@@ -29,12 +29,12 @@ app.use(bodyParser.json());
 // 开启静态资源的访问
 app.use("/public/avatar", express.static("./public/avatar"));
 // 导入配置文件
-const config = require("./config/index");
+const tokenConfig = require("./config/index").tokenConfig;
 // 解析 token 的中间件
 const expressJWT = require("express-jwt");
 // 使用 .unless({ path: [/^\/api\//] }) 指定哪些接口不需要进行 Token 的身份认证
 app.use(
-  expressJWT({ secret: config.jwtSecretKey }).unless({
+  expressJWT({ secret: tokenConfig.jwtSecretKey }).unless({
     path: [
       "/user/login",
       "/user/checkCode",

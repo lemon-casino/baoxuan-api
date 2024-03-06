@@ -27,7 +27,7 @@ const svgCaptcha = require("svg-captcha");
 const redis = require("../utils/redis.js");
 // 引入封装好的token模块和配置信息
 const { addToken, decodedToken, verifyToken } = require("../utils/token");
-const key = require("../config/index");
+const tokenConfig = require("../config/index").tokenConfig;
 
 
 /**
@@ -126,14 +126,14 @@ exports.login = async (req, res, next) => {
           "Bearer " +
           addToken(
             { id: result.user_id, username: result.username },
-            key.jwtSecretKey,
-            key.secretKeyExpire
+            tokenConfig.jwtSecretKey,
+            tokenConfig.secretKeyExpire
           );
         // 生成长时refreshToken
         const refreshToken = addToken(
           { id: result.user_id, username: result.username },
-          key.jwtRefrechSecretKey,
-          key.refreshSerectKeyExpire
+          tokenConfig.jwtRefrechSecretKey,
+          tokenConfig.refreshSerectKeyExpire
         );
         return res.send({
           code: 200,
@@ -188,14 +188,14 @@ exports.addUser = (req, res, next) => {
           "Bearer " +
           addToken(
             { id: result.user_id, username: result.username },
-            key.jwtSecretKey,
-            key.secretKeyExpire
+            tokenConfig.jwtSecretKey,
+            tokenConfig.secretKeyExpire
           );
         // 生成长时refreshToken
         const refreshToken = addToken(
           { id: result.user_id, username: result.username },
-          key.jwtRefrechSecretKey,
-          key.refreshSerectKeyExpire
+          tokenConfig.jwtRefrechSecretKey,
+          tokenConfig.refreshSerectKeyExpire
         );
         return res.send({
           code: 200,
@@ -223,12 +223,12 @@ exports.refreshToken = (req, res) => {
     // 续签生成新的token
     const token =
       "Bearer " +
-      addToken({ id, username }, key.jwtSecretKey, key.secretKeyExpire);
+      addToken({ id, username }, tokenConfig.jwtSecretKey, tokenConfig.secretKeyExpire);
     // 续签长时token
     const newRefreshToken = addToken(
       { id, username },
-      key.jwtRefrechSecretKey,
-      key.refreshSerectKeyExpire
+      tokenConfig.jwtRefrechSecretKey,
+      tokenConfig.refreshSerectKeyExpire
     );
     res.send({
       code: 200,

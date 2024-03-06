@@ -1013,7 +1013,7 @@ exports.getdepartment = async (req, res) => {
 
 // 获取所有状态总览数据
 exports.getoverview = async (req, res) => {
-  const { f_dep_id, dep_q_info, time } = req.query;
+  const { f_dep_id, dep_q_info, time,  } = req.query;
   // 子部门信息
   const dep_q_infos = JSON.parse(dep_q_info);
   // 获取钉钉user_id
