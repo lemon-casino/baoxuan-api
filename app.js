@@ -15,9 +15,11 @@ const joi = require("joi");
 const bodyParser = require("body-parser");
 app.use(
   bodyParser.urlencoded({
+    limit: '50mb',
     extended: true,
   })
 );
+app.use(express.json({ limit: '50mb' }));
 // 使用morgan记录访问日志
 app.use(morgan("combined", { stream }));
 // 全局错误处理器

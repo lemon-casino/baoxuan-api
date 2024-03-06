@@ -10,7 +10,6 @@ const RolesModel = require("../model/roles");
 const MenusModel = require("../model/menus");
 const RolesMenusModel = require("../model/roles-menus");
 const dd = require("../utils/dingding");
-const dataJSon = require("./data.json");
 // 引入封装好的redis
 const redis = require("../utils/redis.js");
 const dd_data = require("../utils/dd_yd_data.js");

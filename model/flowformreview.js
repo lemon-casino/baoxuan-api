@@ -11,6 +11,9 @@ const FlowFormReviewModel = sequelize.define("flowformsreview", {
   form_id: {
     type: Sequelize.STRING(255),
   },
+  modifiedTime: {
+    type: Sequelize.STRING(255),
+  },
   form_review: {
     type: Sequelize.JSON,
     defaultValue: 1,
@@ -36,12 +39,21 @@ const FlowFormReviewModel = sequelize.define("flowformsreview", {
 
 // 添加流程审核流数据
 FlowFormReviewModel.addFlowFormReview = async function (data) {
+
   // 首先,我们开始一个事务并将其保存到变量中
   const t = await sequelize.transaction();
   try {
+    data.forEach(async (item) => {
+      const flow = await FlowFormReviewModel.findOne({
+        where: {
+          form_id: item.formId,
+        },
+      });
+      console.log("data ================>",flow.dataValues);
+    });
     // 然后,我们进行一些调用以将此事务作为参数传递:
     // 添加流程表单
-    const flow_review = await FlowFormReviewModel.upsert(data);
+    // const flow_review = await FlowFormReviewModel.upsert(data);
     // 我们提交事务.
     t.commit();
     return flow.dataValues;

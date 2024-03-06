@@ -423,6 +423,41 @@ dingdingUtil.getSubDeptAll = async (access_token, dept_id = 1) => {
     );
   }
 };
+// 14. 获取实例详情评论信息
+dingdingUtil.getremarksAll = async (
+  access_token,
+  formUuid,
+  userId,
+  formInstanceIdList
+) => {
+  let dataToSend = {
+    formUuid,
+    systemToken: yd_systemToken,
+    appType: yd_appType,
+    userId: userId,
+    formInstanceIdList,
+  };
+  try {
+    const response = await axios.post(
+      "https://api.dingtalk.com/v1.0/yida/forms/remarks/query",
+      dataToSend,
+      {
+        headers: {
+          "x-acs-dingtalk-access-token": access_token,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.log('error.response ================>', error);
+    logger.error(
+      `获取实例详情评论信息错误-----------${dept_id}--------${JSON.stringify(
+        error.response
+      )}`
+    );
+  }
+};
+
 // 导出oa所有流程
 dingdingUtil.getOaAllProcess = async (access_token, userId) => {
   try {

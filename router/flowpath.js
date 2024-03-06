@@ -22,5 +22,7 @@ router.get("/getprocessformlist", flowpathHandler.getprocessformlist);
 router.get("/editprocessformlist", flowpathHandler.editprocessformobj);
 // 导出所有oa流程
 router.get("/getoaallprocess", flowpathHandler.getOaAllProcess);
+// 获取所有的流程模版数据
+router.post("/getprocessAuditing", flowpathHandler.getprocessAuditing);
 
 module.exports = router;

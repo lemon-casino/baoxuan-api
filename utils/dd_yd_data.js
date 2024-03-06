@@ -7,6 +7,7 @@ const FlowFormModel = require("../model/flowfrom");
 const ProcessModel = require("../model/process");
 // 引入时间格式化方法
 const { formatDateTime } = require("../utils/tools");
+const ExcelJS = require("exceljs");
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
 // 延迟函数
@@ -281,6 +282,7 @@ const getAllProcessFlows = async () => {
   });
   return yd_form;
 };
+// getAllProcessFlows()
 // 7. 获取今天以前所有已完成,已终止，异常,流程数据  -----------每天晚上23：59开始执行
 const getAllCompletedLiu = async () => {
   // 开始时间：昨天00:00:00
@@ -350,20 +352,96 @@ const handleAssemblydata = async () => {
   const h_new_liuchengdata = JSON.parse(
     await redis.getKey("getTodayAllLiu_New")
   );
-  // console.log('h_old_liuchengdata=========>', h_old_liuchengdata[0])
-  // console.log('h_new_liuchengdata=========>', h_new_liuchengdata[0])
   list = [...r_liuchengdata, ...h_old_liuchengdata, ...h_new_liuchengdata];
   // const aaa = list.filter((item) => item.processInstanceId === '7c4a2938-6276-4884-a55d-08928ac89045')
-  // console.log('aaa=========>', aaa)
   await redis.setKey("newLiuChengList", JSON.stringify(list));
   // 获取当天所有运行中的数据
-  console.log('所有已完成历史数据长度=========>', r_liuchengdata.length)
-  console.log('获取今天所有流程数据=========>', h_new_liuchengdata.length)
-  console.log('获取所有非已完成所有历史数据=========>', h_old_liuchengdata.length)
+  console.log("所有已完成历史数据长度=========>", r_liuchengdata.length);
+  console.log("获取今天所有流程数据=========>", h_new_liuchengdata.length);
+  console.log(
+    "获取所有非已完成所有历史数据=========>",
+    h_old_liuchengdata.length
+  );
   console.log("所有流程数据长度=========>", list.length);
   console.timeEnd("查询所有流程数据");
 };
 // handleAssemblydata()
+// 10. 获取流程评论数据
+const getremarksAll = async () => {
+  // 获取所有流程数据
+  const list = JSON.parse(await redis.getKey("newLiuChengList"));
+  const { access_token } = await getToken();
+  let processInstanceIds = [];
+  // 需要导出的表单数组id
+  const arrayFromId = ["FORM-0A966I819O8BZMVBE16JLAK96KK42KD1QEIILC"];
+  // 已完成,已终止状态
+  const instanceStatuss = ["TERMINATED", "COMPLETED"];
+  for (let f_item of arrayFromId) {
+    const resdata = list.filter((item) => item.formUuid === f_item);
+    for (let item of resdata) {
+      if (instanceStatuss.includes(item.instanceStatus)) {
+        let date = new Date(item.createTimeGMT);
+        let month = date.getUTCMonth() + 1;
+        if (month === 11 || month === 12 || month === 1) {
+          let s_jindu = [];
+          for (let s_item of item.overallprocessflow) {
+            const jt = s_item.action === "拒绝" ? `---------(${s_item.remark})` : "";
+            s_jindu.push(`${s_item.operatorName}(${s_item.showName || s_item.action})${jt}`);
+          }
+          console.log('s_jindu ================>', s_jindu);
+          item.s_jindu = s_jindu;
+          // 获取流程评论
+          const rees = await dd.getremarksAll(
+            access_token,
+            f_item,
+            com_userid,
+            [item.processInstanceId]
+          );
+          item.pinlun = rees.formRemarkVoMap[item.processInstanceId] || [];
+          let parts = item.title.split("采购任务运营发布");
+          item.c_title = parts[1];
+          processInstanceIds.push(item);
+        }
+      }
+    }
+  }
+  // console.log('processInstanceIds ================>', processInstanceIds);
+  // 导出excel
+  let workbook = new ExcelJS.Workbook();
+  let worksheet = workbook.addWorksheet("My Sheet");
+
+  // 设定表头
+  worksheet.columns = [
+    { header: "名称", key: "title" },
+    { header: "创建时间", key: "createTimeGMT" },
+    { header: "产品名称", key: "c_title" },
+    { header: "审批结果", key: "approvedResult" },
+    { header: "评论", key: "pinlun" },
+    // { header: "审核评论", key: "s_pinlun" },
+    { header: "审核进度信息", key: "s_jindu" },
+  ];
+  // 插入数据
+  processInstanceIds.forEach((item) => {
+    console.log('item.s_jindu ================>', item.s_jindu);
+    worksheet.addRow({
+      title: item.title,
+      createTimeGMT: item.createTimeGMT,
+      c_title: item.c_title,
+      approvedResult: item.approvedResult === "disagree" ? "拒绝" : "同意",
+      s_jindu: JSON.stringify(item.s_jindu),
+      pinlun: item.pinlun.map((i) => i.content).join("; "), // 假设每个评论对象有 'content' 属性, 并且我们将所有评论合并到一个字符串中
+    });
+  });
+
+  // 导出为 Excel 文件
+  workbook.xlsx.writeFile("采购任务运营发布.xlsx");
+};
+// getremarksAll();
+// 11.接收审核流模版数据
+// const getTemplate = async () => {
+//   console.log(dassss)
+// };
+// getTemplate();
 // getAllNoCompletedLiu_Old()
 module.exports = {
   getDingdingToken,

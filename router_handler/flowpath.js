@@ -1766,10 +1766,10 @@ const handlesh = (q_jsonData, h_jsonData) => {
 const formatData = (y_Data) => {
   function transformForm(forms) {
     return forms.map((form) => ({
-      formId: form.formId,
-      formName: form.formName,
-      l_id: form.l_id,
-      reviewProcess: transformNodes(form.reviewProcess.schema.children),
+      formId: form.form_id,
+      c_id: form.c_id,
+      modifiedTime: form.modifiedTime,
+      reviewProcess: transformNodes(JSON.parse(form.liu_data).schema.children),
     }));
   }
 
@@ -1975,7 +1975,6 @@ exports.createExcel = async (req, res) => {
     data: [],
   });
 };
-
 // 导出oa所有流程
 exports.getOaAllProcess = async (req, res) => {
   // const { access_token } = await getToken();
@@ -2871,6 +2870,28 @@ exports.getOaAllProcess = async (req, res) => {
   return res.send({
     code: 0,
     message: "生成成功",
+    data: [],
+  });
+};
+const datasss = require("./data.json");
+// http://127.0.0.1:9999/user/flowpath/getprocessAuditing
+// 获取所有流程设计模版数据
+exports.getprocessAuditing = async (req, res) => {
+  // const { data } = req.body;
+  const data = formatData(JSON.parse(JSON.stringify(datasss)));
+  await FlowFormReviewModel.addFlowFormReview(data);
+  // 入库数据结构
+  // data.forEach(async (item) => {
+  //   await FlowFormReviewModel.upsert({
+  //     form_id: item.formId,
+  //     modifiedTime: item.modifiedTime,
+  //     form_review: item.reviewProcess,
+  //   });
+  // });
+
+  return res.send({
+    code: 0,
+    message: "运行成功",
     data: [],
   });
 };
