@@ -18,6 +18,9 @@ const configs = {
             timestamps: false
         },
         timezone: '+08:00'
+    },
+    serverConfig:{
+        port: 9999
     }
 }
 

@@ -1,6 +1,7 @@
 // 导入 express 模块
 const express = require("express");
 const morgan = require('morgan');
+const serverConfig = require('./config/index').serverConfig
 // 创建 express 的服务器实例
 const app = express();
 // 导入日志配置文件
@@ -96,7 +97,6 @@ app.use((err, req, res, next) => {
   return res.send({ code: 500, message: err.message });
 });
 // 调用 app.listen 方法，指定端口号并启动web服务器
-app.listen(9999, function () {
-  console.log("Bi node本地启动地址 http://127.0.0.1:9999");
-  console.log(`Bi node内网启动地址 http://192.168.203.13:9999`);
+app.listen(serverConfig.port, function () {
+  console.log(`Bi node本地启动地址 http://127.0.0.1:${serverConfig.port}`);
 });
