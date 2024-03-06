@@ -443,9 +443,6 @@ const handle_fq_cy_liuc = async (
     statusMap,
     type
 ) => {
-
-    console.log("********", time)
-
     let startDate = new Date(time[0]);
     let endDate = new Date(time[1]);
     // 初始化结果对象
@@ -2060,12 +2057,24 @@ const handlesh = (q_jsonData, h_jsonData) => {
 // 格式化审核数据数据结构
 const formatData = (y_Data) => {
     function transformForm(forms) {
-        return forms.map((form) => ({
-            formId: form.formId,
-            formName: form.formName,
-            l_id: form.l_id,
-            reviewProcess: transformNodes(form.reviewProcess.schema.children),
-        }));
+        return forms.map((form) => {
+            let reviewProcess = [];
+            try {
+                const liuData = JSON.parse(form.liu_data);
+                if (liuData && liuData.schema && liuData.schema.children) {
+                    reviewProcess = transformNodes(liuData.schema.children);
+                }
+            } catch (error) {
+                console.error("Error parsing liu_data: ", error);
+            }
+
+            return {
+                formId: form.form_id,
+                c_id: form.c_id,
+                modifiedTime: form.modifiedTime,
+                reviewProcess: reviewProcess,
+            };
+        });
     }
 
     function transformNodes(nodes, isNested = false) {

@@ -47,12 +47,15 @@ exports.getCheckCode = async (req, res) => {
   // 验证码键和缓存时间
   const uuid = Uuid.v4();
   const effectTime = 10 * 60;
+
+  console.log('**** redis code ****', new Date())
   // 存入redis
   const result = await redis.setKey(
     uuid,
     captcha.text.toLowerCase(),
     effectTime
   );
+  console.log('**** code ****', new Date())
   if (result) {
     res.send({
       code: 200,
