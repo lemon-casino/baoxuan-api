@@ -10,6 +10,15 @@ router.get("/get_yd_department", flowpathHandler.getdepartment);
 // router.get('/listflowpath', flowpathHandler.listflowpath)
 // 获取所有状态总览数据
 router.get("/get_yd_overview", flowpathHandler.getoverview);
+
+router.get("/selfLaunchFlowsStatistic", flowpathHandler.getSelfLaunchFlowsStatistic)
+
+router.get("/selfJoinFlowsStatistic", flowpathHandler.getSelfJoinFlowsStatistic)
+
+router.get("/departmentLaunchFlowsStatistic", flowpathHandler.getDepartmentLaunchFlowsStatistic)
+
+router.get("/departmentJoinFlowsStatistic", flowpathHandler.getDepartmentJoinFlowsStatistic)
+
 // 获取筛选状态，子部门，类型
 // router.get('/getfilter', flowpathHandler.getfilter)
 
