@@ -44,14 +44,9 @@ const getDepList = async () => {
     return JSON.parse(reply);
 };
 // 获取所有详情用户信息
-const getuserDetailAll = async () => {
+const getAllUserDetails = async () => {
     const reply = await redis.getKey("userAllDetail");
     return JSON.parse(reply);
-    // if(reply){
-    //   return JSON.parse(reply);
-    // }else{
-    //   return []
-    // }
 };
 // 获取所有部门下的所有用户信息
 const getdepDetailuserAll = async () => {
@@ -59,7 +54,7 @@ const getdepDetailuserAll = async () => {
     return JSON.parse(reply);
 };
 // 获取钉钉token
-const getToken = async () => {
+const getDingDingAccessToken = async () => {
     const reply = await redis.getKey("ddCorpToken");
     return JSON.parse(reply);
 };
@@ -166,7 +161,7 @@ const getDeptUserLists = async (access_token, dept_id) => {
 
 // 返回用户部门层级
 const getDepLev = async (access_token, dd_id) => {
-    const userDetails = await getuserDetailAll();
+    const userDetails = await getAllUserDetails();
     // 返回用户详情
     const userInfo = userDetails.filter((item) => item.userid === dd_id);
     if (userInfo.length > 0) {
@@ -437,16 +432,16 @@ const mergeListByNameAndIdInSection = (type, result) => {
 };
 // 处理个人发起参与方法
 const handle_fq_cy_liuc = async (
-    access_token,
-    time,
-    userid,
-    statusMap,
-    type
+    ddAccessToken,
+    timesRange,
+    ddUserId,
+    flowStatusMap,
+    selfLaunchOrJoin
 ) => {
-    let startDate = new Date(time[0]);
-    let endDate = new Date(time[1]);
+    let startDate = new Date(timesRange[0]);
+    let endDate = new Date(timesRange[1]);
     // 初始化结果对象
-    let resultObj = {
+    let resultTemplate = {
         已发起: {data: [], depUser: new Map(), depList: []},
         进行中: {data: [], depUser: new Map(), depList: []},
         已完成: {data: [], depUser: new Map(), depList: []},
@@ -455,14 +450,14 @@ const handle_fq_cy_liuc = async (
         待转入: {data: [], depUser: new Map(), depList: []},
         异常: {data: [], depUser: new Map(), depList: []},
     };
-    const statusMaps = JSON.parse(JSON.stringify(statusMap));
-    const userList = await getuserDetailAll();
+    // const flowStatusMap = flowStatusMap1;// JSON.parse(JSON.stringify(flowStatusMap));
+    const allUserDetails = await getAllUserDetails();
     const liucList = await getNewLiuChengListsAll();
     // 获取当前用户下的所有流程数据
-    const userInfo = userList.filter((item) => item.userid === userid);
-    if (userInfo.length > 0) {
+    const currentUsers = allUserDetails.filter((item) => item.userid === ddUserId);
+    if (currentUsers.length > 0) {
         // 获取区间内的流程数据
-        let filteredData = userInfo[0][type].filter((item) => {
+        let filteredData = currentUsers[0][selfLaunchOrJoin].filter((item) => {
             let itemDate = new Date(item.createTimeGMT);
             return itemDate >= startDate && itemDate <= endDate;
         });
@@ -478,29 +473,29 @@ const handle_fq_cy_liuc = async (
             // 获取审核节点状态数据
             for (let o_item of item.overallprocessflow.slice(1)) {
                 // console.log('o_item=========>', o_item,userid)
-                if (o_item.operatorUserId === userid) {
-                    let status_sh = statusMaps[o_item.type];
+                if (o_item.operatorUserId === ddUserId) {
+                    let status_sh = flowStatusMap[o_item.type];
                     if (
                         status_sh &&
-                        !resultObj[status_sh].data.some(
+                        !resultTemplate[status_sh].data.some(
                             (item_) => item_.processInstanceId === item.processInstanceId
                         )
                     ) {
-                        resultObj[status_sh].data.push(item);
+                        resultTemplate[status_sh].data.push(item);
                     }
                 }
             }
             // 获取流程状态数据
-            let status_lc = statusMaps[item.instanceStatus];
+            let status_lc = flowStatusMap[item.instanceStatus];
             if (status_lc) {
-                resultObj[status_lc].data.push(item);
+                resultTemplate[status_lc].data.push(item);
             }
         }
     }
     // console.log('resultObj=========>', resultObj)
     // 对于每一种状态，获取相关的用户和部门信息
-    for (let category in resultObj) {
-        let instances = resultObj[category];
+    for (let category in resultTemplate) {
+        let instances = resultTemplate[category];
         // 获取属于每一种状态的用户数据
         for (let instance of instances.data) {
             let userId = instance.originator.userId;
@@ -515,7 +510,7 @@ const handle_fq_cy_liuc = async (
         // 获取所有用户的部门信息
         let depUsersArray = await Promise.all(
             Array.from(instances.depUser.keys()).map(async (userId) =>
-                getDepLev(access_token, userId)
+                getDepLev(ddAccessToken, userId)
             )
         );
 
@@ -566,44 +561,44 @@ const handle_fq_cy_liuc = async (
         {title: "已发起", list: [], len: 0},
         {
             title: "进行中",
-            list: resultObj["进行中"].depList,
+            list: resultTemplate["进行中"].depList,
             len: l_len(
-                resultObj["进行中"].depList.map((item) => item.liuchengdata.length)
+                resultTemplate["进行中"].depList.map((item) => item.liuchengdata.length)
             ),
         },
         {
             title: "待转入",
-            list: resultObj["待转入"].depList,
+            list: resultTemplate["待转入"].depList,
             len: l_len(
-                resultObj["待转入"].depList.map((item) => item.liuchengdata.length)
+                resultTemplate["待转入"].depList.map((item) => item.liuchengdata.length)
             ),
         },
         {
             title: "已完成",
-            list: resultObj["已完成"].depList,
+            list: resultTemplate["已完成"].depList,
             len: l_len(
-                resultObj["已完成"].depList.map((item) => item.liuchengdata.length)
+                resultTemplate["已完成"].depList.map((item) => item.liuchengdata.length)
             ),
         },
         {
             title: "已逾期",
-            list: resultObj["已逾期"].depList,
+            list: resultTemplate["已逾期"].depList,
             len: l_len(
-                resultObj["已逾期"].depList.map((item) => item.liuchengdata.length)
+                resultTemplate["已逾期"].depList.map((item) => item.liuchengdata.length)
             ),
         },
         {
             title: "已终止",
-            list: resultObj["已终止"].depList,
+            list: resultTemplate["已终止"].depList,
             len: l_len(
-                resultObj["已终止"].depList.map((item) => item.liuchengdata.length)
+                resultTemplate["已终止"].depList.map((item) => item.liuchengdata.length)
             ),
         },
         {
             title: "异常",
-            list: resultObj["异常"].depList,
+            list: resultTemplate["异常"].depList,
             len: l_len(
-                resultObj["异常"].depList.map((item) => item.liuchengdata.length)
+                resultTemplate["异常"].depList.map((item) => item.liuchengdata.length)
             ),
         },
     ];
@@ -885,7 +880,7 @@ const handle_dep_fq_cy_liuc = async (
 // ===================页面展示方法=====================
 // 本人发起
 const handle_br_h_dep_yfq_LiuChengList = async (access_token, time, userid) => {
-    const statusMap = {
+    const flowStatusMap = {
         RUNNING: "进行中",
         COMPLETED: "已完成",
         TERMINATED: "已终止",
@@ -897,13 +892,13 @@ const handle_br_h_dep_yfq_LiuChengList = async (access_token, time, userid) => {
         access_token,
         time,
         userid,
-        statusMap,
+        flowStatusMap,
         "faqi_liu"
     );
     return faqi_liu;
 };
 // 本人参与
-const handle_br_cy_LiuChengList = async (access_token, time, userid) => {
+const handle_br_cy_LiuChengList = async (ddAccessToken, timesRange, ddUserId) => {
     const statusMap = {
         TODO: "进行中",
         FORCAST: "待转入",
@@ -912,14 +907,14 @@ const handle_br_cy_LiuChengList = async (access_token, time, userid) => {
         TERMINATED: "已终止",
         ERROR: "异常",
     };
-    const canyu_liu = await handle_fq_cy_liuc(
-        access_token,
-        time,
-        userid,
+    const selfJoinData = await handle_fq_cy_liuc(
+        ddAccessToken,
+        timesRange,
+        ddUserId,
         statusMap,
         "canyu_liu"
     );
-    return canyu_liu;
+    return selfJoinData;
 };
 
 // 部门参与
@@ -985,7 +980,7 @@ exports.getdepartment = async (req, res) => {
     // 获取钉钉user_id
     const dd_id = await getDingdingUserId(req.user.id);
     // 获取钉钉Token
-    const {access_token} = await getToken();
+    const {access_token} = await getDingDingAccessToken();
     let dep_info = [];
     // 管理员身份
     if (whiteList.pepArr().includes(dd_id)) {
@@ -1006,16 +1001,58 @@ exports.getdepartment = async (req, res) => {
 };
 
 exports.getSelfLaunchFlowsStatistic = async (req, res) => {
-    const {time} = req.query;
+    const {f_dep_id, dep_q_info, time} = req.query;
+    const dep_q_infos = JSON.parse(dep_q_info);
     const dd_id = await getDingdingUserId(req.user.id);
-    const {access_token} = await getToken();
+    const {access_token} = await getDingDingAccessToken();
     const resObj = {
         code: 200,
         message: "获取成功",
         data: {
+            is_admin: false,
             br_faqi: [],
         },
     };
+
+    // 单个
+    let dep_info = [];
+    // let dep_list = [];
+    // 根据userid判断是否存在于白名单中
+    if (whiteList.pepArr().includes(dd_id)) {
+        const depLists = await getDepList();
+        if ((await getSubDeptLev(depLists, f_dep_id)).length === 0) {
+            const depas = depLists.filter((item) => item.dept_id == f_dep_id);
+            depas.forEach((element) => {
+                element.leader = true;
+            });
+            dep_info = depas;
+        } else {
+            const dg_dep = await getSubDeptLev(depLists, f_dep_id);
+            dep_info = dg_dep.filter((item) => item.dept_id == dep_q_infos.id);
+        }
+        // dep_list = dep_info;
+    } else {
+        // 返回用户详情
+        const lev_dep_list = await getDepLev(access_token, dd_id);
+        const lev_dep_lists = lev_dep_list.filter(
+            (item) => item.dept_id == f_dep_id
+        );
+        // 如果子部门为空
+        if (lev_dep_lists[0].dep_child.length === 0) {
+            dep_info = lev_dep_lists;
+        } else {
+            dep_info = lev_dep_list.filter((item) => item.dept_id == f_dep_id);
+        }
+        // 判断当前用户是否是管理员
+        if (dep_info[0].dep_child.length > 0) {
+            const c_dep = dep_info[0].dep_child.filter(
+                (item) => item.dept_id === dep_q_infos.id
+            );
+            dep_info = c_dep;
+        }
+    }
+
+    const is_admin = dep_info && dep_info.length ? dep_info[0].leader : false;
 
     console.time("本人发起");
     // 本人发起
@@ -1025,14 +1062,27 @@ exports.getSelfLaunchFlowsStatistic = async (req, res) => {
         dd_id
     );
     console.timeEnd("本人发起");
-    resObj.data.br_faqi = liuchenglist;
+    resObj.data = {is_admin: is_admin, br_faqi: liuchenglist};
     return res.send(resObj)
 }
 
+/**
+ * 个人参与的流程统计
+ * @param req
+ * time： 筛选区间，精确到天
+ * user： 登录的用户信息
+ * flowImportanceCondition：流程重要性
+ *    {flowImportanceCondition: {type: "important"| "unImportant", flows:[]}}
+ *    type："important" | "unImportant"，为空是表示全部
+ *    flows：需要精确筛选的流程ids
+ * @param res
+ * @returns {Promise<*>}
+ */
 exports.getSelfJoinFlowsStatistic = async (req, res) => {
-    const {time} = req.query;
-    const dd_id = await getDingdingUserId(req.user.id);
-    const {access_token} = await getToken();
+    const {f_dep_id, dep_q_info, time: timesRange} = req.query;
+    const dep_q_infos = JSON.parse(dep_q_info);
+    const ddUserId = await getDingdingUserId(req.user.id);
+    const {access_token: ddAccessToken} = await getDingDingAccessToken();
     const resObj = {
         code: 200,
         message: "获取成功",
@@ -1041,15 +1091,64 @@ exports.getSelfJoinFlowsStatistic = async (req, res) => {
             br_canyu: [],
         },
     };
+
+    // 单个
+    let dep_info = [];
+    // let dep_list = [];
+    // 根据userid判断是否存在于白名单中
+    console.log("=== getSelfJoinFlowsStatistic ===")
+    if (whiteList.pepArr().includes(ddUserId)) {
+        console.log(1);
+        const depLists = await getDepList();
+        console.log(2);
+        if ((await getSubDeptLev(depLists, f_dep_id)).length === 0) {
+            console.log(3);
+            const depas = depLists.filter((item) => item.dept_id == f_dep_id);
+            depas.forEach((element) => {
+                element.leader = true;
+            });
+            dep_info = depas;
+        } else {
+            console.log(5);
+            const dg_dep = await getSubDeptLev(depLists, f_dep_id);
+            console.log(6);
+            dep_info = dg_dep.filter((item) => item.dept_id == dep_q_infos.id);
+            console.log(7);
+        }
+        // dep_list = dep_info;
+    } else {
+        console.log(4);
+        // 返回用户详情
+        const lev_dep_list = await getDepLev(ddAccessToken, ddUserId);
+        const lev_dep_lists = lev_dep_list.filter(
+            (item) => item.dept_id == f_dep_id
+        );
+        // 如果子部门为空
+        if (lev_dep_lists[0].dep_child.length === 0) {
+            dep_info = lev_dep_lists;
+        } else {
+            dep_info = lev_dep_list.filter((item) => item.dept_id == f_dep_id);
+        }
+        // 判断当前用户是否是管理员
+        if (dep_info[0].dep_child.length > 0) {
+            const c_dep = dep_info[0].dep_child.filter(
+                (item) => item.dept_id === dep_q_infos.id
+            );
+            dep_info = c_dep;
+        }
+    }
+
+    const is_admin = dep_info && dep_info.length ? dep_info[0].leader : false;
+
     console.time("本人参与");
     // 本人参与
-    const canyuliu = await handle_br_cy_LiuChengList(
-        access_token,
-        JSON.parse(time),
-        dd_id
+    const selfJoinData = await handle_br_cy_LiuChengList(
+        ddAccessToken,
+        JSON.parse(timesRange),
+        ddUserId
     );
     console.timeEnd("本人参与");
-    resObj.data.br_canyu = canyuliu
+    resObj.data = {br_canyu: selfJoinData, is_admin: is_admin}
     return res.send(resObj)
 }
 
@@ -1057,7 +1156,7 @@ exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
     const {f_dep_id, dep_q_info, time} = req.query;
     const dep_q_infos = JSON.parse(dep_q_info);
     const dd_id = await getDingdingUserId(req.user.id);
-    const {access_token} = await getToken();
+    const {access_token} = await getDingDingAccessToken();
     const resObj = {
         code: 200,
         message: "获取成功",
@@ -1104,6 +1203,7 @@ exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
                 dep_info = c_dep;
             }
         }
+
 
         const is_admin = dep_info[0].leader;
         if (is_admin) {
@@ -1182,7 +1282,7 @@ exports.getDepartmentJoinFlowsStatistic = async (req, res) => {
     const {f_dep_id, dep_q_info, time} = req.query;
     const dep_q_infos = JSON.parse(dep_q_info);
     const dd_id = await getDingdingUserId(req.user.id);
-    const {access_token} = await getToken();
+    const {access_token} = await getDingDingAccessToken();
     const resObj = {
         code: 200,
         message: "获取成功",
@@ -1312,7 +1412,7 @@ exports.getoverview = async (req, res) => {
     // 获取钉钉user_id
     const dd_id = await getDingdingUserId(req.user.id);
     // 获取钉钉Token
-    const {access_token} = await getToken();
+    const {access_token} = await getDingDingAccessToken();
     // 返回格式
     const resObj = {
         code: 200,
@@ -1500,7 +1600,7 @@ exports.getoverview = async (req, res) => {
 // 获取流程表单数据
 exports.getprocessformlist = async (req, res) => {
     // 钉钉token
-    const {access_token} = await getToken();
+    const {access_token} = await getDingDingAccessToken();
     const userid = "073105202321093148"; // 涛哥id
     // 1.获取所有宜搭表单数据
     const yd_form = await dd.getyd_FormList(access_token, userid);
@@ -1596,7 +1696,7 @@ exports.getprocessformlist = async (req, res) => {
 // 修改流程表单数据
 exports.editprocessformobj = async (req, res) => {
     // 钉钉token
-    const {access_token} = await getToken();
+    const {access_token} = await getDingDingAccessToken();
     const userid = "073105202321093148"; // 涛哥id
     // 1.获取所有宜搭表单数据
     const yd_form = await dd.getyd_FormList(access_token, userid);
@@ -1619,7 +1719,7 @@ exports.editprocessformobj = async (req, res) => {
 // 获取所有流程表单的审核流列表
 exports.getliuchenglist = async (req, res) => {
     const userid = "073105202321093148"; // 涛哥id
-    const {access_token} = await getToken();
+    const {access_token} = await getDingDingAccessToken();
     const list = [];
     // 1.获取所有宜搭表单数据
     const yd_form = await dd.getyd_FormList(access_token, userid);
