@@ -950,11 +950,11 @@ const handle_br_cy_LiuChengList = async (ddAccessToken, timesRange, ddUserId, fo
 
 // 部门参与
 const handle_dep_cy_LiuChengList = async (
-    access_token,
-    time,
-    f_dep_id,
-    dep_list,
-    userId
+    ddAccessToken,
+    timesRange,
+    parentDepartmentId,
+    departments,
+    formImportanceCondition
 ) => {
     const statusMap = {
         TODO: "进行中",
@@ -965,13 +965,13 @@ const handle_dep_cy_LiuChengList = async (
         ERROR: "异常",
     };
     const canyu_liu = await handleDepartmentLaunchOrJoinFlows(
-        access_token,
-        time,
-        f_dep_id,
+        ddAccessToken,
+        timesRange,
+        parentDepartmentId,
         statusMap,
         "canyu_liu",
-        dep_list,
-        userId
+        departments,
+        formImportanceCondition
     );
     return canyu_liu;
 };
@@ -1158,14 +1158,7 @@ exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
     const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
     const ddUserId = await getDingDingUserId(req.user.id);
     const {access_token: ddAccessToken} = await getDingDingAccessToken();
-    const resObj = {
-        code: 200,
-        message: "获取成功",
-        data: {
-            is_admin: false,
-            dep_faqi: [],
-        },
-    };
+
     // 统计指定项目组下的流程数据
     if (subDepartmentId) {
         // 保存该项目的部门信息
@@ -1218,10 +1211,13 @@ exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
                 JSON.parse(formImportanceCondition)
             );
             console.timeEnd("部门发起");
-            resObj.data = {
-                is_admin: isAdmin,
-                dep_faqi: departmentLaunchData,
-            };
+
+            return res.send(biResponse.success(
+                {
+                    is_admin: isAdmin,
+                    dep_faqi: departmentLaunchData,
+                }
+            ))
         }
     }
     // 统计一级部门下所有项目组的流程数据
@@ -1268,86 +1264,79 @@ exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
                 JSON.parse(timesRange),
                 parentDepartmentId,
                 subDepts,
-                // ddUserId,
                 JSON.parse(formImportanceCondition)
             );
             console.timeEnd("部门发起");
-            resObj.data = {
-                is_admin: is_admin,
-                dep_faqi: dep_faqi,
-            };
+
+            return res.send(biResponse.success(
+                {
+                    is_admin: is_admin,
+                    dep_faqi: dep_faqi,
+                }
+            ))
         }
     }
-    return res.send(resObj)
+    return res.send(biResponse.success({
+        is_admin: false,
+        dep_faqi: [],
+    }))
 }
 
 exports.getDepartmentJoinFlowsStatistic = async (req, res) => {
-    const {f_dep_id, dep_q_info, time} = req.query;
-    const dep_q_infos = JSON.parse(dep_q_info);
-    const dd_id = await getDingDingUserId(req.user.id);
-    const {access_token} = await getDingDingAccessToken();
-    const resObj = {
-        code: 200,
-        message: "获取成功",
-        data: {
-            is_admin: false,
-            dep_canyuliu: []
-        },
-    };
-    if (dep_q_infos.id !== "All") {
+    const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
+    const ddUserId = await getDingDingUserId(req.user.id);
+    const {access_token: ddAccessToken} = await getDingDingAccessToken();
+
+    if (subDepartmentId) {
         // 单个
         let dep_info = [];
         // 根据userid判断是否存在于白名单中
-        if (whiteList.pepArr().includes(dd_id)) {
+        if (whiteList.pepArr().includes(ddUserId)) {
             const depLists = await getAllDepartments();
-            if ((await getSubDeptLev(depLists, f_dep_id)).length === 0) {
-                const depas = depLists.filter((item) => item.dept_id == f_dep_id);
+            if ((await getSubDeptLev(depLists, parentDepartmentId)).length === 0) {
+                const depas = depLists.filter((item) => item.dept_id == parentDepartmentId);
                 depas.forEach((element) => {
                     element.leader = true;
                 });
                 dep_info = depas;
             } else {
-                const dg_dep = await getSubDeptLev(depLists, f_dep_id);
-                dep_info = dg_dep.filter((item) => item.dept_id == dep_q_infos.id);
+                const dg_dep = await getSubDeptLev(depLists, parentDepartmentId);
+                dep_info = dg_dep.filter((item) => item.dept_id == subDepartmentId);
             }
         } else {
             // 返回用户详情
-            const lev_dep_list = await getDepLev(access_token, dd_id);
+            const lev_dep_list = await getDepLev(ddAccessToken, ddUserId);
             const lev_dep_lists = lev_dep_list.filter(
-                (item) => item.dept_id == f_dep_id
+                (item) => item.dept_id == parentDepartmentId
             );
             // 如果子部门为空
             if (lev_dep_lists[0].dep_child.length === 0) {
                 dep_info = lev_dep_lists;
             } else {
-                dep_info = lev_dep_list.filter((item) => item.dept_id == f_dep_id);
+                dep_info = lev_dep_list.filter((item) => item.dept_id == parentDepartmentId);
             }
             // 判断当前用户是否是管理员
             if (dep_info[0].dep_child.length > 0) {
                 const c_dep = dep_info[0].dep_child.filter(
-                    (item) => item.dept_id === dep_q_infos.id
+                    (item) => item.dept_id === subDepartmentId
                 );
                 dep_info = c_dep;
             }
         }
 
-        const is_admin = dep_info[0].leader;
-        if (is_admin) {
+        const isAdmin = dep_info[0].leader;
+        if (isAdmin) {
             // 部门参与
             console.time("部门参与");
             const dep_canyuliu = await handle_dep_cy_LiuChengList(
-                access_token,
-                JSON.parse(time),
-                f_dep_id,
-                JSON.parse(JSON.stringify(dep_info)),
-                dd_id
+                ddAccessToken,
+                JSON.parse(timesRange),
+                parentDepartmentId,
+                dep_info,
+                JSON.parse(formImportanceCondition)
             );
             console.timeEnd("部门参与");
-
-            resObj.data = {
-                is_admin: is_admin,
-                dep_canyuliu: dep_canyuliu
-            };
+            return biResponse.success({is_admin: isAdmin, dep_canyuliu: dep_canyuliu})
         }
     } else {
         // 全部
@@ -1355,23 +1344,23 @@ exports.getDepartmentJoinFlowsStatistic = async (req, res) => {
         let dep_list = [];
         let dep_info = [];
         // 根据userid判断是否存在于白名单中
-        if (whiteList.pepArr().includes(dd_id)) {
+        if (whiteList.pepArr().includes(ddUserId)) {
             const depLists = await getAllDepartments();
-            if ((await getSubDeptLev(depLists, f_dep_id)).length === 0) {
-                const depas = depLists.filter((item) => item.dept_id == f_dep_id);
+            if ((await getSubDeptLev(depLists, parentDepartmentId)).length === 0) {
+                const depas = depLists.filter((item) => item.dept_id == parentDepartmentId);
                 depas.forEach((element) => {
                     element.leader = true;
                 });
                 dep_info = depas;
             } else {
-                dep_info = await getSubDeptLev(depLists, f_dep_id);
+                dep_info = await getSubDeptLev(depLists, parentDepartmentId);
             }
             dep_list = dep_info;
         } else {
             // 返回用户详情
-            const lev_dep_list = await getDepLev(access_token, dd_id);
+            const lev_dep_list = await getDepLev(ddAccessToken, ddUserId);
             // 筛选出当前所在部门
-            const ac_dep = lev_dep_list.filter((item) => item.dept_id == f_dep_id);
+            const ac_dep = lev_dep_list.filter((item) => item.dept_id == parentDepartmentId);
             // 如果子部门为空
             if (ac_dep[0].dep_child.length === 0) {
                 dep_info = ac_dep;
@@ -1389,22 +1378,27 @@ exports.getDepartmentJoinFlowsStatistic = async (req, res) => {
             // 部门参与
             console.time("部门参与");
             const dep_canyuliu = await handle_dep_cy_LiuChengList(
-                access_token,
-                JSON.parse(time),
-                f_dep_id,
-                JSON.parse(JSON.stringify(dep_list)),
-                dd_id
+                ddAccessToken,
+                JSON.parse(timesRange),
+                parentDepartmentId,
+                dep_list,
+                JSON.parse(formImportanceCondition)
             );
             console.timeEnd("部门参与");
 
-            resObj.data = {
-                is_admin: is_admin,
-                dep_canyuliu: dep_canyuliu
-            };
+            return res.send(
+                biResponse.success({
+                    is_admin: is_admin,
+                    dep_canyuliu: dep_canyuliu
+                })
+            )
         }
     }
 
-    return res.send(resObj)
+    return res.send(biResponse.success({
+        is_admin: false,
+        dep_faqi: [],
+    }))
 }
 
 // 获取所有状态总览数据
