@@ -14,6 +14,7 @@ const path = require("path");
 // 引入时间格式化方法
 const {formatDateTime} = require("../utils/tools");
 const biResponse = require("../utils/biResponse")
+
 // 公共方法 start========================================================
 // 其他管理中台白名单
 const glwhiteList = [
@@ -51,7 +52,7 @@ const getAllUserDetails = async () => {
     return JSON.parse(reply);
 };
 // 获取所有部门下的所有用户信息
-const getdepDetailuserAll = async () => {
+const getAllUsersOfAllDepartments = async () => {
     const reply = await redis.getKey("dep_userList");
     return JSON.parse(reply);
 };
@@ -140,7 +141,7 @@ const getDeptUserLists = async (access_token, dept_id) => {
     const cursor = 0;
     const size = 100;
 
-    const dep_userList = await getdepDetailuserAll();
+    const dep_userList = await getAllUsersOfAllDepartments();
     const diguiDep = async (depList, dept_id) => {
         const inf = depList.filter((item) => item.dept_id == dept_id);
         if (inf.length > 0) {
@@ -432,7 +433,7 @@ const handle_fq_cy_liuc = async (
     ddUserId,
     flowStatusMap,
     selfLaunchOrJoin,
-    flowImportanceCondition
+    formImportanceCondition
 ) => {
     const startDate = new Date(timesRange[0]);
     const endDate = new Date(timesRange[1]);
@@ -453,12 +454,9 @@ const handle_fq_cy_liuc = async (
     const currentUsers = allUserDetails.filter((item) => item.userid === ddUserId);
     if (currentUsers.length > 0) {
         // 获取创建时间区间内的流程数据（没有详情）
-        const {type, flows} = flowImportanceCondition;
+        const {type, forms} = formImportanceCondition;
         let filteredFlowsWithoutDetails = currentUsers[0][selfLaunchOrJoin].filter((item) => {
             const creteDate = new Date(item.createTimeGMT);
-            if (flows.length) {
-                return creteDate >= startDate && creteDate <= endDate && flows.includes(item.processInstanceId);
-            }
             return creteDate >= startDate && creteDate <= endDate;
         });
         // 获取流程数据详情
@@ -470,18 +468,22 @@ const handle_fq_cy_liuc = async (
             )
             .flat();
 
-        let filteredAgainFlowsByImportance = flowsDetails;
+        let filteredAgainFlowsByImportance = [];
+        // 根据流程详情中的formUuid获取form详情过滤重要性选项  1:重要  2：普通
         // 根据是否重要过滤流程
-        if (!flows.length && type) {
+        if (forms && forms.length) {
+            filteredAgainFlowsByImportance = flowsDetails.filter((flow) => {
+                return forms.includes(flow.formUuid)
+            })
+        } else if (type) {
             const allForms = await FlowForm.getFlowFormList()
-            // 根据流程详情中的formUuid获取form详情过滤重要性选项  1:重要  2：普通
-            for (const flow of flowsDetails) {
-                const form = allForms.filter((form)=>form.flow_form_id===flow.formUuid)
-                const {type} = flowImportanceCondition;
-                if((type === "important" && form.status === "1") || (type === "unImportant" && form.status === "2")){
-                    filteredAgainFlowsByImportance.push(flow)
+            filteredAgainFlowsByImportance = flowsDetails.filter((flow) => {
+                const forms = allForms.filter((form) => form.flow_form_id === flow.formUuid)
+                if (forms && forms.length) {
+                    return ((type === "important" && forms[0].status === "1") || (type === "unImportant" && forms[0].status === "2"))
                 }
-            }
+                return false
+            })
         }
 
         for (const flow of filteredAgainFlowsByImportance) {
@@ -630,40 +632,41 @@ const handle_fq_cy_liuc = async (
     return mergeListByNameAndIdInSection("gr", result);
 };
 // 处理部门发起参与方法
-const handle_dep_fq_cy_liuc = async (
-    access_token,
-    time,
-    f_dep_id,
+const handleDepartmentLaunchOrJoinFlows = async (
+    ddAccessToken,
+    timesRange,
+    parentDepartmentId,
     statusMap,
-    type,
-    dep_list,
-    userId
+    launchOrJoin,
+    departments,
+    formImportanceCondition
 ) => {
-    let startDate = new Date(formatDateTime(new Date(time[0]), "YYYY-mm-dd"));
-    let endDate = new Date(formatDateTime(new Date(time[1]), "YYYY-mm-dd"));
-    // 初始化结果对象
-    const statusMaps = JSON.parse(JSON.stringify(statusMap));
-    const dep_userList = await getdepDetailuserAll();
-    const liucList = await getAllFlowsInDingDing();
+    const startDate = new Date(timesRange[0]);
+    const endDate = new Date(timesRange[1]);
+    const allUsersOfAllDepartments = await getAllUsersOfAllDepartments();
+    const ddAllFlows = await getAllFlowsInDingDing();
     const results = [];
-    // 找到对应的一级部门
-    const yi_dep = dep_userList.filter((item) => item.dept_id == f_dep_id);
-    // 获取该部门下的所有人
-    let dep_result = dep_list.map((obj1) => {
-        let obj2 = yi_dep[0].dep_chil.find((item) => item.dept_id === obj1.dept_id);
+    const usersOfParentDepartment = allUsersOfAllDepartments.filter((item) => item.dept_id == parentDepartmentId);
+
+    // 根据用户的departments过滤掉不包含的部门
+    let subDepartmentsWithUsers = departments.map((obj1) => {
+        let obj2 = usersOfParentDepartment[0].dep_chil.find((item) => item.dept_id === obj1.dept_id);
         // 如果没有子部门获取一级部门下的用户id
         if (obj2) {
             return {...obj1, dep_user: obj2.dep_user};
         } else {
-            return {...obj1, dep_user: yi_dep[0].dep_user};
+            return {...obj1, dep_user: usersOfParentDepartment[0].dep_user};
         }
     });
-    yi_dep[0].dep_chil = dep_result;
-    for (const item of dep_result) {
+    usersOfParentDepartment[0].dep_chil = subDepartmentsWithUsers;
+
+    const allForms = await FlowForm.getFlowFormList()
+    const {type, forms} = formImportanceCondition
+    for (const item of subDepartmentsWithUsers) {
         // 如果是主管
         if (item.leader) {
-            for (const u_item of item.dep_user) {
-                if (u_item.name === "李梦灵") {
+            for (const user of item.dep_user) {
+                if (user.name === "李梦灵") {
 
                 }
                 let resultObj = {
@@ -675,30 +678,46 @@ const handle_dep_fq_cy_liuc = async (
                     待转入: {data: [], depUser: new Map(), depList: []},
                     异常: {data: [], depUser: new Map(), depList: []},
                 };
-                u_item.status = {};
-                if (u_item[type]) {
-                    // 获取时间区间内的流程数据
-                    let filteredData = u_item[type].filter((item) => {
-                        let itemDate = new Date(
-                            formatDateTime(new Date(item.createTimeGMT), "YYYY-mm-dd")
-                        );
-                        return itemDate >= startDate && itemDate <= endDate;
+                user.status = {};
+                if (user[launchOrJoin]) {
+                    // 获取指定时间区间内容流程，如果查询指定了flows，需要根据flows再过滤
+                    const filteredData = user[launchOrJoin].filter((item) => {
+                        const createDate = new Date(item.createTimeGMT)
+                        return createDate >= startDate && createDate <= endDate;
                     });
 
                     // 获取流程详情
-                    const liuInfo_List = filteredData
+                    const flowsDetails = filteredData
                         .map((l_item) =>
-                            liucList.filter(
+                            ddAllFlows.filter(
                                 (item) => item.processInstanceId === l_item.processInstanceId
                             )
                         )
                         .flat();
-                    for (let item of liuInfo_List) {
+
+                    let filteredAgainFlowsByImportance = [];
+                    // 根据流程详情中的formUuid获取form详情过滤重要性选项  1:重要  2：普通
+                    // 根据是否重要过滤流程
+                    if (forms && forms.length) {
+                        filteredAgainFlowsByImportance = flowsDetails.filter((flow) => {
+                            return forms.includes(flow.formUuid)
+                        })
+                    } else if (type) {
+                        filteredAgainFlowsByImportance = flowsDetails.filter((flow) => {
+                            const forms = allForms.filter((form) => form.flow_form_id === flow.formUuid)
+                            if (forms && forms.length) {
+                                return ((type === "important" && forms[0].status === "1") || (type === "unImportant" && forms[0].status === "2"))
+                            }
+                            return false
+                        })
+                    }
+
+                    for (let item of filteredAgainFlowsByImportance) {
                         // 获取审核节点状态数据
                         for (let o_item of item.overallprocessflow.slice(1)) {
                             // 1.先筛选出自己参与的流程
-                            if (o_item.operatorUserId === u_item.userid) {
-                                let status_sh = statusMaps[o_item.type];
+                            if (o_item.operatorUserId === user.userid) {
+                                let status_sh = statusMap[o_item.type];
                                 if (
                                     status_sh &&
                                     !resultObj[status_sh].data.some(
@@ -711,7 +730,7 @@ const handle_dep_fq_cy_liuc = async (
                             }
                         }
                         // 获取流程状态数据
-                        let status_lc = statusMaps[item.instanceStatus];
+                        let status_lc = statusMap[item.instanceStatus];
                         if (status_lc) {
                             resultObj[status_lc].data.push(item);
                         }
@@ -719,7 +738,7 @@ const handle_dep_fq_cy_liuc = async (
                 }
                 // 将对应状态加入到该用户下的status
                 // console.log('resultObj=========>', resultObj)
-                u_item.status = resultObj;
+                user.status = resultObj;
             }
         } else {
 
@@ -764,7 +783,7 @@ const handle_dep_fq_cy_liuc = async (
         return depData;
     };
     // 格式化dep_user数据结构
-    const dep_g_user = dep_result
+    const dep_g_user = subDepartmentsWithUsers
         .map((item) => {
             return {
                 ...item,
@@ -888,7 +907,7 @@ const handle_dep_fq_cy_liuc = async (
 };
 // ===================页面展示方法=====================
 // 本人发起
-const handle_br_h_dep_yfq_LiuChengList = async (access_token, time, userid) => {
+const handle_br_h_dep_yfq_LiuChengList = async (ddAccessToken, timesRange, ddUserid, formImportanceCondition) => {
     const flowStatusMap = {
         RUNNING: "进行中",
         COMPLETED: "已完成",
@@ -897,17 +916,18 @@ const handle_br_h_dep_yfq_LiuChengList = async (access_token, time, userid) => {
         FORCAST: "待转入", // 审核维度状态
         ERROR: "异常",
     };
-    const faqi_liu = await handle_fq_cy_liuc(
-        access_token,
-        time,
-        userid,
+    const selfLaunchData = await handle_fq_cy_liuc(
+        ddAccessToken,
+        timesRange,
+        ddUserid,
         flowStatusMap,
-        "faqi_liu"
+        "faqi_liu",
+        formImportanceCondition
     );
-    return faqi_liu;
+    return selfLaunchData;
 };
 // 本人参与
-const handle_br_cy_LiuChengList = async (ddAccessToken, timesRange, ddUserId, flowImportanceCondition) => {
+const handle_br_cy_LiuChengList = async (ddAccessToken, timesRange, ddUserId, formImportanceCondition) => {
     const flowStatusMap = {
         TODO: "进行中",
         FORCAST: "待转入",
@@ -923,7 +943,7 @@ const handle_br_cy_LiuChengList = async (ddAccessToken, timesRange, ddUserId, fl
         ddUserId,
         flowStatusMap,
         "canyu_liu",
-        flowImportanceCondition
+        formImportanceCondition
     );
     return selfJoinData;
 };
@@ -944,7 +964,7 @@ const handle_dep_cy_LiuChengList = async (
         TERMINATED: "已终止",
         ERROR: "异常",
     };
-    const canyu_liu = await handle_dep_fq_cy_liuc(
+    const canyu_liu = await handleDepartmentLaunchOrJoinFlows(
         access_token,
         time,
         f_dep_id,
@@ -958,12 +978,13 @@ const handle_dep_cy_LiuChengList = async (
 
 // 部门发起
 const handle_dep_fq_LiuChengList = async (
-    access_token,
-    time,
-    f_dep_id,
-    dep_list
+    ddAccessToken,
+    timesRange,
+    parentDepartmentId,
+    departments,
+    formImportanceCondition
 ) => {
-    const statusMap = {
+    const launchStatusMap = {
         RUNNING: "进行中",
         COMPLETED: "已完成",
         TERMINATED: "已终止",
@@ -971,13 +992,14 @@ const handle_dep_fq_LiuChengList = async (
         FORCAST: "待转入",
         ERROR: "异常",
     };
-    const faqi_liu = await handle_dep_fq_cy_liuc(
-        access_token,
-        time,
-        f_dep_id,
-        statusMap,
+    const faqi_liu = await handleDepartmentLaunchOrJoinFlows(
+        ddAccessToken,
+        timesRange,
+        parentDepartmentId,
+        launchStatusMap,
         "faqi_liu",
-        dep_list
+        departments,
+        formImportanceCondition
     );
     return faqi_liu;
 };
@@ -1012,69 +1034,56 @@ exports.getdepartment = async (req, res) => {
 };
 
 exports.getSelfLaunchFlowsStatistic = async (req, res) => {
-    const {f_dep_id, dep_q_info, time} = req.query;
-    const dep_q_infos = JSON.parse(dep_q_info);
-    const dd_id = await getDingDingUserId(req.user.id);
-    const {access_token} = await getDingDingAccessToken();
-    const resObj = {
-        code: 200,
-        message: "获取成功",
-        data: {
-            is_admin: false,
-            br_faqi: [],
-        },
-    };
-
+    const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
+    const ddUserId = await getDingDingUserId(req.user.id);
+    const {access_token: ddAccessToken} = await getDingDingAccessToken();
     // 单个
     let dep_info = [];
-    // let dep_list = [];
     // 根据userid判断是否存在于白名单中
-    if (whiteList.pepArr().includes(dd_id)) {
-        const depLists = await getAllDepartments();
-        if ((await getSubDeptLev(depLists, f_dep_id)).length === 0) {
-            const depas = depLists.filter((item) => item.dept_id == f_dep_id);
-            depas.forEach((element) => {
+    if (whiteList.pepArr().includes(ddUserId)) {
+        const allDepts = await getAllDepartments();
+        const subDepartments = await getSubDeptLev(allDepts, parentDepartmentId)
+        if (subDepartments.length === 0) {
+            const parentDepartmentDetails = allDepts.filter((item) => item.dept_id == parentDepartmentId);
+            parentDepartmentDetails.forEach((element) => {
                 element.leader = true;
             });
-            dep_info = depas;
+            dep_info = parentDepartmentDetails;
         } else {
-            const dg_dep = await getSubDeptLev(depLists, f_dep_id);
-            dep_info = dg_dep.filter((item) => item.dept_id == dep_q_infos.id);
+            dep_info = subDepartments.filter((item) => item.dept_id == subDepartmentId);
         }
-        // dep_list = dep_info;
     } else {
         // 返回用户详情
-        const lev_dep_list = await getDepLev(access_token, dd_id);
+        const lev_dep_list = await getDepLev(ddAccessToken, ddUserId);
         const lev_dep_lists = lev_dep_list.filter(
-            (item) => item.dept_id == f_dep_id
+            (item) => item.dept_id == parentDepartmentId
         );
         // 如果子部门为空
         if (lev_dep_lists[0].dep_child.length === 0) {
             dep_info = lev_dep_lists;
         } else {
-            dep_info = lev_dep_list.filter((item) => item.dept_id == f_dep_id);
+            dep_info = lev_dep_list.filter((item) => item.dept_id == parentDepartmentId);
         }
         // 判断当前用户是否是管理员
         if (dep_info[0].dep_child.length > 0) {
             const c_dep = dep_info[0].dep_child.filter(
-                (item) => item.dept_id === dep_q_infos.id
+                (item) => item.dept_id === subDepartmentId
             );
             dep_info = c_dep;
         }
     }
-
-    const is_admin = dep_info && dep_info.length ? dep_info[0].leader : false;
-
+    const isAdmin = dep_info && dep_info.length ? dep_info[0].leader : false;
     console.time("本人发起");
     // 本人发起
-    const liuchenglist = await handle_br_h_dep_yfq_LiuChengList(
-        access_token,
-        JSON.parse(time),
-        dd_id
+    const selfLaunchStatistic = await handle_br_h_dep_yfq_LiuChengList(
+        ddAccessToken,
+        JSON.parse(timesRange),
+        ddUserId,
+        JSON.parse(formImportanceCondition)
     );
     console.timeEnd("本人发起");
-    resObj.data = {is_admin: is_admin, br_faqi: liuchenglist};
-    return res.send(resObj)
+    const result = biResponse.success({is_admin: isAdmin, br_faqi: selfLaunchStatistic})
+    return res.send(result)
 }
 
 /**
@@ -1089,10 +1098,9 @@ exports.getSelfLaunchFlowsStatistic = async (req, res) => {
  * @param res
  * @returns {Promise<*>}
  */
-const dd_data = require("../utils/dd_yd_data");
 exports.getSelfJoinFlowsStatistic = async (req, res) => {
 
-    const {parentDepartmentId, subDepartmentId, timesRange, flowImportanceCondition} = req.query;
+    const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
     const ddUserId = await getDingDingUserId(req.user.id);
     const {access_token: ddAccessToken} = await getDingDingAccessToken();
 
@@ -1131,8 +1139,7 @@ exports.getSelfJoinFlowsStatistic = async (req, res) => {
             dep_info = c_dep;
         }
     }
-
-    const is_admin = dep_info && dep_info.length ? dep_info[0].leader : false;
+    const isAdmin = dep_info && dep_info.length ? dep_info[0].leader : false;
 
     console.time("本人参与");
     // 本人参与
@@ -1140,18 +1147,17 @@ exports.getSelfJoinFlowsStatistic = async (req, res) => {
         ddAccessToken,
         JSON.parse(timesRange),
         ddUserId,
-        JSON.parse(flowImportanceCondition)
+        JSON.parse(formImportanceCondition)
     );
     console.timeEnd("本人参与");
-    const result = biResponse.success({br_canyu: selfJoinData, is_admin: is_admin})
+    const result = biResponse.success({br_canyu: selfJoinData, is_admin: isAdmin})
     return res.send(result)
 }
 
 exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
-    const {f_dep_id, dep_q_info, time} = req.query;
-    const dep_q_infos = JSON.parse(dep_q_info);
-    const dd_id = await getDingDingUserId(req.user.id);
-    const {access_token} = await getDingDingAccessToken();
+    const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
+    const ddUserId = await getDingDingUserId(req.user.id);
+    const {access_token: ddAccessToken} = await getDingDingAccessToken();
     const resObj = {
         code: 200,
         message: "获取成功",
@@ -1160,94 +1166,95 @@ exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
             dep_faqi: [],
         },
     };
-    if (dep_q_infos.id !== "All") {
-        // 单个
-        let dep_info = [];
+    // 统计指定项目组下的流程数据
+    if (subDepartmentId) {
+        // 保存该项目的部门信息
+        let departments = [];
         // let dep_list = [];
         // 根据userid判断是否存在于白名单中
-        if (whiteList.pepArr().includes(dd_id)) {
+        if (whiteList.pepArr().includes(ddUserId)) {
             const depLists = await getAllDepartments();
-            if ((await getSubDeptLev(depLists, f_dep_id)).length === 0) {
-                const depas = depLists.filter((item) => item.dept_id == f_dep_id);
-                depas.forEach((element) => {
+            const subDepartments = await getSubDeptLev(depLists, parentDepartmentId)
+            if (subDepartments.length === 0) {
+                const parentDepartment = depLists.filter((item) => item.dept_id == parentDepartmentId);
+                parentDepartment.forEach((element) => {
                     element.leader = true;
                 });
-                dep_info = depas;
+                departments = parentDepartment;
             } else {
-                const dg_dep = await getSubDeptLev(depLists, f_dep_id);
-                dep_info = dg_dep.filter((item) => item.dept_id == dep_q_infos.id);
+                departments = subDepartments.filter((item) => item.dept_id == subDepartmentId);
             }
-            // dep_list = dep_info;
         } else {
-            // 返回用户详情
-            const lev_dep_list = await getDepLev(access_token, dd_id);
-            const lev_dep_lists = lev_dep_list.filter(
-                (item) => item.dept_id == f_dep_id
+            // 返回用户所有的部门信息
+            const departmentsOfUser = await getDepLev(ddAccessToken, ddUserId);
+            // 根据传递的 parentDepartmentId 获取一级部门信息
+            const parentDepartmentsOfUser = departmentsOfUser.filter(
+                (item) => item.dept_id == parentDepartmentId
             );
-            // 如果子部门为空
-            if (lev_dep_lists[0].dep_child.length === 0) {
-                dep_info = lev_dep_lists;
+
+            if (!parentDepartmentsOfUser[0].dep_child.length) {
+                departments = parentDepartmentsOfUser;
             } else {
-                dep_info = lev_dep_list.filter((item) => item.dept_id == f_dep_id);
+                departments = departmentsOfUser.filter((item) => item.dept_id == parentDepartmentId);
             }
-            // 判断当前用户是否是管理员
-            if (dep_info[0].dep_child.length > 0) {
-                const c_dep = dep_info[0].dep_child.filter(
-                    (item) => item.dept_id === dep_q_infos.id
+            if (departments[0].dep_child.length) {
+                const c_dep = departments[0].dep_child.filter(
+                    (item) => item.dept_id === subDepartmentId
                 );
-                dep_info = c_dep;
+                departments = c_dep;
             }
         }
 
-
-        const is_admin = dep_info[0].leader;
-        if (is_admin) {
+        const isAdmin = departments[0].leader;
+        if (isAdmin) {
             // 部门发起
             console.time("部门发起");
-            const dep_faqi = await handle_dep_fq_LiuChengList(
-                access_token,
-                JSON.parse(time),
-                f_dep_id,
-                JSON.parse(JSON.stringify(dep_info)),
-                dd_id
+            const departmentLaunchData = await handle_dep_fq_LiuChengList(
+                ddAccessToken,
+                JSON.parse(timesRange),
+                parentDepartmentId,
+                departments,
+                // ddUserId,
+                JSON.parse(formImportanceCondition)
             );
             console.timeEnd("部门发起");
             resObj.data = {
-                is_admin: is_admin,
-                dep_faqi: dep_faqi,
+                is_admin: isAdmin,
+                dep_faqi: departmentLaunchData,
             };
         }
-    } else {
-        // 全部
-        // 部门信息
-        let dep_list = [];
+    }
+    // 统计一级部门下所有项目组的流程数据
+    else {
+        let subDepts = [];
         let dep_info = [];
         // 根据userid判断是否存在于白名单中
-        if (whiteList.pepArr().includes(dd_id)) {
+        if (whiteList.pepArr().includes(ddUserId)) {
             const depLists = await getAllDepartments();
-            if ((await getSubDeptLev(depLists, f_dep_id)).length === 0) {
-                const depas = depLists.filter((item) => item.dept_id == f_dep_id);
+            const subDepartments = await getSubDeptLev(depLists, parentDepartmentId)
+            if ((subDepartments.length === 0)) {
+                const depas = depLists.filter((item) => item.dept_id == parentDepartmentId);
                 depas.forEach((element) => {
                     element.leader = true;
                 });
                 dep_info = depas;
             } else {
-                dep_info = await getSubDeptLev(depLists, f_dep_id);
+                dep_info = subDepartments;
             }
-            dep_list = dep_info;
+            subDepts = dep_info;
         } else {
-            // 返回用户详情
-            const lev_dep_list = await getDepLev(access_token, dd_id);
+            // 返回用户的部门信息
+            const departmentsOfUser = await getDepLev(ddAccessToken, ddUserId);
             // 筛选出当前所在部门
-            const ac_dep = lev_dep_list.filter((item) => item.dept_id == f_dep_id);
+            const ac_dep = departmentsOfUser.filter((item) => item.dept_id == parentDepartmentId);
             // 如果子部门为空
             if (ac_dep[0].dep_child.length === 0) {
                 dep_info = ac_dep;
-                dep_list = dep_info;
+                subDepts = dep_info;
             } else {
                 // 如果存在子部门
                 dep_info = ac_dep[0].dep_child;
-                dep_list = dep_info;
+                subDepts = dep_info;
             }
         }
         // 判断当前部门是否是主管 是主管返回部门信息不是主管返回个人信息
@@ -1257,11 +1264,12 @@ exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
             // 部门发起
             console.time("部门发起");
             const dep_faqi = await handle_dep_fq_LiuChengList(
-                access_token,
-                JSON.parse(time),
-                f_dep_id,
-                JSON.parse(JSON.stringify(dep_list)),
-                dd_id
+                ddAccessToken,
+                JSON.parse(timesRange),
+                parentDepartmentId,
+                subDepts,
+                // ddUserId,
+                JSON.parse(formImportanceCondition)
             );
             console.timeEnd("部门发起");
             resObj.data = {
