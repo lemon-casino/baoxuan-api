@@ -902,7 +902,6 @@ const handleDepartmentLaunchOrJoinFlows = async (
             );
         }
     }
-
     return mergeListByNameAndIdInSection("bm", relault);
 };
 // ===================页面展示方法=====================
