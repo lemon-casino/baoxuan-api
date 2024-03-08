@@ -286,17 +286,17 @@ const getAllCompletedLiu = async () => {
   // 开始时间：昨天00:00:00
   // 结束时间：昨天23:59:00
   const { start, end } = getTodayStartAndEnd();
-  let startTime = start;
-  let endTime = end;
-  const list = [];
-  const type = ["COMPLETED", "TERMINATED", "ERROR"];
-  for (let i of type) {
-    const liuchengdata = await fetchDataAndSaveToRedis(i, [startTime, endTime]);
-    list.push(...liuchengdata);
-  }
-  console.log(startTime, endTime + "新增流程数据=========>", list.length);
-  //   await redis.setKey("sql_liuchengdata", JSON.stringify(list), 86400);
-  await ProcessModel.addProcess(list);
+  // let startTime = start;
+  // let endTime = end;
+  // const list = [];
+  // const type = ["COMPLETED", "TERMINATED", "ERROR"];
+  // for (let i of type) {
+  //   const liuchengdata = await fetchDataAndSaveToRedis(i, [startTime, endTime]);
+  //   list.push(...liuchengdata);
+  // }
+  // console.log(startTime, endTime + "新增流程数据=========>", list.length);
+  // //   await redis.setKey("sql_liuchengdata", JSON.stringify(list), 86400);
+  // await ProcessModel.addProcess(list);
   await redis.setKey(
     "sql_liuchengdata",
     JSON.stringify(await ProcessModel.getProcessList())
