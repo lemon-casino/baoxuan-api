@@ -1,11 +1,14 @@
 // 导入 express 模块
 const express = require("express");
+const path = require("path");
 const morgan = require('morgan');
 const serverConfig = require('./config/index').serverConfig
 // 创建 express 的服务器实例
 const app = express();
 // 导入日志配置文件
 const { logger, stream } = require("./utils/log"); // 引入log.js
+// 导入钉钉机器人模块
+require("./config/ddbot");
 // 导入 cors 中间件
 const cors = require("cors");
 // 将 cors 注册为全局中间件
@@ -51,6 +54,8 @@ app.use(
       "/util/getDpInfo",
       "/user/flowpath/getliuchenglist",
       "/user/flowpath/getoaallprocess",
+      "/user/flowpath/getyidaprocess",
+      /^\/download\/.*/,
     ],
   })
 );
@@ -98,6 +103,13 @@ app.use((err, req, res, next) => {
     return res.send({ code: 401, message: "身份认证失败" });
   // 未知错误
   return res.send({ code: 500, message: err.message });
+});
+// 下载文件
+app.get("/download/:filename", function (req, res) {
+  console.log("req ================>", req);
+  const filename = req.params.filename;
+  const file = path.join(__dirname, "./file", filename);
+  res.download(file);
 });
 // 调用 app.listen 方法，指定端口号并启动web服务器
 app.listen(serverConfig.port, function () {
