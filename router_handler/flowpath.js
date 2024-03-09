@@ -3305,3 +3305,116 @@ exports.getprocessAuditing = async (req, res) => {
     data: [],
   });
 };
+
+// 格式化实例状态
+const formatInstanceStatus = (instanceStatus) => {
+    return instanceStatus === "RUNNING"
+        ? "运行中"
+        : instanceStatus === "TERMINATED"
+            ? "已终止"
+            : instanceStatus === "COMPLETED"
+                ? "已完成"
+                : "异常";
+};
+// 导出指定日期，指定表单的所有宜搭表单数据
+exports.exportYiDaData = async (req, res) => {
+    const { startTime, endTime, form_ids, file_name } = req.query;
+    // 钉钉token
+    const { access_token } = await getToken();
+    const userid = "073105202321093148"; // 涛哥id
+    const liucList = await getNewLiuChengListsAll();
+    const formIdData = JSON.parse(form_ids);
+    let startDate = new Date(formatDateTime(new Date(startTime), "YYYY-mm-dd"));
+    let endDate = new Date(formatDateTime(new Date(endTime), "YYYY-mm-dd"));
+    let wb = XLSX.utils.book_new();
+    let promises = formIdData.map(async (formId) => {
+        // 获取表单组件信息
+        const componentData = await dd.getFormComponent(
+            access_token,
+            formId,
+            userid
+        );
+        const processDataForFormId = liucList.filter(
+            (process) =>
+                process.formUuid === formId &&
+                new Date(
+                    formatDateTime(new Date(process.createTimeGMT), "YYYY-mm-dd")
+                ) >= startDate &&
+                new Date(
+                    formatDateTime(new Date(process.createTimeGMT), "YYYY-mm-dd")
+                ) <= endDate
+        );
+        // 获取数据列表表头
+        let newData = processDataForFormId.map((item) => {
+            let newItem = { ...item }; // 复制 item 防止修改原始数据
+
+            // 遍历 item.data 中的每个键
+            Object.keys(newItem.data).forEach((key) => {
+                // 在 id-标题 数据中寻找匹配的标签
+                let matchLabel = componentData.result.find(
+                    (label) => label.fieldId === key
+                );
+                // 如果找到匹配的标签，替换相应的键
+                if (matchLabel) {
+                    newItem.data[matchLabel.label.zh_CN] = JSON.stringify(
+                        newItem.data[key]
+                    );
+                    delete newItem.data[key]; // 如果需要，删除旧的键
+                }
+            });
+
+            return newItem;
+        });
+        const data = newData.map(
+            ({
+                 title,
+                 createTimeGMT,
+                 instanceStatus,
+                 overallprocessflow,
+                 data,
+                 originator,
+             }) => {
+                let s_jindu = [];
+                for (let s_item of overallprocessflow) {
+                    const jt =
+                        s_item.action === "拒绝" ? `---------(${s_item.remark})` : "";
+                    s_jindu.push(
+                        `${s_item.operatorName}(${s_item.showName || s_item.action})${jt}`
+                    );
+                }
+                return {
+                    流程名称: title,
+                    流程发起时间: createTimeGMT,
+                    流程发起人: originator.name.nameInChinese,
+                    流程状态: formatInstanceStatus(instanceStatus),
+                    ...data,
+                    流程审核流: JSON.stringify(s_jindu),
+                };
+            }
+        );
+        let ws = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, formId.slice(0, 10));
+    });
+    Promise.all(promises).then(() => {
+        XLSX.writeFile(
+            wb,
+            path.join(
+                __dirname,
+                "../file",
+                `${startTime}----${endTime}${file_name ?? "指定流程数据"}.xlsx`
+            )
+        );
+    });
+    let fileName = `${startTime}----${endTime}${
+        file_name ?? "指定流程数据"
+    }.xlsx`;
+    let fileUrl = `${req.protocol}://${req.get("host")}/download/${fileName}`;
+    return res.send({
+        code: 200,
+        message: "生成成功",
+        data: {
+            fileUrl: fileUrl,
+            fileName: fileName,
+        },
+    });
+};

@@ -10,6 +10,7 @@ const axios = require("axios");
 const https = require("node:https");
 const flowpathHandler = require("../router_handler/flowpath");
 const FlowFormModel = require("../model/flowfrom");
+const config = require("../config/index")
 
 const clientId = "dinglc7figruiaukkx86";
 const clientSecret =
@@ -56,8 +57,9 @@ const handel_yd_file_parseData = async (data) => {
   let fileName = contentParts[2].trim(); // 文件名称
   let timeRange = contentParts[0].trim().split(","); // 时间区间
   let formIds = contentParts[1].trim().split(","); // 表单id
+
   let response = await axios.get(
-    `http://127.0.0.1:9999/user/flowpath/getyidaprocess?startTime=${
+    `http://127.0.0.1:${config.serverConfig.port}/user/flowpath/getyidaprocess?startTime=${
       timeRange[0]
     }&endTime=${timeRange[1]}&form_ids=${JSON.stringify(
       formIds
