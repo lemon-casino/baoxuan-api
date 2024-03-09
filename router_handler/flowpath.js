@@ -484,6 +484,8 @@ const handle_fq_cy_liuc = async (
                 }
                 return false
             })
+        } else {
+            filteredAgainFlowsByImportance = flowsDetails
         }
 
         for (const flow of filteredAgainFlowsByImportance) {
@@ -658,6 +660,7 @@ const handleDepartmentLaunchOrJoinFlows = async (
             return {...obj1, dep_user: usersOfParentDepartment[0].dep_user};
         }
     });
+
     usersOfParentDepartment[0].dep_chil = subDepartmentsWithUsers;
 
     const allForms = await FlowForm.getFlowFormList()
@@ -666,8 +669,8 @@ const handleDepartmentLaunchOrJoinFlows = async (
         // 如果是主管
         if (item.leader) {
             for (const user of item.dep_user) {
-                if (user.name === "李梦灵") {
-
+                if (user.name === "薛娜" && launchOrJoin === "faqi_liu") {
+                    console.log('--')
                 }
                 let resultObj = {
                     已发起: {data: [], depUser: new Map(), depList: []},
@@ -710,6 +713,8 @@ const handleDepartmentLaunchOrJoinFlows = async (
                             }
                             return false
                         })
+                    } else {
+                        filteredAgainFlowsByImportance = flowsDetails
                     }
 
                     for (let item of filteredAgainFlowsByImportance) {
@@ -738,6 +743,8 @@ const handleDepartmentLaunchOrJoinFlows = async (
                 }
                 // 将对应状态加入到该用户下的status
                 // console.log('resultObj=========>', resultObj)
+                if (user.name === "薛娜") {
+                }
                 user.status = resultObj;
             }
         } else {
@@ -788,6 +795,9 @@ const handleDepartmentLaunchOrJoinFlows = async (
             return {
                 ...item,
                 dep_user: item.dep_user.map((items) => {
+                    if (items.name === "薛娜") {
+                        console.log('-------');
+                    }
                     return {
                         name: items.name,
                         userid: items.userid,
@@ -850,7 +860,7 @@ const handleDepartmentLaunchOrJoinFlows = async (
     const l_len = (data) => {
         return data.reduce((total, item) => total + item.liuchengdata_len, 0);
     };
-    const relault = [
+    const result = [
         {
             title: "已发起",
             list: [],
@@ -888,21 +898,22 @@ const handleDepartmentLaunchOrJoinFlows = async (
         },
     ];
     let initiatedStatus = ["进行中", "已完成", "已终止", "异常"];
-    for (let i = 0; i < relault.length; i++) {
-        let item = relault[i];
+    for (let i = 0; i < result.length; i++) {
+        let item = result[i];
         if (item.title === "已发起") {
             item.len = initiatedStatus.reduce(
-                (acc, curr) => acc + relault.find((item) => item.title === curr).len,
+                (acc, curr) => acc + result.find((item) => item.title === curr).len,
                 0
             );
             item.list = initiatedStatus.reduce(
                 (acc, curr) =>
-                    acc.concat(relault.find((item) => item.title === curr).list),
+                    acc.concat(result.find((item) => item.title === curr).list),
                 []
             );
         }
     }
-    return mergeListByNameAndIdInSection("bm", relault);
+
+    return mergeListByNameAndIdInSection("bm", result);
 };
 // ===================页面展示方法=====================
 // 本人发起
@@ -1162,7 +1173,6 @@ exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
     if (subDepartmentId) {
         // 保存该项目的部门信息
         let departments = [];
-        // let dep_list = [];
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(ddUserId)) {
             const depLists = await getAllDepartments();
@@ -1335,7 +1345,7 @@ exports.getDepartmentJoinFlowsStatistic = async (req, res) => {
                 JSON.parse(formImportanceCondition)
             );
             console.timeEnd("部门参与");
-            return biResponse.success({is_admin: isAdmin, dep_canyuliu: dep_canyuliu})
+            return res.send(biResponse.success({is_admin: isAdmin, dep_canyuliu: dep_canyuliu}))
         }
     } else {
         // 全部

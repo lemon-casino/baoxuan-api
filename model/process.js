@@ -1,7 +1,6 @@
 const Sequelize = require("sequelize");
 const moment = require("moment");
 const sequelize = require("./init");
-const FlowForm = require("./flowfrom")
 
 const ProcessModel = sequelize.define("process", {
     processInstanceId: {
@@ -116,7 +115,6 @@ function canParseJSON(jsonString) {
 ProcessModel.getProcessList = async function (form_id) {
     const list = [];
     const flow = await ProcessModel.findAll({
-        where: {id: {$eq: 1}},
         attributes: [
             "processInstanceId",
             "formUuid",
@@ -127,12 +125,7 @@ ProcessModel.getProcessList = async function (form_id) {
             "createTimeGMT",
             "modifiedTimeGMT",
             "overallprocessflow",
-        ],
-        include: [{
-            model: FlowForm,
-            as: "form",
-            attributes: ["status"]
-        }]
+        ]
     });
     for (let item of flow) {
         list.push({

@@ -21,4 +21,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-/config/dev.js
+/config/*dev.js

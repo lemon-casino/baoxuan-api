@@ -31,6 +31,7 @@ app.use(bodyParser.json());
 app.use("/public/avatar", express.static("./public/avatar"));
 // 导入配置文件
 const tokenConfig = require("./config/index").tokenConfig;
+
 // 解析 token 的中间件
 const expressJWT = require("express-jwt");
 // 使用 .unless({ path: [/^\/api\//] }) 指定哪些接口不需要进行 Token 的身份认证
