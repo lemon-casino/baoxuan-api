@@ -1,6 +1,7 @@
 // 导入 express 模块
 const express = require("express");
 const morgan = require('morgan');
+const serverConfig = require('./config/index').serverConfig
 // 创建 express 的服务器实例
 const app = express();
 // 导入日志配置文件
@@ -31,12 +32,13 @@ app.use(bodyParser.json());
 // 开启静态资源的访问
 app.use("/public/avatar", express.static("./public/avatar"));
 // 导入配置文件
-const config = require("./config/index");
+const tokenConfig = require("./config/index").tokenConfig;
+
 // 解析 token 的中间件
 const expressJWT = require("express-jwt");
 // 使用 .unless({ path: [/^\/api\//] }) 指定哪些接口不需要进行 Token 的身份认证
 app.use(
-  expressJWT({ secret: config.jwtSecretKey }).unless({
+  expressJWT({ secret: tokenConfig.jwtSecretKey }).unless({
     path: [
       "/user/login",
       "/user/checkCode",
@@ -98,7 +100,6 @@ app.use((err, req, res, next) => {
   return res.send({ code: 500, message: err.message });
 });
 // 调用 app.listen 方法，指定端口号并启动web服务器
-app.listen(9999, function () {
-  console.log("Bi node本地启动地址 http://127.0.0.1:9999");
-  console.log(`Bi node内网启动地址 http://192.168.203.13:9999`);
+app.listen(serverConfig.port, function () {
+  console.log(`Bi node本地启动地址 http://127.0.0.1:${serverConfig.port}`);
 });

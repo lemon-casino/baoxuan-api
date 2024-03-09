@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node-dev app.js",
+    "start": "cross-env NODE_ENV=dev node-dev app.js",
+    "build": "cross-env NODE_ENV=prod node-dev app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -34,5 +35,8 @@
     "uuid": "^9.0.1",
     "winston": "^3.11.0",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
   }
 }
