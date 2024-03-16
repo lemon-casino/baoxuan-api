@@ -1,335 +1,27 @@
-// 引入用户模型
-const UsersModel = require("../model/users");
-const FlowForm = require("../model/flowfrom")
-const FlowFormReviewModel = require("../model/flowformreview");
-// 引入封装好的redis
-const redis = require("../utils/redis.js");
-const dd = require("../utils/dingding");
-// 引入人员白名单
-const whiteList = require("../config/whiteList");
-const XLSX = require("xlsx");
 const excel4node = require("excel4node");
 const fs = require("fs");
 const path = require("path");
-// 引入时间格式化方法
+const FlowForm = require("../model/flowfrom")
+const FlowFormReviewModel = require("../model/flowformreview");
+const dd = require("../core/dingDingReq");
+const whiteList = require("../config/whiteList");
 const {formatDateTime} = require("../utils/tools");
+const dateUtil = require("../utils/dateUtil")
+const excelUtil = require("../utils/excelUtil")
 const biResponse = require("../utils/biResponse")
+const redisService = require("../service/redisService")
+const departmentService = require("../service/departmentService")
+const userService = require("../service/userService")
+const flowService = require("../service/flowService")
+const statisticStatusConst = require("../const/statisticStatusConst")
 
-// 公共方法 start========================================================
-// 其他管理中台白名单
-const glwhiteList = [
-    {
-        userid: "13584833551222384", // 璐瑶
-        qxlist: ["59831246"], // 物流部
-    },
-];
-// 延迟函数
-const delay = (ms = 800) => new Promise((res) => setTimeout(res, ms));
-// 获取钉钉user_id
-const getDingDingUserId = (user_id) => {
-    return new Promise((resolve, reject) => {
-        UsersModel.findOne({
-            where: {
-                user_id: user_id,
-            },
-        })
-            .then((res) => {
-                resolve(res.dataValues.dingding_user_id);
-            })
-            .catch((err) => {
-                reject(err);
-            });
-    });
-};
-// 获取钉钉部门层级信息
-const getAllDepartments = async () => {
-    const reply = await redis.getKey("dep_List");
-    return JSON.parse(reply);
-};
-// 获取所有详情用户信息
-const getAllUserDetails = async () => {
-    const reply = await redis.getKey("userAllDetail");
-    return JSON.parse(reply);
-};
-// 获取所有部门下的所有用户信息
-const getAllUsersOfAllDepartments = async () => {
-    const reply = await redis.getKey("dep_userList");
-    return JSON.parse(reply);
-};
-// 获取钉钉token
-const getDingDingAccessToken = async () => {
-    const reply = await redis.getKey("ddCorpToken");
-    return JSON.parse(reply);
-};
-// 获取钉钉流程数据(时间筛选)
-const getNewLiuChengLists = async (timeRange) => {
-    const reply = await redis.getKey("newLiuChengList");
-    let liuChengData = JSON.parse(reply);
-    let startDate = new Date(timeRange[0]);
-    let endDate = new Date(timeRange[1]);
-    let filteredData = liuChengData.filter((item) => {
-        let itemDate = new Date(item.createTimeGMT);
-        return itemDate >= startDate && itemDate <= endDate;
-    });
-    return filteredData;
-    // return new Promise((resolve, reject) => {
-    //   client.get("newLiuChengList", function (err, reply) {
-    //     if (err) reject(err);
-    //     let liuChengData = JSON.parse(reply);
-
-    //     let startDate = new Date(timeRange[0]);
-    //     let endDate = new Date(timeRange[1]);
-    //     let filteredData = liuChengData.filter((item) => {
-    //       let itemDate = new Date(item.createTimeGMT);
-    //       return itemDate >= startDate && itemDate <= endDate;
-    //     });
-    //     console.log("筛选之后的长度=========>", filteredData.length);
-    //     console.log("所有流程数据长度=========>", liuChengData.length);
-    //     resolve(filteredData);
-    //   });
-    // });
-};
-// 全部钉钉流程数据
-const getAllFlowsInDingDing = async (timeRange) => {
-    const reply = await redis.getKey("newLiuChengList");
-    return JSON.parse(reply);
-};
-// 获取部门层级数据结构
-const listToTree = (list) => {
-    const map = {};
-    let node;
-    const roots = [];
-    for (let i = 0; i < list.length; i += 1) {
-        map[list[i].dept_id] = i; // initialize the map
-        list[i].dep_child = []; // initialize the children
-    }
-    for (let i = 0; i < list.length; i += 1) {
-        node = list[i];
-        if (node.parent_id !== undefined && map[node.parent_id] !== undefined) {
-            // check if parent exists
-            // if you have dangling branches check that map[node.parentId] exists
-            list[map[node.parent_id]].dep_child.push(list[i]);
-        } else {
-            roots.push(list[i]);
-        }
-    }
-    return roots;
-};
-// 获取指定部门Id的所有子部门和人员信息
-const getSubDeptLev = async (depLists, dept_id) => {
-    const res = [];
-    const depInfo = depLists.filter((item) => item.dept_id == dept_id);
-    for (const dept of depInfo) {
-        if (dept.dep_chil && dept.dep_chil.length > 0) {
-            for (const dept_c of dept.dep_chil) {
-                const children = await getSubDeptLev(dept.dep_chil, dept_c.dept_id);
-                res.push({
-                    dep_name: dept_c.name,
-                    dept_id: dept_c.dept_id,
-                    parent_id: dept_c.parent_id,
-                    dep_child: children,
-                    leader: true,
-                });
-            }
-        }
-        return res;
-    }
-};
-// 获取部门人员信息
-const getDeptUserLists = async (access_token, dept_id) => {
-    const user_info = [];
-    const cursor = 0;
-    const size = 100;
-
-    const dep_userList = await getAllUsersOfAllDepartments();
-    const diguiDep = async (depList, dept_id) => {
-        const inf = depList.filter((item) => item.dept_id == dept_id);
-        if (inf.length > 0) {
-            for (const userItem of inf[0].dep_user) {
-                user_info.push({
-                    name: userItem?.name,
-                    userid: userItem?.userid,
-                });
-            }
-        }
-        for (const item of depList) {
-            if (item.dep_chil && item.dep_chil.length > 0) {
-                diguiDep(item.dep_chil, dept_id);
-            }
-        }
-    };
-    await diguiDep(dep_userList, dept_id);
-    return user_info;
-};
-
-// 返回用户部门层级
-const getDepLev = async (ddAccessToken, ddUserId) => {
-    const userDetails = await getAllUserDetails();
-    // 返回用户详情
-    const userInfo = userDetails.filter((item) => item.userid === ddUserId);
-    if (userInfo.length > 0) {
-        // 用户所属子部门
-        const subDepartmentsOfUser = userInfo[0].leader_in_dept;
-        // 获取部门详情
-        let newSubDepartmentsDetails = [];
-        for (const dept of subDepartmentsOfUser) {
-            newSubDepartmentsDetails.push({
-                ...dept.dep_detail,
-                leader: dept.leader,
-            });
-        }
-        // 部门层级数据结构
-        const subDepartmentsOfTree = listToTree(await Promise.all(newSubDepartmentsDetails));
-
-        // 递归判断当前身份在哪个部门下是主管 获取是主管身份下的所有子部门包括人员信息
-        async function dg_dep(dep_list) {
-            for (const item of dep_list) {
-                if (item.leader) {
-                    await delay(50);
-                    item.dep_child =
-                        (await getSubDeptLev(await getAllDepartments(), item.dept_id)) || [];
-                }
-                if (item.dep_child.length > 0) {
-                    await dg_dep(item.dep_child);
-                }
-            }
-        }
-
-        await dg_dep(subDepartmentsOfTree);
-        return subDepartmentsOfTree;
-    } else {
-        return [];
-    }
-};
-// 部门去重
-const mergeDataByDeptId = (data) => {
-    return data.reduce((acc, cur) => {
-        let existingIndex = acc.findIndex((item) => item.dept_id === cur.dept_id);
-
-        if (existingIndex === -1) {
-            // If it doesn't exist, add the item to the accumulator
-            acc.push(cur);
-        } else {
-            // If it exists, merge the liuchengdata array
-            acc[existingIndex].liuchengdata = [
-                ...acc[existingIndex].liuchengdata,
-                ...cur.liuchengdata,
-            ];
-        }
-        return acc;
-    }, []);
-};
-// 将审核流处理成excel表
-const createExcel = (data, fileName) => {
-    // 创建一个新的工作簿
-    let wb = XLSX.utils.book_new();
-
-    data.forEach((item, index) => {
-        let ws_name = `${item.title}_${index}`;
-
-        // 创建表头
-        let headers = item.approveData;
-        // 构建工作表数据
-        let ws_data = [headers];
-        // 使用数据构建工作表对象
-        let ws = XLSX.utils.aoa_to_sheet(ws_data);
-
-        // 将工作表对象添加到工作簿中
-        XLSX.utils.book_append_sheet(wb, ws, ws_name);
-    });
-
-    // 将工作簿写入文件
-    XLSX.writeFile(wb, fileName);
-};
-// 获取当前用户所在部门层级
-const getDepLevByUserId = async (access_token, dd_id) => {
-};
 // 数组对象去重
 const uniqueByProperty = (array, propertyName) =>
     array.reduce((acc, cur) => {
         let has = acc.some((item) => item[propertyName] === cur[propertyName]);
         return has ? acc : acc.concat(cur);
     }, []);
-// 计算已发起总和
-// const mergeListByNameAndIdInSection = (type, result) => {
-//   if (type === "bm") {
-//     let results = result.map((item) => {
-//       // for (let item of result) {
-//       if (item.title === "已发起") {
-//         // 使用 Map 对象来存储去重后的部门
-//         let depMap = new Map();
-//         for (let dep of item.list) {
-//           // 如果部门已经存在于 Map 中，则更新它的 liuchengdata 和 liuchengdata_len
-//           // 否则，新增一个部门到 Map 中
-//           if (depMap.has(dep.dept_id)) {
-//             let existingDep = depMap.get(dep.dept_id);
-//             existingDep.liuchengdata = existingDep.liuchengdata.concat(
-//               dep.liuchengdata
-//             );
-//             existingDep.liuchengdata_len += dep.liuchengdata.length;
-//             for (let user of dep.dep_user) {
-//               existingDep.liuchengdata = existingDep.liuchengdata.concat(
-//                 user.liuchengdata
-//               );
-//               existingDep.liuchengdata_len += user.liuchengdata.length;
-//             }
-//           } else {
-//             let newDep = { ...dep };
-//             for (let user of newDep.dep_user) {
-//               newDep.liuchengdata = newDep.liuchengdata.concat(
-//                 user.liuchengdata
-//               );
-//               newDep.liuchengdata_len += user.liuchengdata.length;
-//             }
-//             depMap.set(newDep.dept_id, newDep);
-//           }
-//         }
-//         return {
-//           title: item.title,
-//           list: Array.from(depMap.values()),
-//           len: Array.from(depMap.values()).reduce(
-//             (total, item) => total + item.liuchengdata_len,
-//             0
-//           ),
-//         };
-//       } else {
-//         return item;
-//       }
-//     });
-//     console.log("results=========>", results);
-//     return results;
-//   }
-//   return;
-//   for (let item of result) {
-//     if (item.title === "已发起") {
-//       let mergedList = [];
-//       let idNameMap = {};
 
-//       for (let listItem of item.list) {
-//         console.log("listItem=========>", type, listItem);
-//         let key = `${listItem.dept_id}-${listItem.name}`; // create a unique key using dept_id and name
-//         if (!idNameMap[key]) {
-//           // If the ID-Name combination doesn't exist in our map, add it.
-//           idNameMap[key] = { ...listItem };
-//           mergedList.push(idNameMap[key]);
-//         } else {
-//           // If the ID-Name combination exists, merge the liuchengdata array.
-//           idNameMap[key].liuchengdata = [
-//             ...idNameMap[key].liuchengdata,
-//             ...listItem.liuchengdata,
-//           ];
-//         }
-//       }
-
-//       // Replace the list with the merged one and update the len
-//       item.list = mergedList;
-//       item.len = item.list.reduce(
-//         (total, listItem) => total + listItem.liuchengdata.length,
-//         0
-//       );
-//     }
-//   }
-// };
 const mergeListByNameAndIdInSection = (type, result) => {
     if (type === "bm") {
         let results = result.map((item) => {
@@ -414,7 +106,6 @@ const mergeListByNameAndIdInSection = (type, result) => {
                     title: item.title,
                     list: mergedDepUsers,
                     len: mergedDepUsers.reduce(
-                        // (total, dep) => total + dep.liuchengdata.length + dep.dep_user.reduce((total, user) => total + user.liuchengdata.length, 0),
                         (total, dep) => total + dep.liuchengdata.length,
                         0
                     ),
@@ -433,10 +124,9 @@ const handle_fq_cy_liuc = async (
     ddUserId,
     flowStatusMap,
     selfLaunchOrJoin,
-    formImportanceCondition
+    formImportanceCondition,
+    statusOfFlow
 ) => {
-    const startDate = new Date(timesRange[0]);
-    const endDate = new Date(timesRange[1]);
     // 初始化结果对象
     let resultTemplate = {
         已发起: {data: [], depUser: new Map(), depList: []},
@@ -448,19 +138,25 @@ const handle_fq_cy_liuc = async (
         异常: {data: [], depUser: new Map(), depList: []},
     };
 
-    const allUserDetails = await getAllUserDetails();
-    const allFlowsInDingDing = await getAllFlowsInDingDing();
+    const allUserDetails = await redisService.getAllUsersDetail();
+    const allFlowsInDingDing = await redisService.getAllFlowsUntilNow();
     // 获取当前用户下的所有流程数据
     const currentUsers = allUserDetails.filter((item) => item.userid === ddUserId);
     if (currentUsers.length > 0) {
         // 获取创建时间区间内的流程数据（没有详情）
         const {type, forms} = formImportanceCondition;
-        let filteredFlowsWithoutDetails = currentUsers[0][selfLaunchOrJoin].filter((item) => {
-            const creteDate = new Date(item.createTimeGMT);
-            return creteDate >= startDate && creteDate <= endDate;
-        });
+        let satisfiedFlows = currentUsers[0][selfLaunchOrJoin]
+        if (timesRange) {
+            const startDate = new Date(timesRange[0]);
+            const endDate = new Date(timesRange[1]);
+            satisfiedFlows = satisfiedFlows.filter((item) => {
+                const creteDate = dateUtil.formatGMT(item.createTimeGMT);
+                return creteDate >= startDate && creteDate <= endDate;
+            });
+        }
+
         // 获取流程数据详情
-        const flowsDetails = filteredFlowsWithoutDetails
+        satisfiedFlows = satisfiedFlows
             .map((flow) =>
                 allFlowsInDingDing.filter(
                     (item) => item.processInstanceId === flow.processInstanceId
@@ -468,16 +164,21 @@ const handle_fq_cy_liuc = async (
             )
             .flat();
 
+        // 根据状态获取流程数据
+        satisfiedFlows = satisfiedFlows.filter((flow) => {
+            return flow.instanceStatus === statusOfFlow
+        })
+
         let filteredAgainFlowsByImportance = [];
         // 根据流程详情中的formUuid获取form详情过滤重要性选项  1:重要  2：普通
         // 根据是否重要过滤流程
         if (forms && forms.length) {
-            filteredAgainFlowsByImportance = flowsDetails.filter((flow) => {
+            filteredAgainFlowsByImportance = satisfiedFlows.filter((flow) => {
                 return forms.includes(flow.formUuid)
             })
         } else if (type) {
             const allForms = await FlowForm.getFlowFormList()
-            filteredAgainFlowsByImportance = flowsDetails.filter((flow) => {
+            filteredAgainFlowsByImportance = satisfiedFlows.filter((flow) => {
                 const forms = allForms.filter((form) => form.flow_form_id === flow.formUuid)
                 if (forms && forms.length) {
                     return ((type === "important" && forms[0].status === "1") || (type === "unImportant" && forms[0].status === "2"))
@@ -485,28 +186,36 @@ const handle_fq_cy_liuc = async (
                 return false
             })
         } else {
-            filteredAgainFlowsByImportance = flowsDetails
+            filteredAgainFlowsByImportance = satisfiedFlows
         }
 
         for (const flow of filteredAgainFlowsByImportance) {
             // 获取审核节点状态数据
-            for (let auditItem of flow.overallprocessflow.slice(1)) {
-                if (auditItem.operatorUserId === ddUserId) {
-                    const status_sh = flowStatusMap[auditItem.type];
+            for (const reviewItem of flow.overallprocessflow) {
+                if (reviewItem.operatorUserId === ddUserId) {
+                    const statusTextInReview = flowStatusMap[reviewItem.type];
                     if (
-                        status_sh &&
-                        !resultTemplate[status_sh].data.some(
+                        statusTextInReview &&
+                        !resultTemplate[statusTextInReview].data.some(
                             (item_) => item_.processInstanceId === flow.processInstanceId
                         )
                     ) {
-                        resultTemplate[status_sh].data.push(flow);
+                        resultTemplate[statusTextInReview].data.push(flow);
+                    }
+
+                    // 判断是否有逾期
+                    if (reviewItem.isOverDue) {
+                        const overDueData = resultTemplate["已逾期"].data
+                        if (!overDueData.some(item => item.processInstanceId === flow.processInstanceId)) {
+                            resultTemplate["已逾期"].data.push(flow);
+                        }
                     }
                 }
             }
             // 获取流程状态数据
-            const statusText = flowStatusMap[flow.instanceStatus];
-            if (statusText) {
-                resultTemplate[statusText].data.push(flow);
+            const statusTextInFlow = flowStatusMap[flow.instanceStatus];
+            if (statusTextInFlow) {
+                resultTemplate[statusTextInFlow].data.push(flow);
             }
         }
     }
@@ -526,7 +235,7 @@ const handle_fq_cy_liuc = async (
         // 获取所有用户的部门信息
         let departmentsOfUsers = await Promise.all(
             Array.from(statistic.depUser.keys()).map(async (ddUserId) =>
-                getDepLev(ddAccessToken, ddUserId)
+                departmentService.getDepLev(ddAccessToken, ddUserId)
             )
         );
 
@@ -563,7 +272,7 @@ const handle_fq_cy_liuc = async (
             }
         }
         // 合并去重部门数据
-        statistic.depList = mergeDataByDeptId(statistic.depList);
+        statistic.depList = await departmentService.mergeDataByDeptId(statistic.depList);
     }
 
     // 获取流程长度
@@ -633,6 +342,111 @@ const handle_fq_cy_liuc = async (
     }
     return mergeListByNameAndIdInSection("gr", result);
 };
+
+const statusTypes = {flowStatus: "flowStatus", reviewStatus: "reviewStatus"}
+
+
+const handleSelfJoinedFlowsOfStatus = async (userId, status) => {
+    const flowsOfUser = redisService.getAllUsersDetail().filter((user) => {
+        return user.user_id === userId
+    })
+}
+
+
+const handleDepartmentJoinFlows = async (departments, timesRange, formImportanceCondition) => {
+    const satisfiedFlows = flowService.getFlowsOfDepartmentBy(departments, "canyu_liu", timesRange, formImportanceCondition);
+    const requiredStatus = [
+        {name: "TODO", value: "进行中", statusType: statusTypes.reviewStatus},
+        {name: "FORCAST", value: "待转入", statusType: statusTypes.reviewStatus},
+        {name: "HISTORY", value: "已完成", statusType: statusTypes.reviewStatus},
+        {name: "OVERDUE", value: "已逾期"},
+        {name: "TERMINATED", value: "已终止", statusType: statusTypes.flowStatus},
+        {name: "ERROR", value: "异常", statusType: statusTypes.flowStatus}
+    ];
+
+    const result = []
+
+    for (const status of requiredStatus) {
+        // 1.汇总个人信息
+        let statisticOfUsers = []
+        for (const flow of satisfiedFlows) {
+            if (status.statusType === statusTypes.reviewStatus) {
+                const reviewItem = await flowService.findReviewItemByType(flow, status.name)
+                if (reviewItem) {
+                    const user = {userId: reviewItem.operatorUserId, userName: reviewItem.operatorName}
+                    statisticOfUsers = await sumOfStatisticOfUsers(user, statisticOfUsers);
+                }
+            } else {
+                // 将该流程统计到审核节点的各个操作人
+                const reviewItems = flow.overallprocessflow
+                if (reviewItems) {
+                    for (const reviewItem of reviewItems) {
+                        const user = {userId: reviewItem.operatorUserId, userName: reviewItem.operatorName}
+                        statisticOfUsers = await sumOfStatisticOfUsers(user, statisticOfUsers);
+                    }
+                }
+            }
+        }
+        // 保存当前状态的全部数
+        let sum = 0;
+        let statisticOfDepartments = []
+        // 2. 汇总部门信息
+        for (const department of departments) {
+            //todo: 需要确认users的结构
+            const users = await userService.getUsersOfDepartment(department.dept_id)
+            const filteredStatisticOfUsers = statisticOfUsers.filter((item) => {
+                for (const user of users) {
+                    if (user.userId === item.userId) {
+                        return true
+                    }
+                }
+                return false
+            })
+            const computedDepartment = statisticOfDepartments.filter((flowOfDepartment) =>
+                flowOfDepartment.dept_id === department.dept_id
+            )
+            if (computedDepartment.length > 0) {
+                computedDepartment[0].sum = parseInt(computedDepartment[0].sum) + filteredStatisticOfUsers.length
+                computedDepartment[0].users = computedDepartment[0].users.push(filteredStatisticOfUsers);
+            } else {
+                statisticOfDepartments.push({
+                    departmentId: department.dept_id,
+                    departmentName: department.name,
+                    sum: filteredStatisticOfUsers.length,
+                    users: filteredStatisticOfUsers
+                })
+            }
+            sum += filteredStatisticOfUsers.length
+        }
+
+        result.push({
+            status: status.name,
+            name: status.value,
+            order: 1,
+            sum: sum,
+            departments: statisticOfDepartments
+        })
+    }
+    return result;
+
+}
+
+const sumOfStatisticOfUsers = async (user, statisticOfUsers) => {
+    const computedUsers = statisticOfUsers.filter((flowOfUser) =>
+        flowOfUser.userId === user.userId
+    )
+    if (computedUsers) {
+        computedUsers[0].sum = parseInt(computedUsers[0].sum) + 1
+    } else {
+        statisticOfUsers.push({
+            userId: user.userId,
+            userName: user.userName,
+            sum: 1
+        })
+    }
+    return statisticOfUsers
+}
+
 // 处理部门发起参与方法
 const handleDepartmentLaunchOrJoinFlows = async (
     ddAccessToken,
@@ -645,8 +459,8 @@ const handleDepartmentLaunchOrJoinFlows = async (
 ) => {
     const startDate = new Date(timesRange[0]);
     const endDate = new Date(timesRange[1]);
-    const allUsersOfAllDepartments = await getAllUsersOfAllDepartments();
-    const ddAllFlows = await getAllFlowsInDingDing();
+    const allUsersOfAllDepartments = await redisService.getUsersWithJoinLaunchDataUnderDepartment();
+    const ddAllFlows = await redisService.getAllFlowsUntilNow();
     const results = [];
     const usersOfParentDepartment = allUsersOfAllDepartments.filter((item) => item.dept_id == parentDepartmentId);
 
@@ -669,9 +483,6 @@ const handleDepartmentLaunchOrJoinFlows = async (
         // 如果是主管
         if (item.leader) {
             for (const user of item.dep_user) {
-                if (user.name === "薛娜" && launchOrJoin === "faqi_liu") {
-                    console.log('--')
-                }
                 let resultObj = {
                     已发起: {data: [], depUser: new Map(), depList: []},
                     进行中: {data: [], depUser: new Map(), depList: []},
@@ -681,11 +492,12 @@ const handleDepartmentLaunchOrJoinFlows = async (
                     待转入: {data: [], depUser: new Map(), depList: []},
                     异常: {data: [], depUser: new Map(), depList: []},
                 };
+
                 user.status = {};
                 if (user[launchOrJoin]) {
                     // 获取指定时间区间内容流程，如果查询指定了flows，需要根据flows再过滤
                     const filteredData = user[launchOrJoin].filter((item) => {
-                        const createDate = new Date(item.createTimeGMT)
+                        const createDate = dateUtil.formatGMT(item.createTimeGMT)
                         return createDate >= startDate && createDate <= endDate;
                     });
 
@@ -717,34 +529,39 @@ const handleDepartmentLaunchOrJoinFlows = async (
                         filteredAgainFlowsByImportance = flowsDetails
                     }
 
-                    for (let item of filteredAgainFlowsByImportance) {
+                    for (const flow of filteredAgainFlowsByImportance) {
                         // 获取审核节点状态数据
-                        for (let o_item of item.overallprocessflow.slice(1)) {
+                        for (const reviewItem of flow.overallprocessflow) {
                             // 1.先筛选出自己参与的流程
-                            if (o_item.operatorUserId === user.userid) {
-                                let status_sh = statusMap[o_item.type];
+                            if (reviewItem.operatorUserId === user.userid) {
+                                const status_sh = statusMap[reviewItem.type];
                                 if (
                                     status_sh &&
                                     !resultObj[status_sh].data.some(
                                         (item_) =>
-                                            item_.processInstanceId === item.processInstanceId
+                                            item_.processInstanceId === flow.processInstanceId
                                     )
                                 ) {
-                                    resultObj[status_sh].data.push(item);
+                                    resultObj[status_sh].data.push(flow);
+                                }
+
+                                // 判断是否有逾期
+                                if (reviewItem.isOverDue) {
+                                    const overDueData = resultObj["已逾期"].data
+                                    if (!overDueData.some(item => item.processInstanceId === flow.processInstanceId)) {
+                                        resultObj["已逾期"].data.push(flow);
+                                    }
                                 }
                             }
                         }
                         // 获取流程状态数据
-                        let status_lc = statusMap[item.instanceStatus];
+                        let status_lc = statusMap[flow.instanceStatus];
                         if (status_lc) {
-                            resultObj[status_lc].data.push(item);
+                            resultObj[status_lc].data.push(flow);
                         }
                     }
                 }
                 // 将对应状态加入到该用户下的status
-                // console.log('resultObj=========>', resultObj)
-                if (user.name === "薛娜") {
-                }
                 user.status = resultObj;
             }
         } else {
@@ -752,6 +569,8 @@ const handleDepartmentLaunchOrJoinFlows = async (
         }
         results.push(item);
     }
+
+
     // 获取对应状态的所有流程长度和流程数据
     const handleliuc_len = (status, dep_g_user) => {
         const depData = JSON.parse(JSON.stringify(dep_g_user));
@@ -773,7 +592,6 @@ const handleDepartmentLaunchOrJoinFlows = async (
                         processInstanceId: l_items.processInstanceId,
                         modifiedTimeGMT: l_items.modifiedTimeGMT,
                         overallprocessflow: l_items.overallprocessflow,
-                        // originator: l_items.originator,
                         originator: {
                             name: l_items.originator.name.nameInChinese,
                             userId: l_items.originator.userId,
@@ -795,9 +613,6 @@ const handleDepartmentLaunchOrJoinFlows = async (
             return {
                 ...item,
                 dep_user: item.dep_user.map((items) => {
-                    if (items.name === "薛娜") {
-                        console.log('-------');
-                    }
                     return {
                         name: items.name,
                         userid: items.userid,
@@ -812,12 +627,6 @@ const handleDepartmentLaunchOrJoinFlows = async (
         const data = handleliuc_len(status, dep_list);
         const a_data = data.map((item) => {
             const u_list = item.dep_user.map((u_item) => {
-                // console.log(
-                //   "u_item=========>",
-                //   item.dep_name,
-                //   u_item,
-                //   u_item.status[status].data.length
-                // );
                 const liu_data = u_item.status[status].data.map((l_items) => {
                     return {
                         title: l_items.title,
@@ -825,6 +634,7 @@ const handleDepartmentLaunchOrJoinFlows = async (
                         formUuid: l_items.formUuid,
                         processInstanceId: l_items.processInstanceId,
                         modifiedTimeGMT: l_items.modifiedTimeGMT,
+                        overallprocessflow: l_items.overallprocessflow,
                         // originator: l_items.originator,
                         originator: {
                             name: l_items.originator.name.nameInChinese,
@@ -915,9 +725,9 @@ const handleDepartmentLaunchOrJoinFlows = async (
 
     return mergeListByNameAndIdInSection("bm", result);
 };
-// ===================页面展示方法=====================
+
 // 本人发起
-const handle_br_h_dep_yfq_LiuChengList = async (ddAccessToken, timesRange, ddUserid, formImportanceCondition) => {
+const handle_br_h_dep_yfq_LiuChengList = async (ddAccessToken, timesRange, ddUserid, formImportanceCondition, statusOfFlow) => {
     const flowStatusMap = {
         RUNNING: "进行中",
         COMPLETED: "已完成",
@@ -932,12 +742,13 @@ const handle_br_h_dep_yfq_LiuChengList = async (ddAccessToken, timesRange, ddUse
         ddUserid,
         flowStatusMap,
         "faqi_liu",
-        formImportanceCondition
+        formImportanceCondition,
+        statusOfFlow
     );
     return selfLaunchData;
 };
 // 本人参与
-const handle_br_cy_LiuChengList = async (ddAccessToken, timesRange, ddUserId, formImportanceCondition) => {
+const handle_br_cy_LiuChengList = async (ddAccessToken, timesRange, ddUserId, formImportanceCondition, statusOfFlow) => {
     const flowStatusMap = {
         TODO: "进行中",
         FORCAST: "待转入",
@@ -953,7 +764,8 @@ const handle_br_cy_LiuChengList = async (ddAccessToken, timesRange, ddUserId, fo
         ddUserId,
         flowStatusMap,
         "canyu_liu",
-        formImportanceCondition
+        formImportanceCondition,
+        statusOfFlow
     );
     return selfJoinData;
 };
@@ -1013,7 +825,6 @@ const handle_dep_fq_LiuChengList = async (
     );
     return faqi_liu;
 };
-// =====================页面展示方法===================
 
 // 公共方法 end========================================================
 
@@ -1021,17 +832,17 @@ const handle_dep_fq_LiuChengList = async (
 exports.getdepartment = async (req, res) => {
     const {depId} = req.query;
     // 获取钉钉user_id
-    const dd_id = await getDingDingUserId(req.user.id);
+    const dd_id = await userService.getDingDingUserId(req.user.id);
     // 获取钉钉Token
-    const {access_token} = await getDingDingAccessToken();
+    const {access_token} = await redisService.getToken();
     let dep_info = [];
     // 管理员身份
     if (whiteList.pepArr().includes(dd_id)) {
         // 获取子部门信息
-        dep_info = await getSubDeptLev(await getAllDepartments(), depId);
+        dep_info = await departmentService.getSubDeptLev(await redisService.getDepartments(), depId);
     } else {
         // 返回用户详情
-        const lev_dep_list = await getDepLev(access_token, dd_id);
+        const lev_dep_list = await departmentService.getDepLev(access_token, dd_id);
         dep_info = lev_dep_list.filter((item) => item.dept_id == depId)[0]
             .dep_child;
     }
@@ -1043,16 +854,12 @@ exports.getdepartment = async (req, res) => {
     });
 };
 
-exports.getSelfLaunchFlowsStatistic = async (req, res) => {
-    const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
-    const ddUserId = await getDingDingUserId(req.user.id);
-    const {access_token: ddAccessToken} = await getDingDingAccessToken();
-    // 单个
+const getDepartmentOfUser = async (ddUserId, ddAccessToken, parentDepartmentId, subDepartmentId) => {
     let dep_info = [];
     // 根据userid判断是否存在于白名单中
     if (whiteList.pepArr().includes(ddUserId)) {
-        const allDepts = await getAllDepartments();
-        const subDepartments = await getSubDeptLev(allDepts, parentDepartmentId)
+        const allDepts = await redisService.getDepartments();
+        const subDepartments = await departmentService.getSubDeptLev(allDepts, parentDepartmentId)
         if (subDepartments.length === 0) {
             const parentDepartmentDetails = allDepts.filter((item) => item.dept_id == parentDepartmentId);
             parentDepartmentDetails.forEach((element) => {
@@ -1064,7 +871,7 @@ exports.getSelfLaunchFlowsStatistic = async (req, res) => {
         }
     } else {
         // 返回用户详情
-        const lev_dep_list = await getDepLev(ddAccessToken, ddUserId);
+        const lev_dep_list = await departmentService.getDepLev(ddAccessToken, ddUserId);
         const lev_dep_lists = lev_dep_list.filter(
             (item) => item.dept_id == parentDepartmentId
         );
@@ -1082,17 +889,26 @@ exports.getSelfLaunchFlowsStatistic = async (req, res) => {
             dep_info = c_dep;
         }
     }
+    return dep_info;
+}
+
+exports.getSelfLaunchDoingFlowsStatistic = async (req, res) => {
+    const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
+    const ddUserId = await userService.getDingDingUserId(req.user.id);
+    const {access_token: ddAccessToken} = await redisService.getToken();
+    // 单个
+    const dep_info = await getDepartmentOfUser(ddUserId, ddAccessToken, parentDepartmentId, subDepartmentId)
     const isAdmin = dep_info && dep_info.length ? dep_info[0].leader : false;
-    console.time("本人发起");
+
     // 本人发起
     const selfLaunchStatistic = await handle_br_h_dep_yfq_LiuChengList(
         ddAccessToken,
         JSON.parse(timesRange),
         ddUserId,
-        JSON.parse(formImportanceCondition)
+        JSON.parse(formImportanceCondition),
+        "RUNNING"
     );
-    console.timeEnd("本人发起");
-    const result = biResponse.success({is_admin: isAdmin, br_faqi: selfLaunchStatistic})
+    const result = biResponse.success({"is_admin": isAdmin, "doing_br_faqi": selfLaunchStatistic})
     return res.send(result)
 }
 
@@ -1108,66 +924,32 @@ exports.getSelfLaunchFlowsStatistic = async (req, res) => {
  * @param res
  * @returns {Promise<*>}
  */
-exports.getSelfJoinFlowsStatistic = async (req, res) => {
+exports.getSelfJoinDoingFlowsStatistic = async (req, res) => {
 
     const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
-    const ddUserId = await getDingDingUserId(req.user.id);
-    const {access_token: ddAccessToken} = await getDingDingAccessToken();
+    const ddUserId = await userService.getDingDingUserId(req.user.id);
+    const {access_token: ddAccessToken} = await redisService.getToken();
 
     // 单个
-    let dep_info = [];
-    // 根据userid判断是否存在于白名单中
-    if (whiteList.pepArr().includes(ddUserId)) {
-        const allDepts = await getAllDepartments();
-        const subDepartments = await getSubDeptLev(allDepts, parentDepartmentId)
-        if (subDepartments.length === 0) {
-            const parentDepartmentDetails = allDepts.filter((item) => item.dept_id == parentDepartmentId);
-            parentDepartmentDetails.forEach((element) => {
-                element.leader = true;
-            });
-            dep_info = parentDepartmentDetails;
-        } else {
-            dep_info = subDepartments.filter((item) => item.dept_id == subDepartmentId);
-        }
-    } else {
-        // 返回用户详情
-        const lev_dep_list = await getDepLev(ddAccessToken, ddUserId);
-        const lev_dep_lists = lev_dep_list.filter(
-            (item) => item.dept_id == parentDepartmentId
-        );
-        // 如果子部门为空
-        if (lev_dep_lists[0].dep_child.length === 0) {
-            dep_info = lev_dep_lists;
-        } else {
-            dep_info = lev_dep_list.filter((item) => item.dept_id == parentDepartmentId);
-        }
-        // 判断当前用户是否是管理员
-        if (dep_info[0].dep_child.length > 0) {
-            const c_dep = dep_info[0].dep_child.filter(
-                (item) => item.dept_id === subDepartmentId
-            );
-            dep_info = c_dep;
-        }
-    }
+    let dep_info = getDepartmentOfUser(ddUserId, ddAccessToken, parentDepartmentId, subDepartmentId)
     const isAdmin = dep_info && dep_info.length ? dep_info[0].leader : false;
 
-    console.time("本人参与");
-    // 本人参与
     const selfJoinData = await handle_br_cy_LiuChengList(
         ddAccessToken,
         JSON.parse(timesRange),
         ddUserId,
-        JSON.parse(formImportanceCondition)
-    );
-    console.timeEnd("本人参与");
-    const result = biResponse.success({br_canyu: selfJoinData, is_admin: isAdmin})
+        JSON.parse(formImportanceCondition),
+        "RUNNING"
+    )
+
+    const result = biResponse.success({"is_admin": isAdmin, "br_canyu": selfJoinData})
     return res.send(result)
 }
 
-exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
+exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
     const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
-    const ddUserId = await getDingDingUserId(req.user.id);
-    const {access_token: ddAccessToken} = await getDingDingAccessToken();
+    const ddUserId = await userService.getDingDingUserId(req.user.id);
+    const {access_token: ddAccessToken} = await redisService.getToken();
 
     // 统计指定项目组下的流程数据
     if (subDepartmentId) {
@@ -1175,8 +957,8 @@ exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
         let departments = [];
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(ddUserId)) {
-            const depLists = await getAllDepartments();
-            const subDepartments = await getSubDeptLev(depLists, parentDepartmentId)
+            const depLists = await redisService.getDepartments();
+            const subDepartments = await departmentService.getSubDeptLev(depLists, parentDepartmentId)
             if (subDepartments.length === 0) {
                 const parentDepartment = depLists.filter((item) => item.dept_id == parentDepartmentId);
                 parentDepartment.forEach((element) => {
@@ -1188,7 +970,7 @@ exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
             }
         } else {
             // 返回用户所有的部门信息
-            const departmentsOfUser = await getDepLev(ddAccessToken, ddUserId);
+            const departmentsOfUser = await departmentService.getDepLev(ddAccessToken, ddUserId);
             // 根据传递的 parentDepartmentId 获取一级部门信息
             const parentDepartmentsOfUser = departmentsOfUser.filter(
                 (item) => item.dept_id == parentDepartmentId
@@ -1216,7 +998,6 @@ exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
                 JSON.parse(timesRange),
                 parentDepartmentId,
                 departments,
-                // ddUserId,
                 JSON.parse(formImportanceCondition)
             );
             console.timeEnd("部门发起");
@@ -1235,8 +1016,8 @@ exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
         let dep_info = [];
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(ddUserId)) {
-            const depLists = await getAllDepartments();
-            const subDepartments = await getSubDeptLev(depLists, parentDepartmentId)
+            const depLists = await redisService.getDepartments();
+            const subDepartments = await departmentService.getSubDeptLev(depLists, parentDepartmentId)
             if ((subDepartments.length === 0)) {
                 const depas = depLists.filter((item) => item.dept_id == parentDepartmentId);
                 depas.forEach((element) => {
@@ -1249,7 +1030,7 @@ exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
             subDepts = dep_info;
         } else {
             // 返回用户的部门信息
-            const departmentsOfUser = await getDepLev(ddAccessToken, ddUserId);
+            const departmentsOfUser = await departmentService.getDepLev(ddAccessToken, ddUserId);
             // 筛选出当前所在部门
             const ac_dep = departmentsOfUser.filter((item) => item.dept_id == parentDepartmentId);
             // 如果子部门为空
@@ -1291,48 +1072,14 @@ exports.getDepartmentLaunchFlowsStatistic = async (req, res) => {
     }))
 }
 
-exports.getDepartmentJoinFlowsStatistic = async (req, res) => {
+exports.getDepartmentJoinDoingFlowsStatistic = async (req, res) => {
     const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
-    const ddUserId = await getDingDingUserId(req.user.id);
-    const {access_token: ddAccessToken} = await getDingDingAccessToken();
+    const ddUserId = await userService.getDingDingUserId(req.user.id);
+    const {access_token: ddAccessToken} = await redisService.getToken();
 
     if (subDepartmentId) {
         // 单个
-        let dep_info = [];
-        // 根据userid判断是否存在于白名单中
-        if (whiteList.pepArr().includes(ddUserId)) {
-            const depLists = await getAllDepartments();
-            if ((await getSubDeptLev(depLists, parentDepartmentId)).length === 0) {
-                const depas = depLists.filter((item) => item.dept_id == parentDepartmentId);
-                depas.forEach((element) => {
-                    element.leader = true;
-                });
-                dep_info = depas;
-            } else {
-                const dg_dep = await getSubDeptLev(depLists, parentDepartmentId);
-                dep_info = dg_dep.filter((item) => item.dept_id == subDepartmentId);
-            }
-        } else {
-            // 返回用户详情
-            const lev_dep_list = await getDepLev(ddAccessToken, ddUserId);
-            const lev_dep_lists = lev_dep_list.filter(
-                (item) => item.dept_id == parentDepartmentId
-            );
-            // 如果子部门为空
-            if (lev_dep_lists[0].dep_child.length === 0) {
-                dep_info = lev_dep_lists;
-            } else {
-                dep_info = lev_dep_list.filter((item) => item.dept_id == parentDepartmentId);
-            }
-            // 判断当前用户是否是管理员
-            if (dep_info[0].dep_child.length > 0) {
-                const c_dep = dep_info[0].dep_child.filter(
-                    (item) => item.dept_id === subDepartmentId
-                );
-                dep_info = c_dep;
-            }
-        }
-
+        let dep_info = departmentService.getDepartmentsOfUser(ddUserId);
         const isAdmin = dep_info[0].leader;
         if (isAdmin) {
             // 部门参与
@@ -1354,20 +1101,20 @@ exports.getDepartmentJoinFlowsStatistic = async (req, res) => {
         let dep_info = [];
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(ddUserId)) {
-            const depLists = await getAllDepartments();
-            if ((await getSubDeptLev(depLists, parentDepartmentId)).length === 0) {
+            const depLists = await redisService.getDepartments();
+            if ((await departmentService.getSubDeptLev(depLists, parentDepartmentId)).length === 0) {
                 const depas = depLists.filter((item) => item.dept_id == parentDepartmentId);
                 depas.forEach((element) => {
                     element.leader = true;
                 });
                 dep_info = depas;
             } else {
-                dep_info = await getSubDeptLev(depLists, parentDepartmentId);
+                dep_info = await departmentService.getSubDeptLev(depLists, parentDepartmentId);
             }
             dep_list = dep_info;
         } else {
             // 返回用户详情
-            const lev_dep_list = await getDepLev(ddAccessToken, ddUserId);
+            const lev_dep_list = await departmentService.getDepLev(ddAccessToken, ddUserId);
             // 筛选出当前所在部门
             const ac_dep = lev_dep_list.filter((item) => item.dept_id == parentDepartmentId);
             // 如果子部门为空
@@ -1416,9 +1163,9 @@ exports.getoverview = async (req, res) => {
     // 子部门信息
     const dep_q_infos = JSON.parse(dep_q_info);
     // 获取钉钉user_id
-    const dd_id = await getDingDingUserId(req.user.id);
+    const dd_id = await userService.getDingDingUserId(req.user.id);
     // 获取钉钉Token
-    const {access_token} = await getDingDingAccessToken();
+    const {access_token} = await redisService.getToken();
     // 返回格式
     const resObj = {
         code: 200,
@@ -1456,21 +1203,21 @@ exports.getoverview = async (req, res) => {
         let dep_list = [];
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(dd_id)) {
-            const depLists = await getAllDepartments();
-            if ((await getSubDeptLev(depLists, f_dep_id)).length === 0) {
+            const depLists = await redisService.getDepartments();
+            if ((await departmentService.getSubDeptLev(depLists, f_dep_id)).length === 0) {
                 const depas = depLists.filter((item) => item.dept_id == f_dep_id);
                 depas.forEach((element) => {
                     element.leader = true;
                 });
                 dep_info = depas;
             } else {
-                const dg_dep = await getSubDeptLev(depLists, f_dep_id);
+                const dg_dep = await departmentService.getSubDeptLev(depLists, f_dep_id);
                 dep_info = dg_dep.filter((item) => item.dept_id == dep_q_infos.id);
             }
             dep_list = dep_info;
         } else {
             // 返回用户详情
-            const lev_dep_list = await getDepLev(access_token, dd_id);
+            const lev_dep_list = await departmentService.getDepLev(access_token, dd_id);
             const lev_dep_lists = lev_dep_list.filter(
                 (item) => item.dept_id == f_dep_id
             );
@@ -1533,20 +1280,20 @@ exports.getoverview = async (req, res) => {
         let dep_info = [];
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(dd_id)) {
-            const depLists = await getAllDepartments();
-            if ((await getSubDeptLev(depLists, f_dep_id)).length === 0) {
+            const depLists = await redisService.getDepartments();
+            if ((await departmentService.getSubDeptLev(depLists, f_dep_id)).length === 0) {
                 const depas = depLists.filter((item) => item.dept_id == f_dep_id);
                 depas.forEach((element) => {
                     element.leader = true;
                 });
                 dep_info = depas;
             } else {
-                dep_info = await getSubDeptLev(depLists, f_dep_id);
+                dep_info = await departmentService.getSubDeptLev(depLists, f_dep_id);
             }
             dep_list = dep_info;
         } else {
             // 返回用户详情
-            const lev_dep_list = await getDepLev(access_token, dd_id);
+            const lev_dep_list = await departmentService.getDepLev(access_token, dd_id);
             // 筛选出当前所在部门
             const ac_dep = lev_dep_list.filter((item) => item.dept_id == f_dep_id);
             // 如果子部门为空
@@ -1606,10 +1353,10 @@ exports.getoverview = async (req, res) => {
 // 获取流程表单数据
 exports.getprocessformlist = async (req, res) => {
     // 钉钉token
-    const {access_token} = await getDingDingAccessToken();
+    const {access_token} = await redisService.getToken();
     const userid = "073105202321093148"; // 涛哥id
     // 1.获取所有宜搭表单数据
-    const yd_form = await dd.getyd_FormList(access_token, userid);
+    const yd_form = await dd.getAllForms(access_token, userid);
     console.log("yd_form.result.data=========>", yd_form.result.data.length);
 
     // const resLiuChengList = await dd.getyd_LiuChengInfoSingle(
@@ -1627,9 +1374,9 @@ exports.getprocessformlist = async (req, res) => {
     // 获取流程表单的审核流
     for (let c_item of yd_form.result.data) {
         c_item.examine = null;
-        await delay(20);
+        await dateUtil.delay(20);
         // 获取实例详情
-        const resLiuChengList = await dd.getyd_LiuChengInfoSingle(
+        const resLiuChengList = await dd.getFlowsOfStatusAndTimeRange(
             access_token,
             userid,
             c_item.formUuid,
@@ -1702,10 +1449,10 @@ exports.getprocessformlist = async (req, res) => {
 // 修改流程表单数据
 exports.editprocessformobj = async (req, res) => {
     // 钉钉token
-    const {access_token} = await getDingDingAccessToken();
+    const {access_token} = await redisService.getToken();
     const userid = "073105202321093148"; // 涛哥id
     // 1.获取所有宜搭表单数据
-    const yd_form = await dd.getyd_FormList(access_token, userid);
+    const yd_form = await dd.getAllForms(access_token, userid);
 
     console.log("sh_list=========>", sh_list);
     // const bd_liuc = yd_form.result.data.map((item) => {
@@ -1725,10 +1472,10 @@ exports.editprocessformobj = async (req, res) => {
 // 获取所有流程表单的审核流列表
 exports.getliuchenglist = async (req, res) => {
     const userid = "073105202321093148"; // 涛哥id
-    const {access_token} = await getDingDingAccessToken();
+    const {access_token} = await redisService.getToken();
     const list = [];
     // 1.获取所有宜搭表单数据
-    const yd_form = await dd.getyd_FormList(access_token, userid);
+    const yd_form = await dd.getAllForms(access_token, userid);
     // 产品与包装设计流：FORM-6F3FC251B384490A8881DA6EAF6646A6MNGP
     // const resLiuChengList = await dd.getyd_LiuChengInfoSingle(
     //   access_token,
@@ -1738,9 +1485,8 @@ exports.getliuchenglist = async (req, res) => {
     //   1
     // );
     for (let c_item of yd_form.result.data) {
-        // await delay(20);
         // 获取实例详情
-        const resLiuChengList = await dd.getyd_LiuChengInfoSingle(
+        const resLiuChengList = await dd.getFlowsOfStatusAndTimeRange(
             access_token,
             userid,
             c_item.formUuid,
@@ -1787,7 +1533,7 @@ exports.getliuchenglist = async (req, res) => {
             });
         }
     }
-    createExcel(list, "审核流模版.xlsx");
+    excelUtil.createExcel(list, "审核流模版.xlsx");
     return res.send({
         code: 0,
         message: "生成成功",
@@ -3287,23 +3033,23 @@ const datasss = require("./data.json");
 // http://127.0.0.1:9999/user/flowpath/getprocessAuditing
 // 获取所有流程设计模版数据
 exports.getprocessAuditing = async (req, res) => {
-  // const { data } = req.body;
-  const data = formatData(JSON.parse(JSON.stringify(datasss)));
-  await FlowFormReviewModel.addFlowFormReview(data);
-  // 入库数据结构
-  // data.forEach(async (item) => {
-  //   await FlowFormReviewModel.upsert({
-  //     form_id: item.formId,
-  //     modifiedTime: item.modifiedTime,
-  //     form_review: item.reviewProcess,
-  //   });
-  // });
+    // const { data } = req.body;
+    const data = formatData(JSON.parse(JSON.stringify(datasss)));
+    await FlowFormReviewModel.addFlowFormReview(data);
+    // 入库数据结构
+    // data.forEach(async (item) => {
+    //   await FlowFormReviewModel.upsert({
+    //     form_id: item.formId,
+    //     modifiedTime: item.modifiedTime,
+    //     form_review: item.reviewProcess,
+    //   });
+    // });
 
-  return res.send({
-    code: 0,
-    message: "运行成功",
-    data: [],
-  });
+    return res.send({
+        code: 0,
+        message: "运行成功",
+        data: [],
+    });
 };
 
 // 格式化实例状态
@@ -3318,9 +3064,9 @@ const formatInstanceStatus = (instanceStatus) => {
 };
 // 导出指定日期，指定表单的所有宜搭表单数据
 exports.exportYiDaData = async (req, res) => {
-    const { startTime, endTime, form_ids, file_name } = req.query;
+    const {startTime, endTime, form_ids, file_name} = req.query;
     // 钉钉token
-    const { access_token } = await getToken();
+    const {access_token} = await getToken();
     const userid = "073105202321093148"; // 涛哥id
     const liucList = await getNewLiuChengListsAll();
     const formIdData = JSON.parse(form_ids);
@@ -3346,7 +3092,7 @@ exports.exportYiDaData = async (req, res) => {
         );
         // 获取数据列表表头
         let newData = processDataForFormId.map((item) => {
-            let newItem = { ...item }; // 复制 item 防止修改原始数据
+            let newItem = {...item}; // 复制 item 防止修改原始数据
 
             // 遍历 item.data 中的每个键
             Object.keys(newItem.data).forEach((key) => {

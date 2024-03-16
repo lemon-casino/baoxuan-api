@@ -21,4 +21,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-/config/*dev.js
+/**/*dev.*
+
+package-lock.json
+.htaccess

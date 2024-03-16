@@ -9,12 +9,13 @@ const UsersModel = require("../model/users");
 const RolesModel = require("../model/roles");
 const MenusModel = require("../model/menus");
 const RolesMenusModel = require("../model/roles-menus");
-const dd = require("../utils/dingding");
+const dd = require("../core/dingDingReq");
 // 引入封装好的redis
-const redis = require("../utils/redis.js");
-const dd_data = require("../utils/dd_yd_data.js");
+const redisUtil = require("../utils/redisUtil.js");
+const dd_data = require("../service/dingDingService.js");
 // 管理人员白名单
 const whiteList = require("../config/whiteList");
+const {redisKeys} = require("../const/redisConst")
 // 部门数据集合
 const dep_list = [
     {
@@ -22,147 +23,42 @@ const dep_list = [
         name: "运营部",
         parent_id: 0,
         leader: true,
-        // dep_children: [
-        //   {
-        //     name: "淘工厂组",
-        //     dept_id: 902919637,
-        //     parent_id: 482254100,
-        //   },
-        //   {
-        //     name: "京东组",
-        //     dept_id: 902897720,
-        //     parent_id: 482254100,
-        //   },
-        //   {
-        //     name: "抖音/快手组",
-        //     dept_id: 902981310,
-        //     parent_id: 482254100,
-        //   },
-        //   {
-        //     name: "猫宁组",
-        //     dept_id: 902807873,
-        //     parent_id: 482254100,
-        //   },
-        //   {
-        //     name: "私域运营",
-        //     dept_id: 906491881,
-        //     parent_id: 482254100,
-        //   },
-        //   {
-        //     name: "小红书",
-        //     dept_id: 908665191,
-        //     parent_id: 482254100,
-        //   },
-        //   {
-        //     name: "天猫组",
-        //     dept_id: 903075138,
-        //     parent_id: 482254100,
-        //   },
-        //   {
-        //     name: "唯品会组",
-        //     dept_id: 902786909,
-        //     parent_id: 482254100,
-        //   },
-        //   {
-        //     name: "视频号组",
-        //     dept_id: 903049185,
-        //     parent_id: 482254100,
-        //   },
-        //   {
-        //     name: "Tiktok",
-        //     dept_id: 917133656,
-        //     parent_id: 482254100,
-        //   },
-        //   {
-        //     name: "1688组",
-        //     dept_id: 902801883,
-        //     parent_id: 482254100,
-        //   },
-        //   {
-        //     name: "垂类店",
-        //     dept_id: 906611517,
-        //     parent_id: 482254100,
-        //   },
-        //   {
-        //     name: "拼多多组",
-        //     dept_id: 902768824,
-        //     parent_id: 482254100,
-        //   },
-        //   {
-        //     name: "猫超组",
-        //     dept_id: 902866760,
-        //     parent_id: 482254100,
-        //   },
-        // ],
     },
     {
         dept_id: 55751338,
         name: "客服部",
         parent_id: 0,
         leader: true,
-        // dep_children: [
-        //   {
-        //     name: "外包客服",
-        //     dept_id: 916515120,
-        //     leader: true,
-        //     parent_id: 55751338,
-        //   },
-        // ],
     },
     {
         dept_id: 59831246,
         name: "物流部",
         parent_id: 0,
         leader: true,
-        // dep_children: [
-        //   {
-        //     name: "周转部",
-        //     dept_id: 903009366,
-        //     leader: true,
-        //     parent_id: 59831246,
-        //   },
-        //   {
-        //     name: "库房部",
-        //     dept_id: 903093137,
-        //     leader: true,
-        //     parent_id: 59831246,
-        //   },
-        // ],
     },
     {
         dept_id: 60067028,
         leader: true,
         name: "财务部",
         parent_id: 0,
-        // dep_children: [],
     },
     {
         dept_id: 111487146,
         leader: true,
         name: "人事部",
         parent_id: 0,
-        // dep_children: [],
     },
     {
         dept_id: 482162119,
         leader: true,
         name: "视觉部",
         parent_id: 0,
-        // dep_children: [],
     },
     {
         dept_id: 902515853,
         leader: true,
         name: "执行中台",
         parent_id: 0,
-        // dep_children: [
-        //   {
-        //     name: "数据部",
-        //     dept_id: 913539395,
-        //     leader: true,
-        //     parent_id: 902515853,
-        //   },
-        // ],
     },
 
     {
@@ -170,33 +66,23 @@ const dep_list = [
         leader: true,
         name: "管理中台",
         parent_id: 0,
-        // dep_children: [],
     },
     {
         dept_id: 902880862,
         leader: true,
         name: "产品部",
         parent_id: 0,
-        // dep_children: [],
     },
     {
         dept_id: 916291839,
         leader: true,
         name: "数据中台",
         parent_id: 0,
-        // dep_children: [
-        //   {
-        //     name: "前端",
-        //     dept_id: 916463676,
-        //     leader: true,
-        //     parent_id: 916291839,
-        //   },
-        // ],
     },
 ];
 // 获取token
 const getToken = async () => {
-    const reply = await redis.getKey("ddCorpToken");
+    const reply = await redisUtil.getKey(redisKeys.DDToken);
     return JSON.parse(reply);
 };
 // 导入需要的验证规则对象
@@ -259,21 +145,21 @@ const getResource = async (role_id) => {
 // 获取用户基本信息的处理函数
 exports.getUserinfo = async (req, res) => {
     console.log("-- getUserInfo ---")
-    if (!(await redis.getKey("ddCorpToken"))) {
+    if (!(await redisUtil.getKey(redisKeys.DDToken))) {
         console.log('我获取完token啦=========>')
-        await dd_data.getDingdingToken();
+        await dd_data.getDingDingToken();
     }
-    if (!(await redis.getKey("dep_List"))) {
+    if (!(await redisUtil.getKey(redisKeys.Department))) {
         console.log('我获取完dep_List啦=========>')
-        await dd_data.DepartmentInformation();
+        await dd_data.getDepartmentFromDingDing();
     }
-    if (!(await redis.getKey("userAllDetail"))) {
+    if (!(await redisUtil.getKey(redisKeys.AllUsersDetailWithJoinLaunchData))) {
         console.log('我获取完userAllDetail啦=========>')
-        await dd_data.fetchUserDetail();
+        await dd_data.getUsersDetailFromDingDing();
     }
-    if (!(await redis.getKey("dep_userList"))) {
+    if (!(await redisUtil.getKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment))) {
         console.log('我获取完dep_userList啦=========>')
-        await dd_data.fetchUserList();
+        await dd_data.getUsersFromDingDing();
     } else {
 
         // 因为加入了expressJWT中间件解析token的原因，所以在请求头传递了token通过req.user.id就可访问到登录用户的id
@@ -294,7 +180,7 @@ exports.getUserinfo = async (req, res) => {
         // 返回个人信息
         const getddUserLists = async (corpTokenToken, userid) => {
             // 获取用户跟人信息
-            const userInfo = await dd.getddUserInfo(corpTokenToken, userid);
+            const userInfo = await dd.getUserInfoByUserIdAndToken(corpTokenToken, userid);
             if (userInfo.errmsg === "ok") {
                 // name: 员工姓名
                 // avatar: 员工头像
@@ -325,7 +211,6 @@ exports.getUserinfo = async (req, res) => {
                 const lev_dep_list = (await Promise.all(dep_promises_info)).filter(
                     (item) => item.parent_id === 1
                 );
-                // console.log("lev_dep_list=========>", lev_dep_list);
                 return {
                     name,
                     avatar,
@@ -399,7 +284,7 @@ exports.getUserinfo = async (req, res) => {
                 buttons: buttons,
                 dep_list: userInfos,
                 admin: whiteList.pepArr().includes(userid),
-                // newLiuChengList:,
+                admin: whiteList.pepArr().includes(userid),
             },
         });
     }

@@ -1,5 +1,5 @@
 const axios = require("axios");
-const dd = require("../utils/dingding");
+const dd = require("../core/dingDingReq");
 // 引入用户模型
 const UsersModel = require("../model/users");
 const {addToken} = require("../utils/token");
@@ -22,15 +22,15 @@ exports.getddUserList = async (req, res) => {
     // 钉钉授权流程
     const ddAuth = async (code) => {
         // 1.根据code获取用户token
-        let UserToken = await dd.getddToken(code);
+        let UserToken = await dd.getDingDingToken(code);
         // 1.获取企业内部应用的access_token
-        let CorpToken = await dd.getddCorpToken();
+        let CorpToken = await dd.getDingDingCorpToken();
         // 2.根据token获取通讯录用户信息，得到unionid
-        const {nick, unionId, avatarUrl, openId, mobile} = await dd.getddtxInfo(
+        const {nick, unionId, avatarUrl, openId, mobile} = await dd.getUserInfoByToken(
             UserToken.accessToken
         );
         //  3.根据unionid获取用户的userid
-        const userIdinfo = await dd.getddUserId(CorpToken.access_token, unionId);
+        const userIdinfo = await dd.getUserIdByUnionIdAndToken(CorpToken.access_token, unionId);
         return {
             userid: userIdinfo.result.userid,
             corpTokenToken: CorpToken.access_token,
@@ -39,7 +39,7 @@ exports.getddUserList = async (req, res) => {
 
     // 返回个人信息
     const getddUserLists = async (corpTokenToken, userid) => {
-        const userInfo = await dd.getddUserInfo(corpTokenToken, userid);
+        const userInfo = await dd.getUserInfoByUserIdAndToken(corpTokenToken, userid);
         if (userInfo.errmsg === "ok") {
             // name: 员工姓名
             // avatar: 员工头像

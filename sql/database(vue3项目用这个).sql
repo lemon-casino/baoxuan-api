@@ -116,7 +116,7 @@ INSERT INTO `menus` VALUES (34, 4, '菜单新增', 1, 'B', NULL, NULL, NULL, NUL
 INSERT INTO `menus` VALUES (35, 4, '菜单编辑', 2, 'B', NULL, NULL, NULL, NULL, NULL, 'system:menu:edit', '0', '2022-12-22 16:17:39', '2022-12-22 16:17:31');
 INSERT INTO `menus` VALUES (36, 4, '菜单查询', 3, 'B', NULL, NULL, NULL, NULL, NULL, 'system:menu:query', '0', '2022-12-22 16:17:39', '2022-12-22 16:17:31');
 INSERT INTO `menus` VALUES (37, 4, '菜单删除', 4, 'B', NULL, NULL, NULL, NULL, NULL, 'system:menu:del', '0', '2022-12-22 16:17:39', '2022-12-22 16:17:31');
-INSERT INTO `menus` VALUES (38, 19, '测试表单', 1, 'M', 'form', 'Test1', '/ceshiMenu/ceshiMenu1', '/ceshiMenu/ceshiMenu1', NULL, NULL, '0', '2023-02-07 15:08:58', '2022-12-07 15:35:46');
+INSERT INTO `menus` VALUES (38, 19, '测试表单', 1, 'M', 'formReviewService.js', 'Test1', '/ceshiMenu/ceshiMenu1', '/ceshiMenu/ceshiMenu1', NULL, NULL, '0', '2023-02-07 15:08:58', '2022-12-07 15:35:46');
 INSERT INTO `menus` VALUES (39, 1, '字典管理', 4, 'M', 'dict', 'dict', '/system/dict', '/system/dict', NULL, NULL, '0', NULL, '2023-02-13 15:17:39');
 
 -- ----------------------------

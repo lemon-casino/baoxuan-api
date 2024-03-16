@@ -58,10 +58,18 @@ FlowFormModel.addFlowForm = async function (data) {
 
 //获取所有流程表单
 FlowFormModel.getFlowFormList = async function (data) {
-    const flow = await FlowFormModel.findAll({
-        where: data,
-    });
-    return flow;
+    let flows = []
+    if (data) {
+        flows = await FlowFormModel.findAll({
+            where: data,
+        });
+    } else {
+        flows = await FlowFormModel.findAll();
+    }
+    for (let i = 0; i < flows.length; i++) {
+        flows[i]= flows[i].dataValues
+    }
+    return flows;
 };
 
 FlowFormModel.getFlowFormById = async function (id) {

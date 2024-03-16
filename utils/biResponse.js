@@ -10,7 +10,6 @@ const serverError = () => {
     return format(500, "服务器异常")
 }
 
-
 module.exports = {
     format,
     success,

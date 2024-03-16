@@ -24,7 +24,7 @@ const {
 // 引入生成图形验证码库
 const svgCaptcha = require("svg-captcha");
 // 引入封装好的redis
-const redis = require("../utils/redis.js");
+const redis = require("../utils/redisUtil.js");
 // 引入封装好的token模块和配置信息
 const { addToken, decodedToken, verifyToken } = require("../utils/token");
 const tokenConfig = require("../config/index").tokenConfig;

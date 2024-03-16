@@ -14,7 +14,7 @@ const config = require("../config/index")
 
 const clientId = "dinglc7figruiaukkx86";
 const clientSecret =
-  "xbivnBl_KlDbXdQrllrA4LIVvTGWAReK3A9Qb4TjtKwEHO38Osxz8k-bl0_B4fkY";
+  "xbivnBl_KlDbXdQrllrA4LIVvTGWAReK3A9Qb4TjtKwEHO38Osxz8knpm r-bl0_B4fkY";
 const {
   DWClient,
   DWClientDownStream,

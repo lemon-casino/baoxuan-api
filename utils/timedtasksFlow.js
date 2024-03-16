@@ -1,5 +1,5 @@
 const schedule = require("node-schedule");
-const dd = require("../utils/dingding");
+const dd = require("../core/dingDingReq");
 const fs = require
 const redis = require("redis");
 
