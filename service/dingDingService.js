@@ -20,7 +20,7 @@ const com_userid = "073105202321093148"; // 涛哥id
 const delay = dateUtil.delay
 const {
     setToken, getToken,
-    getDepList, getAllUsersDetail,
+    getDepartments, getAllUsersDetail,
     getAllFlowsUntilNow, getAllProcessFlow
 } = redisService;
 
@@ -164,7 +164,7 @@ const getDepartmentFromDingDing = async () => {
 const getUsersFromDingDing = async () => {
     console.log("开始获取钉钉_部门下的所有用户=========>");
     const {access_token} = await getToken();
-    const getDepListAll = await getDepList();
+    const getDepListAll = await getDepartments();
     const diguiDep = async (depList) => {
         for (const item of depList) {
             await delay(100);
@@ -197,7 +197,7 @@ const getUsersDetailFromDingDing = async () => {
     const {access_token} = await getToken();
     const [allFlowsUntilNow, departmentList] = await Promise.all([
         getAllFlowsUntilNow(),
-        getDepList(),
+        getDepartments(),
     ]);
     const allUsersFromDepartments = [];
     // 获取部门下的所有用户信息
