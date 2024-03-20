@@ -1,20 +1,24 @@
-const userService = require("../../../service/userService")
-
-const convert = async (selfJoinedStatusProcessorMap, userId, importance, status) => {
-    if (status && Object.keys(selfJoinedStatusProcessorMap).includes(status.toLowerCase())) {
-        // todo: 需要返回前端直接从user中取
-        const ddUserId = await userService.getDingDingUserId(userId);
+/**
+ *
+ * @param statusProcessorMap
+ * @param id  userId 、deptId
+ * @param status
+ * @param importance
+ * @returns {Promise<*|null>}
+ */
+const convert = async (statusProcessorMap, id, status, importance) => {
+    if (status && Object.keys(statusProcessorMap).includes(status.toLowerCase())) {
         if (importance) {
             importance = JSON.parse(importance)
         }
 
-        const processorMap = selfJoinedStatusProcessorMap[status]
+        const processorMap = statusProcessorMap[status]
         const realStatus = processorMap.mapStatus
         let result = null;
         if (realStatus) {
-            result = await processorMap.processor(ddUserId, realStatus, importance)
+            result = await processorMap.processor(id, realStatus, importance)
         } else {
-            result = await processorMap.processor(ddUserId, importance)
+            result = await processorMap.processor(id, importance)
         }
         return result
     }

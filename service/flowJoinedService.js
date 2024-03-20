@@ -36,7 +36,10 @@ const getTodaySelfJoinedFlowsStatisticCountOfOverDue = async (userId, importance
  * @returns {Promise<{doing: *[], done: *[]}>}
  */
 const getTodaySelfJoinedFlowsStatisticOfOverDue = async (userId, importance) => {
-    const flowsOfRunningAndFinishedOfToday = await redisService.getFlowsOfRunningAndFinishedOfToday();
+    let flowsOfRunningAndFinishedOfToday = global.todayRunningAndFinishedFlows
+    if (!flowsOfRunningAndFinishedOfToday || flowsOfRunningAndFinishedOfToday.length === 0) {
+        flowsOfRunningAndFinishedOfToday = await redisService.getFlowsOfRunningAndFinishedOfToday();
+    }
 
     // 根据重要性和forms过滤流程
     const filteredFlows = await flowService.filterFlowsByImportance(flowsOfRunningAndFinishedOfToday, importance)
@@ -118,7 +121,10 @@ const getTodaySelfJoinedFlowsStatisticCountOfReviewType = async (userId, reviewT
  * @returns {Promise<*[]>}
  */
 const getTodaySelfJoinedFlowsStatisticOfReviewType = async (userId, reviewType, importance) => {
-    const flowsOfRunningAndFinishedOfToday = await redisService.getFlowsOfRunningAndFinishedOfToday();
+    let flowsOfRunningAndFinishedOfToday = global.todayRunningAndFinishedFlows
+    if (!flowsOfRunningAndFinishedOfToday || flowsOfRunningAndFinishedOfToday.length === 0) {
+        flowsOfRunningAndFinishedOfToday = await redisService.getFlowsOfRunningAndFinishedOfToday();
+    }
     // 根据重要性和forms过滤流程
     const filteredFlows = await flowService.filterFlowsByImportance(flowsOfRunningAndFinishedOfToday, importance)
     let satisfiedFlows = [];
@@ -205,7 +211,6 @@ const getTodaySelfJoinedFlowsStatisticCountOfFlowStatus = async (userId, status,
  * @returns {Promise<*[]>}
  */
 const getTodaySelfJoinedFlowsStatisticOfFlowStatus = async (userId, status, importance) => {
-
     const filteredFlows = await flowService.filterTodayFlowsByFlowStatusAndImportanceEndOfForms(status, importance)
 
     let satisfiedFlows = [];
@@ -237,11 +242,66 @@ const getTodaySelfJoinedFlowsStatisticOfFlowStatus = async (userId, status, impo
     return satisfiedFlows
 }
 
+const getTodayDeptJoinedFlowsStatisticCountOfFlowStatus = async (deptId, status, importance) => {
+    const result = await flowService.getDeptStatistic(getTodaySelfJoinedFlowsStatisticCountOfFlowStatus,
+        deptId, status, importance)
+    return result
+}
+
+const getTodayDeptJoinedFlowsStatisticCountOfReviewType = async (deptId, status, importance) => {
+    const result = await flowService.getDeptStatistic(getTodaySelfJoinedFlowsStatisticCountOfReviewType,
+        deptId, status, importance)
+    return result
+}
+
+const getTodayDeptJoinedFlowsStatisticCountOfOverDue = async (deptId, importance) => {
+    const result = await getDeptJoinedOverDueStatistic(deptId, importance)
+    return result;
+}
+
+const getDeptJoinedOverDueStatistic = async (deptId, status, importance) => {
+    const requiredDepartment = await departmentService.getDepartmentWithUsers(deptId);
+    if (!requiredDepartment) {
+        console.error(`未找到部门：${deptId}的信息`)
+        return null
+    }
+
+    let convertedDoingResult = {sum: 0, departments: []}
+    let convertedDoneResult = {sum: 0, departments: []}
+    //todo：此步可以省略，直接去requiredDepartment的下的dept_user
+    const usersOfDepartment = departmentService.simplifiedUsersOfDepartment(requiredDepartment)
+    const users = usersOfDepartment.deptUsers
+    for (const user of users) {
+        const result = await getTodaySelfJoinedFlowsStatisticCountOfOverDue(user.userid, importance)
+        if (result.doing.sum > 0) {
+            convertedDoingResult = flowService.convertSelfStatisticToDept(result.doing, user.name,
+                requiredDepartment.parent_id == 1,
+                requiredDepartment.name, convertedDoingResult
+            )
+        }
+        if (result.done.sum > 0) {
+            convertedDoneResult = flowService.convertSelfStatisticToDept(result.done, user.name,
+                requiredDepartment.parent_id == 1,
+                requiredDepartment.name, convertedDoneResult
+            )
+        }
+    }
+    return {
+        sum: convertedDoingResult.sum + convertedDoneResult.sum,
+        doing: convertedDoingResult,
+        done: convertedDoneResult
+    }
+}
+
 module.exports = {
     getTodaySelfJoinedFlowsStatisticOfFlowStatus,
     getTodaySelfJoinedFlowsStatisticCountOfFlowStatus,
     getTodaySelfJoinedFlowsStatisticOfReviewType,
     getTodaySelfJoinedFlowsStatisticCountOfReviewType,
     getTodaySelfJoinedFlowsStatisticOfOverDue,
-    getTodaySelfJoinedFlowsStatisticCountOfOverDue
+    getTodaySelfJoinedFlowsStatisticCountOfOverDue,
+    // 按部门参与统计
+    getTodayDeptJoinedFlowsStatisticCountOfFlowStatus,
+    getTodayDeptJoinedFlowsStatisticCountOfReviewType,
+    getTodayDeptJoinedFlowsStatisticCountOfOverDue
 }

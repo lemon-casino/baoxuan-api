@@ -9,6 +9,10 @@ if (process.env.NODE_ENV === "dev") {
     const swagger = require("./utils/swagger");
     swagger(app);
 }
+// 加载全局的基础信息： users、departments、 usersOfDepartments
+const global = require("./global/index")
+global.initial()
+
 // 导入日志配置文件
 const {logger, stream} = require("./utils/log"); // 引入log.js
 // 导入钉钉机器人模块

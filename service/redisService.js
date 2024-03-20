@@ -57,7 +57,7 @@ const getAllFlowUntilNowByTimeRange = async (timesRange) => {
 };
 
 const getFlowsOfRunningAndFinishedOfToday = async () => {
-    const result = await redisUtil.getKey(redisKeys.FlowsOfRunningAndFinishedOfToday)
+    const result =  await redisUtil.getKey(redisKeys.FlowsOfRunningAndFinishedOfToday)
     return JSON.parse(result)
 }
 

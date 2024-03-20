@@ -49,6 +49,9 @@ const getFlowsByStatusAndTimeRange = async (
         pageSize,
         pageNumber
     );
+    if (!resLiuChengList){
+        return []
+    }
     let allData = resLiuChengList.data;
     let requestCount = 0;
     // 获取对应的流程的审核记录
@@ -85,18 +88,20 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
     const allForms = await dingDingReq.getAllForms(ddAccessToken, userId);
     // 循环请求宜搭实例详情和审核详情数据
     let flows = [];
-    for (let i = 0; i < allForms.result.data.length; i++) {
-        const formUuid = allForms.result.data[i].formUuid;
-        await delay(30);
-        const allData = await getFlowsByStatusAndTimeRange(
-            timesRange,
-            timeAction,
-            status,
-            ddAccessToken,
-            userId,
-            formUuid
-        );
-        flows = flows.concat(allData);
+    if (allForms) {
+        for (let i = 0; i < allForms.result.data.length; i++) {
+            const formUuid = allForms.result.data[i].formUuid;
+            await delay(30);
+            const allData = await getFlowsByStatusAndTimeRange(
+                timesRange,
+                timeAction,
+                status,
+                ddAccessToken,
+                userId,
+                formUuid
+            );
+            flows = flows.concat(allData);
+        }
     }
     return flows;
 };

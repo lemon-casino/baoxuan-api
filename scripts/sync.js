@@ -64,6 +64,10 @@ const getFlowsOfRunningAndFinishedOfToday = async () => {
     const result = await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
 }
 
+// dingDingData.getUsersFromDingDing()
+// dingDingData.getUsersDetailFromDingDing();
+// dingDingData.getDingDingToken();
+// dingDingData.getDepartmentFromDingDing();
 // getFlowsOfRunningAndFinishedOfToday()
 
 // initRedis()

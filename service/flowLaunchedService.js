@@ -4,6 +4,9 @@ const dateUtil = require("../utils/dateUtil")
 const reviewUtil = require("../utils/reviewUtil")
 const statisticStatusConst = require("../const/statisticStatusConst")
 const FlowFormReview = require("../model/flowformreview")
+const departmentService = require("../service/departmentService")
+const globalGetter = require("../global/getter")
+const statisticResultUtil = require("../utils/statisticResultUtil")
 
 /**
  * doing error completed terminated
@@ -72,7 +75,11 @@ const getTodaySelfLaunchedFlowsStatisticCountOfOverDue = async (userId, importan
 }
 
 const getTodaySelfLaunchedFlowsStatisticOfOverDue = async (userId, status, importance) => {
-    const flowsOfRunningAndFinishedOfToday = await redisService.getFlowsOfRunningAndFinishedOfToday();
+    let flowsOfRunningAndFinishedOfToday = global.todayRunningAndFinishedFlows
+    if (!flowsOfRunningAndFinishedOfToday || flowsOfRunningAndFinishedOfToday.length === 0) {
+        flowsOfRunningAndFinishedOfToday = await redisService.getFlowsOfRunningAndFinishedOfToday();
+    }
+
     let filteredFlows = flowsOfRunningAndFinishedOfToday.filter((flow) => {
         return flow.originator.userId === userId;
     })
@@ -99,37 +106,75 @@ const getTodaySelfLaunchedFlowsStatisticOfOverDue = async (userId, status, impor
 
             // 已完成的工作逾期
             if (reviewItems[i].isOverDue) {
-                if (reviewItems[i].type === statisticStatusConst.reviewType.history){
+                if (reviewItems[i].type === statisticStatusConst.reviewType.history) {
                     satisfiedFlows.done.push(flow)
                     break;
-                }else{
+                } else {
                     satisfiedFlows.doing.push(flow)
                     break;
                 }
-                // satisfiedFlows.done.push(flow)
-                // continue;
             }
-
-            // 正在做还未完成的工作已逾期
-            // if (reviewItems[i].type === statisticStatusConst.reviewType.todo && i > 0) {
-            //     // 计算现在工作时长是否超时
-            //     const costAlready = dateUtil.diff(new Date(), dateUtil.formatGMT(reviewItems[i - 1].operateTimeGMT))
-            //     const reviewRequirements = await FlowFormReview.getFlowFormReviewList(flow.formUuid)
-            //     const requiredCost = reviewUtil.extractTimeRequirement(reviewRequirements.form_review, reviewItems[i].activityId)
-            //
-            //     if (requiredCost > 0 && costAlready >= requiredCost) {
-            //         satisfiedFlows.doing.push(flow)
-            //         continue
-            //     }
-            // }
         }
     }
     return satisfiedFlows;
 }
 
+const getTodayDeptLaunchedFlowsStatisticCountOfFlowStatus = async (deptId, status, importance) => {
+    const result = await flowService.getDeptStatistic(getTodaySelfLaunchedFlowsStatisticCountOfFlowStatus,
+        deptId, status, importance)
+    return result
+}
+const getTodayDeptLaunchedFlowsStatisticCountOfReviewType = async (deptId, status, importance) => {
+    const result = await flowService.getDeptStatistic(getTodaySelfLaunchedFlowsStatisticCountOfReviewType,
+        deptId, status, importance)
+    return result
+}
+
+const getTodayDeptLaunchedFlowsStatisticCountOfOverDue = async (deptId, importance) => {
+    const requiredDepartment = await departmentService.getDepartmentWithUsers(deptId);
+    if (!requiredDepartment) {
+        console.error(`未找到部门：${deptId}的信息`)
+        return null
+    }
+
+    let convertedDoingResult = {sum: 0, departments: []}
+    let convertedDoneResult = {sum: 0, departments: []}
+    //todo：此步可以省略，直接去requiredDepartment的下的dept_user
+    const usersOfDepartment = departmentService.simplifiedUsersOfDepartment(requiredDepartment)
+    const users = usersOfDepartment.deptUsers
+    for (const user of users) {
+        const result = await getTodaySelfLaunchedFlowsStatisticCountOfOverDue(user.userid, importance)
+        if (result.doing.sum > 0) {
+            convertedDoingResult = flowService.convertSelfStatisticToDept(result.doing, user.name,
+                requiredDepartment.parent_id == 1,
+                requiredDepartment.name, convertedDoingResult
+            )
+        }
+        if (result.done.sum > 0) {
+            convertedDoneResult = flowService.convertSelfStatisticToDept(result.done, user.name,
+                requiredDepartment.parent_id == 1,
+                requiredDepartment.name, convertedDoneResult
+            )
+        }
+    }
+
+    // 去掉不符的部门统计数据（用户会有跨部门的情况）
+    convertedDoingResult = await statisticResultUtil.removeUnsatisfiedDeptStatistic(convertedDoingResult, deptId)
+    convertedDoneResult = await statisticResultUtil.removeUnsatisfiedDeptStatistic(convertedDoneResult, deptId)
+
+    return {
+        sum: convertedDoneResult.sum + convertedDoingResult.sum,
+        doing: convertedDoingResult,
+        done: convertedDoneResult
+    }
+}
 
 module.exports = {
     getTodaySelfLaunchedFlowsStatisticCountOfFlowStatus,
     getTodaySelfLaunchedFlowsStatisticCountOfReviewType,
-    getTodaySelfLaunchedFlowsStatisticCountOfOverDue
+    getTodaySelfLaunchedFlowsStatisticCountOfOverDue,
+    // 按部门发起统计
+    getTodayDeptLaunchedFlowsStatisticCountOfFlowStatus,
+    getTodayDeptLaunchedFlowsStatisticCountOfReviewType,
+    getTodayDeptLaunchedFlowsStatisticCountOfOverDue,
 }

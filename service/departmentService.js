@@ -1,6 +1,7 @@
 const whiteList = require("../config/whiteList");
 const redisService = require("../service/redisService")
 const dateUtil = require("../utils/dateUtil")
+const globalGetter = require("../global/getter")
 
 // 获取指定部门Id的所有子部门和人员信息
 const getSubDeptLev = async (depLists, dept_id) => {
@@ -171,22 +172,117 @@ const mergeDataByDeptId = (data) => {
  * @param userId
  * @returns {Promise<*[]>}
  */
-const getDepartmentOfUser = async (userId)=>{
+const getDepartmentOfUser = async (userId) => {
     let departmentsOfCurrentUser = []
-    const allUsersDetail = await redisService.getAllUsersDetail();
+    let allUsersDetail = global.users
+    if (!allUsersDetail || allUsersDetail.length === 0) {
+        allUsersDetail = await redisService.getAllUsersDetail();
+    }
     for (const item of allUsersDetail) {
-        if (item.userid === userId){
+        if (item.userid === userId) {
             departmentsOfCurrentUser = departmentsOfCurrentUser.concat(item.leader_in_dept)
         }
     }
     return departmentsOfCurrentUser;
 }
 
+/**
+ * 根据deptId， 从department 中找到与之相同的节点
+ * @param deptId
+ * @param department
+ * @returns {null|*}
+ */
+const findMatchedDepartmentFromRoot = (deptId, department) => {
+    const {dept_id, dep_chil} = department
+
+    if (dept_id.toString() === deptId.toString()) {
+        return department
+    }
+    if (dep_chil && dep_chil.length > 0) {
+        for (const subDep of dep_chil) {
+            const deptDetails = findMatchedDepartmentFromRoot(deptId.toString(), subDep)
+            if (deptDetails) {
+                return deptDetails
+            }
+        }
+        return null
+    }
+}
+
+/**
+ * 从节点和其子节点中根据部门分类获取用户数据
+ * @param department 原始的department结构
+ * @returns {{deptName: "", deptUsers: [], depChil:[]}}
+ */
+const simplifiedUsersOfDepartment = (department) => {
+    const satisfiedUsers = {}
+    const {dep_user, dep_chil} = department;
+    if (dep_user && dep_user.length > 0) {
+        satisfiedUsers["deptName"] = department.name
+        satisfiedUsers["deptUsers"] = dep_user
+    }
+    if (dep_chil && dep_chil.length > 0) {
+        satisfiedUsers["depChil"] = []
+        for (const dep of dep_chil) {
+            if (dep.dep_user && dep.dep_user.length > 0) {
+                satisfiedUsers["depChil"].push(simplifiedUsersOfDepartment(dep))
+            }
+        }
+    }
+    return satisfiedUsers
+}
+
+
+/**
+ * 根据deptId获取节点原始数据
+ * @param deptId
+ * @returns {null}
+ */
+const getDepartmentWithUsers = async (deptId) => {
+    const usersOfDepartments = await globalGetter.getUsersOfDepartments()
+    let requiredDepartment = null
+    for (const usersOfDepartment of usersOfDepartments) {
+        requiredDepartment = findMatchedDepartmentFromRoot(deptId, usersOfDepartment)
+        if (requiredDepartment) {
+            break;
+        }
+    }
+    return requiredDepartment;
+}
+
+const getDepartments = async () => {
+    let departments = global.departments
+    if (!departments || departments.length === 0) {
+        departments = await redisService.getDepartments();
+    }
+    return departments
+}
+
+const hasMatchedDeptName = (deptName, department) => {
+    if (department.name === deptName) {
+        return true
+    }
+    if (department.dep_chil) {
+        for (const subDept of department.dep_chil) {
+            const result = hasMatchedDeptName(deptName, subDept)
+            if (result) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
 
 module.exports = {
+    getDepartments,
     getDepartmentsOfUser,
     getDepLev,
     getSubDeptLev,
     mergeDataByDeptId,
-    getDepartmentOfUser
+    getDepartmentOfUser,
+    findMatchedDepartmentFromRoot,
+    simplifiedUsersOfDepartment,
+    getDepartmentWithUsers,
+    hasMatchedDeptName
 }

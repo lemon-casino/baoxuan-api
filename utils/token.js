@@ -7,7 +7,7 @@ const tkconf = require('../config/index');
  * @param {*} time  token存在时间
  * @returns
  */
-const addToken = function (user, serect, time) {
+const generateToken = function (user, serect, time) {
   //创建token并导出
 
   const token = jwt.sign(
@@ -41,7 +41,7 @@ const verifyToken = function verify_refreshToken(refreshToken) {
 };
 
 module.exports = {
-  addToken,
+  generateToken,
   decodedToken,
   verifyToken
 };

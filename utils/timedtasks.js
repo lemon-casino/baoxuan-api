@@ -2,13 +2,10 @@ const dingDingService = require("../service/dingDingService");
 const schedule = require("node-schedule");
 const redisUtil = require("../utils/redisUtil")
 const {redisKeys} = require("../const/redisConst")
-const dateUtil = require("../utils/dateUtil")
-const redisService = require("../service/redisService")
-const flowFormReviewModel = require("../model/flowformreview")
-const reviewUtil = require("../utils/reviewUtil")
+const global = require("../global/index")
 
 // 开发测试禁用定时任务，可以手动调用
-if(process.env.NODE_ENV==="dev"){
+if (process.env.NODE_ENV === "dev") {
     return;
 }
 
@@ -24,6 +21,9 @@ schedule.scheduleJob("*/6 * * * *", async function () {
 schedule.scheduleJob("*/40 * * * *", async function () {
     // console.time("获取所有部门=========>");
     await dingDingService.getDepartmentFromDingDing();
+    // 将最新的部门数据保存到global中
+    const newDepartments = redisUtil.getKey(redisKeys.Department)
+    global.setGlobalDepartments(newDepartments)
     console.timeEnd("获取所有部门=========>");
 });
 
@@ -31,6 +31,9 @@ schedule.scheduleJob("*/40 * * * *", async function () {
 schedule.scheduleJob("*/45 * * * *", async function () {
     console.time("获取所有部门下的人员=========>");
     await dingDingService.getUsersFromDingDing();
+    // 将最新的部门下的人员数据保存到global中
+    const newUsersOfDepartments = redisUtil.getKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment)
+    global.setGlobalUsersOfDepartments(newUsersOfDepartments)
     console.timeEnd("获取所有部门下的人员=========>");
 });
 
@@ -38,6 +41,9 @@ schedule.scheduleJob("*/45 * * * *", async function () {
 schedule.scheduleJob("*/50 * * * *", async function () {
     console.time("获取所有用户详情数据=========>");
     await dingDingService.getUsersDetailFromDingDing();
+    // 将最新的人员数据保存到global中
+    const newUsers = redisUtil.getKey(redisKeys.AllUsersDetailWithJoinLaunchData)
+    global.setGlobalUsers(newUsers)
     console.timeEnd("获取所有用户详情数据=========>");
 });
 
@@ -63,10 +69,10 @@ schedule.scheduleJob("*/10 * * * *", async function () {
 });
 
 // 每5分钟 获取当前正在进行中的流程和今天完成的流程
-schedule.scheduleJob("0 0/5 * * * ?", async function () {
-    const doingFlows = await dd_data.getDoingFlows();
-    await redisUtil.setKey(redisKeys.AllDoingFlowsOfToday, JSON.stringify(doingFlows))
-})
+// schedule.scheduleJob("0 0/5 * * * ?", async function () {
+//     const doingFlows = await dingDingService.getDoingFlows();
+//     await redisUtil.setKey(redisKeys.AllDoingFlowsOfToday, JSON.stringify(doingFlows))
+// })
 
 /**
  *  每5分钟更新正在进行中的流程和今天完成的流程
@@ -74,4 +80,7 @@ schedule.scheduleJob("0 0/5 * * * ?", async function () {
 schedule.scheduleJob("* 0/5 * * * ?", async function () {
     const flows = await dingDingService.getFlowsOfRunningAndFinishedOfToday()
     await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
+    // 将最新的人员数据保存到global中
+    const flowsOfRunningAndFinishedOfToday = redisUtil.getKey(redisKeys.FlowsOfRunningAndFinishedOfToday)
+    global.setGlobalTodayRunningAndFinishedFlows(flowsOfRunningAndFinishedOfToday)
 })

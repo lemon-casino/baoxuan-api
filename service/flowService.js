@@ -8,6 +8,8 @@ const formService = require("../service/formService")
 const formReviewService = require("../service/formReviewService")
 const departmentService = require("../service/departmentService")
 const flowRepo = require("../repository/flowRepo")
+const globalGetter = require("../global/getter")
+const statisticResultUtil = require("../utils/statisticResultUtil")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -173,9 +175,6 @@ const flowsDividedByDepartment = async (flows) => {
             const subDepartments = departmentsOfUser.filter((dep) => dep.dep_detail.parent_id === department.dep_detail.dept_id)
             if (subDepartments.length > 0) {
                 for (const subDepartment of subDepartments) {
-
-
-
                     if (Object.keys(result).includes(subDepartment.dep_detail.name)) {
                         result[subDepartment.dep_detail.name].push(flow)
                     } else {
@@ -201,9 +200,8 @@ const flowsDividedByDepartment = async (flows) => {
  * @returns {Promise<*>}
  */
 const filterTodayFlowsByFlowStatusAndImportanceEndOfForms = async (status, importance) => {
-    const flowsOfRunningAndFinishedOfToday = await redisService.getFlowsOfRunningAndFinishedOfToday();
+    const flowsOfRunningAndFinishedOfToday = await globalGetter.getTodayFlows()
     const flowOfStatus = flowsOfRunningAndFinishedOfToday.filter((flow) => flow.instanceStatus === status)
-
     // 根据重要性和forms过滤流程
     const filteredFlows = await filterFlowsByImportance(flowOfStatus, importance)
     return filteredFlows;
@@ -292,7 +290,10 @@ const getFlowsByIds = async (ids) => {
 }
 
 const getTodayFlowsByIds = async (ids) => {
-    const flowsOfRunningAndFinishedOfToday = await redisService.getFlowsOfRunningAndFinishedOfToday();
+    let flowsOfRunningAndFinishedOfToday = global.todayRunningAndFinishedFlows
+    if (!flowsOfRunningAndFinishedOfToday || flowsOfRunningAndFinishedOfToday.length === 0) {
+        flowsOfRunningAndFinishedOfToday = await redisService.getFlowsOfRunningAndFinishedOfToday();
+    }
     const satisfiedFlows = await flowsOfRunningAndFinishedOfToday.filter((item) => ids.includes(item.processInstanceId))
     return satisfiedFlows;
 }
@@ -310,6 +311,92 @@ const convertJonsToArr = async (departments) => {
     return tmpDepartments
 }
 
+/**
+ * 将本人统计的数据格式转成按部门统计的格式
+ * @param statistic
+ * @param userName
+ * @param isFirstLevelDept
+ * @param subDepartmentName
+ * @param resultTemplate
+ * @returns {*}
+ */
+const convertSelfStatisticToDept = (statistic, userName, isFirstLevelDept, subDepartmentName, resultTemplate) => {
+    if (statistic.sum == 0) {
+        return resultTemplate
+    }
+
+    const departments = statistic.departments
+    for (const notComputedDept of departments) {
+        // 按子部门筛选，需要精确匹配
+        if (!isFirstLevelDept && notComputedDept.deptName !== subDepartmentName) {
+            continue
+        }
+        resultTemplate.sum = resultTemplate.sum + notComputedDept.sum
+
+        // 开始时为空数据，直接加进去
+        if (resultTemplate.departments.length === 0) {
+            resultTemplate.departments.push({
+                deptName: notComputedDept.deptName,
+                sum: notComputedDept.sum,
+                users: [{userName: userName, sum: notComputedDept.sum, ids: notComputedDept.ids}]
+            })
+            continue
+        }
+
+        for (let i = 0; i < resultTemplate.departments.length; i++) {
+            const deptOfTemplate = resultTemplate.departments[i]
+            if (notComputedDept.deptName === deptOfTemplate.deptName) {
+                deptOfTemplate.sum = deptOfTemplate.sum + notComputedDept.sum
+                // todo: 如果出现人名重复，需要再此进行合并
+                deptOfTemplate.users.push({
+                    userName: userName,
+                    sum: notComputedDept.sum,
+                    ids: notComputedDept.ids
+                })
+                resultTemplate.departments[i] = deptOfTemplate
+                break;
+            } else if (i === resultTemplate.departments.length - 1) {
+                resultTemplate.departments.push({
+                    deptName: notComputedDept.deptName,
+                    sum: notComputedDept.sum,
+                    users: [{userName: userName, sum: notComputedDept.sum, ids: notComputedDept.ids}]
+                })
+                break
+            }
+        }
+    }
+    return resultTemplate;
+}
+
+
+/**
+ * 中转调用 funOfTodaySelfStatistic 获取统计数据并进行格式转化
+ * @param funOfTodaySelfStatistic
+ * @param deptId
+ * @param status
+ * @param importance
+ * @returns {Promise<null|{sum: number, departments: *[]}>}
+ */
+const getDeptStatistic = async (funOfTodaySelfStatistic, deptId, status, importance) => {
+    const requiredDepartment = await departmentService.getDepartmentWithUsers(deptId);
+    if (!requiredDepartment) {
+        console.error(`未找到部门：${deptId}的信息`)
+        return null
+    }
+
+    let convertedResult = {sum: 0, departments: []}
+    const usersOfDepartment = departmentService.simplifiedUsersOfDepartment(requiredDepartment)
+    const users = usersOfDepartment.deptUsers
+
+    for (const user of users) {
+        const result = await funOfTodaySelfStatistic(user.userid, status, importance)
+        convertedResult = convertSelfStatisticToDept(result, user.name,
+            requiredDepartment.parent_id == 1,
+            requiredDepartment.name, convertedResult)
+    }
+
+    return await statisticResultUtil.removeUnsatisfiedDeptStatistic(convertedResult, deptId)
+}
 
 module.exports = {
     filterFlowsByTimesRange,
@@ -329,5 +416,7 @@ module.exports = {
     sumFlowsByDepartmentOfMultiType,
     getFlowsByIds,
     getTodayFlowsByIds,
-    convertJonsToArr
+    convertJonsToArr,
+    convertSelfStatisticToDept,
+    getDeptStatistic
 }

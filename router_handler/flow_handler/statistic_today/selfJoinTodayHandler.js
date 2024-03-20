@@ -1,6 +1,7 @@
 const biResponse = require("../../../utils/biResponse")
 const flowJoinedService = require("../../../service/flowJoinedService")
 const statusMapProcessorHub = require("./statusMapProcessorHub")
+const userService = require("../../../service/userService")
 
 const selfJoinedStatusProcessorMap = {
     "error": {processor: flowJoinedService.getTodaySelfJoinedFlowsStatisticCountOfFlowStatus, mapStatus: "ERROR"},
@@ -16,10 +17,17 @@ const selfJoinedStatusProcessorMap = {
     "overdue": {processor: flowJoinedService.getTodaySelfJoinedFlowsStatisticCountOfOverDue}
 }
 
+const getSelfJoinedResult = async (userId, status, importance) => {
+    const ddUserId = await userService.getDingDingUserId(userId);
+    const result = await statusMapProcessorHub.convert(selfJoinedStatusProcessorMap, ddUserId, status, importance)
+    return result;
+}
+
 const todaySelfJoinedFlowsStatisticHub = async (req, res) => {
     const status = req.params.status;
     const {importance} = req.query
-    const result = await statusMapProcessorHub.convert(selfJoinedStatusProcessorMap, req.user.id, importance, status)
+    // todo: 需要返回前端直接从user中取
+    const result = await getSelfJoinedResult(req.user.id, status, importance)
     if (result != null) {
         return res.send(biResponse.success(result))
     }
@@ -27,5 +35,6 @@ const todaySelfJoinedFlowsStatisticHub = async (req, res) => {
 }
 
 module.exports = {
+    getSelfJoinedResult,
     todaySelfJoinedFlowsStatisticHub
 }

@@ -4,8 +4,12 @@
 // 引入用户模型
 const UsersModel = require("../model/users");
 const RolesModel = require("../model/roles");
+const userRoleRepo = require("../repository/userRoleRepo")
+const roleMenuRepo = require("../repository/roleMenuRepo")
+const menuRepo = require("../repository/menuRepo")
+const departmentService = require("../service/departmentService")
 
-const { Op } = require("sequelize");
+const {Op} = require("sequelize");
 // 引入加密模块
 const bcrypt = require("bcryptjs");
 const Uuid = require("uuid");
@@ -13,436 +17,488 @@ const Uuid = require("uuid");
 let joi = require("joi");
 // 2. 导入需要的验证规则对象
 const {
-  user_login_schema,
-  add_user_schema,
-  get_list,
-  update_user_schema,
-  edit_password_schema,
-  get_userInfoById_schema,
-  delete_user_schema,
+    user_login_schema,
+    add_user_schema,
+    get_list,
+    update_user_schema,
+    edit_password_schema,
+    get_userInfoById_schema,
+    delete_user_schema,
 } = require("../schema/user");
 // 引入生成图形验证码库
 const svgCaptcha = require("svg-captcha");
 // 引入封装好的redis
 const redis = require("../utils/redisUtil.js");
 // 引入封装好的token模块和配置信息
-const { addToken, decodedToken, verifyToken } = require("../utils/token");
+const {generateToken, decodedToken, verifyToken} = require("../utils/token");
 const tokenConfig = require("../config/index").tokenConfig;
+const biResponse = require("../utils/biResponse")
 
 
 /**
  * 获取图形验证码
  */
 exports.getCheckCode = async (req, res) => {
-  // 生成验证码，获取catcha，有{data,text}两个属性，data为svg格式图片、text为验证码
-  const captcha = svgCaptcha.create({
-    size: 4,
-    ignoreChars: "0o1lpaqd",
-    color: true,
-    noise: 6,
-    background: "#aead5b",
-    height: 32,
-    width: 100,
-  });
-  // 验证码键和缓存时间
-  const uuid = Uuid.v4();
-  const effectTime = 10 * 60;
+    // 生成验证码，获取catcha，有{data,text}两个属性，data为svg格式图片、text为验证码
+    const captcha = svgCaptcha.create({
+        size: 4,
+        ignoreChars: "0o1lpaqd",
+        color: true,
+        noise: 6,
+        background: "#aead5b",
+        height: 32,
+        width: 100,
+    });
+    // 验证码键和缓存时间
+    const uuid = Uuid.v4();
+    const effectTime = 10 * 60;
 
-  console.log('**** redis code ****', new Date())
-  // 存入redis
-  const result = await redis.setKey(
-    uuid,
-    captcha.text.toLowerCase(),
-    effectTime
-  );
-  console.log('**** code ****', new Date())
-  if (result) {
-    res.send({
-      code: 200,
-      uuid,
-      textCode: captcha.text,
-      message: "获取验证码成功",
-      data: captcha.data,
-    });
-  } else {
-    return res.send({
-      code: 1,
-      message: "验证码获取失败",
-      data: null,
-    });
-  }
+    console.log('**** redis code ****', new Date())
+    // 存入redis
+    const result = await redis.setKey(
+        uuid,
+        captcha.text.toLowerCase(),
+        effectTime
+    );
+    console.log('**** code ****', new Date())
+    if (result) {
+        res.send({
+            code: 200,
+            uuid,
+            textCode: captcha.text,
+            message: "获取验证码成功",
+            data: captcha.data,
+        });
+    } else {
+        return res.send({
+            code: 1,
+            message: "验证码获取失败",
+            data: null,
+        });
+    }
 };
 /**
  * 登录路由
  */
 exports.login = async (req, res, next) => {
-  // 验证入参，错误时抛出以捕获
-  const { error, value } = user_login_schema.validate(req.body);
-  if (error) {
-    return next(error);
-  }
-  // 验证验证码
-  const { username, password, checkCode, uuid } = value;
-  const captcha = await redis.getKey(uuid);
-  if (!captcha) {
-    return res.send({
-      code: 1,
-      message: "图形验证码已过期，请点击图片刷新",
-    });
-  }
-  if (checkCode.toLowerCase() !== captcha.toLowerCase()) {
-    return res.send({
-      code: 1,
-      message: "图形验证码不正确，请重新输入",
-    });
-  }
-  // 查询数据库用户信息是否存在密码是否正确
-  UsersModel.findOne({
-    where: {
-      username: username,
-    },
-  }).then(async (result) => {
-    if (!result) {
-      /*
-       * 返回体格式
-       * code：200为成功、1为失败
-       * message：接口信息描述
-       * data：接口数据
-       */
-      return res.send({
-        code: 0,
-        message: "用户不存在",
-        data: null,
-      });
-    } else if (result.status === "0") {
-      return res.send({
-        code: 0,
-        message: "帐号已停用",
-        data: "",
-      });
-    } else {
-
-      const compareResult = bcrypt.compareSync(password, result.password);
-      if (compareResult) {
-        // 用浏览器可识别的固定格式生成token
-        const token =
-          "Bearer " +
-          addToken(
-            { id: result.user_id, username: result.username },
-            tokenConfig.jwtSecretKey,
-            tokenConfig.secretKeyExpire
-          );
-        // 生成长时refreshToken
-        const refreshToken = addToken(
-          { id: result.user_id, username: result.username },
-          tokenConfig.jwtRefrechSecretKey,
-          tokenConfig.refreshSerectKeyExpire
-        );
-        return res.send({
-          code: 200,
-          message: "登录成功",
-          data: {
-            token,
-            refreshToken,
-          },
-        });
-      } else {
-        return res.send({
-          code: 1,
-          message: "密码错误",
-          data: "",
-        });
-      }
+    // 验证入参，错误时抛出以捕获
+    const {error, value} = user_login_schema.validate(req.body);
+    if (error) {
+        return next(error);
     }
-  });
+    // 验证验证码
+    const {username, password, checkCode, uuid} = value;
+    const captcha = await redis.getKey(uuid);
+    if (!captcha) {
+        return res.send(biResponse.format(1, "图形验证码已过期，请点击图片刷新"));
+    }
+    if (checkCode.toLowerCase() !== captcha.toLowerCase()) {
+        return res.send(biResponse.format(1, "图形验证码不正确，请重新输入"));
+    }
+    // todo: 先保留
+    const user = {
+        token: null,
+        refreshToken: null,
+        brief: null,
+        permissions: null,
+        departments: null
+    }
+    // 用户基本信息
+    const brief = await UsersModel.findOne({
+        where: {username: username},
+    });
+
+    if (!brief) {
+        return res.send(biResponse.format(0, "用户不存在"));
+    }
+
+    if (brief.status.toString() === "0") {
+        return res.send(biResponse.format(0, "帐号已停用"));
+    }
+
+    const compareResult = bcrypt.compareSync(password, brief.password);
+    if (!compareResult) {
+        return res.send(biResponse.format(1, "密码错误"));
+    }
+
+    const userDetails = brief.dataValues
+    user.brief = userDetails
+
+    user.token = "Bearer " + generateToken(
+        {id: brief.user_id, username: brief.username},
+        tokenConfig.jwtSecretKey,
+        tokenConfig.secretKeyExpire
+    )
+
+    user.refreshToken = generateToken(
+        {id: brief.user_id, username: brief.username},
+        tokenConfig.jwtRefrechSecretKey,
+        tokenConfig.refreshSerectKeyExpire
+    );
+
+    // // 用户角色信息
+    // const userRoles = await userRoleRepo.getRoleByUserId(userDetails.user_id)
+    //
+    // // 权限 菜单和操作
+    // const permissions = {menuIds: [], permIds: []}
+    // for (const userRole of userRoles) {
+    //     const rolePermission = await RolesModel.getResource(userRole.roleId)
+    //     permissions.menuIds = permissions.menuIds.concat(rolePermission.menu_ids)
+    //     permissions.permIds = permissions.permIds.concat(rolePermission.permIds)
+    // }
+    // user.permissions = permissions
+    //
+    // const departments = await departmentService.getDepartments()
+    // // todo: 先保留，需要进行排序
+    // const departmentsOfUser = await departmentService.getDepartmentOfUser(brief.dingding_user_id)
+    // //根据deptId进行升序排序，可避免子部门出现在一级部门前面，而出现汇总问题
+    // const sortedDepartmentsOfUser = departmentsOfUser.sort((cur, next) => cur.dept_id - next.dept_id)
+    //
+    // const departmentsTemplate = []
+    // for (const dept of departmentsOfUser) {
+    //
+    //     // 找到该节点的详情
+    //     let curDeptDetails = null;
+    //     for (const department of departments) {
+    //         curDeptDetails = departmentService.findMatchedDepartmentFromRoot(dept.dept_id, department);
+    //         if (curDeptDetails) {
+    //             break;
+    //         }
+    //     }
+    //
+    //     const departmentTemplate = {}
+    //     departmentTemplate.deptId = dept.dept_id
+    //     departmentTemplate.deptName = dept.dep_detail.name
+    //     departmentTemplate.isLeader = dept.leader
+    //
+    //     if (dept.leader) {
+    //         let subDepts = []
+    //         const {dep_chil: dep_chils} = curDeptDetails
+    //         for (const depChil of dep_chils) {
+    //             const tmpDept = {}
+    //             tmpDept.leader = true
+    //             tmpDept.deptId = depChil.dept_id
+    //             tmpDept.deptName = depChil.name
+    //             tmpDept.parentId = dept.dept_id
+    //             subDepts.push(tmpDept)
+    //         }
+    //         departmentTemplate.subDepts = subDepts
+    //     }
+    //
+    //     // 添加或者合并信息
+    //     if (departmentsTemplate.length == 0) {
+    //         departmentsTemplate.push(departmentTemplate)
+    //         continue;
+    //     }
+    //     for (let i = 0; i < departmentsTemplate.length; i++) {
+    //         if (curDeptDetails.parent_id === departmentsTemplate[i].deptId) {
+    //             departmentTemplate.subDepts.push(departmentTemplate)
+    //             break;
+    //         }
+    //         if (i === departmentsTemplate.length - 1) {
+    //             departmentsTemplate.push(departmentTemplate)
+    //             break;
+    //         }
+    //     }
+    // }
+    // user.departments = departmentsTemplate
+
+    return res.send({
+        code: 200,
+        message: "登录成功",
+        data: {
+            token: user.token,
+            refreshToken: user.refreshToken,
+        },
+    });
 };
 /**
  * 添加用户
  */
 exports.addUser = (req, res, next) => {
-  // 验证入参，错误时抛出以捕获
-  const { error, value } = add_user_schema.validate(req.body);
-  if (error) {
-    return next(error);
-  }
-  // 查询是否存在相同用户名
-  UsersModel.findAll({
-    where: {
-      username: value.username,
-    },
-  }).then(async (result) => {
-    if (result && result.length)
-      return res.send({
-        code: 0,
-        message: "用户名被占用，请更换后重试！",
-        data: null,
-      });
-    else {
-      // const password = 'admin123';
-      const password = value.password;
-      // 加密
-      value.password = bcrypt.hashSync(password, 10);
-      const result = await UsersModel.addUser(value);
-      // 比较明文密码和加密密码
-      const compareResult = bcrypt.compareSync(password, result.password);
-      if (compareResult) {
-        // 用浏览器可识别的固定格式生成token
-        const token =
-          "Bearer " +
-          addToken(
-            { id: result.user_id, username: result.username },
-            tokenConfig.jwtSecretKey,
-            tokenConfig.secretKeyExpire
-          );
-        // 生成长时refreshToken
-        const refreshToken = addToken(
-          { id: result.user_id, username: result.username },
-          tokenConfig.jwtRefrechSecretKey,
-          tokenConfig.refreshSerectKeyExpire
-        );
-        return res.send({
-          code: 200,
-          message: "注册成功",
-          data: {
-            token,
-            refreshToken,
-          },
-        });
-      }
+    // 验证入参，错误时抛出以捕获
+    const {error, value} = add_user_schema.validate(req.body);
+    if (error) {
+        return next(error);
     }
-  });
+    // 查询是否存在相同用户名
+    UsersModel.findAll({
+        where: {
+            username: value.username,
+        },
+    }).then(async (result) => {
+        if (result && result.length)
+            return res.send({
+                code: 0,
+                message: "用户名被占用，请更换后重试！",
+                data: null,
+            });
+        else {
+            // const password = 'admin123';
+            const password = value.password;
+            // 加密
+            value.password = bcrypt.hashSync(password, 10);
+            const result = await UsersModel.addUser(value);
+            // 比较明文密码和加密密码
+            const compareResult = bcrypt.compareSync(password, result.password);
+            if (compareResult) {
+                // 用浏览器可识别的固定格式生成token
+                const token =
+                    "Bearer " +
+                    addToken(
+                        {id: result.user_id, username: result.username},
+                        tokenConfig.jwtSecretKey,
+                        tokenConfig.secretKeyExpire
+                    );
+                // 生成长时refreshToken
+                const refreshToken = addToken(
+                    {id: result.user_id, username: result.username},
+                    tokenConfig.jwtRefrechSecretKey,
+                    tokenConfig.refreshSerectKeyExpire
+                );
+                return res.send({
+                    code: 200,
+                    message: "注册成功",
+                    data: {
+                        token,
+                        refreshToken,
+                    },
+                });
+            }
+        }
+    });
 };
 
 /**
  * 刷新token
  */
 exports.refreshToken = (req, res) => {
-  const { refreshToken } = req.body;
-  // 验证 refreshToken 1:通过
-  let _res = verifyToken(refreshToken);
-  if (_res === 1) {
-    // 对refreshToken进行解码获得id、username
-    let { id, username } = decodedToken(refreshToken);
-    // 续签生成新的token
-    const token =
-      "Bearer " +
-      addToken({ id, username }, tokenConfig.jwtSecretKey, tokenConfig.secretKeyExpire);
-    // 续签长时token
-    const newRefreshToken = addToken(
-      { id, username },
-      tokenConfig.jwtRefrechSecretKey,
-      tokenConfig.refreshSerectKeyExpire
-    );
-    res.send({
-      code: 200,
-      message: "获取成功",
-      data: {
-        token,
-        refreshToken: newRefreshToken,
-      },
-    });
-  } else {
-    res.send({
-      code: 500,
-      message: _res.message,
-    });
-  }
+    const {refreshToken} = req.body;
+    // 验证 refreshToken 1:通过
+    let _res = verifyToken(refreshToken);
+    if (_res === 1) {
+        // 对refreshToken进行解码获得id、username
+        let {id, username} = decodedToken(refreshToken);
+        // 续签生成新的token
+        const token =
+            "Bearer " +
+            addToken({id, username}, tokenConfig.jwtSecretKey, tokenConfig.secretKeyExpire);
+        // 续签长时token
+        const newRefreshToken = addToken(
+            {id, username},
+            tokenConfig.jwtRefrechSecretKey,
+            tokenConfig.refreshSerectKeyExpire
+        );
+        res.send({
+            code: 200,
+            message: "获取成功",
+            data: {
+                token,
+                refreshToken: newRefreshToken,
+            },
+        });
+    } else {
+        res.send({
+            code: 500,
+            message: _res.message,
+        });
+    }
 };
 /**
  * 获取用户列表
  */
 exports.getList = (req, res, next) => {
-  const { value, error } = get_list.validate(req.query);
-  if (error) {
-    return next(error);
-  }
-  // 接收前端参数
-  let { pageSize, currentPage } = req.query;
-  // 默认值
-  limit = pageSize ? Number(pageSize) : 10;
-  offset = currentPage ? Number(currentPage) : 1;
-  offset = (offset - 1) * pageSize;
-  const { username, nickname, email, status } = value;
-  let where = {};
-  if (username) where.username = { [Op.like]: `%${username}%` };
-  if (nickname) where.nickname = nickname;
-  if (email) where.email = email;
-  if (status === "0" || status === "1") where.status = { [Op.eq]: status };
+    const {value, error} = get_list.validate(req.query);
+    if (error) {
+        return next(error);
+    }
+    // 接收前端参数
+    let {pageSize, currentPage} = req.query;
+    // 默认值
+    limit = pageSize ? Number(pageSize) : 10;
+    offset = currentPage ? Number(currentPage) : 1;
+    offset = (offset - 1) * pageSize;
+    const {username, nickname, email, status} = value;
+    let where = {};
+    if (username) where.username = {[Op.like]: `%${username}%`};
+    if (nickname) where.nickname = nickname;
+    if (email) where.email = email;
+    if (status === "0" || status === "1") where.status = {[Op.eq]: status};
 
-  UsersModel.findAndCountAll({
-    attributes: { exclude: ["password"] },
-    include: [{ model: RolesModel }], // 预先加载角色模型
-    distinct: true,
-    offset: offset,
-    limit: limit,
-    where: where,
-  }).then(function (users) {
-    return res.send({
-      code: 0,
-      message: "获取成功",
-      data: users,
+    UsersModel.findAndCountAll({
+        attributes: {exclude: ["password"]},
+        include: [{model: RolesModel}], // 预先加载角色模型
+        distinct: true,
+        offset: offset,
+        limit: limit,
+        where: where,
+    }).then(function (users) {
+        return res.send({
+            code: 0,
+            message: "获取成功",
+            data: users,
+        });
     });
-  });
 };
 /**
  * 修改用户
  */
 exports.editUser = (req, res, next) => {
-  const { value, error } = update_user_schema.validate(req.body);
-  const user_id = value.user_id;
-  if (error) {
-    return next(error);
-  }
-  UsersModel.findAll({
-    where: {
-      [Op.and]: {
-        user_id: {
-          [Op.ne]: user_id,
-        },
-        username: {
-          [Op.eq]: value.username,
-        },
-      },
-    },
-  }).then((result) => {
-    if (result && result.length)
-      return res.send({
-        code: 1,
-        message: "用户名被占用，请更换后重试！",
-        data: null,
-      });
-    else {
-      const result = UsersModel.updateUser(user_id, req.body);
-      result.then(function (ret) {
-        if (ret === true) {
-          return res.send({
-            code: 200,
-            message: "修改成功",
-            data: ret,
-          });
-        } else {
-          return res.send({
-            code: 0,
-            message: ret,
-            data: null,
-          });
-        }
-      });
+    const {value, error} = update_user_schema.validate(req.body);
+    const user_id = value.user_id;
+    if (error) {
+        return next(error);
     }
-  });
+    UsersModel.findAll({
+        where: {
+            [Op.and]: {
+                user_id: {
+                    [Op.ne]: user_id,
+                },
+                username: {
+                    [Op.eq]: value.username,
+                },
+            },
+        },
+    }).then((result) => {
+        if (result && result.length)
+            return res.send({
+                code: 1,
+                message: "用户名被占用，请更换后重试！",
+                data: null,
+            });
+        else {
+            const result = UsersModel.updateUser(user_id, req.body);
+            result.then(function (ret) {
+                if (ret === true) {
+                    return res.send({
+                        code: 200,
+                        message: "修改成功",
+                        data: ret,
+                    });
+                } else {
+                    return res.send({
+                        code: 0,
+                        message: ret,
+                        data: null,
+                    });
+                }
+            });
+        }
+    });
 };
 /**
  * 删除用户
  */
 exports.deleteUser = (req, res, next) => {
-  const { value, error } = delete_user_schema.validate(req.body);
-  if (error) {
-    return next(error);
-  }
-  const user_ids = value.user_ids;
-  UsersModel.delUser(user_ids || []).then(function (user) {
-    if (user !== true) {
-      return res.send({
-        code: 0,
-        message: "删除失败",
-        data: null,
-      });
+    const {value, error} = delete_user_schema.validate(req.body);
+    if (error) {
+        return next(error);
     }
-    return res.send({
-      code: 200,
-      message: "删除成功",
-      data: user,
+    const user_ids = value.user_ids;
+    UsersModel.delUser(user_ids || []).then(function (user) {
+        if (user !== true) {
+            return res.send({
+                code: 0,
+                message: "删除失败",
+                data: null,
+            });
+        }
+        return res.send({
+            code: 200,
+            message: "删除成功",
+            data: user,
+        });
     });
-  });
 };
 /**
  * 重置密码
  */
 exports.editPassword = (req, res, next) => {
-  const { value, error } = edit_password_schema.validate(req.body);
-  if (error) {
-    return next(error);
-  }
-  if (value.password !== value.repassword) {
-    return res.send({
-      code: 1,
-      message: "两次密码输入不一致",
-      data: null,
-    });
-  }
-  const user_id = value.user_id;
-  const old_password = value.old_password;
-  UsersModel.findOne({ where: { user_id: user_id } }).then(function (user) {
-    if (!user) {
-      return res.send({
-        code: 1,
-        message: "用户不存在",
-        data: null,
-      });
+    const {value, error} = edit_password_schema.validate(req.body);
+    if (error) {
+        return next(error);
     }
-    // 判断密码是否与数据库密码一致
-    const compareResult = bcrypt.compareSync(old_password, user.password);
-    if (!compareResult) {
-      return res.send({
-        code: 1,
-        message: "原密码不正确",
-        data: null,
-      });
+    if (value.password !== value.repassword) {
+        return res.send({
+            code: 1,
+            message: "两次密码输入不一致",
+            data: null,
+        });
     }
-    const data = {
-      password: bcrypt.hashSync(value.password, 10),
-      update_time: new Date(),
-    };
-    const result = UsersModel.update(data, {
-      where: {
-        user_id: user_id,
-      },
-    });
-    result.then(function (ret) {
-      if (ret) {
-        return res.send({
-          code: 0,
-          message: "修改成功",
-          data: ret,
+    const user_id = value.user_id;
+    const old_password = value.old_password;
+    UsersModel.findOne({where: {user_id: user_id}}).then(function (user) {
+        if (!user) {
+            return res.send({
+                code: 1,
+                message: "用户不存在",
+                data: null,
+            });
+        }
+        // 判断密码是否与数据库密码一致
+        const compareResult = bcrypt.compareSync(old_password, user.password);
+        if (!compareResult) {
+            return res.send({
+                code: 1,
+                message: "原密码不正确",
+                data: null,
+            });
+        }
+        const data = {
+            password: bcrypt.hashSync(value.password, 10),
+            update_time: new Date(),
+        };
+        const result = UsersModel.update(data, {
+            where: {
+                user_id: user_id,
+            },
         });
-      } else {
-        return res.send({
-          code: 1,
-          message: ret,
-          data: null,
+        result.then(function (ret) {
+            if (ret) {
+                return res.send({
+                    code: 0,
+                    message: "修改成功",
+                    data: ret,
+                });
+            } else {
+                return res.send({
+                    code: 1,
+                    message: ret,
+                    data: null,
+                });
+            }
         });
-      }
     });
-  });
 };
 /**
  * 根据id获取用户信息接口
  */
 exports.getUserinfoById = (req, res, next) => {
-  const { value, error } = get_userInfoById_schema.validate(req.params);
-  if (error) {
-    return next(error);
-  }
-  let user_id = value.user_id;
-  UsersModel.findOne({
-    attributes: { exclude: ["password"] },
-    include: [{ model: RolesModel }], // 预先加载角色模型
-    where: {
-      user_id: user_id,
-    },
-  }).then((user) => {
-    if (!user) {
-      res.send({
-        code: 1,
-        message: "用户不存在",
-        data: null,
-      });
-    } else {
-      res.send({
-        code: 0,
-        message: "获取成功",
-        data: user,
-      });
+    const {value, error} = get_userInfoById_schema.validate(req.params);
+    if (error) {
+        return next(error);
     }
-  });
+    let user_id = value.user_id;
+    UsersModel.findOne({
+        attributes: {exclude: ["password"]},
+        include: [{model: RolesModel}], // 预先加载角色模型
+        where: {
+            user_id: user_id,
+        },
+    }).then((user) => {
+        if (!user) {
+            res.send({
+                code: 1,
+                message: "用户不存在",
+                data: null,
+            });
+        } else {
+            res.send({
+                code: 0,
+                message: "获取成功",
+                data: user,
+            });
+        }
+    });
 };

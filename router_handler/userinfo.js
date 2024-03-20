@@ -16,6 +16,9 @@ const dd_data = require("../service/dingDingService.js");
 // 管理人员白名单
 const whiteList = require("../config/whiteList");
 const {redisKeys} = require("../const/redisConst")
+const globalGetter = require("../global/getter")
+const departmentService = require("../service/departmentService")
+
 // 部门数据集合
 const dep_list = [
     {
@@ -230,6 +233,7 @@ exports.getUserinfo = async (req, res) => {
         };
         const CorpToken = await getToken();
         console.log("当前token=========>", CorpToken.access_token);
+
         let userInfos = [];
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(userid)) {
@@ -240,7 +244,64 @@ exports.getUserinfo = async (req, res) => {
                 .lev_dep_list;
             console.log("当前用户所在部门=========>", userInfos);
         }
-        // console.log("userInfos=========>", userInfos);
+
+        const departmentsOfUser = await departmentService.getDepartmentOfUser(userid)
+        //根据deptId进行升序排序，可避免子部门出现在一级部门前面，而出现汇总问题
+        departmentsOfUser.sort((cur, next) => cur.dept_id - next.dept_id)
+
+        const departmentsTemplate = []
+        for (const dept of departmentsOfUser) {
+            // 找到该节点的详情
+            let curDeptDetails = null;
+            for (const department of departments) {
+                curDeptDetails = departmentService.findMatchedDepartmentFromRoot(dept.dept_id, department);
+                if (curDeptDetails) {
+                    break;
+                }
+            }
+
+            const departmentTemplate = {}
+            departmentTemplate.dept_id = dept.dept_id
+            departmentTemplate.name = dept.dep_detail.name
+            departmentTemplate.leader = dept.leader
+            departmentTemplate.parent_id = curDeptDetails.parent_id
+
+            if (dept.leader) {
+                const dep_chils = curDeptDetails.dep_chil
+                let subDepts = []
+                if (dep_chils) {
+                    for (const depChil of dep_chils) {
+                        const tmpDept = {}
+                        tmpDept.leader = true
+                        tmpDept.dept_id = depChil.dept_id
+                        tmpDept.name = depChil.name
+                        tmpDept.parent_id = dept.dept_id
+                        subDepts.push(tmpDept)
+                    }
+                    departmentTemplate.subDepts = subDepts
+                }
+            }
+
+            // 添加或者合并信息
+            if (departmentsTemplate.length == 0) {
+                departmentsTemplate.push(departmentTemplate)
+                continue;
+            }
+            for (let i = 0; i < departmentsTemplate.length; i++) {
+                if (curDeptDetails.parent_id === departmentsTemplate[i].dept_id) {
+                    if (!departmentsTemplate[i].subDepts) {
+                        departmentsTemplate[i].subDepts = []
+                    }
+                    departmentsTemplate[i].subDepts.push(departmentTemplate)
+                    break;
+                }
+                if (i === departmentsTemplate.length - 1) {
+                    departmentsTemplate.push(departmentTemplate)
+                    break;
+                }
+            }
+        }
+
         // 若无用户信息提示错误
         if (!user_roles) {
             return res.send({
@@ -257,9 +318,6 @@ exports.getUserinfo = async (req, res) => {
             if (item.status) {
                 role_ids.push(item.role_id);
                 role_names.push(item.role_name);
-                // result = await getResource(item.role_id);
-                // menu_ids = result.menu_ids;
-                // buttons = result.buttons;
             }
         });
         // 根据角色id数组获取权限
@@ -282,9 +340,8 @@ exports.getUserinfo = async (req, res) => {
                 avatar: user_roles.user_pic,
                 menus: menus,
                 buttons: buttons,
-                dep_list: userInfos,
-                admin: whiteList.pepArr().includes(userid),
-                admin: whiteList.pepArr().includes(userid),
+                dep_list: departmentsTemplate,
+                admin: whiteList.pepArr().includes(userid)
             },
         });
     }
