@@ -510,7 +510,7 @@ const getFlowsOfRunningAndFinishedOfToday = async () => {
 
                     const costAlready = parseFloat(dateUtil.diff(computeEndDate, dateUtil.formatGMT(reviewItems[i - 1].operateTimeGMT)))
                     const reviewRequirements = await FlowFormReview.getFlowFormReviewList(flow.formUuid)
-                    if (reviewRequirements.form_review) {
+                    if (reviewRequirements && reviewRequirements.form_review) {
                         const requiredCost = reviewUtil.extractTimeRequirement(reviewRequirements.form_review, reviewItems[i].activityId)
                         reviewItems[i]["cost"] = costAlready
                         reviewItems[i]["requiredCost"] = requiredCost === reviewUtil.unlimitedTime ? "无要求" : requiredCost
