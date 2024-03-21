@@ -56,7 +56,7 @@ const getAllFlowUntilNowByTimeRange = async (timesRange) => {
     return filteredData;
 };
 
-const getFlowsOfRunningAndFinishedOfToday = async () => {
+const getTodayRunningAndFinishedFlows = async () => {
     const result =  await redisUtil.getKey(redisKeys.FlowsOfRunningAndFinishedOfToday)
     return JSON.parse(result)
 }
@@ -71,5 +71,5 @@ module.exports = {
     getUsersWithJoinLaunchDataUnderDepartment,
     setUsersWithJoinLaunchDataUnderDepartment,
     getAllFlowUntilNowByTimeRange,
-    getFlowsOfRunningAndFinishedOfToday
+    getTodayRunningAndFinishedFlows
 }

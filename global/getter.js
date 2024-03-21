@@ -3,7 +3,7 @@ const redisService = require("../service/redisService")
 const getTodayFlows = async () => {
     let todayFlows = global.todayRunningAndFinishedFlows
     if (!todayFlows || todayFlows.length === 0) {
-        todayFlows = await redisService.getFlowsOfRunningAndFinishedOfToday();
+        todayFlows = await redisService.getTodayRunningAndFinishedFlows();
     }
     return todayFlows
 }

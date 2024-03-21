@@ -38,7 +38,7 @@ const getTodaySelfJoinedFlowsStatisticCountOfOverDue = async (userId, importance
 const getTodaySelfJoinedFlowsStatisticOfOverDue = async (userId, importance) => {
     let flowsOfRunningAndFinishedOfToday = global.todayRunningAndFinishedFlows
     if (!flowsOfRunningAndFinishedOfToday || flowsOfRunningAndFinishedOfToday.length === 0) {
-        flowsOfRunningAndFinishedOfToday = await redisService.getFlowsOfRunningAndFinishedOfToday();
+        flowsOfRunningAndFinishedOfToday = await redisService.getTodayRunningAndFinishedFlows();
     }
 
     // 根据重要性和forms过滤流程
@@ -123,7 +123,7 @@ const getTodaySelfJoinedFlowsStatisticCountOfReviewType = async (userId, reviewT
 const getTodaySelfJoinedFlowsStatisticOfReviewType = async (userId, reviewType, importance) => {
     let flowsOfRunningAndFinishedOfToday = global.todayRunningAndFinishedFlows
     if (!flowsOfRunningAndFinishedOfToday || flowsOfRunningAndFinishedOfToday.length === 0) {
-        flowsOfRunningAndFinishedOfToday = await redisService.getFlowsOfRunningAndFinishedOfToday();
+        flowsOfRunningAndFinishedOfToday = await redisService.getTodayRunningAndFinishedFlows();
     }
     // 根据重要性和forms过滤流程
     const filteredFlows = await flowService.filterFlowsByImportance(flowsOfRunningAndFinishedOfToday, importance)
@@ -271,6 +271,13 @@ const getDeptJoinedOverDueStatistic = async (deptId, status, importance) => {
     //todo：此步可以省略，直接去requiredDepartment的下的dept_user
     const usersOfDepartment = departmentService.simplifiedUsersOfDepartment(requiredDepartment)
     const users = usersOfDepartment.deptUsers
+    if (!users || users.length === 0) {
+        return {
+            sum: 0,
+            doing: convertedDoingResult,
+            done: convertedDoneResult
+        }
+    }
     for (const user of users) {
         const result = await getTodaySelfJoinedFlowsStatisticCountOfOverDue(user.userid, importance)
         if (result.doing.sum > 0) {

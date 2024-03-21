@@ -476,23 +476,30 @@ const getDoneFlowsOfTodayWithOverDue = async () => {
 //     return doingFlows;
 // }
 
-const getFlowsOfRunningAndFinishedOfToday = async () => {
+const getTodayRunningFlows = async () => {
+    const statusObj = {"name": "RUNNING"}
+    return await getTodayFlowsOfStatus(statusObj)
+}
+
+const getTodayFinishedFlows = async () => {
     const timeRangeOfToday = [dateUtil.startOfToday(), dateUtil.endOfToday()]
     const statusArr = [
-        {"name": "RUNNING"},
         {"name": "ERROR", "timeAction": "modified", "timeRange": timeRangeOfToday},
         {"name": "COMPLETED", "timeAction": "modified", "timeRange": timeRangeOfToday},
         {"name": "TERMINATED", "timeAction": "modified", "timeRange": timeRangeOfToday}
     ]
-
     let flows = [];
     for (const statusObj of statusArr) {
-        const tmpFlows = await getFlowsFromDingDing(statusObj.name, statusObj.timeRange, statusObj.timeAction);
+        const tmpFlows = getTodayFlowsOfStatus(statusObj)
         flows = flows.concat(tmpFlows);
     }
+    return flows
+}
 
-    // 对流程的审核节点补充操作耗时
-    // const savedFlows = await redisService.getFlowsOfRunningAndFinishedOfToday()
+
+const getTodayFlowsOfStatus = async (statusObj) => {
+    const flows = await getFlowsFromDingDing(statusObj.name, statusObj.timeRange, statusObj.timeAction);
+    // 同步流程的操作节点耗时信息
     for (const flow of flows) {
         const reviewItems = flow.overallprocessflow
         if (reviewItems) {
@@ -521,6 +528,15 @@ const getFlowsOfRunningAndFinishedOfToday = async () => {
         }
         flow["overallprocessflow"] = reviewItems
     }
+    return flows
+}
+
+const getTodayRunningAndFinishedFlows = async () => {
+    let flows = [];
+    const todayRunningFlows = await getTodayRunningFlows();
+    flows.concat(todayRunningFlows)
+    const todayFinishedFlows = await getTodayFinishedFlows();
+    flows.concat(todayFinishedFlows)
     return flows;
 }
 
@@ -534,5 +550,5 @@ module.exports = {
     getAllNotFinishedFlowsBeforeToday,
     getAllFlowsOfToday,
     combineAllFlows,
-    getFlowsOfRunningAndFinishedOfToday
+    getTodayRunningAndFinishedFlows
 };

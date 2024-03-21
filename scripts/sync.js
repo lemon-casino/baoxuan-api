@@ -25,7 +25,6 @@ const syncProcessReviewInDb = async () => {
 
 const extractProcessReviewToAloneTale = async () => {
     const allProcesses = await ProcessModel.getProcessList();
-    // for (const process of allProcesses) {
     if (allProcesses[0].overallprocessflow) {
         const reviewItems = allProcesses[0].overallprocessflow;
         for (const reviewItem of reviewItems) {
@@ -39,11 +38,9 @@ const extractProcessReviewToAloneTale = async () => {
                     reviewItem[keyMap[key]] = reviewItem[key];
                 }
             }
-            const result = await processReviewService.saveProcessReview(reviewItem)
-            console.log("--")
+            await processReviewService.saveProcessReview(reviewItem)
         }
     }
-    // }
 }
 
 const initRedis = async () => {
@@ -57,11 +54,9 @@ const initRedis = async () => {
     await dingDingData.getUsersFromDingDing();
 }
 
-const getFlowsOfRunningAndFinishedOfToday = async () => {
-    console.log("------- getFlowsOfRunningAndFinishedOfToday ------")
-    const flows = await dingDingService.getFlowsOfRunningAndFinishedOfToday()
-    console.log("------- getFlowsOfRunningAndFinishedOfToday  sum ------", flows.length)
-    const result = await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
+const getTodayRunningAndFinishedFlows = async () => {
+    const flows = await dingDingService.getTodayRunningAndFinishedFlows()
+    await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
 }
 
 

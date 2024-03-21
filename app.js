@@ -67,7 +67,7 @@ app.use(
         ],
     })
 );
-require("./utils/timedtasks");
+require("./scripts/scheduledTask");
 // 导入并注册用户路由模块
 const userRouter = require("./router/user");
 app.use("/user", userRouter);

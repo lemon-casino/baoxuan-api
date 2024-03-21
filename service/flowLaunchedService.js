@@ -77,7 +77,7 @@ const getTodaySelfLaunchedFlowsStatisticCountOfOverDue = async (userId, importan
 const getTodaySelfLaunchedFlowsStatisticOfOverDue = async (userId, status, importance) => {
     let flowsOfRunningAndFinishedOfToday = global.todayRunningAndFinishedFlows
     if (!flowsOfRunningAndFinishedOfToday || flowsOfRunningAndFinishedOfToday.length === 0) {
-        flowsOfRunningAndFinishedOfToday = await redisService.getFlowsOfRunningAndFinishedOfToday();
+        flowsOfRunningAndFinishedOfToday = await redisService.getTodayRunningAndFinishedFlows();
     }
 
     let filteredFlows = flowsOfRunningAndFinishedOfToday.filter((flow) => {
@@ -142,6 +142,13 @@ const getTodayDeptLaunchedFlowsStatisticCountOfOverDue = async (deptId, importan
     //todo：此步可以省略，直接去requiredDepartment的下的dept_user
     const usersOfDepartment = departmentService.simplifiedUsersOfDepartment(requiredDepartment)
     const users = usersOfDepartment.deptUsers
+    if (!users) {
+        return {
+            sum: 0,
+            doing: [],
+            done: []
+        }
+    }
     for (const user of users) {
         const result = await getTodaySelfLaunchedFlowsStatisticCountOfOverDue(user.userid, importance)
         if (result.doing.sum > 0) {

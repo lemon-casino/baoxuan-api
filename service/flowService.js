@@ -201,7 +201,7 @@ const flowsDividedByDepartment = async (flows) => {
  */
 const filterTodayFlowsByFlowStatusAndImportanceEndOfForms = async (status, importance) => {
     const flowsOfRunningAndFinishedOfToday = await globalGetter.getTodayFlows()
-    if (!flowsOfRunningAndFinishedOfToday){
+    if (!flowsOfRunningAndFinishedOfToday) {
         return []
     }
     const flowOfStatus = flowsOfRunningAndFinishedOfToday.filter((flow) => flow.instanceStatus === status)
@@ -295,8 +295,9 @@ const getFlowsByIds = async (ids) => {
 const getTodayFlowsByIds = async (ids) => {
     let flowsOfRunningAndFinishedOfToday = global.todayRunningAndFinishedFlows
     if (!flowsOfRunningAndFinishedOfToday || flowsOfRunningAndFinishedOfToday.length === 0) {
-        flowsOfRunningAndFinishedOfToday = await redisService.getFlowsOfRunningAndFinishedOfToday();
+        flowsOfRunningAndFinishedOfToday = await redisService.getTodayRunningAndFinishedFlows();
     }
+
     const satisfiedFlows = await flowsOfRunningAndFinishedOfToday.filter((item) => ids.includes(item.processInstanceId))
     return satisfiedFlows;
 }
@@ -391,6 +392,9 @@ const getDeptStatistic = async (funOfTodaySelfStatistic, deptId, status, importa
     const usersOfDepartment = departmentService.simplifiedUsersOfDepartment(requiredDepartment)
     const users = usersOfDepartment.deptUsers
 
+    if (!users || users.length === 0) {
+        return convertedResult
+    }
     for (const user of users) {
         const result = await funOfTodaySelfStatistic(user.userid, status, importance)
         convertedResult = convertSelfStatisticToDept(result, user.name,

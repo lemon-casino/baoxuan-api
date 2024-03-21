@@ -14,7 +14,7 @@ const initial = async () => {
 }
 
 const initGlobalTodayRunningAndFinishedFlows = async () => {
-    const todayRunningAndFinishedFlows = await redisService.getFlowsOfRunningAndFinishedOfToday();
+    const todayRunningAndFinishedFlows = await redisService.getTodayRunningAndFinishedFlows();
     setter.setGlobalTodayRunningAndFinishedFlows(todayRunningAndFinishedFlows)
 }
 

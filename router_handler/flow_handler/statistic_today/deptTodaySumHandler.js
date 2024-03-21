@@ -25,7 +25,7 @@ const getDeptTodaySum = async (req, res) => {
     // 逾期的拆开提出来
     const newOriginalResult = []
     for (const result of originalResult) {
-        if (result.doing) {
+        if (result && result.doing) {
             newOriginalResult.push(result.doing)
             newOriginalResult.push(result.done)
             continue
