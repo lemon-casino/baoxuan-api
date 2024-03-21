@@ -79,7 +79,7 @@ schedule.scheduleJob("*/50 * * * *", async function () {
 /**
  *  每15分钟更新正在进行中的流程和今天完成的流程
  */
-schedule.scheduleJob("* 0/15 * * * ?", async function () {
+schedule.scheduleJob("0 0/15 * * * ?", async function () {
     const flows = await dingDingService.getFlowsOfRunningAndFinishedOfToday()
     await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
     // 将最新的人员数据保存到global中
