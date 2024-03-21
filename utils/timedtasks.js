@@ -18,34 +18,34 @@ schedule.scheduleJob("*/6 * * * *", async function () {
 });
 
 // 每40分钟请求一次DepartmentInformation  获取所有部门
-schedule.scheduleJob("*/40 * * * *", async function () {
-    // console.time("获取所有部门=========>");
-    await dingDingService.getDepartmentFromDingDing();
-    // 将最新的部门数据保存到global中
-    const newDepartments = redisUtil.getKey(redisKeys.Department)
-    globalSetter.setGlobalDepartments(newDepartments)
-    console.timeEnd("获取所有部门=========>");
-});
+// schedule.scheduleJob("*/40 * * * *", async function () {
+//     // console.time("获取所有部门=========>");
+//     await dingDingService.getDepartmentFromDingDing();
+//     // 将最新的部门数据保存到global中
+//     const newDepartments = redisUtil.getKey(redisKeys.Department)
+//     globalSetter.setGlobalDepartments(newDepartments)
+//     console.timeEnd("获取所有部门=========>");
+// });
 
 // 每45分钟请求一次fetchUserList  获取所有部门下的人员
-schedule.scheduleJob("*/45 * * * *", async function () {
-    console.time("获取所有部门下的人员=========>");
-    await dingDingService.getUsersFromDingDing();
-    // 将最新的部门下的人员数据保存到global中
-    const newUsersOfDepartments = redisUtil.getKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment)
-    globalSetter.setGlobalUsersOfDepartments(newUsersOfDepartments)
-    console.timeEnd("获取所有部门下的人员=========>");
-});
+// schedule.scheduleJob("*/45 * * * *", async function () {
+//     console.time("获取所有部门下的人员=========>");
+//     await dingDingService.getUsersFromDingDing();
+//     // 将最新的部门下的人员数据保存到global中
+//     const newUsersOfDepartments = redisUtil.getKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment)
+//     globalSetter.setGlobalUsersOfDepartments(newUsersOfDepartments)
+//     console.timeEnd("获取所有部门下的人员=========>");
+// });
 
 // 每50分钟请求一次fetchUserDetail 获取所有用户详情数据
-schedule.scheduleJob("*/50 * * * *", async function () {
-    console.time("获取所有用户详情数据=========>");
-    await dingDingService.getUsersDetailFromDingDing();
-    // 将最新的人员数据保存到global中
-    const newUsers = redisUtil.getKey(redisKeys.AllUsersDetailWithJoinLaunchData)
-    globalSetter.setGlobalUsers(newUsers)
-    console.timeEnd("获取所有用户详情数据=========>");
-});
+// schedule.scheduleJob("*/50 * * * *", async function () {
+//     console.time("获取所有用户详情数据=========>");
+//     await dingDingService.getUsersDetailFromDingDing();
+//     // 将最新的人员数据保存到global中
+//     const newUsers = redisUtil.getKey(redisKeys.AllUsersDetailWithJoinLaunchData)
+//     globalSetter.setGlobalUsers(newUsers)
+//     console.timeEnd("获取所有用户详情数据=========>");
+// });
 
 // 每天晚上0点开始执行：getAllCompletedLiu() 获取今天以前所有已完成,已终止，异常,流程数据
 schedule.scheduleJob("0 59 23 * * *", async function () {
