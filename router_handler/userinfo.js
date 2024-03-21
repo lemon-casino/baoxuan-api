@@ -250,18 +250,20 @@ exports.getUserinfo = async (req, res) => {
         // todo: 临时处理
         if (whiteList.pepArr().includes(userid)) {
             let departments = await globalGetter.getDepartments()
-            // 顾虑掉外部的部门
-            const outDepartments = ["114410517"]
-            departments = departments.filter((depart) => !outDepartments.includes(depart.dept_id.toString()))
-            departmentsOfUser = departments.map((depart) => {
-                return {
-                    dept_id: depart.dept_id,
-                    leader: true,
-                    dep_detail: {
-                        name: depart.name
+            if (departments && departments.length > 0) {
+                // 顾虑掉外部的部门
+                const outDepartments = ["114410517"]
+                departments = departments.filter((depart) => !outDepartments.includes(depart.dept_id.toString()))
+                departmentsOfUser = departments.map((depart) => {
+                    return {
+                        dept_id: depart.dept_id,
+                        leader: true,
+                        dep_detail: {
+                            name: depart.name
+                        }
                     }
-                }
-            })
+                })
+            }
         }
 
         //根据deptId进行升序排序，可避免子部门出现在一级部门前面，而出现汇总问题
