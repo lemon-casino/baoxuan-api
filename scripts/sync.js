@@ -65,9 +65,15 @@ const getFlowsOfRunningAndFinishedOfToday = async () => {
 }
 
 // const dingDingReq = require("../core/dingDingReq")
-// const test = async () => {
-//     await dingDingReq.getFlowsOfStatus("RNNNING", )
+// const testGetDingDingInstances = async () => {
+//     const result = await dingDingReq.getFlowsOfStatus("RUNNING",
+//         "a0c2bf3c1a2039b2bf4f6bfc76dd5eff",
+//         "073105202321093148",
+//         "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
+//         1,10)
+//     console.log("---hello world---")
 // }
+// testGetDingDingInstances()
 
 // dingDingData.getUsersFromDingDing()
 // dingDingData.getUsersDetailFromDingDing();
