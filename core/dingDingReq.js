@@ -173,7 +173,7 @@ dingDingReq.getFlowIdsByFormId = async (token, userId, formUuid) => {
         userId: userId,
     };
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.post(
             `https://api.dingtalk.com/v1.0/yida/forms/instances/ids/${appType}/${formUuid}`,
             dataToSend,
@@ -211,7 +211,7 @@ dingDingReq.getFlowsByFormId = async (
         pageNumber,
     };
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.post(
             `https://api.dingtalk.com/v1.0/yida/forms/instances/advances/queryAll`,
             dataToSend,
@@ -232,7 +232,7 @@ dingDingReq.getFlowsByFormId = async (
 // 7.批量获取宜搭流程实例详情
 dingDingReq.getBatchFlowsByIds = async (token, userId, processInstanceIds) => {
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.get(
             `https://api.dingtalk.com/v1.0/yida/processes/instances/searchWithIds?systemToken=${systemToken}&appType=${appType}&userId=${userId}&processInstanceIds=${processInstanceIds}`,
             {
@@ -271,7 +271,7 @@ dingDingReq.getFlowsOfStatus = async (
 
 const getPagingFlows = async (token, data, pageNumber, pageSize) => {
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.post(
             `https://api.dingtalk.com/v1.0/yida/processes/instances?pageNumber=${pageNumber}&pageSize=${pageSize}`,
             data,
@@ -320,7 +320,7 @@ dingDingReq.getFlowsOfStatusAndTimeRange = async (
 // 8.获取部门用户的userid列表
 dingDingReq.getDeptUserList = async (access_token, dept_id) => {
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.post(
             "https://oapi.dingtalk.com/topapi/user/listid?access_token=" +
             access_token,
@@ -339,7 +339,7 @@ dingDingReq.getDeptUserList = async (access_token, dept_id) => {
 // 9. 获取用户部门层级
 dingDingReq.getDeptLevel = async (access_token, userid) => {
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.post(
             "https://oapi.dingtalk.com/topapi/v2/department/listparentbyuser?access_token=" +
             access_token,
@@ -358,7 +358,7 @@ dingDingReq.getDeptLevel = async (access_token, userid) => {
 // 10. 获取子部门id详情
 dingDingReq.getSubDept = async (access_token, dept_id) => {
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.post(
             "https://oapi.dingtalk.com/topapi/v2/department/listsubid?access_token=" +
             access_token,
@@ -377,7 +377,7 @@ dingDingReq.getSubDept = async (access_token, dept_id) => {
 // 11. 获取部门用户基础信息
 dingDingReq.getDeptUser_def = async (access_token, dept_id, cursor, size) => {
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.post(
             "https://oapi.dingtalk.com/topapi/user/listsimple?access_token=" +
             access_token,
@@ -404,7 +404,7 @@ dingDingReq.getProcessRecord = async (
     process_instance_id
 ) => {
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.get(
             `https://api.dingtalk.com/v1.0/yida/processes/operationRecords?systemToken=${systemToken}&appType=${appType}&userId=${userId}&processInstanceId=${process_instance_id}`,
             {
@@ -424,7 +424,7 @@ dingDingReq.getProcessRecord = async (
 // 13. 获取所有一级部门列表
 dingDingReq.getSubDeptAll = async (access_token, dept_id = 1) => {
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.post(
             "https://oapi.dingtalk.com/topapi/v2/department/listsub?access_token=" +
             access_token,
@@ -455,7 +455,7 @@ dingDingReq.getremarksAll = async (
         formInstanceIdList,
     };
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.post(
             "https://api.dingtalk.com/v1.0/yida/forms/remarks/query",
             dataToSend,
@@ -476,7 +476,7 @@ dingDingReq.getremarksAll = async (
 // 导出oa所有流程
 dingDingReq.getOaAllProcess = async (access_token, userId) => {
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.get(
             `https://api.dingtalk.com/v1.0/workflow/processes/managements/templates?userId=${userId}`,
             {
@@ -493,7 +493,7 @@ dingDingReq.getOaAllProcess = async (access_token, userId) => {
 
 dingDingReq.corpAccessToken = async () => {
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.post(
             "https://api.dingtalk.com/v1.0/oauth2/accessToken",
             {
@@ -510,7 +510,7 @@ dingDingReq.corpAccessToken = async () => {
 //根据dingding用户id获取部门列表
 dingDingReq.getDp = async (access_token, user_id) => {
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.post(
             "https://oapi.dingtalk.com/topapi/v2/department/listparentbyuser?access_token=" +
             access_token,
@@ -529,7 +529,7 @@ dingDingReq.getDp = async (access_token, user_id) => {
 //获取部门详情
 dingDingReq.getDpInfo = async (access_token, dept_id) => {
     try {
-        await dateUtil.delay(80)
+        await dateUtil.delay(500)
         const response = await axios.post(
             "https://oapi.dingtalk.com/topapi/v2/department/get?access_token=" +
             access_token,
