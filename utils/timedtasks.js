@@ -2,7 +2,7 @@ const dingDingService = require("../service/dingDingService");
 const schedule = require("node-schedule");
 const redisUtil = require("../utils/redisUtil")
 const {redisKeys} = require("../const/redisConst")
-const global = require("../global/index")
+const globalSetter = require("../global/setter")
 
 // 开发测试禁用定时任务，可以手动调用
 if (process.env.NODE_ENV === "dev") {
@@ -23,7 +23,7 @@ schedule.scheduleJob("*/40 * * * *", async function () {
     await dingDingService.getDepartmentFromDingDing();
     // 将最新的部门数据保存到global中
     const newDepartments = redisUtil.getKey(redisKeys.Department)
-    global.setGlobalDepartments(newDepartments)
+    globalSetter.setGlobalDepartments(newDepartments)
     console.timeEnd("获取所有部门=========>");
 });
 
@@ -33,7 +33,7 @@ schedule.scheduleJob("*/45 * * * *", async function () {
     await dingDingService.getUsersFromDingDing();
     // 将最新的部门下的人员数据保存到global中
     const newUsersOfDepartments = redisUtil.getKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment)
-    global.setGlobalUsersOfDepartments(newUsersOfDepartments)
+    globalSetter.setGlobalUsersOfDepartments(newUsersOfDepartments)
     console.timeEnd("获取所有部门下的人员=========>");
 });
 
@@ -43,7 +43,7 @@ schedule.scheduleJob("*/50 * * * *", async function () {
     await dingDingService.getUsersDetailFromDingDing();
     // 将最新的人员数据保存到global中
     const newUsers = redisUtil.getKey(redisKeys.AllUsersDetailWithJoinLaunchData)
-    global.setGlobalUsers(newUsers)
+    globalSetter.setGlobalUsers(newUsers)
     console.timeEnd("获取所有用户详情数据=========>");
 });
 
@@ -82,5 +82,5 @@ schedule.scheduleJob("* 0/5 * * * ?", async function () {
     await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
     // 将最新的人员数据保存到global中
     const flowsOfRunningAndFinishedOfToday = redisUtil.getKey(redisKeys.FlowsOfRunningAndFinishedOfToday)
-    global.setGlobalTodayRunningAndFinishedFlows(flowsOfRunningAndFinishedOfToday)
+    globalSetter.setGlobalTodayRunningAndFinishedFlows(flowsOfRunningAndFinishedOfToday)
 })
