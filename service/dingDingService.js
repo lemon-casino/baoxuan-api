@@ -49,7 +49,7 @@ const getFlowsByStatusAndTimeRange = async (
         pageSize,
         pageNumber
     );
-    if (!resLiuChengList){
+    if (!resLiuChengList) {
         return []
     }
     let allData = resLiuChengList.data;
@@ -510,10 +510,12 @@ const getFlowsOfRunningAndFinishedOfToday = async () => {
 
                     const costAlready = parseFloat(dateUtil.diff(computeEndDate, dateUtil.formatGMT(reviewItems[i - 1].operateTimeGMT)))
                     const reviewRequirements = await FlowFormReview.getFlowFormReviewList(flow.formUuid)
-                    const requiredCost = reviewUtil.extractTimeRequirement(reviewRequirements.form_review, reviewItems[i].activityId)
-                    reviewItems[i]["cost"] = costAlready
-                    reviewItems[i]["requiredCost"] = requiredCost === reviewUtil.unlimitedTime ? "无要求" : requiredCost
-                    reviewItems[i]["isOverDue"] = requiredCost > 0 && costAlready >= requiredCost
+                    if (reviewRequirements.form_review) {
+                        const requiredCost = reviewUtil.extractTimeRequirement(reviewRequirements.form_review, reviewItems[i].activityId)
+                        reviewItems[i]["cost"] = costAlready
+                        reviewItems[i]["requiredCost"] = requiredCost === reviewUtil.unlimitedTime ? "无要求" : requiredCost
+                        reviewItems[i]["isOverDue"] = requiredCost > 0 && costAlready >= requiredCost
+                    }
                 }
             }
         }
