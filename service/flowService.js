@@ -201,6 +201,9 @@ const flowsDividedByDepartment = async (flows) => {
  */
 const filterTodayFlowsByFlowStatusAndImportanceEndOfForms = async (status, importance) => {
     const flowsOfRunningAndFinishedOfToday = await globalGetter.getTodayFlows()
+    if (!flowsOfRunningAndFinishedOfToday){
+        return []
+    }
     const flowOfStatus = flowsOfRunningAndFinishedOfToday.filter((flow) => flow.instanceStatus === status)
     // 根据重要性和forms过滤流程
     const filteredFlows = await filterFlowsByImportance(flowOfStatus, importance)

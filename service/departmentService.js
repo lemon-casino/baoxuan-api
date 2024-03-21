@@ -196,7 +196,9 @@ const getDepartmentOfUser = async (userId) => {
  */
 const findMatchedDepartmentFromRoot = (deptId, department) => {
     const {dept_id, dep_chil} = department
-
+    if (!dept_id){
+        return null
+    }
     if (dept_id.toString() === deptId.toString()) {
         return department
     }
