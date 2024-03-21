@@ -7,25 +7,25 @@ const globalSetter = require("../global/setter")
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20， 涉及的宜搭接口暂时没有qps和总调用量的限制
 
 // 开发测试禁用定时任务，可以手动调用
-if (process.env.NODE_ENV === "dev") {
-    return;
-}
+// if (process.env.NODE_ENV === "dev") {
+//     return;
+// }
 
 //定时任务
 // 每30分钟请求一次getDingdingToken 获取token
-schedule.scheduleJob("*/6 * * * *", async function () {
-    console.time("获取token=========>");
-    await dingDingService.getDingDingToken();
-    console.timeEnd("获取token=========>");
-});
+// schedule.scheduleJob("*/6 * * * *", async function () {
+//     console.time("获取token=========>");
+//     await dingDingService.getDingDingToken();
+//     console.timeEnd("获取token=========>");
+// });
 
 // 每40分钟请求一次DepartmentInformation  获取所有部门
 schedule.scheduleJob("*/40 * * * *", async function () {
     // console.time("获取所有部门=========>");
     await dingDingService.getDepartmentFromDingDing();
     // 将最新的部门数据保存到global中
-    const newDepartments = redisUtil.getKey(redisKeys.Department)
-    globalSetter.setGlobalDepartments(newDepartments)
+    const newDepartments = await redisUtil.getKey(redisKeys.Department)
+    globalSetter.setGlobalDepartments(JSON.parse(newDepartments || "[]"))
     console.timeEnd("获取所有部门=========>");
 });
 
@@ -34,8 +34,8 @@ schedule.scheduleJob("*/45 * * * *", async function () {
     console.time("获取所有部门下的人员=========>");
     await dingDingService.getUsersFromDingDing();
     // 将最新的部门下的人员数据保存到global中
-    const newUsersOfDepartments = redisUtil.getKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment)
-    globalSetter.setGlobalUsersOfDepartments(newUsersOfDepartments)
+    const newUsersOfDepartments = await redisUtil.getKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment)
+    globalSetter.setGlobalUsersOfDepartments(JSON.parse(newUsersOfDepartments || "[]"))
     console.timeEnd("获取所有部门下的人员=========>");
 });
 
@@ -44,8 +44,8 @@ schedule.scheduleJob("*/50 * * * *", async function () {
     console.time("获取所有用户详情数据=========>");
     await dingDingService.getUsersDetailFromDingDing();
     // 将最新的人员数据保存到global中
-    const newUsers = redisUtil.getKey(redisKeys.AllUsersDetailWithJoinLaunchData)
-    globalSetter.setGlobalUsers(newUsers)
+    const newUsers = await redisUtil.getKey(redisKeys.AllUsersDetailWithJoinLaunchData)
+    globalSetter.setGlobalUsers(JSON.parse(newUsers || "[]"))
     console.timeEnd("获取所有用户详情数据=========>");
 });
 
@@ -77,12 +77,10 @@ schedule.scheduleJob("*/50 * * * *", async function () {
 // })
 
 /**
- *  每15分钟更新正在进行中的流程和今天完成的流程
+ *  每10分钟更新正在进行中的流程和今天完成的流程
  */
-schedule.scheduleJob("0 0/15 * * * ?", async function () {
+schedule.scheduleJob("0 0/10 * * * ?", async function () {
     const flows = await dingDingService.getFlowsOfRunningAndFinishedOfToday()
     await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
-    // 将最新的人员数据保存到global中
-    const flowsOfRunningAndFinishedOfToday = redisUtil.getKey(redisKeys.FlowsOfRunningAndFinishedOfToday)
-    globalSetter.setGlobalTodayRunningAndFinishedFlows(flowsOfRunningAndFinishedOfToday)
+    globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
 })
