@@ -178,9 +178,11 @@ const getDepartmentOfUser = async (userId) => {
     if (!allUsersDetail || allUsersDetail.length === 0) {
         allUsersDetail = await redisService.getAllUsersDetail();
     }
-    for (const item of allUsersDetail) {
-        if (item.userid === userId) {
-            departmentsOfCurrentUser = departmentsOfCurrentUser.concat(item.leader_in_dept)
+    if (allUsersDetail && allUsersDetail.length > 0) {
+        for (const item of allUsersDetail) {
+            if (item.userid === userId) {
+                departmentsOfCurrentUser = departmentsOfCurrentUser.concat(item.leader_in_dept)
+            }
         }
     }
     return departmentsOfCurrentUser;
