@@ -2,7 +2,7 @@ const axios = require("axios");
 const dd = require("../core/dingDingReq");
 // 引入用户模型
 const UsersModel = require("../model/users");
-const {addToken} = require("../utils/token");
+const {generateToken} = require("../utils/token");
 const tokenConfig = require("../config/index").tokenConfig;
 
 // 定义获取流程列表的API接口URL
@@ -117,13 +117,13 @@ exports.getddUserList = async (req, res) => {
     if (is_userId) {
         const token =
             "Bearer " +
-            addToken(
+            generateToken(
                 {id: is_userId.user_id, username: is_userId.username},
                 tokenConfig.jwtSecretKey,
                 tokenConfig.secretKeyExpire
             );
         // 生成长时refreshToken
-        const refreshToken = addToken(
+        const refreshToken = generateToken(
             {id: is_userId.user_id, username: is_userId.username},
             tokenConfig.jwtRefrechSecretKey,
             tokenConfig.refreshSerectKeyExpire

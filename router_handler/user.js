@@ -245,13 +245,13 @@ exports.addUser = (req, res, next) => {
                 // 用浏览器可识别的固定格式生成token
                 const token =
                     "Bearer " +
-                    addToken(
+                    generateToken(
                         {id: result.user_id, username: result.username},
                         tokenConfig.jwtSecretKey,
                         tokenConfig.secretKeyExpire
                     );
                 // 生成长时refreshToken
-                const refreshToken = addToken(
+                const refreshToken = generateToken(
                     {id: result.user_id, username: result.username},
                     tokenConfig.jwtRefrechSecretKey,
                     tokenConfig.refreshSerectKeyExpire
@@ -282,9 +282,9 @@ exports.refreshToken = (req, res) => {
         // 续签生成新的token
         const token =
             "Bearer " +
-            addToken({id, username}, tokenConfig.jwtSecretKey, tokenConfig.secretKeyExpire);
+            generateToken({id, username}, tokenConfig.jwtSecretKey, tokenConfig.secretKeyExpire);
         // 续签长时token
-        const newRefreshToken = addToken(
+        const newRefreshToken = generateToken(
             {id, username},
             tokenConfig.jwtRefrechSecretKey,
             tokenConfig.refreshSerectKeyExpire
