@@ -245,7 +245,25 @@ exports.getUserinfo = async (req, res) => {
             console.log("当前用户所在部门=========>", userInfos);
         }
 
-        const departmentsOfUser = await departmentService.getDepartmentOfUser(userid)
+        let departmentsOfUser = await departmentService.getDepartmentOfUser(userid)
+        // [{dept_id:12121, leader: true, dep_detail: {}}]
+        // todo: 临时处理
+        if (whiteList.pepArr().includes(userid)) {
+            let departments = await globalGetter.getDepartments()
+            // 顾虑掉外部的部门
+            const outDepartments = ["114410517"]
+            departments = departments.filter((depart) => !outDepartments.includes(depart.dept_id.toString()))
+            departmentsOfUser = departments.map((depart) => {
+                return {
+                    dept_id: depart.dept_id,
+                    leader: true,
+                    dep_detail: {
+                        name: depart.name
+                    }
+                }
+            })
+        }
+
         //根据deptId进行升序排序，可避免子部门出现在一级部门前面，而出现汇总问题
         departmentsOfUser.sort((cur, next) => cur.dept_id - next.dept_id)
 
