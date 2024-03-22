@@ -60,32 +60,3 @@ const getTodayRunningAndFinishedFlows = async () => {
     await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
 }
-
-getTodayRunningAndFinishedFlows()
-
-<<<<<<< HEAD
-=======
-
->>>>>>> 36ed224436e8b5f2f678212708c6d2e0b9824b85
-// const dingDingReq = require("../core/dingDingReq")
-// const testGetDingDingInstances = async () => {
-//     const result = await dingDingReq.getFlowsOfStatus("COMPLETED",
-//         "a0c2bf3c1a2039b2bf4f6bfc76dd5eff",
-//         "073105202321093148",
-//         "FORM-4IA668916HKCDJ2O9KPRFBWT069H3F08AJ6KL6",
-//         1,10)
-//     console.log("---hello world---")
-// }
-// testGetDingDingInstances()
-
-// dingDingData.getUsersFromDingDing()
-// dingDingData.getUsersDetailFromDingDing();
-// dingDingData.getDingDingToken();
-// dingDingData.getDepartmentFromDingDing();
-// getFlowsOfRunningAndFinishedOfToday()
-
-// initRedis()
-
-// syncProcessReviewInDb()
-
-// extractProcessReviewToAloneTale()
