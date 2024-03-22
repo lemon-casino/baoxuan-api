@@ -3,7 +3,7 @@ const axios = require("axios");
 const {logger} = require("../utils/log");
 const {dingDingConfig} = require("../config")
 const dateUtil = require("../utils/dateUtil")
-const delayTime = 200
+const delayTime = 300
 // 宜搭配置
 const systemToken = dingDingConfig.systemToken;
 const appType = dingDingConfig.appType;
