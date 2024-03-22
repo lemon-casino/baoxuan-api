@@ -63,6 +63,10 @@ const getTodayRunningAndFinishedFlows = async () => {
 
 getTodayRunningAndFinishedFlows()
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 36ed224436e8b5f2f678212708c6d2e0b9824b85
 // const dingDingReq = require("../core/dingDingReq")
 // const testGetDingDingInstances = async () => {
 //     const result = await dingDingReq.getFlowsOfStatus("COMPLETED",
