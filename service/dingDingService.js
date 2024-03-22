@@ -13,6 +13,7 @@ const reviewUtil = require("../utils/reviewUtil")
 const dateUtil = require("../utils/dateUtil")
 const redisService = require("./redisService")
 const {redisKeys} = require("../const/redisConst")
+const {logger} = require("../utils/log")
 
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
@@ -92,6 +93,7 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
         for (let i = 0; i < allForms.result.data.length; i++) {
             const formUuid = allForms.result.data[i].formUuid;
             await delay(30);
+            console.log(i + ":" + allForms.length + ":" + formUuid)
             const allData = await getFlowsByStatusAndTimeRange(
                 timesRange,
                 timeAction,
@@ -111,6 +113,7 @@ const getTodayStartAndEnd = () => {
     const end = formatDateTime(new Date(), "YYYY-mm-dd 23:59:00");
     return {start, end};
 };
+
 // 获取昨天的开始和结束时间
 const getzuotStartAndEnd = () => {
     const date = new Date();
@@ -150,24 +153,19 @@ const getFlowsFromDingDing = async (status, timesRange, timeAction) => {
 };
 // 3.定时更新部门层级详情信息
 const getDepartmentFromDingDing = async () => {
-    console.log("开始获取更新部门层级详情信息=========>");
-    // 获取钉钉Token
     const {access_token} = await getToken();
     const depList = await dingDingReq.getSubDeptAll(access_token);
-    console.log("depList=========>", depList);
-    // 获取一级部门下的子部门
     for (const item of depList.result) {
-        await delay(50);
-        // 获取子部门
+        await dateUtil.delay(50)
         const dep_chil = await dingDingReq.getSubDeptAll(access_token, item.dept_id);
         item.dep_chil = dep_chil.result;
     }
-    // 存入redis
+    logger.info(`本次更新 ${depList.result.length} 个部门信息`)
     await redisUtil.setKey(redisKeys.Department, JSON.stringify(depList.result));
 };
+
 // 4.获取钉钉_部门下的所有用户
 const getUsersFromDingDing = async () => {
-    console.log("开始获取钉钉_部门下的所有用户=========>");
     const {access_token} = await getToken();
     const getDepListAll = await getDepartments();
     const diguiDep = async (depList) => {
@@ -191,13 +189,12 @@ const getUsersFromDingDing = async () => {
         }
     };
     await diguiDep(getDepListAll);
-    console.log("getDepListAll=========>", getDepListAll.length);
-    // 存入redis
+    logger.info(`本次更新 ${getDepListAll.length} 个部门附带用户信息`)
     await redisUtil.setKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment, JSON.stringify(getDepListAll));
 };
+
 // 5.获取钉钉_所有用户详情
 const getUsersDetailFromDingDing = async () => {
-    console.time("定时更新所有用户详情时间=========>");
     // 获取token
     const {access_token} = await getToken();
     const [allFlowsUntilNow, departmentList] = await Promise.all([
@@ -224,9 +221,7 @@ const getUsersDetailFromDingDing = async () => {
         for (let dep of userDetail.result.leader_in_dept) {
             const dep_res = await dingDingReq.getDpInfo(access_token, dep.dept_id);
             dep.dep_detail = dep_res.result;
-            // depDetails.push({ ...dep_res.result, ...dep });
         }
-        // userDetail.result.leader_in_dept = depDetails;
         //  获取每个用户发起的流程数据
         userDetail.result.faqi_liu = allFlowsUntilNow
             .filter((liu) => {
@@ -247,9 +242,6 @@ const getUsersDetailFromDingDing = async () => {
         userDetail.result.canyu_liu = allFlowsUntilNow
             .filter((liu) => {
                     if (liu.overallprocessflow) {
-                        if (userId === "023056436721153811" && liu.processInstanceId === "10cdedbf-670c-45da-bb5f-bda41765be5e") {
-                            console.log("--- liu yu he ---")
-                        }
                         return liu.overallprocessflow
                             .slice(1)
                             .some((flow) => flow.operatorUserId === userId)
@@ -267,9 +259,8 @@ const getUsersDetailFromDingDing = async () => {
             }); // 将每个符合条件的对象映射为其 id
         userDetails.push(userDetail.result);
     }
-    // 存入redis
+    logger.info(`本次更新 ${userDetails.length} 个用户信息`)
     await redisUtil.setKey(redisKeys.AllUsersDetailWithJoinLaunchData, JSON.stringify(userDetails));
-    console.timeEnd("定时更新所有用户详情时间=========>");
 };
 // 6.获取钉钉_流程表单列表
 const getAllFormsFromDingDing = async () => {
@@ -306,19 +297,19 @@ const getAllFinishedFlowsBeforeToday = async () => {
         JSON.stringify(await ProcessModel.getProcessList())
     );
 };
+
 // 8. 获取今天以前所有运行中的流程数据            -----------每天晚上23：59开始执行
 const getAllNotFinishedFlowsBeforeToday = async (starttime) => {
     const {start, end} = getTodayStartAndEnd();
     let startTime = "2001-01-01 00:00:00";
     let endTime = end;
-    console.log("====", end)
     const list = [];
     const type = ["RUNNING"];
     for (let i of type) {
         const liuchengdata = await getFlowsFromDingDing(i, [startTime, endTime], "create");
         list.push(...liuchengdata);
     }
-    // 存入redis
+
     await redisUtil.setKey(redisKeys.AllNotFinishedFlowsBeforeToday, JSON.stringify(list));
 };
 // 9.获取今天所有的流程数据
@@ -341,7 +332,6 @@ const getAllFlowsOfToday = async () => {
 
 // 9. 组装昨天入库数据和 当天,历史缓存数据
 const combineAllFlows = async () => {
-    console.time("查询所有流程数据");
     const allFinishedFlowsBeforeToday = JSON.parse(await redisUtil.getKey(redisKeys.AllFinishedFlowsBeforeToday));
     const allNotFinishedFlowsBeforeToday = JSON.parse(
         await redisUtil.getKey(redisKeys.AllNotFinishedFlowsBeforeToday)
@@ -351,13 +341,8 @@ const combineAllFlows = async () => {
     );
     const allFlowUntilNow = [...allFinishedFlowsBeforeToday, ...allNotFinishedFlowsBeforeToday, ...allFlowsOfToday];
     await redisUtil.setKey(redisKeys.AllFlowsUntilNow, JSON.stringify(allFlowUntilNow));
-    // 获取当天所有运行中的数据
-    console.log('所有已完成历史数据长度=========>', allFinishedFlowsBeforeToday.length)
-    console.log('获取今天所有流程数据=========>', allFlowsOfToday.length)
-    console.log('获取所有非已完成所有历史数据=========>', allNotFinishedFlowsBeforeToday.length)
-    console.log("所有流程数据长度=========>", allFlowUntilNow.length);
-    console.timeEnd("查询所有流程数据");
 };
+
 // 10. 获取流程评论数据
 const getremarksAll = async () => {
     // 获取所有流程数据
@@ -448,33 +433,6 @@ const computeFlowsCost = async (flows) => {
     }
     return newFlows
 }
-
-const getOverDueFlows = async () => {
-
-}
-
-const getDoneFlowsOfTodayWithOverDue = async () => {
-    const doingStatusArr = ["COMPLETE", "ERROR", "TERMINATED"];
-
-    const overDueFlows = []
-}
-//
-// const getDoingFlowsWithOverDue = async () => {
-//     const doingStatusArr = ["RUNNING", "FOCAST"];
-//     const overDueFlows = []
-//     let doingFlows = []
-//     for (const status of doingStatusArr) {
-//         const flows = await getFlowsFromDingDing(status);
-//         const newFlows = computeFlowsCost(flows);
-//         for (const flow of newFlows) {
-//             if (flow.isOverDue) {
-//                 overDueFlows.push(flow)
-//             }
-//         }
-//         doingFlows.push(newFlows);
-//     }
-//     return doingFlows;
-// }
 
 const getTodayRunningFlows = async () => {
     const statusObj = {"name": "RUNNING"}

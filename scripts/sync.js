@@ -60,3 +60,6 @@ const getTodayRunningAndFinishedFlows = async () => {
     await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
 }
+
+//
+dingDingData.getDingDingToken();

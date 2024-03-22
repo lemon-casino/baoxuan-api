@@ -2,6 +2,7 @@
 const express = require("express");
 const path = require("path");
 const morgan = require('morgan');
+const rfs = require("rotating-file-stream")
 const serverConfig = require('./config/index').serverConfig
 // 创建 express 的服务器实例
 const app = express();
@@ -34,6 +35,7 @@ app.use(
 app.use(express.json({limit: '50mb'}));
 // 使用morgan记录访问日志
 app.use(morgan("combined", {stream}));
+
 // 全局错误处理器
 app.use((err, req, res, next) => {
     logger.error("Unhandled error:", err);
