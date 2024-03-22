@@ -45,7 +45,7 @@ const getTodaySelfLaunchedFlowsStatisticCountOfReviewType = async (userId, type,
         return flow.originator.userId === userId;
     })
 
-    filteredFlows = await flowService.filterFlowByReviewTypeAndOperatorId(filteredFlows, type, userId);
+    filteredFlows = flowService.filterFlowByReviewTypeAndOperatorId(filteredFlows, type, userId);
     const flowsOfDepartment = await flowService.flowsDividedByDepartment(filteredFlows)
     const result = await flowService.sumFlowsByDepartment(flowsOfDepartment)
 
@@ -75,12 +75,12 @@ const getTodaySelfLaunchedFlowsStatisticCountOfOverDue = async (userId, importan
 }
 
 const getTodaySelfLaunchedFlowsStatisticOfOverDue = async (userId, status, importance) => {
-    let flowsOfRunningAndFinishedOfToday = global.todayRunningAndFinishedFlows
-    if (!flowsOfRunningAndFinishedOfToday || flowsOfRunningAndFinishedOfToday.length === 0) {
-        flowsOfRunningAndFinishedOfToday = await redisService.getTodayRunningAndFinishedFlows();
-    }
-
+    const flowsOfRunningAndFinishedOfToday = await globalGetter.getTodayFlows()
     let filteredFlows = flowsOfRunningAndFinishedOfToday.filter((flow) => {
+        if (flow && !flow.originator) {
+            console.info(`异常流程：${flow.processInstanceId}, 没有originator信息， ${JSON.stringify(flow)}`)
+            return false
+        }
         return flow.originator.userId === userId;
     })
     filteredFlows = await flowService.filterFlowsByImportance(filteredFlows, importance)

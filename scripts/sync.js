@@ -5,6 +5,7 @@ const redisUtil = require("../utils/redisUtil")
 const dingDingData = require("../service/dingDingService")
 const processReviewService = require("../service/prcessReviewService")
 const dingDingService = require("../service/dingDingService")
+const globalSetter = require("../global/setter")
 
 const {redisKeys} = require("../const/redisConst")
 
@@ -57,20 +58,21 @@ const initRedis = async () => {
 const getTodayRunningAndFinishedFlows = async () => {
     const flows = await dingDingService.getTodayRunningAndFinishedFlows()
     await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
+    globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
 }
 
+getTodayRunningAndFinishedFlows()
 
-
-const dingDingReq = require("../core/dingDingReq")
-const testGetDingDingInstances = async () => {
-    const result = await dingDingReq.getFlowsOfStatus("COMPLETED",
-        "a0c2bf3c1a2039b2bf4f6bfc76dd5eff",
-        "073105202321093148",
-        "FORM-4IA668916HKCDJ2O9KPRFBWT069H3F08AJ6KL6",
-        1,10)
-    console.log("---hello world---")
-}
-testGetDingDingInstances()
+// const dingDingReq = require("../core/dingDingReq")
+// const testGetDingDingInstances = async () => {
+//     const result = await dingDingReq.getFlowsOfStatus("COMPLETED",
+//         "a0c2bf3c1a2039b2bf4f6bfc76dd5eff",
+//         "073105202321093148",
+//         "FORM-4IA668916HKCDJ2O9KPRFBWT069H3F08AJ6KL6",
+//         1,10)
+//     console.log("---hello world---")
+// }
+// testGetDingDingInstances()
 
 // dingDingData.getUsersFromDingDing()
 // dingDingData.getUsersDetailFromDingDing();

@@ -286,8 +286,7 @@ const getPagingFlows = async (token, data, pageNumber, pageSize) => {
         logger.error(
             `单个获取宜搭流程实例详情错误: ${error.message}  
             data:${JSON.stringify(data)} --- 
-            token: ${token} --- 
-            response:${JSON.stringify(error.response || {})}`
+            token: ${token}`
         );
     }
     return null

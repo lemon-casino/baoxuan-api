@@ -70,14 +70,14 @@ const getFlowsOfDepartmentBy = async (departments, selfJoinOrLaunch, timesRange,
 }
 
 
-const filterFlowByFlowStatus = async (flows, flowStatus) => {
+const filterFlowByFlowStatus = (flows, flowStatus) => {
     const satisfiedFlows = flows.filter((flow) => {
         return flow.instanceStatus === flowStatus
     })
     return satisfiedFlows
 }
 
-const filterFlowByReviewType = async (flows, type) => {
+const filterFlowByReviewType = (flows, type) => {
     const satisfiedFlows = flows.filter((flow) => {
         const reviewInfo = flow.overallprocessflow;
         if (reviewInfo) {
@@ -90,7 +90,7 @@ const filterFlowByReviewType = async (flows, type) => {
     return satisfiedFlows
 }
 
-const filterFlowByReviewTypeAndOperatorId = async (flows, type, operatorId) => {
+const filterFlowByReviewTypeAndOperatorId = (flows, type, operatorId) => {
     const satisfiedFlows = flows.filter((flow) => {
         const reviewInfo = flow.overallprocessflow;
         if (reviewInfo) {
@@ -223,7 +223,7 @@ const filterFlowsByImportance = async (flows, importance) => {
         if (forms && forms.length > 0) {
             filteredFlows = filterFlowsByForms(filteredFlows, forms)
         } else if (isImportant.toString() === "true" || isImportant.toString() === "false") {
-            filteredFlows = filterFlowsByImportant(filteredFlows, isImportant)
+            filteredFlows = await filterFlowsByImportant(filteredFlows, isImportant)
         }
     }
     return filteredFlows
@@ -255,7 +255,7 @@ const filterFlowsByImportant = async (flows, isImportant) => {
  * @param forms 需要匹配的表单
  * @returns {Promise<*>}
  */
-const filterFlowsByForms = async (flows, forms) => {
+const filterFlowsByForms = (flows, forms) => {
     if (!forms || forms.length === 0) {
         return flows
     }
@@ -293,11 +293,7 @@ const getFlowsByIds = async (ids) => {
 }
 
 const getTodayFlowsByIds = async (ids) => {
-    let flowsOfRunningAndFinishedOfToday = global.todayRunningAndFinishedFlows
-    if (!flowsOfRunningAndFinishedOfToday || flowsOfRunningAndFinishedOfToday.length === 0) {
-        flowsOfRunningAndFinishedOfToday = await redisService.getTodayRunningAndFinishedFlows();
-    }
-
+    const flowsOfRunningAndFinishedOfToday = globalGetter.getTodayFlows()
     const satisfiedFlows = await flowsOfRunningAndFinishedOfToday.filter((item) => ids.includes(item.processInstanceId))
     return satisfiedFlows;
 }
@@ -410,7 +406,7 @@ module.exports = {
     filterFlowsByImportanceCondition,
     getFlowsOfDepartmentBy,
     filterFlowByFlowStatus,
-    filterFlowByReviewStatus: filterFlowByReviewType,
+    filterFlowByReviewType,
     filterFlowByReviewTypeAndOperatorId,
     findReviewItemByType,
 

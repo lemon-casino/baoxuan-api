@@ -13,6 +13,7 @@ const redisService = require("../service/redisService")
 const departmentService = require("../service/departmentService")
 const userService = require("../service/userService")
 const flowService = require("../service/flowService")
+const globalGetter = require("../global/getter")
 const statisticStatusConst = require("../const/statisticStatusConst")
 
 // 数组对象去重
@@ -839,7 +840,7 @@ exports.getdepartment = async (req, res) => {
     // 管理员身份
     if (whiteList.pepArr().includes(dd_id)) {
         // 获取子部门信息
-        dep_info = await departmentService.getSubDeptLev(await redisService.getDepartments(), depId);
+        dep_info = await departmentService.getSubDeptLev(await globalGetter.getDepartments(), depId);
     } else {
         // 返回用户详情
         const lev_dep_list = await departmentService.getDepLev(access_token, dd_id);
@@ -957,7 +958,7 @@ exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
         let departments = [];
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(ddUserId)) {
-            const depLists = await redisService.getDepartments();
+            const depLists = await globalGetter.getDepartments();
             const subDepartments = await departmentService.getSubDeptLev(depLists, parentDepartmentId)
             if (subDepartments.length === 0) {
                 const parentDepartment = depLists.filter((item) => item.dept_id == parentDepartmentId);
@@ -1016,7 +1017,7 @@ exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
         let dep_info = [];
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(ddUserId)) {
-            const depLists = await redisService.getDepartments();
+            const depLists = await globalGetter.getDepartments();
             const subDepartments = await departmentService.getSubDeptLev(depLists, parentDepartmentId)
             if ((subDepartments.length === 0)) {
                 const depas = depLists.filter((item) => item.dept_id == parentDepartmentId);
@@ -1101,7 +1102,7 @@ exports.getDepartmentJoinDoingFlowsStatistic = async (req, res) => {
         let dep_info = [];
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(ddUserId)) {
-            const depLists = await redisService.getDepartments();
+            const depLists = await globalGetter.getDepartments();
             if ((await departmentService.getSubDeptLev(depLists, parentDepartmentId)).length === 0) {
                 const depas = depLists.filter((item) => item.dept_id == parentDepartmentId);
                 depas.forEach((element) => {
@@ -1203,7 +1204,7 @@ exports.getoverview = async (req, res) => {
         let dep_list = [];
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(dd_id)) {
-            const depLists = await redisService.getDepartments();
+            const depLists = await globalGetter.getDepartments();
             if ((await departmentService.getSubDeptLev(depLists, f_dep_id)).length === 0) {
                 const depas = depLists.filter((item) => item.dept_id == f_dep_id);
                 depas.forEach((element) => {
@@ -1280,7 +1281,7 @@ exports.getoverview = async (req, res) => {
         let dep_info = [];
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(dd_id)) {
-            const depLists = await redisService.getDepartments();
+            const depLists = await globalGetter.getDepartments();
             if ((await departmentService.getSubDeptLev(depLists, f_dep_id)).length === 0) {
                 const depas = depLists.filter((item) => item.dept_id == f_dep_id);
                 depas.forEach((element) => {

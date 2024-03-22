@@ -49,7 +49,7 @@ const getDepLev = async (ddAccessToken, ddUserId) => {
                 if (item.leader) {
                     await dateUtil.delay(50);
                     item.dep_child =
-                        (await getSubDeptLev(await redisService.getDepartments(), item.dept_id)) || [];
+                        (await getSubDeptLev(await globalGetter.getDepartments(), item.dept_id)) || [];
                 }
                 if (item.dep_child.length > 0) {
                     await dg_dep(item.dep_child);
@@ -87,7 +87,7 @@ const listToTree = (list) => {
 const getDepartmentsOfUser = async (ddUserId, ddAccessToken, parentDepartmentId, subDepartmentId) => {
     let dep_info = [];
     if (whiteList.pepArr().includes(ddUserId)) {
-        const allDepts = await redisService.getDepartments();
+        const allDepts = await globalGetter.getDepartments();
         const subDepartments = await getSubDeptLev(allDepts, parentDepartmentId)
         if (subDepartments.length === 0) {
             const parentDepartmentDetails = allDepts.filter((item) => item.dept_id == parentDepartmentId);
@@ -174,7 +174,7 @@ const mergeDataByDeptId = (data) => {
  */
 const getDepartmentOfUser = async (userId) => {
     let departmentsOfCurrentUser = []
-    let allUsersDetail = global.users
+    let allUsersDetail = await globalGetter.getUsers()
     if (!allUsersDetail || allUsersDetail.length === 0) {
         allUsersDetail = await redisService.getAllUsersDetail();
     }
@@ -196,7 +196,7 @@ const getDepartmentOfUser = async (userId) => {
  */
 const findMatchedDepartmentFromRoot = (deptId, department) => {
     const {dept_id, dep_chil} = department
-    if (!dept_id){
+    if (!dept_id) {
         return null
     }
     if (dept_id.toString() === deptId.toString()) {
@@ -255,10 +255,7 @@ const getDepartmentWithUsers = async (deptId) => {
 }
 
 const getDepartments = async () => {
-    let departments = global.departments
-    if (!departments || departments.length === 0) {
-        departments = await redisService.getDepartments();
-    }
+    let departments = await globalGetter.getDepartments()
     return departments
 }
 

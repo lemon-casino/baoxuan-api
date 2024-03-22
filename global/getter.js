@@ -27,7 +27,7 @@ const getDepartments = async () => {
 const getUsersOfDepartments = async () => {
     let usersOfDepartments = global.usersOfDepartments
     if (!usersOfDepartments || usersOfDepartments.length === 0) {
-        usersOfDepartments = await redisService.getDepartments()
+        usersOfDepartments = await redisService.getUsersWithJoinLaunchDataUnderDepartment()
     }
     return usersOfDepartments;
 }

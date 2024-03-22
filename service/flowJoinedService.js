@@ -5,6 +5,7 @@ const reviewUtil = require("../utils/reviewUtil")
 const statisticStatusConst = require("../const/statisticStatusConst")
 const FlowFormReview = require("../model/flowformreview")
 const departmentService = require("../service/departmentService")
+const globalGetter = require("../global/getter")
 
 /**
  * 本人参与： 已逾期的流程数量（流程可重复）
@@ -36,10 +37,7 @@ const getTodaySelfJoinedFlowsStatisticCountOfOverDue = async (userId, importance
  * @returns {Promise<{doing: *[], done: *[]}>}
  */
 const getTodaySelfJoinedFlowsStatisticOfOverDue = async (userId, importance) => {
-    let flowsOfRunningAndFinishedOfToday = global.todayRunningAndFinishedFlows
-    if (!flowsOfRunningAndFinishedOfToday || flowsOfRunningAndFinishedOfToday.length === 0) {
-        flowsOfRunningAndFinishedOfToday = await redisService.getTodayRunningAndFinishedFlows();
-    }
+    const flowsOfRunningAndFinishedOfToday = await globalGetter.getTodayFlows()
 
     // 根据重要性和forms过滤流程
     const filteredFlows = await flowService.filterFlowsByImportance(flowsOfRunningAndFinishedOfToday, importance)
@@ -121,10 +119,7 @@ const getTodaySelfJoinedFlowsStatisticCountOfReviewType = async (userId, reviewT
  * @returns {Promise<*[]>}
  */
 const getTodaySelfJoinedFlowsStatisticOfReviewType = async (userId, reviewType, importance) => {
-    let flowsOfRunningAndFinishedOfToday = global.todayRunningAndFinishedFlows
-    if (!flowsOfRunningAndFinishedOfToday || flowsOfRunningAndFinishedOfToday.length === 0) {
-        flowsOfRunningAndFinishedOfToday = await redisService.getTodayRunningAndFinishedFlows();
-    }
+    const flowsOfRunningAndFinishedOfToday = await globalGetter.getTodayFlows()
     // 根据重要性和forms过滤流程
     const filteredFlows = await flowService.filterFlowsByImportance(flowsOfRunningAndFinishedOfToday, importance)
     let satisfiedFlows = [];

@@ -490,7 +490,7 @@ const getTodayFinishedFlows = async () => {
     ]
     let flows = [];
     for (const statusObj of statusArr) {
-        const tmpFlows = getTodayFlowsOfStatus(statusObj)
+        const tmpFlows = await getTodayFlowsOfStatus(statusObj)
         flows = flows.concat(tmpFlows);
     }
     return flows
@@ -534,9 +534,9 @@ const getTodayFlowsOfStatus = async (statusObj) => {
 const getTodayRunningAndFinishedFlows = async () => {
     let flows = [];
     const todayRunningFlows = await getTodayRunningFlows();
-    flows.concat(todayRunningFlows)
+    flows = flows.concat(todayRunningFlows)
     const todayFinishedFlows = await getTodayFinishedFlows();
-    flows.concat(todayFinishedFlows)
+    flows = flows.concat(todayFinishedFlows)
     return flows;
 }
 
