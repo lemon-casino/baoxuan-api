@@ -81,137 +81,199 @@ exports.getCheckCode = async (req, res) => {
  * 登录路由
  */
 exports.login = async (req, res, next) => {
-    // 验证入参，错误时抛出以捕获
-    const {error, value} = user_login_schema.validate(req.body);
-    if (error) {
-        return next(error);
+    try {
+
+        // 验证入参，错误时抛出以捕获
+        const {error, value} = user_login_schema.validate(req.body);
+        if (error) {
+            return next(error);
+        }
+        // 验证验证码
+        const {username, password, checkCode, uuid} = value;
+        const captcha = await redis.getKey(uuid);
+        if (!captcha) {
+            return res.send(biResponse.format(1, "图形验证码已过期，请点击图片刷新"));
+        }
+        if (checkCode.toLowerCase() !== captcha.toLowerCase()) {
+            return res.send(biResponse.format(1, "图形验证码不正确，请重新输入"));
+        }
+        // todo: 先保留
+        const user = {
+            token: null,
+            refreshToken: null,
+            brief: null,
+            permissions: null,
+            departments: null
+        }
+
+        const {token, refreshToken} = await getTokenAndRefreshToken(username, password)
+
+        // 用户基本信息
+        // const brief = await UsersModel.findOne({
+        //     where: {username: username},
+        // });
+        //
+        // if (!brief) {
+        //     return res.send(biResponse.format(0, "用户不存在"));
+        // }
+        // if (brief.status.toString() === "0") {
+        //     return res.send(biResponse.format(0, "帐号已停用"));
+        // }
+        //
+        // const compareResult = bcrypt.compareSync(password, brief.password);
+        // if (!compareResult) {
+        //     return res.send(biResponse.format(1, "密码错误"));
+        // }
+        //
+        // const userDetails = brief.dataValues
+        // user.brief = userDetails
+        // user.token = "Bearer " + generateToken(
+        //     {id: brief.user_id, username: brief.username},
+        //     tokenConfig.jwtSecretKey,
+        //     tokenConfig.secretKeyExpire
+        // )
+        //
+        // user.refreshToken = generateToken(
+        //     {id: brief.user_id, username: brief.username},
+        //     tokenConfig.jwtRefrechSecretKey,
+        //     tokenConfig.refreshSerectKeyExpire
+        // );
+        // // 用户角色信息
+        // const userRoles = await userRoleRepo.getRoleByUserId(userDetails.user_id)
+        //
+        // // 权限 菜单和操作
+        // const permissions = {menuIds: [], permIds: []}
+        // for (const userRole of userRoles) {
+        //     const rolePermission = await RolesModel.getResource(userRole.roleId)
+        //     permissions.menuIds = permissions.menuIds.concat(rolePermission.menu_ids)
+        //     permissions.permIds = permissions.permIds.concat(rolePermission.permIds)
+        // }
+        // user.permissions = permissions
+        //
+        // const departments = await departmentService.getDepartments()
+        // // todo: 先保留，需要进行排序
+        // const departmentsOfUser = await departmentService.getDepartmentOfUser(brief.dingding_user_id)
+        // //根据deptId进行升序排序，可避免子部门出现在一级部门前面，而出现汇总问题
+        // const sortedDepartmentsOfUser = departmentsOfUser.sort((cur, next) => cur.dept_id - next.dept_id)
+        //
+        // const departmentsTemplate = []
+        // for (const dept of departmentsOfUser) {
+        //
+        //     // 找到该节点的详情
+        //     let curDeptDetails = null;
+        //     for (const department of departments) {
+        //         curDeptDetails = departmentService.findMatchedDepartmentFromRoot(dept.dept_id, department);
+        //         if (curDeptDetails) {
+        //             break;
+        //         }
+        //     }
+        //
+        //     const departmentTemplate = {}
+        //     departmentTemplate.deptId = dept.dept_id
+        //     departmentTemplate.deptName = dept.dep_detail.name
+        //     departmentTemplate.isLeader = dept.leader
+        //
+        //     if (dept.leader) {
+        //         let subDepts = []
+        //         const {dep_chil: dep_chils} = curDeptDetails
+        //         for (const depChil of dep_chils) {
+        //             const tmpDept = {}
+        //             tmpDept.leader = true
+        //             tmpDept.deptId = depChil.dept_id
+        //             tmpDept.deptName = depChil.name
+        //             tmpDept.parentId = dept.dept_id
+        //             subDepts.push(tmpDept)
+        //         }
+        //         departmentTemplate.subDepts = subDepts
+        //     }
+        //
+        //     // 添加或者合并信息
+        //     if (departmentsTemplate.length == 0) {
+        //         departmentsTemplate.push(departmentTemplate)
+        //         continue;
+        //     }
+        //     for (let i = 0; i < departmentsTemplate.length; i++) {
+        //         if (curDeptDetails.parent_id === departmentsTemplate[i].deptId) {
+        //             departmentTemplate.subDepts.push(departmentTemplate)
+        //             break;
+        //         }
+        //         if (i === departmentsTemplate.length - 1) {
+        //             departmentsTemplate.push(departmentTemplate)
+        //             break;
+        //         }
+        //     }
+        // }
+        // user.departments = departmentsTemplate
+
+        return res.send({
+            code: 200,
+            message: "登录成功",
+            data: {
+                token,
+                refreshToken
+            },
+        });
+    } catch (e) {
+        next(e)
     }
-    // 验证验证码
-    const {username, password, checkCode, uuid} = value;
-    const captcha = await redis.getKey(uuid);
-    if (!captcha) {
-        return res.send(biResponse.format(1, "图形验证码已过期，请点击图片刷新"));
+};
+
+exports.getTokens = async (req, res, next) => {
+    try {
+        const {userName, password} = req.body;
+        const tokens = await getTokenAndRefreshToken(userName, password);
+        return res.send(biResponse.success(tokens))
+    } catch (e) {
+        next(e)
     }
-    if (checkCode.toLowerCase() !== captcha.toLowerCase()) {
-        return res.send(biResponse.format(1, "图形验证码不正确，请重新输入"));
-    }
-    // todo: 先保留
-    const user = {
-        token: null,
-        refreshToken: null,
-        brief: null,
-        permissions: null,
-        departments: null
-    }
-    // 用户基本信息
+}
+
+const getTokenAndRefreshToken = async (userName, password) => {
     const brief = await UsersModel.findOne({
-        where: {username: username},
+        where: {username: userName},
     });
 
     if (!brief) {
-        return res.send(biResponse.format(0, "用户不存在"));
+        throw new Error("用户不存在")
     }
 
     if (brief.status.toString() === "0") {
-        return res.send(biResponse.format(0, "帐号已停用"));
+        throw new Error("帐号已停用")
     }
 
     const compareResult = bcrypt.compareSync(password, brief.password);
     if (!compareResult) {
-        return res.send(biResponse.format(1, "密码错误"));
+        throw new Error("密码错误")
     }
 
-    const userDetails = brief.dataValues
-    user.brief = userDetails
 
-    user.token = "Bearer " + generateToken(
+    const token = "Bearer " + generateToken(
         {id: brief.user_id, username: brief.username},
         tokenConfig.jwtSecretKey,
         tokenConfig.secretKeyExpire
     )
 
-    user.refreshToken = generateToken(
+    const refreshToken = generateToken(
         {id: brief.user_id, username: brief.username},
         tokenConfig.jwtRefrechSecretKey,
         tokenConfig.refreshSerectKeyExpire
     );
+    return {token, refreshToken}
+}
 
-    // // 用户角色信息
-    // const userRoles = await userRoleRepo.getRoleByUserId(userDetails.user_id)
-    //
-    // // 权限 菜单和操作
-    // const permissions = {menuIds: [], permIds: []}
-    // for (const userRole of userRoles) {
-    //     const rolePermission = await RolesModel.getResource(userRole.roleId)
-    //     permissions.menuIds = permissions.menuIds.concat(rolePermission.menu_ids)
-    //     permissions.permIds = permissions.permIds.concat(rolePermission.permIds)
-    // }
-    // user.permissions = permissions
-    //
-    // const departments = await departmentService.getDepartments()
-    // // todo: 先保留，需要进行排序
-    // const departmentsOfUser = await departmentService.getDepartmentOfUser(brief.dingding_user_id)
-    // //根据deptId进行升序排序，可避免子部门出现在一级部门前面，而出现汇总问题
-    // const sortedDepartmentsOfUser = departmentsOfUser.sort((cur, next) => cur.dept_id - next.dept_id)
-    //
-    // const departmentsTemplate = []
-    // for (const dept of departmentsOfUser) {
-    //
-    //     // 找到该节点的详情
-    //     let curDeptDetails = null;
-    //     for (const department of departments) {
-    //         curDeptDetails = departmentService.findMatchedDepartmentFromRoot(dept.dept_id, department);
-    //         if (curDeptDetails) {
-    //             break;
-    //         }
-    //     }
-    //
-    //     const departmentTemplate = {}
-    //     departmentTemplate.deptId = dept.dept_id
-    //     departmentTemplate.deptName = dept.dep_detail.name
-    //     departmentTemplate.isLeader = dept.leader
-    //
-    //     if (dept.leader) {
-    //         let subDepts = []
-    //         const {dep_chil: dep_chils} = curDeptDetails
-    //         for (const depChil of dep_chils) {
-    //             const tmpDept = {}
-    //             tmpDept.leader = true
-    //             tmpDept.deptId = depChil.dept_id
-    //             tmpDept.deptName = depChil.name
-    //             tmpDept.parentId = dept.dept_id
-    //             subDepts.push(tmpDept)
-    //         }
-    //         departmentTemplate.subDepts = subDepts
-    //     }
-    //
-    //     // 添加或者合并信息
-    //     if (departmentsTemplate.length == 0) {
-    //         departmentsTemplate.push(departmentTemplate)
-    //         continue;
-    //     }
-    //     for (let i = 0; i < departmentsTemplate.length; i++) {
-    //         if (curDeptDetails.parent_id === departmentsTemplate[i].deptId) {
-    //             departmentTemplate.subDepts.push(departmentTemplate)
-    //             break;
-    //         }
-    //         if (i === departmentsTemplate.length - 1) {
-    //             departmentsTemplate.push(departmentTemplate)
-    //             break;
-    //         }
-    //     }
-    // }
-    // user.departments = departmentsTemplate
+const checkCode = async (req, res) => {
+    const {username, password} = req.body
+
 
     return res.send({
         code: 200,
-        message: "登录成功",
+        message: "成功",
         data: {
             token: user.token,
             refreshToken: user.refreshToken,
         },
     });
-};
+}
 /**
  * 添加用户
  */

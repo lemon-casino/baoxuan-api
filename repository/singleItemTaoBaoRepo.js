@@ -1,0 +1,34 @@
+const sequelize = require('../model/init');
+const getSingleItemTaoBaoModel = require("../model/singleItemTaobaoModel")
+const singleItemTaoBaoModel = getSingleItemTaoBaoModel(sequelize)
+const {logger} = require("../utils/log")
+
+const saveSingleItemTaoBao = async (item) => {
+    try {
+        return await singleItemTaoBaoModel.create(item)
+    } catch (e) {
+        await deleteSingleIteTaoBaoByBatchId(item.batchId)
+        logger.error(e.message)
+        throw new Error(e.message)
+        return null
+    }
+}
+
+const deleteSingleIteTaoBaoByBatchId = async (batchId) => {
+    try {
+        return await singleItemTaoBaoModel.destroy({
+            where: {
+                batchId
+            }
+        })
+    } catch (e) {
+        throw new Error(e.message)
+        logger.error(e.message)
+        return null
+    }
+}
+
+module.exports = {
+    saveSingleItemTaoBao,
+    deleteSingleIteTaoBaoByBatchId
+}
