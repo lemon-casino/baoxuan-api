@@ -354,4 +354,20 @@ http://127.0.0.1:9999
 
    | 参数名 | 类型   | 是否必选 | 备注     |
    | ------ | ------ | -------- | -------- |
-   | file   | object | 是       | 头像文件 |
+   | file   | object | 是| 头像文件 |
+
+
+------
+# 单品表
+## 淘宝
+> 线上正式端口号：9999  测试端口号：7999 
+
+|说明|地址|请求方式|参数|返回结果|
+| --- |--- |----|----|----|
+|获取token|http://47.95.1.102:7999/user/tokens|post |{"userName": "baishaoxiong","password": "123456"}|{"code": 200,"message": "成功","data": {"token": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTcsInVzZXJuYW1lIjoiYmFpc2hhb3hpb25nIiwiaWF0IjoxNzExMzI5MzI5LCJleHAiOjE3MTEzMzI5Mjl9.t6ZhYiorN3TAdHYTSnYVbq1e2d4RofsXVkmKAELxFFQ","refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NTcsInVzZXJuYW1lIjoiYmFpc2hhb3hpb25nIiwiaWF0IjoxNzExMzI5MzI5LCJleHAiOjE3MTE1MDIxMjl9.C9ckdIDpxGfjjjiTsWnscKQckXyGaUo61L1gqZi_mWQ"}}
+|保存单品数据|http://47.95.1.102:7999/single-item/taobao|post|参数太多单独发|{"code": 200,"message": "成功"}或者{"code": 500,"message": "异常信息"}
+
+
+
+
+
