@@ -50,14 +50,14 @@ const saveSingleItemTaoBao = async (item) => {
     return result
 }
 
-const deleteSingleIteTaoBaoByBatchId = async (batchId) => {
-    if (!batchId) {
-        throw new Error("参数：batchId 不能为空")
+const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
+    if (!batchId || !linkId) {
+        throw new Error("参数：batchId, linkId 不能为空")
     }
-    return singleItemTaoBaoRepo.deleteSingleIteTaoBaoByBatchId(batchId)
+    return singleItemTaoBaoRepo.deleteSingleIteTaoBaoByBatchIdAndLinkId(batchId, linkId)
 }
 
 module.exports = {
     saveSingleItemTaoBao,
-    deleteSingleIteTaoBaoByBatchId
+    deleteSingleIteTaoBaoByBatchIdAndLinkId
 }

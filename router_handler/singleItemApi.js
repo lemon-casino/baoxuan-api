@@ -11,11 +11,11 @@ const saveSingleItemTaoBao = async (req, res, next) => {
     }
 }
 
-const deleteSingleIteTaoBaoByBatchId = async (req, res, next) => {
+const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (req, res, next) => {
     try {
-        const {id, batchId} = req.query
+        const {id, batchId, linkId} = req.query
         if (batchId) {
-            await singleItemTaoBaoService.deleteSingleIteTaoBaoByBatchId(batchId)
+            await singleItemTaoBaoService.deleteSingleIteTaoBaoByBatchIdAndLinkId(batchId, linkId)
             return res.send(biResponse.success())
         }
         if (id) {
@@ -30,5 +30,5 @@ const deleteSingleIteTaoBaoByBatchId = async (req, res, next) => {
 
 module.exports = {
     saveSingleItemTaoBao,
-    deleteSingleIteTaoBaoByBatchId
+    deleteSingleIteTaoBaoByBatchIdAndLinkId
 }

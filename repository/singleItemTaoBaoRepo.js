@@ -10,22 +10,22 @@ const {logger} = require("../utils/log")
  */
 const saveSingleItemTaoBao = async (item) => {
     try {
-        // batchId 以日期为准精确到天，一天仅会有一次，插入前先清理下（会有重复修改的情况）
-        await deleteSingleIteTaoBaoByBatchId(item.batchId)
+        await deleteSingleIteTaoBaoByBatchIdAndLinkId(item.batchId, item.linkId)
         return await singleItemTaoBaoModel.create(item)
     } catch (e) {
-        await deleteSingleIteTaoBaoByBatchId(item.batchId)
+        await deleteSingleIteTaoBaoByBatchIdAndLinkId(item.batchId, item.linkId)
         logger.error(e.message)
         throw new Error(e.message)
         return null
     }
 }
 
-const deleteSingleIteTaoBaoByBatchId = async (batchId) => {
+const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
     try {
         return await singleItemTaoBaoModel.destroy({
             where: {
-                batchId
+                batchId,
+                linkId
             }
         })
     } catch (e) {
@@ -37,5 +37,5 @@ const deleteSingleIteTaoBaoByBatchId = async (batchId) => {
 
 module.exports = {
     saveSingleItemTaoBao,
-    deleteSingleIteTaoBaoByBatchId
+    deleteSingleIteTaoBaoByBatchIdAndLinkId
 }
