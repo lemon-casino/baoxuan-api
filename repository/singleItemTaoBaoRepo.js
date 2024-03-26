@@ -2,6 +2,7 @@ const sequelize = require('../model/init');
 const getSingleItemTaoBaoModel = require("../model/singleItemTaobaoModel")
 const singleItemTaoBaoModel = getSingleItemTaoBaoModel(sequelize)
 const {logger} = require("../utils/log")
+const uuidUtil = require("../utils/uuidUtil")
 
 /**
  * 保存淘宝的单品表数据
@@ -11,6 +12,7 @@ const {logger} = require("../utils/log")
 const saveSingleItemTaoBao = async (item) => {
     try {
         await deleteSingleIteTaoBaoByBatchIdAndLinkId(item.batchId, item.linkId)
+        item.id = uuidUtil.getId()
         return await singleItemTaoBaoModel.create(item)
     } catch (e) {
         await deleteSingleIteTaoBaoByBatchIdAndLinkId(item.batchId, item.linkId)

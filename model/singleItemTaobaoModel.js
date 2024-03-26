@@ -4,11 +4,11 @@ const {
 module.exports = sequelize => {
   const attributes = {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING(50),
       allowNull: false,
       defaultValue: null,
       primaryKey: true,
-      autoIncrement: true,
+      autoIncrement: false,
       comment: "主键",
       field: "id"
     },
