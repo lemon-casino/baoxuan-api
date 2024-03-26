@@ -2,7 +2,6 @@
 const express = require("express");
 const path = require("path");
 const morgan = require('morgan');
-const rfs = require("rotating-file-stream")
 const serverConfig = require('./config/index').serverConfig
 // 创建 express 的服务器实例
 const app = express();
