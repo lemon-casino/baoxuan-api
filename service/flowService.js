@@ -293,7 +293,7 @@ const getFlowsByIds = async (ids) => {
 }
 
 const getTodayFlowsByIds = async (ids) => {
-    const flowsOfRunningAndFinishedOfToday = globalGetter.getTodayFlows()
+    const flowsOfRunningAndFinishedOfToday = await globalGetter.getTodayFlows()
     const satisfiedFlows = await flowsOfRunningAndFinishedOfToday.filter((item) => ids.includes(item.processInstanceId))
     return satisfiedFlows;
 }
