@@ -103,6 +103,8 @@ const formRouter = require("./router/formRouter")
 app.use("/form", formRouter)
 const singleItemRouter = require("./router/singleItemRouter")
 app.use("/single-item", singleItemRouter)
+const linkStatisticRouter = require("./router/linkStatisticRouter")
+app.use("/link-statistic", linkStatisticRouter)
 
 app.use((err, req, res, next) => {
     // 数据验证失败

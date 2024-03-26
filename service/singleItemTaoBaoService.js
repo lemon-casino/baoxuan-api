@@ -1,7 +1,14 @@
 const singleItemTaoBaoRepo = require("../repository/singleItemTaoBaoRepo")
 const {taoBaoSingleItemMap} = require("../const/singleItemMap")
 const {logger} = require("../utils/log")
+const dateUtil = require("../utils/dateUtil")
+const linkTypeConst = require("../const/linkTypeConst")
 
+/**
+ * 根据中文获取真实的数据库字段
+ * @param chineseName
+ * @returns {string|null}
+ */
 const getRealKey = (chineseName) => {
     for (const key of Object.keys(taoBaoSingleItemMap)) {
         if (taoBaoSingleItemMap[key] === chineseName) {
@@ -11,6 +18,11 @@ const getRealKey = (chineseName) => {
     return null
 }
 
+/**
+ * 保存单品表
+ * @param item
+ * @returns {Promise<*|null>}
+ */
 const saveSingleItemTaoBao = async (item) => {
     // 白少雄那边传来的key是中文（好认），转化下
     let validChineseKeys = []
@@ -50,6 +62,12 @@ const saveSingleItemTaoBao = async (item) => {
     return result
 }
 
+/**
+ * 根据batchId 和 linkId删除数据
+ * @param batchId
+ * @param linkId
+ * @returns {Promise<*|null>}
+ */
 const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
     if (!batchId || !linkId) {
         throw new Error("参数：batchId, linkId 不能为空")
@@ -57,7 +75,91 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
     return singleItemTaoBaoRepo.deleteSingleIteTaoBaoByBatchIdAndLinkId(batchId, linkId)
 }
 
+/**
+ * 获取本人不同装填的的链接操作数
+ * @param username
+ * @param status
+ * @returns {Promise<*[]>}
+ */
+const getSelfLinkOperationCount = async (username, status) => {
+    if (status === "do") {
+        const result = await getSelfALLDoSingleItemLinkOperationCount(username)
+        return result
+    }
+    throw new Error(`${status}还不支持`)
+}
+
+/**
+ * 获取本人所有链接操作数据（操作）
+ * @param username
+ * @returns {Promise<*[]>}
+ */
+const getSelfALLDoSingleItemLinkOperationCount = async (username) => {
+    const timeRange = [dateUtil.earliestDate, dateUtil.endOfToday()]
+    const result = await getSelfDoSingleItemLinkOperationCount(username, timeRange)
+    return result
+}
+
+/**
+ * 获取本人链接操作数据（操作）
+ * @param username 运营主管姓名
+ * @param timeRange 时间范围
+ * @returns {Promise<*[]>}
+ */
+const getSelfDoSingleItemLinkOperationCount = async (username, timeRange) => {
+    const result = []
+    for (const key of Object.keys(linkTypeConst)) {
+        const resultOfLinkType = await singleItemTaoBaoRepo.getSingleItemByOperationLeaderLinkTypeTimeRange(
+            username,
+            linkTypeConst[key],
+            timeRange)
+
+        result.push({
+            linkTypeName: key,
+            linkTypeValue: linkTypeConst[key],
+            count: resultOfLinkType.length
+        })
+    }
+    return result
+}
+
+/**
+ * 获取本人链接操作数据（待上架）
+ * @returns {Promise<void>}
+ */
+const getSelfWaitingOnSingleItemLinkOperationCount = async () => {
+
+}
+
+/**
+ * 获取本人链接操作数据（待转出）
+ * @returns {Promise<void>}
+ */
+const getSelfWaitingOutSingleItemLinkOperationCount = async () => {
+
+}
+
+/**
+ * 获取本人链接操作数据（打仗链接）
+ * @returns {Promise<void>}
+ */
+const getSelfFightingSingleItemLinkOperationCount = async () => {
+
+}
+
+/**
+ * 获取本人链接操作数据（异常数据）
+ * @returns {Promise<void>}
+ */
+const getSelfErrorSingleItemLinkOperationCount = async () => {
+
+}
+
+
 module.exports = {
     saveSingleItemTaoBao,
-    deleteSingleIteTaoBaoByBatchIdAndLinkId
+    deleteSingleIteTaoBaoByBatchIdAndLinkId,
+    getSelfLinkOperationCount,
+    getSelfDoSingleItemLinkOperationCount,
+    getSelfALLDoSingleItemLinkOperationCount
 }
