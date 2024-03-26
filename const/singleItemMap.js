@@ -43,7 +43,11 @@ const taoBaoSingleItemMap = {
     "shouTaoPeopleNumMarketRateCircleRate30day": "手淘人数市场占比环比（30天）",
     "salesMarketRateCircleRate30day": "坑市场占比环比（30天）",
     "brandFirstBuySumAmount": "品牌新享费用合计",
-    "xiaoHongShuRefund": "小红书返款"
+    "xiaoHongShuRefund": "小红书返款",
+    "accuratePeoplePromotionCost": "精准人群推广花费",
+    "accuratePeoplePromotionProductionRate": "精准人群推广投产比",
+    "wanXiangTaiCost": "万相台花费",
+    "wanXiangTaiProductionRate": "万相台投产比"
 }
 
 module.exports = {

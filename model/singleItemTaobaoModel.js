@@ -425,6 +425,42 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "创建时间",
       field: "create_time"
+    },
+    accuratePeoplePromotionCost: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "精准人群推广费用;",
+      field: "accuratePeoplePromotionCost"
+    },
+    accuratePeoplePromotionProductionRate: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "精准人群推广花费;",
+      field: "accuratePeoplePromotionProductionRate"
+    },
+    wanXiangTaiCost: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "万相台花费;",
+      field: "wanXiangTaiCost"
+    },
+    wanXiangTaiProductionRate: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "万相台投产比;",
+      field: "wanXiangTaiProductionRate"
     }
   };
   const options = {
