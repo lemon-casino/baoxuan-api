@@ -23,16 +23,6 @@ const logger = createLogger({
     defaultMeta: {service: "bi"},
     transports: [
         new DailyRotateFile({
-            filename: path.join(`${logDirectory}/%DATE%`, `debug.log`),
-            datePattern: 'YYYY-MM-DD',
-            level: process.env.NODE_ENV === "dev" ? "debug" : ""
-        }),
-        new DailyRotateFile({
-            filename: path.join(`${logDirectory}/%DATE%`, `info.log`),
-            datePattern: 'YYYY-MM-DD',
-            level: "info"
-        }),
-        new DailyRotateFile({
             filename: path.join(`${logDirectory}/%DATE%`, `warm.log`),
             datePattern: 'YYYY-MM-DD',
             level: "warm"
