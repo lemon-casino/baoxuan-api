@@ -52,7 +52,7 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
  * @param operationLeaderNames 运营负责人姓名: 支持多人
  * @param firstLevelProductLine 一级产品线
  * @param secondLevelProductLine 二级产品线
- * @param exceptionItem 异常项目
+ * @param errorItem 异常项目
  * @param linkType 链接类型
  * @param linkStatus 链接状态
  * @param timeRange 时间区间
@@ -63,7 +63,7 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     operationLeaderNames,
                                     firstLevelProductLine,
                                     secondLevelProductLine,
-                                    exceptionItem,
+                                    errorItem,
                                     linkType,
                                     linkStatus,
                                     timeRange) => {
@@ -71,9 +71,11 @@ const getTaoBaoSingleItems = async (pageIndex,
         const where = {}
         where.operationLeader = {$in: operationLeaderNames}
         where.date = {$between: timeRange}
-
         if (linkType) {
             where.linkType = linkType
+        }
+        if (errorItem.field) {
+            where[errorItem.field] = {[errorItem.operator]: errorItem.value}
         }
 
         const satisfiedCount = await singleItemTaoBaoModel.count({

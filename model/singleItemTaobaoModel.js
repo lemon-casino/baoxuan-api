@@ -103,9 +103,9 @@ module.exports = sequelize => {
       field: "first_level_item"
     },
     payAmount: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.DECIMAL,
       allowNull: true,
-      defaultValue: "0",
+      defaultValue: "0.00",
       primaryKey: false,
       autoIncrement: false,
       comment: "支付金额",
@@ -157,36 +157,36 @@ module.exports = sequelize => {
       field: "profit_rate"
     },
     visitors: {
-      type: DataTypes.DECIMAL,
+      type: DataTypes.INTEGER,
       allowNull: true,
-      defaultValue: "0.00",
+      defaultValue: "0",
       primaryKey: false,
       autoIncrement: false,
       comment: "访客数",
       field: "visitors"
     },
     paidBuyers: {
-      type: DataTypes.DECIMAL,
+      type: DataTypes.INTEGER,
       allowNull: true,
-      defaultValue: "0.00",
+      defaultValue: "0",
       primaryKey: false,
       autoIncrement: false,
       comment: "支付买家数",
       field: "paid_buyers"
     },
     sumShoppingCart: {
-      type: DataTypes.DECIMAL,
+      type: DataTypes.INTEGER,
       allowNull: true,
-      defaultValue: "0.00",
+      defaultValue: "0",
       primaryKey: false,
       autoIncrement: false,
       comment: "总购物车数",
       field: "sum_shopping_cart"
     },
     shoppingCartClickAmount: {
-      type: DataTypes.DECIMAL,
+      type: DataTypes.INTEGER,
       allowNull: true,
-      defaultValue: "0.00",
+      defaultValue: "0",
       primaryKey: false,
       autoIncrement: false,
       comment: "车点击量",
@@ -274,9 +274,9 @@ module.exports = sequelize => {
       field: "click_farming_amount"
     },
     clickFarmingCount: {
-      type: DataTypes.DECIMAL,
+      type: DataTypes.INTEGER,
       allowNull: true,
-      defaultValue: "0.00",
+      defaultValue: "0",
       primaryKey: false,
       autoIncrement: false,
       comment: "刷单金笔数",

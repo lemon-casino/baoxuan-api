@@ -101,16 +101,17 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     linkType,
                                     linkStatus,
                                     timeRange) => {
+
     const data = await singleItemTaoBaoRepo.getTaoBaoSingleItems(
-        pageIndex,
-        pageSize,
-        operationLeaderNames,
+        parseInt(pageIndex),
+        parseInt(pageSize),
+        JSON.parse(operationLeaderNames),
         firstLevelProductLine,
         secondLevelProductLine,
-        errorItem,
+        JSON.parse(errorItem || "{}"),
         linkType,
         linkStatus,
-        timeRange)
+        JSON.parse(timeRange))
     return data
 }
 

@@ -50,15 +50,15 @@ const getTaoBaoSingleItems = async (req, res, next) => {
             timeRange
         } = req.query
         const result = await singleItemTaoBaoService.getTaoBaoSingleItems(
-            parseInt(pageIndex),
-            parseInt(pageSize),
-            JSON.parse(operationLeaderNames),
+            pageIndex,
+            pageSize,
+            operationLeaderNames,
             firstLevelProductLine,
             secondLevelProductLine,
             errorItem,
             linkType,
             linkStatus,
-            JSON.parse(timeRange))
+            timeRange)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
