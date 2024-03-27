@@ -5,6 +5,16 @@ const {logger} = require("../utils/log")
 const uuidUtil = require("../utils/uuidUtil")
 const sequelizeUtil = require("../utils/sequelizeUtil")
 const pagingUtil = require("../utils/pagingUtil")
+const singleItemConst = require("../const/singleItemConst")
+const {taoBaoSingleItemStatusesKeys} = require("../const/singleItemConst")
+const flowStatusConst = require("../const/flowStatusConst")
+const globalGetter = require("../global/getter")
+
+// 天猫链接打架流程表单id
+const tmFightingFlowFormId = "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J"
+// todo: 历史数据同步完成后，可以从数据库中获取
+// 天猫链接打架流程表单中链接ID的key
+const linkIdKeyInTmFightingFlowForm = "textField_lqhp0b0d"
 
 /**
  * 保存淘宝的单品表数据
@@ -76,6 +86,25 @@ const getTaoBaoSingleItems = async (pageIndex,
         }
         if (errorItem.field) {
             where[errorItem.field] = {[errorItem.operator]: errorItem.value}
+        }
+        // 从正在进行中的打仗流程中的data中找到linkId
+        let fightingLinkIds = []
+        if (linkStatus) {
+            const todayFlows = await globalGetter.getTodayFlows();
+            const runningFightingFlows = todayFlows.filter((flow) => {
+                return flow.formUuid === tmFightingFlowFormId && flow.instanceStatus === flowStatusConst.RUNNING
+            })
+            for (const runningFightingFlow of runningFightingFlows) {
+                const runningLinkId = runningFightingFlow.data[linkIdKeyInTmFightingFlowForm]
+                if (runningLinkId) {
+                    fightingLinkIds.push(runningLinkId)
+                }
+            }
+            if (linkStatus === taoBaoSingleItemStatusesKeys.fighting) {
+                where.linkId = {$in: fightingLinkIds}
+            }else{
+                where.linkId = {$notIn: fightingLinkIds}
+            }
         }
 
         const satisfiedCount = await singleItemTaoBaoModel.count({

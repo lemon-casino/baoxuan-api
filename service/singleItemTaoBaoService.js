@@ -1,7 +1,7 @@
 const singleItemTaoBaoRepo = require("../repository/singleItemTaoBaoRepo")
 const departmentService = require("../service/departmentService")
 const userService = require("../service/userService")
-const {taoBaoSingleItemMap, taoBaoErrorItems} = require("../const/singleItemConst")
+const {taoBaoSingleItemMap, taoBaoErrorItems, taoBaoSingleItemStatuses} = require("../const/singleItemConst")
 const whiteList = require("../config/whiteList")
 const {logger} = require("../utils/log")
 const dateUtil = require("../utils/dateUtil")
@@ -129,7 +129,7 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
         secondLevelProductionLines: [],
         errorItems: taoBaoErrorItems,
         linkTypes: [],
-        linkStatuses: []
+        linkStatuses: taoBaoSingleItemStatuses
     }
     // 判断用户是否是leader
     const userDDId = await userService.getDingDingUserId(userId)

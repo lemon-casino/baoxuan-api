@@ -80,9 +80,12 @@ const taoBaoErrorItems = [
     {name: "费比超过15%", value: {filed: "", operator: "", value: ""}}
 ]
 
-const taoBaoSingleItemStatuses = ["打仗", "正常"]
+const taoBaoSingleItemStatuses = [{name: "fighting", value: "打仗"}, {name: "normal", value: "正常"}]
+const taoBaoSingleItemStatusesKeys = {"fighting": "fighting", "normal": "normal"}
 
 module.exports = {
     taoBaoSingleItemMap,
-    taoBaoErrorItems
+    taoBaoErrorItems,
+    taoBaoSingleItemStatuses,
+    taoBaoSingleItemStatusesKeys
 }
