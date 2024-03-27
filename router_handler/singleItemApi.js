@@ -44,7 +44,7 @@ const getTaoBaoSingleItems = async (req, res, next) => {
             operationLeaderNames,
             firstLevelProductLine,
             secondLevelProductLine,
-            exceptionItem,
+            errorItem,
             linkType,
             linkStatus,
             timeRange
@@ -55,7 +55,7 @@ const getTaoBaoSingleItems = async (req, res, next) => {
             JSON.parse(operationLeaderNames),
             firstLevelProductLine,
             secondLevelProductLine,
-            exceptionItem,
+            errorItem,
             linkType,
             linkStatus,
             JSON.parse(timeRange))
