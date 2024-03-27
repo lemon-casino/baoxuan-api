@@ -2,11 +2,11 @@ const extractDataValues = (result) => {
     if (result instanceof String) {
         return result.dataValues
     }
-    const results = []
+    const data = []
     for (const item of result) {
-        results.push(item.dataValues)
+        data.push(item.dataValues)
     }
-    return result
+    return data
 }
 
 module.exports = {

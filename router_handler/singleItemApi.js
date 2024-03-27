@@ -28,7 +28,62 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (req, res, next) => {
     }
 }
 
+
+/**
+ * 获取淘宝单品表数据
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<*>}
+ */
+const getTaoBaoSingleItems = async (req, res, next) => {
+    try {
+        const {
+            pageIndex,
+            pageSize,
+            operationLeaderNames,
+            firstLevelProductLine,
+            secondLevelProductLine,
+            exceptionItem,
+            linkType,
+            linkStatus,
+            timeRange
+        } = req.query
+        const result = await singleItemTaoBaoService.getTaoBaoSingleItems(
+            parseInt(pageIndex),
+            parseInt(pageSize),
+            JSON.parse(operationLeaderNames),
+            firstLevelProductLine,
+            secondLevelProductLine,
+            exceptionItem,
+            linkType,
+            linkStatus,
+            JSON.parse(timeRange))
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+/**
+ * 获取淘宝单品表中的查询条件需要的数据
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<{linkStatuses: *[], errorItems: *[], linkTypes: *[], operationLeaders: *[], firstLevelLines: *[], secondLevelLines: *[]}>}
+ */
+const getSearchDataTaoBaoSingleItem = async (req, res, next) => {
+    try {
+        const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     saveSingleItemTaoBao,
-    deleteSingleIteTaoBaoByBatchIdAndLinkId
+    deleteSingleIteTaoBaoByBatchIdAndLinkId,
+    getTaoBaoSingleItems,
+    getSearchDataTaoBaoSingleItem
 }

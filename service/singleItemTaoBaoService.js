@@ -1,5 +1,8 @@
 const singleItemTaoBaoRepo = require("../repository/singleItemTaoBaoRepo")
+const departmentService = require("../service/departmentService")
+const userService = require("../service/userService")
 const {taoBaoSingleItemMap} = require("../const/singleItemMap")
+const whiteList = require("../config/whiteList")
 const {logger} = require("../utils/log")
 const dateUtil = require("../utils/dateUtil")
 const linkTypeConst = require("../const/linkTypeConst")
@@ -73,6 +76,90 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
         throw new Error("参数：batchId, linkId 不能为空")
     }
     return singleItemTaoBaoRepo.deleteSingleIteTaoBaoByBatchIdAndLinkId(batchId, linkId)
+}
+
+/**
+ * 获取淘宝单品表数据
+ * @param pageIndex 页码
+ * @param pageSize 单页数据量
+ * @param operationLeaderNames 运营负责人姓名: 支持多人
+ * @param firstLevelProductLine 一级产品线
+ * @param secondLevelProductLine 二级产品线
+ * @param exceptionItem 异常项目
+ * @param linkType 链接类型
+ * @param linkStatus 链接状态
+ * @param timeRange 时间区间
+ * @returns {Promise<{pageCount: *, data: *, pageIndex: *, pageSize: *}|null>}
+ */
+const getTaoBaoSingleItems = async (pageIndex,
+                                    pageSize,
+                                    operationLeaderNames,
+                                    firstLevelProductLine,
+                                    secondLevelProductLine,
+                                    exceptionItem,
+                                    linkType,
+                                    linkStatus,
+                                    timeRange) => {
+    const data = await singleItemTaoBaoRepo.getTaoBaoSingleItems(
+        pageIndex,
+        pageSize,
+        operationLeaderNames,
+        firstLevelProductLine,
+        secondLevelProductLine,
+        exceptionItem,
+        linkType,
+        linkStatus,
+        timeRange)
+    return data
+}
+
+
+/**
+ * 获取用户在淘宝单品表页面查询需要的数据
+ * @param userId
+ * @returns {Promise<{linkStatuses: *[], errorItems: *[], linkTypes: *[], operationLeaders: *[], firstLevelLines: *[], secondLevelLines: *[]}>}
+ */
+const getSearchDataTaoBaoSingleItem = async (userId) => {
+
+    const result = {
+        operationLeaders: [],
+        firstLevelProductionLines: [],
+        secondLevelProductionLines: [],
+        errorItems: [],
+        linkTypes: [],
+        linkStatuses: []
+    }
+    // 判断用户是否是leader
+    const userDDId = await userService.getDingDingUserId(userId)
+    const user = await departmentService.getDepartmentOfUser(userDDId)
+    // tm leader 需要获取该部门下的所有人
+    let isTMLeader = false;
+    if (whiteList.pepArr().includes(userDDId)) {
+        isTMLeader = true
+    } else {
+        if (user && user.leader_in_dept) {
+            for (const dept of user.leader_in_dept) {
+                if (dept.dep_detail.name === "天猫组" && dept.leader) {
+                    isTMLeader = true
+                    break
+                }
+            }
+        }
+    }
+    if (isTMLeader) {
+        const department = await departmentService.getDepartmentWithUsers("903075138")
+        for (const user of department.dep_user) {
+            result.operationLeaders.push({
+                userId: user.userid, userName: user.name
+            })
+        }
+    } else {
+        result.operationLeaders = [{userId: userDDId, userName: user.name}]
+    }
+
+    const linkTypes = await singleItemTaoBaoRepo.getLinkTypes()
+    result.linkTypes = linkTypes
+    return result
 }
 
 /**
@@ -161,5 +248,7 @@ module.exports = {
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
     getSelfLinkOperationCount,
     getSelfDoSingleItemLinkOperationCount,
-    getSelfALLDoSingleItemLinkOperationCount
+    getSelfALLDoSingleItemLinkOperationCount,
+    getTaoBaoSingleItems,
+    getSearchDataTaoBaoSingleItem
 }
