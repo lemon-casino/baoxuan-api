@@ -432,8 +432,8 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "精准人群推广费用;",
-      field: "accuratePeoplePromotionCost"
+      comment: "精准人群推广费用",
+      field: "accurate_people_promotion_cost"
     },
     accuratePeoplePromotionProductionRate: {
       type: DataTypes.DECIMAL,
@@ -441,8 +441,8 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "精准人群推广花费;",
-      field: "accuratePeoplePromotionProductionRate"
+      comment: "精准人群推广花费",
+      field: "accurate_people_promotion_production_rate"
     },
     wanXiangTaiCost: {
       type: DataTypes.DECIMAL,
@@ -450,8 +450,8 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "万相台花费;",
-      field: "wanXiangTaiCost"
+      comment: "万相台花费",
+      field: "wan_xiang_tai_cost"
     },
     wanXiangTaiProductionRate: {
       type: DataTypes.DECIMAL,
@@ -459,8 +459,8 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "万相台投产比;",
-      field: "wanXiangTaiProductionRate"
+      comment: "万相台投产比",
+      field: "wan_xiang_tai_production_rate"
     }
   };
   const options = {

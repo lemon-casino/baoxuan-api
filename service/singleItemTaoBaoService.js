@@ -1,11 +1,12 @@
 const singleItemTaoBaoRepo = require("../repository/singleItemTaoBaoRepo")
 const departmentService = require("../service/departmentService")
 const userService = require("../service/userService")
-const {taoBaoSingleItemMap} = require("../const/singleItemMap")
+const {taoBaoSingleItemMap, taoBaoErrorItems} = require("../const/singleItemConst")
 const whiteList = require("../config/whiteList")
 const {logger} = require("../utils/log")
 const dateUtil = require("../utils/dateUtil")
 const linkTypeConst = require("../const/linkTypeConst")
+
 
 /**
  * 根据中文获取真实的数据库字段
@@ -85,7 +86,7 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
  * @param operationLeaderNames 运营负责人姓名: 支持多人
  * @param firstLevelProductLine 一级产品线
  * @param secondLevelProductLine 二级产品线
- * @param exceptionItem 异常项目
+ * @param errorItem 异常项目
  * @param linkType 链接类型
  * @param linkStatus 链接状态
  * @param timeRange 时间区间
@@ -96,7 +97,7 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     operationLeaderNames,
                                     firstLevelProductLine,
                                     secondLevelProductLine,
-                                    exceptionItem,
+                                    errorItem,
                                     linkType,
                                     linkStatus,
                                     timeRange) => {
@@ -106,7 +107,7 @@ const getTaoBaoSingleItems = async (pageIndex,
         operationLeaderNames,
         firstLevelProductLine,
         secondLevelProductLine,
-        exceptionItem,
+        errorItem,
         linkType,
         linkStatus,
         timeRange)
@@ -117,7 +118,7 @@ const getTaoBaoSingleItems = async (pageIndex,
 /**
  * 获取用户在淘宝单品表页面查询需要的数据
  * @param userId
- * @returns {Promise<{linkStatuses: *[], errorItems: *[], linkTypes: *[], operationLeaders: *[], firstLevelLines: *[], secondLevelLines: *[]}>}
+ * @returns {Promise<{firstLevelProductionLines: *[], linkStatuses: *[], errorItems: [{name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, null, null, null, null, null, null, null, null], linkTypes: *[], secondLevelProductionLines: *[], operationLeaders: *[]}>}
  */
 const getSearchDataTaoBaoSingleItem = async (userId) => {
 
@@ -125,7 +126,7 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
         operationLeaders: [],
         firstLevelProductionLines: [],
         secondLevelProductionLines: [],
-        errorItems: [],
+        errorItems: taoBaoErrorItems,
         linkTypes: [],
         linkStatuses: []
     }
