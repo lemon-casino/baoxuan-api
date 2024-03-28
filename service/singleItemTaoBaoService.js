@@ -197,14 +197,14 @@ const getSelfALLDoSingleItemLinkOperationCount = async (username) => {
 
 /**
  * 获取本人链接操作数据（操作）
- * @param username 运营主管姓名
+ * @param username  产品线负责人姓名
  * @param timeRange 时间范围
  * @returns {Promise<*[]>}
  */
 const getSelfDoSingleItemLinkOperationCount = async (username, timeRange) => {
     const result = []
     for (const key of Object.keys(linkTypeConst)) {
-        const resultOfLinkType = await singleItemTaoBaoRepo.getSingleItemByOperationLeaderLinkTypeTimeRange(
+        const resultOfLinkType = await singleItemTaoBaoRepo.getSingleItemByProductionLineLeaderLinkTypeTimeRange(
             username,
             linkTypeConst[key],
             timeRange)

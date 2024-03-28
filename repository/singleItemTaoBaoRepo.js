@@ -133,16 +133,16 @@ const getTaoBaoSingleItems = async (pageIndex,
 
 /**
  * 获取单品数据
- * @param operationLeader 运营负责人
+ * @param productionLineLeader 产品线负责人
  * @param linkType 链接类型
  * @param timeRange 时间范围
  * @returns {Promise<*>}
  */
-const getSingleItemByOperationLeaderLinkTypeTimeRange = async (operationLeader, linkType, timeRange) => {
+const getSingleItemByProductionLineLeaderLinkTypeTimeRange = async (productionLineLeader, linkType, timeRange) => {
     try {
         const singleItems = await singleItemTaoBaoModel.findAll({
             where: {
-                operationLeader,
+                productionLineLeader,
                 linkType,
                 date: {
                     $between: timeRange
@@ -182,7 +182,7 @@ const getLinkTypes = async () => {
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
-    getSingleItemByOperationLeaderLinkTypeTimeRange,
+    getSingleItemByProductionLineLeaderLinkTypeTimeRange,
     getTaoBaoSingleItems,
     getLinkTypes
 }
