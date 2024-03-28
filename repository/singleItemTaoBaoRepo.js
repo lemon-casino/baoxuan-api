@@ -25,6 +25,7 @@ const saveSingleItemTaoBao = async (item) => {
     try {
         await deleteSingleIteTaoBaoByBatchIdAndLinkId(item.batchId, item.linkId)
         item.id = uuidUtil.getId()
+        item.createTime = new Date()
         return await singleItemTaoBaoModel.create(item)
     } catch (e) {
         await deleteSingleIteTaoBaoByBatchIdAndLinkId(item.batchId, item.linkId)

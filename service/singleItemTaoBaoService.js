@@ -48,9 +48,15 @@ const saveSingleItemTaoBao = async (item) => {
         if (!value) {
             continue
         }
-        if (value.toString().indexOf("%") > 0) {
-            value = value.toString().replace("%", "").trim()
-            if (/^[0-9]+\.*[0-9]+$/.test(value)) {
+        // 去掉空格和%
+        value = value.toString().trim()
+        if (value.indexOf("%") > 0) {
+            value = value.replace("%", "")
+        }
+        // 数字转化
+        if (/^[0-9]+\.*[0-9]+$/.test(value)) {
+            // 当前linkId是12位的数字，parseFloat转化15为长度的会异常
+            if (value.length <= 14) {
                 value = parseFloat(value)
             }
         }
