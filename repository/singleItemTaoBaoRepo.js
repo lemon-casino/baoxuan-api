@@ -73,6 +73,10 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     fightingLinkIds,
                                     timeRange) => {
     try {
+        if (pageIndex < 0 || pageSize < 0) {
+            throw new Error("分页参数无效")
+        }
+
         const where = {}
         where.productLineLeader = {$in: operationLeaderNames}
         where.date = {$between: timeRange}
@@ -97,7 +101,7 @@ const getTaoBaoSingleItems = async (pageIndex,
             offset: pageIndex * pageSize,
             limit: pageSize,
             where,
-            order: [["date", "asc"]]
+            order: [["linkId", "asc"],["date", "asc"]]
         })
         data = sequelizeUtil.extractDataValues(data)
         const result = pagingUtil.paging(Math.ceil(satisfiedCount / pageSize), satisfiedCount, data)
