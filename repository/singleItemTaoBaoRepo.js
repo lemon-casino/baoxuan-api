@@ -79,7 +79,7 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     timeRange) => {
     try {
         const where = {}
-        where.operationLeader = {$in: operationLeaderNames}
+        where.productLineLeader = {$in: operationLeaderNames}
         where.date = {$between: timeRange}
         if (linkType) {
             where.linkType = linkType
@@ -102,7 +102,7 @@ const getTaoBaoSingleItems = async (pageIndex,
             }
             if (linkStatus === taoBaoSingleItemStatusesKeys.fighting) {
                 where.linkId = {$in: fightingLinkIds}
-            }else{
+            } else {
                 where.linkId = {$notIn: fightingLinkIds}
             }
         }
