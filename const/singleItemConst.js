@@ -47,7 +47,8 @@ const taoBaoSingleItemMap = {
     "accuratePeoplePromotionCost": "精准人群推广花费",
     "accuratePeoplePromotionProductionRate": "精准人群推广投产比",
     "wanXiangTaiCost": "万相台花费",
-    "wanXiangTaiProductionRate": "万相台投产比"
+    "wanXiangTaiProductionRate": "万相台投产比",
+    "feeRate": "费用比例"
 }
 
 const taoBaoErrorItems = [

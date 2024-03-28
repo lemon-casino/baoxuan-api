@@ -85,7 +85,7 @@ module.exports = sequelize => {
       field: "link_type"
     },
     date: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
@@ -417,15 +417,6 @@ module.exports = sequelize => {
       comment: "小红书返款",
       field: "xiao_hong_shu_refund"
     },
-    createTime: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: null,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "创建时间",
-      field: "create_time"
-    },
     accuratePeoplePromotionCost: {
       type: DataTypes.DECIMAL,
       allowNull: true,
@@ -461,6 +452,24 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "万相台投产比",
       field: "wan_xiang_tai_production_rate"
+    },
+    feeRate: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "费用比例;",
+      field: "fee_rate"
+    },
+    createTime: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "创建时间",
+      field: "create_time"
     }
   };
   const options = {
