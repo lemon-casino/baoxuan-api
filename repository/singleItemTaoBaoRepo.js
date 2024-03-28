@@ -120,7 +120,7 @@ const getTaoBaoSingleItems = async (pageIndex,
             order: [["date", "asc"]]
         })
         data = sequelizeUtil.extractDataValues(data)
-        const result = pagingUtil.paging(Math.ceil(satisfiedCount / pageSize), data)
+        const result = pagingUtil.paging(Math.ceil(satisfiedCount / pageSize), satisfiedCount, data)
         return result
 
     } catch (e) {

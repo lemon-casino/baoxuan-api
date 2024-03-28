@@ -1,6 +1,7 @@
-const paging = (pageCount, data) => {
+const paging = (pageCount, total, data) => {
     return {
         pageCount,
+        total,
         data
     }
 }
