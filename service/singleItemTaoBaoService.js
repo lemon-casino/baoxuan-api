@@ -171,6 +171,19 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
 }
 
 /**
+ * 返回单品数据详情
+ * @param id
+ * @returns {Promise<*|*[]|null>}
+ */
+const getSingleItemById = async (id) => {
+    if (!id) {
+        throw new Error("id不能为空")
+    }
+    const singleItem = await singleItemTaoBaoRepo.getSingleItemById(id)
+    return singleItem
+}
+
+/**
  * 获取本人不同装填的的链接操作数
  * @param username
  * @param status
@@ -258,5 +271,6 @@ module.exports = {
     getSelfDoSingleItemLinkOperationCount,
     getSelfALLDoSingleItemLinkOperationCount,
     getTaoBaoSingleItems,
-    getSearchDataTaoBaoSingleItem
+    getSearchDataTaoBaoSingleItem,
+    getSingleItemById
 }

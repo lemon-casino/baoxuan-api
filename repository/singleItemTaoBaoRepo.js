@@ -121,7 +121,7 @@ const getTaoBaoSingleItems = async (pageIndex,
             offset: pageIndex * pageSize,
             limit: pageSize,
             where,
-            order: [["linkId", "asc"],["date", "asc"]]
+            order: [["linkId", "asc"], ["date", "asc"]]
         })
         data = sequelizeUtil.extractDataValues(data)
         const result = pagingUtil.paging(Math.ceil(satisfiedCount / pageSize), satisfiedCount, data)
@@ -163,6 +163,29 @@ const getSingleItemByOperationLeaderLinkTypeTimeRange = async (operationLeader, 
 }
 
 /**
+ * 获取单品表详情
+ * @param id
+ * @returns {Promise<*|[]|null>}
+ */
+const getSingleItemById = async (id) => {
+    try {
+        const singleItem = await singleItemTaoBaoModel.findAll({
+            where: {id}
+        })
+        if (singleItem && singleItem.length > 0) {
+            const result = sequelizeUtil.extractDataValues(singleItem)
+            return result[0]
+        } else {
+            throw new Error("单品信息不存在")
+        }
+    } catch (e) {
+        logger.error(e.message)
+        logger.error(e.sql)
+        throw new Error(e.message)
+    }
+}
+
+/**
  * 获取单品表中的链接属性
  * @returns {Promise<*[]>}
  */
@@ -188,5 +211,6 @@ module.exports = {
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
     getSingleItemByOperationLeaderLinkTypeTimeRange,
     getTaoBaoSingleItems,
-    getLinkTypes
+    getLinkTypes,
+    getSingleItemById
 }
