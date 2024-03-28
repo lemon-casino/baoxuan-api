@@ -47,7 +47,7 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
         return await singleItemTaoBaoModel.destroy({
             where: {
                 batchId,
-                linkId: linkId
+                linkId: linkId.toString()
             }
         })
     } catch (e) {
