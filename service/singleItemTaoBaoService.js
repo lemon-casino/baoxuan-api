@@ -139,14 +139,16 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
     }
     // 判断用户是否是leader
     const userDDId = await userService.getDingDingUserId(userId)
-    const user = await departmentService.getDepartmentOfUser(userDDId)
+    const user = await userService.getUserDetails(userId)
+    const departments = await departmentService.getDepartmentOfUser(userDDId)
+
     // tm leader 需要获取该部门下的所有人
     let isTMLeader = false;
     if (whiteList.pepArr().includes(userDDId)) {
         isTMLeader = true
     } else {
-        if (user && user.leader_in_dept) {
-            for (const dept of user.leader_in_dept) {
+        if (departments) {
+            for (const dept of departments) {
                 if (dept.dep_detail.name === "天猫组" && dept.leader) {
                     isTMLeader = true
                     break
@@ -162,7 +164,7 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
             })
         }
     } else {
-        result.operationLeaders = [{userId: userDDId, userName: user.name}]
+        result.operationLeaders = [{userId: userDDId, userName: user.nickname}]
     }
 
     const linkTypes = await singleItemTaoBaoRepo.getLinkTypes()
