@@ -1,0 +1,6 @@
+module.exports = {
+    RUNNING: "RUNNING",
+    ERROR: "ERROR",
+    COMPLETE: "COMPLETE",
+    TERMINATED: "TERMINATED"
+}

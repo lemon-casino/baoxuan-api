@@ -13,6 +13,8 @@ router.get('/userInfo', userHandler.getList);
 router.post('/editUser', userHandler.editUser);
 // 登录
 router.post('/login', userHandler.login);
+// 获取tokens
+router.post('/tokens', userHandler.getTokens);
 // 添加用户接口
 router.post('/addUser', userHandler.addUser);
 // 获取图形验证码

@@ -20,10 +20,13 @@ const diff = (endDate, startDate) => {
 
 const delay = (ms = 800) => new Promise((res) => setTimeout(res, ms));
 
+const earliestDate = "2020-01-01 00:00:00"
+
 module.exports = {
     diff,
     delay,
     formatGMT,
     startOfToday,
-    endOfToday
+    endOfToday,
+    earliestDate
 }
