@@ -30,6 +30,7 @@ const saveSingleItemTaoBao = async (item) => {
     } catch (e) {
         await deleteSingleIteTaoBaoByBatchIdAndLinkId(item.batchId, item.linkId)
         logger.error(e.message)
+        logger.error(e.sql)
         throw new Error(e.message)
         return null
     }
@@ -46,12 +47,13 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
         return await singleItemTaoBaoModel.destroy({
             where: {
                 batchId,
-                linkId
+                linkId: linkId
             }
         })
     } catch (e) {
         throw new Error(e.message)
         logger.error(e.message)
+        logger.error(e.sql)
         return null
     }
 }
@@ -121,8 +123,9 @@ const getTaoBaoSingleItems = async (pageIndex,
         return result
 
     } catch (e) {
-        throw new Error(e.message)
         logger.error(e.message)
+        logger.error(e.sql)
+        throw new Error(e.message)
         return null
     }
 }
@@ -135,17 +138,23 @@ const getTaoBaoSingleItems = async (pageIndex,
  * @returns {Promise<*>}
  */
 const getSingleItemByOperationLeaderLinkTypeTimeRange = async (operationLeader, linkType, timeRange) => {
-    const singleItems = await singleItemTaoBaoModel.findAll({
-        where: {
-            operationLeader,
-            linkType,
-            date: {
-                $between: timeRange
+    try {
+        const singleItems = await singleItemTaoBaoModel.findAll({
+            where: {
+                operationLeader,
+                linkType,
+                date: {
+                    $between: timeRange
+                }
             }
-        }
-    })
-    const result = sequelizeUtil.extractDataValues(singleItems)
-    return result
+        })
+        const result = sequelizeUtil.extractDataValues(singleItems)
+        return result
+    } catch (e) {
+        logger.error(e.message)
+        logger.error(e.sql)
+        return null
+    }
 }
 
 /**
@@ -163,6 +172,7 @@ const getLinkTypes = async () => {
     } catch (e) {
         throw new Error(e.message)
         logger.error(e.message)
+        logger.error(e.sql)
         return null
     }
 }
