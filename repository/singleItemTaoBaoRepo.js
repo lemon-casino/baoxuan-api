@@ -81,6 +81,10 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     linkStatus,
                                     timeRange) => {
     try {
+        if (pageIndex < 0 || pageSize < 0) {
+            throw new Error("分页参数无效")
+        }
+
         const where = {}
         where.productLineLeader = {$in: operationLeaderNames}
         where.date = {$between: timeRange}
