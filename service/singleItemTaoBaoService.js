@@ -6,7 +6,16 @@ const whiteList = require("../config/whiteList")
 const {logger} = require("../utils/log")
 const dateUtil = require("../utils/dateUtil")
 const linkTypeConst = require("../const/linkTypeConst")
+const flowStatusConst = require("../const/flowStatusConst")
+const globalGetter = require("../global/getter")
 
+// 天猫链接打架流程表单id
+const tmFightingFlowFormId = "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J"
+// todo: 历史数据同步完成后，可以从数据库中获取
+// 天猫链接打架流程表单中链接ID的key
+const linkIdKeyInTmFightingFlowForm = "textField_lqhp0b0d"
+// 天猫链接上架流程
+const tmLinkShelvesFlowFormId = "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1"
 
 /**
  * 根据中文获取真实的数据库字段
@@ -108,6 +117,20 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     linkStatus,
                                     timeRange) => {
 
+    const fightingLinkIds = []
+    if (linkStatus) {
+        const todayFlows = await globalGetter.getTodayFlows();
+        const runningFightingFlows = todayFlows.filter((flow) => {
+            return flow.formUuid === tmFightingFlowFormId && flow.instanceStatus === flowStatusConst.RUNNING
+        })
+        for (const runningFightingFlow of runningFightingFlows) {
+            const runningLinkId = runningFightingFlow.data[linkIdKeyInTmFightingFlowForm]
+            if (runningLinkId) {
+                fightingLinkIds.push(runningLinkId)
+            }
+        }
+    }
+
     const data = await singleItemTaoBaoRepo.getTaoBaoSingleItems(
         parseInt(pageIndex),
         parseInt(pageSize),
@@ -117,6 +140,7 @@ const getTaoBaoSingleItems = async (pageIndex,
         JSON.parse(errorItem || "{}"),
         linkType,
         linkStatus,
+        fightingLinkIds,
         JSON.parse(timeRange))
     return data
 }
