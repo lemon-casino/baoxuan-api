@@ -49,7 +49,7 @@ const saveSingleItemTaoBao = async (item) => {
             continue
         }
         if (value.toString().indexOf("%")) {
-            value = value.replace("%", "").trim()
+            value = value.toString().replace("%", "").trim()
             if (/^[0-9]+\.*[0-9]+$/.test(value)) {
                 value = parseFloat(value)
             }
