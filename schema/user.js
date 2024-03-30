@@ -78,7 +78,7 @@ exports.get_list = joi.object().keys({
 });
 // 更新用户接口
 exports.update_user_schema = joi.object().keys({
-  username: joi.string().alphanum().min(1).max(10),
+  username: joi.string().alphanum().min(1).max(11),
   status,
   nickname,
   // email,
