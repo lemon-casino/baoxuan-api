@@ -98,7 +98,7 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
  * 获取淘宝单品表数据
  * @param pageIndex 页码
  * @param pageSize 单页数据量
- * @param operationLeaderNames 运营负责人姓名: 支持多人
+ * @param operationLeaderNames 产品线负责人姓名: 支持多人
  * @param firstLevelProductLine 一级产品线
  * @param secondLevelProductLine 二级产品线
  * @param errorItem 异常项目
@@ -109,7 +109,7 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
  */
 const getTaoBaoSingleItems = async (pageIndex,
                                     pageSize,
-                                    operationLeaderNames,
+                                    productLineLeaderNames,
                                     firstLevelProductLine,
                                     secondLevelProductLine,
                                     errorItem,
@@ -134,7 +134,7 @@ const getTaoBaoSingleItems = async (pageIndex,
     const data = await singleItemTaoBaoRepo.getTaoBaoSingleItems(
         parseInt(pageIndex),
         parseInt(pageSize),
-        JSON.parse(operationLeaderNames),
+        JSON.parse(productLineLeaderNames),
         firstLevelProductLine,
         secondLevelProductLine,
         JSON.parse(errorItem || "{}"),
@@ -149,12 +149,11 @@ const getTaoBaoSingleItems = async (pageIndex,
 /**
  * 获取用户在淘宝单品表页面查询需要的数据
  * @param userId
- * @returns {Promise<{firstLevelProductionLines: *[], linkStatuses: *[], errorItems: [{name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, null, null, null, null, null, null, null, null], linkTypes: *[], secondLevelProductionLines: *[], operationLeaders: *[]}>}
+ * @returns {Promise<{firstLevelProductionLines: *[], linkStatuses: [{name: string, value: string}, {name: string, value: string}], productLineLeaders: *[], errorItems: [{name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, null, null, null, null, null, null, null, null], linkTypes: *[], secondLevelProductionLines: *[]}>}
  */
 const getSearchDataTaoBaoSingleItem = async (userId) => {
-
     const result = {
-        operationLeaders: [],
+        productLineLeaders: [],
         firstLevelProductionLines: [],
         secondLevelProductionLines: [],
         errorItems: taoBaoErrorItems,
@@ -181,14 +180,15 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
         }
     }
     if (isTMLeader) {
+        // 天猫组deptId：903075138
         const department = await departmentService.getDepartmentWithUsers("903075138")
         for (const user of department.dep_user) {
-            result.operationLeaders.push({
+            result.productLineLeaders.push({
                 userId: user.userid, userName: user.name
             })
         }
     } else {
-        result.operationLeaders = [{userId: userDDId, userName: user.nickname}]
+        result.productLineLeaders = [{userId: userDDId, userName: user.nickname}]
     }
 
     const linkTypes = await singleItemTaoBaoRepo.getLinkTypes()

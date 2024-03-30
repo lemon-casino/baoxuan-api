@@ -41,7 +41,7 @@ const getTaoBaoSingleItems = async (req, res, next) => {
         const {
             pageIndex,
             pageSize,
-            operationLeaderNames,
+            productLineLeaders,
             firstLevelProductLine,
             secondLevelProductLine,
             errorItem,
@@ -52,7 +52,7 @@ const getTaoBaoSingleItems = async (req, res, next) => {
         const result = await singleItemTaoBaoService.getTaoBaoSingleItems(
             pageIndex,
             pageSize,
-            operationLeaderNames,
+            productLineLeaders,
             firstLevelProductLine,
             secondLevelProductLine,
             errorItem,

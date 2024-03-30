@@ -2,85 +2,35 @@ const Sequelize = require("sequelize");
 const sequelize = require('../model/init');
 // const getSingleItemTaoBaoModel = require("../model/singleItemTaobaoModel")
 // const singleItemTaoBaoModel = getSingleItemTaoBaoModel(sequelize)
-const singleItemTaoBaoModel1 = sequelize.define("single_item_taobao",
+const singleItemTaoBaoModel = sequelize.define("single_item_taobao",
     {
         batchId: {
-            type: Sequelize.STRING(50)
+            type: Sequelize.STRING(50),
+            field: "batch_id"
         },
         productName: {
-            type: Sequelize.STRING(255)
+            type: Sequelize.STRING(255),
+            field: "product_name"
         },
         linkId: {
-            type: Sequelize.STRING(50)
+            type: Sequelize.STRING(50),
+            field: "link_id"
+        },
+        linkType:{
+            type: Sequelize.STRING(50),
+            field: "link_type"
         },
         operationLeader: {
-            type: Sequelize.STRING(20)
+            type: Sequelize.STRING(20),
+            field: "operation_leader"
         },
         productLineLeader: {
-            type: Sequelize.STRING(50)
+            type: Sequelize.STRING(50),
+            field: "product_line_leader"
         },
         purchaseLeader: {
-            type: Sequelize.STRING(20)
-        },
-        shopName: {
-            type: Sequelize.STRING(100)
-        },
-        linkType: {
-            type: Sequelize.STRING(50)
-        },
-        date: {
-            type: Sequelize.DATEONLY
-        },
-        firstLevelItem: {
-            type: Sequelize.STRING(50)
-        },
-        payAmount: {
-            type: Sequelize.DECIMAL
-        },
-        shouTaoVisitors: {
-            type: Sequelize.INTEGER
-        },
-        shouTaoBuyers: {
-            type: Sequelize.INTEGER
-        },
-        shouTaoReallyConversionRate: {
-            type: Sequelize.DECIMAL
-        },
-        profitAmount: {
-            type: Sequelize.DECIMAL
-        },
-        profitRate: {
-            type: Sequelize.DECIMAL
-        },
-        visitors: {
-            type: Sequelize.INTEGER
-        },
-        paidBuyers: {
-            type: Sequelize.INTEGER
-        },
-        sumShoppingCart: {
-            type: Sequelize.INTEGER
-        },
-        shoppingCartClickAmount: {
-            type: Sequelize.INTEGER
-        },
-        shoppingCartSumClick: {
-            type: Sequelize.DECIMAL
-        },
-        shoppingCartConversion: {
-            type: Sequelize.DECIMAL
-        },
-        shoppingCartSumAmount: {
-            type: Sequelize.DECIMAL
-        },
-        shoppingCatSumRoi: {
-            type: Sequelize.DECIMAL
-        },
-        payConversionRate: {
-            type: Sequelize.DECIMAL
-        },
-        reallyDealRate: {
-            type: Sequelize.DECIMAL
+            type: Sequelize.STRING(20),
+            field: "purchase_leader"
         }
     },
     {
@@ -139,7 +89,7 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
  * 获取淘宝单品表数据
  * @param pageIndex 页码
  * @param pageSize 单页数据量
- * @param operationLeaderNames 运营负责人姓名: 支持多人
+ * @param productLineLeaderNames 产品线负责人姓名: 支持多人
  * @param firstLevelProductLine 一级产品线
  * @param secondLevelProductLine 二级产品线
  * @param errorItem 异常项目
@@ -150,7 +100,7 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
  */
 const getTaoBaoSingleItems = async (pageIndex,
                                     pageSize,
-                                    operationLeaderNames,
+                                    productLineLeaderNames,
                                     firstLevelProductLine,
                                     secondLevelProductLine,
                                     errorItem,
@@ -164,7 +114,7 @@ const getTaoBaoSingleItems = async (pageIndex,
         }
 
         const where = {}
-        where.productLineLeader = {$in: operationLeaderNames}
+        where.productLineLeader = {$in: productLineLeaderNames}
         where.date = {$between: timeRange}
         if (linkType) {
             where.linkType = linkType
