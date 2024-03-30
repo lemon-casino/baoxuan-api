@@ -13,7 +13,7 @@ const RolesModel = sequelize.define('roles', {
     autoIncrement: true
   },
   role_name: {
-    type: Sequelize.STRING(255)
+    type: Sequelize.STRING(255),
   },
   remark: {
     type: Sequelize.STRING(255)

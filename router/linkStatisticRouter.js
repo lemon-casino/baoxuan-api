@@ -6,8 +6,8 @@ const linkStatisticApi = require('../router_handler/linkStatisticApi')
  * 链接操作数据路由
  * status：
  *    waiting-on（待上架）：
- *       -- 新品：统计"running的 运营新品流程"
- *       -- 老品： 统计"running的 老品重新流程"
+ *       -- 新品： 统计" running的 运营新品流程"
+ *       -- 老品： 统计" running的 老品重新流程"
  *       -- 滞销： 暂无
  *    do（操作）：天猫下的产品线负责人
  *    waiting-out（待转出）：暂无

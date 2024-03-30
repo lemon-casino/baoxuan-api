@@ -401,6 +401,19 @@ const getDeptStatistic = async (funOfTodaySelfStatistic, deptId, status, importa
     return await statisticResultUtil.removeUnsatisfiedDeptStatistic(convertedResult, deptId)
 }
 
+/**
+ * 根据表单和流程状态获取今天的流程
+ * @param formId
+ * @param flowStatus
+ * @returns {Promise<T[]>}
+ */
+const getTodayFlowsByFormIdAndFlowStatus = async (formId, flowStatus) => {
+    const todayFlows = await globalGetter.getTodayFlows();
+    return todayFlows.filter((flow) => {
+        return flow.formUuid === formId && flow.instanceStatus === flowStatus
+    })
+}
+
 module.exports = {
     filterFlowsByTimesRange,
     filterFlowsByImportanceCondition,
@@ -421,5 +434,6 @@ module.exports = {
     getTodayFlowsByIds,
     convertJonsToArr,
     convertSelfStatisticToDept,
-    getDeptStatistic
+    getDeptStatistic,
+    getTodayFlowsByFormIdAndFlowStatus
 }

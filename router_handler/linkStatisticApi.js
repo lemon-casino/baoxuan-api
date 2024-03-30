@@ -1,5 +1,6 @@
 const biResponse = require("../utils/biResponse")
 const singleItemTaoBaoService = require("../service/singleItemTaoBaoService")
+const userService = require("../service/userService")
 
 /**
  * 获取本人链接操作数
@@ -11,7 +12,9 @@ const singleItemTaoBaoService = require("../service/singleItemTaoBaoService")
 const getSelfLinkOperationCount = async (req, res, next) => {
     try {
         const status = req.params.status
-        const result = await singleItemTaoBaoService.getSelfLinkOperationCount(req.user.username, status)
+        const ddUserId = await userService.getDingDingUserId(req.user.id)
+        const username = req.user.username;
+        const result = await singleItemTaoBaoService.getSelfLinkOperationCount(ddUserId, username, status)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)

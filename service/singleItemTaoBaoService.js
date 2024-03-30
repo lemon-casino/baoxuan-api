@@ -1,6 +1,7 @@
 const singleItemTaoBaoRepo = require("../repository/singleItemTaoBaoRepo")
 const departmentService = require("../service/departmentService")
 const userService = require("../service/userService")
+const flowService = require("../service/flowService")
 const {taoBaoSingleItemMap, taoBaoErrorItems, taoBaoSingleItemStatuses} = require("../const/singleItemConst")
 const whiteList = require("../config/whiteList")
 const {logger} = require("../utils/log")
@@ -16,6 +17,10 @@ const tmFightingFlowFormId = "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J"
 const linkIdKeyInTmFightingFlowForm = "textField_lqhp0b0d"
 // 天猫链接上架流程
 const tmLinkShelvesFlowFormId = "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1"
+// 运营新品流程formId
+const operationNewFlowFormId = "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3"
+// 运营新品流程表单中运营负责人所对应的fieldId
+const operationLeaderFieldId = "employeeField_lii5gvq3_id";
 
 /**
  * 根据中文获取真实的数据库字段
@@ -119,11 +124,11 @@ const getTaoBaoSingleItems = async (pageIndex,
 
     const fightingLinkIds = []
     if (linkStatus) {
-        const todayFlows = await globalGetter.getTodayFlows();
-        const runningFightingFlows = todayFlows.filter((flow) => {
-            return flow.formUuid === tmFightingFlowFormId && flow.instanceStatus === flowStatusConst.RUNNING
-        })
+        const runningFightingFlows = flowService.getTodayFlowsByFormIdAndFlowStatus(tmFightingFlowFormId, flowStatusConst.RUNNING)
         for (const runningFightingFlow of runningFightingFlows) {
+            if (!runningFightingFlow.data) {
+                continue
+            }
             const runningLinkId = runningFightingFlow.data[linkIdKeyInTmFightingFlowForm]
             if (runningLinkId) {
                 fightingLinkIds.push(runningLinkId)
@@ -147,9 +152,9 @@ const getTaoBaoSingleItems = async (pageIndex,
 
 
 /**
- * 获取用户在淘宝单品表页面查询需要的数据
+ *  获取用户在淘宝单品表页面查询需要的数据
  * @param userId
- * @returns {Promise<{firstLevelProductionLines: *[], linkStatuses: [{name: string, value: string}, {name: string, value: string}], productLineLeaders: *[], errorItems: [{name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, {name: string, value: {filed: string, value: string, operator: string}}, null, null, null, null, null, null, null, null], linkTypes: *[], secondLevelProductionLines: *[]}>}
+ * @returns {Promise<{firstLevelProductionLines: *[], linkStatuses: [{name: string, value: string}, {name: string, value: string}], productLineLeaders: *[], errorItems: [{name: string, value: {field: string, value: string, operator: string}}, {name: string, value: {field: string, value: string, operator: string}}, {name: string, value: {field: string, value: string, operator: string}}, {name: string, value: {field: string, value: string, operator: string}}, {name: string, value: {field: string, value: string, operator: string}}, null, null, null, null, null, null, null, null], linkTypes: *[], secondLevelProductionLines: *[]}>}
  */
 const getSearchDataTaoBaoSingleItem = async (userId) => {
     const result = {
@@ -211,13 +216,30 @@ const getSingleItemById = async (id) => {
 
 /**
  * 获取本人不同装填的的链接操作数
+ * @param userId
  * @param username
  * @param status
- * @returns {Promise<*[]>}
+ * @returns {Promise<{fightingOnOld: *, fightingOnNew: *}|{waitingOnNew: number, waitingOnUnsalable: number, waitingOnOld: number}|*[]>}
  */
-const getSelfLinkOperationCount = async (username, status) => {
+const getSelfLinkOperationCount = async (userId, username, status) => {
+    // 操作数
     if (status === "do") {
         const result = await getSelfALLDoSingleItemLinkOperationCount(username)
+        return result
+    }
+    // 待上架
+    else if (status === "waiting-on") {
+        const result = await getSelfWaitingOnSingleItemLinkOperationCount(userId)
+        return result
+    }
+    // 打仗
+    else if (status === "fighting") {
+        const timeRange = [dateUtil.earliestDate, dateUtil.endOfToday()]
+        const result = await getSelfFightingSingleItemLinkOperationCount(username, timeRange)
+        return result
+    } else if (status === "error") {
+        const timeRange = [dateUtil.earliestDate, dateUtil.endOfToday()]
+        const result = await getSelfErrorSingleItemLinkOperationCount(username, timeRange)
         return result
     }
     throw new Error(`${status}还不支持`)
@@ -243,7 +265,7 @@ const getSelfALLDoSingleItemLinkOperationCount = async (username) => {
 const getSelfDoSingleItemLinkOperationCount = async (username, timeRange) => {
     const result = []
     for (const key of Object.keys(linkTypeConst)) {
-        const resultOfLinkType = await singleItemTaoBaoRepo.getSingleItemByProductionLineLeaderLinkTypeTimeRange(
+        const resultOfLinkType = await singleItemTaoBaoRepo.getSingleItemByProductLeaderLinkTypeTimeRange(
             username,
             linkTypeConst[key],
             timeRange)
@@ -259,34 +281,103 @@ const getSelfDoSingleItemLinkOperationCount = async (username, timeRange) => {
 
 /**
  * 获取本人链接操作数据（待上架）
- * @returns {Promise<void>}
+ * @returns {Promise<{waitingOnNew: number, waitingOnUnsalable: number, waitingOnOld: number}>}
  */
-const getSelfWaitingOnSingleItemLinkOperationCount = async () => {
-
+const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
+    const result = {
+        "waitingOnNew": 0,
+        "waitingOnOld": 0,
+        "waitingOnUnsalable": 0
+    }
+    //新品： 统计" running的 运营新品流程"
+    const todayFlows = await globalGetter.getTodayFlows()
+    const runningFlow = todayFlows.filter((flow) => flow.instanceStatus === flowStatusConst.RUNNING)
+    const newOperationRunningFlows = runningFlow.filter((flow) => {
+        return flow.formUuid === operationNewFlowFormId &&
+            flow.data[operationLeaderFieldId] &&
+            flow.data[operationLeaderFieldId].length > 0 &&
+            flow.data[operationLeaderFieldId][0] === userId
+    })
+    result.waitingOnNew = newOperationRunningFlows.length
+    //老品： 统计" running的 老品重新流程"
+    const oldTMLinkShelvesFlows = runningFlow.filter((flow) => {
+        return flow.formUuid === tmLinkShelvesFlowFormId &&
+            flow.data[operationLeaderFieldId] &&
+            flow.data[operationLeaderFieldId].length > 0 &&
+            flow.data[operationLeaderFieldId][0] === userId
+    })
+    result.waitingOnOld = oldTMLinkShelvesFlows.length
+    //todo: 滞销： 暂无
+    return result
 }
 
 /**
  * 获取本人链接操作数据（待转出）
+ * @returns {Promise<{waitingOnNew: number, waitingOnUnsalable: number, waitingOnOld: number}>}
+ */
+const getSelfWaitingOutSingleItemLinkOperationCount = async (userId) => {
+
+}
+
+/**
+ * 根据链接类型获取本人的正在打仗单品信息
  * @returns {Promise<void>}
  */
-const getSelfWaitingOutSingleItemLinkOperationCount = async () => {
-
+const getSelfFightingSingleItemsByLinkType = async (username, linkType, timeRange) => {
+    try {
+        // 获取正在打仗的流程
+        const runningFightingFlows = await flowService.getTodayFlowsByFormIdAndFlowStatus(tmFightingFlowFormId, flowStatusConst.RUNNING)
+        // 获取正在打仗流程的linkId(s)
+        const fightingLinkIds = []
+        for (const runningFightingFlow of runningFightingFlows) {
+            if (!runningFightingFlow.data) {
+                continue
+            }
+            const runningLinkId = runningFightingFlow.data[linkIdKeyInTmFightingFlowForm]
+            if (runningLinkId) {
+                fightingLinkIds.push(runningLinkId)
+            }
+        }
+        // 获取本人指定链接类型的单品数据
+        const newSelfSingleItems = await singleItemTaoBaoRepo.getSingleItemByProductLeaderLinkTypeTimeRange(username, linkType, timeRange)
+        const selfFightingSingleItems = newSelfSingleItems.filter((item) => {
+            return fightingLinkIds.includes(item.linkId)
+        })
+        return selfFightingSingleItems
+    } catch (e) {
+        throw new Error(e.message)
+    }
 }
 
 /**
  * 获取本人链接操作数据（打仗链接）
- * @returns {Promise<void>}
+ * @param username
+ * @param timeRange
+ * @returns {Promise<{fightingOnOld: *, fightingOnNew: *}>}
  */
-const getSelfFightingSingleItemLinkOperationCount = async () => {
-
+const getSelfFightingSingleItemLinkOperationCount = async (username, timeRange) => {
+    const newProductSelfFightingSingleItems = await getSelfFightingSingleItemsByLinkType(username, "新品", timeRange)
+    const oldProductSelfFightingSingleItems = await getSelfFightingSingleItemsByLinkType(username, "老品", timeRange)
+    // todo: 带滞销 (需求还未确定)
+    return {
+        fightingOnNew: newProductSelfFightingSingleItems.length,
+        fightingOnOld: oldProductSelfFightingSingleItems.length,
+        fightingOnUnsalable: 0
+    }
 }
 
 /**
  * 获取本人链接操作数据（异常数据）
- * @returns {Promise<void>}
+ * @param username
+ * @returns {Promise<*[]>}
  */
-const getSelfErrorSingleItemLinkOperationCount = async () => {
-
+const getSelfErrorSingleItemLinkOperationCount = async (username, timeRange) => {
+    const result = []
+    for (const item of taoBaoErrorItems) {
+        const count = await singleItemTaoBaoRepo.getErrorSingleItemsTotal([username], item.value, timeRange)
+        result.push({name: item.name, value: count})
+    }
+    return result;
 }
 
 
