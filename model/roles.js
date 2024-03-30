@@ -22,24 +22,6 @@ const RolesModel = sequelize.define('roles', {
     type: Sequelize.INTEGER,
     defaultValue: 1
   },
-  // menu_ids: {
-  //   type: Sequelize.TEXT,
-  //   set(val) {
-  //     this.setDataValue('menu_ids', val && val.length > 0 ? JSON.stringify(val) : JSON.stringify([]));
-  //   },
-  //   get() {
-  //     return this.getDataValue('menu_ids') ? JSON.parse(this.getDataValue('menu_ids')) : [];
-  //   }
-  // },
-  // buttons: {
-  //   type: Sequelize.TEXT,
-  //   set(val) {
-  //     this.setDataValue('buttons', val && val.length > 0 ? JSON.stringify(val) : JSON.stringify([]));
-  //   },
-  //   get() {
-  //     return this.getDataValue('buttons') ? JSON.parse(this.getDataValue('buttons')) : [];
-  //   }
-  // },
   update_time: {
     type: Sequelize.DATE,
     get() {

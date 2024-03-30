@@ -1,6 +1,92 @@
+const Sequelize = require("sequelize");
 const sequelize = require('../model/init');
-const getSingleItemTaoBaoModel = require("../model/singleItemTaobaoModel")
-const singleItemTaoBaoModel = getSingleItemTaoBaoModel(sequelize)
+// const getSingleItemTaoBaoModel = require("../model/singleItemTaobaoModel")
+// const singleItemTaoBaoModel = getSingleItemTaoBaoModel(sequelize)
+const singleItemTaoBaoModel1 = sequelize.define("single_item_taobao",
+    {
+        batchId: {
+            type: Sequelize.STRING(50)
+        },
+        productName: {
+            type: Sequelize.STRING(255)
+        },
+        linkId: {
+            type: Sequelize.STRING(50)
+        },
+        operationLeader: {
+            type: Sequelize.STRING(20)
+        },
+        productLineLeader: {
+            type: Sequelize.STRING(50)
+        },
+        purchaseLeader: {
+            type: Sequelize.STRING(20)
+        },
+        shopName: {
+            type: Sequelize.STRING(100)
+        },
+        linkType: {
+            type: Sequelize.STRING(50)
+        },
+        date: {
+            type: Sequelize.DATEONLY
+        },
+        firstLevelItem: {
+            type: Sequelize.STRING(50)
+        },
+        payAmount: {
+            type: Sequelize.DECIMAL
+        },
+        shouTaoVisitors: {
+            type: Sequelize.INTEGER
+        },
+        shouTaoBuyers: {
+            type: Sequelize.INTEGER
+        },
+        shouTaoReallyConversionRate: {
+            type: Sequelize.DECIMAL
+        },
+        profitAmount: {
+            type: Sequelize.DECIMAL
+        },
+        profitRate: {
+            type: Sequelize.DECIMAL
+        },
+        visitors: {
+            type: Sequelize.INTEGER
+        },
+        paidBuyers: {
+            type: Sequelize.INTEGER
+        },
+        sumShoppingCart: {
+            type: Sequelize.INTEGER
+        },
+        shoppingCartClickAmount: {
+            type: Sequelize.INTEGER
+        },
+        shoppingCartSumClick: {
+            type: Sequelize.DECIMAL
+        },
+        shoppingCartConversion: {
+            type: Sequelize.DECIMAL
+        },
+        shoppingCartSumAmount: {
+            type: Sequelize.DECIMAL
+        },
+        shoppingCatSumRoi: {
+            type: Sequelize.DECIMAL
+        },
+        payConversionRate: {
+            type: Sequelize.DECIMAL
+        },
+        reallyDealRate: {
+            type: Sequelize.DECIMAL
+        }
+    },
+    {
+        freezeTableName: true
+    }
+);
 const {logger} = require("../utils/log")
 const uuidUtil = require("../utils/uuidUtil")
 const sequelizeUtil = require("../utils/sequelizeUtil")
