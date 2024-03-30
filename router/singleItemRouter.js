@@ -6,6 +6,7 @@ router.post('/taobao', singleItemApi.saveSingleItemTaoBao);
 router.delete("/taobao", singleItemApi.deleteSingleIteTaoBaoByBatchIdAndLinkId)
 router.get("/taobao", singleItemApi.getTaoBaoSingleItems)
 router.get("/taobao/search-data", singleItemApi.getSearchDataTaoBaoSingleItem)
+router.get("/taobao/:id", singleItemApi.getSingleItemDetails)
 
 
 module.exports = router;

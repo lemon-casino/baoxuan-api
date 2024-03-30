@@ -81,9 +81,27 @@ const getSearchDataTaoBaoSingleItem = async (req, res, next) => {
     }
 }
 
+/**
+ * 获取单品表详情数据
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<*>}
+ */
+const getSingleItemDetails = async (req, res, next) => {
+    try {
+        const id = req.params.id
+        const result = await singleItemTaoBaoService.getSingleItemById(id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
     getTaoBaoSingleItems,
-    getSearchDataTaoBaoSingleItem
+    getSearchDataTaoBaoSingleItem,
+    getSingleItemDetails
 }
