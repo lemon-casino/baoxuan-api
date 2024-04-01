@@ -32,8 +32,7 @@ const getDeptLinkOperationCount = async (req, res, next) => {
     try {
         const status = req.params.status
         const ddUserId = await userService.getDingDingUserId(req.user.id)
-        const username = req.user.username
-        const result = await singleItemTaoBaoService.getSelfLinkOperationCount(ddUserId, username, status)
+        const result = await singleItemTaoBaoService.getDeptLinkOperationCount(ddUserId, status)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)

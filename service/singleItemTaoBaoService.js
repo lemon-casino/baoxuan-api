@@ -254,15 +254,56 @@ const getSelfLinkOperationCount = async (userId, username, status) => {
  * @returns {Promise<void>}
  */
 const getDeptLinkOperationCount = async (userId, status) => {
-    // 判断该用户时候有访问权限
+    // 判断该用户时候有访问权限： 仅有部门领导和管理员可以查看
+    const usersWithDepartment = await globalGetter.getUsers()
+    const userWithDepartment = usersWithDepartment.filter((user) => user.userid === userId)
+
+    if (!userWithDepartment || userWithDepartment.length === 0) {
+        throw new Error("你没有权限访问该接口")
+    }
+    const isLeaderOfTM = userWithDepartment[0].leader_in_dept.filter((dept) => {
+        return dept.dept_id === tmDeptId && dept.leader
+    }).length > 0
+    if (!isLeaderOfTM && !whiteList.pepArr().includes(userId)) {
+        throw new Error("你没有权限访问该接口")
+    }
 
     // 获取天猫下面的所有人
-    const departmentWithUsers = await globalGetter.getUsersOfDepartments()
-    const tmDepartment = departmentService.findMatchedDepartmentFromRoot(tmDeptId, departmentWithUsers)
-    const usersOfTM = tmDepartment.dep_user
-    for (const user of usersOfTM) {
-        const tmpResult = await getSelfLinkOperationCount(userId, user.name, status)
+    const departmentsWithUser = await globalGetter.getUsersOfDepartments()
+
+    let tmDepartment = null
+    for (const department of departmentsWithUser) {
+        tmDepartment = departmentService.findMatchedDepartmentFromRoot(tmDeptId, department)
+        if (tmDepartment) {
+            break
+        }
     }
+    if (!tmDepartment) {
+        throw new Error("为找到天猫的部门信息")
+    }
+
+    const usersOfTM = tmDepartment.dep_user
+    let result = null
+    for (const user of usersOfTM) {
+        const tmpResult = await getSelfLinkOperationCount(user.userid, user.name, status)
+        if (!result) {
+            result = tmpResult
+            continue
+        }
+        // 合并多人的结果
+        for (const tmpItem of tmpResult) {
+            if (tmpItem.count <= 0) {
+                continue
+            }
+            for (const item of result) {
+                if (tmpItem.name == item.name) {
+                    item.count = item.count + tmpItem.count
+                    break;
+                }
+            }
+        }
+    }
+    return result
 }
 
 /**
