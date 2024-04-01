@@ -105,15 +105,15 @@ ProcessModel.addProcess = async function (data) {
                     processInstanceId: item.processInstanceId,
                     approvedResult: item.approvedResult,
                     formUuid: item.formUuid,
-                    data: JSON.stringify(item.data),
+                    data: item.data,
                     modifiedTimeGMT: item.modifiedTimeGMT,
                     processCode: item.processCode,
-                    actionExecutor: JSON.stringify(item.actionExecutor),
-                    originator: JSON.stringify(item.originator),
+                    actionExecutor: item.actionExecutor,
+                    originator: item.originator,
                     title: item.title,
                     instanceStatus: item.instanceStatus,
                     version: item.version,
-                    overallprocessflow: JSON.stringify(item.overallprocessflow),
+                    overallprocessflow: item.overallprocessflow,
                     review_id: reviewId
                 });
             }
