@@ -93,7 +93,7 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
         for (let i = 0; i < allForms.result.data.length; i++) {
             const formUuid = allForms.result.data[i].formUuid;
             await delay(30);
-            console.log(i + ":" + allForms.length + ":" + formUuid)
+            console.log(i + ":" + allForms.result.data.length + ":" + formUuid)
             const allData = await getFlowsByStatusAndTimeRange(
                 timesRange,
                 timeAction,
