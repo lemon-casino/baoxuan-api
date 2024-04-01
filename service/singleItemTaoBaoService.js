@@ -21,6 +21,8 @@ const tmLinkShelvesFlowFormId = "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1"
 const operationNewFlowFormId = "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3"
 // 运营新品流程表单中运营负责人所对应的fieldId
 const operationLeaderFieldId = "employeeField_lii5gvq3_id";
+// 天猫部门的id
+const tmDeptId = "903075138"
 
 /**
  * 根据中文获取真实的数据库字段
@@ -246,6 +248,24 @@ const getSelfLinkOperationCount = async (userId, username, status) => {
 }
 
 /**
+ * 获取天猫部门的统计数据
+ * @param deptId
+ * @param status
+ * @returns {Promise<void>}
+ */
+const getDeptLinkOperationCount = async (userId, status) => {
+    // 判断该用户时候有访问权限
+
+    // 获取天猫下面的所有人
+    const departmentWithUsers = await globalGetter.getUsersOfDepartments()
+    const tmDepartment = departmentService.findMatchedDepartmentFromRoot(tmDeptId, departmentWithUsers)
+    const usersOfTM = tmDepartment.dep_user
+    for (const user of usersOfTM) {
+        const tmpResult = await getSelfLinkOperationCount(userId, user.name, status)
+    }
+}
+
+/**
  * 获取本人所有链接操作数据（操作）
  * @param username
  * @returns {Promise<*[]>}
@@ -271,8 +291,7 @@ const getSelfDoSingleItemLinkOperationCount = async (username, timeRange) => {
             timeRange)
 
         result.push({
-            linkTypeName: key,
-            linkTypeValue: linkTypeConst[key],
+            name: linkTypeConst[key],
             count: resultOfLinkType.length
         })
     }
@@ -281,14 +300,20 @@ const getSelfDoSingleItemLinkOperationCount = async (username, timeRange) => {
 
 /**
  * 获取本人链接操作数据（待上架）
- * @returns {Promise<{waitingOnNew: number, waitingOnUnsalable: number, waitingOnOld: number}>}
+ * @param userId
+ * @returns {Promise<[{name: string, count: number}, {name: string, count: number}, {name: string, count: number}]>}
  */
 const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
-    const result = {
-        "waitingOnNew": 0,
-        "waitingOnOld": 0,
-        "waitingOnUnsalable": 0
-    }
+    const result = [{
+        name: "新品",
+        count: 0
+    }, {
+        name: "老品",
+        count: 0
+    }, {
+        name: "滞销",
+        count: 0
+    }]
     //新品： 统计" running的 运营新品流程"
     const todayFlows = await globalGetter.getTodayFlows()
     const runningFlow = todayFlows.filter((flow) => flow.instanceStatus === flowStatusConst.RUNNING)
@@ -298,7 +323,7 @@ const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
             flow.data[operationLeaderFieldId].length > 0 &&
             flow.data[operationLeaderFieldId][0] === userId
     })
-    result.waitingOnNew = newOperationRunningFlows.length
+    result[0].count = newOperationRunningFlows.length
     //老品： 统计" running的 老品重新流程"
     const oldTMLinkShelvesFlows = runningFlow.filter((flow) => {
         return flow.formUuid === tmLinkShelvesFlowFormId &&
@@ -306,7 +331,7 @@ const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
             flow.data[operationLeaderFieldId].length > 0 &&
             flow.data[operationLeaderFieldId][0] === userId
     })
-    result.waitingOnOld = oldTMLinkShelvesFlows.length
+    result[1].count = oldTMLinkShelvesFlows.length
     //todo: 滞销： 暂无
     return result
 }
@@ -359,11 +384,16 @@ const getSelfFightingSingleItemLinkOperationCount = async (username, timeRange) 
     const newProductSelfFightingSingleItems = await getSelfFightingSingleItemsByLinkType(username, "新品", timeRange)
     const oldProductSelfFightingSingleItems = await getSelfFightingSingleItemsByLinkType(username, "老品", timeRange)
     // todo: 带滞销 (需求还未确定)
-    return {
-        fightingOnNew: newProductSelfFightingSingleItems.length,
-        fightingOnOld: oldProductSelfFightingSingleItems.length,
-        fightingOnUnsalable: 0
-    }
+    return [{
+        name: "新品",
+        count: newProductSelfFightingSingleItems.length
+    }, {
+        name: "老品",
+        count: oldProductSelfFightingSingleItems.length,
+    }, {
+        name: "滞销品",
+        count: 0
+    }]
 }
 
 /**
@@ -375,7 +405,7 @@ const getSelfErrorSingleItemLinkOperationCount = async (username, timeRange) => 
     const result = []
     for (const item of taoBaoErrorItems) {
         const count = await singleItemTaoBaoRepo.getErrorSingleItemsTotal([username], item.value, timeRange)
-        result.push({name: item.name, value: count})
+        result.push({name: item.name, count})
     }
     return result;
 }
@@ -389,5 +419,6 @@ module.exports = {
     getSelfALLDoSingleItemLinkOperationCount,
     getTaoBaoSingleItems,
     getSearchDataTaoBaoSingleItem,
-    getSingleItemById
+    getSingleItemById,
+    getDeptLinkOperationCount
 }

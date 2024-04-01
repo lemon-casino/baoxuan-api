@@ -29,15 +29,11 @@ const getSelfLinkOperationCount = async (req, res, next) => {
  * @returns {Promise<*>}
  */
 const getDeptLinkOperationCount = async (req, res, next) => {
-    const status = req.params.status
-    // 校验用户是否有访问权限
-    let result = null
     try {
-        switch (status) {
-            case "do":
-                result = singleItemTaoBaoService.getSelfALLDoSingleItemLinkOperationCount(req.user.username)
-                break
-        }
+        const status = req.params.status
+        const ddUserId = await userService.getDingDingUserId(req.user.id)
+        const username = req.user.username
+        const result = await singleItemTaoBaoService.getSelfLinkOperationCount(ddUserId, username, status)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -46,5 +42,6 @@ const getDeptLinkOperationCount = async (req, res, next) => {
 
 
 module.exports = {
-    getSelfLinkOperationCount
+    getSelfLinkOperationCount,
+    getDeptLinkOperationCount
 }
