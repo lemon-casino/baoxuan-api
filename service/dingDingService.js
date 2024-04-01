@@ -213,50 +213,46 @@ const getUsersDetailFromDingDing = async () => {
     const userDetails = [];
     // 根据用户id获取用户详情
     for (let userId of uniqueUsers) {
-        await delay(50);
-
         const userDetail = await dingDingReq.getUserInfoByUserIdAndToken(access_token, userId);
-
         const depDetails = [];
         for (let dep of userDetail.result.leader_in_dept) {
             const dep_res = await dingDingReq.getDpInfo(access_token, dep.dept_id);
             dep.dep_detail = dep_res.result;
         }
         //  获取每个用户发起的流程数据
-        userDetail.result.faqi_liu = allFlowsUntilNow
-            .filter((liu) => {
-                if (liu.originator) {
-                    return liu.originator.userId === userId
-                }
-                return false
-            })
-            .map((item) => {
-                return {
-                    createTimeGMT: item.createTimeGMT,
-                    processInstanceId: item.processInstanceId,
-                    modifiedTimeGMT: item.modifiedTimeGMT,
-                };
-            });
-
+        // userDetail.result.faqi_liu = allFlowsUntilNow
+        //     .filter((liu) => {
+        //         if (liu.originator) {
+        //             return liu.originator.userId === userId
+        //         }
+        //         return false
+        //     })
+        //     .map((item) => {
+        //         return {
+        //             createTimeGMT: item.createTimeGMT,
+        //             processInstanceId: item.processInstanceId,
+        //             modifiedTimeGMT: item.modifiedTimeGMT,
+        //         };
+        //     });
         // 获取每个用户参与的流程数据
-        userDetail.result.canyu_liu = allFlowsUntilNow
-            .filter((liu) => {
-                    if (liu.overallprocessflow) {
-                        return liu.overallprocessflow
-                            .slice(1)
-                            .some((flow) => flow.operatorUserId === userId)
-                    } else {
-                        return false
-                    }
-                }
-            )
-            .map((item) => {
-                return {
-                    createTimeGMT: item.createTimeGMT,
-                    processInstanceId: item.processInstanceId,
-                    modifiedTimeGMT: item.modifiedTimeGMT,
-                };
-            }); // 将每个符合条件的对象映射为其 id
+        // userDetail.result.canyu_liu = allFlowsUntilNow
+        //     .filter((liu) => {
+        //             if (liu.overallprocessflow) {
+        //                 return liu.overallprocessflow
+        //                     .slice(1)
+        //                     .some((flow) => flow.operatorUserId === userId)
+        //             } else {
+        //                 return false
+        //             }
+        //         }
+        //     )
+        //     .map((item) => {
+        //         return {
+        //             createTimeGMT: item.createTimeGMT,
+        //             processInstanceId: item.processInstanceId,
+        //             modifiedTimeGMT: item.modifiedTimeGMT,
+        //         };
+        //     }); // 将每个符合条件的对象映射为其 id
         userDetails.push(userDetail.result);
     }
     logger.info(`本次更新 ${userDetails.length} 个用户信息`)
@@ -283,6 +279,28 @@ const getAllFinishedFlowsBeforeToday = async () => {
     // 开始时间：昨天00:00:00
     // 结束时间：昨天23:59:00
     const {start: startTime, end: endTime} = getTodayStartAndEnd();
+
+    const completedFlows = [];
+    const statusArr = ["COMPLETED", "TERMINATED", "ERROR"];
+    for (let status of statusArr) {
+        const currentFlowsOfStatus = await getFlowsFromDingDing(status, [startTime, endTime], "create");
+        completedFlows.push(...currentFlowsOfStatus);
+    }
+    console.log(startTime, endTime + "新增流程数据=========>", completedFlows.length);
+    await ProcessModel.addProcess(completedFlows);
+    await redisUtil.setKey(
+        redisKeys.AllFinishedFlowsBeforeToday,
+        JSON.stringify(await ProcessModel.getProcessList())
+    );
+};
+
+/**
+ * 手动弥补
+ * @param startTime
+ * @param endTime
+ * @returns {Promise<void>}
+ */
+const handleAsyncAllFinishedFlowsByTimeRange = async (startTime, endTime) => {
 
     const completedFlows = [];
     const statusArr = ["COMPLETED", "TERMINATED", "ERROR"];
@@ -508,5 +526,6 @@ module.exports = {
     getAllNotFinishedFlowsBeforeToday,
     getAllFlowsOfToday,
     combineAllFlows,
-    getTodayRunningAndFinishedFlows
+    getTodayRunningAndFinishedFlows,
+    handleAsyncAllFinishedFlowsByTimeRange
 };

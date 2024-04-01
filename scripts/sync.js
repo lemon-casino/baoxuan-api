@@ -2,9 +2,11 @@ const ProcessModel = require("../model/process")
 const FlowReview = require("../model/flowformreview")
 const reviewUtil = require("../utils/reviewUtil")
 const redisUtil = require("../utils/redisUtil")
+const dateUtil = require("../utils/dateUtil")
 const dingDingData = require("../service/dingDingService")
 const processReviewService = require("../service/prcessReviewService")
 const dingDingService = require("../service/dingDingService")
+const processService = require("../service/processService")
 const globalSetter = require("../global/setter")
 
 const {redisKeys} = require("../const/redisConst")
@@ -61,5 +63,5 @@ const getTodayRunningAndFinishedFlows = async () => {
     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
 }
 
-//
-// dingDingData.getDingDingToken();
+// 同步3.21号~3.31的已完成流程入库
+await dingDingService.handleAsyncAllFinishedFlowsByTimeRange("2024-03-21 00:00:00","2024-03-31 23:59:00");
