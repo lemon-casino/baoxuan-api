@@ -363,14 +363,14 @@ module.exports = sequelize => {
       comment: "坑市场占比环比（日）",
       field: "sales_market_rate_circle_rate_day"
     },
-    shoutaoPeopleNumMarketRateCircleRate7Day: {
+    shouTaoPeopleNumMarketRateCircleRate7Day: {
       type: DataTypes.DECIMAL,
       allowNull: true,
       defaultValue: "0.00",
       primaryKey: false,
       autoIncrement: false,
       comment: "手淘人数市场占比环比（7天）",
-      field: "shoutao_people_num_market_rate_circle_rate_7day"
+      field: "shou_tao_people_num_market_rate_circle_rate_7day"
     },
     salesMarketRateCircleRate7Day: {
       type: DataTypes.DECIMAL,
@@ -420,7 +420,7 @@ module.exports = sequelize => {
     accuratePeoplePromotionCost: {
       type: DataTypes.DECIMAL,
       allowNull: true,
-      defaultValue: null,
+      defaultValue: "0.00",
       primaryKey: false,
       autoIncrement: false,
       comment: "精准人群推广费用",
@@ -429,7 +429,7 @@ module.exports = sequelize => {
     accuratePeoplePromotionProductionRate: {
       type: DataTypes.DECIMAL,
       allowNull: true,
-      defaultValue: null,
+      defaultValue: "0.00",
       primaryKey: false,
       autoIncrement: false,
       comment: "精准人群推广花费",
@@ -438,7 +438,7 @@ module.exports = sequelize => {
     wanXiangTaiCost: {
       type: DataTypes.DECIMAL,
       allowNull: true,
-      defaultValue: null,
+      defaultValue: "0.00",
       primaryKey: false,
       autoIncrement: false,
       comment: "万相台花费",
@@ -447,7 +447,7 @@ module.exports = sequelize => {
     wanXiangTaiProductionRate: {
       type: DataTypes.DECIMAL,
       allowNull: true,
-      defaultValue: null,
+      defaultValue: "0.00",
       primaryKey: false,
       autoIncrement: false,
       comment: "万相台投产比",
@@ -456,10 +456,10 @@ module.exports = sequelize => {
     feeRate: {
       type: DataTypes.DECIMAL,
       allowNull: true,
-      defaultValue: null,
+      defaultValue: "0.00",
       primaryKey: false,
       autoIncrement: false,
-      comment: "费用比例;",
+      comment: "费用比例",
       field: "fee_rate"
     },
     createTime: {

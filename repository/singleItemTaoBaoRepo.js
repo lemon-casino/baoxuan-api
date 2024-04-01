@@ -5,16 +5,7 @@ const {logger} = require("../utils/log")
 const uuidUtil = require("../utils/uuidUtil")
 const sequelizeUtil = require("../utils/sequelizeUtil")
 const pagingUtil = require("../utils/pagingUtil")
-const singleItemConst = require("../const/singleItemConst")
 const {taoBaoSingleItemStatusesKeys} = require("../const/singleItemConst")
-const flowStatusConst = require("../const/flowStatusConst")
-const globalGetter = require("../global/getter")
-
-// 天猫链接打架流程表单id
-const tmFightingFlowFormId = "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J"
-// todo: 历史数据同步完成后，可以从数据库中获取
-// 天猫链接打架流程表单中链接ID的key
-const linkIdKeyInTmFightingFlowForm = "textField_lqhp0b0d"
 
 /**
  * 保存淘宝的单品表数据
@@ -32,7 +23,6 @@ const saveSingleItemTaoBao = async (item) => {
         logger.error(e.message)
         logger.error(e.sql)
         throw new Error(e.message)
-        return null
     }
 }
 
@@ -51,10 +41,9 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
             }
         })
     } catch (e) {
-        throw new Error(e.message)
         logger.error(e.message)
         logger.error(e.sql)
-        return null
+        throw new Error(e.message)
     }
 }
 
@@ -62,23 +51,24 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
  * 获取淘宝单品表数据
  * @param pageIndex 页码
  * @param pageSize 单页数据量
- * @param operationLeaderNames 运营负责人姓名: 支持多人
+ * @param productLineLeaders 产品线负责人姓名: 支持多人
  * @param firstLevelProductLine 一级产品线
  * @param secondLevelProductLine 二级产品线
  * @param errorItem 异常项目
  * @param linkType 链接类型
  * @param linkStatus 链接状态
  * @param timeRange 时间区间
- * @returns {Promise<{pageCount: *, data: *, pageIndex: *, pageSize: *}|null>}
+ * @returns {Promise<{pageCount: *, total: *, data: *}>}
  */
 const getTaoBaoSingleItems = async (pageIndex,
                                     pageSize,
-                                    operationLeaderNames,
+                                    productLineLeaders,
                                     firstLevelProductLine,
                                     secondLevelProductLine,
                                     errorItem,
                                     linkType,
                                     linkStatus,
+                                    fightingLinkIds,
                                     timeRange) => {
     try {
         if (pageIndex < 0 || pageSize < 0) {
@@ -86,7 +76,7 @@ const getTaoBaoSingleItems = async (pageIndex,
         }
 
         const where = {}
-        where.productLineLeader = {$in: operationLeaderNames}
+        where.productLineLeader = {$in: productLineLeaders}
         where.date = {$between: timeRange}
         if (linkType) {
             where.linkType = linkType
@@ -94,19 +84,7 @@ const getTaoBaoSingleItems = async (pageIndex,
         if (errorItem.field) {
             where[errorItem.field] = {[errorItem.operator]: errorItem.value}
         }
-        // 从正在进行中的打仗流程中的data中找到linkId
-        let fightingLinkIds = []
         if (linkStatus) {
-            const todayFlows = await globalGetter.getTodayFlows();
-            const runningFightingFlows = todayFlows.filter((flow) => {
-                return flow.formUuid === tmFightingFlowFormId && flow.instanceStatus === flowStatusConst.RUNNING
-            })
-            for (const runningFightingFlow of runningFightingFlows) {
-                const runningLinkId = runningFightingFlow.data[linkIdKeyInTmFightingFlowForm]
-                if (runningLinkId) {
-                    fightingLinkIds.push(runningLinkId)
-                }
-            }
             if (linkStatus === taoBaoSingleItemStatusesKeys.fighting) {
                 where.linkId = {$in: fightingLinkIds}
             } else {
@@ -126,27 +104,51 @@ const getTaoBaoSingleItems = async (pageIndex,
         data = sequelizeUtil.extractDataValues(data)
         const result = pagingUtil.paging(Math.ceil(satisfiedCount / pageSize), satisfiedCount, data)
         return result
-
     } catch (e) {
         logger.error(e.message)
         logger.error(e.sql)
         throw new Error(e.message)
-        return null
+    }
+}
+
+/**
+ * 获取错误项的数据量
+ * @param productLineLeaders
+ * @param errorItem
+ * @param timeRange
+ * @returns {Promise<*>}
+ */
+const getErrorSingleItemsTotal = async (productLineLeaders,
+                                        errorItem,
+                                        timeRange) => {
+
+    const where = {}
+    if (!errorItem.field) {
+        return 0
+    }
+    try {
+        where[errorItem.field] = {[errorItem.operator]: errorItem.value}
+        where.productLineLeader = {$in: productLineLeaders}
+        where.date = {$between: timeRange}
+        const result = await singleItemTaoBaoModel.count({where})
+        return result
+    } catch (e) {
+        throw new Error(e.message)
     }
 }
 
 /**
  * 获取单品数据
- * @param operationLeader 运营负责人
+ * @param productionLineLeader 产品线负责人
  * @param linkType 链接类型
  * @param timeRange 时间范围
  * @returns {Promise<*>}
  */
-const getSingleItemByOperationLeaderLinkTypeTimeRange = async (operationLeader, linkType, timeRange) => {
+const getSingleItemByProductLeaderLinkTypeTimeRange = async (productLineLeader, linkType, timeRange) => {
     try {
         const singleItems = await singleItemTaoBaoModel.findAll({
             where: {
-                operationLeader,
+                productLineLeader,
                 linkType,
                 date: {
                     $between: timeRange
@@ -158,9 +160,10 @@ const getSingleItemByOperationLeaderLinkTypeTimeRange = async (operationLeader, 
     } catch (e) {
         logger.error(e.message)
         logger.error(e.sql)
-        return null
+        throw new Error(e.message)
     }
 }
+
 
 /**
  * 获取单品表详情
@@ -198,10 +201,9 @@ const getLinkTypes = async () => {
         const data = sequelizeUtil.extractDataValues(result)
         return data
     } catch (e) {
-        throw new Error(e.message)
         logger.error(e.message)
         logger.error(e.sql)
-        return null
+        throw new Error(e.message)
     }
 }
 
@@ -209,8 +211,9 @@ const getLinkTypes = async () => {
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
-    getSingleItemByOperationLeaderLinkTypeTimeRange,
+    getSingleItemByProductLeaderLinkTypeTimeRange,
     getTaoBaoSingleItems,
     getLinkTypes,
-    getSingleItemById
+    getSingleItemById,
+    getErrorSingleItemsTotal
 }
