@@ -294,6 +294,28 @@ const getAllFinishedFlowsBeforeToday = async () => {
     );
 };
 
+/**
+ * 手动弥补
+ * @param startTime
+ * @param endTime
+ * @returns {Promise<void>}
+ */
+const handleAsyncAllFinishedFlowsByTimeRange = async (startTime, endTime) => {
+
+    const completedFlows = [];
+    const statusArr = ["COMPLETED", "TERMINATED", "ERROR"];
+    for (let status of statusArr) {
+        const currentFlowsOfStatus = await getFlowsFromDingDing(status, [startTime, endTime], "create");
+        completedFlows.push(...currentFlowsOfStatus);
+    }
+    console.log(startTime, endTime + "新增流程数据=========>", completedFlows.length);
+    await ProcessModel.addProcess(completedFlows);
+    await redisUtil.setKey(
+        redisKeys.AllFinishedFlowsBeforeToday,
+        JSON.stringify(await ProcessModel.getProcessList())
+    );
+};
+
 // 8. 获取今天以前所有运行中的流程数据            -----------每天晚上23：59开始执行
 const getAllNotFinishedFlowsBeforeToday = async (starttime) => {
     const {start, end} = getTodayStartAndEnd();
@@ -504,5 +526,6 @@ module.exports = {
     getAllNotFinishedFlowsBeforeToday,
     getAllFlowsOfToday,
     combineAllFlows,
-    getTodayRunningAndFinishedFlows
+    getTodayRunningAndFinishedFlows,
+    handleAsyncAllFinishedFlowsByTimeRange
 };

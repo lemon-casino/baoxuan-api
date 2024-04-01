@@ -74,21 +74,19 @@ schedule.scheduleJob("*/50 * * * *", async function () {
     console.timeEnd("获取所有用户详情数据=========>");
 });
 
+// 每天晚上0点开始执行：getAllCompletedLiu() 获取今天以前所有已完成,已终止，异常,流程数据
+schedule.scheduleJob("0 59 23 * * *", async function () {
+    console.time("获取今天以前所有已完成,已终止，异常,流程数据=========>");
+    await dingDingService.getAllFinishedFlowsBeforeToday();
+    console.timeEnd("获取今天以前所有已完成,已终止，异常,流程数据=========>");
+});
 
-
-// // 每天晚上0点开始执行：getAllCompletedLiu() 获取今天以前所有已完成,已终止，异常,流程数据
-// schedule.scheduleJob("0 59 23 * * *", async function () {
-//     console.time("获取今天以前所有已完成,已终止，异常,流程数据=========>");
-//     await dingDingService.getAllFinishedFlowsBeforeToday();
-//     console.timeEnd("获取今天以前所有已完成,已终止，异常,流程数据=========>");
-// });
-//
-// // 每天晚上0点开始执行：getAllNoCompletedLiu_Old() 获
-// schedule.scheduleJob("0 59 23 * * *", async function () {
-//     console.time("获取今天以前所有运行中的流程数据=========>");
-//     await dingDingService.getAllNotFinishedFlowsBeforeToday();
-//     console.timeEnd("获取今天以前所有运行中的流程数据=========>");
-// });
+// 每天晚上0点开始执行：getAllNoCompletedLiu_Old() 获
+schedule.scheduleJob("0 59 23 * * *", async function () {
+    console.time("获取今天以前所有运行中的流程数据=========>");
+    await dingDingService.getAllNotFinishedFlowsBeforeToday();
+    console.timeEnd("获取今天以前所有运行中的流程数据=========>");
+});
 //
 // // 每5分钟执行一次：getAllLiu_New()  获取今天所有的流程数据
 // schedule.scheduleJob("*/10 * * * *", async function () {
