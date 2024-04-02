@@ -24,16 +24,19 @@ router.get('/self-operation-count/:status', linkStatisticApi.getSelfLinkOperatio
 router.get('/dept-operation-count/:status', linkStatisticApi.getDeptLinkOperationCount)
 
 /**
- * 链接问题处理数据
- * 进行中：
+ * 链接问题处理数据：
+ *     - 针对运营优化方案流程进行的统计
+ *     - 从发起人维度进行的统计
  *
- * 已完成：
+ * 进行中：流程状态 RUNNING
+ *
+ * 已完成： 流程状态  COMPLETED
  *
  * 优化成功：
- *
  * 优化失败：
- *
+ *    - 需要根据优化的内容从单品表中取出某一天的对应的数据做对比
  */
-router.get('/self-error-link-count/:status', null)
+router.get('/self-error-link-count/:status', linkStatisticApi.getSelfErrorLinkCount)
+router.get('/dept-error-link-count/:status', linkStatisticApi.getDeptErrorLinkCount)
 
 module.exports = router;

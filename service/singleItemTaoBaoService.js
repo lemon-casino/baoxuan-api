@@ -23,6 +23,8 @@ const operationNewFlowFormId = "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3"
 const operationLeaderFieldId = "employeeField_lii5gvq3_id";
 // 天猫部门的id
 const tmDeptId = "903075138"
+// 链接问题处理数据需要筛选的流程表单id
+let errorLinkFormId = "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB";
 
 /**
  * 根据中文获取真实的数据库字段
@@ -254,6 +256,7 @@ const getSelfLinkOperationCount = async (userId, username, status) => {
  * @returns {Promise<void>}
  */
 const getDeptLinkOperationCount = async (userId, status) => {
+    // todo: 临时加上，后面统一加权限后再去掉
     // 判断该用户时候有访问权限： 仅有部门领导和管理员可以查看
     const usersWithDepartment = await globalGetter.getUsers()
     const userWithDepartment = usersWithDepartment.filter((user) => user.userid === userId)
@@ -269,20 +272,7 @@ const getDeptLinkOperationCount = async (userId, status) => {
     }
 
     // 获取天猫下面的所有人
-    const departmentsWithUser = await globalGetter.getUsersOfDepartments()
-
-    let tmDepartment = null
-    for (const department of departmentsWithUser) {
-        tmDepartment = departmentService.findMatchedDepartmentFromRoot(tmDeptId, department)
-        if (tmDepartment) {
-            break
-        }
-    }
-    if (!tmDepartment) {
-        throw new Error("为找到天猫的部门信息")
-    }
-
-    const usersOfTM = tmDepartment.dep_user
+    const usersOfTM = departmentService.getUsersOfDepartment(tmDeptId)
     let result = null
     for (const user of usersOfTM) {
         const tmpResult = await getSelfLinkOperationCount(user.userid, user.name, status)
@@ -451,6 +441,74 @@ const getSelfErrorSingleItemLinkOperationCount = async (username, timeRange) => 
     return result;
 }
 
+/**
+ *
+ * @param userId
+ * @param status
+ */
+const getSelfErrorLinkOperationCount = async (userId, status) => {
+    const todayFlows = await globalGetter.getTodayFlows()
+    // 个人进行中
+    if (status.toUpperCase() === flowStatusConst.RUNNING) {
+        const satisfiedFlows = todayFlows.filter(
+            (flow) => flow.formUuid === errorLinkFormId &&
+                flow.instanceStatus === flowStatusConst.RUNNING &&
+                flow.originator.userId === userId
+        )
+        return satisfiedFlows.length
+    }
+    //  个人已完成
+    // todo: 后面需要补充上历史的数据
+    if (status.toUpperCase() === flowStatusConst.COMPLETE) {
+        const satisfiedFlows = todayFlows.filter(
+            (flow) => flow.formUuid === errorLinkFormId &&
+                flow.instanceStatus === flowStatusConst.COMPLETE &&
+                flow.originator.userId === userId
+        )
+        return satisfiedFlows.length
+    }
+    // todo: 需要确认成功的条件在判断
+    if (status === "success") {
+        return 0
+    }
+    // todo: 需要确认成功的条件在判断
+    if (status == "fail") {
+        return 0
+    }
+    throw new Error(`${status}还不支持`)
+}
+
+/**
+ * 获取部门下的汇总的数据（按人分类）
+ * @param status
+ * @returns {Promise<{sum: number, users: *[]}>}
+ */
+const getDeptErrorLinkOperationCount = async (userId, status) => {
+    // todo: 临时加上，后面统一加权限后再去掉
+    // 判断该用户时候有访问权限： 仅有部门领导和管理员可以查看
+    const usersWithDepartment = await globalGetter.getUsers()
+    const userWithDepartment = usersWithDepartment.filter((user) => user.userid === userId)
+
+    if (!userWithDepartment || userWithDepartment.length === 0) {
+        throw new Error("你没有权限访问该接口")
+    }
+    const isLeaderOfTM = userWithDepartment[0].leader_in_dept.filter((dept) => {
+        return dept.dept_id === tmDeptId && dept.leader
+    }).length > 0
+    if (!isLeaderOfTM && !whiteList.pepArr().includes(userId)) {
+        throw new Error("你没有权限访问该接口")
+    }
+
+    // 获取天猫下面的所有人
+    const usersOfTM = await departmentService.getUsersOfDepartment(tmDeptId)
+    const result = {sum: 0, users: []}
+    for (const user of usersOfTM) {
+        const count = await getSelfErrorLinkOperationCount(user.userid, status)
+        result.users.push({userName: user.name, count})
+        result.sum = result.sum + count
+    }
+    return result
+}
 
 module.exports = {
     saveSingleItemTaoBao,
@@ -461,5 +519,7 @@ module.exports = {
     getTaoBaoSingleItems,
     getSearchDataTaoBaoSingleItem,
     getSingleItemById,
-    getDeptLinkOperationCount
+    getDeptLinkOperationCount,
+    getSelfErrorLinkOperationCount,
+    getDeptErrorLinkOperationCount
 }
