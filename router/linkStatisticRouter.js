@@ -23,4 +23,17 @@ const linkStatisticApi = require('../router_handler/linkStatisticApi')
 router.get('/self-operation-count/:status', linkStatisticApi.getSelfLinkOperationCount)
 router.get('/dept-operation-count/:status', linkStatisticApi.getDeptLinkOperationCount)
 
+/**
+ * 链接问题处理数据
+ * 进行中：
+ *
+ * 已完成：
+ *
+ * 优化成功：
+ *
+ * 优化失败：
+ *
+ */
+router.get('/self-error-link-count/:status', null)
+
 module.exports = router;
