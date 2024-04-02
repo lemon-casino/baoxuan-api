@@ -20,8 +20,7 @@ const linkStatisticApi = require('../router_handler/linkStatisticApi')
  *       -- 新品负利率
  *       -- 投产低于2
  */
-router.get('/self-operation-count/:status', linkStatisticApi.getSelfLinkOperationCount)
-router.get('/dept-operation-count/:status', linkStatisticApi.getDeptLinkOperationCount)
+router.get('/link-operation-count/:status', linkStatisticApi.getLinkOperationCount)
 
 /**
  * 链接问题处理数据：

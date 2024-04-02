@@ -219,11 +219,60 @@ const getSingleItemById = async (id) => {
 }
 
 /**
+ * 获取链接操作数据（区分个人和部门）
+ * @param userId
+ * @param status
+ * @returns {Promise<{sum: number, items: *[]}>}
+ */
+const getLinkOperationCount = async (userId, status) => {
+    // 判断该用户时候有访问权限： 仅有部门领导和管理员可以查看
+    const usersWithDepartment = await globalGetter.getUsers()
+    let userWithDepartment = usersWithDepartment.filter((user) => user.userid === userId)
+
+    if (!userWithDepartment || userWithDepartment.length === 0) {
+        throw new Error("没有找到您所在的部门信息")
+    }
+    userWithDepartment = userWithDepartment[0]
+    const isLeaderOfTM = userWithDepartment.leader_in_dept.filter((dept) => {
+        return dept.dept_id === tmDeptId && dept.leader
+    }).length > 0
+    // 默认获取个人
+    let usersOfTM = [{name: userWithDepartment.name, userid: usersWithDepartment.userid}]
+    // leader: 获取部门下所有人的统计信息
+    if (isLeaderOfTM || whiteList.pepArr().includes(userId)) {
+        usersOfTM = await departmentService.getUsersOfDepartment(tmDeptId)
+    }
+
+    let result = {sum: 0, items: []}
+    // 合并多人的结果(异常项会有数据重复)
+    for (const user of usersOfTM) {
+        const tmpResult = await getSelfLinkOperationCount(user.userid, user.name, status)
+        result.sum = result.sum + tmpResult.sum
+        for (const tmpItem of tmpResult.items) {
+            if (result.items.length == 0) {
+                result.items = tmpResult.items
+                break
+            }
+            for (let i = 0; i < result.items.length; i++) {
+                if (tmpItem.name == result.items[i].name) {
+                    result.items[i].sum = result.items[i].sum + tmpItem.sum
+                    break;
+                }
+                if (i === result.items.length - 1) {
+                    result.items.push(tmpItem)
+                }
+            }
+        }
+    }
+    return result
+}
+
+/**
  * 获取本人不同装填的的链接操作数
  * @param userId
  * @param username
  * @param status
- * @returns {Promise<{fightingOnOld: *, fightingOnNew: *}|{waitingOnNew: number, waitingOnUnsalable: number, waitingOnOld: number}|*[]>}
+ * @returns {Promise<{sum: number, items: *[]}|{sum: number, items: {name: string, sum: number}[]}|{fightingOnOld: *, fightingOnNew: *}|*[]>}
  */
 const getSelfLinkOperationCount = async (userId, username, status) => {
     // 操作数
@@ -250,53 +299,6 @@ const getSelfLinkOperationCount = async (userId, username, status) => {
 }
 
 /**
- * 获取天猫部门的统计数据
- * @param deptId
- * @param status
- * @returns {Promise<void>}
- */
-const getDeptLinkOperationCount = async (userId, status) => {
-    // todo: 临时加上，后面统一加权限后再去掉
-    // 判断该用户时候有访问权限： 仅有部门领导和管理员可以查看
-    const usersWithDepartment = await globalGetter.getUsers()
-    const userWithDepartment = usersWithDepartment.filter((user) => user.userid === userId)
-
-    if (!userWithDepartment || userWithDepartment.length === 0) {
-        throw new Error("你没有权限访问该接口")
-    }
-    const isLeaderOfTM = userWithDepartment[0].leader_in_dept.filter((dept) => {
-        return dept.dept_id === tmDeptId && dept.leader
-    }).length > 0
-    if (!isLeaderOfTM && !whiteList.pepArr().includes(userId)) {
-        throw new Error("你没有权限访问该接口")
-    }
-
-    // 获取天猫下面的所有人
-    const usersOfTM = departmentService.getUsersOfDepartment(tmDeptId)
-    let result = null
-    for (const user of usersOfTM) {
-        const tmpResult = await getSelfLinkOperationCount(user.userid, user.name, status)
-        if (!result) {
-            result = tmpResult
-            continue
-        }
-        // 合并多人的结果
-        for (const tmpItem of tmpResult) {
-            if (tmpItem.count <= 0) {
-                continue
-            }
-            for (const item of result) {
-                if (tmpItem.name == item.name) {
-                    item.count = item.count + tmpItem.count
-                    break;
-                }
-            }
-        }
-    }
-    return result
-}
-
-/**
  * 获取本人所有链接操作数据（操作）
  * @param username
  * @returns {Promise<*[]>}
@@ -311,20 +313,21 @@ const getSelfALLDoSingleItemLinkOperationCount = async (username) => {
  * 获取本人链接操作数据（操作）
  * @param username  产品线负责人姓名
  * @param timeRange 时间范围
- * @returns {Promise<*[]>}
+ * @returns {Promise<{sum: number, items: *[]}>}
  */
 const getSelfDoSingleItemLinkOperationCount = async (username, timeRange) => {
-    const result = []
+    const result = {sum: 0, items: []}
     for (const key of Object.keys(linkTypeConst)) {
         const resultOfLinkType = await singleItemTaoBaoRepo.getSingleItemByProductLeaderLinkTypeTimeRange(
             username,
             linkTypeConst[key],
             timeRange)
 
-        result.push({
+        result.items.push({
             name: linkTypeConst[key],
-            count: resultOfLinkType.length
+            sum: resultOfLinkType.length
         })
+        result.sum = result.sum + resultOfLinkType.length
     }
     return result
 }
@@ -332,19 +335,22 @@ const getSelfDoSingleItemLinkOperationCount = async (username, timeRange) => {
 /**
  * 获取本人链接操作数据（待上架）
  * @param userId
- * @returns {Promise<[{name: string, count: number}, {name: string, count: number}, {name: string, count: number}]>}
+ * @returns {Promise<{sum: number, items: [{name: string, sum: number}, {name: string, sum: number}, {name: string, sum: number}]}>}
  */
 const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
-    const result = [{
-        name: "新品",
-        count: 0
-    }, {
-        name: "老品",
-        count: 0
-    }, {
-        name: "滞销",
-        count: 0
-    }]
+    const result = {
+        sum: 0,
+        items: [{
+            name: "新品",
+            sum: 0
+        }, {
+            name: "老品",
+            sum: 0
+        }, {
+            name: "滞销",
+            sum: 0
+        }]
+    }
     //新品： 统计" running的 运营新品流程"
     const todayFlows = await globalGetter.getTodayFlows()
     const runningFlow = todayFlows.filter((flow) => flow.instanceStatus === flowStatusConst.RUNNING)
@@ -354,7 +360,8 @@ const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
             flow.data[operationLeaderFieldId].length > 0 &&
             flow.data[operationLeaderFieldId][0] === userId
     })
-    result[0].count = newOperationRunningFlows.length
+    result.items[0].sum = newOperationRunningFlows.length
+    result.sum = result.sum + newOperationRunningFlows.length
     //老品： 统计" running的 老品重新流程"
     const oldTMLinkShelvesFlows = runningFlow.filter((flow) => {
         return flow.formUuid === tmLinkShelvesFlowFormId &&
@@ -362,7 +369,8 @@ const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
             flow.data[operationLeaderFieldId].length > 0 &&
             flow.data[operationLeaderFieldId][0] === userId
     })
-    result[1].count = oldTMLinkShelvesFlows.length
+    result.items[1].sum = oldTMLinkShelvesFlows.length
+    result.sum = result.sum + oldTMLinkShelvesFlows.length
     //todo: 滞销： 暂无
     return result
 }
@@ -415,29 +423,39 @@ const getSelfFightingSingleItemLinkOperationCount = async (username, timeRange) 
     const newProductSelfFightingSingleItems = await getSelfFightingSingleItemsByLinkType(username, "新品", timeRange)
     const oldProductSelfFightingSingleItems = await getSelfFightingSingleItemsByLinkType(username, "老品", timeRange)
     // todo: 带滞销 (需求还未确定)
-    return [{
-        name: "新品",
-        count: newProductSelfFightingSingleItems.length
-    }, {
-        name: "老品",
-        count: oldProductSelfFightingSingleItems.length,
-    }, {
-        name: "滞销品",
-        count: 0
-    }]
+    return {
+        sum: newProductSelfFightingSingleItems.length + oldProductSelfFightingSingleItems.length,
+        items: [{
+            name: "新品",
+            sum: newProductSelfFightingSingleItems.length
+        }, {
+            name: "老品",
+            sum: oldProductSelfFightingSingleItems.length,
+        }, {
+            name: "滞销品",
+            sum: 0
+        }]
+    }
 }
 
 /**
  * 获取本人链接操作数据（异常数据）
  * @param username
- * @returns {Promise<*[]>}
+ * @param timeRange
+ * @returns {Promise<{sum: number, items: *[]}>}
  */
 const getSelfErrorSingleItemLinkOperationCount = async (username, timeRange) => {
-    const result = []
+    const result = {sum: 0, items: []}
+    // 通过map过滤重复的数据
+    const uniqueItems = {}
     for (const item of taoBaoErrorItems) {
-        const count = await singleItemTaoBaoRepo.getErrorSingleItemsTotal([username], item.value, timeRange)
-        result.push({name: item.name, count})
+        const singleItems = await singleItemTaoBaoRepo.getErrorSingleItems([username], item.value, timeRange)
+        for (const item of singleItems) {
+            uniqueItems[item.id] = 1
+        }
+        result.items.push({name: item.name, sum: singleItems.length})
     }
+    result.sum = Object.keys(uniqueItems).length
     return result;
 }
 
@@ -520,5 +538,6 @@ module.exports = {
     getTaoBaoSingleItems,
     getSearchDataTaoBaoSingleItem,
     getSingleItemById,
-    getErrorLinkOperationCount
+    getErrorLinkOperationCount,
+    getLinkOperationCount
 }

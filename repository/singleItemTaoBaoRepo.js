@@ -121,17 +121,31 @@ const getTaoBaoSingleItems = async (pageIndex,
 const getErrorSingleItemsTotal = async (productLineLeaders,
                                         errorItem,
                                         timeRange) => {
+    const items = await getErrorSingleItems(productLineLeaders, errorItem, timeRange)
+    return items.length
+}
 
+/**
+ * 获取异常的单品表数据
+ * @param productLineLeaders
+ * @param errorItem
+ * @param timeRange
+ * @returns {Promise<*|*[]>}
+ */
+const getErrorSingleItems = async (productLineLeaders,
+                                   errorItem,
+                                   timeRange) => {
     const where = {}
     if (!errorItem.field) {
-        return 0
+        return []
     }
     try {
         where[errorItem.field] = {[errorItem.operator]: errorItem.value}
         where.productLineLeader = {$in: productLineLeaders}
         where.date = {$between: timeRange}
-        const result = await singleItemTaoBaoModel.count({where})
-        return result
+        const result = await singleItemTaoBaoModel.findAll({where})
+        const data = sequelizeUtil.extractDataValues(result)
+        return data
     } catch (e) {
         throw new Error(e.message)
     }
@@ -215,5 +229,6 @@ module.exports = {
     getTaoBaoSingleItems,
     getLinkTypes,
     getSingleItemById,
-    getErrorSingleItemsTotal
+    getErrorSingleItemsTotal,
+    getErrorSingleItems
 }
