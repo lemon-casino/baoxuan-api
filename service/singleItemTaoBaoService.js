@@ -126,7 +126,7 @@ const getTaoBaoSingleItems = async (pageIndex,
 
     const fightingLinkIds = []
     if (linkStatus) {
-        const runningFightingFlows = flowService.getTodayFlowsByFormIdAndFlowStatus(tmFightingFlowFormId, flowStatusConst.RUNNING)
+        const runningFightingFlows = await flowService.getTodayFlowsByFormIdAndFlowStatus(tmFightingFlowFormId, flowStatusConst.RUNNING)
         for (const runningFightingFlow of runningFightingFlows) {
             if (!runningFightingFlow.data) {
                 continue
