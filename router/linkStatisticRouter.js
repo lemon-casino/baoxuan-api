@@ -37,4 +37,6 @@ router.get('/link-operation-count/:status', linkStatisticApi.getLinkOperationCou
  */
 router.get('/error-link-count/:status', linkStatisticApi.getErrorLinkCount)
 
+router.get('/payment', linkStatisticApi.getPayment)
+
 module.exports = router;

@@ -19,24 +19,6 @@ const getLinkOperationCount = async (req, res, next) => {
         next(e)
     }
 }
-//
-// /**
-//  * 获取部门链接操作数
-//  * @param req
-//  * @param res
-//  * @param next
-//  * @returns {Promise<*>}
-//  */
-// const getDeptLinkOperationCount = async (req, res, next) => {
-//     try {
-//         const status = req.params.status
-//         const ddUserId = await userService.getDingDingUserId(req.user.id)
-//         const result = await singleItemTaoBaoService.getDeptLinkOperationCount(ddUserId, status)
-//         return res.send(biResponse.success(result))
-//     } catch (e) {
-//         next(e)
-//     }
-// }
 
 /**
  * 获取链接问题处理数据
@@ -53,7 +35,24 @@ const getErrorLinkCount = async (req, res, next) => {
     }
 }
 
+/**
+ * 获取付费数据
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<*>}
+ */
+const getPayment = async (req, res, next) => {
+    try {
+        const result = await singleItemTaoBaoService.getPayment(req.user.username)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getLinkOperationCount,
-    getErrorLinkCount
+    getErrorLinkCount,
+    getPayment
 }

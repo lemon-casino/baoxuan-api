@@ -529,6 +529,16 @@ const getSelfErrorLinkOperationCount = async (userId, status) => {
     throw new Error(`${status}还不支持`)
 }
 
+/**
+ * 获取付费数据
+ * @param userName
+ * @returns {Promise<*|*[]>}
+ */
+const getPayment = async (userName) => {
+    const result = await singleItemTaoBaoRepo.sumPaymentByProductLineLeader(userName)
+    return result
+}
+
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
@@ -539,5 +549,6 @@ module.exports = {
     getSearchDataTaoBaoSingleItem,
     getSingleItemById,
     getErrorLinkOperationCount,
-    getLinkOperationCount
+    getLinkOperationCount,
+    getPayment
 }
