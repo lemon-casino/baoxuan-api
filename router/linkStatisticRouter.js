@@ -36,7 +36,6 @@ router.get('/dept-operation-count/:status', linkStatisticApi.getDeptLinkOperatio
  * 优化失败：
  *    - 需要根据优化的内容从单品表中取出某一天的对应的数据做对比
  */
-router.get('/self-error-link-count/:status', linkStatisticApi.getSelfErrorLinkCount)
-router.get('/dept-error-link-count/:status', linkStatisticApi.getDeptErrorLinkCount)
+router.get('/error-link-count/:status', linkStatisticApi.getErrorLinkCount)
 
 module.exports = router;

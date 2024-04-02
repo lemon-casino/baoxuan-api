@@ -442,7 +442,40 @@ const getSelfErrorSingleItemLinkOperationCount = async (username, timeRange) => 
 }
 
 /**
- *
+ * 获取链接处理数据：区分个人和部门
+ * @param userId
+ * @param status
+ * @returns {Promise<{sum: number, users: *[]}>}
+ */
+const getErrorLinkOperationCount = async (userId, status) => {
+    // 判断该用户时候有访问权限： 仅有部门领导和管理员可以查看
+    const usersWithDepartment = await globalGetter.getUsers()
+    let userWithDepartment = usersWithDepartment.filter((user) => user.userid === userId)
+
+    if (!userWithDepartment || userWithDepartment.length === 0) {
+        throw new Error("没有找到您所在的部门信息")
+    }
+    userWithDepartment = userWithDepartment[0]
+    const isLeaderOfTM = userWithDepartment.leader_in_dept.filter((dept) => {
+        return dept.dept_id === tmDeptId && dept.leader
+    }).length > 0
+    // 默认获取个人
+    let users = [{name: userWithDepartment.name, userid: usersWithDepartment.userid}]
+    // leader: 获取部门下所有人的统计信息
+    if (isLeaderOfTM || whiteList.pepArr().includes(userId)) {
+        users = await departmentService.getUsersOfDepartment(tmDeptId)
+    }
+    const result = {sum: 0, users: []}
+    for (const user of users) {
+        const sum = await getSelfErrorLinkOperationCount(user.userid, status)
+        result.users.push({name: user.name, sum})
+        result.sum = result.sum + sum
+    }
+    return result
+}
+
+/**
+ * 获取个人的数据
  * @param userId
  * @param status
  */
@@ -478,38 +511,6 @@ const getSelfErrorLinkOperationCount = async (userId, status) => {
     throw new Error(`${status}还不支持`)
 }
 
-/**
- * 获取部门下的汇总的数据（按人分类）
- * @param status
- * @returns {Promise<{sum: number, users: *[]}>}
- */
-const getDeptErrorLinkOperationCount = async (userId, status) => {
-    // todo: 临时加上，后面统一加权限后再去掉
-    // 判断该用户时候有访问权限： 仅有部门领导和管理员可以查看
-    const usersWithDepartment = await globalGetter.getUsers()
-    const userWithDepartment = usersWithDepartment.filter((user) => user.userid === userId)
-
-    if (!userWithDepartment || userWithDepartment.length === 0) {
-        throw new Error("你没有权限访问该接口")
-    }
-    const isLeaderOfTM = userWithDepartment[0].leader_in_dept.filter((dept) => {
-        return dept.dept_id === tmDeptId && dept.leader
-    }).length > 0
-    if (!isLeaderOfTM && !whiteList.pepArr().includes(userId)) {
-        throw new Error("你没有权限访问该接口")
-    }
-
-    // 获取天猫下面的所有人
-    const usersOfTM = await departmentService.getUsersOfDepartment(tmDeptId)
-    const result = {sum: 0, users: []}
-    for (const user of usersOfTM) {
-        const count = await getSelfErrorLinkOperationCount(user.userid, status)
-        result.users.push({userName: user.name, count})
-        result.sum = result.sum + count
-    }
-    return result
-}
-
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
@@ -519,7 +520,5 @@ module.exports = {
     getTaoBaoSingleItems,
     getSearchDataTaoBaoSingleItem,
     getSingleItemById,
-    getDeptLinkOperationCount,
-    getSelfErrorLinkOperationCount,
-    getDeptErrorLinkOperationCount
+    getErrorLinkOperationCount
 }
