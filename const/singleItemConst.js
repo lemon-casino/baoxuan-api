@@ -84,7 +84,6 @@ const taoBaoErrorItems = [
 const taoBaoSingleItemStatuses = [{name: "fighting", value: "打仗"}, {name: "normal", value: "正常"}]
 const taoBaoSingleItemStatusesKeys = {"fighting": "fighting", "normal": "normal"}
 
-
 const profitRateRangeSumTypes = [
     {type: "新品", name: "新品25%及以上", range: [25, 999999]},
     {type: "新品", name: "新品20%-25%", range: [20, 24.999999]},
@@ -104,10 +103,32 @@ const profitRateRangeSumTypes = [
     {type: "老品", name: "老品9%以下", range: [-999999, 8.999999]}, // 9以下
 ]
 
+const marketRatio = [
+    {type: "坑产占比正常", name: "0-9%", range: [0, 8.999999]},
+    {type: "坑产占比提升", name: "50%及以上", range: [50, 999999]},
+    {type: "坑产占比提升", name: "40%-50%", range: [40, 49.999999]},
+    {type: "坑产占比提升", name: "30-40%", range: [30, 39.999999]},
+    {type: "坑产占比提升", name: "20%-30%", range: [20, 29.999999]},
+    {type: "坑产占比提升", name: "9%-20%", range: [9, 19.999999]},
+    {type: "坑产占比下降", name: "-10%-0", range: [-10, 0.000001]},
+    {type: "坑产占比下降", name: "-19%--10%", range: [-19, -10.000001]},
+    {type: "坑产占比下降", name: "-29%--19%", range: [-29, -19.000001]},
+    {type: "流量占比正常", name: "0-10%", range: [0, 9.999999]},
+    {type: "流量占比提升", name: "50%及以上", range: [50, 999999]},
+    {type: "流量占比提升", name: "40%-50%", range: [40, 49.999999]},
+    {type: "流量占比提升", name: "30--40%", range: [30, 39.999999]},
+    {type: "流量占比提升", name: "20%--30%", range: [20, 29.999999]},
+    {type: "流量占比提升", name: "10%--20%", range: [10, 19.999999]},
+    {type: "坑产占比下降", name: "-10%--0", range: [-10, 0.000001]},
+    {type: "坑产占比下降", name: "-20%--10%", range: [-20, -10.000001]},
+    {type: "坑产占比下降", name: "-29%--20%", range: [-29, -20.000001]}
+]
+
 module.exports = {
     taoBaoSingleItemMap,
     taoBaoErrorItems,
     taoBaoSingleItemStatuses,
     taoBaoSingleItemStatusesKeys,
-    profitRateRangeSumTypes
+    profitRateRangeSumTypes,
+    marketRatio
 }
