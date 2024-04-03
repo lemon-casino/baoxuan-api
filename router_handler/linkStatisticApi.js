@@ -42,9 +42,23 @@ const getErrorLinkCount = async (req, res, next) => {
  * @param next
  * @returns {Promise<*>}
  */
-const getPayment = async (req, res, next) => {
+const getPaymentData = async (req, res, next) => {
     try {
         const result = await singleItemTaoBaoService.getPayment(req.user.username)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+/**
+ * 获取支付数据（数据不同付费数据，更偏向于利润所以取profit）
+ * @returns {Promise<void>}
+ */
+const getProfitData = async (req, res, next) => {
+    try {
+        const ddUserId = await userService.getDingDingUserId(req.user.id)
+        const result = await singleItemTaoBaoService.getProfitData(ddUserId)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -54,5 +68,6 @@ const getPayment = async (req, res, next) => {
 module.exports = {
     getLinkOperationCount,
     getErrorLinkCount,
-    getPayment
+    getPaymentData,
+    getProfitData
 }

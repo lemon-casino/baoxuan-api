@@ -63,7 +63,7 @@ const getTodayRunningAndFinishedFlows = async () => {
     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
 }
 
-processService.correctStrFieldToJson();
+// processService.correctStrFieldToJson();
 
-// 同步3.21号~3.31的已完成流程入库
-// dingDingService.handleAsyncAllFinishedFlowsByTimeRange("2024-03-21 00:00:00","2024-03-31 23:59:00");
+// 同步3.1号~3.31的已完成流程入库
+// dingDingService.handleAsyncAllFinishedFlowsByTimeRange("2024-03-01 00:00:00","2024-03-31 23:59:00");

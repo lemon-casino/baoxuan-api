@@ -2,12 +2,17 @@ const singleItemTaoBaoRepo = require("../repository/singleItemTaoBaoRepo")
 const departmentService = require("../service/departmentService")
 const userService = require("../service/userService")
 const flowService = require("../service/flowService")
-const {taoBaoSingleItemMap, taoBaoErrorItems, taoBaoSingleItemStatuses} = require("../const/singleItemConst")
 const whiteList = require("../config/whiteList")
 const {logger} = require("../utils/log")
 const dateUtil = require("../utils/dateUtil")
 const linkTypeConst = require("../const/linkTypeConst")
 const flowStatusConst = require("../const/flowStatusConst")
+const {
+    taoBaoSingleItemMap,
+    taoBaoErrorItems,
+    taoBaoSingleItemStatuses,
+    profitRateRangeSumTypes
+} = require("../const/singleItemConst")
 const globalGetter = require("../global/getter")
 
 // 天猫链接打架流程表单id
@@ -225,24 +230,7 @@ const getSingleItemById = async (id) => {
  * @returns {Promise<{sum: number, items: *[]}>}
  */
 const getLinkOperationCount = async (userId, status) => {
-    // 判断该用户时候有访问权限： 仅有部门领导和管理员可以查看
-    const usersWithDepartment = await globalGetter.getUsers()
-    let userWithDepartment = usersWithDepartment.filter((user) => user.userid === userId)
-
-    if (!userWithDepartment || userWithDepartment.length === 0) {
-        throw new Error("没有找到您所在的部门信息")
-    }
-    userWithDepartment = userWithDepartment[0]
-    const isLeaderOfTM = userWithDepartment.leader_in_dept.filter((dept) => {
-        return dept.dept_id === tmDeptId && dept.leader
-    }).length > 0
-    // 默认获取个人
-    let usersOfTM = [{name: userWithDepartment.name, userid: usersWithDepartment.userid}]
-    // leader: 获取部门下所有人的统计信息
-    if (isLeaderOfTM || whiteList.pepArr().includes(userId)) {
-        usersOfTM = await departmentService.getUsersOfDepartment(tmDeptId)
-    }
-
+    const usersOfTM = await userService.getUserSelfOrPartnersOfDepartment(userId, tmDeptId)
     let result = {sum: 0, items: []}
     // 合并多人的结果(异常项会有数据重复)
     for (const user of usersOfTM) {
@@ -459,6 +447,7 @@ const getSelfErrorSingleItemLinkOperationCount = async (username, timeRange) => 
     return result;
 }
 
+
 /**
  * 获取链接处理数据：区分个人和部门
  * @param userId
@@ -466,23 +455,7 @@ const getSelfErrorSingleItemLinkOperationCount = async (username, timeRange) => 
  * @returns {Promise<{sum: number, users: *[]}>}
  */
 const getErrorLinkOperationCount = async (userId, status) => {
-    // 判断该用户时候有访问权限： 仅有部门领导和管理员可以查看
-    const usersWithDepartment = await globalGetter.getUsers()
-    let userWithDepartment = usersWithDepartment.filter((user) => user.userid === userId)
-
-    if (!userWithDepartment || userWithDepartment.length === 0) {
-        throw new Error("没有找到您所在的部门信息")
-    }
-    userWithDepartment = userWithDepartment[0]
-    const isLeaderOfTM = userWithDepartment.leader_in_dept.filter((dept) => {
-        return dept.dept_id === tmDeptId && dept.leader
-    }).length > 0
-    // 默认获取个人
-    let users = [{name: userWithDepartment.name, userid: usersWithDepartment.userid}]
-    // leader: 获取部门下所有人的统计信息
-    if (isLeaderOfTM || whiteList.pepArr().includes(userId)) {
-        users = await departmentService.getUsersOfDepartment(tmDeptId)
-    }
+    const users = await userService.getUserSelfOrPartnersOfDepartment(userId, tmDeptId)
     const result = {sum: 0, users: []}
     for (const user of users) {
         const sum = await getSelfErrorLinkOperationCount(user.userid, status)
@@ -539,6 +512,100 @@ const getPayment = async (userName) => {
     return result
 }
 
+/**
+ *  * 支付数据：按照新品老品分别统计发货金额和利润额，
+ *         利润率按照新老品指定的利润区间统计
+ * @param usernames
+ * @returns {Promise<[{name: string, sum: number, items: *[]}, {name: string, sum: null, items: *[]}, {name: string, sum: null, items: *[]}]>}
+ */
+const getProfitData = async (ddUserId) => {
+    const users = await userService.getUserSelfOrPartnersOfDepartment(ddUserId, tmDeptId)
+    const productLineLeaders = users.map((user) => user.name)
+    const satisfiedSingleItems = await singleItemTaoBaoRepo.getSingleItemsBy({productLineLeader: {$in: productLineLeaders}})
+    const linkTypes = await singleItemTaoBaoRepo.getLinkTypes()
+    // 返回的数据模版
+    const result = [
+        {name: "发货金额", sum: 0, items: []},
+        {name: "利润额", sum: 0},
+        {name: "利润率", sum: null, items: []}
+    ]
+    // 按照类别统计发货金额、利润额
+    // 根据linkTypes初始化发货金额的items
+    for (const linkType of linkTypes) {
+        result[0].items.push({name: linkType.link_type, sum: 0})
+    }
+
+    // 根据 profitRateRangeSumTypes 初始化sumProfitRate的items
+    for (const profitRateRangeSumType of profitRateRangeSumTypes) {
+        result[2].items.push({name: profitRateRangeSumType.name, sum: 0})
+    }
+
+    for (const singleItem of satisfiedSingleItems) {
+        // 汇总发货金额
+        result[0].sum = result[0].sum + parseFloat(singleItem.reallyShipmentAmount)
+        // 汇总利润额
+        result[1].sum = result[1].sum + parseFloat(singleItem.profitAmount)
+        // 统计不同linkType的单品表数
+        for (const resultItem of result[0].items) {
+            if (resultItem.name === singleItem.linkType) {
+                resultItem.sum = resultItem.sum + 1
+                break
+            }
+        }
+        // 判断当前的单品是新品还是老品，新品90、新品150 归算为老品
+        let singleItemType = "老品"
+        if (singleItem.linkType.includes("新品")) {
+            const matchDays = singleItem.linkType.match(/\d+/)
+            if (matchDays && parseInt(matchDays[0]) < 90) {
+                singleItemType = "新品"
+            }
+        }
+        // 根据利润率按照新老品指定的利润区间统计
+        let profitRateRangeSumTypesIndex = 0
+        for (const item of profitRateRangeSumTypes) {
+            if (item.type === singleItemType && parseFloat(singleItem.profitRate) >= item.range[0] && parseFloat(singleItem.profitRate) <= item.range[1]) {
+                const currentSumProfitRateItems = result[2].items
+                for (let i = 0; i < currentSumProfitRateItems.length; i++) {
+                    if (currentSumProfitRateItems[i].name === item.name) {
+                        currentSumProfitRateItems[i].sum = currentSumProfitRateItems[i].sum + 1
+                        break
+                    }
+                }
+                break
+            }
+            if (profitRateRangeSumTypesIndex === profitRateRangeSumTypes.length - 1) {
+                throw new Error(`单品：${singleItem.productName}，linkType:${singleItem.linkType}, profitRate: ${singleItem.profitRate} 未匹配到有效的利润区间`)
+            }
+            profitRateRangeSumTypesIndex = profitRateRangeSumTypesIndex + 1;
+        }
+    }
+    result[2].sum = 0
+    if (result[0].sum > 0) {
+        result[2].sum = (result[1].sum / result[0].sum * 100).toFixed(2)
+    }
+    result[0].sum = result[0].sum.toFixed(2)
+    result[1].sum = result[1].sum.toFixed(2)
+    return result
+}
+
+/**
+ * 将金额amount根据类型linkType合并到resultItems中
+ * @param amount
+ * @param linkType
+ * @param resultItems
+ * @returns {*}
+ */
+const mergeAmountToResultItemsByLinkType = (amount, linkType, resultItems) => {
+    for (let i = 0; i < resultItems.length; i++) {
+        if (resultItems[i].name === linkType) {
+            resultItems[i].sum = resultItems[i].sum + amount
+        } else if (i === resultItems.length - 1) {
+            resultItems.push({name: linkType, sum: amount})
+        }
+    }
+    return resultItems
+}
+
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
@@ -550,5 +617,6 @@ module.exports = {
     getSingleItemById,
     getErrorLinkOperationCount,
     getLinkOperationCount,
-    getPayment
+    getPayment,
+    getProfitData
 }

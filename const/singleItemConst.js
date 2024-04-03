@@ -84,9 +84,30 @@ const taoBaoErrorItems = [
 const taoBaoSingleItemStatuses = [{name: "fighting", value: "打仗"}, {name: "normal", value: "正常"}]
 const taoBaoSingleItemStatusesKeys = {"fighting": "fighting", "normal": "normal"}
 
+
+const profitRateRangeSumTypes = [
+    {type: "新品", name: "新品25%及以上", range: [25, 999999]},
+    {type: "新品", name: "新品20%-25%", range: [20, 24.999999]},
+    {type: "新品", name: "新品15%-20%", range: [15, 19.999999]},
+    {type: "新品", name: "新品10%-15%", range: [10, 14.999999]},
+    {type: "新品", name: "新品6%-10%", range: [6, 9.999999]},
+    {type: "新品", name: "新品0%-6%", range: [0, 5.999999]},
+    {type: "新品", name: "新品0%以下", range: [-999999, -0.0000001]},// 0以下
+    {type: "老品", name: "老品50%以上", range: [50, 9999999]},
+    {type: "老品", name: "老品40%-50%", range: [40, 49.999999]},
+    {type: "老品", name: "老品35%-40%", range: [35, 39.999999]},
+    {type: "老品", name: "老品30%-35%", range: [30, 34.999999]},
+    {type: "老品", name: "老品25%-30%", range: [25, 29.999999]},
+    {type: "老品", name: "老品20%-25%", range: [20, 24.999999]},
+    {type: "老品", name: "老品15-20%", range: [15, 19.999999]},
+    {type: "老品", name: "老品9%-15%", range: [9, 14.999999]},
+    {type: "老品", name: "老品9%以下", range: [-999999, 8.999999]}, // 9以下
+]
+
 module.exports = {
     taoBaoSingleItemMap,
     taoBaoErrorItems,
     taoBaoSingleItemStatuses,
-    taoBaoSingleItemStatusesKeys
+    taoBaoSingleItemStatusesKeys,
+    profitRateRangeSumTypes
 }

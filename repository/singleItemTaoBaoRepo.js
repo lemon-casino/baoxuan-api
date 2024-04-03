@@ -246,6 +246,18 @@ const sumPaymentByProductLineLeader = async (productLineLeader) => {
     }
 }
 
+/**
+ * 根据产品线负责人获取单品表数据
+ * @returns {Promise<void>}
+ */
+const getSingleItemsBy = async (where) => {
+    const result = await singleItemTaoBaoModel.findAll({
+        where
+    })
+    const data = sequelizeUtil.extractDataValues(result)
+    return data
+}
+
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
@@ -255,5 +267,7 @@ module.exports = {
     getSingleItemById,
     getErrorSingleItemsTotal,
     getErrorSingleItems,
-    sumPaymentByProductLineLeader
+    sumPaymentByProductLineLeader,
+    getSingleItemsBy
+
 }
