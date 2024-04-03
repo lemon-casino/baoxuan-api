@@ -3,7 +3,7 @@ const singleItemTaoBaoService = require("../service/singleItemTaoBaoService")
 const userService = require("../service/userService")
 
 /**
- * 获取链接操作数(个人、部门)
+ * 获取链接操作数
  * @param req
  * @param res
  * @param next
@@ -11,9 +11,25 @@ const userService = require("../service/userService")
  */
 const getLinkOperationCount = async (req, res, next) => {
     try {
-        const status = req.params.status
-        const ddUserId = await userService.getDingDingUserId(req.user.id)
-        const result = await singleItemTaoBaoService.getLinkOperationCount(ddUserId, status)
+        const {
+            productLineLeaders,
+            firstLevelProductLine,
+            secondLevelProductLine,
+            errorItem,
+            linkType,
+            linkStatus,
+            timeRange
+        } = req.query
+
+        const result = await singleItemTaoBaoService.getLinkOperationCount(
+            req.params.status,
+            productLineLeaders,
+            firstLevelProductLine,
+            secondLevelProductLine,
+            errorItem,
+            linkType,
+            linkStatus,
+            timeRange)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)

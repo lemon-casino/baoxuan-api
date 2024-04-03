@@ -224,77 +224,96 @@ const getSingleItemById = async (id) => {
 }
 
 /**
- * 获取链接操作数据（区分个人和部门）
+ * 获取链接操作数据
  * @param userId
  * @param status
- * @returns {Promise<{sum: number, items: *[]}>}
+ * @param productLineLeaders
+ * @param firstLevelProductLine
+ * @param secondLevelProductLine
+ * @param errorItem
+ * @param linkType
+ * @param linkStatus
+ * @param timeRange
+ * @returns {Promise<{sum: number, items: *[]}|{fightingOnOld: *, fightingOnNew: *}|{sum: number, items: {name: string, sum: number}[]}>}
  */
-const getLinkOperationCount = async (userId, status) => {
-    const usersOfTM = await userService.getUserSelfOrPartnersOfDepartment(userId, tmDeptId)
-    let result = {sum: 0, items: []}
-    // 合并多人的结果(异常项会有数据重复)
-    for (const user of usersOfTM) {
-        const tmpResult = await getSelfLinkOperationCount(user.userid, user.name, status)
-        result.sum = result.sum + tmpResult.sum
-        for (const tmpItem of tmpResult.items) {
-            if (result.items.length == 0) {
-                result.items = tmpResult.items
-                break
-            }
-            for (let i = 0; i < result.items.length; i++) {
-                if (tmpItem.name == result.items[i].name) {
-                    result.items[i].sum = result.items[i].sum + tmpItem.sum
-                    break;
-                }
-                if (i === result.items.length - 1) {
-                    result.items.push(tmpItem)
-                }
-            }
-        }
-    }
-    return result
-}
+const getLinkOperationCount = async (status,
+                                     productLineLeaders,
+                                     firstLevelProductLine,
+                                     secondLevelProductLine,
+                                     errorItem,
+                                     linkType,
+                                     linkStatus,
+                                     timeRange) => {
 
-/**
- * 获取本人不同装填的的链接操作数
- * @param userId
- * @param username
- * @param status
- * @returns {Promise<{sum: number, items: *[]}|{sum: number, items: {name: string, sum: number}[]}|{fightingOnOld: *, fightingOnNew: *}|*[]>}
- */
-const getSelfLinkOperationCount = async (userId, username, status) => {
-    // 操作数
-    if (status === "do") {
-        const result = await getSelfALLDoSingleItemLinkOperationCount(username)
+    if (!timeRange) {
+        throw new Error("查询条件：时间区间不能为空")
+    }
+    if (!productLineLeaders) {
+        throw new Error("查询条件：产品线负责人不能为空")
+    }
+
+    productLineLeaders = JSON.parse(productLineLeaders)
+    timeRange = JSON.parse(timeRange)
+
+    // 待上架
+    if (status === "waiting-on") {
+        // 找到ddUserId
+        const result = {
+            sum: 0,
+            items: [
+                {name: "新品", sum: 0},
+                {name: "老品", sum: 0},
+                {name: "滞销", sum: 0}
+            ]
+        }
+        for (const productLineLeader of productLineLeaders) {
+            const allUsers = await globalGetter.getUsers()
+            const users = allUsers.filter((user) => user.name === productLineLeader)
+            const curResult = await getSelfWaitingOnSingleItemLinkOperationCount(users[0].userid)
+            result.sum = result.sum + curResult.sum
+            result.items[0].sum = result.items[0].sum + curResult.items[0].sum
+            result.items[1].sum = result.items[1].sum + curResult.items[1].sum
+            result.items[2].sum = result.items[2].sum + curResult.items[2].sum
+        }
         return result
     }
-    // 待上架
-    else if (status === "waiting-on") {
-        const result = await getSelfWaitingOnSingleItemLinkOperationCount(userId)
+
+    const fightingLinkIds = []
+    const runningFightingFlows = await flowService.getTodayFlowsByFormIdAndFlowStatus(tmFightingFlowFormId, flowStatusConst.RUNNING)
+    for (const runningFightingFlow of runningFightingFlows) {
+        if (!runningFightingFlow.data) {
+            continue
+        }
+        const runningLinkId = runningFightingFlow.data[linkIdKeyInTmFightingFlowForm]
+        if (runningLinkId) {
+            fightingLinkIds.push(runningLinkId)
+        }
+    }
+
+    const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
+        999999,
+        productLineLeaders,
+        firstLevelProductLine,
+        secondLevelProductLine,
+        JSON.parse(errorItem || "{}"),
+        linkType,
+        linkStatus,
+        fightingLinkIds,
+        timeRange)
+
+    if (status === "do") {
+        const result = await getSelfDoSingleItemLinkOperationCount(satisfiedSingleItems.data)
         return result
     }
     // 打仗
     else if (status === "fighting") {
-        const timeRange = [dateUtil.earliestDate, dateUtil.endOfToday()]
-        const result = await getSelfFightingSingleItemLinkOperationCount(username, timeRange)
+        const result = await getSelfFightingSingleItemLinkOperationCount(satisfiedSingleItems.data, fightingLinkIds)
         return result
     } else if (status === "error") {
-        const timeRange = [dateUtil.earliestDate, dateUtil.endOfToday()]
-        const result = await getSelfErrorSingleItemLinkOperationCount(username, timeRange)
+        const result = await getSelfErrorSingleItemLinkOperationCount(satisfiedSingleItems.data)
         return result
     }
     throw new Error(`${status}还不支持`)
-}
-
-/**
- * 获取本人所有链接操作数据（操作）
- * @param username
- * @returns {Promise<*[]>}
- */
-const getSelfALLDoSingleItemLinkOperationCount = async (username) => {
-    const timeRange = [dateUtil.earliestDate, dateUtil.endOfToday()]
-    const result = await getSelfDoSingleItemLinkOperationCount(username, timeRange)
-    return result
 }
 
 /**
@@ -303,20 +322,43 @@ const getSelfALLDoSingleItemLinkOperationCount = async (username) => {
  * @param timeRange 时间范围
  * @returns {Promise<{sum: number, items: *[]}>}
  */
-const getSelfDoSingleItemLinkOperationCount = async (username, timeRange) => {
+const getSelfDoSingleItemLinkOperationCount = async (singleItems) => {
     const result = {sum: 0, items: []}
-    for (const key of Object.keys(linkTypeConst)) {
-        const resultOfLinkType = await singleItemTaoBaoRepo.getSingleItemByProductLeaderLinkTypeTimeRange(
-            username,
-            linkTypeConst[key],
-            timeRange)
 
-        result.items.push({
-            name: linkTypeConst[key],
-            sum: resultOfLinkType.length
-        })
-        result.sum = result.sum + resultOfLinkType.length
-    }
+    const newSingleItems = singleItems.filter((item) => {
+        if (item.linkType.includes("新品")) {
+            const matchNewItems = item.linkType.match(/\d+/)
+            if (!matchNewItems || matchNewItems[0] < 90) {
+                return true
+            }
+        }
+        return false
+    })
+    result.items.push({
+        name: linkTypeConst["new"],
+        sum: newSingleItems.length
+    })
+    result.sum = result.sum + newSingleItems.length
+    const oldSingleItems = singleItems.filter((item) => {
+        if (item.linkType.includes("新品")) {
+            const matchNewItems = item.linkType.match(/\d+/)
+            if (matchNewItems && matchNewItems[0] >= 90) {
+                return true
+            }
+        } else if (item.linkType === "老品") {
+            return true
+        }
+        return false
+    })
+    result.items.push({
+        name: linkTypeConst["old"],
+        sum: oldSingleItems.length
+    })
+    result.sum = result.sum + oldSingleItems.length
+    result.items.push({
+        name: linkTypeConst["unsalable"],
+        sum: 0
+    })
     return result
 }
 
@@ -364,41 +406,11 @@ const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
 }
 
 /**
- * 获取本人链接操作数据（待转出）
+ * 获取链接操作数据（待转出）
  * @returns {Promise<{waitingOnNew: number, waitingOnUnsalable: number, waitingOnOld: number}>}
  */
 const getSelfWaitingOutSingleItemLinkOperationCount = async (userId) => {
 
-}
-
-/**
- * 根据链接类型获取本人的正在打仗单品信息
- * @returns {Promise<void>}
- */
-const getSelfFightingSingleItemsByLinkType = async (username, linkType, timeRange) => {
-    try {
-        // 获取正在打仗的流程
-        const runningFightingFlows = await flowService.getTodayFlowsByFormIdAndFlowStatus(tmFightingFlowFormId, flowStatusConst.RUNNING)
-        // 获取正在打仗流程的linkId(s)
-        const fightingLinkIds = []
-        for (const runningFightingFlow of runningFightingFlows) {
-            if (!runningFightingFlow.data) {
-                continue
-            }
-            const runningLinkId = runningFightingFlow.data[linkIdKeyInTmFightingFlowForm]
-            if (runningLinkId) {
-                fightingLinkIds.push(runningLinkId)
-            }
-        }
-        // 获取本人指定链接类型的单品数据
-        const newSelfSingleItems = await singleItemTaoBaoRepo.getSingleItemByProductLeaderLinkTypeTimeRange(username, linkType, timeRange)
-        const selfFightingSingleItems = newSelfSingleItems.filter((item) => {
-            return fightingLinkIds.includes(item.linkId)
-        })
-        return selfFightingSingleItems
-    } catch (e) {
-        throw new Error(e.message)
-    }
 }
 
 /**
@@ -407,23 +419,45 @@ const getSelfFightingSingleItemsByLinkType = async (username, linkType, timeRang
  * @param timeRange
  * @returns {Promise<{fightingOnOld: *, fightingOnNew: *}>}
  */
-const getSelfFightingSingleItemLinkOperationCount = async (username, timeRange) => {
-    const newProductSelfFightingSingleItems = await getSelfFightingSingleItemsByLinkType(username, "新品", timeRange)
-    const oldProductSelfFightingSingleItems = await getSelfFightingSingleItemsByLinkType(username, "老品", timeRange)
-    // todo: 带滞销 (需求还未确定)
-    return {
-        sum: newProductSelfFightingSingleItems.length + oldProductSelfFightingSingleItems.length,
-        items: [{
-            name: "新品",
-            sum: newProductSelfFightingSingleItems.length
-        }, {
-            name: "老品",
-            sum: oldProductSelfFightingSingleItems.length,
-        }, {
-            name: "滞销品",
-            sum: 0
-        }]
+const getSelfFightingSingleItemLinkOperationCount = async (singleItems, fightingLinkIds) => {
+    const result = {
+        sum: 0,
+        items: [
+            {name: "新品", sum: 0},
+            {name: "老品", sum: 0},
+            {name: "滞销品", sum: 0}
+        ]
     }
+    singleItems = singleItems.filter((item) => {
+        return fightingLinkIds.includes(item.linkId)
+    })
+    // 获取本人指定链接类型的单品数据
+    const newSingleItems = singleItems.filter((item) => {
+        if (item.linkType.includes("新品")) {
+            const matchNewItems = item.linkType.match(/\d+/)
+            if (!matchNewItems || matchNewItems[0] < 90) {
+                return true
+            }
+        }
+        return false
+    })
+    result.items[0].sum = newSingleItems.length
+    result.sum = newSingleItems.length
+    const oldSingleItems = singleItems.filter((item) => {
+        if (item.linkType.includes("新品")) {
+            const matchNewItems = item.linkType.match(/\d+/)
+            if (matchNewItems && matchNewItems[0] >= 90) {
+                return true
+            }
+        } else if (item.linkType === "老品") {
+            return true
+        }
+        return false
+    })
+    result.items[1].sum = oldSingleItems.length
+    result.sum = result.sum + oldSingleItems.length
+    // todo: 滞销待定
+    return result
 }
 
 /**
@@ -432,16 +466,20 @@ const getSelfFightingSingleItemLinkOperationCount = async (username, timeRange) 
  * @param timeRange
  * @returns {Promise<{sum: number, items: *[]}>}
  */
-const getSelfErrorSingleItemLinkOperationCount = async (username, timeRange) => {
+const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
     const result = {sum: 0, items: []}
     // 通过map过滤重复的数据
     const uniqueItems = {}
     for (const item of taoBaoErrorItems) {
-        const singleItems = await singleItemTaoBaoRepo.getErrorSingleItems([username], item.value, timeRange)
-        for (const item of singleItems) {
-            uniqueItems[item.id] = 1
+        const items = singleItems.filter((singleItem) => {
+            return eval(`parseFloat(${singleItem[item.value.field]})
+            ${item.value.comparator}
+            ${parseFloat(item.value.value)}`)
+        })
+        result.items.push({name: item.name, sum: items.length})
+        for (const tmp of items) {
+            uniqueItems[tmp.id] = 1
         }
-        result.items.push({name: item.name, sum: singleItems.length})
     }
     result.sum = Object.keys(uniqueItems).length
     return result;
@@ -609,9 +647,7 @@ const mergeAmountToResultItemsByLinkType = (amount, linkType, resultItems) => {
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
-    getSelfLinkOperationCount,
     getSelfDoSingleItemLinkOperationCount,
-    getSelfALLDoSingleItemLinkOperationCount,
     getTaoBaoSingleItems,
     getSearchDataTaoBaoSingleItem,
     getSingleItemById,

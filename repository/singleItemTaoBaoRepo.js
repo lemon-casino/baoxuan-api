@@ -82,7 +82,7 @@ const getTaoBaoSingleItems = async (pageIndex,
         if (linkType) {
             where.linkType = linkType
         }
-        if (errorItem.field) {
+        if (errorItem  && errorItem.field) {
             where[errorItem.field] = {[errorItem.operator]: errorItem.value}
         }
         if (linkStatus) {

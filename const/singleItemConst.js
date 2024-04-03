@@ -52,28 +52,40 @@ const taoBaoSingleItemMap = {
 }
 
 const taoBaoErrorItems = [
-    {name: "利润率低于15%", value: {field: "profitRate", operator: "$lt", value: "15"}},
+    {name: "利润率低于15%", value: {field: "profitRate", operator: "$lt", value: "15", comparator: "<"}},
     // 手淘人数市场占比环比（日、7天、30天）
     {
         name: "手淘人数市场占比环比（日）下降",
-        value: {field: "shouTaoPeopleNumMarketRateCircleRateDay", operator: "$lt", value: "20"}
+        value: {field: "shouTaoPeopleNumMarketRateCircleRateDay", operator: "$lt", value: "20", comparator: "<"}
     },
     {
         name: "手淘人数市场占比环比（7天）下降",
-        value: {field: "shouTaoPeopleNumMarketRateCircleRate7Day", operator: "$lt", value: "20"}
+        value: {field: "shouTaoPeopleNumMarketRateCircleRate7Day", operator: "$lt", value: "20", comparator: "<"}
     },
     {
         name: "手淘人数市场占比环比（30天）下降",
-        value: {field: "shouTaoPeopleNumMarketRateCircleRate30Day", operator: "$lt", value: "20"}
+        value: {field: "shouTaoPeopleNumMarketRateCircleRate30Day", operator: "$lt", value: "20", comparator: "<"}
     },
     // 坑市场占比环比（日、7天、30天）低于20%
-    {name: "坑市场占比环比（日）下降", value: {field: "salesMarketRateCircleRateDay", operator: "$lt", value: "20"}},
-    {name: "坑市场占比环比（7天）下降", value: {field: "salesMarketRateCircleRate7Day", operator: "$lt", value: "20"}},
-    {name: "坑市场占比环比（30天）下降", value: {field: "salesMarketRateCircleRate30Day", operator: "$lt", value: "20"}},
+    {
+        name: "坑市场占比环比（日）下降",
+        value: {field: "salesMarketRateCircleRateDay", operator: "$lt", value: "20", comparator: "<"}
+    },
+    {
+        name: "坑市场占比环比（7天）下降",
+        value: {field: "salesMarketRateCircleRate7Day", operator: "$lt", value: "20", comparator: "<"}
+    },
+    {
+        name: "坑市场占比环比（30天）下降",
+        value: {field: "salesMarketRateCircleRate30Day", operator: "$lt", value: "20", comparator: "<"}
+    },
     // 投产低于2
-    {name: "车总投产比低于2", value: {field: "shoppingCatSumRoi", operator: "$lt", value: "2"}},
-    {name: "精准人群推广投产比低于2", value: {field: "accuratePeoplePromotionProductionRate", operator: "$lt", value: "2"}},
-    {name: "万相台投产比低于2", value: {field: "wanXiangTaiProductionRate", operator: "$lt", value: "2"}},
+    {name: "车总投产比低于2", value: {field: "shoppingCatSumRoi", operator: "$lt", value: "2", comparator: "<"}},
+    {
+        name: "精准人群推广投产比低于2",
+        value: {field: "accuratePeoplePromotionProductionRate", operator: "$lt", value: "2", comparator: "<"}
+    },
+    {name: "万相台投产比低于2", value: {field: "wanXiangTaiProductionRate", operator: "$lt", value: "2", comparator: "<"}},
     // 新品日搜索流量低于100，上架14天新品搜索目标达成30%以下
     {name: "流量未起", value: {field: "", operator: "", value: ""}},
 
