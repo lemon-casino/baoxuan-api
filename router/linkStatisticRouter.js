@@ -48,4 +48,9 @@ router.get('/payment', linkStatisticApi.getPaymentData)
  */
 router.get('/profit', linkStatisticApi.getProfitData)
 
+/**
+ * 获取市场占有率数据
+ */
+router.get('/market-ratio', linkStatisticApi.getMarketRatioData)
+
 module.exports = router;

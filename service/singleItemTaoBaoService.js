@@ -11,7 +11,8 @@ const {
     taoBaoSingleItemMap,
     taoBaoErrorItems,
     taoBaoSingleItemStatuses,
-    profitRateRangeSumTypes
+    profitRateRangeSumTypes,
+    marketRatioGroup
 } = require("../const/singleItemConst")
 const globalGetter = require("../global/getter")
 
@@ -28,8 +29,6 @@ const operationNewFlowFormId = "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3"
 const operationLeaderFieldId = "employeeField_lii5gvq3_id";
 // 天猫部门的id
 const tmDeptId = "903075138"
-// 链接问题处理数据需要筛选的流程表单id
-let errorLinkFormId = "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB";
 
 /**
  * 根据中文获取真实的数据库字段
@@ -224,9 +223,7 @@ const getSingleItemById = async (id) => {
 }
 
 /**
- * 获取链接操作数据
- * @param userId
- * @param status
+ *
  * @param productLineLeaders
  * @param firstLevelProductLine
  * @param secondLevelProductLine
@@ -234,26 +231,46 @@ const getSingleItemById = async (id) => {
  * @param linkType
  * @param linkStatus
  * @param timeRange
- * @returns {Promise<{sum: number, items: *[]}|{fightingOnOld: *, fightingOnNew: *}|{sum: number, items: {name: string, sum: number}[]}>}
+ * @returns {Promise<void>}
  */
-const getLinkOperationCount = async (status,
-                                     productLineLeaders,
-                                     firstLevelProductLine,
-                                     secondLevelProductLine,
-                                     errorItem,
-                                     linkType,
-                                     linkStatus,
-                                     timeRange) => {
-
+const getAllSatisfiedSingleItems = async (productLineLeaders,
+                                          firstLevelProductLine,
+                                          secondLevelProductLine,
+                                          errorItem,
+                                          linkType,
+                                          linkStatus,
+                                          timeRange) => {
     if (!timeRange) {
         throw new Error("查询条件：时间区间不能为空")
     }
     if (!productLineLeaders) {
         throw new Error("查询条件：产品线负责人不能为空")
     }
-
     productLineLeaders = JSON.parse(productLineLeaders)
     timeRange = JSON.parse(timeRange)
+    const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
+    const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
+        999999,
+        productLineLeaders,
+        firstLevelProductLine,
+        secondLevelProductLine,
+        JSON.parse(errorItem || "{}"),
+        linkType,
+        linkStatus,
+        fightingLinkIds,
+        timeRange)
+    return satisfiedSingleItems.data
+}
+
+/**
+ * 获取链接操作数据
+ * @param status
+ * @param satisfiedSingleItems
+ * @returns {Promise<{sum: number, items: [{name: string, sum: number}, {name: string, sum: number}, {name: string, sum: number}]}|{sum: number, items: *[]}|{fightingOnOld: *, fightingOnNew: *}>}
+ */
+const getLinkOperationCount = async (status,
+                                     satisfiedSingleItems,
+                                     productLineLeaders) => {
 
     // 待上架
     if (status === "waiting-on") {
@@ -266,7 +283,7 @@ const getLinkOperationCount = async (status,
                 {name: "滞销", sum: 0}
             ]
         }
-        for (const productLineLeader of productLineLeaders) {
+        for (const productLineLeader of JSON.parse(productLineLeaders)) {
             const allUsers = await globalGetter.getUsers()
             const users = allUsers.filter((user) => user.name === productLineLeader)
             const curResult = await getSelfWaitingOnSingleItemLinkOperationCount(users[0].userid)
@@ -278,39 +295,15 @@ const getLinkOperationCount = async (status,
         return result
     }
 
-    const fightingLinkIds = []
-    const runningFightingFlows = await flowService.getTodayFlowsByFormIdAndFlowStatus(tmFightingFlowFormId, flowStatusConst.RUNNING)
-    for (const runningFightingFlow of runningFightingFlows) {
-        if (!runningFightingFlow.data) {
-            continue
-        }
-        const runningLinkId = runningFightingFlow.data[linkIdKeyInTmFightingFlowForm]
-        if (runningLinkId) {
-            fightingLinkIds.push(runningLinkId)
-        }
-    }
-
-    const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
-        999999,
-        productLineLeaders,
-        firstLevelProductLine,
-        secondLevelProductLine,
-        JSON.parse(errorItem || "{}"),
-        linkType,
-        linkStatus,
-        fightingLinkIds,
-        timeRange)
-
     if (status === "do") {
-        const result = await getSelfDoSingleItemLinkOperationCount(satisfiedSingleItems.data)
+        const result = await getSelfDoSingleItemLinkOperationCount(satisfiedSingleItems)
         return result
-    }
-    // 打仗
-    else if (status === "fighting") {
-        const result = await getSelfFightingSingleItemLinkOperationCount(satisfiedSingleItems.data, fightingLinkIds)
+    } else if (status === "fighting") {
+        const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
+        const result = await getSelfFightingSingleItemLinkOperationCount(satisfiedSingleItems, fightingLinkIds)
         return result
     } else if (status === "error") {
-        const result = await getSelfErrorSingleItemLinkOperationCount(satisfiedSingleItems.data)
+        const result = await getSelfErrorSingleItemLinkOperationCount(satisfiedSingleItems)
         return result
     }
     throw new Error(`${status}还不支持`)
@@ -485,49 +478,46 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
     return result;
 }
 
-
 /**
- * 获取链接处理数据：区分个人和部门
+ * 获取数据
  * @param userId
  * @param status
- * @returns {Promise<{sum: number, users: *[]}>}
  */
-const getErrorLinkOperationCount = async (userId, status) => {
-    const users = await userService.getUserSelfOrPartnersOfDepartment(userId, tmDeptId)
-    const result = {sum: 0, users: []}
-    for (const user of users) {
-        const sum = await getSelfErrorLinkOperationCount(user.userid, status)
-        result.users.push({name: user.name, sum})
-        result.sum = result.sum + sum
+const getErrorLinkOperationCount = async (singleItems, status) => {
+
+    const findSingleItemsDividedByUser = (runningErrorLinkIds, singleItems) => {
+        const result = {sum: 0, items: []}
+        const errorSingleItems = singleItems.filter((item) => {
+            return runningErrorLinkIds.includes(item.linkId)
+        })
+
+        for (const user of usersOfTM) {
+            const singleItemsOfUser = errorSingleItems.filter((item) => item.productLineLeader === user.name)
+            result.sum = result.sum + singleItemsOfUser.length
+            result.items.push({
+                name: user.name,
+                sum: singleItemsOfUser.length
+            })
+        }
+        return result
     }
-    return result
-}
+    // 链接问题处理数据需要筛选的流程表单id (运营优化方案流程)
+    const errorLinkFormId = "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB";
+    const linkIdField = "textField_liihs7kw"
+    const usersOfTM = await departmentService.getUsersOfDepartment(tmDeptId)
 
-/**
- * 获取个人的数据
- * @param userId
- * @param status
- */
-const getSelfErrorLinkOperationCount = async (userId, status) => {
-    const todayFlows = await globalGetter.getTodayFlows()
-    // 个人进行中
+    // 进行中
     if (status.toUpperCase() === flowStatusConst.RUNNING) {
-        const satisfiedFlows = todayFlows.filter(
-            (flow) => flow.formUuid === errorLinkFormId &&
-                flow.instanceStatus === flowStatusConst.RUNNING &&
-                flow.originator.userId === userId
-        )
-        return satisfiedFlows.length
+        const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING)
+        const result = findSingleItemsDividedByUser(runningErrorLinkIds, singleItems)
+        return result
     }
-    //  个人已完成
+    //  已完成
     // todo: 后面需要补充上历史的数据
     if (status.toUpperCase() === flowStatusConst.COMPLETE) {
-        const satisfiedFlows = todayFlows.filter(
-            (flow) => flow.formUuid === errorLinkFormId &&
-                flow.instanceStatus === flowStatusConst.COMPLETE &&
-                flow.originator.userId === userId
-        )
-        return satisfiedFlows.length
+        const completeErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.COMPLETE)
+        const result = findSingleItemsDividedByUser(completeErrorLinkIds, singleItems)
+        return result
     }
     // todo: 需要确认成功的条件在判断
     if (status === "success") {
@@ -541,13 +531,22 @@ const getSelfErrorLinkOperationCount = async (userId, status) => {
 }
 
 /**
- * 获取付费数据
+ * 付费数据： 精准人群、车、万象台
  * @param userName
  * @returns {Promise<*|*[]>}
  */
-const getPayment = async (userName) => {
-    const result = await singleItemTaoBaoRepo.sumPaymentByProductLineLeader(userName)
-    return result
+const getPayment = async (singleItems) => {
+    const result = [
+        {type: "支付金额", sum: 0, items: []},
+        {type: "推广金额", sum: 0, items: []},
+        {type: "投产比", sum: 0, items: []}
+    ]
+    for (const singleItem of singleItems) {
+        // 推广金额
+        const {accuratePeoplePromotionCost, wanXiangTaiCost,shoppingCartSumAmount, sumPayment} = singleItem
+        //
+    }
+    return []
 }
 
 /**
@@ -556,10 +555,7 @@ const getPayment = async (userName) => {
  * @param usernames
  * @returns {Promise<[{name: string, sum: number, items: *[]}, {name: string, sum: null, items: *[]}, {name: string, sum: null, items: *[]}]>}
  */
-const getProfitData = async (ddUserId) => {
-    const users = await userService.getUserSelfOrPartnersOfDepartment(ddUserId, tmDeptId)
-    const productLineLeaders = users.map((user) => user.name)
-    const satisfiedSingleItems = await singleItemTaoBaoRepo.getSingleItemsBy({productLineLeader: {$in: productLineLeaders}})
+const getProfitData = async (singleItems) => {
     const linkTypes = await singleItemTaoBaoRepo.getLinkTypes()
     // 返回的数据模版
     const result = [
@@ -578,7 +574,7 @@ const getProfitData = async (ddUserId) => {
         result[2].items.push({name: profitRateRangeSumType.name, sum: 0})
     }
 
-    for (const singleItem of satisfiedSingleItems) {
+    for (const singleItem of singleItems) {
         // 汇总发货金额
         result[0].sum = result[0].sum + parseFloat(singleItem.reallyShipmentAmount)
         // 汇总利润额
@@ -626,6 +622,93 @@ const getProfitData = async (ddUserId) => {
     return result
 }
 
+const getMarketRatioData = async (singleItems) => {
+    const tmpResult = []
+    // 初始化结果: 扁平处理
+    for (const marketRatio of marketRatioGroup) {
+        tmpResult.push({
+            type: marketRatio.type,
+            name: marketRatio.name,
+            sum: 0
+        })
+    }
+
+    for (const singleItem of singleItems) {
+        // 坑产占比
+        const salesMarketRate = singleItem.salesMarketRate
+        // 判断坑产占比所在的区间
+        for (const marketRatio of marketRatioGroup) {
+            let hasComputed = false
+            if (salesMarketRate >= marketRatio.range[0] && salesMarketRate <= marketRatio.range[1]) {
+                // 将数据统计到result对应的节点中
+                for (const item of tmpResult) {
+                    if (item.type === marketRatio.type && item.name === marketRatio.name) {
+                        item.sum = item.sum + 1
+                        hasComputed = true
+                        break;
+                    }
+                }
+            }
+            if (hasComputed) {
+                break
+            }
+        }
+
+        // todo： 流量占比
+    }
+
+    // 根据type进行汇总
+    const result = []
+    for (const tmpItem of tmpResult) {
+        if (result.length === 0) {
+            result.push({
+                type: tmpItem.type,
+                sum: tmpItem.sum,
+                items: [{
+                    name: tmpItem.name,
+                    sum: tmpItem.sum
+                }]
+            })
+            continue
+        }
+        let hasComputed = false
+        for (let i = 0; i < result.length; i++) {
+            if (result[i].type === tmpItem.type) {
+                result[i].sum = result[i].sum + tmpItem.sum
+                const items = result[i].items
+                for (let j = 0; j < items.length; j++) {
+                    if (items[j].name === tmpItem.name) {
+                        items[j].sum = items[j].sum + tmpItem.sum
+                        hasComputed = true
+                        break;
+                    } else if (j === items.length - 1) {
+                        items.push({
+                            name: tmpItem.name,
+                            sum: tmpItem.sum
+                        })
+                        hasComputed = true
+                        break;
+                    }
+                }
+            } else if (i === result.length - 1) {
+                result.push({
+                    type: tmpItem.type,
+                    sum: tmpItem.sum,
+                    items: [{
+                        name: tmpItem.name,
+                        sum: tmpItem.sum
+                    }]
+                })
+            }
+            if (hasComputed) {
+                break
+            }
+        }
+    }
+
+    return result
+}
+
 /**
  * 将金额amount根据类型linkType合并到resultItems中
  * @param amount
@@ -654,5 +737,7 @@ module.exports = {
     getErrorLinkOperationCount,
     getLinkOperationCount,
     getPayment,
-    getProfitData
+    getProfitData,
+    getAllSatisfiedSingleItems,
+    getMarketRatioData
 }

@@ -48,7 +48,10 @@ const taoBaoSingleItemMap = {
     "accuratePeoplePromotionProductionRate": "精准人群推广投产比",
     "wanXiangTaiCost": "万相台花费",
     "wanXiangTaiProductionRate": "万相台投产比",
-    "feeRate": "费用比例"
+    "feeRate": "费用比例",
+    "cartSumPayment": "车总支付",
+    "wanXiangTaiSumPayment": "万相台总支付",
+    "accuratePeopleSumPayment": "精准人群总支付"
 }
 
 const taoBaoErrorItems = [
@@ -115,7 +118,7 @@ const profitRateRangeSumTypes = [
     {type: "老品", name: "老品9%以下", range: [-999999, 8.999999]}, // 9以下
 ]
 
-const marketRatio = [
+const marketRatioGroup = [
     {type: "坑产占比正常", name: "0-9%", range: [0, 8.999999]},
     {type: "坑产占比提升", name: "50%及以上", range: [50, 999999]},
     {type: "坑产占比提升", name: "40%-50%", range: [40, 49.999999]},
@@ -128,12 +131,12 @@ const marketRatio = [
     {type: "流量占比正常", name: "0-10%", range: [0, 9.999999]},
     {type: "流量占比提升", name: "50%及以上", range: [50, 999999]},
     {type: "流量占比提升", name: "40%-50%", range: [40, 49.999999]},
-    {type: "流量占比提升", name: "30--40%", range: [30, 39.999999]},
-    {type: "流量占比提升", name: "20%--30%", range: [20, 29.999999]},
-    {type: "流量占比提升", name: "10%--20%", range: [10, 19.999999]},
-    {type: "坑产占比下降", name: "-10%--0", range: [-10, 0.000001]},
-    {type: "坑产占比下降", name: "-20%--10%", range: [-20, -10.000001]},
-    {type: "坑产占比下降", name: "-29%--20%", range: [-29, -20.000001]}
+    {type: "流量占比提升", name: "30-40%", range: [30, 39.999999]},
+    {type: "流量占比提升", name: "20%-30%", range: [20, 29.999999]},
+    {type: "流量占比提升", name: "10%-20%", range: [10, 19.999999]},
+    {type: "流量占比下降", name: "-10%-0", range: [-10, 0.000001]},
+    {type: "流量占比下降", name: "-20%--10%", range: [-20, -10.000001]},
+    {type: "流量占比下降", name: "-29%--20%", range: [-29, -20.000001]}
 ]
 
 module.exports = {
@@ -142,5 +145,5 @@ module.exports = {
     taoBaoSingleItemStatuses,
     taoBaoSingleItemStatusesKeys,
     profitRateRangeSumTypes,
-    marketRatio
+    marketRatioGroup
 }
