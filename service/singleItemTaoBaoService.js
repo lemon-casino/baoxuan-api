@@ -588,12 +588,14 @@ const getPayment = async (singleItems) => {
         result[1].items[0].sum = mathUtil.sum(result[1].items[0].sum, shoppingCartSumAmount)
         result[1].items[1].sum = mathUtil.sum(result[1].items[1].sum, wanXiangTaiCost)
         result[1].items[2].sum = mathUtil.sum(result[1].items[2].sum, accuratePeoplePromotionCost)
+
+
     }
     // 投产比
     result[2].sum = result[0].sum === 0 ? 0 : (result[1].sum / result[0].sum).toFixed(2)
-    result[2].items[0].sum = result[0].items[0].sum === 0 ? 0 : (result[1].item[0].sum / result[0].items[0].sum).toFixed(2)
-    result[2].items[1].sum = result[0].items[1].sum === 0 ? 0 : (result[1].item[1].sum / result[0].items[1].sum).toFixed(2)
-    result[2].items[2].sum = result[0].items[2].sum === 0 ? 0 : (result[1].item[2].sum / result[0].items[2].sum).toFixed(2)
+    result[2].items[0].sum = result[0].items[0].sum === 0 ? 0 : (result[1].items[0].sum / result[0].items[0].sum).toFixed(2)
+    result[2].items[1].sum = result[0].items[1].sum === 0 ? 0 : (result[1].items[1].sum / result[0].items[1].sum).toFixed(2)
+    result[2].items[2].sum = result[0].items[2].sum === 0 ? 0 : (result[1].items[2].sum / result[0].items[2].sum).toFixed(2)
 
     return result
 }
