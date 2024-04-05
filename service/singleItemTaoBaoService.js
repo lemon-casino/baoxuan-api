@@ -658,27 +658,47 @@ const getMarketRatioData = async (singleItems) => {
     }
 
     for (const singleItem of singleItems) {
-        // 坑产占比
-        const salesMarketRate = singleItem.salesMarketRate
-        // 判断坑产占比所在的区间
+
+        console.log(singleItems.length, singleItem.shouTaoPeopleNumMarketRateCircleRate7Day)
+
+        let salesMarketRateHasComputed = false
+        let shouTaoPeopleNumMarketRateHasComputed = false
+        // 坑产占比、流量占比（手淘人数市场占比环比（7天））
+        const {salesMarketRate, shouTaoPeopleNumMarketRateCircleRate7Day} = singleItem
+        // 判断占比所在的区间
         for (const marketRatio of marketRatioGroup) {
-            let hasComputed = false
-            if (salesMarketRate >= marketRatio.range[0] && salesMarketRate <= marketRatio.range[1]) {
+            // 统计坑产占比
+            if (!salesMarketRateHasComputed &&
+                marketRatio.type.includes("坑产占比") &&
+                salesMarketRate >= marketRatio.range[0] &&
+                salesMarketRate <= marketRatio.range[1]) {
                 // 将数据统计到result对应的节点中
                 for (const item of tmpResult) {
-                    if (item.type === marketRatio.type && item.name === marketRatio.name) {
+                    if (item.name === marketRatio.name) {
                         item.sum = item.sum + 1
-                        hasComputed = true
+                        salesMarketRateHasComputed = true
                         break;
                     }
                 }
             }
-            if (hasComputed) {
+            // 统计流量占比
+            if (!shouTaoPeopleNumMarketRateHasComputed &&
+                marketRatio.type.includes("流量占比") &&
+                shouTaoPeopleNumMarketRateCircleRate7Day >= marketRatio.range[0] &&
+                shouTaoPeopleNumMarketRateCircleRate7Day <= marketRatio.range[1]) {
+                // 将数据统计到result对应的节点中
+                for (const item of tmpResult) {
+                    if (item.name === marketRatio.name) {
+                        item.sum = item.sum + 1
+                        shouTaoPeopleNumMarketRateHasComputed = true
+                        break;
+                    }
+                }
+            }
+            if (salesMarketRateHasComputed && shouTaoPeopleNumMarketRateHasComputed) {
                 break
             }
         }
-
-        // todo： 流量占比
     }
 
     // 根据type进行汇总
@@ -723,6 +743,7 @@ const getMarketRatioData = async (singleItems) => {
                         sum: tmpItem.sum
                     }]
                 })
+                hasComputed = true
             }
             if (hasComputed) {
                 break
