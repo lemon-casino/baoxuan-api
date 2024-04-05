@@ -537,9 +537,34 @@ const getErrorLinkOperationCount = async (singleItems, status) => {
  */
 const getPayment = async (singleItems) => {
     const result = [
-        {type: "支付金额", sum: 0, items: [{name: "购物车", sum: 0}, {name: "万相台", sum: 0}, {name: "精准人群", sum: 0}]},
-        {type: "推广金额", sum: 0, items: [{name: "购物车", sum: 0}, {name: "万相台", sum: 0}, {name: "精准人群", sum: 0}]},
-        {type: "投产比", sum: 0, items: [{name: "购物车", sum: 0}, {name: "万相台", sum: 0}, {name: "精准人群", sum: 0}]}
+        {
+            type: "payment",
+            name: "支付金额",
+            sum: 0,
+            items: [
+                {name: "购物车", sum: 0},
+                {name: "万相台", sum: 0},
+                {name: "精准人群", sum: 0}]
+        },
+        {
+            type: "promotionAmount",
+            name: "推广金额",
+            sum: 0,
+            items: [
+                {name: "购物车", sum: 0},
+                {name: "万相台", sum: 0},
+                {name: "精准人群", sum: 0}]
+        },
+        {
+            type: "roi",
+            name: "投产比",
+            sum: 0,
+            items: [
+                {name: "购物车", sum: 0},
+                {name: "万相台", sum: 0},
+                {name: "精准人群", sum: 0}
+            ]
+        }
     ]
     for (const singleItem of singleItems) {
         // 支付金额
@@ -583,9 +608,9 @@ const getProfitData = async (singleItems) => {
     const linkTypes = await singleItemTaoBaoRepo.getLinkTypes()
     // 返回的数据模版
     const result = [
-        {name: "发货金额", sum: 0, items: []},
-        {name: "利润额", sum: 0},
-        {name: "利润率", sum: null, items: []}
+        {type: "deliveryAmount", name: "发货金额", sum: 0, items: []},
+        {type: "profitAmount", name: "利润额", sum: 0},
+        {type: "profitRate", name: "利润率", sum: null, items: []}
     ]
     // 按照类别统计发货金额、利润额
     // 根据linkTypes初始化发货金额的items
@@ -651,16 +676,12 @@ const getMarketRatioData = async (singleItems) => {
     // 初始化结果: 扁平处理
     for (const marketRatio of marketRatioGroup) {
         tmpResult.push({
-            type: marketRatio.type,
-            name: marketRatio.name,
-            sum: 0
+            ...marketRatio,
+            item: {name: marketRatio.item.name, sum: 0}
         })
     }
 
     for (const singleItem of singleItems) {
-
-        console.log(singleItems.length, singleItem.shouTaoPeopleNumMarketRateCircleRate7Day)
-
         let salesMarketRateHasComputed = false
         let shouTaoPeopleNumMarketRateHasComputed = false
         // 坑产占比、流量占比（手淘人数市场占比环比（7天））
@@ -669,13 +690,13 @@ const getMarketRatioData = async (singleItems) => {
         for (const marketRatio of marketRatioGroup) {
             // 统计坑产占比
             if (!salesMarketRateHasComputed &&
-                marketRatio.type.includes("坑产占比") &&
-                salesMarketRate >= marketRatio.range[0] &&
-                salesMarketRate <= marketRatio.range[1]) {
+                marketRatio.name.includes("坑产占比") &&
+                salesMarketRate >= marketRatio.item.range[0] &&
+                salesMarketRate <= marketRatio.item.range[1]) {
                 // 将数据统计到result对应的节点中
                 for (const item of tmpResult) {
-                    if (item.name === marketRatio.name) {
-                        item.sum = item.sum + 1
+                    if (item.item.name === marketRatio.item.name) {
+                        item.item.sum = item.item.sum + 1
                         salesMarketRateHasComputed = true
                         break;
                     }
@@ -683,13 +704,13 @@ const getMarketRatioData = async (singleItems) => {
             }
             // 统计流量占比
             if (!shouTaoPeopleNumMarketRateHasComputed &&
-                marketRatio.type.includes("流量占比") &&
-                shouTaoPeopleNumMarketRateCircleRate7Day >= marketRatio.range[0] &&
-                shouTaoPeopleNumMarketRateCircleRate7Day <= marketRatio.range[1]) {
+                marketRatio.name.includes("流量占比") &&
+                shouTaoPeopleNumMarketRateCircleRate7Day >= marketRatio.item.range[0] &&
+                shouTaoPeopleNumMarketRateCircleRate7Day <= marketRatio.item.range[1]) {
                 // 将数据统计到result对应的节点中
                 for (const item of tmpResult) {
-                    if (item.name === marketRatio.name) {
-                        item.sum = item.sum + 1
+                    if (item.item.name === marketRatio.item.name) {
+                        item.item.sum = item.item.sum + 1
                         shouTaoPeopleNumMarketRateHasComputed = true
                         break;
                     }
@@ -707,10 +728,11 @@ const getMarketRatioData = async (singleItems) => {
         if (result.length === 0) {
             result.push({
                 type: tmpItem.type,
-                sum: tmpItem.sum,
+                name: tmpItem.name,
+                sum: tmpItem.item.sum,
                 items: [{
-                    name: tmpItem.name,
-                    sum: tmpItem.sum
+                    name: tmpItem.item.name,
+                    sum: tmpItem.item.sum
                 }]
             })
             continue
@@ -718,17 +740,17 @@ const getMarketRatioData = async (singleItems) => {
         let hasComputed = false
         for (let i = 0; i < result.length; i++) {
             if (result[i].type === tmpItem.type) {
-                result[i].sum = result[i].sum + tmpItem.sum
+                result[i].sum = result[i].sum + tmpItem.item.sum
                 const items = result[i].items
                 for (let j = 0; j < items.length; j++) {
-                    if (items[j].name === tmpItem.name) {
-                        items[j].sum = items[j].sum + tmpItem.sum
+                    if (items[j].name === tmpItem.item.name) {
+                        items[j].sum = items[j].sum + tmpItem.item.sum
                         hasComputed = true
                         break;
                     } else if (j === items.length - 1) {
                         items.push({
-                            name: tmpItem.name,
-                            sum: tmpItem.sum
+                            name: tmpItem.item.name,
+                            sum: tmpItem.item.sum
                         })
                         hasComputed = true
                         break;
@@ -737,10 +759,11 @@ const getMarketRatioData = async (singleItems) => {
             } else if (i === result.length - 1) {
                 result.push({
                     type: tmpItem.type,
-                    sum: tmpItem.sum,
+                    name: tmpItem.name,
+                    sum: tmpItem.item.sum,
                     items: [{
-                        name: tmpItem.name,
-                        sum: tmpItem.sum
+                        name: tmpItem.item.name,
+                        sum: tmpItem.item.sum
                     }]
                 })
                 hasComputed = true
