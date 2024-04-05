@@ -4,7 +4,7 @@ const userService = require("../service/userService")
 const flowService = require("../service/flowService")
 const whiteList = require("../config/whiteList")
 const {logger} = require("../utils/log")
-const dateUtil = require("../utils/dateUtil")
+const mathUtil = require("../utils/mathUtil")
 const linkTypeConst = require("../const/linkTypeConst")
 const flowStatusConst = require("../const/flowStatusConst")
 const {
@@ -537,16 +537,40 @@ const getErrorLinkOperationCount = async (singleItems, status) => {
  */
 const getPayment = async (singleItems) => {
     const result = [
-        {type: "支付金额", sum: 0, items: []},
-        {type: "推广金额", sum: 0, items: []},
-        {type: "投产比", sum: 0, items: []}
+        {type: "支付金额", sum: 0, items: [{name: "购物车", sum: 0}, {name: "万相台", sum: 0}, {name: "精准人群", sum: 0}]},
+        {type: "推广金额", sum: 0, items: [{name: "购物车", sum: 0}, {name: "万相台", sum: 0}, {name: "精准人群", sum: 0}]},
+        {type: "投产比", sum: 0, items: [{name: "购物车", sum: 0}, {name: "万相台", sum: 0}, {name: "精准人群", sum: 0}]}
     ]
     for (const singleItem of singleItems) {
+        // 支付金额
+        let {cartSumPayment, wanXiangTaiSumPayment, accuratePeopleSumPayment} = singleItem
+        cartSumPayment = parseFloat(cartSumPayment || "0")
+        wanXiangTaiSumPayment = parseFloat(wanXiangTaiSumPayment || "0")
+        accuratePeopleSumPayment = parseFloat(accuratePeopleSumPayment || "0")
+
+        result[0].sum = mathUtil.sum(result[0].sum, cartSumPayment, wanXiangTaiSumPayment, accuratePeopleSumPayment)
+        result[0].items[0].sum = mathUtil.sum(result[0].items[0].sum, cartSumPayment)
+        result[0].items[1].sum = mathUtil.sum(result[0].items[1].sum, wanXiangTaiSumPayment)
+        result[0].items[2].sum = mathUtil.sum(result[0].items[2].sum, accuratePeopleSumPayment)
+
         // 推广金额
-        const {accuratePeoplePromotionCost, wanXiangTaiCost,shoppingCartSumAmount, sumPayment} = singleItem
-        //
+        let {accuratePeoplePromotionCost, wanXiangTaiCost, shoppingCartSumAmount} = singleItem
+        accuratePeoplePromotionCost = parseFloat(accuratePeoplePromotionCost || "0")
+        wanXiangTaiCost = parseFloat(wanXiangTaiCost || "0")
+        shoppingCartSumAmount = parseFloat(shoppingCartSumAmount || "0")
+
+        result[1].sum = mathUtil.sum(result[1].sum, shoppingCartSumAmount, accuratePeoplePromotionCost, wanXiangTaiCost)
+        result[1].items[0].sum = mathUtil.sum(result[1].items[0].sum, shoppingCartSumAmount)
+        result[1].items[1].sum = mathUtil.sum(result[1].items[1].sum, wanXiangTaiCost)
+        result[1].items[2].sum = mathUtil.sum(result[1].items[2].sum, accuratePeoplePromotionCost)
     }
-    return []
+    // 投产比
+    result[2].sum = result[0].sum === 0 ? 0 : (result[1].sum / result[0].sum).toFixed(2)
+    result[2].items[0].sum = result[0].items[0].sum === 0 ? 0 : (result[1].item[0].sum / result[0].items[0].sum).toFixed(2)
+    result[2].items[1].sum = result[0].items[1].sum === 0 ? 0 : (result[1].item[1].sum / result[0].items[1].sum).toFixed(2)
+    result[2].items[2].sum = result[0].items[2].sum === 0 ? 0 : (result[1].item[2].sum / result[0].items[2].sum).toFixed(2)
+
+    return result
 }
 
 /**
