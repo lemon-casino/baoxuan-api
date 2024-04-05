@@ -481,12 +481,12 @@ module.exports = sequelize => {
       field: "accurate_people_sum_payment"
     },
     wanXiangTaiSumPayment: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.DECIMAL,
       allowNull: true,
-      defaultValue: null,
+      defaultValue: "0.00",
       primaryKey: false,
       autoIncrement: false,
-      comment: "万象台总支付;",
+      comment: "万象台总支付",
       field: "wan_xiang_tai_sum_payment"
     },
     createTime: {
