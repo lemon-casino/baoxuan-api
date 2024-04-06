@@ -93,7 +93,7 @@ const taoBaoErrorItems = [
     {name: "流量未起", value: {field: "", operator: "", value: ""}},
 
     {name: "新品负利率", value: {field: "", operator: "", value: ""}},
-    {name: "费比超过15%", value: {field: "", operator: "", value: ""}}
+    {name: "费比超过15%", value: {field: "feeRate", operator: "$gt", value: "15", comparator: ">"}}
 ]
 
 const taoBaoSingleItemStatuses = [{name: "fighting", value: "打仗"}, {name: "normal", value: "正常"}]

@@ -1,10 +1,10 @@
+const BigNumber = require("bignumber.js")
 const singleItemTaoBaoRepo = require("../repository/singleItemTaoBaoRepo")
 const departmentService = require("../service/departmentService")
 const userService = require("../service/userService")
 const flowService = require("../service/flowService")
 const whiteList = require("../config/whiteList")
 const {logger} = require("../utils/log")
-const mathUtil = require("../utils/mathUtil")
 const linkTypeConst = require("../const/linkTypeConst")
 const flowStatusConst = require("../const/flowStatusConst")
 const {
@@ -286,6 +286,7 @@ const getLinkOperationCount = async (status,
         for (const productLineLeader of JSON.parse(productLineLeaders)) {
             const allUsers = await globalGetter.getUsers()
             const users = allUsers.filter((user) => user.name === productLineLeader)
+
             const curResult = await getSelfWaitingOnSingleItemLinkOperationCount(users[0].userid)
             result.sum = result.sum + curResult.sum
             result.items[0].sum = result.items[0].sum + curResult.items[0].sum
@@ -573,10 +574,10 @@ const getPayment = async (singleItems) => {
         wanXiangTaiSumPayment = parseFloat(wanXiangTaiSumPayment || "0")
         accuratePeopleSumPayment = parseFloat(accuratePeopleSumPayment || "0")
 
-        result[0].sum = mathUtil.sum(result[0].sum, cartSumPayment, wanXiangTaiSumPayment, accuratePeopleSumPayment)
-        result[0].items[0].sum = mathUtil.sum(result[0].items[0].sum, cartSumPayment)
-        result[0].items[1].sum = mathUtil.sum(result[0].items[1].sum, wanXiangTaiSumPayment)
-        result[0].items[2].sum = mathUtil.sum(result[0].items[2].sum, accuratePeopleSumPayment)
+        result[0].sum = new BigNumber(result[0].sum).plus(cartSumPayment).plus(wanXiangTaiSumPayment).plus(accuratePeopleSumPayment)
+        result[0].items[0].sum = new BigNumber(result[0].items[0].sum).plus(cartSumPayment)
+        result[0].items[1].sum = new BigNumber(result[0].items[1].sum).plus(wanXiangTaiSumPayment)
+        result[0].items[2].sum = new BigNumber(result[0].items[2].sum).plus(accuratePeopleSumPayment)
 
         // 推广金额
         let {accuratePeoplePromotionCost, wanXiangTaiCost, shoppingCartSumAmount} = singleItem
@@ -584,12 +585,10 @@ const getPayment = async (singleItems) => {
         wanXiangTaiCost = parseFloat(wanXiangTaiCost || "0")
         shoppingCartSumAmount = parseFloat(shoppingCartSumAmount || "0")
 
-        result[1].sum = mathUtil.sum(result[1].sum, shoppingCartSumAmount, accuratePeoplePromotionCost, wanXiangTaiCost)
-        result[1].items[0].sum = mathUtil.sum(result[1].items[0].sum, shoppingCartSumAmount)
-        result[1].items[1].sum = mathUtil.sum(result[1].items[1].sum, wanXiangTaiCost)
-        result[1].items[2].sum = mathUtil.sum(result[1].items[2].sum, accuratePeoplePromotionCost)
-
-
+        result[1].sum = new BigNumber(result[1].sum).plus(shoppingCartSumAmount).plus(accuratePeoplePromotionCost).plus(wanXiangTaiCost)
+        result[1].items[0].sum = new BigNumber(result[1].items[0].sum).plus(shoppingCartSumAmount)
+        result[1].items[1].sum = new BigNumber(result[1].items[1].sum).plus(wanXiangTaiCost)
+        result[1].items[2].sum = new BigNumber(result[1].items[2].sum).plus(accuratePeoplePromotionCost)
     }
     // 投产比
     result[2].sum = result[0].sum === 0 ? 0 : (result[1].sum / result[0].sum).toFixed(2)
