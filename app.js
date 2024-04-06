@@ -2,6 +2,9 @@ const express = require("express");
 require("express-async-errors")
 const path = require("path");
 const morgan = require('morgan');
+const SQLError = require("./error/sqlError")
+const {logger} = require("./utils/log")
+
 const serverConfig = require('./config/index').serverConfig
 const app = express();
 if (process.env.NODE_ENV === "dev") {
@@ -105,6 +108,8 @@ const singleItemRouter = require("./router/singleItemRouter")
 app.use("/single-item", singleItemRouter)
 const linkStatisticRouter = require("./router/linkStatisticRouter")
 app.use("/link-statistic", linkStatisticRouter)
+const userLogRouter = require("./router/userLogRouter")
+app.use("/user-logs", userLogRouter)
 
 app.use((err, req, res, next) => {
     // 数据验证失败
@@ -113,7 +118,10 @@ app.use((err, req, res, next) => {
     // token解析失败
     if (err.name === "UnauthorizedError")
         return res.send({code: 401, message: "身份认证失败"});
-    // 未知错误
+    if (err instanceof SQLError) {
+        logger.error(err.message, err.sql)
+        return res.send({code: err.code, message: "数据操作异常"})
+    }
     return res.send({code: 500, message: err.message});
 });
 

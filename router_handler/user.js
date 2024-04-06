@@ -8,6 +8,8 @@ const userRoleRepo = require("../repository/userRoleRepo")
 const roleMenuRepo = require("../repository/roleMenuRepo")
 const menuRepo = require("../repository/menuRepo")
 const departmentService = require("../service/departmentService")
+const userLogService = require("../service/userLogService")
+const tokenUtil = require("../utils/token")
 
 const {Op} = require("sequelize");
 // 引入加密模块
@@ -204,6 +206,11 @@ exports.login = async (req, res, next) => {
         //     }
         // }
         // user.departments = departmentsTemplate
+
+        // 保存用户的登录记录
+        const userId = tokenUtil.decodedToken(token.split(" ")[1]).id
+        const userLog = {userId: userId, userName: username, ip: req.ip, device: req.headers["user-agent"]}
+        await userLogService.saveUserLog(userLog)
 
         return res.send({
             code: 200,
