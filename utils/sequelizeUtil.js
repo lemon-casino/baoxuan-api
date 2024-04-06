@@ -1,12 +1,13 @@
 const extractDataValues = (result) => {
-    if (result instanceof String) {
-        return result.dataValues
+    if (result instanceof Array) {
+        const data = []
+        for (const item of result) {
+            data.push(item.dataValues)
+        }
+        return data
     }
-    const data = []
-    for (const item of result) {
-        data.push(item.dataValues)
-    }
-    return data
+    return result.dataValues
+
 }
 
 module.exports = {
