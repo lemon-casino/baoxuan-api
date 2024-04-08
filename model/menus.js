@@ -69,6 +69,7 @@ const MenusModel = sequelize.define('menus', {
   update_time: {
     type: Sequelize.DATE,
     get() {
+      return "hello world"
       return this.getDataValue('update_time')
         ? moment(this.getDataValue('update_time')).format('YYYY-MM-DD HH:mm:ss')
         : null

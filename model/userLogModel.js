@@ -28,7 +28,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "用户名",
-      field: "user_name"
+      field: "user_name",
     },
     loginTime: {
       type: DataTypes.DATE,

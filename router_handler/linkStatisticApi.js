@@ -1,10 +1,10 @@
 const biResponse = require("../utils/biResponse")
 const singleItemTaoBaoService = require("../service/singleItemTaoBaoService")
-const userService = require("../service/userService")
-
+const dateUtil = require("../utils/dateUtil")
+const moment = require("moment")
 
 /**
- * 获取链接操作数
+ * 获取链接操作数: 固定取前一天的数据
  * @param req
  * @param res
  * @param next
@@ -18,10 +18,10 @@ const getLinkOperationCount = async (req, res, next) => {
             secondLevelProductLine,
             errorItem,
             linkType,
-            linkStatus,
-            timeRange
+            linkStatus
         } = req.query
 
+        const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD');
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
             productLineLeaders,
             firstLevelProductLine,
@@ -29,7 +29,7 @@ const getLinkOperationCount = async (req, res, next) => {
             errorItem,
             linkType,
             linkStatus,
-            timeRange)
+            [dateUtil.startOfDay(yesterday), dateUtil.endOfDay(yesterday)])
 
         const result = await singleItemTaoBaoService.getLinkOperationCount(
             req.params.status,
@@ -42,7 +42,7 @@ const getLinkOperationCount = async (req, res, next) => {
 }
 
 /**
- * 获取链接问题处理数据
+ * 获取链接问题处理数据: 固定统计昨天的
  * @returns {Promise<void>}
  */
 const getErrorLinkCount = async (req, res, next) => {
@@ -54,10 +54,10 @@ const getErrorLinkCount = async (req, res, next) => {
             secondLevelProductLine,
             errorItem,
             linkType,
-            linkStatus,
-            timeRange
+            linkStatus
         } = req.query
 
+        const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD');
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
             productLineLeaders,
             firstLevelProductLine,
@@ -65,7 +65,7 @@ const getErrorLinkCount = async (req, res, next) => {
             errorItem,
             linkType,
             linkStatus,
-            timeRange)
+            [dateUtil.startOfDay(yesterday), dateUtil.endOfDay(yesterday)])
         const result = await singleItemTaoBaoService.getErrorLinkOperationCount(singleItems, status)
         return res.send(biResponse.success(result))
     } catch (e) {

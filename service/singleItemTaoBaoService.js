@@ -591,7 +591,7 @@ const getPayment = async (singleItems) => {
         result[1].items[2].sum = new BigNumber(result[1].items[2].sum).plus(accuratePeoplePromotionCost)
     }
     // 投产比
-    result[2].sum = result[0].sum === 0 ? 0 : (result[1].sum / result[0].sum).toFixed(2)
+    result[2].sum = result[1].sum === 0 ? 0 : (result[0].sum / result[1].sum).toFixed(2)
     result[2].items[0].sum = result[0].items[0].sum === 0 ? 0 : (result[1].items[0].sum / result[0].items[0].sum).toFixed(2)
     result[2].items[1].sum = result[0].items[1].sum === 0 ? 0 : (result[1].items[1].sum / result[0].items[1].sum).toFixed(2)
     result[2].items[2].sum = result[0].items[2].sum === 0 ? 0 : (result[1].items[2].sum / result[0].items[2].sum).toFixed(2)
@@ -686,7 +686,11 @@ const getMarketRatioData = async (singleItems) => {
         let salesMarketRateHasComputed = false
         let shouTaoPeopleNumMarketRateHasComputed = false
         // 坑产占比、流量占比（手淘人数市场占比环比（7天））
-        const {salesMarketRate, shouTaoPeopleNumMarketRateCircleRate7Day} = singleItem
+        // todo: 流量占比先按照手淘人数市场占比环比（日）计算
+        const {
+            salesMarketRate,
+            shouTaoPeopleNumMarketRateCircleRateDay: shouTaoPeopleNumMarketRateCircleRate7Day
+        } = singleItem
         // 判断占比所在的区间
         for (const marketRatio of marketRatioGroup) {
             // 统计坑产占比

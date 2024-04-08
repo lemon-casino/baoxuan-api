@@ -82,7 +82,7 @@ const getTaoBaoSingleItems = async (pageIndex,
         if (linkType) {
             where.linkType = linkType
         }
-        if (errorItem  && errorItem.field) {
+        if (errorItem && errorItem.field) {
             where[errorItem.field] = {[errorItem.operator]: errorItem.value}
         }
         if (linkStatus) {
@@ -102,7 +102,11 @@ const getTaoBaoSingleItems = async (pageIndex,
             where,
             order: [["linkId", "asc"], ["date", "asc"]]
         })
-        data = sequelizeUtil.extractDataValues(data)
+
+        data = data.map(function (item) {
+            return item.get({plain: true})
+        })
+        // data = sequelizeUtil.extractDataValues(data)
         const result = pagingUtil.paging(Math.ceil(satisfiedCount / pageSize), satisfiedCount, data)
         return result
     } catch (e) {
