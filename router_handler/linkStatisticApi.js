@@ -1,10 +1,10 @@
 const biResponse = require("../utils/biResponse")
 const singleItemTaoBaoService = require("../service/singleItemTaoBaoService")
-const userService = require("../service/userService")
+const dateUtil = require("../utils/dateUtil")
 
 
 /**
- * 获取链接操作数
+ * 获取链接操作数: 固定取前一天的数据
  * @param req
  * @param res
  * @param next
@@ -18,8 +18,7 @@ const getLinkOperationCount = async (req, res, next) => {
             secondLevelProductLine,
             errorItem,
             linkType,
-            linkStatus,
-            timeRange
+            linkStatus
         } = req.query
 
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
@@ -29,7 +28,7 @@ const getLinkOperationCount = async (req, res, next) => {
             errorItem,
             linkType,
             linkStatus,
-            timeRange)
+            [dateUtil.])
 
         const result = await singleItemTaoBaoService.getLinkOperationCount(
             req.params.status,
