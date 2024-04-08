@@ -27,7 +27,9 @@ const getUserLogs = async (pageIndex, pageSize, userId, timeRange) => {
             where,
             order: [["loginTime", "desc"]]
         })
-        data = sequelizeUtil.extractDataValues(data)
+        data = data.map(function (item) {
+            return item.get({ plain: true })
+        })
         const result = pagingUtil.paging(Math.ceil(count / pageSize), count, data)
         return result
     } catch (e) {
