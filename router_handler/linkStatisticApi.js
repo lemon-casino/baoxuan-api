@@ -154,10 +154,10 @@ const getMarketRatioData = async (req, res, next) => {
             secondLevelProductLine,
             errorItem,
             linkType,
-            linkStatus,
-            timeRange
+            linkStatus
         } = req.query
 
+        const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD');
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
             productLineLeaders,
             firstLevelProductLine,
@@ -165,7 +165,7 @@ const getMarketRatioData = async (req, res, next) => {
             errorItem,
             linkType,
             linkStatus,
-            timeRange)
+            [dateUtil.startOfDay(yesterday), dateUtil.endOfDay(yesterday)])
         const result = await singleItemTaoBaoService.getMarketRatioData(singleItems)
         return res.send(biResponse.success(result))
     } catch (e) {
