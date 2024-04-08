@@ -9,10 +9,7 @@ const saveUserLog = async (userLog) => {
 }
 
 const getUserLogs = async (pageIndex, pageSize, userId, timeRange) => {
-    if (!pageIndex || !pageSize || !timeRange) {
-        throw new Error("参数必填项不能为空")
-    }
-    const userLogs = await userLogRepo.getUserLogs(parseInt(pageIndex), parseInt(pageSize), userId, JSON.parse(timeRange))
+    const userLogs = await userLogRepo.getUserLogs(parseInt(pageIndex), parseInt(pageSize), userId, timeRange)
     return userLogs
 }
 

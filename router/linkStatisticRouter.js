@@ -20,7 +20,37 @@ const linkStatisticApi = require('../router_handler/linkStatisticApi')
  *       -- 新品负利率
  *       -- 投产低于2
  */
-router.get('/self-operation-count/:status', linkStatisticApi.getSelfLinkOperationCount)
-router.get('/dept-operation-count/:status', linkStatisticApi.getDeptLinkOperationCount)
+router.get('/link-operation-count/:status', linkStatisticApi.getLinkOperationCount)
+
+/**
+ * 链接问题处理数据：
+ *     - 针对运营优化方案流程进行的统计
+ *     - 从发起人维度进行的统计
+ *
+ * 进行中：流程状态 RUNNING
+ *
+ * 已完成： 流程状态  COMPLETED
+ *
+ * 优化成功：
+ * 优化失败：
+ *    - 需要根据优化的内容从单品表中取出某一天的对应的数据做对比
+ */
+router.get('/error-link-count/:status', linkStatisticApi.getErrorLinkCount)
+
+/**
+ *  付费数据： 精准人群、车、万象台
+ */
+router.get('/payment', linkStatisticApi.getPaymentData)
+
+/**
+ * 支付数据：按照新品老品分别统计发货金额和利润额，
+ *         利润率按照新老品指定的利润区间统计
+ */
+router.get('/profit', linkStatisticApi.getProfitData)
+
+/**
+ * 获取市场占有率数据
+ */
+router.get('/market-ratio', linkStatisticApi.getMarketRatioData)
 
 module.exports = router;

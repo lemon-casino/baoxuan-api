@@ -7,11 +7,20 @@ const formatGMT = (datetimeOfGMT, pattern) => {
     return new Date(moment(datetimeOfGMT.toString().replace("Z", "+08:00")).format(pattern))
 }
 
-const startOfToday = () => {
-    return moment(new Date().toString()).format("YYYY-MM-DD 00:00:0")
+const startOfDay = (day) => {
+    return moment(day).format("YYYY-MM-DD 00:00:00")
 }
+
+const startOfToday = () => {
+    return startOfDay(new Date().toString())
+}
+
+const endOfDay = (day) => {
+    return moment(day).format("YYYY-MM-DD 23:59:59")
+}
+
 const endOfToday = () => {
-    return moment(new Date().toString()).format("YYYY-MM-DD 23:59:59")
+    return endOfDay(new Date().toString())
 }
 
 const diff = (endDate, startDate) => {
@@ -28,5 +37,7 @@ module.exports = {
     formatGMT,
     startOfToday,
     endOfToday,
-    earliestDate
+    earliestDate,
+    startOfDay,
+    endOfDay
 }

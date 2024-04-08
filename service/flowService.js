@@ -1,15 +1,11 @@
 const dateUtil = require("../utils/dateUtil")
 const FlowForm = require("../model/flowfrom")
-const redisService = require("../service/redisService")
-const statisticStatusConst = require("../const/statisticStatusConst")
-const FlowFormReview = require("../model/flowformreview")
-const reviewUtil = require("../utils/reviewUtil")
 const formService = require("../service/formService")
-const formReviewService = require("../service/formReviewService")
 const departmentService = require("../service/departmentService")
 const flowRepo = require("../repository/flowRepo")
 const globalGetter = require("../global/getter")
 const statisticResultUtil = require("../utils/statisticResultUtil")
+const flowStatusConst = require("../const/flowStatusConst")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -415,6 +411,27 @@ const getTodayFlowsByFormIdAndFlowStatus = async (formId, flowStatus) => {
     })
 }
 
+/**
+ * 获取指定状态的表单流程filed的值
+ * @param formId
+ * @param linkIdKeyInFightingFlowForm
+ * @returns {Promise<*[]>}
+ */
+const getFlowFormValues = async (formId, fieldKey, flowStatus) => {
+    const fightingLinkIds = []
+    const flows = await getTodayFlowsByFormIdAndFlowStatus(formId, flowStatus)
+    for (const flow of flows) {
+        if (!flow.data) {
+            continue
+        }
+        const runningLinkId = flow.data[fieldKey]
+        if (runningLinkId) {
+            fightingLinkIds.push(runningLinkId)
+        }
+    }
+    return fightingLinkIds
+}
+
 module.exports = {
     filterFlowsByTimesRange,
     filterFlowsByImportanceCondition,
@@ -423,7 +440,6 @@ module.exports = {
     filterFlowByReviewType,
     filterFlowByReviewTypeAndOperatorId,
     findReviewItemByType,
-
     filterFlowsByForms,
     filterFlowsByImportant,
     filterFlowsByImportance,
@@ -436,5 +452,6 @@ module.exports = {
     convertJonsToArr,
     convertSelfStatisticToDept,
     getDeptStatistic,
-    getTodayFlowsByFormIdAndFlowStatus
+    getTodayFlowsByFormIdAndFlowStatus,
+    getFlowFormValues
 }

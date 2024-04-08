@@ -274,6 +274,26 @@ const hasMatchedDeptName = (deptName, department) => {
     return false
 }
 
+/**
+ * 获取部门下的用户信息
+ * @param deptId
+ * @returns {Promise<*>}
+ */
+const getUsersOfDepartment = async (deptId) => {
+    const departmentsWithUser = await globalGetter.getUsersOfDepartments()
+    let satisfiedDepartment = null
+    for (const department of departmentsWithUser) {
+        satisfiedDepartment = findMatchedDepartmentFromRoot(deptId, department)
+        if (satisfiedDepartment) {
+            break
+        }
+    }
+    if (satisfiedDepartment) {
+        return satisfiedDepartment.dep_user
+    }
+    throw new Error(`未找到部门${deptId}的信息`)
+}
+
 
 module.exports = {
     getDepartments,
@@ -282,6 +302,7 @@ module.exports = {
     getSubDeptLev,
     mergeDataByDeptId,
     getDepartmentOfUser,
+    getUsersOfDepartment,
     findMatchedDepartmentFromRoot,
     simplifiedUsersOfDepartment,
     getDepartmentWithUsers,

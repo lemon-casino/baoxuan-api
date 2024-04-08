@@ -1,13 +1,19 @@
+const BigNumber = require("bignumber.js")
 const singleItemTaoBaoRepo = require("../repository/singleItemTaoBaoRepo")
 const departmentService = require("../service/departmentService")
 const userService = require("../service/userService")
 const flowService = require("../service/flowService")
-const {taoBaoSingleItemMap, taoBaoErrorItems, taoBaoSingleItemStatuses} = require("../const/singleItemConst")
 const whiteList = require("../config/whiteList")
 const {logger} = require("../utils/log")
-const dateUtil = require("../utils/dateUtil")
 const linkTypeConst = require("../const/linkTypeConst")
 const flowStatusConst = require("../const/flowStatusConst")
+const {
+    taoBaoSingleItemMap,
+    taoBaoErrorItems,
+    taoBaoSingleItemStatuses,
+    profitRateRangeSumTypes,
+    marketRatioGroup
+} = require("../const/singleItemConst")
 const globalGetter = require("../global/getter")
 
 // 天猫链接打架流程表单id
@@ -217,144 +223,158 @@ const getSingleItemById = async (id) => {
 }
 
 /**
- * 获取本人不同装填的的链接操作数
- * @param userId
- * @param username
- * @param status
- * @returns {Promise<{fightingOnOld: *, fightingOnNew: *}|{waitingOnNew: number, waitingOnUnsalable: number, waitingOnOld: number}|*[]>}
+ *
+ * @param productLineLeaders
+ * @param firstLevelProductLine
+ * @param secondLevelProductLine
+ * @param errorItem
+ * @param linkType
+ * @param linkStatus
+ * @param timeRange
+ * @returns {Promise<void>}
  */
-const getSelfLinkOperationCount = async (userId, username, status) => {
-    // 操作数
-    if (status === "do") {
-        const result = await getSelfALLDoSingleItemLinkOperationCount(username)
-        return result
+const getAllSatisfiedSingleItems = async (productLineLeaders,
+                                          firstLevelProductLine,
+                                          secondLevelProductLine,
+                                          errorItem,
+                                          linkType,
+                                          linkStatus,
+                                          timeRange) => {
+    if (!timeRange) {
+        throw new Error("查询条件：时间区间不能为空")
     }
+    if (!productLineLeaders) {
+        throw new Error("查询条件：产品线负责人不能为空")
+    }
+    productLineLeaders = JSON.parse(productLineLeaders)
+    timeRange = JSON.parse(timeRange)
+    const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
+    const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
+        999999,
+        productLineLeaders,
+        firstLevelProductLine,
+        secondLevelProductLine,
+        JSON.parse(errorItem || "{}"),
+        linkType,
+        linkStatus,
+        fightingLinkIds,
+        timeRange)
+    return satisfiedSingleItems.data
+}
+
+/**
+ * 获取链接操作数据
+ * @param status
+ * @param satisfiedSingleItems
+ * @returns {Promise<{sum: number, items: [{name: string, sum: number}, {name: string, sum: number}, {name: string, sum: number}]}|{sum: number, items: *[]}|{fightingOnOld: *, fightingOnNew: *}>}
+ */
+const getLinkOperationCount = async (status,
+                                     satisfiedSingleItems,
+                                     productLineLeaders) => {
+
     // 待上架
-    else if (status === "waiting-on") {
-        const result = await getSelfWaitingOnSingleItemLinkOperationCount(userId)
+    if (status === "waiting-on") {
+        // 找到ddUserId
+        const result = {
+            sum: 0,
+            items: [
+                {name: "新品", sum: 0},
+                {name: "老品", sum: 0},
+                {name: "滞销", sum: 0}
+            ]
+        }
+        for (const productLineLeader of JSON.parse(productLineLeaders)) {
+            const allUsers = await globalGetter.getUsers()
+            const users = allUsers.filter((user) => user.name === productLineLeader)
+
+            const curResult = await getSelfWaitingOnSingleItemLinkOperationCount(users[0].userid)
+            result.sum = result.sum + curResult.sum
+            result.items[0].sum = result.items[0].sum + curResult.items[0].sum
+            result.items[1].sum = result.items[1].sum + curResult.items[1].sum
+            result.items[2].sum = result.items[2].sum + curResult.items[2].sum
+        }
         return result
     }
-    // 打仗
-    else if (status === "fighting") {
-        const timeRange = [dateUtil.earliestDate, dateUtil.endOfToday()]
-        const result = await getSelfFightingSingleItemLinkOperationCount(username, timeRange)
+
+    if (status === "do") {
+        const result = await getSelfDoSingleItemLinkOperationCount(satisfiedSingleItems)
+        return result
+    } else if (status === "fighting") {
+        const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
+        const result = await getSelfFightingSingleItemLinkOperationCount(satisfiedSingleItems, fightingLinkIds)
         return result
     } else if (status === "error") {
-        const timeRange = [dateUtil.earliestDate, dateUtil.endOfToday()]
-        const result = await getSelfErrorSingleItemLinkOperationCount(username, timeRange)
+        const result = await getSelfErrorSingleItemLinkOperationCount(satisfiedSingleItems)
         return result
     }
     throw new Error(`${status}还不支持`)
 }
 
 /**
- * 获取天猫部门的统计数据
- * @param deptId
- * @param status
- * @returns {Promise<void>}
- */
-const getDeptLinkOperationCount = async (userId, status) => {
-    // 判断该用户时候有访问权限： 仅有部门领导和管理员可以查看
-    const usersWithDepartment = await globalGetter.getUsers()
-    const userWithDepartment = usersWithDepartment.filter((user) => user.userid === userId)
-
-    if (!userWithDepartment || userWithDepartment.length === 0) {
-        throw new Error("你没有权限访问该接口")
-    }
-    const isLeaderOfTM = userWithDepartment[0].leader_in_dept.filter((dept) => {
-        return dept.dept_id === tmDeptId && dept.leader
-    }).length > 0
-    if (!isLeaderOfTM && !whiteList.pepArr().includes(userId)) {
-        throw new Error("你没有权限访问该接口")
-    }
-
-    // 获取天猫下面的所有人
-    const departmentsWithUser = await globalGetter.getUsersOfDepartments()
-
-    let tmDepartment = null
-    for (const department of departmentsWithUser) {
-        tmDepartment = departmentService.findMatchedDepartmentFromRoot(tmDeptId, department)
-        if (tmDepartment) {
-            break
-        }
-    }
-    if (!tmDepartment) {
-        throw new Error("为找到天猫的部门信息")
-    }
-
-    const usersOfTM = tmDepartment.dep_user
-    let result = null
-    for (const user of usersOfTM) {
-        const tmpResult = await getSelfLinkOperationCount(user.userid, user.name, status)
-        if (!result) {
-            result = tmpResult
-            continue
-        }
-        // 合并多人的结果
-        for (const tmpItem of tmpResult) {
-            if (tmpItem.count <= 0) {
-                continue
-            }
-            for (const item of result) {
-                if (tmpItem.name == item.name) {
-                    item.count = item.count + tmpItem.count
-                    break;
-                }
-            }
-        }
-    }
-    return result
-}
-
-/**
- * 获取本人所有链接操作数据（操作）
- * @param username
- * @returns {Promise<*[]>}
- */
-const getSelfALLDoSingleItemLinkOperationCount = async (username) => {
-    const timeRange = [dateUtil.earliestDate, dateUtil.endOfToday()]
-    const result = await getSelfDoSingleItemLinkOperationCount(username, timeRange)
-    return result
-}
-
-/**
  * 获取本人链接操作数据（操作）
  * @param username  产品线负责人姓名
  * @param timeRange 时间范围
- * @returns {Promise<*[]>}
+ * @returns {Promise<{sum: number, items: *[]}>}
  */
-const getSelfDoSingleItemLinkOperationCount = async (username, timeRange) => {
-    const result = []
-    for (const key of Object.keys(linkTypeConst)) {
-        const resultOfLinkType = await singleItemTaoBaoRepo.getSingleItemByProductLeaderLinkTypeTimeRange(
-            username,
-            linkTypeConst[key],
-            timeRange)
+const getSelfDoSingleItemLinkOperationCount = async (singleItems) => {
+    const result = {sum: 0, items: []}
 
-        result.push({
-            name: linkTypeConst[key],
-            count: resultOfLinkType.length
-        })
-    }
+    const newSingleItems = singleItems.filter((item) => {
+        if (item.linkType.includes("新品")) {
+            const matchNewItems = item.linkType.match(/\d+/)
+            if (!matchNewItems || matchNewItems[0] < 90) {
+                return true
+            }
+        }
+        return false
+    })
+    result.items.push({
+        name: linkTypeConst["new"],
+        sum: newSingleItems.length
+    })
+    result.sum = result.sum + newSingleItems.length
+    const oldSingleItems = singleItems.filter((item) => {
+        if (item.linkType.includes("新品")) {
+            const matchNewItems = item.linkType.match(/\d+/)
+            if (matchNewItems && matchNewItems[0] >= 90) {
+                return true
+            }
+        } else if (item.linkType === "老品") {
+            return true
+        }
+        return false
+    })
+    result.items.push({
+        name: linkTypeConst["old"],
+        sum: oldSingleItems.length
+    })
+    result.sum = result.sum + oldSingleItems.length
+    result.items.push({
+        name: linkTypeConst["unsalable"],
+        sum: 0
+    })
     return result
 }
 
 /**
  * 获取本人链接操作数据（待上架）
  * @param userId
- * @returns {Promise<[{name: string, count: number}, {name: string, count: number}, {name: string, count: number}]>}
+ * @returns {Promise<{sum: number, items: [{name: string, sum: number}, {name: string, sum: number}, {name: string, sum: number}]}>}
  */
 const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
-    const result = [{
-        name: "新品",
-        count: 0
-    }, {
-        name: "老品",
-        count: 0
-    }, {
-        name: "滞销",
-        count: 0
-    }]
+    const result = {
+        sum: 0,
+        items: [{
+            name: "新品",
+            sum: 0
+        }, {
+            name: "老品",
+            sum: 0
+        }, {
+            name: "滞销",
+            sum: 0
+        }]
+    }
     //新品： 统计" running的 运营新品流程"
     const todayFlows = await globalGetter.getTodayFlows()
     const runningFlow = todayFlows.filter((flow) => flow.instanceStatus === flowStatusConst.RUNNING)
@@ -364,7 +384,8 @@ const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
             flow.data[operationLeaderFieldId].length > 0 &&
             flow.data[operationLeaderFieldId][0] === userId
     })
-    result[0].count = newOperationRunningFlows.length
+    result.items[0].sum = newOperationRunningFlows.length
+    result.sum = result.sum + newOperationRunningFlows.length
     //老品： 统计" running的 老品重新流程"
     const oldTMLinkShelvesFlows = runningFlow.filter((flow) => {
         return flow.formUuid === tmLinkShelvesFlowFormId &&
@@ -372,47 +393,18 @@ const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
             flow.data[operationLeaderFieldId].length > 0 &&
             flow.data[operationLeaderFieldId][0] === userId
     })
-    result[1].count = oldTMLinkShelvesFlows.length
+    result.items[1].sum = oldTMLinkShelvesFlows.length
+    result.sum = result.sum + oldTMLinkShelvesFlows.length
     //todo: 滞销： 暂无
     return result
 }
 
 /**
- * 获取本人链接操作数据（待转出）
+ * 获取链接操作数据（待转出）
  * @returns {Promise<{waitingOnNew: number, waitingOnUnsalable: number, waitingOnOld: number}>}
  */
 const getSelfWaitingOutSingleItemLinkOperationCount = async (userId) => {
 
-}
-
-/**
- * 根据链接类型获取本人的正在打仗单品信息
- * @returns {Promise<void>}
- */
-const getSelfFightingSingleItemsByLinkType = async (username, linkType, timeRange) => {
-    try {
-        // 获取正在打仗的流程
-        const runningFightingFlows = await flowService.getTodayFlowsByFormIdAndFlowStatus(tmFightingFlowFormId, flowStatusConst.RUNNING)
-        // 获取正在打仗流程的linkId(s)
-        const fightingLinkIds = []
-        for (const runningFightingFlow of runningFightingFlows) {
-            if (!runningFightingFlow.data) {
-                continue
-            }
-            const runningLinkId = runningFightingFlow.data[linkIdKeyInTmFightingFlowForm]
-            if (runningLinkId) {
-                fightingLinkIds.push(runningLinkId)
-            }
-        }
-        // 获取本人指定链接类型的单品数据
-        const newSelfSingleItems = await singleItemTaoBaoRepo.getSingleItemByProductLeaderLinkTypeTimeRange(username, linkType, timeRange)
-        const selfFightingSingleItems = newSelfSingleItems.filter((item) => {
-            return fightingLinkIds.includes(item.linkId)
-        })
-        return selfFightingSingleItems
-    } catch (e) {
-        throw new Error(e.message)
-    }
 }
 
 /**
@@ -421,45 +413,400 @@ const getSelfFightingSingleItemsByLinkType = async (username, linkType, timeRang
  * @param timeRange
  * @returns {Promise<{fightingOnOld: *, fightingOnNew: *}>}
  */
-const getSelfFightingSingleItemLinkOperationCount = async (username, timeRange) => {
-    const newProductSelfFightingSingleItems = await getSelfFightingSingleItemsByLinkType(username, "新品", timeRange)
-    const oldProductSelfFightingSingleItems = await getSelfFightingSingleItemsByLinkType(username, "老品", timeRange)
-    // todo: 带滞销 (需求还未确定)
-    return [{
-        name: "新品",
-        count: newProductSelfFightingSingleItems.length
-    }, {
-        name: "老品",
-        count: oldProductSelfFightingSingleItems.length,
-    }, {
-        name: "滞销品",
-        count: 0
-    }]
+const getSelfFightingSingleItemLinkOperationCount = async (singleItems, fightingLinkIds) => {
+    const result = {
+        sum: 0,
+        items: [
+            {name: "新品", sum: 0},
+            {name: "老品", sum: 0},
+            {name: "滞销品", sum: 0}
+        ]
+    }
+    singleItems = singleItems.filter((item) => {
+        return fightingLinkIds.includes(item.linkId)
+    })
+    // 获取本人指定链接类型的单品数据
+    const newSingleItems = singleItems.filter((item) => {
+        if (item.linkType.includes("新品")) {
+            const matchNewItems = item.linkType.match(/\d+/)
+            if (!matchNewItems || matchNewItems[0] < 90) {
+                return true
+            }
+        }
+        return false
+    })
+    result.items[0].sum = newSingleItems.length
+    result.sum = newSingleItems.length
+    const oldSingleItems = singleItems.filter((item) => {
+        if (item.linkType.includes("新品")) {
+            const matchNewItems = item.linkType.match(/\d+/)
+            if (matchNewItems && matchNewItems[0] >= 90) {
+                return true
+            }
+        } else if (item.linkType === "老品") {
+            return true
+        }
+        return false
+    })
+    result.items[1].sum = oldSingleItems.length
+    result.sum = result.sum + oldSingleItems.length
+    // todo: 滞销待定
+    return result
 }
 
 /**
  * 获取本人链接操作数据（异常数据）
  * @param username
- * @returns {Promise<*[]>}
+ * @param timeRange
+ * @returns {Promise<{sum: number, items: *[]}>}
  */
-const getSelfErrorSingleItemLinkOperationCount = async (username, timeRange) => {
-    const result = []
+const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
+    const result = {sum: 0, items: []}
+    // 通过map过滤重复的数据
+    const uniqueItems = {}
     for (const item of taoBaoErrorItems) {
-        const count = await singleItemTaoBaoRepo.getErrorSingleItemsTotal([username], item.value, timeRange)
-        result.push({name: item.name, count})
+        const items = singleItems.filter((singleItem) => {
+            return eval(`parseFloat(${singleItem[item.value.field]})
+            ${item.value.comparator}
+            ${parseFloat(item.value.value)}`)
+        })
+        result.items.push({name: item.name, sum: items.length})
+        for (const tmp of items) {
+            uniqueItems[tmp.id] = 1
+        }
     }
+    result.sum = Object.keys(uniqueItems).length
     return result;
 }
 
+/**
+ * 获取数据
+ * @param userId
+ * @param status
+ */
+const getErrorLinkOperationCount = async (singleItems, status) => {
+
+    const findSingleItemsDividedByUser = (runningErrorLinkIds, singleItems) => {
+        const result = {sum: 0, items: []}
+        const errorSingleItems = singleItems.filter((item) => {
+            return runningErrorLinkIds.includes(item.linkId)
+        })
+
+        for (const user of usersOfTM) {
+            const singleItemsOfUser = errorSingleItems.filter((item) => item.productLineLeader === user.name)
+            result.sum = result.sum + singleItemsOfUser.length
+            result.items.push({
+                name: user.name,
+                sum: singleItemsOfUser.length
+            })
+        }
+        return result
+    }
+    // 链接问题处理数据需要筛选的流程表单id (运营优化方案流程)
+    const errorLinkFormId = "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB";
+    const linkIdField = "textField_liihs7kw"
+    const usersOfTM = await departmentService.getUsersOfDepartment(tmDeptId)
+
+    // 进行中
+    if (status.toUpperCase() === flowStatusConst.RUNNING) {
+        const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING)
+        const result = findSingleItemsDividedByUser(runningErrorLinkIds, singleItems)
+        return result
+    }
+    //  已完成
+    // todo: 后面需要补充上历史的数据
+    if (status.toUpperCase() === flowStatusConst.COMPLETE) {
+        const completeErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.COMPLETE)
+        const result = findSingleItemsDividedByUser(completeErrorLinkIds, singleItems)
+        return result
+    }
+    // todo: 需要确认成功的条件在判断
+    if (status === "success") {
+        return 0
+    }
+    // todo: 需要确认成功的条件在判断
+    if (status == "fail") {
+        return 0
+    }
+    throw new Error(`${status}还不支持`)
+}
+
+/**
+ * 付费数据： 精准人群、车、万象台
+ * @param userName
+ * @returns {Promise<*|*[]>}
+ */
+const getPayment = async (singleItems) => {
+    const result = [
+        {
+            type: "payment",
+            name: "支付金额",
+            sum: 0,
+            items: [
+                {name: "购物车", sum: 0},
+                {name: "万相台", sum: 0},
+                {name: "精准人群", sum: 0}]
+        },
+        {
+            type: "promotionAmount",
+            name: "推广金额",
+            sum: 0,
+            items: [
+                {name: "购物车", sum: 0},
+                {name: "万相台", sum: 0},
+                {name: "精准人群", sum: 0}]
+        },
+        {
+            type: "roi",
+            name: "投产比",
+            sum: 0,
+            items: [
+                {name: "购物车", sum: 0},
+                {name: "万相台", sum: 0},
+                {name: "精准人群", sum: 0}
+            ]
+        }
+    ]
+    for (const singleItem of singleItems) {
+        // 支付金额
+        let {cartSumPayment, wanXiangTaiSumPayment, accuratePeopleSumPayment} = singleItem
+        cartSumPayment = parseFloat(cartSumPayment || "0")
+        wanXiangTaiSumPayment = parseFloat(wanXiangTaiSumPayment || "0")
+        accuratePeopleSumPayment = parseFloat(accuratePeopleSumPayment || "0")
+
+        result[0].sum = new BigNumber(result[0].sum).plus(cartSumPayment).plus(wanXiangTaiSumPayment).plus(accuratePeopleSumPayment)
+        result[0].items[0].sum = new BigNumber(result[0].items[0].sum).plus(cartSumPayment)
+        result[0].items[1].sum = new BigNumber(result[0].items[1].sum).plus(wanXiangTaiSumPayment)
+        result[0].items[2].sum = new BigNumber(result[0].items[2].sum).plus(accuratePeopleSumPayment)
+
+        // 推广金额
+        let {accuratePeoplePromotionCost, wanXiangTaiCost, shoppingCartSumAmount} = singleItem
+        accuratePeoplePromotionCost = parseFloat(accuratePeoplePromotionCost || "0")
+        wanXiangTaiCost = parseFloat(wanXiangTaiCost || "0")
+        shoppingCartSumAmount = parseFloat(shoppingCartSumAmount || "0")
+
+        result[1].sum = new BigNumber(result[1].sum).plus(shoppingCartSumAmount).plus(accuratePeoplePromotionCost).plus(wanXiangTaiCost)
+        result[1].items[0].sum = new BigNumber(result[1].items[0].sum).plus(shoppingCartSumAmount)
+        result[1].items[1].sum = new BigNumber(result[1].items[1].sum).plus(wanXiangTaiCost)
+        result[1].items[2].sum = new BigNumber(result[1].items[2].sum).plus(accuratePeoplePromotionCost)
+    }
+    // 投产比
+    result[2].sum = result[0].sum === 0 ? 0 : (result[1].sum / result[0].sum).toFixed(2)
+    result[2].items[0].sum = result[0].items[0].sum === 0 ? 0 : (result[1].items[0].sum / result[0].items[0].sum).toFixed(2)
+    result[2].items[1].sum = result[0].items[1].sum === 0 ? 0 : (result[1].items[1].sum / result[0].items[1].sum).toFixed(2)
+    result[2].items[2].sum = result[0].items[2].sum === 0 ? 0 : (result[1].items[2].sum / result[0].items[2].sum).toFixed(2)
+
+    return result
+}
+
+/**
+ *  * 支付数据：按照新品老品分别统计发货金额和利润额，
+ *         利润率按照新老品指定的利润区间统计
+ * @param usernames
+ * @returns {Promise<[{name: string, sum: number, items: *[]}, {name: string, sum: null, items: *[]}, {name: string, sum: null, items: *[]}]>}
+ */
+const getProfitData = async (singleItems) => {
+    const linkTypes = await singleItemTaoBaoRepo.getLinkTypes()
+    // 返回的数据模版
+    const result = [
+        {type: "deliveryAmount", name: "发货金额", sum: 0, items: []},
+        {type: "profitAmount", name: "利润额", sum: 0},
+        {type: "profitRate", name: "利润率", sum: null, items: []}
+    ]
+    // 按照类别统计发货金额、利润额
+    // 根据linkTypes初始化发货金额的items
+    for (const linkType of linkTypes) {
+        result[0].items.push({name: linkType.link_type, sum: 0})
+    }
+
+    // 根据 profitRateRangeSumTypes 初始化sumProfitRate的items
+    for (const profitRateRangeSumType of profitRateRangeSumTypes) {
+        result[2].items.push({name: profitRateRangeSumType.name, sum: 0})
+    }
+
+    for (const singleItem of singleItems) {
+        // 汇总发货金额
+        result[0].sum = result[0].sum + parseFloat(singleItem.reallyShipmentAmount)
+        // 汇总利润额
+        result[1].sum = result[1].sum + parseFloat(singleItem.profitAmount)
+        // 统计不同linkType的单品表数
+        for (const resultItem of result[0].items) {
+            if (resultItem.name === singleItem.linkType) {
+                resultItem.sum = resultItem.sum + 1
+                break
+            }
+        }
+        // 判断当前的单品是新品还是老品，新品90、新品150 归算为老品
+        let singleItemType = "老品"
+        if (singleItem.linkType.includes("新品")) {
+            const matchDays = singleItem.linkType.match(/\d+/)
+            if (matchDays && parseInt(matchDays[0]) < 90) {
+                singleItemType = "新品"
+            }
+        }
+        // 根据利润率按照新老品指定的利润区间统计
+        let profitRateRangeSumTypesIndex = 0
+        for (const item of profitRateRangeSumTypes) {
+            if (item.type === singleItemType && parseFloat(singleItem.profitRate) >= item.range[0] && parseFloat(singleItem.profitRate) <= item.range[1]) {
+                const currentSumProfitRateItems = result[2].items
+                for (let i = 0; i < currentSumProfitRateItems.length; i++) {
+                    if (currentSumProfitRateItems[i].name === item.name) {
+                        currentSumProfitRateItems[i].sum = currentSumProfitRateItems[i].sum + 1
+                        break
+                    }
+                }
+                break
+            }
+            if (profitRateRangeSumTypesIndex === profitRateRangeSumTypes.length - 1) {
+                throw new Error(`单品：${singleItem.productName}，linkType:${singleItem.linkType}, profitRate: ${singleItem.profitRate} 未匹配到有效的利润区间`)
+            }
+            profitRateRangeSumTypesIndex = profitRateRangeSumTypesIndex + 1;
+        }
+    }
+    result[2].sum = 0
+    if (result[0].sum > 0) {
+        result[2].sum = (result[1].sum / result[0].sum * 100).toFixed(2)
+    }
+    result[0].sum = result[0].sum.toFixed(2)
+    result[1].sum = result[1].sum.toFixed(2)
+    return result
+}
+
+const getMarketRatioData = async (singleItems) => {
+    const tmpResult = []
+    // 初始化结果: 扁平处理
+    for (const marketRatio of marketRatioGroup) {
+        tmpResult.push({
+            ...marketRatio,
+            item: {name: marketRatio.item.name, sum: 0}
+        })
+    }
+
+    for (const singleItem of singleItems) {
+        let salesMarketRateHasComputed = false
+        let shouTaoPeopleNumMarketRateHasComputed = false
+        // 坑产占比、流量占比（手淘人数市场占比环比（7天））
+        const {salesMarketRate, shouTaoPeopleNumMarketRateCircleRate7Day} = singleItem
+        // 判断占比所在的区间
+        for (const marketRatio of marketRatioGroup) {
+            // 统计坑产占比
+            if (!salesMarketRateHasComputed &&
+                marketRatio.name.includes("坑产占比") &&
+                salesMarketRate >= marketRatio.item.range[0] &&
+                salesMarketRate <= marketRatio.item.range[1]) {
+                // 将数据统计到result对应的节点中
+                for (const item of tmpResult) {
+                    if (item.item.name === marketRatio.item.name) {
+                        item.item.sum = item.item.sum + 1
+                        salesMarketRateHasComputed = true
+                        break;
+                    }
+                }
+            }
+            // 统计流量占比
+            if (!shouTaoPeopleNumMarketRateHasComputed &&
+                marketRatio.name.includes("流量占比") &&
+                shouTaoPeopleNumMarketRateCircleRate7Day >= marketRatio.item.range[0] &&
+                shouTaoPeopleNumMarketRateCircleRate7Day <= marketRatio.item.range[1]) {
+                // 将数据统计到result对应的节点中
+                for (const item of tmpResult) {
+                    if (item.item.name === marketRatio.item.name) {
+                        item.item.sum = item.item.sum + 1
+                        shouTaoPeopleNumMarketRateHasComputed = true
+                        break;
+                    }
+                }
+            }
+            if (salesMarketRateHasComputed && shouTaoPeopleNumMarketRateHasComputed) {
+                break
+            }
+        }
+    }
+
+    // 根据type进行汇总
+    const result = []
+    for (const tmpItem of tmpResult) {
+        if (result.length === 0) {
+            result.push({
+                type: tmpItem.type,
+                name: tmpItem.name,
+                sum: tmpItem.item.sum,
+                items: [{
+                    name: tmpItem.item.name,
+                    sum: tmpItem.item.sum
+                }]
+            })
+            continue
+        }
+        let hasComputed = false
+        for (let i = 0; i < result.length; i++) {
+            if (result[i].type === tmpItem.type) {
+                result[i].sum = result[i].sum + tmpItem.item.sum
+                const items = result[i].items
+                for (let j = 0; j < items.length; j++) {
+                    if (items[j].name === tmpItem.item.name) {
+                        items[j].sum = items[j].sum + tmpItem.item.sum
+                        hasComputed = true
+                        break;
+                    } else if (j === items.length - 1) {
+                        items.push({
+                            name: tmpItem.item.name,
+                            sum: tmpItem.item.sum
+                        })
+                        hasComputed = true
+                        break;
+                    }
+                }
+            } else if (i === result.length - 1) {
+                result.push({
+                    type: tmpItem.type,
+                    name: tmpItem.name,
+                    sum: tmpItem.item.sum,
+                    items: [{
+                        name: tmpItem.item.name,
+                        sum: tmpItem.item.sum
+                    }]
+                })
+                hasComputed = true
+            }
+            if (hasComputed) {
+                break
+            }
+        }
+    }
+
+    return result
+}
+
+/**
+ * 将金额amount根据类型linkType合并到resultItems中
+ * @param amount
+ * @param linkType
+ * @param resultItems
+ * @returns {*}
+ */
+const mergeAmountToResultItemsByLinkType = (amount, linkType, resultItems) => {
+    for (let i = 0; i < resultItems.length; i++) {
+        if (resultItems[i].name === linkType) {
+            resultItems[i].sum = resultItems[i].sum + amount
+        } else if (i === resultItems.length - 1) {
+            resultItems.push({name: linkType, sum: amount})
+        }
+    }
+    return resultItems
+}
 
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
-    getSelfLinkOperationCount,
     getSelfDoSingleItemLinkOperationCount,
-    getSelfALLDoSingleItemLinkOperationCount,
     getTaoBaoSingleItems,
     getSearchDataTaoBaoSingleItem,
     getSingleItemById,
-    getDeptLinkOperationCount
+    getErrorLinkOperationCount,
+    getLinkOperationCount,
+    getPayment,
+    getProfitData,
+    getAllSatisfiedSingleItems,
+    getMarketRatioData
 }

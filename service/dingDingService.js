@@ -107,6 +107,33 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
     }
     return flows;
 };
+
+
+const getFinishedFlowsByTimeRangeAndFormId = async (timeRange, formUuid) => {
+    const {access_token} = await getToken();
+    let completedFlows = [];
+    const statusArr = ["COMPLETED", "TERMINATED", "ERROR"];
+    for (let status of statusArr) {
+        const flows = await getFlowsByStatusAndTimeRange(
+            timeRange,
+            "modified",
+            status,
+            access_token,
+            com_userid,
+            formUuid
+        );
+        completedFlows = completedFlows.concat(flows)
+    }
+
+    console.log('hi')
+
+    // await ProcessModel.addProcess(completedFlows);
+    // await redisUtil.setKey(
+    //     redisKeys.AllFinishedFlowsBeforeToday,
+    //     JSON.stringify(await ProcessModel.getProcessList())
+    // );
+}
+
 // 获取今天的开始和结束时间
 const getTodayStartAndEnd = () => {
     const start = formatDateTime(new Date(), "YYYY-mm-dd 00:00:00");
@@ -301,11 +328,10 @@ const getAllFinishedFlowsBeforeToday = async () => {
  * @returns {Promise<void>}
  */
 const handleAsyncAllFinishedFlowsByTimeRange = async (startTime, endTime) => {
-
     const completedFlows = [];
     const statusArr = ["COMPLETED", "TERMINATED", "ERROR"];
     for (let status of statusArr) {
-        const currentFlowsOfStatus = await getFlowsFromDingDing(status, [startTime, endTime], "create");
+        const currentFlowsOfStatus = await getFlowsFromDingDing(status, [startTime, endTime], "modified");
         completedFlows.push(...currentFlowsOfStatus);
     }
     console.log(startTime, endTime + "新增流程数据=========>", completedFlows.length);
@@ -527,5 +553,6 @@ module.exports = {
     getAllFlowsOfToday,
     combineAllFlows,
     getTodayRunningAndFinishedFlows,
-    handleAsyncAllFinishedFlowsByTimeRange
+    handleAsyncAllFinishedFlowsByTimeRange,
+    getFinishedFlowsByTimeRangeAndFormId
 };

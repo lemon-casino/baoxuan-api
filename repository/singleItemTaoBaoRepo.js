@@ -1,3 +1,4 @@
+const Sequelize = require("sequelize")
 const sequelize = require('../model/init');
 const getSingleItemTaoBaoModel = require("../model/singleItemTaobaoModel")
 const singleItemTaoBaoModel = getSingleItemTaoBaoModel(sequelize)
@@ -81,7 +82,7 @@ const getTaoBaoSingleItems = async (pageIndex,
         if (linkType) {
             where.linkType = linkType
         }
-        if (errorItem.field) {
+        if (errorItem  && errorItem.field) {
             where[errorItem.field] = {[errorItem.operator]: errorItem.value}
         }
         if (linkStatus) {
@@ -121,17 +122,31 @@ const getTaoBaoSingleItems = async (pageIndex,
 const getErrorSingleItemsTotal = async (productLineLeaders,
                                         errorItem,
                                         timeRange) => {
+    const items = await getErrorSingleItems(productLineLeaders, errorItem, timeRange)
+    return items.length
+}
 
+/**
+ * 获取异常的单品表数据
+ * @param productLineLeaders
+ * @param errorItem
+ * @param timeRange
+ * @returns {Promise<*|*[]>}
+ */
+const getErrorSingleItems = async (productLineLeaders,
+                                   errorItem,
+                                   timeRange) => {
     const where = {}
     if (!errorItem.field) {
-        return 0
+        return []
     }
     try {
         where[errorItem.field] = {[errorItem.operator]: errorItem.value}
         where.productLineLeader = {$in: productLineLeaders}
         where.date = {$between: timeRange}
-        const result = await singleItemTaoBaoModel.count({where})
-        return result
+        const result = await singleItemTaoBaoModel.findAll({where})
+        const data = sequelizeUtil.extractDataValues(result)
+        return data
     } catch (e) {
         throw new Error(e.message)
     }
@@ -207,6 +222,41 @@ const getLinkTypes = async () => {
     }
 }
 
+/**
+ * 根据产品线负责人汇总数据: 支付金额、推广金额(payAmount)、汇总金额（）
+ * @param productLineLeader
+ * @returns {Promise<*|[]>}
+ */
+const sumPaymentByProductLineLeader = async (productLineLeader) => {
+    try {
+        const sumResult = await singleItemTaoBaoModel.findAll({
+            attributes: [
+                [Sequelize.fn('SUM', Sequelize.col('pay_amount')), 'payAmount'],
+                [Sequelize.fn('SUM', Sequelize.col('really_shipment_amount')), 'reallyShipmentAmount'],
+                [Sequelize.fn('SUM', Sequelize.col('profit_amount')), 'profitAmount'],
+            ],
+            where: {
+                productLineLeader
+            }
+        })
+        return sequelizeUtil.extractDataValues(sumResult)[0]
+    } catch (e) {
+        logger.error(e.message)
+        throw new Error(e.message)
+    }
+}
+
+/**
+ * 根据产品线负责人获取单品表数据
+ * @returns {Promise<void>}
+ */
+const getSingleItemsBy = async (where) => {
+    const result = await singleItemTaoBaoModel.findAll({
+        where
+    })
+    const data = sequelizeUtil.extractDataValues(result)
+    return data
+}
 
 module.exports = {
     saveSingleItemTaoBao,
@@ -215,5 +265,9 @@ module.exports = {
     getTaoBaoSingleItems,
     getLinkTypes,
     getSingleItemById,
-    getErrorSingleItemsTotal
+    getErrorSingleItemsTotal,
+    getErrorSingleItems,
+    sumPaymentByProductLineLeader,
+    getSingleItemsBy
+
 }

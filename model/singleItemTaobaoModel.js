@@ -462,6 +462,33 @@ module.exports = sequelize => {
       comment: "费用比例",
       field: "fee_rate"
     },
+    cartSumPayment: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: "0.00",
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "车总支付",
+      field: "cart_sum_payment"
+    },
+    accuratePeopleSumPayment: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: "0.00",
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "精准人群总支付;",
+      field: "accurate_people_sum_payment"
+    },
+    wanXiangTaiSumPayment: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: "0.00",
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "万象台总支付",
+      field: "wan_xiang_tai_sum_payment"
+    },
     createTime: {
       type: DataTypes.DATE,
       allowNull: true,
