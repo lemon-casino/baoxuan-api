@@ -13,10 +13,9 @@ const getFlowsByIds = async (req, res) => {
 }
 
 const getTodayFlowsByIds = async (req, res) => {
-    const {ids} = req.query
-    if (ids) {
-        const idsObj = JSON.parse(ids);
-        const flows = await flowService.getTodayFlowsByIds(idsObj)
+    const {ids} = req.body
+    if (ids && ids.length > 0) {
+        const flows = await flowService.getTodayFlowsByIds(ids)
         return res.send(biResponse.success(flows))
     }
 
