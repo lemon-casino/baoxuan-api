@@ -26,7 +26,6 @@ const getSelfJoinedResult = async (userId, status, importance) => {
 const todaySelfJoinedFlowsStatisticHub = async (req, res) => {
     const status = req.params.status;
     const {importance} = req.query
-    // todo: 需要返回前端直接从user中取
     const result = await getSelfJoinedResult(req.user.id, status, importance)
     if (result != null) {
         return res.send(biResponse.success(result))

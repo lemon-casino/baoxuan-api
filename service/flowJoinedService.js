@@ -75,19 +75,6 @@ const getTodaySelfJoinedFlowsStatisticOfOverDue = async (userId, importance) => 
                     break;
                 }
             }
-
-            // 正在做还未完成的工作已逾期
-            // if (reviewItems[i].type === statisticStatusConst.reviewType.todo && i > 0) {
-            //     // 计算现在工作时长是否超时
-            //     const costAlready = dateUtil.diff(new Date(), dateUtil.formatGMT(reviewItems[i - 1].operateTimeGMT))
-            //     const reviewRequirements = await FlowFormReview.getFlowFormReviewList(flow.formUuid)
-            //     const requiredCost = reviewUtil.extractTimeRequirement(reviewRequirements.form_review, reviewItems[i].activityId)
-            //
-            //     if (requiredCost > 0 && costAlready >= requiredCost) {
-            //         satisfiedFlows.doing.push(flow)
-            //         continue
-            //     }
-            // }
         }
     }
     return satisfiedFlows;

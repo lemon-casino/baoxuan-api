@@ -398,7 +398,8 @@ const getDeptStatistic = async (funOfTodaySelfStatistic, deptId, status, importa
             requiredDepartment.name, convertedResult)
     }
 
-    return await statisticResultUtil.removeUnsatisfiedDeptStatistic(convertedResult, deptId)
+    return convertedResult;
+    // await statisticResultUtil.removeUnsatisfiedDeptStatistic(convertedResult, deptId)
 }
 
 /**
