@@ -9,7 +9,7 @@ const flowHandler = require("../router_handler/flow_handler/flowHandler")
 const selfTodaySumHandler = require("../router_handler/flow_handler/statistic_today/selfTodaySumHandler")
 const deptTodaySumHandler = require("../router_handler/flow_handler/statistic_today/deptTodaySumHandler")
 
-router.get("/list/today", flowHandler.getTodayFlowsByIds)
+router.post("/list/today", flowHandler.getTodayFlowsByIds)
 
 router.get("/statistic/self-joined-today/:status", selfJoinTodayHandler.todaySelfJoinedFlowsStatisticHub)
 router.get("/statistic/self-launched-today/:status", selfLaunchTodayHandler.todaySelfLaunchedFlowsStatisticHub)
