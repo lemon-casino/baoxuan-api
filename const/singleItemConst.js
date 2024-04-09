@@ -86,9 +86,18 @@ const taoBaoErrorItems = [
     {name: "车总投产比低于2", value: {field: "shoppingCatSumRoi", operator: "$lt", value: "2", comparator: "<"}},
     {
         name: "精准人群推广投产比低于2",
-        value: {field: "accuratePeoplePromotionProductionRate", operator: "$lt", value: "2", comparator: "<"}
+        value: {
+            field: "accuratePeoplePromotionProductionRate",
+            operator: "$lt",
+            value: "2",
+            comparator: "<",
+            min: "0.000001"
+        }
     },
-    {name: "万相台投产比低于2", value: {field: "wanXiangTaiProductionRate", operator: "$lt", value: "2", comparator: "<"}},
+    {
+        name: "万相台投产比低于2",
+        value: {field: "wanXiangTaiProductionRate", operator: "$lt", value: "2", comparator: "<", min: "0.000001"}
+    },
     // 新品日搜索流量低于100，上架14天新品搜索目标达成30%以下
     {name: "流量未起", value: {field: "", operator: "", value: ""}},
 
@@ -141,7 +150,7 @@ const marketRatioGroup = [
 
 const fieldsWithPercentageTag = [
     "shouTaoReallyConversionRate", "profitRate", "shoppingCartSumClick", "shoppingCartConversion", "shoppingCatSumRoi",
-    "payConversionRate", "reallyDealRate", "shouTaoPeopleNumMarketRate", "salesMarketRate","shouTaoPeopleNumMarketRateCircleRateDay",
+    "payConversionRate", "reallyDealRate", "shouTaoPeopleNumMarketRate", "salesMarketRate", "shouTaoPeopleNumMarketRateCircleRateDay",
     "salesMarketRateCircleRateDay", "shouTaoPeopleNumMarketRateCircleRate7day", "salesMarketRateCircleRate7day",
     "shouTaoPeopleNumMarketRateCircleRate30day", "salesMarketRateCircleRate30day", "accuratePeoplePromotionProductionRate",
     "wanXiangTaiProductionRate", "feeRate"

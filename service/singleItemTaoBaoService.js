@@ -510,9 +510,14 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
     const uniqueItems = {}
     for (const item of taoBaoErrorItems) {
         const items = singleItems.filter((singleItem) => {
-            return eval(`parseFloat(${singleItem[item.value.field]})
+            const baseMatch = eval(`parseFloat(${singleItem[item.value.field]})
             ${item.value.comparator}
             ${parseFloat(item.value.value)}`)
+            let minMatch = true
+            if (item.value.min) {
+                minMatch = parseFloat(singleItem[item.value.field]) >= parseFloat(item.value.min)
+            }
+            return baseMatch && minMatch
         })
         result.items.push({name: item.name, sum: items.length})
         for (const tmp of items) {
