@@ -139,11 +139,20 @@ const marketRatioGroup = [
     {type: "flowRateDown", name: "流量占比下降", item: {name: "-29%--20%", range: [-29, -20.000001]}}
 ]
 
+const fieldsWithPercentageTag = [
+    "shouTaoReallyConversionRate", "profitRate", "shoppingCartSumClick", "shoppingCartConversion", "shoppingCatSumRoi",
+    "payConversionRate", "reallyDealRate", "shouTaoPeopleNumMarketRate", "salesMarketRate","shouTaoPeopleNumMarketRateCircleRateDay",
+    "salesMarketRateCircleRateDay", "shouTaoPeopleNumMarketRateCircleRate7day", "salesMarketRateCircleRate7day",
+    "shouTaoPeopleNumMarketRateCircleRate30day", "salesMarketRateCircleRate30day", "accuratePeoplePromotionProductionRate",
+    "wanXiangTaiProductionRate", "feeRate"
+]
+
 module.exports = {
     taoBaoSingleItemMap,
     taoBaoErrorItems,
     taoBaoSingleItemStatuses,
     taoBaoSingleItemStatusesKeys,
     profitRateRangeSumTypes,
-    marketRatioGroup
+    marketRatioGroup,
+    fieldsWithPercentageTag
 }

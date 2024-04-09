@@ -12,7 +12,8 @@ const {
     taoBaoErrorItems,
     taoBaoSingleItemStatuses,
     profitRateRangeSumTypes,
-    marketRatioGroup
+    marketRatioGroup,
+    fieldsWithPercentageTag
 } = require("../const/singleItemConst")
 const globalGetter = require("../global/getter")
 
@@ -156,6 +157,47 @@ const getTaoBaoSingleItems = async (pageIndex,
         fightingLinkIds,
         JSON.parse(timeRange))
     return data
+}
+
+/**
+ * 返回的单品信息百分比的数据需要加上%
+ * @param pageIndex
+ * @param pageSize
+ * @param productLineLeaderNames
+ * @param firstLevelProductLine
+ * @param secondLevelProductLine
+ * @param errorItem
+ * @param linkType
+ * @param linkStatus
+ * @param timeRange
+ * @returns {Promise<{pageCount: *, data: *, pageIndex: *, pageSize: *}|null>}
+ */
+const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
+                                                    pageSize,
+                                                    productLineLeaderNames,
+                                                    firstLevelProductLine,
+                                                    secondLevelProductLine,
+                                                    errorItem,
+                                                    linkType,
+                                                    linkStatus,
+                                                    timeRange) => {
+    const pagingSingleItems = await getTaoBaoSingleItems(pageIndex,
+        pageSize,
+        productLineLeaderNames,
+        firstLevelProductLine,
+        secondLevelProductLine,
+        errorItem,
+        linkType,
+        linkStatus,
+        timeRange)
+
+    const items = pagingSingleItems.data
+    for (const item of items) {
+        for (const field of fieldsWithPercentageTag) {
+            item[field] = `${item[field]}%`
+        }
+    }
+    return pagingSingleItems
 }
 
 
@@ -610,7 +652,7 @@ const getProfitData = async (singleItems) => {
     // 返回的数据模版
     const result = [
         {type: "deliveryAmount", name: "发货金额", sum: 0, items: []},
-        {type: "profitAmount", name: "利润额", sum: 0},
+        {type: "profitAmount", name: "利润额", sum: 0, items: []},
         {type: "profitRate", name: "利润率", sum: null, items: []}
     ]
     // 按照类别统计发货金额、利润额
@@ -628,18 +670,18 @@ const getProfitData = async (singleItems) => {
         // 发货金额
         const reallyShipmentAmount = parseFloat(singleItem.reallyShipmentAmount)
         // 汇总发货金额
-        result[0].sum = result[0].sum + reallyShipmentAmount
+        result[0].sum = new BigNumber(result[0].sum).plus(reallyShipmentAmount)
         // 分类汇总发货金额统计不同linkType的单品表数
         for (const resultItem of result[0].items) {
             if (resultItem.name === singleItem.linkType) {
-                resultItem.sum = resultItem.sum + reallyShipmentAmount
+                resultItem.sum = new BigNumber(resultItem.sum).plus(reallyShipmentAmount)
                 break
             }
         }
         // 利润额
         const profitAmount = parseFloat(singleItem.profitAmount)
         // 汇总利润额
-        result[1].sum = result[1].sum + profitAmount
+        result[1].sum = new BigNumber(result[1].sum).plus(profitAmount)
         // 分类汇总利润额
         for (const resultItem of result[1].items) {
             if (resultItem.name === singleItem.linkType) {
@@ -822,11 +864,30 @@ const getLatestBatchIdRecords = async (count) => {
     return data
 }
 
+/**
+ * 获取不重复singleItems
+ * @param singleItems
+ * @returns {*[]}
+ */
+const getUniqueSingleItems = (singleItems) => {
+    const linkIds = {}
+    const uniqueSingleItems = []
+    for (const singleItem of singleItems) {
+        if (Object.keys(linkIds).includes(singleItem.linkId.toString())) {
+            continue
+        }
+        uniqueSingleItems.push(singleItem)
+        linkIds[singleItem.linkId.toString()] = 1
+    }
+    return uniqueSingleItems
+}
+
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
     getSelfDoSingleItemLinkOperationCount,
     getTaoBaoSingleItems,
+    getTaoBaoSingleItemsWitPercentageTag,
     getSearchDataTaoBaoSingleItem,
     getSingleItemById,
     getErrorLinkOperationCount,
@@ -835,5 +896,6 @@ module.exports = {
     getProfitData,
     getAllSatisfiedSingleItems,
     getMarketRatioData,
-    getLatestBatchIdRecords
+    getLatestBatchIdRecords,
+    getUniqueSingleItems
 }

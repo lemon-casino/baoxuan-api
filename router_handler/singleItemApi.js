@@ -49,7 +49,7 @@ const getTaoBaoSingleItems = async (req, res, next) => {
             linkStatus,
             timeRange
         } = req.query
-        const result = await singleItemTaoBaoService.getTaoBaoSingleItems(
+        const result = await singleItemTaoBaoService.getTaoBaoSingleItemsWitPercentageTag(
             pageIndex,
             pageSize,
             productLineLeaders,
@@ -59,6 +59,7 @@ const getTaoBaoSingleItems = async (req, res, next) => {
             linkType,
             linkStatus,
             timeRange)
+
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)

@@ -4,7 +4,7 @@ const dateUtil = require("../utils/dateUtil")
 const moment = require("moment")
 
 /**
- * 获取链接操作数: 固定取前一天的数据
+ * 获取链接操作数: 获取库中最新一天的链接操作数据
  * @param req
  * @param res
  * @param next
@@ -22,7 +22,6 @@ const getLinkOperationCount = async (req, res, next) => {
             timeRange
         } = req.query
 
-        // const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD');
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
             productLineLeaders,
             firstLevelProductLine,
@@ -32,9 +31,10 @@ const getLinkOperationCount = async (req, res, next) => {
             linkStatus,
             timeRange)
 
+        const uniqueSingleItems = singleItemTaoBaoService.getUniqueSingleItems(singleItems)
         const result = await singleItemTaoBaoService.getLinkOperationCount(
             req.params.status,
-            singleItems,
+            uniqueSingleItems,
             productLineLeaders)
         return res.send(biResponse.success(result))
     } catch (e) {
@@ -59,7 +59,6 @@ const getErrorLinkCount = async (req, res, next) => {
             timeRange
         } = req.query
 
-        // const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD');
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
             productLineLeaders,
             firstLevelProductLine,
@@ -69,7 +68,8 @@ const getErrorLinkCount = async (req, res, next) => {
             linkStatus,
             timeRange
         )
-        const result = await singleItemTaoBaoService.getErrorLinkOperationCount(singleItems, status)
+        const uniqueSingleItems = singleItemTaoBaoService.getUniqueSingleItems(singleItems)
+        const result = await singleItemTaoBaoService.getErrorLinkOperationCount(uniqueSingleItems, status)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
