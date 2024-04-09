@@ -93,7 +93,8 @@ const getSingleItemDetails = async (req, res, next) => {
     try {
         const id = req.params.id
         const result = await singleItemTaoBaoService.getSingleItemById(id)
-        return res.send(biResponse.success(result))
+        const data = singleItemTaoBaoService.attachPercentageTagToField(result)
+        return res.send(biResponse.success(data))
     } catch (e) {
         next(e)
     }

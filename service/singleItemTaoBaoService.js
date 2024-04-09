@@ -192,16 +192,21 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
         timeRange)
 
     const items = pagingSingleItems.data
-    for (const item of items) {
-        for (const field of fieldsWithPercentageTag) {
-            if (item[field] && item[field] !== "0.00") {
-                item[field] = `${item[field]}%`
-            }
-        }
+    for (let item of items) {
+        item = attachPercentageTagToField(item)
     }
     return pagingSingleItems
 }
 
+
+const attachPercentageTagToField = (item) => {
+    for (const field of fieldsWithPercentageTag) {
+        if (item[field] && item[field] !== "0.00") {
+            item[field] = `${item[field]}%`
+        }
+    }
+    return item;
+}
 
 /**
  *  获取用户在淘宝单品表页面查询需要的数据
@@ -904,5 +909,6 @@ module.exports = {
     getAllSatisfiedSingleItems,
     getMarketRatioData,
     getLatestBatchIdRecords,
-    getUniqueSingleItems
+    getUniqueSingleItems,
+    attachPercentageTagToField
 }
