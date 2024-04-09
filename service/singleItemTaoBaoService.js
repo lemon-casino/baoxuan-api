@@ -743,10 +743,9 @@ const getMarketRatioData = async (singleItems) => {
         let salesMarketRateHasComputed = false
         let shouTaoPeopleNumMarketRateHasComputed = false
         // 坑产占比、流量占比（手淘人数市场占比环比（7天））
-        // todo: 流量占比先按照手淘人数市场占比环比（日）计算
         const {
             salesMarketRate,
-            shouTaoPeopleNumMarketRateCircleRateDay: shouTaoPeopleNumMarketRateCircleRate7Day
+            shouTaoPeopleNumMarketRateCircleRate7Day
         } = singleItem
         // 判断占比所在的区间
         for (const marketRatio of marketRatioGroup) {
