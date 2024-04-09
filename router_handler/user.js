@@ -111,9 +111,9 @@ exports.login = async (req, res, next) => {
         const {token, refreshToken} = await getTokenAndRefreshToken(username, password)
 
         // 用户基本信息
-        // const brief = await UsersModel.findOne({
-        //     where: {username: username},
-        // });
+        const brief = await UsersModel.findOne({
+            where: {username: username},
+        });
         //
         // if (!brief) {
         //     return res.send(biResponse.format(0, "用户不存在"));
@@ -209,7 +209,12 @@ exports.login = async (req, res, next) => {
 
         // 保存用户的登录记录
         const userId = tokenUtil.decodedToken(token.split(" ")[1]).id
-        const userLog = {userId: userId, userName: username, ip: req.ip, device: req.headers["user-agent"]}
+        const userLog = {
+            userId: userId,
+            userName: brief.dataValues.nickname,
+            ip: req.ip,
+            device: req.headers["user-agent"]
+        }
         await userLogService.saveUserLog(userLog)
 
         return res.send({
