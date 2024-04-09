@@ -18,10 +18,11 @@ const getLinkOperationCount = async (req, res, next) => {
             secondLevelProductLine,
             errorItem,
             linkType,
-            linkStatus
+            linkStatus,
+            timeRange
         } = req.query
 
-        const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD');
+        // const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD');
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
             productLineLeaders,
             firstLevelProductLine,
@@ -29,7 +30,7 @@ const getLinkOperationCount = async (req, res, next) => {
             errorItem,
             linkType,
             linkStatus,
-            [dateUtil.startOfDay(yesterday), dateUtil.endOfDay(yesterday)])
+            timeRange)
 
         const result = await singleItemTaoBaoService.getLinkOperationCount(
             req.params.status,
@@ -54,10 +55,11 @@ const getErrorLinkCount = async (req, res, next) => {
             secondLevelProductLine,
             errorItem,
             linkType,
-            linkStatus
+            linkStatus,
+            timeRange
         } = req.query
 
-        const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD');
+        // const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD');
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
             productLineLeaders,
             firstLevelProductLine,
@@ -65,7 +67,8 @@ const getErrorLinkCount = async (req, res, next) => {
             errorItem,
             linkType,
             linkStatus,
-            [dateUtil.startOfDay(yesterday), dateUtil.endOfDay(yesterday)])
+            timeRange
+        )
         const result = await singleItemTaoBaoService.getErrorLinkOperationCount(singleItems, status)
         return res.send(biResponse.success(result))
     } catch (e) {
@@ -158,7 +161,6 @@ const getMarketRatioData = async (req, res, next) => {
             timeRange
         } = req.query
 
-        const yesterday = moment().subtract(1, 'days').format('YYYY-MM-DD');
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
             productLineLeaders,
             firstLevelProductLine,

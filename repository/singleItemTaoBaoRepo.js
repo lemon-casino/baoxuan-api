@@ -262,6 +262,23 @@ const getSingleItemsBy = async (where) => {
     return data
 }
 
+/**
+ * 获取最新的几条数据
+ * @param count
+ * @returns {Promise<*|*>}
+ */
+const getLatestBatchIdRecords = async (count) => {
+    let data = await singleItemTaoBaoModel.findAll({
+        offset: 0,
+        limit: count || 1,
+        order: [["batchId", "desc"]]
+    })
+    data = data.map(function (item) {
+        return item.get({plain: true})
+    })
+    return data
+}
+
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
@@ -272,6 +289,6 @@ module.exports = {
     getErrorSingleItemsTotal,
     getErrorSingleItems,
     sumPaymentByProductLineLeader,
-    getSingleItemsBy
-
+    getSingleItemsBy,
+    getLatestBatchIdRecords
 }

@@ -98,10 +98,31 @@ const getSingleItemDetails = async (req, res, next) => {
     }
 }
 
+/**
+ * 获取单品表中最新的入库时间
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<*>}
+ */
+const getLatest = async (req, res, next) => {
+    try {
+        const data = await singleItemTaoBaoService.getLatestBatchIdRecords(1)
+        let latestDate = new Date().toDateString()
+        if (data && data.length > 0) {
+            latestDate = data[0].batchId
+        }
+        return res.send(biResponse.success(latestDate))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
     getTaoBaoSingleItems,
     getSearchDataTaoBaoSingleItem,
-    getSingleItemDetails
+    getSingleItemDetails,
+    getLatest
 }

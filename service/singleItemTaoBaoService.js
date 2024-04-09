@@ -543,7 +543,7 @@ const getPayment = async (singleItems) => {
             name: "支付金额",
             sum: 0,
             items: [
-                {name: "购物车", sum: 0},
+                {name: "精准词", sum: 0},
                 {name: "万相台", sum: 0},
                 {name: "精准人群", sum: 0}]
         },
@@ -552,7 +552,7 @@ const getPayment = async (singleItems) => {
             name: "推广金额",
             sum: 0,
             items: [
-                {name: "购物车", sum: 0},
+                {name: "精准词", sum: 0},
                 {name: "万相台", sum: 0},
                 {name: "精准人群", sum: 0}]
         },
@@ -561,7 +561,7 @@ const getPayment = async (singleItems) => {
             name: "投产比",
             sum: 0,
             items: [
-                {name: "购物车", sum: 0},
+                {name: "精准词", sum: 0},
                 {name: "万相台", sum: 0},
                 {name: "精准人群", sum: 0}
             ]
@@ -625,17 +625,29 @@ const getProfitData = async (singleItems) => {
     }
 
     for (const singleItem of singleItems) {
+        // 发货金额
+        const reallyShipmentAmount = parseFloat(singleItem.reallyShipmentAmount)
         // 汇总发货金额
-        result[0].sum = result[0].sum + parseFloat(singleItem.reallyShipmentAmount)
-        // 汇总利润额
-        result[1].sum = result[1].sum + parseFloat(singleItem.profitAmount)
-        // 统计不同linkType的单品表数
+        result[0].sum = result[0].sum + reallyShipmentAmount
+        // 分类汇总发货金额统计不同linkType的单品表数
         for (const resultItem of result[0].items) {
             if (resultItem.name === singleItem.linkType) {
-                resultItem.sum = resultItem.sum + 1
+                resultItem.sum = resultItem.sum + reallyShipmentAmount
                 break
             }
         }
+        // 利润额
+        const profitAmount = parseFloat(singleItem.profitAmount)
+        // 汇总利润额
+        result[1].sum = result[1].sum + profitAmount
+        // 分类汇总利润额
+        for (const resultItem of result[1].items) {
+            if (resultItem.name === singleItem.linkType) {
+                resultItem.sum = new BigNumber(resultItem.sum).plus(profitAmount)
+                break
+            }
+        }
+
         // 判断当前的单品是新品还是老品，新品90、新品150 归算为老品
         let singleItemType = "老品"
         if (singleItem.linkType.includes("新品")) {
@@ -800,6 +812,16 @@ const mergeAmountToResultItemsByLinkType = (amount, linkType, resultItems) => {
     return resultItems
 }
 
+/**
+ * 获取最新的几条数据
+ * @param count
+ * @returns {Promise<*>}
+ */
+const getLatestBatchIdRecords = async (count) => {
+    const data = singleItemTaoBaoRepo.getLatestBatchIdRecords(count)
+    return data
+}
+
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
@@ -812,5 +834,6 @@ module.exports = {
     getPayment,
     getProfitData,
     getAllSatisfiedSingleItems,
-    getMarketRatioData
+    getMarketRatioData,
+    getLatestBatchIdRecords
 }
