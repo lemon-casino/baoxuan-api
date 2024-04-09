@@ -636,9 +636,9 @@ const getPayment = async (singleItems) => {
     }
     // 投产比
     result[2].sum = result[1].sum === 0 ? 0 : (result[0].sum / result[1].sum).toFixed(2)
-    result[2].items[0].sum = result[0].items[0].sum === 0 ? 0 : (result[1].items[0].sum / result[0].items[0].sum).toFixed(2)
-    result[2].items[1].sum = result[0].items[1].sum === 0 ? 0 : (result[1].items[1].sum / result[0].items[1].sum).toFixed(2)
-    result[2].items[2].sum = result[0].items[2].sum === 0 ? 0 : (result[1].items[2].sum / result[0].items[2].sum).toFixed(2)
+    result[2].items[0].sum = result[1].items[0].sum === 0 ? 0 : (result[0].items[0].sum / result[1].items[0].sum).toFixed(2)
+    result[2].items[1].sum = result[1].items[1].sum === 0 ? 0 : (result[0].items[1].sum / result[1].items[1].sum).toFixed(2)
+    result[2].items[2].sum = result[1].items[2].sum === 0 ? 0 : (result[0].items[2].sum / result[1].items[2].sum).toFixed(2)
 
     return result
 }
