@@ -45,12 +45,12 @@ const stream = {
 
 // 处理未捕获的异常和未处理的Promise拒绝
 process.on("uncaughtException", (error) => {
-    logger.error("Uncaught Exception:", error);
+    // logger.error("Uncaught Exception:", error);
 });
 
 process.on("unhandledRejection", (reason, promise) => {
     // 检查 `reason` 是否为错误对象，如果是，则获取其堆栈信息；如果不是，直接转换为字符串
-    const message = reason instanceof Error ? reason.stack : reason.toString();
-    logger.error(`Unhandled Rejection at: ${promise}. Reason: ${message}`);
+    // const message = reason instanceof Error ? reason.stack : reason.toString();
+    // logger.error(`Unhandled Rejection at: ${promise}. Reason: ${message}`);
 });
 module.exports = {logger, stream};
