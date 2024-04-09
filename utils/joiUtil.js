@@ -1,4 +1,5 @@
 const Joi = require("joi")
+const ParameterError = require("../error/parameterError")
 const {commonJoiSchemas, joiErrorMessages} = require("../const/joiConst")
 
 const validate = (items) => {
@@ -43,9 +44,9 @@ const validate = (items) => {
         const {type, context: {label, key}} = error.details[0]
         const errorMsg = joiErrorMessages[type]
         if (errorMsg) {
-            throw new Error(`参数：${key} ${errorMsg}`)
+            throw new ParameterError(`参数：${key} ${errorMsg}`)
         }
-        throw new Error(error.message)
+        throw new ParameterError(error.message)
     }
 }
 

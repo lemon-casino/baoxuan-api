@@ -2,8 +2,9 @@ const express = require("express");
 require("express-async-errors")
 const path = require("path");
 const morgan = require('morgan');
-const SQLError = require("./error/sqlError")
+const {errorMessages, errorCodes} = require("./const/errorConst")
 const {logger} = require("./utils/log")
+
 
 const serverConfig = require('./config/index').serverConfig
 const app = express();
@@ -112,17 +113,22 @@ const userLogRouter = require("./router/userLogRouter")
 app.use("/user-logs", userLogRouter)
 
 app.use((err, req, res, next) => {
-    // 数据验证失败
-    if (err instanceof joi.ValidationError)
-        return res.send({code: 1, message: err.message});
-    // token解析失败
-    if (err.name === "UnauthorizedError")
-        return res.send({code: 401, message: "身份认证失败"});
-    if (err instanceof SQLError) {
-        logger.error(err.message, err.sql)
-        return res.send({code: err.code, message: "数据操作异常"})
+    if (err.code && err.message) {
+        return res.send({code: err.code, message: err.message});
     }
-    return res.send({code: 500, message: err.message});
+    // // 数据验证失败
+    // if (err instanceof joi.ValidationError)
+    //     return res.send({code: err.code, message: err.message});
+    // // token解析失败
+    // if (err.name === "UnauthorizedError")
+    //     return res.send({code: 401, message: "身份认证失败"});
+    //
+    //
+    // if (err instanceof SQLError) {
+    //     logger.error(err.message, err.sql)
+    //     return res.send({code: err.code, message: "数据操作异常"})
+    // }
+    return res.send({code: errorCodes.commonError, message: errorMessages.common});
 });
 
 app.listen(serverConfig.port, function () {

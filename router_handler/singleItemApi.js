@@ -1,5 +1,7 @@
 const singleItemTaoBaoService = require('../service/singleItemTaoBaoService')
 const biResponse = require("../utils/biResponse")
+const joiUtil = require("../utils/joiUtil")
+
 
 const saveSingleItemTaoBao = async (req, res, next) => {
     try {
@@ -14,6 +16,7 @@ const saveSingleItemTaoBao = async (req, res, next) => {
 const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (req, res, next) => {
     try {
         const {id, batchId, linkId} = req.query
+
         if (batchId) {
             await singleItemTaoBaoService.deleteSingleIteTaoBaoByBatchIdAndLinkId(batchId, linkId)
             return res.send(biResponse.success())
@@ -49,6 +52,9 @@ const getTaoBaoSingleItems = async (req, res, next) => {
             linkStatus,
             timeRange
         } = req.query
+
+        joiUtil.validate({pageIndex, pageSize})
+
         const result = await singleItemTaoBaoService.getTaoBaoSingleItemsWitPercentageTag(
             pageIndex,
             pageSize,
