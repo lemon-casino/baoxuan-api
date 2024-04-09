@@ -154,8 +154,8 @@ const marketRatioGroup = [
 const fieldsWithPercentageTag = [
     "shouTaoReallyConversionRate", "profitRate", "shoppingCartSumClick", "shoppingCartConversion", "shoppingCatSumRoi",
     "payConversionRate", "reallyDealRate", "shouTaoPeopleNumMarketRate", "salesMarketRate", "shouTaoPeopleNumMarketRateCircleRateDay",
-    "salesMarketRateCircleRateDay", "shouTaoPeopleNumMarketRateCircleRate7day", "salesMarketRateCircleRate7day",
-    "shouTaoPeopleNumMarketRateCircleRate30day", "salesMarketRateCircleRate30day", "accuratePeoplePromotionProductionRate",
+    "salesMarketRateCircleRateDay", "shouTaoPeopleNumMarketRateCircleRate7Day", "salesMarketRateCircleRate7Day",
+    "shouTaoPeopleNumMarketRateCircleRate30Day", "salesMarketRateCircleRate30Day", "accuratePeoplePromotionProductionRate",
     "wanXiangTaiProductionRate", "feeRate"
 ]
 
