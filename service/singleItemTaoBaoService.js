@@ -661,6 +661,7 @@ const getProfitData = async (singleItems) => {
     // 根据linkTypes初始化发货金额的items
     for (const linkType of linkTypes) {
         result[0].items.push({name: linkType.link_type, sum: 0})
+        result[1].items.push({name: linkType.link_type, sum: 0})
     }
 
     // 根据 profitRateRangeSumTypes 初始化sumProfitRate的items
