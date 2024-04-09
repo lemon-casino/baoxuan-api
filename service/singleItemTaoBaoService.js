@@ -732,7 +732,7 @@ const getProfitData = async (singleItems) => {
     }
     result[2].sum = 0
     if (result[0].sum > 0) {
-        result[2].sum = (result[1].sum / result[0].sum * 100).toFixed(2)
+        result[2].sum = `${(result[1].sum / result[0].sum * 100).toFixed(2)}%`
     }
     result[0].sum = result[0].sum.toFixed(2)
     result[1].sum = result[1].sum.toFixed(2)

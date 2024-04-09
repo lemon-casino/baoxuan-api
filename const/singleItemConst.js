@@ -83,7 +83,10 @@ const taoBaoErrorItems = [
         value: {field: "salesMarketRateCircleRate30Day", operator: "$lt", value: "-20", comparator: "<"}
     },
     // 投产低于2
-    {name: "车总投产比低于2", value: {field: "shoppingCatSumRoi", operator: "$lt", value: "2", comparator: "<"}},
+    {
+        name: "车总投产比低于2",
+        value: {field: "shoppingCatSumRoi", operator: "$lt", value: "2", comparator: "<", min: "0.000001"}
+    },
     {
         name: "精准人群推广投产比低于2",
         value: {
