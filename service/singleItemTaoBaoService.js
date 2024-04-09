@@ -194,7 +194,9 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
     const items = pagingSingleItems.data
     for (const item of items) {
         for (const field of fieldsWithPercentageTag) {
-            item[field] = `${item[field]}%`
+            if (item[field] && item[field] !== "0.00") {
+                item[field] = `${item[field]}%`
+            }
         }
     }
     return pagingSingleItems
