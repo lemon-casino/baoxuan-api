@@ -32,12 +32,11 @@ const get = async (url, params, token) => {
         const response = await axios.get(newUrl, config);
         return response.data;
     } catch (error) {
-
         let message = `${error.message}, url: ${newUrl}`
         if (config) {
             message = `${message}, config: ${JSON.stringify(config)}`
         }
-        logger.error(message);
+        // logger.error(message);
         throw new Error("请求处理异常")
     }
 }
@@ -64,7 +63,7 @@ const post = async (url, data, token) => {
         if (config) {
             message = `${message}, data: ${JSON.stringify(config)}`
         }
-        logger.error(message);
+        // logger.error(message);
         throw new Error("请求处理异常")
     }
 }
