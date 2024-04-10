@@ -1,5 +1,4 @@
 const axios = require("axios")
-const {logger} = require("./log")
 const dateUtil = require("./dateUtil")
 
 const delayTime = 300
@@ -35,8 +34,7 @@ const get = async (url, params, token) => {
         if (config) {
             message = `${message}, config: ${JSON.stringify(config)}`
         }
-        // logger.error(message);
-        throw new Error("请求处理异常")
+        throw new Error(message)
     }
 }
 
@@ -62,8 +60,7 @@ const post = async (url, data, token) => {
         if (config) {
             message = `${message}, data: ${JSON.stringify(config)}`
         }
-        // logger.error(message);
-        throw new Error("请求处理异常")
+        throw new Error(message)
     }
 }
 
