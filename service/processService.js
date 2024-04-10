@@ -1,4 +1,5 @@
 const processRepo = require("../repository/processRepo")
+const dateUtil = require("../utils/dateUtil")
 
 
 const getLatestModifiedProcess = async () => {
@@ -17,8 +18,13 @@ const correctStrFieldToJson = async () => {
     return await processRepo.correctStrFieldToJson()
 }
 
+const getProcessByProcessInstanceId = async (processInstanceId) => {
+    return await processRepo.getProcessByProcessInstanceId(processInstanceId)
+}
+
 module.exports = {
     getLatestModifiedProcess,
     saveProcess,
-    correctStrFieldToJson
+    correctStrFieldToJson,
+    getProcessByProcessInstanceId
 }

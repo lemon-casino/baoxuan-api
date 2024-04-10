@@ -28,7 +28,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "流程实例id",
-      field: "processInstanceId"
+      field: "process_instance_id"
     },
     processCode: {
       type: DataTypes.STRING(255),
@@ -37,7 +37,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "流程编码",
-      field: "processCode"
+      field: "process_code"
     },
     formUuid: {
       type: DataTypes.STRING(255),
@@ -46,7 +46,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "实例表单id",
-      field: "formUuid"
+      field: "form_uuid"
     },
     title: {
       type: DataTypes.STRING(255),
@@ -64,16 +64,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "流程审批结果",
-      field: "approvedResult"
-    },
-    originator: {
-      type: DataTypes.JSON,
-      allowNull: true,
-      defaultValue: null,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "流程发起人",
-      field: "originator"
+      field: "approved_result"
     },
     instanceStatus: {
       type: DataTypes.STRING(255),
@@ -82,16 +73,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "流程状态",
-      field: "instanceStatus"
-    },
-    data: {
-      type: DataTypes.JSON,
-      allowNull: true,
-      defaultValue: null,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "流程组件数据",
-      field: "data"
+      field: "instance_status"
     },
     actionExecutor: {
       type: DataTypes.JSON,
@@ -100,34 +82,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "多个执行人",
-      field: "actionExecutor"
-    },
-    createTimeGmt: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      defaultValue: null,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "创建时间",
-      field: "createTimeGMT"
-    },
-    modifiedTimeGmt: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      defaultValue: null,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "修改时间",
-      field: "modifiedTimeGMT"
-    },
-    overallprocessflow: {
-      type: DataTypes.JSON,
-      allowNull: true,
-      defaultValue: null,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "当前流程审核流",
-      field: "overallprocessflow"
+      field: "action_executor"
     },
     version: {
       type: DataTypes.STRING(255),
@@ -138,14 +93,14 @@ module.exports = sequelize => {
       comment: "版本",
       field: "version"
     },
-    updateTime: {
+    doneTime: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "修改时间",
-      field: "update_time"
+      comment: "完成时间",
+      field: "done_time"
     },
     createTime: {
       type: DataTypes.DATE,
@@ -156,6 +111,15 @@ module.exports = sequelize => {
       comment: "创建时间",
       field: "create_time"
     },
+    stockedTime: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "入库时间;",
+      field: "stocked_time"
+    },
     reviewId: {
       type: DataTypes.INTEGER,
       allowNull: true,
@@ -164,13 +128,31 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: null,
       field: "review_id"
+    },
+    originatorName: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: null,
+      field: "originator_name"
+    },
+    originatorId: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: null,
+      field: "originator_id"
     }
   };
   const options = {
-    tableName: "processes",
+    tableName: "process",
     comment: "",
     indexes: []
   };
-  const ProcessesModel = sequelize.define("processesModel", attributes, options);
-  return ProcessesModel;
+  const ProcessModel = sequelize.define("processModel", attributes, options);
+  return ProcessModel;
 };

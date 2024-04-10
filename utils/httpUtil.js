@@ -28,7 +28,6 @@ const get = async (url, params, token) => {
     }
 
     try {
-        await dateUtil.delay(80)
         const response = await axios.get(newUrl, config);
         return response.data;
     } catch (error) {

@@ -1,0 +1,16 @@
+module.exports = [
+    "/user/login",
+    "/user/tokens",
+    "/user/checkCode",
+    "/user/refreshToken",
+    "/user/addUser",
+    "/user/script/summaryscript",
+    "/util/getddUserList",
+    "/util/getLiuChengList",
+    "/util/getDpList",
+    "/util/getDpInfo",
+    "/user/flowpath/getliuchenglist",
+    "/user/flowpath/getoaallprocess",
+    "/user/flowpath/getyidaprocess",
+    /^\/download\/.*/,
+]

@@ -1,11 +1,11 @@
 const dateUtil = require("../utils/dateUtil")
 const FlowForm = require("../model/flowfrom")
-const formService = require("../service/formService")
+const formService = require("../service/flowFormService")
 const departmentService = require("../service/departmentService")
+const dingDingService = require("../service/dingDingService")
+const processService = require("../service/processService")
 const flowRepo = require("../repository/flowRepo")
 const globalGetter = require("../global/getter")
-const statisticResultUtil = require("../utils/statisticResultUtil")
-const flowStatusConst = require("../const/flowStatusConst")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -412,6 +412,59 @@ const getTodayFlowsByFormIdAndFlowStatus = async (formId, flowStatus) => {
 }
 
 /**
+ * 获取所有的流程数据
+ * @returns {Promise<*>}
+ */
+const getAllFlows = async () => {
+    const allFlows = await flowRepo.getAllProcesses()
+    return allFlows
+}
+
+const updateFlow = async (flow) => {
+    const result = await flowRepo.updateProcess(flow)
+    return result
+}
+
+/**
+ * 同步missing的历史已完成的流程
+ * @returns {Promise<void>}
+ */
+const syncMissingCompletedFlows = async () => {
+    const pullTimeRange = []
+    // 获取拉取钉钉完成流程的起始时间（异常情况下，当天更新失败，可能下次会拉取多天的）
+    const latestProcess = await processService.getLatestModifiedProcess();
+    if (latestProcess) {
+        // 钉钉返回的时间精确到分钟，同一分钟内可能会有入库失败的情况，
+        // 需要把这一分钟内的流程也筛出来，过滤掉
+        const {doneTime} = latestProcess
+        pullTimeRange.push(dateUtil.format2Str(doneTime, "YYYY-MM-DD"))
+    }
+    // 还没有历史数据，需要拉取全部的已完成的流程
+    else {
+        pullTimeRange.push(dateUtil.dateOfEarliest())
+    }
+    pullTimeRange.push(dateUtil.dateEndOffToday(210, "YYYY-MM-DD"))
+
+    // 获取指定范围时间范围内的流程
+    const finishedFlows = await dingDingService.getFinishedFlows(pullTimeRange)
+    let syncCount = 0
+    for (const flow of finishedFlows) {
+        // 同一天的完工流程可以存在失败的情况 已经入库
+        if (dateUtil.formatGMT2Str(flow.modifiedTimeGMT, "YYYY-MM-DD") === pullTimeRange[0].toString()) {
+            const savedFlow = await processService.getProcessByProcessInstanceId(flow.processInstanceId)
+            if (savedFlow) {
+                continue
+            }
+        }
+        syncCount = syncCount + 1
+        // 同步到数据库
+        await processService.saveProcess(flow)
+        console.log(`正在同步第${syncCount}个`)
+    }
+    console.log(`同步完成，共计：${syncCount}个`)
+}
+
+/**
  * 获取指定状态的表单流程filed的值
  * @param formId
  * @param linkIdKeyInFightingFlowForm
@@ -452,6 +505,9 @@ module.exports = {
     convertJonsToArr,
     convertSelfStatisticToDept,
     getDeptStatistic,
+    getAllFlows,
+    updateFlow,
     getTodayFlowsByFormIdAndFlowStatus,
+    syncMissingCompletedFlows,
     getFlowFormValues
 }

@@ -17,6 +17,7 @@ const configs = {
         define: {
             timestamps: false
         },
+        logging: false,
         timezone: '+08:00'
     },
     serverConfig:{

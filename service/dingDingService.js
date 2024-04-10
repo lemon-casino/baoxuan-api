@@ -57,7 +57,6 @@ const getFlowsByStatusAndTimeRange = async (
     let requestCount = 0;
     // 获取对应的流程的审核记录
     for (let i = 0; i < allData.length; i++) {
-        await delay(30);
         allData[i]["overallprocessflow"] = await getAllProcessFlow(
             token,
             userId,
@@ -90,10 +89,9 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
     // 循环请求宜搭实例详情和审核详情数据
     let flows = [];
     if (allForms) {
-        for (let i = 0; i < allForms.result.data.length; i++) {
-            const formUuid = allForms.result.data[i].formUuid;
-            await delay(30);
-            console.log(i + ":" + allForms.result.data.length + ":" + formUuid)
+        for (let i = 0; i < allForms.length; i++) {
+            const formUuid = allForms[i].formUuid;
+            console.log(i + ":" + allForms.length + ":" + formUuid)
             const allData = await getFlowsByStatusAndTimeRange(
                 timesRange,
                 timeAction,
@@ -478,29 +476,52 @@ const computeFlowsCost = async (flows) => {
     return newFlows
 }
 
+/**
+ * 获取今天进行中的流程
+ * @returns {Promise<*>}
+ */
 const getTodayRunningFlows = async () => {
     const statusObj = {"name": "RUNNING"}
-    return await getTodayFlowsOfStatus(statusObj)
+    return await getFlowsOfStatusAndTimeRange(statusObj.name)
 }
 
+/**
+ * 获取今天完成的流程
+ * @returns {Promise<*>}
+ */
 const getTodayFinishedFlows = async () => {
     const timeRangeOfToday = [dateUtil.startOfToday(), dateUtil.endOfToday()]
+    return await getFinishedFlows(timeRangeOfToday)
+}
+
+/**
+ * 根据时间范围获取该区间内的已完成的流程
+ * @param timeRange
+ * @returns {Promise<*[]>}
+ */
+const getFinishedFlows = async (timeRange) => {
     const statusArr = [
-        {"name": "ERROR", "timeAction": "modified", "timeRange": timeRangeOfToday},
-        {"name": "COMPLETED", "timeAction": "modified", "timeRange": timeRangeOfToday},
-        {"name": "TERMINATED", "timeAction": "modified", "timeRange": timeRangeOfToday}
+        {"name": "ERROR", "timeAction": "modified", "timeRange": timeRange},
+        {"name": "COMPLETED", "timeAction": "modified", "timeRange": timeRange},
+        {"name": "TERMINATED", "timeAction": "modified", "timeRange": timeRange}
     ]
     let flows = [];
     for (const statusObj of statusArr) {
-        const tmpFlows = await getTodayFlowsOfStatus(statusObj)
+        const tmpFlows = await getFlowsOfStatusAndTimeRange(statusObj.name, statusObj.timeRange, statusObj.timeAction)
         flows = flows.concat(tmpFlows);
     }
+    // 对flows按照modifiedTimeGMT进行升序
+    flows = flows.sort((curr, next) => dateUtil.formatGMT(curr.modifiedTimeGMT) - dateUtil.formatGMT(next.modifiedTimeGMT))
     return flows
 }
 
-
-const getTodayFlowsOfStatus = async (statusObj) => {
-    const flows = await getFlowsFromDingDing(statusObj.name, statusObj.timeRange, statusObj.timeAction);
+/**
+ * 根据状态和不同的时间(创建、修改)范围查询流程
+ * @param statusObj
+ * @returns {Promise<*>}
+ */
+const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
+    const flows = await getFlowsFromDingDing(status, timeRange, timeAction);
     // 同步流程的操作节点耗时信息
     for (const flow of flows) {
         const reviewItems = flow.overallprocessflow
@@ -509,7 +530,6 @@ const getTodayFlowsOfStatus = async (statusObj) => {
                 if (i == 0) {
                     continue
                 }
-
                 const {operateTimeGMT, activeTimeGMT} = reviewItems[i]
                 if (operateTimeGMT || activeTimeGMT) {
                     let computeEndDate = new Date()
@@ -520,10 +540,12 @@ const getTodayFlowsOfStatus = async (statusObj) => {
                     const costAlready = parseFloat(dateUtil.diff(computeEndDate, dateUtil.formatGMT(reviewItems[i - 1].operateTimeGMT)))
                     const reviewRequirements = await FlowFormReview.getFlowFormReviewList(flow.formUuid)
                     if (reviewRequirements && reviewRequirements.form_review) {
+                        flow.reviewId = reviewRequirements.id
                         const requiredCost = reviewUtil.extractTimeRequirement(reviewRequirements.form_review, reviewItems[i].activityId)
                         reviewItems[i]["cost"] = costAlready
                         reviewItems[i]["requiredCost"] = requiredCost === reviewUtil.unlimitedTime ? "无要求" : requiredCost
                         reviewItems[i]["isOverDue"] = requiredCost > 0 && costAlready >= requiredCost
+                        reviewItems[i].reviewId = reviewRequirements.id
                     }
                 }
             }
@@ -533,6 +555,10 @@ const getTodayFlowsOfStatus = async (statusObj) => {
     return flows
 }
 
+/**
+ * 获取今天进行中和今天完成的流程
+ * @returns {Promise<T[]>}
+ */
 const getTodayRunningAndFinishedFlows = async () => {
     let flows = [];
     const todayRunningFlows = await getTodayRunningFlows();
@@ -553,6 +579,7 @@ module.exports = {
     getAllFlowsOfToday,
     combineAllFlows,
     getTodayRunningAndFinishedFlows,
+    getFinishedFlows,
     handleAsyncAllFinishedFlowsByTimeRange,
     getFinishedFlowsByTimeRangeAndFormId
 };

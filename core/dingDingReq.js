@@ -1,6 +1,7 @@
 const dingDingReq = {};
 const {dingDingConfig} = require("../config")
 const httpUtil = require("../utils/httpUtil")
+const dingDingUtil = require("../utils/dingDingUtil")
 
 // 宜搭配置
 const systemToken = dingDingConfig.systemToken;
@@ -58,9 +59,12 @@ dingDingReq.getAllForms = async (token, userid) => {
         formTypes: "process",
         systemToken: systemToken,
         appType: appType,
-        userId: userid
+        userId: userid,
+        pageSize: 100,
+        pageNumber: 0
     }
-    return await httpUtil.get(url, params, token)
+    const result = await dingDingUtil.loopGet(url, params, token, [])
+    return result
 }
 
 // 6.获取宜搭流程id列表
@@ -178,7 +182,7 @@ dingDingReq.getFlowsOfStatusAndTimeRange = async (
         dataToSend[`${timeAction}FromTimeGMT`] = fromTimeGMT;
         dataToSend[`${timeAction}ToTimeGMT`] = toTimeGMT
     }
-    const result = getPagingFlows(token, dataToSend, pageNumber, pageSize)
+    const result = await getPagingFlows(token, dataToSend, pageNumber, pageSize)
     return result;
 }
 
@@ -276,6 +280,25 @@ dingDingReq.getDpInfo = async (access_token, dept_id) => {
     const url = `https://oapi.dingtalk.com/topapi/v2/department/get?access_token=${access_token}`
     const data = {language: "zh_CN", dept_id: dept_id}
     return await httpUtil.post(url, data)
+}
+
+/**
+ * 获取Form的详细的设计信息
+ * @param formId
+ * @param userId
+ * @param token
+ * @returns {Promise<any>}
+ */
+dingDingReq.getFormFields = async (formId, userId, token) => {
+    const url = "https://api.dingtalk.com/v1.0/yida/forms/formFields"
+    const params = {
+        appType: appType,
+        systemToken: systemToken,
+        formUuid: formId,
+        userId: userId
+    }
+    const result = await httpUtil.get(url, params, token)
+    return result
 }
 
 module.exports = dingDingReq;

@@ -1,5 +1,5 @@
 const biResponse = require("../utils/biResponse")
-const formService = require("../service/formService")
+const formService = require("../service/flowFormService")
 
 exports.getFormsByImportance = async (req, res) => {
     const {isImportant} = req.query

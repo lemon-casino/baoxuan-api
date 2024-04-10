@@ -4,22 +4,31 @@ const {
 module.exports = sequelize => {
   const attributes = {
     id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: null,
-      primaryKey: true,
-      autoIncrement: true,
-      comment: "key",
-      field: "id"
-    },
-    processId: {
       type: DataTypes.STRING(50),
       allowNull: false,
       defaultValue: null,
+      primaryKey: true,
+      autoIncrement: false,
+      comment: "key",
+      field: "id"
+    },
+    processInstanceId: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "流程id",
-      field: "process_id"
+      comment: null,
+      field: "process_instance_id"
+    },
+    orderIndex: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "在当前流程中的排序;",
+      field: "order_index"
     },
     size: {
       type: DataTypes.INTEGER,

@@ -2,21 +2,84 @@ const Sequelize = require('sequelize')
 const sequelize = require('../model/init');
 const getProcessModel = require("../model/processModel")
 const processModel = getProcessModel(sequelize)
+const processReviewRepo = require("../repository/processReviewRepo")
+const processDetailsRepo = require("../repository/processDetailsRepo")
+const flowFormDetailsRepo = require("../repository/flowFormDetailsRepo")
 const {logger} = require("../utils/log")
+const dateUtil = require("../utils/dateUtil")
 
 const getLatestModifiedProcess = async () => {
-    const latestProcess = await processModel.findOne({
-        order: "modifiedTimeGMT desc"
-    })
-    if (latestProcess) {
-        return latestProcess.dataValues
+    try {
+        const latestProcess = await processModel.findOne({
+            order: [["doneTime", "desc"]]
+        })
+        if (latestProcess) {
+            return latestProcess.dataValues
+        }
+        return latestProcess
+    } catch (e) {
+        logger.error(e.message)
+        return null
     }
-    return latestProcess
 }
 
 const saveProcess = async (process) => {
-    const result = await processModel.create(process);
-    return result
+    const transaction = await sequelize.transaction();
+    try {
+        const reviewItems = process.overallprocessflow
+        const data = process.data
+        const originator = process.originator
+
+        process.originatorName = originator.name.nameInChinese
+        process.originatorId = originator.userId
+        process.overallprocessflow = null
+        process.data = null
+        process.originator = null
+        process.createTime = dateUtil.formatGMT(process.createTimeGMT)
+        process.doneTime = dateUtil.formatGMT(process.modifiedTimeGMT)
+        process.stockedTime = new Date()
+        await processModel.create(process, {transaction})
+
+        for (let i = 0; i < reviewItems.length; i++) {
+            reviewItems[i].orderIndex = i
+            await processReviewRepo.saveProcessReview(reviewItems[i], transaction)
+        }
+        const flowFormDetails = await flowFormDetailsRepo.getFormDetailsByFormId(process.formUuid)
+        const detailsArr = []
+        for (const key of Object.keys(data)) {
+            const fieldDetails = flowFormDetails.filter((item) => item.fieldId === key)
+            detailsArr.push({
+                processInstanceId: process.processInstanceId,
+                fieldId: key,
+                fieldName: fieldDetails && fieldDetails.length > 0 ? fieldDetails[0].fieldName : "",
+                fieldValue: JSON.stringify(data[key])
+            })
+        }
+        await processDetailsRepo.saveProcessDetailsArrWithOutTrans(detailsArr, transaction)
+        await transaction.commit()
+        return true
+    } catch (e) {
+        logger.error(e.message)
+        await transaction.rollback()
+        return false
+    }
+}
+
+const getProcessByProcessInstanceId = async (processInstanceId) => {
+    try {
+        const result = await processModel.findOne({
+            where: {
+                processInstanceId
+            }
+        })
+        if (result) {
+            return result.dataValues
+        }
+        return null
+    } catch (e) {
+        logger.error(e.message)
+        throw new Error(e.message)
+    }
 }
 
 /**
@@ -64,5 +127,6 @@ const correctStrFieldToJson = async () => {
 module.exports = {
     getLatestModifiedProcess,
     saveProcess,
-    correctStrFieldToJson
+    correctStrFieldToJson,
+    getProcessByProcessInstanceId
 }
