@@ -33,13 +33,13 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (req, res, next) => {
 
 
 /**
- * 获取淘宝单品表数据
+ * 获取淘宝单品表数据： 同时汇总付费数据、支付数据、市场占有率
  * @param req
  * @param res
  * @param next
  * @returns {Promise<*>}
  */
-const getTaoBaoSingleItems = async (req, res, next) => {
+const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
     try {
         const {
             pageIndex,
@@ -54,8 +54,7 @@ const getTaoBaoSingleItems = async (req, res, next) => {
         } = req.query
 
         joiUtil.validate({pageIndex, pageSize})
-
-        const result = await singleItemTaoBaoService.getTaoBaoSingleItemsWitPercentageTag(
+        const result = await singleItemTaoBaoService.getTaoBaoSingleItemsWithStatistic(
             pageIndex,
             pageSize,
             productLineLeaders,
@@ -129,7 +128,7 @@ const getLatest = async (req, res, next) => {
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
-    getTaoBaoSingleItems,
+    getTaoBaoSingleItemsWithStatistic,
     getSearchDataTaoBaoSingleItem,
     getSingleItemDetails,
     getLatest

@@ -200,6 +200,68 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
 }
 
 
+/**
+ * 获取单品表数据，并进行付费数据、支付数据、市场占有率的汇总
+ * @param pageIndex
+ * @param pageSize
+ * @param productLineLeaderNames
+ * @param firstLevelProductLine
+ * @param secondLevelProductLine
+ * @param errorItem
+ * @param linkType
+ * @param linkStatus
+ * @param timeRange
+ * @returns {Promise<void>}
+ */
+const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
+                                                 pageSize,
+                                                 productLineLeaderNames,
+                                                 firstLevelProductLine,
+                                                 secondLevelProductLine,
+                                                 errorItem,
+                                                 linkType,
+                                                 linkStatus,
+                                                 timeRange) => {
+    // 获取分页单品表数据
+    const pagingSingleItems = await getTaoBaoSingleItemsWitPercentageTag(pageIndex,
+        pageSize,
+        productLineLeaderNames,
+        firstLevelProductLine,
+        secondLevelProductLine,
+        errorItem,
+        linkType,
+        linkStatus,
+        timeRange)
+
+    const singleItems = await getAllSatisfiedSingleItems(
+        productLineLeaderNames,
+        firstLevelProductLine,
+        secondLevelProductLine,
+        errorItem,
+        linkType,
+        linkStatus,
+        timeRange)
+    /**
+     *  付费数据： 精准人群、车、万象台
+     * 支付数据：按照新品老品分别统计发货金额和利润额，
+     *         利润率按照新老品指定的利润区间统计
+     * 获取市场占有率数据
+     */
+    // 付费数据
+    const paymentData = await getPayment(singleItems)
+    // 支付数据
+    const profitData = await getProfitData(singleItems)
+    // 市场占有率
+    const marketRioData = await getMarketRatioData(singleItems)
+
+    return {
+        pagingSingleItems,
+        paymentData,
+        profitData,
+        marketRioData
+    }
+}
+
 const attachPercentageTagToField = (item) => {
     for (const field of fieldsWithPercentageTag) {
         if (item[field] && item[field] !== "0.00") {
@@ -646,10 +708,10 @@ const getPayment = async (singleItems) => {
         result[1].items[2].sum = new BigNumber(result[1].items[2].sum).plus(accuratePeoplePromotionCost)
     }
     // 投产比
-    result[2].sum = result[1].sum === 0 ? 0 : (result[0].sum / result[1].sum).toFixed(2)
-    result[2].items[0].sum = result[1].items[0].sum === 0 ? 0 : (result[0].items[0].sum / result[1].items[0].sum).toFixed(2)
-    result[2].items[1].sum = result[1].items[1].sum === 0 ? 0 : (result[0].items[1].sum / result[1].items[1].sum).toFixed(2)
-    result[2].items[2].sum = result[1].items[2].sum === 0 ? 0 : (result[0].items[2].sum / result[1].items[2].sum).toFixed(2)
+    result[2].sum = new BigNumber(result[1].sum).isEqualTo(0) ? 0 : (result[0].sum / result[1].sum).toFixed(2)
+    result[2].items[0].sum = new BigNumber(result[1].items[0].sum).isEqualTo(0) ? 0 : (result[0].items[0].sum / result[1].items[0].sum).toFixed(2)
+    result[2].items[1].sum = new BigNumber(result[1].items[1].sum).isEqualTo(0) ? 0 : (result[0].items[1].sum / result[1].items[1].sum).toFixed(2)
+    result[2].items[2].sum = new BigNumber(result[1].items[2].sum).isEqualTo(0) ? 0 : (result[0].items[2].sum / result[1].items[2].sum).toFixed(2)
 
     return result
 }
@@ -914,5 +976,6 @@ module.exports = {
     getMarketRatioData,
     getLatestBatchIdRecords,
     getUniqueSingleItems,
-    attachPercentageTagToField
+    attachPercentageTagToField,
+    getTaoBaoSingleItemsWithStatistic
 }

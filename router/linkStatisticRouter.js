@@ -37,20 +37,4 @@ router.get('/link-operation-count/:status', linkStatisticApi.getLinkOperationCou
  */
 router.get('/error-link-count/:status', linkStatisticApi.getErrorLinkCount)
 
-/**
- *  付费数据： 精准人群、车、万象台
- */
-router.get('/payment', linkStatisticApi.getPaymentData)
-
-/**
- * 支付数据：按照新品老品分别统计发货金额和利润额，
- *         利润率按照新老品指定的利润区间统计
- */
-router.get('/profit', linkStatisticApi.getProfitData)
-
-/**
- * 获取市场占有率数据
- */
-router.get('/market-ratio', linkStatisticApi.getMarketRatioData)
-
 module.exports = router;
