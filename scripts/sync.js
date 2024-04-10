@@ -191,6 +191,6 @@ const extractProcessReview = async () => {
 }
 // extractProcessReview()
 
-// flowService.syncMissingCompletedFlows()
+flowService.syncMissingCompletedFlows()
 // 同步3.1号~3.31的已完成流程入库
 // dingDingService.handleAsyncAllFinishedFlowsByTimeRange("2024-03-01 00:00:00","2024-03-31 23:59:00");
