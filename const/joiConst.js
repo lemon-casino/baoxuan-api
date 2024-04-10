@@ -7,6 +7,7 @@ const joiErrorMessages = {
 }
 
 const commonJoiSchemas = {
+    id: Joi.required(),
     pageIndex: Joi.string().alphanum().required(),
     pageSize: Joi.string().alphanum().required(),
     startDate: Joi.date().required(),

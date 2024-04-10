@@ -145,8 +145,8 @@ const getTodayDeptLaunchedFlowsStatisticCountOfOverDue = async (deptId, importan
     if (!users) {
         return {
             sum: 0,
-            doing: [],
-            done: []
+            doing: {sum: 0},
+            done: {sum: 0}
         }
     }
     for (const user of users) {

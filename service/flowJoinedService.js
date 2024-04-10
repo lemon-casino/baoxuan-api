@@ -200,6 +200,9 @@ const getTodaySelfJoinedFlowsStatisticOfFlowStatus = async (userId, status, impo
     if (importance) {
         needFilterReviewItems = importance.items
     }
+    if (!needFilterReviewItems  || needFilterReviewItems.length ===0){
+        return filteredFlows
+    }
 
     for (const flow of filteredFlows) {
         // 将该流程统计到审核节点的各个操作人
@@ -210,14 +213,10 @@ const getTodaySelfJoinedFlowsStatisticOfFlowStatus = async (userId, status, impo
         for (const reviewItem of reviewItems) {
             // 如果需要过滤指定的items，那么不符合直接跳过
             if (needFilterReviewItems && needFilterReviewItems.length > 0) {
-                if (!needFilterReviewItems.includes(reviewItem.activityId)) {
-                    continue
+                if (needFilterReviewItems.includes(reviewItem.activityId) && reviewItem.operatorUserId === userId) {
+                    satisfiedFlows.push(flow);
+                    break
                 }
-            }
-
-            if (reviewItem.operatorUserId === userId) {
-                satisfiedFlows.push(flow);
-                break;
             }
         }
     }

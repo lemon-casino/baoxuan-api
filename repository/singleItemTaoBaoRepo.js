@@ -2,11 +2,11 @@ const Sequelize = require("sequelize")
 const sequelize = require('../model/init');
 const getSingleItemTaoBaoModel = require("../model/singleItemTaobaoModel")
 const singleItemTaoBaoModel = getSingleItemTaoBaoModel(sequelize)
-const {logger} = require("../utils/log")
 const uuidUtil = require("../utils/uuidUtil")
 const sequelizeUtil = require("../utils/sequelizeUtil")
 const pagingUtil = require("../utils/pagingUtil")
 const {taoBaoSingleItemStatusesKeys} = require("../const/singleItemConst")
+const NotFoundError = require("../error/http/notFoundError")
 
 /**
  * 保存淘宝的单品表数据
@@ -21,9 +21,7 @@ const saveSingleItemTaoBao = async (item) => {
         return await singleItemTaoBaoModel.create(item)
     } catch (e) {
         await deleteSingleIteTaoBaoByBatchIdAndLinkId(item.batchId, item.linkId)
-        logger.error(e.message)
-        logger.error(e.sql)
-        throw new Error(e.message)
+        throw e
     }
 }
 
@@ -34,18 +32,12 @@ const saveSingleItemTaoBao = async (item) => {
  * @returns {Promise<*|null>}
  */
 const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
-    try {
-        return await singleItemTaoBaoModel.destroy({
-            where: {
-                batchId,
-                linkId: linkId.toString()
-            }
-        })
-    } catch (e) {
-        logger.error(e.message)
-        logger.error(e.sql)
-        throw new Error(e.message)
-    }
+    return await singleItemTaoBaoModel.destroy({
+        where: {
+            batchId,
+            linkId: linkId.toString()
+        }
+    })
 }
 
 /**
@@ -56,7 +48,7 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
  * @param firstLevelProductLine 一级产品线
  * @param secondLevelProductLine 二级产品线
  * @param errorItem 异常项目
- * @param linkType 链接类型
+ * @param linkTypes 链接类型
  * @param linkStatus 链接状态
  * @param timeRange 时间区间
  * @returns {Promise<{pageCount: *, total: *, data: *}>}
@@ -67,53 +59,50 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     firstLevelProductLine,
                                     secondLevelProductLine,
                                     errorItem,
-                                    linkType,
+                                    linkTypes,
                                     linkStatus,
                                     fightingLinkIds,
                                     timeRange) => {
-    try {
-        if (pageIndex < 0 || pageSize < 0) {
-            throw new Error("分页参数无效")
-        }
-
-        const where = {}
+    const where = {date: {$between: timeRange}}
+    if (productLineLeaders.length === 1) {
+        where.productLineLeader = productLineLeaders[0]
+    } else if (productLineLeaders.length > 1) {
         where.productLineLeader = {$in: productLineLeaders}
-        where.date = {$between: timeRange}
-        if (linkType) {
-            where.linkType = linkType
-        }
-        if (errorItem && errorItem.field) {
-            where[errorItem.field] = {[errorItem.operator]: errorItem.value}
-        }
-        if (linkStatus) {
-            if (linkStatus === taoBaoSingleItemStatusesKeys.fighting) {
-                where.linkId = {$in: fightingLinkIds}
-            } else {
-                where.linkId = {$notIn: fightingLinkIds}
-            }
-        }
-
-        const satisfiedCount = await singleItemTaoBaoModel.count({
-            where
-        })
-        let data = await singleItemTaoBaoModel.findAll({
-            offset: pageIndex * pageSize,
-            limit: pageSize,
-            where,
-            order: [["linkId", "asc"], ["date", "asc"]]
-        })
-
-        data = data.map(function (item) {
-            return item.get({plain: true})
-        })
-        // data = sequelizeUtil.extractDataValues(data)
-        const result = pagingUtil.paging(Math.ceil(satisfiedCount / pageSize), satisfiedCount, data)
-        return result
-    } catch (e) {
-        logger.error(e.message)
-        logger.error(e.sql)
-        throw new Error(e.message)
     }
+    if (linkTypes) {
+        if (linkTypes.length === 1) {
+            where.linkType = linkTypes[0]
+        } else if (linkTypes.length > 1) {
+            where.linkType = {$in: linkTypes}
+        }
+    }
+
+    if (errorItem && errorItem.field) {
+        where[errorItem.field] = {[errorItem.operator]: errorItem.value}
+    }
+    if (linkStatus) {
+        if (linkStatus === taoBaoSingleItemStatusesKeys.fighting) {
+            where.linkId = {$in: fightingLinkIds}
+        } else {
+            where.linkId = {$notIn: fightingLinkIds}
+        }
+    }
+
+    const satisfiedCount = await singleItemTaoBaoModel.count({
+        where
+    })
+    let data = await singleItemTaoBaoModel.findAll({
+        offset: pageIndex * pageSize,
+        limit: pageSize,
+        where,
+        order: [["linkId", "asc"], ["date", "asc"]]
+    })
+
+    data = data.map(function (item) {
+        return item.get({plain: true})
+    })
+    const result = pagingUtil.paging(Math.ceil(satisfiedCount / pageSize), satisfiedCount, data)
+    return result
 }
 
 /**
@@ -144,16 +133,12 @@ const getErrorSingleItems = async (productLineLeaders,
     if (!errorItem.field) {
         return []
     }
-    try {
-        where[errorItem.field] = {[errorItem.operator]: errorItem.value}
-        where.productLineLeader = {$in: productLineLeaders}
-        where.date = {$between: timeRange}
-        const result = await singleItemTaoBaoModel.findAll({where})
-        const data = sequelizeUtil.extractDataValues(result)
-        return data
-    } catch (e) {
-        throw new Error(e.message)
-    }
+    where[errorItem.field] = {[errorItem.operator]: errorItem.value}
+    where.productLineLeader = {$in: productLineLeaders}
+    where.date = {$between: timeRange}
+    const result = await singleItemTaoBaoModel.findAll({where})
+    const data = sequelizeUtil.extractDataValues(result)
+    return data
 }
 
 /**
@@ -164,23 +149,17 @@ const getErrorSingleItems = async (productLineLeaders,
  * @returns {Promise<*>}
  */
 const getSingleItemByProductLeaderLinkTypeTimeRange = async (productLineLeader, linkType, timeRange) => {
-    try {
-        const singleItems = await singleItemTaoBaoModel.findAll({
-            where: {
-                productLineLeader,
-                linkType,
-                date: {
-                    $between: timeRange
-                }
+    const singleItems = await singleItemTaoBaoModel.findAll({
+        where: {
+            productLineLeader,
+            linkType,
+            date: {
+                $between: timeRange
             }
-        })
-        const result = sequelizeUtil.extractDataValues(singleItems)
-        return result
-    } catch (e) {
-        logger.error(e.message)
-        logger.error(e.sql)
-        throw new Error(e.message)
-    }
+        }
+    })
+    const result = sequelizeUtil.extractDataValues(singleItems)
+    return result
 }
 
 
@@ -190,20 +169,14 @@ const getSingleItemByProductLeaderLinkTypeTimeRange = async (productLineLeader, 
  * @returns {Promise<*|[]|null>}
  */
 const getSingleItemById = async (id) => {
-    try {
-        const singleItem = await singleItemTaoBaoModel.findAll({
-            where: {id}
-        })
-        if (singleItem && singleItem.length > 0) {
-            const result = sequelizeUtil.extractDataValues(singleItem)
-            return result[0]
-        } else {
-            throw new Error("单品信息不存在")
-        }
-    } catch (e) {
-        logger.error(e.message)
-        logger.error(e.sql)
-        throw new Error(e.message)
+    const singleItem = await singleItemTaoBaoModel.findAll({
+        where: {id}
+    })
+    if (singleItem && singleItem.length > 0) {
+        const result = sequelizeUtil.extractDataValues(singleItem)
+        return result[0]
+    } else {
+        throw new NotFoundError(`${id}所对应的单品信息不存在`)
     }
 }
 
@@ -212,18 +185,12 @@ const getSingleItemById = async (id) => {
  * @returns {Promise<*[]>}
  */
 const getLinkTypes = async () => {
-    try {
-        const result = await singleItemTaoBaoModel.findAll({
-            group: 'link_type',
-            attributes: ['link_type']
-        })
-        const data = sequelizeUtil.extractDataValues(result)
-        return data
-    } catch (e) {
-        logger.error(e.message)
-        logger.error(e.sql)
-        throw new Error(e.message)
-    }
+    const result = await singleItemTaoBaoModel.findAll({
+        group: 'link_type',
+        attributes: ['link_type']
+    })
+    const data = sequelizeUtil.extractDataValues(result)
+    return data
 }
 
 /**
@@ -232,22 +199,17 @@ const getLinkTypes = async () => {
  * @returns {Promise<*|[]>}
  */
 const sumPaymentByProductLineLeader = async (productLineLeader) => {
-    try {
-        const sumResult = await singleItemTaoBaoModel.findAll({
-            attributes: [
-                [Sequelize.fn('SUM', Sequelize.col('pay_amount')), 'payAmount'],
-                [Sequelize.fn('SUM', Sequelize.col('really_shipment_amount')), 'reallyShipmentAmount'],
-                [Sequelize.fn('SUM', Sequelize.col('profit_amount')), 'profitAmount'],
-            ],
-            where: {
-                productLineLeader
-            }
-        })
-        return sequelizeUtil.extractDataValues(sumResult)[0]
-    } catch (e) {
-        logger.error(e.message)
-        throw new Error(e.message)
-    }
+    const sumResult = await singleItemTaoBaoModel.findAll({
+        attributes: [
+            [Sequelize.fn('SUM', Sequelize.col('pay_amount')), 'payAmount'],
+            [Sequelize.fn('SUM', Sequelize.col('really_shipment_amount')), 'reallyShipmentAmount'],
+            [Sequelize.fn('SUM', Sequelize.col('profit_amount')), 'profitAmount'],
+        ],
+        where: {
+            productLineLeader
+        }
+    })
+    return sequelizeUtil.extractDataValues(sumResult)[0]
 }
 
 /**

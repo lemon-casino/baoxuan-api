@@ -218,7 +218,8 @@ const filterFlowsByImportance = async (flows, importance) => {
         const {isImportant, forms} = importance
         if (forms && forms.length > 0) {
             filteredFlows = filterFlowsByForms(filteredFlows, forms)
-        } else if (isImportant.toString() === "true" || isImportant.toString() === "false") {
+        }
+        if (isImportant.toString() === "true" || isImportant.toString() === "false") {
             filteredFlows = await filterFlowsByImportant(filteredFlows, isImportant)
         }
     }
@@ -233,13 +234,10 @@ const filterFlowsByImportance = async (flows, importance) => {
  * @returns {Promise<*>}
  */
 const filterFlowsByImportant = async (flows, isImportant) => {
-    if (!isImportant) {
-        return flows
-    }
     const formsOfImportance = await formService.getFormsByImportance(isImportant)
     const filteredFlows = flows.filter((flow) => {
         return formsOfImportance.some((form) => {
-            return form.formUuid === flow.formUuid
+            return form.flow_form_id === flow.formUuid
         })
     })
     return filteredFlows;

@@ -1,6 +1,7 @@
 const biResponse = require("../utils/biResponse")
 const singleItemTaoBaoService = require("../service/singleItemTaoBaoService")
 const dateUtil = require("../utils/dateUtil")
+const joiUtil = require("../utils/joiUtil")
 
 /**
  * 获取链接操作数: 获取库中最新一天的链接操作数据
@@ -11,7 +12,9 @@ const dateUtil = require("../utils/dateUtil")
  */
 const getLinkOperationCount = async (req, res, next) => {
     try {
-        const {productLineLeaders} = req.query
+        let {productLineLeaders} = req.query
+        joiUtil.validate({id: productLineLeaders})
+        productLineLeaders = JSON.parse(productLineLeaders)
         const latestSingleItems = await singleItemTaoBaoService.getLatestBatchIdRecords(1)
         const latestDate = latestSingleItems[0]["batchId"]
         const timeRange = [dateUtil.startOfDay(latestDate), dateUtil.endOfDay(latestDate)]
@@ -22,7 +25,7 @@ const getLinkOperationCount = async (req, res, next) => {
             null,
             null,
             null,
-            JSON.stringify(timeRange))
+            timeRange)
 
         const uniqueSingleItems = await singleItemTaoBaoService.getUniqueSingleItems(singleItems)
         const result = await singleItemTaoBaoService.getLinkOperationCount(
@@ -55,7 +58,7 @@ const getErrorLinkCount = async (req, res, next) => {
             null,
             null,
             null,
-            JSON.stringify(timeRange)
+            timeRange
         )
         const uniqueSingleItems = singleItemTaoBaoService.getUniqueSingleItems(singleItems)
         const result = await singleItemTaoBaoService.getErrorLinkOperationCount(uniqueSingleItems, status)

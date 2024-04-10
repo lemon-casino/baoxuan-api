@@ -117,7 +117,7 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
  * @param firstLevelProductLine 一级产品线
  * @param secondLevelProductLine 二级产品线
  * @param errorItem 异常项目
- * @param linkType 链接类型
+ * @param linkTypes 链接类型
  * @param linkStatus 链接状态
  * @param timeRange 时间区间
  * @returns {Promise<{pageCount: *, data: *, pageIndex: *, pageSize: *}|null>}
@@ -128,7 +128,7 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     firstLevelProductLine,
                                     secondLevelProductLine,
                                     errorItem,
-                                    linkType,
+                                    linkTypes,
                                     linkStatus,
                                     timeRange) => {
 
@@ -147,16 +147,15 @@ const getTaoBaoSingleItems = async (pageIndex,
     }
 
     const data = await singleItemTaoBaoRepo.getTaoBaoSingleItems(
-        parseInt(pageIndex),
-        parseInt(pageSize),
-        JSON.parse(productLineLeaderNames),
+        pageIndex, pageSize,
+        productLineLeaderNames,
         firstLevelProductLine,
         secondLevelProductLine,
-        JSON.parse(errorItem || "{}"),
-        linkType,
+        errorItem,
+        linkTypes,
         linkStatus,
         fightingLinkIds,
-        JSON.parse(timeRange))
+        timeRange)
     return data
 }
 
@@ -168,7 +167,7 @@ const getTaoBaoSingleItems = async (pageIndex,
  * @param firstLevelProductLine
  * @param secondLevelProductLine
  * @param errorItem
- * @param linkType
+ * @param linkTypes
  * @param linkStatus
  * @param timeRange
  * @returns {Promise<{pageCount: *, data: *, pageIndex: *, pageSize: *}|null>}
@@ -179,7 +178,7 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
                                                     firstLevelProductLine,
                                                     secondLevelProductLine,
                                                     errorItem,
-                                                    linkType,
+                                                    linkTypes,
                                                     linkStatus,
                                                     timeRange) => {
     const pagingSingleItems = await getTaoBaoSingleItems(pageIndex,
@@ -188,7 +187,7 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
         firstLevelProductLine,
         secondLevelProductLine,
         errorItem,
-        linkType,
+        linkTypes,
         linkStatus,
         timeRange)
 
@@ -208,7 +207,7 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
  * @param firstLevelProductLine
  * @param secondLevelProductLine
  * @param errorItem
- * @param linkType
+ * @param linkTypes
  * @param linkStatus
  * @param timeRange
  * @returns {Promise<void>}
@@ -219,17 +218,18 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
                                                  firstLevelProductLine,
                                                  secondLevelProductLine,
                                                  errorItem,
-                                                 linkType,
+                                                 linkTypes,
                                                  linkStatus,
                                                  timeRange) => {
     // 获取分页单品表数据
-    const pagingSingleItems = await getTaoBaoSingleItemsWitPercentageTag(pageIndex,
+    const pagingSingleItems = await getTaoBaoSingleItemsWitPercentageTag(
+        pageIndex,
         pageSize,
         productLineLeaderNames,
         firstLevelProductLine,
         secondLevelProductLine,
         errorItem,
-        linkType,
+        linkTypes,
         linkStatus,
         timeRange)
 
@@ -238,7 +238,7 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
         firstLevelProductLine,
         secondLevelProductLine,
         errorItem,
-        linkType,
+        linkTypes,
         linkStatus,
         timeRange)
     /**
@@ -247,7 +247,7 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
      *         利润率按照新老品指定的利润区间统计
      * 获取市场占有率数据
      */
-    // 付费数据
+        // 付费数据
     const paymentData = await getPayment(singleItems)
     // 支付数据
     const profitData = await getProfitData(singleItems)
@@ -327,9 +327,6 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
  * @returns {Promise<*|*[]|null>}
  */
 const getSingleItemById = async (id) => {
-    if (!id) {
-        throw new Error("id不能为空")
-    }
     const singleItem = await singleItemTaoBaoRepo.getSingleItemById(id)
     return singleItem
 }
@@ -352,21 +349,13 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
                                           linkType,
                                           linkStatus,
                                           timeRange) => {
-    if (!timeRange) {
-        throw new Error("查询条件：时间区间不能为空")
-    }
-    if (!productLineLeaders) {
-        throw new Error("查询条件：产品线负责人不能为空")
-    }
-    productLineLeaders = JSON.parse(productLineLeaders)
-    timeRange = JSON.parse(timeRange)
     const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
     const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
         999999,
         productLineLeaders,
         firstLevelProductLine,
         secondLevelProductLine,
-        JSON.parse(errorItem || "{}"),
+        errorItem,
         linkType,
         linkStatus,
         fightingLinkIds,
@@ -395,7 +384,7 @@ const getLinkOperationCount = async (status,
                 {name: "滞销", sum: 0}
             ]
         }
-        for (const productLineLeader of JSON.parse(productLineLeaders)) {
+        for (const productLineLeader of productLineLeaders) {
             const allUsers = await globalGetter.getUsers()
             const users = allUsers.filter((user) => user.name === productLineLeader)
 

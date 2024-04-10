@@ -92,8 +92,6 @@ const getDeptTodaySum = async (req, res) => {
                     break;
                 }
             }
-
-
         }
     }
 

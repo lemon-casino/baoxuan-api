@@ -1,3 +1,4 @@
+const Joi = require("joi")
 const singleItemTaoBaoService = require('../service/singleItemTaoBaoService')
 const biResponse = require("../utils/biResponse")
 const joiUtil = require("../utils/joiUtil")
@@ -48,22 +49,22 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
             firstLevelProductLine,
             secondLevelProductLine,
             errorItem,
-            linkType,
+            linkTypes,
             linkStatus,
             timeRange
         } = req.query
 
         joiUtil.validate({pageIndex, pageSize})
         const result = await singleItemTaoBaoService.getTaoBaoSingleItemsWithStatistic(
-            pageIndex,
-            pageSize,
-            productLineLeaders,
+            parseInt(pageIndex),
+            parseInt(pageSize),
+            JSON.parse(productLineLeaders || "[]"),
             firstLevelProductLine,
             secondLevelProductLine,
-            errorItem,
-            linkType,
+            JSON.parse(errorItem || "{}"),
+            JSON.parse(linkTypes || "[]"),
             linkStatus,
-            timeRange)
+            JSON.parse(timeRange))
 
         return res.send(biResponse.success(result))
     } catch (e) {
@@ -97,6 +98,7 @@ const getSearchDataTaoBaoSingleItem = async (req, res, next) => {
 const getSingleItemDetails = async (req, res, next) => {
     try {
         const id = req.params.id
+        joiUtil.validate({id})
         const result = await singleItemTaoBaoService.getSingleItemById(id)
         const data = singleItemTaoBaoService.attachPercentageTagToField(result)
         return res.send(biResponse.success(data))
