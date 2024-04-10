@@ -1,7 +1,6 @@
 const biResponse = require("../utils/biResponse")
 const singleItemTaoBaoService = require("../service/singleItemTaoBaoService")
 const dateUtil = require("../utils/dateUtil")
-const moment = require("moment")
 
 /**
  * 获取链接操作数: 获取库中最新一天的链接操作数据
@@ -12,26 +11,20 @@ const moment = require("moment")
  */
 const getLinkOperationCount = async (req, res, next) => {
     try {
-        const {
-            productLineLeaders,
-            firstLevelProductLine,
-            secondLevelProductLine,
-            errorItem,
-            linkType,
-            linkStatus,
-            timeRange
-        } = req.query
-
+        const {productLineLeaders} = req.query
+        const latestSingleItems = await singleItemTaoBaoService.getLatestBatchIdRecords(1)
+        const latestDate = latestSingleItems[0]["batchId"]
+        const timeRange = [dateUtil.startOfDay(latestDate), dateUtil.endOfDay(latestDate)]
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
             productLineLeaders,
-            firstLevelProductLine,
-            secondLevelProductLine,
-            errorItem,
-            linkType,
-            linkStatus,
-            timeRange)
+            null,
+            null,
+            null,
+            null,
+            null,
+            JSON.stringify(timeRange))
 
-        const uniqueSingleItems = singleItemTaoBaoService.getUniqueSingleItems(singleItems)
+        const uniqueSingleItems = await singleItemTaoBaoService.getUniqueSingleItems(singleItems)
         const result = await singleItemTaoBaoService.getLinkOperationCount(
             req.params.status,
             uniqueSingleItems,
@@ -49,24 +42,20 @@ const getLinkOperationCount = async (req, res, next) => {
 const getErrorLinkCount = async (req, res, next) => {
     try {
         const status = req.params.status
-        const {
-            productLineLeaders,
-            firstLevelProductLine,
-            secondLevelProductLine,
-            errorItem,
-            linkType,
-            linkStatus,
-            timeRange
-        } = req.query
+        const {productLineLeaders} = req.query
+
+        const latestSingleItems = await singleItemTaoBaoService.getLatestBatchIdRecords(1)
+        const latestDate = latestSingleItems[0]["batchId"]
+        const timeRange = [dateUtil.startOfDay(latestDate), dateUtil.endOfDay(latestDate)]
 
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
             productLineLeaders,
-            firstLevelProductLine,
-            secondLevelProductLine,
-            errorItem,
-            linkType,
-            linkStatus,
-            timeRange
+            null,
+            null,
+            null,
+            null,
+            null,
+            JSON.stringify(timeRange)
         )
         const uniqueSingleItems = singleItemTaoBaoService.getUniqueSingleItems(singleItems)
         const result = await singleItemTaoBaoService.getErrorLinkOperationCount(uniqueSingleItems, status)

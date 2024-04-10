@@ -45,15 +45,11 @@ for (const key of Object.keys(routerMap)) {
 
 app.use((err, req, res, next) => {
     logger.error(err.message)
+    if (err.name === "UnauthorizedError")
+        return res.send({code: 401, message: errorMessages.unauthorized});
     if (err.code && err.message) {
         return res.send({code: err.code, message: err.message});
     }
-    // todo: -- 暂时保留，后面删除 start--
-    // token解析失败
-    if (err.name === "UnauthorizedError")
-        return res.send({code: 401, message: "身份认证失败"});
-
-    //  -- 暂时保留，后面删除 end--
     return res.send({code: errorCodes.commonError, message: errorMessages.common});
 });
 

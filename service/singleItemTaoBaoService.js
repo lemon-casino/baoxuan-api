@@ -16,6 +16,7 @@ const {
     fieldsWithPercentageTag
 } = require("../const/singleItemConst")
 const globalGetter = require("../global/getter")
+const NotFoundError = require("../error/http/notFoundError")
 
 // 天猫链接打架流程表单id
 const tmFightingFlowFormId = "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J"
@@ -872,8 +873,11 @@ const mergeAmountToResultItemsByLinkType = (amount, linkType, resultItems) => {
  * @returns {Promise<*>}
  */
 const getLatestBatchIdRecords = async (count) => {
-    const data = singleItemTaoBaoRepo.getLatestBatchIdRecords(count)
-    return data
+    const data = await singleItemTaoBaoRepo.getLatestBatchIdRecords(count)
+    if (data && data.length > 0) {
+        return data
+    }
+    throw new NotFoundError()
 }
 
 /**
