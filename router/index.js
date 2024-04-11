@@ -15,5 +15,6 @@ module.exports = {
     "/single-item":  require("./singleItemRouter"),
     "/link-statistic": require("./linkStatisticRouter"),
     "/user-logs":  require("./userLogRouter"),
+    "/market-data": require("./marketDataRouter"),
     "/download/:filename": require("./fileRouter")
 }
