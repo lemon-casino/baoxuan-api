@@ -65,7 +65,6 @@ const saveSingleItemTaoBao = async (item) => {
     for (const key of Object.keys(item)) {
         if (!validChineseKeys.includes(key)) {
             const errMsg = `当前单品数据中的${key}后端无法处理`
-            logger.error(errMsg)
             throw new Error(errMsg)
         }
         let value = item[key]

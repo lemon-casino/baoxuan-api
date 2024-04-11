@@ -5,17 +5,12 @@ const flowFormDetailsRepo = require("./flowFormDetailsRepo")
 const {logger} = require("../utils/log")
 
 const getAllForms = async () => {
-    try {
-        const result = await flowFormModel.findAll()
-        const flowForms = []
-        for (const flowForm of result) {
-            flowForms.push(flowForm.dataValues)
-        }
-        return flowForms
-    } catch (e) {
-        logger.error(e.message)
-        throw new Error(e.message)
+    const result = await flowFormModel.findAll()
+    const flowForms = []
+    for (const flowForm of result) {
+        flowForms.push(flowForm.dataValues)
     }
+    return flowForms
 }
 
 /**
@@ -35,9 +30,8 @@ const saveFormAndDetails = async (form, detailsArr) => {
         await transaction.commit()
         return true
     } catch (e) {
-        logger.error(e.message)
         await transaction.rollback()
-        return false
+        throw e
     }
 }
 
@@ -64,9 +58,8 @@ const updateFormAndAddDetails = async (form, detailsArr) => {
         await transaction.commit()
         return true
     } catch (e) {
-        logger.error(e.message)
         await transaction.rollback()
-        return false
+        throw e
     }
 }
 

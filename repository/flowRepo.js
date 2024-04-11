@@ -18,17 +18,12 @@ const getAllProcesses = async () => {
 }
 
 const updateProcess = async (process) => {
-    try {
-        await processModel.update(
-            {...process},
-            {
-                where: {processInstanceId: process.processInstanceId}
-            })
-        return true
-    } catch (e) {
-        logger.error(e.message)
-        return false
-    }
+    await processModel.update(
+        {...process},
+        {
+            where: {processInstanceId: process.processInstanceId}
+        })
+    return true
 }
 
 module.exports = {
