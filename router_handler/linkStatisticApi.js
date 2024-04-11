@@ -52,7 +52,7 @@ const getErrorLinkCount = async (req, res, next) => {
         const timeRange = [dateUtil.startOfDay(latestDate), dateUtil.endOfDay(latestDate)]
 
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
-            productLineLeaders,
+            JSON.parse(productLineLeaders),
             null,
             null,
             null,
