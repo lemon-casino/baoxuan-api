@@ -801,6 +801,7 @@ const getMarketRatioData = async (singleItems) => {
         })
     }
 
+    let index = 0
     for (const singleItem of singleItems) {
         let salesMarketRateHasComputed = false
         let shouTaoPeopleNumMarketRateHasComputed = false
@@ -814,11 +815,11 @@ const getMarketRatioData = async (singleItems) => {
             // 统计坑产占比
             if (!salesMarketRateHasComputed &&
                 marketRatio.name.includes("坑产占比") &&
-                salesMarketRate >= marketRatio.item.range[0] &&
-                salesMarketRate <= marketRatio.item.range[1]) {
+                parseFloat(salesMarketRate) >= marketRatio.item.range[0] &&
+                parseFloat(salesMarketRate) <= marketRatio.item.range[1]) {
                 // 将数据统计到result对应的节点中
                 for (const item of tmpResult) {
-                    if (item.item.name === marketRatio.item.name) {
+                    if (item.name.includes("坑产占比") && item.item.name === marketRatio.item.name) {
                         item.item.sum = item.item.sum + 1
                         salesMarketRateHasComputed = true
                         break;
@@ -828,11 +829,11 @@ const getMarketRatioData = async (singleItems) => {
             // 统计流量占比
             if (!shouTaoPeopleNumMarketRateHasComputed &&
                 marketRatio.name.includes("流量占比") &&
-                shouTaoPeopleNumMarketRateCircleRate7Day >= marketRatio.item.range[0] &&
-                shouTaoPeopleNumMarketRateCircleRate7Day <= marketRatio.item.range[1]) {
+                parseFloat(shouTaoPeopleNumMarketRateCircleRate7Day) >= marketRatio.item.range[0] &&
+                parseFloat(shouTaoPeopleNumMarketRateCircleRate7Day) <= marketRatio.item.range[1]) {
                 // 将数据统计到result对应的节点中
                 for (const item of tmpResult) {
-                    if (item.item.name === marketRatio.item.name) {
+                    if (item.name.includes("流量占比") && item.item.name === marketRatio.item.name) {
                         item.item.sum = item.item.sum + 1
                         shouTaoPeopleNumMarketRateHasComputed = true
                         break;
@@ -843,6 +844,7 @@ const getMarketRatioData = async (singleItems) => {
                 break
             }
         }
+        index = index + 1
     }
 
     // 根据type进行汇总
