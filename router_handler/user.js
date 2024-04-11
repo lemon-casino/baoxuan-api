@@ -63,6 +63,7 @@ exports.getCheckCode = async (req, res) => {
         effectTime
     );
     console.log('**** code ****', new Date())
+    // todo: 返回的验证码接口数据待调整
     if (result) {
         res.send({
             code: 200,
@@ -72,11 +73,7 @@ exports.getCheckCode = async (req, res) => {
             data: captcha.data,
         });
     } else {
-        return res.send({
-            code: 1,
-            message: "验证码获取失败",
-            data: null,
-        });
+        return res.send(biResponse.serverError("验证码获取失败"));
     }
 };
 /**
@@ -217,14 +214,7 @@ exports.login = async (req, res, next) => {
         }
         await userLogService.saveUserLog(userLog)
 
-        return res.send({
-            code: 200,
-            message: "登录成功",
-            data: {
-                token,
-                refreshToken
-            },
-        });
+        return res.send(biResponse.success({token, refreshToken}));
     } catch (e) {
         next(e)
     }
@@ -277,14 +267,7 @@ const checkCode = async (req, res) => {
     const {username, password} = req.body
 
 
-    return res.send({
-        code: 200,
-        message: "成功",
-        data: {
-            token: user.token,
-            refreshToken: user.refreshToken,
-        },
-    });
+    return res.send(biResponse.success({token: user.token, refreshToken: user.refreshToken}));
 }
 /**
  * 添加用户
@@ -302,11 +285,7 @@ exports.addUser = (req, res, next) => {
         },
     }).then(async (result) => {
         if (result && result.length)
-            return res.send({
-                code: 0,
-                message: "用户名被占用，请更换后重试！",
-                data: null,
-            });
+            return res.send(biResponse.serverError("用户名被占用，请更换后重试！"));
         else {
             // const password = 'admin123';
             const password = value.password;
@@ -330,14 +309,10 @@ exports.addUser = (req, res, next) => {
                     tokenConfig.jwtRefrechSecretKey,
                     tokenConfig.refreshSerectKeyExpire
                 );
-                return res.send({
-                    code: 200,
-                    message: "注册成功",
-                    data: {
-                        token,
-                        refreshToken,
-                    },
-                });
+                return res.send(biResponse.success({
+                    token,
+                    refreshToken,
+                }));
             }
         }
     });
@@ -363,19 +338,12 @@ exports.refreshToken = (req, res) => {
             tokenConfig.jwtRefrechSecretKey,
             tokenConfig.refreshSerectKeyExpire
         );
-        res.send({
-            code: 200,
-            message: "获取成功",
-            data: {
-                token,
-                refreshToken: newRefreshToken,
-            },
-        });
+        res.send(biResponse.success({
+            token,
+            refreshToken: newRefreshToken,
+        }));
     } else {
-        res.send({
-            code: 500,
-            message: _res.message,
-        });
+        res.send(biResponse.serverError(_res.message));
     }
 };
 /**
@@ -407,11 +375,7 @@ exports.getList = (req, res, next) => {
         limit: limit,
         where: where,
     }).then(function (users) {
-        return res.send({
-            code: 0,
-            message: "获取成功",
-            data: users,
-        });
+        return res.send(biResponse.success(users));
     });
 };
 /**
@@ -436,26 +400,14 @@ exports.editUser = (req, res, next) => {
         },
     }).then((result) => {
         if (result && result.length)
-            return res.send({
-                code: 1,
-                message: "用户名被占用，请更换后重试！",
-                data: null,
-            });
+            return res.send(biResponse.serverError("用户名被占用，请更换后重试！"));
         else {
             const result = UsersModel.updateUser(user_id, req.body);
             result.then(function (ret) {
                 if (ret === true) {
-                    return res.send({
-                        code: 200,
-                        message: "修改成功",
-                        data: ret,
-                    });
+                    return res.send(biResponse.success(ret));
                 } else {
-                    return res.send({
-                        code: 0,
-                        message: ret,
-                        data: null,
-                    });
+                    return res.send(biResponse.serverError(ret));
                 }
             });
         }
@@ -472,17 +424,9 @@ exports.deleteUser = (req, res, next) => {
     const user_ids = value.user_ids;
     UsersModel.delUser(user_ids || []).then(function (user) {
         if (user !== true) {
-            return res.send({
-                code: 0,
-                message: "删除失败",
-                data: null,
-            });
+            return res.send(biResponse.serverError("删除失败"));
         }
-        return res.send({
-            code: 200,
-            message: "删除成功",
-            data: user,
-        });
+        return res.send(biResponse.success(user));
     });
 };
 /**
@@ -494,30 +438,18 @@ exports.editPassword = (req, res, next) => {
         return next(error);
     }
     if (value.password !== value.repassword) {
-        return res.send({
-            code: 1,
-            message: "两次密码输入不一致",
-            data: null,
-        });
+        return res.send(biResponse.serverError("两次密码输入不一致"));
     }
     const user_id = value.user_id;
     const old_password = value.old_password;
     UsersModel.findOne({where: {user_id: user_id}}).then(function (user) {
         if (!user) {
-            return res.send({
-                code: 1,
-                message: "用户不存在",
-                data: null,
-            });
+            return res.send(biResponse.serverError("用户不存在"));
         }
         // 判断密码是否与数据库密码一致
         const compareResult = bcrypt.compareSync(old_password, user.password);
         if (!compareResult) {
-            return res.send({
-                code: 1,
-                message: "原密码不正确",
-                data: null,
-            });
+            return res.send(biResponse.serverError("原密码不正确"));
         }
         const data = {
             password: bcrypt.hashSync(value.password, 10),
@@ -530,17 +462,9 @@ exports.editPassword = (req, res, next) => {
         });
         result.then(function (ret) {
             if (ret) {
-                return res.send({
-                    code: 0,
-                    message: "修改成功",
-                    data: ret,
-                });
+                return res.send(biResponse.success(ret));
             } else {
-                return res.send({
-                    code: 1,
-                    message: ret,
-                    data: null,
-                });
+                return res.send(biResponse.serverError(ret));
             }
         });
     });
@@ -562,17 +486,9 @@ exports.getUserinfoById = (req, res, next) => {
         },
     }).then((user) => {
         if (!user) {
-            res.send({
-                code: 1,
-                message: "用户不存在",
-                data: null,
-            });
+            res.send(biResponse.serverError("用户不存在"));
         } else {
-            res.send({
-                code: 0,
-                message: "获取成功",
-                data: user,
-            });
+            res.send(biResponse.success(user));
         }
     });
 };

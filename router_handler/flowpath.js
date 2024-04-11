@@ -848,11 +848,7 @@ exports.getdepartment = async (req, res) => {
             .dep_child;
     }
     // 返回指定的部门信息
-    return res.send({
-        code: 200,
-        message: "获取成功",
-        data: dep_info,
-    });
+    return res.send(biResponse.success(dep_info));
 };
 
 const getDepartmentOfUser = async (ddUserId, ddAccessToken, parentDepartmentId, subDepartmentId) => {
@@ -909,8 +905,7 @@ exports.getSelfLaunchDoingFlowsStatistic = async (req, res) => {
         JSON.parse(formImportanceCondition),
         "RUNNING"
     );
-    const result = biResponse.success({"is_admin": isAdmin, "doing_br_faqi": selfLaunchStatistic})
-    return res.send(result)
+    return res.send(biResponse.success({"is_admin": isAdmin, "doing_br_faqi": selfLaunchStatistic}))
 }
 
 /**
@@ -943,8 +938,7 @@ exports.getSelfJoinDoingFlowsStatistic = async (req, res) => {
         "RUNNING"
     )
 
-    const result = biResponse.success({"is_admin": isAdmin, "br_canyu": selfJoinData})
-    return res.send(result)
+    return res.send(biResponse.success({"is_admin": isAdmin, "br_canyu": selfJoinData}))
 }
 
 exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
@@ -1143,8 +1137,7 @@ exports.getDepartmentJoinDoingFlowsStatistic = async (req, res) => {
             );
             console.timeEnd("部门参与");
 
-            return res.send(
-                biResponse.success({
+            return res.send(biResponse.success({
                     is_admin: is_admin,
                     dep_canyuliu: dep_canyuliu
                 })
@@ -1348,7 +1341,7 @@ exports.getoverview = async (req, res) => {
             };
         }
     }
-    return res.send(resObj);
+    return res.send(biResponse.success(resObj.data));
 };
 
 // 获取流程表单数据
@@ -1440,11 +1433,7 @@ exports.getprocessformlist = async (req, res) => {
     });
     console.timeEnd("组装表单数据时间");
 
-    return res.send({
-        code: 0,
-        message: "获取成功",
-        data: bd_liuc,
-    });
+    return res.send(biResponse.success(bd_liuc));
     console.log("req=========>", yd_form.result.data);
 };
 // 修改流程表单数据
@@ -1463,11 +1452,7 @@ exports.editprocessformobj = async (req, res) => {
     //   };
     // });
 
-    return res.send({
-        code: 0,
-        message: "获取成功",
-        data: [],
-    });
+    return res.send(biResponse.success([]));
     console.log("req=========>", yd_form.result.data);
 };
 // 获取所有流程表单的审核流列表
@@ -1535,11 +1520,7 @@ exports.getliuchenglist = async (req, res) => {
         }
     }
     excelUtil.createExcel(list, "审核流模版.xlsx");
-    return res.send({
-        code: 0,
-        message: "生成成功",
-        data: list,
-    });
+    return res.send(biResponse.success(list));
 };
 
 // 获取json文件数据
@@ -2126,11 +2107,7 @@ exports.createExcel = async (req, res) => {
         });
     });
 
-    return res.send({
-        code: 200,
-        message: "生成成功",
-        data: [],
-    });
+    return res.send(biResponse.success([]));
 };
 // 导出oa所有流程
 exports.getOaAllProcess = async (req, res) => {
@@ -3024,11 +3001,7 @@ exports.getOaAllProcess = async (req, res) => {
     //   ws.cell(rowIndex + 2, 1).string(item.flowTitle);
     // });
     wb.write("OA审批流模版1.xlsx");
-    return res.send({
-        code: 0,
-        message: "生成成功",
-        data: [],
-    });
+    return res.send(biResponse.success([]));
 };
 const datasss = require("./data.json");
 // http://127.0.0.1:9999/user/flowpath/getprocessAuditing
@@ -3046,11 +3019,7 @@ exports.getprocessAuditing = async (req, res) => {
     //   });
     // });
 
-    return res.send({
-        code: 0,
-        message: "运行成功",
-        data: [],
-    });
+    return res.send(biResponse.success([]));
 };
 
 // 格式化实例状态
@@ -3156,12 +3125,8 @@ exports.exportYiDaData = async (req, res) => {
         file_name ?? "指定流程数据"
     }.xlsx`;
     let fileUrl = `${req.protocol}://${req.get("host")}/download/${fileName}`;
-    return res.send({
-        code: 200,
-        message: "生成成功",
-        data: {
-            fileUrl: fileUrl,
-            fileName: fileName,
-        },
-    });
+    return res.send(biResponse.success({
+        fileUrl: fileUrl,
+        fileName: fileName,
+    }));
 };

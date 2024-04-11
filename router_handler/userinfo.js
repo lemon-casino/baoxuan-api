@@ -18,6 +18,7 @@ const whiteList = require("../config/whiteList");
 const {redisKeys} = require("../const/redisConst")
 const globalGetter = require("../global/getter")
 const departmentService = require("../service/departmentService")
+const biResponse = require("../utils/biResponse")
 
 // 部门数据集合
 const dep_list = [
@@ -224,11 +225,7 @@ exports.getUserinfo = async (req, res) => {
                     lev_dep_list,
                 };
             } else {
-                return res.send({
-                    code: 0,
-                    message: userInfo.errmsg,
-                    data: {},
-                });
+                return res.send(biResponse.serverError(userInfo.errmsg));
             }
         };
         const CorpToken = await getToken();
@@ -324,11 +321,7 @@ exports.getUserinfo = async (req, res) => {
 
         // 若无用户信息提示错误
         if (!user_roles) {
-            return res.send({
-                code: 1,
-                message: "帐号未分配角色",
-                data: "",
-            });
+            return res.send(biResponse.serverError("帐号未分配角色"));
         }
         let role_ids = [];
         let role_names = [];
@@ -348,10 +341,7 @@ exports.getUserinfo = async (req, res) => {
         });
         // 根据菜单id数组获取菜单详细信息
         const menus = await MenusModel.getListTree({menu_id: resource.menu_ids});
-        return res.send({
-            code: 0,
-            message: "获取成功",
-            data: {
+        return res.send(biResponse.success({
                 roles: role_names,
                 user_id: user_id,
                 name: user_roles.username,
@@ -362,8 +352,8 @@ exports.getUserinfo = async (req, res) => {
                 buttons: buttons,
                 dep_list: departmentsTemplate,
                 admin: whiteList.pepArr().includes(userid)
-            },
-        });
+            }
+        ));
     }
 };
 // 更新用户基本信息的处理函数
@@ -380,17 +370,9 @@ exports.updateUserInfo = (req, res, next) => {
     });
     result.then(function (ret) {
         if (ret) {
-            return res.send({
-                code: 0,
-                message: "修改成功",
-                data: ret,
-            });
+            return res.send(biResponse.success(ret));
         } else {
-            return res.send({
-                code: 1,
-                message: ret,
-                data: null,
-            });
+            return res.send(biResponse.serverError(ret));
         }
     });
 };
@@ -401,30 +383,18 @@ exports.updatepwd = (req, res, next) => {
         return next(error);
     }
     if (value.password !== value.repassword) {
-        return res.send({
-            code: 1,
-            message: "两次密码输入不一致",
-            data: null,
-        });
+        return res.send(biResponse.serverError("两次密码输入不一致"));
     }
     const user_id = req.user.id;
     const old_password = value.old_password;
     UsersModel.findOne({where: {user_id: user_id}}).then(function (user) {
         if (!user) {
-            return res.send({
-                code: 1,
-                message: "用户不存在",
-                data: null,
-            });
+            return res.send(biResponse.serverError("用户不存在"));
         }
         // 判断密码是否与数据库密码一致
         const compareResult = bcrypt.compareSync(old_password, user.password);
         if (!compareResult) {
-            return res.send({
-                code: 1,
-                message: "原密码不正确",
-                data: null,
-            });
+            return res.send(biResponse.serverError("原密码不正确"));
         }
         const data = {
             password: bcrypt.hashSync(value.password, 10),
@@ -437,17 +407,9 @@ exports.updatepwd = (req, res, next) => {
         });
         result.then(function (ret) {
             if (ret) {
-                return res.send({
-                    code: 0,
-                    message: "修改成功",
-                    data: ret,
-                });
+                return res.send(biResponse.success(ret));
             } else {
-                return res.send({
-                    code: 1,
-                    message: ret,
-                    data: null,
-                });
+                return res.send(biResponse.serverError(ret));
             }
         });
     });
@@ -505,19 +467,9 @@ exports.updateAvatar = (req, res) => {
         );
         result.then(function (ret) {
             if (ret) {
-                return res.send({
-                    code: 0,
-                    message: "重置头像成功",
-                    data: {
-                        srcUrl: newFilePath,
-                    },
-                });
+                return res.send(biResponse.success({srcUrl: newFilePath}));
             } else {
-                return res.send({
-                    code: 1,
-                    message: ret,
-                    data: null,
-                });
+                return res.send(biResponse.serverError(ret));
             }
         });
     });

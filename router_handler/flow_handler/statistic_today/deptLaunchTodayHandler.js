@@ -35,7 +35,7 @@ const todayDeptLaunchedFlowsStatisticHub = async (req, res) => {
     if (result != null) {
         return res.send(biResponse.success(result))
     }
-    return res.send(biResponse.format("500", `请求的状态：${status}不可用`))
+    return res.send(biResponse.serverError(`请求的状态：${status}不可用`))
 }
 module.exports = {
     getDeptLaunchedResult,

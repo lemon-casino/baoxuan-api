@@ -26,7 +26,7 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (req, res, next) => {
             // todo:根据需要补充
             return res.send(biResponse.success())
         }
-        return res.send(biResponse.format("500", "仅提供基于id和batchId的删除操作"))
+        return res.send(biResponse.serverError("仅提供基于id和batchId的删除操作"))
     } catch (e) {
         next(e)
     }
