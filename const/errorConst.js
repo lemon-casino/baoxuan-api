@@ -1,7 +1,8 @@
 const errorMessages = {
     "common": "服务器处理异常",
     "notFound": "未找到您要的资源",
-    "unauthorized": "身份认证失败"
+    "unauthorized": "身份认证失败",
+    "createFailed": "数据添加失败"
 }
 
 const errorCodes = {
@@ -12,9 +13,7 @@ const errorCodes = {
     "sqlError": 590,
 }
 
-const errorNames = {
-
-}
+const errorNames = {}
 
 module.exports = {
     errorCodes,

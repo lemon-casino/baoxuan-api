@@ -4,6 +4,7 @@ const dd = require("../core/dingDingReq");
 const UsersModel = require("../model/users");
 const {generateToken} = require("../utils/token");
 const tokenConfig = require("../config/index").tokenConfig;
+const biResponse = require("../utils/biResponse")
 
 // 定义获取流程列表的API接口URL
 const GET_PROCESS_LIST_URL =
@@ -89,11 +90,7 @@ exports.getddUserList = async (req, res) => {
                 dep_list,
             };
         } else {
-            return res.send({
-                code: 0,
-                message: userInfo.errmsg,
-                data: {},
-            });
+            return res.send(biResponse.serverError(userInfo.errmsg));
         }
     };
 
@@ -128,41 +125,29 @@ exports.getddUserList = async (req, res) => {
             tokenConfig.jwtRefrechSecretKey,
             tokenConfig.refreshSerectKeyExpire
         );
-        return res.send({
-            code: 200,
-            message: "登录成功",
-            data: {
-                is_userId: true,
-                token,
-                refreshToken,
-            },
-        });
+        return res.send(biResponse.success({
+            is_userId: true,
+            token,
+            refreshToken,
+        }));
     } else {
-        return res.send({
-            code: 200,
-            message: "获取用户信息成功",
-            data: {
-                is_userId: false,
-                name,
-                avatar,
-                mobile,
-                email,
-                hired_date,
-                dingding_user_id: userid,
-                // newLiuChengList
-            },
-        });
+        return res.send(biResponse.success({
+            is_userId: false,
+            name,
+            avatar,
+            mobile,
+            email,
+            hired_date,
+            dingding_user_id: userid
+        }));
     }
 };
 exports.getLiuChengList = async (req, res) => {
     try {
         let aa = await dd.corpAccessToken();
-
         return res.send(aa);
     } catch (error) {
-        return res.send({
-            err: error,
-        });
+        return res.send(biResponse.serverError(error.message));
     }
 };
 exports.getDpList = async (req, res) => {

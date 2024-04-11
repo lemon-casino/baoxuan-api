@@ -1,4 +1,6 @@
 const RoleModel = require("../model/roles");
+const biResponse = require("../utils/biResponse")
+
 // 导入需要的验证规则对象
 const {
   get_role_list_schema,
@@ -32,11 +34,7 @@ exports.getList = (req, res, next) => {
     limit: limit,
     where: where,
   }).then(function (roles) {
-    return res.send({
-      code: 200,
-      message: "获取成功",
-      data: roles,
-    });
+    return res.send(biResponse.success(roles));
   });
 };
 
@@ -46,11 +44,7 @@ exports.getAllRole = (req, res) => {
       status: "1",
     },
   }).then(function (roles) {
-    return res.send({
-      code: 200,
-      message: "获取成功",
-      data: roles,
-    });
+    return res.send(biResponse.success(roles));
   });
 };
 
@@ -58,35 +52,19 @@ exports.getRoleResource = (req, res) => {
   const role_id = req.query.role_id;
   RoleModel.getResource(role_id).then(function (resource) {
     if (!resource) {
-      return res.send({
-        code: 0,
-        message: "获取角色权限失败",
-        data: null,
-      });
+      return res.send(biResponse.serverError("获取角色权限失败"));
     }
-    return res.send({
-      code: 200,
-      message: "获取角色权限成功",
-      data: resource,
-    });
-  });
+    return res.send(biResponse.success(resource));
+  })
 };
 
 exports.getRoleAuth = (req, res) => {
   const role_id = req.query.role_id;
   RoleModel.getAuth(role_id).then(function (resource) {
     if (!resource) {
-      return res.send({
-        code: 0,
-        message: "获取角色权限失败",
-        data: null,
-      });
+      return res.send(biResponse.serverError("获取角色权限失败"));
     }
-    return res.send({
-      code: 200,
-      message: "获取角色权限成功",
-      data: resource,
-    });
+    return res.send(biResponse.success(resource));
   });
 };
 
@@ -97,17 +75,9 @@ exports.updateRoleResource = (req, res) => {
     data.all_ids ?? data.menu_ids.concat(data.permIds ? data.permIds : []);
   RoleModel.updateResource(role_id, all_ids).then(function (resource) {
     if (resource !== true) {
-      return res.send({
-        code: 0,
-        message: "修改失败",
-        data: null,
-      });
+      return res.send(biResponse.serverError("修改失败"));
     }
-    return res.send({
-      code: 200,
-      message: "修改成功",
-      data: resource,
-    });
+    return res.send(biResponse.success(resource));
   });
 };
 
@@ -119,17 +89,9 @@ exports.addRole = (req, res, next) => {
   }
   RoleModel.create(value).then(function (role) {
     if (!role) {
-      return res.send({
-        code: 0,
-        message: "创建失败",
-        data: null,
-      });
+      return res.send(biResponse.serverError("创建失败"));
     }
-    return res.send({
-      code: 200,
-      message: "创建成功",
-      data: role,
-    });
+    return res.send(biResponse.success(role));
   });
 };
 // 编辑角色接口
@@ -145,17 +107,9 @@ exports.editRole = (req, res, next) => {
     },
   }).then(function (role) {
     if (!role) {
-      return res.send({
-        code: 0,
-        message: "修改失败",
-        data: null,
-      });
+      return res.send(biResponse.serverError("修改失败"));
     }
-    return res.send({
-      code: 200,
-      message: "修改成功",
-      data: role,
-    });
+    return res.send(biResponse.success(role));
   });
 };
 // 删除角色接口
@@ -167,17 +121,9 @@ exports.deleteRole = (req, res, next) => {
   const role_ids = value.role_ids;
   RoleModel.delRole(role_ids || []).then(function (role) {
     if (role !== true) {
-      return res.send({
-        code: 0,
-        message: "删除失败",
-        data: null,
-      });
+      return res.send(biResponse.serverError("删除失败"));
     }
-    return res.send({
-      code: 200,
-      message: "删除成功",
-      data: role,
-    });
+    return res.send(biResponse.serverError(role));
   });
 };
 // 获取单角色接口
@@ -189,10 +135,6 @@ exports.getOneRole = (req, res, next) => {
   RoleModel.findOne({
     where: value,
   }).then(function (role) {
-    return res.send({
-      code: 200,
-      message: "获取成功",
-      data: role,
-    });
+    return res.send(biResponse.success(role));
   });
 };
