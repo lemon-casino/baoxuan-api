@@ -2721,7 +2721,7 @@ exports.getOaAllProcess = async (req, res) => {
             attendanceType: 0,
             flowTitle: "备用金",
             gmtModified: "2023-02-21T11:06Z",
-            iconName: "common#green",
+            iconName: "commonRepo.js#green",
             processCode: "PROC-B681BBE0-5839-4C7B-BDA8-8E23339D4F6F",
             iconUrl:
                 "https://img.alicdn.com/imgextra/i1/O1CN01N8qCer28EiATxILyj_!!6000000007901-0-tps-480-480.jpg",
