@@ -11,26 +11,21 @@ if (!fs.existsSync(logDirectory)) {
 }
 
 const logger = createLogger({
-    level: "info",
+    level: "error",
     format: format.combine(
         format.timestamp({
             format: "YYYY-MM-DD HH:mm:ss",
         }),
-        format.errors({stack: true}), // 以便记录错误堆栈
+        format.errors({stack: true}),
         format.splat(),
         format.json()
     ),
     defaultMeta: {service: "bi"},
     transports: [
         new DailyRotateFile({
-            filename: path.join(`${logDirectory}/%DATE%`, `warm.log`),
-            datePattern: 'YYYY-MM-DD',
-            level: "warm"
-        }),
-        new DailyRotateFile({
             level: "error",
             filename: path.join(`${logDirectory}/%DATE%`, `error.log`),
-            datePattern: 'YYYY-MM-DD',
+            datePattern: 'YYYY-MM-DD HH:mm:ss',
             prepend: true
         })
     ],
