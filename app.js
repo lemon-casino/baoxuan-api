@@ -1,6 +1,5 @@
 const express = require("express");
 require("express-async-errors")
-const path = require("path");
 const morgan = require('morgan');
 const {errorMessages, errorCodes} = require("./const/errorConst")
 const {logger, stream} = require("./utils/log")

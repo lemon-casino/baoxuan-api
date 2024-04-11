@@ -3,7 +3,7 @@ const ParameterError = require("../error/parameterError")
 const {commonJoiSchemas, joiErrorMessages} = require("../const/joiConst")
 
 const validate = (items) => {
-    // schema查找优先级： 自定义-common-无
+    // schema查找优先级： 自定义-commonRepo.js-无
     let tmpSchemas = {}
     let tmpValues = {}
     for (const key of Object.keys(items)) {
@@ -46,7 +46,7 @@ const validate = (items) => {
         if (errorMsg) {
             throw new ParameterError(`参数：${key} ${errorMsg}`)
         }
-        throw new ParameterError(error.message)
+        throw new ParameterError(`${error.message}(${type})`)
     }
 }
 
