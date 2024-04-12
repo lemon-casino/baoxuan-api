@@ -50,15 +50,56 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
             }
             let flow = await FlowFormReviewModel.findOne({
                 where: {form_id: depsend.form_id},
+                order: [["modifiedTime", "desc"]]
             });
             // // 如果存在该记录
             if (flow) {
                 // 如果 modifiedTime 字段不一致，更新 form_review 数据
                 if (flow.modifiedTime != depsend.modifiedTime) {
-                    console.log(depsend)
-                    await FlowFormReviewModel.update(depsend, {
-                        where: {form_id: depsend.form_id}
-                    });
+                    // 需要把以往相同节点已经添加时间的同步过来，形成新的节点
+                    const oldFormReviews = flow.form_review
+                    const newFormReviews = depsend.form_review
+
+                    // 查单个找节点在旧的reviewItem中保存的time
+                    const getConfirmedTime = (nodeId, oldReviewItems) => {
+                        // 遍历同级节点
+                        for (let i = 0; i < oldReviewItems.length; i++) {
+                            const oldReviewItem = oldReviewItems[i]
+                            if (nodeId === oldReviewItem.id) {
+                                return oldReviewItem.time
+                            }
+                        }
+                        // 遍历children
+                        for (let i = 0; i < oldReviewItems.length; i++) {
+                            const oldReviewItem = oldReviewItems[i]
+                            if (oldReviewItem.children && oldReviewItem.children.length > 0) {
+                                const time = getConfirmedTime(nodeId, oldReviewItem.children)
+                                if (time > 0) {
+                                    return time
+                                }
+                            }
+                        }
+                        return 0
+                    }
+
+                    // 为每一项formReview 根据已保存的数据设置时间
+                    const loopReviewItems = (reviewItems) => {
+                        for (let i = 0; i < reviewItems.length; i++) {
+                            const item = reviewItems[i]
+                            const confirmedTime = getConfirmedTime(item.id, oldFormReviews)
+                            item.time = confirmedTime
+                            if (item.children && item.children.length > 0) {
+                                loopReviewItems(item.children)
+                            }
+                            reviewItems[i] = item
+                        }
+                        return reviewItems
+                    }
+                    depsend.form_review = loopReviewItems(newFormReviews)
+                    await FlowFormReviewModel.create(depsend);
+                    // await FlowFormReviewModel.update(depsend, {
+                    //     where: {form_id: depsend.form_id}
+                    // });
                 }
                 // 如果不存在该记录，则新增
             } else {
