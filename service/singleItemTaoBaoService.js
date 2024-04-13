@@ -129,8 +129,10 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     secondLevelProductLine,
                                     errorItem,
                                     linkTypes,
+                                    linkHierarchies,
                                     linkStatus,
-                                    timeRange) => {
+                                    timeRange,
+                                    clickingAdditionalParams) => {
 
     const fightingLinkIds = []
     if (linkStatus) {
@@ -153,9 +155,11 @@ const getTaoBaoSingleItems = async (pageIndex,
         secondLevelProductLine,
         errorItem,
         linkTypes,
+        linkHierarchies,
         linkStatus,
         fightingLinkIds,
-        timeRange)
+        timeRange,
+        clickingAdditionalParams)
     return data
 }
 
@@ -179,8 +183,10 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
                                                     secondLevelProductLine,
                                                     errorItem,
                                                     linkTypes,
+                                                    linkHierarchies,
                                                     linkStatus,
-                                                    timeRange) => {
+                                                    timeRange,
+                                                    clickingAdditionalParams) => {
     const pagingSingleItems = await getTaoBaoSingleItems(pageIndex,
         pageSize,
         productLineLeaderNames,
@@ -188,8 +194,10 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
         secondLevelProductLine,
         errorItem,
         linkTypes,
+        linkHierarchies,
         linkStatus,
-        timeRange)
+        timeRange,
+        clickingAdditionalParams)
 
     const items = pagingSingleItems.data
     for (let item of items) {
@@ -219,8 +227,12 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
                                                  secondLevelProductLine,
                                                  errorItem,
                                                  linkTypes,
+                                                 linkHierarchies,
                                                  linkStatus,
-                                                 timeRange) => {
+                                                 timeRange,
+                                                 clickingAdditionalParams) => {
+
+    // todo: 如果速度影响较大，两个查询可以可以考虑一个查询然后做处理
     // 获取分页单品表数据
     const pagingSingleItems = await getTaoBaoSingleItemsWitPercentageTag(
         pageIndex,
@@ -230,8 +242,10 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
         secondLevelProductLine,
         errorItem,
         linkTypes,
+        linkHierarchies,
         linkStatus,
-        timeRange)
+        timeRange,
+        clickingAdditionalParams)
 
     const singleItems = await getAllSatisfiedSingleItems(
         productLineLeaderNames,
@@ -239,8 +253,10 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
         secondLevelProductLine,
         errorItem,
         linkTypes,
+        linkHierarchies,
         linkStatus,
-        timeRange)
+        timeRange,
+        clickingAdditionalParams)
     /**
      *  付费数据： 精准人群、车、万象台
      * 支付数据：按照新品老品分别统计发货金额和利润额，
@@ -351,9 +367,11 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
                                           firstLevelProductLine,
                                           secondLevelProductLine,
                                           errorItem,
-                                          linkType,
+                                          linkTypes,
+                                          linkHierarchies,
                                           linkStatus,
-                                          timeRange) => {
+                                          timeRange,
+                                          clickingAdditionalParams) => {
     const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
     const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
         999999,
@@ -361,10 +379,12 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
         firstLevelProductLine,
         secondLevelProductLine,
         errorItem,
-        linkType,
+        linkTypes,
+        linkHierarchies,
         linkStatus,
         fightingLinkIds,
-        timeRange)
+        timeRange,
+        clickingAdditionalParams)
     return satisfiedSingleItems.data
 }
 

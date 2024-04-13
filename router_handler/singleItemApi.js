@@ -50,8 +50,10 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
             secondLevelProductLine,
             errorItem,
             linkTypes,
+            linkHierarchies,
             linkStatus,
-            timeRange
+            timeRange,
+            clickingAdditionalParams
         } = req.query
 
         joiUtil.validate({pageIndex, pageSize})
@@ -63,8 +65,10 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
             secondLevelProductLine,
             JSON.parse(errorItem || "{}"),
             JSON.parse(linkTypes || "[]"),
+            JSON.parse(linkHierarchies || "[]"),
             linkStatus,
-            JSON.parse(timeRange))
+            JSON.parse(timeRange),
+            JSON.parse(clickingAdditionalParams || "[]"))
 
         return res.send(biResponse.success(result))
     } catch (e) {
