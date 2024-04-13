@@ -60,7 +60,9 @@ const getErrorLinkCount = async (req, res, next) => {
             null,
             null,
             null,
-            timeRange
+            null,
+            timeRange,
+            null
         )
         const uniqueSingleItems = singleItemTaoBaoService.getUniqueSingleItems(singleItems)
         const result = await singleItemTaoBaoService.getErrorLinkOperationCount(uniqueSingleItems, status)
