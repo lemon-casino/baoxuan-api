@@ -65,7 +65,7 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     fightingLinkIds,
                                     timeRange,
                                     clickingAdditionalParams) => {
-    const where = {date: {$between: timeRange}}
+    const where = {batchId: {$between: timeRange}}
     if (productLineLeaders) {
         if (productLineLeaders.length === 1) {
             where.productLineLeader = productLineLeaders[0]
@@ -81,7 +81,6 @@ const getTaoBaoSingleItems = async (pageIndex,
             where.linkHierarchy = {$in: linkHierarchies}
         }
     }
-
 
     if (linkTypes) {
         if (linkTypes.length === 1) {
