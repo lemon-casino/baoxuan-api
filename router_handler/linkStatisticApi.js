@@ -25,7 +25,9 @@ const getLinkOperationCount = async (req, res, next) => {
             null,
             null,
             null,
-            timeRange)
+            null,
+            timeRange,
+            null)
 
         const uniqueSingleItems = await singleItemTaoBaoService.getUniqueSingleItems(singleItems)
         const result = await singleItemTaoBaoService.getLinkOperationCount(

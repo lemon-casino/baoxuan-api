@@ -66,17 +66,22 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     timeRange,
                                     clickingAdditionalParams) => {
     const where = {date: {$between: timeRange}}
-    if (productLineLeaders.length === 1) {
-        where.productLineLeader = productLineLeaders[0]
-    } else if (productLineLeaders.length > 1) {
-        where.productLineLeader = {$in: productLineLeaders}
+    if (productLineLeaders) {
+        if (productLineLeaders.length === 1) {
+            where.productLineLeader = productLineLeaders[0]
+        } else if (productLineLeaders.length > 1) {
+            where.productLineLeader = {$in: productLineLeaders}
+        }
     }
 
-    if (linkHierarchies.length === 1) {
-        where.linkHierarchy = linkHierarchies[0]
-    } else if (linkHierarchies.length > 1) {
-        where.linkHierarchy = {$in: linkHierarchies}
+    if (linkHierarchies) {
+        if (linkHierarchies.length === 1) {
+            where.linkHierarchy = linkHierarchies[0]
+        } else if (linkHierarchies.length > 1) {
+            where.linkHierarchy = {$in: linkHierarchies}
+        }
     }
+
 
     if (linkTypes) {
         if (linkTypes.length === 1) {
@@ -86,8 +91,10 @@ const getTaoBaoSingleItems = async (pageIndex,
         }
     }
 
-    for (const clickingParam of clickingAdditionalParams) {
-        where[clickingParam.field] = {[clickingParam.operator]: clickingParam.value}
+    if (clickingAdditionalParams){
+        for (const clickingParam of clickingAdditionalParams) {
+            where[clickingParam.field] = {[clickingParam.operator]: clickingParam.value}
+        }
     }
 
     if (errorItem && errorItem.field) {
