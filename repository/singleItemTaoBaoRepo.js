@@ -194,6 +194,19 @@ const getLinkTypes = async () => {
 }
 
 /**
+ * 获取单品表中的链接层级
+ * @returns {Promise<[]|*>}
+ */
+const getLinkHierarchy = async () => {
+    const result = await singleItemTaoBaoModel.findAll({
+        group: 'link_hierarchy',
+        attributes: ['link_hierarchy']
+    })
+    let data = sequelizeUtil.extractDataValues(result)
+    return data
+}
+
+/**
  * 根据产品线负责人汇总数据: 支付金额、推广金额(payAmount)、汇总金额（）
  * @param productLineLeader
  * @returns {Promise<*|[]>}
@@ -252,5 +265,6 @@ module.exports = {
     getErrorSingleItems,
     sumPaymentByProductLineLeader,
     getSingleItemsBy,
-    getLatestBatchIdRecords
+    getLatestBatchIdRecords,
+    getLinkHierarchy
 }

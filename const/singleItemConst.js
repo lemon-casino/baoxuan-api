@@ -131,24 +131,24 @@ const profitRateRangeSumTypes = [
 ]
 
 const marketRatioGroup = [
-    {type: "salesRateNormal", name: "坑产占比正常", item: {name: "0-9%", range: [0, 8.999999]}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "50%及以上", range: [50, 999999]}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "40%-50%", range: [40, 49.999999]}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "30-40%", range: [30, 39.999999]}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "20%-30%", range: [20, 29.999999]}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "9%-20%", range: [9, 19.999999]}},
-    {type: "salesRateDown", name: "坑产占比下降", item: {name: "-10%-0", range: [-10, -0.000001]}},
-    {type: "salesRateDown", name: "坑产占比下降", item: {name: "-19%--10%", range: [-19, -10.000001]}},
-    {type: "salesRateDown", name: "坑产占比下降", item: {name: "-29%--19%", range: [-29, -19.000001]}},
-    {type: "flowRateNormal", name: "流量占比正常", item: {name: "0-10%", range: [0, 9.999999]}},
-    {type: "flowRateUp", name: "流量占比提升", item: {name: "50%及以上", range: [50, 999999]}},
-    {type: "flowRateUp", name: "流量占比提升", item: {name: "40%-50%", range: [40, 49.999999]}},
-    {type: "flowRateUp", name: "流量占比提升", item: {name: "30-40%", range: [30, 39.999999]}},
-    {type: "flowRateUp", name: "流量占比提升", item: {name: "20%-30%", range: [20, 29.999999]}},
-    {type: "flowRateUp", name: "流量占比提升", item: {name: "10%-20%", range: [10, 19.999999]}},
-    {type: "flowRateDown", name: "流量占比下降", item: {name: "-10%-0", range: [-10, 0.000001]}},
-    {type: "flowRateDown", name: "流量占比下降", item: {name: "-20%--10%", range: [-20, -10.000001]}},
-    {type: "flowRateDown", name: "流量占比下降", item: {name: "-29%--20%", range: [-29, -20.000001]}}
+    {type: "salesRateNormal", name: "坑产占比正常", item: {name: "0-9%", range: [0, 8.999999], field: "salesMarketRate"}},
+    {type: "salesRateUp", name: "坑产占比提升", item: {name: "50%及以上", range: [50, 999999], field: "salesMarketRate"}},
+    {type: "salesRateUp", name: "坑产占比提升", item: {name: "40%-50%", range: [40, 49.999999], field: "salesMarketRate"}},
+    {type: "salesRateUp", name: "坑产占比提升", item: {name: "30-40%", range: [30, 39.999999], field: "salesMarketRate"}},
+    {type: "salesRateUp", name: "坑产占比提升", item: {name: "20%-30%", range: [20, 29.999999], field: "salesMarketRate"}},
+    {type: "salesRateUp", name: "坑产占比提升", item: {name: "9%-20%", range: [9, 19.999999], field: "salesMarketRate"}},
+    {type: "salesRateDown", name: "坑产占比下降", item: {name: "-10%-0", range: [-10, -0.000001], field: "salesMarketRate"}},
+    {type: "salesRateDown", name: "坑产占比下降", item: {name: "-19%--10%", range: [-19, -10.000001], field: "salesMarketRate"}},
+    {type: "salesRateDown", name: "坑产占比下降", item: {name: "-29%--19%", range: [-29, -19.000001], field: "salesMarketRate"}},
+    {type: "flowRateNormal", name: "流量占比正常", item: {name: "0-10%", range: [0, 9.999999], field: "salesMarketRate"}},
+    {type: "flowRateUp", name: "流量占比提升", item: {name: "50%及以上", range: [50, 999999], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}},
+    {type: "flowRateUp", name: "流量占比提升", item: {name: "40%-50%", range: [40, 49.999999], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}},
+    {type: "flowRateUp", name: "流量占比提升", item: {name: "30-40%", range: [30, 39.999999], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}},
+    {type: "flowRateUp", name: "流量占比提升", item: {name: "20%-30%", range: [20, 29.999999], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}},
+    {type: "flowRateUp", name: "流量占比提升", item: {name: "10%-20%", range: [10, 19.999999], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}},
+    {type: "flowRateDown", name: "流量占比下降", item: {name: "-10%-0", range: [-10, 0.000001], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}},
+    {type: "flowRateDown", name: "流量占比下降", item: {name: "-20%--10%", range: [-20, -10.000001], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}},
+    {type: "flowRateDown", name: "流量占比下降", item: {name: "-29%--20%", range: [-29, -20.000001], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}}
 ]
 
 const fieldsWithPercentageTag = [
