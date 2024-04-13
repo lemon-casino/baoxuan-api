@@ -14,7 +14,7 @@ const logger = createLogger({
     level: "error",
     format: format.combine(
         format.timestamp({
-            format: "YYYY-MM-DD HH:mm:ss",
+            format: "YYYY-MM-DD",
         }),
         format.errors({stack: true}),
         format.splat(),
@@ -25,7 +25,7 @@ const logger = createLogger({
         new DailyRotateFile({
             level: "error",
             filename: path.join(`${logDirectory}/%DATE%`, `error.log`),
-            datePattern: 'YYYY-MM-DD HH:mm:ss',
+            datePattern: 'YYYY-MM-DD',
             prepend: true
         })
     ],
