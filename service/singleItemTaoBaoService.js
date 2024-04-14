@@ -32,6 +32,9 @@ const operationNewFlowFormId = "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3"
 const operationLeaderFieldId = "employeeField_lii5gvq3_id";
 // 天猫部门的id
 const tmDeptId = "903075138"
+// 链接问题处理数据需要筛选的流程表单id (运营优化方案流程)
+const errorLinkFormId = "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB";
+const linkIdField = "textField_liihs7kw"
 
 /**
  * 根据中文获取真实的数据库字段
@@ -172,8 +175,10 @@ const getTaoBaoSingleItems = async (pageIndex,
  * @param secondLevelProductLine
  * @param errorItem
  * @param linkTypes
+ * @param linkHierarchies
  * @param linkStatus
  * @param timeRange
+ * @param clickingAdditionalParams
  * @returns {Promise<{pageCount: *, data: *, pageIndex: *, pageSize: *}|null>}
  */
 const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
@@ -206,6 +211,16 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
     return pagingSingleItems
 }
 
+/**
+ * 没有被显式引用，误删！！！！！！
+ *
+ * 获取需要对于链接问题处理数据点击需要额外理的查询条件()
+ * @returns {[{field: string, value: *[], operator: string}]}
+ */
+const getLinkErrorQueryFields = async (status) => {
+    const errorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, status)
+    return {field: "linkId", operator: "$in", value: errorLinkIds}
+}
 
 /**
  * 获取单品表数据，并进行付费数据、支付数据、市场占有率的汇总
@@ -216,9 +231,11 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
  * @param secondLevelProductLine
  * @param errorItem
  * @param linkTypes
+ * @param linkHierarchies
  * @param linkStatus
  * @param timeRange
- * @returns {Promise<void>}
+ * @param clickingAdditionalParams
+ * @returns {Promise<{marketRioData: *[], profitData: ({name: string, sum: number, items: *[]}|{name: string, sum: null, items: *[]})[], paymentData: (*|*[]), pagingSingleItems: ({pageCount: *, data: *, pageIndex: *, pageSize: *}|null)}>}
  */
 const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
                                                  pageSize,
@@ -231,6 +248,14 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
                                                  linkStatus,
                                                  timeRange,
                                                  clickingAdditionalParams) => {
+
+    // 链接问题处理数据需要对clickingAdditionalParams进行转化
+    for (let i = 0; i < clickingAdditionalParams.length; i++) {
+        const param = clickingAdditionalParams[i]
+        if (Object.keys(param).includes("method") && Object.keys(availableFunctionsMap).includes(param["method"])) {
+            clickingAdditionalParams[i] = await availableFunctionsMap[param["method"]](param["param"])
+        }
+    }
 
     // todo: 如果速度影响较大，两个查询可以可以考虑一个查询然后做处理
     // 获取分页单品表数据
@@ -589,7 +614,7 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
  */
 const getErrorLinkOperationCount = async (singleItems, status) => {
 
-    const findSingleItemsDividedByUser = (runningErrorLinkIds, singleItems) => {
+    const findSingleItemsDividedByUser = (runningErrorLinkIds, singleItems, status) => {
         const result = {sum: 0, items: []}
         const errorSingleItems = singleItems.filter((item) => {
             return runningErrorLinkIds.includes(item.linkId)
@@ -600,20 +625,19 @@ const getErrorLinkOperationCount = async (singleItems, status) => {
             result.sum = result.sum + singleItemsOfUser.length
             result.items.push({
                 name: user.name,
-                sum: singleItemsOfUser.length
+                sum: singleItemsOfUser.length,
+                clickingAdditionalParams: [{"method": "getLinkErrorQueryFields", "param": status}]
             })
         }
         return result
     }
-    // 链接问题处理数据需要筛选的流程表单id (运营优化方案流程)
-    const errorLinkFormId = "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB";
-    const linkIdField = "textField_liihs7kw"
+
     const usersOfTM = await departmentService.getUsersOfDepartment(tmDeptId)
 
     // 进行中
     if (status.toUpperCase() === flowStatusConst.RUNNING) {
         const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING)
-        const result = findSingleItemsDividedByUser(runningErrorLinkIds, singleItems)
+        const result = findSingleItemsDividedByUser(runningErrorLinkIds, singleItems, flowStatusConst.RUNNING)
         return result
     }
     //  已完成
@@ -1013,6 +1037,10 @@ const getUniqueSingleItems = (singleItems) => {
     }
     return uniqueSingleItems
 }
+
+// 方法映射，为接口调用使用
+const availableFunctionsMap = {"getLinkErrorQueryFields": getLinkErrorQueryFields}
+
 
 module.exports = {
     saveSingleItemTaoBao,

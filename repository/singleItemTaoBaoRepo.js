@@ -90,9 +90,11 @@ const getTaoBaoSingleItems = async (pageIndex,
         }
     }
 
-    if (clickingAdditionalParams){
+    if (clickingAdditionalParams) {
         for (const clickingParam of clickingAdditionalParams) {
-            where[clickingParam.field] = {[clickingParam.operator]: clickingParam.value}
+            if (clickingParam.field && clickingParam.operator && clickingParam.value){
+                where[clickingParam.field] = {[clickingParam.operator]: clickingParam.value}
+            }
         }
     }
 

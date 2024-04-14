@@ -470,7 +470,7 @@ const syncMissingCompletedFlows = async () => {
  * @returns {Promise<*[]>}
  */
 const getFlowFormValues = async (formId, fieldKey, flowStatus) => {
-    const fightingLinkIds = []
+    let fightingLinkIds = []
     const flows = await getTodayFlowsByFormIdAndFlowStatus(formId, flowStatus)
     for (const flow of flows) {
         if (!flow.data) {
@@ -478,7 +478,12 @@ const getFlowFormValues = async (formId, fieldKey, flowStatus) => {
         }
         const runningLinkId = flow.data[fieldKey]
         if (runningLinkId) {
-            fightingLinkIds.push(runningLinkId)
+            if (runningLinkId.trim().includes(" ")){
+                fightingLinkIds = fightingLinkIds.concat(runningLinkId.split(/\s+/))
+            }else{
+                fightingLinkIds.push(runningLinkId)
+            }
+
         }
     }
     return fightingLinkIds
