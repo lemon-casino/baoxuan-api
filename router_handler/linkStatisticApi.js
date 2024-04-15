@@ -1,3 +1,4 @@
+const Joi = require("joi")
 const biResponse = require("../utils/biResponse")
 const singleItemTaoBaoService = require("../service/singleItemTaoBaoService")
 const dateUtil = require("../utils/dateUtil")
@@ -13,7 +14,8 @@ const joiUtil = require("../utils/joiUtil")
 const getLinkOperationCount = async (req, res, next) => {
     try {
         let {productLineLeaders} = req.query
-        joiUtil.validate({id: productLineLeaders})
+        joiUtil.validate({productLineLeaders: {value: productLineLeaders, schema: Joi.string().required().regex("")}})
+
         productLineLeaders = JSON.parse(productLineLeaders)
         const latestSingleItems = await singleItemTaoBaoService.getLatestBatchIdRecords(1)
         const latestDate = latestSingleItems[0]["batchId"]

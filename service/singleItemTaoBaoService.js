@@ -18,6 +18,7 @@ const linkTypeUtil = require("../utils/linkTypeUtil")
 const jsonUtil = require("../utils/jsonUtil")
 const globalGetter = require("../global/getter")
 const NotFoundError = require("../error/http/notFoundError")
+const tmpTMInnerGroupingConst = require("../const/tmp/tmInnerGroupingConst")
 
 // 天猫链接打架流程表单id
 const tmFightingFlowFormId = "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J"
@@ -346,17 +347,30 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
             }
         }
     }
+    // 天猫组deptId：903075138
+    const department = await departmentService.getDepartmentWithUsers("903075138")
     if (isTMLeader) {
-        // 天猫组deptId：903075138
-        const department = await departmentService.getDepartmentWithUsers("903075138")
-        for (const user of department.dep_user) {
-            result.productLineLeaders.push({
-                userId: user.userid, userName: user.name
-            })
+        const groupingResult = Object.keys(tmpTMInnerGroupingConst).map(key => {
+            return {[key]: tmpTMInnerGroupingConst[key]}
+        })
+        let hasGroupedUsers = []
+        for (const key of Object.keys(tmpTMInnerGroupingConst)) {
+            hasGroupedUsers = hasGroupedUsers.concat(tmpTMInnerGroupingConst[key])
         }
+        const noGroupedUsers = []
+        for (const user of department.dep_user) {
+            if (hasGroupedUsers.includes(user.name)) {
+                continue
+            }
+            noGroupedUsers.push(user.name)
+        }
+        groupingResult.push({"NoInnerGroup": noGroupedUsers})
+        result.productLineLeaders = groupingResult
     } else {
-        result.productLineLeaders = [{userId: userDDId, userName: user.nickname}]
+        const currentUser = department.dep_user.filter(user => user.userid === userDDId)
+        result.productLineLeaders = [currentUser[0].name]
     }
+
 
     let linkTypes = await singleItemTaoBaoRepo.getLinkTypes()
     linkTypes = linkTypes.map(linkType => linkType.link_type)
