@@ -4,7 +4,7 @@ const singleItemApi = require('../router_handler/singleItemApi')
 const singleItemPddApi = require("../router_handler/singleItemPddApi")
 
 
-router.post('/taobao', singleItemApi.saveSingleItemTaoBao);
+router.post('/taobao', singleItemApi.saveSingleItemTaoBao)
 router.delete("/taobao", singleItemApi.deleteSingleIteTaoBaoByBatchIdAndLinkId)
 router.get("/taobao", singleItemApi.getTaoBaoSingleItemsWithStatistic)
 router.get("/taobao/search-data", singleItemApi.getSearchDataTaoBaoSingleItem)

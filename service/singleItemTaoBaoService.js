@@ -678,66 +678,84 @@ const getErrorLinkOperationCount = async (singleItems, status) => {
  * @returns {Promise<*|*[]>}
  */
 const getPayment = async (singleItems) => {
-    const result = [
-        {
-            type: "payment",
-            name: "支付金额",
-            sum: 0,
-            items: [
-                {
-                    name: "精准词", sum: 0,
-                    clickingAdditionalParams: [
-                        jsonUtil.getSqlFieldQuery("cartSumPayment", "$gt", 0)
-                    ]
-                },
-                {
-                    name: "万相台", sum: 0,
-                    clickingAdditionalParams: [
-                        jsonUtil.getSqlFieldQuery("wanXiangTaiSumPayment", "$gt", 0)
-                    ]
-                },
-                {
-                    name: "精准人群", sum: 0,
-                    clickingAdditionalParams: [
-                        jsonUtil.getSqlFieldQuery("accuratePeopleSumPayment", "$gt", 0)
-                    ]
-                }]
-        },
-        {
-            type: "promotionAmount",
-            name: "推广金额",
-            sum: 0,
-            items: [
-                {
-                    name: "精准词", sum: 0,
-                    clickingAdditionalParams: [
-                        jsonUtil.getSqlFieldQuery("shoppingCartSumAmount", "$gt", 0)
-                    ]
-                },
-                {
-                    name: "万相台", sum: 0,
-                    clickingAdditionalParams: [
-                        jsonUtil.getSqlFieldQuery("wanXiangTaiCost", "$gt", 0)
-                    ]
-                },
-                {
-                    name: "精准人群", sum: 0,
-                    clickingAdditionalParams: [
-                        jsonUtil.getSqlFieldQuery("accuratePeoplePromotionCost", "$gt", 0)
-                    ]
-                }]
-        },
-        {
-            type: "roi",
-            name: "投产比",
-            sum: 0,
-            items: [
-                {name: "精准词", sum: 0},
-                {name: "万相台", sum: 0},
-                {name: "精准人群", sum: 0}
-            ]
-        }
-    ]
+
+    const result = []
+    result.push({
+        type: "payment",
+        name: "支付金额",
+        sum: 0,
+        items: [
+            {
+                name: "精准词", sum: 0,
+                clickingAdditionalParams: [
+                    jsonUtil.getSqlFieldQuery("cartSumPayment", "$gt", 0)
+                ]
+            },
+            {
+                name: "万相台", sum: 0,
+                clickingAdditionalParams: [
+                    jsonUtil.getSqlFieldQuery("wanXiangTaiSumPayment", "$gt", 0)
+                ]
+            },
+            {
+                name: "精准人群", sum: 0,
+                clickingAdditionalParams: [
+                    jsonUtil.getSqlFieldQuery("accuratePeopleSumPayment", "$gt", 0)
+                ]
+            }]
+    })
+    result.push({
+        type: "promotionAmount",
+        name: "推广金额",
+        sum: 0,
+        items: [
+            {
+                name: "精准词", sum: 0,
+                clickingAdditionalParams: [
+                    jsonUtil.getSqlFieldQuery("shoppingCartSumAmount", "$gt", 0)
+                ]
+            },
+            {
+                name: "万相台", sum: 0,
+                clickingAdditionalParams: [
+                    jsonUtil.getSqlFieldQuery("wanXiangTaiCost", "$gt", 0)
+                ]
+            },
+            {
+                name: "精准人群", sum: 0,
+                clickingAdditionalParams: [
+                    jsonUtil.getSqlFieldQuery("accuratePeoplePromotionCost", "$gt", 0)
+                ]
+            }]
+    })
+    const roiResult = {
+        type: "roi", name: "投产比", sum: 0,
+        items: [
+            {name: "精准词", sum: 0},
+            {name: "万相台", sum: 0},
+            {name: "精准人群", sum: 0}
+        ]
+    }
+    const cartSumPaymentLinkIds = singleItems.filter(item => item.cartSumPayment === 0 && item.shoppingCartSumAmount === 0).map(item => item.linkId)
+    if (cartSumPaymentLinkIds.length > 0) {
+        roiResult.items[0].clickingAdditionalParams = [
+            jsonUtil.getSqlFieldQuery("linkId", "$notIn", cartSumPaymentLinkIds)
+        ]
+    }
+    const wanXiangTaiSumPaymentLinkIds = singleItems.filter(item => item.wanXiangTaiSumPayment === 0 && item.wanXiangTaiCost === 0).map(item => item.linkId)
+    if (wanXiangTaiSumPaymentLinkIds.length > 0) {
+        roiResult.items[1].clickingAdditionalParams = [
+            jsonUtil.getSqlFieldQuery("linkId", "$notIn", wanXiangTaiSumPaymentLinkIds)
+        ]
+    }
+    const accuratePeopleSumPaymentLinkIds = singleItems.filter(item => item.accuratePeopleSumPayment === 0 && item.accuratePeoplePromotionCost === 0).map(item => item.linkId)
+    if (accuratePeopleSumPaymentLinkIds.length > 0) {
+        roiResult.items[2].clickingAdditionalParams = [
+            jsonUtil.getSqlFieldQuery("linkId", "$notIn", accuratePeopleSumPaymentLinkIds)
+        ]
+    }
+    result.push(roiResult)
+
     for (const singleItem of singleItems) {
         // 支付金额
         let {cartSumPayment, wanXiangTaiSumPayment, accuratePeopleSumPayment} = singleItem
@@ -830,29 +848,9 @@ const getProfitData = async (singleItems) => {
         const reallyShipmentAmount = parseFloat(singleItem.reallyShipmentAmount)
         innerAmountStatistic(reallyShipmentAmount, linkTypeGroupName, singleItem.linkHierarchy || '', deliveryAmountStatistic)
 
-        // 汇总发货金额
-        // deliveryAmountStatistic.sum = new BigNumber(deliveryAmountStatistic.sum).plus(reallyShipmentAmount)
-        // // 分类汇总发货金额统计不同linkType和linkHierarchy的单品表数
-        // for (const resultItem of deliveryAmountStatistic.items) {
-        //     if (resultItem.name === `${linkTypeGroupName}${singleItem.linkHierarchy}`) {
-        //         resultItem.sum = new BigNumber(resultItem.sum).plus(reallyShipmentAmount)
-        //         break
-        //     }
-        // }
-
         // 利润额
         const profitAmount = parseFloat(singleItem.profitAmount)
         innerAmountStatistic(profitAmount, linkTypeGroupName, singleItem.linkHierarchy || '', profitAmountStatistic)
-
-        // 汇总利润额
-        // profitAmountStatistic.sum = new BigNumber(profitAmountStatistic.sum).plus(profitAmount)
-        // // 分类汇总利润额
-        // for (const resultItem of profitAmountStatistic.items) {
-        //     if (resultItem.name === `${linkTypeGroupName}${singleItem.linkHierarchy}`) {
-        //         resultItem.sum = new BigNumber(resultItem.sum).plus(profitAmount)
-        //         break
-        //     }
-        // }
 
         // 根据利润率按照新老品指定的利润区间统计
         let profitRateRangeSumTypesIndex = 0
@@ -862,6 +860,7 @@ const getProfitData = async (singleItems) => {
                 for (let i = 0; i < currentSumProfitRateItems.length; i++) {
                     if (currentSumProfitRateItems[i].name === item.name) {
                         currentSumProfitRateItems[i].sum = currentSumProfitRateItems[i].sum + 1
+                        currentSumProfitRateItems[i].clickingAdditionalParams = [jsonUtil.getSqlFieldQuery("profitRate", "$between", item)]
                         break
                     }
                 }
