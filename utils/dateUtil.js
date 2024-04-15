@@ -1,4 +1,5 @@
 const moment = require("moment")
+const momentUnitConst = require("../const/momentUnitConst")
 
 const formatGMT = (datetimeOfGMT, pattern) => {
     if (!pattern) {
@@ -37,7 +38,6 @@ const dateEndOffToday = (daysOff, pattern) => {
     return moment().subtract(daysOff, 'days').format(pattern)
 }
 
-
 const endOfDay = (day) => {
     return moment(day).format("YYYY-MM-DD 23:59:59")
 }
@@ -50,8 +50,8 @@ const endOfYesterday = () => {
     return dateEndOffToday(1, "YYYY-MM-DD 23:59:59")
 }
 
-const diff = (endDate, startDate) => {
-    return moment(endDate).diff(moment(startDate), "hours", true).toFixed(2)
+const duration = (endDate, startDate, unitOfTime = "hours") => {
+    return moment(endDate).diff(moment(startDate), unitOfTime, true).toFixed(2)
 }
 
 const delay = (ms = 800) => new Promise((res) => setTimeout(res, ms));
@@ -60,8 +60,12 @@ const convertToStr = (date) => {
     return moment(date).format("YYYY-MM-DD HH:mm:ss")
 }
 
+const add = (date, amount, unitOfTime = momentUnitConst.DAYS) => {
+    return moment(date).add(amount, unitOfTime);
+}
+
 module.exports = {
-    diff,
+    duration,
     delay,
     formatGMT,
     startOfToday,
@@ -73,5 +77,6 @@ module.exports = {
     dateEndOffToday,
     format2Str,
     startOfDay,
-    endOfDay
+    endOfDay,
+    add
 }

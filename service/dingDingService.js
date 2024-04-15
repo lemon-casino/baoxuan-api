@@ -533,7 +533,7 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
                         computeEndDate = operateTimeGMT
                     }
 
-                    const costAlready = parseFloat(dateUtil.diff(computeEndDate, dateUtil.formatGMT(reviewItems[i - 1].operateTimeGMT)))
+                    const costAlready = parseFloat(dateUtil.duration(computeEndDate, dateUtil.formatGMT(reviewItems[i - 1].operateTimeGMT)))
                     const reviewRequirements = await FlowFormReview.getFlowFormReviewList(flow.formUuid)
                     if (reviewRequirements && reviewRequirements.form_review) {
                         flow.reviewId = reviewRequirements.id

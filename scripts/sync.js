@@ -203,4 +203,5 @@ const syncWorkingDay =  async ()=>{
         await workingDayService.saveWorkingDay(date)
     }
 }
-syncWorkingDay()
+
+console.log(dateUtil.duration("2024-04-15","2024-04-15", "days"))
