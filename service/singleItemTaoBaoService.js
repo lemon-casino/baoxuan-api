@@ -19,6 +19,7 @@ const jsonUtil = require("../utils/jsonUtil")
 const globalGetter = require("../global/getter")
 const NotFoundError = require("../error/http/notFoundError")
 const tmpTMInnerGroupingConst = require("../const/tmp/tmInnerGroupingConst")
+const {logger} = require("../utils/log")
 
 // 天猫链接打架流程表单id
 const tmFightingFlowFormId = "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J"
@@ -449,6 +450,10 @@ const getLinkOperationCount = async (status,
         for (const productLineLeader of productLineLeaders) {
             const allUsers = await globalGetter.getUsers()
             const users = allUsers.filter((user) => user.name === productLineLeader)
+            if (users.length === 0) {
+                logger.error(`用户${productLineLeader}不存在详细信息`)
+                continue
+            }
 
             const curResult = await getSelfWaitingOnSingleItemLinkOperationCount(users[0].userid)
             result.sum = result.sum + curResult.sum
