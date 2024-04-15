@@ -364,7 +364,7 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
             }
             noGroupedUsers.push(user.name)
         }
-        groupingResult.push({"NoInnerGroup": noGroupedUsers})
+        groupingResult.push({"未分组": noGroupedUsers})
         result.productLineLeaders = groupingResult
     } else {
         const currentUser = department.dep_user.filter(user => user.userid === userDDId)
