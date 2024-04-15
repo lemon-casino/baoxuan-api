@@ -12,6 +12,7 @@ const flowFormService = require("../service/flowFormService")
 const flowService = require("../service/flowService")
 const processDetailsService = require("../service/processDetailsService")
 const flowFormDetailsService = require("../service/flowFormDetailsService")
+const workingDayService = require("../service/workingDayService")
 
 const {redisKeys} = require("../const/redisConst")
 
@@ -191,6 +192,15 @@ const extractProcessReview = async () => {
 }
 // extractProcessReview()
 
-flowService.syncMissingCompletedFlows()
+// flowService.syncMissingCompletedFlows()
 // 同步3.1号~3.31的已完成流程入库
 // dingDingService.handleAsyncAllFinishedFlowsByTimeRange("2024-03-01 00:00:00","2024-03-31 23:59:00");
+
+const syncWorkingDay =  async ()=>{
+    const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
+    const isWorkingDay = await workingDayService.isWorkingDayOrNotOf(date)
+    if (isWorkingDay) {
+        await workingDayService.saveWorkingDay(date)
+    }
+}
+syncWorkingDay()

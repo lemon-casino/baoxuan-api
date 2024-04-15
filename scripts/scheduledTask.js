@@ -5,9 +5,19 @@ const globalSetter = require("../global/setter")
 const dingDingService = require("../service/dingDingService")
 const flowService = require("../service/flowService")
 const flowFormService = require("../service/flowFormService")
+const workingDayService = require("../service/workingDayService")
 const {logger} = require("../utils/log")
 
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20， 涉及的宜搭接口暂时没有qps和总调用量的限制
+
+// 每天9点确认当天是否是工作日并将日期入库
+schedule.scheduleJob("0 0 9 ? * ? ", async function () {
+    const date = new Date().toDateString()
+    const isWorkingDay = await workingDayService.isWorkingDayOrNotOf(date)
+    if (isWorkingDay) {
+        await workingDayService.saveWorkingDay(date)
+    }
+})
 
 /**
  *  每15分钟更新正在进行中的流程和今天完成的流程（包含节点的工作情况）

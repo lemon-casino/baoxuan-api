@@ -18,7 +18,6 @@ const {logger} = require("../utils/log")
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
 // 延迟函数
-const delay = dateUtil.delay
 const {
     setToken, getToken,
     getDepartments, getAllUsersDetail,
@@ -181,7 +180,6 @@ const getDepartmentFromDingDing = async () => {
     const {access_token} = await getToken();
     const depList = await dingDingReq.getSubDeptAll(access_token);
     for (const item of depList.result) {
-        await dateUtil.delay(50)
         const dep_chil = await dingDingReq.getSubDeptAll(access_token, item.dept_id);
         item.dep_chil = dep_chil.result;
     }
@@ -195,7 +193,6 @@ const getUsersFromDingDing = async () => {
     const getDepListAll = await getDepartments();
     const diguiDep = async (depList) => {
         for (const item of depList) {
-            await delay(100);
             item.dep_user = [];
             const res = await dingDingReq.getDeptUser_def(access_token, item.dept_id, 0, 100);
             for (let userid of res.result.list) {
@@ -229,7 +226,6 @@ const getUsersDetailFromDingDing = async () => {
     const allUsersFromDepartments = [];
     // 获取部门下的所有用户信息
     for (const item of departmentList) {
-        await delay(50);
         const res = await dingDingReq.getDeptUserList(access_token, item.dept_id);
         allUsersFromDepartments.push(res.result.userid_list);
     }
@@ -568,6 +564,20 @@ const getTodayRunningAndFinishedFlows = async () => {
     return flows;
 }
 
+/**
+ * 获取打卡记录
+ * @param pageIndex
+ * @param pageSize
+ * @param workDateFrom
+ * @param workDateTo
+ * @param userIds
+ * @returns {Promise<*>}
+ */
+const getAttendances = async (pageIndex, pageSize, workDateFrom, workDateTo, userIds) => {
+    const attendances = await dingDingReq.getAttendances(pageIndex, pageSize, workDateFrom, workDateTo, userIds)
+    return attendances
+}
+
 module.exports = {
     getDingDingToken,
     getUsersFromDingDing,
@@ -581,5 +591,6 @@ module.exports = {
     getTodayRunningAndFinishedFlows,
     getFinishedFlows,
     handleAsyncAllFinishedFlowsByTimeRange,
-    getFinishedFlowsByTimeRangeAndFormId
+    getFinishedFlowsByTimeRangeAndFormId,
+    getAttendances
 };

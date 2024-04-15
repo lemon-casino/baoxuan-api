@@ -3,20 +3,11 @@ const {
 } = require('sequelize');
 module.exports = sequelize => {
   const attributes = {
-    id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: null,
-      primaryKey: true,
-      autoIncrement: true,
-      comment: null,
-      field: "id"
-    },
     workingDate: {
       type: DataTypes.DATEONLY,
       allowNull: false,
       defaultValue: null,
-      primaryKey: false,
+      primaryKey: true,
       autoIncrement: false,
       comment: "工作日",
       field: "working_date"
