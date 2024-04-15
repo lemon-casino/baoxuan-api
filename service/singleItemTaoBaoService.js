@@ -361,7 +361,7 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
         for (const user of department.dep_user) {
             if (hasGroupedUsers.includes(user.name)) {
                 continue
-            }git
+            }
             noGroupedUsers.push(user.name)
         }
         groupingResult.push({"NoInnerGroup": noGroupedUsers})
