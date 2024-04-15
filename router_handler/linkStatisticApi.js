@@ -14,7 +14,7 @@ const joiUtil = require("../utils/joiUtil")
 const getLinkOperationCount = async (req, res, next) => {
     try {
         let {productLineLeaders} = req.query
-        joiUtil.validate({productLineLeaders: {value: productLineLeaders, schema: Joi.string().required().regex("")}})
+        joiUtil.validate({productLineLeaders: {value: productLineLeaders, schema: Joi.string().required()}})
 
         productLineLeaders = JSON.parse(productLineLeaders)
         const latestSingleItems = await singleItemTaoBaoService.getLatestBatchIdRecords(1)
