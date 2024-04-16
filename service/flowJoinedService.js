@@ -200,7 +200,7 @@ const getTodaySelfJoinedFlowsStatisticOfFlowStatus = async (userId, status, impo
     if (importance) {
         needFilterReviewItems = importance.items
     }
-    if (!needFilterReviewItems  || needFilterReviewItems.length ===0){
+    if (!needFilterReviewItems || needFilterReviewItems.length === 0) {
         return filteredFlows
     }
 

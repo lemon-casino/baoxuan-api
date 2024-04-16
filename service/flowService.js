@@ -6,6 +6,7 @@ const dingDingService = require("../service/dingDingService")
 const processService = require("../service/processService")
 const flowRepo = require("../repository/flowRepo")
 const globalGetter = require("../global/getter")
+const {logger} = require("../utils/log")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -154,21 +155,31 @@ const sumFlowsByDepartment = async (flowsOfDepartments) => {
 /**
  * 将流程按照发起人所在的部门进行分类
  * @param flows
- * @returns {Promise<{sum: number, departments: {}}>}
+ * @returns {Promise<{}>}
  */
 const flowsDividedByDepartment = async (flows) => {
     const result = {}
+
     for (const flow of flows) {
         // todo: 这种方式的遍历太耗时了
         // 根据流程发起人所在的部门汇总数据
         // warning: 如果userId用户存在多部门的情况，会重复计算
-        const departmentsOfUser = await departmentService.getDepartmentOfUser(flow.originator.userId);
+        const departmentsOfUser = await departmentService.getDepartmentOfUser(flow.originator.userId)
+
         const topDepartments = departmentsOfUser.filter((dep) => {
-            return dep.dep_detail.parent_id === 1
+            if (dep && dep.dep_detail && dep.dep_detail.parent_id) {
+                return dep.dep_detail.parent_id === 1
+            }
+            return false
         })
 
         for (const department of topDepartments) {
-            const subDepartments = departmentsOfUser.filter((dep) => dep.dep_detail.parent_id === department.dep_detail.dept_id)
+            const subDepartments = departmentsOfUser.filter((dep) => {
+                if (dep && dep.dep_detail && dep.dep_detail.parent_id) {
+                    return dep.dep_detail.parent_id === department.dep_detail.dept_id
+                }
+                return false
+            })
             if (subDepartments.length > 0) {
                 for (const subDepartment of subDepartments) {
                     if (Object.keys(result).includes(subDepartment.dep_detail.name)) {
@@ -478,9 +489,9 @@ const getFlowFormValues = async (formId, fieldKey, flowStatus) => {
         }
         const runningLinkId = flow.data[fieldKey]
         if (runningLinkId) {
-            if (runningLinkId.trim().includes(" ")){
+            if (runningLinkId.trim().includes(" ")) {
                 fightingLinkIds = fightingLinkIds.concat(runningLinkId.split(/\s+/))
-            }else{
+            } else {
                 fightingLinkIds.push(runningLinkId)
             }
 
