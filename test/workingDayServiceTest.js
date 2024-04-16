@@ -64,4 +64,26 @@ describe("workingDayService", () => {
             assert.equal(9, duration)
         })
     })
+    describe("computeValidWorkingDurationOfExecutionFlow", () => {
+        it("workingDayBefore18PmAndBefore20Pm", async () => {
+            const duration = await workingDayService.computeValidWorkingDurationOfExecutionFlow("2024-04-15 17:00:00", "2024-04-15 19:00:00")
+            assert.equal(2, duration)
+        })
+        it("workingDayBefore18PmAndEqual20Pm", async () => {
+            const duration = await workingDayService.computeValidWorkingDurationOfExecutionFlow("2024-04-15 17:00:00", "2024-04-15 20:00:00")
+            assert.equal(3, duration)
+        })
+        it("workingDayBefore18PmAndAfter20Pm", async () => {
+            const duration = await workingDayService.computeValidWorkingDurationOfExecutionFlow("2024-04-15 17:00:00", "2024-04-15 21:00:00")
+            assert.equal(3, duration)
+        })
+        it("workingDayBefore18PmAndEndWithNextDay", async () => {
+            const duration = await workingDayService.computeValidWorkingDurationOfExecutionFlow("2024-04-15 17:00:00", "2024-04-16 10:00:00")
+            assert.equal(4, duration)
+        })
+        it("workingDayAfter18PmAndEndWithNextDay", async () => {
+            const duration = await workingDayService.computeValidWorkingDurationOfExecutionFlow("2024-04-15 19:00:00", "2024-04-15 20:00:00")
+            assert.equal(0, duration)
+        })
+    })
 })

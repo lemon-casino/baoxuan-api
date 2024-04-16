@@ -20,6 +20,7 @@ const workingDayService = require("../service/workingDayService")
 
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
+const executionFlowFormId = "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU"
 // 延迟函数
 const {
     setToken, getToken,
@@ -536,7 +537,14 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
                         computeEndDate = dateUtil.formatGMT2Str(operateTimeGMT)
                     }
 
-                    const costAlready = workingDayService.computeValidWorkingDuration(dateUtil.formatGMT2Str(reviewItems[i - 1].operateTimeGMT), computeEndDate)
+                    let costAlready = 0
+                    const startDateTime = dateUtil.formatGMT2Str(reviewItems[i - 1].operateTimeGMT)
+                    // 运营执行流程的用时要特别计算
+                    if (flow.formUuid === executionFlowFormId) {
+                        costAlready = workingDayService.computeValidWorkingDurationOfExecutionFlow(startDateTime, computeEndDate)
+                    } else {
+                        costAlready = workingDayService.computeValidWorkingDuration(startDateTime, computeEndDate)
+                    }
                     const reviewRequirements = await FlowFormReview.getFlowFormReviewList(flow.formUuid)
                     if (reviewRequirements && reviewRequirements.form_review) {
                         flow.reviewId = reviewRequirements.id

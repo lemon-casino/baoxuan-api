@@ -36,6 +36,48 @@ const isWorkingDayOf = async (date) => {
 }
 
 /**
+ * 对于执行流程计算第一天的截止时间为20点，后面还是18点
+ * @param startDateTime
+ * @param endDateTime
+ * @returns {Promise<number>}
+ */
+const computeValidWorkingDurationOfExecutionFlow = async (startDateTime, endDateTime) => {
+    // 18点前开始的，首日的截止时间为20点
+    const isStartBefore18Pm = dateUtil.duration(
+        dateUtil.format2Str(startDateTime, "YYYY-MM-DD 18:00:00"),
+        startDateTime) >= 0
+    // 是否是工作日
+    const isWorkingDay = await isWorkingDayOf(dateUtil.format2Str(startDateTime, "YYYY-MM-DD"))
+
+    if (isWorkingDay && isStartBefore18Pm) {
+        const dayOf20Pm = dateUtil.format2Str(startDateTime, "YYYY-MM-DD 20:00:00")
+        const isEndBefore20Pm = dateUtil.duration(dayOf20Pm, endDateTime) >= 0
+        if (isEndBefore20Pm) {
+            return dateUtil.duration(endDateTime, startDateTime)
+        }
+        const firstDayCost = dateUtil.duration(dayOf20Pm, startDateTime)
+
+        const newStartDateTime = dateUtil.add(startDateTime, 1).format("YYYY-MM-DD 09:00:00")
+        // 如果新的开始时间 > 结束时间 则直接返回
+        if (dateUtil.duration(newStartDateTime, endDateTime) >= 0) {
+            return firstDayCost
+        }
+        const otherDayCost = await computeValidWorkingDuration(newStartDateTime, endDateTime)
+        return new BigNumber(firstDayCost).plus(otherDayCost).toNumber()
+    }
+    // 18点之后开始的
+    else {
+        // 计算新的开始时间
+        const newStartDateTime = dateUtil.add(startDateTime, 1).format("YYYY-MM-DD 09:00:00")
+        // 如果新的开始时间 > 结束时间 则返回0
+        if (dateUtil.duration(newStartDateTime, endDateTime)) {
+            return 0
+        }
+        return await computeValidWorkingDuration(newStartDateTime, endDateTime)
+    }
+}
+
+/**
  * 计算时间区间内有效的工作时长（去掉休息日和下班时间）
  * @param startDateTime
  * @param endDateTime
@@ -48,7 +90,7 @@ const computeValidWorkingDuration = async (startDateTime, endDateTime) => {
     //         则计算结束，否则继续开始新一轮的循环
     const durationOfDays = dateUtil.duration(endDateTime, startDateTime)
     if (durationOfDays <= 0) {
-        throw new ParameterError("结束日期必须大于开始日期")
+        return 0
     }
 
     let sumDuration = 0
@@ -64,7 +106,7 @@ const computeValidWorkingDuration = async (startDateTime, endDateTime) => {
             if (currentStartDuration > 0) {
                 startDateTime = curr9AmDate
             }
-            // 确定这一天的结束时间
+            // 确定这一天的结束时间(以18点为计算的最终截止时间)
             const current18PmDate = dateUtil.format2Str(currDate, "YYYY-MM-DD 18:00:00")
             const currentEndDuration = dateUtil.duration(endDateTime, current18PmDate)
             if (currentEndDuration > 0) {
@@ -86,5 +128,6 @@ module.exports = {
     saveWorkingDay,
     getWorkingDayByRange,
     isWorkingDay: isWorkingDayOf,
-    computeValidWorkingDuration
+    computeValidWorkingDuration,
+    computeValidWorkingDurationOfExecutionFlow
 }

@@ -15,7 +15,7 @@ const formatGMT2Str = (datetimeOfGMT, pattern) => {
     return moment(datetimeOfGMT.toString().replace("Z", "+08:00")).format(pattern)
 }
 
-const format2Str = (datetime, pattern="YYYY-MM-DD HH:mm") => {
+const format2Str = (datetime, pattern="YYYY-MM-DD HH:mm:ss") => {
     return moment(datetime.toString()).format(pattern)
 }
 
