@@ -290,9 +290,9 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
      *         利润率按照新老品指定的利润区间统计
      * 获取市场占有率数据
      */
-        // 支付数据
+        //付费数据
     const paymentData = await getPayment(singleItems)
-    // 付费数据
+    //  支付数据
     const profitData = await getProfitData(singleItems)
     // 市场占有率
     const marketRioData = await getMarketRatioData(singleItems)
@@ -870,7 +870,7 @@ const getProfitData = async (singleItems) => {
                 for (let i = 0; i < currentSumProfitRateItems.length; i++) {
                     if (currentSumProfitRateItems[i].name === item.name) {
                         currentSumProfitRateItems[i].sum = currentSumProfitRateItems[i].sum + 1
-                        currentSumProfitRateItems[i].clickingAdditionalParams = [jsonUtil.getSqlFieldQuery("profitRate", "$between", item)]
+                        currentSumProfitRateItems[i].clickingAdditionalParams = [jsonUtil.getSqlFieldQuery("profitRate", "$between", item.range)]
                         break
                     }
                 }
