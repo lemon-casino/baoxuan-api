@@ -165,7 +165,8 @@ const flowsDividedByDepartment = async (flows) => {
         // warning: 如果userId用户存在多部门的情况，会重复计算
         const departmentsOfUser = await departmentService.getDepartmentOfUser(flow.originator.userId);
 
-        logger.error(flow.originator.userId, JSON.stringify(departmentsOfUser))
+        logger.error(flow.originator.userId)
+        logger.error(JSON.stringify(departmentsOfUser))
 
         const topDepartments = departmentsOfUser.filter((dep) => {
             if (dep && dep.dep_detail && dep.dep_detail.parent_id){
