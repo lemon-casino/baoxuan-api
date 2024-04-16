@@ -6,6 +6,7 @@ const dingDingService = require("../service/dingDingService")
 const processService = require("../service/processService")
 const flowRepo = require("../repository/flowRepo")
 const globalGetter = require("../global/getter")
+const {logger} = require("../utils/log")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -163,8 +164,14 @@ const flowsDividedByDepartment = async (flows) => {
         // 根据流程发起人所在的部门汇总数据
         // warning: 如果userId用户存在多部门的情况，会重复计算
         const departmentsOfUser = await departmentService.getDepartmentOfUser(flow.originator.userId);
+
+        logger.error(flow.originator.userId, JSON.stringify(departmentsOfUser))
+
         const topDepartments = departmentsOfUser.filter((dep) => {
-            return dep.dep_detail.parent_id === 1
+            if (dep && dep.dep_detail && dep.dep_detail.parent_id){
+                return dep.dep_detail.parent_id === 1
+            }
+            return false
         })
 
         for (const department of topDepartments) {
