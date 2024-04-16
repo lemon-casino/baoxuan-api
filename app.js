@@ -43,7 +43,7 @@ for (const key of Object.keys(routerMap)) {
 }
 
 app.use((err, req, res, next) => {
-    logger.error(err.message)
+    logger.error(err.stack)
     if (err.name === "UnauthorizedError")
         return res.send({code: 401, message: errorMessages.unauthorized});
     if (err.code && err.message) {

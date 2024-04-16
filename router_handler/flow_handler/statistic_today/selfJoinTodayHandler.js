@@ -23,14 +23,18 @@ const getSelfJoinedResult = async (userId, status, importance) => {
     return result;
 }
 
-const todaySelfJoinedFlowsStatisticHub = async (req, res) => {
-    const status = req.params.status;
-    const {importance} = req.query
-    const result = await getSelfJoinedResult(req.user.id, status, importance)
-    if (result != null) {
-        return res.send(biResponse.success(result))
+const todaySelfJoinedFlowsStatisticHub = async (req, res, next) => {
+    try {
+        const status = req.params.status;
+        const {importance} = req.query
+        const result = await getSelfJoinedResult(req.user.id, status, importance)
+        if (result != null) {
+            return res.send(biResponse.success(result))
+        }
+        return res.send(biResponse.serverError(`请求的状态：${status}不可用`))
+    }catch (e){
+        next(e)
     }
-    return res.send(biResponse.serverError(`请求的状态：${status}不可用`))
 }
 
 module.exports = {
