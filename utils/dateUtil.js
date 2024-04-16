@@ -15,10 +15,7 @@ const formatGMT2Str = (datetimeOfGMT, pattern) => {
     return moment(datetimeOfGMT.toString().replace("Z", "+08:00")).format(pattern)
 }
 
-const format2Str = (datetime, pattern) => {
-    if (!pattern) {
-        pattern = "YYYY-MM-DD HH:mm";
-    }
+const format2Str = (datetime, pattern="YYYY-MM-DD HH:mm") => {
     return moment(datetime.toString()).format(pattern)
 }
 
@@ -61,7 +58,7 @@ const convertToStr = (date) => {
 }
 
 const add = (date, amount, unitOfTime = momentUnitConst.DAYS) => {
-    return moment(date).add(amount, unitOfTime);
+    return moment(date).add(amount, unitOfTime)
 }
 
 module.exports = {

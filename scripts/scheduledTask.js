@@ -7,22 +7,27 @@ const flowService = require("../service/flowService")
 const flowFormService = require("../service/flowFormService")
 const workingDayService = require("../service/workingDayService")
 const {logger} = require("../utils/log")
+const dateUtil = require("../utils/dateUtil")
 
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20， 涉及的宜搭接口暂时没有qps和总调用量的限制
 
 // 每天9点确认当天是否是工作日并将日期入库
 schedule.scheduleJob("0 0 9 ? * ? ", async function () {
-    const date = new Date().toDateString()
-    const isWorkingDay = await workingDayService.isWorkingDayOrNotOf(date)
-    if (isWorkingDay) {
-        await workingDayService.saveWorkingDay(date)
+    try {
+        const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
+        const isWorkingDay = await dingDingService.isWorkingDay(date)
+        if (isWorkingDay) {
+            await workingDayService.saveWorkingDay(date)
+        }
+    } catch (e) {
+        logger.error("同步今天工作日信息失败")
     }
 })
 
 /**
  *  每15分钟更新正在进行中的流程和今天完成的流程（包含节点的工作情况）
  */
-schedule.scheduleJob("0 0/15 * * * ?", async function () {
+schedule.scheduleJob("0 0/33 * * * ?", async function () {
     const flows = await dingDingService.getTodayRunningAndFinishedFlows()
     await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)

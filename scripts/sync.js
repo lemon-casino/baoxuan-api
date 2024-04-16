@@ -196,12 +196,17 @@ const extractProcessReview = async () => {
 // 同步3.1号~3.31的已完成流程入库
 // dingDingService.handleAsyncAllFinishedFlowsByTimeRange("2024-03-01 00:00:00","2024-03-31 23:59:00");
 
-const syncWorkingDay =  async ()=>{
+const syncWorkingDay = async () => {
     const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
-    const isWorkingDay = await workingDayService.isWorkingDayOrNotOf(date)
+    const isWorkingDay = await dingDingService.isWorkingDay(date)
     if (isWorkingDay) {
         await workingDayService.saveWorkingDay(date)
     }
 }
 
-console.log(dateUtil.duration("2024-04-15","2024-04-15", "days"))
+const computeValidWorkingDuration = async () => {
+    const duration = await workingDayService.computeValidWorkingDuration("2024-04-15 10:00:00", "2024-04-16 11:03:24")
+    console.log(duration)
+}
+
+computeValidWorkingDuration()

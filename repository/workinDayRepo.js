@@ -10,7 +10,7 @@ const sequelizeUtil = require("../utils/sequelizeUtil")
  */
 const isWorkingDayOf = async (date) => {
     const result = await workingDayModel.findAll({
-        where: {workingDay: date}
+        where: {workingDate: date}
     })
     return sequelizeUtil.extractDataValues(result).length > 0
 }
