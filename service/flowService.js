@@ -159,6 +159,7 @@ const sumFlowsByDepartment = async (flowsOfDepartments) => {
  */
 const flowsDividedByDepartment = async (flows) => {
     const result = {}
+
     for (const flow of flows) {
         // todo: 这种方式的遍历太耗时了
         // 根据流程发起人所在的部门汇总数据
