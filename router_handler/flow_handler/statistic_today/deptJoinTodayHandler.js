@@ -18,7 +18,6 @@ const deptJoinedStatusProcessorMap = {
         processor: flowJoinedService.getTodayDeptJoinedFlowsStatisticCountOfReviewType,
         mapStatus: "FORCAST"
     },
-
     "overdue": {processor: flowJoinedService.getTodayDeptJoinedFlowsStatisticCountOfOverDue}
 }
 

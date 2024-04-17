@@ -6,7 +6,7 @@ const dingDingService = require("../service/dingDingService")
 const processService = require("../service/processService")
 const flowRepo = require("../repository/flowRepo")
 const globalGetter = require("../global/getter")
-const {logger} = require("../utils/log")
+const NotFoundError = require("../error/http/notFoundError")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -43,7 +43,6 @@ const filterFlowsByImportanceCondition = async (flows, importanceCondition) => {
     return satisfiedFlows;
 }
 
-
 const getFlowsOfDepartmentBy = async (departments, selfJoinOrLaunch, timesRange, formImportanceCondition) => {
     //  获取部门下所有人员的参与的符合条件的流程
     const satisfiedSelfFlows = [];
@@ -65,7 +64,6 @@ const getFlowsOfDepartmentBy = async (departments, selfJoinOrLaunch, timesRange,
     }
     return satisfiedSelfFlows
 }
-
 
 const filterFlowByFlowStatus = (flows, flowStatus) => {
     const satisfiedFlows = flows.filter((flow) => {
@@ -111,30 +109,6 @@ const findReviewItemByType = (flow, reviewStatus) => {
     }
     return null
 }
-
-// // 筛选出指定状态的流程
-// const filterFlowsByFlowStatus = async (flows, status) => {
-//     let statisticOfUsers = []
-//     for (const flow of flows) {
-//         if (status === statusTypes.reviewStatus) {
-//             const reviewItem = await flowService.findReviewItemByType(flow, status.name)
-//             if (reviewItem) {
-//                 const user = {userId: reviewItem.operatorUserId, userName: reviewItem.operatorName}
-//                 statisticOfUsers = await sumOfStatisticOfUsers(user, statisticOfUsers);
-//             }
-//         } else {
-//             // 将该流程统计到审核节点的各个操作人
-//             const reviewItems = flow.overallprocessflow
-//             if (reviewItems) {
-//                 for (const reviewItem of reviewItems) {
-//                     const user = {userId: reviewItem.operatorUserId, userName: reviewItem.operatorName}
-//                     statisticOfUsers = await sumOfStatisticOfUsers(user, statisticOfUsers);
-//                 }
-//             }
-//         }
-//     }
-// }
-
 
 /**
  * 根据按部门汇总的流程，按照部门进行统计返回
@@ -237,7 +211,6 @@ const filterFlowsByImportance = async (flows, importance) => {
     return filteredFlows
 }
 
-
 /**
  * 根据重要性过滤流程
  * @param flows 需要筛选的流程
@@ -269,7 +242,6 @@ const filterFlowsByForms = (flows, forms) => {
     })
     return filteredFlows;
 }
-
 
 const sumFlowsByDepartmentOfMultiType = async (flowsOfMultiType) => {
     const result = {}
@@ -373,7 +345,6 @@ const convertSelfStatisticToDept = (statistic, userName, isFirstLevelDept, subDe
     return resultTemplate;
 }
 
-
 /**
  * 中转调用 funOfTodaySelfStatistic 获取统计数据并进行格式转化
  * @param funOfTodaySelfStatistic
@@ -385,8 +356,7 @@ const convertSelfStatisticToDept = (statistic, userName, isFirstLevelDept, subDe
 const getDeptStatistic = async (funOfTodaySelfStatistic, deptId, status, importance) => {
     const requiredDepartment = await departmentService.getDepartmentWithUsers(deptId);
     if (!requiredDepartment) {
-        console.error(`未找到部门：${deptId}的信息`)
-        return null
+        throw new NotFoundError(`未找到部门：${deptId}的信息`)
     }
 
     let convertedResult = {sum: 0, departments: []}
@@ -397,7 +367,9 @@ const getDeptStatistic = async (funOfTodaySelfStatistic, deptId, status, importa
         return convertedResult
     }
     for (const user of users) {
+        // 获取本人参与的流程并按流程发起人所在的组进行分类
         const result = await funOfTodaySelfStatistic(user.userid, status, importance)
+        // 在部门分组统计的数据中，进一步汇总到参与的个人
         convertedResult = convertSelfStatisticToDept(result, user.name,
             requiredDepartment.parent_id == 1,
             requiredDepartment.name, convertedResult)
@@ -494,7 +466,6 @@ const getFlowFormValues = async (formId, fieldKey, flowStatus) => {
             } else {
                 fightingLinkIds.push(runningLinkId)
             }
-
         }
     }
     return fightingLinkIds

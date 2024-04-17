@@ -1,9 +1,7 @@
-const FormModel = require("../model/flowfrom")
 const formReviewRepo = require("../repository/formReviewRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
 const dingDingReq = require("../core/dingDingReq")
 const redisService = require("../service/redisService")
-const dateUtil = require("../utils/dateUtil")
 const sha256 = require("sha256")
 
 /**
@@ -17,10 +15,8 @@ const getFormsByImportance = async (isImportant) => {
         statusWhere.status = 1
     } else if (isImportant.toString() === "false") {
         statusWhere.status = 2
-    } else {
-        statusWhere = null;
     }
-    return await FormModel.getFlowFormList(statusWhere);
+    return await flowFormRepo.getAllForms(statusWhere);
 }
 
 /**
@@ -36,10 +32,6 @@ const getFormsWithReviewItemsByImportance = async (isImportant) => {
             form.reviewItmes = formReviews[0].formReview;
     }
     return forms;
-}
-
-const getAllFormsInDB = async () => {
-    // flowFormRepo
 }
 
 /**
@@ -119,8 +111,28 @@ const syncFormsFromDingDing = async () => {
     return true
 }
 
+/**
+ * 根据部门和重要性筛选流程表单
+ * @param deptId
+ * @param isImportant
+ * @returns {Promise<[]|*>}
+ */
+const getFlowFormsByDeptIdAndImportant = async (deptId, isImportant) => {
+    let where = {};
+    if (isImportant.toString() === "true") {
+        where.status = 1
+    } else if (isImportant.toString() === "false") {
+        where.status = 2
+    }
+    if (deptId) {
+        where.dept_id = deptId
+    }
+    return await flowFormRepo.getAllForms(where);
+}
+
 module.exports = {
     getFormsByImportance,
     getFormsWithReviewItemsByImportance,
-    syncFormsFromDingDing
+    syncFormsFromDingDing,
+    getFlowFormsByDeptIdAndImportant
 }

@@ -2,15 +2,18 @@ const sequelize = require('../model/init');
 const getFlowFormModel = require("../model/flowFormsModel")
 const flowFormModel = getFlowFormModel(sequelize)
 const flowFormDetailsRepo = require("./flowFormDetailsRepo")
-const {logger} = require("../utils/log")
+const sequelizeUtil = require("../utils/sequelizeUtil")
 
-const getAllForms = async () => {
-    const result = await flowFormModel.findAll()
-    const flowForms = []
-    for (const flowForm of result) {
-        flowForms.push(flowForm.dataValues)
-    }
-    return flowForms
+/**
+ * 根据条件获取流程表单数据
+ * @param where
+ * @returns {Promise<[]|*>}
+ */
+const getAllForms = async (where) => {
+    const result = await flowFormModel.findAll({
+        where
+    })
+    return sequelizeUtil.extractDataValues(result)
 }
 
 /**
