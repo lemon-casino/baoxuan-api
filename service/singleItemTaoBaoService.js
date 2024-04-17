@@ -608,21 +608,42 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
     const uniqueItems = {}
     for (const item of taoBaoErrorItems) {
         const items = singleItems.filter((singleItem) => {
-            const baseMatch = eval(`parseFloat(${singleItem[item.value.field]})
-            ${item.value.comparator}
-            ${parseFloat(item.value.value)}`)
-            let minMatch = true
-            if (item.value.min) {
-                minMatch = parseFloat(singleItem[item.value.field]) >= parseFloat(item.value.min)
+            for (const exp of item.values) {
+                let value = exp.value
+                let fieldValue = singleItem[exp.field]
+                if (exp.comparator) {
+                    let tmpResult = true
+                    // 如果value为数字需要转化
+                    const isNumber = /^(\-|\+)?\d+(\.\d+)?$/.test(value)
+                    if (isNumber) {
+                        value = parseFloat(value)
+                        fieldValue = parseFloat(fieldValue)
+                        tmpResult = eval(`${fieldValue}${exp.comparator}${value}`)
+                    } else {
+                        tmpResult = eval(`"${fieldValue}"
+                        ${exp.comparator}
+                        "${value}"`)
+                    }
+
+                    if (!tmpResult) {
+                        return false
+                    }
+                }
+                if (exp.min) {
+                    const minMatch = fieldValue >= parseFloat(exp.min)
+                    if (!minMatch) {
+                        return false
+                    }
+                }
             }
-            return baseMatch && minMatch
+            return true
         })
-        let queryFields = ""
-        const errItems = taoBaoErrorItems.filter(errItem => errItem.name === item.name)
-        if (errItems.length > 0) {
-            queryFields = errItems[0].value
-        }
-        result.items.push({name: item.name, sum: items.length, value: queryFields})
+        // let queryFields = ""
+        // const errItems = taoBaoErrorItems.filter(errItem => errItem.name === item.name)
+        // if (errItems.length > 0) {
+        //     queryFields = errItems[0].value
+        // }
+        result.items.push({name: item.name, sum: items.length, clickingAdditionalParams: item.values})
         for (const tmp of items) {
             uniqueItems[tmp.id] = 1
         }
@@ -712,7 +733,8 @@ const getPayment = async (singleItems) => {
                 clickingAdditionalParams: [
                     jsonUtil.getSqlFieldQuery("accuratePeopleSumPayment", "$gt", 0)
                 ]
-            }]
+            }
+        ]
     })
     result.push({
         type: "promotionAmount",

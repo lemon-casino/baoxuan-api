@@ -43,7 +43,7 @@ const getLinkOperationCount = async (req, res, next) => {
 }
 
 /**
- * 获取链接问题处理数据: 固定统计昨天的
+ * 获取链接问题处理数据: 统计库中最新一天的
  * @returns {Promise<void>}
  */
 const getErrorLinkCount = async (req, res, next) => {
