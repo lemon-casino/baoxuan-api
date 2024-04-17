@@ -11,8 +11,8 @@ const dateUtil = require("../utils/dateUtil")
 
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20， 涉及的宜搭接口暂时没有qps和总调用量的限制
 
-// 每天9点确认当天是否是工作日并将日期入库
-schedule.scheduleJob("0 0 9 ? * ? ", async function () {
+// 每天9:05确认当天是否是工作日并将日期入库
+schedule.scheduleJob("0 5 9 * * ?", async function () {
     try {
         const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
         const isWorkingDay = await dingDingService.isWorkingDay(date)
@@ -37,8 +37,10 @@ schedule.scheduleJob("0 0/15 * * * ?", async function () {
  * 需要有手动补偿机制
  * 每天晚上0点获取今天完成的流程数据并入库，状态包含：completed、 terminated、error
  */
-schedule.scheduleJob("0 59 23 * * *", async function () {
+schedule.scheduleJob("0 59 23 * * ?", async function () {
+    logger.error("--- 已完成流程入库 开始 ---")
     await flowService.syncMissingCompletedFlows()
+    logger.error("--- 已完成流程入库 结束---")
 });
 
 /**
