@@ -36,6 +36,9 @@ const getDeptTodaySum = async (req, res) => {
     // 对多个状态的数据按照部门-人的级别关系进行汇总
     let mergedResult = {sum: 0, departments: []}
     for (const result of newOriginalResult) {
+        if (!result){
+            continue
+        }
         // 初始化时，首节点直接赋值
         if (mergedResult.sum === 0) {
             mergedResult = result
