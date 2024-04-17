@@ -20,7 +20,8 @@ schedule.scheduleJob("0 5 9 * * ?", async function () {
             await workingDayService.saveWorkingDay(date)
         }
     } catch (e) {
-        logger.error("同步今天工作日信息失败")
+        logger.error(`同步今天工作日信息失败：${e.message}`)
+        logger.error(e.stack)
     }
 })
 
