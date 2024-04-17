@@ -13,6 +13,7 @@ const flowService = require("../service/flowService")
 const processDetailsService = require("../service/processDetailsService")
 const flowFormDetailsService = require("../service/flowFormDetailsService")
 const workingDayService = require("../service/workingDayService")
+const {logger} = require("../utils/log")
 
 const {redisKeys} = require("../const/redisConst")
 
@@ -206,17 +207,7 @@ const syncWorkingDay = async () => {
 
 const computeValidWorkingDuration = async () => {
     const duration = await workingDayService.computeValidWorkingDuration("2024-04-15 10:00:00", "2024-04-16 11:03:24")
-    console.log(duration)
 }
 
-// computeValidWorkingDuration()
-
-const syncDepartment = async ()=>{
-    console.log("开始同步部门信息")
-    await dingDingService.getDepartmentFromDingDing();
-    // 将最新的部门数据保存到global中
-    const newDepartments = await redisUtil.getKey(redisKeys.Department)
-    globalSetter.setGlobalDepartments(JSON.parse(newDepartments || "[]"))
-    console.log("同步部门信息结束")
-}
-syncDepartment()
+logger.error("error")
+logger.info("hello world")

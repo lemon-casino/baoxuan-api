@@ -54,29 +54,21 @@ schedule.scheduleJob("0 59 23 * * *", async function () {
 //定时任务
 // 每30分钟请求一次getDingdingToken 获取token
 schedule.scheduleJob("*/6 * * * *", async function () {
-    console.time("获取token=========>");
     await dingDingService.getDingDingToken();
-    console.timeEnd("获取token=========>");
 });
 
-// 每40分钟请求一次DepartmentInformation  获取所有部门
+// 每40分钟请求一次DepartmentInformation 获取所有部门
 schedule.scheduleJob("*/40 * * * *", async function () {
-    // console.time("获取所有部门=========>");
     await dingDingService.getDepartmentFromDingDing();
-    // 将最新的部门数据保存到global中
     const newDepartments = await redisUtil.getKey(redisKeys.Department)
     globalSetter.setGlobalDepartments(JSON.parse(newDepartments || "[]"))
-    console.timeEnd("获取所有部门=========>");
 });
 
 // 每45分钟请求一次fetchUserList  获取所有部门下的人员
 schedule.scheduleJob("*/45 * * * *", async function () {
-    console.time("获取所有部门下的人员=========>");
     await dingDingService.getUsersFromDingDing();
-    // 将最新的部门下的人员数据保存到global中
     const newUsersOfDepartments = await redisUtil.getKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment)
     globalSetter.setGlobalUsersOfDepartments(JSON.parse(newUsersOfDepartments || "[]"))
-    console.timeEnd("获取所有部门下的人员=========>");
 });
 
 // 每50分钟请求一次fetchUserDetail 获取所有用户详情数据

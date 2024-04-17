@@ -1,5 +1,6 @@
 const axios = require("axios")
 const dateUtil = require("./dateUtil")
+const {logger} = require("../utils/log")
 
 const delayTime = 300
 
@@ -19,11 +20,7 @@ const get = async (url, params, token) => {
     const newUrl = `${url}${query}`
     let config = null
     if (token) {
-        config = {
-            headers: {
-                "x-acs-dingtalk-access-token": token
-            }
-        }
+        config = {headers: {"x-acs-dingtalk-access-token": token}}
     }
 
     try {
@@ -34,6 +31,7 @@ const get = async (url, params, token) => {
         if (config) {
             message = `${message}, config: ${JSON.stringify(config)}`
         }
+        logger.error(error.stack)
         throw new Error(message)
     }
 }
@@ -41,11 +39,7 @@ const get = async (url, params, token) => {
 const post = async (url, data, token) => {
     let config = null
     if (token) {
-        config = {
-            headers: {
-                "x-acs-dingtalk-access-token": token
-            }
-        }
+        config = {headers: {"x-acs-dingtalk-access-token": token}}
     }
 
     try {
@@ -60,6 +54,7 @@ const post = async (url, data, token) => {
         if (config) {
             message = `${message}, data: ${JSON.stringify(config)}`
         }
+        logger.error(error.stack)
         throw new Error(message)
     }
 }

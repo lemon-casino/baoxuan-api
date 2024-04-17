@@ -11,10 +11,9 @@ if (!fs.existsSync(logDirectory)) {
 }
 
 const logger = createLogger({
-    level: "error",
     format: format.combine(
         format.timestamp({
-            format: "YYYY-MM-DD",
+            format: "YYYY-MM-DD HH:mm:ss",
         }),
         format.errors({stack: true}),
         format.splat(),
@@ -22,6 +21,12 @@ const logger = createLogger({
     ),
     defaultMeta: {service: "bi"},
     transports: [
+        // new DailyRotateFile({
+        //     level: "info",
+        //     filename: path.join(`${logDirectory}/%DATE%`, `info.log`),
+        //     datePattern: 'YYYY-MM-DD',
+        //     prepend: true
+        // }),
         new DailyRotateFile({
             level: "error",
             filename: path.join(`${logDirectory}/%DATE%`, `error.log`),
@@ -34,7 +39,6 @@ const logger = createLogger({
 // 创建一个流对象，morgan会使用它来写入日志到winston
 const stream = {
     write: (message) => {
-        // logger.info(message.trim());
     },
 };
 
