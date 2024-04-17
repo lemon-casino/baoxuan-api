@@ -27,7 +27,7 @@ const getFormsByImportance = async (isImportant) => {
 const getFormsWithReviewItemsByImportance = async (isImportant) => {
     const forms = await getFormsByImportance(isImportant)
     for (const form of forms) {
-        const formReviews = await formReviewRepo.getFormReviewByFormId(form.flow_form_id);
+        const formReviews = await formReviewRepo.getFormReviewByFormId(form.flowFormId);
         if (formReviews && formReviews.length > 0)
             form.reviewItmes = formReviews[0].formReview;
     }

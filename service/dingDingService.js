@@ -187,46 +187,46 @@ const getDepartmentFromDingDing = async () => {
         const dep_chil = await dingDingReq.getSubDeptAll(access_token, item.dept_id);
         item.dep_chil = dep_chil.result;
     }
-    logger.info(`本次更新 ${depList.result.length} 个部门信息`)
-    await redisUtil.setKey(redisKeys.Department, JSON.stringify(depList.result));
+    return depList
 };
 
 // 4.获取钉钉_部门下的所有用户
-const getUsersFromDingDing = async () => {
+const getDepartmentsWithUsersFromDingDing = async () => {
     const {access_token} = await getToken();
-    const getDepListAll = await getDepartments();
-    const diguiDep = async (depList) => {
+    const allDepartments = await getDepartments();
+    const loopDept = async (depList) => {
         for (const item of depList) {
-            item.dep_user = [];
+            // item.dep_user = [];
             const res = await dingDingReq.getDeptUser_def(access_token, item.dept_id, 0, 100);
-            for (let userid of res.result.list) {
-                const info = (await getAllUsersDetail()).filter(
-                    (item) => item.userid === userid.userid
-                );
-                if (info.length > 0) {
-                    userid.canyu_liu = info[0].canyu_liu;
-                    userid.faqi_liu = info[0].faqi_liu;
-                }
-            }
+            // for (let userid of res.result.list) {
+            //     const info = (await getAllUsersDetail()).filter(
+            //         (item) => item.userid === userid.userid
+            //     );
+            //     if (info.length > 0) {
+            //         userid.canyu_liu = info[0].canyu_liu;
+            //         userid.faqi_liu = info[0].faqi_liu;
+            //     }
+            // }
             item.dep_user = res.result.list;
             if (item.dep_chil && item.dep_chil.length > 0) {
-                await diguiDep(item.dep_chil);
+                await loopDept(item.dep_chil);
             }
         }
     };
-    await diguiDep(getDepListAll);
-    logger.info(`本次更新 ${getDepListAll.length} 个部门附带用户信息`)
-    await redisUtil.setKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment, JSON.stringify(getDepListAll));
+    await loopDept(allDepartments);
+    return  allDepartments
 };
 
 // 5.获取钉钉_所有用户详情
-const getUsersDetailFromDingDing = async () => {
+const getUsersWithDepartmentFromDingDing = async () => {
     // 获取token
     const {access_token} = await getToken();
-    const [allFlowsUntilNow, departmentList] = await Promise.all([
-        getAllFlowsUntilNow(),
-        getDepartments(),
-    ]);
+    // const [allFlowsUntilNow, departmentList] = await Promise.all([
+    //     getAllFlowsUntilNow(),
+    //     getDepartments(),
+    // ]);
+
+    const departmentList = await getDepartments()
     const allUsersFromDepartments = [];
     // 获取部门下的所有用户信息
     for (const item of departmentList) {
@@ -239,50 +239,16 @@ const getUsersDetailFromDingDing = async () => {
     // 根据用户id获取用户详情
     for (let userId of uniqueUsers) {
         const userDetail = await dingDingReq.getUserInfoByUserIdAndToken(access_token, userId);
-        const depDetails = [];
+        // const depDetails = [];
         for (let dep of userDetail.result.leader_in_dept) {
             const dep_res = await dingDingReq.getDpInfo(access_token, dep.dept_id);
             dep.dep_detail = dep_res.result;
         }
-        //  获取每个用户发起的流程数据
-        // userDetail.result.faqi_liu = allFlowsUntilNow
-        //     .filter((liu) => {
-        //         if (liu.originator) {
-        //             return liu.originator.userId === userId
-        //         }
-        //         return false
-        //     })
-        //     .map((item) => {
-        //         return {
-        //             createTimeGMT: item.createTimeGMT,
-        //             processInstanceId: item.processInstanceId,
-        //             modifiedTimeGMT: item.modifiedTimeGMT,
-        //         };
-        //     });
-        // 获取每个用户参与的流程数据
-        // userDetail.result.canyu_liu = allFlowsUntilNow
-        //     .filter((liu) => {
-        //             if (liu.overallprocessflow) {
-        //                 return liu.overallprocessflow
-        //                     .slice(1)
-        //                     .some((flow) => flow.operatorUserId === userId)
-        //             } else {
-        //                 return false
-        //             }
-        //         }
-        //     )
-        //     .map((item) => {
-        //         return {
-        //             createTimeGMT: item.createTimeGMT,
-        //             processInstanceId: item.processInstanceId,
-        //             modifiedTimeGMT: item.modifiedTimeGMT,
-        //         };
-        //     }); // 将每个符合条件的对象映射为其 id
         userDetails.push(userDetail.result);
     }
-    logger.info(`本次更新 ${userDetails.length} 个用户信息`)
-    await redisUtil.setKey(redisKeys.AllUsersDetailWithJoinLaunchData, JSON.stringify(userDetails));
+    return userDetails
 };
+
 // 6.获取钉钉_流程表单列表
 const getAllFormsFromDingDing = async () => {
     console.log("开始获取钉钉_流程表单列表=========>");
@@ -627,8 +593,8 @@ const isWorkingDay = async (date) => {
 
 module.exports = {
     getDingDingToken,
-    getUsersFromDingDing,
-    getUsersDetailFromDingDing,
+    getDepartmentsWithUsersFromDingDing,
+    getUsersWithDepartmentFromDingDing,
     getAllFormsFromDingDing,
     getDepartmentFromDingDing,
     getAllFinishedFlowsBeforeToday,
