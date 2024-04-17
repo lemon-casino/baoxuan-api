@@ -212,9 +212,11 @@ const computeValidWorkingDuration = async () => {
 // computeValidWorkingDuration()
 
 const syncDepartment = async ()=>{
+    console.log("开始同步部门信息")
     await dingDingService.getDepartmentFromDingDing();
     // 将最新的部门数据保存到global中
     const newDepartments = await redisUtil.getKey(redisKeys.Department)
     globalSetter.setGlobalDepartments(JSON.parse(newDepartments || "[]"))
+    console.log("同步部门信息结束")
 }
 syncDepartment()
