@@ -221,7 +221,7 @@ const filterFlowsByImportant = async (flows, isImportant) => {
     const formsOfImportance = await formService.getFormsByImportance(isImportant)
     const filteredFlows = flows.filter((flow) => {
         return formsOfImportance.some((form) => {
-            return form.flow_form_id === flow.formUuid
+            return form.flowFormId === flow.formUuid
         })
     })
     return filteredFlows;
