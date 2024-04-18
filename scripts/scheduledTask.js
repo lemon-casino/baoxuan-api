@@ -7,6 +7,7 @@ const flowService = require("../service/flowService")
 const flowFormService = require("../service/flowFormService")
 const workingDayService = require("../service/workingDayService")
 const dateUtil = require("../utils/dateUtil")
+const {logger} = require("../utils/log")
 
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20， 涉及的宜搭接口暂时没有qps和总调用量的限制
 /**
@@ -48,37 +49,40 @@ schedule.scheduleJob("0 0 0/1 * * ?", async function () {
 /**
  * 从钉钉更新部门信息（按天更新）
  */
-schedule.scheduleJob("0 0 0 * * ?", async function () {
-    const depList = await dingDingService.getDepartmentFromDingDing()
-    await redisUtil.setKey(redisKeys.Department, JSON.stringify(depList.result))
-    globalSetter.setGlobalDepartments(depList.result)
-});
+// schedule.scheduleJob("0 0 5 * * ?", async function () {
+//     const depList = await dingDingService.getDepartmentFromDingDing()
+//     // todo: 线上总是会出现更新时天猫数据丢失，临时打印更新的结果用于判断
+//     logger.error("hello-world:")
+//     logger.error(JSON.stringify(depList))
+//     await redisUtil.setKey(redisKeys.Department, JSON.stringify(depList.result))
+//     globalSetter.setGlobalDepartments(depList.result)
+// });
 
 /**
  * 获取部门下的员工信息（按天更新）
  *
  * 注意：该数据依赖于Redis中的department数据：要保证更新department的定时任务优先执行完成
  */
-schedule.scheduleJob("0 0 1 * * ?", async function () {
-    const allDepartmentsWithUsers = await dingDingService.getDepartmentsWithUsersFromDingDing()
-    await redisUtil.setKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment, JSON.stringify(allDepartmentsWithUsers))
-    globalSetter.setGlobalUsersOfDepartments(allDepartmentsWithUsers)
-});
+// schedule.scheduleJob("0 0 6 * * ?", async function () {
+//     const allDepartmentsWithUsers = await dingDingService.getDepartmentsWithUsersFromDingDing()
+//     await redisUtil.setKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment, JSON.stringify(allDepartmentsWithUsers))
+//     globalSetter.setGlobalUsersOfDepartments(allDepartmentsWithUsers)
+// });
 
 /**
  * 获取员工信息（附带所属的部门信息）（按天更新）
  *
  * 注意：该数据依赖于Redis中的department数据：要保证更新department的定时任务优先执行完成
  */
-schedule.scheduleJob("0 0 2 * * ?", async function () {
-    const usersWithDepartment = await dingDingService.getUsersWithDepartmentFromDingDing()
-    await redisUtil.setKey(redisKeys.AllUsersDetailWithJoinLaunchData, JSON.stringify(usersWithDepartment))
-    globalSetter.setGlobalUsers(usersWithDepartment)
-})
+// schedule.scheduleJob("0 0 7 * * ?", async function () {
+//     const usersWithDepartment = await dingDingService.getUsersWithDepartmentFromDingDing()
+//     await redisUtil.setKey(redisKeys.AllUsersDetailWithJoinLaunchData, JSON.stringify(usersWithDepartment))
+//     globalSetter.setGlobalUsers(usersWithDepartment)
+// })
 
 /**
  * 更新Form和Form的详细信息（按天更新）
  */
-schedule.scheduleJob("0 0 3 * * ?", async function () {
-    await flowFormService.syncFormsFromDingDing()
-})
+// schedule.scheduleJob("0 0 8 * * ?", async function () {
+//     await flowFormService.syncFormsFromDingDing()
+// })

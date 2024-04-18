@@ -179,10 +179,12 @@ const getFlowsFromDingDing = async (status, timesRange, timeAction) => {
     );
     return flows || [];
 };
+
 // 3.定时更新部门层级详情信息
 const getDepartmentFromDingDing = async () => {
     const {access_token} = await getToken();
     const depList = await dingDingReq.getSubDeptAll(access_token);
+
     for (const item of depList.result) {
         const dep_chil = await dingDingReq.getSubDeptAll(access_token, item.dept_id);
         item.dep_chil = dep_chil.result;
@@ -214,7 +216,7 @@ const getDepartmentsWithUsersFromDingDing = async () => {
         }
     };
     await loopDept(allDepartments);
-    return  allDepartments
+    return allDepartments
 };
 
 // 5.获取钉钉_所有用户详情
