@@ -61,7 +61,7 @@ const newItems = linkTypeConst.groups.filter(group => group.group === "new")[0].
 const feeRateOver15NewProductFields = newItems.map(item => {
     return {
         field: "linkType", operator: "$notIn", comparator: "!==",
-        value: item, items: newItems
+        value: item, sqlValue: newItems
     }
 })
 const taoBaoErrorItems = [
@@ -97,10 +97,11 @@ const taoBaoErrorItems = [
         name: "车总投产比低于2",
         values: [{
             field: "shoppingCatSumRoi",
-            operator: "$lt",
-            value: [0.000001, 1.99999],
+            operator: "$between",
+            sqlValue: [0.000001, 1.99999],
+            value: 2,
             comparator: "<",
-            min: "0.000001"
+            min: "0.000001",
         }]
     },
     {
@@ -108,7 +109,8 @@ const taoBaoErrorItems = [
         values: [{
             field: "accuratePeoplePromotionProductionRate",
             operator: "$between",
-            value: [0.000001, 1.99999],
+            sqlValue: [0.000001, 1.99999],
+            value: 2,
             comparator: "<",
             min: "0.000001"
         }]
@@ -118,7 +120,8 @@ const taoBaoErrorItems = [
         values: [{
             field: "wanXiangTaiProductionRate",
             operator: "$between",
-            value: [0.000001, 1.99999],
+            sqlValue: [0.000001, 1.99999],
+            value: 2,
             comparator: "<",
             min: "0.000001"
         }]

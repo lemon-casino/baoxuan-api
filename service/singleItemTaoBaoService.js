@@ -638,13 +638,6 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
             return true
         })
 
-
-
-        // let queryFields = ""
-        // const errItems = taoBaoErrorItems.filter(errItem => errItem.name === item.name)
-        // if (errItems.length > 0) {
-        //     queryFields = errItems[0].value
-        // }
         result.items.push({name: item.name, sum: items.length, clickingAdditionalParams: item.values})
         for (const tmp of items) {
             uniqueItems[tmp.id] = 1
