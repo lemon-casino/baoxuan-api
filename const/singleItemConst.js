@@ -123,10 +123,23 @@ const taoBaoErrorItems = [
             min: "0.000001"
         }]
     },
-    // 新品日搜索流量低于100，上架14天新品搜索目标达成30%以下
-    {name: "流量未起", values: []},
-
-    {name: "新品负利率", values: []},
+    // 新品日搜索流量低于100，上架14天新品搜索目标达成30%以下(还未确定，找一个无法筛选出数据的条件)
+    {
+        name: "流量未起", values: [{
+            field: "feeRate",
+            operator: "$eq",
+            value: "99999",
+            comparator: "==="
+        }]
+    },
+    {
+        name: "新品负利率", values: [{
+            field: "feeRate",
+            operator: "$eq",
+            value: "99999",
+            comparator: "==="
+        }]
+    },
     {
         name: "费比超过15%",
         values: [{
