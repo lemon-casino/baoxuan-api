@@ -21,11 +21,11 @@ const workingDayService = require("../service/workingDayService")
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
 const executionFlowFormId = "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU"
-// 延迟函数
+
 const {
-    setToken, getToken,
-    getDepartments, getAllUsersDetail,
-    getAllFlowsUntilNow, getAllProcessFlow
+    getToken,
+    getDepartments,
+    getAllProcessFlow
 } = redisService;
 
 // 分页获取表单所有的流程详情
@@ -59,11 +59,16 @@ const getFlowsByStatusAndTimeRange = async (
     let allData = resLiuChengList.data;
     // 获取对应的流程的审核记录
     for (let i = 0; i < allData.length; i++) {
-        allData[i]["overallprocessflow"] = await getAllProcessFlow(
-            token,
-            userId,
-            allData[i].processInstanceId
-        );
+        try {
+            allData[i]["overallprocessflow"] = await getAllProcessFlow(
+                token,
+                userId,
+                allData[i].processInstanceId
+            );
+        } catch (e) {
+            console.log(e)
+        }
+
         console.log(`(page: ${pageNumber})get flowReviewItems process：${i + 1}/${allData.length}`);
     }
     // 如果总数大于当前页数*每页数量，继续请求
@@ -505,8 +510,7 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
 
                     let costAlready = 0
                     // todo: 对于多分支的情况开始时间不准确
-                    const {operateTimeGMT, activeTimeGMT} = reviewItems[i - 1]
-                    const startDateTime = dateUtil.formatGMT2Str(operateTimeGMT || activeTimeGMT)
+                    const startDateTime = dateUtil.formatGMT2Str(reviewItems[i - 1].operateTimeGMT || reviewItems[i - 1].activeTimeGMT)
                     // 运营执行流程的用时要特别计算
                     if (flow.formUuid === executionFlowFormId) {
                         costAlready = workingDayService.computeValidWorkingDurationOfExecutionFlow(startDateTime, computeEndDate)
