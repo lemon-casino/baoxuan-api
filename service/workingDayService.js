@@ -5,6 +5,7 @@ const ForbiddenError = require("../error/http/forbiddenError")
 const ParameterError = require("../error/parameterError")
 const dateUtil = require("../utils/dateUtil")
 const globalGetter = require("../global/getter")
+const {dateFormatReg} = require("../const/regexConst")
 
 
 /**
@@ -42,6 +43,13 @@ const isWorkingDayOf = async (date) => {
  * @returns {Promise<number>}
  */
 const computeValidWorkingDurationOfExecutionFlow = async (startDateTime, endDateTime) => {
+    if (!startDateTime || !endDateTime){
+        return 0
+    }
+    if (!dateFormatReg.test(startDateTime) || !dateFormatReg.test(endDateTime)){
+        return 0
+    }
+
     // 18点前开始的，首日的截止时间为20点
     const isStartBefore18Pm = dateUtil.duration(
         dateUtil.format2Str(startDateTime, "YYYY-MM-DD 18:00:00"),
@@ -84,6 +92,12 @@ const computeValidWorkingDurationOfExecutionFlow = async (startDateTime, endDate
  * @returns {Promise<number>}
  */
 const computeValidWorkingDuration = async (startDateTime, endDateTime) => {
+    if (!startDateTime || !endDateTime){
+        return 0
+    }
+    if (!dateFormatReg.test(startDateTime) || !dateFormatReg.test(endDateTime)){
+        return 0
+    }
     // 算法：1、从startDateTime开始，结合节假日和9点上班的条件，重新确定新的startDateTime
     //      2、以18点下班和endDateTime为条件计算开始这天有效的工作时长
     //      3、下班后时间 < endDateTime, 确定第二天的9点位新的 startDateTime， 如果此时 startDateTime > endDateTime,

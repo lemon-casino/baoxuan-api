@@ -2,6 +2,32 @@ const workingDayService = require("../service/workingDayService")
 const assert = require('assert')
 
 describe("workingDayService", () => {
+    describe("sadPath", () => {
+        it("bothUndefined", async () => {
+            const duration = await workingDayService.computeValidWorkingDuration(undefined, undefined)
+            assert.equal(0, duration)
+        })
+        it("bothNull", async () => {
+            const duration = await workingDayService.computeValidWorkingDuration(null, null)
+            assert.equal(0, duration)
+        })
+        it("startUndefined", async () => {
+            const duration = await workingDayService.computeValidWorkingDuration(undefined, "2023-04-05 10:45:20")
+            assert.equal(0, duration)
+        })
+        it("endUndefined", async () => {
+            const duration = await workingDayService.computeValidWorkingDuration("2023-04-05 10:45:20", undefined)
+            assert.equal(0, duration)
+        })
+        it("errorFormat", async () => {
+            const duration = await workingDayService.computeValidWorkingDuration("2023-04-0590", undefined)
+            assert.equal(0, duration)
+        })
+        it("null", async () => {
+            const duration = await workingDayService.computeValidWorkingDuration("2023-04-05 10:45:20", null)
+            assert.equal(0, duration)
+        })
+    })
     describe("computeValidWorkingDuration", () => {
         it('oneWorkingDay7Hours', async () => {
             const duration = await workingDayService.computeValidWorkingDuration("2024-04-15 10:00:00", "2024-04-15 17:00:00")
