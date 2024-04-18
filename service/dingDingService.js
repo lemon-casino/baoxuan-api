@@ -504,7 +504,9 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
                     }
 
                     let costAlready = 0
-                    const startDateTime = dateUtil.formatGMT2Str(reviewItems[i - 1].operateTimeGMT)
+                    // todo: 对于多分支的情况开始时间不准确
+                    const {operateTimeGMT, activeTimeGMT} = reviewItems[i - 1]
+                    const startDateTime = dateUtil.formatGMT2Str(operateTimeGMT || activeTimeGMT)
                     // 运营执行流程的用时要特别计算
                     if (flow.formUuid === executionFlowFormId) {
                         costAlready = workingDayService.computeValidWorkingDurationOfExecutionFlow(startDateTime, computeEndDate)
