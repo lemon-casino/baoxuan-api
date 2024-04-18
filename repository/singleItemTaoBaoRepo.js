@@ -100,7 +100,11 @@ const getTaoBaoSingleItems = async (pageIndex,
 
     if (errorItems) {
         for (const errorItem of errorItems) {
-            where[errorItem.field] = {[errorItem.operator]: errorItem.value}
+            if (errorItem.items){
+                where[errorItem.field] = {[errorItem.operator]: errorItem.items}
+            }else{
+                where[errorItem.field] = {[errorItem.operator]: errorItem.value}
+            }
         }
     }
 

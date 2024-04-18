@@ -56,11 +56,12 @@ const taoBaoSingleItemMap = {
     "accuratePeopleSumPayment": "精准人群总支付"
 }
 
-// 费比超过15仅统计老品
-const feeRateOver15NewProductFields = linkTypeConst.groups.filter(group => group.group === "new")[0].items.map(item => {
+// 费比超过15仅统计老品(格式不好！要兼顾eval调用和数据库的条件判断，数据库的同一个field只能保留一份)
+const oldItems = linkTypeConst.groups.filter(group => group.group === "old")[0].items
+const feeRateOver15NewProductFields = oldItems.map(item => {
     return {
-        field: "linkType", operator: "$ne", comparator: "!==",
-        value: item
+        field: "linkType", operator: "$in", comparator: "!==",
+        value: item, items: oldItems
     }
 })
 const taoBaoErrorItems = [
