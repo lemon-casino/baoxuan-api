@@ -82,31 +82,31 @@ const taoBaoErrorItems = [
         values: [{field: "profitRate", operator: "$lt", value: "5", comparator: "<"}].concat(newProductFields)
     },
     // 手淘人数市场占比环比（日、7天、30天）
-    {
-        name: "手淘人数市场占比环比（日）下降",
-        values: [{field: "shouTaoPeopleNumMarketRateCircleRateDay", operator: "$lt", value: "-20", comparator: "<"}]
-    },
+    // {
+    //     name: "手淘人数市场占比环比（日）下降",
+    //     values: [{field: "shouTaoPeopleNumMarketRateCircleRateDay", operator: "$lt", value: "-20", comparator: "<"}]
+    // },
     {
         name: "手淘人数市场占比环比（7天）下降",
         values: [{field: "shouTaoPeopleNumMarketRateCircleRate7Day", operator: "$lt", value: "-20", comparator: "<"}]
     },
-    {
-        name: "手淘人数市场占比环比（30天）下降",
-        values: [{field: "shouTaoPeopleNumMarketRateCircleRate30Day", operator: "$lt", value: "-20", comparator: "<"}]
-    },
+    // {
+    //     name: "手淘人数市场占比环比（30天）下降",
+    //     values: [{field: "shouTaoPeopleNumMarketRateCircleRate30Day", operator: "$lt", value: "-20", comparator: "<"}]
+    // },
     // 坑市场占比环比（日、7天、30天）低于20%
-    {
-        name: "坑市场占比环比（日）下降",
-        values: [{field: "salesMarketRateCircleRateDay", operator: "$lt", value: "-20", comparator: "<"}]
-    },
+    // {
+    //     name: "坑市场占比环比（日）下降",
+    //     values: [{field: "salesMarketRateCircleRateDay", operator: "$lt", value: "-20", comparator: "<"}]
+    // },
     {
         name: "坑市场占比环比（7天）下降",
         values: [{field: "salesMarketRateCircleRate7Day", operator: "$lt", value: "-20", comparator: "<"}]
     },
-    {
-        name: "坑市场占比环比（30天）下降",
-        values: [{field: "salesMarketRateCircleRate30Day", operator: "$lt", value: "-20", comparator: "<"}]
-    },
+    // {
+    //     name: "坑市场占比环比（30天）下降",
+    //     values: [{field: "salesMarketRateCircleRate30Day", operator: "$lt", value: "-20", comparator: "<"}]
+    // },
     // 投产低于2
     {
         name: "车总投产比低于2",
