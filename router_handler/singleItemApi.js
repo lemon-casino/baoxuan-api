@@ -64,7 +64,7 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
             JSON.parse(productLineLeaders || "[]"),
             firstLevelProductLine,
             secondLevelProductLine,
-            JSON.parse(errorItem || "{}"),
+            JSON.parse(errorItem || "[]"),
             JSON.parse(linkTypes || "[]"),
             JSON.parse(linkHierarchies || "[]"),
             linkStatus,

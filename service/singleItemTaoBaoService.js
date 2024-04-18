@@ -121,7 +121,7 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
  * @param operationLeaderNames 产品线负责人姓名: 支持多人
  * @param firstLevelProductLine 一级产品线
  * @param secondLevelProductLine 二级产品线
- * @param errorItem 异常项目
+ * @param errorItems 异常项目
  * @param linkTypes 链接类型
  * @param linkStatus 链接状态
  * @param timeRange 时间区间
@@ -132,7 +132,7 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     productLineLeaderNames,
                                     firstLevelProductLine,
                                     secondLevelProductLine,
-                                    errorItem,
+                                    errorItems,
                                     linkTypes,
                                     linkHierarchies,
                                     linkStatus,
@@ -158,7 +158,7 @@ const getTaoBaoSingleItems = async (pageIndex,
         productLineLeaderNames,
         firstLevelProductLine,
         secondLevelProductLine,
-        errorItem,
+        errorItems,
         linkTypes,
         linkHierarchies,
         linkStatus,
@@ -175,7 +175,7 @@ const getTaoBaoSingleItems = async (pageIndex,
  * @param productLineLeaderNames
  * @param firstLevelProductLine
  * @param secondLevelProductLine
- * @param errorItem
+ * @param errorItems
  * @param linkTypes
  * @param linkHierarchies
  * @param linkStatus
@@ -188,7 +188,7 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
                                                     productLineLeaderNames,
                                                     firstLevelProductLine,
                                                     secondLevelProductLine,
-                                                    errorItem,
+                                                    errorItems,
                                                     linkTypes,
                                                     linkHierarchies,
                                                     linkStatus,
@@ -199,7 +199,7 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
         productLineLeaderNames,
         firstLevelProductLine,
         secondLevelProductLine,
-        errorItem,
+        errorItems,
         linkTypes,
         linkHierarchies,
         linkStatus,
@@ -231,7 +231,7 @@ const getLinkErrorQueryFields = async (status) => {
  * @param productLineLeaderNames
  * @param firstLevelProductLine
  * @param secondLevelProductLine
- * @param errorItem
+ * @param errorItems
  * @param linkTypes
  * @param linkHierarchies
  * @param linkStatus
@@ -244,7 +244,7 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
                                                  productLineLeaderNames,
                                                  firstLevelProductLine,
                                                  secondLevelProductLine,
-                                                 errorItem,
+                                                 errorItems,
                                                  linkTypes,
                                                  linkHierarchies,
                                                  linkStatus,
@@ -258,7 +258,6 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
             clickingAdditionalParams[i] = await availableFunctionsMap[param["method"]](param["param"])
         }
     }
-
     // todo: 如果速度影响较大，两个查询可以可以考虑一个查询然后做处理
     // 获取分页单品表数据
     const pagingSingleItems = await getTaoBaoSingleItemsWitPercentageTag(
@@ -267,7 +266,7 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
         productLineLeaderNames,
         firstLevelProductLine,
         secondLevelProductLine,
-        errorItem,
+        errorItems,
         linkTypes,
         linkHierarchies,
         linkStatus,
@@ -278,7 +277,7 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
         productLineLeaderNames,
         firstLevelProductLine,
         secondLevelProductLine,
-        errorItem,
+        errorItems,
         linkTypes,
         linkHierarchies,
         linkStatus,
@@ -397,7 +396,7 @@ const getSingleItemById = async (id) => {
  * @param productLineLeaders
  * @param firstLevelProductLine
  * @param secondLevelProductLine
- * @param errorItem
+ * @param errorItems
  * @param linkType
  * @param linkStatus
  * @param timeRange
@@ -406,7 +405,7 @@ const getSingleItemById = async (id) => {
 const getAllSatisfiedSingleItems = async (productLineLeaders,
                                           firstLevelProductLine,
                                           secondLevelProductLine,
-                                          errorItem,
+                                          errorItems,
                                           linkTypes,
                                           linkHierarchies,
                                           linkStatus,
@@ -418,7 +417,7 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
         productLineLeaders,
         firstLevelProductLine,
         secondLevelProductLine,
-        errorItem,
+        errorItems,
         linkTypes,
         linkHierarchies,
         linkStatus,

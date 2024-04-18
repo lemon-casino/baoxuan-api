@@ -21,10 +21,10 @@ schedule.scheduleJob("0 5 9 * * ?", async function () {
     }
 })
 
-/**
+/** 0 0/15 * * * ?
  *  每15分钟更新正在进行中的流程和今天完成的流程（包含节点的工作情况）
  */
-schedule.scheduleJob("0 0/15 * * * ?", async function () {
+schedule.scheduleJob("0 28 12 * * ?", async function () {
     const flows = await dingDingService.getTodayRunningAndFinishedFlows()
     await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)

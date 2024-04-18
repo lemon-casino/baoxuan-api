@@ -57,7 +57,6 @@ const getFlowsByStatusAndTimeRange = async (
         return []
     }
     let allData = resLiuChengList.data;
-    let requestCount = 0;
     // 获取对应的流程的审核记录
     for (let i = 0; i < allData.length; i++) {
         allData[i]["overallprocessflow"] = await getAllProcessFlow(
@@ -65,12 +64,11 @@ const getFlowsByStatusAndTimeRange = async (
             userId,
             allData[i].processInstanceId
         );
-        requestCount += 1;
-        console.log("requestCount=========>", formUuid, requestCount);
+        console.log(`(page: ${pageNumber})get flowReviewItems process：${i + 1}/${allData.length}`);
     }
     // 如果总数大于当前页数*每页数量，继续请求
     if (resLiuChengList.totalCount > pageNumber * pageSize) {
-        console.log("pageNumber=========>", pageNumber, formUuid);
+        console.log("pageNumber:", pageNumber, formUuid);
         const nextPageData = await getFlowsByStatusAndTimeRange(
             timesRange,
             timeAction,
@@ -85,6 +83,7 @@ const getFlowsByStatusAndTimeRange = async (
     }
     return allData;
 };
+
 // 获取宜搭流程表单数据方法
 const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesRange, timeAction) => {
     // 1.获取所有宜搭表单数据
@@ -94,7 +93,7 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
     if (allForms) {
         for (let i = 0; i < allForms.length; i++) {
             const formUuid = allForms[i].formUuid;
-            console.log(i + ":" + allForms.length + ":" + formUuid)
+            console.log(`loop form process: ${i + 1}:${allForms.length}(${allForms[i].title.zhCN}:${formUuid})`)
             const allData = await getFlowsByStatusAndTimeRange(
                 timesRange,
                 timeAction,
@@ -491,7 +490,12 @@ const getFinishedFlows = async (timeRange) => {
 const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
     const flows = await getFlowsFromDingDing(status, timeRange, timeAction);
     // 同步流程的操作节点耗时信息
+    let index = 0;
     for (const flow of flows) {
+
+        index = index + 1
+        console.log(`${index}/${flows.length}`, JSON.stringify(flow))
+
         const reviewItems = flow.overallprocessflow
         if (reviewItems) {
             for (let i = 0; i < reviewItems.length; i++) {

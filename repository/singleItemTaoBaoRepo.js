@@ -47,7 +47,7 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
  * @param productLineLeaders 产品线负责人姓名: 支持多人
  * @param firstLevelProductLine 一级产品线
  * @param secondLevelProductLine 二级产品线
- * @param errorItem 异常项目
+ * @param errorItems 异常项目
  * @param linkTypes 链接类型
  * @param linkStatus 链接状态
  * @param timeRange 时间区间
@@ -58,7 +58,7 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     productLineLeaders,
                                     firstLevelProductLine,
                                     secondLevelProductLine,
-                                    errorItem,
+                                    errorItems,
                                     linkTypes,
                                     linkHierarchies,
                                     linkStatus,
@@ -92,15 +92,18 @@ const getTaoBaoSingleItems = async (pageIndex,
 
     if (clickingAdditionalParams) {
         for (const clickingParam of clickingAdditionalParams) {
-            if (clickingParam.field && clickingParam.operator && clickingParam.value){
+            if (clickingParam.field && clickingParam.operator && clickingParam.value) {
                 where[clickingParam.field] = {[clickingParam.operator]: clickingParam.value}
             }
         }
     }
 
-    if (errorItem && errorItem.field) {
-        where[errorItem.field] = {[errorItem.operator]: errorItem.value}
+    if (errorItems) {
+        for (const errorItem of errorItems) {
+            where[errorItem.field] = {[errorItem.operator]: errorItem.value}
+        }
     }
+
     if (linkStatus) {
         if (linkStatus === taoBaoSingleItemStatusesKeys.fighting) {
             where.linkId = {$in: fightingLinkIds}
