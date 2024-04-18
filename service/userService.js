@@ -4,21 +4,18 @@ const departmentService = require("../service/departmentService")
 const userRepo = require("../repository/userRepo")
 const whiteList = require("../config/whiteList")
 const globalGetter = require("../global/getter")
+const NotFoundError = require("../error/http/notFoundError")
 
-const getDingDingUserId = (user_id) => {
-    return new Promise((resolve, reject) => {
-        UsersModel.findOne({
-            where: {
-                user_id: user_id,
-            },
-        })
-            .then((res) => {
-                resolve(res.dataValues.dingding_user_id);
-            })
-            .catch((err) => {
-                reject(err);
-            });
-    });
+const getDingDingUserId = async (user_id) => {
+    const user = await UsersModel.findOne({
+        where: {
+            user_id: user_id,
+        },
+    })
+    if (user) {
+        return user.dataValues.dingding_user_id
+    }
+    throw  new NotFoundError("用户不存在")
 };
 
 const getUsersOfDepartment = async (departmentId) => {

@@ -9,18 +9,13 @@ const {logger} = require("../utils/log")
 const dateUtil = require("../utils/dateUtil")
 
 const getLatestModifiedProcess = async () => {
-    try {
-        const latestProcess = await processModel.findOne({
-            order: [["doneTime", "desc"]]
-        })
-        if (latestProcess) {
-            return latestProcess.dataValues
-        }
-        return latestProcess
-    } catch (e) {
-        logger.error(e.message)
-        return null
+    const latestProcess = await processModel.findOne({
+        order: [["doneTime", "desc"]]
+    })
+    if (latestProcess) {
+        return latestProcess.dataValues
     }
+    return latestProcess
 }
 
 const saveProcess = async (process) => {
@@ -59,27 +54,21 @@ const saveProcess = async (process) => {
         await transaction.commit()
         return true
     } catch (e) {
-        logger.error(e.message)
         await transaction.rollback()
-        return false
+        throw e
     }
 }
 
 const getProcessByProcessInstanceId = async (processInstanceId) => {
-    try {
-        const result = await processModel.findOne({
-            where: {
-                processInstanceId
-            }
-        })
-        if (result) {
-            return result.dataValues
+    const result = await processModel.findOne({
+        where: {
+            processInstanceId
         }
-        return null
-    } catch (e) {
-        logger.error(e.message)
-        throw new Error(e.message)
+    })
+    if (result) {
+        return result.dataValues
     }
+    return null
 }
 
 /**
@@ -88,40 +77,35 @@ const getProcessByProcessInstanceId = async (processInstanceId) => {
  */
 const correctStrFieldToJson = async () => {
     // 修正流程表中data、overallprocessflow 字符串为json
-    try {
-        const flowsOfIncorrectFormatData = await processModel.findAll({
-            where: {
-                data: {$like: Sequelize.literal(`'"%'`)}
-            }
-        })
-        for (const flow of flowsOfIncorrectFormatData) {
-            const result = await processModel.update({
-                data: JSON.parse(flow.data)
-            }, {
-                where: {
-                    processInstanceId: flow.processInstanceId
-                }
-            })
-        }
-        const flowsOfIncorrectFormatOverallProcessFlow = await processModel.findAll({
-            where: {
-                overallprocessflow: {$like: Sequelize.literal(`'"%'`)}
-            }
-        })
-        for (const flow of flowsOfIncorrectFormatOverallProcessFlow) {
-            await processModel.update({
-                overallprocessflow: JSON.parse(flow.overallprocessflow)
-            }, {
-                where: {
-                    processInstanceId: flow.processInstanceId
-                }
-            })
-        }
-    } catch (e) {
-        logger.error(e.message)
-        throw new Error(e.message)
-    }
 
+    const flowsOfIncorrectFormatData = await processModel.findAll({
+        where: {
+            data: {$like: Sequelize.literal(`'"%'`)}
+        }
+    })
+    for (const flow of flowsOfIncorrectFormatData) {
+        const result = await processModel.update({
+            data: JSON.parse(flow.data)
+        }, {
+            where: {
+                processInstanceId: flow.processInstanceId
+            }
+        })
+    }
+    const flowsOfIncorrectFormatOverallProcessFlow = await processModel.findAll({
+        where: {
+            overallprocessflow: {$like: Sequelize.literal(`'"%'`)}
+        }
+    })
+    for (const flow of flowsOfIncorrectFormatOverallProcessFlow) {
+        await processModel.update({
+            overallprocessflow: JSON.parse(flow.overallprocessflow)
+        }, {
+            where: {
+                processInstanceId: flow.processInstanceId
+            }
+        })
+    }
 }
 
 module.exports = {

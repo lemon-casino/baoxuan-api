@@ -19,23 +19,17 @@ const saveProcessDetailsArr = async (detailsArr) => {
         await transaction.commit()
         return true
     } catch (e) {
-        logger.error(e.message)
         await transaction.rollback()
-        return false
+        throw e
     }
 }
 
 const saveProcessDetailsArrWithOutTrans = async (detailsArr, transaction) => {
-    try {
-        for (const details of detailsArr) {
-            details.id = uuidUtil.getId()
-            await processDetailsModel.create(details, transaction)
-        }
-        return true
-    } catch (e) {
-        logger.error(e.message)
-        return false
+    for (const details of detailsArr) {
+        details.id = uuidUtil.getId()
+        await processDetailsModel.create(details, transaction)
     }
+    return true
 }
 
 

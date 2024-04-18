@@ -4,7 +4,6 @@ const departmentService = require("../service/departmentService")
 const userService = require("../service/userService")
 const flowService = require("../service/flowService")
 const whiteList = require("../config/whiteList")
-const {logger} = require("../utils/log")
 const linkTypeConst = require("../const/linkTypeConst")
 const flowStatusConst = require("../const/flowStatusConst")
 const {
@@ -15,8 +14,12 @@ const {
     marketRatioGroup,
     fieldsWithPercentageTag
 } = require("../const/singleItemConst")
+const linkTypeUtil = require("../utils/linkTypeUtil")
+const jsonUtil = require("../utils/jsonUtil")
 const globalGetter = require("../global/getter")
 const NotFoundError = require("../error/http/notFoundError")
+const tmpTMInnerGroupingConst = require("../const/tmp/tmInnerGroupingConst")
+const {logger} = require("../utils/log")
 
 // 天猫链接打架流程表单id
 const tmFightingFlowFormId = "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J"
@@ -31,6 +34,9 @@ const operationNewFlowFormId = "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3"
 const operationLeaderFieldId = "employeeField_lii5gvq3_id";
 // 天猫部门的id
 const tmDeptId = "903075138"
+// 链接问题处理数据需要筛选的流程表单id (运营优化方案流程)
+const errorLinkFormId = "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB";
+const linkIdField = "textField_liihs7kw"
 
 /**
  * 根据中文获取真实的数据库字段
@@ -65,7 +71,6 @@ const saveSingleItemTaoBao = async (item) => {
     for (const key of Object.keys(item)) {
         if (!validChineseKeys.includes(key)) {
             const errMsg = `当前单品数据中的${key}后端无法处理`
-            logger.error(errMsg)
             throw new Error(errMsg)
         }
         let value = item[key]
@@ -129,8 +134,10 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     secondLevelProductLine,
                                     errorItem,
                                     linkTypes,
+                                    linkHierarchies,
                                     linkStatus,
-                                    timeRange) => {
+                                    timeRange,
+                                    clickingAdditionalParams) => {
 
     const fightingLinkIds = []
     if (linkStatus) {
@@ -153,9 +160,11 @@ const getTaoBaoSingleItems = async (pageIndex,
         secondLevelProductLine,
         errorItem,
         linkTypes,
+        linkHierarchies,
         linkStatus,
         fightingLinkIds,
-        timeRange)
+        timeRange,
+        clickingAdditionalParams)
     return data
 }
 
@@ -168,8 +177,10 @@ const getTaoBaoSingleItems = async (pageIndex,
  * @param secondLevelProductLine
  * @param errorItem
  * @param linkTypes
+ * @param linkHierarchies
  * @param linkStatus
  * @param timeRange
+ * @param clickingAdditionalParams
  * @returns {Promise<{pageCount: *, data: *, pageIndex: *, pageSize: *}|null>}
  */
 const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
@@ -179,8 +190,10 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
                                                     secondLevelProductLine,
                                                     errorItem,
                                                     linkTypes,
+                                                    linkHierarchies,
                                                     linkStatus,
-                                                    timeRange) => {
+                                                    timeRange,
+                                                    clickingAdditionalParams) => {
     const pagingSingleItems = await getTaoBaoSingleItems(pageIndex,
         pageSize,
         productLineLeaderNames,
@@ -188,8 +201,10 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
         secondLevelProductLine,
         errorItem,
         linkTypes,
+        linkHierarchies,
         linkStatus,
-        timeRange)
+        timeRange,
+        clickingAdditionalParams)
 
     const items = pagingSingleItems.data
     for (let item of items) {
@@ -198,6 +213,16 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
     return pagingSingleItems
 }
 
+/**
+ * 没有被显式引用，误删！！！！！！
+ *
+ * 获取需要对于链接问题处理数据点击需要额外理的查询条件()
+ * @returns {[{field: string, value: *[], operator: string}]}
+ */
+const getLinkErrorQueryFields = async (status) => {
+    const errorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, status)
+    return {field: "linkId", operator: "$in", value: errorLinkIds}
+}
 
 /**
  * 获取单品表数据，并进行付费数据、支付数据、市场占有率的汇总
@@ -208,9 +233,11 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
  * @param secondLevelProductLine
  * @param errorItem
  * @param linkTypes
+ * @param linkHierarchies
  * @param linkStatus
  * @param timeRange
- * @returns {Promise<void>}
+ * @param clickingAdditionalParams
+ * @returns {Promise<{marketRioData: *[], profitData: ({name: string, sum: number, items: *[]}|{name: string, sum: null, items: *[]})[], paymentData: (*|*[]), pagingSingleItems: ({pageCount: *, data: *, pageIndex: *, pageSize: *}|null)}>}
  */
 const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
                                                  pageSize,
@@ -219,8 +246,20 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
                                                  secondLevelProductLine,
                                                  errorItem,
                                                  linkTypes,
+                                                 linkHierarchies,
                                                  linkStatus,
-                                                 timeRange) => {
+                                                 timeRange,
+                                                 clickingAdditionalParams) => {
+
+    // 链接问题处理数据需要对clickingAdditionalParams进行转化
+    for (let i = 0; i < clickingAdditionalParams.length; i++) {
+        const param = clickingAdditionalParams[i]
+        if (Object.keys(param).includes("method") && Object.keys(availableFunctionsMap).includes(param["method"])) {
+            clickingAdditionalParams[i] = await availableFunctionsMap[param["method"]](param["param"])
+        }
+    }
+
+    // todo: 如果速度影响较大，两个查询可以可以考虑一个查询然后做处理
     // 获取分页单品表数据
     const pagingSingleItems = await getTaoBaoSingleItemsWitPercentageTag(
         pageIndex,
@@ -230,8 +269,10 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
         secondLevelProductLine,
         errorItem,
         linkTypes,
+        linkHierarchies,
         linkStatus,
-        timeRange)
+        timeRange,
+        clickingAdditionalParams)
 
     const singleItems = await getAllSatisfiedSingleItems(
         productLineLeaderNames,
@@ -239,17 +280,19 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
         secondLevelProductLine,
         errorItem,
         linkTypes,
+        linkHierarchies,
         linkStatus,
-        timeRange)
+        timeRange,
+        clickingAdditionalParams)
     /**
      *  付费数据： 精准人群、车、万象台
      * 支付数据：按照新品老品分别统计发货金额和利润额，
      *         利润率按照新老品指定的利润区间统计
      * 获取市场占有率数据
      */
-        // 付费数据
+        //付费数据
     const paymentData = await getPayment(singleItems)
-    // 支付数据
+    //  支付数据
     const profitData = await getProfitData(singleItems)
     // 市场占有率
     const marketRioData = await getMarketRatioData(singleItems)
@@ -283,6 +326,7 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
         secondLevelProductionLines: [],
         errorItems: taoBaoErrorItems,
         linkTypes: [],
+        linkHierarchies: [],
         linkStatuses: taoBaoSingleItemStatuses
     }
     // 判断用户是否是leader
@@ -304,20 +348,37 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
             }
         }
     }
+    // 天猫组deptId：903075138
+    const department = await departmentService.getDepartmentWithUsers("903075138")
     if (isTMLeader) {
-        // 天猫组deptId：903075138
-        const department = await departmentService.getDepartmentWithUsers("903075138")
-        for (const user of department.dep_user) {
-            result.productLineLeaders.push({
-                userId: user.userid, userName: user.name
-            })
+        const groupingResult = Object.keys(tmpTMInnerGroupingConst).map(key => {
+            return {[key]: tmpTMInnerGroupingConst[key]}
+        })
+        let hasGroupedUsers = []
+        for (const key of Object.keys(tmpTMInnerGroupingConst)) {
+            hasGroupedUsers = hasGroupedUsers.concat(tmpTMInnerGroupingConst[key])
         }
+        const noGroupedUsers = []
+        for (const user of department.dep_user) {
+            if (hasGroupedUsers.includes(user.name)) {
+                continue
+            }
+            noGroupedUsers.push(user.name)
+        }
+        groupingResult.push({"未分组": noGroupedUsers})
+        result.productLineLeaders = groupingResult
     } else {
-        result.productLineLeaders = [{userId: userDDId, userName: user.nickname}]
+        const currentUser = department.dep_user.filter(user => user.userid === userDDId)
+        result.productLineLeaders = [currentUser[0].name]
     }
 
-    const linkTypes = await singleItemTaoBaoRepo.getLinkTypes()
-    result.linkTypes = linkTypes
+
+    let linkTypes = await singleItemTaoBaoRepo.getLinkTypes()
+    linkTypes = linkTypes.map(linkType => linkType.link_type)
+    result.linkTypes = linkTypes.filter(linkType => linkType)
+    let linkHierarchies = await singleItemTaoBaoRepo.getLinkHierarchy()
+    linkHierarchies = linkHierarchies.map(hierarchy => hierarchy.link_hierarchy)
+    result.linkHierarchies = linkHierarchies.filter(hierarchy => hierarchy)
     return result
 }
 
@@ -346,9 +407,11 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
                                           firstLevelProductLine,
                                           secondLevelProductLine,
                                           errorItem,
-                                          linkType,
+                                          linkTypes,
+                                          linkHierarchies,
                                           linkStatus,
-                                          timeRange) => {
+                                          timeRange,
+                                          clickingAdditionalParams) => {
     const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
     const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
         999999,
@@ -356,10 +419,12 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
         firstLevelProductLine,
         secondLevelProductLine,
         errorItem,
-        linkType,
+        linkTypes,
+        linkHierarchies,
         linkStatus,
         fightingLinkIds,
-        timeRange)
+        timeRange,
+        clickingAdditionalParams)
     return satisfiedSingleItems.data
 }
 
@@ -378,15 +443,17 @@ const getLinkOperationCount = async (status,
         // 找到ddUserId
         const result = {
             sum: 0,
-            items: [
-                {name: "新品", sum: 0},
-                {name: "老品", sum: 0},
-                {name: "滞销", sum: 0}
-            ]
+            items: linkTypeConst.groups.map(group => {
+                return {name: group.name, sum: 0}
+            })
         }
         for (const productLineLeader of productLineLeaders) {
             const allUsers = await globalGetter.getUsers()
             const users = allUsers.filter((user) => user.name === productLineLeader)
+            if (users.length === 0) {
+                logger.error(`用户${productLineLeader}不存在详细信息`)
+                continue
+            }
 
             const curResult = await getSelfWaitingOnSingleItemLinkOperationCount(users[0].userid)
             result.sum = result.sum + curResult.sum
@@ -418,42 +485,16 @@ const getLinkOperationCount = async (status,
  * @returns {Promise<{sum: number, items: *[]}>}
  */
 const getSelfDoSingleItemLinkOperationCount = async (singleItems) => {
-    const result = {sum: 0, items: []}
+    const result = await getResultTemplateByLinkTypeAndLinkHierarchy()
+    for (let i = 0; i < result.items.length - 1; i++) {
+        let resultItem = result.items[i]
+        const satisfiedSingleItems = singleItems.filter((item) => {
+            return resultItem.linkTypes.includes(item.linkType) && resultItem.linkHierarchy === item.linkHierarchy
+        })
+        result.items[i] = {name: resultItem.name, sum: satisfiedSingleItems.length}
+        result.sum = result.sum + satisfiedSingleItems.length
+    }
 
-    const newSingleItems = singleItems.filter((item) => {
-        if (item.linkType.includes("新品")) {
-            const matchNewItems = item.linkType.match(/\d+/)
-            if (!matchNewItems || matchNewItems[0] < 90) {
-                return true
-            }
-        }
-        return false
-    })
-    result.items.push({
-        name: linkTypeConst["new"],
-        sum: newSingleItems.length
-    })
-    result.sum = result.sum + newSingleItems.length
-    const oldSingleItems = singleItems.filter((item) => {
-        if (item.linkType.includes("新品")) {
-            const matchNewItems = item.linkType.match(/\d+/)
-            if (matchNewItems && matchNewItems[0] >= 90) {
-                return true
-            }
-        } else if (item.linkType === "老品") {
-            return true
-        }
-        return false
-    })
-    result.items.push({
-        name: linkTypeConst["old"],
-        sum: oldSingleItems.length
-    })
-    result.sum = result.sum + oldSingleItems.length
-    result.items.push({
-        name: linkTypeConst["unsalable"],
-        sum: 0
-    })
     return result
 }
 
@@ -509,49 +550,49 @@ const getSelfWaitingOutSingleItemLinkOperationCount = async (userId) => {
 }
 
 /**
+ * 根据linkType和linkHierarchy 返回新品、老品+ linkHierarchy的结果模版数据
+ * @returns {Promise<{sum: number, items: *[]}>}
+ */
+const getResultTemplateByLinkTypeAndLinkHierarchy = async () => {
+    const result = {sum: 0, items: []}
+    const linkHierarchies = await singleItemTaoBaoRepo.getLinkHierarchy()
+    // 按照类别统计发货金额、利润额 根据linkTypes和linkHierarchy初始化发货金额的items
+    for (const linkTypeGroup of linkTypeConst.groups) {
+        for (const hierarchy of linkHierarchies) {
+            const linkHierarchy = hierarchy.link_hierarchy
+            result.items.push({
+                name: `${linkTypeGroup.name}${linkHierarchy || ''}`,
+                sum: 0,
+                linkTypes: linkTypeGroup.items,
+                linkHierarchy: linkHierarchy
+            })
+        }
+    }
+    return result
+}
+
+/**
  * 获取本人链接操作数据（打仗链接）
  * @param username
  * @param timeRange
  * @returns {Promise<{fightingOnOld: *, fightingOnNew: *}>}
  */
 const getSelfFightingSingleItemLinkOperationCount = async (singleItems, fightingLinkIds) => {
-    const result = {
-        sum: 0,
-        items: [
-            {name: "新品", sum: 0},
-            {name: "老品", sum: 0},
-            {name: "滞销品", sum: 0}
-        ]
-    }
+    const result = await getResultTemplateByLinkTypeAndLinkHierarchy()
+
     singleItems = singleItems.filter((item) => {
         return fightingLinkIds.includes(item.linkId)
     })
-    // 获取本人指定链接类型的单品数据
-    const newSingleItems = singleItems.filter((item) => {
-        if (item.linkType.includes("新品")) {
-            const matchNewItems = item.linkType.match(/\d+/)
-            if (!matchNewItems || matchNewItems[0] < 90) {
-                return true
-            }
-        }
-        return false
-    })
-    result.items[0].sum = newSingleItems.length
-    result.sum = newSingleItems.length
-    const oldSingleItems = singleItems.filter((item) => {
-        if (item.linkType.includes("新品")) {
-            const matchNewItems = item.linkType.match(/\d+/)
-            if (matchNewItems && matchNewItems[0] >= 90) {
-                return true
-            }
-        } else if (item.linkType === "老品") {
-            return true
-        }
-        return false
-    })
-    result.items[1].sum = oldSingleItems.length
-    result.sum = result.sum + oldSingleItems.length
-    // todo: 滞销待定
+
+    for (let i = 0; i < result.items.length - 1; i++) {
+        let resultItem = result.items[i]
+
+        const satisfiedSingleItems = singleItems.filter((item) => {
+            return resultItem.linkTypes.includes(item.linkType) && resultItem.linkHierarchy === item.linkHierarchy
+        })
+        result.items[i] = {name: resultItem.name, sum: satisfiedSingleItems.length}
+        result.sum = result.sum + satisfiedSingleItems.length
+    }
     return result
 }
 
@@ -567,16 +608,42 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
     const uniqueItems = {}
     for (const item of taoBaoErrorItems) {
         const items = singleItems.filter((singleItem) => {
-            const baseMatch = eval(`parseFloat(${singleItem[item.value.field]})
-            ${item.value.comparator}
-            ${parseFloat(item.value.value)}`)
-            let minMatch = true
-            if (item.value.min) {
-                minMatch = parseFloat(singleItem[item.value.field]) >= parseFloat(item.value.min)
+            for (const exp of item.values) {
+                let value = exp.value
+                let fieldValue = singleItem[exp.field]
+                if (exp.comparator) {
+                    let tmpResult = true
+                    // 如果value为数字需要转化
+                    const isNumber = /^(\-|\+)?\d+(\.\d+)?$/.test(value)
+                    if (isNumber) {
+                        value = parseFloat(value)
+                        fieldValue = parseFloat(fieldValue)
+                        tmpResult = eval(`${fieldValue}${exp.comparator}${value}`)
+                    } else {
+                        tmpResult = eval(`"${fieldValue}"
+                        ${exp.comparator}
+                        "${value}"`)
+                    }
+
+                    if (!tmpResult) {
+                        return false
+                    }
+                }
+                if (exp.min) {
+                    const minMatch = fieldValue >= parseFloat(exp.min)
+                    if (!minMatch) {
+                        return false
+                    }
+                }
             }
-            return baseMatch && minMatch
+            return true
         })
-        result.items.push({name: item.name, sum: items.length})
+        // let queryFields = ""
+        // const errItems = taoBaoErrorItems.filter(errItem => errItem.name === item.name)
+        // if (errItems.length > 0) {
+        //     queryFields = errItems[0].value
+        // }
+        result.items.push({name: item.name, sum: items.length, clickingAdditionalParams: item.values})
         for (const tmp of items) {
             uniqueItems[tmp.id] = 1
         }
@@ -592,7 +659,7 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
  */
 const getErrorLinkOperationCount = async (singleItems, status) => {
 
-    const findSingleItemsDividedByUser = (runningErrorLinkIds, singleItems) => {
+    const findSingleItemsDividedByUser = (runningErrorLinkIds, singleItems, status) => {
         const result = {sum: 0, items: []}
         const errorSingleItems = singleItems.filter((item) => {
             return runningErrorLinkIds.includes(item.linkId)
@@ -603,20 +670,19 @@ const getErrorLinkOperationCount = async (singleItems, status) => {
             result.sum = result.sum + singleItemsOfUser.length
             result.items.push({
                 name: user.name,
-                sum: singleItemsOfUser.length
+                sum: singleItemsOfUser.length,
+                clickingAdditionalParams: [{"method": "getLinkErrorQueryFields", "param": status}]
             })
         }
         return result
     }
-    // 链接问题处理数据需要筛选的流程表单id (运营优化方案流程)
-    const errorLinkFormId = "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB";
-    const linkIdField = "textField_liihs7kw"
+
     const usersOfTM = await departmentService.getUsersOfDepartment(tmDeptId)
 
     // 进行中
     if (status.toUpperCase() === flowStatusConst.RUNNING) {
         const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING)
-        const result = findSingleItemsDividedByUser(runningErrorLinkIds, singleItems)
+        const result = findSingleItemsDividedByUser(runningErrorLinkIds, singleItems, flowStatusConst.RUNNING)
         return result
     }
     //  已完成
@@ -643,36 +709,85 @@ const getErrorLinkOperationCount = async (singleItems, status) => {
  * @returns {Promise<*|*[]>}
  */
 const getPayment = async (singleItems) => {
-    const result = [
-        {
-            type: "payment",
-            name: "支付金额",
-            sum: 0,
-            items: [
-                {name: "精准词", sum: 0},
-                {name: "万相台", sum: 0},
-                {name: "精准人群", sum: 0}]
-        },
-        {
-            type: "promotionAmount",
-            name: "推广金额",
-            sum: 0,
-            items: [
-                {name: "精准词", sum: 0},
-                {name: "万相台", sum: 0},
-                {name: "精准人群", sum: 0}]
-        },
-        {
-            type: "roi",
-            name: "投产比",
-            sum: 0,
-            items: [
-                {name: "精准词", sum: 0},
-                {name: "万相台", sum: 0},
-                {name: "精准人群", sum: 0}
-            ]
-        }
-    ]
+
+    const result = []
+    result.push({
+        type: "payment",
+        name: "支付金额",
+        sum: 0,
+        items: [
+            {
+                name: "精准词", sum: 0,
+                clickingAdditionalParams: [
+                    jsonUtil.getSqlFieldQuery("cartSumPayment", "$gt", 0)
+                ]
+            },
+            {
+                name: "万相台", sum: 0,
+                clickingAdditionalParams: [
+                    jsonUtil.getSqlFieldQuery("wanXiangTaiSumPayment", "$gt", 0)
+                ]
+            },
+            {
+                name: "精准人群", sum: 0,
+                clickingAdditionalParams: [
+                    jsonUtil.getSqlFieldQuery("accuratePeopleSumPayment", "$gt", 0)
+                ]
+            }
+        ]
+    })
+    result.push({
+        type: "promotionAmount",
+        name: "推广金额",
+        sum: 0,
+        items: [
+            {
+                name: "精准词", sum: 0,
+                clickingAdditionalParams: [
+                    jsonUtil.getSqlFieldQuery("shoppingCartSumAmount", "$gt", 0)
+                ]
+            },
+            {
+                name: "万相台", sum: 0,
+                clickingAdditionalParams: [
+                    jsonUtil.getSqlFieldQuery("wanXiangTaiCost", "$gt", 0)
+                ]
+            },
+            {
+                name: "精准人群", sum: 0,
+                clickingAdditionalParams: [
+                    jsonUtil.getSqlFieldQuery("accuratePeoplePromotionCost", "$gt", 0)
+                ]
+            }]
+    })
+    const roiResult = {
+        type: "roi", name: "投产比", sum: 0,
+        items: [
+            {name: "精准词", sum: 0},
+            {name: "万相台", sum: 0},
+            {name: "精准人群", sum: 0}
+        ]
+    }
+    const cartSumPaymentLinkIds = singleItems.filter(item => item.cartSumPayment === 0 && item.shoppingCartSumAmount === 0).map(item => item.linkId)
+    if (cartSumPaymentLinkIds.length > 0) {
+        roiResult.items[0].clickingAdditionalParams = [
+            jsonUtil.getSqlFieldQuery("linkId", "$notIn", cartSumPaymentLinkIds)
+        ]
+    }
+    const wanXiangTaiSumPaymentLinkIds = singleItems.filter(item => item.wanXiangTaiSumPayment === 0 && item.wanXiangTaiCost === 0).map(item => item.linkId)
+    if (wanXiangTaiSumPaymentLinkIds.length > 0) {
+        roiResult.items[1].clickingAdditionalParams = [
+            jsonUtil.getSqlFieldQuery("linkId", "$notIn", wanXiangTaiSumPaymentLinkIds)
+        ]
+    }
+    const accuratePeopleSumPaymentLinkIds = singleItems.filter(item => item.accuratePeopleSumPayment === 0 && item.accuratePeoplePromotionCost === 0).map(item => item.linkId)
+    if (accuratePeopleSumPaymentLinkIds.length > 0) {
+        roiResult.items[2].clickingAdditionalParams = [
+            jsonUtil.getSqlFieldQuery("linkId", "$notIn", accuratePeopleSumPaymentLinkIds)
+        ]
+    }
+    result.push(roiResult)
+
     for (const singleItem of singleItems) {
         // 支付金额
         let {cartSumPayment, wanXiangTaiSumPayment, accuratePeopleSumPayment} = singleItem
@@ -712,82 +827,90 @@ const getPayment = async (singleItems) => {
  * @returns {Promise<[{name: string, sum: number, items: *[]}, {name: string, sum: null, items: *[]}, {name: string, sum: null, items: *[]}]>}
  */
 const getProfitData = async (singleItems) => {
-    const linkTypes = await singleItemTaoBaoRepo.getLinkTypes()
+    // 根据新品老品 + 链接层级进行分组统计
+    const linkHierarchies = await singleItemTaoBaoRepo.getLinkHierarchy()
     // 返回的数据模版
     const result = [
         {type: "deliveryAmount", name: "发货金额", sum: 0, items: []},
         {type: "profitAmount", name: "利润额", sum: 0, items: []},
         {type: "profitRate", name: "利润率", sum: null, items: []}
     ]
-    // 按照类别统计发货金额、利润额
-    // 根据linkTypes初始化发货金额的items
-    for (const linkType of linkTypes) {
-        result[0].items.push({name: linkType.link_type, sum: 0})
-        result[1].items.push({name: linkType.link_type, sum: 0})
+
+    const deliveryAmountStatistic = result[0]
+    const profitAmountStatistic = result[1]
+    const profitRateStatistic = result[2]
+
+    // 按照类别统计发货金额、利润额 根据linkTypes和linkHierarchy初始化发货金额的items
+    for (const linkTypeGroup of linkTypeConst.groups) {
+        for (const hierarchy of linkHierarchies) {
+            const linkHierarchy = hierarchy.link_hierarchy
+            deliveryAmountStatistic.items.push({
+                name: `${linkTypeGroup.name}${linkHierarchy || ''}`,
+                sum: 0,
+                clickingAdditionalParams: [jsonUtil.getSqlFieldQuery("reallyShipmentAmount", "$gt", 0)]
+            })
+            profitAmountStatistic.items.push({
+                name: `${linkTypeGroup.name}${linkHierarchy || ''}`, sum: 0,
+                clickingAdditionalParams: [jsonUtil.getSqlFieldQuery("profitAmount", "$gt", 0)]
+            })
+        }
     }
 
     // 根据 profitRateRangeSumTypes 初始化sumProfitRate的items
     for (const profitRateRangeSumType of profitRateRangeSumTypes) {
-        result[2].items.push({name: profitRateRangeSumType.name, sum: 0})
+        profitRateStatistic.items.push({name: profitRateRangeSumType.name, sum: 0})
     }
 
     for (const singleItem of singleItems) {
-        // 发货金额
-        const reallyShipmentAmount = parseFloat(singleItem.reallyShipmentAmount)
-        // 汇总发货金额
-        result[0].sum = new BigNumber(result[0].sum).plus(reallyShipmentAmount)
-        // 分类汇总发货金额统计不同linkType的单品表数
-        for (const resultItem of result[0].items) {
-            if (resultItem.name === singleItem.linkType) {
-                resultItem.sum = new BigNumber(resultItem.sum).plus(reallyShipmentAmount)
-                break
-            }
-        }
-        // 利润额
-        const profitAmount = parseFloat(singleItem.profitAmount)
-        // 汇总利润额
-        result[1].sum = new BigNumber(result[1].sum).plus(profitAmount)
-        // 分类汇总利润额
-        for (const resultItem of result[1].items) {
-            if (resultItem.name === singleItem.linkType) {
-                resultItem.sum = new BigNumber(resultItem.sum).plus(profitAmount)
-                break
+        // 根据原始linkType获取所对应的linkType组名（新品、老品）
+        const linkTypeGroupName = linkTypeUtil.getLinkGroupName(singleItem.linkType)
+
+        const innerAmountStatistic = (amount, groupName, linkHierarchy, amountStatistic) => {
+            amountStatistic.sum = new BigNumber(amountStatistic.sum).plus(amount)
+            // 分类汇总发货金额统计不同linkType和linkHierarchy的单品表数
+            for (const resultItem of amountStatistic.items) {
+                if (resultItem.name === `${groupName}${linkHierarchy}`) {
+                    resultItem.sum = new BigNumber(resultItem.sum).plus(amount)
+                    break
+                }
             }
         }
 
-        // 判断当前的单品是新品还是老品，新品90、新品150 归算为老品
-        let singleItemType = "老品"
-        if (singleItem.linkType.includes("新品")) {
-            const matchDays = singleItem.linkType.match(/\d+/)
-            if (matchDays && parseInt(matchDays[0]) < 90) {
-                singleItemType = "新品"
-            }
-        }
+        // 发货金额
+        const reallyShipmentAmount = parseFloat(singleItem.reallyShipmentAmount)
+        innerAmountStatistic(reallyShipmentAmount, linkTypeGroupName, singleItem.linkHierarchy || '', deliveryAmountStatistic)
+
+        // 利润额
+        const profitAmount = parseFloat(singleItem.profitAmount)
+        innerAmountStatistic(profitAmount, linkTypeGroupName, singleItem.linkHierarchy || '', profitAmountStatistic)
+
         // 根据利润率按照新老品指定的利润区间统计
         let profitRateRangeSumTypesIndex = 0
         for (const item of profitRateRangeSumTypes) {
-            if (item.type === singleItemType && parseFloat(singleItem.profitRate) >= item.range[0] && parseFloat(singleItem.profitRate) <= item.range[1]) {
-                const currentSumProfitRateItems = result[2].items
+            if (item.type === linkTypeGroupName && parseFloat(singleItem.profitRate) >= item.range[0] && parseFloat(singleItem.profitRate) <= item.range[1]) {
+                const currentSumProfitRateItems = profitRateStatistic.items
                 for (let i = 0; i < currentSumProfitRateItems.length; i++) {
                     if (currentSumProfitRateItems[i].name === item.name) {
                         currentSumProfitRateItems[i].sum = currentSumProfitRateItems[i].sum + 1
+                        currentSumProfitRateItems[i].clickingAdditionalParams = [jsonUtil.getSqlFieldQuery("profitRate", "$between", item.range)]
                         break
                     }
                 }
                 break
             }
             if (profitRateRangeSumTypesIndex === profitRateRangeSumTypes.length - 1) {
-                throw new Error(`单品：${singleItem.productName}，linkType:${singleItem.linkType}, profitRate: ${singleItem.profitRate} 未匹配到有效的利润区间`)
+                throw new NotFoundError(`单品：${singleItem.productName}，linkType:${singleItem.linkType}, profitRate: ${singleItem.profitRate} 未匹配到有效的利润区间`)
             }
             profitRateRangeSumTypesIndex = profitRateRangeSumTypesIndex + 1;
         }
     }
-    result[2].sum = 0
-    if (result[0].sum > 0) {
-        result[2].sum = `${(result[1].sum / result[0].sum * 100).toFixed(2)}%`
+
+    profitRateStatistic.sum = 0
+    if (deliveryAmountStatistic.sum > 0) {
+        profitRateStatistic.sum = `${(profitAmountStatistic.sum / deliveryAmountStatistic.sum * 100).toFixed(2)}%`
     }
-    result[0].sum = result[0].sum.toFixed(2)
-    result[1].sum = result[1].sum.toFixed(2)
+    deliveryAmountStatistic.sum = deliveryAmountStatistic.sum.toFixed(2)
+    profitAmountStatistic.sum = profitAmountStatistic.sum.toFixed(2)
     return result
 }
 
@@ -797,7 +920,7 @@ const getMarketRatioData = async (singleItems) => {
     for (const marketRatio of marketRatioGroup) {
         tmpResult.push({
             ...marketRatio,
-            item: {name: marketRatio.item.name, sum: 0}
+            item: {name: marketRatio.item.name, sum: 0, range: marketRatio.item.range, field: marketRatio.item.field}
         })
     }
 
@@ -857,7 +980,10 @@ const getMarketRatioData = async (singleItems) => {
                 sum: tmpItem.item.sum,
                 items: [{
                     name: tmpItem.item.name,
-                    sum: tmpItem.item.sum
+                    sum: tmpItem.item.sum,
+                    clickingAdditionalParams: [
+                        jsonUtil.getSqlFieldQuery(tmpItem.item.field, "$between", tmpItem.item.range)
+                    ]
                 }]
             })
             continue
@@ -875,7 +1001,10 @@ const getMarketRatioData = async (singleItems) => {
                     } else if (j === items.length - 1) {
                         items.push({
                             name: tmpItem.item.name,
-                            sum: tmpItem.item.sum
+                            sum: tmpItem.item.sum,
+                            clickingAdditionalParams: [
+                                jsonUtil.getSqlFieldQuery(tmpItem.item.field, "$between", tmpItem.item.range)
+                            ]
                         })
                         hasComputed = true
                         break;
@@ -888,7 +1017,10 @@ const getMarketRatioData = async (singleItems) => {
                     sum: tmpItem.item.sum,
                     items: [{
                         name: tmpItem.item.name,
-                        sum: tmpItem.item.sum
+                        sum: tmpItem.item.sum,
+                        clickingAdditionalParams: [
+                            jsonUtil.getSqlFieldQuery(tmpItem.item.field, "$between", tmpItem.item.range)
+                        ]
                     }]
                 })
                 hasComputed = true
@@ -950,6 +1082,10 @@ const getUniqueSingleItems = (singleItems) => {
     }
     return uniqueSingleItems
 }
+
+// 方法映射，为接口调用使用
+const availableFunctionsMap = {"getLinkErrorQueryFields": getLinkErrorQueryFields}
+
 
 module.exports = {
     saveSingleItemTaoBao,

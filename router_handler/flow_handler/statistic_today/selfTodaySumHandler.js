@@ -35,6 +35,9 @@ const getSelfTodaySum = async (req, res) => {
         const unMergedDepartments = result.departments
 
         for (const unMergedDepartment of unMergedDepartments) {
+            if (!unMergedDepartment) {
+                continue
+            }
             if (mergedResult.departments.length === 0) {
                 mergedResult.sum = mergedResult.sum + unMergedDepartment.sum
                 mergedResult.departments.push(unMergedDepartment)

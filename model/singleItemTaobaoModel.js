@@ -497,6 +497,15 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "创建时间",
       field: "create_time"
+    },
+    linkHierarchy: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "链接层级",
+      field: "link_hierarchy"
     }
   };
   const options = {

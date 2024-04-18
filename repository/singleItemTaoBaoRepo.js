@@ -60,20 +60,41 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     secondLevelProductLine,
                                     errorItem,
                                     linkTypes,
+                                    linkHierarchies,
                                     linkStatus,
                                     fightingLinkIds,
-                                    timeRange) => {
+                                    timeRange,
+                                    clickingAdditionalParams) => {
     const where = {date: {$between: timeRange}}
-    if (productLineLeaders.length === 1) {
-        where.productLineLeader = productLineLeaders[0]
-    } else if (productLineLeaders.length > 1) {
-        where.productLineLeader = {$in: productLineLeaders}
+    if (productLineLeaders) {
+        if (productLineLeaders.length === 1) {
+            where.productLineLeader = productLineLeaders[0]
+        } else if (productLineLeaders.length > 1) {
+            where.productLineLeader = {$in: productLineLeaders}
+        }
     }
+
+    if (linkHierarchies) {
+        if (linkHierarchies.length === 1) {
+            where.linkHierarchy = linkHierarchies[0]
+        } else if (linkHierarchies.length > 1) {
+            where.linkHierarchy = {$in: linkHierarchies}
+        }
+    }
+
     if (linkTypes) {
         if (linkTypes.length === 1) {
             where.linkType = linkTypes[0]
         } else if (linkTypes.length > 1) {
             where.linkType = {$in: linkTypes}
+        }
+    }
+
+    if (clickingAdditionalParams) {
+        for (const clickingParam of clickingAdditionalParams) {
+            if (clickingParam.field && clickingParam.operator && clickingParam.value){
+                where[clickingParam.field] = {[clickingParam.operator]: clickingParam.value}
+            }
         }
     }
 
@@ -194,6 +215,19 @@ const getLinkTypes = async () => {
 }
 
 /**
+ * 获取单品表中的链接层级
+ * @returns {Promise<[]|*>}
+ */
+const getLinkHierarchy = async () => {
+    const result = await singleItemTaoBaoModel.findAll({
+        group: 'link_hierarchy',
+        attributes: ['link_hierarchy']
+    })
+    let data = sequelizeUtil.extractDataValues(result)
+    return data
+}
+
+/**
  * 根据产品线负责人汇总数据: 支付金额、推广金额(payAmount)、汇总金额（）
  * @param productLineLeader
  * @returns {Promise<*|[]>}
@@ -252,5 +286,6 @@ module.exports = {
     getErrorSingleItems,
     sumPaymentByProductLineLeader,
     getSingleItemsBy,
-    getLatestBatchIdRecords
+    getLatestBatchIdRecords,
+    getLinkHierarchy
 }

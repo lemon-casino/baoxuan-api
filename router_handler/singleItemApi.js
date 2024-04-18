@@ -50,10 +50,13 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
             secondLevelProductLine,
             errorItem,
             linkTypes,
+            linkHierarchies,
             linkStatus,
-            timeRange
+            timeRange,
+            clickingAdditionalParams
         } = req.query
 
+        // todo: 其他参数还要校验
         joiUtil.validate({pageIndex, pageSize})
         const result = await singleItemTaoBaoService.getTaoBaoSingleItemsWithStatistic(
             parseInt(pageIndex),
@@ -63,8 +66,10 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
             secondLevelProductLine,
             JSON.parse(errorItem || "{}"),
             JSON.parse(linkTypes || "[]"),
+            JSON.parse(linkHierarchies || "[]"),
             linkStatus,
-            JSON.parse(timeRange))
+            JSON.parse(timeRange),
+            JSON.parse(clickingAdditionalParams || "[]"))
 
         return res.send(biResponse.success(result))
     } catch (e) {

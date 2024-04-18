@@ -6,6 +6,7 @@ const dingDingService = require("../service/dingDingService")
 const processService = require("../service/processService")
 const flowRepo = require("../repository/flowRepo")
 const globalGetter = require("../global/getter")
+const NotFoundError = require("../error/http/notFoundError")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -42,7 +43,6 @@ const filterFlowsByImportanceCondition = async (flows, importanceCondition) => {
     return satisfiedFlows;
 }
 
-
 const getFlowsOfDepartmentBy = async (departments, selfJoinOrLaunch, timesRange, formImportanceCondition) => {
     //  获取部门下所有人员的参与的符合条件的流程
     const satisfiedSelfFlows = [];
@@ -64,7 +64,6 @@ const getFlowsOfDepartmentBy = async (departments, selfJoinOrLaunch, timesRange,
     }
     return satisfiedSelfFlows
 }
-
 
 const filterFlowByFlowStatus = (flows, flowStatus) => {
     const satisfiedFlows = flows.filter((flow) => {
@@ -111,30 +110,6 @@ const findReviewItemByType = (flow, reviewStatus) => {
     return null
 }
 
-// // 筛选出指定状态的流程
-// const filterFlowsByFlowStatus = async (flows, status) => {
-//     let statisticOfUsers = []
-//     for (const flow of flows) {
-//         if (status === statusTypes.reviewStatus) {
-//             const reviewItem = await flowService.findReviewItemByType(flow, status.name)
-//             if (reviewItem) {
-//                 const user = {userId: reviewItem.operatorUserId, userName: reviewItem.operatorName}
-//                 statisticOfUsers = await sumOfStatisticOfUsers(user, statisticOfUsers);
-//             }
-//         } else {
-//             // 将该流程统计到审核节点的各个操作人
-//             const reviewItems = flow.overallprocessflow
-//             if (reviewItems) {
-//                 for (const reviewItem of reviewItems) {
-//                     const user = {userId: reviewItem.operatorUserId, userName: reviewItem.operatorName}
-//                     statisticOfUsers = await sumOfStatisticOfUsers(user, statisticOfUsers);
-//                 }
-//             }
-//         }
-//     }
-// }
-
-
 /**
  * 根据按部门汇总的流程，按照部门进行统计返回
  * @param flowsOfDepartments
@@ -154,21 +129,31 @@ const sumFlowsByDepartment = async (flowsOfDepartments) => {
 /**
  * 将流程按照发起人所在的部门进行分类
  * @param flows
- * @returns {Promise<{sum: number, departments: {}}>}
+ * @returns {Promise<{}>}
  */
 const flowsDividedByDepartment = async (flows) => {
     const result = {}
+
     for (const flow of flows) {
         // todo: 这种方式的遍历太耗时了
         // 根据流程发起人所在的部门汇总数据
         // warning: 如果userId用户存在多部门的情况，会重复计算
-        const departmentsOfUser = await departmentService.getDepartmentOfUser(flow.originator.userId);
+        const departmentsOfUser = await departmentService.getDepartmentOfUser(flow.originator.userId)
+
         const topDepartments = departmentsOfUser.filter((dep) => {
-            return dep.dep_detail.parent_id === 1
+            if (dep && dep.dep_detail && dep.dep_detail.parent_id) {
+                return dep.dep_detail.parent_id === 1
+            }
+            return false
         })
 
         for (const department of topDepartments) {
-            const subDepartments = departmentsOfUser.filter((dep) => dep.dep_detail.parent_id === department.dep_detail.dept_id)
+            const subDepartments = departmentsOfUser.filter((dep) => {
+                if (dep && dep.dep_detail && dep.dep_detail.parent_id) {
+                    return dep.dep_detail.parent_id === department.dep_detail.dept_id
+                }
+                return false
+            })
             if (subDepartments.length > 0) {
                 for (const subDepartment of subDepartments) {
                     if (Object.keys(result).includes(subDepartment.dep_detail.name)) {
@@ -226,7 +211,6 @@ const filterFlowsByImportance = async (flows, importance) => {
     return filteredFlows
 }
 
-
 /**
  * 根据重要性过滤流程
  * @param flows 需要筛选的流程
@@ -237,7 +221,7 @@ const filterFlowsByImportant = async (flows, isImportant) => {
     const formsOfImportance = await formService.getFormsByImportance(isImportant)
     const filteredFlows = flows.filter((flow) => {
         return formsOfImportance.some((form) => {
-            return form.flow_form_id === flow.formUuid
+            return form.flowFormId === flow.formUuid
         })
     })
     return filteredFlows;
@@ -258,7 +242,6 @@ const filterFlowsByForms = (flows, forms) => {
     })
     return filteredFlows;
 }
-
 
 const sumFlowsByDepartmentOfMultiType = async (flowsOfMultiType) => {
     const result = {}
@@ -362,7 +345,6 @@ const convertSelfStatisticToDept = (statistic, userName, isFirstLevelDept, subDe
     return resultTemplate;
 }
 
-
 /**
  * 中转调用 funOfTodaySelfStatistic 获取统计数据并进行格式转化
  * @param funOfTodaySelfStatistic
@@ -374,8 +356,7 @@ const convertSelfStatisticToDept = (statistic, userName, isFirstLevelDept, subDe
 const getDeptStatistic = async (funOfTodaySelfStatistic, deptId, status, importance) => {
     const requiredDepartment = await departmentService.getDepartmentWithUsers(deptId);
     if (!requiredDepartment) {
-        console.error(`未找到部门：${deptId}的信息`)
-        return null
+        throw new NotFoundError(`未找到部门：${deptId}的信息`)
     }
 
     let convertedResult = {sum: 0, departments: []}
@@ -386,7 +367,9 @@ const getDeptStatistic = async (funOfTodaySelfStatistic, deptId, status, importa
         return convertedResult
     }
     for (const user of users) {
+        // 获取本人参与的流程并按流程发起人所在的组进行分类
         const result = await funOfTodaySelfStatistic(user.userid, status, importance)
+        // 在部门分组统计的数据中，进一步汇总到参与的个人
         convertedResult = convertSelfStatisticToDept(result, user.name,
             requiredDepartment.parent_id == 1,
             requiredDepartment.name, convertedResult)
@@ -470,7 +453,7 @@ const syncMissingCompletedFlows = async () => {
  * @returns {Promise<*[]>}
  */
 const getFlowFormValues = async (formId, fieldKey, flowStatus) => {
-    const fightingLinkIds = []
+    let fightingLinkIds = []
     const flows = await getTodayFlowsByFormIdAndFlowStatus(formId, flowStatus)
     for (const flow of flows) {
         if (!flow.data) {
@@ -478,7 +461,11 @@ const getFlowFormValues = async (formId, fieldKey, flowStatus) => {
         }
         const runningLinkId = flow.data[fieldKey]
         if (runningLinkId) {
-            fightingLinkIds.push(runningLinkId)
+            if (runningLinkId.trim().includes(" ")) {
+                fightingLinkIds = fightingLinkIds.concat(runningLinkId.split(/\s+/))
+            } else {
+                fightingLinkIds.push(runningLinkId)
+            }
         }
     }
     return fightingLinkIds

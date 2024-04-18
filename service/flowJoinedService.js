@@ -130,8 +130,6 @@ const getTodaySelfJoinedFlowsStatisticOfReviewType = async (userId, reviewType, 
                     continue
                 }
             }
-
-            // todo: 暂时加在这里，需要独立出去
             // 对于已完成的流程，需要整个流程中涉及本人的工作都已完成
             if (reviewType === statisticStatusConst.reviewType.history) {
                 if (reviewItem.operatorUserId === userId) {
@@ -146,7 +144,7 @@ const getTodaySelfJoinedFlowsStatisticOfReviewType = async (userId, reviewType, 
                     satisfiedFlows.push(flow)
                 }
             } else {
-                // todo 和 forcast 存在一个即为有效，不用遍历全部
+                // todo类型和 forcast类型 存在一个即为有效，不用遍历全部
                 //  非本人且类型不匹配的直接跳过
                 if (reviewItem.operatorUserId !== userId || reviewItem.type !== reviewType) {
                     continue
@@ -154,13 +152,6 @@ const getTodaySelfJoinedFlowsStatisticOfReviewType = async (userId, reviewType, 
                 satisfiedFlows.push(flow)
                 break;
             }
-
-            // //  非本人且类型不匹配的直接跳过
-            // if (reviewItem.operatorUserId !== userId || reviewItem.type !== reviewType) {
-            //     continue
-            // }
-            // satisfiedFlows.push(flow)
-            // break;
         }
     }
     return satisfiedFlows
@@ -200,7 +191,7 @@ const getTodaySelfJoinedFlowsStatisticOfFlowStatus = async (userId, status, impo
     if (importance) {
         needFilterReviewItems = importance.items
     }
-    if (!needFilterReviewItems  || needFilterReviewItems.length ===0){
+    if (!needFilterReviewItems || needFilterReviewItems.length === 0) {
         return filteredFlows
     }
 

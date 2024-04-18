@@ -1,3 +1,5 @@
+const linkTypeConst = require("../const/linkTypeConst")
+
 const taoBaoSingleItemMap = {
     "batchId": "批次号",
     "productName": "产品名称",
@@ -54,58 +56,73 @@ const taoBaoSingleItemMap = {
     "accuratePeopleSumPayment": "精准人群总支付"
 }
 
+// 费比超过15仅统计老品
+const feeRateOver15NewProductFields = linkTypeConst.groups.filter(group => group.group === "new")[0].items.map(item => {
+    return {
+        field: "linkType", operator: "$ne", comparator: "!==",
+        value: item
+    }
+})
 const taoBaoErrorItems = [
-    {name: "利润率低于15%", value: {field: "profitRate", operator: "$lt", value: "15", comparator: "<"}},
+    {name: "利润率低于15%", values: [{field: "profitRate", operator: "$lt", value: "15", comparator: "<"}]},
     // 手淘人数市场占比环比（日、7天、30天）
     {
         name: "手淘人数市场占比环比（日）下降",
-        value: {field: "shouTaoPeopleNumMarketRateCircleRateDay", operator: "$lt", value: "-20", comparator: "<"}
+        values: [{field: "shouTaoPeopleNumMarketRateCircleRateDay", operator: "$lt", value: "-20", comparator: "<"}]
     },
     {
         name: "手淘人数市场占比环比（7天）下降",
-        value: {field: "shouTaoPeopleNumMarketRateCircleRate7Day", operator: "$lt", value: "-20", comparator: "<"}
+        values: [{field: "shouTaoPeopleNumMarketRateCircleRate7Day", operator: "$lt", value: "-20", comparator: "<"}]
     },
     {
         name: "手淘人数市场占比环比（30天）下降",
-        value: {field: "shouTaoPeopleNumMarketRateCircleRate30Day", operator: "$lt", value: "-20", comparator: "<"}
+        values: [{field: "shouTaoPeopleNumMarketRateCircleRate30Day", operator: "$lt", value: "-20", comparator: "<"}]
     },
     // 坑市场占比环比（日、7天、30天）低于20%
     {
         name: "坑市场占比环比（日）下降",
-        value: {field: "salesMarketRateCircleRateDay", operator: "$lt", value: "-20", comparator: "<"}
+        values: [{field: "salesMarketRateCircleRateDay", operator: "$lt", value: "-20", comparator: "<"}]
     },
     {
         name: "坑市场占比环比（7天）下降",
-        value: {field: "salesMarketRateCircleRate7Day", operator: "$lt", value: "-20", comparator: "<"}
+        values: [{field: "salesMarketRateCircleRate7Day", operator: "$lt", value: "-20", comparator: "<"}]
     },
     {
         name: "坑市场占比环比（30天）下降",
-        value: {field: "salesMarketRateCircleRate30Day", operator: "$lt", value: "-20", comparator: "<"}
+        values: [{field: "salesMarketRateCircleRate30Day", operator: "$lt", value: "-20", comparator: "<"}]
     },
     // 投产低于2
     {
         name: "车总投产比低于2",
-        value: {field: "shoppingCatSumRoi", operator: "$lt", value: "2", comparator: "<", min: "0.000001"}
+        values: [{field: "shoppingCatSumRoi", operator: "$lt", value: "2", comparator: "<", min: "0.000001"}]
     },
     {
         name: "精准人群推广投产比低于2",
-        value: {
+        values: [{
             field: "accuratePeoplePromotionProductionRate",
             operator: "$lt",
             value: "2",
             comparator: "<",
             min: "0.000001"
-        }
+        }]
     },
     {
         name: "万相台投产比低于2",
-        value: {field: "wanXiangTaiProductionRate", operator: "$lt", value: "2", comparator: "<", min: "0.000001"}
+        values: [{field: "wanXiangTaiProductionRate", operator: "$lt", value: "2", comparator: "<", min: "0.000001"}]
     },
     // 新品日搜索流量低于100，上架14天新品搜索目标达成30%以下
-    {name: "流量未起", value: {field: "", operator: "", value: ""}},
+    {name: "流量未起", values: [{field: "", operator: "", value: ""}]},
 
-    {name: "新品负利率", value: {field: "", operator: "", value: ""}},
-    {name: "费比超过15%", value: {field: "feeRate", operator: "$gt", value: "15", comparator: ">"}}
+    {name: "新品负利率", values: [{field: "", operator: "", value: ""}]},
+    {
+        name: "费比超过15%",
+        values: [{
+            field: "feeRate",
+            operator: "$gt",
+            value: "15",
+            comparator: ">"
+        }].concat(feeRateOver15NewProductFields)
+    }
 ]
 
 const taoBaoSingleItemStatuses = [{name: "fighting", value: "打仗"}, {name: "normal", value: "正常"}]
@@ -131,24 +148,64 @@ const profitRateRangeSumTypes = [
 ]
 
 const marketRatioGroup = [
-    {type: "salesRateNormal", name: "坑产占比正常", item: {name: "0-9%", range: [0, 8.999999]}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "50%及以上", range: [50, 999999]}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "40%-50%", range: [40, 49.999999]}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "30-40%", range: [30, 39.999999]}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "20%-30%", range: [20, 29.999999]}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "9%-20%", range: [9, 19.999999]}},
-    {type: "salesRateDown", name: "坑产占比下降", item: {name: "-10%-0", range: [-10, -0.000001]}},
-    {type: "salesRateDown", name: "坑产占比下降", item: {name: "-19%--10%", range: [-19, -10.000001]}},
-    {type: "salesRateDown", name: "坑产占比下降", item: {name: "-29%--19%", range: [-29, -19.000001]}},
-    {type: "flowRateNormal", name: "流量占比正常", item: {name: "0-10%", range: [0, 9.999999]}},
-    {type: "flowRateUp", name: "流量占比提升", item: {name: "50%及以上", range: [50, 999999]}},
-    {type: "flowRateUp", name: "流量占比提升", item: {name: "40%-50%", range: [40, 49.999999]}},
-    {type: "flowRateUp", name: "流量占比提升", item: {name: "30-40%", range: [30, 39.999999]}},
-    {type: "flowRateUp", name: "流量占比提升", item: {name: "20%-30%", range: [20, 29.999999]}},
-    {type: "flowRateUp", name: "流量占比提升", item: {name: "10%-20%", range: [10, 19.999999]}},
-    {type: "flowRateDown", name: "流量占比下降", item: {name: "-10%-0", range: [-10, 0.000001]}},
-    {type: "flowRateDown", name: "流量占比下降", item: {name: "-20%--10%", range: [-20, -10.000001]}},
-    {type: "flowRateDown", name: "流量占比下降", item: {name: "-29%--20%", range: [-29, -20.000001]}}
+    {type: "salesRateNormal", name: "坑产占比正常", item: {name: "0-9%", range: [0, 8.999999], field: "salesMarketRate"}},
+    {type: "salesRateUp", name: "坑产占比提升", item: {name: "50%及以上", range: [50, 999999], field: "salesMarketRate"}},
+    {type: "salesRateUp", name: "坑产占比提升", item: {name: "40%-50%", range: [40, 49.999999], field: "salesMarketRate"}},
+    {type: "salesRateUp", name: "坑产占比提升", item: {name: "30-40%", range: [30, 39.999999], field: "salesMarketRate"}},
+    {type: "salesRateUp", name: "坑产占比提升", item: {name: "20%-30%", range: [20, 29.999999], field: "salesMarketRate"}},
+    {type: "salesRateUp", name: "坑产占比提升", item: {name: "9%-20%", range: [9, 19.999999], field: "salesMarketRate"}},
+    {type: "salesRateDown", name: "坑产占比下降", item: {name: "-10%-0", range: [-10, -0.000001], field: "salesMarketRate"}},
+    {
+        type: "salesRateDown",
+        name: "坑产占比下降",
+        item: {name: "-19%--10%", range: [-19, -10.000001], field: "salesMarketRate"}
+    },
+    {
+        type: "salesRateDown",
+        name: "坑产占比下降",
+        item: {name: "-29%--19%", range: [-29, -19.000001], field: "salesMarketRate"}
+    },
+    {type: "flowRateNormal", name: "流量占比正常", item: {name: "0-10%", range: [0, 9.999999], field: "salesMarketRate"}},
+    {
+        type: "flowRateUp",
+        name: "流量占比提升",
+        item: {name: "50%及以上", range: [50, 999999], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}
+    },
+    {
+        type: "flowRateUp",
+        name: "流量占比提升",
+        item: {name: "40%-50%", range: [40, 49.999999], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}
+    },
+    {
+        type: "flowRateUp",
+        name: "流量占比提升",
+        item: {name: "30-40%", range: [30, 39.999999], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}
+    },
+    {
+        type: "flowRateUp",
+        name: "流量占比提升",
+        item: {name: "20%-30%", range: [20, 29.999999], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}
+    },
+    {
+        type: "flowRateUp",
+        name: "流量占比提升",
+        item: {name: "10%-20%", range: [10, 19.999999], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}
+    },
+    {
+        type: "flowRateDown",
+        name: "流量占比下降",
+        item: {name: "-10%-0", range: [-10, 0.000001], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}
+    },
+    {
+        type: "flowRateDown",
+        name: "流量占比下降",
+        item: {name: "-20%--10%", range: [-20, -10.000001], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}
+    },
+    {
+        type: "flowRateDown",
+        name: "流量占比下降",
+        item: {name: "-29%--20%", range: [-29, -20.000001], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}
+    }
 ]
 
 const fieldsWithPercentageTag = [

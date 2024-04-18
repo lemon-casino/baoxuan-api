@@ -5,9 +5,21 @@ const globalSetter = require("../global/setter")
 const dingDingService = require("../service/dingDingService")
 const flowService = require("../service/flowService")
 const flowFormService = require("../service/flowFormService")
+const workingDayService = require("../service/workingDayService")
+const dateUtil = require("../utils/dateUtil")
 const {logger} = require("../utils/log")
 
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20， 涉及的宜搭接口暂时没有qps和总调用量的限制
+/**
+ * 每天9:05确认当天是否是工作日并将日期入库
+ */
+schedule.scheduleJob("0 5 9 * * ?", async function () {
+    const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
+    const isWorkingDay = await dingDingService.isWorkingDay(date)
+    if (isWorkingDay) {
+        await workingDayService.saveWorkingDay(date)
+    }
+})
 
 /**
  *  每15分钟更新正在进行中的流程和今天完成的流程（包含节点的工作情况）
@@ -18,56 +30,59 @@ schedule.scheduleJob("0 0/15 * * * ?", async function () {
     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
 })
 
-/**
- * 需要有手动补偿机制
- * 每天晚上0点获取今天完成的流程数据并入库，状态包含：completed、 terminated、error
+/** 0 50 23 * * ?
+ * 每天23：50 获取今天完成的流程并入库，状态包含：completed、 terminated、error
  */
-schedule.scheduleJob("0 59 23 * * *", async function () {
+schedule.scheduleJob("0 50 23 * * ?", async function () {
     await flowService.syncMissingCompletedFlows()
-});
-
-/**
- * 更新Form和Form的详细信息
- */
-schedule.scheduleJob("0 59 23 * * *", async function () {
-    await flowFormService.syncFormsFromDingDing()
-    logger.info(`${new Date()}：流程表单信息更新完成`)
 })
 
-//定时任务
-// 每30分钟请求一次getDingdingToken 获取token
-schedule.scheduleJob("*/6 * * * *", async function () {
-    console.time("获取token=========>");
-    await dingDingService.getDingDingToken();
-    console.timeEnd("获取token=========>");
+/**
+ * 更新钉钉token（频率：1h）
+ *
+ * 注意：访问钉钉的接口都需要使用token，要保证token不能过期，默认2小时
+ */
+schedule.scheduleJob("0 0 0/1 * * ?", async function () {
+    await dingDingService.getDingDingToken()
+})
+
+/**
+ * 从钉钉更新部门信息（按天更新）
+ */
+schedule.scheduleJob("0 0 5 * * ?", async function () {
+    const depList = await dingDingService.getDepartmentFromDingDing()
+    // todo: 线上总是会出现更新时天猫数据丢失，临时打印更新的结果用于判断
+    logger.error("hello-world:")
+    logger.error(JSON.stringify(depList))
+    await redisUtil.setKey(redisKeys.Department, JSON.stringify(depList.result))
+    globalSetter.setGlobalDepartments(depList.result)
 });
 
-// 每40分钟请求一次DepartmentInformation  获取所有部门
-schedule.scheduleJob("*/40 * * * *", async function () {
-    // console.time("获取所有部门=========>");
-    await dingDingService.getDepartmentFromDingDing();
-    // 将最新的部门数据保存到global中
-    const newDepartments = await redisUtil.getKey(redisKeys.Department)
-    globalSetter.setGlobalDepartments(JSON.parse(newDepartments || "[]"))
-    console.timeEnd("获取所有部门=========>");
+/**
+ * 获取部门下的员工信息（按天更新）
+ *
+ * 注意：该数据依赖于Redis中的department数据：要保证更新department的定时任务优先执行完成
+ */
+schedule.scheduleJob("0 30 5 * * ?", async function () {
+    const allDepartmentsWithUsers = await dingDingService.getDepartmentsWithUsersFromDingDing()
+    await redisUtil.setKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment, JSON.stringify(allDepartmentsWithUsers))
+    globalSetter.setGlobalUsersOfDepartments(allDepartmentsWithUsers)
 });
 
-// 每45分钟请求一次fetchUserList  获取所有部门下的人员
-schedule.scheduleJob("*/45 * * * *", async function () {
-    console.time("获取所有部门下的人员=========>");
-    await dingDingService.getUsersFromDingDing();
-    // 将最新的部门下的人员数据保存到global中
-    const newUsersOfDepartments = await redisUtil.getKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment)
-    globalSetter.setGlobalUsersOfDepartments(JSON.parse(newUsersOfDepartments || "[]"))
-    console.timeEnd("获取所有部门下的人员=========>");
-});
+/**
+ * 获取员工信息（附带所属的部门信息）（按天更新）
+ *
+ * 注意：该数据依赖于Redis中的department数据：要保证更新department的定时任务优先执行完成
+ */
+schedule.scheduleJob("0 0 6 * * ?", async function () {
+    const usersWithDepartment = await dingDingService.getUsersWithDepartmentFromDingDing()
+    await redisUtil.setKey(redisKeys.AllUsersDetailWithJoinLaunchData, JSON.stringify(usersWithDepartment))
+    globalSetter.setGlobalUsers(usersWithDepartment)
+})
 
-// 每50分钟请求一次fetchUserDetail 获取所有用户详情数据
-schedule.scheduleJob("*/50 * * * *", async function () {
-    console.time("获取所有用户详情数据=========>");
-    await dingDingService.getUsersDetailFromDingDing();
-    // 将最新的人员数据保存到global中
-    const newUsers = await redisUtil.getKey(redisKeys.AllUsersDetailWithJoinLaunchData)
-    globalSetter.setGlobalUsers(JSON.parse(newUsers || "[]"))
-    console.timeEnd("获取所有用户详情数据=========>");
-});
+/**
+ * 更新Form和Form的详细信息（按天更新）
+ */
+schedule.scheduleJob("0 30 6 * * ?", async function () {
+    await flowFormService.syncFormsFromDingDing()
+})

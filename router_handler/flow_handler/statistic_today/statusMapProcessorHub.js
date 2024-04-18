@@ -1,5 +1,5 @@
 /**
- *
+ * 处理个人和部门的跳转实际处理方法
  * @param statusProcessorMap
  * @param id  userId 、deptId
  * @param status

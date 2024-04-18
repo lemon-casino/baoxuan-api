@@ -34,9 +34,8 @@ const saveBatchProcessReviews = async (processReviews) => {
         transaction.commit()
         return true
     } catch (e) {
-        logger.error(e.message)
         await transaction.rollback()
-        return false
+        throw e
     }
 }
 

@@ -16,41 +16,45 @@ const logger = createLogger({
         format.timestamp({
             format: "YYYY-MM-DD HH:mm:ss",
         }),
-        format.errors({stack: true}), // 以便记录错误堆栈
+        format.errors({stack: true}),
         format.splat(),
         format.json()
     ),
     defaultMeta: {service: "bi"},
     transports: [
-        new DailyRotateFile({
-            filename: path.join(`${logDirectory}/%DATE%`, `warm.log`),
-            datePattern: 'YYYY-MM-DD',
-            level: "warm"
-        }),
+        // 也会记录info以下级别的日志
+        // new DailyRotateFile({
+        //     level: "info",
+        //     filename: path.join(`${logDirectory}/%DATE%`, `info.log`),
+        //     datePattern: 'YYYY-MM-DD',
+        //     prepend: false,
+        //     maxSize: '20m',
+        //     maxFiles: '7d'
+        // }),
         new DailyRotateFile({
             level: "error",
             filename: path.join(`${logDirectory}/%DATE%`, `error.log`),
             datePattern: 'YYYY-MM-DD',
-            prepend: true
-        })
+            prepend: false,
+            maxSize: '50m'
+        }),
     ],
 });
 
 // 创建一个流对象，morgan会使用它来写入日志到winston
 const stream = {
     write: (message) => {
-        // logger.info(message.trim());
     },
 };
 
 // 处理未捕获的异常和未处理的Promise拒绝
 process.on("uncaughtException", (error) => {
-    // logger.error("Uncaught Exception:", error);
+    logger.error("Uncaught Exception:", error);
 });
 
 process.on("unhandledRejection", (reason, promise) => {
     // 检查 `reason` 是否为错误对象，如果是，则获取其堆栈信息；如果不是，直接转换为字符串
-    // const message = reason instanceof Error ? reason.stack : reason.toString();
-    // logger.error(`Unhandled Rejection at: ${promise}. Reason: ${message}`);
+    const message = reason instanceof Error ? reason.stack : reason.toString();
+    logger.error(`Unhandled Rejection at: ${promise}. Reason: ${message}`);
 });
 module.exports = {logger, stream};

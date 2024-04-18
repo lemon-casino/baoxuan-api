@@ -1,0 +1,3 @@
+const arrayOfStr = //
+
+module.exports = {}

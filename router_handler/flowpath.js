@@ -3008,7 +3008,7 @@ const datasss = require("./data.json");
 // 获取所有流程设计模版数据
 exports.getprocessAuditing = async (req, res) => {
     // const { data } = req.body;
-    const data = formatData(JSON.parse(JSON.stringify(datasss)));
+    const data = formatData(JSON.parse(JSON.stringify(req.body.data)));
     await FlowFormReviewModel.addFlowFormReview(data);
     // 入库数据结构
     // data.forEach(async (item) => {
