@@ -24,7 +24,7 @@ const taoBaoSingleItemMap = {
     "shoppingCartSumClick": "车总点击率",
     "shoppingCartConversion": "车转化",
     "shoppingCartSumAmount": "车总花费",
-    "shoppingCatSumRoi": "车总投产比",
+    "shoppingCatSumRoi": "车总投产比",//
     "payConversionRate": "支付转化率",
     "reallyDealRate": "真实成交率",
     "deductionPoint": "扣点",
@@ -69,7 +69,7 @@ const oldItems = linkTypeConst.groups.filter(group => group.group === "old")[0].
 const newProductFields = oldItems.map(item => {
     return {
         field: "linkType", operator: "$notIn", comparator: "!==",
-        value: item, sqlValue: newItems
+        value: item, sqlValue: oldItems
     }
 })
 const taoBaoErrorItems = [
@@ -257,11 +257,7 @@ const marketRatioGroup = [
 ]
 
 const fieldsWithPercentageTag = [
-    "shouTaoReallyConversionRate", "profitRate", "shoppingCartSumClick", "shoppingCartConversion", "shoppingCatSumRoi",
-    "payConversionRate", "reallyDealRate", "shouTaoPeopleNumMarketRate", "salesMarketRate", "shouTaoPeopleNumMarketRateCircleRateDay",
-    "salesMarketRateCircleRateDay", "shouTaoPeopleNumMarketRateCircleRate7Day", "salesMarketRateCircleRate7Day",
-    "shouTaoPeopleNumMarketRateCircleRate30Day", "salesMarketRateCircleRate30Day", "accuratePeoplePromotionProductionRate",
-    "wanXiangTaiProductionRate", "feeRate"
+    "shoppingCatSumRoi","accuratePeoplePromotionProductionRate", "wanXiangTaiProductionRate"
 ]
 
 module.exports = {
