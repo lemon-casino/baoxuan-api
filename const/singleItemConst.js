@@ -58,14 +58,29 @@ const taoBaoSingleItemMap = {
 
 // 费比超过15仅统计老品(格式不好！要兼顾eval调用和数据库的条件判断，数据库的同一个field只能保留一份)
 const newItems = linkTypeConst.groups.filter(group => group.group === "new")[0].items
-const feeRateOver15NewProductFields = newItems.map(item => {
+const oldProductFields = newItems.map(item => {
+    return {
+        field: "linkType", operator: "$notIn", comparator: "!==",
+        value: item, sqlValue: newItems
+    }
+})
+
+const oldItems = linkTypeConst.groups.filter(group => group.group === "old")[0].items
+const newProductFields = oldItems.map(item => {
     return {
         field: "linkType", operator: "$notIn", comparator: "!==",
         value: item, sqlValue: newItems
     }
 })
 const taoBaoErrorItems = [
-    {name: "利润率低于15%", values: [{field: "profitRate", operator: "$lt", value: "15", comparator: "<"}]},
+    {
+        name: "老品利润率低于15%",
+        values: [{field: "profitRate", operator: "$lt", value: "15", comparator: "<"}].concat(oldProductFields)
+    },
+    {
+        name: "新品利润率低于5%",
+        values: [{field: "profitRate", operator: "$lt", value: "5", comparator: "<"}].concat(newProductFields)
+    },
     // 手淘人数市场占比环比（日、7天、30天）
     {
         name: "手淘人数市场占比环比（日）下降",
@@ -150,7 +165,7 @@ const taoBaoErrorItems = [
             operator: "$gt",
             value: "15",
             comparator: ">"
-        }].concat(feeRateOver15NewProductFields)
+        }].concat(oldProductFields)
     }
 ]
 
@@ -194,7 +209,11 @@ const marketRatioGroup = [
         name: "坑产占比下降",
         item: {name: "-29%--19%", range: [-29, -19.000001], field: "salesMarketRate"}
     },
-    {type: "flowRateNormal", name: "流量占比正常", item: {name: "0-10%", range: [0, 9.999999], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}},
+    {
+        type: "flowRateNormal",
+        name: "流量占比正常",
+        item: {name: "0-10%", range: [0, 9.999999], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}
+    },
     {
         type: "flowRateUp",
         name: "流量占比提升",
