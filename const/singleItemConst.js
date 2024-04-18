@@ -194,7 +194,7 @@ const marketRatioGroup = [
         name: "坑产占比下降",
         item: {name: "-29%--19%", range: [-29, -19.000001], field: "salesMarketRate"}
     },
-    {type: "flowRateNormal", name: "流量占比正常", item: {name: "0-10%", range: [0, 9.999999], field: "salesMarketRate"}},
+    {type: "flowRateNormal", name: "流量占比正常", item: {name: "0-10%", range: [0, 9.999999], field: "shouTaoPeopleNumMarketRateCircleRate7Day"}},
     {
         type: "flowRateUp",
         name: "流量占比提升",
