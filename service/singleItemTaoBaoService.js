@@ -637,6 +637,9 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
             }
             return true
         })
+
+
+
         // let queryFields = ""
         // const errItems = taoBaoErrorItems.filter(errItem => errItem.name === item.name)
         // if (errItems.length > 0) {
