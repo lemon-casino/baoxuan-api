@@ -94,26 +94,38 @@ const taoBaoErrorItems = [
     // 投产低于2
     {
         name: "车总投产比低于2",
-        values: [{field: "shoppingCatSumRoi", operator: "$lt", value: "2", comparator: "<", min: "0.000001"}]
+        values: [{
+            field: "shoppingCatSumRoi",
+            operator: "$lt",
+            value: [0.000001, 1.99999],
+            comparator: "<",
+            min: "0.000001"
+        }]
     },
     {
         name: "精准人群推广投产比低于2",
         values: [{
             field: "accuratePeoplePromotionProductionRate",
-            operator: "$lt",
-            value: "2",
+            operator: "$between",
+            value: [0.000001, 1.99999],
             comparator: "<",
             min: "0.000001"
         }]
     },
     {
         name: "万相台投产比低于2",
-        values: [{field: "wanXiangTaiProductionRate", operator: "$lt", value: "2", comparator: "<", min: "0.000001"}]
+        values: [{
+            field: "wanXiangTaiProductionRate",
+            operator: "$between",
+            value: [0.000001, 1.99999],
+            comparator: "<",
+            min: "0.000001"
+        }]
     },
     // 新品日搜索流量低于100，上架14天新品搜索目标达成30%以下
-    {name: "流量未起", values: [{field: "", operator: "", value: ""}]},
+    {name: "流量未起", values: []},
 
-    {name: "新品负利率", values: [{field: "", operator: "", value: ""}]},
+    {name: "新品负利率", values: []},
     {
         name: "费比超过15%",
         values: [{

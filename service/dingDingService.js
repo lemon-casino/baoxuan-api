@@ -68,7 +68,6 @@ const getFlowsByStatusAndTimeRange = async (
     }
     // 如果总数大于当前页数*每页数量，继续请求
     if (resLiuChengList.totalCount > pageNumber * pageSize) {
-        console.log("pageNumber:", pageNumber, formUuid);
         const nextPageData = await getFlowsByStatusAndTimeRange(
             timesRange,
             timeAction,
@@ -490,12 +489,7 @@ const getFinishedFlows = async (timeRange) => {
 const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
     const flows = await getFlowsFromDingDing(status, timeRange, timeAction);
     // 同步流程的操作节点耗时信息
-    let index = 0;
     for (const flow of flows) {
-
-        index = index + 1
-        console.log(`${index}/${flows.length}`, JSON.stringify(flow))
-
         const reviewItems = flow.overallprocessflow
         if (reviewItems) {
             for (let i = 0; i < reviewItems.length; i++) {
