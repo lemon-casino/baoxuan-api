@@ -492,6 +492,9 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
     const flows = await getFlowsFromDingDing(status, timeRange, timeAction);
     // 同步流程的操作节点耗时信息
     for (const flow of flows) {
+        if (flow.processInstanceId === "3c0abb2c-9fd5-457e-a053-afab3e0ed682"){
+            console.log("==== error process ====")
+        }
         const reviewItems = flow.overallprocessflow
         if (reviewItems) {
             for (let i = 0; i < reviewItems.length; i++) {
@@ -523,11 +526,6 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
                         reviewItems[i]["isOverDue"] = requiredCost > 0 && costAlready >= requiredCost
                         reviewItems[i].reviewId = reviewRequirements.id
                     }
-                }else{
-                    console.log("no time")
-                    reviewItems[i]["cost"] = 0
-                    reviewItems[i]["requiredCost"] = 0
-                    reviewItems[i]["isOverDue"] = false
                 }
             }
         }
