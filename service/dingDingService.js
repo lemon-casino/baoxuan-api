@@ -492,9 +492,6 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
     const flows = await getFlowsFromDingDing(status, timeRange, timeAction);
     // 同步流程的操作节点耗时信息
     for (const flow of flows) {
-        if (flow.processInstanceId === "3c0abb2c-9fd5-457e-a053-afab3e0ed682"){
-            console.log("==== error process ====")
-        }
         const reviewItems = flow.overallprocessflow
         if (reviewItems) {
             for (let i = 0; i < reviewItems.length; i++) {
@@ -513,9 +510,9 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
                     const startDateTime = dateUtil.formatGMT2Str(reviewItems[i - 1].operateTimeGMT || reviewItems[i - 1].activeTimeGMT)
                     // 运营执行流程的用时要特别计算
                     if (flow.formUuid === executionFlowFormId) {
-                        costAlready = workingDayService.computeValidWorkingDurationOfExecutionFlow(startDateTime, computeEndDate)
+                        costAlready = await workingDayService.computeValidWorkingDurationOfExecutionFlow(startDateTime, computeEndDate)
                     } else {
-                        costAlready = workingDayService.computeValidWorkingDuration(startDateTime, computeEndDate)
+                        costAlready = await workingDayService.computeValidWorkingDuration(startDateTime, computeEndDate)
                     }
                     const reviewRequirements = await FlowFormReview.getFlowFormReviewList(flow.formUuid)
                     if (reviewRequirements && reviewRequirements.form_review) {
