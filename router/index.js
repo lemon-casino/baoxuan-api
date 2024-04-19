@@ -16,5 +16,6 @@ module.exports = {
     "/link-statistic": require("./linkStatisticRouter"),
     "/user-logs":  require("./userLogRouter"),
     "/market-data": require("./marketDataRouter"),
-    "/download/:filename": require("./fileRouter")
+    "/download/:filename": require("./fileRouter"),
+    "/tima/video": require("./videoRouter")
 }
