@@ -7,14 +7,13 @@ const flowService = require("../service/flowService")
 const flowFormService = require("../service/flowFormService")
 const workingDayService = require("../service/workingDayService")
 const dateUtil = require("../utils/dateUtil")
-const {logger} = require("../utils/log")
 
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20(貌似不准确)，涉及的宜搭接口暂时没有qps和总调用量的限制
 // 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况
 
 let syncWorkingDayCron = "0 5 9 * * ?"
-let syncTodayRunningAndFinishedFlowsCron = "0 0/20 * * * ?"
-let syncMissingCompletedFlowsCron = "0 50 23 * * ?"
+let syncTodayRunningAndFinishedFlowsCron = "0 0/20 8-21 * * ?"
+let syncMissingCompletedFlowsCron = "0 0 23 * * ?"
 let syncDepartmentCron = "0 0 5 * * ?"
 let syncDepartmentWithUserCron = "0 30 5 * * ?"
 let syncUserWithDepartmentCron = "0 0 6 * * ?"
