@@ -523,6 +523,8 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
                         reviewItems[i]["isOverDue"] = requiredCost > 0 && costAlready >= requiredCost
                         reviewItems[i].reviewId = reviewRequirements.id
                     }
+                }else{
+                    console.log("no time")
                 }
             }
         }
