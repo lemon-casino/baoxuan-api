@@ -52,11 +52,6 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
                 where: {form_id: depsend.form_id},
                 order: [["modifiedTime", "desc"]]
             });
-            //
-            // if (flow.form_id === "FORM-0451C46A993640E59CC9F871A615FF90D9MG"){
-            //     console.log("-----")
-            // }
-
             // // 如果存在该记录
             if (flow) {
                 // 如果 modifiedTime 字段不一致，更新 form_review 数据

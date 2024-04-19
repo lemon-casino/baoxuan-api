@@ -1967,7 +1967,7 @@ const formatData = (y_Data) => {
         }
     }
 
-    const transformedData = transformForm(y_Data); // originalData 是原始数据数组
+    const transformedData = transformForm(y_Data);
     return transformedData;
 };
 
@@ -3008,16 +3008,8 @@ const datasss = require("./data.json");
 // 获取所有流程设计模版数据
 exports.getprocessAuditing = async (req, res) => {
     // const { data } = req.body;
-    const data = formatData(JSON.parse(JSON.stringify(req.body.data)));
+    const data = formatData(JSON.parse(JSON.stringify(datasss)));
     await FlowFormReviewModel.addFlowFormReview(data);
-    // 入库数据结构
-    // data.forEach(async (item) => {
-    //   await FlowFormReviewModel.upsert({
-    //     form_id: item.formId,
-    //     modifiedTime: item.modifiedTime,
-    //     form_review: item.reviewProcess,
-    //   });
-    // });
 
     return res.send(biResponse.success([]));
 };
