@@ -26,7 +26,6 @@ const getTodayFlowsByIds = async (req, res) => {
 const updateRunningFlowEmergency = async (req, res, next) => {
     try {
         const {ids, } = req.body
-
         flowService.updateRunningFlowEmergency()
     } catch (e) {
         next(e)
