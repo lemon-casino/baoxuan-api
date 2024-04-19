@@ -76,7 +76,7 @@ module.exports = sequelize => {
       field: "data_id"
     },
     remark: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(255),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
