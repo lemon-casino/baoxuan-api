@@ -125,7 +125,7 @@ const getFlowFormsByDeptIdAndImportant = async (deptId, isImportant) => {
         where.status = 2
     }
     if (deptId) {
-        where.dept_id = deptId
+        where.dept_id = {$like: `%${deptId}%`}
     }
     return await flowFormRepo.getAllForms(where);
 }
@@ -134,7 +134,7 @@ const getFlowFormsByDeptIdAndImportant = async (deptId, isImportant) => {
  * 获取所有的表流程表单
  * @returns {Promise<*[]|*>}
  */
-const getAllForms = async ()=>{
+const getAllForms = async () => {
     return flowFormRepo.getAllForms({})
 }
 
