@@ -9,11 +9,30 @@ const workingDayService = require("../service/workingDayService")
 const dateUtil = require("../utils/dateUtil")
 const {logger} = require("../utils/log")
 
-// 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20， 涉及的宜搭接口暂时没有qps和总调用量的限制
+// 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20(貌似不准确)，涉及的宜搭接口暂时没有qps和总调用量的限制
+// 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况
+
+let syncWorkingDayCron = "0 5 9 * * ?"
+let syncTodayRunningAndFinishedFlowsCron = "0 0/15 * * * ?"
+let syncMissingCompletedFlowsCron = "0 50 23 * * ?"
+let syncDepartmentCron = "0 0 5 * * ?"
+let syncDepartmentWithUserCron = "0 30 5 * * ?"
+let syncUserWithDepartmentCron = "0 0 6 * * ?"
+let syncFormCron = "0 30 6 * * ?"
+if (process.env.NODE_ENV === "dev") {
+    syncWorkingDayCron = "0 5 10 * * ?"
+    syncTodayRunningAndFinishedFlowsCron = "0 0 22 * * ?"
+    syncMissingCompletedFlowsCron = "0 50 22 * * ?"
+    syncDepartmentCron = "0 10 5 * * ?"
+    syncDepartmentWithUserCron =  "0 0 7 * * ?"
+    syncUserWithDepartmentCron = "0 30 7 * * ?"
+    syncFormCron = "0 0 8 * * ?"
+}
+
 /**
  * 每天9:05确认当天是否是工作日并将日期入库
  */
-schedule.scheduleJob("0 5 9 * * ?", async function () {
+schedule.scheduleJob(syncWorkingDayCron, async function () {
     const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
     const isWorkingDay = await dingDingService.isWorkingDay(date)
     if (isWorkingDay) {
@@ -24,18 +43,18 @@ schedule.scheduleJob("0 5 9 * * ?", async function () {
 /** 0 0/15 * * * ?
  *  每15分钟更新正在进行中的流程和今天完成的流程（包含节点的工作情况）
  */
-// schedule.scheduleJob("0 32 10 * * ?", async function () {
-//     console.time("TodayRunningAndFinishedFlows")
-//     const flows = await dingDingService.getTodayRunningAndFinishedFlows()
-//     await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
-//     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
-//     console.timeEnd("TodayRunningAndFinishedFlows")
-// })
+schedule.scheduleJob(syncTodayRunningAndFinishedFlowsCron, async function () {
+    console.time("TodayRunningAndFinishedFlows")
+    const flows = await dingDingService.getTodayRunningAndFinishedFlows()
+    await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
+    globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
+    console.timeEnd("TodayRunningAndFinishedFlows")
+})
 
 /** 0 50 23 * * ?
  * 每天23：50 获取今天完成的流程并入库，状态包含：completed、 terminated、error
  */
-schedule.scheduleJob("0 50 23 * * ?", async function () {
+schedule.scheduleJob(syncMissingCompletedFlowsCron, async function () {
     await flowService.syncMissingCompletedFlows()
 })
 
@@ -51,11 +70,8 @@ schedule.scheduleJob("0 0 0/1 * * ?", async function () {
 /**
  * 从钉钉更新部门信息（按天更新）
  */
-schedule.scheduleJob("0 0 5 * * ?", async function () {
+schedule.scheduleJob(syncDepartmentCron, async function () {
     const depList = await dingDingService.getDepartmentFromDingDing()
-    // todo: 线上总是会出现更新时天猫数据丢失，临时打印更新的结果用于判断
-    logger.error("hello-world:")
-    logger.error(JSON.stringify(depList))
     await redisUtil.setKey(redisKeys.Department, JSON.stringify(depList.result))
     globalSetter.setGlobalDepartments(depList.result)
 });
@@ -65,7 +81,7 @@ schedule.scheduleJob("0 0 5 * * ?", async function () {
  *
  * 注意：该数据依赖于Redis中的department数据：要保证更新department的定时任务优先执行完成
  */
-schedule.scheduleJob("0 30 5 * * ?", async function () {
+schedule.scheduleJob(syncDepartmentWithUserCron, async function () {
     const allDepartmentsWithUsers = await dingDingService.getDepartmentsWithUsersFromDingDing()
     await redisUtil.setKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment, JSON.stringify(allDepartmentsWithUsers))
     globalSetter.setGlobalUsersOfDepartments(allDepartmentsWithUsers)
@@ -76,7 +92,7 @@ schedule.scheduleJob("0 30 5 * * ?", async function () {
  *
  * 注意：该数据依赖于Redis中的department数据：要保证更新department的定时任务优先执行完成
  */
-schedule.scheduleJob("0 0 6 * * ?", async function () {
+schedule.scheduleJob(syncUserWithDepartmentCron, async function () {
     const usersWithDepartment = await dingDingService.getUsersWithDepartmentFromDingDing()
     await redisUtil.setKey(redisKeys.AllUsersDetailWithJoinLaunchData, JSON.stringify(usersWithDepartment))
     globalSetter.setGlobalUsers(usersWithDepartment)
@@ -85,6 +101,6 @@ schedule.scheduleJob("0 0 6 * * ?", async function () {
 /**
  * 更新Form和Form的详细信息（按天更新）
  */
-schedule.scheduleJob("0 30 6 * * ?", async function () {
+schedule.scheduleJob(syncFormCron, async function () {
     await flowFormService.syncFormsFromDingDing()
 })
