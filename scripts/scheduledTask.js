@@ -21,8 +21,8 @@ let syncUserWithDepartmentCron = "0 0 6 * * ?"
 let syncFormCron = "0 30 6 * * ?"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
-    syncTodayRunningAndFinishedFlowsCron = "0 0 22 * * ?"
-    syncMissingCompletedFlowsCron = "0 43 12 * * ?"
+    syncTodayRunningAndFinishedFlowsCron = "0 39 19 * * ?"
+    syncMissingCompletedFlowsCron = "0 13 18 * * ?"
     syncDepartmentCron = "0 10 5 * * ?"
     syncDepartmentWithUserCron =  "0 0 7 * * ?"
     syncUserWithDepartmentCron = "0 30 7 * * ?"
@@ -44,11 +44,9 @@ schedule.scheduleJob(syncWorkingDayCron, async function () {
  *  每15分钟更新正在进行中的流程和今天完成的流程（包含节点的工作情况）
  */
 schedule.scheduleJob(syncTodayRunningAndFinishedFlowsCron, async function () {
-    console.time("TodayRunningAndFinishedFlows")
     const flows = await dingDingService.getTodayRunningAndFinishedFlows()
     await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
-    console.timeEnd("TodayRunningAndFinishedFlows")
 })
 
 /** 0 50 23 * * ?

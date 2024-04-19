@@ -4,8 +4,10 @@ const formService = require("../service/flowFormService")
 const departmentService = require("../service/departmentService")
 const dingDingService = require("../service/dingDingService")
 const processService = require("../service/processService")
+const redisService = require("../service/redisService")
 const flowRepo = require("../repository/flowRepo")
 const globalGetter = require("../global/getter")
+const globalSetter = require("../global/setter")
 const NotFoundError = require("../error/http/notFoundError")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
@@ -471,6 +473,20 @@ const getFlowFormValues = async (formId, fieldKey, flowStatus) => {
     return fightingLinkIds
 }
 
+const updateRunningFlowEmergency = async (ids, emergency) => {
+    const todayFlows = await globalGetter.getTodayFlows()
+    const newTodayFlows = todayFlows.map(flow => {
+        if (ids.includes(flow.processInstanceId)) {
+            return {...flow, emergency}
+        }
+        return flow
+    })
+
+    await redisService.setTodayFlows(newTodayFlows)
+    globalSetter.setGlobalTodayRunningAndFinishedFlows(todayFlows)
+}
+
+
 module.exports = {
     filterFlowsByTimesRange,
     filterFlowsByImportanceCondition,
@@ -495,5 +511,6 @@ module.exports = {
     updateFlow,
     getTodayFlowsByFormIdAndFlowStatus,
     syncMissingCompletedFlows,
-    getFlowFormValues
+    getFlowFormValues,
+    updateRunningFlowEmergency
 }

@@ -17,7 +17,7 @@ const {logger} = require("../utils/log")
 const ForbiddenError = require("../error/http/forbiddenError")
 const globalGetter = require("../global/getter")
 const workingDayService = require("../service/workingDayService")
-const flowFormService = require("../service/flowFormService")
+const flowFormDetailsService = require("../service/flowFormDetailsService")
 
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
@@ -102,7 +102,7 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
                 ddAccessToken,
                 userId,
                 formUuid
-            );
+            )
             flows = flows.concat(allData);
         }
     }
@@ -450,7 +450,19 @@ const computeFlowsCost = async (flows) => {
  */
 const getTodayRunningFlows = async () => {
     const statusObj = {"name": "RUNNING"}
-    return await getFlowsOfStatusAndTimeRange(statusObj.name)
+    const runningFlows = await getFlowsOfStatusAndTimeRange(statusObj.name)
+    const todayFlows = await globalGetter.getTodayFlows()
+    // 需要将流程data中的信息标识出来
+    // 进行中的流程需要保存之前录入的紧急信息
+    for (const flow of runningFlows) {
+        flow.Details = await flowFormDetailsService.formatDataWithTitle(flow)
+        const currentFlow = todayFlows.filter(tmp => tmp.processInstanceId === flow.processInstanceId)
+        if (currentFlow.length > 0 && currentFlow[0].emergency) {
+            flow.emergency = currentFlow[0].emergency
+        }
+    }
+
+    return runningFlows
 }
 
 /**
@@ -459,7 +471,11 @@ const getTodayRunningFlows = async () => {
  */
 const getTodayFinishedFlows = async () => {
     const timeRangeOfToday = [dateUtil.startOfToday(), dateUtil.endOfToday()]
-    return await getFinishedFlows(timeRangeOfToday)
+    const todayFinishedFlows = await getFinishedFlows(timeRangeOfToday)
+    for (const flow of todayFinishedFlows) {
+        flow.Details = flowFormDetailsService.formatDataWithTitle(flow)
+    }
+    return todayFinishedFlows
 }
 
 /**
@@ -536,9 +552,8 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
  * @returns {Promise<T[]>}
  */
 const getTodayRunningAndFinishedFlows = async () => {
-    let flows = [];
     const todayRunningFlows = await getTodayRunningFlows();
-    flows = flows.concat(todayRunningFlows)
+    let flows = todayRunningFlows
     const todayFinishedFlows = await getTodayFinishedFlows();
     flows = flows.concat(todayFinishedFlows)
     return flows;

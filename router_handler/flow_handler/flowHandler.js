@@ -22,7 +22,19 @@ const getTodayFlowsByIds = async (req, res) => {
     return res.send(biResponse.serverError())
 }
 
+// 更新 Redis 中正在进行中的流程的紧急程度
+const updateRunningFlowEmergency = async (req, res, next) => {
+    try {
+        const {ids, } = req.body
+
+        flowService.updateRunningFlowEmergency()
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getFlowsByIds,
-    getTodayFlowsByIds
+    getTodayFlowsByIds,
+    updateRunningFlowEmergency
 }
