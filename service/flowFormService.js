@@ -130,7 +130,16 @@ const getFlowFormsByDeptIdAndImportant = async (deptId, isImportant) => {
     return await flowFormRepo.getAllForms(where);
 }
 
+/**
+ * 获取所有的表流程表单
+ * @returns {Promise<*[]|*>}
+ */
+const getAllForms = async ()=>{
+    return flowFormRepo.getAllForms({})
+}
+
 module.exports = {
+    getAllForms,
     getFormsByImportance,
     getFormsWithReviewItemsByImportance,
     syncFormsFromDingDing,

@@ -1,8 +1,8 @@
 const axios = require("axios")
 const dateUtil = require("./dateUtil")
-const {logger} = require("../utils/log")
+const RemoteError = require("../error/remoteError")
 
-const delayTime = 300
+const delayTime = 500
 
 const get = async (url, params, token) => {
     await dateUtil.delay(delayTime)
@@ -27,12 +27,7 @@ const get = async (url, params, token) => {
         const response = await axios.get(newUrl, config);
         return response.data;
     } catch (error) {
-        let message = `${error.message}, url: ${newUrl}`
-        if (config) {
-            message = `${message}, config: ${JSON.stringify(config)}`
-        }
-        logger.error(error.stack)
-        throw new Error(message)
+        errorHandler(url, query, config, error)
     }
 }
 
@@ -47,18 +42,20 @@ const post = async (url, data, token) => {
         const response = await axios.post(url, data, config);
         return response.data;
     } catch (error) {
-        let message = `${error.message}, url: ${url}`
-        if (data) {
-            message = `${message}, data: ${JSON.stringify(data)}`
-        }
-        if (config) {
-            message = `${message}, data: ${JSON.stringify(config)}`
-        }
-        logger.error(error.stack)
-        throw new Error(message)
+        errorHandler(url, JSON.stringify(data), config, error)
     }
 }
 
+const errorHandler = (url, params, config, error) => {
+    let stack = `${error.message}, url: ${url}, params: ${params}`
+    if (config) {
+        stack = `${stack}, config: ${JSON.stringify(config)}, ${error.stack}`
+    }
+    if (error.response && error.response.data) {
+        stack = `${stack}, ${JSON.stringify(error.response.data)}`
+    }
+    throw new RemoteError(error.message, stack)
+}
 
 module.exports = {
     get,

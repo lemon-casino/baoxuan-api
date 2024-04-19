@@ -13,6 +13,7 @@ const errorCodes = {
     "userError": 520,
     "notFound": 530, // http 先关的
     "sqlError": 590,
+    "remoteError": 600 // 调用钉钉接口异常返回的错误码
 }
 
 const errorNames = {}

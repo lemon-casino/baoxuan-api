@@ -17,6 +17,7 @@ const {logger} = require("../utils/log")
 const ForbiddenError = require("../error/http/forbiddenError")
 const globalGetter = require("../global/getter")
 const workingDayService = require("../service/workingDayService")
+const flowFormService = require("../service/flowFormService")
 
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
@@ -59,16 +60,11 @@ const getFlowsByStatusAndTimeRange = async (
     let allData = resLiuChengList.data;
     // 获取对应的流程的审核记录
     for (let i = 0; i < allData.length; i++) {
-        try {
-            allData[i]["overallprocessflow"] = await getAllProcessFlow(
-                token,
-                userId,
-                allData[i].processInstanceId
-            );
-        } catch (e) {
-            console.log(e)
-        }
-
+        allData[i]["overallprocessflow"] = await getAllProcessFlow(
+            token,
+            userId,
+            allData[i].processInstanceId
+        );
         console.log(`(page: ${pageNumber})get flowReviewItems process：${i + 1}/${allData.length}`);
     }
     // 如果总数大于当前页数*每页数量，继续请求
@@ -92,6 +88,7 @@ const getFlowsByStatusAndTimeRange = async (
 const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesRange, timeAction) => {
     // 1.获取所有宜搭表单数据
     const allForms = await dingDingReq.getAllForms(ddAccessToken, userId);
+    // const allForms = await flowFormService.getAllForms()
     // 循环请求宜搭实例详情和审核详情数据
     let flows = [];
     if (allForms) {
