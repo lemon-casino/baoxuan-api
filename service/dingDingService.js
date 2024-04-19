@@ -525,6 +525,9 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
                     }
                 }else{
                     console.log("no time")
+                    reviewItems[i]["cost"] = 0
+                    reviewItems[i]["requiredCost"] = 0
+                    reviewItems[i]["isOverDue"] = false
                 }
             }
         }
