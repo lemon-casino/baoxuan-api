@@ -13,7 +13,7 @@ const {logger} = require("../utils/log")
 // 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况
 
 let syncWorkingDayCron = "0 5 9 * * ?"
-let syncTodayRunningAndFinishedFlowsCron = "0 0/15 * * * ?"
+let syncTodayRunningAndFinishedFlowsCron = "0 0/50 * * * ?"
 let syncMissingCompletedFlowsCron = "0 50 23 * * ?"
 let syncDepartmentCron = "0 0 5 * * ?"
 let syncDepartmentWithUserCron = "0 30 5 * * ?"
