@@ -40,7 +40,7 @@ module.exports = sequelize => {
       field: "field_name"
     },
     fieldValue: {
-      type: DataTypes.STRING(2555),
+      type: DataTypes.TEXT,
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
