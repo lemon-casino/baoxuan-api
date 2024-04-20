@@ -42,7 +42,7 @@ const syncFormsFromDingDing = async () => {
     const userId = "073105202321093148";
     const tokenObj = await redisService.getToken()
     const token = tokenObj.access_token
-    const allFormsInDB = await flowFormRepo.getAllForms()
+    const allFormsInDB = await flowFormRepo.getAllForms({})
     // 获取钉钉的form信息
     const allFormsInDingDing = await dingDingReq.getAllForms(token, userId)
 

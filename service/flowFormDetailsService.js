@@ -8,7 +8,8 @@ const formatDataWithTitle = async (flow) => {
     const formDetails = await getFormDetailsByFormId(flow.formUuid)
     const newData = {}
     for (const key of Object.keys(flow.data)) {
-        const fieldNames = formDetails.filter(detail => detail.fieldId === key)
+        // 钉钉返回的流程的data 数据有的filedId后面会加"_id"故使用includes()
+        const fieldNames = formDetails.filter(detail => key.includes(detail.fieldId))
         if (fieldNames.length > 0) {
             newData[fieldNames[0].fieldName] = flow.data[key]
         } else {

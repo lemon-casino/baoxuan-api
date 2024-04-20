@@ -12,7 +12,7 @@ const dateUtil = require("../utils/dateUtil")
 // 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况
 
 let syncWorkingDayCron = "0 5 9 * * ?"
-let syncTodayRunningAndFinishedFlowsCron = "0 0/20 8-21 * * ?"
+let syncTodayRunningAndFinishedFlowsCron = "0 0/30 8-21 * * ?"
 let syncMissingCompletedFlowsCron = "0 0 23 * * ?"
 let syncDepartmentCron = "0 0 5 * * ?"
 let syncDepartmentWithUserCron = "0 30 5 * * ?"
@@ -25,7 +25,7 @@ if (process.env.NODE_ENV === "dev") {
     syncDepartmentCron = "0 10 5 * * ?"
     syncDepartmentWithUserCron =  "0 0 7 * * ?"
     syncUserWithDepartmentCron = "0 30 7 * * ?"
-    syncFormCron = "0 0 8 * * ?"
+    syncFormCron = "0 32 9 * * ?"
 }
 
 /**
