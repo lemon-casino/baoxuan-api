@@ -378,7 +378,6 @@ const getDeptStatistic = async (funOfTodaySelfStatistic, deptId, status, importa
     }
 
     return convertedResult;
-    // await statisticResultUtil.removeUnsatisfiedDeptStatistic(convertedResult, deptId)
 }
 
 /**
@@ -443,9 +442,7 @@ const syncMissingCompletedFlows = async () => {
         syncCount = syncCount + 1
         // 同步到数据库
         await processService.saveProcess(flow)
-        console.log(`正在同步第${syncCount}个`)
     }
-    console.log(`同步完成，共计：${syncCount}个`)
 }
 
 /**
@@ -486,6 +483,9 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
     globalSetter.setGlobalTodayRunningAndFinishedFlows(newTodayFlows)
 }
 
+const getOperation = async () => {
+
+}
 
 module.exports = {
     filterFlowsByTimesRange,
