@@ -5,7 +5,6 @@ const processModel = getProcessModel(sequelize)
 const processReviewRepo = require("../repository/processReviewRepo")
 const processDetailsRepo = require("../repository/processDetailsRepo")
 const flowFormDetailsRepo = require("../repository/flowFormDetailsRepo")
-const {logger} = require("../utils/log")
 const dateUtil = require("../utils/dateUtil")
 
 const getLatestModifiedProcess = async () => {

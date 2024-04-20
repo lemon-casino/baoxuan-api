@@ -8,12 +8,10 @@ const dingDingData = require("../service/dingDingService")
 const processReviewService = require("../service/prcessReviewService")
 const dingDingService = require("../service/dingDingService")
 const processService = require("../service/processService")
-const flowFormService = require("../service/flowFormService")
 const flowService = require("../service/flowService")
 const processDetailsService = require("../service/processDetailsService")
 const flowFormDetailsService = require("../service/flowFormDetailsService")
 const workingDayService = require("../service/workingDayService")
-const {logger} = require("../utils/log")
 
 const {redisKeys} = require("../const/redisConst")
 
@@ -208,6 +206,3 @@ const syncWorkingDay = async () => {
 const computeValidWorkingDuration = async () => {
     const duration = await workingDayService.computeValidWorkingDuration("2024-04-15 10:00:00", "2024-04-16 11:03:24")
 }
-
-logger.error("error")
-logger.info("hello world")

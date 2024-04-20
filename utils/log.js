@@ -10,33 +10,42 @@ if (!fs.existsSync(logDirectory)) {
     fs.mkdirSync(logDirectory);
 }
 
+const commonOptions = {
+    datePattern: 'YYYY-MM-DD',
+    prepend: true,
+    maxSize: '20m'
+}
+
 const logger = createLogger({
-    level: "info",
-    format: format.combine(
-        format.timestamp({
-            format: "YYYY-MM-DD HH:mm:ss",
-        }),
-        format.errors({stack: true}),
-        format.splat(),
-        format.json()
-    ),
     defaultMeta: {service: "bi"},
     transports: [
-        // 也会记录info以下级别的日志
-        // new DailyRotateFile({
-        //     level: "info",
-        //     filename: path.join(`${logDirectory}/%DATE%`, `info.log`),
-        //     datePattern: 'YYYY-MM-DD',
-        //     prepend: false,
-        //     maxSize: '20m',
-        //     maxFiles: '7d'
-        // }),
+        new DailyRotateFile({
+            level: "info",
+            filename: path.join(`${logDirectory}/%DATE%`, `info.log`),
+            format: format.combine(
+                format.timestamp({
+                    format: "YYYY-MM-DD HH:mm:ss",
+                }),
+                format.splat(),
+                format.json(),
+                format.printf((log) =>
+                    log.level === "info" ?  JSON.stringify(log) : ""
+                )
+            ),
+            ...commonOptions,
+        }),
         new DailyRotateFile({
             level: "error",
             filename: path.join(`${logDirectory}/%DATE%`, `error.log`),
-            datePattern: 'YYYY-MM-DD',
-            prepend: false,
-            maxSize: '50m'
+            format: format.combine(
+                format.timestamp({
+                    format: "YYYY-MM-DD HH:mm:ss",
+                }),
+                format.errors({stack: true}),
+                format.splat(),
+                format.json()
+            ),
+            ...commonOptions
         }),
     ],
 });
@@ -50,11 +59,13 @@ const stream = {
 // 处理未捕获的异常和未处理的Promise拒绝
 process.on("uncaughtException", (error) => {
     logger.error("Uncaught Exception:", error);
-});
+})
 
 process.on("unhandledRejection", (reason, promise) => {
     // 检查 `reason` 是否为错误对象，如果是，则获取其堆栈信息；如果不是，直接转换为字符串
     const message = reason instanceof Error ? reason.stack : reason.toString();
     logger.error(`Unhandled Rejection at: ${promise}. Reason: ${message}`);
 });
+global.logger = logger
+
 module.exports = {logger, stream};

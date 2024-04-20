@@ -1,7 +1,6 @@
 const sequelize = require('../model/init');
 const getProcessDetailsModel = require("../model/processDetailsModel")
 const processDetailsModel = getProcessDetailsModel(sequelize)
-const {logger} = require("../utils/log")
 const uuidUtil = require("../utils/uuidUtil")
 
 /**

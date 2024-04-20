@@ -2,7 +2,6 @@ const sequelize = require('../model/init');
 const getUsersModel = require("../model/usersMode")
 const userModel = getUsersModel(sequelize)
 const sequelizeUtil = require("../utils/sequelizeUtil")
-const {logger} = require("../utils/log")
 
 const getUserDetails = async (userId) => {
 

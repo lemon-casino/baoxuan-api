@@ -19,7 +19,6 @@ const jsonUtil = require("../utils/jsonUtil")
 const globalGetter = require("../global/getter")
 const NotFoundError = require("../error/http/notFoundError")
 const tmpTMInnerGroupingConst = require("../const/tmp/tmInnerGroupingConst")
-const {logger} = require("../utils/log")
 
 // 天猫链接打架流程表单id
 const tmFightingFlowFormId = "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J"

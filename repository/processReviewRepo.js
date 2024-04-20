@@ -1,7 +1,6 @@
 const sequelize = require('../model/init');
 const getProcessReviewModel = require("../model/processReviewModel")
 const processReviewModel = getProcessReviewModel(sequelize)
-const {logger} = require("../utils/log")
 const uuidUtil = require("../utils/uuidUtil")
 
 const getProcessReviewsByProcessId = async (processId) => {

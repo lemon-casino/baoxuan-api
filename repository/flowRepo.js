@@ -1,7 +1,6 @@
 const sequelize = require('../model/init');
 const getProcessModel = require("../model/processModel")
 const processModel = getProcessModel(sequelize)
-const {logger} = require("../utils/log")
 
 const getProcessByIds = async (ids) => {
     const processes = await processModel.findAll({
