@@ -483,7 +483,7 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
     })
 
     await redisService.setTodayFlows(newTodayFlows)
-    globalSetter.setGlobalTodayRunningAndFinishedFlows(todayFlows)
+    globalSetter.setGlobalTodayRunningAndFinishedFlows(newTodayFlows)
 }
 
 
