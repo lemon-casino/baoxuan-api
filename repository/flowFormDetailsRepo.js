@@ -24,7 +24,7 @@ const getFormLatestDetailsByFormId = async (formId) => {
         const formDetails = await flowFormDetailsModel.findAll({
             where: {
                 formId,
-                version: formProfile[0].version
+                version: formProfile[0].detailsVersion
             }
         })
         return sequelizeUtil.extractDataValues(formDetails);
