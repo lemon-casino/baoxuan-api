@@ -18,6 +18,7 @@ const ForbiddenError = require("../error/http/forbiddenError")
 const globalGetter = require("../global/getter")
 const workingDayService = require("../service/workingDayService")
 const flowFormDetailsService = require("../service/flowFormDetailsService")
+const flowFormService = require("../service/flowFormService")
 
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
@@ -456,6 +457,7 @@ const getTodayRunningFlows = async () => {
     // 进行中的流程需要保存之前录入的紧急信息
     for (const flow of runningFlows) {
         flow.dataKeyDetails = await flowFormDetailsService.getDataKeyDetails(flow)
+        flow.emergencyKeys =  await flowFormService.getFormEmergencyItems(flow.formUuid)
         const currentFlow = todayFlows.filter(tmp => tmp.processInstanceId === flow.processInstanceId)
         if (currentFlow.length > 0 && currentFlow[0].emergency) {
             flow.emergency = currentFlow[0].emergency

@@ -3,6 +3,7 @@ const flowFormRepo = require("../repository/flowFormRepo")
 const dingDingReq = require("../core/dingDingReq")
 const redisService = require("../service/redisService")
 const sha256 = require("sha256")
+const formImportantItems = require("../const/tmp/formImportantItems")
 
 /**
  * 根据重要性获取form  默认：普通
@@ -48,7 +49,7 @@ const syncFormsFromDingDing = async () => {
 
     for (const form of allFormsInDingDing) {
 
-        if (form.formUuid === "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1"){
+        if (form.formUuid === "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1") {
             console.log("tm")
         }
 
@@ -143,10 +144,24 @@ const getAllForms = async () => {
     return flowFormRepo.getAllForms({})
 }
 
+/**
+ * 获取表单的需要紧急显示的节点
+ * @param formId
+ * @returns {Promise<[string]|*[]>}
+ */
+const getFormEmergencyItems = async (formId) => {
+    const form = formImportantItems.filter(item => item.formId === formId)
+    if (form.length > 0) {
+        return form[0].items
+    }
+    return []
+}
+
 module.exports = {
     getAllForms,
     getFormsByImportance,
     getFormsWithReviewItemsByImportance,
     syncFormsFromDingDing,
-    getFlowFormsByDeptIdAndImportant
+    getFlowFormsByDeptIdAndImportant,
+    getFormEmergencyItems
 }
