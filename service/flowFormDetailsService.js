@@ -4,7 +4,7 @@ const getFormDetailsByFormId = async (formId) => {
     return await flowFormDetailsRepo.getFormDetailsByFormId(formId)
 }
 
-const formatDataWithTitle = async (flow) => {
+const getDataKeyDetails = async (flow) => {
     const formDetails = await getFormDetailsByFormId(flow.formUuid)
     const newData = {}
     for (const key of Object.keys(flow.data)) {
@@ -19,5 +19,5 @@ const formatDataWithTitle = async (flow) => {
 
 module.exports = {
     getFormDetailsByFormId,
-    formatDataWithTitle
+    getDataKeyDetails
 }
