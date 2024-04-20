@@ -5,13 +5,13 @@ const getFormDetailsByFormId = async (formId) => {
 }
 
 const getDataKeyDetails = async (flow) => {
-    const formDetails = await getFormDetailsByFormId(flow.formUuid)
+    const formDetails = await flowFormDetailsRepo.getFormLatestDetailsByFormId(flow.formUuid)
     const newData = {}
     for (const key of Object.keys(flow.data)) {
         // 钉钉返回的流程的data 数据有的filedId后面会加"_id"故使用includes()
         const fieldNames = formDetails.filter(detail => key.includes(detail.fieldId))
         if (fieldNames.length > 0) {
-            newData[flow.data[key]] = fieldNames[0].fieldName
+            newData[key] = fieldNames[0].fieldName
         }
     }
     return newData

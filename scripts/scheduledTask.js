@@ -25,7 +25,7 @@ if (process.env.NODE_ENV === "dev") {
     syncDepartmentCron = "0 10 5 * * ?"
     syncDepartmentWithUserCron =  "0 0 7 * * ?"
     syncUserWithDepartmentCron = "0 30 7 * * ?"
-    syncFormCron = "0 32 9 * * ?"
+    syncFormCron = "0 18 11 * * ?"
 }
 
 /**
