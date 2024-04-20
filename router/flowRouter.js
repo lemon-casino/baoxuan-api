@@ -19,6 +19,6 @@ router.get("/statistic/dept-joined-today/:status", deptJoinTodayHandler.todayDep
 router.get("/statistic/dept-launched-today/:status", deptLaunchTodayHandler.todayDeptLaunchedFlowsStatisticHub)
 router.get("/statistic/dept-today-sum", deptTodaySumHandler.getDeptTodaySum)
 
-router.post("/", flowHandler.updateRunningFlowEmergency)
+router.put("/running", flowHandler.updateRunningFlowEmergency)
 
 module.exports = router;

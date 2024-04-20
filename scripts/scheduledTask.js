@@ -21,7 +21,7 @@ let syncUserWithDepartmentCron = "0 0 6 * * ?"
 let syncFormCron = "0 30 6 * * ?"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
-    syncTodayRunningAndFinishedFlowsCron = "0 39 19 * * ?"
+    syncTodayRunningAndFinishedFlowsCron = "0 18 10 * * ?"
     syncMissingCompletedFlowsCron = "0 13 18 * * ?"
     syncDepartmentCron = "0 10 5 * * ?"
     syncDepartmentWithUserCron =  "0 0 7 * * ?"
