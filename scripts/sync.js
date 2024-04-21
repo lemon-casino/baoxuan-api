@@ -12,6 +12,7 @@ const flowService = require("../service/flowService")
 const processDetailsService = require("../service/processDetailsService")
 const flowFormDetailsService = require("../service/flowFormDetailsService")
 const workingDayService = require("../service/workingDayService")
+const {logger} = require("../utils/log")
 
 const {redisKeys} = require("../const/redisConst")
 

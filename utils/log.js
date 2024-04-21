@@ -24,7 +24,7 @@ const logger = createLogger({
             filename: path.join(`${logDirectory}/%DATE%`, `info.log`),
             format: format.combine(
                 format.timestamp({
-                    format: "YYYY-MM-DD HH:mm:ss",
+                    format: "YYYY-MM-DD HH:mm:ss.SSS",
                 }),
                 format.splat(),
                 format.json(),
@@ -39,7 +39,7 @@ const logger = createLogger({
             filename: path.join(`${logDirectory}/%DATE%`, `error.log`),
             format: format.combine(
                 format.timestamp({
-                    format: "YYYY-MM-DD HH:mm:ss",
+                    format: "YYYY-MM-DD HH:mm:ss.SSS",
                 }),
                 format.errors({stack: true}),
                 format.splat(),
