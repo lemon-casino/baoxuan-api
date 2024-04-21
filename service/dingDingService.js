@@ -457,12 +457,13 @@ const getTodayRunningFlows = async () => {
     for (const flow of runningFlows) {
         flow.dataKeyDetails = await flowFormDetailsService.getDataKeyDetails(flow)
         flow.emergencyKeys =  await flowFormService.getFormEmergencyItems(flow.formUuid)
-        const currentFlow = todayFlows.filter(tmp => tmp.processInstanceId === flow.processInstanceId)
-        if (currentFlow.length > 0 && currentFlow[0].emergency) {
-            flow.emergency = currentFlow[0].emergency
+        if(todayFlows && todayFlows.length>0){
+            const currentFlow = todayFlows.filter(tmp => tmp.processInstanceId === flow.processInstanceId)
+            if (currentFlow.length > 0 && currentFlow[0].emergency) {
+                flow.emergency = currentFlow[0].emergency
+            }
         }
     }
-
     return runningFlows
 }
 
