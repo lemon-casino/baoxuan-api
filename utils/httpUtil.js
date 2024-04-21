@@ -2,7 +2,7 @@ const axios = require("axios")
 const dateUtil = require("./dateUtil")
 const RemoteError = require("../error/remoteError")
 
-const delayTime = 400
+const delayTime = 300
 
 const get = async (url, params, token) => {
     logger.info(url)
