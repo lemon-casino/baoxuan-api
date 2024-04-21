@@ -1,8 +1,9 @@
 const sequelize = require('../model/init');
 const getFlowFormDetailsModel = require("../model/flowFormDetailsModel")
 const flowFormDetailsModel = getFlowFormDetailsModel(sequelize)
+const getFlowFormModel = require("../model/flowFormsModel")
+const flowFormModel = getFlowFormModel(sequelize)
 const sequelizeUtil = require("../utils/sequelizeUtil")
-const flowFormRepo = require("../repository/flowFormRepo")
 
 const saveFormDetails = async (details, transaction) => {
     const result = await flowFormDetailsModel.create(details, {transaction})
@@ -19,7 +20,7 @@ const getFormDetailsByFormId = async (formId) => {
 }
 
 const getFormLatestDetailsByFormId = async (formId) => {
-    const formProfile = await flowFormRepo.getAllForms({flowFormId: formId})
+    const formProfile =await flowFormModel.findAll({flowFormId: formId})
     if (formProfile.length > 0) {
         const formDetails = await flowFormDetailsModel.findAll({
             where: {
