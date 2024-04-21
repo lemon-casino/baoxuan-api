@@ -6,7 +6,9 @@ const delayTime = 500
 
 const get = async (url, params, token) => {
     logger.info(url)
+    logger.info(new Date())
     await dateUtil.delay(delayTime)
+    logger.info(new Date())
     let query = "";
     if (params) {
         query = "?"
