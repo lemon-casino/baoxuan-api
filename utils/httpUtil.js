@@ -2,13 +2,11 @@ const axios = require("axios")
 const dateUtil = require("./dateUtil")
 const RemoteError = require("../error/remoteError")
 
-const delayTime = 500
+const delayTime = 400
 
 const get = async (url, params, token) => {
     logger.info(url)
-    logger.info(new Date())
     await dateUtil.delay(delayTime)
-    logger.info(new Date())
     let query = "";
     if (params) {
         query = "?"
@@ -36,13 +34,13 @@ const get = async (url, params, token) => {
 
 const post = async (url, data, token) => {
     logger.info(url)
+    await dateUtil.delay(delayTime)
     let config = null
     if (token) {
         config = {headers: {"x-acs-dingtalk-access-token": token}}
     }
 
     try {
-        await dateUtil.delay(delayTime)
         const response = await axios.post(url, data, config);
         return response.data;
     } catch (error) {
