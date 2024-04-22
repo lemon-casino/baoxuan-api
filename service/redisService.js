@@ -27,6 +27,7 @@ const getAllFlowsUntilNow = async () => {
 };
 // 根据流程id获取全部审批流程详情
 const getAllProcessFlow = async (token, userId, formInstanceId) => {
+    logger.info(`getAllProcessFlow: ${process.pid}`)
     const data = await dingDingReq.getProcessRecord(token, userId, formInstanceId);
     if (data) {
         return data.result;

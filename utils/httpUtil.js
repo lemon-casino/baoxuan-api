@@ -5,6 +5,7 @@ const RemoteError = require("../error/remoteError")
 const delayTime = 100
 global.currentRequstCount = 0
 const get = async (url, params, token) => {
+    logger.info(`get: ${process.pid}`)
     // await dateUtil.delay(delayTime * Math.max(global.currentRequstCount, 0))
     // await dateUtil.delay(delayTime)
     // global.currentRequstCount = global.currentRequstCount + 1
@@ -36,10 +37,11 @@ const get = async (url, params, token) => {
 }
 
 const post = async (url, data, token) => {
+    logger.info(`post: ${process.pid}`)
     // await dateUtil.delay(delayTime * global.currentRequstCount)
     // await dateUtil.delay(delayTime)
     // global.currentRequstCount = global.currentRequstCount + 1
-    logger.info(`${process.pid}:${url}`)
+    // logger.info(`${process.pid}:${url}`)
     let config = null
     if (token) {
         config = {headers: {"x-acs-dingtalk-access-token": token}}
