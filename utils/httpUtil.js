@@ -1,7 +1,7 @@
 const axios = require("axios")
 const dateUtil = require("./dateUtil")
 const RemoteError = require("../error/remoteError")
-
+// 临时处理限制请求速度  mq更适合
 const delayTime = 5
 global.currentRequstCount = 0
 const get = async (url, params, token) => {
