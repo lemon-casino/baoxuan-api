@@ -5,8 +5,8 @@ const RemoteError = require("../error/remoteError")
 const delayTime = 300
 
 const get = async (url, params, token) => {
-    logger.info(url)
     await dateUtil.delay(delayTime)
+    logger.info(url)
     let query = "";
     if (params) {
         query = "?"
@@ -33,8 +33,8 @@ const get = async (url, params, token) => {
 }
 
 const post = async (url, data, token) => {
-    logger.info(url)
     await dateUtil.delay(delayTime)
+    logger.info(url)
     let config = null
     if (token) {
         config = {headers: {"x-acs-dingtalk-access-token": token}}
