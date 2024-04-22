@@ -40,7 +40,6 @@ const getFlowsByStatusAndTimeRange = async (
     pageNumber = 1,
     pageSize = 99
 ) => {
-    logger.info(`getFlowsByStatusAndTimeRange: ${process.pid}`)
     const fromTimeGMT = timeAction ? timesRange[0] : null;
     const toTimeGMT = timeAction ? timesRange[1] : null;
     // 2.分页去请求所有流程id
@@ -91,7 +90,6 @@ const getFlowsByStatusAndTimeRange = async (
 const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesRange, timeAction) => {
     // 1.获取所有宜搭表单数据
     const allForms = await dingDingReq.getAllForms(ddAccessToken, userId);
-    logger.info(`getFlowsThroughFormFromYiDa: ${process.pid}`)
     // 循环请求宜搭实例详情和审核详情数据
     let flows = [];
     if (allForms) {

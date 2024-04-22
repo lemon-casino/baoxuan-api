@@ -155,9 +155,6 @@ const getFlowsOfStatus = async (
 }
 
 const getPagingFlows = async (token, data, pageNumber, pageSize) => {
-
-    logger.info(`getPagingFlows: ${process.pid}`)
-
     const url = `https://api.dingtalk.com/v1.0/yida/processes/instances?pageNumber=${pageNumber}&pageSize=${pageSize}`
     return await httpUtil.post(url, data, token)
 }
@@ -174,9 +171,6 @@ const getFlowsOfStatusAndTimeRange = async (
     pageSize,
     pageNumber
 ) => {
-
-
-    logger.info(`getFlowsOfStatusAndTimeRange: ${process.pid}`)
     let dataToSend = {
         instanceStatus: status,
         formUuid,
@@ -228,7 +222,6 @@ const getProcessRecord = async (
     userId,
     process_instance_id
 ) => {
-    logger.info(`getProcessRecord: ${process.pid}`)
     const url = "https://api.dingtalk.com/v1.0/yida/processes/operationRecords"
     const params = {systemToken: systemToken, appType: appType, userId: userId, processInstanceId: process_instance_id}
     return await httpUtil.get(url, params, access_token)
