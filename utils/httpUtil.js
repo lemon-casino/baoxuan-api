@@ -2,12 +2,13 @@ const axios = require("axios")
 const dateUtil = require("./dateUtil")
 const RemoteError = require("../error/remoteError")
 
-const delayTime = 1000
-
+const delayTime = 50
+global.currentRequstCount = 0
 const get = async (url, params, token) => {
-    await dateUtil.delay(delayTime)
+    await dateUtil.delay(delayTime * Math.max(global.currentRequstCount, 0))
+    global.currentRequstCount = global.currentRequstCount + 1
     logger.info(`${process.pid}:${url}`)
-    let query = "";
+    let query = ""
     if (params) {
         query = "?"
         const keys = Object.keys(params)
@@ -29,11 +30,14 @@ const get = async (url, params, token) => {
         return response.data;
     } catch (error) {
         errorHandler(url, query, config, error)
+    } finally {
+        global.currentRequstCount = global.currentRequstCount + 1
     }
 }
 
 const post = async (url, data, token) => {
-    await dateUtil.delay(delayTime)
+    await dateUtil.delay(delayTime * global.currentRequstCount)
+    global.currentRequstCount = global.currentRequstCount + 1
     logger.info(`${process.pid}:${url}`)
     let config = null
     if (token) {
@@ -45,6 +49,8 @@ const post = async (url, data, token) => {
         return response.data;
     } catch (error) {
         errorHandler(url, JSON.stringify(data), config, error)
+    } finally {
+        global.currentRequstCount = global.currentRequstCount + 1
     }
 }
 
