@@ -43,6 +43,7 @@ const getFlowsByStatusAndTimeRange = async (
     const fromTimeGMT = timeAction ? timesRange[0] : null;
     const toTimeGMT = timeAction ? timesRange[1] : null;
     // 2.分页去请求所有流程id
+    await dateUtil.delay()
     const resLiuChengList = await dingDingReq.getFlowsOfStatusAndTimeRange(
         fromTimeGMT,
         toTimeGMT,
@@ -54,12 +55,14 @@ const getFlowsByStatusAndTimeRange = async (
         pageSize,
         pageNumber
     );
+
     if (!resLiuChengList) {
         return []
     }
     let allData = resLiuChengList.data;
     // 获取对应的流程的审核记录
     for (let i = 0; i < allData.length; i++) {
+        await dateUtil.delay()
         allData[i]["overallprocessflow"] = await getAllProcessFlow(
             token,
             userId,
