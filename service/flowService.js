@@ -483,7 +483,11 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
     globalSetter.setGlobalTodayRunningAndFinishedFlows(newTodayFlows)
 }
 
-const getOperation = async () => {
+/**
+ * 获取流程中各部门所关注的审核节点的汇总数据
+ * @returns {Promise<void>}
+ */
+const getCoreReviewItemStatistic = async (deptId) => {
 
 }
 
