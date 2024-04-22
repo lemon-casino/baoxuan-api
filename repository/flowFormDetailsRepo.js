@@ -20,7 +20,14 @@ const getFormDetailsByFormId = async (formId) => {
 }
 
 const getFormLatestDetailsByFormId = async (formId) => {
-    const formProfile =await flowFormModel.findAll({flowFormId: formId})
+    const formProfile = await flowFormModel.findAll(
+        {
+            where: {
+                flowFormId: formId
+            },
+            order: [["detailsVersion", "desc"]]
+        }
+    )
     if (formProfile.length > 0) {
         const formDetails = await flowFormDetailsModel.findAll({
             where: {
