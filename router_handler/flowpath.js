@@ -1889,86 +1889,117 @@ const handlesh = (q_jsonData, h_jsonData) => {
     return res;
 };
 // 格式化审核数据数据结构
-const formatData = (y_Data) => {
-    function transformForm(forms) {
-        return forms.map((form) => {
-            let reviewProcess = [];
-            try {
-                const liuData = JSON.parse(form.liu_data);
-                if (liuData && liuData.schema && liuData.schema.children) {
-                    reviewProcess = transformNodes(liuData.schema.children);
-                }
-            } catch (error) {
-                console.error("Error parsing liu_data: ", error);
+const formatData = (originForms) => {
+
+    const componentNames = [
+        "CanvasEngine",// 根节点
+        "ApplyNode", // 发起节点
+        "OperatorNode", // 操作节点
+        "ApprovalNode", // 审核节点
+        "ConditionContainer",//条件分支 type =="parallel"（并发） 没有type 是普通（非并发）
+        "ParallelNode", // 并发分支节点
+        "ConditionNode", // 普通分支节点（非并发）
+        "CarbonNode",
+        "EndNode"//  结束
+    ]
+
+    // 节点名称
+    //    - ApplyNode、EndNode: node.props.name.zh_CN
+    //    - OperatorNode、ConditionContainer、ParallelNode、ApprovalNode、ConditionNode、CarbonNode: node.props.name
+
+    const requiredComputeTimeNode = ["OperatorNode", "ApprovalNode"]
+
+    function loopNodes(nodes) {
+        for (const node of nodes) {
+            if (!componentNames.includes(nodes[i].componentName)) {
+                console.log(`missing componentName: ${nodes[i].componentName}`)
+            }
+            node.title = extractTitle(node)
+            node.description = node.props.conditions?.description || ""
+            if (requiredComputeTimeNode.includes(node.componentName)) {
+                node.isTime = true
+                node.time = 0
             }
 
-            return {
-                formId: form.form_id,
-                c_id: form.c_id,
-                modifiedTime: form.modifiedTime,
-                reviewProcess: reviewProcess,
-            };
-        });
-    }
-
-    function transformNodes(nodes, isNested = false) {
-        let result = [];
-
-        for (let i = 0; i < nodes.length; i++) {
-            let node = nodes[i];
-            let isConditionBranch =
-                node.title === "条件分支" ||
-                node.componentName === "ConditionContainer";
-
-            if (isConditionBranch && !isNested) {
-                //如果它是顶级条件分支，请将其子级合并到上一个节点中
-                if (result.length > 0 && node.children) {
-                    result[result.length - 1].children = result[
-                    result.length - 1
-                        ].children.concat(transformNodes(node.children, true));
-                }
-            } else {
-                let isTime =
-                    node.componentName === "OperatorNode" ||
-                    node.componentName === "ApprovalNode";
-                //标准节点处理
-                let newNode = {
-                    isTime: isTime,
-                    title: extractTitle(node),
-                    componentName: node.componentName,
-                    id: node.id,
-                    description:
-                        node.props.conditions && node.props.conditions.description,
-                    time: 0,
-                    children: transformNodes(node.children || [], isConditionBranch),
-                };
-                result.push(newNode);
+            const isConditionBranch = node.componentName === "ConditionContainer"
+            if (isConditionBranch) {
+                node.children = loopNodes(node.children)
             }
+
+            // if (isConditionBranch && !isNested) {
+            //
+            //     //如果它是顶级条件分支，请将其子级合并到上一个节点中
+            //     if (result.length > 0 && node.children) {
+            //         result[result.length - 1].children =
+            //             result[result.length - 1].children.concat(loopNodes(node.children, true));
+            //     }
+            // }
+            // else {
+            //     let isTime =
+            //         node.componentName === "OperatorNode" ||
+            //         node.componentName === "ApprovalNode"
+            //     //标准节点处理
+            //     let newNode = {
+            //         isTime: isTime,
+            //         title: extractTitle(node),
+            //         componentName: node.componentName,
+            //         id: node.id,
+            //         description:
+            //             node.props.conditions && node.props.conditions.description,
+            //         time: 0,
+            //         children: loopNodes(node.children || [], isConditionBranch),
+            //     };
+            //     // result.push(newNode);
+            // }
         }
 
-        return result;
+        return nodes;
     }
 
     function extractTitle(node) {
-        if (["ApplyNode", "EndNode"].includes(node.componentName)) {
-            return node.props?.name?.zh_CN || node.props?.name || "";
-        } else if (!node.props || !node.props.name) {
+        if (["ApplyNode", "EndNode"].includes(node.componentName))
+            return node.props?.name?.zh_CN || node.props?.name || ""
+
+        if (!node.props || !node.props.name) {
             return node.title || "";
-        } else if (node.props.name && typeof node.props.name === "object") {
+        }
+
+        if (node.props.name && typeof node.props.name === "object") {
             return node.props.name.zh_CN || node.props.name.en_US || "";
-        } else if (node.props.conditions) {
+        }
+
+        if (node.props.conditions) {
             if (node.props.conditions.description) {
-                return `${node.props.name}(${node.props.conditions.description})`;
+                return `${node.props.name}(${node.props.conditions.description})`
             } else {
                 return `${node.props.name}`;
             }
-        } else {
-            return node.props.name || "";
         }
+
+        return node.props.name || "";
+
     }
 
-    const transformedData = transformForm(y_Data);
-    return transformedData;
+    const result = originForms.map((form) => {
+        let reviewProcess = [];
+        try {
+            const liuData = JSON.parse(form.liu_data);
+            if (liuData && liuData.schema && liuData.schema.children) {
+                reviewProcess = loopNodes(liuData.schema.children);
+            }
+        } catch (error) {
+            console.error("Error parsing liu_data: ", error);
+        }
+
+        return {
+            formId: form.form_id,
+            c_id: form.c_id,
+            modifiedTime: form.modifiedTime,
+            reviewProcess: reviewProcess,
+        };
+    })
+
+    return result;
 };
 
 // 将抓取到的审核流模版处理成excel
@@ -3011,7 +3042,7 @@ exports.getprocessAuditing = async (req, res) => {
     const data = formatData(JSON.parse(JSON.stringify(datasss)));
     await FlowFormReviewModel.addFlowFormReview(data);
 
-    return res.send(biResponse.success([]));
+    return res.send(biResponse.success());
 };
 
 // 格式化实例状态
