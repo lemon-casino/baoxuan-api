@@ -115,41 +115,66 @@ const getTodaySelfJoinedFlowsStatisticOfReviewType = async (userId, reviewType, 
         needFilterReviewItems = importance.items
     }
 
+    if(userId === "2103600332651419" &&  reviewType === "TODO"  && importance.forms[0]=== "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3"){
+        console.log("--------")
+    }
+
     for (const flow of filteredFlows) {
+
+        if (flow.processInstanceId === "a0d1b354-dadb-4f1b-937b-816554a65128") {
+            console.log("--------")
+        }
         // 将该流程统计到审核节点的各个操作人
         const reviewItems = flow.overallprocessflow
         if (!reviewItems) {
             continue
         }
-        let hasDoneReviewItemOfUser = false;
+        let hasDoneReviewItemOfUser = false
+        let canStopFinding = false
         for (let i = 0; i < reviewItems.length; i++) {
             const reviewItem = reviewItems[i]
+
             // 如果需要过滤指定的items，那么不符合直接跳过
             if (needFilterReviewItems && needFilterReviewItems.length > 0) {
                 if (!needFilterReviewItems.includes(reviewItem.activityId)) {
                     continue
                 }
             }
-            // 对于已完成的流程，需要整个流程中涉及本人的工作都已完成
-            if (reviewType === statisticStatusConst.reviewType.history) {
-                if (reviewItem.operatorUserId === userId) {
-                    if (reviewItem.type === statisticStatusConst.reviewType.todo ||
-                        reviewItem.type === statisticStatusConst.reviewType.forecast) {
-                        break;
-                    } else {
-                        hasDoneReviewItemOfUser = true
+
+            let currentReviewItems = [reviewItem]
+            // 如果是多人协同的工作，需要到domainList中遍历
+            if (reviewItem.domainList && reviewItem.domainList.length > 0) {
+                currentReviewItems = reviewItem.domainList
+            }
+
+            for (const item of currentReviewItems) {
+                // 对于已完成的流程，需要整个流程中涉及本人的工作都已完成
+                if (reviewType === statisticStatusConst.reviewType.history) {
+                    if (item.operatorUserId === userId) {
+                        if (item.type === statisticStatusConst.reviewType.todo ||
+                            item.type === statisticStatusConst.reviewType.forecast) {
+                            canStopFinding = true
+                            break;
+                        } else {
+                            hasDoneReviewItemOfUser = true
+                        }
                     }
-                }
-                if (hasDoneReviewItemOfUser && i === reviewItems.length - 1) {
+                    if (hasDoneReviewItemOfUser && i === reviewItems.length - 1) {
+                        satisfiedFlows.push(flow)
+                        canStopFinding = true
+                    }
+                } else {
+                    // todo类型和 forcast类型 存在一个即为有效，不用遍历全部
+                    //  非本人且类型不匹配的直接跳过
+                    if (item.operatorUserId !== userId || item.type !== reviewType) {
+                        continue
+                    }
                     satisfiedFlows.push(flow)
+                    canStopFinding = true
+                    break;
                 }
-            } else {
-                // todo类型和 forcast类型 存在一个即为有效，不用遍历全部
-                //  非本人且类型不匹配的直接跳过
-                if (reviewItem.operatorUserId !== userId || reviewItem.type !== reviewType) {
-                    continue
-                }
-                satisfiedFlows.push(flow)
+            }
+            if (canStopFinding) {
                 break;
             }
         }
