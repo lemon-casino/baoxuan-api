@@ -16,9 +16,11 @@ const syncWorkingDay = async () => {
 }
 
 const syncTodayRunningAndFinishedFlows = async () => {
+    logger.info("开始同步今日流程数据...")
     const flows = await dingDingService.getTodayRunningAndFinishedFlows()
     await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
+    logger.info(`同步完成，共:${flows.length}条数据`)
 }
 
 const syncMissingCompletedFlows = async () => {
