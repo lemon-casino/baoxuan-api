@@ -48,11 +48,6 @@ const syncFormsFromDingDing = async () => {
     const allFormsInDingDing = await dingDingReq.getAllForms(token, userId)
 
     for (const form of allFormsInDingDing) {
-
-        if (form.formUuid === "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1") {
-            console.log("tm")
-        }
-
         let formsInDB = allFormsInDB.filter((item) => {
             return item.flowFormId === form.formUuid
         })

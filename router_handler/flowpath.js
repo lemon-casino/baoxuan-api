@@ -1911,8 +1911,8 @@ const formatData = (originForms) => {
 
     function loopNodes(nodes) {
         for (const node of nodes) {
-            if (!componentNames.includes(nodes[i].componentName)) {
-                console.log(`missing componentName: ${nodes[i].componentName}`)
+            if (!componentNames.includes(node.componentName)) {
+                console.log(`missing componentName: ${node.componentName}`)
             }
             node.title = extractTitle(node)
             node.description = node.props.conditions?.description || ""
@@ -1981,6 +1981,9 @@ const formatData = (originForms) => {
     }
 
     const result = originForms.map((form) => {
+        if (form.form_id  !== "FORM-2529762FC54F44849153E5564C1628FAHFKN"){
+            return []
+        }
         let reviewProcess = [];
         try {
             const liuData = JSON.parse(form.liu_data);
