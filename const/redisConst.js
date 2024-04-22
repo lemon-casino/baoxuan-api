@@ -9,7 +9,6 @@ const redisKeys = {
     "UsersWithJoinLaunchDataUnderDepartment": "bases:departments:users", //dep_userList
     "AllUsersDetailWithJoinLaunchData": "bases:users", //userAllDetail
     "DDToken": "bases:dd_token",//ddCorpToken
-
     // new key
     "FlowsOfRunningAndFinishedOfToday": "flows:today:running_and_finished"
 }

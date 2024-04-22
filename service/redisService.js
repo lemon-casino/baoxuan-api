@@ -3,7 +3,7 @@ const redisUtil = require("../utils/redisUtil")
 const dingDingReq = require("../core/dingDingReq")
 
 const setToken = async (ddToken) => {
-    await redisUtil.setKey(redisKeys.DDToken, JSON.stringify(ddToken))
+    await redisUtil.setKey(redisKeys.DDToken, JSON.stringify(ddToken), 7200)
 };
 
 const getToken = async () => {

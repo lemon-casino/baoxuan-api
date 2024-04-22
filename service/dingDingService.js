@@ -88,7 +88,6 @@ const getFlowsByStatusAndTimeRange = async (
 const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesRange, timeAction) => {
     // 1.获取所有宜搭表单数据
     const allForms = await dingDingReq.getAllForms(ddAccessToken, userId);
-    // const allForms = await flowFormService.getAllForms()
     // 循环请求宜搭实例详情和审核详情数据
     let flows = [];
     if (allForms) {
@@ -457,12 +456,13 @@ const getTodayRunningFlows = async () => {
     for (const flow of runningFlows) {
         flow.dataKeyDetails = await flowFormDetailsService.getDataKeyDetails(flow)
         flow.emergencyKeys =  await flowFormService.getFormEmergencyItems(flow.formUuid)
-        const currentFlow = todayFlows.filter(tmp => tmp.processInstanceId === flow.processInstanceId)
-        if (currentFlow.length > 0 && currentFlow[0].emergency) {
-            flow.emergency = currentFlow[0].emergency
+        if(todayFlows && todayFlows.length>0){
+            const currentFlow = todayFlows.filter(tmp => tmp.processInstanceId === flow.processInstanceId)
+            if (currentFlow.length > 0 && currentFlow[0].emergency) {
+                flow.emergency = currentFlow[0].emergency
+            }
         }
     }
-
     return runningFlows
 }
 

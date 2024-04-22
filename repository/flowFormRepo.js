@@ -1,7 +1,8 @@
 const sequelize = require('../model/init');
 const getFlowFormModel = require("../model/flowFormsModel")
 const flowFormModel = getFlowFormModel(sequelize)
-const flowFormDetailsRepo = require("./flowFormDetailsRepo")
+const getFlowFormDetailsModel = require("../model/flowFormDetailsModel")
+const flowFormDetailsModel = getFlowFormDetailsModel(sequelize)
 const sequelizeUtil = require("../utils/sequelizeUtil")
 
 /**
@@ -28,7 +29,7 @@ const saveFormAndDetails = async (form, detailsArr) => {
         await flowFormModel.create(form, {transaction})
 
         for (const details of detailsArr) {
-            await flowFormDetailsRepo.saveFormDetails(details, transaction)
+            await flowFormDetailsModel.create(details, {transaction})
         }
         await transaction.commit()
         return true
@@ -56,7 +57,7 @@ const updateFormAndAddDetails = async (form, detailsArr) => {
         }, {transaction})
 
         for (const details of detailsArr) {
-            await flowFormDetailsRepo.saveFormDetails(details, transaction)
+            await flowFormDetailsModel.create(details, {transaction})
         }
         await transaction.commit()
         return true
