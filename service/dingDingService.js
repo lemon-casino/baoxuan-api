@@ -43,7 +43,6 @@ const getFlowsByStatusAndTimeRange = async (
     const fromTimeGMT = timeAction ? timesRange[0] : null;
     const toTimeGMT = timeAction ? timesRange[1] : null;
     // 2.分页去请求所有流程id
-    await dateUtil.delay()
     const resLiuChengList = await dingDingReq.getFlowsOfStatusAndTimeRange(
         fromTimeGMT,
         toTimeGMT,

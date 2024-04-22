@@ -6,7 +6,7 @@ const delayTime = 100
 global.currentRequstCount = 0
 const get = async (url, params, token) => {
     // await dateUtil.delay(delayTime * Math.max(global.currentRequstCount, 0))
-    await dateUtil.delay(delayTime)
+    // await dateUtil.delay(delayTime)
     // global.currentRequstCount = global.currentRequstCount + 1
     let query = ""
     if (params) {
@@ -37,7 +37,7 @@ const get = async (url, params, token) => {
 
 const post = async (url, data, token) => {
     // await dateUtil.delay(delayTime * global.currentRequstCount)
-    await dateUtil.delay(delayTime)
+    // await dateUtil.delay(delayTime)
     // global.currentRequstCount = global.currentRequstCount + 1
     logger.info(`${process.pid}:${url}`)
     let config = null
