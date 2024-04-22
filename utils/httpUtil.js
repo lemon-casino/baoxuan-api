@@ -2,7 +2,7 @@ const axios = require("axios")
 const dateUtil = require("./dateUtil")
 const RemoteError = require("../error/remoteError")
 
-const delayTime = 50
+const delayTime = 10
 global.currentRequstCount = 0
 const get = async (url, params, token) => {
     await dateUtil.delay(delayTime * Math.max(global.currentRequstCount, 0))
