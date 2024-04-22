@@ -8,9 +8,12 @@ const getDataKeyDetails = async (flow) => {
     const formDetails = await flowFormDetailsRepo.getFormLatestDetailsByFormId(flow.formUuid)
     const newData = {}
 
-    for (const detail of formDetails) {
-        newData[detail.fieldId] = detail.fieldName
+    if (formDetails.length > 0) {
+        for (const item of formDetails) {
+            newData[item.fieldId] = item.fieldName
+        }
     }
+
     //
     // for (const key of Object.keys(flow.data)) {
     //     // 钉钉返回的流程的data 数据有的filedId后面会加"_id"故使用includes()
