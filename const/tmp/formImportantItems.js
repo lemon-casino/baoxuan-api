@@ -9,7 +9,7 @@ module.exports = [
     },
     {
         formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3", formName: "运营新品流程",
-        items: ["radioField_lv6hoigb", "radioField_lv6hoigc", "textField_lkvzn3m6", "radioField_ltjt0ykc"]
+        items: ["radioField_lv6hoigb", "radioField_lv6hoigc", "radioField_ltjt0ykc"]
     },
     {
         formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1", formName: "运营拍摄流程",
