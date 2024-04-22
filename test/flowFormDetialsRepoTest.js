@@ -2,7 +2,7 @@ const flowFormDetailsService = require("../service/flowFormDetailsService")
 
 describe("", () => {
     it("", async () => {
-        const result = await flowFormDetailsService.getDataKeyDetails({formUuid: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS"})
+        const result = await flowFormDetailsService.getDataKeyDetails({formUuid: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU"})
         console.log(result)
     })
 })

@@ -453,10 +453,10 @@ const getTodayRunningFlows = async () => {
     const todayFlows = await globalGetter.getTodayFlows()
     // 需要将流程data中的信息标识出来
     // 进行中的流程需要保存之前录入的紧急信息
-    for (const flow of runningFlows) {
+    for (let flow of runningFlows) {
         flow.dataKeyDetails = await flowFormDetailsService.getDataKeyDetails(flow)
-        flow.emergencyKeys =  await flowFormService.getFormEmergencyItems(flow.formUuid)
-        if(todayFlows && todayFlows.length>0){
+        flow.emergencyKeys = await flowFormService.getFormEmergencyItems(flow.formUuid)
+        if (todayFlows && todayFlows.length > 0) {
             const currentFlow = todayFlows.filter(tmp => tmp.processInstanceId === flow.processInstanceId)
             if (currentFlow.length > 0 && currentFlow[0].emergency) {
                 flow.emergency = currentFlow[0].emergency
@@ -473,8 +473,8 @@ const getTodayRunningFlows = async () => {
 const getTodayFinishedFlows = async () => {
     const timeRangeOfToday = [dateUtil.startOfToday(), dateUtil.endOfToday()]
     const todayFinishedFlows = await getFinishedFlows(timeRangeOfToday)
-    for (const flow of todayFinishedFlows) {
-        flow.dataKeyDetails = flowFormDetailsService.getDataKeyDetails(flow)
+    for (let flow of todayFinishedFlows) {
+        flow.dataKeyDetails = await flowFormDetailsService.getDataKeyDetails(flow)
     }
     return todayFinishedFlows
 }
