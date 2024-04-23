@@ -46,6 +46,8 @@ const get = async (url, params, token) => {
             } else {
                 errorHandler(url, query, config, error)
             }
+        } else {
+            errorHandler(url, JSON.stringify(data), config, error)
         }
     }
 }
@@ -78,6 +80,8 @@ const post = async (url, data, token) => {
             } else {
                 errorHandler(url, JSON.stringify(data), config, error)
             }
+        } else {
+            errorHandler(url, JSON.stringify(data), config, error)
         }
     }
 }
