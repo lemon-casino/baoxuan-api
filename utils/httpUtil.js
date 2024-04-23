@@ -5,19 +5,12 @@ const RemoteError = require("../error/remoteError")
 
 const limiter = new Limiter({tokensPerInterval: 15, interval: 'second'});
 
-// 临时处理限制请求速度  mq更适合
-const delayTime = 100
-// global.currentRequstCount = 0
+const delayTime = 300
 const get = async (url, params, token) => {
-    const remainingToken = await limiter.removeTokens(1)
-    if (remainingToken <= 0) {
-        await dateUtil.delay(delayTime)
-    }
-
-    // await dateUtil.delay(delayTime * Math.max(global.currentRequstCount, 0))
-    // await dateUtil.delay(delayTime)
-    // global.currentRequstCount = global.currentRequstCount + 1
-
+    // const remainingToken = await limiter.removeTokens(1)
+    // if (remainingToken <= 0) {
+    await dateUtil.delay(delayTime)
+    // }
     logger.info(`${process.pid}:${url}`)
     let query = ""
     if (params) {
@@ -41,20 +34,14 @@ const get = async (url, params, token) => {
         return response.data;
     } catch (error) {
         errorHandler(url, query, config, error)
-    } finally {
-        // global.currentRequstCount = global.currentRequstCount - 1
     }
 }
 
 const post = async (url, data, token) => {
-    // await dateUtil.delay(delayTime * Math.max(global.currentRequstCount, 0))
-    // await dateUtil.delay(delayTime)
-    // global.currentRequstCount = global.currentRequstCount + 1
-
-    const remainingToken = await limiter.removeTokens(1)
-    if (remainingToken <= 0) {
-        await dateUtil.delay(delayTime)
-    }
+    // const remainingToken = await limiter.removeTokens(1)
+    // if (remainingToken <= 0) {
+    await dateUtil.delay(delayTime)
+    // }
 
     logger.info(`${process.pid}:${url}`)
     let config = null
@@ -67,8 +54,6 @@ const post = async (url, data, token) => {
         return response.data;
     } catch (error) {
         errorHandler(url, JSON.stringify(data), config, error)
-    } finally {
-        // global.currentRequstCount = global.currentRequstCount - 1
     }
 }
 
