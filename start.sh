@@ -20,6 +20,5 @@ done
 if [ "$m"  == 'prod' ]; then
     nohup npm run prod > logs/nohup.out 2>&1 &
 else
-  echo ''
-    #nohup npm run start > logs/nohup.out 2>&1 &
+    nohup npm run start > logs/nohup.out 2>&1 &
 fi
