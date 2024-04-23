@@ -8,18 +8,18 @@ do
 done
 
 m=${mode:-dev};
+p=7999
+if [ "$m" == 'prod' ]; then
+    p=9999
+fi
 
-pids=`ps -ef|grep $m/baoxuan-api | grep -v grep | awk '{print $2}'`
-
-for id in $pids
-do
-  echo "kill -9 pid:" $id
-  kill -9 $id
-done
+pId=$(lsof -i:"$p" | awk '{print $2}' | tail -n 1)
+if [[ -n $pId ]]; then
+    kill -9 "${pId}"
+fi
 
 if [ "$m"  == 'prod' ]; then
     nohup npm run prod > logs/nohup.out 2>&1 &
 else
-  echo ''
-    #nohup npm run start > logs/nohup.out 2>&1 &
+    nohup npm run start > logs/nohup.out 2>&1 &
 fi
