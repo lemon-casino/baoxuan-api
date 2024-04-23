@@ -13,7 +13,7 @@ const statisticResultUtil = require("../utils/statisticResultUtil")
  * @param userId
  * @param status
  * @param importance
- * @returns {Promise<{sum: number, departments: {}}>}
+ * @returns {Promise<{departments: {}}>}
  */
 const getTodaySelfLaunchedFlowsStatisticCountOfFlowStatus = async (userId, status, importance) => {
     let filteredFlows = await flowService.filterTodayFlowsByFlowStatusAndImportanceEndOfForms(status, importance)
@@ -26,6 +26,7 @@ const getTodaySelfLaunchedFlowsStatisticCountOfFlowStatus = async (userId, statu
         const convertedData = await flowService.convertJonsToArr(result.departments)
         result.departments = convertedData
     }
+    result.sum = Object.keys(result.ids).length
     return result;
 }
 
@@ -34,7 +35,7 @@ const getTodaySelfLaunchedFlowsStatisticCountOfFlowStatus = async (userId, statu
  * @param userId
  * @param type
  * @param importance
- * @returns {Promise<{sum: number, departments: {}}>}
+ * @returns {Promise<{departments: {}}>}
  */
 const getTodaySelfLaunchedFlowsStatisticCountOfReviewType = async (userId, type, importance) => {
     let filteredFlows = await flowService.filterTodayFlowsByFlowStatusAndImportanceEndOfForms(
@@ -54,6 +55,7 @@ const getTodaySelfLaunchedFlowsStatisticCountOfReviewType = async (userId, type,
         result.departments = convertedData
     }
 
+    result.sum = Object.keys(result.ids).length
     return result;
 }
 
@@ -74,7 +76,7 @@ const getTodaySelfLaunchedFlowsStatisticCountOfOverDue = async (userId, importan
     return satisfiedFlowsObj
 }
 
-const getTodaySelfLaunchedFlowsStatisticOfOverDue = async (userId, status, importance) => {
+const getTodaySelfLaunchedFlowsStatisticOfOverDue = async (userId, importance) => {
     const flowsOfRunningAndFinishedOfToday = await globalGetter.getTodayFlows()
     let filteredFlows = flowsOfRunningAndFinishedOfToday.filter((flow) => {
         if (flow && !flow.originator) {
@@ -137,8 +139,8 @@ const getTodayDeptLaunchedFlowsStatisticCountOfOverDue = async (deptId, importan
         return null
     }
 
-    let convertedDoingResult = {sum: 0, departments: []}
-    let convertedDoneResult = {sum: 0, departments: []}
+    let convertedDoingResult = {sum: 0, ids: {}, departments: []}
+    let convertedDoneResult = {sum: 0, ids: {}, departments: []}
     //todo：此步可以省略，直接去requiredDepartment的下的dept_user
     const usersOfDepartment = departmentService.simplifiedUsersOfDepartment(requiredDepartment)
     const users = usersOfDepartment.deptUsers
