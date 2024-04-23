@@ -66,10 +66,10 @@ const post = async (url, data, token) => {
     } catch (error) {
         // 如果出现限流错误，则重试
         if (error.response) {
-            const {data} = error.response
+            const errData = error.response.data
             let isRateLimited = false
             for (const errKeyword of dingDingRateLimitErrorKeywords) {
-                if (data.message.includes(errKeyword)) {
+                if (errData.message.includes(errKeyword)) {
                     isRateLimited = true
                     break
                 }
