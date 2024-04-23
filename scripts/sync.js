@@ -58,8 +58,6 @@ const initRedis = async () => {
     await dingDingData.getAllNotFinishedFlowsBeforeToday();
     await dingDingData.combineAllFlows();
     await dingDingData.getAllFlowsOfToday();
-    await dingDingData.getUsersDetailFromDingDing();
-    await dingDingData.getUsersFromDingDing();
 }
 
 const getTodayRunningAndFinishedFlows = async () => {
