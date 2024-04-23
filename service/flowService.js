@@ -361,7 +361,7 @@ const getDeptStatistic = async (funOfTodaySelfStatistic, deptId, status, importa
         throw new NotFoundError(`未找到部门：${deptId}的信息`)
     }
 
-    let convertedResult = {sum: 0, departments: []}
+    let convertedResult = {sum: 0, ids: {}, departments: []}
     const usersOfDepartment = departmentService.simplifiedUsersOfDepartment(requiredDepartment)
     const users = usersOfDepartment.deptUsers
 

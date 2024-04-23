@@ -187,12 +187,9 @@ const getTodaySelfJoinedFlowsStatisticOfFlowStatus = async (userId, status, impo
     const filteredFlows = await flowService.filterTodayFlowsByFlowStatusAndImportanceEndOfForms(status, importance)
 
     let satisfiedFlows = [];
-    let needFilterReviewItems = null
-    if (importance) {
+    let needFilterReviewItems = []
+    if (importance && importance.items) {
         needFilterReviewItems = importance.items
-    }
-    if (!needFilterReviewItems || needFilterReviewItems.length === 0) {
-        return filteredFlows
     }
 
     for (const flow of filteredFlows) {
@@ -202,9 +199,14 @@ const getTodaySelfJoinedFlowsStatisticOfFlowStatus = async (userId, status, impo
             continue
         }
         for (const reviewItem of reviewItems) {
-            // 如果需要过滤指定的items，那么不符合直接跳过
-            if (needFilterReviewItems && needFilterReviewItems.length > 0) {
-                if (needFilterReviewItems.includes(reviewItem.activityId) && reviewItem.operatorUserId === userId) {
+            if (reviewItem.operatorUserId === userId) {
+                // 如果需要过滤指定的items，那么不符合直接跳过
+                if (needFilterReviewItems.length > 0) {
+                    if (needFilterReviewItems.includes(reviewItem.activityId)) {
+                        satisfiedFlows.push(flow);
+                        break
+                    }
+                }else{
                     satisfiedFlows.push(flow);
                     break
                 }

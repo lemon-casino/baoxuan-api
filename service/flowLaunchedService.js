@@ -74,7 +74,7 @@ const getTodaySelfLaunchedFlowsStatisticCountOfOverDue = async (userId, importan
     return satisfiedFlowsObj
 }
 
-const getTodaySelfLaunchedFlowsStatisticOfOverDue = async (userId, status, importance) => {
+const getTodaySelfLaunchedFlowsStatisticOfOverDue = async (userId, importance) => {
     const flowsOfRunningAndFinishedOfToday = await globalGetter.getTodayFlows()
     let filteredFlows = flowsOfRunningAndFinishedOfToday.filter((flow) => {
         if (flow && !flow.originator) {
