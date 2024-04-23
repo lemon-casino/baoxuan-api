@@ -41,7 +41,7 @@ const get = async (url, params, token) => {
                 }
             }
             if (isRateLimited) {
-                await dateUtil.delay(delayTime)
+                await dateUtil.delay(1000)
                 return await get(url, params, token)
             } else {
                 errorHandler(url, query, config, error)
@@ -75,7 +75,7 @@ const post = async (url, data, token) => {
                 }
             }
             if (isRateLimited) {
-                await dateUtil.delay(delayTime)
+                await dateUtil.delay(1000)
                 return await post(url, data, token)
             } else {
                 errorHandler(url, JSON.stringify(data), config, error)
