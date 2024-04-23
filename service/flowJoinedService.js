@@ -1,9 +1,5 @@
 const flowService = require("./flowService")
-const redisService = require("./redisService")
-const dateUtil = require("../utils/dateUtil")
-const reviewUtil = require("../utils/reviewUtil")
 const statisticStatusConst = require("../const/statisticStatusConst")
-const FlowFormReview = require("../model/flowformreview")
 const departmentService = require("../service/departmentService")
 const globalGetter = require("../global/getter")
 
@@ -14,20 +10,22 @@ const globalGetter = require("../global/getter")
  * @returns {Promise<{}>}
  */
 const getTodaySelfJoinedFlowsStatisticCountOfOverDue = async (userId, importance) => {
-    const satisfiedFlowsObj = await getTodaySelfJoinedFlowsStatisticOfOverDue(userId, importance)
-    let allSum = 0;
-    for (const key of Object.keys(satisfiedFlowsObj)) {
-        const flowsDividedByDepartment = await flowService.flowsDividedByDepartment(satisfiedFlowsObj[key])
+    const overDueFlows = await getTodaySelfJoinedFlowsStatisticOfOverDue(userId, importance)
+
+    let sum = 0
+    for (const key of Object.keys(overDueFlows)) {
+        const flowsDividedByDepartment = await flowService.flowsDividedByDepartment(overDueFlows[key])
         const sumFlowsByDepartment = await flowService.sumFlowsByDepartment(flowsDividedByDepartment)
+        sumFlowsByDepartment.sum = Object.keys(sumFlowsByDepartment.ids).length
+        sum = sum + sumFlowsByDepartment.sum
         if (sumFlowsByDepartment.departments) {
             const convertedData = await flowService.convertJonsToArr(sumFlowsByDepartment.departments)
             sumFlowsByDepartment.departments = convertedData
         }
-        satisfiedFlowsObj[key] = sumFlowsByDepartment
-        allSum = allSum + (sumFlowsByDepartment["sum"] || 0)
+        overDueFlows[key] = sumFlowsByDepartment
     }
-    satisfiedFlowsObj["sum"] = allSum
-    return satisfiedFlowsObj
+    overDueFlows["sum"] = sum
+    return overDueFlows
 }
 
 /**
@@ -81,11 +79,11 @@ const getTodaySelfJoinedFlowsStatisticOfOverDue = async (userId, importance) => 
 }
 
 /**
- * 本人参与：TODO、FORCAST、HISTORY 的流程数量（流程可重复）
+ * 本人参与：TODO、FORCAST、HISTORY 的流程数量
  * @param userId
- * @param reviewType 审核的节点类型
- * @param importance 重要性条件null | {isImportant: true, forms: [], items: []}
- * @returns {Promise<{sum: number, departments: {}}>}
+ * @param reviewType
+ * @param importance
+ * @returns {Promise<{departments: {}}>}
  */
 const getTodaySelfJoinedFlowsStatisticCountOfReviewType = async (userId, reviewType, importance) => {
     const satisfiedFlows = await getTodaySelfJoinedFlowsStatisticOfReviewType(userId, reviewType, importance)
@@ -95,6 +93,7 @@ const getTodaySelfJoinedFlowsStatisticCountOfReviewType = async (userId, reviewT
         const convertedData = await flowService.convertJonsToArr(result.departments)
         result.departments = convertedData
     }
+    result.sum = Object.keys(result.ids).length
     return result
 }
 
@@ -160,10 +159,10 @@ const getTodaySelfJoinedFlowsStatisticOfReviewType = async (userId, reviewType, 
 
 /**
  * 本人参与的 error terminated 的流程数量（流程可重复）
- * @param status 流程状态
  * @param userId
- * @param importance 重要性条件null | {isImportant: true, forms: [], items: []}
- * @returns {Promise<{sum: number, departments: {}}>}
+ * @param status
+ * @param importance
+ * @returns {Promise<{departments: {}}>}
  */
 const getTodaySelfJoinedFlowsStatisticCountOfFlowStatus = async (userId, status, importance) => {
     const satisfiedFlows = await getTodaySelfJoinedFlowsStatisticOfFlowStatus(userId, status, importance)
@@ -173,6 +172,7 @@ const getTodaySelfJoinedFlowsStatisticCountOfFlowStatus = async (userId, status,
         const convertedData = await flowService.convertJonsToArr(result.departments)
         result.departments = convertedData
     }
+    result.sum = Object.keys(result.ids).length
     return result
 }
 
@@ -203,14 +203,15 @@ const getTodaySelfJoinedFlowsStatisticOfFlowStatus = async (userId, status, impo
                 // 如果需要过滤指定的items，那么不符合直接跳过
                 if (needFilterReviewItems.length > 0) {
                     if (needFilterReviewItems.includes(reviewItem.activityId)) {
-                        satisfiedFlows.push(flow);
+                        satisfiedFlows.push(flow)
                         break
                     }
-                }else{
-                    satisfiedFlows.push(flow);
+                } else {
+                    satisfiedFlows.push(flow)
                     break
                 }
             }
+
         }
     }
     return satisfiedFlows
@@ -240,9 +241,9 @@ const getDeptJoinedOverDueStatistic = async (deptId, status, importance) => {
         return null
     }
 
-    let convertedDoingResult = {sum: 0, departments: []}
-    let convertedDoneResult = {sum: 0, departments: []}
-    //todo：此步可以省略，直接去requiredDepartment的下的dept_user
+    let convertedDoingResult = {sum: 0, ids: {}, departments: []}
+    let convertedDoneResult = {sum: 0, ids: {}, departments: []}
+
     const usersOfDepartment = departmentService.simplifiedUsersOfDepartment(requiredDepartment)
     const users = usersOfDepartment.deptUsers
     if (!users || users.length === 0) {
@@ -267,6 +268,17 @@ const getDeptJoinedOverDueStatistic = async (deptId, status, importance) => {
             )
         }
     }
+
+    // 根据ids 添加sum数据
+    convertedDoingResult.sum = Object.keys(convertedDoingResult.ids).length
+    for (const department of convertedDoingResult.departments) {
+        department.sum = Object.keys(department.ids).length
+    }
+    convertedDoneResult.sum = Object.keys(convertedDoneResult.ids).length
+    for (const department of convertedDoneResult.departments) {
+        department.sum = Object.keys(department.ids).length
+    }
+
     return {
         sum: convertedDoingResult.sum + convertedDoneResult.sum,
         doing: convertedDoingResult,

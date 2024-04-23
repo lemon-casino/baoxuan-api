@@ -1,6 +1,4 @@
 const biResponse = require("../../../utils/biResponse")
-const selfJoinTodayHandler = require("./selfJoinTodayHandler")
-const selfLaunchTodayHandler = require("./selfLaunchTodayHandler")
 const deptLaunchTodayHandler = require("./deptLaunchTodayHandler")
 const deptJoinTodayHandler = require("./deptJoinTodayHandler")
 
@@ -34,14 +32,15 @@ const getDeptTodaySum = async (req, res) => {
     }
 
     // 对多个状态的数据按照部门-人的级别关系进行汇总
-    let mergedResult = {sum: 0, departments: []}
+    let finalResult = {sum: 0, ids: {}, departments: []}
     for (const result of newOriginalResult) {
-        if (!result){
+        if (!result) {
             continue
         }
+
         // 初始化时，首节点直接赋值
-        if (mergedResult.sum === 0) {
-            mergedResult = result
+        if (finalResult.sum === 0) {
+            finalResult = result
             continue
         }
 
@@ -49,8 +48,8 @@ const getDeptTodaySum = async (req, res) => {
         const unMergedDepartments = result.departments
         for (const unMergedDepartment of unMergedDepartments) {
             // 跟已经处理过的统计数据进行对比，判断进行合并
-            for (let i = 0; i < mergedResult.departments.length; i++) {
-                const hasMergedDepartment = mergedResult.departments[i]
+            for (let i = 0; i < finalResult.departments.length; i++) {
+                const hasMergedDepartment = finalResult.departments[i]
                 // 如果部门名称相同-则需要进行合并操作
                 if (unMergedDepartment.deptName === hasMergedDepartment.deptName) {
                     const unMergedUsers = unMergedDepartment.users
@@ -71,17 +70,18 @@ const getDeptTodaySum = async (req, res) => {
                                     mergedUsers[j].ids.push(unMergedId)
                                     // 同步更新 users-departments- result的 sum
                                     mergedUsers[j].sum = mergedUsers[j].sum + 1
-                                    hasMergedDepartment.sum = hasMergedDepartment.sum + 1
-                                    mergedResult.sum = mergedResult.sum + 1
+                                    hasMergedDepartment.ids[unMergedId] = 1
+                                    finalResult.ids[unMergedId] = 1
                                 }
                                 break;
                             }
                             // 如果是新用户的统计数据，则直接保存
                             if (j === mergedUsers.length - 1) {
                                 hasMergedDepartment.users.push(unMergedUsers[k])
-                                // 同步更新 departments- result的 sum
-                                hasMergedDepartment.sum = hasMergedDepartment.sum + unMergedUsers[k].sum
-                                mergedResult.sum = mergedResult.sum + unMergedUsers[k].sum
+                                for (const id of unMergedUsers[k].ids) {
+                                    hasMergedDepartment.ids[id] = 1
+                                    finalResult.ids[id] = 1
+                                }
                                 break
                             }
                         }
@@ -89,16 +89,16 @@ const getDeptTodaySum = async (req, res) => {
                     break
                 }
                 // 新的统计数据，则直接保存
-                if (i === mergedResult.departments.length - 1) {
-                    mergedResult.sum = mergedResult.sum + unMergedDepartment.sum
-                    mergedResult.departments.push(unMergedDepartment)
+                if (i === finalResult.departments.length - 1) {
+                    finalResult.departments.push(unMergedDepartment)
+                    finalResult.ids = unMergedDepartment.ids
                     break;
                 }
             }
         }
     }
 
-    return res.send(biResponse.success(mergedResult))
+    return res.send(biResponse.success(finalResult))
 
 
 }
