@@ -13,7 +13,7 @@ if (!fs.existsSync(logDirectory)) {
 const commonOptions = {
     datePattern: 'YYYY-MM-DD',
     prepend: true,
-    maxSize: '20m'
+    maxSize: '300m'
 }
 
 const logger = createLogger({
