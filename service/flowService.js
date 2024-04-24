@@ -115,15 +115,17 @@ const findReviewItemByType = (flow, reviewStatus) => {
 /**
  * 根据按部门汇总的流程，按照部门进行统计返回
  * @param flowsOfDepartments
- * @returns {Promise<{sum: number, departments: {}}>}
+ * @returns {Promise<{ departments: {}}>}
  */
 const sumFlowsByDepartment = async (flowsOfDepartments) => {
-    const result = {sum: 0, departments: {}}
+    const result = {ids: {}, departments: {}}
     for (const dep of Object.keys(flowsOfDepartments)) {
         const count = flowsOfDepartments[dep].length
         const ids = flowsOfDepartments[dep].map((flow) => flow.processInstanceId)
-        result.departments[dep] = {sum: count, ids};
-        result.sum = result.sum + count
+        for (const id of ids) {
+            result.ids[id] = 1
+        }
+        result.departments[dep] = {sum: count, ids}
     }
     return result
 }
@@ -135,9 +137,7 @@ const sumFlowsByDepartment = async (flowsOfDepartments) => {
  */
 const flowsDividedByDepartment = async (flows) => {
     const result = {}
-
     for (const flow of flows) {
-        // todo: 这种方式的遍历太耗时了
         // 根据流程发起人所在的部门汇总数据
         // warning: 如果userId用户存在多部门的情况，会重复计算
         const departmentsOfUser = await departmentService.getDepartmentOfUser(flow.originator.userId)
@@ -295,28 +295,36 @@ const convertJonsToArr = async (departments) => {
  * @param statistic
  * @param userName
  * @param isFirstLevelDept
- * @param subDepartmentName
+ * @param departmentName
  * @param resultTemplate
  * @returns {*}
  */
-const convertSelfStatisticToDept = (statistic, userName, isFirstLevelDept, subDepartmentName, resultTemplate) => {
+const convertSelfStatisticToDept = (statistic, userName, isFirstLevelDept, departmentName, resultTemplate) => {
     if (statistic.sum == 0) {
         return resultTemplate
     }
 
-    const departments = statistic.departments
-    for (const notComputedDept of departments) {
+    for (const notComputedDept of statistic.departments) {
+
         // 按子部门筛选，需要精确匹配
-        if (!isFirstLevelDept && notComputedDept.deptName !== subDepartmentName) {
+        if (!isFirstLevelDept && notComputedDept.deptName !== departmentName) {
             continue
         }
-        resultTemplate.sum = resultTemplate.sum + notComputedDept.sum
+
+        // 保存所有用户（不分部门）都不重复的id
+        for (const id of notComputedDept.ids) {
+            resultTemplate.ids[id] = 1
+        }
 
         // 开始时为空数据，直接加进去
         if (resultTemplate.departments.length === 0) {
+            const tmpDeptIds = {}
+            for (const id of notComputedDept.ids) {
+                tmpDeptIds[id] = 1
+            }
             resultTemplate.departments.push({
                 deptName: notComputedDept.deptName,
-                sum: notComputedDept.sum,
+                ids: tmpDeptIds,
                 users: [{userName: userName, sum: notComputedDept.sum, ids: notComputedDept.ids}]
             })
             continue
@@ -325,19 +333,25 @@ const convertSelfStatisticToDept = (statistic, userName, isFirstLevelDept, subDe
         for (let i = 0; i < resultTemplate.departments.length; i++) {
             const deptOfTemplate = resultTemplate.departments[i]
             if (notComputedDept.deptName === deptOfTemplate.deptName) {
-                deptOfTemplate.sum = deptOfTemplate.sum + notComputedDept.sum
-                // todo: 如果出现人名重复，需要再此进行合并
+                // 部门的sum 需要汇总所有组员的不同的id
+                for (const id of notComputedDept.ids) {
+                    deptOfTemplate.ids[id] = 1
+                }
                 deptOfTemplate.users.push({
                     userName: userName,
                     sum: notComputedDept.sum,
                     ids: notComputedDept.ids
                 })
                 resultTemplate.departments[i] = deptOfTemplate
-                break;
+                break
             } else if (i === resultTemplate.departments.length - 1) {
+                const tmpDeptIds = {}
+                for (const id of notComputedDept.ids) {
+                    tmpDeptIds[id] = 1
+                }
                 resultTemplate.departments.push({
                     deptName: notComputedDept.deptName,
-                    sum: notComputedDept.sum,
+                    ids: tmpDeptIds,
                     users: [{userName: userName, sum: notComputedDept.sum, ids: notComputedDept.ids}]
                 })
                 break
@@ -361,24 +375,32 @@ const getDeptStatistic = async (funOfTodaySelfStatistic, deptId, status, importa
         throw new NotFoundError(`未找到部门：${deptId}的信息`)
     }
 
-    let convertedResult = {sum: 0, departments: []}
+    let resultTemplate = {sum: 0, ids: {}, departments: []}
     const usersOfDepartment = departmentService.simplifiedUsersOfDepartment(requiredDepartment)
     const users = usersOfDepartment.deptUsers
 
     if (!users || users.length === 0) {
-        return convertedResult
-    }
-    for (const user of users) {
-        // 获取本人参与的流程并按流程发起人所在的组进行分类
-        const result = await funOfTodaySelfStatistic(user.userid, status, importance)
-        // 在部门分组统计的数据中，进一步汇总到参与的个人
-        convertedResult = convertSelfStatisticToDept(result, user.name,
-            requiredDepartment.parent_id == 1,
-            requiredDepartment.name, convertedResult)
+        return resultTemplate
     }
 
-    return convertedResult;
-    // await statisticResultUtil.removeUnsatisfiedDeptStatistic(convertedResult, deptId)
+    for (const user of users) {
+        // 获取本人参与的流程并按流程发起人所在的组进行分类
+        const sumByOriginatorDepartment = await funOfTodaySelfStatistic(user.userid, status, importance)
+
+        // 在部门分组统计的数据中，进一步汇总到参与的个人
+        resultTemplate = convertSelfStatisticToDept(sumByOriginatorDepartment, user.name,
+            requiredDepartment.parent_id == 1,
+            requiredDepartment.name, resultTemplate)
+    }
+
+    // 根据departments 下的ids和resultTemplate的ids 分别算出对应的sum
+    return {
+        ids: resultTemplate.ids,
+        sum: Object.keys(resultTemplate.ids).length,
+        departments: resultTemplate.departments.map(item => {
+            return {deptName: item.deptName, sum: Object.keys(item.ids).length, users: item.users, ids: item.ids}
+        })
+    }
 }
 
 /**

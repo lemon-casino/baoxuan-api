@@ -51,7 +51,7 @@ const duration = (endDate, startDate, unitOfTime = "hours") => {
     return moment(endDate).diff(moment(startDate), unitOfTime, true).toFixed(2)
 }
 
-const delay = (ms = 800) => new Promise((res) => setTimeout(res, ms));
+const delay = (ms = 100) => new Promise((res) => setTimeout(res, ms));
 
 const convertToStr = (date) => {
     return moment(date).format("YYYY-MM-DD HH:mm:ss")

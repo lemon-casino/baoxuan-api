@@ -18,5 +18,6 @@ module.exports = {
     "/user-logs":  require("./userLogRouter"),
     "/market-data": require("./marketDataRouter"),
     "/download/:filename": require("./fileRouter"),
-    "/tima/video": require("./videoRouter")
+    "/tima/video": require("./videoRouter"),
+    "/tima/workload": require("./Tm_Workload")
 }

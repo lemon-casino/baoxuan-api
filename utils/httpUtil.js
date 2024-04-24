@@ -2,12 +2,14 @@ const axios = require("axios")
 const dateUtil = require("./dateUtil")
 const RemoteError = require("../error/remoteError")
 
-const delayTime = 300
+// 状态码不一定准确，故使用关键词 [400, 403]
+const dingDingRateLimitErrorKeywords = ["过多", "频繁", "流控", "限制"]
 
+const delayTime = 100
 const get = async (url, params, token) => {
     await dateUtil.delay(delayTime)
-    logger.info(url)
-    let query = "";
+    logger.info(`${process.pid}:${url}`)
+    let query = ""
     if (params) {
         query = "?"
         const keys = Object.keys(params)
@@ -28,13 +30,31 @@ const get = async (url, params, token) => {
         const response = await axios.get(newUrl, config);
         return response.data;
     } catch (error) {
-        errorHandler(url, query, config, error)
+        if (error.response) {
+            // 如果出现限流错误，则重试
+            const {data} = error.response
+            let isRateLimited = false
+            for (const errKeyword of dingDingRateLimitErrorKeywords) {
+                if (data.message.includes(errKeyword)) {
+                    isRateLimited = true
+                    break
+                }
+            }
+            if (isRateLimited) {
+                await dateUtil.delay(1000)
+                return await get(url, params, token)
+            } else {
+                errorHandler(url, query, config, error)
+            }
+        } else {
+            errorHandler(url, JSON.stringify(data), config, error)
+        }
     }
 }
 
 const post = async (url, data, token) => {
     await dateUtil.delay(delayTime)
-    logger.info(url)
+    logger.info(`${process.pid}:${url}`)
     let config = null
     if (token) {
         config = {headers: {"x-acs-dingtalk-access-token": token}}
@@ -44,7 +64,25 @@ const post = async (url, data, token) => {
         const response = await axios.post(url, data, config);
         return response.data;
     } catch (error) {
-        errorHandler(url, JSON.stringify(data), config, error)
+        // 如果出现限流错误，则重试
+        if (error.response) {
+            const errData = error.response.data
+            let isRateLimited = false
+            for (const errKeyword of dingDingRateLimitErrorKeywords) {
+                if (errData.message.includes(errKeyword)) {
+                    isRateLimited = true
+                    break
+                }
+            }
+            if (isRateLimited) {
+                await dateUtil.delay(1000)
+                return await post(url, data, token)
+            } else {
+                errorHandler(url, JSON.stringify(data), config, error)
+            }
+        } else {
+            errorHandler(url, JSON.stringify(data), config, error)
+        }
     }
 }
 
