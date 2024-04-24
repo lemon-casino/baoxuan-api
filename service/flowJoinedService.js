@@ -109,20 +109,12 @@ const getTodaySelfJoinedFlowsStatisticOfReviewType = async (userId, reviewType, 
     // 根据重要性和forms过滤流程
     const filteredFlows = await flowService.filterFlowsByImportance(flowsOfRunningAndFinishedOfToday, importance)
     let satisfiedFlows = [];
-    let needFilterReviewItems = null
-    if (importance) {
+    let needFilterReviewItems = []
+    if (importance && importance.items) {
         needFilterReviewItems = importance.items
     }
 
-    if(userId === "2103600332651419" &&  reviewType === "TODO"  && importance.forms[0]=== "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3"){
-        console.log("--------")
-    }
-
     for (const flow of filteredFlows) {
-
-        if (flow.processInstanceId === "a0d1b354-dadb-4f1b-937b-816554a65128") {
-            console.log("--------")
-        }
         // 将该流程统计到审核节点的各个操作人
         const reviewItems = flow.overallprocessflow
         if (!reviewItems) {
@@ -134,7 +126,7 @@ const getTodaySelfJoinedFlowsStatisticOfReviewType = async (userId, reviewType, 
             const reviewItem = reviewItems[i]
 
             // 如果需要过滤指定的items，那么不符合直接跳过
-            if (needFilterReviewItems && needFilterReviewItems.length > 0) {
+            if (needFilterReviewItems.length > 0) {
                 if (!needFilterReviewItems.includes(reviewItem.activityId)) {
                     continue
                 }
@@ -164,8 +156,10 @@ const getTodaySelfJoinedFlowsStatisticOfReviewType = async (userId, reviewType, 
                     }
                 } else {
                     // todo类型和 forcast类型 存在一个即为有效，不用遍历全部
-                    //  非本人且类型不匹配的直接跳过
-                    if (item.operatorUserId !== userId || item.type !== reviewType) {
+                    // 非本人且类型不匹配的直接跳过
+                    // 操作人的id在主线上是operatorUserId，domainList中是operator
+                    const operatorId = item.operator || item.operatorUserId
+                    if (operatorId !== userId || item.type !== reviewType) {
                         continue
                     }
                     satisfiedFlows.push(flow)
