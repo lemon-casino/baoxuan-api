@@ -1,3 +1,4 @@
+const joiUtil = require("../../../utils/joiUtil")
 const biResponse = require("../../../utils/biResponse")
 const flowJoinedService = require("../../../service/flowJoinedService")
 const statusMapProcessorHub = require("./statusMapProcessorHub")
@@ -26,14 +27,17 @@ const getDeptJoinedResult = async (deptId, status, importance) => {
     return result
 }
 
-const todayDeptJoinedFlowsStatisticHub = async (req, res) => {
-    const status = req.params.status;
-    const {deptId, importance} = req.query
-    const result = await getDeptJoinedResult(deptId, status, importance)
-    if (result != null) {
+const todayDeptJoinedFlowsStatisticHub = async (req, res, next) => {
+    try {
+        const status = req.params.status;
+        const {deptId, importance} = req.query
+        joiUtil.validate({deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.strRequired}})
+        const result = await getDeptJoinedResult(deptId, status, importance)
+
         return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
     }
-    return res.send(biResponse.serverError(`请求的状态：${status}不可用`))
 }
 
 module.exports = {

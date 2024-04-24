@@ -1,7 +1,7 @@
+const joiUtil = require("../../../utils/joiUtil")
 const flowLaunchedService = require("../../../service/flowLaunchedService")
 const statusMapProcessorHub = require("./statusMapProcessorHub")
 const biResponse = require("../../../utils/biResponse")
-const departmentService = require("../../../service/departmentService")
 
 const deptLaunchedStatusProcessorMap = {
     "error": {processor: flowLaunchedService.getTodayDeptLaunchedFlowsStatisticCountOfFlowStatus, mapStatus: "ERROR"},
@@ -28,14 +28,16 @@ const getDeptLaunchedResult = async (deptId, status, importance) => {
     return result;
 }
 
-const todayDeptLaunchedFlowsStatisticHub = async (req, res) => {
-    const status = req.params.status;
-    const {deptId, importance} = req.query
-    const result = await getDeptLaunchedResult(deptId, status, importance)
-    if (result != null) {
+const todayDeptLaunchedFlowsStatisticHub = async (req, res, next) => {
+    try {
+        const status = req.params.status;
+        const {deptId, importance} = req.query
+        joiUtil.validate({deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.strRequired}})
+        const result = await getDeptLaunchedResult(deptId, status, importance)
         return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
     }
-    return res.send(biResponse.serverError(`请求的状态：${status}不可用`))
 }
 module.exports = {
     getDeptLaunchedResult,
