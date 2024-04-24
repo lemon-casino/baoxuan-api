@@ -56,7 +56,6 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
             clickingAdditionalParams
         } = req.query
 
-        // todo: 其他参数还要校验
         joiUtil.validate({pageIndex, pageSize})
         const result = await singleItemTaoBaoService.getTaoBaoSingleItemsWithStatistic(
             parseInt(pageIndex),

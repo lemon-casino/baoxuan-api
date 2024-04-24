@@ -4,7 +4,6 @@ const deptJoinTodayHandler = require("./deptJoinTodayHandler")
 
 const getDeptTodaySum = async (req, res) => {
     const {type, statuses} = req.query
-
     const originalResult = []
     const statusArr = JSON.parse(statuses)
     for (const status of statusArr) {

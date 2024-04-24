@@ -1,6 +1,28 @@
 const Joi = require("joi")
 const ParameterError = require("../error/parameterError")
-const {commonJoiSchemas, joiErrorMessages} = require("../const/joiConst")
+
+const joiErrorMessages = {
+    "any.required": "为必传参数",
+    "any.empty": "内容不能为空",
+    "string.empty": "内容不能为空",
+    "string.alphanum": "必须为0或正整数",
+    "date.base": "日期格式不正确"
+}
+
+const commonJoiSchemas = {
+    required: Joi.required(),
+    strRequired: Joi.string().required(),
+    numberRequired: Joi.string().alphanum().min(0).required(),
+    dateRequired: Joi.date().required()
+}
+
+const commonArgsSchemas = {
+    id: commonJoiSchemas.required,
+    pageIndex: commonJoiSchemas.numberRequired,
+    pageSize: Joi.string().alphanum().min(1).required(),
+    startDate: commonJoiSchemas.dateRequired,
+    endDate: commonJoiSchemas.dateRequired
+}
 
 const validate = (items) => {
     // schema查找优先级： 自定义-commonRepo.js-无
@@ -22,10 +44,10 @@ const validate = (items) => {
         }
         // 查找通用的校验规则
         let hasCommonSchema = false
-        for (const commonKey of Object.keys(commonJoiSchemas)) {
-            if (commonKey === key) {
+        for (const commonArg of Object.keys(commonArgsSchemas)) {
+            if (commonArg === key) {
                 hasCommonSchema = true
-                tmpSchemas[key] = commonJoiSchemas[commonKey]
+                tmpSchemas[key] = commonArgsSchemas[commonArg]
                 break
             }
         }
@@ -51,5 +73,6 @@ const validate = (items) => {
 }
 
 module.exports = {
-    validate
+    validate,
+    commonJoiSchemas
 }
