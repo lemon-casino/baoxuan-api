@@ -16,6 +16,7 @@ exports.getFlowFormReviewList = async (req, res) => {
         where: {
             form_id: form_id,
         },
+        order: [['id', 'DESC']]
     });
     if (reslut) {
         return res.send(biResponse.success(reslut.dataValues.form_review));
