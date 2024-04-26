@@ -18,6 +18,7 @@ const globalGetter = require("../global/getter")
 const workingDayService = require("../service/workingDayService")
 const flowFormDetailsService = require("../service/flowFormDetailsService")
 const flowFormService = require("../service/flowFormService")
+const formReviewRepo = require("../repository/formReviewRepo")
 
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
@@ -508,7 +509,8 @@ const getFinishedFlows = async (timeRange) => {
  * @returns {Promise<*>}
  */
 const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
-    const flows = await getFlowsFromDingDing(status, timeRange, timeAction);
+    let flows = await getFlowsFromDingDing(status, timeRange, timeAction);
+
     // 同步流程的操作节点耗时信息
     for (const flow of flows) {
         const reviewItems = flow.overallprocessflow
@@ -525,8 +527,52 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
                     }
 
                     let costAlready = 0
-                    // todo: 对于多分支的情况开始时间不准确
-                    const startDateTime = dateUtil.formatGMT2Str(reviewItems[i - 1].operateTimeGMT || reviewItems[i - 1].activeTimeGMT)
+                    // 根据当前节点id查找上一个操作节点
+                    const flowFormReviews = await formReviewRepo.getFormReviewByFormId(flow.formUuid)
+
+                    // 找到该节点所对应的lastTimingNodes
+                    const formReviews = flowFormReviews[0].formReview
+                    const getNode = (nodes) => {
+                        for (const node of nodes) {
+                            if (node.id === reviewItems[i].activityId) {
+                                return node
+                            }
+                            if (node.children && node.children.length > 0) {
+                                const tmpNode = getNode(node.children)
+                                if (tmpNode) {
+                                    return tmpNode
+                                }
+                            }
+                        }
+                        return null
+                    }
+
+                    const node = getNode(formReviews)
+                    if (!node) {
+                        logger.warn(`节点${reviewItems[i].activityId}未在数据库中找到审核节点`)
+                        continue
+                    }
+                    if (!node.lastTimingNodes) {
+                        logger.warn(`节点 ${reviewItems[i].activityId}的lastTimingNodes 未找到`)
+                        continue
+                    }
+
+                    // 宜搭流程首节点统一都把发起叫做申请，activityId=sid-restartevent
+                    // 如果node.lastTimingNodes中的节点包含了发起(第一个节点)，把sid-restartevent放进去
+                    if (node.lastTimingNodes.includes(formReviews[0].id)) {
+                        node.lastTimingNodes.push("sid-restartevent")
+                    }
+                    const orderedSatisfiedReviewItems = reviewItems.filter(item => {
+                        return item.operateTimeGMT && node.lastTimingNodes.includes(item.activityId)
+                    }).sort((a, b) => parseInt(b.operateTimeGMT) - parseInt(a.operateTimeGMT))
+
+                    if (orderedSatisfiedReviewItems.length === 0) {
+                        logger.warn(`节点${reviewItems[i].activityId}的上一完成节点未找到`)
+                        continue
+                    }
+
+                    const startDateTime = dateUtil.formatGMT2Str(orderedSatisfiedReviewItems[0].operateTimeGMT || orderedSatisfiedReviewItems[0].activeTimeGMT)
+                    // 获取该节点在流程中的完成时间
                     // 运营执行流程的用时要特别计算
                     if (flow.formUuid === executionFlowFormId) {
                         costAlready = await workingDayService.computeValidWorkingDurationOfExecutionFlow(startDateTime, computeEndDate)
@@ -627,5 +673,6 @@ module.exports = {
     handleAsyncAllFinishedFlowsByTimeRange,
     getFinishedFlowsByTimeRangeAndFormId,
     getAttendances,
-    isWorkingDay
+    isWorkingDay,
+    getFlowsOfStatusAndTimeRange
 };

@@ -2,6 +2,10 @@ const flowService = require("./flowService")
 const statisticStatusConst = require("../const/statisticStatusConst")
 const departmentService = require("../service/departmentService")
 const globalGetter = require("../global/getter")
+const dateUtil = require("../utils/dateUtil")
+const flowUtil = require("../utils/flowUtil")
+const flowReviewTypeConst = require("../const/flowReviewTypeConst")
+const NotFoundError = require("../error/http/notFoundError")
 
 /**
  * 本人参与： 已逾期的流程数量（流程可重复）
@@ -42,37 +46,17 @@ const getTodaySelfJoinedFlowsStatisticOfOverDue = async (userId, importance) => 
 
     const satisfiedFlows = {"done": [], "doing": []};
     let needFilterReviewItems = null
-    if (importance) {
+    if (importance && importance.items) {
         needFilterReviewItems = importance.items
     }
     for (const flow of filteredFlows) {
-        const reviewItems = flow.overallprocessflow
-        if (!reviewItems) {
-            continue;
+        const userDoingOverDue = flowUtil.isUserDoingOverDueFlow(userId, flow, needFilterReviewItems)
+        const userDoneOverDue = flowUtil.isUserDoneOverDueFlow(userId, flow, needFilterReviewItems)
+        if (userDoingOverDue) {
+            satisfiedFlows.done.push(flow)
         }
-        for (let i = 0; i < reviewItems.length; i++) {
-            // 如果需要过滤指定的items，那么不符合直接跳过
-            if (needFilterReviewItems && needFilterReviewItems.length > 0) {
-                if (!needFilterReviewItems.includes(reviewItems[i].activityId)) {
-                    continue
-                }
-            }
-
-            // 非本人直接跳过
-            if (reviewItems[i].operatorUserId !== userId) {
-                continue
-            }
-
-            // 已完成的工作逾期
-            if (reviewItems[i].isOverDue) {
-                if (reviewItems[i].type === statisticStatusConst.reviewType.history) {
-                    satisfiedFlows.done.push(flow)
-                    break;
-                } else {
-                    satisfiedFlows.doing.push(flow)
-                    break;
-                }
-            }
+        if (userDoneOverDue) {
+            satisfiedFlows.doing.push(flow)
         }
     }
     return satisfiedFlows;
@@ -98,7 +82,7 @@ const getTodaySelfJoinedFlowsStatisticCountOfReviewType = async (userId, reviewT
 }
 
 /**
- * 本人参与的：TODO、FORCAST、HISTORY 的流程详情（流程可重复）
+ * 本人参与的：TODO、FORCAST、HISTORY 的流程详情
  * @param userId
  * @param reviewType 审核的节点类型
  * @param importance 重要性条件null | {isImportant: true, forms: [], items: []}
@@ -108,68 +92,28 @@ const getTodaySelfJoinedFlowsStatisticOfReviewType = async (userId, reviewType, 
     const flowsOfRunningAndFinishedOfToday = await globalGetter.getTodayFlows()
     // 根据重要性和forms过滤流程
     const filteredFlows = await flowService.filterFlowsByImportance(flowsOfRunningAndFinishedOfToday, importance)
-    let satisfiedFlows = [];
-    let needFilterReviewItems = []
+
+    let needFilterReviewItems = null
     if (importance && importance.items) {
         needFilterReviewItems = importance.items
     }
 
+    let satisfiedFlows = [];
     for (const flow of filteredFlows) {
-        // 将该流程统计到审核节点的各个操作人
-        const reviewItems = flow.overallprocessflow
-        if (!reviewItems) {
-            continue
+
+        let flowIsSatisfied = false
+        if (reviewType === flowReviewTypeConst.HISTORY && flowUtil.isUserHasFinishedTodayFlow(userId, flow, needFilterReviewItems)) {
+            flowIsSatisfied = true
         }
-        let hasDoneReviewItemOfUser = false
-        let canStopFinding = false
-        for (let i = 0; i < reviewItems.length; i++) {
-            const reviewItem = reviewItems[i]
+        if (reviewType === flowReviewTypeConst.TODO && flowUtil.isUserDoingFlow(userId, flow, needFilterReviewItems)) {
+            flowIsSatisfied = true
+        }
+        if (reviewType === flowReviewTypeConst.FORCAST && flowUtil.isUserTodoFlow(userId, flow, needFilterReviewItems)) {
+            flowIsSatisfied = true
+        }
 
-            // 如果需要过滤指定的items，那么不符合直接跳过
-            if (needFilterReviewItems.length > 0) {
-                if (!needFilterReviewItems.includes(reviewItem.activityId)) {
-                    continue
-                }
-            }
-
-            let currentReviewItems = [reviewItem]
-            // 如果是多人协同的工作，需要到domainList中遍历
-            if (reviewItem.domainList && reviewItem.domainList.length > 0) {
-                currentReviewItems = reviewItem.domainList
-            }
-
-            for (const item of currentReviewItems) {
-                // 对于已完成的流程，需要整个流程中涉及本人的工作都已完成
-                if (reviewType === statisticStatusConst.reviewType.history) {
-                    if (item.operatorUserId === userId) {
-                        if (item.type === statisticStatusConst.reviewType.todo ||
-                            item.type === statisticStatusConst.reviewType.forecast) {
-                            canStopFinding = true
-                            break;
-                        } else {
-                            hasDoneReviewItemOfUser = true
-                        }
-                    }
-                    if (hasDoneReviewItemOfUser && i === reviewItems.length - 1) {
-                        satisfiedFlows.push(flow)
-                        canStopFinding = true
-                    }
-                } else {
-                    // todo类型和 forcast类型 存在一个即为有效，不用遍历全部
-                    // 非本人且类型不匹配的直接跳过
-                    // 操作人的id在主线上是operatorUserId，domainList中是operator
-                    const operatorId = item.operator || item.operatorUserId
-                    if (operatorId !== userId || item.type !== reviewType) {
-                        continue
-                    }
-                    satisfiedFlows.push(flow)
-                    canStopFinding = true
-                    break;
-                }
-            }
-            if (canStopFinding) {
-                break;
-            }
+        if (flowIsSatisfied) {
+            satisfiedFlows.push(flow)
         }
     }
     return satisfiedFlows
@@ -210,27 +154,13 @@ const getTodaySelfJoinedFlowsStatisticOfFlowStatus = async (userId, status, impo
     if (importance && importance.items) {
         needFilterReviewItems = importance.items
     }
-
     for (const flow of filteredFlows) {
-        // 将该流程统计到审核节点的各个操作人
-        const reviewItems = flow.overallprocessflow
-        if (!reviewItems) {
-            continue
+        if (flowUtil.isUserErrorFlow(userId, flow, needFilterReviewItems)) {
+            satisfiedFlows.push(flow)
         }
-        for (const reviewItem of reviewItems) {
-            if (reviewItem.operatorUserId === userId) {
-                // 如果需要过滤指定的items，那么不符合直接跳过
-                if (needFilterReviewItems.length > 0) {
-                    if (needFilterReviewItems.includes(reviewItem.activityId)) {
-                        satisfiedFlows.push(flow)
-                        break
-                    }
-                } else {
-                    satisfiedFlows.push(flow)
-                    break
-                }
-            }
 
+        if (flowUtil.isUserTerminatedFlow(userId, flow, needFilterReviewItems)) {
+            satisfiedFlows.push(flow)
         }
     }
     return satisfiedFlows
@@ -245,6 +175,48 @@ const getTodayDeptJoinedFlowsStatisticCountOfFlowStatus = async (deptId, status,
 const getTodayDeptJoinedFlowsStatisticCountOfReviewType = async (deptId, status, importance) => {
     const result = await flowService.getDeptStatistic(getTodaySelfJoinedFlowsStatisticCountOfReviewType,
         deptId, status, importance)
+
+    // 对于部门参与已完成的流程，需要流程中所有关于部门成员的节点都完成才行
+    if (status === flowReviewTypeConst.HISTORY) {
+        const todayFlows = await globalGetter.getTodayFlows()
+        const departmentsWithUsers = await globalGetter.getUsersOfDepartments()
+
+        const allUniqueIds = {}
+        for (const deptStatistic of result.departments) {
+            // 获取部门下的用户
+            let usersOfDept = []
+            for (const department of departmentsWithUsers) {
+                const deptDetails = await departmentService.getDepartmentByDeptName(deptStatistic.deptName, department)
+                if (deptDetails) {
+                    usersOfDept = deptDetails.dep_user
+                    break
+                }
+            }
+
+            const currDeptFinishedIds = []
+            for (const id of Object.keys(deptStatistic.ids)) {
+                const flows = todayFlows.filter(flow => flow.processInstanceId === id)
+                // 流程要部门下所有的人都完成
+                let allUsersFinished = true
+                for (const user of usersOfDept) {
+                    const userFinishedThisFlow = flowUtil.isUserHasFinishedTodayFlow(user.userid, flows[0])
+                    if (!userFinishedThisFlow) {
+                        allUsersFinished = false
+                        break
+                    }
+                }
+                if (allUsersFinished) {
+                    allUniqueIds[id] = 1
+                    currDeptFinishedIds.push(id)
+                }
+            }
+            deptStatistic.ids = currDeptFinishedIds
+            deptStatistic.sum = currDeptFinishedIds.length
+        }
+        result.ids = Object.keys(allUniqueIds)
+        result.sum = result.ids.length
+    }
+
     return result
 }
 
@@ -253,11 +225,10 @@ const getTodayDeptJoinedFlowsStatisticCountOfOverDue = async (deptId, importance
     return result;
 }
 
-const getDeptJoinedOverDueStatistic = async (deptId, status, importance) => {
+const getDeptJoinedOverDueStatistic = async (deptId, importance) => {
     const requiredDepartment = await departmentService.getDepartmentWithUsers(deptId);
     if (!requiredDepartment) {
-        console.error(`未找到部门：${deptId}的信息`)
-        return null
+        throw new NotFoundError(`未找到部门：${deptId}的信息`)
     }
 
     let convertedDoingResult = {sum: 0, ids: {}, departments: []}
@@ -275,16 +246,10 @@ const getDeptJoinedOverDueStatistic = async (deptId, status, importance) => {
     for (const user of users) {
         const result = await getTodaySelfJoinedFlowsStatisticCountOfOverDue(user.userid, importance)
         if (result.doing.sum > 0) {
-            convertedDoingResult = flowService.convertSelfStatisticToDept(result.doing, user.name,
-                requiredDepartment.parent_id == 1,
-                requiredDepartment.name, convertedDoingResult
-            )
+            convertedDoingResult = flowService.convertSelfStatisticToDept(result.doing, user.name, convertedDoingResult)
         }
         if (result.done.sum > 0) {
-            convertedDoneResult = flowService.convertSelfStatisticToDept(result.done, user.name,
-                requiredDepartment.parent_id == 1,
-                requiredDepartment.name, convertedDoneResult
-            )
+            convertedDoneResult = flowService.convertSelfStatisticToDept(result.done, user.name, convertedDoneResult)
         }
     }
 
@@ -298,8 +263,17 @@ const getDeptJoinedOverDueStatistic = async (deptId, status, importance) => {
         department.sum = Object.keys(department.ids).length
     }
 
+    const allUniqueIds = {}
+    for (const id of Object.keys(convertedDoneResult.ids)) {
+        allUniqueIds[id] = 1
+    }
+    for (const id of Object.keys(convertedDoingResult.ids)) {
+        allUniqueIds[id] = 1
+    }
+
     return {
-        sum: convertedDoingResult.sum + convertedDoneResult.sum,
+        sum: Object.keys(allUniqueIds).length,
+        ids: Object.keys(allUniqueIds),
         doing: convertedDoingResult,
         done: convertedDoneResult
     }

@@ -294,23 +294,15 @@ const convertJonsToArr = async (departments) => {
  * 将本人统计的数据格式转成按部门统计的格式
  * @param statistic
  * @param userName
- * @param isFirstLevelDept
- * @param departmentName
  * @param resultTemplate
  * @returns {*}
  */
-const convertSelfStatisticToDept = (statistic, userName, isFirstLevelDept, departmentName, resultTemplate) => {
+const convertSelfStatisticToDept = (statistic, userName, resultTemplate) => {
     if (statistic.sum == 0) {
         return resultTemplate
     }
 
     for (const notComputedDept of statistic.departments) {
-
-        // 按子部门筛选，需要精确匹配
-        if (!isFirstLevelDept && notComputedDept.deptName !== departmentName) {
-            continue
-        }
-
         // 保存所有用户（不分部门）都不重复的id
         for (const id of notComputedDept.ids) {
             resultTemplate.ids[id] = 1
@@ -388,9 +380,7 @@ const getDeptStatistic = async (funOfTodaySelfStatistic, deptId, status, importa
         const sumByOriginatorDepartment = await funOfTodaySelfStatistic(user.userid, status, importance)
 
         // 在部门分组统计的数据中，进一步汇总到参与的个人
-        resultTemplate = convertSelfStatisticToDept(sumByOriginatorDepartment, user.name,
-            requiredDepartment.parent_id == 1,
-            requiredDepartment.name, resultTemplate)
+        resultTemplate = convertSelfStatisticToDept(sumByOriginatorDepartment, user.name, resultTemplate)
     }
 
     // 根据departments 下的ids和resultTemplate的ids 分别算出对应的sum

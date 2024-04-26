@@ -152,11 +152,150 @@ const getFormEmergencyItems = async (formId) => {
     return []
 }
 
+/**
+ * 根据id从nodes 中获取节点信息
+ * @param id
+ * @param nodes
+ * @returns {null|*}
+ */
+const getNode = (id, nodes) => {
+    for (const node of nodes) {
+        if (node.id === id) {
+            return node
+        }
+        if (node.children && node.children.length > 0) {
+            return getNode(id, node.children)
+        }
+    }
+    return null
+}
+
+/**
+ * 获取节点的所有叶子信息
+ * @param node
+ * @returns {{children}|*}
+ */
+const getLeaf = (node) => {
+    let allLeaf = []
+    if (!node.children) {
+        allLeaf.push(node.id)
+    } else {
+        // 遍历节点中的每一项，后面覆盖前面的节点信息
+        let currentNodeLastLeaf = null
+
+        for (let i = 0; i < node.children.length; i++) {
+            const childNode = node.children[i]
+            if (!childNode.children) {
+                // 条件的最终选项，循环覆盖找到最后一条
+                currentNodeLastLeaf = childNode.id
+            } else {
+                // 条件分支节点：对于各个条件中的的最终节点做合并
+                if (childNode.componentName === "ConditionNode" || childNode.componentName === "ParallelNode") {
+                    allLeaf = allLeaf.concat(getLeaf(childNode))
+                }
+            }
+        }
+        if (currentNodeLastLeaf) {
+            allLeaf = allLeaf.concat(currentNodeLastLeaf)
+        }
+    }
+    return allLeaf
+}
+
+function extractTitle(node) {
+    if (["ApplyNode", "EndNode"].includes(node.componentName)) {
+        return node.props?.name?.zh_CN || node.props?.name || "";
+    }
+
+    if (!node.props || !node.props.name) {
+        return node.title || "";
+    }
+
+    if (node.props.name && typeof node.props.name === "object") {
+        return node.props.name.zh_CN || node.props.name.en_US || "";
+    }
+
+    if (node.props.conditions) {
+        if (node.props.conditions.description) {
+            return `${node.props.name} (${node.props.conditions.description})`;
+        }
+        return node.props.name;
+    }
+
+    return node.props.name || "";
+}
+
+
+const refactorReviewItems = (nodes, lastTimingNode) => {
+    // 节点释义
+    // const componentNames = [
+    //     "CanvasEngine", // 根节点
+    //     "ApplyNode", // 发起节点
+    //     "OperatorNode", // 操作节点
+    //     "ApprovalNode", // 审批节点
+    //     "ConditionContainer", // 条件分支 type =="parallel"（并发） 没有type 是普通（非并发）
+    //     "ParallelNode", // 并发分支节点
+    //     "ConditionNode", // 标准分支节点（非并发）
+    //     "CarbonNode", // 额外节点示例
+    //     "EndNode" // 结束节点
+    // ];
+
+    const requiredTimingComponentNames = ["CarbonNode", "ApplyNode", "OperatorNode", "ApprovalNode"];
+    const processedNodes = []
+    for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i]
+        let newNode = {
+            id: node.id,
+            title: extractTitle(node),
+            description: node.props.conditions?.description || "",
+            children: [],
+            componentName: node.componentName
+        }
+
+        // 获取当前节点的直接上一次的计时节点
+        let lastTimingNodes = []
+        if (i > 0) {
+            if (requiredTimingComponentNames.includes(nodes[i - 1].componentName)) {
+                lastTimingNode = nodes[i - 1]
+            }
+            if (lastTimingNode) {
+                if (nodes[i - 1].id !== lastTimingNode.id) {
+                    lastTimingNodes = lastTimingNodes.concat(getLeaf(nodes[i - 1]))
+                } else {
+                    lastTimingNodes.push(lastTimingNode.id)
+                }
+            }
+            newNode = {...newNode, lastNode: nodes[i - 1].id}
+        } else {
+            lastTimingNode && lastTimingNodes.push(lastTimingNode.id)
+        }
+        if (requiredTimingComponentNames.includes(node.componentName)) {
+            newNode = {...newNode, lastTimingNodes}
+        }
+
+        if (requiredTimingComponentNames.includes(node.componentName)) {
+            newNode = {
+                ...newNode,
+                isTime: true,
+                time: 0
+            }
+        }
+
+        if (node.children && node.children.length > 0) {
+            newNode.children = refactorReviewItems(node.children, lastTimingNode);
+        }
+
+        processedNodes.push(newNode);
+    }
+    return processedNodes;
+}
+
 module.exports = {
     getAllForms,
     getFormsByImportance,
     getFormsWithReviewItemsByImportance,
     syncFormsFromDingDing,
     getFlowFormsByDeptIdAndImportant,
-    getFormEmergencyItems
+    getFormEmergencyItems,
+    refactorReviewItems
 }

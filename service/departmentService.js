@@ -138,35 +138,6 @@ const mergeDataByDeptId = (data) => {
     }, []);
 };
 
-
-// 获取部门人员信息
-// const getDeptUserLists = async (access_token, dept_id) => {
-//     const user_info = [];
-//     const cursor = 0;
-//     const size = 100;
-//
-//     const dep_userList = await redisService.getUsersWithJoinLaunchDataUnderDepartment();
-//     const diguiDep = async (depList, dept_id) => {
-//         const inf = depList.filter((item) => item.dept_id == dept_id);
-//         if (inf.length > 0) {
-//             for (const userItem of inf[0].dep_user) {
-//                 user_info.push({
-//                     name: userItem?.name,
-//                     userid: userItem?.userid,
-//                 });
-//             }
-//         }
-//         for (const item of depList) {
-//             if (item.dep_chil && item.dep_chil.length > 0) {
-//                 diguiDep(item.dep_chil, dept_id);
-//             }
-//         }
-//     };
-//     await diguiDep(dep_userList, dept_id);
-//     return user_info;
-// };
-
-
 /**
  * 获取用户所在的部门-项目组-是否leader 信息
  * @param userId
@@ -212,6 +183,26 @@ const findMatchedDepartmentFromRoot = (deptId, department) => {
         return null
     }
 }
+
+const getDepartmentByDeptName = (deptName, department) => {
+    const {name, dep_chil} = department
+    if (!name) {
+        return null
+    }
+    if (name === deptName) {
+        return department
+    }
+    if (dep_chil && dep_chil.length > 0) {
+        for (const subDep of dep_chil) {
+            const deptDetails = getDepartmentByDeptName(deptName, subDep)
+            if (deptDetails) {
+                return deptDetails
+            }
+        }
+        return null
+    }
+}
+
 
 /**
  * 从节点和其子节点中根据部门分类获取用户数据
@@ -304,6 +295,7 @@ module.exports = {
     getDepartmentOfUser,
     getUsersOfDepartment,
     findMatchedDepartmentFromRoot,
+    getDepartmentByDeptName,
     simplifiedUsersOfDepartment,
     getDepartmentWithUsers,
     hasMatchedDeptName

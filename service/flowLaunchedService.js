@@ -154,16 +154,10 @@ const getTodayDeptLaunchedFlowsStatisticCountOfOverDue = async (deptId, importan
     for (const user of users) {
         const result = await getTodaySelfLaunchedFlowsStatisticCountOfOverDue(user.userid, importance)
         if (result.doing.sum > 0) {
-            convertedDoingResult = flowService.convertSelfStatisticToDept(result.doing, user.name,
-                requiredDepartment.parent_id == 1,
-                requiredDepartment.name, convertedDoingResult
-            )
+            convertedDoingResult = flowService.convertSelfStatisticToDept(result.doing, user.name, convertedDoingResult)
         }
         if (result.done.sum > 0) {
-            convertedDoneResult = flowService.convertSelfStatisticToDept(result.done, user.name,
-                requiredDepartment.parent_id == 1,
-                requiredDepartment.name, convertedDoneResult
-            )
+            convertedDoneResult = flowService.convertSelfStatisticToDept(result.done, user.name, convertedDoneResult)
         }
     }
 

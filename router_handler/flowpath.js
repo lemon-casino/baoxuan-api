@@ -15,6 +15,7 @@ const userService = require("../service/userService")
 const flowService = require("../service/flowService")
 const globalGetter = require("../global/getter")
 const statisticStatusConst = require("../const/statisticStatusConst")
+const flowFormService = require("../service/flowFormService")
 
 // 数组对象去重
 const uniqueByProperty = (array, propertyName) =>
@@ -1888,87 +1889,16 @@ const handlesh = (q_jsonData, h_jsonData) => {
     });
     return res;
 };
+
 // 格式化审核数据数据结构
 const formatData = (originForms) => {
-    const componentNames = [
-        "CanvasEngine", // 根节点
-        "ApplyNode", // 发起节点
-        "OperatorNode", // 操作节点
-        "ApprovalNode", // 审批节点
-        "ConditionContainer", // 条件分支 type =="parallel"（并发） 没有type 是普通（非并发）
-        "ParallelNode", // 并发分支节点
-        "ConditionNode", // 标准分支节点（非并发）
-        "CarbonNode", // 额外节点示例
-        "EndNode" // 结束节点
-    ];
 
-    const requiredComputeTimeNode = ["OperatorNode", "ApprovalNode"];
-
-    // Recursive function to process each node
-    function loopNodes(nodes) {
-        const processedNodes = [];
-        for (const node of nodes) {
-            if (!componentNames.includes(node.componentName)) {
-                console.log(`Missing componentName: ${node.componentName}`);
-                continue;
-            }
-
-            const newNode = {
-                id: node.id,
-                title: extractTitle(node),
-                description: node.props.conditions?.description || "",
-                children: [],
-                componentName: node.componentName,
-                isTime: requiredComputeTimeNode.includes(node.componentName),
-                time: 0 // Initialize time to 0, adjust if necessary
-            };
-
-            // Process children nodes if any
-            if (node.children && node.children.length > 0) {
-                newNode.children = loopNodes(node.children);
-            }
-
-            processedNodes.push(newNode);
-        }
-        return processedNodes;
-    }
-
-    // Function to extract the title based on the node type
-    function extractTitle(node) {
-        if (["ApplyNode", "EndNode"].includes(node.componentName)) {
-            return node.props?.name?.zh_CN || node.props?.name || "";
-        }
-
-        if (!node.props || !node.props.name) {
-            return node.title || "";
-        }
-
-        if (node.props.name && typeof node.props.name === "object") {
-            return node.props.name.zh_CN || node.props.name.en_US || "";
-        }
-
-        if (node.props.conditions) {
-            if (node.props.conditions.description) {
-                return `${node.props.name} (${node.props.conditions.description})`;
-            }
-            return node.props.name;
-        }
-
-        return node.props.name || "";
-    }
-
-    // Filter forms and process each eligible form's data .filter(form => form.form_id === "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3")
     const result = originForms.map(form => {
         let reviewProcess = [];
-        try {
-            const liuData = JSON.parse(form.liu_data);
-            if (liuData && liuData.schema && liuData.schema.children) {
-                reviewProcess = loopNodes(liuData.schema.children);
-            }
-        } catch (error) {
-            console.error("Error parsing liu_data: ", error);
+        const liuData = JSON.parse(form.liu_data);
+        if (liuData && liuData.schema && liuData.schema.children) {
+            reviewProcess = flowFormService.refactorReviewItems(liuData.schema.children)
         }
-
         return {
             formId: form.form_id,
             c_id: form.c_id,
@@ -1979,13 +1909,6 @@ const formatData = (originForms) => {
 
     return result;
 };
-
-
-
-
-
-
-
 
 
 // 将抓取到的审核流模版处理成excel
@@ -3020,16 +2943,16 @@ exports.getOaAllProcess = async (req, res) => {
     wb.write("OA审批流模版1.xlsx");
     return res.send(biResponse.success([]));
 };
-const datasss = require("./data.json");
+// const datasss = require("./data.json");
 // http://127.0.0.1:9999/user/flowpath/getprocessAuditing
 // 获取所有流程设计模版数据
 exports.getprocessAuditing = async (req, res) => {
-    // const { data } = req.body;
-    const data = formatData(JSON.parse(JSON.stringify(datasss)));
+    let {data} = req.body;
+    data = formatData(JSON.parse(JSON.stringify(data)));
     await FlowFormReviewModel.addFlowFormReview(data);
 
     return res.send(biResponse.success());
-};
+}
 
 // 格式化实例状态
 const formatInstanceStatus = (instanceStatus) => {

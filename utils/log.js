@@ -35,6 +35,21 @@ const logger = createLogger({
             ...commonOptions,
         }),
         new DailyRotateFile({
+            level: "warm",
+            filename: path.join(`${logDirectory}/%DATE%`, `warm.log`),
+            format: format.combine(
+                format.timestamp({
+                    format: "YYYY-MM-DD HH:mm:ss.SSS",
+                }),
+                format.splat(),
+                format.json(),
+                format.printf((log) =>
+                    log.level === "warm" ?  JSON.stringify(log) : ""
+                )
+            ),
+            ...commonOptions,
+        }),
+        new DailyRotateFile({
             level: "error",
             filename: path.join(`${logDirectory}/%DATE%`, `error.log`),
             format: format.combine(
