@@ -148,213 +148,195 @@ const getResource = async (role_id) => {
 
 // 获取用户基本信息的处理函数
 exports.getUserinfo = async (req, res) => {
-    console.log("-- getUserInfo ---")
-    if (!(await redisUtil.getKey(redisKeys.DDToken))) {
-        console.log('我获取完token啦=========>')
-        await dd_data.getDingDingToken();
-    }
-    if (!(await redisUtil.getKey(redisKeys.Department))) {
-        console.log('我获取完dep_List啦=========>')
-        await dd_data.getDepartmentFromDingDing();
-    }
-    if (!(await redisUtil.getKey(redisKeys.AllUsersDetailWithJoinLaunchData))) {
-        console.log('我获取完userAllDetail啦=========>')
-        await dd_data.getUsersDetailFromDingDing();
-    }
-    if (!(await redisUtil.getKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment))) {
-        console.log('我获取完dep_userList啦=========>')
-        await dd_data.getUsersFromDingDing();
-    } else {
 
-        // 因为加入了expressJWT中间件解析token的原因，所以在请求头传递了token通过req.user.id就可访问到登录用户的id
-        const user_id = req.user.id;
-        // 查找已登录的用户详细信息
-        const user_roles = await UsersModel.findOne({
-            attributes: {exclude: ["password"]},
-            include: [
-                {model: RolesModel, attributes: ["role_id", "role_name", "status"]},
-            ],
-            where: {
-                user_id: user_id,
-            },
-        });
-        // TODO: 从redis取出corpTokenToken
-        // 钉钉用户id
-        const userid = user_roles.dingding_user_id;
-        // 返回个人信息
-        const getddUserLists = async (corpTokenToken, userid) => {
-            // 获取用户跟人信息
-            const userInfo = await dd.getUserInfoByUserIdAndToken(corpTokenToken, userid);
-            if (userInfo.errmsg === "ok") {
-                // name: 员工姓名
-                // avatar: 员工头像
-                // mobile: 员工手机号
-                // email: 员工邮箱
-                // dept_id_list: 员工所属部门id列表
-                // hired_date: 员工入职时间
-                // leader_in_dept 员工在对应的部门中是否是主管，返回true或false
-                const {
-                    name,
-                    avatar,
-                    mobile,
-                    email,
-                    dept_id_list,
-                    hired_date,
-                    leader_in_dept,
-                } = userInfo.result;
-                // 格式化部门详情数据
-                let dep_promises_info = leader_in_dept.map(async (item) => {
-                    // 获取部门详情
-                    const {result} = await dd.getDpInfo(corpTokenToken, item.dept_id);
-                    return {
-                        ...item,
-                        name: result.name,
-                        parent_id: result.parent_id,
-                    };
-                });
-                const lev_dep_list = (await Promise.all(dep_promises_info)).filter(
-                    (item) => item.parent_id === 1
-                );
+    // 因为加入了expressJWT中间件解析token的原因，所以在请求头传递了token通过req.user.id就可访问到登录用户的id
+    const user_id = req.user.id;
+    // 查找已登录的用户详细信息
+    const user_roles = await UsersModel.findOne({
+        attributes: {exclude: ["password"]},
+        include: [
+            {model: RolesModel, attributes: ["role_id", "role_name", "status"]},
+        ],
+        where: {
+            user_id: user_id,
+        },
+    });
+    // TODO: 从redis取出corpTokenToken
+    // 钉钉用户id
+    const userid = user_roles.dingding_user_id;
+    // 返回个人信息
+    const getddUserLists = async (corpTokenToken, userid) => {
+        // 获取用户跟人信息
+        const userInfo = await dd.getUserInfoByUserIdAndToken(corpTokenToken, userid);
+        if (userInfo.errmsg === "ok") {
+            // name: 员工姓名
+            // avatar: 员工头像
+            // mobile: 员工手机号
+            // email: 员工邮箱
+            // dept_id_list: 员工所属部门id列表
+            // hired_date: 员工入职时间
+            // leader_in_dept 员工在对应的部门中是否是主管，返回true或false
+            const {
+                name,
+                avatar,
+                mobile,
+                email,
+                dept_id_list,
+                hired_date,
+                leader_in_dept,
+            } = userInfo.result;
+            // 格式化部门详情数据
+            let dep_promises_info = leader_in_dept.map(async (item) => {
+                // 获取部门详情
+                const {result} = await dd.getDpInfo(corpTokenToken, item.dept_id);
                 return {
-                    name,
-                    avatar,
-                    mobile,
-                    email,
-                    dept_id_list,
-                    hired_date,
-                    lev_dep_list,
+                    ...item,
+                    name: result.name,
+                    parent_id: result.parent_id,
                 };
-            } else {
-                return res.send(biResponse.serverError(userInfo.errmsg));
-            }
-        };
-        const CorpToken = await getToken();
-        console.log("当前token=========>", CorpToken.access_token);
-
-        let userInfos = [];
-        // 根据userid判断是否存在于白名单中
-        if (whiteList.pepArr().includes(userid)) {
-            userInfos = dep_list;
+            });
+            const lev_dep_list = (await Promise.all(dep_promises_info)).filter(
+                (item) => item.parent_id === 1
+            );
+            return {
+                name,
+                avatar,
+                mobile,
+                email,
+                dept_id_list,
+                hired_date,
+                lev_dep_list,
+            };
         } else {
-            // 返回所在一级部门部门信息
-            userInfos = (await getddUserLists(CorpToken.access_token, userid))
-                .lev_dep_list;
-            console.log("当前用户所在部门=========>", userInfos);
+            return res.send(biResponse.serverError(userInfo.errmsg));
         }
+    };
+    const CorpToken = await getToken();
+    console.log("当前token=========>", CorpToken.access_token);
 
-        let departmentsOfUser = await departmentService.getDepartmentOfUser(userid)
-        // [{dept_id:12121, leader: true, dep_detail: {}}]
-        // todo: 临时处理
-        if (whiteList.pepArr().includes(userid)) {
-            let departments = await globalGetter.getDepartments()
-            if (departments && departments.length > 0) {
-                // 顾虑掉外部的部门
-                const outDepartments = ["114410517"]
-                departments = departments.filter((depart) => !outDepartments.includes(depart.dept_id.toString()))
-                departmentsOfUser = departments.map((depart) => {
-                    return {
-                        dept_id: depart.dept_id,
-                        leader: true,
-                        dep_detail: {
-                            name: depart.name
-                        }
-                    }
-                })
-            }
-        }
-
-        //根据deptId进行升序排序，可避免子部门出现在一级部门前面，而出现汇总问题
-        departmentsOfUser.sort((cur, next) => cur.dept_id - next.dept_id)
-
-        const departmentsTemplate = []
-        for (const dept of departmentsOfUser) {
-            // 找到该节点的详情
-            let curDeptDetails = null;
-            for (const department of departments) {
-                curDeptDetails = departmentService.findMatchedDepartmentFromRoot(dept.dept_id, department);
-                if (curDeptDetails) {
-                    break;
-                }
-            }
-
-            const departmentTemplate = {}
-            departmentTemplate.dept_id = dept.dept_id
-            departmentTemplate.name = dept.dep_detail.name
-            departmentTemplate.leader = dept.leader
-            departmentTemplate.parent_id = curDeptDetails.parent_id
-
-            if (dept.leader) {
-                const dep_chils = curDeptDetails.dep_chil
-                let subDepts = []
-                if (dep_chils) {
-                    for (const depChil of dep_chils) {
-                        const tmpDept = {}
-                        tmpDept.leader = true
-                        tmpDept.dept_id = depChil.dept_id
-                        tmpDept.name = depChil.name
-                        tmpDept.parent_id = dept.dept_id
-                        subDepts.push(tmpDept)
-                    }
-                    departmentTemplate.subDepts = subDepts
-                }
-            }
-
-            // 添加或者合并信息
-            if (departmentsTemplate.length == 0) {
-                departmentsTemplate.push(departmentTemplate)
-                continue;
-            }
-            for (let i = 0; i < departmentsTemplate.length; i++) {
-                if (curDeptDetails.parent_id === departmentsTemplate[i].dept_id) {
-                    if (!departmentsTemplate[i].subDepts) {
-                        departmentsTemplate[i].subDepts = []
-                    }
-                    departmentsTemplate[i].subDepts.push(departmentTemplate)
-                    break;
-                }
-                if (i === departmentsTemplate.length - 1) {
-                    departmentsTemplate.push(departmentTemplate)
-                    break;
-                }
-            }
-        }
-
-        // 若无用户信息提示错误
-        if (!user_roles) {
-            return res.send(biResponse.serverError("帐号未分配角色"));
-        }
-        let role_ids = [];
-        let role_names = [];
-        let buttons = [];
-        // 获取该用户所拥有的角色
-        user_roles.roles.forEach(function (item) {
-            if (item.status) {
-                role_ids.push(item.role_id);
-                role_names.push(item.role_name);
-            }
-        });
-        // 根据角色id数组获取权限
-        const resource = await getResource(role_ids);
-        // 将btns合并buttons数组
-        resource.buttons.forEach((button) => {
-            buttons = buttons.concat(button.btns);
-        });
-        // 根据菜单id数组获取菜单详细信息
-        const menus = await MenusModel.getListTree({menu_id: resource.menu_ids});
-        return res.send(biResponse.success({
-                roles: role_names,
-                user_id: user_id,
-                name: user_roles.username,
-                nickname: user_roles.nickname,
-                email: user_roles.email,
-                avatar: user_roles.user_pic,
-                menus: menus,
-                buttons: buttons,
-                dep_list: departmentsTemplate,
-                admin: whiteList.pepArr().includes(userid)
-            }
-        ));
+    let userInfos = [];
+    // 根据userid判断是否存在于白名单中
+    if (whiteList.pepArr().includes(userid)) {
+        userInfos = dep_list;
+    } else {
+        // 返回所在一级部门部门信息
+        userInfos = (await getddUserLists(CorpToken.access_token, userid))
+            .lev_dep_list;
+        console.log("当前用户所在部门=========>", userInfos);
     }
+
+    let departmentsOfUser = await departmentService.getDepartmentOfUser(userid)
+    // [{dept_id:12121, leader: true, dep_detail: {}}]
+    // todo: 临时处理
+    if (whiteList.pepArr().includes(userid)) {
+        let departments = await globalGetter.getDepartments()
+        if (departments && departments.length > 0) {
+            // 顾虑掉外部的部门
+            const outDepartments = ["114410517"]
+            departments = departments.filter((depart) => !outDepartments.includes(depart.dept_id.toString()))
+            departmentsOfUser = departments.map((depart) => {
+                return {
+                    dept_id: depart.dept_id,
+                    leader: true,
+                    dep_detail: {
+                        name: depart.name
+                    }
+                }
+            })
+        }
+    }
+
+    //根据deptId进行升序排序，可避免子部门出现在一级部门前面，而出现汇总问题
+    departmentsOfUser.sort((cur, next) => cur.dept_id - next.dept_id)
+
+    const departmentsTemplate = []
+    for (const dept of departmentsOfUser) {
+        // 找到该节点的详情
+        let curDeptDetails = null;
+        for (const department of departments) {
+            curDeptDetails = departmentService.findMatchedDepartmentFromRoot(dept.dept_id, department);
+            if (curDeptDetails) {
+                break;
+            }
+        }
+
+        const departmentTemplate = {}
+        departmentTemplate.dept_id = dept.dept_id
+        departmentTemplate.name = dept.dep_detail.name
+        departmentTemplate.leader = dept.leader
+        departmentTemplate.parent_id = curDeptDetails.parent_id
+
+        if (dept.leader) {
+            const dep_chils = curDeptDetails.dep_chil
+            let subDepts = []
+            if (dep_chils) {
+                for (const depChil of dep_chils) {
+                    const tmpDept = {}
+                    tmpDept.leader = true
+                    tmpDept.dept_id = depChil.dept_id
+                    tmpDept.name = depChil.name
+                    tmpDept.parent_id = dept.dept_id
+                    subDepts.push(tmpDept)
+                }
+                departmentTemplate.subDepts = subDepts
+            }
+        }
+
+        // 添加或者合并信息
+        if (departmentsTemplate.length == 0) {
+            departmentsTemplate.push(departmentTemplate)
+            continue;
+        }
+        for (let i = 0; i < departmentsTemplate.length; i++) {
+            if (curDeptDetails.parent_id === departmentsTemplate[i].dept_id) {
+                if (!departmentsTemplate[i].subDepts) {
+                    departmentsTemplate[i].subDepts = []
+                }
+                departmentsTemplate[i].subDepts.push(departmentTemplate)
+                break;
+            }
+            if (i === departmentsTemplate.length - 1) {
+                departmentsTemplate.push(departmentTemplate)
+                break;
+            }
+        }
+    }
+
+    // 若无用户信息提示错误
+    if (!user_roles) {
+        return res.send(biResponse.serverError("帐号未分配角色"));
+    }
+    let role_ids = [];
+    let role_names = [];
+    let buttons = [];
+    // 获取该用户所拥有的角色
+    user_roles.roles.forEach(function (item) {
+        if (item.status) {
+            role_ids.push(item.role_id);
+            role_names.push(item.role_name);
+        }
+    });
+    // 根据角色id数组获取权限
+    const resource = await getResource(role_ids);
+    // 将btns合并buttons数组
+    resource.buttons.forEach((button) => {
+        buttons = buttons.concat(button.btns);
+    });
+    // 根据菜单id数组获取菜单详细信息
+    const menus = await MenusModel.getListTree({menu_id: resource.menu_ids});
+    return res.send(biResponse.success({
+            roles: role_names,
+            user_id: user_id,
+            name: user_roles.username,
+            nickname: user_roles.nickname,
+            email: user_roles.email,
+            avatar: user_roles.user_pic,
+            menus: menus,
+            buttons: buttons,
+            dep_list: departmentsTemplate,
+            admin: whiteList.pepArr().includes(userid)
+        }
+    ))
 };
 // 更新用户基本信息的处理函数
 exports.updateUserInfo = (req, res, next) => {
