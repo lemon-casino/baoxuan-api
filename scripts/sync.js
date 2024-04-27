@@ -54,10 +54,6 @@ const extractProcessReviewToAloneTale = async () => {
 const initRedis = async () => {
     await dingDingData.getDingDingToken();
     await dingDingData.getDepartmentFromDingDing();
-    await dingDingData.getAllFinishedFlowsBeforeToday();
-    await dingDingData.getAllNotFinishedFlowsBeforeToday();
-    await dingDingData.combineAllFlows();
-    await dingDingData.getAllFlowsOfToday();
 }
 
 const getTodayRunningAndFinishedFlows = async () => {

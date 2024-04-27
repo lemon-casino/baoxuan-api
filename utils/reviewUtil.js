@@ -42,7 +42,6 @@ const addCostToReviewOfFlow = async (flow, reviewRequirements) => {
     let lastStep = null;
     // 遍历每个审核节点
     for (const reviewItem of flowReviewDetails) {
-        // todo: 全部状态信息不明确，明确后可以设置上所有可以停止的状态，下个判断可以取消
         // 遍历到进行中状态的节点停止：非完成状态
         if ((reviewItem.type === reviewStatus.doing || reviewItem.type === reviewStatus.todo) && lastStep) {
             break;
