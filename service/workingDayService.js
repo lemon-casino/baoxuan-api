@@ -33,7 +33,8 @@ const getWorkingDayByRange = async (startDate, endDate) => {
  * @returns {Promise<boolean>}
  */
 const isWorkingDayOf = async (date) => {
-    return await workingDayRepo.isWorkingDayOf(date)
+    const result = await workingDayRepo.isWorkingDayOf(date)
+    return result
 }
 
 /**
@@ -43,10 +44,10 @@ const isWorkingDayOf = async (date) => {
  * @returns {Promise<number>}
  */
 const computeValidWorkingDurationOfExecutionFlow = async (startDateTime, endDateTime) => {
-    if (!startDateTime || !endDateTime){
+    if (!startDateTime || !endDateTime) {
         return 0
     }
-    if (!dateFormatReg.test(startDateTime) || !dateFormatReg.test(endDateTime)){
+    if (!dateFormatReg.test(startDateTime) || !dateFormatReg.test(endDateTime)) {
         return 0
     }
 
@@ -92,10 +93,10 @@ const computeValidWorkingDurationOfExecutionFlow = async (startDateTime, endDate
  * @returns {Promise<number>}
  */
 const computeValidWorkingDuration = async (startDateTime, endDateTime) => {
-    if (!startDateTime || !endDateTime){
+    if (!startDateTime || !endDateTime) {
         return 0
     }
-    if (!dateFormatReg.test(startDateTime) || !dateFormatReg.test(endDateTime)){
+    if (!dateFormatReg.test(startDateTime) || !dateFormatReg.test(endDateTime)) {
         return 0
     }
     // 算法：1、从startDateTime开始，结合节假日和9点上班的条件，重新确定新的startDateTime
@@ -110,24 +111,35 @@ const computeValidWorkingDuration = async (startDateTime, endDateTime) => {
     let sumDuration = 0
     while (startDateTime < endDateTime) {
         const currDate = dateUtil.format2Str(startDateTime, "YYYY-MM-DD")
-        let curr9AmDate = dateUtil.format2Str(currDate, "YYYY-MM-DD 09:00:00")
+        const curr9AmDate = dateUtil.format2Str(currDate, "YYYY-MM-DD 09:00:00")
+        const current18PmDate = dateUtil.format2Str(currDate, "YYYY-MM-DD 18:00:00")
         let currEndDateTime = endDateTime
 
         const isWorkingDay = await isWorkingDayOf(currDate)
         if (isWorkingDay) {
-            // 确定是否已经上班时间
-            const currentStartDuration = dateUtil.duration(curr9AmDate, startDateTime)
-            if (currentStartDuration > 0) {
+            // 确定是否已经上班时间: startDateTime  9am
+            // -- 9点前开始
+            const currentStart9AmDuration = dateUtil.duration(curr9AmDate, startDateTime)
+            if (currentStart9AmDuration > 0) {
                 startDateTime = curr9AmDate
             }
-            // 确定这一天的结束时间(以18点为计算的最终截止时间)
-            const current18PmDate = dateUtil.format2Str(currDate, "YYYY-MM-DD 18:00:00")
-            const currentEndDuration = dateUtil.duration(endDateTime, current18PmDate)
-            if (currentEndDuration > 0) {
-                currEndDateTime = current18PmDate
+            // 18点后开始
+            const currentStart18PmDuration = dateUtil.duration(current18PmDate, startDateTime)
+            if (currentStart18PmDuration > 0) {
+                // 确定这一天的结束时间(以18点为计算的最终截止时间:9am 18pm enDate)
+                const currentEnd9AmDuration = dateUtil.duration(endDateTime, curr9AmDate)
+                if (currentEnd9AmDuration <= 0) {
+                    currEndDateTime = curr9AmDate
+                } else {
+                    const currentEnd18PmDuration = dateUtil.duration(endDateTime, current18PmDate)
+                    if (currentEnd18PmDuration > 0) {
+                        currEndDateTime = current18PmDate
+                    }
+                }
+                const currentCost = dateUtil.duration(currEndDateTime, startDateTime)
+                sumDuration = new BigNumber(sumDuration).plus(currentCost).toFixed(2)
             }
-            const currentCost = dateUtil.duration(currEndDateTime, startDateTime)
-            sumDuration = new BigNumber(sumDuration).plus(currentCost).toFixed(2)
+
             // 更新开始时间为下一天的9点
             startDateTime = dateUtil.add(curr9AmDate, 1).format("YYYY-MM-DD HH:mm:ss")
         } else {

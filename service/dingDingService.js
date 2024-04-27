@@ -12,6 +12,7 @@ const {logger} = require("../utils/log")
 const dateUtil = require("../utils/dateUtil")
 const redisService = require("./redisService")
 const flowStatusConst = require("../const/flowStatusConst")
+const flowReviewTypeConst = require("../const/flowReviewTypeConst")
 const ForbiddenError = require("../error/http/forbiddenError")
 const globalGetter = require("../global/getter")
 const workingDayService = require("../service/workingDayService")
@@ -277,39 +278,57 @@ const getFinishedFlows = async (timeRange) => {
  */
 const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
 
-    const attachItemCost = async (formUuid, reviewItem, reviewItems) => {
-        const {operateTimeGMT, activeTimeGMT, activityId} = reviewItem
-
-        if (!operateTimeGMT && !activeTimeGMT) {
-            return reviewItem
+    const getLatestFormReview = async (formId) => {
+        const flowFormReviews = await formReviewRepo.getFormReviewByFormId(formId)
+        if (flowFormReviews.length === 0) {
+            logger.warn(`数据库中还没有表单${formId}的表单设计信息`)
+            return null
         }
+        return flowFormReviews[0]
+    }
 
-        let costAlready = 0
-        // 根据当前节点id查找上一个操作节点
-        const flowFormReviews = await formReviewRepo.getFormReviewByFormId(formUuid)
-        // 找到该节点所对应的lastTimingNodes
-        const formReviews = flowFormReviews[0].formReview
+    const getReviewItemConfig = (id, dbReviewItems) => {
+        for (const item of dbReviewItems) {
+            if (item.id === id) {
+                return item
+            }
+            if (item.children && item.children.length > 0) {
+                const tmpNode = getReviewItemConfig(id, item.children)
+                if (tmpNode) {
+                    return tmpNode
+                }
+            }
+        }
+        return null
+    }
 
-        const itemConfig = getNode(activityId, formReviews)
+    const fillReviewItemCost = async (reviewItem, reviewItems, reviewItemsConfig, formUuid) => {
+        const {activityId} = reviewItem
+        // 2. 获取其中的节点限时配置信息
+        const itemConfig = getReviewItemConfig(activityId, reviewItemsConfig)
         if (!itemConfig) {
-            logger.warn(`节点${activityId}未在数据库中找到审核节点`)
-            return reviewItem
-        }
-        if (!itemConfig.lastTimingNodes) {
-            logger.warn(`节点 ${activityId}的lastTimingNodes 未找到`)
+            logger.warn(`未在数据库中找到节点${activityId}的限时配置信息`)
             return reviewItem
         }
         if (!itemConfig.time || itemConfig.time === 0) {
             logger.warn(`节点 ${activityId}:${itemConfig.title} 没有配置时限`)
         }
+        if (!itemConfig.lastTimingNodes) {
+            logger.warn(`节点 ${activityId}的 lastTimingNodes 信息在数据库的配置中未找到`)
+            return reviewItem
+        }
 
+        // 3. 获取流程节点中的 lastTimingNodes
+        const lastTimingNodes = itemConfig.lastTimingNodes
         // 宜搭流程首节点统一都把发起叫做申请，activityId=sid-restartevent
         // 如果node.lastTimingNodes中的节点包含了发起(第一个节点)，把sid-restartevent放进去
-        if (itemConfig.lastTimingNodes.includes(formReviews[0].id)) {
-            itemConfig.lastTimingNodes.push(reviewItemRootId)
+        if (lastTimingNodes.includes(reviewItemsConfig[0].id)) {
+            lastTimingNodes.push(reviewItemRootId)
         }
+
+        // // 4. 根据lastTimingNodes找到完成时间
         const orderedSatisfiedReviewItems = reviewItems.filter(item => {
-            return item.operateTimeGMT && itemConfig.lastTimingNodes.includes(item.activityId)
+            return item.operateTimeGMT && lastTimingNodes.includes(item.activityId)
         }).sort((a, b) => parseInt(b.operateTimeGMT) - parseInt(a.operateTimeGMT))
 
         if (orderedSatisfiedReviewItems.length === 0) {
@@ -323,11 +342,14 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
             return reviewItem
         }
 
+        // 5. 计算时间
         const startDateTime = dateUtil.formatGMT2Str(lastTimingReviewItem.operateTimeGMT)
         let computeEndDate = dateUtil.format2Str(new Date())
-        if (operateTimeGMT) {
-            computeEndDate = dateUtil.formatGMT2Str(operateTimeGMT)
+        if (reviewItem.operateTimeGMT) {
+            computeEndDate = dateUtil.formatGMT2Str(reviewItem.operateTimeGMT)
         }
+
+        let costAlready = 0
         // 获取该节点在流程中的完成时间
         // 运营执行流程的用时要特别计算
         if (formUuid === executionFlowFormId) {
@@ -338,29 +360,139 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
         reviewItem["cost"] = costAlready
         reviewItem["requiredCost"] = itemConfig.time
         reviewItem["isOverDue"] = itemConfig.time > 0 && costAlready > itemConfig.time
-        reviewItem.reviewId = flowFormReviews[0].id
         return reviewItem
-    }
-
-    const getNode = (id, nodes) => {
-        for (const node of nodes) {
-            if (node.id === id) {
-                return node
-            }
-            if (node.children && node.children.length > 0) {
-                const tmpNode = getNode(id, node.children)
-                if (tmpNode) {
-                    return tmpNode
-                }
-            }
-        }
-        return null
     }
 
     const reviewItemRootId = "sid-restartevent"
 
-    let flows = await getFlowsFromDingDing(status, timeRange, timeAction)
+    // let flows = await getFlowsFromDingDing(status, timeRange, timeAction)
+    const flows = [{
+        "createTimeGMT": "2024-04-27T07:56Z",
+        "processInstanceId": "c1765d21-fad8-4868-820d-f5f4828b461c",
+        "formUuid": "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
+        "data": {
+            "textField_liikmvi5": "",
+            "textField_liikmvi6": "",
+            "radioField_lrj67d00": "精修",
+            "radioField_lsr9utb4_id": "京东",
+            "textField_liikmvi2": "张宇-郭辰龙青花汝窑盖碗排版",
+            "radioField_lrj67d00_id": "精修",
+            "radioField_lvgihtcg": "易敏",
+            "radioField_lvgihtcg_id": "易敏",
+            "radioField_lv641k3b": "套图",
+            "radioField_lv641k3b_id": "套图",
+            "textField_liikmvi7": "",
+            "textField_ljxvbuqe": "111",
+            "radioField_lsr9utb4": "京东",
+            "numberField_lv3j56q2_value": ""
+        },
+        "modifiedTimeGMT": "2024-04-27T08:33Z",
+        "processCode": "TPROC--WV866IC1JU8B99PU77CDKBMZ4N5K271FLKIILT",
+        "actionExecutor": [
+            {
+                "name": {
+                    "nameInChinese": "张宇",
+                    "nameInEnglish": "张宇",
+                    "type": "i18n"
+                },
+                "userId": "021013633404778343"
+            }
+        ],
+        "originator": {
+            "name": {
+                "nameInChinese": "李徐莹",
+                "nameInEnglish": "李徐莹",
+                "type": "i18n"
+            },
+            "userId": "216201066326206711"
+        },
+        "title": "李徐莹发起的美编任务运营发布张宇-郭辰龙青花汝窑盖碗排版",
+        "instanceStatus": "RUNNING",
+        "version": 31,
+        "overallprocessflow": [
+            {
+                "processInstanceId": "c1765d21-fad8-4868-820d-f5f4828b461c",
+                "operateTimeGMT": "2024-04-27T07:56Z",
+                "showName": "提交申请",
+                "operateType": "NEW_PROCESS",
+                "remark": "",
+                "taskHoldTimeGMT": 0,
+                "type": "HISTORY",
+                "operatorName": "李徐莹",
+                "actionExit": "submit",
+                "operatorUserId": "216201066326206711",
+                "activityId": "sid-restartevent",
+                "size": 1,
+                "dataId": 29459166111,
+                "domainList": [],
+                "operatorDisplayName": "李徐莹",
+                "action": "提交申请",
+                "taskId": "null",
+                "operatorPhotoUrl": "https://static.dingtalk.com/media/lADPD4d83OK6kN_NBHfNBHc_1143_1143.jpg"
+            },
+            {
+                "processInstanceId": "c1765d21-fad8-4868-820d-f5f4828b461c",
+                "operateTimeGMT": "2024-04-27T08:26Z",
+                "showName": "确认美编任务",
+                "operateType": "EXECUTE_TASK_NORMAL",
+                "remark": "同意",
+                "taskHoldTimeGMT": 0,
+                "type": "HISTORY",
+                "operatorName": "田辉",
+                "actionExit": "agree",
+                "operatorUserId": "013732072734966745",
+                "activityId": "node_oclrj76uyg1",// node_oclvgenwmp6
+                "size": 1,
+                "dataId": 29460505109,
+                "domainList": [],
+                "operatorDisplayName": "田辉",
+                "action": "同意",
+                "taskId": "29459148899",
+                "operatorPhotoUrl": "//img.alicdn.com/tfs/TB1mKVJSpXXXXcwaXXXXXXXXXXX-78-80.jpg"
+            },
+            {
+                "processInstanceId": "c1765d21-fad8-4868-820d-f5f4828b461c",
+                "operateTimeGMT": "2024-04-27T08:33Z",
+                "showName": "审批人",
+                "operateType": "REDIRECT_TASK",
+                "remark": "转交",
+                "taskHoldTimeGMT": 0,
+                "type": "HISTORY",
+                "operatorName": "李徐莹",
+                "actionExit": "forward",
+                "operatorUserId": "216201066326206711",
+                "activityId": "node_ocllok1vc71",
+                "size": 1,
+                "dataId": 29460833133,
+                "domainList": [],
+                "operatorDisplayName": "李徐莹",
+                "action": "转交",
+                "taskId": "29460505114",
+                "operatorPhotoUrl": "https://static.dingtalk.com/media/lADPD4d83OK6kN_NBHfNBHc_1143_1143.jpg"
+            },
+            {
+                "processInstanceId": "c1765d21-fad8-4868-820d-f5f4828b461c",
+                "showName": "审批人",
+                "taskHoldTimeGMT": 25704158,
+                "type": "TODO",
+                "operatorName": "张宇",
+                "actionExit": "doing",
+                "operatorUserId": "021013633404778343",
+                "activityId": "node_ocllok1vc71",
+                "taskType": "COMMON_ALL_AT_ONCE",
+                "size": 1,
+                "domainList": [],
+                "operatorDisplayName": "张宇",
+                "activeTimeGMT": "2024-04-27T08:33Z",
+                "taskId": "29460833131",
+                "operatorPhotoUrl": "//img.alicdn.com/tfs/TB1mKVJSpXXXXcwaXXXXXXXXXXX-78-80.jpg"
+            }
+        ]
+    }]
+    //JSON.parse(await redisUtil.getKey("flows:today:origin:running"))
     // 同步流程的操作节点耗时信息
+    // 注意📢：如果已经保存到Redis中的流程中的reviewId需要继承，要不流程表单更新后节点id会变动
+    const todayFlows = await globalGetter.getTodayFlows()
     for (const flow of flows) {
         const reviewItems = flow.overallprocessflow
         if (!reviewItems || reviewItems.length === 0) {
@@ -368,25 +500,44 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
             continue
         }
 
-        let index = 0
-        for (const reviewItem of reviewItems) {
+        // 获取流程的表单流程的限时配置信息
+        //     -- 如果在是新流程不在库中，需要获取最新的表单流程的限时配置信息
+        //     -- 如果已经在库中了，需要根据保存的reviewId获取表单流程的限时配置信息
+        let reviewItemsConfig = null
+        const oldFlow = todayFlows.filter(item => item.processInstanceId === flow.processInstanceId)
+        if (oldFlow.length === 0 || !oldFlow[0].reviewId) {
+            const latestFormReview = await getLatestFormReview(flow.formUuid)
+            reviewItemsConfig = latestFormReview.formReview
+            flow.reviewId = latestFormReview.id
+        } else {
+            flow.reviewId = oldFlow[0].reviewId
+            const tmpFormReview = await formReviewRepo.getDetailsById(oldFlow[0].reviewId)
+            reviewItemsConfig = tmpFormReview.formReview
+        }
+
+        if (!reviewItemsConfig) {
+            logger.warn("没有在数据库中找到表单设计流程的信息")
+            return flow
+        }
+
+        for (let i = 0; i < reviewItems.length; i++) {
+            const reviewItem = reviewItems[i]
+            // todo： 如果已经完成的节点计时，直接复制跳过
+            // if (oldFlow.length > 0 && reviewItem.time && reviewItem.time > 0 && reviewItem.type=== flowReviewTypeConst.HISTORY) {
+            //     const s = oldFlow.overallprocessflow
+            // }
+
             if (reviewItem.activityId === reviewItemRootId) {
                 continue
             }
-            if (reviewItem.domainList && reviewItem.domainList.length > 0) {
-                let subIndex = 0
-                for (const domain of reviewItem.domainList) {
-                    const subNewReviewItem = await attachItemCost(flow.formUuid, domain, reviewItems)
-                    reviewItem.domainList[subIndex] = subNewReviewItem
-                    subIndex = subIndex + 1
+            const domainList = reviewItem.domainList
+            if (domainList && domainList.length > 0) {
+                for (let j = 0; j < domainList.length; j++) {
+                    reviewItems[i].domainList[j] = await fillReviewItemCost(domainList[j], reviewItems, reviewItemsConfig, flow.formUuid)
                 }
-                index = index + 1
                 continue
             }
-            const newReviewItem = await attachItemCost(flow.formUuid, reviewItem, reviewItems)
-            reviewItems[index] = newReviewItem
-            flow["reviewId"] = newReviewItem.reviewId
-            index = index + 1
+            reviewItems[i] = await fillReviewItemCost(reviewItem, reviewItems, reviewItemsConfig, flow.formUuid)
         }
         flow["overallprocessflow"] = reviewItems
     }

@@ -1,9 +1,12 @@
-
 const dingDingService = require("../service/dingDingService")
+const taskService = require("../service/taskService")
 
 describe("", () => {
-    it("", async () => {
+    it("getFlowsOfStatusAndTimeRange", async () => {
         const result = await dingDingService.getFlowsOfStatusAndTimeRange()
         console.log(result)
+    })
+    it("syncTodayRunningAndFinishedFlows", async () => {
+        await taskService.syncTodayRunningAndFinishedFlows()
     })
 })

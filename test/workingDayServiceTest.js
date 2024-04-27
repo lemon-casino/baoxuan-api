@@ -15,6 +15,15 @@ describe("workingDayService", () => {
             const duration = await workingDayService.computeValidWorkingDuration(undefined, "2023-04-05 10:45:20")
             assert.equal(0, duration)
         })
+        it("allBefore9Am", async () => {
+            const duration = await workingDayService.computeValidWorkingDuration("2024-04-27 07:45:20", "2024-04-27 08:35:20")
+            assert.equal(duration, 0)
+        })
+        it("allAfter18Pm", async () => {
+            const duration = await workingDayService.computeValidWorkingDuration("2024-04-26 18:05:20", "2024-04-27 08:35:20")
+            assert.equal(duration, 0)
+        })
+
         it("endUndefined", async () => {
             const duration = await workingDayService.computeValidWorkingDuration("2023-04-05 10:45:20", undefined)
             assert.equal(0, duration)

@@ -139,6 +139,7 @@ const isUserDoingOverDueFlow = (userId, flow, reviewItems) => {
         if (reviewItems && reviewItems.length > 0 && !reviewItems.includes(item.activityId)) {
             continue
         }
+
         if (item.operatorUserId === userId) {
             if (item.type === flowReviewTypeConst.TODO && item.isOverDue) {
                 return true

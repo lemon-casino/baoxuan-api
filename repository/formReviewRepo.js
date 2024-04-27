@@ -11,6 +11,12 @@ const getFormReviewByFormId = async (formId) => {
     return sequelizeUtil.extractDataValues(formReviews)
 }
 
+const getDetailsById = async (id) => {
+    const result = await formReviewModel.findByPk(id)
+    return sequelizeUtil.extractDataValues(result)
+}
+
 module.exports = {
-    getFormReviewByFormId
+    getFormReviewByFormId,
+    getDetailsById
 }
