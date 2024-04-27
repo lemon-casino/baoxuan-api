@@ -9,7 +9,7 @@ const dateUtil = require("./dateUtil")
  */
 const flatReviewItems = (flow) => {
     let newReviewItems = []
-    flow.overallprocessflow.forEach((item) => {
+    for (const item of flow.overallprocessflow) {
         if (item.domainList && item.domainList.length > 0) {
             newReviewItems = newReviewItems.concat(
                 item.domainList.map(subItem => {
@@ -20,7 +20,8 @@ const flatReviewItems = (flow) => {
         } else {
             newReviewItems.push(item)
         }
-    })
+    }
+
     flow.overallprocessflow = newReviewItems
     return flow
 }
