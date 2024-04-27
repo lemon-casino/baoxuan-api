@@ -91,11 +91,15 @@ const isUserDoingFlow = (userId, flow, reviewItems) => {
  * @returns {boolean}
  */
 const isUserTodoFlow = (userId, flow, reviewItems) => {
+    if (flow.processInstanceId === "032b1f7a-ebed-4c15-8a3e-dbfa8cbae75f" && userId === "17403303641083361") {
+        console.log("0--0-")
+    }
     for (let i = 0; i < flow.overallprocessflow.length; i++) {
         const reviewItem = flow.overallprocessflow[i]
-        if (reviewItem.type === flowReviewTypeConst.TODO) {
-            if (reviewItem.domainList && reviewItem.domainList.length > 0) {
-                for (const domain of reviewItem.domainList) {
+        if (reviewItem.type === flowReviewTypeConst.TODO && i < flow.overallprocessflow.length - 1) {
+            const nextNode = flow.overallprocessflow[i + 1]
+            if (nextNode.domainList && nextNode.domainList.length > 0) {
+                for (const domain of nextNode.domainList) {
                     if (reviewItems && !reviewItems.includes(domain.activityId)) {
                         continue
                     }
@@ -104,8 +108,8 @@ const isUserTodoFlow = (userId, flow, reviewItems) => {
                     }
                 }
             } else {
-                if (reviewItem.operatorUserId === userId) {
-                    if (reviewItems && !reviewItems.includes(reviewItem.activityId)) {
+                if (nextNode.operatorUserId === userId) {
+                    if (reviewItems && !reviewItems.includes(nextNode.activityId)) {
                         continue
                     }
                     return true
