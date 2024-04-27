@@ -455,9 +455,7 @@ const syncMissingCompletedFlows = async () => {
         syncCount = syncCount + 1
         // 同步到数据库
         await processService.saveProcess(flow)
-        console.log(`正在同步第${syncCount}个`)
     }
-    console.log(`同步完成，共计：${syncCount}个`)
 }
 
 /**
