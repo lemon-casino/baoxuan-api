@@ -91,17 +91,29 @@ const isUserDoingFlow = (userId, flow, reviewItems) => {
  * @returns {boolean}
  */
 const isUserTodoFlow = (userId, flow, reviewItems) => {
-    const newFlow = flatReviewItems(flow)
-    for (const item of newFlow.overallprocessflow) {
-        if (reviewItems && reviewItems.length > 0 && !reviewItems.includes(item.activityId)) {
-            continue
-        }
-        if (item.operatorUserId === userId) {
-            if (item.type === flowReviewTypeConst.FORCAST) {
-                return true
+    for (let i = 0; i < flow.overallprocessflow.length; i++) {
+        const reviewItem = flow.overallprocessflow[i]
+        if (reviewItem.type === flowReviewTypeConst.TODO) {
+            if (reviewItem.domainList.length > 0) {
+                for (const domain of reviewItem.domainList) {
+                    if (!reviewItems.includes(domain.activityId)) {
+                        continue
+                    }
+                    if (domain.operator === userId) {
+                        return true
+                    }
+                }
+            } else {
+                if (reviewItem.operatorUserId === userId) {
+                    if (!reviewItems.includes(reviewItem.activityId)) {
+                        continue
+                    }
+                    return true
+                }
             }
         }
     }
+
     return false
 }
 
