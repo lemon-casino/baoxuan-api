@@ -50,13 +50,18 @@ const getTodaySelfJoinedFlowsStatisticOfOverDue = async (userId, importance) => 
         needFilterReviewItems = importance.items
     }
     for (const flow of filteredFlows) {
+
+        if (flow.processInstanceId === "e09fd3d3-5984-4967-a82c-cf76f33eb945"){
+            console.log("90909")
+        }
+
         const userDoingOverDue = flowUtil.isUserDoingOverDueFlow(userId, flow, needFilterReviewItems)
         const userDoneOverDue = flowUtil.isUserDoneOverDueFlow(userId, flow, needFilterReviewItems)
         if (userDoingOverDue) {
-            satisfiedFlows.done.push(flow)
+            satisfiedFlows.doing.push(flow)
         }
         if (userDoneOverDue) {
-            satisfiedFlows.doing.push(flow)
+            satisfiedFlows.done.push(flow)
         }
     }
     return satisfiedFlows;
