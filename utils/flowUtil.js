@@ -94,7 +94,7 @@ const isUserTodoFlow = (userId, flow, reviewItems) => {
     for (let i = 0; i < flow.overallprocessflow.length; i++) {
         const reviewItem = flow.overallprocessflow[i]
         if (reviewItem.type === flowReviewTypeConst.TODO) {
-            if (reviewItem.domainList.length > 0) {
+            if (reviewItem.domainList && reviewItem.domainList.length > 0) {
                 for (const domain of reviewItem.domainList) {
                     if (reviewItems && !reviewItems.includes(domain.activityId)) {
                         continue
