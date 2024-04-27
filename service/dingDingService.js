@@ -376,7 +376,7 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
             if (reviewItem.domainList && reviewItem.domainList.length > 0) {
                 let subIndex = 0
                 for (const domain of reviewItem.domainList) {
-                    const subNewReviewItem = attachItemCost(flow.formUuid, domain, reviewItems)
+                    const subNewReviewItem = await attachItemCost(flow.formUuid, domain, reviewItems)
                     reviewItem.domainList[subIndex] = subNewReviewItem
                     subIndex = subIndex + 1
                 }
