@@ -96,7 +96,7 @@ const isUserTodoFlow = (userId, flow, reviewItems) => {
         if (reviewItem.type === flowReviewTypeConst.TODO) {
             if (reviewItem.domainList.length > 0) {
                 for (const domain of reviewItem.domainList) {
-                    if (!reviewItems.includes(domain.activityId)) {
+                    if (reviewItems && !reviewItems.includes(domain.activityId)) {
                         continue
                     }
                     if (domain.operator === userId) {
@@ -105,7 +105,7 @@ const isUserTodoFlow = (userId, flow, reviewItems) => {
                 }
             } else {
                 if (reviewItem.operatorUserId === userId) {
-                    if (!reviewItems.includes(reviewItem.activityId)) {
+                    if (reviewItems && !reviewItems.includes(reviewItem.activityId)) {
                         continue
                     }
                     return true
