@@ -520,8 +520,7 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
             return flow
         }
 
-        for (let i = 0; i < reviewItems.length; i++) {
-            const reviewItem = reviewItems[i]
+        for (let reviewItem of reviewItems) {
             // todo： 如果已经完成的节点计时，直接复制跳过
             // if (oldFlow.length > 0 && reviewItem.time && reviewItem.time > 0 && reviewItem.type=== flowReviewTypeConst.HISTORY) {
             //     const s = oldFlow.overallprocessflow
@@ -532,12 +531,12 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
             }
             const domainList = reviewItem.domainList
             if (domainList && domainList.length > 0) {
-                for (let j = 0; j < domainList.length; j++) {
-                    reviewItems[i].domainList[j] = await fillReviewItemCost(domainList[j], reviewItems, reviewItemsConfig, flow.formUuid)
+                for (let domain of domainList) {
+                    domain = await fillReviewItemCost(domain, reviewItems, reviewItemsConfig, flow.formUuid)
                 }
                 continue
             }
-            reviewItems[i] = await fillReviewItemCost(reviewItem, reviewItems, reviewItemsConfig, flow.formUuid)
+            reviewItem = await fillReviewItemCost(reviewItem, reviewItems, reviewItemsConfig, flow.formUuid)
         }
         flow["overallprocessflow"] = reviewItems
     }
