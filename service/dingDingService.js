@@ -276,7 +276,6 @@ const getFinishedFlows = async (timeRange) => {
  * @returns {Promise<*>}
  */
 const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
-    let flows = await getFlowsFromDingDing(status, timeRange, timeAction)
 
     const attachItemCost = async (formUuid, reviewItem, reviewItems) => {
         const {operateTimeGMT, activeTimeGMT, activityId} = reviewItem
@@ -359,6 +358,8 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
     }
 
     const reviewItemRootId = "sid-restartevent"
+
+    let flows = await getFlowsFromDingDing(status, timeRange, timeAction)
     // 同步流程的操作节点耗时信息
     for (const flow of flows) {
         const reviewItems = flow.overallprocessflow
