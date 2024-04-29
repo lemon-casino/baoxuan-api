@@ -65,7 +65,20 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     fightingLinkIds,
                                     timeRange,
                                     clickingAdditionalParams) => {
-    const where = {date: {$between: timeRange}}
+
+    let startDateTime, endDateTime;
+    const daysInRange = getDaysInRange(timeRange[0], timeRange[1]);
+
+    if (daysInRange === 1) {
+        startDateTime = new Date(timeRange[0]);
+        endDateTime = new Date(timeRange[0]);
+    } else {
+        // 相减结果不等于一天，查询时间范围为时间范围的起始时间到结束时间
+        startDateTime = new Date(timeRange[0]);
+        endDateTime = new Date(timeRange[1]);
+    }
+    const where = {date: {$between: [startDateTime, endDateTime]}}
+    const abnormalWhere = {}
     if (productLineLeaders) {
         if (productLineLeaders.length === 1) {
             where.productLineLeader = productLineLeaders[0]
@@ -100,10 +113,38 @@ const getTaoBaoSingleItems = async (pageIndex,
 
     if (errorItems) {
         for (const errorItem of errorItems) {
+            // console.log("异常的条件",errorItem)
             if (errorItem.sqlValue){
                 where[errorItem.field] = {[errorItem.operator]: errorItem.sqlValue}
             }else{
+                // console.log("到异常的条件",where)
+                // 这个异常 需要进行条件查询
+                if(errorItem.field === "profitRate"){
+                    abnormalWhere[errorItem.lessThan] = "true"
+                    where[errorItem.field] = {[errorItem.operator]: errorItem.value}
+                }
+                //手淘人数市场占比环比（7天）下降
+                if (errorItem.field === "shouTaoPeopleNumMarketRateCircleRate7Day"){
+                    where["salesMarketRateCircleRate7Day"] = {"$ne": errorItem.value}
+                }
+                //坑市场占比环比（7天）下降
+                if (errorItem.field === "salesMarketRateCircleRate7Day"){
+                    where["shouTaoPeopleNumMarketRateCircleRate7Day"] = {"$gt": errorItem.value}
+                }
+
+                //手淘人数市场占比环比（日）下降
+                if (errorItem.field === "shouTaoPeopleNumMarketRateCircleRateDay"){
+                    where["salesMarketRateCircleRateDay"] = {"$ne": errorItem.value}
+                }
+                //坑市场占比环比（日天）下降
+                if (errorItem.field === "salesMarketRateCircleRateDay"){
+                    where["shouTaoPeopleNumMarketRateCircleRateDay"] = {"$gt": errorItem.value}
+                }
+
                 where[errorItem.field] = {[errorItem.operator]: errorItem.value}
+
+               // console.log(abnormalWhere)
+
             }
         }
     }
@@ -116,21 +157,48 @@ const getTaoBaoSingleItems = async (pageIndex,
         }
     }
 
-    const satisfiedCount = await singleItemTaoBaoModel.count({
-        where
-    })
-    let data = await singleItemTaoBaoModel.findAll({
+    // const satisfiedCount = await singleItemTaoBaoModel.count({
+    //     where
+    // })
+    singleItemTaoBaoModel.belongsTo(ABbnormal_TM, {
+        foreignKey: 'linkId',
+        targetKey: 'linkId'
+    });
+
+    let result = await singleItemTaoBaoModel.findAndCountAll({
+        attributes: {
+            include: [
+                [Sequelize.fn('date', Sequelize.col('singleItemTaoBaoModel.date')), 'date'],
+                [col('ABbnormal_TM.new_16_30'), 'new_16_30'],
+                [col('ABbnormal_TM.new_30_60'), 'new_30_60'],
+                [col('ABbnormal_TM.negative_profit_60'), 'negative_profit_60'],
+                [col('ABbnormal_TM.old'), 'old']
+            ]
+        },
+        include: [{
+            model: ABbnormal_TM,
+            attributes: [], // Don't fetch any additional fields from ItemInfoModel
+            required: true,
+            on: {
+                '$singleItemTaoBaoModel.date$': { [Sequelize.Op.eq]: Sequelize.col('ABbnormal_TM.date') },
+                '$singleItemTaoBaoModel.link_id$': { [Sequelize.Op.eq]: Sequelize.col('ABbnormal_TM.link_id') }
+            },
+            where: abnormalWhere
+        }],
         offset: pageIndex * pageSize,
         limit: pageSize,
         where,
-        order: [["linkId", "asc"], ["date", "asc"]]
+        order: [["linkId", "asc"], ["date", "asc"]],
+        logging:true,
+        group: ['singleItemTaoBaoModel.date','singleItemTaoBaoModel.id','ABbnormal_TM.new_16_30','ABbnormal_TM.new_30_60','ABbnormal_TM.negative_profit_60','ABbnormal_TM.old'],
     })
-
-    data = data.map(function (item) {
+    result.rows = result.rows.map(function (item) {
         return item.get({plain: true})
     })
-    const result = pagingUtil.paging(Math.ceil(satisfiedCount / pageSize), satisfiedCount, data)
-    return result
+    console.log(result.count.length)
+
+    // pagingUtil.paging(Math.ceil(result.count / pageSize), result.count, result.rows)  result.count 为总数
+    return  pagingUtil.paging(Math.ceil(result.count.length / pageSize), result.count.length, result.rows)
 }
 
 /**
