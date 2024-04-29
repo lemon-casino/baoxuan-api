@@ -1,5 +1,7 @@
 module.exports = {
     TODO: "TODO",
     HISTORY: "HISTORY",
-    FORCAST: "FORCAST"
+    FORCAST: "FORCAST",
+    TERMINATED: "TERMINATED",
+    ERROR: "ERROR"
 }

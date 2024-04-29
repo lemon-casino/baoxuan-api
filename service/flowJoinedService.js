@@ -2,6 +2,8 @@ const flowService = require("./flowService")
 const departmentService = require("../service/departmentService")
 const globalGetter = require("../global/getter")
 const flowUtil = require("../utils/flowUtil")
+const dateUtil = require("../utils/dateUtil")
+const flowStatusConst = require("../const/flowStatusConst")
 const flowReviewTypeConst = require("../const/flowReviewTypeConst")
 const NotFoundError = require("../error/http/notFoundError")
 
@@ -99,7 +101,6 @@ const getTodaySelfJoinedFlowsStatisticOfReviewType = async (userId, reviewType, 
 
     let satisfiedFlows = [];
     for (const flow of filteredFlows) {
-
         let flowIsSatisfied = false
         if (reviewType === flowReviewTypeConst.HISTORY && flowUtil.isUserHasFinishedTodayFlow(userId, flow, needFilterReviewItems)) {
             flowIsSatisfied = true
@@ -196,16 +197,40 @@ const getTodayDeptJoinedFlowsStatisticCountOfReviewType = async (deptId, status,
             const currDeptFinishedIds = []
             for (const id of Object.keys(deptStatistic.ids)) {
                 const flows = todayFlows.filter(flow => flow.processInstanceId === id)
-                // 流程要部门下所有的人都完成
-                let allUsersFinished = true
-                for (const user of usersOfDept) {
-                    const userFinishedThisFlow = flowUtil.isUserHasFinishedTodayFlow(user.userid, flows[0])
-                    if (!userFinishedThisFlow) {
-                        allUsersFinished = false
+                const ignoreTypes = [flowStatusConst.ERROR, flowStatusConst.TERMINATED]
+                const doingTypes = [flowReviewTypeConst.TODO, flowReviewTypeConst.FORCAST]
+
+                // 异常跳过
+                if (ignoreTypes.includes(flows[0].instanceStatus)) {
+                    continue
+                }
+                const newFlow = flowUtil.flatReviewItems(flows[0])
+
+                // 流程要部门下所有参与的人都完成(没参与的忽略)
+                let doneDateTimes = []
+                let someUserDoing = false
+                for (const item of newFlow.overallprocessflow) {
+                    for (const user of usersOfDept) {
+                        if (user.userid === item.operatorUserId) {
+                            if (item.type === flowReviewTypeConst.HISTORY) {
+                                const doneDate = dateUtil.formatGMT2Str(item.operateTimeGMT, "YYYY-MM-DD")
+                                doneDateTimes.push(doneDate)
+                            }
+                            if (doingTypes.includes(item.type)) {
+                                someUserDoing = true
+                                break
+                            }
+                        }
+                    }
+                    if (someUserDoing) {
                         break
                     }
                 }
-                if (allUsersFinished) {
+                if (someUserDoing) {
+                    continue
+                }
+
+                if (doneDateTimes.includes(dateUtil.format2Str(new Date(), "YYYY-MM-DD"))) {
                     allUniqueIds[id] = 1
                     currDeptFinishedIds.push(id)
                 }
