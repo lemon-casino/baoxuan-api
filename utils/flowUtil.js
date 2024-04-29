@@ -39,28 +39,32 @@ const isFinishedTodayFlow = (flow) => {
 
 /**
  * 用户是否在今天完成了流程(可以指定要过滤的节点)
+ *
+ * 存在没完成或之前完成的情况
  * @param userId
  * @param flow
- * @returns {boolean}
+ * @param reviewItems
+ * @returns {{userJoined: boolean, userFinished: boolean, userTodayFinished: boolean}|boolean}
  */
 const isUserHasFinishedTodayFlow = (userId, flow, reviewItems) => {
-    let userFinished = false
+    let userTodayFinished = false
     const newFlow = flatReviewItems(flow)
+
     for (const item of newFlow.overallprocessflow) {
         if (reviewItems && reviewItems.length > 0 && !reviewItems.includes(item.activityId)) {
             continue
         }
 
         if (item.operatorUserId === userId) {
-            if (item.type !== flowReviewTypeConst.HISTORY) {
-                return false
+            if (item.type === flowReviewTypeConst.HISTORY || item.type === flowReviewTypeConst.TERMINATED || item.type === flowReviewTypeConst.ERROR) {
+                const doneDate = dateUtil.formatGMT2Str(item.operateTimeGMT, "YYYY-MM-DD")
+                userTodayFinished = doneDate === dateUtil.format2Str(new Date(), "YYYY-MM-DD")
+            }else{
+                userTodayFinished = false
             }
-            // 需要确定本人今天已完成所有相关的工作
-            const doneDate = dateUtil.formatGMT2Str(item.operateTimeGMT, "YYYY-MM-DD")
-            userFinished = doneDate === dateUtil.format2Str(new Date(), "YYYY-MM-DD")
         }
     }
-    return userFinished
+    return userTodayFinished
 }
 
 /**

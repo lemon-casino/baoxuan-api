@@ -31,7 +31,7 @@ const todayDeptJoinedFlowsStatisticHub = async (req, res, next) => {
     try {
         const status = req.params.status;
         const {deptId, importance} = req.query
-        joiUtil.validate({deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.strRequired}})
+        joiUtil.validate({deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required}})
         const result = await getDeptJoinedResult(deptId, status, importance)
 
         return res.send(biResponse.success(result))
