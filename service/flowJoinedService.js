@@ -197,7 +197,7 @@ const getTodayDeptJoinedFlowsStatisticCountOfReviewType = async (deptId, status,
             for (const id of Object.keys(deptStatistic.ids)) {
                 const flows = todayFlows.filter(flow => flow.processInstanceId === id)
 
-                const doneTypes = [flowReviewTypeConst.HISTORY, flowReviewTypeConst.ERROR, flowReviewTypeConst.TERMINATED]
+                // const doneTypes = [flowReviewTypeConst.HISTORY, flowReviewTypeConst.ERROR, flowReviewTypeConst.TERMINATED]
                 const doingTypes = [flowReviewTypeConst.TODO, flowReviewTypeConst.FORCAST]
 
                 const newFlow = flowUtil.flatReviewItems(flows[0])
@@ -208,7 +208,7 @@ const getTodayDeptJoinedFlowsStatisticCountOfReviewType = async (deptId, status,
                 for (const item of newFlow.overallprocessflow) {
                     for (const user of usersOfDept) {
                         if (user.userid === item.operatorUserId) {
-                            if (doneTypes.includes(item.type)) {
+                            if (item.type===flowReviewTypeConst.HISTORY) {
                                 const doneDate = dateUtil.formatGMT2Str(item.operateTimeGMT, "YYYY-MM-DD")
                                 doneDateTimes.push(doneDate)
                             }

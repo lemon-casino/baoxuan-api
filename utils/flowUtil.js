@@ -56,10 +56,10 @@ const isUserHasFinishedTodayFlow = (userId, flow, reviewItems) => {
         }
 
         if (item.operatorUserId === userId) {
-            if (item.type === flowReviewTypeConst.HISTORY || item.type === flowReviewTypeConst.TERMINATED || item.type === flowReviewTypeConst.ERROR) {
+            if (item.type === flowReviewTypeConst.HISTORY) {
                 const doneDate = dateUtil.formatGMT2Str(item.operateTimeGMT, "YYYY-MM-DD")
                 userTodayFinished = doneDate === dateUtil.format2Str(new Date(), "YYYY-MM-DD")
-            }else{
+            } else {
                 userTodayFinished = false
             }
         }
