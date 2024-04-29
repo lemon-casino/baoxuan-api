@@ -6,16 +6,16 @@ const tmCoreActions = [{
             forms: [{
                 formName: "运营新品流程",
                 formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
-                startNode: {
+                startNodes: [{
                     id: "",
                     name: "提交竞店ID",
                     statuses: ["TODO", "HISTORY"]
-                },
-                endNode: {
+                }],
+                endNodes: [{
                     id: "node_oclii6vcap1",
                     name: "五维表分析",
                     statuses: ["TODO", "FORECAST"]
-                },
+                }],
                 overDueNode: {
                     id: "",
                     name: "审核执行统计五维表"
@@ -28,11 +28,11 @@ const tmCoreActions = [{
                 {
                     name: "宝可梦新品开发流程",
                     formId: "FORM-CC0B476071F24581B129A24835910B81AK56",
-                    startNode: {
+                    startNodes: [{
                         id: "node_oclvkcjxy41",
                         name: "分配执行营销分析方案",
                         statuses: ["TODO", "HISTORY"]
-                    },
+                    }],
                     // 分支情况
                     endNodes: [
                         {
@@ -51,7 +51,7 @@ const tmCoreActions = [{
                             statuses: ["TODO", "FORECAST"]
                         }],
                     overDueNode: {
-                        id: "",
+                        id: "node_oclvkcjxy41",
                         name: "分配执行营销分析方案"
                     },
                     personInCharge: {
@@ -63,30 +63,33 @@ const tmCoreActions = [{
                 {
                     name: "天猫链接上架流程",
                     formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
-                    startNode: {
-                        id: "",
-                        name: "分配执行营销分析方案",
-                        statuses: [""]
-                    },
-                    endNode: {
-                        id: "",
-                        name: "运营提交营销方案",
-                        statuses: []
-                    },
+                    startNodes: [{
+                        id: "node_ockpz6phx72",
+                        name: "发起",
+                        statuses: ["TODO", "HISTORY"]
+                    }],
+                    endNodes: [{
+                        id: "node_oclm91902f2",
+                        name: "审核执行动作完成",
+                        statuses: ["TODO", 'FORECAST']
+                    }],
                     overDueNode: {
-                        id: "",
-                        name: "分配执行营销分析方案"
+                        id: "node_oclm91902f2",
+                        name: "审核执行动作完成"
                     },
                     personInCharge: {
-                        from: "form",
-                        name: "分配运营做市场分析",
-                        id: "employeeField_luv1lfuq"
+                        from: "process",
+                        name: "发起",
+                        id: "node_ockpz6phx72"
                     }
                 }]
         },
         {
             name: "在做",
             forms: [{
+                formName: "",
+                formId: "",
+                id: "",
                 startNode: {
                     id: "",
                     status: []
