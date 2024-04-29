@@ -86,14 +86,13 @@ const isUserDoingFlow = (userId, flow, reviewItems) => {
 
 /**
  * 用户是否准备要做该流程(可以指定要过滤的审核节点)
+ *
+ * 上一步必须是正在做，不能跨步计算
  * @param userId
  * @param flow
  * @returns {boolean}
  */
 const isUserTodoFlow = (userId, flow, reviewItems) => {
-    if (flow.processInstanceId === "032b1f7a-ebed-4c15-8a3e-dbfa8cbae75f" && userId === "17403303641083361") {
-        console.log("0--0-")
-    }
     for (let i = 0; i < flow.overallprocessflow.length; i++) {
         const reviewItem = flow.overallprocessflow[i]
         if (reviewItem.type === flowReviewTypeConst.TODO && i < flow.overallprocessflow.length - 1) {

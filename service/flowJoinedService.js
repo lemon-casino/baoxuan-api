@@ -1,8 +1,6 @@
 const flowService = require("./flowService")
-const statisticStatusConst = require("../const/statisticStatusConst")
 const departmentService = require("../service/departmentService")
 const globalGetter = require("../global/getter")
-const dateUtil = require("../utils/dateUtil")
 const flowUtil = require("../utils/flowUtil")
 const flowReviewTypeConst = require("../const/flowReviewTypeConst")
 const NotFoundError = require("../error/http/notFoundError")
@@ -50,11 +48,6 @@ const getTodaySelfJoinedFlowsStatisticOfOverDue = async (userId, importance) => 
         needFilterReviewItems = importance.items
     }
     for (const flow of filteredFlows) {
-
-        if (flow.processInstanceId === "e09fd3d3-5984-4967-a82c-cf76f33eb945"){
-            console.log("90909")
-        }
-
         const userDoingOverDue = flowUtil.isUserDoingOverDueFlow(userId, flow, needFilterReviewItems)
         const userDoneOverDue = flowUtil.isUserDoneOverDueFlow(userId, flow, needFilterReviewItems)
         if (userDoingOverDue) {
@@ -76,6 +69,7 @@ const getTodaySelfJoinedFlowsStatisticOfOverDue = async (userId, importance) => 
  */
 const getTodaySelfJoinedFlowsStatisticCountOfReviewType = async (userId, reviewType, importance) => {
     const satisfiedFlows = await getTodaySelfJoinedFlowsStatisticOfReviewType(userId, reviewType, importance)
+
     const flowsOfDepartment = await flowService.flowsDividedByDepartment(satisfiedFlows)
     const result = await flowService.sumFlowsByDepartment(flowsOfDepartment)
     if (result.departments) {
@@ -134,6 +128,7 @@ const getTodaySelfJoinedFlowsStatisticOfReviewType = async (userId, reviewType, 
  */
 const getTodaySelfJoinedFlowsStatisticCountOfFlowStatus = async (userId, status, importance) => {
     const satisfiedFlows = await getTodaySelfJoinedFlowsStatisticOfFlowStatus(userId, status, importance)
+
     const flowsOfDepartment = await flowService.flowsDividedByDepartment(satisfiedFlows)
     const result = await flowService.sumFlowsByDepartment(flowsOfDepartment)
     if (result.departments) {
