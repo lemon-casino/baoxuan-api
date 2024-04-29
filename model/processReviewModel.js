@@ -111,15 +111,6 @@ module.exports = sequelize => {
       comment: "节点id",
       field: "activity_id"
     },
-    activeTime: {
-      type: DataTypes.DATE,
-      allowNull: true,
-      defaultValue: null,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "激活时间",
-      field: "active-time"
-    },
     operatorName: {
       type: DataTypes.STRING(20),
       allowNull: true,
@@ -129,14 +120,14 @@ module.exports = sequelize => {
       comment: "操作人",
       field: "operator_name"
     },
-    opertateTime: {
+    doneTime: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
       comment: "操作时间",
-      field: "opertate_time"
+      field: "done_time"
     },
     operatorUserId: {
       type: DataTypes.STRING(30),
