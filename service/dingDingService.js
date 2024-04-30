@@ -384,6 +384,9 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
         const oldFlow = todayFlows.filter(item => item.processInstanceId === flow.processInstanceId)
         if (oldFlow.length === 0 || !oldFlow[0].reviewId) {
             const latestFormReview = await getLatestFormReview(flow.formUuid)
+            if (!latestFormReview) {
+                return flow
+            }
             reviewItemsConfig = latestFormReview.formReview
             flow.reviewId = latestFormReview.id
         } else {
