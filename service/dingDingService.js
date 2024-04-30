@@ -385,7 +385,7 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
         if (oldFlow.length === 0 || !oldFlow[0].reviewId) {
             const latestFormReview = await getLatestFormReview(flow.formUuid)
             if (!latestFormReview) {
-                return flow
+                continue
             }
             reviewItemsConfig = latestFormReview.formReview
             flow.reviewId = latestFormReview.id
@@ -397,15 +397,10 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
 
         if (!reviewItemsConfig) {
             logger.warn("没有在数据库中找到表单设计流程的信息")
-            return flow
+            continue
         }
 
         for (let reviewItem of reviewItems) {
-            // todo： 如果已经完成的节点计时，直接复制跳过
-            // if (oldFlow.length > 0 && reviewItem.time && reviewItem.time > 0 && reviewItem.type=== flowReviewTypeConst.HISTORY) {
-            //     const s = oldFlow.overallprocessflow
-            // }
-
             if (reviewItem.activityId === reviewItemRootId) {
                 continue
             }
