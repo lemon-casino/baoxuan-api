@@ -215,8 +215,25 @@ const isUserJoinFlow = (userId, flow, reviewItems) => {
     return false
 }
 
-const coreActionStatistic = () => {
-
+// 将ids从底往上汇总
+const attachIdsAndSum = (node) => {
+    if (node.children) {
+        const uniqueIds = {}
+        for (const child of node.children) {
+            const newChild = attachIdsAndSum(child)
+            for (const id of newChild.ids) {
+                uniqueIds[id] = 1
+            }
+        }
+        node.ids = Object.keys(uniqueIds)
+    }
+    if (node.ids) {
+        node.sum = node.ids.length
+    } else {
+        node.sum = 0
+        node.ids = []
+    }
+    return node
 }
 
 module.exports = {
@@ -228,5 +245,6 @@ module.exports = {
     isUserDoingOverDueFlow,
     isUserDoneOverDueFlow,
     isUserErrorFlow,
-    isUserTerminatedFlow
+    isUserTerminatedFlow,
+    attachIdsAndSum
 }

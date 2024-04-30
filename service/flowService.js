@@ -507,20 +507,19 @@ const getCoreActionData = async (deptId, startDate, endDate) => {
     // todo： 根据时间范围获取历史流程，序列化后统一处理
 
     const finalResult = []
-
     for (const action of coreActionsConfig) {
         const {actionName, actionCode} = action
-        const actionResult = {actionName, actionCode}
-
-        actionResult["actionStatus"] = []
+        const actionResult = {actionName, actionCode, children: []}
 
         for (const actionStatus of action.actionStatus) {
             const {nameCN, nameEN, rules} = actionStatus
 
-            let statusResult = {nameCN, nameEN, overDue: [], notOverDue: []}
+            let statusResult = {nameCN, nameEN, children: []}
+
+            const overDueResult = {nameCN: "逾期", nameEN: "overDue", children: []}
+            const notOverDueResult = {name: "未逾期", nameEN: "notOverDue", children: []}
 
             for (const rule of rules) {
-
                 const currentFlows = todayFlows.filter((flow) => flow.formUuid === rule.formId)
 
                 for (const nodePair of rule.countNodePairs) {
@@ -560,25 +559,33 @@ const getCoreActionData = async (deptId, startDate, endDate) => {
                                 logger.warn(`没有匹配到计数规则的所有人。流程：${flow.processInstanceId},rule: ${JSON.stringify(ownerRule)}`)
                                 continue
                             }
-
-                            let userFlows = statusResult[isOverDue ? "overDue" : "notOverDue"].filter(item => item.userName === ownerName)
+                            let userFlows = null
+                            if (overdueNode) {
+                                userFlows = overDueResult.children.filter(item => item.userName === ownerName)
+                            } else {
+                                userFlows = notOverDueResult.children.filter(item => item.userName === ownerName)
+                            }
                             if (userFlows.length > 0 && userFlows[0].ids && userFlows[0].ids.length > 0) {
                                 userFlows[0].ids.push(flow.processInstanceId)
+                                userFlows[0].sum = userFlows[0].ids.length
                             } else {
-                                userFlows = {userName: ownerName, ids: [flow.processInstanceId]}
-                                statusResult[isOverDue ? "overDue" : "notOverDue"].push(userFlows)
+                                userFlows = {userName: ownerName, sum: 1, ids: [flow.processInstanceId]}
+                                overDueResult.children.push(userFlows)
                             }
                         }
                     }
                 }
             }
-            actionResult["actionStatus"].push(statusResult)
+            statusResult.children.push(overDueResult, notOverDueResult)
+            actionResult.children.push(statusResult)
         }
         finalResult.push(actionResult)
     }
-    // 将ids从底往上汇总
-
-
+    for (let result of finalResult) {
+        if (result.children) {
+            result = flowUtil.attachIdsAndSum(result)
+        }
+    }
 }
 
 module.exports = {
