@@ -1,4 +1,3 @@
-const dateUtil = require("../utils/dateUtil")
 const FlowForm = require("../model/flowfrom")
 const formService = require("../service/flowFormService")
 const departmentService = require("../service/departmentService")
@@ -9,6 +8,10 @@ const flowRepo = require("../repository/flowRepo")
 const globalGetter = require("../global/getter")
 const globalSetter = require("../global/setter")
 const NotFoundError = require("../error/http/notFoundError")
+const dateUtil = require("../utils/dateUtil")
+const flowUtil = require("../utils/flowUtil")
+const formFlowIdMappings = require("../const/formFlowIdMappings")
+const {logger} = require("../utils/log")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -496,6 +499,87 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
     globalSetter.setGlobalTodayRunningAndFinishedFlows(newTodayFlows)
 }
 
+const getCoreActionData = async (deptId, startDate, endDate) => {
+    const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
+    // 部门的核心动作配置信息
+    const coreActionsConfig = await flowRepo.getCoreActionsConfig(deptId)
+    const todayFlows = await globalGetter.getTodayFlows()
+    // todo： 根据时间范围获取历史流程，序列化后统一处理
+
+    const finalResult = []
+
+    for (const action of coreActionsConfig) {
+        const {actionName, actionCode} = action
+        const actionResult = {actionName, actionCode}
+
+        actionResult["actionStatus"] = []
+
+        for (const actionStatus of action.actionStatus) {
+            const {nameCN, nameEN, rules} = actionStatus
+
+            let statusResult = {nameCN, nameEN, overDue: [], notOverDue: []}
+
+            for (const rule of rules) {
+
+                const currentFlows = todayFlows.filter((flow) => flow.formUuid === rule.formId)
+
+                for (const nodePair of rule.countNodePairs) {
+                    const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = nodePair
+
+                    let fromMatched = false
+                    let toMatched = false
+                    let isOverDue = false
+
+                    for (const flow of currentFlows) {
+
+                        const reviewItems = flow.overallprocessflow
+                        for (const reviewItem of reviewItems) {
+                            if (fromNode && reviewItem.activityId === fromNode.id && fromNode.status.includes(reviewItem.type)) {
+                                fromMatched = true
+                            }
+                            if (toNode && reviewItem.activityId === toNode.id && toNode.status.includes(reviewItem.type)) {
+                                toMatched = true
+                            }
+                            if (overdueNode && reviewItem.activityId === overdueNode.id && overdueNode.status.includes(reviewItem.type)) {
+                                isOverDue = reviewItem.isOverDue
+                            }
+                        }
+
+                        if (fromMatched && toMatched) {
+                            let ownerName = ""
+                            const {from, id} = ownerRule
+                            if (from.toUpperCase() === ownerFrom.FORM) {
+                                ownerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id][0]
+                            } else {
+                                const processReviewId = formFlowIdMappings[id] || id
+                                const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
+                                ownerName = reviewItems.length > 0 && reviewItems[0].operatorName
+                            }
+
+                            if (!ownerName) {
+                                logger.warn(`没有匹配到计数规则的所有人。流程：${flow.processInstanceId},rule: ${JSON.stringify(ownerRule)}`)
+                                continue
+                            }
+
+                            let userFlows = statusResult[isOverDue ? "overDue" : "notOverDue"].filter(item => item.userName === ownerName)
+                            if (userFlows.length > 0 && userFlows[0].ids && userFlows[0].ids.length > 0) {
+                                userFlows[0].ids.push(flow.processInstanceId)
+                            } else {
+                                userFlows = {userName: ownerName, ids: [flow.processInstanceId]}
+                                statusResult[isOverDue ? "overDue" : "notOverDue"].push(userFlows)
+                            }
+                        }
+                    }
+                }
+            }
+            actionResult["actionStatus"].push(statusResult)
+        }
+        finalResult.push(actionResult)
+    }
+    // 将ids从底往上汇总
+
+
+}
 
 module.exports = {
     filterFlowsByTimesRange,
@@ -522,5 +606,6 @@ module.exports = {
     getTodayFlowsByFormIdAndFlowStatus,
     syncMissingCompletedFlows,
     getFlowFormValues,
-    updateRunningFlowEmergency
+    updateRunningFlowEmergency,
+    getCoreActionData
 }

@@ -215,6 +215,10 @@ const isUserJoinFlow = (userId, flow, reviewItems) => {
     return false
 }
 
+const coreActionStatistic = () => {
+
+}
+
 module.exports = {
     flatReviewItems,
     isUserDoingFlow,
