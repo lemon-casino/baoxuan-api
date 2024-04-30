@@ -605,10 +605,53 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
     // 通过map过滤重复的数据
     const uniqueItems = {}
     for (const item of taoBaoErrorItems) {
+        //打印singleItems 的长度
+       // console.log(singleItems.length)
         const items = singleItems.filter((singleItem) => {
             for (const exp of item.values) {
                 let value = exp.value
                 let fieldValue = singleItem[exp.field]
+                if (exp.field === "profitRate") {
+                    // if(singleItem[exp.lessThan] === "true"){
+                    //reallyShipmentAmount 小于0
+                    if(exp.lessThan === "negative_profit_60"){
+                        if (singleItem[exp.lessThan] === "true"){
+                           return  singleItem["profitRate"]*1 <0
+                        }
+                      return   false
+                    }else {
+                        return singleItem[exp.lessThan] === "true";
+                    }
+
+                    //     return  singleItem[exp.field] < parseFloat(exp.value)
+                    // }
+
+                }
+                // 坑市场占比环比（7天）
+                if (exp.field === "salesMarketRateCircleRate7Day") {
+                 return    singleItem["salesMarketRateCircleRate7Day"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"]*1>-20
+                }
+                //手淘人数市场占比环比（7天）
+                if (exp.field === "shouTaoPeopleNumMarketRateCircleRate7Day") {
+
+                    return    ( singleItem["salesMarketRateCircleRate7Day"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"]*1<-20) || ( singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"]*1<-20 && singleItem["salesMarketRateCircleRate7Day"]*1>-20)
+
+
+                }
+
+                // 坑市场占比环比（日天）
+                if (exp.field === "salesMarketRateCircleRateDay") {
+                    return    singleItem["salesMarketRateCircleRateDay"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"]*1>-20
+                }
+                //手淘人数市场占比环比（日天）
+                if (exp.field === "shouTaoPeopleNumMarketRateCircleRateDay") {
+
+                    return    ( singleItem["salesMarketRateCircleRateDay"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"]*1<-20) || ( singleItem["shouTaoPeopleNumMarketRateCircleRateDay"]*1<-20 && singleItem["salesMarketRateCircleRateDay"]*1>-20)
+
+
+                }
+
+
                 if (exp.comparator) {
                     let tmpResult = true
                     // 如果value为数字需要转化
@@ -643,8 +686,10 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
         }
     }
     result.sum = Object.keys(uniqueItems).length
+  // console.log(result)
     return result;
 }
+
 
 /**
  * 获取数据
