@@ -37,7 +37,7 @@ const saveProcess = async (process) => {
         for (let i = 0; i < reviewItems.length; i++) {
             reviewItems[i].orderIndex = i
             reviewItems[i].taskHoldTime = reviewItems[i].taskHoldTimeGMT
-            reviewItems[i].doneTime = dateUtil.formatGMT2Str(reviewItems[i].modifiedTimeGMT)
+            reviewItems[i].doneTime = dateUtil.formatGMT2Str(reviewItems[i].operateTimeGMT)
             await processReviewRepo.saveProcessReview(reviewItems[i], transaction)
         }
         const flowFormDetails = await flowFormDetailsRepo.getFormDetailsByFormId(process.formUuid)

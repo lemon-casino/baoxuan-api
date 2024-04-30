@@ -9,4 +9,7 @@ describe("", () => {
     it("syncTodayRunningAndFinishedFlows", async () => {
         await taskService.syncTodayRunningAndFinishedFlows()
     })
+    it("syncMissingCompletedFlows", async () => {
+        await taskService.syncMissingCompletedFlows()
+    })
 })
