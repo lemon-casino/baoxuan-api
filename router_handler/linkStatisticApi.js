@@ -17,7 +17,7 @@ const getLinkOperationCount = async (req, res, next) => {
         joiUtil.validate({productLineLeaders: {value: productLineLeaders, schema: Joi.string().required()}})
         productLineLeaders = JSON.parse(productLineLeaders)
         const latestSingleItems = await singleItemTaoBaoService.getLatestBatchIdRecords(1)
-
+//console.log(timeRange)
         // 获得数据
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
             productLineLeaders,

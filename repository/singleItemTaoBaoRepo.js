@@ -1,5 +1,6 @@
 const Sequelize = require("sequelize")
 const sequelize = require('../model/init');
+const { DataTypes,where, col } =Sequelize;
 const getSingleItemTaoBaoModel = require("../model/singleItemTaobaoModel")
 const singleItemTaoBaoModel = getSingleItemTaoBaoModel(sequelize)
 const uuidUtil = require("../utils/uuidUtil")
@@ -7,7 +8,9 @@ const sequelizeUtil = require("../utils/sequelizeUtil")
 const pagingUtil = require("../utils/pagingUtil")
 const {taoBaoSingleItemStatusesKeys} = require("../const/singleItemConst")
 const NotFoundError = require("../error/http/notFoundError")
-
+const moment = require("moment");
+const getABnormal_tm = require("../model/ABbnormal_TM");
+const ABbnormal_TM = getABnormal_tm(sequelize);
 /**
  * 保存淘宝的单品表数据
  * @param item
@@ -39,6 +42,17 @@ const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
         }
     })
 }
+
+
+function getDaysInRange(start, end) {
+    // 使用 Moment.js 解析日期字符串
+    const startDate = moment(start, 'YYYY-MM-DD HH:mm:ss');
+    const endDate = moment(end, 'YYYY-MM-DD HH:mm:ss');
+
+    // 计算日期范围内的天数
+    return endDate.diff(startDate, 'days') + 1;
+}
+
 
 /**
  * 获取淘宝单品表数据
@@ -189,13 +203,13 @@ const getTaoBaoSingleItems = async (pageIndex,
         limit: pageSize,
         where,
         order: [["linkId", "asc"], ["date", "asc"]],
-        logging:true,
+        logging:false,
         group: ['singleItemTaoBaoModel.date','singleItemTaoBaoModel.id','ABbnormal_TM.new_16_30','ABbnormal_TM.new_30_60','ABbnormal_TM.negative_profit_60','ABbnormal_TM.old'],
     })
     result.rows = result.rows.map(function (item) {
         return item.get({plain: true})
     })
-    console.log(result.count.length)
+    //console.log(result.count.length)
 
     // pagingUtil.paging(Math.ceil(result.count / pageSize), result.count, result.rows)  result.count 为总数
     return  pagingUtil.paging(Math.ceil(result.count.length / pageSize), result.count.length, result.rows)

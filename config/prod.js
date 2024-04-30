@@ -3,9 +3,9 @@ const defaultConfig = require('./default')
 const configs = {
     ...defaultConfig,
     redisConfig:{
-        port: 6379,
-        url: '127.0.0.1',
-        password: 'myredis123456',
+        port: 7379,
+        url: '47.95.1.102',
+        password: '',
         ddSuiteKey: "",
     },
     dbConfig: {

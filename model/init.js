@@ -51,7 +51,8 @@ const sequelize = new Sequelize(
             ...dbConfig.define
         },
         timezone: '+08:00',
-        operatorsAliases
+        operatorsAliases,
+        logging:false
     },
 )
 
