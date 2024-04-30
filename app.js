@@ -43,13 +43,14 @@ for (const key of Object.keys(routerMap)) {
 }
 
 app.use((err, req, res, next) => {
-    logger.error(err.stack)
-    if (err.name === "UnauthorizedError")
-        return res.send({code: 401, message: errorMessages.unauthorized});
-    if (err.code && err.message) {
-        return res.send({code: err.code, message: err.message});
+    if (err.name === "UnauthorizedError"){
+        return res.send({code: 401, message: errorMessages.unauthorized})
     }
-    return res.send({code: errorCodes.commonError, message: errorMessages.common});
+    logger.error(err.stack)
+    if (err.code && err.message) {
+        return res.send({code: err.code, message: err.message})
+    }
+    return res.send({code: errorCodes.commonError, message: errorMessages.common})
 });
 
 app.listen(serverConfig.port, function () {
