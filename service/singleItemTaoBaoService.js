@@ -18,6 +18,8 @@ const linkTypeUtil = require("../utils/linkTypeUtil")
 const jsonUtil = require("../utils/jsonUtil")
 const globalGetter = require("../global/getter")
 const NotFoundError = require("../error/http/notFoundError")
+const ForbiddenError = require("../error/http/forbiddenError")
+const ParameterError = require("../error/parameterError")
 const tmpTMInnerGroupingConst = require("../const/tmp/tmInnerGroupingConst")
 
 // 天猫链接打架流程表单id
@@ -69,8 +71,7 @@ const saveSingleItemTaoBao = async (item) => {
     const newItem = {};
     for (const key of Object.keys(item)) {
         if (!validChineseKeys.includes(key)) {
-            const errMsg = `当前单品数据中的${key}后端无法处理`
-            throw new Error(errMsg)
+            throw new ForbiddenError(`当前单品数据中的${key}后端无法处理`)
         }
         let value = item[key]
         if (!value) {
@@ -93,7 +94,7 @@ const saveSingleItemTaoBao = async (item) => {
     }
     // 必须包含 batchId，便于异常时删除同一批数据
     if (!newItem.batchId) {
-        throw new Error("必须包含batchId信息，保证数据的保存完成性")
+        throw new NotFoundError("必须包含batchId信息，保证数据的保存完成性")
     }
 
     const result = await singleItemTaoBaoRepo.saveSingleItemTaoBao(newItem)
@@ -108,7 +109,7 @@ const saveSingleItemTaoBao = async (item) => {
  */
 const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
     if (!batchId || !linkId) {
-        throw new Error("参数：batchId, linkId 不能为空")
+        throw new ParameterError("参数：batchId, linkId 不能为空")
     }
     return singleItemTaoBaoRepo.deleteSingleIteTaoBaoByBatchIdAndLinkId(batchId, linkId)
 }
@@ -473,7 +474,7 @@ const getLinkOperationCount = async (status,
         const result = await getSelfErrorSingleItemLinkOperationCount(satisfiedSingleItems)
         return result
     }
-    throw new Error(`${status}还不支持`)
+    throw new NotFoundError(`${status}还不支持`)
 }
 
 /**
@@ -739,7 +740,7 @@ const getErrorLinkOperationCount = async (singleItems, status) => {
     if (status == "fail") {
         return 0
     }
-    throw new Error(`${status}还不支持`)
+    throw new NotFoundError(`${status}还不支持`)
 }
 
 /**

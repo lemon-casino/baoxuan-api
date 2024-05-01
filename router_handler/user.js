@@ -10,6 +10,7 @@ const menuRepo = require("../repository/menuRepo")
 const departmentService = require("../service/departmentService")
 const userLogService = require("../service/userLogService")
 const tokenUtil = require("../utils/token")
+const UserError = require("../error/userError")
 
 const {Op} = require("sequelize");
 // 引入加密模块
@@ -236,16 +237,16 @@ const getTokenAndRefreshToken = async (userName, password) => {
     });
 
     if (!brief) {
-        throw new Error("用户不存在")
+        throw new UserError("用户不存在")
     }
 
     if (brief.status.toString() === "0") {
-        throw new Error("帐号已停用")
+        throw new UserError("帐号已停用")
     }
 
     const compareResult = bcrypt.compareSync(password, brief.password);
     if (!compareResult) {
-        throw new Error("密码错误")
+        throw new UserError("密码错误")
     }
 
 

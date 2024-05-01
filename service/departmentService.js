@@ -2,6 +2,7 @@ const whiteList = require("../config/whiteList");
 const redisService = require("../service/redisService")
 const dateUtil = require("../utils/dateUtil")
 const globalGetter = require("../global/getter")
+const NotFoundError = require("../error/http/notFoundError")
 
 // 获取指定部门Id的所有子部门和人员信息
 const getSubDeptLev = async (depLists, dept_id) => {
@@ -282,7 +283,7 @@ const getUsersOfDepartment = async (deptId) => {
     if (satisfiedDepartment) {
         return satisfiedDepartment.dep_user
     }
-    throw new Error(`未找到部门${deptId}的信息`)
+    throw new NotFoundError(`未找到部门${deptId}的信息`)
 }
 
 
