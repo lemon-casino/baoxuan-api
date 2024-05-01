@@ -44,8 +44,6 @@ const biResponse = require("../utils/biResponse")
 exports.getCheckCode = async (req, res, next) => {
 
     try {
-        throw new Error("emo")
-
         // 生成验证码，获取catcha，有{data,text}两个属性，data为svg格式图片、text为验证码
         const captcha = svgCaptcha.create({
             size: 4,
