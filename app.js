@@ -60,7 +60,7 @@ app.listen(serverConfig.port, function () {
 });
 
 process.on("SIGTERM", () => {
-    app.close(() => {
-        process.exit(0)
-    })
+    // app.close(() => {
+    //     process.exit(0)
+    // })
 })
