@@ -1,9 +1,9 @@
 const express = require("express")
 require("express-async-errors")
 const morgan = require('morgan')
-const email = require("nodemailer")
 const {errorMessages, errorCodes} = require("./const/errorConst")
 const {logger, stream} = require("./utils/log")
+const emailUtil = require("./utils/emailUtil")
 
 require("./scripts/scheduledTask");
 const serverConfig = require('./config/index').serverConfig
@@ -51,6 +51,7 @@ app.use((err, req, res, next) => {
         return res.send({code: err.code, message: err.message})
     }
     logger.error(err.stack)
+    // emailUtil.send(err.stack)
     return res.send({code: errorCodes.commonError, message: errorMessages.common})
 });
 
