@@ -24,7 +24,9 @@ const syncTodayRunningAndFinishedFlows = async () => {
 }
 
 const syncMissingCompletedFlows = async () => {
+    console.log("开始同步历史已完成流程...")
     await flowService.syncMissingCompletedFlows()
+    console.log("同步历史已完成流程结束")
 }
 
 const syncDingDingToken = async () => {

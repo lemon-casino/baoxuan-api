@@ -11,5 +11,6 @@ describe("", () => {
     })
     it("syncMissingCompletedFlows", async () => {
         await taskService.syncMissingCompletedFlows()
+        console.log("finished")
     })
 })

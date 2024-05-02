@@ -28,7 +28,7 @@ const startOfToday = () => {
 }
 
 const dateOfEarliest = () => {
-    return "2023-02-03"
+    return "2023-06-01"
 }
 
 const dateEndOffToday = (daysOff, pattern) => {
