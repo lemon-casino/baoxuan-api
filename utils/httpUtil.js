@@ -34,10 +34,12 @@ const get = async (url, params, token) => {
             // 如果出现限流错误，则重试
             const {data} = error.response
             let isRateLimited = false
-            for (const errKeyword of dingDingRateLimitErrorKeywords) {
-                if (data.message.includes(errKeyword)) {
-                    isRateLimited = true
-                    break
+            if (data.message) {
+                for (const errKeyword of dingDingRateLimitErrorKeywords) {
+                    if (data.message.includes(errKeyword)) {
+                        isRateLimited = true
+                        break
+                    }
                 }
             }
             if (isRateLimited) {
@@ -68,10 +70,12 @@ const post = async (url, data, token) => {
         if (error.response) {
             const errData = error.response.data
             let isRateLimited = false
-            for (const errKeyword of dingDingRateLimitErrorKeywords) {
-                if (errData.message.includes(errKeyword)) {
-                    isRateLimited = true
-                    break
+            if (errData.message) {
+                for (const errKeyword of dingDingRateLimitErrorKeywords) {
+                    if (errData.message.includes(errKeyword)) {
+                        isRateLimited = true
+                        break
+                    }
                 }
             }
             if (isRateLimited) {
