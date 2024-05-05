@@ -522,7 +522,7 @@ const getCoreActionData = async (deptId, userNames, startDate, endDate) => {
 
             // 动作的状态节点区分逾期-未逾期两种
             const overDueResult = {nameCN: "逾期", nameEN: "overDue", children: []}
-            const notOverDueResult = {name: "未逾期", nameEN: "notOverDue", children: []}
+            const notOverDueResult = {nameCN: "未逾期", nameEN: "notOverDue", children: []}
 
             // 根据配置中状态的计算规则进行统计
             for (const rule of rules) {
