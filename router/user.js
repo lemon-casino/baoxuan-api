@@ -27,5 +27,7 @@ router.post('/delUser', userHandler.deleteUser);
 router.post('/editPwd', userHandler.editPassword);
 // 根据id获取用户信息接口
 router.get('/queryUserInfo/:user_id', userHandler.getUserinfoById);
+router.get('/tm-inner-groups', userHandler.getTMInnerGroups);
+
 // 将路由对象共享出去
 module.exports = router;

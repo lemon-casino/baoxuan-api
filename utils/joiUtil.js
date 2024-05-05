@@ -24,6 +24,10 @@ const commonArgsSchemas = {
     endDate: commonJoiSchemas.dateRequired
 }
 
+/**
+ *
+ * @param items {}
+ */
 const validate = (items) => {
     // schema查找优先级： 自定义-commonRepo.js-无
     let tmpSchemas = {}

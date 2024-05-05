@@ -21,4 +21,6 @@ router.get("/statistic/dept-today-sum", deptTodaySumHandler.getDeptTodaySum)
 
 router.put("/running", flowHandler.updateRunningFlowEmergency)
 
+router.get("/core-action", flowHandler.getCoreActionData)
+
 module.exports = router;

@@ -4,11 +4,8 @@
 // 引入用户模型
 const UsersModel = require("../model/users");
 const RolesModel = require("../model/roles");
-const userRoleRepo = require("../repository/userRoleRepo")
-const roleMenuRepo = require("../repository/roleMenuRepo")
-const menuRepo = require("../repository/menuRepo")
-const departmentService = require("../service/departmentService")
 const userLogService = require("../service/userLogService")
+const userService = require("../service/userService")
 const tokenUtil = require("../utils/token")
 const UserError = require("../error/userError")
 
@@ -496,5 +493,21 @@ exports.getUserinfoById = (req, res, next) => {
         } else {
             res.send(biResponse.success(user));
         }
-    });
-};
+    })
+}
+
+/**
+ * 获取天猫成员的内部组的划分结构
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<void>}
+ */
+exports.getTMInnerGroups = async (req, res, next) => {
+    try {
+        const tmInnerGroups = await userService.getTMInnerGroups(req.user.id)
+        res.send(biResponse.success(tmInnerGroups))
+    } catch (e) {
+        next(e)
+    }
+}

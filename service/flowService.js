@@ -499,7 +499,8 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
     globalSetter.setGlobalTodayRunningAndFinishedFlows(newTodayFlows)
 }
 
-const getCoreActionData = async (deptId, startDate, endDate) => {
+const getCoreActionData = async (deptId, userNames, startDate, endDate) => {
+
     const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
     // 部门的核心动作配置信息
     const coreActionsConfig = await flowRepo.getCoreActionsConfig(deptId)
@@ -507,21 +508,26 @@ const getCoreActionData = async (deptId, startDate, endDate) => {
     // todo： 根据时间范围获取历史流程，序列化后统一处理
 
     const finalResult = []
+    // 根据配置信息获取基于所有人的数据
+    // eg：[{actionName: "市场分析", children: [{"nameCN": "待做", children: [{nameCN:"逾期", children:[{userName: "张三", sum: 1, ids: ["xxx"]}]}]}]}]
     for (const action of coreActionsConfig) {
         const {actionName, actionCode} = action
+        // 动作节点
         const actionResult = {actionName, actionCode, children: []}
-
         for (const actionStatus of action.actionStatus) {
             const {nameCN, nameEN, rules} = actionStatus
 
+            // 动作的状态节点
             let statusResult = {nameCN, nameEN, children: []}
 
+            // 动作的状态节点区分逾期-未逾期两种
             const overDueResult = {nameCN: "逾期", nameEN: "overDue", children: []}
             const notOverDueResult = {name: "未逾期", nameEN: "notOverDue", children: []}
 
+            // 根据配置中状态的计算规则进行统计
             for (const rule of rules) {
                 const currentFlows = todayFlows.filter((flow) => flow.formUuid === rule.formId)
-
+                // 需要计算的节点对
                 for (const nodePair of rule.countNodePairs) {
                     const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = nodePair
 
@@ -530,8 +536,8 @@ const getCoreActionData = async (deptId, startDate, endDate) => {
                     let isOverDue = false
 
                     for (const flow of currentFlows) {
-
                         const reviewItems = flow.overallprocessflow
+
                         for (const reviewItem of reviewItems) {
                             if (fromNode && reviewItem.activityId === fromNode.id && fromNode.status.includes(reviewItem.type)) {
                                 fromMatched = true
@@ -543,40 +549,55 @@ const getCoreActionData = async (deptId, startDate, endDate) => {
                                 isOverDue = reviewItem.isOverDue
                             }
                         }
+                        if (!fromMatched || !toMatched) {
+                            continue
+                        }
 
-                        if (fromMatched && toMatched) {
-                            let ownerName = ""
-                            const {from, id} = ownerRule
-                            if (from.toUpperCase() === ownerFrom.FORM) {
-                                ownerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id][0]
-                            } else {
-                                const processReviewId = formFlowIdMappings[id] || id
-                                const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
-                                ownerName = reviewItems.length > 0 && reviewItems[0].operatorName
-                            }
+                        // 找到该公工作量的负责人
+                        let ownerName = ""
+                        const {from, id} = ownerRule
+                        if (from.toUpperCase() === ownerFrom.FORM) {
+                            ownerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id][0]
+                        } else {
+                            const processReviewId = formFlowIdMappings[id] || id
+                            const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
+                            ownerName = reviewItems.length > 0 && reviewItems[0].operatorName
+                        }
+                        if (!ownerName) {
+                            logger.warn(`没有匹配到计数规则的所有人。流程：${flow.processInstanceId},rule: ${JSON.stringify(ownerRule)}`)
+                            continue
+                        }
 
-                            if (!ownerName) {
-                                logger.warn(`没有匹配到计数规则的所有人。流程：${flow.processInstanceId},rule: ${JSON.stringify(ownerRule)}`)
-                                continue
-                            }
-                            let userFlows = null
-                            if (overdueNode) {
-                                userFlows = overDueResult.children.filter(item => item.userName === ownerName)
-                            } else {
-                                userFlows = notOverDueResult.children.filter(item => item.userName === ownerName)
-                            }
-                            if (userFlows.length > 0 && userFlows[0].ids && userFlows[0].ids.length > 0) {
-                                userFlows[0].ids.push(flow.processInstanceId)
-                                userFlows[0].sum = userFlows[0].ids.length
-                            } else {
-                                userFlows = {userName: ownerName, sum: 1, ids: [flow.processInstanceId]}
+                        // 统计指定人的工作量
+                        if (!userNames.includes(ownerName)) {
+                            continue
+                        }
+
+                        // 根据是否逾期汇总个人的ids和sum
+                        let userFlows = null
+                        if (overdueNode) {
+                            userFlows = overDueResult.children.filter(item => item.userName === ownerName)
+                        } else {
+                            userFlows = notOverDueResult.children.filter(item => item.userName === ownerName)
+                        }
+                        if (userFlows.length > 0 && userFlows[0].ids && userFlows[0].ids.length > 0) {
+                            userFlows[0].ids.push(flow.processInstanceId)
+                            userFlows[0].sum = userFlows[0].ids.length
+                        } else {
+                            userFlows = {userName: ownerName, sum: 1, ids: [flow.processInstanceId]}
+                            if (isOverDue) {
                                 overDueResult.children.push(userFlows)
+                            } else {
+                                notOverDueResult.children.push(userFlows)
                             }
                         }
                     }
                 }
             }
-            statusResult.children.push(overDueResult, notOverDueResult)
+
+            // 汇总结果保存
+            statusResult.children.push(overDueResult)
+            statusResult.children.push(notOverDueResult)
             actionResult.children.push(statusResult)
         }
         finalResult.push(actionResult)
@@ -586,7 +607,9 @@ const getCoreActionData = async (deptId, startDate, endDate) => {
             result = flowUtil.attachIdsAndSum(result)
         }
     }
+    return finalResult
 }
+
 
 module.exports = {
     filterFlowsByTimesRange,

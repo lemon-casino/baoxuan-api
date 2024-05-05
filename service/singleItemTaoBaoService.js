@@ -330,7 +330,6 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
     }
     // 判断用户是否是leader
     const userDDId = await userService.getDingDingUserId(userId)
-    const user = await userService.getUserDetails(userId)
     const departments = await departmentService.getDepartmentOfUser(userDDId)
 
     // tm leader 需要获取该部门下的所有人
@@ -350,12 +349,12 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
     // 天猫组deptId：903075138
     const department = await departmentService.getDepartmentWithUsers("903075138")
     if (isTMLeader) {
-        const groupingResult = Object.keys(tmpTMInnerGroupingConst).map(key => {
-            return {[key]: tmpTMInnerGroupingConst[key]}
+        const groupingResult = Object.keys(tmpTMInnerGroupingConst.tmInnerGroupVersion1).map(key => {
+            return {[key]: tmpTMInnerGroupingConst.tmInnerGroupVersion1[key]}
         })
         let hasGroupedUsers = []
-        for (const key of Object.keys(tmpTMInnerGroupingConst)) {
-            hasGroupedUsers = hasGroupedUsers.concat(tmpTMInnerGroupingConst[key])
+        for (const key of Object.keys(tmpTMInnerGroupingConst.tmInnerGroupVersion1)) {
+            hasGroupedUsers = hasGroupedUsers.concat(tmpTMInnerGroupingConst.tmInnerGroupVersion1[key])
         }
         const noGroupedUsers = []
         for (const user of department.dep_user) {

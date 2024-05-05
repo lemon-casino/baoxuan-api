@@ -5,6 +5,7 @@ const userRepo = require("../repository/userRepo")
 const whiteList = require("../config/whiteList")
 const globalGetter = require("../global/getter")
 const NotFoundError = require("../error/http/notFoundError")
+const tmpTMInnerGroupingConst = require("../const/tmp/tmInnerGroupingConst")
 
 const getDingDingUserId = async (user_id) => {
     const user = await UsersModel.findOne({
@@ -65,9 +66,89 @@ const getUserDetails = async (id) => {
     return details
 }
 
+/**
+ * 获取用户可以查看基于内部分组的人员信息
+ * @param userId
+ * @returns {Promise<[{[p: string]: *}]|*[]>}
+ */
+const getTMInnerGroups = async (userId) => {
+    // 判断用户是否是leader
+    let isTMLeader = false
+    const userDDId = await getDingDingUserId(userId)
+    if (whiteList.pepArr().includes(userDDId)) {
+        isTMLeader = true
+    } else {
+        const departments = await departmentService.getDepartmentOfUser(userDDId)
+        if (departments.length === 0) {
+            throw NotFoundError(`未找到用户：${userDDId}的部门信息`)
+        }
+        for (const dept of departments) {
+            if (dept.dep_detail.name === "天猫组" && dept.leader) {
+                isTMLeader = true
+                break
+            }
+        }
+    }
+
+    const groupingResult = []
+
+    const department = await departmentService.getDepartmentWithUsers("903075138")
+    let currentUser = []
+    if (!isTMLeader) {
+        currentUser = department.dep_user.filter(user => user.userid === userDDId)
+        if (currentUser.length === 0) {
+            throw NotFoundError(`未找到用户：${userDDId}在天猫下的详细信息`)
+        }
+    }
+    // 天猫下的所有组员按组划分，没有指定组的划分到"未分组"中
+    const hasGroupedUsers = []
+    const noGroupedUsers = []
+    for (const innerGroup of tmpTMInnerGroupingConst.tmInnerGroupVersion2) {
+        const currentGroupUsers = []
+        for (const member of innerGroup.members) {
+            currentGroupUsers.push(member)
+            hasGroupedUsers.push(member.userName)
+        }
+        groupingResult.push({
+            groupCode: innerGroup.groupCode,
+            groupName: innerGroup.groupName,
+            members: currentGroupUsers
+        })
+    }
+
+    for (const user of department.dep_user) {
+        if (hasGroupedUsers.includes(user.name)) {
+            continue
+        }
+        noGroupedUsers.push({userName: user.name})
+    }
+    groupingResult.push({groupCode: "noGroup", groupName: "未分组", members: noGroupedUsers})
+
+    // 部门主管和管理员返回所有分组信息
+    if (isTMLeader) {
+        return groupingResult
+    }
+
+    for (const grouping of groupingResult) {
+        for (const member of grouping.members) {
+            if (currentUser.length > 0 && currentUser[0].name === member.userName) {
+                if (member.isLeader) {
+                    return [grouping]
+                }
+                return [{
+                    ...grouping,
+                    members: grouping.members.filter(member => currentUser[0].name === member.userName)
+                }]
+            }
+        }
+    }
+    return []
+}
+
 module.exports = {
     getDingDingUserId,
     getUsersOfDepartment,
     getUserDetails,
-    getUserSelfOrPartnersOfDepartment
+    getUserSelfOrPartnersOfDepartment,
+    getTMInnerGroups
 }

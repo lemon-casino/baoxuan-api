@@ -28,10 +28,11 @@ const getTodayFlowsByIds = async (req, res) => {
 const updateRunningFlowEmergency = async (req, res, next) => {
     try {
         const {ids, emergency} = req.body
-        joiUtil.validate([
-                {emergency: {value: emergency, schema: joi.string().required()}},
-                {ids: {value: ids, schema: joi.string().required()}}
-            ]
+        joiUtil.validate(
+            {
+                emergency: {value: emergency, schema: joiUtil.commonJoiSchemas.strRequired},
+                ids: {value: ids, schema: joiUtil.commonJoiSchemas.strRequired}
+            }
         )
         await flowService.updateRunningFlowEmergency(ids, emergency)
         return res.send(biResponse.success())
@@ -40,8 +41,26 @@ const updateRunningFlowEmergency = async (req, res, next) => {
     }
 }
 
+const getCoreActionData = async (req, res, next) => {
+    try {
+        const {deptId, userNames, startDate, endDate} = req.query
+
+        joiUtil.validate({
+            deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required},
+            userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+
+        const result = await flowService.getCoreActionData(deptId, userNames, startDate, endDate)
+        res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+
 module.exports = {
     getFlowsByIds,
     getTodayFlowsByIds,
-    updateRunningFlowEmergency
+    updateRunningFlowEmergency,
+    getCoreActionData
 }
