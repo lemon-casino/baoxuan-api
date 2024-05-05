@@ -40,7 +40,7 @@ const getUserSelfOrPartnersOfDepartment = async (ddUserId, deptId) => {
     let userWithDepartment = usersWithDepartment.filter((user) => user.userid === ddUserId)
 
     if (!userWithDepartment || userWithDepartment.length === 0) {
-        throw new Error("没有找到您所在的部门信息")
+        throw new NotFoundError("没有找到您所在的部门信息")
     }
     userWithDepartment = userWithDepartment[0]
     const isLeaderOfTM = userWithDepartment.leader_in_dept.filter((dept) => {

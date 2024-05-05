@@ -1,6 +1,4 @@
 const processRepo = require("../repository/processRepo")
-const dateUtil = require("../utils/dateUtil")
-
 
 const getLatestModifiedProcess = async () => {
     return await processRepo.getLatestModifiedProcess();

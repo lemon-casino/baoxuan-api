@@ -1,8 +1,9 @@
-const express = require("express");
+const express = require("express")
 require("express-async-errors")
-const morgan = require('morgan');
+const morgan = require('morgan')
 const {errorMessages, errorCodes} = require("./const/errorConst")
 const {logger, stream} = require("./utils/log")
+const emailUtil = require("./utils/emailUtil")
 
 require("./scripts/scheduledTask");
 const serverConfig = require('./config/index').serverConfig
@@ -11,8 +12,8 @@ const app = express();
 // 加载全局的基础信息： users、departments、 usersOfDepartments
 const global = require("./global/index")
 global.initial()
-const cors = require("cors");
-app.use(cors());
+const cors = require("cors")
+app.use(cors())
 
 const bodyParser = require("body-parser");
 app.use(
@@ -43,15 +44,23 @@ for (const key of Object.keys(routerMap)) {
 }
 
 app.use((err, req, res, next) => {
-    logger.error(err.stack)
-    if (err.name === "UnauthorizedError")
-        return res.send({code: 401, message: errorMessages.unauthorized});
-    if (err.code && err.message) {
-        return res.send({code: err.code, message: err.message});
+    if (err.name === "UnauthorizedError") {
+        return res.send({code: 401, message: errorMessages.unauthorized})
     }
-    return res.send({code: errorCodes.commonError, message: errorMessages.common});
+    if (err.code && err.message) {
+        return res.send({code: err.code, message: err.message})
+    }
+    logger.error(err.stack)
+    // emailUtil.send(err.stack)
+    return res.send({code: errorCodes.commonError, message: errorMessages.common})
 });
 
 app.listen(serverConfig.port, function () {
     console.log(`Bi node本地启动地址 http://127.0.0.1:${serverConfig.port}`);
 });
+
+// process.on("SIGTERM", () => {
+//     app.close(() => {
+//         process.exit(0)
+//     })
+// })

@@ -2,10 +2,13 @@ const Sequelize = require('sequelize')
 const sequelize = require('../model/init');
 const getProcessModel = require("../model/processModel")
 const processModel = getProcessModel(sequelize)
-const processReviewRepo = require("../repository/processReviewRepo")
-const processDetailsRepo = require("../repository/processDetailsRepo")
+const getProcessDetailsModel = require("../model/processDetailsModel")
+const processDetailsModel = getProcessDetailsModel(sequelize)
+const getProcessReviewModel = require("../model/processReviewModel")
+const processReviewModel = getProcessReviewModel(sequelize)
 const flowFormDetailsRepo = require("../repository/flowFormDetailsRepo")
 const dateUtil = require("../utils/dateUtil")
+const uuidUtil = require("../utils/uuidUtil")
 
 const getLatestModifiedProcess = async () => {
     const latestProcess = await processModel.findOne({
@@ -18,7 +21,7 @@ const getLatestModifiedProcess = async () => {
 }
 
 const saveProcess = async (process) => {
-    const transaction = await sequelize.transaction();
+    const transaction = await sequelize.transaction()
     try {
         const reviewItems = process.overallprocessflow
         const data = process.data
@@ -26,32 +29,31 @@ const saveProcess = async (process) => {
 
         process.originatorName = originator.name.nameInChinese
         process.originatorId = originator.userId
-        process.overallprocessflow = null
-        process.data = null
-        process.originator = null
         process.createTime = dateUtil.formatGMT(process.createTimeGMT)
         process.doneTime = dateUtil.formatGMT(process.modifiedTimeGMT)
         process.stockedTime = new Date()
         await processModel.create(process, {transaction})
 
         for (let i = 0; i < reviewItems.length; i++) {
+            reviewItems[i].id = uuidUtil.getId()
             reviewItems[i].orderIndex = i
             reviewItems[i].taskHoldTime = reviewItems[i].taskHoldTimeGMT
-            reviewItems[i].doneTime = dateUtil.formatGMT2Str(reviewItems[i].modifiedTimeGMT)
-            await processReviewRepo.saveProcessReview(reviewItems[i], transaction)
+            reviewItems[i].doneTime = dateUtil.formatGMT2Str(reviewItems[i].operateTimeGMT)
+            await processReviewModel.create(reviewItems[i], {transaction})
         }
         const flowFormDetails = await flowFormDetailsRepo.getFormDetailsByFormId(process.formUuid)
-        const detailsArr = []
         for (const key of Object.keys(data)) {
             const fieldDetails = flowFormDetails.filter((item) => item.fieldId === key)
-            detailsArr.push({
+            const fieldValue = data[key] instanceof Array ? JSON.stringify(data[key]) : data[key]
+            const details = {
+                id: uuidUtil.getId(),
                 processInstanceId: process.processInstanceId,
                 fieldId: key,
                 fieldName: fieldDetails && fieldDetails.length > 0 ? fieldDetails[0].fieldName : "",
-                fieldValue: JSON.stringify(data[key])
-            })
+                fieldValue
+            }
+            await processDetailsModel.create(details, {transaction})
         }
-        await processDetailsRepo.saveProcessDetailsArrWithOutTrans(detailsArr, transaction)
         await transaction.commit()
         return true
     } catch (e) {

@@ -10,6 +10,7 @@ const menuRepo = require("../repository/menuRepo")
 const departmentService = require("../service/departmentService")
 const userLogService = require("../service/userLogService")
 const tokenUtil = require("../utils/token")
+const UserError = require("../error/userError")
 
 const {Op} = require("sequelize");
 // 引入加密模块
@@ -40,40 +41,45 @@ const biResponse = require("../utils/biResponse")
 /**
  * 获取图形验证码
  */
-exports.getCheckCode = async (req, res) => {
-    // 生成验证码，获取catcha，有{data,text}两个属性，data为svg格式图片、text为验证码
-    const captcha = svgCaptcha.create({
-        size: 4,
-        ignoreChars: "0o1lpaqd",
-        color: true,
-        noise: 6,
-        background: "#aead5b",
-        height: 32,
-        width: 100,
-    });
-    // 验证码键和缓存时间
-    const uuid = Uuid.v4();
-    const effectTime = 10 * 60;
+exports.getCheckCode = async (req, res, next) => {
 
-    console.log('**** redis code ****', new Date())
-    // 存入redis
-    const result = await redis.setKey(
-        uuid,
-        captcha.text.toLowerCase(),
-        effectTime
-    );
-    console.log('**** code ****', new Date())
-    // todo: 返回的验证码接口数据待调整
-    if (result) {
-        res.send({
-            code: 200,
-            uuid,
-            textCode: captcha.text,
-            message: "获取验证码成功",
-            data: captcha.data,
+    try {
+        // 生成验证码，获取catcha，有{data,text}两个属性，data为svg格式图片、text为验证码
+        const captcha = svgCaptcha.create({
+            size: 4,
+            ignoreChars: "0o1lpaqd",
+            color: true,
+            noise: 6,
+            background: "#aead5b",
+            height: 32,
+            width: 100,
         });
-    } else {
-        return res.send(biResponse.serverError("验证码获取失败"));
+        // 验证码键和缓存时间
+        const uuid = Uuid.v4();
+        const effectTime = 10 * 60;
+
+        console.log('**** redis code ****', new Date())
+        // 存入redis
+        const result = await redis.setKey(
+            uuid,
+            captcha.text.toLowerCase(),
+            effectTime
+        );
+        console.log('**** code ****', new Date())
+        // todo: 返回的验证码接口数据待调整
+        if (result) {
+            res.send({
+                code: 200,
+                uuid,
+                textCode: captcha.text,
+                message: "获取验证码成功",
+                data: captcha.data,
+            });
+        } else {
+            return res.send(biResponse.serverError("验证码获取失败"));
+        }
+    } catch (e) {
+        next(e)
     }
 };
 /**
@@ -236,16 +242,16 @@ const getTokenAndRefreshToken = async (userName, password) => {
     });
 
     if (!brief) {
-        throw new Error("用户不存在")
+        throw new UserError("用户不存在")
     }
 
     if (brief.status.toString() === "0") {
-        throw new Error("帐号已停用")
+        throw new UserError("帐号已停用")
     }
 
     const compareResult = bcrypt.compareSync(password, brief.password);
     if (!compareResult) {
-        throw new Error("密码错误")
+        throw new UserError("密码错误")
     }
 
 

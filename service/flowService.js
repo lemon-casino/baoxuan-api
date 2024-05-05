@@ -430,7 +430,7 @@ const updateFlow = async (flow) => {
 const syncMissingCompletedFlows = async () => {
     const pullTimeRange = []
     // 获取拉取钉钉完成流程的起始时间（异常情况下，当天更新失败，可能下次会拉取多天的）
-    const latestProcess = await processService.getLatestModifiedProcess();
+    const latestProcess = await processService.getLatestModifiedProcess()
     if (latestProcess) {
         // 钉钉返回的时间精确到分钟，同一分钟内可能会有入库失败的情况，
         // 需要把这一分钟内的流程也筛出来，过滤掉
@@ -442,7 +442,7 @@ const syncMissingCompletedFlows = async () => {
         pullTimeRange.push(dateUtil.dateOfEarliest())
     }
     // 截止的日期取不到数据，所以用 -1
-    pullTimeRange.push(dateUtil.dateEndOffToday(-1, "YYYY-MM-DD"))
+    pullTimeRange.push(dateUtil.dateEndOffToday(120, "YYYY-MM-DD"))
 
     // 获取指定范围时间范围内的流程
     const finishedFlows = await dingDingService.getFinishedFlows(pullTimeRange)

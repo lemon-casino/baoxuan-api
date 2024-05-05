@@ -165,15 +165,6 @@ module.exports = sequelize => {
       comment: "操作人名称",
       field: "operator_display_name"
     },
-    reviewId: {
-      type: DataTypes.STRING(20),
-      allowNull: true,
-      defaultValue: null,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "审核模版id",
-      field: "review_id"
-    },
     cost: {
       type: DataTypes.DECIMAL,
       allowNull: true,
