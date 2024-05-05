@@ -499,13 +499,39 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
     globalSetter.setGlobalTodayRunningAndFinishedFlows(newTodayFlows)
 }
 
-const getCoreActionData = async (deptId, userNames, startDate, endDate) => {
+const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) => {
+    let computedFlows = []
+    if (startDoneDate && endDoneDate) {
+        const processDataReviewItem = await Promise.all([
+            flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate)),
+            flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate))
+        ])
+
+        computedFlows = processDataReviewItem[1]
+        const processWithData = processDataReviewItem[0]
+        // 合并流程的data和审核流信息
+        for (let i = 0; i < computedFlows.length; i++) {
+            const currData = {}
+            for (const item of processWithData[i].data) {
+                const fieldValue = item.fieldValue
+                if (fieldValue.startsWith("[") && fieldValue.endsWith("]")) {
+                    currData[item.fieldId] = JSON.parse(fieldValue)
+                } else {
+                    currData[item.fieldId] = fieldValue
+                }
+            }
+            computedFlows[i].data = currData
+        }
+
+        if (endDoneDate && endDoneDate === dateUtil.format2Str(new Date(), "YYYY-MM-DD")) {
+            const todayFlows = await globalGetter.getTodayFlows()
+            computedFlows = computedFlows.concat(todayFlows)
+        }
+    }
 
     const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
     // 部门的核心动作配置信息
     const coreActionsConfig = await flowRepo.getCoreActionsConfig(deptId)
-    const todayFlows = await globalGetter.getTodayFlows()
-    // todo： 根据时间范围获取历史流程，序列化后统一处理
 
     const finalResult = []
     // 根据配置信息获取基于所有人的数据
@@ -526,7 +552,7 @@ const getCoreActionData = async (deptId, userNames, startDate, endDate) => {
 
             // 根据配置中状态的计算规则进行统计
             for (const rule of rules) {
-                const currentFlows = todayFlows.filter((flow) => flow.formUuid === rule.formId)
+                const currentFlows = computedFlows.filter((flow) => flow.formUuid === rule.formId)
                 // 需要计算的节点对
                 for (const nodePair of rule.countNodePairs) {
                     const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = nodePair
@@ -547,6 +573,7 @@ const getCoreActionData = async (deptId, userNames, startDate, endDate) => {
                             }
                             if (overdueNode && reviewItem.activityId === overdueNode.id && overdueNode.status.includes(reviewItem.type)) {
                                 isOverDue = reviewItem.isOverDue
+                                console.log(isOverDue)
                             }
                         }
                         if (!fromMatched || !toMatched) {
@@ -609,7 +636,6 @@ const getCoreActionData = async (deptId, userNames, startDate, endDate) => {
     }
     return finalResult
 }
-
 
 module.exports = {
     filterFlowsByTimesRange,

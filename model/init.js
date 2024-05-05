@@ -52,7 +52,7 @@ const sequelize = new Sequelize(
         },
         timezone: '+08:00',
         operatorsAliases,
-        logging:false
+        logging: dbConfig.logging
     },
 )
 

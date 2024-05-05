@@ -1,8 +1,6 @@
 let env = process.env.NODE_ENV
 if (!env) {
     env = "dev"
-    // console.error("没有配置启动的环境参数：cross-env NODE_ENV=(dev|prod)")
-    // return;
 }
 let configs = null
 try {

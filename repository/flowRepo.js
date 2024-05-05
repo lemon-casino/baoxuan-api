@@ -1,8 +1,28 @@
+const Sequelize = require('sequelize')
 const sequelize = require('../model/init');
 const getProcessModel = require("../model/processModel")
 const processModel = getProcessModel(sequelize)
+const getProcessReviewModel = require("../model/processReviewModel")
+const processReviewModel = getProcessReviewModel(sequelize)
+const getProcessDetailsModel = require("../model/processDetailsModel")
+const processDetailsModel = getProcessDetailsModel(sequelize)
 const NotFoundError = require("../error/http/notFoundError")
 const tmCoreActionsConst = require("../const/tmp/tmCoreActionsConst")
+const sequelizeUtil = require("../utils/sequelizeUtil")
+
+processModel.hasMany(processReviewModel,
+    {
+        foreignKey: 'process_instance_id',
+        as: "overallprocessflow"
+    }
+)
+
+processModel.hasMany(processDetailsModel,
+    {
+        foreignKey: 'process_instance_id',
+        as: "data"
+    }
+)
 
 const getProcessByIds = async (ids) => {
     const processes = await processModel.findAll({
@@ -39,9 +59,60 @@ const getCoreActionsConfig = async (deptId) => {
     throw new NotFoundError(`未找到部门：${deptId}的核心动作的配置信息`)
 }
 
+/**
+ *
+ * @param id
+ * @returns {Promise<[]|*>}
+ */
+const getProcessWithReviewByReviewItemDoneTime = async (startDoneDateTime, enDoneDateTime) => {
+    const tempSQL = sequelize.dialect.QueryGenerator.selectQuery("process_review", {
+            attributes: ['process_instance_id'],
+            where: {done_time: {$between: [startDoneDateTime, enDoneDateTime]}}
+        }
+    ).slice(0, -1);
+
+    const processWithReview = await processModel.findAll({
+        include: [
+            {
+                model: processReviewModel,
+                where: {processReviewModel: Sequelize.col("processModel.process_instance_id")},
+                as: "overallprocessflow"
+            }
+        ],
+        where: {process_instance_id: {$in: sequelize.literal(`(${tempSQL})`)}},
+        order: [["process_instance_id", "desc"]]
+    })
+    return processWithReview
+}
+
+const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateTime) => {
+    const tempSQL = sequelize.dialect.QueryGenerator.selectQuery("process_review", {
+            attributes: ['process_instance_id'],
+            where: {done_time: {$between: [startDoneDateTime, enDoneDateTime]}}
+        }
+    ).slice(0, -1);
+
+    const processWithData = await processModel.findAll({
+        include: [
+            {
+                model: processDetailsModel,
+                where: {processDetailsModel: Sequelize.col("processModel.process_instance_id")},
+                as: "data"
+            }
+        ],
+        where: {process_instance_id: {$in: sequelize.literal(`(${tempSQL})`)}},
+        order: [["process_instance_id", "desc"]]
+    })
+
+    return processWithData
+}
+
+
 module.exports = {
     getProcessByIds,
     getAllProcesses,
     updateProcess,
-    getCoreActionsConfig
+    getCoreActionsConfig,
+    getProcessDataByReviewItemDoneTime,
+    getProcessWithReviewByReviewItemDoneTime
 }

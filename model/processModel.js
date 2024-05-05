@@ -3,14 +3,14 @@ const {
 } = require('sequelize');
 module.exports = sequelize => {
   const attributes = {
-    id: {
-      type: DataTypes.INTEGER,
+    processInstanceId: {
+      type: DataTypes.STRING(255),
       allowNull: false,
       defaultValue: null,
       primaryKey: true,
-      autoIncrement: true,
-      comment: null,
-      field: "id"
+      autoIncrement: false,
+      comment: "流程实例id",
+      field: "process_instance_id"
     },
     weight: {
       type: DataTypes.INTEGER,
@@ -20,15 +20,6 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "商品权重：1重要 2普通",
       field: "weight"
-    },
-    processInstanceId: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      defaultValue: null,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "流程实例id",
-      field: "process_instance_id"
     },
     processCode: {
       type: DataTypes.STRING(255),
