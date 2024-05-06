@@ -443,7 +443,7 @@ const syncMissingCompletedFlows = async () => {
         pullTimeRange.push(dateUtil.dateOfEarliest())
     }
     // 截止的日期取不到数据，所以用 -1
-    pullTimeRange.push(dateUtil.dateEndOffToday(120, "YYYY-MM-DD"))
+    pullTimeRange.push(dateUtil.dateEndOffToday(330, "YYYY-MM-DD"))
 
     // 获取指定范围时间范围内的流程
     const finishedFlows = await dingDingService.getFinishedFlows(pullTimeRange)
@@ -458,7 +458,15 @@ const syncMissingCompletedFlows = async () => {
         }
         syncCount = syncCount + 1
         // 同步到数据库
-        await processService.saveProcess(flow)
+        try{
+            await processService.saveProcess(flow)
+        }
+        catch (e){
+            // 重复的数据异常直接忽略
+            if (e.original.code !== "ER_DUP_ENTRY"){
+                throw e
+            }
+        }
     }
 }
 

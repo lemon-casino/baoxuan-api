@@ -23,10 +23,7 @@ const getLatestModifiedProcess = async () => {
 const saveProcess = async (process) => {
     const transaction = await sequelize.transaction()
     try {
-        const reviewItems = process.overallprocessflow
-        const data = process.data
         const originator = process.originator
-
         process.originatorName = originator.name.nameInChinese
         process.originatorId = originator.userId
         process.createTime = dateUtil.formatGMT(process.createTimeGMT)
@@ -34,6 +31,7 @@ const saveProcess = async (process) => {
         process.stockedTime = new Date()
         await processModel.create(process, {transaction})
 
+        const reviewItems = process.overallprocessflow
         for (let i = 0; i < reviewItems.length; i++) {
             reviewItems[i].id = uuidUtil.getId()
             reviewItems[i].orderIndex = i
@@ -42,6 +40,8 @@ const saveProcess = async (process) => {
             await processReviewModel.create(reviewItems[i], {transaction})
         }
         const flowFormDetails = await flowFormDetailsRepo.getFormDetailsByFormId(process.formUuid)
+
+        const data = process.data
         for (const key of Object.keys(data)) {
             const fieldDetails = flowFormDetails.filter((item) => item.fieldId === key)
             const fieldValue = data[key] instanceof Array ? JSON.stringify(data[key]) : data[key]
