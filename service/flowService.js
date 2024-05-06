@@ -8,6 +8,7 @@ const flowRepo = require("../repository/flowRepo")
 const globalGetter = require("../global/getter")
 const globalSetter = require("../global/setter")
 const NotFoundError = require("../error/http/notFoundError")
+const ParameterError = require("../error/parameterError")
 const dateUtil = require("../utils/dateUtil")
 const flowUtil = require("../utils/flowUtil")
 const formFlowIdMappings = require("../const/formFlowIdMappings")
@@ -500,6 +501,11 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
 }
 
 const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) => {
+
+    if ((startDoneDate || endDoneDate) && !(startDoneDate && endDoneDate)) {
+        throw new ParameterError("时间区间不完整")
+    }
+
     let computedFlows = []
     if (startDoneDate && endDoneDate) {
         const processDataReviewItem = await Promise.all([
@@ -523,10 +529,13 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
             computedFlows[i].data = currData
         }
 
-        if (endDoneDate && endDoneDate === dateUtil.format2Str(new Date(), "YYYY-MM-DD")) {
+        if (endDoneDate && dateUtil.duration(endDoneDate, dateUtil.format2Str(new Date(), "YYYY-MM-DD")) >= 0) {
             const todayFlows = await globalGetter.getTodayFlows()
             computedFlows = computedFlows.concat(todayFlows)
         }
+    } else {
+        // 没有选择日期默认筛选今天的流程
+        computedFlows = await globalGetter.getTodayFlows()
     }
 
     const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
