@@ -443,7 +443,7 @@ const syncMissingCompletedFlows = async () => {
         pullTimeRange.push(dateUtil.dateOfEarliest())
     }
     // 截止的日期取不到数据，所以用 -1
-    pullTimeRange.push(dateUtil.dateEndOffToday(330, "YYYY-MM-DD"))
+    pullTimeRange.push(dateUtil.dateEndOffToday(310, "YYYY-MM-DD"))
 
     // 获取指定范围时间范围内的流程
     const finishedFlows = await dingDingService.getFinishedFlows(pullTimeRange)
@@ -575,6 +575,11 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
                     const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = nodePair
 
                     for (const flow of currentFlows) {
+
+                        if (flow.processInstanceId === "5d00d96d-e07c-46dd-baf2-6dff49be9d69"){
+                            console.log("-----")
+                        }
+
                         let fromMatched = false
                         let toMatched = false
                         let isOverDue = false
