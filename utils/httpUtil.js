@@ -49,7 +49,7 @@ const get = async (url, params, token) => {
                 errorHandler(url, query, config, error)
             }
         } else {
-            errorHandler(url, JSON.stringify(data), config, error)
+            errorHandler(url, JSON.stringify(params), config, error)
         }
     }
 }

@@ -576,10 +576,6 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
 
                     for (const flow of currentFlows) {
 
-                        if (flow.processInstanceId === "5d00d96d-e07c-46dd-baf2-6dff49be9d69"){
-                            console.log("-----")
-                        }
-
                         let fromMatched = false
                         let toMatched = false
                         let isOverDue = false
