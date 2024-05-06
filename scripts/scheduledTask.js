@@ -39,7 +39,7 @@ schedule.scheduleJob(syncTodayRunningAndFinishedFlowsCron, async function () {
  * 每天23：50 获取今天完成的流程并入库，状态包含：completed、 terminated、error
  */
 schedule.scheduleJob(syncMissingCompletedFlowsCron, async function () {
-    await taskService.syncMissingCompletedFlows()
+    // await taskService.syncMissingCompletedFlows()
 })
 
 /**

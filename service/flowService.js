@@ -443,7 +443,7 @@ const syncMissingCompletedFlows = async () => {
         pullTimeRange.push(dateUtil.dateOfEarliest())
     }
     // 截止的日期取不到数据，所以用 -1
-    pullTimeRange.push(dateUtil.dateEndOffToday(330, "YYYY-MM-DD"))
+    pullTimeRange.push(dateUtil.dateEndOffToday(320, "YYYY-MM-DD"))
 
     // 获取指定范围时间范围内的流程
     const finishedFlows = await dingDingService.getFinishedFlows(pullTimeRange)
