@@ -611,7 +611,7 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
 
                         // 根据是否逾期汇总个人的ids和sum
                         let userFlows = null
-                        if (overdueNode) {
+                        if (isOverDue) {
                             userFlows = overDueResult.children.filter(item => item.userName === ownerName)
                         } else {
                             userFlows = notOverDueResult.children.filter(item => item.userName === ownerName)
