@@ -566,14 +566,12 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
                 for (const nodePair of rule.countNodePairs) {
                     const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = nodePair
 
-                    let fromMatched = false
-                    let toMatched = false
-                    let isOverDue = false
-
                     for (const flow of currentFlows) {
-                        const reviewItems = flow.overallprocessflow
+                        let fromMatched = false
+                        let toMatched = false
+                        let isOverDue = false
 
-                        for (const reviewItem of reviewItems) {
+                        for (const reviewItem of flow.overallprocessflow) {
                             if (fromNode && reviewItem.activityId === fromNode.id && fromNode.status.includes(reviewItem.type)) {
                                 fromMatched = true
                             }
@@ -582,7 +580,6 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
                             }
                             if (overdueNode && reviewItem.activityId === overdueNode.id && overdueNode.status.includes(reviewItem.type)) {
                                 isOverDue = reviewItem.isOverDue
-                                console.log(isOverDue)
                             }
                         }
                         if (!fromMatched || !toMatched) {
