@@ -15,8 +15,8 @@ const formatGMT2Str = (datetimeOfGMT, pattern) => {
     return moment(datetimeOfGMT.toString().replace("Z", "+08:00")).format(pattern)
 }
 
-const format2Str = (datetime, pattern="YYYY-MM-DD HH:mm:ss") => {
-    return moment(datetime.toString()).format(pattern)
+const format2Str = (datetime, pattern = "YYYY-MM-DD HH:mm:ss") => {
+    return moment(datetime).format(pattern)
 }
 
 const startOfDay = (day) => {
@@ -24,7 +24,7 @@ const startOfDay = (day) => {
 }
 
 const startOfToday = () => {
-    return moment(new Date().toString()).format("YYYY-MM-DD 00:00:0")
+    return startOfDay(new Date())
 }
 
 const dateOfEarliest = () => {
@@ -40,7 +40,7 @@ const endOfDay = (day) => {
 }
 
 const endOfToday = () => {
-    return dateEndOffToday(0, "YYYY-MM-DD 23:59:59")
+    return endOfDay(new Date())
 }
 
 const endOfYesterday = () => {
