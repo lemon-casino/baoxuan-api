@@ -259,7 +259,7 @@ const getFinishedFlows = async (timeRange) => {
     const statusArr = [
         {"name": "ERROR", "timeAction": "modified", "timeRange": timeRange},
         {"name": "COMPLETED", "timeAction": "modified", "timeRange": timeRange},
-        // {"name": "TERMINATED", "timeAction": "modified", "timeRange": timeRange}
+        {"name": "TERMINATED", "timeAction": "modified", "timeRange": timeRange}
     ]
     let flows = [];
     for (const statusObj of statusArr) {
