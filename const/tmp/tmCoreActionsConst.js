@@ -455,9 +455,9 @@ const tmCoreActionsConfig = [
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
-                                    from: "process",
-                                    id: "node_ockpz6phx72",
-                                    name: "发起人"
+                                    from: "form",
+                                    id: "employeeField_lvesa8t3",
+                                    name: "分配运营"
                                 }
                             },
                             {
@@ -477,9 +477,9 @@ const tmCoreActionsConfig = [
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
-                                    from: "process",
-                                    id: "node_ockpz6phx72",
-                                    name: "发起人"
+                                    from: "form",
+                                    id: "employeeField_lvesa8t3",
+                                    name: "分配运营"
                                 }
                             },
                             {
@@ -499,9 +499,9 @@ const tmCoreActionsConfig = [
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
-                                    from: "process",
-                                    id: "node_ockpz6phx72",
-                                    name: "发起人"
+                                    from: "form",
+                                    id: "employeeField_lvesa8t3",
+                                    name: "分配运营"
                                 }
                             }
                         ]
@@ -586,8 +586,9 @@ const tmCoreActionsConfig = [
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
-                                    from: "process",
-                                    id: "node_ockpz6phx72"
+                                    from: "form",
+                                    id: "employeeField_lvesa8t3",
+                                    name: "分配运营"
                                 }
                             }
                         ]
