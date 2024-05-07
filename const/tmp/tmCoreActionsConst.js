@@ -315,19 +315,19 @@ const tmCoreActionsConfig = [
                                     status: ["TODO", "HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvesclp04",
-                                    name: "运营提交市场分析",
+                                    id: "node_oclvt63juf3",
+                                    name: "执行提交市场统计",
                                     status: ["TODO", 'FORCAST']
                                 },
                                 overdue: {
-                                    id: "node_oclvesclp04",
-                                    name: "运营提交市场分析",
+                                    id: "node_oclvt63juf3",
+                                    name: "执行提交市场统计",
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
-                                    from: "process",
-                                    name: "发起人",
-                                    id: "node_ockpz6phx72"
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
                                 }
                             },
                             {
@@ -408,32 +408,33 @@ const tmCoreActionsConfig = [
             {
                 nameCN: "在做",
                 nameEN: actionStatus.DOING,
-                rules: [{
-                    formName: "宝可梦新品开发流程",
-                    formId: "FORM-CC0B476071F24581B129A24835910B81AK56",
-                    countNodePairs: [{
-                        from: {
-                            id: "node_oclvkc9r0a4",
-                            name: "完成市场分析方案",
-                            status: ["TODO"]
-                        },
-                        to: {
-                            id: "node_oclvkc9r0a4",
-                            name: "完成市场分析方案",
-                            status: ["TODO"]
-                        },
-                        overdue: {
-                            id: "node_oclvkc9r0a4",
-                            name: "完成市场分析方案",
-                            status: ["TODO"]
-                        },
-                        ownerRule: {
-                            from: "form",
-                            name: "分配运营做市场分析",
-                            id: "employeeField_luv1lfuq"
-                        }
-                    }]
-                },
+                rules: [
+                    {
+                        formName: "宝可梦新品开发流程",
+                        formId: "FORM-CC0B476071F24581B129A24835910B81AK56",
+                        countNodePairs: [{
+                            from: {
+                                id: "node_oclvkc9r0a4",
+                                name: "完成市场分析方案",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclvkc9r0a4",
+                                name: "完成市场分析方案",
+                                status: ["TODO"]
+                            },
+                            overdue: {
+                                id: "node_oclvkc9r0a4",
+                                name: "完成市场分析方案",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "分配运营做市场分析",
+                                id: "employeeField_luv1lfuq"
+                            }
+                        }]
+                    },
                     {
                         formName: "采购任务运营发布",
                         formId: "FORM-0A966I819O8BZMVBE16JLAK96KK42KD1QEIILC",
