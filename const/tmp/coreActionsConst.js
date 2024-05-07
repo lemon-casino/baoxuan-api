@@ -779,4 +779,11 @@ const tmCoreActionsConfig = [
     }
 ]
 
-module.exports = tmCoreActionsConfig
+const mbCoreActionsConfig = [
+
+]
+
+module.exports = {
+    tmCoreActionsConfig,
+    mbCoreActionsConfig
+}

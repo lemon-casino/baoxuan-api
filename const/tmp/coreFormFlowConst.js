@@ -1,6 +1,5 @@
-const coreFormFlowsConfig = [
+const tmCoreFormFlowsConfig = [
     {
-        // 采购选品会
         formName: "采购选品会",
         formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
         actions: [
@@ -110,7 +109,6 @@ const coreFormFlowsConfig = [
             }
         ]
     },
-
     {
         formName: "天猫链接打仗审核流程",
         formId: "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J",
@@ -435,4 +433,245 @@ const coreFormFlowsConfig = [
     }
 ]
 
-module.exports = coreFormFlowsConfig
+const mbCoreFormFlowConfig = [
+    {
+        formName: "美编任务运营发布",
+        formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
+        actions: [
+            {
+                name: "确认美编任务",
+                nodeIds: [
+                    "node_oclvgenwmp6"
+                ]
+            },
+            {
+                name: "重点精修美编完成任务",
+                nodeIds: [
+                    "node_oclvgh4l0z8",
+                    "node_oclvgh4l0z5",
+                    "node_oclvgh4l0z2"
+                ]
+            },
+            {
+                name: "精修美编完成任务",
+                nodeIds: [
+                    "node_oclvgenwmp4",
+                    "node_oclvgffo392",
+                    "node_oclvgffo395",
+                    "node_oclvt49cil2",
+                    "node_oclvgh4l0zb",
+                    "node_oclvt4kpea1"
+                ]
+            },
+            {
+                name: "简单美编完成任务",
+                nodeIds: [
+                    "node_oclvgenwmp5",
+                    "node_oclvgffo393",
+                    "node_oclvgffo396",
+                    "node_oclvt49cil3"
+                ]
+            },
+            {
+                name: "视频剪辑完成任务",
+                nodeIds: [
+                    "node_oclvgh4l0zd",
+                    "node_oclvvytk8v2"
+                ]
+            },
+            {
+                name: "审核美编任务",
+                nodeIds: [
+                    "node_oclvghx5li5",
+                    "node_oclvghx5li4",
+                    "node_oclvghx5li1",
+                    "node_oclvt49cil4",
+                    "node_oclvghx5li2",
+                    "node_oclvghx5li6",
+                    "node_oclvghx5li7",
+                    "node_oclvghx5li8",
+                    "node_oclvt4kpea2",
+                    "node_oclvghx5li9",
+                    "node_oclvvytk8v3",
+                    "node_oclvghx5lia"
+                ]
+            }
+        ]
+    },
+    {
+        formName: "运营拍摄流程",
+        formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
+        actions: [
+            {
+                name: "审批视觉方案",
+                nodeIds: [
+                    "node_ocllqa26nn1"
+                ]
+            },
+            {
+                name: "摄影确认道具",
+                nodeIds: []
+            },
+            {
+                name: "拍摄完成",
+                nodeIds: [
+                    "node_ocliimu2ur1"
+                ]
+            },
+            {
+                name: "分配美编制作",
+                nodeIds: [
+                    "node_oclrj9wzny1"
+                ]
+            },
+            {
+                name: "重点精修美编完成任务",
+                nodeIds: [
+                    "node_oclrj9wzny7",
+                    "node_oclvkqswtb2",
+                    "node_oclvkq3wa11",
+                    "node_oclvkqswtb6",
+                    "node_oclrj9wznyh",
+                    "node_oclvkqswtba"
+                ]
+            },
+            {
+                name: "简单美编完成任务",
+                nodeIds: [
+                    "node_oclrj9wzny6",
+                    "node_oclvkqswtb3",
+                    "node_oclvkq3wa12",
+                    "node_oclvkqswtb7",
+                    "node_oclrj9wznyi",
+                    "node_oclvkqswtbb"
+                ]
+            },
+            {
+                name: "视频剪辑完成",
+                nodeIds: [
+                    "node_oclrj9wznym"
+                ]
+            },
+            {
+                name: "审核美编工作",
+                nodeIds: [
+                    "node_oclvkpzz4g1",
+                    "node_oclvkqswtb4",
+                    "node_oclvkq3wa13",
+                    "node_oclvkqswtb8",
+                    "node_oclvkpzz4g3",
+                    "node_oclvkqswtbc",
+                    "node_oclvkpzz4g4"
+                ]
+            }
+        ]
+    },
+    {
+        formName: "运营新品流程",
+        formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+        actions: [
+            {
+                name: "视觉方案审核",
+                nodeIds: [
+                    "node_oclii6vcap3"
+                ]
+            },
+            {
+                name: "摄影确认样品与道具",
+                nodeIds: [
+                    "node_oclii6vcap6"
+                ]
+            },
+            {
+                name: "摄影拍照",
+                nodeIds: [
+                    "node_oclii6vcap7"
+                ]
+            },
+            {
+                name: "分配美编",
+                nodeIds: [
+                    "node_oclii6vcap8"
+                ]
+            },
+            {
+                name: "重点精修美编完成任务",
+                nodeIds: [
+                    "node_oclvksud0d5",
+                    "node_oclvksud0d8",
+                    "node_oclvksud0db"
+                ]
+            },
+            {
+                name: "简单美编完成任务",
+                nodeIds: [
+                    "node_oclvksud0d6",
+                    "node_oclvksud0d9",
+                    "node_oclvksud0dc"
+                ]
+            },
+            {
+                name: "视觉完成确认审核",
+                nodeIds: [
+                    "node_ockpz6phx73"
+                ]
+            }
+        ]
+    },
+    {
+        formName: "天猫链接上架流程",
+        formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
+        actions: [
+            {
+                name: "审核视觉方案",
+                nodeIds: [
+                    "node_oclofn02iu1"
+                ]
+            },
+            {
+                name: "确认样品道具",
+                nodeIds: [
+                    "node_oclm91ca7l4"
+                ]
+            },
+            // todo: 无此信息
+            {
+                name: "摄影拍照",
+                nodeIds: []
+            },
+            // todo: 无此信息
+            {
+                name: "分配美编",
+                nodeIds: []
+            },
+            // ---
+            {
+                name: "精修美编完成任务",
+                nodeIds: [
+                    "node_oclm91ca7l8",
+                    "node_oclrkczkhk3"
+                ]
+            },
+            // ----
+            {
+                name: "普通美编完成任务",
+                nodeIds: [
+                    "node_oclrkczkhk4",
+                    "node_oclrkczkhk1"
+                ]
+            },
+            // ---
+            {
+                name: "审核视觉完成",
+                nodeIds: [
+                    "node_oclm91ca7le"
+                ]
+            }
+        ]
+    },
+]
+
+module.exports = {
+    tmCoreFormFlowsConfig,
+    mbCoreFormFlowConfig
+}

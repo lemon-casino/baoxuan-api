@@ -7,8 +7,8 @@ const processReviewModel = getProcessReviewModel(sequelize)
 const getProcessDetailsModel = require("../model/processDetailsModel")
 const processDetailsModel = getProcessDetailsModel(sequelize)
 const NotFoundError = require("../error/http/notFoundError")
-const tmCoreActionsConst = require("../const/tmp/tmCoreActionsConst")
-const tmCoreFormFlowConst = require("../const/tmp/tmCoreFormFlowConst")
+const {tmCoreActionsConfig} = require("../const/tmp/coreActionsConst")
+const {tmCoreFormFlowConfig} = require("../const/tmp/coreFormFlowConst")
 
 processModel.hasMany(processReviewModel,
     {
@@ -55,7 +55,7 @@ const updateProcess = async (process) => {
  */
 const getCoreActionsConfig = async (deptId) => {
     if (deptId === "903075138") {
-        return tmCoreActionsConst
+        return tmCoreActionsConfig
     }
     throw new NotFoundError(`未找到部门：${deptId}的核心动作的配置信息`)
 }
@@ -68,7 +68,7 @@ const getCoreActionsConfig = async (deptId) => {
  */
 const getCoreFormFlowConfig = async (deptId) => {
     if (deptId === "903075138") {
-        return tmCoreFormFlowConst
+        return tmCoreFormFlowConfig
     }
 
     throw new NotFoundError(`未找到部门：${deptId}的核心流程的配置信息`)
