@@ -1,18 +1,22 @@
 const FlowForm = require("../model/flowfrom")
+const flowRepo = require("../repository/flowRepo")
+const formReviewRepo = require("../repository/formReviewRepo")
 const formService = require("../service/flowFormService")
 const departmentService = require("../service/departmentService")
 const dingDingService = require("../service/dingDingService")
 const processService = require("../service/processService")
 const redisService = require("../service/redisService")
-const flowRepo = require("../repository/flowRepo")
 const globalGetter = require("../global/getter")
 const globalSetter = require("../global/setter")
-const NotFoundError = require("../error/http/notFoundError")
-const ParameterError = require("../error/parameterError")
 const dateUtil = require("../utils/dateUtil")
 const flowUtil = require("../utils/flowUtil")
+const flowFormReviewUtil = require("../utils/flowFormReviewUtil")
 const formFlowIdMappings = require("../const/formFlowIdMappings")
+const flowReviewTypeConst = require("../const/flowReviewTypeConst")
+const flowStatusConst = require("../const/flowStatusConst")
 const {logger} = require("../utils/log")
+const NotFoundError = require("../error/http/notFoundError")
+const ParameterError = require("../error/parameterError")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -443,7 +447,7 @@ const syncMissingCompletedFlows = async () => {
         pullTimeRange.push(dateUtil.dateOfEarliest())
     }
     // 截止的日期取不到数据，所以用 -1
-    pullTimeRange.push(dateUtil.dateEndOffToday(210, "YYYY-MM-DD"))
+    pullTimeRange.push(dateUtil.dateEndOffToday(0, "YYYY-MM-DD"))
 
     // 获取指定范围时间范围内的流程
     const finishedFlows = await dingDingService.getFinishedFlows(pullTimeRange)
@@ -458,12 +462,11 @@ const syncMissingCompletedFlows = async () => {
         }
         syncCount = syncCount + 1
         // 同步到数据库
-        try{
+        try {
             await processService.saveProcess(flow)
-        }
-        catch (e){
+        } catch (e) {
             // 重复的数据异常直接忽略
-            if (e.original.code !== "ER_DUP_ENTRY"){
+            if (e.original.code !== "ER_DUP_ENTRY") {
                 throw e
             }
         }
@@ -508,43 +511,17 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
     globalSetter.setGlobalTodayRunningAndFinishedFlows(newTodayFlows)
 }
 
+/**
+ * 获取表单流程中核心动作汇总数据（人->逾期->动作）
+ * @param deptId
+ * @param userNames
+ * @param startDoneDate
+ * @param endDoneDate
+ * @returns {Promise<*[]>}
+ */
 const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) => {
 
-    if ((startDoneDate || endDoneDate) && !(startDoneDate && endDoneDate)) {
-        throw new ParameterError("时间区间不完整")
-    }
-
-    let computedFlows = []
-    if (startDoneDate && endDoneDate) {
-        const processDataReviewItem = await Promise.all([
-            flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate)),
-            flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate))
-        ])
-
-        computedFlows = processDataReviewItem[1]
-        const processWithData = processDataReviewItem[0]
-        // 合并流程的data和审核流信息
-        for (let i = 0; i < computedFlows.length; i++) {
-            const currData = {}
-            for (const item of processWithData[i].data) {
-                const fieldValue = item.fieldValue
-                if (fieldValue.startsWith("[") && fieldValue.endsWith("]")) {
-                    currData[item.fieldId] = JSON.parse(fieldValue)
-                } else {
-                    currData[item.fieldId] = fieldValue
-                }
-            }
-            computedFlows[i].data = currData
-        }
-
-        if (endDoneDate && dateUtil.duration(endDoneDate, dateUtil.format2Str(new Date(), "YYYY-MM-DD")) >= 0) {
-            const todayFlows = await globalGetter.getTodayFlows()
-            computedFlows = computedFlows.concat(todayFlows)
-        }
-    } else {
-        // 没有选择日期默认筛选今天的流程
-        computedFlows = await globalGetter.getTodayFlows()
-    }
+    const computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
 
     const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
     // 部门的核心动作配置信息
@@ -644,6 +621,7 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
         }
         finalResult.push(actionResult)
     }
+
     for (let result of finalResult) {
         if (result.children) {
             result = flowUtil.attachIdsAndSum(result)
@@ -651,6 +629,226 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
     }
     return finalResult
 }
+
+/**
+ * 统计部门的核心流程指定节点的数据
+ * @param deptId
+ * @param userNames
+ * @param startDoneDate
+ * @param endDoneDate
+ * @returns {Promise<*[]>}
+ */
+const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) => {
+    // 根据时间获取需要统计的流程数据（今天+历史）
+    const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
+
+    const finalResult = []
+
+    const nodeTypes = [
+        {name: "进行中", type: flowReviewTypeConst.TODO},
+        {name: "待转入", type: flowReviewTypeConst.FORCAST},
+        {name: "已完成", type: flowReviewTypeConst.HISTORY},
+        {name: "已终止", type: flowReviewTypeConst.TERMINATED},
+        {name: "已逾期", type: "OVERDUE"},
+        {name: "异常", type: flowReviewTypeConst.ERROR},
+    ]
+
+    const coreFormFlowConfigs = await flowRepo.getCoreFormFlowConfig(deptId)
+    for (const coreFormConfig of coreFormFlowConfigs) {
+        const {formName, formId, actions} = coreFormConfig
+
+        const formResult = {formId, formName, children: []}
+        // 初始化结果
+        for (const action of actions) {
+            const actionResult = {name: action.name, children: []}
+            for (const nodeType of nodeTypes) {
+                const typeResult = {type: nodeType.type, name: nodeType.name}
+                if (nodeType.type.toUpperCase() === "OVERDUE") {
+                    typeResult.children = [
+                        {type: flowReviewTypeConst.TODO, name: "进行中", ids: [], sum: 0},
+                        {type: flowReviewTypeConst.HISTORY, name: "已完成", ids: [], sum: 0}
+                    ]
+                } else {
+                    typeResult.ids = []
+                    typeResult.sum = 0
+                }
+
+                actionResult.children.push(typeResult)
+            }
+            formResult.children.push(actionResult)
+        }
+
+        // 根据动作配置信息对flow进行统计
+        const currentFormFlows = flows.filter(flow => flow.formUuid === formId)
+        for (const flow of currentFormFlows) {
+
+            // 统计待转入时，需要知道要统计节点的临近的工作节点的状况
+            // 循环中最耗时的地方
+            // 如果该流程中药统计所有核心节点都没有待转入状态，则不必获取表单流程详情
+            for (const action of actions) {
+
+            }
+
+            let flowFormReviews = []
+            if (flow.instanceStatus === flowStatusConst.RUNNING) {
+                flowFormReviews = await formReviewRepo.getFormReviewByFormId(flow.formUuid)
+                if (flowFormReviews.length === 0) {
+                    logger.warn(`未在flowFormReview中找到表单${flow.formUuid}的配置信息`)
+                }
+            }
+
+            for (const action of actions) {
+                const currActionResult = formResult.children.filter(item => item.name === action.name)[0]
+                const firstFilteredReviewItems = flow.overallprocessflow.filter(item => action.nodeIds.includes(item.activityId))
+                for (const nodeType of nodeTypes) {
+                    const typeResult = currActionResult.children.filter(item => item.type === nodeType.type)[0]
+
+                    // 筛选出统计动作所对应的节点
+                    // 1.逾期
+                    if (nodeType.type === "OVERDUE") {
+                        const overDueNodes = firstFilteredReviewItems.filter(item => item.isOverDue)
+                        // 判断是完成还是进行中
+                        if (overDueNodes.length === 0) {
+                            continue
+                        }
+                        // 并行分支的条件下，可能会有一个流程出现两种状态的逾期情况
+                        const tmpHistoryOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.HISTORY)
+                        if (tmpHistoryOverdue.length > 0) {
+                            const historyOverDueResult = typeResult.children.filter(item => item.type === flowReviewTypeConst.HISTORY)[0]
+                            historyOverDueResult.ids.push(flow.processInstanceId)
+                            historyOverDueResult.sum = historyOverDueResult.ids.length
+                        }
+                        const tmpTodoOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.TODO)
+                        if (tmpTodoOverdue.length > 0) {
+                            const todoOverDueResult = typeResult.children.filter(item => item.type === flowReviewTypeConst.TODO)[0]
+                            todoOverDueResult.ids.push(flow.processInstanceId)
+                            todoOverDueResult.sum = todoOverDueResult.ids.length
+                        }
+                    }
+                    // 2.待转入：存在节点的状态为forcast 并且临近的节点(s)的状态为todo
+                    else if (nodeType.type === flowReviewTypeConst.FORCAST) {
+                        // 找到该节点的临近的节点(s)
+                        if (flowFormReviews.length === 0) {
+                            continue
+                        }
+
+                        const forecastReviewItems = firstFilteredReviewItems.filter(item => item.type === flowReviewTypeConst.FORCAST)
+                        if (forecastReviewItems.length == 0) {
+                            continue
+                        }
+
+                        for (const forecastReviewItem of forecastReviewItems) {
+
+                            const flowReviewItems = flowFormReviews[0].formReview
+                            const reviewItem = flowFormReviewUtil.getReviewItem(forecastReviewItem.activityId, flowReviewItems)
+                            if (!reviewItem) {
+                                logger.warn(`未在flowFormReview中找到节点${forecastReviewItem.activityId}的配置信息`)
+                                continue
+                            }
+                            // 判断临近节点(s)的状态
+                            if (!reviewItem.lastTimingNodes || reviewItem.lastTimingNodes.length === 0) {
+                                logger.warn(`未在flowFormReview中找到节点${forecastReviewItem.nodeId}的lastTimingNodes信息`)
+                                continue
+                            }
+
+                            // 所有的临近节点状态都为进行中
+                            let lastNodeIsDoing = true
+                            for (const nodeId of reviewItem.lastTimingNodes) {
+                                const isDoing = flow.overallprocessflow.filter(
+                                    item => item.activityId === nodeId && item.type === flowReviewTypeConst.TODO
+                                ).length > 0
+
+                                if (!isDoing) {
+                                    lastNodeIsDoing = false
+                                    break
+                                }
+                            }
+                            if (lastNodeIsDoing && !typeResult.ids.includes(flow.processInstanceId)) {
+                                typeResult.ids.push(flow.processInstanceId)
+                                typeResult.sum = typeResult.ids.length
+                                break
+                            }
+                        }
+                    }
+                    // 3.其他：判断type即可
+                    else {
+                        const currTypeReviewItems = firstFilteredReviewItems.filter(item => item.type === nodeType.type)
+                        if (currTypeReviewItems.length > 0) {
+                            typeResult.ids.push(flow.processInstanceId)
+                            typeResult.sum = typeResult.ids.length
+                        }
+                    }
+                }
+            }
+        }
+        finalResult.push(formResult)
+    }
+
+    for (let result of finalResult) {
+        if (result.children) {
+            result = flowUtil.attachIdsAndSum(result)
+        }
+    }
+    return finalResult
+}
+
+/**
+ * 根据完成时间获取流程数据
+ *
+ * 历史数据转成Redis中的格式统一处理
+ * @param startDoneDate
+ * @param endDoneDate
+ * @returns {Promise<*|[]|*[]|*[]>}
+ */
+const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate) => {
+
+    if (!startDoneDate && !endDoneDate) {
+        // 没有选择日期默认筛选今天的流程
+        return await globalGetter.getTodayFlows()
+    }
+
+    if ((startDoneDate || endDoneDate) && !(startDoneDate && endDoneDate)) {
+        throw new ParameterError("时间区间不完整")
+    }
+
+    if (dateUtil.duration(endDoneDate, startDoneDate) < 0) {
+        throw new ParameterError("结束日期不能小于开始日期")
+    }
+
+    // 起止时间在将来
+    if (dateUtil.duration(startDoneDate, dateUtil.format2Str(new Date(), "YYYY-MM-DD")) > 0) {
+        return []
+    }
+
+    const processDataReviewItem = await Promise.all([
+        flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate)),
+        flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate))
+    ])
+
+    let computedFlows = processDataReviewItem[1]
+    const processWithData = processDataReviewItem[0]
+    // 合并流程的data和审核流信息
+    for (let i = 0; i < computedFlows.length; i++) {
+        const currData = {}
+        for (const item of processWithData[i].data) {
+            const fieldValue = item.fieldValue
+            if (fieldValue.startsWith("[") && fieldValue.endsWith("]")) {
+                currData[item.fieldId] = JSON.parse(fieldValue)
+            } else {
+                currData[item.fieldId] = fieldValue
+            }
+        }
+        computedFlows[i].data = currData
+    }
+
+    if (endDoneDate && dateUtil.duration(endDoneDate, dateUtil.format2Str(new Date(), "YYYY-MM-DD")) >= 0) {
+        const todayFlows = await globalGetter.getTodayFlows()
+        computedFlows = computedFlows.concat(todayFlows)
+    }
+
+    return computedFlows
+}
+
 
 module.exports = {
     filterFlowsByTimesRange,
@@ -678,5 +876,6 @@ module.exports = {
     syncMissingCompletedFlows,
     getFlowFormValues,
     updateRunningFlowEmergency,
-    getCoreActionData
+    getCoreActionData,
+    getCoreFlowData
 }

@@ -41,7 +41,7 @@ const updateRunningFlowEmergency = async (req, res, next) => {
     }
 }
 
-const getCoreActionData = async (req, res, next) => {
+const getCoreDataByType = async (req, res, next) => {
     try {
         const {deptId, userNames, startDate, endDate} = req.query
 
@@ -49,18 +49,21 @@ const getCoreActionData = async (req, res, next) => {
             deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required},
             userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.strRequired}
         })
-
-        const result = await flowService.getCoreActionData(deptId, userNames, startDate, endDate)
+        let result = []
+        if (req.params.type === "action") {
+            result = await flowService.getCoreActionData(deptId, userNames, startDate, endDate)
+        } else {
+            result = await flowService.getCoreFlowData(deptId, userNames, startDate, endDate)
+        }
         res.send(biResponse.success(result))
     } catch (e) {
         next(e)
     }
 }
 
-
 module.exports = {
     getFlowsByIds,
     getTodayFlowsByIds,
     updateRunningFlowEmergency,
-    getCoreActionData
+    getCoreDataByType
 }

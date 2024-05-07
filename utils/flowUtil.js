@@ -145,7 +145,6 @@ const isUserDoneOverDueFlow = (userId, flow, reviewItems) => {
     return false
 }
 
-
 /**
  * 用户正在做的节点是否有逾期(可以指定节点判断)
  * @param userId
@@ -215,7 +214,13 @@ const isUserJoinFlow = (userId, flow, reviewItems) => {
     return false
 }
 
-// 将ids从底往上汇总
+/**
+ * 将ids从底往上汇总
+ * node结构每一级需要children节点
+ *
+ * @param node
+ * @returns {*}
+ */
 const attachIdsAndSum = (node) => {
     if (node.children) {
         const uniqueIds = {}
@@ -235,6 +240,8 @@ const attachIdsAndSum = (node) => {
     }
     return node
 }
+
+
 
 module.exports = {
     flatReviewItems,

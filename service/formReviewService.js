@@ -4,4 +4,6 @@ const getFormReviewByFormId = async (formId) => {
     return formReviewRepo.getFormReviewByFormId(formId);
 }
 
-module.exports = {getFormReviewByFormId}
+module.exports = {
+    getFormReviewByFormId
+}

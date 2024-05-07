@@ -1,4 +1,4 @@
-const flows = [
+const coreFormFlowsConfig = [
     {
         // 采购选品会
         formName: "采购选品会",
@@ -75,8 +75,6 @@ const flows = [
             }
         ]
     },
-
-    // 运营优化方案
     {
         formName: "运营优化方案",
         formId: "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB",
@@ -113,7 +111,6 @@ const flows = [
         ]
     },
 
-    //
     {
         formName: "天猫链接打仗审核流程",
         formId: "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J",
@@ -198,7 +195,6 @@ const flows = [
             }
         ]
     },
-    //
     {
         formName: "运营新品流程",
         formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
@@ -253,8 +249,6 @@ const flows = [
             },
         ]
     },
-
-    // 宝可梦新品开发流程
     {
         formName: "宝可梦新品开发流程",
         formId: "FORM-CC0B476071F24581B129A24835910B81AK56",
@@ -441,4 +435,4 @@ const flows = [
     }
 ]
 
-module.exports = {}
+module.exports = coreFormFlowsConfig

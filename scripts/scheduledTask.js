@@ -13,7 +13,7 @@ let syncUserWithDepartmentCron = "0 0 6 * * ?"
 let syncFormCron = "0 30 6 * * ?"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
-    syncTodayRunningAndFinishedFlowsCron = "0 30 13 * * ?"
+    syncTodayRunningAndFinishedFlowsCron = "0 10 12 * * ?"
     syncMissingCompletedFlowsCron = "0 0 22 * * ?"
     syncDepartmentCron = "0 10 5 * * ?"
     syncDepartmentWithUserCron = "0 0 7 * * ?"
@@ -39,7 +39,7 @@ schedule.scheduleJob(syncTodayRunningAndFinishedFlowsCron, async function () {
  * 每天23：50 获取今天完成的流程并入库，状态包含：completed、 terminated、error
  */
 schedule.scheduleJob(syncMissingCompletedFlowsCron, async function () {
-    // await taskService.syncMissingCompletedFlows()
+    await taskService.syncMissingCompletedFlows()
 })
 
 /**

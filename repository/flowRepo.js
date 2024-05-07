@@ -8,7 +8,7 @@ const getProcessDetailsModel = require("../model/processDetailsModel")
 const processDetailsModel = getProcessDetailsModel(sequelize)
 const NotFoundError = require("../error/http/notFoundError")
 const tmCoreActionsConst = require("../const/tmp/tmCoreActionsConst")
-const sequelizeUtil = require("../utils/sequelizeUtil")
+const tmCoreFormFlowConst = require("../const/tmp/tmCoreFormFlowConst")
 
 processModel.hasMany(processReviewModel,
     {
@@ -49,6 +49,7 @@ const updateProcess = async (process) => {
 
 /**
  * 当前仅有天猫的
+ *
  * @param deptId
  * @returns {Promise<[{actionStatus: [{nameCN: string, origins: [{formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, Id: string, status: string[]}, to: {name: string, id: string, status: string[]}}], formName: string}, {formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}], formName: string}, {formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}], formName: string}], nameEN: string}, {name: string, origins: [{formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, actionOwnerFrom: {name: string, from: string, id: string}, actionStartNodes: [{name: string, id: string, status: [string]}], formName: string, actionEndNodes: [{name: string, id: string, status: [string]}]}, {formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}], nameEN: string}, {name: string, origins: [{formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}], nameEN: string}], actionName: string}, {actionStatus: [{nameCN: string, origins: [{formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}], formName: string}, {formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}, {owner: {name: string, from: string, id: string}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}, {owner: {name: string, from: string, id: string}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}], formName: string}, {formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}], formName: string}], nameEN: string}, {nameCN: string, origins: [{formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}, {owner: {name: string, from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}, {owner: {name: string, from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}], nameEN: string}, {nameCN: string, origins: [{formId: string, countNodePairs: [{owner: {from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, countNodePairs: [{owner: {from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}], nameEN: string}], actionName: string}, {actionStatus: [{nameCN: string, origins: [{formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}], formName: string}], nameEN: string}, {nameCN: string, origins: [{formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}], nameEN: string}, {nameCN: string, origins: [{formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, countNodePairs: [{owner: {name: string, from: string, id: string}, overdue: {name: string, id: string}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}], nameEN: string}], actionName: string}]>}
  */
@@ -60,7 +61,23 @@ const getCoreActionsConfig = async (deptId) => {
 }
 
 /**
+ * 获取部门的核心流程下指定节点的配置信息
  *
+ * @param deptId
+ * @returns {Promise<void>}
+ */
+const getCoreFormFlowConfig = async (deptId) => {
+    if (deptId === "903075138") {
+        return tmCoreFormFlowConst
+    }
+
+    throw new NotFoundError(`未找到部门：${deptId}的核心流程的配置信息`)
+}
+
+/**
+ * 根据节点的完成时间获取流程的信息+审核信息
+ *
+ * process、process_details、 process_review 三表连接性能极差，顾拆开
  * @param id
  * @returns {Promise<[]|*>}
  */
@@ -85,6 +102,14 @@ const getProcessWithReviewByReviewItemDoneTime = async (startDoneDateTime, enDon
     return processWithReview
 }
 
+/**
+ * 根据节点的完成时间获取流程的信息+表单信息
+ *
+ * process、process_details、 process_review 三表连接性能极差，顾拆开
+ * @param startDoneDateTime
+ * @param enDoneDateTime
+ * @returns {Promise<*>}
+ */
 const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateTime) => {
     const tempSQL = sequelize.dialect.QueryGenerator.selectQuery("process_review", {
             attributes: ['process_instance_id'],
@@ -113,6 +138,7 @@ module.exports = {
     getAllProcesses,
     updateProcess,
     getCoreActionsConfig,
+    getCoreFormFlowConfig,
     getProcessDataByReviewItemDoneTime,
     getProcessWithReviewByReviewItemDoneTime
 }
