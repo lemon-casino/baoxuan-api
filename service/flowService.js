@@ -699,7 +699,8 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
 
             for (const action of actions) {
                 const currActionResult = formResult.children.filter(item => item.name === action.name)[0]
-                const firstFilteredReviewItems = flow.overallprocessflow.filter(item => action.nodeIds.includes(item.activityId))
+                const firstFilteredReviewItems = flow.overallprocessflow.filter(
+                    item => action.nodeIds.includes(item.activityId) && userNames.includes(item.operatorName))
                 for (const nodeType of nodeTypes) {
                     const typeResult = currActionResult.children.filter(item => item.type === nodeType.type)[0]
 
