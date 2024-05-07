@@ -8,7 +8,7 @@ const getProcessDetailsModel = require("../model/processDetailsModel")
 const processDetailsModel = getProcessDetailsModel(sequelize)
 const NotFoundError = require("../error/http/notFoundError")
 const {tmCoreActionsConfig} = require("../const/tmp/coreActionsConst")
-const {tmCoreFormFlowConfig, mbCoreFormFlowConfig} = require("../const/tmp/coreFormFlowConst")
+const {tmCoreFormFlowsConfig, mbCoreFormFlowConfig} = require("../const/tmp/coreFormFlowConst")
 
 processModel.hasMany(processReviewModel,
     {
@@ -69,7 +69,7 @@ const getCoreActionsConfig = async (deptId) => {
 const getCoreFormFlowConfig = async (deptId) => {
     // 天猫组
     if (deptId === "903075138") {
-        return tmCoreFormFlowConfig
+        return tmCoreFormFlowsConfig
     }
     // 视觉部
     else if (deptId === "482162119") {
