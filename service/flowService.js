@@ -558,7 +558,10 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
                         let isOverDue = false
 
                         for (const reviewItem of flow.overallprocessflow) {
-                            if (fromNode && reviewItem.activityId === fromNode.id && fromNode.status.includes(reviewItem.type)) {
+                            // 发起的节点id对应的表单流程id不一致
+                            const fromNodeId = formFlowIdMappings[fromNode.id] || fromNode.id
+
+                            if (fromNode && reviewItem.activityId === fromNodeId && fromNode.status.includes(reviewItem.type)) {
                                 fromMatched = true
                             }
                             if (toNode && reviewItem.activityId === toNode.id && toNode.status.includes(reviewItem.type)) {
@@ -685,10 +688,6 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
             // 统计待转入时，需要知道要统计节点的临近的工作节点的状况
             // 循环中最耗时的地方
             // 如果该流程中药统计所有核心节点都没有待转入状态，则不必获取表单流程详情
-            for (const action of actions) {
-
-            }
-
             let flowFormReviews = []
             if (flow.instanceStatus === flowStatusConst.RUNNING) {
                 flowFormReviews = await formReviewRepo.getFormReviewByFormId(flow.formUuid)
