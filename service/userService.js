@@ -6,6 +6,7 @@ const whiteList = require("../config/whiteList")
 const globalGetter = require("../global/getter")
 const NotFoundError = require("../error/http/notFoundError")
 const tmpTMInnerGroupingConst = require("../const/tmp/tmInnerGroupingConst")
+const visionInnerGroupingConst = require("../const/tmp/visionInnerGroupingConst")
 
 const getDingDingUserId = async (user_id) => {
     const user = await UsersModel.findOne({
@@ -72,8 +73,8 @@ const getUserDetails = async (id) => {
  * @returns {Promise<[{[p: string]: *}]|*[]>}
  */
 const getTMInnerGroups = async (userId) => {
-    // 判断用户是否是leader
     let isTMLeader = false
+    let currentUser = []
     const userDDId = await getDingDingUserId(userId)
     if (whiteList.pepArr().includes(userDDId)) {
         isTMLeader = true
@@ -88,41 +89,16 @@ const getTMInnerGroups = async (userId) => {
                 break
             }
         }
-    }
-
-    const groupingResult = []
-
-    const department = await departmentService.getDepartmentWithUsers("903075138")
-    let currentUser = []
-    if (!isTMLeader) {
-        currentUser = department.dep_user.filter(user => user.userid === userDDId)
-        if (currentUser.length === 0) {
-            throw NotFoundError(`未找到用户：${userDDId}在天猫下的详细信息`)
+        const department = await departmentService.getDepartmentWithUsers("903075138")
+        if (!isTMLeader) {
+            currentUser = department.dep_user.filter(user => user.userid === userDDId)
+            if (currentUser.length === 0) {
+                throw NotFoundError(`未找到用户：${userDDId}在天猫下的详细信息`)
+            }
         }
     }
-    // 天猫下的所有组员按组划分，没有指定组的划分到"未分组"中
-    const hasGroupedUsers = []
-    const noGroupedUsers = []
-    for (const innerGroup of tmpTMInnerGroupingConst.tmInnerGroupVersion2) {
-        const currentGroupUsers = []
-        for (const member of innerGroup.members) {
-            currentGroupUsers.push(member)
-            hasGroupedUsers.push(member.userName)
-        }
-        groupingResult.push({
-            groupCode: innerGroup.groupCode,
-            groupName: innerGroup.groupName,
-            members: currentGroupUsers
-        })
-    }
 
-    for (const user of department.dep_user) {
-        if (hasGroupedUsers.includes(user.name)) {
-            continue
-        }
-        noGroupedUsers.push({userName: user.name})
-    }
-    groupingResult.push({groupCode: "noGroup", groupName: "未分组", members: noGroupedUsers})
+    const groupingResult = await reGrouping("903075138", tmpTMInnerGroupingConst.tmInnerGroupVersion2)
 
     // 部门主管和管理员返回所有分组信息
     if (isTMLeader) {
@@ -145,10 +121,96 @@ const getTMInnerGroups = async (userId) => {
     return []
 }
 
+/**
+ * 获取视觉部的内部分组信息
+ * @param userId
+ * @returns {Promise<void>}
+ */
+const getVisionInnerGroups = async (userId) => {
+    let isVisionLeader = false
+    let currentUser = []
+    const userDDId = await getDingDingUserId(userId)
+    if (whiteList.pepArr().includes(userDDId)) {
+        isVisionLeader = true
+    } else {
+        const departments = await departmentService.getDepartmentOfUser(userDDId)
+        if (departments.length === 0) {
+            throw NotFoundError(`未找到用户：${userDDId}的部门信息`)
+        }
+        for (const dept of departments) {
+            if (dept.dep_detail.name === "视觉部" && dept.leader) {
+                isVisionLeader = true
+                break
+            }
+        }
+        const department = await departmentService.getDepartmentWithUsers("482162119")
+        if (!isVisionLeader) {
+            currentUser = department.dep_user.filter(user => user.userid === userDDId)
+            if (currentUser.length === 0) {
+                throw NotFoundError(`未找到用户：${userDDId}在视觉部下的详细信息`)
+            }
+        }
+    }
+
+    const groupingResult = await reGrouping("482162119", visionInnerGroupingConst.visionInnerGroup)
+
+    // 部门主管和管理员返回所有分组信息
+    if (isVisionLeader) {
+        return groupingResult
+    }
+
+    for (const grouping of groupingResult) {
+        for (const member of grouping.members) {
+            if (currentUser.length > 0 && currentUser[0].name === member.userName) {
+                if (member.isLeader) {
+                    return [grouping]
+                }
+                return [{
+                    ...grouping,
+                    members: grouping.members.filter(member => currentUser[0].name === member.userName)
+                }]
+            }
+        }
+    }
+    return []
+}
+
+const reGrouping = async (deptId, selfDefinedInnerGroup) => {
+
+    const groupingResult = []
+
+    const department = await departmentService.getDepartmentWithUsers(deptId)
+    const hasGroupedUsers = []
+    const noGroupedUsers = []
+    for (const innerGroup of selfDefinedInnerGroup) {
+        const currentGroupUsers = []
+        for (const member of innerGroup.members) {
+            currentGroupUsers.push(member)
+            hasGroupedUsers.push(member.userName)
+        }
+        groupingResult.push({
+            groupCode: innerGroup.groupCode,
+            groupName: innerGroup.groupName,
+            members: currentGroupUsers
+        })
+    }
+
+    for (const user of department.dep_user) {
+        if (hasGroupedUsers.includes(user.name)) {
+            continue
+        }
+        noGroupedUsers.push({userName: user.name})
+    }
+    groupingResult.push({groupCode: "noGroup", groupName: "未分组", members: noGroupedUsers})
+
+    return groupingResult
+}
+
 module.exports = {
     getDingDingUserId,
     getUsersOfDepartment,
     getUserDetails,
     getUserSelfOrPartnersOfDepartment,
-    getTMInnerGroups
+    getTMInnerGroups,
+    getVisionInnerGroups
 }

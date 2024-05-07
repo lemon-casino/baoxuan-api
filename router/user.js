@@ -28,6 +28,7 @@ router.post('/editPwd', userHandler.editPassword);
 // 根据id获取用户信息接口
 router.get('/queryUserInfo/:user_id', userHandler.getUserinfoById);
 router.get('/tm-inner-groups', userHandler.getTMInnerGroups);
+router.get('/vision-inner-groups', userHandler.getVisionInnerGroups);
 
 // 将路由对象共享出去
 module.exports = router;
