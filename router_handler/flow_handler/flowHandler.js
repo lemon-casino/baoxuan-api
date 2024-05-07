@@ -31,7 +31,7 @@ const updateRunningFlowEmergency = async (req, res, next) => {
         joiUtil.validate(
             {
                 emergency: {value: emergency, schema: joiUtil.commonJoiSchemas.strRequired},
-                ids: {value: ids, schema: joiUtil.commonJoiSchemas.strRequired}
+                ids: {value: ids, schema: joiUtil.commonJoiSchemas.arrayRequired}
             }
         )
         await flowService.updateRunningFlowEmergency(ids, emergency)
