@@ -696,10 +696,18 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
                 }
             }
 
+            const processInstanceId = flow.processInstanceId
+
             for (const action of actions) {
                 const currActionResult = formResult.children.filter(item => item.name === action.name)[0]
                 const firstFilteredReviewItems = flow.overallprocessflow.filter(
                     item => action.nodeIds.includes(item.activityId) && userNames.includes(item.operatorName))
+
+                // 如果流程节点中还没有统计的节点信息（可能未开始），则直接跳过
+                if (firstFilteredReviewItems.length === 0) {
+                    continue
+                }
+
                 for (const nodeType of nodeTypes) {
                     const typeResult = currActionResult.children.filter(item => item.type === nodeType.type)[0]
 
@@ -715,13 +723,13 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
                         const tmpHistoryOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.HISTORY)
                         if (tmpHistoryOverdue.length > 0) {
                             const historyOverDueResult = typeResult.children.filter(item => item.type === flowReviewTypeConst.HISTORY)[0]
-                            historyOverDueResult.ids.push(flow.processInstanceId)
+                            historyOverDueResult.ids.push(processInstanceId)
                             historyOverDueResult.sum = historyOverDueResult.ids.length
                         }
                         const tmpTodoOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.TODO)
                         if (tmpTodoOverdue.length > 0) {
                             const todoOverDueResult = typeResult.children.filter(item => item.type === flowReviewTypeConst.TODO)[0]
-                            todoOverDueResult.ids.push(flow.processInstanceId)
+                            todoOverDueResult.ids.push(processInstanceId)
                             todoOverDueResult.sum = todoOverDueResult.ids.length
                         }
                     }
@@ -763,18 +771,26 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
                                     break
                                 }
                             }
-                            if (lastNodeIsDoing && !typeResult.ids.includes(flow.processInstanceId)) {
-                                typeResult.ids.push(flow.processInstanceId)
+                            if (lastNodeIsDoing && !typeResult.ids.includes(processInstanceId)) {
+                                typeResult.ids.push(processInstanceId)
                                 typeResult.sum = typeResult.ids.length
                                 break
                             }
                         }
                     }
-                    // 3.其他：判断type即可
-                    else {
+                    // 3.进行中、已完成：判断type即可
+                    else if (nodeType.type === flowReviewTypeConst.TODO || nodeType.type === flowReviewTypeConst.HISTORY) {
                         const currTypeReviewItems = firstFilteredReviewItems.filter(item => item.type === nodeType.type)
                         if (currTypeReviewItems.length > 0) {
-                            typeResult.ids.push(flow.processInstanceId)
+                            typeResult.ids.push(processInstanceId)
+                            typeResult.sum = typeResult.ids.length
+                        }
+                    }
+                    // 终止、异常判断流程状态
+                    else {
+                        const flowAbnormalStatus = [flowStatusConst.ERROR, flowStatusConst.TERMINATED]
+                        if (flowAbnormalStatus.includes(nodeType.type)) {
+                            typeResult.ids.push(processInstanceId)
                             typeResult.sum = typeResult.ids.length
                         }
                     }
