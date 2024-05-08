@@ -553,6 +553,8 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
 
                     for (const flow of currentFlows) {
 
+                        const processInstanceId = flow.processInstanceId
+
                         let fromMatched = false
                         let toMatched = false
                         let isOverDue = false
@@ -586,7 +588,7 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
                             ownerName = reviewItems.length > 0 && reviewItems[0].operatorName
                         }
                         if (!ownerName) {
-                            logger.warn(`没有匹配到计数规则的所有人。流程：${flow.processInstanceId},rule: ${JSON.stringify(ownerRule)}`)
+                            logger.warn(`没有匹配到计数规则的所有人。流程：${processInstanceId},rule: ${JSON.stringify(ownerRule)}`)
                             continue
                         }
 
@@ -603,10 +605,10 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
                             userFlows = notOverDueResult.children.filter(item => item.userName === ownerName)
                         }
                         if (userFlows.length > 0 && userFlows[0].ids && userFlows[0].ids.length > 0) {
-                            userFlows[0].ids.push(flow.processInstanceId)
+                            userFlows[0].ids.push(processInstanceId)
                             userFlows[0].sum = userFlows[0].ids.length
                         } else {
-                            userFlows = {userName: ownerName, sum: 1, ids: [flow.processInstanceId]}
+                            userFlows = {userName: ownerName, sum: 1, ids: [processInstanceId]}
                             if (isOverDue) {
                                 overDueResult.children.push(userFlows)
                             } else {

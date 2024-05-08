@@ -5,7 +5,7 @@ const RemoteError = require("../error/remoteError")
 // 状态码不一定准确，故使用关键词 [400, 403]
 const dingDingRateLimitErrorKeywords = ["过多", "频繁", "流控", "限制"]
 
-const delayTime = 100
+const delayTime = 50
 const get = async (url, params, token) => {
     await dateUtil.delay(delayTime)
     logger.info(`${process.pid}:${url}`)

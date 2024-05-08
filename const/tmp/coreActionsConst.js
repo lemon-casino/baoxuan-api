@@ -8,6 +8,7 @@ const tmCoreActionsConfig = [
             {
                 nameCN: "待做",
                 nameEN: actionStatus.TODO,
+                children: [],
                 rules: [
                     {
                         formName: "运营新品流程",
