@@ -468,7 +468,6 @@ const mbCoreFormFlowConfig = [
                     "node_oclvt49cil2",
                     "node_oclvgh4l0zb",
                     "node_oclvt4kpea1",
-                    "node_oclii89ejz1"
                 ]
             },
             {
@@ -477,9 +476,7 @@ const mbCoreFormFlowConfig = [
                     "node_oclvgenwmp5",
                     "node_oclvgffo393",
                     "node_oclvgffo396",
-                    "node_oclvt49cil3",
-                    "node_oclrkbghp22",
-                    "node_oclrkbghp23"
+                    "node_oclvt49cil3"
                 ]
             },
             {
@@ -609,7 +606,8 @@ const mbCoreFormFlowConfig = [
                 nodeIds: [
                     "node_oclvksud0d5",
                     "node_oclvksud0d8",
-                    "node_oclvksud0db"
+                    "node_oclvksud0db",
+                    "node_oclii89ejz1"
                 ]
             },
             {
@@ -617,7 +615,9 @@ const mbCoreFormFlowConfig = [
                 nodeIds: [
                     "node_oclvksud0d6",
                     "node_oclvksud0d9",
-                    "node_oclvksud0dc"
+                    "node_oclvksud0dc",
+                    "node_oclrkbghp22",
+                    "node_oclrkbghp23"
                 ]
             },
             {
