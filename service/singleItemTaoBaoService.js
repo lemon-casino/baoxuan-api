@@ -372,7 +372,7 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
             for (const group of groupingResult) {
                 const isInThisGroup = group[Object.keys(group)[0]].filter(item => item === currentUser[0].name).length > 0
                 if (isInThisGroup) {
-                    result.productLineLeaders = [{[Object.keys(group)[0]]: currentUser[0].name}]
+                    result.productLineLeaders = [{[Object.keys(group)[0]]: [currentUser[0].name]}]
                     break
                 }
             }
