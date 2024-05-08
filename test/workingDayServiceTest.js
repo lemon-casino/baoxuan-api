@@ -120,5 +120,10 @@ describe("workingDayService", () => {
             const duration = await workingDayService.computeValidWorkingDurationOfExecutionFlow("2024-04-15 19:00:00", "2024-04-15 20:00:00")
             assert.equal(0, duration)
         })
+        it("workingDayAfter18PmAndEndWithNextDay1", async () => {
+            const duration = await workingDayService.computeValidWorkingDurationOfExecutionFlow("2024-05-07 18:19:00", "2024-05-08 18:25:00")
+            console.log(duration)
+            assert.equal(duration, 0)
+        })
     })
 })

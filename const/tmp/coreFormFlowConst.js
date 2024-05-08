@@ -476,7 +476,8 @@ const mbCoreFormFlowConfig = [
                     "node_oclvgenwmp5",
                     "node_oclvgffo393",
                     "node_oclvgffo396",
-                    "node_oclvt49cil3"
+                    "node_oclvt49cil3",
+                    "node_ocllok1vc71"
                 ]
             },
             {
@@ -670,7 +671,9 @@ const mbCoreFormFlowConfig = [
                 name: "普通美编完成任务",
                 nodeIds: [
                     "node_oclrkczkhk4",
-                    "node_oclrkczkhk1"
+                    "node_oclrkczkhk1",
+                    "node_oclrkczkhk2",
+                    "node_oclrkczkhk5"
                 ]
             },
             {
