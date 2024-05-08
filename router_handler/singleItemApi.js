@@ -85,7 +85,7 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
  */
 const getSearchDataTaoBaoSingleItem = async (req, res, next) => {
     try {
-        const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(req.user.id)
+        const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(70)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)

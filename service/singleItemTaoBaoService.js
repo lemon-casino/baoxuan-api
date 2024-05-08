@@ -348,26 +348,38 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
     }
     // 天猫组deptId：903075138
     const department = await departmentService.getDepartmentWithUsers("903075138")
+    const groupingResult = Object.keys(tmpTMInnerGroupingConst.tmInnerGroupVersion1).map(key => {
+        return {[key]: tmpTMInnerGroupingConst.tmInnerGroupVersion1[key]}
+    })
+    let hasGroupedUsers = []
+    for (const key of Object.keys(tmpTMInnerGroupingConst.tmInnerGroupVersion1)) {
+        hasGroupedUsers = hasGroupedUsers.concat(tmpTMInnerGroupingConst.tmInnerGroupVersion1[key])
+    }
+    const noGroupedUsers = []
+    for (const user of department.dep_user) {
+        if (hasGroupedUsers.includes(user.name)) {
+            continue
+        }
+        noGroupedUsers.push(user.name)
+    }
+    groupingResult.push({"未分组": noGroupedUsers})
+
     if (isTMLeader) {
-        const groupingResult = Object.keys(tmpTMInnerGroupingConst.tmInnerGroupVersion1).map(key => {
-            return {[key]: tmpTMInnerGroupingConst.tmInnerGroupVersion1[key]}
-        })
-        let hasGroupedUsers = []
-        for (const key of Object.keys(tmpTMInnerGroupingConst.tmInnerGroupVersion1)) {
-            hasGroupedUsers = hasGroupedUsers.concat(tmpTMInnerGroupingConst.tmInnerGroupVersion1[key])
-        }
-        const noGroupedUsers = []
-        for (const user of department.dep_user) {
-            if (hasGroupedUsers.includes(user.name)) {
-                continue
-            }
-            noGroupedUsers.push(user.name)
-        }
-        groupingResult.push({"未分组": noGroupedUsers})
         result.productLineLeaders = groupingResult
     } else {
         const currentUser = department.dep_user.filter(user => user.userid === userDDId)
-        result.productLineLeaders = [currentUser[0].name]
+        if (currentUser.length > 0) {
+            for (const group of groupingResult) {
+                const isInThisGroup = group[Object.keys(group)[0]].filter(item => item === currentUser[0].name).length > 0
+                if (isInThisGroup) {
+                    result.productLineLeaders = [{[Object.keys(group)[0]]: currentUser[0].name}]
+                    break
+                }
+            }
+
+        } else {
+            result.productLineLeaders = []
+        }
     }
 
 
@@ -606,7 +618,7 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
     const uniqueItems = {}
     for (const item of taoBaoErrorItems) {
         //打印singleItems 的长度
-       // console.log(singleItems.length)
+        // console.log(singleItems.length)
         const items = singleItems.filter((singleItem) => {
             for (const exp of item.values) {
                 let value = exp.value
@@ -614,12 +626,12 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
                 if (exp.field === "profitRate") {
                     // if(singleItem[exp.lessThan] === "true"){
                     //reallyShipmentAmount 小于0
-                    if(exp.lessThan === "negative_profit_60"){
-                        if (singleItem[exp.lessThan] === "true"){
-                           return  singleItem["profitRate"]*1 <0
+                    if (exp.lessThan === "negative_profit_60") {
+                        if (singleItem[exp.lessThan] === "true") {
+                            return singleItem["profitRate"] * 1 < 0
                         }
-                      return   false
-                    }else {
+                        return false
+                    } else {
                         return singleItem[exp.lessThan] === "true";
                     }
 
@@ -629,24 +641,24 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
                 }
                 // 坑市场占比环比（7天）
                 if (exp.field === "salesMarketRateCircleRate7Day") {
-                 return    singleItem["salesMarketRateCircleRate7Day"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"]*1>-20
+                    return singleItem["salesMarketRateCircleRate7Day"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 > -20
                 }
                 //手淘人数市场占比环比（7天）
                 if (exp.field === "shouTaoPeopleNumMarketRateCircleRate7Day") {
 
-                    return    ( singleItem["salesMarketRateCircleRate7Day"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"]*1<-20) || ( singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"]*1<-20 && singleItem["salesMarketRateCircleRate7Day"]*1>-20)
+                    return (singleItem["salesMarketRateCircleRate7Day"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 < -20) || (singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 < -20 && singleItem["salesMarketRateCircleRate7Day"] * 1 > -20)
 
 
                 }
 
                 // 坑市场占比环比（日天）
                 if (exp.field === "salesMarketRateCircleRateDay") {
-                    return    singleItem["salesMarketRateCircleRateDay"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"]*1>-20
+                    return singleItem["salesMarketRateCircleRateDay"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 > -20
                 }
                 //手淘人数市场占比环比（日天）
                 if (exp.field === "shouTaoPeopleNumMarketRateCircleRateDay") {
 
-                    return    ( singleItem["salesMarketRateCircleRateDay"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"]*1<-20) || ( singleItem["shouTaoPeopleNumMarketRateCircleRateDay"]*1<-20 && singleItem["salesMarketRateCircleRateDay"]*1>-20)
+                    return (singleItem["salesMarketRateCircleRateDay"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 < -20) || (singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 < -20 && singleItem["salesMarketRateCircleRateDay"] * 1 > -20)
 
 
                 }
@@ -686,7 +698,7 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
         }
     }
     result.sum = Object.keys(uniqueItems).length
-  // console.log(result)
+    // console.log(result)
     return result;
 }
 
