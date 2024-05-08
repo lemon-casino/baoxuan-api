@@ -790,8 +790,7 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
                     }
                     // 终止、异常判断流程状态
                     else {
-                        const flowAbnormalStatus = [flowStatusConst.ERROR, flowStatusConst.TERMINATED]
-                        if (flowAbnormalStatus.includes(flow.instanceStatus)) {
+                        if (flow.instanceStatus === nodeType.type) {
                             typeResult.ids.push(processInstanceId)
                             typeResult.sum = typeResult.ids.length
                         }
