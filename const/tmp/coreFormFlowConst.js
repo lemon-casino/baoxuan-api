@@ -168,16 +168,21 @@ const tmCoreFormFlowsConfig = [
                 ]
             },
             {
-                // todo: 没有该节点
                 name: "组长审核方案",
                 nodeIds: [
-                    ""
+                    "node_oclto7ocj77",
+                    "node_oclto7ocj75",
+                    "node_oclvhw76j22"
                 ]
             },
             {
-                // todo: 没有该节点
                 name: "项目负责人审核方案",
-                nodeIds: []
+                nodeIds: [
+                    "node_oclto7ocj78",
+                    "node_oclto7ocj76",
+                    "node_oclvhw76j23",
+                    "node_oclm91902f3"
+                ]
             },
             {
                 name: "提交订货明细",
@@ -215,17 +220,19 @@ const tmCoreFormFlowsConfig = [
                     "node_oclii6vcap1"
                 ]
             },
-            // todo:  无该节点
             {
                 name: "组长审核方案",
                 nodeIds: [
-                    ""
+                    "node_oclto83mms7",
+                    "node_oclto83mms5",
+                    "node_oclvx64tg92"
                 ]
             },
-            // todo:  无该节点
             {
                 name: "项目负责人审核方案",
-                nodeIds: []
+                nodeIds: [
+                    "node_oclii6vcap2"
+                ]
             },
             {
                 name: "运营提供样品明细",
@@ -634,17 +641,21 @@ const mbCoreFormFlowConfig = [
                     "node_oclm91ca7l4"
                 ]
             },
-            // todo: 无此信息
             {
+                // 摄影完成
                 name: "摄影拍照",
-                nodeIds: []
+                nodeIds: [
+                    "node_oclm91ca7l5"
+                ]
             },
-            // todo: 无此信息
             {
+                // 确认美编任务
                 name: "分配美编",
-                nodeIds: []
+                nodeIds: [
+                    "node_oclv68umqp1",
+                    "node_oclm91ca7l6"
+                ]
             },
-            // ---
             {
                 name: "精修美编完成任务",
                 nodeIds: [
@@ -652,7 +663,6 @@ const mbCoreFormFlowConfig = [
                     "node_oclrkczkhk3"
                 ]
             },
-            // ----
             {
                 name: "普通美编完成任务",
                 nodeIds: [
@@ -660,7 +670,6 @@ const mbCoreFormFlowConfig = [
                     "node_oclrkczkhk1"
                 ]
             },
-            // ---
             {
                 name: "审核视觉完成",
                 nodeIds: [

@@ -95,11 +95,6 @@ const getFlowIdsByFormId = async (token, userId, formUuid) => {
         userId: userId,
     };
     return await httpUtil.post(url, data, token)
-
-    // todo: 确认异常是否必须返回固定格式的数据
-    //     return {
-    //         data: [],
-    //     };
 }
 
 // 6.2 根据表单id获取所有流程实例详情
