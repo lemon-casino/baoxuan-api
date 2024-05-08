@@ -5,9 +5,9 @@ const RemoteError = require("../error/remoteError")
 // 状态码不一定准确，故使用关键词 [400, 403]
 const dingDingRateLimitErrorKeywords = ["过多", "频繁", "流控", "限制"]
 
-const delayTime = 50
+const delayTime = 0
 const get = async (url, params, token) => {
-    await dateUtil.delay(delayTime)
+    // await dateUtil.delay(delayTime)
     logger.info(`${process.pid}:${url}`)
     let query = ""
     if (params) {
@@ -55,7 +55,7 @@ const get = async (url, params, token) => {
 }
 
 const post = async (url, data, token) => {
-    await dateUtil.delay(delayTime)
+    // await dateUtil.delay(delayTime)
     logger.info(`${process.pid}:${url}`)
     let config = null
     if (token) {
