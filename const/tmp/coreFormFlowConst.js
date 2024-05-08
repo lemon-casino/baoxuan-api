@@ -467,7 +467,8 @@ const mbCoreFormFlowConfig = [
                     "node_oclvgffo395",
                     "node_oclvt49cil2",
                     "node_oclvgh4l0zb",
-                    "node_oclvt4kpea1"
+                    "node_oclvt4kpea1",
+                    "node_oclii89ejz1"
                 ]
             },
             {
@@ -476,7 +477,9 @@ const mbCoreFormFlowConfig = [
                     "node_oclvgenwmp5",
                     "node_oclvgffo393",
                     "node_oclvgffo396",
-                    "node_oclvt49cil3"
+                    "node_oclvt49cil3",
+                    "node_oclrkbghp22",
+                    "node_oclrkbghp23"
                 ]
             },
             {
