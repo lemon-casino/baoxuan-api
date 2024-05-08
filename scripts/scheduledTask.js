@@ -5,7 +5,7 @@ const taskService = require("../service/taskService")
 // 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况
 
 let syncWorkingDayCron = "0 5 9 * * ?"
-let syncTodayRunningAndFinishedFlowsCron = "0 0/30 8-22 * * ?"
+let syncTodayRunningAndFinishedFlowsCron = "0 0/5 9-22 * * ?"
 let syncMissingCompletedFlowsCron = "0 0 23 * * ?"
 let syncDepartmentCron = "0 0 5 * * ?"
 let syncDepartmentWithUserCron = "0 30 5 * * ?"
