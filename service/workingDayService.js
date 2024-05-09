@@ -79,7 +79,7 @@ const computeValidWorkingDurationOfExecutionFlow = async (startDateTime, endDate
         // 计算新的开始时间
         const newStartDateTime = dateUtil.add(startDateTime, 1).format("YYYY-MM-DD 09:00:00")
         // 如果新的开始时间 > 结束时间 则返回0
-        if (dateUtil.duration(newStartDateTime, endDateTime)) {
+        if (dateUtil.duration(newStartDateTime, endDateTime)>=0) {
             return 0
         }
         return await computeValidWorkingDuration(newStartDateTime, endDateTime)

@@ -123,7 +123,7 @@ describe("workingDayService", () => {
         it("workingDayAfter18PmAndEndWithNextDay1", async () => {
             const duration = await workingDayService.computeValidWorkingDurationOfExecutionFlow("2024-05-07 18:19:00", "2024-05-08 18:25:00")
             console.log(duration)
-            assert.equal(duration, 0)
+            assert.equal(duration, 9)
         })
     })
 })
