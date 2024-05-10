@@ -569,7 +569,7 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
 
                         // 一个动作多人执行（会签）
                         let parallelOperators = []
-                        for (const reviewItem of flow.overallprocessflow) {
+                        for (const reviewItem of flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)) {
                             // 发起的节点id对应的表单流程id不一致
                             const fromNodeId = formFlowIdMappings[fromNode.id] || fromNode.id
 

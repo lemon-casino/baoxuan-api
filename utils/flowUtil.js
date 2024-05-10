@@ -241,7 +241,28 @@ const attachIdsAndSum = (node) => {
     return node
 }
 
+/**
+ * 获取最新的不重复的审核节点数据
+ *
+ * @param reviewItems
+ * @returns {*[]}
+ */
+const getLatestUniqueReviewItems = (reviewItems) => {
+    const uniqueFieldIds = {}
+    for (let i = reviewItems.length - 1; i >= 0; i--) {
+        const activityId = reviewItems[i].activityId
+        if (!Object.keys(uniqueFieldIds).includes(activityId)) {
+            uniqueFieldIds[activityId] = reviewItems[i]
+        }
+    }
 
+    const newReviewItems = []
+    const keys = Object.keys(uniqueFieldIds)
+    for (let i = keys.length - 1; i >= 0; i--) {
+        newReviewItems.push(uniqueFieldIds[keys[i]])
+    }
+    return newReviewItems
+}
 
 module.exports = {
     flatReviewItems,
@@ -253,5 +274,6 @@ module.exports = {
     isUserDoneOverDueFlow,
     isUserErrorFlow,
     isUserTerminatedFlow,
-    attachIdsAndSum
+    attachIdsAndSum,
+    getLatestUniqueReviewItems
 }
