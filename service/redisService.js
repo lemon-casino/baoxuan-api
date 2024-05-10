@@ -17,7 +17,7 @@ const getDepartments = async () => {
 };
 // 获取redis所有详情用户信息
 const getAllUsersDetail = async () => {
-    const reply = await redisUtil.getKey(redisKeys.AllUsersDetailWithJoinLaunchData);
+    const reply = await redisUtil.getKey(redisKeys.AllUsersWithDepartment);
     return JSON.parse(reply);
 };
 // 获取redis流程数据

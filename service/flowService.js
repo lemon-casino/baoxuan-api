@@ -559,7 +559,7 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
                     }
 
                     const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = flowNodeRule
-                    for (const flow of currentFlows) {
+                    for (let flow of currentFlows) {
 
                         const processInstanceId = flow.processInstanceId
 
@@ -567,6 +567,7 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
                         let toMatched = false
                         let isOverDue = false
 
+                        flow = flowUtil.flatReviewItems(flow)
                         for (const reviewItem of flow.overallprocessflow) {
                             // 发起的节点id对应的表单流程id不一致
                             const fromNodeId = formFlowIdMappings[fromNode.id] || fromNode.id
