@@ -584,7 +584,7 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
                             }
 
                             if (fromMatched && toMatched) {
-                                if (reviewItem.domainList.length > 0) {
+                                if (reviewItem.domainList && reviewItem.domainList.length > 0) {
                                     for (const domain of reviewItem.domainList) {
                                         parallelOperators.push(domain.operatorName)
                                     }
