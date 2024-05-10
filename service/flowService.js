@@ -567,7 +567,8 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
                         let toMatched = false
                         let isOverDue = false
 
-                        flow = flowUtil.flatReviewItems(flow)
+                        // 一个动作多人执行（会签）
+                        let parallelOperators = []
                         for (const reviewItem of flow.overallprocessflow) {
                             // 发起的节点id对应的表单流程id不一致
                             const fromNodeId = formFlowIdMappings[fromNode.id] || fromNode.id
@@ -581,47 +582,62 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
                             if (overdueNode && reviewItem.activityId === overdueNode.id && overdueNode.status.includes(reviewItem.type)) {
                                 isOverDue = reviewItem.isOverDue
                             }
+
+                            if (fromMatched && toMatched) {
+                                if (reviewItem.domainList.length > 0) {
+                                    for (const domain of reviewItem.domainList) {
+                                        parallelOperators.push(domain.operatorName)
+                                    }
+                                }
+                                break
+                            }
                         }
                         if (!fromMatched || !toMatched) {
                             continue
                         }
 
-                        // 找到该公工作量的负责人
-                        let ownerName = ""
-                        const {from, id} = ownerRule
-                        if (from.toUpperCase() === ownerFrom.FORM) {
-                            ownerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id][0]
-                        } else {
-                            const processReviewId = formFlowIdMappings[id] || id
-                            const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
-                            ownerName = reviewItems.length > 0 && reviewItems[0].operatorName
-                        }
-                        if (!ownerName) {
-                            logger.warn(`没有匹配到计数规则的所有人。流程：${processInstanceId},rule: ${JSON.stringify(ownerRule)}`)
-                            continue
+                        if (parallelOperators.length === 0) {
+                            // 找到该公工作量的负责人
+                            let ownerName = ""
+                            const {from, id} = ownerRule
+                            if (from.toUpperCase() === ownerFrom.FORM) {
+                                ownerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id][0]
+                            } else {
+                                const processReviewId = formFlowIdMappings[id] || id
+                                const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
+                                ownerName = reviewItems.length > 0 && reviewItems[0].operatorName
+                            }
+                            if (!ownerName) {
+                                logger.warn(`没有匹配到计数规则的所有人。流程：${processInstanceId},rule: ${JSON.stringify(ownerRule)}`)
+                                continue
+                            }
+                            parallelOperators.push(ownerName)
                         }
 
-                        // 统计指定人的工作量
-                        if (!userNames.includes(ownerName)) {
+                        parallelOperators = parallelOperators.filter(operator => userNames.includes(operator))
+
+                        if (parallelOperators.length === 0) {
                             continue
                         }
 
                         // 根据是否逾期汇总个人的ids和sum
-                        let userFlows = null
-                        if (isOverDue) {
-                            userFlows = overDueResult.children.filter(item => item.userName === ownerName)
-                        } else {
-                            userFlows = notOverDueResult.children.filter(item => item.userName === ownerName)
-                        }
-                        if (userFlows.length > 0 && userFlows[0].ids && userFlows[0].ids.length > 0) {
-                            userFlows[0].ids.push(processInstanceId)
-                            userFlows[0].sum = userFlows[0].ids.length
-                        } else {
-                            userFlows = {userName: ownerName, sum: 1, ids: [processInstanceId]}
+                        for (const operator of parallelOperators) {
+                            let userFlows = null
                             if (isOverDue) {
-                                overDueResult.children.push(userFlows)
+                                userFlows = overDueResult.children.filter(item => item.userName === operator)
                             } else {
-                                notOverDueResult.children.push(userFlows)
+                                userFlows = notOverDueResult.children.filter(item => item.userName === operator)
+                            }
+                            if (userFlows.length > 0 && userFlows[0].ids && userFlows[0].ids.length > 0) {
+                                userFlows[0].ids.push(processInstanceId)
+                                userFlows[0].sum = userFlows[0].ids.length
+                            } else {
+                                userFlows = {userName: operator, sum: 1, ids: [processInstanceId]}
+                                if (isOverDue) {
+                                    overDueResult.children.push(userFlows)
+                                } else {
+                                    notOverDueResult.children.push(userFlows)
+                                }
                             }
                         }
                     }
