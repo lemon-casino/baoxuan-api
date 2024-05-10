@@ -409,8 +409,8 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
                 for (let domain of domainList) {
                     domain = await fillReviewItemCost(domain, reviewItems, reviewItemsConfig, flow.formUuid)
                 }
-                continue
             }
+            // 当前主节点也要更新时限信息
             reviewItem = await fillReviewItemCost(reviewItem, reviewItems, reviewItemsConfig, flow.formUuid)
         }
         flow["overallprocessflow"] = reviewItems
