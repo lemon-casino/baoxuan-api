@@ -1773,17 +1773,17 @@ const mbCoreActionsConfig = [
                                 from: {
                                     id: "node_oclii89ejz1",
                                     name: "精修美编制作",
-                                    status: ["HISTORY"]
+                                    status: ["TODO"]
                                 },
                                 to: {
                                     id: "node_oclii89ejz1",
                                     name: "精修美编制作",
-                                    status: ["HISTORY"]
+                                    status: ["TODO"]
                                 },
                                 overdue: {
                                     id: "node_oclii89ejz1",
                                     name: "精修美编制作",
-                                    status: ["HISTORY"]
+                                    status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "process",
@@ -1795,17 +1795,17 @@ const mbCoreActionsConfig = [
                                 from: {
                                     id: "node_oclrkbghp22",
                                     name: "普通美编制作",
-                                    status: ["HISTORY"]
+                                    status: ["TODO"]
                                 },
                                 to: {
                                     id: "node_oclrkbghp22",
                                     name: "普通美编制作",
-                                    status: ["HISTORY"]
+                                    status: ["TODO"]
                                 },
                                 overdue: {
                                     id: "node_oclrkbghp22",
                                     name: "普通美编制作",
-                                    status: ["HISTORY"]
+                                    status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "process",
@@ -1817,17 +1817,17 @@ const mbCoreActionsConfig = [
                                 from: {
                                     id: "node_oclrkbghp23",
                                     name: "套版美编完成",
-                                    status: ["HISTORY"]
+                                    status: ["TODO"]
                                 },
                                 to: {
                                     id: "node_oclrkbghp23",
                                     name: "套版美编完成",
-                                    status: ["HISTORY"]
+                                    status: ["TODO"]
                                 },
                                 overdue: {
                                     id: "node_oclrkbghp23",
                                     name: "套版美编完成",
-                                    status: ["HISTORY"]
+                                    status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "process",
