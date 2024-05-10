@@ -13,6 +13,7 @@ const flowUtil = require("../utils/flowUtil")
 const flowFormReviewUtil = require("../utils/flowFormReviewUtil")
 const formFlowIdMappings = require("../const/formFlowIdMappings")
 const flowReviewTypeConst = require("../const/flowReviewTypeConst")
+const {opFunctions} = require("../const/operatorConst")
 const flowStatusConst = require("../const/flowStatusConst")
 const {logger} = require("../utils/log")
 const NotFoundError = require("../error/http/notFoundError")
@@ -546,11 +547,18 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
 
             // 根据配置中状态的计算规则进行统计
             for (const rule of rules) {
-                const currentFlows = computedFlows.filter((flow) => flow.formUuid === rule.formId)
+                let currentFlows = computedFlows.filter((flow) => flow.formUuid === rule.formId)
                 // 需要计算的节点对
-                for (const nodePair of rule.countNodePairs) {
-                    const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = nodePair
+                for (const flowNodeRule of rule.flowNodeRules) {
+                    if (rule.flowDetailsRules) {
+                        for (const detailsRule of rule.flowDetailsRules) {
+                            currentFlows = currentFlows.filter(flow => {
+                                return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
+                            })
+                        }
+                    }
 
+                    const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = flowNodeRule
                     for (const flow of currentFlows) {
 
                         const processInstanceId = flow.processInstanceId
