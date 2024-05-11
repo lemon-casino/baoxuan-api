@@ -218,27 +218,42 @@ const isUserJoinFlow = (userId, flow, reviewItems) => {
  * 将ids从底往上汇总
  * node结构每一级需要children节点
  *
- * @param node
+ * @param data
  * @returns {*}
  */
-const attachIdsAndSum = (node) => {
-    if (node.children) {
-        const uniqueIds = {}
-        for (const child of node.children) {
-            const newChild = attachIdsAndSum(child)
-            for (const id of newChild.ids) {
-                uniqueIds[id] = 1
+const attachIdsAndSum = (data) => {
+
+    const handleItem = (item) => {
+        if (item.children) {
+            const uniqueIds = {}
+            for (const child of item.children) {
+                const newChild = attachIdsAndSum(child)
+                for (const id of newChild.ids) {
+                    uniqueIds[id] = 1
+                }
+            }
+            item.ids = Object.keys(uniqueIds)
+        }
+        if (item.ids) {
+            item.sum = item.ids.length
+        } else {
+            item.sum = 0
+            item.ids = []
+        }
+        return item
+    }
+
+    if (data instanceof Array) {
+        for (let item of data) {
+            if (item.children) {
+                item = handleItem(item)
             }
         }
-        node.ids = Object.keys(uniqueIds)
-    }
-    if (node.ids) {
-        node.sum = node.ids.length
     } else {
-        node.sum = 0
-        node.ids = []
+        data = handleItem(data)
     }
-    return node
+
+    return data
 }
 
 /**
