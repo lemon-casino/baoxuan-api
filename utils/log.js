@@ -13,15 +13,17 @@ if (!fs.existsSync(logDirectory)) {
 const commonOptions = {
     datePattern: 'YYYY-MM-DD',
     prepend: true,
-    maxSize: '300m'
+    maxSize: '300m',
+    maxFiles: '1d'
 }
 
 const logger = createLogger({
     defaultMeta: {service: "bi"},
     transports: [
         new DailyRotateFile({
+            ...commonOptions,
             level: "info",
-            filename: path.join(`${logDirectory}/%DATE%`, `info.log`),
+            filename: path.join(`${logDirectory}/info`, `%DATE%.log`),
             format: format.combine(
                 format.timestamp({
                     format: "YYYY-MM-DD HH:mm:ss.SSS",
@@ -29,14 +31,14 @@ const logger = createLogger({
                 format.splat(),
                 format.json(),
                 format.printf((log) =>
-                    log.level === "info" ?  JSON.stringify(log) : ""
+                    log.level === "info" ? JSON.stringify(log) : ""
                 )
-            ),
-            ...commonOptions,
+            )
         }),
         new DailyRotateFile({
+            ...commonOptions,
             level: "warn",
-            filename: path.join(`${logDirectory}/%DATE%`, `warn.log`),
+            filename: path.join(`${logDirectory}/warn`, `%DATE%.log`),
             format: format.combine(
                 format.timestamp({
                     format: "YYYY-MM-DD HH:mm:ss.SSS",
@@ -44,14 +46,14 @@ const logger = createLogger({
                 format.splat(),
                 format.json(),
                 format.printf((log) =>
-                    log.level === "warn" ?  JSON.stringify(log) : ""
+                    log.level === "warn" ? JSON.stringify(log) : ""
                 )
-            ),
-            ...commonOptions,
+            )
         }),
         new DailyRotateFile({
+            ...commonOptions,
             level: "error",
-            filename: path.join(`${logDirectory}/%DATE%`, `error.log`),
+            filename: path.join(`${logDirectory}/error`, `%DATE%.log`),
             format: format.combine(
                 format.timestamp({
                     format: "YYYY-MM-DD HH:mm:ss.SSS",
@@ -59,8 +61,7 @@ const logger = createLogger({
                 format.errors({stack: true}),
                 format.splat(),
                 format.json()
-            ),
-            ...commonOptions
+            )
         }),
     ],
 });
