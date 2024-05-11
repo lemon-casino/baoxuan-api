@@ -8,6 +8,7 @@ const userLogService = require("../service/userLogService")
 const userService = require("../service/userService")
 const tokenUtil = require("../utils/token")
 const UserError = require("../error/userError")
+const HttpError = require("../error/http/httpError")
 
 const {Op} = require("sequelize");
 // 引入加密模块
@@ -55,15 +56,12 @@ exports.getCheckCode = async (req, res, next) => {
         const uuid = Uuid.v4();
         const effectTime = 10 * 60;
 
-        console.log('**** redis code ****', new Date())
         // 存入redis
         const result = await redis.setKey(
             uuid,
             captcha.text.toLowerCase(),
             effectTime
         );
-        console.log('**** code ****', new Date())
-        // todo: 返回的验证码接口数据待调整
         if (result) {
             res.send({
                 code: 200,
@@ -73,7 +71,7 @@ exports.getCheckCode = async (req, res, next) => {
                 data: captcha.data,
             });
         } else {
-            return res.send(biResponse.serverError("验证码获取失败"));
+            throw new HttpError("验证码获取失败")
         }
     } catch (e) {
         next(e)
@@ -84,20 +82,18 @@ exports.getCheckCode = async (req, res, next) => {
  */
 exports.login = async (req, res, next) => {
     try {
-
-        // 验证入参，错误时抛出以捕获
         const {error, value} = user_login_schema.validate(req.body);
         if (error) {
-            return next(error);
+            throw new HttpError(error)
         }
         // 验证验证码
         const {username, password, checkCode, uuid} = value;
         const captcha = await redis.getKey(uuid);
         if (!captcha) {
-            return res.send(biResponse.format(1, "图形验证码已过期，请点击图片刷新"));
+            throw new HttpError("图形验证码已过期，请点击图片刷新")
         }
         if (checkCode.toLowerCase() !== captcha.toLowerCase()) {
-            return res.send(biResponse.format(1, "图形验证码不正确，请重新输入"));
+            throw new HttpError("图形验证码不正确，请重新输入")
         }
         // todo: 先保留
         const user = {
