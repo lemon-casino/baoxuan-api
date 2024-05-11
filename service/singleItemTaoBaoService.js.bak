@@ -528,6 +528,7 @@ const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
 
 // 获取今日所有流程
     const todayFlows = await globalGetter.getTodayFlows();
+    console.log("111")
     const runningFlow = todayFlows.filter((flow) => flow.instanceStatus === flowStatusConst.RUNNING );
 // 定义一个函数来处理流程并更新结果
     const processFlows = (formUuid, itemIndex) => {

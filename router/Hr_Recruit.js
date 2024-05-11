@@ -53,7 +53,7 @@ router.get('/RecruitmentDepartmentPositions', async (req, res) => {
 
         const todayFlows = await globalGetter.getTodayFlows();
         const runningFlow = todayFlows.filter((flow) => flow.instanceStatus === flowStatusConst.RUNNING && flow.formUuid ===PERSONNEL_AUDITS );
-        console.log(runningFlow)
+        //console.log(runningFlow)
 
         return res.send(success(rest));
     } catch (error) {
