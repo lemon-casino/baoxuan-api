@@ -19,5 +19,8 @@ module.exports = {
     "/market-data": require("./marketDataRouter"),
     "/download/:filename": require("./fileRouter"),
     "/tima/video": require("./videoRouter"),
-    "/tima/workload": require("./Tm_Workload")
+    "/tima/workload": require("./Tm_Workload"),
+    // ’–∆∏π‹¿Ì
+    "/hr/recruit": require("./Hr_Recruit")
+
 }

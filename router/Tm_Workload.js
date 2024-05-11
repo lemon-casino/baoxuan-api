@@ -22,7 +22,6 @@ router.get('/storedata', async (req, res) => {
         const { page, pageSize } = req.query;
         timeRange = handleDateRange(timeRange);
         // 增加 分页功能
-
         const videos = await TM_StoreDataService.getVideosByDateRange(timeRange,page,pageSize);
         return res.send(success(videos));
     } catch (error) {
