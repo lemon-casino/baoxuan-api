@@ -7,7 +7,6 @@ const dingDingRateLimitErrorKeywords = ["过多", "频繁", "流控", "限制"]
 
 const delayTime = 0
 const get = async (url, params, token) => {
-    // await dateUtil.delay(delayTime)
     logger.info(`${process.pid}:${url}`)
     let query = ""
     if (params) {
@@ -55,7 +54,6 @@ const get = async (url, params, token) => {
 }
 
 const post = async (url, data, token) => {
-    // await dateUtil.delay(delayTime)
     logger.info(`${process.pid}:${url}`)
     let config = null
     if (token) {

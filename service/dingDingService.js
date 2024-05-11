@@ -17,6 +17,7 @@ const ForbiddenError = require("../error/http/forbiddenError")
 const globalGetter = require("../global/getter")
 const workingDayService = require("../service/workingDayService")
 const flowFormDetailsService = require("../service/flowFormDetailsService")
+const departmentService = require("../service/departmentService")
 const flowFormService = require("../service/flowFormService")
 const formReviewRepo = require("../repository/formReviewRepo")
 
@@ -480,6 +481,22 @@ const isWorkingDay = async (date) => {
     return Object.keys(uniqueAttendances).length > 10
 }
 
+/**
+ *
+ * @param formId
+ * @param userId
+ * @param processCode
+ * @param formDataJsonStr
+ * @returns {Promise<void>}
+ */
+const createProcess = async (formId, userId, processCode, formDataJsonStr) => {
+    // 获取用户的部门id
+    const departments = await departmentService.getDepartmentOfUser(userId)
+    const departmentId = departments[departments.length-1].dept_id
+    const {access_token: token} = await getToken();
+    return await dingDingReq.createProcess(token, formId, userId, processCode, departmentId, formDataJsonStr)
+}
+
 module.exports = {
     getDingDingToken,
     getDepartmentsWithUsersFromDingDing,
@@ -491,5 +508,6 @@ module.exports = {
     handleAsyncAllFinishedFlowsByTimeRange,
     getAttendances,
     isWorkingDay,
-    getFlowsOfStatusAndTimeRange
+    getFlowsOfStatusAndTimeRange,
+    createProcess
 };

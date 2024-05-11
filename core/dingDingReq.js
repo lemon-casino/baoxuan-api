@@ -331,6 +331,34 @@ const getAttendances = async (pageIndex, pageSize, workDateFrom, workDateTo, use
     return await httpUtil.post(url, body)
 }
 
+/**
+ * 发起流程
+ * @param formId
+ * @param userId
+ * @param processCode
+ * @param departmentId
+ * @param formDataJsonStr
+ * @returns {Promise<void>}
+ */
+const createProcess = async (token, formId, userId, processCode, departmentId, formDataJsonStr) => {
+    const url = "https://api.dingtalk.com/v1.0/yida/processes/instances/start"
+
+    const body = {
+        "appType": appType,
+        "systemToken": systemToken,
+        userId,
+        "language": "zh_CN",
+        "formUuid": formId,
+        processCode,
+        departmentId: departmentId.toString()
+    }
+    if (formDataJsonStr) {
+        body.formDataJson = formDataJsonStr
+    }
+
+    return await httpUtil.post(url, body, token)
+}
+
 module.exports = {
     getDingDingToken,
     getDingDingApplicationToken,
@@ -358,5 +386,6 @@ module.exports = {
     getUserInfoByUserIdAndToken,
     getAllForms,
     getAllFlowIds,
-    getFlowIdsByFormId
-};
+    getFlowIdsByFormId,
+    createProcess
+}
