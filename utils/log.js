@@ -14,7 +14,7 @@ const commonOptions = {
     datePattern: 'YYYY-MM-DD',
     prepend: true,
     maxSize: '300m',
-    maxFiles: '1d'
+    maxFiles: '7d',
 }
 
 const logger = createLogger({
@@ -22,6 +22,7 @@ const logger = createLogger({
     transports: [
         new DailyRotateFile({
             ...commonOptions,
+            maxFiles: '2d',
             level: "info",
             filename: path.join(`${logDirectory}/info`, `%DATE%.log`),
             format: format.combine(
