@@ -1,5 +1,5 @@
 const {opCodes} = require("../operatorConst")
-const tmActionStatus = {TODO: "TODO", DOING: "DOING", DONE: "DONE"}
+const commonActionStatus = {TODO: "TODO", DOING: "DOING", DONE: "DONE"}
 
 const tmCoreActionsConfig = [
     {
@@ -8,7 +8,7 @@ const tmCoreActionsConfig = [
         actionStatus: [
             {
                 nameCN: "待做",
-                nameEN: tmActionStatus.TODO,
+                nameEN: commonActionStatus.TODO,
                 children: [],
                 rules: [
                     {
@@ -97,7 +97,7 @@ const tmCoreActionsConfig = [
             },
             {
                 nameCN: "在做",
-                nameEN: tmActionStatus.DOING,
+                nameEN: commonActionStatus.DOING,
                 rules: [
                     {
                         formName: "运营新品流程",
@@ -184,7 +184,7 @@ const tmCoreActionsConfig = [
             },
             {
                 nameCN: "已做",
-                nameEN: tmActionStatus.DONE,
+                nameEN: commonActionStatus.DONE,
                 rules: [
                     {
                         formName: "运营新品流程",
@@ -278,7 +278,7 @@ const tmCoreActionsConfig = [
         actionStatus: [
             {
                 nameCN: "待做",
-                nameEN: tmActionStatus.TODO,
+                nameEN: commonActionStatus.TODO,
                 rules: [
                     {
                         formName: "宝可梦新品开发流程",
@@ -409,7 +409,7 @@ const tmCoreActionsConfig = [
             },
             {
                 nameCN: "在做",
-                nameEN: tmActionStatus.DOING,
+                nameEN: commonActionStatus.DOING,
                 rules: [
                     {
                         formName: "宝可梦新品开发流程",
@@ -540,7 +540,7 @@ const tmCoreActionsConfig = [
             },
             {
                 nameCN: "已做",
-                nameEN: tmActionStatus.DONE,
+                nameEN: commonActionStatus.DONE,
                 rules: [{
                     formName: "宝可梦新品开发流程",
                     formId: "FORM-CC0B476071F24581B129A24835910B81AK56",
@@ -634,7 +634,7 @@ const tmCoreActionsConfig = [
         actionStatus: [
             {
                 nameCN: "待做",
-                nameEN: tmActionStatus.TODO,
+                nameEN: commonActionStatus.TODO,
                 rules: [
                     {
                         formName: "天猫链接打仗审核流程",
@@ -663,7 +663,7 @@ const tmCoreActionsConfig = [
             },
             {
                 nameCN: "在做",
-                nameEN: tmActionStatus.DOING,
+                nameEN: commonActionStatus.DOING,
                 rules: [{
                     formName: "天猫链接打仗审核流程",
                     formId: "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J",
@@ -720,7 +720,7 @@ const tmCoreActionsConfig = [
             },
             {
                 nameCN: "已做",
-                nameEN: tmActionStatus.DONE,
+                nameEN: commonActionStatus.DONE,
                 rules: [{
                     formName: "天猫链接打仗审核流程",
                     formId: "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J",
@@ -786,7 +786,6 @@ const mbActionTypes = {
     WAIT_TO_PS: "WAIT_TO_PS", ON_PS: "ON_PS", PS_DONE: "PS_DONE",
     WAIT_TO_CUT: "WAIT_TO_CUT", BE_CUTTING: "BE_CUTTING", CUT_DONE: "CUT_DONE"
 }
-
 
 const mbCoreActionsConfig = [
     {
@@ -4688,7 +4687,1643 @@ const mbCoreActionsConfig = [
     }
 ]
 
+const executionCoreActionsConfig = [
+    {
+        actionName: "市场统计",
+        actionCode: "marketStatistic",
+        actionStatus: [
+            {
+                nameCN: "待做",
+                nameEN: commonActionStatus.TODO,
+                children: [],
+                rules: [
+                    {
+                        formName: "运营执行流程",
+                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                        flowDetailsRules: [
+                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "市场分析统计"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm6",
+                                    name: "审批人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "选品会流程",
+                        formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclv1ugwu31",
+                                    name: "运营负责人提交市场统计模板",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclix0mfzn1",
+                                    name: "执行提交市场分析表",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_lii9qts2"
+                                }
+                            }]
+                    },
+                    {
+                        formName: "宝可梦新品开发流程",
+                        formId: "FORM-CC0B476071F24581B129A24835910B81AK56",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclv1xr53i4",
+                                    name: "运营提交市场统计模板",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvkc9r0a2",
+                                    name: "执行提交市场统计",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_oclvkc9r0a2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvkcjxy41",
+                                    name: "分配执行营销分析方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvkcjxy42",
+                                    name: "执行提交市场统计",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_oclvkcjxy42"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "采购任务运营发布",
+                        formId: "FORM-0A966I819O8BZMVBE16JLAK96KK42KD1QEIILC",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclvt63juf2",
+                                    name: "分配执行统计市场",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvt63juf3",
+                                    name: "执行提交市场统计",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配执行统计市场",
+                                    id: "employeeField_lvt5untf"
+                                }
+                            }]
+                    }
+                ]
+            },
+            {
+                nameCN: "在做",
+                nameEN: commonActionStatus.DOING,
+                rules: [
+                    {
+                        formName: "运营执行流程",
+                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                        flowDetailsRules: [
+                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "市场分析统计"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm9"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "选品会流程",
+                        formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclix0mfzn1",
+                                    name: "执行提交市场分析表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclix0mfzn1",
+                                    name: "执行提交市场分析表",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclix0mfzn1",
+                                    name: "执行提交市场分析表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_lii9qts2"
+                                }
+                            },
+                        ]
+                    },
+                    {
+                        formName: "宝可梦新品开发流程",
+                        formId: "FORM-CC0B476071F24581B129A24835910B81AK56",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclvkc9r0a2",
+                                    name: "执行提交市场统计",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvkc9r0a2",
+                                    name: "执行提交市场统计",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvkc9r0a2",
+                                    name: "执行提交市场统计",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_oclvkc9r0a2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvkcjxy42",
+                                    name: "执行提交市场统计",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvkcjxy42",
+                                    name: "执行提交市场统计",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvkcjxy42",
+                                    name: "执行提交市场统计",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_oclvkcjxy42"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "采购任务运营发布",
+                        formId: "FORM-0A966I819O8BZMVBE16JLAK96KK42KD1QEIILC",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclvt63juf3",
+                                    name: "执行提交市场统计",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvt63juf3",
+                                    name: "执行提交市场统计",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvt63juf3",
+                                    name: "执行提交市场统计",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配执行统计市场",
+                                    id: "employeeField_lvt5untf"
+                                }
+                            },
+                        ]
+                    }
+                ]
+            },
+            {
+                nameCN: "已做",
+                nameEN: commonActionStatus.DONE,
+                rules: [
+                    {
+                        formName: "运营执行流程",
+                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                        flowDetailsRules: [
+                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "市场分析统计"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm9"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "选品会流程",
+                        formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclix0mfzn1",
+                                    name: "执行提交市场分析表",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclix0mfzn1",
+                                    name: "执行提交市场分析表",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclix0mfzn1",
+                                    name: "执行提交市场分析表",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_lii9qts2"
+                                }
+                            },
+                        ]
+                    },
+                    {
+                        formName: "宝可梦新品开发流程",
+                        formId: "FORM-CC0B476071F24581B129A24835910B81AK56",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclvkc9r0a2",
+                                    name: "执行提交市场统计",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvkc9r0a2",
+                                    name: "执行提交市场统计",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvkc9r0a2",
+                                    name: "执行提交市场统计",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_oclvkc9r0a2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvkcjxy42",
+                                    name: "执行提交市场统计",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvkcjxy42",
+                                    name: "执行提交市场统计",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvkcjxy42",
+                                    name: "执行提交市场统计",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_oclvkcjxy42"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "采购任务运营发布",
+                        formId: "FORM-0A966I819O8BZMVBE16JLAK96KK42KD1QEIILC",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclvt63juf3",
+                                    name: "执行提交市场统计",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvt63juf3",
+                                    name: "执行提交市场统计",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvt63juf3",
+                                    name: "执行提交市场统计",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配执行统计市场",
+                                    id: "employeeField_lvt5untf"
+                                }
+                            },
+                        ]
+                    }
+                ]
+            },
+        ]
+    },
+    {
+        actionName: "五维统计",
+        actionCode: "fiveDimensionalTableStatistic",
+        actionStatus: [
+            {
+                nameCN: "待做",
+                nameEN: commonActionStatus.TODO,
+                children: [],
+                rules: [
+                    {
+                        formName: "运营执行流程",
+                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                        flowDetailsRules: [
+                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "五维表统计"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm6",
+                                    name: "审批人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "运营新品流程",
+                        formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclohx0w4s1",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_lii5gvq3"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "天猫链接上架流程",
+                        formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclm91902f1",
+                                    name: "执行统计五维表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclv6afgcd1",
+                                    name: "执行人",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "执行运营",
+                                    id: "employeeField_lm91md3u"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                nameCN: "在做",
+                nameEN: commonActionStatus.DOING,
+                children: [],
+                rules: [
+                    {
+                        formName: "运营执行流程",
+                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                        flowDetailsRules: [
+                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "五维表统计"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm9"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "运营新品流程",
+                        formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_lii5gvq3"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "天猫链接上架流程",
+                        formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclv6afgcd1",
+                                    name: "执行人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclv6afgcd1",
+                                    name: "执行人",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclv6afgcd1",
+                                    name: "执行人",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "执行运营",
+                                    id: "employeeField_lm91md3u"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "采购任务运营发布",
+                        formId: "FORM-0A966I819O8BZMVBE16JLAK96KK42KD1QEIILC",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclvt7r3d87",
+                                    name: "执行提交五维表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvt7r3d87",
+                                    name: "执行提交五维表",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvt7r3d87",
+                                    name: "执行提交五维表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配执行统计五维",
+                                    id: "employeeField_lvt5unth"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+
+            {
+                nameCN: "已做",
+                nameEN: commonActionStatus.DONE,
+                children: [],
+                rules: [
+                    {
+                        formName: "运营执行流程",
+                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                        flowDetailsRules: [
+                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "五维表统计"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm9"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "运营新品流程",
+                        formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_lii5gvq3"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "天猫链接上架流程",
+                        formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclv6afgcd1",
+                                    name: "执行人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclv6afgcd1",
+                                    name: "执行人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclv6afgcd1",
+                                    name: "执行人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "执行运营",
+                                    id: "employeeField_lm91md3u"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "采购任务运营发布",
+                        formId: "FORM-0A966I819O8BZMVBE16JLAK96KK42KD1QEIILC",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclvt7r3d87",
+                                    name: "执行提交五维表",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvt7r3d87",
+                                    name: "执行提交五维表",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvt7r3d87",
+                                    name: "执行提交五维表",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配执行统计五维",
+                                    id: "employeeField_lvt5unth"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        actionName: "链接上架",
+        actionCode: "linkPutAway",
+        actionStatus: [
+            {
+                nameCN: "待做",
+                nameEN: commonActionStatus.TODO,
+                children: [],
+                rules: [
+                    {
+                        formName: "运营执行流程",
+                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                        flowDetailsRules: [
+                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "链接上架"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm6",
+                                    name: "审批人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                nameCN: "在做",
+                nameEN: commonActionStatus.DOING,
+                children: [],
+                rules: [
+                    {
+                        formName: "运营执行流程",
+                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                        flowDetailsRules: [
+                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "链接上架"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm9"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                nameCN: "已做",
+                nameEN: commonActionStatus.DONE,
+                children: [],
+                rules: [
+                    {
+                        formName: "运营执行流程",
+                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                        flowDetailsRules: [
+                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "链接上架"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm9"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }, {
+        actionName: "补单",
+        actionCode: "replacementOrder",
+        actionStatus: [
+            {
+                nameCN: "待做",
+                nameEN: commonActionStatus.TODO,
+                children: [],
+                rules: [
+                    {
+                        formName: "运营执行流程",
+                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                        flowDetailsRules: [
+                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "补单"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm6",
+                                    name: "审批人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["FORCAST"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                nameCN: "在做",
+                nameEN: commonActionStatus.DOING,
+                children: [],
+                rules: [
+                    {
+                        formName: "运营执行流程",
+                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                        flowDetailsRules: [
+                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "补单"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm9"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                nameCN: "已做",
+                nameEN: commonActionStatus.DONE,
+                children: [],
+                rules: [
+                    {
+                        formName: "运营执行流程",
+                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                        flowDetailsRules: [
+                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "补单"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm9",
+                                    name: "分配执行人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm9"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbma",
+                                    name: "执行完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm7",
+                                    name: "分配执行发布",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocltzh0nbm7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocltzh0nbm8",
+                                    name: "发布完成",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营执行人",
+                                    id: "employeeField_liigx7wd"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+]
+
 module.exports = {
-    tmCoreActionsConfig,
-    mbCoreActionsConfig
+    "903075138": tmCoreActionsConfig,
+    "482162119": mbCoreActionsConfig,
+    "902515853": executionCoreActionsConfig
 }

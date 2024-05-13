@@ -7,8 +7,8 @@ const processReviewModel = getProcessReviewModel(sequelize)
 const getProcessDetailsModel = require("../model/processDetailsModel")
 const processDetailsModel = getProcessDetailsModel(sequelize)
 const NotFoundError = require("../error/http/notFoundError")
-const {tmCoreActionsConfig, mbCoreActionsConfig} = require("../const/tmp/coreActionsConst")
-const {tmCoreFormFlowsConfig, mbCoreFormFlowConfig} = require("../const/tmp/coreFormFlowConst")
+const coreActionsConst = require("../const/tmp/coreActionsConst")
+const coreFormFlowConst = require("../const/tmp/coreFormFlowConst")
 
 processModel.hasMany(processReviewModel,
     {
@@ -54,15 +54,11 @@ const updateProcess = async (process) => {
  * @returns {Promise<[{actionStatus: [{children: [], nameCN: string, rules: [{formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}], formName: string}, {formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}], formName: string}, {formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}], formName: string}], nameEN: string}, {nameCN: string, rules: [{formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}], nameEN: string}, {nameCN: string, rules: [{formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}], nameEN: string}], actionCode: string, actionName: string}, {actionStatus: [{nameCN: string, rules: [{formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}], formName: string}, {formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}, {ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}, {ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}], formName: string}, {formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: string[]}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}], formName: string}], nameEN: string}, {nameCN: string, rules: [{formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}, {ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}, {ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}], nameEN: string}, {nameCN: string, rules: [{formId: string, flowNodeRules: [{ownerRule: {from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}], nameEN: string}], actionCode: string, actionName: string}, {actionStatus: [{nameCN: string, rules: [{formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, from: {name: string, id: string, status: string[]}, to: {name: string, id: string, status: string[]}}], formName: string}], nameEN: string}, {nameCN: string, rules: [{formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}], nameEN: string}, {nameCN: string, rules: [{formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}, {formId: string, flowNodeRules: [{ownerRule: {name: string, from: string, id: string}, overdue: {name: string, id: string, status: [string]}, from: {name: string, id: string, status: [string]}, to: {name: string, id: string, status: [string]}}], formName: string}], nameEN: string}], actionCode: string, actionName: string}]>}
  */
 const getCoreActionsConfig = async (deptId) => {
-    // 天猫组
-    if (deptId === "903075138") {
-        return tmCoreActionsConfig
+    if (!Object.keys(coreActionsConst).includes(deptId)) {
+        throw new NotFoundError(`未找到部门：${deptId}的核心动作的配置信息`)
     }
-    // 视觉部
-    if (deptId === "482162119") {
-        return mbCoreActionsConfig
-    }
-    throw new NotFoundError(`未找到部门：${deptId}的核心动作的配置信息`)
+
+    return coreActionsConst[deptId.toString()]
 }
 
 /**
@@ -71,16 +67,10 @@ const getCoreActionsConfig = async (deptId) => {
  * @returns {Promise<[{formId: string, formName: string, actions}, {formId: string, formName: string, actions}, {formId: string, formName: string, actions}, {formId: string, formName: string, actions}]|*>}
  */
 const getCoreFormFlowConfig = async (deptId) => {
-    // 天猫组
-    if (deptId === "903075138") {
-        return tmCoreFormFlowsConfig
+    if (!Object.keys(coreFormFlowConst).includes(deptId)) {
+        throw new NotFoundError(`未找到部门：${deptId}的核心流程的配置信息`)
     }
-    // 视觉部
-    else if (deptId === "482162119") {
-        return mbCoreFormFlowConfig
-    }
-
-    throw new NotFoundError(`未找到部门：${deptId}的核心流程的配置信息`)
+    return coreFormFlowConst[deptId.toString()]
 }
 
 /**
