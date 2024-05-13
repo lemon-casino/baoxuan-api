@@ -449,7 +449,8 @@ const mbCoreFormFlowConfig = [
                 name: "确认美编任务",
                 nodeIds: [
                     "node_oclvgenwmp6"
-                ]
+                ],
+                types: ["todo", "forcast", "history"]
             },
             {
                 name: "重点精修美编完成任务",
@@ -686,7 +687,561 @@ const mbCoreFormFlowConfig = [
     },
 ]
 
+const executionGroupCoreFormFlowConfig = [
+    {
+        formName: "运营执行流程",
+        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+        actions: [
+            {
+                name: "分配执行发布",
+                nodeIds: [
+                    "node_ocltzh0nbm7"
+                ]
+            },
+            {
+                name: "分配执行人",
+                nodeIds: [
+                    "node_ocltzh0nbm9"
+                ]
+            },
+            {
+                name: "发布完成",
+                nodeIds: [
+                    "node_ocltzh0nbm8"
+                ]
+            },
+            {
+                name: "执行完成任务",
+                nodeIds: [
+                    "node_ocltzh0nbma"
+                ]
+            },
+            {
+                name: "分配执行人",
+                nodeIds: [
+                    "node_ocltzh0nbm9"
+                ]
+            }
+        ]
+    },
+    {
+        formName: "运营新品流程",
+        formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+        actions: [
+            {
+                name: "提交竞店ID",
+                nodeIds: [
+                    "node_oclkvznwuu1"
+                ]
+            },
+            {
+                name: "分配执行",
+                nodeIds: [
+                    "node_oclohx0w4s1"
+                ]
+            },
+            {
+                name: "统计五维表",
+                nodeIds: [
+                    "node_oclix0goa91"
+                ]
+            }
+        ]
+    },
+    {
+        formName: "美编任务运营发布",
+        formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
+        actions: [
+            {
+                name: "",
+                nodeIds: []
+            }
+        ]
+    },
+    {
+        formName: "采购断货流程",
+        formId: "",
+        actions: [
+            {
+                name: "通知运营到货",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "运营确认",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "预售流程",
+        formId: "",
+        actions: [
+            {
+                name: "周转确认产品到货",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "运营解预售",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "代发流程",
+        formId: "",
+        actions: [
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "专利投诉流程",
+        formId: "",
+        actions: [
+            {
+                name: "审核采购方案",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "审核流程结果",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "降成本运营发布流程",
+        formId: "",
+        actions: [
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "选品会流程",
+        formId: "",
+        actions: [
+            {
+                name: "运营提交市场统计模板",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "审核订货数量",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "执行提交市场统计表",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "统计预估销量",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "销量变化流程",
+        formId: "",
+        actions: [
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "运营拍摄流程",
+        formId: "",
+        actions: [
+            {
+                name: "审批视觉方案",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "分配执行助理",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "执行准备道具",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "分配执行助理",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "产品问题解决流程",
+        formId: "",
+        actions: [
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "天猫链接上架流程",
+        formId: "",
+        actions: [
+            {
+                name: "运营确认是否拍照",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "执行人寄样品",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "执行统计五维表",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "样品与道具准备",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "确认摄影拍摄完成",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "工商投诉流程",
+        formId: "",
+        actions: [
+            {
+                name: "执行确认资料",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "运营调整截图",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "外包视觉制作",
+        formId: "",
+        actions: [
+            {
+                name: "提供样品明细",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "分配执行寄样品",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "确认任务完成",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "分配外包摄影拍照",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "分配外包美编制作",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "分配执行寄样品",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "发出样品填写单号",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "统计作图数量",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "宝可梦新品开发流程",
+        formId: "",
+        actions: [
+            {
+                name: "分配执行市场分析方案",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "分配执行营销分析方案",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "执行提交市场统计",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "执行提交市场分析方案",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "天猫链接打仗审核流程",
+        formId: "",
+        actions: [
+            {
+                name: "审核链接状态",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "运营确认数据回复",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "执行BI系统打标签",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "统计优化后数据结果",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "采购断货流程",
+        formId: "",
+        actions: [
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "采购断货流程",
+        formId: "",
+        actions: [
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "采购断货流程",
+        formId: "",
+        actions: [
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "采购断货流程",
+        formId: "",
+        actions: [
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "采购断货流程",
+        formId: "",
+        actions: [
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    },
+    {
+        formName: "采购断货流程",
+        formId: "",
+        actions: [
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            },
+            {
+                name: "",
+                nodeIds: [
+                    ""
+                ]
+            }
+        ]
+    }
+]
+
 module.exports = {
     "903075138": tmCoreFormFlowsConfig,
-    "482162119": mbCoreFormFlowConfig
+    "482162119": mbCoreFormFlowConfig,
+    "902515853": executionGroupCoreFormFlowConfig
 }
