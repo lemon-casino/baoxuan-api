@@ -27,10 +27,10 @@ const client = redisUtil.createClient(options);
         logger.warn("__keyevent@0__:expire")
         logger.warn(message)
     });
-    await subscriber.subscribe('__keyespace@0__:login*', (message) => {
-        logger.warn("__keyespace@0__:login*")
-        logger.warn(message)
-    });
+    // await subscriber.subscribe('__keyespace@0__:login*', (message) => {
+    //     logger.warn("__keyespace@0__:login*")
+    //     logger.warn(message)
+    // });
 })();
 
 client.on("error", (err) => {
