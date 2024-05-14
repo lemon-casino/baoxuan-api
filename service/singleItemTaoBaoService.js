@@ -32,7 +32,7 @@ const tmLinkShelvesFlowFormId = "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1"
 // 运营新品流程formId
 const operationNewFlowFormId = "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3"
 // 宝可梦 新品开发流程
-const  baoKeMengNewFlowFormId = "FORM-CC0B476071F24581B129A24835910B81AK56"
+const baoKeMengNewFlowFormId = "FORM-CC0B476071F24581B129A24835910B81AK56"
 // 运营新品流程表单中运营负责人所对应的fieldId
 const operationLeaderFieldId = "employeeField_lii5gvq3_id";
 // 天猫部门的id
@@ -331,7 +331,7 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
         linkStatuses: taoBaoSingleItemStatuses
     }
     // 判断用户是否是leader
-    const userDDId = await userService.getDingDingUserId(userId)
+    const userDDId = await userService.getDingDingUserId(59)
     const departments = await departmentService.getDepartmentOfUser(userDDId)
 
     // tm leader 需要获取该部门下的所有人
@@ -366,15 +366,22 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
     }
     groupingResult.push({"未分组": noGroupedUsers})
 
+
     if (isTMLeader) {
         result.productLineLeaders = groupingResult
     } else {
         const currentUser = department.dep_user.filter(user => user.userid === userDDId)
         if (currentUser.length > 0) {
             for (const group of groupingResult) {
-                const isInThisGroup = group[Object.keys(group)[0]].filter(item => item === currentUser[0].name).length > 0
+                const groupName = Object.keys(group)[0]
+                const isInThisGroup = group[groupName].filter(item => item === currentUser[0].name).length > 0
                 if (isInThisGroup) {
-                    result.productLineLeaders = [{[Object.keys(group)[0]]: [currentUser[0].name]}]
+                    // 组长
+                    if (groupName.includes(currentUser[0].name)) {
+                        result.productLineLeaders = [{[groupName]: group[groupName]}]
+                    } else {
+                        result.productLineLeaders = [{[groupName]: [currentUser[0].name]}]
+                    }
                     break
                 }
             }
@@ -528,7 +535,7 @@ const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
 
 // 获取今日所有流程
     const todayFlows = await globalGetter.getTodayFlows();
-    const runningFlow = todayFlows.filter((flow) => flow.instanceStatus === flowStatusConst.RUNNING );
+    const runningFlow = todayFlows.filter((flow) => flow.instanceStatus === flowStatusConst.RUNNING);
 // 定义一个函数来处理流程并更新结果
     const processFlows = (formUuid, itemIndex) => {
         const item = result.items[itemIndex];
@@ -550,7 +557,7 @@ const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
 
 // 处理新品流程
     processFlows(operationNewFlowFormId, 0);
-   // console.log(result.items[0].ids)
+    // console.log(result.items[0].ids)
 // 天猫链接上架流程
     processFlows(tmLinkShelvesFlowFormId, 1);
 // 处理宝可梦新品流程
