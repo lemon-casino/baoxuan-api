@@ -42,10 +42,21 @@ const getDeptCoreAction = async (deptId, userNames, flows) => {
                         }
                     }
 
+
                     const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = flowNodeRule
+
+
+                    if (fromNode.id === "node_oclii89ejz1") {
+                        console.log("-node_oclii89ejz1-")
+                    }
+
                     for (let flow of currentFlows) {
 
                         const processInstanceId = flow.processInstanceId
+
+                        if (processInstanceId === "9134dd20-005b-4477-9c44-f4269b4be1df") {
+                            console.log('====')
+                        }
 
                         let fromMatched = false
                         let toMatched = false
@@ -53,7 +64,8 @@ const getDeptCoreAction = async (deptId, userNames, flows) => {
 
                         // 一个动作多人执行（会签）
                         let parallelOperators = []
-                        for (const reviewItem of flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)) {
+                        const reviewItems = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
+                        for (const reviewItem of reviewItems) {
                             // 发起的节点id对应的表单流程id不一致
                             const fromNodeId = formFlowIdMappings[fromNode.id] || fromNode.id
 
@@ -68,10 +80,19 @@ const getDeptCoreAction = async (deptId, userNames, flows) => {
                             }
 
                             if (fromMatched && toMatched) {
+
+
+                                if (fromNode.status.includes("TODO") && fromNode.id === "node_oclii89ejz1" && processInstanceId === "9134dd20-005b-4477-9c44-f4269b4be1df" && userNames.includes("李徐莹")) {
+                                    logger.warn("匹配到李徐莹 todo")
+                                }
+
                                 if (reviewItem.domainList && reviewItem.domainList.length > 0) {
                                     for (const domain of reviewItem.domainList) {
                                         parallelOperators.push(domain.operatorName)
                                     }
+                                }
+                                if (fromNode.status.includes("TODO") && fromNode.id === "node_oclii89ejz1" && processInstanceId === "9134dd20-005b-4477-9c44-f4269b4be1df" && userNames.includes("李徐莹")) {
+                                    logger.warn(JSON.stringify(reviewItem))
                                 }
                                 break
                             }
@@ -138,7 +159,7 @@ const getDeptCoreAction = async (deptId, userNames, flows) => {
     return finalResult
 }
 
-const getDeptCoreFlow = async (deptId, userNames, flows)=>{
+const getDeptCoreFlow = async (deptId, userNames, flows) => {
     const finalResult = []
 
     const nodeTypes = [
