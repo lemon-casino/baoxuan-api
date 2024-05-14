@@ -54,6 +54,17 @@ const getKey = async (key) => {
     return null;
 };
 
+const subscribeExpire = async()=>{
+    const subscriber = client.duplicate()
+    subscriber.on('error', err => console.error(err))
+    await subscriber.connect()
+    const listener = (message, channel) => {
+        logger.warn("key expired")
+    }
+    await subscriber.subscribe('__keyevent@0__:expired', listener)
+}
+subscribeExpire()
+
 module.exports = {
     setKey,
     getKey
