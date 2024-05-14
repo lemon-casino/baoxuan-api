@@ -22,7 +22,7 @@ const initGlobalUsers = async () => {
     const users = await redisService.getAllUsersDetail();
     // 去掉不需要的内容
     const newUsers = users.map((user) => {
-        return {...user, "faqi_liu": null, "canyu_liu": null}
+        return {...user}
     })
     setter.setGlobalUsers(newUsers)
 }
@@ -46,7 +46,7 @@ const clearFlowsDataOfUser = (dept) => {
     const users = dept.dep_user;
     if (users && users.length > 0) {
         for (let i = 0; i < users.length; i++) {
-            users[i] = {...users[i], canyu_liu: null, faqi_liu: null}
+            users[i] = {...users[i]}
         }
     }
     const subDepts = dept.dep_chil
