@@ -42,22 +42,11 @@ const getDeptCoreAction = async (deptId, userNames, flows) => {
                         }
                     }
 
-
                     const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = flowNodeRule
-
-
-                    if (fromNode.id === "node_oclii89ejz1") {
-                        console.log("-node_oclii89ejz1-")
-                    }
 
                     for (let flow of currentFlows) {
 
                         const processInstanceId = flow.processInstanceId
-
-                        if (processInstanceId === "9134dd20-005b-4477-9c44-f4269b4be1df") {
-                            console.log('====')
-                        }
-
                         let fromMatched = false
                         let toMatched = false
                         let isOverDue = false
@@ -80,19 +69,10 @@ const getDeptCoreAction = async (deptId, userNames, flows) => {
                             }
 
                             if (fromMatched && toMatched) {
-
-
-                                if (fromNode.status.includes("TODO") && fromNode.id === "node_oclii89ejz1" && processInstanceId === "9134dd20-005b-4477-9c44-f4269b4be1df" && userNames.includes("李徐莹")) {
-                                    logger.warn("匹配到李徐莹 todo")
-                                }
-
                                 if (reviewItem.domainList && reviewItem.domainList.length > 0) {
                                     for (const domain of reviewItem.domainList) {
                                         parallelOperators.push(domain.operatorName)
                                     }
-                                }
-                                if (fromNode.status.includes("TODO") && fromNode.id === "node_oclii89ejz1" && processInstanceId === "9134dd20-005b-4477-9c44-f4269b4be1df" && userNames.includes("李徐莹")) {
-                                    logger.warn(JSON.stringify(reviewItem))
                                 }
                                 break
                             }
@@ -172,6 +152,7 @@ const getDeptCoreFlow = async (deptId, userNames, flows) => {
     ]
 
     const coreFormFlowConfigs = await flowRepo.getCoreFormFlowConfig(deptId)
+    const flowReviewItemsMap = {}
     for (const coreFormConfig of coreFormFlowConfigs) {
         const {formName, formId, actions} = coreFormConfig
 
@@ -199,13 +180,15 @@ const getDeptCoreFlow = async (deptId, userNames, flows) => {
         // 根据动作配置信息对flow进行统计
         const currentFormFlows = flows.filter(flow => flow.formUuid === formId)
         for (const flow of currentFormFlows) {
-
             // 统计待转入时，需要知道要统计节点的临近的工作节点的状况
             // 循环中最耗时的地方
             // 如果该流程中药统计所有核心节点都没有待转入状态，则不必获取表单流程详情
-            let flowFormReviews = []
+            let flowFormReviews = flowReviewItemsMap[flow.formUuid]
             if (flow.instanceStatus === flowStatusConst.RUNNING) {
-                flowFormReviews = await formReviewRepo.getFormReviewByFormId(flow.formUuid)
+                if (!flowFormReviews) {
+                    flowFormReviews = await formReviewRepo.getFormReviewByFormId(flow.formUuid)
+                    flowReviewItemsMap[flow.formUuid] = flowFormReviews
+                }
                 if (flowFormReviews.length === 0) {
                     logger.warn(`未在flowFormReview中找到表单${flow.formUuid}的配置信息`)
                 }
