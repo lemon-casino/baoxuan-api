@@ -20,6 +20,14 @@ client = redisUtil.createClient(options);
 
 (async () => {
     await client.connect()
+    await client.send_command("config", ['set', 'notify-keyspace-events', 'Ex'], SubscribeExpired);
+    function SubscribeExpired(e, r) {
+        const sub = redisUtil.createClient(redisConfig);
+        const expired_subKey = '__keyevent@0__:expired'
+        sub.subscribe(expired_subKey, function () {
+            client.set('testing','redis notify-keyspace-events : expired')
+        })
+    }
 })();
 
 client.on("error", (err) => {
@@ -53,17 +61,16 @@ const getKey = async (key) => {
     }
     return null;
 };
-
-const subscribeExpire = async()=>{
-    const subscriber = client.duplicate()
-    subscriber.on('error', err => console.error(err))
-    await subscriber.connect()
-    const listener = (message, channel) => {
-        logger.warn("key expired")
-    }
-    await subscriber.subscribe('__keyevent@0__:expired', listener)
-}
-subscribeExpire()
+//
+// const subscribeExpire = async()=>{
+//     const subscriber = client.duplicate()
+//     await subscriber.connect()
+//     const listener = (message, channel) => {
+//         logger.warn("key expired")
+//     }
+//     await subscriber.subscribe('__keyevent@0__:expired', listener)
+// }
+// subscribeExpire()
 
 module.exports = {
     setKey,
