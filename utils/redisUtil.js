@@ -16,19 +16,16 @@ const options = {
 if (redisConfig.password) {
     options["password"] = redisConfig.password
 }
-client = redisUtil.createClient(options);
+
+const client = redisUtil.createClient(options);
 
 (async () => {
     await client.connect()
-})();
-
-(async () => {
     const subscriber = client.duplicate();
     await subscriber.connect();
-    await subscriber.subscribe('__keyevent@0__:expired', (message) => {
+    await subscriber.subscribe('article', (message) => {
         logger.warn(message)
     });
-
 })();
 
 client.on("error", (err) => {
@@ -38,6 +35,7 @@ client.on("error", (err) => {
 client.on("connect", () => {
     console.log("Redis 已启动");
 });
+
 
 const setKey = async (key, value, expire) => {
     try {
