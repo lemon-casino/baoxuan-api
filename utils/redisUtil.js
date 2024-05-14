@@ -23,7 +23,7 @@ const client = redisUtil.createClient(options);
     await client.connect()
     const subscriber = client.duplicate();
     await subscriber.connect();
-    await subscriber.subscribe('__keyspace@0__:login*', (message) => {
+    await subscriber.subscribe('__keyspace@0__:login* del', (message) => {
         logger.warn(message)
     });
 })();
