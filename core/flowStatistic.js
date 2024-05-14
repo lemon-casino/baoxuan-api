@@ -42,10 +42,22 @@ const getDeptCoreAction = async (deptId, userNames, flows) => {
                         }
                     }
 
+
+
                     const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = flowNodeRule
+
+
+                    if (fromNode.id === "node_oclii89ejz1"){
+                        console.log("-node_oclii89ejz1-")
+                    }
+
                     for (let flow of currentFlows) {
 
                         const processInstanceId = flow.processInstanceId
+
+                        if (processInstanceId === "9134dd20-005b-4477-9c44-f4269b4be1df"){
+                            console.log('====')
+                        }
 
                         let fromMatched = false
                         let toMatched = false
@@ -68,10 +80,19 @@ const getDeptCoreAction = async (deptId, userNames, flows) => {
                             }
 
                             if (fromMatched && toMatched) {
+
+
+                                if (fromNode.status.includes("TODO") && fromNode.id === "node_oclii89ejz1" && processInstanceId === "9134dd20-005b-4477-9c44-f4269b4be1df" && userNames.includes("李徐莹")){
+                                    logger.warn("匹配到李徐莹 todo")
+                                }
+
                                 if (reviewItem.domainList && reviewItem.domainList.length > 0) {
                                     for (const domain of reviewItem.domainList) {
                                         parallelOperators.push(domain.operatorName)
                                     }
+                                }
+                                if (fromNode.status.includes("TODO") && fromNode.id === "node_oclii89ejz1" && processInstanceId === "9134dd20-005b-4477-9c44-f4269b4be1df" && userNames.includes("李徐莹")){
+                                    logger.warn(JSON.stringify(parallelOperators))
                                 }
                                 break
                             }
