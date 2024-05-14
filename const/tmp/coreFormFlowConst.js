@@ -760,49 +760,46 @@ const executionGroupCoreFormFlowConfig = [
     },
     {
         formName: "采购断货流程",
-        formId: "",
+        formId: "FORM-F8666NB1JO8BPCAW7KNFD7TMJWMJ29APAQIILQ",
         actions: [
             {
-                name: "通知运营到货",
+                name: "采购通知运营到货",
                 nodeIds: [
-                    ""
+                    "node_oclijksmlzc"
                 ]
             },
             {
                 name: "运营确认",
                 nodeIds: [
-                    ""
+                    "node_oclijksmlza",
+                    "node_oclijksmlzg",
+                    "node_oclijksmlzk",
+                    "node_oclijksmlzq"
                 ]
             }
         ]
     },
     {
-        formName: "预售流程",
-        formId: "",
+        formName: "运营预售商品流程",
+        formId: "FORM-K9766DA1ZVDB1L0W7VM0H97S44ZR2JOJEOJILJ",
         actions: [
             {
-                name: "周转确认产品到货",
+                name: "周转采购确认产品到货",
                 nodeIds: [
-                    ""
+                    "node_oclijrkauv3"
                 ]
             },
             {
-                name: "运营解预售",
+                name: "运营解除预售/确认延长预售",
                 nodeIds: [
-                    ""
-                ]
-            },
-            {
-                name: "",
-                nodeIds: [
-                    ""
+                    "node_oclijrkauv4"
                 ]
             }
         ]
     },
     {
-        formName: "代发流程",
-        formId: "",
+        formName: "运营代发流程",
+        formId: "FORM-GI666T81KINCWI9UEHGTPA1T2C1J3ISDAIGKLJ",
         actions: [
             {
                 name: "",
@@ -813,26 +810,26 @@ const executionGroupCoreFormFlowConfig = [
         ]
     },
     {
-        formName: "专利投诉流程",
-        formId: "",
+        formName: "运营产品专利投诉解决流程",
+        formId: "FORM-4IA668916HKCDJ2O9KPRFBWT069H3F08AJ6KL6",
         actions: [
             {
                 name: "审核采购方案",
                 nodeIds: [
-                    ""
+                    "node_ockpz6phx73"
                 ]
             },
             {
                 name: "审核流程结果",
                 nodeIds: [
-                    ""
+                    "node_oclklz3mer1"
                 ]
             }
         ]
     },
     {
         formName: "降成本运营发布流程",
-        formId: "",
+        formId: "FORM-9O666M711Y8B594PALYYTABX5DGD2JAQ9IIILC",
         actions: [
             {
                 name: "",
@@ -843,38 +840,49 @@ const executionGroupCoreFormFlowConfig = [
         ]
     },
     {
-        formName: "选品会流程",
-        formId: "",
+        formName: "采购选品会",
+        formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
         actions: [
             {
-                name: "运营提交市场统计模板",
+                name: "运营负责人提交市场统计模板",
                 nodeIds: [
-                    ""
+                    "node_oclklxv8kk1",
+                    "node_oclv1ugwu31",
+                    "node_oclv1ugwu32",
+                    "node_oclv24zen54",
+                    "node_oclv24zen58",
+                    "node_oclv2a2mj43",
+                    "node_oclv2a2mj46",
+                    "node_oclv2a2mj49",
+                    "node_oclv2a2mj4c"
                 ]
             },
             {
-                name: "审核订货数量",
+                name: "审核订货量",
                 nodeIds: [
-                    ""
+                    "node_oclm60vm9a1",
+                    "node_oclv2ayeqti",
+                    "node_oclv2ayeqtj"
                 ]
             },
             {
+                // unknown
                 name: "执行提交市场统计表",
                 nodeIds: [
                     ""
                 ]
             },
             {
-                name: "统计预估销量",
+                name: "统计预估销量与样品需求",
                 nodeIds: [
-                    ""
+                    "node_oclv2ayeqt1"
                 ]
             }
         ]
     },
     {
-        formName: "销量变化流程",
-        formId: "",
+        formName: "运营销量变化流程",
+        formId: "FORM-IQ8666B19V8BYKVT614OUB3J7S5N28096OJILF",
         actions: [
             {
                 name: "",
@@ -886,37 +894,37 @@ const executionGroupCoreFormFlowConfig = [
     },
     {
         formName: "运营拍摄流程",
-        formId: "",
+        formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
         actions: [
             {
                 name: "审批视觉方案",
                 nodeIds: [
-                    ""
+                    "node_ocllqa26nn1"
                 ]
             },
             {
                 name: "分配执行助理",
                 nodeIds: [
-                    ""
+                    "node_oclrolj7io1"
                 ]
             },
             {
                 name: "执行准备道具",
                 nodeIds: [
-                    ""
+                    "node_oclrolllmq1"
                 ]
             },
             {
                 name: "分配执行助理",
                 nodeIds: [
-                    ""
+                    "node_oclrolj7io1"
                 ]
             }
         ]
     },
     {
         formName: "产品问题解决流程",
-        formId: "",
+        formId: "FORM-CP766081IWECNTLIF4H1MDAUORHV3H54K21KLG",
         actions: [
             {
                 name: "",
@@ -928,117 +936,121 @@ const executionGroupCoreFormFlowConfig = [
     },
     {
         formName: "天猫链接上架流程",
-        formId: "",
+        formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
         actions: [
             {
                 name: "运营确认是否拍照",
                 nodeIds: [
-                    ""
+                    "node_oclv68pdw91"
                 ]
             },
             {
                 name: "执行人寄样品",
                 nodeIds: [
-                    ""
+                    "node_oclvxgf8mzi"
                 ]
             },
             {
                 name: "执行统计五维表",
                 nodeIds: [
-                    ""
+                    "node_oclm91902f1"
                 ]
             },
             {
                 name: "样品与道具准备",
                 nodeIds: [
-                    ""
+                    "node_ocln14cs9r2"
                 ]
             },
             {
                 name: "确认摄影拍摄完成",
                 nodeIds: [
-                    ""
+                    "node_oclvxgf8mz5"
                 ]
             }
         ]
     },
     {
         formName: "工商投诉流程",
-        formId: "",
+        formId: "FORM-NO766591R66FKG1EF0UXN7HANWWA3PI8YM2OLM",
         actions: [
             {
                 name: "执行确认资料",
                 nodeIds: [
-                    ""
+                    "node_oclssdsafx1",
+                    "node_oclssdsafx2",
+                    "node_oclssdsafx3"
                 ]
             },
             {
                 name: "运营调整截图",
                 nodeIds: [
-                    ""
+                    "node_oclo2o8xnr8"
                 ]
             }
         ]
     },
     {
-        formName: "外包视觉制作",
-        formId: "",
+        formName: "外包视觉制作流程",
+        formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
         actions: [
             {
-                name: "提供样品明细",
+                name: "提交样品明细",
                 nodeIds: [
-                    ""
+                    "node_oclvum5btl1"
                 ]
             },
             {
                 name: "分配执行寄样品",
                 nodeIds: [
-                    ""
+                    "node_oclvum5btl2"
                 ]
             },
             {
                 name: "确认任务完成",
                 nodeIds: [
-                    ""
+                    "node_oclv679al66"
                 ]
             },
             {
-                name: "分配外包摄影拍照",
+                name: "分配外包摄影拍摄",
                 nodeIds: [
-                    ""
+                    "node_oclvulwdg91"
                 ]
             },
             {
                 name: "分配外包美编制作",
                 nodeIds: [
-                    ""
+                    "node_oclvsua8gb1",
+                    "node_oclvulwdg92"
                 ]
             },
             {
                 name: "分配执行寄样品",
                 nodeIds: [
-                    ""
+                    "node_oclvum5btl2"
                 ]
             },
             {
-                name: "发出样品填写单号",
+                name: "发出样品填写快递单号",
                 nodeIds: [
-                    ""
+                    "node_oclv67im1r1"
                 ]
             },
             {
                 name: "统计作图数量",
                 nodeIds: [
-                    ""
+                    "node_oclvsua8gb2"
                 ]
             }
         ]
     },
     {
         formName: "宝可梦新品开发流程",
-        formId: "",
+        formId: "FORM-CC0B476071F24581B129A24835910B81AK56",
         actions: [
             {
+                // known
                 name: "分配执行市场分析方案",
                 nodeIds: [
                     ""
@@ -1047,16 +1059,18 @@ const executionGroupCoreFormFlowConfig = [
             {
                 name: "分配执行营销分析方案",
                 nodeIds: [
-                    ""
+                    "node_oclvkcjxy41"
                 ]
             },
             {
                 name: "执行提交市场统计",
                 nodeIds: [
-                    ""
+                    "node_oclvkcjxy42",
+                    "node_oclvkc9r0a2"
                 ]
             },
             {
+                // known
                 name: "执行提交市场分析方案",
                 nodeIds: [
                     ""
@@ -1066,174 +1080,30 @@ const executionGroupCoreFormFlowConfig = [
     },
     {
         formName: "天猫链接打仗审核流程",
-        formId: "",
+        formId: "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J",
         actions: [
             {
                 name: "审核链接状态",
                 nodeIds: [
-                    ""
+                    "node_oclqhp9c101"
                 ]
             },
             {
                 name: "运营确认数据回复",
                 nodeIds: [
-                    ""
+                    "node_ocltqyzlu32"
                 ]
             },
             {
                 name: "执行BI系统打标签",
                 nodeIds: [
-                    ""
+                    "node_oclqhp9c102"
                 ]
             },
             {
                 name: "统计优化后数据结果",
                 nodeIds: [
-                    ""
-                ]
-            }
-        ]
-    },
-    {
-        formName: "采购断货流程",
-        formId: "",
-        actions: [
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            },
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            },
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            }
-        ]
-    },
-    {
-        formName: "采购断货流程",
-        formId: "",
-        actions: [
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            },
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            },
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            }
-        ]
-    },
-    {
-        formName: "采购断货流程",
-        formId: "",
-        actions: [
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            },
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            },
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            }
-        ]
-    },
-    {
-        formName: "采购断货流程",
-        formId: "",
-        actions: [
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            },
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            },
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            }
-        ]
-    },
-    {
-        formName: "采购断货流程",
-        formId: "",
-        actions: [
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            },
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            },
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            }
-        ]
-    },
-    {
-        formName: "采购断货流程",
-        formId: "",
-        actions: [
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            },
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            },
-            {
-                name: "",
-                nodeIds: [
-                    ""
+                    "node_oclqhp9c106"
                 ]
             }
         ]
