@@ -23,7 +23,7 @@ const client = redisUtil.createClient(options);
     await client.connect()
     const subscriber = client.duplicate();
     await subscriber.connect();
-    await subscriber.subscribe('article', (message) => {
+    await subscriber.subscribe('__keyevent@0__:expired', (message) => {
         logger.warn(message)
     });
 })();
