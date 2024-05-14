@@ -331,7 +331,7 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
         linkStatuses: taoBaoSingleItemStatuses
     }
     // 判断用户是否是leader
-    const userDDId = await userService.getDingDingUserId(59)
+    const userDDId = await userService.getDingDingUserId(userId)
     const departments = await departmentService.getDepartmentOfUser(userDDId)
 
     // tm leader 需要获取该部门下的所有人
