@@ -23,10 +23,10 @@ const client = redisUtil.createClient(options);
     await client.connect()
     const subscriber = client.duplicate();
     await subscriber.connect();
-    await subscriber.subscribe('__keyevent@0__:expire', (message) => {
-        logger.warn("__keyevent@0__:expire")
-        logger.warn(message)
-    });
+    // await subscriber.subscribe('__keyevent@0__:expire', (message) => {
+    //     logger.warn("__keyevent@0__:expire")
+    //     logger.warn(message)
+    // });
     // await subscriber.subscribe('__keyespace@0__:login*', (message) => {
     //     logger.warn("__keyespace@0__:login*")
     //     logger.warn(message)
