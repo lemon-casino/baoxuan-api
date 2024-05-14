@@ -204,6 +204,7 @@ const getTodayDeptJoinedFlowsStatisticCountOfReviewType = async (deptId, status,
                 if (ignoreTypes.includes(flows[0].instanceStatus)) {
                     continue
                 }
+
                 const newFlow = flowUtil.flatReviewItems(flows[0])
 
                 // 流程要部门下所有参与的人都完成(没参与的忽略)
