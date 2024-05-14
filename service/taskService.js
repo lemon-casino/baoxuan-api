@@ -41,7 +41,7 @@ const syncDepartment = async () => {
 
 const syncDepartmentWithUser = async () => {
     const allDepartmentsWithUsers = await dingDingService.getDepartmentsWithUsersFromDingDing()
-    await redisUtil.setKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment, JSON.stringify(allDepartmentsWithUsers))
+    await redisUtil.setKey(redisKeys.UsersUnderDepartment, JSON.stringify(allDepartmentsWithUsers))
     globalSetter.setGlobalUsersOfDepartments(allDepartmentsWithUsers)
 }
 

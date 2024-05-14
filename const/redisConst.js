@@ -6,7 +6,7 @@ const redisKeys = {
     "AllDoingFlowsOfToday": "flows:today:all_doing_flows",
     "AllFlowsUntilNow": "flows:all_flows_until_now", // newLiuChengList
     "Department": "bases:departments", // dep_List
-    "UsersWithJoinLaunchDataUnderDepartment": "bases:departments:users", //dep_userList
+    "UsersUnderDepartment": "bases:departments:users", //dep_userList
     "AllUsersWithDepartment": "bases:users", //userAllDetail
     "DDToken": "bases:dd_token",//ddCorpToken
     // new key

@@ -461,7 +461,7 @@ const handleDepartmentLaunchOrJoinFlows = async (
 ) => {
     const startDate = new Date(timesRange[0]);
     const endDate = new Date(timesRange[1]);
-    const allUsersOfAllDepartments = await redisService.getUsersWithJoinLaunchDataUnderDepartment();
+    const allUsersOfAllDepartments = await redisService.getUsersUnderDepartment();
     const ddAllFlows = await redisService.getAllFlowsUntilNow();
     const results = [];
     const usersOfParentDepartment = allUsersOfAllDepartments.filter((item) => item.dept_id == parentDepartmentId);

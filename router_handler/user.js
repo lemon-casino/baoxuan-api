@@ -516,3 +516,13 @@ exports.getVisionInnerGroups = async (req, res, next) => {
         next(e)
     }
 }
+
+exports.getUsersOfDepartment = async (req, res, next) => {
+    try {
+        const {deptId} = req.params
+        const usersOfDepartment = await userService.getUsersOfDepartment(deptId)
+        res.send(biResponse.success(usersOfDepartment))
+    } catch (e) {
+        next(e)
+    }
+}

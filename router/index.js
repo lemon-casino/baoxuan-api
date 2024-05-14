@@ -20,7 +20,8 @@ module.exports = {
     "/download/:filename": require("./fileRouter"),
     "/tima/video": require("./videoRouter"),
     "/tima/workload": require("./Tm_Workload"),
-    // ÕÐÆ¸¹ÜÀí
-    "/hr/recruit": require("./Hr_Recruit")
+    // ï¿½ï¿½Æ¸ï¿½ï¿½ï¿½ï¿½
+    "/hr/recruit": require("./Hr_Recruit"),
+    "/dept": require("./departmentRouter")
 
 }

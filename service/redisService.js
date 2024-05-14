@@ -34,13 +34,13 @@ const getAllProcessFlow = async (token, userId, formInstanceId) => {
     return null;
 };
 
-const setUsersWithJoinLaunchDataUnderDepartment = async (departments) => {
-    await redisUtil.setKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment, JSON.stringify(departments));
+const setUsersUnderDepartment = async (departments) => {
+    await redisUtil.setKey(redisKeys.UsersUnderDepartment, JSON.stringify(departments));
 }
 
 // 获取所有部门下的所有用户信息
-const getUsersWithJoinLaunchDataUnderDepartment = async () => {
-    const reply = await redisUtil.getKey(redisKeys.UsersWithJoinLaunchDataUnderDepartment);
+const getUsersUnderDepartment = async () => {
+    const reply = await redisUtil.getKey(redisKeys.UsersUnderDepartment);
     return JSON.parse(reply);
 };
 
@@ -73,8 +73,8 @@ module.exports = {
     getAllUsersDetail,
     getAllFlowsUntilNow,
     getAllProcessFlow,
-    getUsersWithJoinLaunchDataUnderDepartment,
-    setUsersWithJoinLaunchDataUnderDepartment,
+    getUsersUnderDepartment,
+    setUsersUnderDepartment,
     getAllFlowUntilNowByTimeRange,
     getTodayRunningAndFinishedFlows,
     setTodayFlows

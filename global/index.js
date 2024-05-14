@@ -33,7 +33,7 @@ const initGlobalDepartments = async () => {
 }
 
 const initGlobalUsersOfDepartments = async () => {
-    const usersOfDepartments = await redisService.getUsersWithJoinLaunchDataUnderDepartment();
+    const usersOfDepartments = await redisService.getUsersUnderDepartment();
     let newUsersOfDepartments = []
     for (const usersOfDepartment of usersOfDepartments) {
         const newUsersOfDepartment = clearFlowsDataOfUser(usersOfDepartment);

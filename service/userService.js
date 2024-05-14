@@ -17,17 +17,22 @@ const getDingDingUserId = async (user_id) => {
     if (user) {
         return user.dataValues.dingding_user_id
     }
-    throw  new NotFoundError("用户不存在")
+    throw new NotFoundError("用户不存在")
 };
 
 const getUsersOfDepartment = async (departmentId) => {
-    const usersOfDepartments = redisService.getUsersWithJoinLaunchDataUnderDepartment()
+    const usersOfDepartments = await redisService.getUsersUnderDepartment()
+    let department = null
     for (const usersOfDepartment of usersOfDepartments) {
-        if (usersOfDepartment.dept_id === departmentId) {
-            return usersOfDepartment
+        department = departmentService.findMatchedDepartmentFromRoot(departmentId, usersOfDepartment)
+        if (department){
+            break
         }
     }
-    return null;
+    if (department) {
+        return department.dep_user
+    }
+    throw new NotFoundError(`未找到部门：${departmentId}的信息`)
 }
 
 /**
