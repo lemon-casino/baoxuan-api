@@ -715,12 +715,6 @@ const executionGroupCoreFormFlowConfig = [
                 nodeIds: [
                     "node_ocltzh0nbma"
                 ]
-            },
-            {
-                name: "分配执行人",
-                nodeIds: [
-                    "node_ocltzh0nbm9"
-                ]
             }
         ]
     },
@@ -728,12 +722,6 @@ const executionGroupCoreFormFlowConfig = [
         formName: "运营新品流程",
         formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
         actions: [
-            {
-                name: "提交竞店ID",
-                nodeIds: [
-                    "node_oclkvznwuu1"
-                ]
-            },
             {
                 name: "分配执行",
                 nodeIds: [
@@ -745,16 +733,54 @@ const executionGroupCoreFormFlowConfig = [
                 nodeIds: [
                     "node_oclix0goa91"
                 ]
-            }
-        ]
-    },
-    {
-        formName: "美编任务运营发布",
-        formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
-        actions: [
+            },
             {
-                name: "",
-                nodeIds: []
+                name: "执行运营填写样品登记表",
+                nodeIds: [
+                    "node_ocltsdtj1u5"
+                ]
+            },
+            {
+                name: "执行运营确认样品到公司",
+                nodeIds: [
+                    "node_ocltseng6r1"
+                ]
+            },
+            {
+                name: "样品与道具确认",
+                nodeIds: [
+                    "node_oclii6vcap5"
+                ]
+            },
+            {
+                name: "执行寄样品",
+                nodeIds: [
+                    "node_oclvxhoetg7"
+                ]
+            },
+            {
+                name: "确认摄影拍摄完成",
+                nodeIds: [
+                    "node_oclvxhoetg8"
+                ]
+            },
+            {
+                name: "执行人",
+                nodeIds: [
+                    "node_oclvxhoetg5"
+                ]
+            },
+            {
+                name: "上传产品使用视频与客服样品交接",
+                nodeIds: [
+                    "node_oclii7t3xt1"
+                ]
+            },
+            {
+                name: "链接上架及BI数据维护",
+                nodeIds: [
+                    "node_oclii7t3xt4"
+                ]
             }
         ]
     },
@@ -763,9 +789,15 @@ const executionGroupCoreFormFlowConfig = [
         formId: "FORM-F8666NB1JO8BPCAW7KNFD7TMJWMJ29APAQIILQ",
         actions: [
             {
-                name: "采购通知运营到货",
+                name: "运营上架",
                 nodeIds: [
-                    "node_oclijksmlzc"
+                    "node_oclijksmlzd"
+                ]
+            },
+            {
+                name: "运营解除预售",
+                nodeIds: [
+                    "node_oclijksmlzo"
                 ]
             },
             {
@@ -784,27 +816,9 @@ const executionGroupCoreFormFlowConfig = [
         formId: "FORM-K9766DA1ZVDB1L0W7VM0H97S44ZR2JOJEOJILJ",
         actions: [
             {
-                name: "周转采购确认产品到货",
-                nodeIds: [
-                    "node_oclijrkauv3"
-                ]
-            },
-            {
                 name: "运营解除预售/确认延长预售",
                 nodeIds: [
                     "node_oclijrkauv4"
-                ]
-            }
-        ]
-    },
-    {
-        formName: "运营代发流程",
-        formId: "FORM-GI666T81KINCWI9UEHGTPA1T2C1J3ISDAIGKLJ",
-        actions: [
-            {
-                name: "",
-                nodeIds: [
-                    ""
                 ]
             }
         ]
@@ -814,27 +828,9 @@ const executionGroupCoreFormFlowConfig = [
         formId: "FORM-4IA668916HKCDJ2O9KPRFBWT069H3F08AJ6KL6",
         actions: [
             {
-                name: "审核采购方案",
-                nodeIds: [
-                    "node_ockpz6phx73"
-                ]
-            },
-            {
                 name: "审核流程结果",
                 nodeIds: [
                     "node_oclklz3mer1"
-                ]
-            }
-        ]
-    },
-    {
-        formName: "降成本运营发布流程",
-        formId: "FORM-9O666M711Y8B594PALYYTABX5DGD2JAQ9IIILC",
-        actions: [
-            {
-                name: "",
-                nodeIds: [
-                    ""
                 ]
             }
         ]
@@ -844,32 +840,15 @@ const executionGroupCoreFormFlowConfig = [
         formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
         actions: [
             {
-                name: "运营负责人提交市场统计模板",
+                name: "开发交接确认样品",
                 nodeIds: [
-                    "node_oclklxv8kk1",
-                    "node_oclv1ugwu31",
-                    "node_oclv1ugwu32",
-                    "node_oclv24zen54",
-                    "node_oclv24zen58",
-                    "node_oclv2a2mj43",
-                    "node_oclv2a2mj46",
-                    "node_oclv2a2mj49",
-                    "node_oclv2a2mj4c"
+                    "node_oclv2c2ehf1"
                 ]
             },
             {
-                name: "审核订货量",
+                name: "执行提交市场分析表",
                 nodeIds: [
-                    "node_oclm60vm9a1",
-                    "node_oclv2ayeqti",
-                    "node_oclv2ayeqtj"
-                ]
-            },
-            {
-                // unknown
-                name: "执行提交市场统计表",
-                nodeIds: [
-                    ""
+                    "node_oclix0mfzn1"
                 ]
             },
             {
@@ -881,27 +860,9 @@ const executionGroupCoreFormFlowConfig = [
         ]
     },
     {
-        formName: "运营销量变化流程",
-        formId: "FORM-IQ8666B19V8BYKVT614OUB3J7S5N28096OJILF",
-        actions: [
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
-            }
-        ]
-    },
-    {
         formName: "运营拍摄流程",
         formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
         actions: [
-            {
-                name: "审批视觉方案",
-                nodeIds: [
-                    "node_ocllqa26nn1"
-                ]
-            },
             {
                 name: "分配执行助理",
                 nodeIds: [
@@ -913,24 +874,6 @@ const executionGroupCoreFormFlowConfig = [
                 nodeIds: [
                     "node_oclrolllmq1"
                 ]
-            },
-            {
-                name: "分配执行助理",
-                nodeIds: [
-                    "node_oclrolj7io1"
-                ]
-            }
-        ]
-    },
-    {
-        formName: "产品问题解决流程",
-        formId: "FORM-CP766081IWECNTLIF4H1MDAUORHV3H54K21KLG",
-        actions: [
-            {
-                name: "",
-                nodeIds: [
-                    ""
-                ]
             }
         ]
     },
@@ -938,22 +881,17 @@ const executionGroupCoreFormFlowConfig = [
         formName: "天猫链接上架流程",
         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
         actions: [
-            {
-                name: "运营确认是否拍照",
-                nodeIds: [
-                    "node_oclv68pdw91"
-                ]
-            },
-            {
-                name: "执行人寄样品",
-                nodeIds: [
-                    "node_oclvxgf8mzi"
-                ]
-            },
+
             {
                 name: "执行统计五维表",
                 nodeIds: [
                     "node_oclm91902f1"
+                ]
+            },
+            {
+                name: "执行人",
+                nodeIds: [
+                    "node_oclv6afgcd1"
                 ]
             },
             {
@@ -963,9 +901,21 @@ const executionGroupCoreFormFlowConfig = [
                 ]
             },
             {
+                name: "执行人寄样品",
+                nodeIds: [
+                    "node_oclvxgf8mzi"
+                ]
+            },
+            {
                 name: "确认摄影拍摄完成",
                 nodeIds: [
                     "node_oclvxgf8mz5"
+                ]
+            },
+            {
+                name: "执行完成上架",
+                nodeIds: [
+                    "node_oclm91ca7lf"
                 ]
             }
         ]
@@ -995,24 +945,6 @@ const executionGroupCoreFormFlowConfig = [
         formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
         actions: [
             {
-                name: "提交样品明细",
-                nodeIds: [
-                    "node_oclvum5btl1"
-                ]
-            },
-            {
-                name: "分配执行寄样品",
-                nodeIds: [
-                    "node_oclvum5btl2"
-                ]
-            },
-            {
-                name: "确认任务完成",
-                nodeIds: [
-                    "node_oclv679al66"
-                ]
-            },
-            {
                 name: "分配外包摄影拍摄",
                 nodeIds: [
                     "node_oclvulwdg91"
@@ -1032,9 +964,22 @@ const executionGroupCoreFormFlowConfig = [
                 ]
             },
             {
+                name: "确认任务数量",
+                nodeIds: [
+                    "node_oclv672mq11",
+                    "node_oclv679al65"
+                ]
+            },
+            {
                 name: "发出样品填写快递单号",
                 nodeIds: [
                     "node_oclv67im1r1"
+                ]
+            },
+            {
+                name: "快递已发出",
+                nodeIds: [
+                    "node_oclvx4muig1"
                 ]
             },
             {
@@ -1050,30 +995,10 @@ const executionGroupCoreFormFlowConfig = [
         formId: "FORM-CC0B476071F24581B129A24835910B81AK56",
         actions: [
             {
-                // known
-                name: "分配执行市场分析方案",
-                nodeIds: [
-                    ""
-                ]
-            },
-            {
-                name: "分配执行营销分析方案",
-                nodeIds: [
-                    "node_oclvkcjxy41"
-                ]
-            },
-            {
                 name: "执行提交市场统计",
                 nodeIds: [
                     "node_oclvkcjxy42",
                     "node_oclvkc9r0a2"
-                ]
-            },
-            {
-                // known
-                name: "执行提交市场分析方案",
-                nodeIds: [
-                    ""
                 ]
             }
         ]
@@ -1082,18 +1007,6 @@ const executionGroupCoreFormFlowConfig = [
         formName: "天猫链接打仗审核流程",
         formId: "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J",
         actions: [
-            {
-                name: "审核链接状态",
-                nodeIds: [
-                    "node_oclqhp9c101"
-                ]
-            },
-            {
-                name: "运营确认数据回复",
-                nodeIds: [
-                    "node_ocltqyzlu32"
-                ]
-            },
             {
                 name: "执行BI系统打标签",
                 nodeIds: [
@@ -1104,6 +1017,38 @@ const executionGroupCoreFormFlowConfig = [
                 name: "统计优化后数据结果",
                 nodeIds: [
                     "node_oclqhp9c106"
+                ]
+            }
+        ]
+    },
+    {
+        formName: "采购任务运营发布",
+        formId: "FORM-0A966I819O8BZMVBE16JLAK96KK42KD1QEIILC",
+        actions: [
+            {
+                name: "分配执行统计市场",
+                nodeIds: [
+                    "node_oclvt63juf2"
+                ]
+            },
+            {
+                name: "执行提交市场统计",
+                nodeIds: [
+                    "node_oclvt63juf3"
+                ]
+            },
+            {
+                name: "分配执行统计五维",
+                nodeIds: [
+                    "node_oclvt7r3d85",
+                    "node_oclvugt7k57"
+                ]
+            },
+            {
+                name: "执行提交五维表",
+                nodeIds: [
+                    "node_oclvt7r3d87",
+                    "node_oclvugt7k58"
                 ]
             }
         ]
