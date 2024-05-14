@@ -92,7 +92,7 @@ const getDeptCoreAction = async (deptId, userNames, flows) => {
                                     }
                                 }
                                 if (fromNode.status.includes("TODO") && fromNode.id === "node_oclii89ejz1" && processInstanceId === "9134dd20-005b-4477-9c44-f4269b4be1df" && userNames.includes("李徐莹")){
-                                    logger.warn(JSON.stringify(parallelOperators))
+                                    logger.warn(JSON.stringify(reviewItem))
                                 }
                                 break
                             }
