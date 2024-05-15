@@ -76,7 +76,7 @@ const durationStatistic = async () => {
             userStatistic.push({
                 userId: user.userId,
                 userName: user.nickname,
-                duration: 0
+                duration: "0"
             })
         }
     }
