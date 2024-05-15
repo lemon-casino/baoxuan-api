@@ -38,7 +38,7 @@ const iAmOnline = async (userId) => {
         const user = await userService.getUserDetails(userId)
         const userLog = {
             userId,
-            userName: user.username || "",
+            userName: user.nickname || "",
             id: logId,
             loginTime: new Date(),
             lastOnlineTime: new Date(),
