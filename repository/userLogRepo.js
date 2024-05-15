@@ -4,6 +4,7 @@ const userLogModel = getUserLogModel(sequelize)
 const SQLError = require("../error/sqlError")
 const sequelizeUtil = require("../utils/sequelizeUtil")
 const pagingUtil = require("../utils/pagingUtil")
+const dateUtil = require("../utils/dateUtil")
 
 const saveUserLog = async (userLog) => {
     try {
@@ -27,8 +28,13 @@ const getUserLogs = async (pageIndex, pageSize, userId, timeRange) => {
             where,
             order: [["loginTime", "desc"]]
         })
-        data = data.map(function (item) {
-            return item.get({plain: true})
+        data = sequelizeUtil.extractDataValues(data)
+        data = data.map((item) => {
+            return {
+                ...item,
+                loginTime: dateUtil.format2Str(item.loginTime),
+                lastOnlineTime: item.lastOnlineTime && dateUtil.format2Str(item.lastOnlineTime),
+            }
         })
         const result = pagingUtil.paging(Math.ceil(count / pageSize), count, data)
         return result
