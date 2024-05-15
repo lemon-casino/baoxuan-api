@@ -101,7 +101,7 @@ const getInnerGroups = async (userId, deptId, deptName, innerGroup) => {
     } else {
         const departments = await departmentService.getDepartmentOfUser(userDDId)
         if (departments.length === 0) {
-            throw NotFoundError(`未找到用户：${userDDId}的部门信息`)
+            throw new NotFoundError(`未找到用户：${userDDId}的部门信息`)
         }
         for (const dept of departments) {
             if (dept.dep_detail.name === deptName && dept.leader) {
@@ -113,7 +113,7 @@ const getInnerGroups = async (userId, deptId, deptName, innerGroup) => {
         if (!isLeader) {
             currentUser = department.dep_user.filter(user => user.userid === userDDId)
             if (currentUser.length === 0) {
-                throw NotFoundError(`未找到用户：${userDDId}在${deptName}下的详细信息`)
+                throw new NotFoundError(`未找到用户：${userDDId}在${deptName}下的详细信息`)
             }
         }
     }
@@ -173,8 +173,8 @@ const reGrouping = async (deptId, selfDefinedInnerGroup) => {
 }
 
 const getAllUsers = async () => {
-   const users = await userRepo.getAllUsers();
-   return users
+    const users = await userRepo.getAllUsers();
+    return users
 }
 
 module.exports = {
