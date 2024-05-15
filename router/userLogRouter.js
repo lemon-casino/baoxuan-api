@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const userLogApi = require('../router_handler/userLogApi')
 
+router.get("/i-am-online", userLogApi.iAmOnline)
 router.get("/", userLogApi.getUserLogs)
 
-module.exports =  router
+module.exports = router

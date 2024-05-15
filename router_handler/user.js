@@ -203,16 +203,6 @@ exports.login = async (req, res, next) => {
         // }
         // user.departments = departmentsTemplate
 
-        // 保存用户的登录记录
-        const userId = tokenUtil.decodedToken(token.split(" ")[1]).id
-        const userLog = {
-            userId: userId,
-            userName: brief.dataValues.nickname,
-            ip: req.ip,
-            device: req.headers["user-agent"]
-        }
-        await userLogService.saveUserLog(userLog)
-
         return res.send(biResponse.success({token, refreshToken}));
     } catch (e) {
         next(e)

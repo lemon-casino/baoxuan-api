@@ -21,12 +21,11 @@ const client = redisUtil.createClient(options);
 
 (async () => {
     await client.connect()
-    // const subscriber = client.duplicate();
-    // await subscriber.connect();
-    // await subscriber.subscribe('__keyevent@0__:expired', (message) => {
-    //     logger.warn("__keyevent@0__:expire")
-    //     logger.warn(message)
-    // });
+    const subscriber = client.duplicate();
+    await subscriber.connect();
+    await subscriber.subscribe('__keyevent@0__:expired', (key, value) => {
+        logger.warn(`${key}, ${value}(__keyevent@0__:expired)`)
+    });
 })();
 
 client.on("error", (err) => {

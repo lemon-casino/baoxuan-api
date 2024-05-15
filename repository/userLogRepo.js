@@ -28,7 +28,7 @@ const getUserLogs = async (pageIndex, pageSize, userId, timeRange) => {
             order: [["loginTime", "desc"]]
         })
         data = data.map(function (item) {
-            return item.get({ plain: true })
+            return item.get({plain: true})
         })
         const result = pagingUtil.paging(Math.ceil(count / pageSize), count, data)
         return result
@@ -37,7 +37,14 @@ const getUserLogs = async (pageIndex, pageSize, userId, timeRange) => {
     }
 }
 
+const updateFields = (id, fields) => {
+    userLogModel.update({...fields}, {
+        where: {id}
+    })
+}
+
 module.exports = {
     saveUserLog,
-    getUserLogs
+    getUserLogs,
+    updateFields
 }

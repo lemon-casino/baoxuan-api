@@ -2,6 +2,7 @@ const userLogService = require("../service/userLogService")
 const biResponse = require("../utils/biResponse")
 const dateUtil = require("../utils/dateUtil")
 const joiUtil = require("../utils/joiUtil")
+const onlineCheckConst = require("../const/onlineCheckConst")
 
 const getUserLogs = async (req, res, next) => {
     try {
@@ -16,6 +17,26 @@ const getUserLogs = async (req, res, next) => {
     }
 }
 
+const getOnlineCheckConfig = async (req, res, next) => {
+    try {
+        return res.send(biResponse.success(onlineCheckConst))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const iAmOnline = async (req, res, next) => {
+    try {
+        const {id} = req.user
+        await userLogService.iAmOnline(id)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
-    getUserLogs
+    getUserLogs,
+    getOnlineCheckConfig,
+    iAmOnline
 }

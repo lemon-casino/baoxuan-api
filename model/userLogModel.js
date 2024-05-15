@@ -28,7 +28,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "用户名",
-      field: "user_name",
+      field: "user_name"
     },
     loginTime: {
       type: DataTypes.DATE,
@@ -39,9 +39,18 @@ module.exports = sequelize => {
       comment: "登录时间",
       field: "login_time"
     },
+    lastOnlineTime: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "最新的在线时间;",
+      field: "last_online_time"
+    },
     device: {
       type: DataTypes.STRING(255),
-      allowNull: false,
+      allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
@@ -56,6 +65,15 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "登录ip;",
       field: "ip"
+    },
+    isOnline: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: 0,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "是否在线;",
+      field: "is_online"
     }
   };
   const options = {
