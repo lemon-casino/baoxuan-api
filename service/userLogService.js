@@ -65,7 +65,25 @@ const iAmDown = async (userId) => {
 }
 
 const durationStatistic = async () => {
-    return await userLogRepo.durationStatistic()
+    const allUsers = await userService.getAllUsers()
+    let userStatistic = await userLogRepo.durationStatistic()
+    const loginUserIds = {}
+    for (const user of userStatistic) {
+        loginUserIds[user.user_id] = 1
+    }
+    for (const user of allUsers) {
+        if (!Object.keys(loginUserIds).includes(user.user_id)) {
+            userStatistic.push({
+                userId: user.userId,
+                userName: user.nickname,
+                duration: 0
+            })
+        }
+    }
+    userStatistic = userStatistic.sort((curr, next) => {
+        return parseInt(next.duration || "0") - parseInt(curr.duration || "0")
+    })
+    return userStatistic
 }
 
 const setUserDown = async (userId) => {

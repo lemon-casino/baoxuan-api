@@ -62,12 +62,13 @@ const getLatestUserLog = async (userId) => {
 const durationStatistic = async () => {
     const result = await userLogModel.findAll({
         attributes: [
-            "user_id",
-            [Sequelize.fn('SUM', Sequelize.literal('last_online_time - login_time')), 'duration']
+            ["user_name", "userName"],
+            ["user_id", "userId"],
+            [Sequelize.fn('SUM', Sequelize.literal('TIME_TO_SEC(TIMEDIFF(last_online_time, login_time))')), 'duration']
         ],
-        group: "user_id"
+        group: ["user_id", "user_name"]
     })
-    console.log(result)
+    return sequelizeUtil.extractDataValues(result)
 }
 
 const setUserDown = async (userId) => {
