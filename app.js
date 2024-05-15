@@ -50,7 +50,7 @@ app.use((err, req, res, next) => {
     if (err.code && err.message) {
         return res.send({code: err.code, message: err.message})
     }
-    logger.error(err.stack)
+    logger.error(err.stack || err.message)
     // emailUtil.send(err.stack)
     return res.send({code: errorCodes.commonError, message: errorMessages.common})
 });

@@ -18,7 +18,6 @@ const setValue = async (key, value, expire) => {
         }
         return value;
     } catch (err) {
-        console.error("redisUtil 存储出错了======》", err);
         throw err;
     }
 };

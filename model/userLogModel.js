@@ -42,7 +42,11 @@ module.exports = sequelize => {
             field: "login_time",
             get() {
                 const loginTime = this.getDataValue("loginTime")
-                return dateUtil.format2Str(loginTime)
+                if (loginTime) {
+                    return dateUtil.format2Str(loginTime)
+                }
+                return loginTime
+
             }
         },
         lastOnlineTime: {
@@ -55,7 +59,10 @@ module.exports = sequelize => {
             field: "last_online_time",
             get() {
                 const lastOnlineTime = this.getDataValue("lastOnlineTime")
-                return dateUtil.format2Str(lastOnlineTime)
+                if (lastOnlineTime) {
+                    return dateUtil.format2Str(lastOnlineTime)
+                }
+                return lastOnlineTime
             }
         },
         device: {

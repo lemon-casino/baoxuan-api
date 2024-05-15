@@ -3,7 +3,6 @@ const biResponse = require("../utils/biResponse")
 const dateUtil = require("../utils/dateUtil")
 const joiUtil = require("../utils/joiUtil")
 const onlineCheckConst = require("../const/onlineCheckConst")
-const userLogRepo = require("../repository/userLogRepo");
 
 const getUserLogs = async (req, res, next) => {
     try {
