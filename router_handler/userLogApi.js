@@ -20,7 +20,7 @@ const getUserLogs = async (req, res, next) => {
 
 const getOnlineCheckConfig = async (req, res, next) => {
     try {
-        return res.send(biResponse.success(onlineCheckConst))
+        return res.send(biResponse.success(onlineCheckConst.intervalConfig))
     } catch (e) {
         next(e)
     }

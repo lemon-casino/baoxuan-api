@@ -42,10 +42,11 @@ const getUserLogs = async (pageIndex, pageSize, userId, timeRange, isOnline) => 
     }
 }
 
-const updateFields = (id, fields) => {
-    userLogModel.update({...fields}, {
+const updateFields = async (id, fields) => {
+    const result = await userLogModel.update({...fields}, {
         where: {id}
     })
+    return result
 }
 
 const getLatestUserLog = async (userId) => {
@@ -69,10 +70,19 @@ const durationStatistic = async () => {
     console.log(result)
 }
 
+const setUserDown = async (userId) => {
+    await userLogModel.update({
+        isOnline: false
+    }, {
+        where: {userId}
+    })
+}
+
 module.exports = {
     saveUserLog,
     getUserLogs,
     updateFields,
     getLatestUserLog,
-    durationStatistic
+    durationStatistic,
+    setUserDown
 }

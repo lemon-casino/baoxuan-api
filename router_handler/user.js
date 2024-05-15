@@ -58,7 +58,7 @@ exports.getCheckCode = async (req, res, next) => {
         const effectTime = 10 * 60;
 
         // 存入redis
-        const result = await redis.setKey(
+        const result = await redis.setValue(
             uuid,
             captcha.text.toLowerCase(),
             effectTime
@@ -89,7 +89,7 @@ exports.login = async (req, res, next) => {
         }
         // 验证验证码
         const {username, password, checkCode, uuid} = value;
-        const captcha = await redis.getKey(uuid);
+        const captcha = await redis.getValue(uuid);
         if (!captcha) {
             throw new HttpError("图形验证码已过期，请点击图片刷新")
         }

@@ -82,3 +82,9 @@ schedule.scheduleJob(syncUserWithDepartmentCron, async function () {
 schedule.scheduleJob(syncFormCron, async function () {
     await taskService.syncForm()
 })
+
+
+schedule.scheduleJob(syncFormCron, async function () {
+    await taskService.syncUserLogin()
+})
+

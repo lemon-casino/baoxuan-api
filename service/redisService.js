@@ -3,26 +3,26 @@ const redisUtil = require("../utils/redisUtil")
 const dingDingReq = require("../core/dingDingReq")
 
 const setToken = async (ddToken) => {
-    await redisUtil.setKey(redisKeys.DDToken, JSON.stringify(ddToken), 7200)
+    await redisUtil.setValue(redisKeys.DDToken, JSON.stringify(ddToken), 7200)
 }
 
 const getToken = async () => {
-    const reply = await redisUtil.getKey(redisKeys.DDToken);
+    const reply = await redisUtil.getValue(redisKeys.DDToken);
     return JSON.parse(reply);
 };
 
 const getDepartments = async () => {
-    const reply = await redisUtil.getKey(redisKeys.Department);
+    const reply = await redisUtil.getValue(redisKeys.Department);
     return JSON.parse(reply);
 };
 // 获取redis所有详情用户信息
 const getAllUsersDetail = async () => {
-    const reply = await redisUtil.getKey(redisKeys.AllUsersWithDepartment);
+    const reply = await redisUtil.getValue(redisKeys.AllUsersWithDepartment);
     return JSON.parse(reply);
 };
 // 获取redis流程数据
 const getAllFlowsUntilNow = async () => {
-    const reply = await redisUtil.getKey(redisKeys.AllFlowsUntilNow);
+    const reply = await redisUtil.getValue(redisKeys.AllFlowsUntilNow);
     return JSON.parse(reply);
 };
 // 根据流程id获取全部审批流程详情
@@ -35,12 +35,12 @@ const getAllProcessFlow = async (token, userId, formInstanceId) => {
 };
 
 const setUsersUnderDepartment = async (departments) => {
-    await redisUtil.setKey(redisKeys.UsersUnderDepartment, JSON.stringify(departments));
+    await redisUtil.setValue(redisKeys.UsersUnderDepartment, JSON.stringify(departments));
 }
 
 // 获取所有部门下的所有用户信息
 const getUsersUnderDepartment = async () => {
-    const reply = await redisUtil.getKey(redisKeys.UsersUnderDepartment);
+    const reply = await redisUtil.getValue(redisKeys.UsersUnderDepartment);
     return JSON.parse(reply);
 };
 
@@ -57,12 +57,12 @@ const getAllFlowUntilNowByTimeRange = async (timesRange) => {
 };
 
 const getTodayRunningAndFinishedFlows = async () => {
-    const result = await redisUtil.getKey(redisKeys.FlowsOfRunningAndFinishedOfToday)
+    const result = await redisUtil.getValue(redisKeys.FlowsOfRunningAndFinishedOfToday)
     return JSON.parse(result)
 }
 
 const setTodayFlows = async (flows) => {
-    await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
+    await redisUtil.setValue(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
     return true
 }
 

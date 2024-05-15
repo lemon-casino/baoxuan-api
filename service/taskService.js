@@ -1,11 +1,13 @@
-const redisUtil = require("../utils/redisUtil")
-const {redisKeys} = require("../const/redisConst")
 const globalSetter = require("../global/setter")
 const dingDingService = require("../service/dingDingService")
 const flowService = require("../service/flowService")
 const flowFormService = require("../service/flowFormService")
 const workingDayService = require("../service/workingDayService")
+const userLogService = require("../service/userLogService")
+const redisUtil = require("../utils/redisUtil")
 const dateUtil = require("../utils/dateUtil")
+const {redisKeys} = require("../const/redisConst")
+const onlineCheckConst = require("../const/onlineCheckConst")
 
 const syncWorkingDay = async () => {
     const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
@@ -18,7 +20,7 @@ const syncWorkingDay = async () => {
 const syncTodayRunningAndFinishedFlows = async () => {
     logger.info("开始同步今日流程数据...")
     const flows = await dingDingService.getTodayRunningAndFinishedFlows()
-    await redisUtil.setKey(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
+    await redisUtil.setValue(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
     logger.info(`同步完成，共:${flows.length}条数据`)
 }
@@ -35,24 +37,42 @@ const syncDingDingToken = async () => {
 
 const syncDepartment = async () => {
     const depList = await dingDingService.getDepartmentFromDingDing()
-    await redisUtil.setKey(redisKeys.Department, JSON.stringify(depList.result))
+    await redisUtil.setValue(redisKeys.Department, JSON.stringify(depList.result))
     globalSetter.setGlobalDepartments(depList.result)
 }
 
 const syncDepartmentWithUser = async () => {
     const allDepartmentsWithUsers = await dingDingService.getDepartmentsWithUsersFromDingDing()
-    await redisUtil.setKey(redisKeys.UsersUnderDepartment, JSON.stringify(allDepartmentsWithUsers))
+    await redisUtil.setValue(redisKeys.UsersUnderDepartment, JSON.stringify(allDepartmentsWithUsers))
     globalSetter.setGlobalUsersOfDepartments(allDepartmentsWithUsers)
 }
 
 const syncUserWithDepartment = async () => {
     const usersWithDepartment = await dingDingService.getUsersWithDepartmentFromDingDing()
-    await redisUtil.setKey(redisKeys.AllUsersWithDepartment, JSON.stringify(usersWithDepartment))
+    await redisUtil.setValue(redisKeys.AllUsersWithDepartment, JSON.stringify(usersWithDepartment))
     globalSetter.setGlobalUsers(usersWithDepartment)
 }
 
 const syncForm = async () => {
     await flowFormService.syncFormsFromDingDing()
+}
+
+const syncUserLogin = async () => {
+    const pageData = await userLogService.getUserLogs(0, 999, "",
+        [dateUtil.startOfDay(dateUtil.dateOfEarliest()), dateUtil.endOfToday()],
+        1)
+
+    const userOnlineInRedis = await redisUtil.getKeys(
+        `${onlineCheckConst.REDIS_LOGIN_KEY_PREFIX}:*`)
+
+    const userIdsOnlineInRedis = userOnlineInRedis.map(item => item.split(":")[1])
+
+    const usersOnlineInDb = pageData.data
+    for (const user of usersOnlineInDb) {
+        if (!userIdsOnlineInRedis.includes(user.userId)) {
+            await userLogService.setUserDown(user.userId)
+        }
+    }
 }
 
 module.exports = {
@@ -63,5 +83,6 @@ module.exports = {
     syncDepartmentWithUser,
     syncUserWithDepartment,
     syncForm,
-    syncDingDingToken
+    syncDingDingToken,
+    syncUserLogin
 }
