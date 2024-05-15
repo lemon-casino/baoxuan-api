@@ -47,14 +47,14 @@ const iAmOnline = async (userId) => {
         try {
             await userLogRepo.saveUserLog(userLog)
         } catch (e) {
-            if (e.original.code !== "ER_DUP_ENTRY") {
+            if (e.original && e.original.code !== "ER_DUP_ENTRY") {
                 throw e
             }
         }
     }
 
     // 比前端接口回调的频率多1倍的时间作为用户下线的判断
-    await redisUtil.setValue(userLoginKey, logId, 2.5 * onlineCheckConst.intervalConfig)
+    await redisUtil.setValue(userLoginKey, logId, 2.5 * onlineCheckConst.intervalConfig.interval)
 }
 
 const iAmDown = async (userId) => {
