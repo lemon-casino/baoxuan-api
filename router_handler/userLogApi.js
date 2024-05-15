@@ -3,6 +3,7 @@ const biResponse = require("../utils/biResponse")
 const dateUtil = require("../utils/dateUtil")
 const joiUtil = require("../utils/joiUtil")
 const onlineCheckConst = require("../const/onlineCheckConst")
+const userLogRepo = require("../repository/userLogRepo");
 
 const getUserLogs = async (req, res, next) => {
     try {
@@ -45,10 +46,19 @@ const iAmDown = async (req, res, next) => {
     }
 }
 
+const durationStatistic = async (req, res, next) => {
+    try {
+        const result = await userLogService.durationStatistic()
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
 
 module.exports = {
     getUserLogs,
     getOnlineCheckConfig,
     iAmOnline,
-    iAmDown
+    iAmDown,
+    durationStatistic
 }

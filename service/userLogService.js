@@ -48,8 +48,13 @@ const iAmDown = async (userId) => {
     }
 }
 
+const durationStatistic = async () => {
+    return await userLogRepo.durationStatistic()
+}
+
 module.exports = {
     getUserLogs,
     iAmOnline,
-    iAmDown
+    iAmDown,
+    durationStatistic
 }

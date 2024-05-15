@@ -9,6 +9,7 @@ const userService = require("../service/userService")
 const tokenUtil = require("../utils/token")
 const UserError = require("../error/userError")
 const HttpError = require("../error/http/httpError")
+const ParameterError = require("../error/parameterError")
 
 const {Op} = require("sequelize");
 // 引入加密模块
@@ -341,7 +342,7 @@ exports.refreshToken = (req, res) => {
 exports.getList = (req, res, next) => {
     const {value, error} = get_list.validate(req.query);
     if (error) {
-        return next(error);
+        throw new ParameterError(error.message)
     }
     // 接收前端参数
     let {pageSize, currentPage} = req.query;
@@ -512,6 +513,15 @@ exports.getUsersOfDepartment = async (req, res, next) => {
         const {deptId} = req.params
         const usersOfDepartment = await userService.getUsersOfDepartment(deptId)
         res.send(biResponse.success(usersOfDepartment))
+    } catch (e) {
+        next(e)
+    }
+}
+
+exports.getAllUsers = async (req, res, next) => {
+    try {
+        const users = await userService.getAllUsers()
+        res.send(biResponse.success(users))
     } catch (e) {
         next(e)
     }

@@ -18,4 +18,17 @@ const getUserDetails = async (userId) => {
     }
 }
 
-module.exports = {getUserDetails}
+const getAllUsers = async () => {
+    const users = await userModel.findAll({
+        attributes: {exclude: ["password", "dingdingUserId", "userPic", "status"]},
+        where: {
+            status: 1
+        }
+    })
+    return users
+}
+
+module.exports = {
+    getUserDetails,
+    getAllUsers
+}

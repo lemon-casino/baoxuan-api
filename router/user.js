@@ -29,6 +29,7 @@ router.post('/editPwd', userHandler.editPassword);
 router.get('/queryUserInfo/:user_id', userHandler.getUserinfoById);
 router.get('/tm-inner-groups', userHandler.getTMInnerGroups);
 router.get('/vision-inner-groups', userHandler.getVisionInnerGroups);
+router.get('/all', userHandler.getAllUsers);
 
 // 将路由对象共享出去
 module.exports = router;

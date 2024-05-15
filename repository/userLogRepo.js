@@ -1,3 +1,4 @@
+const Sequelize = require("sequelize")
 const sequelize = require('../model/init');
 const getUserLogModel = require("../model/userLogModel")
 const userLogModel = getUserLogModel(sequelize)
@@ -31,13 +32,8 @@ const getUserLogs = async (pageIndex, pageSize, userId, timeRange, isOnline) => 
             where,
             order: [["loginTime", "desc"]]
         })
-        data = sequelizeUtil.extractDataValues(data)
         data = data.map((item) => {
-            return {
-                ...item,
-                loginTime: dateUtil.format2Str(item.loginTime),
-                lastOnlineTime: item.lastOnlineTime && dateUtil.format2Str(item.lastOnlineTime),
-            }
+            return item.get({plain: true})
         })
         const result = pagingUtil.paging(Math.ceil(count / pageSize), count, data)
         return result
@@ -62,9 +58,21 @@ const getLatestUserLog = async (userId) => {
     return sequelizeUtil.extractDataValues(userLatestLog)
 }
 
+const durationStatistic = async () => {
+    const result = await userLogModel.findAll({
+        attributes: [
+            "user_id",
+            [Sequelize.fn('SUM', Sequelize.literal('last_online_time - login_time')), 'duration']
+        ],
+        group: "user_id"
+    })
+    console.log(result)
+}
+
 module.exports = {
     saveUserLog,
     getUserLogs,
     updateFields,
-    getLatestUserLog
+    getLatestUserLog,
+    durationStatistic
 }

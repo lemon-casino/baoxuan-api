@@ -25,7 +25,7 @@ const getUsersOfDepartment = async (departmentId) => {
     let department = null
     for (const usersOfDepartment of usersOfDepartments) {
         department = departmentService.findMatchedDepartmentFromRoot(departmentId, usersOfDepartment)
-        if (department){
+        if (department) {
             break
         }
     }
@@ -172,11 +172,17 @@ const reGrouping = async (deptId, selfDefinedInnerGroup) => {
     return groupingResult
 }
 
+const getAllUsers = async () => {
+   const users = await userRepo.getAllUsers();
+   return users
+}
+
 module.exports = {
     getDingDingUserId,
     getUsersOfDepartment,
     getUserDetails,
     getUserSelfOrPartnersOfDepartment,
     getTMInnerGroups,
-    getVisionInnerGroups
+    getVisionInnerGroups,
+    getAllUsers
 }
