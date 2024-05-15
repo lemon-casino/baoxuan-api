@@ -38,7 +38,7 @@ const iAmOnline = async (req, res, next) => {
 const iAmDown = async (req, res, next) => {
     try {
         const {id} = req.user
-        await userLogService.iAmDown(14)
+        await userLogService.iAmDown(id)
         return res.send(biResponse.success())
     } catch (e) {
         next(e)
