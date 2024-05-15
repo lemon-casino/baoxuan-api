@@ -6,14 +6,15 @@ const onlineCheckConst = require("../const/onlineCheckConst")
 
 const REDIS_LOGIN_KEY_PREFIX = "login"
 
-const getUserLogs = async (pageIndex, pageSize, userId, timeRange) => {
-    const userLogs = await userLogRepo.getUserLogs(parseInt(pageIndex), parseInt(pageSize), userId, timeRange)
+const getUserLogs = async (pageIndex, pageSize, userId, timeRange, isOnline) => {
+    const userLogs = await userLogRepo.getUserLogs(parseInt(pageIndex),
+        parseInt(pageSize), userId, timeRange, isOnline)
     return userLogs
 }
 
 const iAmOnline = async (userId) => {
     const userLoginKey = `${REDIS_LOGIN_KEY_PREFIX}:${userId}`
-    let logId =  await redisUtil.getKey(userLoginKey)
+    let logId = await redisUtil.getKey(userLoginKey)
     // 用户首次登录
     if (!logId) {
         logId = uuidUtil.getId()
@@ -40,7 +41,7 @@ const iAmOnline = async (userId) => {
     await redisUtil.setKey(userLoginKey, logId, 2.5 * onlineCheckConst.interval)
 }
 
-const iAmDown = async(userId)=>{
+const iAmDown = async (userId) => {
     const userLog = await userLogRepo.getLatestUserLog(userId)
     if (userLog && userLog.id) {
         await userLogRepo.updateFields(userLog.id, {isOnline: false})

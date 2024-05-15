@@ -22,6 +22,7 @@ module.exports = {
     "/tima/workload": require("./Tm_Workload"),
     // ��Ƹ����
     "/hr/recruit": require("./Hr_Recruit"),
-    "/dept": require("./departmentRouter")
+    "/dept": require("./departmentRouter"),
+    "/depts": require("./departmentRouter")
 
 }

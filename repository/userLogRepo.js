@@ -15,11 +15,14 @@ const saveUserLog = async (userLog) => {
     }
 }
 
-const getUserLogs = async (pageIndex, pageSize, userId, timeRange) => {
+const getUserLogs = async (pageIndex, pageSize, userId, timeRange, isOnline) => {
     try {
         const where = {loginTime: {$between: timeRange}}
         if (userId) {
             where.userId = userId
+        }
+        if (isOnline) {
+            where.isOnline = isOnline
         }
         const count = await userLogModel.count({where})
         let data = await userLogModel.findAll({

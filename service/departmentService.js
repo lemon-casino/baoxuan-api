@@ -286,6 +286,21 @@ const getUsersOfDepartment = async (deptId) => {
     throw new NotFoundError(`未找到部门${deptId}的信息`)
 }
 
+const getAllUsers = async () => {
+    const allUsers = []
+    const userIds = {}
+    const departmentUsers = await globalGetter.getUsersOfDepartments()
+    for (const departmentUser of departmentUsers) {
+        const users = departmentUser.dep_user
+        for (const user of users) {
+            if (!Object.keys(userIds).includes(user.userid)) {
+                allUsers.push(user)
+                userIds[user.userid] = 1
+            }
+        }
+    }
+    return allUsers
+}
 
 module.exports = {
     getDepartments,
@@ -299,5 +314,6 @@ module.exports = {
     getDepartmentByDeptName,
     simplifiedUsersOfDepartment,
     getDepartmentWithUsers,
-    hasMatchedDeptName
+    hasMatchedDeptName,
+    getAllUsers
 }

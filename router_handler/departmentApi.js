@@ -13,6 +13,16 @@ const getDeptUsers = async (req, res, next) => {
     }
 }
 
+const getAllUsers = async (req, res, next)=>{
+    try {
+        const users = await departmentService.getAllUsers()
+        return res.send(biResponse.success(users))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
-    getDeptUsers
+    getDeptUsers,
+    getAllUsers
 }
