@@ -54,7 +54,7 @@ const iAmOnline = async (userId) => {
     }
 
     // 比前端接口回调的频率多1倍的时间作为用户下线的判断
-    await redisUtil.setValue(userLoginKey, logId, 2.5 * onlineCheckConst.intervalConfig.interval)
+    await redisUtil.setValue(userLoginKey, logId, 3 * onlineCheckConst.intervalConfig.interval)
 }
 
 const iAmDown = async (userId) => {
