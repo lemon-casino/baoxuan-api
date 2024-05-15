@@ -43,8 +43,19 @@ const updateFields = (id, fields) => {
     })
 }
 
+const getLatestUserLog = async (userId) => {
+    const userLatestLog = await userLogModel.findOne({
+        where: {
+            userId
+        },
+        order: [["loginTime", "desc"]]
+    })
+    return sequelizeUtil.extractDataValues(userLatestLog)
+}
+
 module.exports = {
     saveUserLog,
     getUserLogs,
-    updateFields
+    updateFields,
+    getLatestUserLog
 }

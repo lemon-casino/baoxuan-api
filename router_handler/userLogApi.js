@@ -35,8 +35,20 @@ const iAmOnline = async (req, res, next) => {
     }
 }
 
+const iAmDown = async (req, res, next) => {
+    try {
+        const {id} = req.user
+        await userLogService.iAmDown(14)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+
 module.exports = {
     getUserLogs,
     getOnlineCheckConfig,
-    iAmOnline
+    iAmOnline,
+    iAmDown
 }

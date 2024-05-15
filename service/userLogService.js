@@ -13,14 +13,14 @@ const getUserLogs = async (pageIndex, pageSize, userId, timeRange) => {
 
 const iAmOnline = async (userId) => {
     const userLoginKey = `${REDIS_LOGIN_KEY_PREFIX}:${userId}`
-    let logId = redisUtil.getKey(userLoginKey)
+    let logId =  await redisUtil.getKey(userLoginKey)
     // 用户首次登录
     if (!logId) {
         logId = uuidUtil.getId()
         const user = await userService.getUserDetails(userId)
         const userLog = {
             userId,
-            userName: user.name || "",
+            userName: user.username || "",
             id: logId,
             loginTime: new Date(),
             lastOnlineTime: new Date(),
@@ -40,10 +40,11 @@ const iAmOnline = async (userId) => {
     await redisUtil.setKey(userLoginKey, logId, 2.5 * onlineCheckConst.interval)
 }
 
-const iAmDown = async (logId) => {
-    await userLogRepo.updateFields(logId, {
-        isOnline: false
-    })
+const iAmDown = async(userId)=>{
+    const userLog = await userLogRepo.getLatestUserLog(userId)
+    if (userLog && userLog.id) {
+        await userLogRepo.updateFields(userLog.id, {isOnline: false})
+    }
 }
 
 module.exports = {
