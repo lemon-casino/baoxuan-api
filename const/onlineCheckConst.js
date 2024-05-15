@@ -1,6 +1,6 @@
 const REDIS_LOGIN_KEY_PREFIX = "login"
 const intervalConfig = {
-    interval: 10,
+    interval: 5,
     unit: "s"
 }
 
