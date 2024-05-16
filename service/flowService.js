@@ -145,6 +145,8 @@ const flowsDividedByDepartment = async (flows) => {
         // warning: 如果userId用户存在多部门的情况，会重复计算
         const departmentsOfUser = await departmentService.getDepartmentOfUser(flow.originator.userId)
 
+        // 人员的leader_in_dept 是一种扁平的结构，有子部门的归算的子部门，没有的就归算到一级部门下
+        // 获取一级部门信息
         const topDepartments = departmentsOfUser.filter((dep) => {
             if (dep && dep.dep_detail && dep.dep_detail.parent_id) {
                 return dep.dep_detail.parent_id === 1
@@ -159,6 +161,7 @@ const flowsDividedByDepartment = async (flows) => {
                 }
                 return false
             })
+            // 存在子部门统计到子部门下
             if (subDepartments.length > 0) {
                 for (const subDepartment of subDepartments) {
                     if (Object.keys(result).includes(subDepartment.dep_detail.name)) {
@@ -167,7 +170,9 @@ const flowsDividedByDepartment = async (flows) => {
                         result[subDepartment.dep_detail.name] = [flow]
                     }
                 }
-            } else {
+            }
+            // 没有子部门统计到一级部门下
+            else {
                 if (Object.keys(result).includes(department.dep_detail.name)) {
                     result[department.dep_detail.name].push(flow)
                 } else {
@@ -277,6 +282,44 @@ const getFlowsByIds = async (ids) => {
 const getTodayFlowsByIds = async (ids) => {
     const flowsOfRunningAndFinishedOfToday = await globalGetter.getTodayFlows()
     const satisfiedFlows = await flowsOfRunningAndFinishedOfToday.filter((item) => ids.includes(item.processInstanceId))
+    // 为流程添加发起人的部门信息
+    for (const flow of satisfiedFlows) {
+        let departmentNames = ""
+        const departmentsOfUser = await departmentService.getDepartmentOfUser(flow.originator.userId)
+        // 人员的leader_in_dept 是一种扁平的结构，有子部门的归算的子部门，没有的就归算到一级部门下
+        // 获取一级部门信息
+        const topDepartments = departmentsOfUser.filter((dep) => {
+            if (dep && dep.dep_detail && dep.dep_detail.parent_id) {
+                return dep.dep_detail.parent_id === 1
+            }
+            return false
+        })
+
+        for (const department of topDepartments) {
+            const subDepartments = departmentsOfUser.filter((dep) => {
+                if (dep && dep.dep_detail && dep.dep_detail.parent_id) {
+                    return dep.dep_detail.parent_id === department.dep_detail.dept_id
+                }
+                return false
+            })
+            // 存在子部门统计到子部门下
+            if (subDepartments.length > 0) {
+                for (const subDepartment of subDepartments) {
+                    departmentNames = `${departmentNames},${subDepartment.dep_detail.name}`
+                }
+            }
+            // 没有子部门统计到一级部门下
+            else {
+                departmentNames = `${departmentNames},${department.dep_detail.name}`
+            }
+        }
+        if (departmentNames.startsWith(",")) {
+            flow.departmentName = departmentNames.substring(1)
+        } else {
+            flow.departmentName = departmentNames
+        }
+
+    }
     return satisfiedFlows;
 }
 
