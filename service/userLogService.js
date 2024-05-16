@@ -69,10 +69,10 @@ const durationStatistic = async () => {
     let userStatistic = await userLogRepo.durationStatistic()
     const loginUserIds = {}
     for (const user of userStatistic) {
-        loginUserIds[user.user_id] = 1
+        loginUserIds[user.userId] = 1
     }
     for (const user of allUsers) {
-        if (!Object.keys(loginUserIds).includes(user.user_id)) {
+        if (!Object.keys(loginUserIds).includes(user.userId.toString())) {
             userStatistic.push({
                 userId: user.userId,
                 userName: user.nickname,

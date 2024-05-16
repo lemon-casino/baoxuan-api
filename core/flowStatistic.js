@@ -139,18 +139,40 @@ const getDeptCoreAction = async (deptId, userNames, flows) => {
     return finalResult
 }
 
-const getDeptCoreFlow = async (deptId, userNames, flows) => {
+// 根据操作人汇总流程节点数据到结果节点中
+const sumReviewItemsToResultNodeByOperator = (processInstanceId, reviewItems, resultNode) => {
+    // 逾期节点的人：存在多个节点多个人、多个节点一个人
+    const tmpUniqueUserNames = {}
+    for (const overdueItem of reviewItems) {
+        tmpUniqueUserNames[[overdueItem.operatorName]] = 1
+    }
+    const uniqueUserNames = Object.keys(tmpUniqueUserNames)
+    for (const userName of uniqueUserNames) {
+        const userAlreadyCount = resultNode.children.filter(item => item.userName === userName)
+        if (userAlreadyCount.length > 0) {
+            userAlreadyCount[0].ids.push(processInstanceId)
+            userAlreadyCount[0].sum = userAlreadyCount[0].ids.length
+        } else {
+            resultNode.children.push({
+                userName: userName,
+                sum: 1,
+                ids: [processInstanceId]
+            })
+        }
+    }
+}
+
+const getDeptCoreFlow = async (deptId, users, flows) => {
     const finalResult = []
 
     const nodeTypes = [
         {name: "进行中", type: flowReviewTypeConst.TODO},
         {name: "待转入", type: flowReviewTypeConst.FORCAST},
-        {name: "已完成", type: flowReviewTypeConst.HISTORY},
-        {name: "已终止", type: flowReviewTypeConst.TERMINATED},
         {name: "已逾期", type: "OVERDUE"},
-        {name: "异常", type: flowReviewTypeConst.ERROR},
+        {name: "已完成", type: flowReviewTypeConst.HISTORY}
     ]
 
+    const userIds = users.map(user => user.userid)
     const coreFormFlowConfigs = await flowRepo.getCoreFormFlowConfig(deptId)
     const flowReviewItemsMap = {}
     for (const coreFormConfig of coreFormFlowConfigs) {
@@ -162,12 +184,16 @@ const getDeptCoreFlow = async (deptId, userNames, flows) => {
             const actionResult = {name: action.name, children: []}
             for (const nodeType of nodeTypes) {
                 const typeResult = {type: nodeType.type, name: nodeType.name}
+
                 if (nodeType.type.toUpperCase() === "OVERDUE") {
                     typeResult.children = [
-                        {type: flowReviewTypeConst.TODO, name: "进行中", ids: [], sum: 0},
-                        {type: flowReviewTypeConst.HISTORY, name: "已完成", ids: [], sum: 0}
+                        // children 用于保存人的统计信息
+                        {type: flowReviewTypeConst.TODO, name: "进行中", ids: [], sum: 0, children: []},
+                        {type: flowReviewTypeConst.HISTORY, name: "已完成", ids: [], sum: 0, children: []}
                     ]
                 } else {
+                    // children 用于保存人的统计信息
+                    typeResult.children = []
                     typeResult.ids = []
                     typeResult.sum = 0
                 }
@@ -199,7 +225,7 @@ const getDeptCoreFlow = async (deptId, userNames, flows) => {
             for (const action of actions) {
                 const currActionResult = formResult.children.filter(item => item.name === action.name)[0]
                 const firstFilteredReviewItems = flow.overallprocessflow.filter(
-                    item => action.nodeIds.includes(item.activityId) && userNames.includes(item.operatorName))
+                    item => action.nodeIds.includes(item.activityId) && userIds.includes(item.operatorUserId))
 
                 // 如果流程节点中还没有统计的节点信息（可能未开始），则直接跳过
                 if (firstFilteredReviewItems.length === 0) {
@@ -220,15 +246,16 @@ const getDeptCoreFlow = async (deptId, userNames, flows) => {
                         // 并行分支的条件下，可能会有一个流程出现两种状态的逾期情况
                         const tmpHistoryOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.HISTORY)
                         if (tmpHistoryOverdue.length > 0) {
+
                             const historyOverDueResult = typeResult.children.filter(item => item.type === flowReviewTypeConst.HISTORY)[0]
-                            historyOverDueResult.ids.push(processInstanceId)
-                            historyOverDueResult.sum = historyOverDueResult.ids.length
+
+                            sumReviewItemsToResultNodeByOperator(processInstanceId, tmpHistoryOverdue, historyOverDueResult)
                         }
                         const tmpTodoOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.TODO)
                         if (tmpTodoOverdue.length > 0) {
                             const todoOverDueResult = typeResult.children.filter(item => item.type === flowReviewTypeConst.TODO)[0]
-                            todoOverDueResult.ids.push(processInstanceId)
-                            todoOverDueResult.sum = todoOverDueResult.ids.length
+
+                            sumReviewItemsToResultNodeByOperator(processInstanceId, tmpTodoOverdue, todoOverDueResult)
                         }
                     }
                     // 2.待转入：存在节点的状态为forcast 并且临近的节点(s)的状态为todo
@@ -270,8 +297,7 @@ const getDeptCoreFlow = async (deptId, userNames, flows) => {
                                 }
                             }
                             if (lastNodeIsDoing && !typeResult.ids.includes(processInstanceId)) {
-                                typeResult.ids.push(processInstanceId)
-                                typeResult.sum = typeResult.ids.length
+                                sumReviewItemsToResultNodeByOperator(processInstanceId, [forecastReviewItem], typeResult)
                                 break
                             }
                         }
@@ -280,15 +306,7 @@ const getDeptCoreFlow = async (deptId, userNames, flows) => {
                     else if (nodeType.type === flowReviewTypeConst.TODO || nodeType.type === flowReviewTypeConst.HISTORY) {
                         const currTypeReviewItems = firstFilteredReviewItems.filter(item => item.type === nodeType.type)
                         if (currTypeReviewItems.length > 0) {
-                            typeResult.ids.push(processInstanceId)
-                            typeResult.sum = typeResult.ids.length
-                        }
-                    }
-                    // 终止、异常判断流程状态
-                    else {
-                        if (flow.instanceStatus === nodeType.type) {
-                            typeResult.ids.push(processInstanceId)
-                            typeResult.sum = typeResult.ids.length
+                            sumReviewItemsToResultNodeByOperator(processInstanceId, currTypeReviewItems, typeResult)
                         }
                     }
                 }

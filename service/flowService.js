@@ -1,5 +1,6 @@
 const FlowForm = require("../model/flowfrom")
 const flowRepo = require("../repository/flowRepo")
+const userRepo = require("../repository/userRepo")
 const formService = require("../service/flowFormService")
 const departmentService = require("../service/departmentService")
 const dingDingService = require("../service/dingDingService")
@@ -571,15 +572,18 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
 /**
  * 统计部门的核心流程指定节点的数据
  * @param deptId
- * @param userNames
+ * @param userId
  * @param startDoneDate
  * @param endDoneDate
- * @returns {Promise<*[]>}
+ * @returns {Promise<*>}
  */
-const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) => {
+const getCoreFlowData = async (deptId, userId, startDoneDate, endDoneDate) => {
     // 根据时间获取需要统计的流程数据（今天+历史）
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
-    const result = await flowStatistic.getDeptCoreFlow(deptId, userNames, flows)
+    const userDetails = await userRepo.getUserDetails(userId)
+    // 获取用户相关的人名
+    const users = await userRepo.getDepartmentUsers(userDetails.dingdingUserId, deptId)
+    const result = await flowStatistic.getDeptCoreFlow(deptId, users, flows)
     return flowUtil.attachIdsAndSum(result)
 }
 

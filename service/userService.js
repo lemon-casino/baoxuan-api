@@ -5,8 +5,7 @@ const userRepo = require("../repository/userRepo")
 const whiteList = require("../config/whiteList")
 const globalGetter = require("../global/getter")
 const NotFoundError = require("../error/http/notFoundError")
-const tmpTMInnerGroupingConst = require("../const/tmp/tmInnerGroupingConst")
-const visionInnerGroupingConst = require("../const/tmp/visionInnerGroupingConst")
+const {tmInnerGroup, visionInnerGroup} = require("../const/tmp/innerGroupConst")
 
 const getDingDingUserId = async (user_id) => {
     const user = await UsersModel.findOne({
@@ -78,7 +77,7 @@ const getUserDetails = async (id) => {
  * @returns {Promise<[{[p: string]: *}]|*[]>}
  */
 const getTMInnerGroups = async (userId) => {
-    const innerGroup = await getInnerGroups(userId, "903075138", "天猫组", tmpTMInnerGroupingConst.tmInnerGroupVersion2)
+    const innerGroup = await getInnerGroups(userId, "903075138", "天猫组", tmInnerGroup.group)
     return innerGroup
 }
 
@@ -88,7 +87,7 @@ const getTMInnerGroups = async (userId) => {
  * @returns {Promise<*[]|[*]|[{[p: string]: *}]|[]>}
  */
 const getVisionInnerGroups = async (userId) => {
-    const innerGroup = await getInnerGroups(userId, "482162119", "视觉部", visionInnerGroupingConst.visionInnerGroup)
+    const innerGroup = await getInnerGroups(userId, "482162119", "视觉部", visionInnerGroup.group)
     return innerGroup
 }
 

@@ -20,7 +20,7 @@ const globalGetter = require("../global/getter")
 const NotFoundError = require("../error/http/notFoundError")
 const ForbiddenError = require("../error/http/forbiddenError")
 const ParameterError = require("../error/parameterError")
-const tmpTMInnerGroupingConst = require("../const/tmp/tmInnerGroupingConst")
+const {tmInnerGroup} = require("../const/tmp/innerGroupConst")
 
 // 天猫链接打架流程表单id
 const tmFightingFlowFormId = "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J"
@@ -350,12 +350,12 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
     }
     // 天猫组deptId：903075138
     const department = await departmentService.getDepartmentWithUsers("903075138")
-    const groupingResult = Object.keys(tmpTMInnerGroupingConst.tmInnerGroupVersion1).map(key => {
-        return {[key]: tmpTMInnerGroupingConst.tmInnerGroupVersion1[key]}
+    const groupingResult = Object.keys(tmInnerGroup.deprecatedGroup).map(key => {
+        return {[key]: tmInnerGroup.deprecatedGroup[key]}
     })
     let hasGroupedUsers = []
-    for (const key of Object.keys(tmpTMInnerGroupingConst.tmInnerGroupVersion1)) {
-        hasGroupedUsers = hasGroupedUsers.concat(tmpTMInnerGroupingConst.tmInnerGroupVersion1[key])
+    for (const key of Object.keys(tmInnerGroup.deprecatedGroup)) {
+        hasGroupedUsers = hasGroupedUsers.concat(tmInnerGroup.deprecatedGroup[key])
     }
     const noGroupedUsers = []
     for (const user of department.dep_user) {

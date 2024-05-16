@@ -43,17 +43,21 @@ const updateRunningFlowEmergency = async (req, res, next) => {
 
 const getCoreDataByType = async (req, res, next) => {
     try {
-        const {deptId, userNames, startDate, endDate} = req.query
+        const {deptId, startDate, endDate} = req.query
 
         joiUtil.validate({
-            deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required},
-            userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.strRequired}
+            deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required}
         })
         let result = []
         if (req.params.type === "action") {
+            const userNames = req.query.userNames
+            joiUtil.validate({
+                userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.strRequired}
+            })
             result = await flowService.getCoreActionData(deptId, userNames, startDate, endDate)
         } else {
-            result = await flowService.getCoreFlowData(deptId, userNames, startDate, endDate)
+            const userId = req.user.id
+            result = await flowService.getCoreFlowData(deptId, userId, startDate, endDate)
         }
         res.send(biResponse.success(result))
     } catch (e) {

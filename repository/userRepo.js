@@ -1,8 +1,13 @@
 const sequelize = require('../model/init');
 const getUsersModel = require("../model/usersMode")
 const userModel = getUsersModel(sequelize)
-const sequelizeUtil = require("../utils/sequelizeUtil")
+const globalGetter = require("../global/getter")
 const UserError = require("../error/userError")
+const NotFoundError = require("../error/http/notFoundError")
+const departmentRepo = require("../repository/departmentRepo")
+const sequelizeUtil = require("../utils/sequelizeUtil")
+const innerGroupConst = require("../const/tmp/innerGroupConst")
+const whiteList = require("../config/whiteList")
 
 const getUserDetails = async (userId) => {
 
@@ -28,7 +33,64 @@ const getAllUsers = async () => {
     return users
 }
 
+/**
+ * 根据用户的身份获取部门中的人员信息: 管理员-部门主管-管理员-普通员工
+ * @param userDDId
+ * @param deptId
+ * @returns {Promise<*|*[]|void>}
+ */
+const getDepartmentUsers = async (userDDId, deptId) => {
+    // 处理管理员-部门主管-普通组员
+    const departmentUsers = await departmentRepo.getDepartmentUsers(deptId)
+    if (whiteList.pepArr().includes(userDDId)) {
+        return departmentUsers
+    }
+
+    const users = await globalGetter.getUsers()
+    const tmpUsers = users.filter(user => user.userid === userDDId)
+    if (tmpUsers.length === 0) {
+        throw new NotFoundError(`在Redis(base:users)中未找员工${userDDId}的信息`)
+    }
+    const user = tmpUsers[0]
+    const department = await departmentRepo.getDepartmentDetails(deptId)
+    if (!department) {
+        throw new NotFoundError(`在Redis(base:departments)中未找部门${deptId}的信息`)
+    }
+
+    const tmpUserDepartments = user.leader_in_dept.filter(dept => dept.dept_id === deptId)
+    if (tmpUserDepartments.length === 0) {
+        throw new NotFoundError(`用户:${user.name}不在${department.name}中`)
+    }
+
+    let innerGroups = []
+    for (const key of Object.keys(innerGroupConst)) {
+        if (innerGroupConst[key].deptId === deptId) {
+            innerGroups = innerGroupConst[key].group
+            break
+        }
+    }
+
+    // 处理内部组的情况
+    for (const innerGroup of innerGroups) {
+        const innerGroupUser = innerGroup.members.filter(member => member.userId === userDDId)
+        if (innerGroupUser.length > 0 && innerGroupUser[0].leader) {
+            return innerGroup.members
+        }
+        if (innerGroupUser.length > 0) {
+            return [innerGroupUser]
+        }
+    }
+
+    // 用户在该部门中是什么角色
+    const isLeader = tmpUserDepartments[0].leader
+    if (isLeader) {
+        return departmentUsers
+    }
+    return [user]
+}
+
 module.exports = {
     getUserDetails,
-    getAllUsers
+    getAllUsers,
+    getDepartmentUsers
 }

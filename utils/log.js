@@ -14,7 +14,7 @@ const commonOptions = {
     datePattern: 'YYYY-MM-DD',
     prepend: true,
     maxSize: '300m',
-    maxFiles: '7d',
+    maxFiles: '5d',
 }
 
 const logger = createLogger({
