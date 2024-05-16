@@ -26,7 +26,8 @@ const getTodaySelfLaunchedFlowsStatisticCountOfFlowStatus = async (userId, statu
         const convertedData = await flowService.convertJonsToArr(result.departments)
         result.departments = convertedData
     }
-    result.sum = Object.keys(result.ids).length
+    result.ids = Object.keys(result.ids)
+    result.sum = result.ids.length
     return result;
 }
 
@@ -55,24 +56,30 @@ const getTodaySelfLaunchedFlowsStatisticCountOfReviewType = async (userId, type,
         result.departments = convertedData
     }
 
-    result.sum = Object.keys(result.ids).length
+    result.ids = Object.keys(result.ids)
+    result.sum = result.ids.length
     return result;
 }
 
 const getTodaySelfLaunchedFlowsStatisticCountOfOverDue = async (userId, importance) => {
     const satisfiedFlowsObj = await getTodaySelfLaunchedFlowsStatisticOfOverDue(userId, importance)
     let allSum = 0;
-    for (const key of Object.keys(satisfiedFlowsObj)) {
-        const flowsDividedByDepartment = await flowService.flowsDividedByDepartment(satisfiedFlowsObj[key])
+    const uniqueIds = {}
+    for (const status of Object.keys(satisfiedFlowsObj)) {
+        const flowsDividedByDepartment = await flowService.flowsDividedByDepartment(satisfiedFlowsObj[status])
         const sumFlowsByDepartment = await flowService.sumFlowsByDepartment(flowsDividedByDepartment)
+        for (const id of Object.keys(sumFlowsByDepartment.ids)) {
+            uniqueIds[id] = 1
+        }
         if (sumFlowsByDepartment.departments) {
             const convertedData = await flowService.convertJonsToArr(sumFlowsByDepartment.departments)
             sumFlowsByDepartment.departments = convertedData
         }
-        satisfiedFlowsObj[key] = sumFlowsByDepartment
+        satisfiedFlowsObj[status] = sumFlowsByDepartment
         allSum = allSum + (sumFlowsByDepartment["sum"] || 0)
     }
-    satisfiedFlowsObj["sum"] = allSum
+    satisfiedFlowsObj.ids = Object.keys(uniqueIds)
+    satisfiedFlowsObj.sum = satisfiedFlowsObj.ids.length
     return satisfiedFlowsObj
 }
 
@@ -146,9 +153,10 @@ const getTodayDeptLaunchedFlowsStatisticCountOfOverDue = async (deptId, importan
     const users = usersOfDepartment.deptUsers
     if (!users) {
         return {
+            ids: [],
             sum: 0,
-            doing: {sum: 0},
-            done: {sum: 0}
+            doing: {ids: [], sum: 0},
+            done: {ids: [], sum: 0}
         }
     }
     for (const user of users) {
@@ -166,6 +174,7 @@ const getTodayDeptLaunchedFlowsStatisticCountOfOverDue = async (deptId, importan
     convertedDoneResult = await statisticResultUtil.removeUnsatisfiedDeptStatistic(convertedDoneResult, deptId)
 
     return {
+        ids: convertedDoingResult.ids.concat(convertedDoneResult.ids),
         sum: convertedDoneResult.sum + convertedDoingResult.sum,
         doing: convertedDoingResult,
         done: convertedDoneResult

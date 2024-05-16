@@ -424,17 +424,22 @@ const getDeptStatistic = async (funOfTodaySelfStatistic, deptId, status, importa
     for (const user of users) {
         // 获取本人参与的流程并按流程发起人所在的组进行分类
         const sumByOriginatorDepartment = await funOfTodaySelfStatistic(user.userid, status, importance)
-
         // 在部门分组统计的数据中，进一步汇总到参与的个人
         resultTemplate = convertSelfStatisticToDept(sumByOriginatorDepartment, user.name, resultTemplate)
     }
 
     // 根据departments 下的ids和resultTemplate的ids 分别算出对应的sum
+    const idArr = Object.keys(resultTemplate.ids)
     return {
-        ids: resultTemplate.ids,
-        sum: Object.keys(resultTemplate.ids).length,
+        ids: idArr,
+        sum: idArr.length,
         departments: resultTemplate.departments.map(item => {
-            return {deptName: item.deptName, sum: Object.keys(item.ids).length, users: item.users, ids: item.ids}
+            return {
+                deptName: item.deptName,
+                sum: Object.keys(item.ids).length,
+                users: item.users,
+                ids: Object.keys(item.ids)
+            }
         })
     }
 }

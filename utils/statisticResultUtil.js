@@ -22,10 +22,11 @@ const removeUnsatisfiedDeptStatistic = async (statistic, deptId) => {
         return departmentService.hasMatchedDeptName(item.deptName, departmentDetails)
     })
 
-    const result = {sum: 0, departments: filteredDeptStatistic}
+    const result = {ids: [], sum: 0, departments: filteredDeptStatistic}
     result.sum = 0
     for (const dept of filteredDeptStatistic) {
         result.sum = result.sum + dept.sum
+        result.ids = result.ids.concat()
     }
     return result;
 }

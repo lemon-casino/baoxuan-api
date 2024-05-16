@@ -16,19 +16,23 @@ const NotFoundError = require("../error/http/notFoundError")
 const getTodaySelfJoinedFlowsStatisticCountOfOverDue = async (userId, importance) => {
     const overDueFlows = await getTodaySelfJoinedFlowsStatisticOfOverDue(userId, importance)
 
-    let sum = 0
-    for (const key of Object.keys(overDueFlows)) {
-        const flowsDividedByDepartment = await flowService.flowsDividedByDepartment(overDueFlows[key])
+    const allIds = {}
+    for (const status of Object.keys(overDueFlows)) {
+        const flowsDividedByDepartment = await flowService.flowsDividedByDepartment(overDueFlows[status])
         const sumFlowsByDepartment = await flowService.sumFlowsByDepartment(flowsDividedByDepartment)
-        sumFlowsByDepartment.sum = Object.keys(sumFlowsByDepartment.ids).length
-        sum = sum + sumFlowsByDepartment.sum
+        sumFlowsByDepartment.ids = Object.keys(sumFlowsByDepartment.ids)
+        for (const id of sumFlowsByDepartment.ids) {
+            allIds[id] = 1
+        }
+        sumFlowsByDepartment.sum = sumFlowsByDepartment.ids.length
         if (sumFlowsByDepartment.departments) {
             const convertedData = await flowService.convertJonsToArr(sumFlowsByDepartment.departments)
             sumFlowsByDepartment.departments = convertedData
         }
-        overDueFlows[key] = sumFlowsByDepartment
+        overDueFlows[status] = sumFlowsByDepartment
     }
-    overDueFlows["sum"] = sum
+    overDueFlows.ids = Object.keys(allIds)
+    overDueFlows.sum = overDueFlows.ids.length
     return overDueFlows
 }
 
@@ -78,7 +82,8 @@ const getTodaySelfJoinedFlowsStatisticCountOfReviewType = async (userId, reviewT
         const convertedData = await flowService.convertJonsToArr(result.departments)
         result.departments = convertedData
     }
-    result.sum = Object.keys(result.ids).length
+    result.ids = Object.keys(result.ids)
+    result.sum = result.ids.length
     return result
 }
 
@@ -136,7 +141,8 @@ const getTodaySelfJoinedFlowsStatisticCountOfFlowStatus = async (userId, status,
         const convertedData = await flowService.convertJonsToArr(result.departments)
         result.departments = convertedData
     }
-    result.sum = Object.keys(result.ids).length
+    result.ids = Object.keys(result.ids)
+    result.sum = result.ids.length
     return result
 }
 
@@ -264,9 +270,10 @@ const getDeptJoinedOverDueStatistic = async (deptId, importance) => {
     const users = usersOfDepartment.deptUsers
     if (!users || users.length === 0) {
         return {
+            ids: [],
             sum: 0,
-            doing: convertedDoingResult,
-            done: convertedDoneResult
+            doing: {...convertedDoingResult, ids: []},
+            done: {...convertedDoneResult, ids: []}
         }
     }
     for (const user of users) {
@@ -280,26 +287,32 @@ const getDeptJoinedOverDueStatistic = async (deptId, importance) => {
     }
 
     // 根据ids 添加sum数据
-    convertedDoingResult.sum = Object.keys(convertedDoingResult.ids).length
+    convertedDoingResult.ids = Object.keys(convertedDoingResult.ids)
+    convertedDoingResult.sum = convertedDoingResult.ids.length
     for (const department of convertedDoingResult.departments) {
-        department.sum = Object.keys(department.ids).length
+        department.ids = Object.keys(department.ids)
+        department.sum = department.ids.length
     }
-    convertedDoneResult.sum = Object.keys(convertedDoneResult.ids).length
+    convertedDoneResult.ids = Object.keys(convertedDoneResult.ids)
+    convertedDoneResult.sum = convertedDoneResult.ids.length
+
     for (const department of convertedDoneResult.departments) {
-        department.sum = Object.keys(department.ids).length
+        department.ids = Object.keys(department.ids)
+        department.sum = department.ids.length
     }
 
     const allUniqueIds = {}
-    for (const id of Object.keys(convertedDoneResult.ids)) {
+    for (const id of convertedDoneResult.ids) {
         allUniqueIds[id] = 1
     }
-    for (const id of Object.keys(convertedDoingResult.ids)) {
+    for (const id of convertedDoingResult.ids) {
         allUniqueIds[id] = 1
     }
 
+    const idArr = Object.keys(allUniqueIds)
     return {
-        sum: Object.keys(allUniqueIds).length,
-        ids: Object.keys(allUniqueIds),
+        ids: idArr,
+        sum: idArr.length,
         doing: convertedDoingResult,
         done: convertedDoneResult
     }
