@@ -201,7 +201,7 @@ const getTodayDeptJoinedFlowsStatisticCountOfReviewType = async (deptId, status,
             }
 
             const currDeptFinishedIds = []
-            for (const id of Object.keys(deptStatistic.ids)) {
+            for (const id of deptStatistic.ids) {
                 const flows = todayFlows.filter(flow => flow.processInstanceId === id)
                 const ignoreTypes = [flowStatusConst.ERROR, flowStatusConst.TERMINATED]
                 const doingTypes = [flowReviewTypeConst.TODO, flowReviewTypeConst.FORCAST]
