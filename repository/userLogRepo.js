@@ -23,7 +23,7 @@ const getUserLogs = async (pageIndex, pageSize, userId, timeRange, isOnline) => 
             where.userId = userId
         }
         if (isOnline) {
-            where.isOnline = (isOnline.toLowerCase() === "true")
+            where.isOnline = (isOnline.toString().toLowerCase() === "true")
         }
         const count = await userLogModel.count({where})
         let data = await userLogModel.findAll({
