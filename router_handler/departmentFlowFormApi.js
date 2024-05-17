@@ -5,7 +5,7 @@ const departmentFlowFormService = require('../service/departmentFlowFormService'
 
 const getDepartmentFlowForms = async (req, res, next) => {
     try {
-        const {deptId} = req.params
+        const {deptId} = req.query
         joiUtil.validate({deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required}})
         const deptFlowForms = await flowFormService.getDeptFlowForms(deptId)
         return res.send(biResponse.success(deptFlowForms))
@@ -16,7 +16,7 @@ const getDepartmentFlowForms = async (req, res, next) => {
 
 const deleteDepartmentFlowForm = async (req, res, next) => {
     try {
-        const {id} = req.params
+        const {id} = req.query
         joiUtil.validate({id: {value: id, schema: joiUtil.commonJoiSchemas.required}})
         await departmentFlowFormService.deleteDepartmentFlowForm(id)
         return res.send(biResponse.success())

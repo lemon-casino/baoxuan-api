@@ -4,7 +4,7 @@ const departmentFlowFormActivityService = require('../service/departmentFlowForm
 
 const getDeptFlowFormActivities = async (req, res, next) => {
     try {
-        const {id} = req.params
+        const {id} = req.query
         joiUtil.validate({id: {value: id, schema: joiUtil.commonJoiSchemas.required}})
         const data = await departmentFlowFormActivityService.getDeptFlowFormActivities(id)
         return res.send(biResponse.success(data))
@@ -15,7 +15,7 @@ const getDeptFlowFormActivities = async (req, res, next) => {
 
 const deleteDeptFlowFormActivity = async (req, res, next) => {
     try {
-        const {id} = req.params
+        const {id} = req.query
         joiUtil.validate({id: {value: id, schema: joiUtil.commonJoiSchemas.required}})
         await departmentFlowFormActivityService.deleteDeptFlowFormActivity(id)
         return res.send(biResponse.success())
@@ -26,7 +26,7 @@ const deleteDeptFlowFormActivity = async (req, res, next) => {
 
 const saveDepartmentFlowFormActivity = async (req, res, next) => {
     try {
-        const {deptFlowFormId, activityId, activityName} = req.params
+        const {deptFlowFormId, activityId, activityName} = req.body
         joiUtil.validate({
             deptFlowFormId: {value: deptFlowFormId, schema: joiUtil.commonJoiSchemas.required},
             activityId: {value: activityId, schema: joiUtil.commonJoiSchemas.required},
