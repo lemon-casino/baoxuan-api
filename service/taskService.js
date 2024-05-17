@@ -58,19 +58,20 @@ const syncForm = async () => {
 }
 
 const syncUserLogin = async () => {
-    const pageData = await userLogService.getUserLogs(0, 999, "",
-        [dateUtil.startOfDay(dateUtil.dateOfEarliest()), dateUtil.endOfToday()],
-        1)
-
     const userOnlineInRedis = await redisUtil.getKeys(
         `${onlineCheckConst.REDIS_LOGIN_KEY_PREFIX}:*`)
 
-    const userIdsOnlineInRedis = userOnlineInRedis.map(item => item.split(":")[1])
+    if (userOnlineInRedis && userOnlineInRedis.length > 0) {
+        const userIdsOnlineInRedis = userOnlineInRedis.map(item => item.split(":")[1])
 
-    const usersOnlineInDb = pageData.data
-    for (const user of usersOnlineInDb) {
-        if (!userIdsOnlineInRedis.includes(user.userId)) {
-            await userLogService.setUserDown(user.userId)
+        const pageData = await userLogService.getUserLogs(0, 999, "",
+            [dateUtil.startOfDay(dateUtil.dateOfEarliest()), dateUtil.endOfToday()],
+            true)
+        const usersOnlineInDb = pageData.data
+        for (const user of usersOnlineInDb) {
+            if (!userIdsOnlineInRedis.includes(user.userId)) {
+                await userLogService.setUserDown(user.userId)
+            }
         }
     }
 }
