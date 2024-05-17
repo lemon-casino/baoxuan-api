@@ -6,18 +6,12 @@ const deptFlowFormActivityModel = getDeptFlowFormActivityModel(sequelize)
 
 deptFlowFormModel.hasMany(deptFlowFormActivityModel,
     {
-        foreignKey: 'deptFlowFormId'
+        foreignKey: 'deptFlowFormId',
+        as: "activities"
     }
 )
 
 const getDepartmentFlowForms = async (deptId) => {
-    const forms = await deptFlowFormModel.findAll({
-        where: {deptId}
-    })
-    return forms
-}
-
-const getDepartmentFlowFormsWithActivities = async (deptId) => {
     const forms = await deptFlowFormModel.findAll({
         where: {deptId}
     })
@@ -45,16 +39,13 @@ const deleteDepartmentFlowForm = async (id) => {
     }
 }
 
-const saveDepartmentFlowForm = async (deptId, deptName, formId, formName) => {
-    const result = await deptFlowFormModel.create({
-        deptId, deptName, formId, formName
-    })
+const saveDepartmentFlowForm = async (model) => {
+    const result = await deptFlowFormModel.create(model)
     return result
 }
 
 module.exports = {
     saveDepartmentFlowForm,
     deleteDepartmentFlowForm,
-    getDepartmentFlowForms,
-    getDepartmentFlowFormsWithActivities
+    getDepartmentFlowForms
 }

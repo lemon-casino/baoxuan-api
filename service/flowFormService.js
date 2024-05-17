@@ -1,4 +1,5 @@
 const formReviewRepo = require("../repository/formReviewRepo")
+const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
 const dingDingReq = require("../core/dingDingReq")
 const redisService = require("../service/redisService")
@@ -290,7 +291,23 @@ const refactorReviewItems = (nodes, lastTimingNode) => {
     return processedNodes;
 }
 
+/**
+ * 获取表单列表，需要带上该deptId是否选择的标识
+ * @param deptId
+ * @returns {Promise<void>}
+ */
+const getDeptFlowForms = async (deptId) => {
+    const flowForms = await getAllForms()
+    const deptFlowForms = await departmentFlowFormRepo.getDepartmentFlowForms(deptId)
+    const settledIds = deptFlowForms.map(item => item.formId)
+    for (const form of flowForms) {
+        form.selected = settledIds.includes(form.flowFormId)
+    }
+    return flowForms
+}
+
 module.exports = {
+    getDeptFlowForms,
     getAllForms,
     getFormsByImportance,
     getFormsWithReviewItemsByImportance,

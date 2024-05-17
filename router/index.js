@@ -23,6 +23,7 @@ module.exports = {
     // ��Ƹ����
     "/hr/recruit": require("./Hr_Recruit"),
     "/dept": require("./departmentRouter"),
-    "/depts": require("./departmentRouter")
-
+    "/depts": require("./departmentRouter"),
+    "/dept-flow-form": require("./departmentFlowFormRouter"),
+    "/dept-flow-form-activity": require("./departmentFlowFormActivityRouter")
 }

@@ -6,6 +6,18 @@ const flowFormDetailsModel = getFlowFormDetailsModel(sequelize)
 const sequelizeUtil = require("../utils/sequelizeUtil")
 
 /**
+ * 获取表单详情
+ * @param formId
+ * @returns {Promise<*|null>}
+ */
+const getFormDetails = async (formId) => {
+    const tmpForms = await getAllForms({flowFormId: formId})
+    if (tmpForms.length > 0)
+        return tmpForms[0]
+    return null
+}
+
+/**
  * 根据条件获取流程表单数据
  * @param where
  * @returns {Promise<[]|*>}
@@ -68,6 +80,7 @@ const updateFormAndAddDetails = async (form, detailsArr) => {
 }
 
 module.exports = {
+    getFormDetails,
     getAllForms,
     updateFormAndAddDetails,
     saveFormAndDetails

@@ -15,10 +15,8 @@ const getDeptFlowFormActivities = async (deptFlowFormId) => {
     })
 }
 
-const saveDeptFlowFormActivity = async (deptFlowFormId, activityId, activityName) => {
-    const result = await deptFlowFormActivityModel.create({
-        deptFlowFormId, activityId, activityName
-    })
+const saveDeptFlowFormActivity = async (data) => {
+    const result = await deptFlowFormActivityModel.create(data)
     return result
 }
 
