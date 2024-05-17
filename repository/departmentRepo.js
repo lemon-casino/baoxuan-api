@@ -22,7 +22,17 @@ const getDepartmentUsers = async (deptId) => {
     return departmentUsers && departmentUsers.dep_user || []
 }
 
+/**
+ * 获取部门数据
+ * @returns {Promise<void>}
+ */
+const getDepartments = async () => {
+    const departments = await globalGetter.getDepartments()
+    return departments
+}
+
 module.exports = {
     getDepartmentDetails,
-    getDepartmentUsers
+    getDepartmentUsers,
+    getDepartments
 }
