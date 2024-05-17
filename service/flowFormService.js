@@ -298,7 +298,7 @@ const refactorReviewItems = (nodes, lastTimingNode) => {
  */
 const getDeptFlowForms = async (deptId) => {
     const flowForms = await getAllForms()
-    const deptFlowForms = await departmentFlowFormRepo.getDepartmentFlowForms(deptId)
+    const deptFlowForms = await departmentFlowFormRepo.getDepartmentFlowForms({deptId})
     const settledIds = deptFlowForms.map(item => item.formId)
     for (const form of flowForms) {
         form.selected = settledIds.includes(form.flowFormId)

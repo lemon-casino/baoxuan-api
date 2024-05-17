@@ -11,9 +11,9 @@ deptFlowFormModel.hasMany(deptFlowFormActivityModel,
     }
 )
 
-const getDepartmentFlowForms = async (deptId) => {
+const getDepartmentFlowForms = async (where) => {
     const forms = await deptFlowFormModel.findAll({
-        where: {deptId}
+        where
     })
     return forms
 }

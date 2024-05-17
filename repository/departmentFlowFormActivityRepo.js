@@ -9,10 +9,11 @@ const deleteDeptFlowFormActivity = async (id) => {
     return result > 0
 }
 
-const getDeptFlowFormActivities = async (deptFlowFormId) => {
+const getDeptFlowFormActivities = async (where) => {
     const res = await deptFlowFormActivityModel.findAll({
-        where: {deptFlowFormId}
+        where
     })
+    return res
 }
 
 const saveDeptFlowFormActivity = async (data) => {

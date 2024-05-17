@@ -18,13 +18,13 @@ const deleteDeptFlowFormActivity = async (req, res, next) => {
         const {id} = req.params
         joiUtil.validate({id: {value: id, schema: joiUtil.commonJoiSchemas.required}})
         await departmentFlowFormActivityService.deleteDeptFlowFormActivity(id)
-        return res.send(biResponse.success("取消成功"))
+        return res.send(biResponse.success())
     } catch (e) {
         next(e)
     }
 }
 
-const saveDepartmentFlowForm = async (req, res, next) => {
+const saveDepartmentFlowFormActivity = async (req, res, next) => {
     try {
         const {deptFlowFormId, activityId, activityName} = req.params
         joiUtil.validate({
@@ -32,8 +32,8 @@ const saveDepartmentFlowForm = async (req, res, next) => {
             activityId: {value: activityId, schema: joiUtil.commonJoiSchemas.required},
             activityName: {value: activityName, schema: joiUtil.commonJoiSchemas.required}
         })
-        await departmentFlowFormActivityService.saveDepartmentFlowFormActivity(deptFlowFormId, activityId, activityName)
-        return res.send(biResponse.success("取消成功"))
+        const result = await departmentFlowFormActivityService.saveDepartmentFlowFormActivity(deptFlowFormId, activityId, activityName)
+        return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
     }
@@ -41,6 +41,6 @@ const saveDepartmentFlowForm = async (req, res, next) => {
 
 module.exports = {
     getDeptFlowFormActivities,
-    saveDepartmentFlowForm,
+    saveDepartmentFlowFormActivity,
     deleteDeptFlowFormActivity
 }

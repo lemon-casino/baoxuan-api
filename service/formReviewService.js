@@ -9,7 +9,7 @@ const getFormReviewByFormId = async (formId) => {
 const getDeptFlowFormActivities = async (formId, deptFlowFormId) => {
     const flowFormReviews = await getFormReviewByFormId(formId)
 
-    const deptActivities = await departmentFlowFormActivityRepo.getDeptFlowFormActivities(deptFlowFormId)
+    const deptActivities = await departmentFlowFormActivityRepo.getDeptFlowFormActivities({deptFlowFormId})
     const reviewItems = flowFormReviews[0]
 
     for (const deptActivity of deptActivities) {
