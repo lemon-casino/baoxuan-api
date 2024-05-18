@@ -2036,7 +2036,7 @@ exports.createExcel = async (req, res) => {
     const h_jsonData = getpreid("后置数据");
     const new_data = handlesh(q_jsonData, h_jsonData);
     // 生成审核流模版excel文件
-    createRevewExcel(JSON.parse(JSON.stringify(new_data)), "审核流数据模版.xlsx");
+    createRevewExcel(JSON.parse(JSON.stringify(new_data)), "template/审核流数据模版.xlsx");
     // 格式化之后的数据
     const data = formatData(JSON.parse(JSON.stringify(new_data)));
     // 入库数据结构
@@ -2940,7 +2940,7 @@ exports.getOaAllProcess = async (req, res) => {
     // oa_List.forEach((item, rowIndex) => {
     //   ws.cell(rowIndex + 2, 1).string(item.flowTitle);
     // });
-    wb.write("OA审批流模版1.xlsx");
+    wb.write("template/OA审批流模版1.xlsx");
     return res.send(biResponse.success([]));
 };
 // const datasss = require("./data.json");
