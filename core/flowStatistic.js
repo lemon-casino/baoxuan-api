@@ -246,9 +246,7 @@ const getDeptCoreFlow = async (deptId, users, flows) => {
                         // 并行分支的条件下，可能会有一个流程出现两种状态的逾期情况
                         const tmpHistoryOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.HISTORY)
                         if (tmpHistoryOverdue.length > 0) {
-
                             const historyOverDueResult = typeResult.children.filter(item => item.type === flowReviewTypeConst.HISTORY)[0]
-
                             sumReviewItemsToResultNodeByOperator(processInstanceId, tmpHistoryOverdue, historyOverDueResult)
                         }
                         const tmpTodoOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.TODO)
