@@ -4,9 +4,12 @@ const departmentFlowFormActivityService = require('../service/departmentFlowForm
 
 const getDeptFlowFormActivities = async (req, res, next) => {
     try {
-        const {id} = req.query
-        joiUtil.validate({id: {value: id, schema: joiUtil.commonJoiSchemas.required}})
-        const data = await departmentFlowFormActivityService.getDeptFlowFormActivities(id)
+        const {formId, deptFlowFormId} = req.query
+        joiUtil.validate({
+            formId: {value: formId, schema: joiUtil.commonJoiSchemas.required},
+            deptFlowFormId: {value: deptFlowFormId, schema: joiUtil.commonJoiSchemas.required}
+        })
+        const data = await departmentFlowFormActivityService.getDeptFlowFormActivities(formId,deptFlowFormId)
         return res.send(biResponse.success(data))
     } catch (e) {
         next(e)
