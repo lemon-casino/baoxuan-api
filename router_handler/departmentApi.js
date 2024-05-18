@@ -22,7 +22,17 @@ const getAllUsers = async (req, res, next)=>{
     }
 }
 
+const getDepartments =  async (req, res, next)=>{
+    try {
+        const departments = await departmentService.getDepartments()
+        return res.send(biResponse.success(departments))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDeptUsers,
-    getAllUsers
+    getAllUsers,
+    getDepartments
 }

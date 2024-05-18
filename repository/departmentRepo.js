@@ -8,7 +8,7 @@ const algorithmUtil = require("../utils/algorithmUtil")
  */
 const getDepartmentDetails = async (deptId) => {
     const departments = await globalGetter.getDepartments()
-    return algorithmUtil.recursionJsonArr(departments, "dep_chil", "dept_id", deptId)
+    return algorithmUtil.getJsonFromUnionFormattedJsonArr(departments, "dep_chil", "dept_id", deptId)
 }
 
 /**
@@ -18,7 +18,7 @@ const getDepartmentDetails = async (deptId) => {
  */
 const getDepartmentUsers = async (deptId) => {
     const departmentsUsers = await globalGetter.getUsersOfDepartments()
-    const departmentUsers = algorithmUtil.recursionJsonArr(departmentsUsers, "dep_chil", "dept_id", deptId)
+    const departmentUsers = algorithmUtil.getJsonFromUnionFormattedJsonArr(departmentsUsers, "dep_chil", "dept_id", deptId)
     return departmentUsers && departmentUsers.dep_user || []
 }
 

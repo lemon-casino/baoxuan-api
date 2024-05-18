@@ -10,7 +10,7 @@ const getDeptFlowFormActivities = async (formId, deptFlowFormId) => {
     const deptActivities = await departmentFlowFormActivityRepo.getDeptFlowFormActivities({deptFlowFormId})
 
     for (const deptActivity of deptActivities) {
-        const reviewItem = algorithmUtil.recursionJsonArr(reviewItems, "children", "id", deptActivity.activityId)
+        const reviewItem = algorithmUtil.getJsonFromUnionFormattedJsonArr(reviewItems, "children", "id", deptActivity.activityId)
         if (reviewItem) {
             reviewItem.deptFlowFormActivityId = deptActivity.id
             reviewItem.selected = true
