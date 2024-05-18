@@ -1,18 +1,7 @@
-const sequelize = require('../model/init');
-const getDeptFlowFormModel = require("../model/deptFlowFormModel")
-const deptFlowFormModel = getDeptFlowFormModel(sequelize)
-const getDeptFlowFormActivityModel = require("../model/deptFlowFormActivityModel")
-const deptFlowFormActivityModel = getDeptFlowFormActivityModel(sequelize)
-
-deptFlowFormModel.hasMany(deptFlowFormActivityModel,
-    {
-        foreignKey: 'deptFlowFormId',
-        as: "activities"
-    }
-)
+const models = require('../model')
 
 const getDepartmentFlowForms = async (where) => {
-    const forms = await deptFlowFormModel.findAll({
+    const forms = await models.deptFlowFormModel.findAll({
         where
     })
     return forms
@@ -22,12 +11,12 @@ const deleteDepartmentFlowForm = async (id) => {
     // 需要同时把 deptFlowFormActivity中的关联数据也删除
     const trans = await sequelize.transaction();
     try {
-        await deptFlowFormModel.destroy({
+        await models.deptFlowFormModel.destroy({
             where: {id},
             transaction: trans
         })
 
-        await deptFlowFormActivityModel.destroy({
+        await models.deptFlowFormActivityModel.destroy({
             where: {deptFlowFormId: id},
             transaction: trans
         })
@@ -40,7 +29,7 @@ const deleteDepartmentFlowForm = async (id) => {
 }
 
 const saveDepartmentFlowForm = async (model) => {
-    const result = await deptFlowFormModel.create(model)
+    const result = await models.deptFlowFormModel.create(model)
     return result
 }
 
