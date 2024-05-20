@@ -19,7 +19,7 @@ const saveProcessReview = async (processReview, transaction) => {
 }
 
 const saveBatchProcessReviews = async (processReviews) => {
-    const transaction = await sequelize.transaction();
+    const transaction = await models.sequelize.transaction();
     try {
         let index = 0
         for (const processReview of processReviews) {
