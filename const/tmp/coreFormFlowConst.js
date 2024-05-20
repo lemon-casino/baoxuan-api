@@ -1,3 +1,9 @@
+/**
+ * 正常一个节点仅有一个id
+ * 对于条件分支同一个名称的节点会存在多个id的情况
+ *
+ * @type {[{formId: string, formName: string, actions: [{nodeIds: string[], name: string},{nodeIds: string[], name: string},{nodeIds: string[], name: string},{nodeIds: string[], name: string},{nodeIds: string[], name: string},null,null,null]},{formId: string, formName: string, actions: [{nodeIds: string[], name: string},{nodeIds: string[], name: string},{nodeIds: string[], name: string},{nodeIds: string[], name: string}]},{formId: string, formName: string, actions: [{nodeIds: string[], name: string},{nodeIds: string[], name: string},{nodeIds: string[], name: string},{nodeIds: string[], name: string},{nodeIds: string[], name: string},null]},{formId: string, formName: string, actions: [{nodeIds: string[], name: string},{nodeIds: string[], name: string},{nodeIds: string[], name: string},{nodeIds: string[], name: string},{nodeIds: string[], name: string},null]},{formId: string, formName: string, actions: [{nodeIds: string[], name: string},{nodeIds: string[], name: string},{nodeIds: string[], name: string},{nodeIds: string[], name: string},{nodeIds: string[], name: string},null,null,null]},null,null]}
+ */
 const tmCoreFormFlowsConfig = [
     {
         formName: "采购选品会",
