@@ -1,23 +1,16 @@
-const Sequelize = require('sequelize')
-const sequelize = require('../model/init');
-const getProcessModel = require("../model/processModel")
-const processModel = getProcessModel(sequelize)
-const getProcessReviewModel = require("../model/processReviewModel")
-const processReviewModel = getProcessReviewModel(sequelize)
-const getProcessDetailsModel = require("../model/processDetailsModel")
-const processDetailsModel = getProcessDetailsModel(sequelize)
+const models = require('../model');
 const NotFoundError = require("../error/http/notFoundError")
 const coreActionsConst = require("../const/tmp/coreActionsConst")
 const coreFormFlowConst = require("../const/tmp/coreFormFlowConst")
 
-processModel.hasMany(processReviewModel,
+models.processModel.hasMany(models.processReviewModel,
     {
         foreignKey: 'process_instance_id',
         as: "overallprocessflow"
     }
 )
 
-processModel.hasMany(processDetailsModel,
+models.processModel.hasMany(models.processDetailsModel,
     {
         foreignKey: 'process_instance_id',
         as: "data"
@@ -25,7 +18,7 @@ processModel.hasMany(processDetailsModel,
 )
 
 const getProcessByIds = async (ids) => {
-    const processes = await processModel.findAll({
+    const processes = await models.processModel.findAll({
         where: {
             processInstanceId: ids
         }
@@ -34,12 +27,12 @@ const getProcessByIds = async (ids) => {
 }
 
 const getAllProcesses = async () => {
-    const allProcesses = await processModel.findAll()
+    const allProcesses = await models.processModel.findAll()
     return allProcesses
 }
 
 const updateProcess = async (process) => {
-    await processModel.update(
+    await models.processModel.update(
         {...process},
         {
             where: {processInstanceId: process.processInstanceId}
@@ -81,21 +74,21 @@ const getCoreFormFlowConfig = async (deptId) => {
  * @returns {Promise<[]|*>}
  */
 const getProcessWithReviewByReviewItemDoneTime = async (startDoneDateTime, enDoneDateTime) => {
-    const tempSQL = sequelize.dialect.QueryGenerator.selectQuery("process_review", {
+    const tempSQL = models.sequelize.dialect.QueryGenerator.selectQuery("process_review", {
             attributes: ['process_instance_id'],
             where: {done_time: {$between: [startDoneDateTime, enDoneDateTime]}}
         }
     ).slice(0, -1);
 
-    const processWithReview = await processModel.findAll({
+    const processWithReview = await models.processModel.findAll({
         include: [
             {
-                model: processReviewModel,
-                where: {processReviewModel: Sequelize.col("processModel.process_instance_id")},
+                model: models.processReviewModel,
+                where: {processReviewModel: models.Sequelize.col("models.processModel.process_instance_id")},
                 as: "overallprocessflow"
             }
         ],
-        where: {process_instance_id: {$in: sequelize.literal(`(${tempSQL})`)}},
+        where: {process_instance_id: {$in: models.sequelize.literal(`(${tempSQL})`)}},
         order: [["process_instance_id", "desc"]]
     })
     return processWithReview
@@ -110,21 +103,21 @@ const getProcessWithReviewByReviewItemDoneTime = async (startDoneDateTime, enDon
  * @returns {Promise<*>}
  */
 const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateTime) => {
-    const tempSQL = sequelize.dialect.QueryGenerator.selectQuery("process_review", {
+    const tempSQL = models.sequelize.dialect.QueryGenerator.selectQuery("process_review", {
             attributes: ['process_instance_id'],
             where: {done_time: {$between: [startDoneDateTime, enDoneDateTime]}}
         }
     ).slice(0, -1);
 
-    const processWithData = await processModel.findAll({
+    const processWithData = await models.processModel.findAll({
         include: [
             {
-                model: processDetailsModel,
-                where: {processDetailsModel: Sequelize.col("processModel.process_instance_id")},
+                model: models.processDetailsModel,
+                where: {processDetailsModel: models.Sequelize.col("models.processModel.process_instance_id")},
                 as: "data"
             }
         ],
-        where: {process_instance_id: {$in: sequelize.literal(`(${tempSQL})`)}},
+        where: {process_instance_id: {$in: models.sequelize.literal(`(${tempSQL})`)}},
         order: [["process_instance_id", "desc"]]
     })
 

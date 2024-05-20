@@ -1,9 +1,7 @@
-const sequelize = require('../model/init');
-const getRoleMenuModel = require("../model/rolesMenusModel")
-const roleMenuModel = getRoleMenuModel(sequelize)
+const models = require('../model')
 
 const getMenusByRoles = async (roleIds) => {
-    roleMenuModel.findAll({
+    await models.rolesMenusModel.findAll({
         where: {
             roleId: roleIds
         }

@@ -1,8 +1,4 @@
-const sequelize = require('../model/init');
-const getFlowFormModel = require("../model/flowFormsModel")
-const flowFormModel = getFlowFormModel(sequelize)
-const getFlowFormDetailsModel = require("../model/flowFormDetailsModel")
-const flowFormDetailsModel = getFlowFormDetailsModel(sequelize)
+const models = require('../model')
 const sequelizeUtil = require("../utils/sequelizeUtil")
 
 /**
@@ -23,7 +19,7 @@ const getFormDetails = async (formId) => {
  * @returns {Promise<[]|*>}
  */
 const getAllForms = async (where) => {
-    const result = await flowFormModel.findAll({
+    const result = await models.flowFormModel.findAll({
         where
     })
     return sequelizeUtil.extractDataValues(result)
@@ -36,12 +32,12 @@ const getAllForms = async (where) => {
  * @returns {Promise<boolean>}
  */
 const saveFormAndDetails = async (form, detailsArr) => {
-    const transaction = await sequelize.transaction();
+    const transaction = await models.sequelize.transaction();
     try {
-        await flowFormModel.create(form, {transaction})
+        await models.flowFormModel.create(form, {transaction})
 
         for (const details of detailsArr) {
-            await flowFormDetailsModel.create(details, {transaction})
+            await models.flowFormDetailsModel.create(details, {transaction})
         }
         await transaction.commit()
         return true
@@ -58,9 +54,9 @@ const saveFormAndDetails = async (form, detailsArr) => {
  * @returns {Promise<boolean>}
  */
 const updateFormAndAddDetails = async (form, detailsArr) => {
-    const transaction = await sequelize.transaction();
+    const transaction = await models.sequelize.transaction();
     try {
-        await flowFormModel.update({
+        await models.flowFormModel.update({
             ...form
         }, {
             where: {
@@ -69,7 +65,7 @@ const updateFormAndAddDetails = async (form, detailsArr) => {
         }, {transaction})
 
         for (const details of detailsArr) {
-            await flowFormDetailsModel.create(details, {transaction})
+            await models.flowFormDetailsModel.create(details, {transaction})
         }
         await transaction.commit()
         return true

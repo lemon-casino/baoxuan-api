@@ -1,6 +1,4 @@
-const sequelize = require('../model/init');
-const getUsersModel = require("../model/usersMode")
-const userModel = getUsersModel(sequelize)
+const models = require('../model');
 const globalGetter = require("../global/getter")
 const UserError = require("../error/userError")
 const NotFoundError = require("../error/http/notFoundError")
@@ -10,8 +8,7 @@ const innerGroupConst = require("../const/tmp/innerGroupConst")
 const whiteList = require("../config/whiteList")
 
 const getUserDetails = async (userId) => {
-
-    const details = await userModel.findAll({
+    const details = await models.userModel.findAll({
         where: {userId}
     })
 
@@ -24,7 +21,7 @@ const getUserDetails = async (userId) => {
 }
 
 const getAllUsers = async () => {
-    const users = await userModel.findAll({
+    const users = await models.userModel.findAll({
         attributes: {exclude: ["password", "dingdingUserId", "userPic", "status"]},
         where: {
             status: 1

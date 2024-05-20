@@ -1,9 +1,7 @@
-const sequelize = require('../model/init');
-const getUserRoleModel = require("../model/usersRolesModel")
-const userRoleModel = getUserRoleModel(sequelize)
+const models = require('../model')
 
 const getRoleByUserId = async (userId) => {
-    const roles = await userRoleModel.findAll({
+    const roles = await models.userRoleModel.findAll({
         where: {userId}
     })
     if (!roles) {

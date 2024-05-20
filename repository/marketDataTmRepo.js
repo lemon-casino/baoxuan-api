@@ -1,6 +1,4 @@
-const sequelize = require('../model/init');
-const getMarketDataTmModel = require("../model/marketDataTmModel")
-const marketDataTmModel = getMarketDataTmModel(sequelize)
+const models = require('../model')
 const commonRepo = require("./commonRepo")
 
 const getPagingMarketDataTmData = async (pageIndex, pageSize, startDate, endDate) => {
@@ -8,7 +6,7 @@ const getPagingMarketDataTmData = async (pageIndex, pageSize, startDate, endDate
         date: {$between: [startDate, endDate]}
     }
     const order = [["date", "asc"]];
-    const pagingData = await commonRepo.getPagingData(marketDataTmModel, pageIndex, pageSize, where, order)
+    const pagingData = await commonRepo.getPagingData(models.marketDataTmModel, pageIndex, pageSize, where, order)
     return pagingData
 }
 
