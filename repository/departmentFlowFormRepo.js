@@ -9,7 +9,7 @@ const getDepartmentFlowForms = async (where) => {
 
 const deleteDepartmentFlowForm = async (id) => {
     // 需要同时把 deptFlowFormActivity中的关联数据也删除
-    const trans = await sequelize.transaction();
+    const trans = await models.sequelize.transaction();
     try {
         await models.deptFlowFormModel.destroy({
             where: {id},
