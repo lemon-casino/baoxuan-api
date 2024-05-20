@@ -1,17 +1,10 @@
-const Sequelize = require('sequelize')
-const sequelize = require('../model/init');
-const getProcessModel = require("../model/processModel")
-const processModel = getProcessModel(sequelize)
-const getProcessDetailsModel = require("../model/processDetailsModel")
-const processDetailsModel = getProcessDetailsModel(sequelize)
-const getProcessReviewModel = require("../model/processReviewModel")
-const processReviewModel = getProcessReviewModel(sequelize)
+const models = require('../model')
 const flowFormDetailsRepo = require("../repository/flowFormDetailsRepo")
 const dateUtil = require("../utils/dateUtil")
 const uuidUtil = require("../utils/uuidUtil")
 
 const getLatestModifiedProcess = async () => {
-    const latestProcess = await processModel.findOne({
+    const latestProcess = await models.processModel.findOne({
         order: [["doneTime", "desc"]]
     })
     if (latestProcess) {
@@ -21,7 +14,7 @@ const getLatestModifiedProcess = async () => {
 }
 
 const saveProcess = async (process) => {
-    const transaction = await sequelize.transaction()
+    const transaction = await models.sequelize.transaction()
     try {
         const originator = process.originator
         process.originatorName = originator.name.nameInChinese
@@ -29,7 +22,7 @@ const saveProcess = async (process) => {
         process.createTime = dateUtil.formatGMT(process.createTimeGMT)
         process.doneTime = dateUtil.formatGMT(process.modifiedTimeGMT)
         process.stockedTime = new Date()
-        await processModel.create(process, {transaction})
+        await models.processModel.create(process, {transaction})
 
         const reviewItems = process.overallprocessflow
         for (let i = 0; i < reviewItems.length; i++) {
@@ -37,7 +30,7 @@ const saveProcess = async (process) => {
             reviewItems[i].orderIndex = i
             reviewItems[i].taskHoldTime = reviewItems[i].taskHoldTimeGMT
             reviewItems[i].doneTime = dateUtil.formatGMT2Str(reviewItems[i].operateTimeGMT)
-            await processReviewModel.create(reviewItems[i], {transaction})
+            await models.processReviewModel.create(reviewItems[i], {transaction})
         }
         const flowFormDetails = await flowFormDetailsRepo.getFormDetailsByFormId(process.formUuid)
 
@@ -52,7 +45,7 @@ const saveProcess = async (process) => {
                 fieldName: fieldDetails && fieldDetails.length > 0 ? fieldDetails[0].fieldName : "",
                 fieldValue
             }
-            await processDetailsModel.create(details, {transaction})
+            await models.processDetailsModel.create(details, {transaction})
         }
         await transaction.commit()
         return true
@@ -63,7 +56,7 @@ const saveProcess = async (process) => {
 }
 
 const getProcessByProcessInstanceId = async (processInstanceId) => {
-    const result = await processModel.findOne({
+    const result = await models.processModel.findOne({
         where: {
             processInstanceId
         }
@@ -81,13 +74,13 @@ const getProcessByProcessInstanceId = async (processInstanceId) => {
 const correctStrFieldToJson = async () => {
     // 修正流程表中data、overallprocessflow 字符串为json
 
-    const flowsOfIncorrectFormatData = await processModel.findAll({
+    const flowsOfIncorrectFormatData = await models.processModel.findAll({
         where: {
-            data: {$like: Sequelize.literal(`'"%'`)}
+            data: {$like: models.Sequelize.literal(`'"%'`)}
         }
     })
     for (const flow of flowsOfIncorrectFormatData) {
-        const result = await processModel.update({
+        const result = await models.processModel.update({
             data: JSON.parse(flow.data)
         }, {
             where: {
@@ -95,13 +88,13 @@ const correctStrFieldToJson = async () => {
             }
         })
     }
-    const flowsOfIncorrectFormatOverallProcessFlow = await processModel.findAll({
+    const flowsOfIncorrectFormatOverallProcessFlow = await models.processModel.findAll({
         where: {
-            overallprocessflow: {$like: Sequelize.literal(`'"%'`)}
+            overallprocessflow: {$like: models.Sequelize.literal(`'"%'`)}
         }
     })
     for (const flow of flowsOfIncorrectFormatOverallProcessFlow) {
-        await processModel.update({
+        await models.processModel.update({
             overallprocessflow: JSON.parse(flow.overallprocessflow)
         }, {
             where: {

@@ -1,15 +1,11 @@
-const Sequelize = require("sequelize")
-const sequelize = require('../model/init');
-const getUserLogModel = require("../model/userLogModel")
-const userLogModel = getUserLogModel(sequelize)
+const models = require('../model')
 const SQLError = require("../error/sqlError")
 const sequelizeUtil = require("../utils/sequelizeUtil")
 const pagingUtil = require("../utils/pagingUtil")
-const dateUtil = require("../utils/dateUtil")
 
 const saveUserLog = async (userLog) => {
     try {
-        const result = await userLogModel.create(userLog)
+        const result = await models.userLogModel.create(userLog)
         return sequelizeUtil.extractDataValues(result)
     } catch (e) {
         throw new SQLError(e.message, e.sql)
@@ -25,8 +21,8 @@ const getUserLogs = async (pageIndex, pageSize, userId, timeRange, isOnline) => 
         if (isOnline) {
             where.isOnline = (isOnline.toString().toLowerCase() === "true")
         }
-        const count = await userLogModel.count({where})
-        let data = await userLogModel.findAll({
+        const count = await models.userLogModel.count({where})
+        let data = await models.userLogModel.findAll({
             offset: pageIndex * pageSize,
             limit: pageSize,
             where,
@@ -43,14 +39,14 @@ const getUserLogs = async (pageIndex, pageSize, userId, timeRange, isOnline) => 
 }
 
 const updateFields = async (id, fields) => {
-    const result = await userLogModel.update({...fields}, {
+    const result = await models.userLogModel.update({...fields}, {
         where: {id}
     })
     return result
 }
 
 const getLatestUserLog = async (userId) => {
-    const userLatestLog = await userLogModel.findOne({
+    const userLatestLog = await models.userLogModel.findOne({
         where: {
             userId
         },
@@ -60,11 +56,11 @@ const getLatestUserLog = async (userId) => {
 }
 
 const durationStatistic = async () => {
-    const result = await userLogModel.findAll({
+    const result = await models.userLogModel.findAll({
         attributes: [
             ["user_name", "userName"],
             ["user_id", "userId"],
-            [Sequelize.fn('SUM', Sequelize.literal('TIME_TO_SEC(TIMEDIFF(last_online_time, login_time))')), 'duration']
+            [models.Sequelize.fn('SUM', models.Sequelize.literal('TIME_TO_SEC(TIMEDIFF(last_online_time, login_time))')), 'duration']
         ],
         group: ["user_id", "user_name"]
     })
@@ -72,7 +68,7 @@ const durationStatistic = async () => {
 }
 
 const setUserDown = async (userId) => {
-    await userLogModel.update({
+    await models.userLogModel.update({
         isOnline: false
     }, {
         where: {userId}

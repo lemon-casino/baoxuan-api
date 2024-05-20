@@ -1,6 +1,4 @@
-const sequelize = require('../model/init');
-const getProcessDetailsModel = require("../model/processDetailsModel")
-const processDetailsModel = getProcessDetailsModel(sequelize)
+const models = require('../model')
 const uuidUtil = require("../utils/uuidUtil")
 
 /**
@@ -9,11 +7,11 @@ const uuidUtil = require("../utils/uuidUtil")
  * @returns {Promise<boolean>}
  */
 const saveProcessDetailsArr = async (detailsArr) => {
-    const transaction = await sequelize.transaction();
+    const transaction = await models.sequelize.transaction();
     try {
         for (const details of detailsArr) {
             details.id = uuidUtil.getId()
-            await processDetailsModel.create(details, transaction)
+            await models.processDetailsModel.create(details, transaction)
         }
         await transaction.commit()
         return true
@@ -26,7 +24,7 @@ const saveProcessDetailsArr = async (detailsArr) => {
 const saveProcessDetailsArrWithOutTrans = async (detailsArr, transaction) => {
     for (const details of detailsArr) {
         details.id = uuidUtil.getId()
-        await processDetailsModel.create(details, transaction)
+        await models.processDetailsModel.create(details, transaction)
     }
     return true
 }

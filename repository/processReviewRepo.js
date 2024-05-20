@@ -1,10 +1,8 @@
-const sequelize = require('../model/init');
-const getProcessReviewModel = require("../model/processReviewModel")
-const processReviewModel = getProcessReviewModel(sequelize)
+const models = require('../model')
 const uuidUtil = require("../utils/uuidUtil")
 
 const getProcessReviewsByProcessId = async (processId) => {
-    const result = await processReviewModel.findAll({
+    const result = await models.processReviewModel.findAll({
         where: {processId}
     })
     return result
@@ -13,10 +11,10 @@ const getProcessReviewsByProcessId = async (processId) => {
 const saveProcessReview = async (processReview, transaction) => {
     processReview.id = uuidUtil.getId()
     if (transaction) {
-        const result = await processReviewModel.create(processReview, {transaction})
+        const result = await models.processReviewModel.create(processReview, {transaction})
         return result
     }
-    const result = await processReviewModel.create(processReview)
+    const result = await models.processReviewModel.create(processReview)
     return result
 }
 
@@ -27,7 +25,7 @@ const saveBatchProcessReviews = async (processReviews) => {
         for (const processReview of processReviews) {
             processReview.id = uuidUtil.getId()
             processReview.orderIndex = index
-            await processReviewModel.create(processReview)
+            await models.processReviewModel.create(processReview)
             index = index + 1
         }
         transaction.commit()
@@ -39,7 +37,7 @@ const saveBatchProcessReviews = async (processReviews) => {
 }
 
 const updateProcessReviewCostInfo = async (id, execution) => {
-    const result = await processReviewModel.update(execution, {
+    const result = await models.processReviewModel.update(execution, {
         where: {id: id}
     })
     return result;
