@@ -38,6 +38,7 @@ const logger = createLogger({
         }),
         new DailyRotateFile({
             ...commonOptions,
+            maxFiles: '2d',
             level: "warn",
             filename: path.join(`${logDirectory}/warn`, `%DATE%.log`),
             format: format.combine(
