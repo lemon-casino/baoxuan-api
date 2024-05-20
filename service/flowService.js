@@ -577,13 +577,13 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
  * @param endDoneDate
  * @returns {Promise<*>}
  */
-const getCoreFlowData = async (deptId, userId, startDoneDate, endDoneDate) => {
+const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) => {
     // 根据时间获取需要统计的流程数据（今天+历史）
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
-    const userDetails = await userRepo.getUserDetails(userId)
+    // const userDetails = await userRepo.getUserDetails(userId)
     // 获取用户相关的人名
-    const users = await userRepo.getDepartmentUsers(userDetails.dingdingUserId, deptId)
-    const result = await flowStatistic.getDeptCoreFlow(deptId, users, flows)
+    // const users = await userRepo.getDepartmentUsers(userDetails.dingdingUserId, deptId)
+    const result = await flowStatistic.getDeptCoreFlow(deptId, userNames, flows)
     return flowUtil.attachIdsAndSum(result)
 }
 

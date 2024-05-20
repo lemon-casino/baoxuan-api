@@ -56,8 +56,12 @@ const getCoreDataByType = async (req, res, next) => {
             })
             result = await flowService.getCoreActionData(deptId, userNames, startDate, endDate)
         } else {
-            const userId = req.user.id
-            result = await flowService.getCoreFlowData(deptId, userId, startDate, endDate)
+            // const userId = req.user.id
+            const userNames = req.query.userNames
+            joiUtil.validate({
+                userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.strRequired}
+            })
+            result = await flowService.getCoreFlowData(deptId, userNames, startDate, endDate)
         }
         res.send(biResponse.success(result))
     } catch (e) {

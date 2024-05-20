@@ -165,7 +165,7 @@ const sumReviewItemsToResultNodeByOperators = (processInstanceId, userNames, res
     }
 }
 
-const getDeptCoreFlow = async (deptId, users, flows) => {
+const getDeptCoreFlow = async (deptId, userNames, flows) => {
     const finalResult = []
 
     const nodeTypes = [
@@ -175,7 +175,7 @@ const getDeptCoreFlow = async (deptId, users, flows) => {
         {name: "已逾期", type: "OVERDUE"},
     ]
 
-    const userIds = users.map(user => user.userid)
+    // const userIds = users.map(user => user.userid)
     const coreFormFlowConfigs = await flowRepo.getCoreFormFlowConfig(deptId)
     const flowReviewItemsMap = {}
     for (const coreFormConfig of coreFormFlowConfigs) {
@@ -228,7 +228,7 @@ const getDeptCoreFlow = async (deptId, users, flows) => {
             // 将流程根据节点和状态进行统计
             for (const action of actions) {
                 const firstFilteredReviewItems = flowUtil.flatReviewItems(flow).overallprocessflow.filter(
-                    item => action.nodeIds.includes(item.activityId) && userIds.includes(item.operatorUserId))
+                    item => action.nodeIds.includes(item.activityId) && userNames.includes(item.operatorName))
 
                 // 如果流程节点中还没有统计的节点信息（可能未开始），则直接跳过
                 if (firstFilteredReviewItems.length === 0) {
