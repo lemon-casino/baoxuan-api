@@ -14,6 +14,8 @@ const getDeptFlowFormActivities = async (formId, deptFlowFormId) => {
         if (reviewItem) {
             reviewItem.deptFlowFormActivityId = deptActivity.id
             reviewItem.selected = true
+        } else {
+            reviewItem.selected = false
         }
     }
     return reviewItems

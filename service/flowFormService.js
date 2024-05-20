@@ -305,6 +305,8 @@ const getDeptFlowForms = async (deptId) => {
         if (data.length > 0) {
             form.deptFlowFormId = data[0].id
             form.selected = true
+        } else {
+            form.selected = false
         }
     }
     return flowForms
