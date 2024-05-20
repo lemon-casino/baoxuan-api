@@ -3,9 +3,7 @@ const formReviewRepo = require("../repository/formReviewRepo")
 const flowUtil = require("../utils/flowUtil")
 const flowFormReviewUtil = require("../utils/flowFormReviewUtil")
 const {opFunctions} = require("../const/operatorConst")
-const formFlowIdMappings = require("../const/formFlowIdMappings")
-const flowReviewTypeConst = require("../const/flowReviewTypeConst")
-const flowStatusConst = require("../const/flowStatusConst")
+const {flowStatusConst, flowReviewTypeConst, activityIdMappingConst} = require("../const/flowConst")
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 
@@ -56,7 +54,7 @@ const getDeptCoreAction = async (deptId, userNames, flows) => {
                         const reviewItems = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
                         for (const reviewItem of reviewItems) {
                             // 发起的节点id对应的表单流程id不一致
-                            const fromNodeId = formFlowIdMappings[fromNode.id] || fromNode.id
+                            const fromNodeId = activityIdMappingConst[fromNode.id] || fromNode.id
 
                             if (fromNode && reviewItem.activityId === fromNodeId && fromNode.status.includes(reviewItem.type)) {
                                 fromMatched = true
@@ -88,7 +86,7 @@ const getDeptCoreAction = async (deptId, userNames, flows) => {
                             if (from.toUpperCase() === ownerFrom.FORM) {
                                 ownerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id][0]
                             } else {
-                                const processReviewId = formFlowIdMappings[id] || id
+                                const processReviewId = activityIdMappingConst[id] || id
                                 const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
                                 ownerName = reviewItems.length > 0 && reviewItems[0].operatorName
                             }

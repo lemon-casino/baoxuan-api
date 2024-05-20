@@ -3,8 +3,7 @@ const departmentService = require("../service/departmentService")
 const globalGetter = require("../global/getter")
 const flowUtil = require("../utils/flowUtil")
 const dateUtil = require("../utils/dateUtil")
-const flowStatusConst = require("../const/flowStatusConst")
-const flowReviewTypeConst = require("../const/flowReviewTypeConst")
+const {flowStatusConst,flowReviewTypeConst} = require("../const/flowConst")
 const NotFoundError = require("../error/http/notFoundError")
 
 /**

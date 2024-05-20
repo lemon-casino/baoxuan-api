@@ -1,5 +1,4 @@
-const flowStatusConst = require("../const/flowStatusConst")
-const flowReviewTypeConst = require("../const/flowReviewTypeConst")
+const {flowStatusConst, flowReviewTypeConst} = require("../const/flowConst")
 const dateUtil = require("./dateUtil")
 
 /**

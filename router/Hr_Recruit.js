@@ -3,8 +3,9 @@ const router = express.Router();
 const Hr_RecruitmentDepartmentPositions = require('../service/Hr_RecruitmentDepartmentPositions');
 const {success} = require("../utils/biResponse");
 const globalGetter = require("../global/getter")
-const flowStatusConst = require("../const/flowStatusConst")
-const  PERSONNEL_AUDITS = "FORM-027086325D5B4B24885D75A541FD633E7AMV"
+const {flowStatusConst} = require("../const/flowConst")
+const PERSONNEL_AUDITS = "FORM-027086325D5B4B24885D75A541FD633E7AMV"
+
 function extracted(timeRange, startDate, endDate) {
     if (timeRange === undefined) {
         const currentDate = new Date();
@@ -23,9 +24,9 @@ router.get('/RecruitmentDepartmentPositions', async (req, res) => {
 
     let startDate;
     let endDate;
-    const rest={
-        department:[],
-        quarters:[],
+    const rest = {
+        department: [],
+        quarters: [],
     }
     try {
         let {timeRange} = req.query;
@@ -41,7 +42,7 @@ router.get('/RecruitmentDepartmentPositions', async (req, res) => {
         rest.department = await Hr_RecruitmentDepartmentPositions.getHrDepartment(startDate, endDate);
         // 这个是岗位面试情况
         rest.quarters = await Hr_RecruitmentDepartmentPositions.getHrQuarters(startDate, endDate);
-        let xx= await  Hr_RecruitmentDepartmentPositions.getMatching(startDate, endDate)
+        let xx = await Hr_RecruitmentDepartmentPositions.getMatching(startDate, endDate)
         rest.quarters.forEach(item => {
             const matchingItem = xx.find(item2 => item.keyword === item2.keyword);
             if (matchingItem) {
@@ -52,7 +53,7 @@ router.get('/RecruitmentDepartmentPositions', async (req, res) => {
         });
 
         const todayFlows = await globalGetter.getTodayFlows();
-        const runningFlow = todayFlows.filter((flow) => flow.instanceStatus === flowStatusConst.RUNNING && flow.formUuid ===PERSONNEL_AUDITS );
+        const runningFlow = todayFlows.filter((flow) => flow.instanceStatus === flowStatusConst.RUNNING && flow.formUuid === PERSONNEL_AUDITS);
         //console.log(runningFlow)
 
         return res.send(success(rest));
@@ -80,7 +81,7 @@ async function updateAttendanceData(sourceData, targetArray) {
 router.get('/progressMap', async (req, res) => {
     let startDate;
     let endDate;
-    const createMonthObject = () => Array.from({ length: 12 }, (_, i) => ({
+    const createMonthObject = () => Array.from({length: 12}, (_, i) => ({
         attendance: 0,
         month: `${i + 1}`.padStart(2, '0')
     }));
@@ -118,8 +119,8 @@ router.get('/RecruitmentTalentDynamic', async (req, res) => {
 
     let startDate;
     let endDate;
-    const rest={
-        quarters:[],
+    const rest = {
+        quarters: [],
     }
     try {
         let {timeRange} = req.query;

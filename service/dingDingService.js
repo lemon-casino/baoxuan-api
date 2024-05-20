@@ -11,8 +11,7 @@ const FlowFormReview = require("../model/flowformreview")
 const {logger} = require("../utils/log")
 const dateUtil = require("../utils/dateUtil")
 const redisService = require("./redisService")
-const flowStatusConst = require("../const/flowStatusConst")
-const flowReviewTypeConst = require("../const/flowReviewTypeConst")
+const {flowStatusConst} = require("../const/flowConst")
 const ForbiddenError = require("../error/http/forbiddenError")
 const globalGetter = require("../global/getter")
 const workingDayService = require("../service/workingDayService")
@@ -492,7 +491,7 @@ const isWorkingDay = async (date) => {
 const createProcess = async (formId, userId, processCode, formDataJsonStr) => {
     // 获取用户的部门id
     const departments = await departmentService.getDepartmentOfUser(userId)
-    const departmentId = departments[departments.length-1].dept_id
+    const departmentId = departments[departments.length - 1].dept_id
     const {access_token: token} = await getToken();
     return await dingDingReq.createProcess(token, formId, userId, processCode, departmentId, formDataJsonStr)
 }

@@ -5,7 +5,7 @@ const userService = require("../service/userService")
 const flowService = require("../service/flowService")
 const whiteList = require("../config/whiteList")
 const linkTypeConst = require("../const/linkTypeConst")
-const flowStatusConst = require("../const/flowStatusConst")
+const {flowStatusConst} = require("../const/flowConst")
 const {
     taoBaoSingleItemMap,
     taoBaoErrorItems,
