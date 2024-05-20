@@ -8,7 +8,7 @@ const innerGroupConst = require("../const/tmp/innerGroupConst")
 const whiteList = require("../config/whiteList")
 
 const getUserDetails = async (userId) => {
-    const details = await models.userModel.findAll({
+    const details = await models.usersModel.findAll({
         where: {userId}
     })
 
