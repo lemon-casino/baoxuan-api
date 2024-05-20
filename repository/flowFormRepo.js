@@ -19,7 +19,7 @@ const getFormDetails = async (formId) => {
  * @returns {Promise<[]|*>}
  */
 const getAllForms = async (where) => {
-    const result = await models.flowFormModel.findAll({
+    const result = await models.flowfromsModel.findAll({
         where
     })
     return sequelizeUtil.extractDataValues(result)
@@ -34,7 +34,7 @@ const getAllForms = async (where) => {
 const saveFormAndDetails = async (form, detailsArr) => {
     const transaction = await models.sequelize.transaction();
     try {
-        await models.flowFormModel.create(form, {transaction})
+        await models.flowfromsModel.create(form, {transaction})
 
         for (const details of detailsArr) {
             await models.flowFormDetailsModel.create(details, {transaction})
@@ -56,7 +56,7 @@ const saveFormAndDetails = async (form, detailsArr) => {
 const updateFormAndAddDetails = async (form, detailsArr) => {
     const transaction = await models.sequelize.transaction();
     try {
-        await models.flowFormModel.update({
+        await models.flowfromsModel.update({
             ...form
         }, {
             where: {

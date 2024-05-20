@@ -2,7 +2,7 @@ const models = require('../model')
 const sequelizeUtil = require("../utils/sequelizeUtil")
 
 const getFormReviewByFormId = async (formId) => {
-    const formReviews = await models.formReviewModel.findAll({
+    const formReviews = await models.flowformsreviewsModel.findAll({
         where: {formId},
         order: [["modifiedTime", "desc"]]
     })
@@ -10,7 +10,7 @@ const getFormReviewByFormId = async (formId) => {
 }
 
 const getDetailsById = async (id) => {
-    const result = await models.formReviewModel.findByPk(id)
+    const result = await models.flowformsreviewsModel.findByPk(id)
     return sequelizeUtil.extractDataValues(result)
 }
 
