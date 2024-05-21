@@ -297,7 +297,6 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
     const profitData = await getProfitData(singleItems)
     // 市场占有率
     const marketRioData = await getMarketRatioData(singleItems)
-
     return {
         pagingSingleItems,
         paymentData,
@@ -417,9 +416,11 @@ const getSingleItemById = async (id) => {
  * @param firstLevelProductLine
  * @param secondLevelProductLine
  * @param errorItems
- * @param linkType
+ * @param linkTypes
+ * @param linkHierarchies
  * @param linkStatus
  * @param timeRange
+ * @param clickingAdditionalParams
  * @returns {Promise<void>}
  */
 const getAllSatisfiedSingleItems = async (productLineLeaders,
@@ -447,67 +448,51 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
     return satisfiedSingleItems.data
 }
 
-/**
- * 获取链接操作数据
- * @param status
- * @param satisfiedSingleItems
- * @returns {Promise<{sum: number, items: [{name: string, sum: number}, {name: string, sum: number}, {name: string, sum: number}]}|{sum: number, items: *[]}|{fightingOnOld: *, fightingOnNew: *}>}
- */
-const getLinkOperationCount = async (status,
-                                     satisfiedSingleItems,
-                                     productLineLeaders) => {
-
-    // 待上架
-    if (status === "waiting-on") {
-        // 找到ddUserId
-        const result = {
-            sum: 0,
-            items: linkTypeConst.ToBeOnTheShelves.map(group => {
-                return {name: group.name, sum: 0, ids: []}
-            })
-        }
-        for (const productLineLeader of productLineLeaders) {
-            const allUsers = await globalGetter.getUsers()
-            const users = allUsers.filter((user) => user.name === productLineLeader)
-            if (users.length === 0) {
-                logger.error(`用户${productLineLeader}不存在详细信息`)
-                continue
-            }
-
-            const curResult = await getSelfWaitingOnSingleItemLinkOperationCount(users[0].userid)
-            result.sum = result.sum + curResult.sum
-            result.items[0].sum = result.items[0].sum + curResult.items[0].sum
-            //   curResult.items[0].ids 追加 result.items[0].ids
-            result.items[0].ids = result.items[0].ids.concat(curResult.items[0].ids)
-            result.items[1].sum = result.items[1].sum + curResult.items[1].sum
-            result.items[2].sum = result.items[2].sum + curResult.items[2].sum
-        }
-        return result
+async function ToBeOnTheShelves(productLineLeaders) {
+    const result = {
+        sum: 0,
+        items: linkTypeConst.ToBeOnTheShelves.map(group => {
+            return {name: group.name, sum: 0, ids: []}
+        })
     }
+    for (const productLineLeader of productLineLeaders) {
+        const allUsers = await globalGetter.getUsers()
+        const users = allUsers.filter((user) => user.name === productLineLeader)
+        if (users.length === 0) {
+            logger.error(`用户${productLineLeader}不存在详细信息`)
+            continue
+        }
 
-    if (status === "do") {
-        const result = await getSelfDoSingleItemLinkOperationCount(satisfiedSingleItems)
-        return result
-    } else if (status === "fighting") {
-        const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
-        const result = await getSelfFightingSingleItemLinkOperationCount(satisfiedSingleItems, fightingLinkIds)
-        return result
-    } else if (status === "error") {
-        const result = await getSelfErrorSingleItemLinkOperationCount(satisfiedSingleItems)
-        //根据result 的items 的clickingAdditionalParams 排序  最高的在前
-        return result
+        const curResult = await getSelfWaitingOnSingleItemLinkOperationCount(users[0].userid)
+        result.sum = result.sum + curResult.sum
+        result.items[0].sum = result.items[0].sum + curResult.items[0].sum
+        //   curResult.items[0].ids 追加 result.items[0].ids
+        result.items[0].ids = result.items[0].ids.concat(curResult.items[0].ids)
+        result.items[1].sum = result.items[1].sum + curResult.items[1].sum
+        result.items[2].sum = result.items[2].sum + curResult.items[2].sum
     }
-    throw new NotFoundError(`${status}还不支持`)
+    return result
 }
 
 /**
- * 获取本人链接操作数据（操作）
- * @param username  产品线负责人姓名
- * @param timeRange 时间范围
- * @returns {Promise<{sum: number, items: *[]}>}
+ * 获取链接操作数据
+ * @param satisfiedSingleItems
+ * @param productLineLeaders
+ * @returns {Promise<{sum: number, items: [{name: string, sum: number}, {name: string, sum: number}, {name: string, sum: number}]}|{sum: number, items: *[]}|{fightingOnOld: *, fightingOnNew: *}>}
  */
-const getSelfDoSingleItemLinkOperationCount = async (singleItems) => {
-    const result = await getResultTemplateByLinkTypeAndLinkHierarchy()
+const getLinkOperationCount = async (
+                                     satisfiedSingleItems,
+                                     productLineLeaders) => {
+
+    return [
+        {operation: await getSelfDoSingleItemLinkOperationCount(satisfiedSingleItems)},
+        {ToBeOnTheShelves: await ToBeOnTheShelves(productLineLeaders)},
+        {fighting: await getSelfFightingSingleItemLinkOperationCount(satisfiedSingleItems, await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING))},
+        {error: await getSelfErrorSingleItemLinkOperationCount(satisfiedSingleItems)}
+];
+}
+
+function link_operational_data(result, singleItems) {
     for (let i = 0; i < result.items.length - 1; i++) {
         let resultItem = result.items[i]
         const satisfiedSingleItems = singleItems.filter((item) => {
@@ -516,6 +501,15 @@ const getSelfDoSingleItemLinkOperationCount = async (singleItems) => {
         result.items[i] = {name: resultItem.name, sum: satisfiedSingleItems.length}
         result.sum = result.sum + satisfiedSingleItems.length
     }
+}
+
+/**
+ * 获取本人链接操作数据（操作）
+ * @param singleItems
+ */
+const getSelfDoSingleItemLinkOperationCount = async (singleItems) => {
+    const result = await getResultTemplateByLinkTypeAndLinkHierarchy()
+    link_operational_data(result, singleItems);
 
     return result
 }
@@ -611,23 +605,14 @@ const getSelfFightingSingleItemLinkOperationCount = async (singleItems, fighting
         return fightingLinkIds.includes(item.linkId)
     })
 
-    for (let i = 0; i < result.items.length - 1; i++) {
-        let resultItem = result.items[i]
-
-        const satisfiedSingleItems = singleItems.filter((item) => {
-            return resultItem.linkTypes.includes(item.linkType) && resultItem.linkHierarchy === item.linkHierarchy
-        })
-        result.items[i] = {name: resultItem.name, sum: satisfiedSingleItems.length}
-        result.sum = result.sum + satisfiedSingleItems.length
-    }
+    link_operational_data(result, singleItems);
     return result
 }
 
 /**
  * 获取本人链接操作数据（异常数据）
- * @param username
- * @param timeRange
  * @returns {Promise<{sum: number, items: *[]}>}
+ * @param singleItems  获得的数据
  */
 const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
     const result = {sum: 0, items: []}
@@ -643,12 +628,12 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
                 if (exp.field === "profitRate") {
                     // if(singleItem[exp.lessThan] === "true"){
                     //reallyShipmentAmount 小于0
-                    if (exp.lessThan === "negative_profit_60") {
-                        if (singleItem[exp.lessThan] === "true") {
-                            return singleItem["profitRate"] * 1 < 0
+                    if(exp.lessThan === "negative_profit_60"){
+                        if (singleItem[exp.lessThan] === "true"){
+                            return  singleItem["profitRate"]*1 <0
                         }
-                        return false
-                    } else {
+                        return   false
+                    }else {
                         return singleItem[exp.lessThan] === "true";
                     }
 
@@ -658,25 +643,28 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
                 }
                 // 坑市场占比环比（7天）
                 if (exp.field === "salesMarketRateCircleRate7Day") {
-                    return singleItem["salesMarketRateCircleRate7Day"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 > -20
+                    return    singleItem["salesMarketRateCircleRate7Day"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"]*1>-20
                 }
                 //手淘人数市场占比环比（7天）
                 if (exp.field === "shouTaoPeopleNumMarketRateCircleRate7Day") {
 
-                    return (singleItem["salesMarketRateCircleRate7Day"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 < -20) || (singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 < -20 && singleItem["salesMarketRateCircleRate7Day"] * 1 > -20)
-
+                    return    ( singleItem["salesMarketRateCircleRate7Day"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"]*1<-20) || ( singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"]*1<-20 && singleItem["salesMarketRateCircleRate7Day"]*1>-20)
 
                 }
 
                 // 坑市场占比环比（日天）
                 if (exp.field === "salesMarketRateCircleRateDay") {
-                    return singleItem["salesMarketRateCircleRateDay"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 > -20
+                    return    singleItem["salesMarketRateCircleRateDay"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"]*1>-20
                 }
                 //手淘人数市场占比环比（日天）
                 if (exp.field === "shouTaoPeopleNumMarketRateCircleRateDay") {
 
-                    return (singleItem["salesMarketRateCircleRateDay"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 < -20) || (singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 < -20 && singleItem["salesMarketRateCircleRateDay"] * 1 > -20)
+                    return    ( singleItem["salesMarketRateCircleRateDay"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"]*1<-20) || ( singleItem["shouTaoPeopleNumMarketRateCircleRateDay"]*1<-20 && singleItem["salesMarketRateCircleRateDay"]*1>-20)
 
+
+                }
+                if (exp.field === "wanXiangTaiProductionRate" || exp.field === "shoppingCatSumRoi" || exp.field === "accuratePeoplePromotionProductionRate") {
+                     // 这些投产比 是每天的计算 现在计算逻辑可以改为3天平均低于2 三天的平均值
 
                 }
 

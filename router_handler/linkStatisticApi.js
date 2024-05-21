@@ -34,7 +34,6 @@ const getLinkOperationCount = async (req, res, next) => {
        // const uniqueSingleItems = singleItemTaoBaoService.getUniqueSingleItems(singleItems)
 
         const result = await singleItemTaoBaoService.getLinkOperationCount(
-            req.params.status,
             singleItems,
             productLineLeaders)
         return res.send(biResponse.success(result))
