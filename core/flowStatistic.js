@@ -1,15 +1,21 @@
-const flowRepo = require("../repository/flowRepo")
-const formReviewRepo = require("../repository/formReviewRepo")
+const flowService = require("../service/flowService")
+const departmentFlowFormService = require("../service/departmentFlowFormService")
+const formReviewService = require("../service/formReviewService")
 const flowUtil = require("../utils/flowUtil")
 const flowFormReviewUtil = require("../utils/flowFormReviewUtil")
 const {opFunctions} = require("../const/operatorConst")
-const {flowStatusConst, flowReviewTypeConst, activityIdMappingConst} = require("../const/flowConst")
+const {
+    flowStatusConst,
+    flowReviewTypeConst,
+    activityIdMappingConst
+} = require("../const/flowConst")
+const NotFoundError = require("../error/http/notFoundError");
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 
 const getDeptCoreAction = async (deptId, userNames, flows) => {
     // 部门的核心动作配置信息
-    const coreActionsConfig = await flowRepo.getCoreActionsConfig(deptId)
+    const coreActionsConfig = await flowService.getCoreActionsConfig(deptId)
     const finalResult = []
     // 根据配置信息获取基于所有人的数据
     // eg：[{actionName: "市场分析", children: [{"nameCN": "待做", children: [{nameCN:"逾期", children:[{userName: "张三", sum: 1, ids: ["xxx"]}]}]}]}]
@@ -174,7 +180,9 @@ const getDeptCoreFlow = async (deptId, userNames, flows) => {
     ]
 
     // const userIds = users.map(user => user.userid)
-    const coreFormFlowConfigs = await flowRepo.getCoreFormFlowConfig(deptId)
+    const coreFormFlowConfigs = await departmentFlowFormService.getDeptFlowFormConfig(deptId)
+
+
     const flowReviewItemsMap = {}
     for (const coreFormConfig of coreFormFlowConfigs) {
         const {formName, formId, actions} = coreFormConfig
@@ -213,7 +221,7 @@ const getDeptCoreFlow = async (deptId, userNames, flows) => {
             let flowFormReviews = flowReviewItemsMap[flow.formUuid]
             if (flow.instanceStatus === flowStatusConst.RUNNING) {
                 if (!flowFormReviews) {
-                    flowFormReviews = await formReviewRepo.getFormReviewByFormId(flow.formUuid)
+                    flowFormReviews = await formReviewService.getFormReviewByFormId(flow.formUuid)
                     flowReviewItemsMap[flow.formUuid] = flowFormReviews
                 }
                 if (flowFormReviews.length === 0) {

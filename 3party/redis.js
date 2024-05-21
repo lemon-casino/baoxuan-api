@@ -27,12 +27,14 @@ const client = redis.createClient(options);
     })
 })();
 
+client.on("connect", () => {
+    console.log("Redis 连接成功");
+})
+client.on("ready", () => {
+    console.log("Redis 连接成功，准备好接收命令");
+})
 client.on("error", (err) => {
     console.log("Redis 失败日志：" + err);
-});
-
-client.on("connect", () => {
-    console.log("Redis 已启动");
 })
 
 module.exports = client

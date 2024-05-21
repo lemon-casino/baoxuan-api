@@ -290,7 +290,7 @@ const tmCoreFormFlowsConfig = [
                 ]
             },
             {
-                name: "分配执行市场分析方案",
+                name: "运营提交市场统计模板",
                 nodeIds: ["node_oclv1xr53i4"]
             },
             {
@@ -298,7 +298,7 @@ const tmCoreFormFlowsConfig = [
                 nodeIds: ["node_oclvkc9r0a3"]
             },
             {
-                name: "完成市场分析方案",
+                name: "运营提交市场分析方案",
                 nodeIds: [
                     "node_oclvkc9r0a4"
                 ]

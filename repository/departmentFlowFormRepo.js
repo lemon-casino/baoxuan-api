@@ -1,9 +1,14 @@
 const models = require('../model')
 
+models.deptFlowFormModel.hasMany(models.deptFlowFormActivityModel,
+    {
+        foreignKey: 'dept_flow_form_id',
+        as: 'deptFlowFormActivities'
+    }
+)
+
 const getDepartmentFlowForms = async (where) => {
-    const forms = await models.deptFlowFormModel.findAll({
-        where
-    })
+    const forms = await models.deptFlowFormModel.findAll({where})
     return forms
 }
 
@@ -33,8 +38,22 @@ const saveDepartmentFlowForm = async (model) => {
     return result
 }
 
+const getDeptFlowFormConfig = async (deptId) => {
+    const deptForms = await models.deptFlowFormModel.findAll({
+        where: {deptId},
+        include: [
+            {
+                model: models.deptFlowFormActivityModel,
+                as: "deptFlowFormActivities"
+            }
+        ],
+    })
+    return deptForms
+}
+
 module.exports = {
     saveDepartmentFlowForm,
     deleteDepartmentFlowForm,
-    getDepartmentFlowForms
+    getDepartmentFlowForms,
+    getDeptFlowFormConfig
 }

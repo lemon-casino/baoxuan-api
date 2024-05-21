@@ -1,6 +1,5 @@
 const FlowForm = require("../model/flowfrom")
 const flowRepo = require("../repository/flowRepo")
-const userRepo = require("../repository/userRepo")
 const formService = require("../service/flowFormService")
 const departmentService = require("../service/departmentService")
 const dingDingService = require("../service/dingDingService")
@@ -644,6 +643,16 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate) => {
     return computedFlows
 }
 
+const getCoreActionsConfig = async (deptId) => {
+    const coreActionsConfig = await flowRepo.getCoreActionsConfig(deptId)
+    return coreActionsConfig
+}
+const getCoreFormFlowConfig = async (deptId) => {
+    const coreFormFlowConfig = await flowRepo.getCoreFormFlowConfig(deptId)
+    return coreFormFlowConfig
+}
+
+
 module.exports = {
     filterFlowsByTimesRange,
     filterFlowsByImportanceCondition,
@@ -671,5 +680,7 @@ module.exports = {
     getFlowFormValues,
     updateRunningFlowEmergency,
     getCoreActionData,
-    getCoreFlowData
+    getCoreFlowData,
+    getCoreActionsConfig,
+    getCoreFormFlowConfig
 }
