@@ -84,7 +84,7 @@ const getProcessWithReviewByReviewItemDoneTime = async (startDoneDateTime, enDon
         include: [
             {
                 model: models.processReviewModel,
-                where: {processReviewModel: models.Sequelize.col("models.processModel.process_instance_id")},
+                // where: {processReviewModel: models.Sequelize.col("models.processModel.process_instance_id")},
                 as: "overallprocessflow"
             }
         ],
@@ -113,7 +113,7 @@ const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateT
         include: [
             {
                 model: models.processDetailsModel,
-                where: {processDetailsModel: models.Sequelize.col("models.processModel.process_instance_id")},
+                // where: {processDetailsModel: models.Sequelize.col("models.processModel.process_instance_id")},
                 as: "data"
             }
         ],
