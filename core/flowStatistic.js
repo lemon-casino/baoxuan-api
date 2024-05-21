@@ -5,7 +5,6 @@ const {
     flowReviewTypeConst,
     activityIdMappingConst
 } = require("../const/flowConst")
-const NotFoundError = require("../error/http/notFoundError")
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 
