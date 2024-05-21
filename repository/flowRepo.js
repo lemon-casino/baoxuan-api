@@ -35,7 +35,7 @@ const getProcessByIds = async (ids) => {
     processes = sequelizeUtil.extractDataValues(processes)
     // 兼容未入库的数据
     return processes.map((process) => {
-        process.overallprocessflow = sequelizeUtil.extractDataValues(process.overallprocessflow)
+        process.overallprocessflow = sequelizeUtil.extractDataValues(process.overallprocessflow).sort((curr, next) => curr.doneTime - next.doneTime)
         process.overallprocessflow = process.overallprocessflow.map(item => {
             return {...item, operateTimeGMT: dateUtil.format2Str(item.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"}
         })
