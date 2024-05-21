@@ -282,7 +282,26 @@ const getFlowsByIds = async (ids) => {
 
 const getTodayFlowsByIds = async (ids) => {
     const flowsOfRunningAndFinishedOfToday = await globalGetter.getTodayFlows()
-    const satisfiedFlows = await flowsOfRunningAndFinishedOfToday.filter((item) => ids.includes(item.processInstanceId))
+    const satisfiedFlows = []
+    const matchedTodayFlowIds = []
+    for (const flow of flowsOfRunningAndFinishedOfToday) {
+        if (ids.includes(flow.processInstanceId)) {
+            satisfiedFlows.push(flow)
+            if (satisfiedFlows.length === ids.length) {
+                break
+            }
+            matchedTodayFlowIds.push(flow.processInstanceId)
+        }
+    }
+    // 需要从数据库中获取流程
+    const stockedFlowIds = ids.filter(id => !matchedTodayFlowIds.includes(id))
+    if (stockedFlowIds.length > 0) {
+        const stockedFlows = await flowRepo.getProcessByIds(stockedFlowIds)
+        for (const flow of stockedFlows) {
+            satisfiedFlows.push({...flow, originator: {userId: flow.originatorId}})
+        }
+    }
+    // const satisfiedFlows = await flowsOfRunningAndFinishedOfToday.filter((item) => ids.includes(item.processInstanceId))
     // 为流程添加发起人的部门信息
     for (const flow of satisfiedFlows) {
         let departmentNames = ""
