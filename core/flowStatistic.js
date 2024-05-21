@@ -218,14 +218,14 @@ const getDeptCoreFlow = async (deptId, userNames, flows) => {
             // 统计待转入时，需要知道要统计节点的临近的工作节点的状况
             // 循环中最耗时的地方
             // 如果该流程中要统计所有核心节点都没有待转入状态，则不必获取表单流程详情
-            let flowFormReviews = flowReviewItemsMap[flow.formUuid]
-            if (flow.instanceStatus === flowStatusConst.RUNNING) {
-                if (!flowFormReviews) {
-                    flowFormReviews = await formReviewService.getFormReviewByFormId(flow.formUuid)
-                    flowReviewItemsMap[flow.formUuid] = flowFormReviews
-                }
-                if (flowFormReviews.length === 0) {
+            let flowFormReviews = flowReviewItemsMap[flow.reviewId] || []
+            if (!flowFormReviews) {
+                const formReview = await formReviewRepo.getDetailsById(flow.reviewId)
+                if (!formReview) {
                     logger.warn(`未在flowFormReview中找到表单${flow.formUuid}的配置信息`)
+                    flowReviewItemsMap[flow.reviewId] = []
+                } else {
+                    flowReviewItemsMap[flow.reviewId] = formReview.formReview
                 }
             }
 
@@ -258,7 +258,7 @@ const getDeptCoreFlow = async (deptId, userNames, flows) => {
                         }
                         //  flowFormReviews>1的情况在分支条件下会出现，同样只要判断第一个即可
                         const forecastReviewItem = forecastReviewItems[0]
-                        const flowReviewItems = flowReviewItemsMap[flow.formUuid]
+                        const flowReviewItems = flowReviewItemsMap[flow.reviewId]
                         const reviewItem = flowFormReviewUtil.getReviewItem(forecastReviewItem.activityId, flowReviewItems)
                         if (!reviewItem) {
                             logger.warn(`未在flowFormReview中找到节点${forecastReviewItem.activityId}的配置信息`)

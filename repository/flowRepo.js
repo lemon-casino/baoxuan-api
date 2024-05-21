@@ -2,6 +2,7 @@ const models = require('../model');
 const NotFoundError = require("../error/http/notFoundError")
 const coreActionsConst = require("../const/tmp/coreActionsConst")
 const coreFormFlowConst = require("../const/tmp/coreFormFlowConst")
+const sequelizeUtil = require("../utils/sequelizeUtil")
 
 models.processModel.hasMany(models.processReviewModel,
     {
@@ -19,11 +20,18 @@ models.processModel.hasMany(models.processDetailsModel,
 
 const getProcessByIds = async (ids) => {
     const processes = await models.processModel.findAll({
+        include: [
+            {
+                model: models.processReviewModel,
+                as: "overallprocessflow"
+            }
+        ],
         where: {
-            processInstanceId: ids
+            processInstanceId: {$in: ids}
         }
     })
-    return processes;
+
+    return sequelizeUtil.extractDataValues(processes)
 }
 
 const getAllProcesses = async () => {
@@ -84,7 +92,7 @@ const getProcessWithReviewByReviewItemDoneTime = async (startDoneDateTime, enDon
         include: [
             {
                 model: models.processReviewModel,
-                where: {processReviewModel: models.Sequelize.col("models.processModel.process_instance_id")},
+                // where: {processReviewModel: models.Sequelize.col("models.processModel.process_instance_id")},
                 as: "overallprocessflow"
             }
         ],
@@ -113,7 +121,7 @@ const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateT
         include: [
             {
                 model: models.processDetailsModel,
-                where: {processDetailsModel: models.Sequelize.col("models.processModel.process_instance_id")},
+                // where: {processDetailsModel: models.Sequelize.col("models.processModel.process_instance_id")},
                 as: "data"
             }
         ],
