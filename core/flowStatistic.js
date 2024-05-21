@@ -202,11 +202,6 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
         // 根据动作配置信息对flow进行统计
         const currentFormFlows = flows.filter(flow => flow.formUuid === formId)
         for (const flow of currentFormFlows) {
-
-            if (flow.processInstanceId === "314f05a4-2447-4217-b2b2-947919ed3594"){
-                console.log("====")
-            }
-
             // 统计待转入时，需要知道要统计节点的临近的工作节点的状况
             // 循环中最耗时的地方
             // 如果该流程中要统计所有核心节点都没有待转入状态，则不必获取表单流程详情
