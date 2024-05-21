@@ -37,7 +37,7 @@ const getProcessByIds = async (ids) => {
     return processes.map((item) => {
         return {
             ...item,
-            creatTimeGMT: dateUtil.format2Str(item.createTime, "YYYY-MM-DDTHH:mm:ss") + "Z",
+            createTimeGMT: dateUtil.format2Str(item.createTime, "YYYY-MM-DDTHH:mm:ss") + "Z",
             modifiedTimeGMT: dateUtil.format2Str(item.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"
         }
     })
