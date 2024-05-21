@@ -82,21 +82,14 @@ const getCoreFormFlowConfig = async (deptId) => {
  * @returns {Promise<[]|*>}
  */
 const getProcessWithReviewByReviewItemDoneTime = async (startDoneDateTime, enDoneDateTime) => {
-    const tempSQL = models.sequelize.dialect.QueryGenerator.selectQuery("process_review", {
-            attributes: ['process_instance_id'],
-            where: {done_time: {$between: [startDoneDateTime, enDoneDateTime]}}
-        }
-    ).slice(0, -1);
-
     const processWithReview = await models.processModel.findAll({
         include: [
             {
                 model: models.processReviewModel,
-                // where: {processReviewModel: models.Sequelize.col("models.processModel.process_instance_id")},
-                as: "overallprocessflow"
+                as: "overallprocessflow",
+                where: {done_time: {$between: [startDoneDateTime, enDoneDateTime]}}
             }
         ],
-        where: {process_instance_id: {$in: models.sequelize.literal(`(${tempSQL})`)}},
         order: [["process_instance_id", "desc"]]
     })
     return processWithReview
@@ -121,7 +114,6 @@ const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateT
         include: [
             {
                 model: models.processDetailsModel,
-                // where: {processDetailsModel: models.Sequelize.col("models.processModel.process_instance_id")},
                 as: "data"
             }
         ],

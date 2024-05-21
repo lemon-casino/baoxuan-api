@@ -14,6 +14,7 @@ const ParameterError = require("../error/parameterError")
 const flowStatistic = require("../core/flowStatistic")
 const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo");
 const deptFlowFormConfigConvertor = require("../convertor/deptFlowFormConfigConvertor");
+const {flowReviewTypeConst} = require("../const/flowConst");
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -586,7 +587,7 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
 const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) => {
     const computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptId)
-    const result = await flowStatistic.getDeptCoreAction(deptId, userNames, computedFlows, coreActionConfig)
+    const result = await flowStatistic.getDeptCoreAction(userNames, computedFlows, coreActionConfig)
     return flowUtil.attachIdsAndSum(result)
 }
 
@@ -606,7 +607,7 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
         throw new NotFoundError(`未找到部门：${deptId}的统计流程节点的配置信息`)
     }
     const coreFlowFormConfig = deptFlowFormConfigConvertor.convert(deptForms)
-    const result = await flowStatistic.getDeptCoreFlow(deptId, userNames, flows, coreFlowFormConfig)
+    const result = await flowStatistic.getDeptCoreFlow(userNames, flows, coreFlowFormConfig)
     return flowUtil.attachIdsAndSum(result)
 }
 
@@ -620,51 +621,61 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
  */
 const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate) => {
 
-    if (!startDoneDate && !endDoneDate) {
-        // 没有选择日期默认筛选今天的流程
-        return await globalGetter.getTodayFlows()
-    }
-
     if ((startDoneDate || endDoneDate) && !(startDoneDate && endDoneDate)) {
         throw new ParameterError("时间区间不完整")
     }
 
-    if (dateUtil.duration(endDoneDate, startDoneDate) < 0) {
-        throw new ParameterError("结束日期不能小于开始日期")
+    let flows = []
+    // 获取时间区间内的入库流程
+    if (startDoneDate && endDoneDate) {
+        if (dateUtil.duration(endDoneDate, startDoneDate) < 0) {
+            throw new ParameterError("结束日期不能小于开始日期")
+        }
+        const processDataReviewItem = await Promise.all([
+            flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate)),
+            flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate))
+        ])
+
+        flows = processDataReviewItem[1]
+        // 合并流程的data和审核流信息
+        for (let i = 0; i < flows.length; i++) {
+            const currData = {}
+            for (const item of processDataReviewItem[0][i].data) {
+                const fieldValue = item.fieldValue
+                if (fieldValue.startsWith("[") && fieldValue.endsWith("]")) {
+                    currData[item.fieldId] = JSON.parse(fieldValue)
+                } else {
+                    currData[item.fieldId] = fieldValue
+                }
+            }
+            flows[i].data = currData
+        }
     }
 
-    // 起止时间在将来
-    if (dateUtil.duration(startDoneDate, dateUtil.format2Str(new Date(), "YYYY-MM-DD")) > 0) {
-        return []
-    }
-
-    const processDataReviewItem = await Promise.all([
-        flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate)),
-        flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate))
-    ])
-
-    let computedFlows = processDataReviewItem[1]
-    const processWithData = processDataReviewItem[0]
-    // 合并流程的data和审核流信息
-    for (let i = 0; i < computedFlows.length; i++) {
-        const currData = {}
-        for (const item of processWithData[i].data) {
-            const fieldValue = item.fieldValue
-            if (fieldValue.startsWith("[") && fieldValue.endsWith("]")) {
-                currData[item.fieldId] = JSON.parse(fieldValue)
-            } else {
-                currData[item.fieldId] = fieldValue
+    const todayFlows = await globalGetter.getTodayFlows()
+    flows = flows.concat(todayFlows)
+    // 根据时间区间过滤掉不在区间内的完成节点，todo和forcast的数据不用处理
+    for (const flow of flows) {
+        const newOverallProcessFlow = []
+        for (const item of flow.overallprocessflow) {
+            if (item.type === flowReviewTypeConst.TODO || item.type === flowReviewTypeConst.FORCAST) {
+                newOverallProcessFlow.push(item)
+                continue
+            }
+            if ( startDoneDate && endDoneDate && item.type === flowReviewTypeConst.HISTORY) {
+                let doneTime = item.doneTime
+                if (!doneTime) {
+                    doneTime = dateUtil.formatGMT2Str(item.operateTimeGMT)
+                }
+                if (dateUtil.duration(doneTime, startDoneDate) >= 0 && dateUtil.duration(endDoneDate, doneTime) >= 0) {
+                    newOverallProcessFlow.push(item)
+                    continue
+                }
             }
         }
-        computedFlows[i].data = currData
+        flow.overallprocessflow = newOverallProcessFlow
     }
-
-    if (endDoneDate && dateUtil.duration(endDoneDate, dateUtil.format2Str(new Date(), "YYYY-MM-DD")) >= 0) {
-        const todayFlows = await globalGetter.getTodayFlows()
-        computedFlows = computedFlows.concat(todayFlows)
-    }
-
-    return computedFlows
+    return flows
 }
 
 const getCoreActionsConfig = async (deptId) => {

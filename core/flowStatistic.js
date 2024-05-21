@@ -8,7 +8,7 @@ const {
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 
-const getDeptCoreAction = async (deptId, userNames, flows, coreConfig) => {
+const getDeptCoreAction = async (userNames, flows, coreConfig) => {
     const finalResult = []
     // 根据配置信息获取基于所有人的数据
     // eg：[{actionName: "市场分析", children: [{"nameCN": "待做", children: [{nameCN:"逾期", children:[{userName: "张三", sum: 1, ids: ["xxx"]}]}]}]}]
@@ -18,7 +18,6 @@ const getDeptCoreAction = async (deptId, userNames, flows, coreConfig) => {
         const actionResult = {actionName, actionCode, children: []}
         for (const actionStatus of action.actionStatus) {
             const {nameCN, nameEN, rules} = actionStatus
-
             // 动作的状态节点
             let statusResult = {nameCN, nameEN, children: []}
 
@@ -162,7 +161,7 @@ const sumReviewItemsToResultNodeByOperators = (processInstanceId, userNames, res
     }
 }
 
-const getDeptCoreFlow = async (deptId, userNames, flows, coreFormFlowConfigs) => {
+const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
     const finalResult = []
 
     const nodeTypes = [
@@ -203,6 +202,11 @@ const getDeptCoreFlow = async (deptId, userNames, flows, coreFormFlowConfigs) =>
         // 根据动作配置信息对flow进行统计
         const currentFormFlows = flows.filter(flow => flow.formUuid === formId)
         for (const flow of currentFormFlows) {
+
+            if (flow.processInstanceId === "314f05a4-2447-4217-b2b2-947919ed3594"){
+                console.log("====")
+            }
+
             // 统计待转入时，需要知道要统计节点的临近的工作节点的状况
             // 循环中最耗时的地方
             // 如果该流程中要统计所有核心节点都没有待转入状态，则不必获取表单流程详情
