@@ -583,7 +583,8 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
  */
 const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) => {
     const computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
-    const result = await flowStatistic.getDeptCoreAction(deptId, userNames, computedFlows)
+    const coreActionConfig = await getCoreActionsConfig(deptId)
+    const result = await flowStatistic.getDeptCoreAction(deptId, userNames, computedFlows, coreActionConfig)
     return flowUtil.attachIdsAndSum(result)
 }
 
@@ -601,7 +602,9 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
     // const userDetails = await userRepo.getUserDetails(userId)
     // 获取用户相关的人名
     // const users = await userRepo.getDepartmentUsers(userDetails.dingdingUserId, deptId)
-    const result = await flowStatistic.getDeptCoreFlow(deptId, userNames, flows)
+
+    const coreFlowFormConfig = await getCoreFormFlowConfig(deptId)
+    const result = await require("../core/flowStatistic").getDeptCoreFlow(deptId, userNames, flows, coreFlowFormConfig)
     return flowUtil.attachIdsAndSum(result)
 }
 

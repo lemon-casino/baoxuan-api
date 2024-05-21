@@ -1,25 +1,19 @@
-const flowService = require("../service/flowService")
-const departmentFlowFormService = require("../service/departmentFlowFormService")
-const formReviewService = require("../service/formReviewService")
 const flowUtil = require("../utils/flowUtil")
 const flowFormReviewUtil = require("../utils/flowFormReviewUtil")
 const {opFunctions} = require("../const/operatorConst")
 const {
-    flowStatusConst,
     flowReviewTypeConst,
     activityIdMappingConst
 } = require("../const/flowConst")
-const NotFoundError = require("../error/http/notFoundError");
+const NotFoundError = require("../error/http/notFoundError")
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 
-const getDeptCoreAction = async (deptId, userNames, flows) => {
-    // 部门的核心动作配置信息
-    const coreActionsConfig = await flowService.getCoreActionsConfig(deptId)
+const getDeptCoreAction = async (deptId, userNames, flows, coreConfig) => {
     const finalResult = []
     // 根据配置信息获取基于所有人的数据
     // eg：[{actionName: "市场分析", children: [{"nameCN": "待做", children: [{nameCN:"逾期", children:[{userName: "张三", sum: 1, ids: ["xxx"]}]}]}]}]
-    for (const action of coreActionsConfig) {
+    for (const action of coreConfig) {
         const {actionName, actionCode} = action
         // 动作节点
         const actionResult = {actionName, actionCode, children: []}
@@ -169,7 +163,7 @@ const sumReviewItemsToResultNodeByOperators = (processInstanceId, userNames, res
     }
 }
 
-const getDeptCoreFlow = async (deptId, userNames, flows) => {
+const getDeptCoreFlow = async (deptId, userNames, flows, coreFormFlowConfigs) => {
     const finalResult = []
 
     const nodeTypes = [
@@ -178,11 +172,6 @@ const getDeptCoreFlow = async (deptId, userNames, flows) => {
         {name: "已完成", type: flowReviewTypeConst.HISTORY},
         {name: "已逾期", type: "OVERDUE"},
     ]
-
-    // const userIds = users.map(user => user.userid)
-    const coreFormFlowConfigs = await departmentFlowFormService.getDeptFlowFormConfig(deptId)
-
-
     const flowReviewItemsMap = {}
     for (const coreFormConfig of coreFormFlowConfigs) {
         const {formName, formId, actions} = coreFormConfig
