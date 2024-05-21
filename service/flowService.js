@@ -12,6 +12,8 @@ const flowUtil = require("../utils/flowUtil")
 const NotFoundError = require("../error/http/notFoundError")
 const ParameterError = require("../error/parameterError")
 const flowStatistic = require("../core/flowStatistic")
+const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo");
+const deptFlowFormConfigConvertor = require("../convertor/deptFlowFormConfigConvertor");
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -583,7 +585,7 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
  */
 const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) => {
     const computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
-    const coreActionConfig = await getCoreActionsConfig(deptId)
+    const coreActionConfig = await flowRepo.getCoreActionsConfig(deptId)
     const result = await flowStatistic.getDeptCoreAction(deptId, userNames, computedFlows, coreActionConfig)
     return flowUtil.attachIdsAndSum(result)
 }
@@ -599,12 +601,12 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
 const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) => {
     // 根据时间获取需要统计的流程数据（今天+历史）
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
-    // const userDetails = await userRepo.getUserDetails(userId)
-    // 获取用户相关的人名
-    // const users = await userRepo.getDepartmentUsers(userDetails.dingdingUserId, deptId)
-
-    const coreFlowFormConfig = await getCoreFormFlowConfig(deptId)
-    const result = await require("../core/flowStatistic").getDeptCoreFlow(deptId, userNames, flows, coreFlowFormConfig)
+    const deptForms = await departmentFlowFormRepo.getDeptFlowFormConfig(deptId)
+    if (deptForms.length === 0) {
+        throw new NotFoundError(`未找到部门：${deptId}的统计流程节点的配置信息`)
+    }
+    const coreFlowFormConfig = deptFlowFormConfigConvertor.convert(deptForms)
+    const result = await flowStatistic.getDeptCoreFlow(deptId, userNames, flows, coreFlowFormConfig)
     return flowUtil.attachIdsAndSum(result)
 }
 

@@ -46,7 +46,7 @@ const getDeptFlowFormConfig = async (deptId) => {
                 model: models.deptFlowFormActivityModel,
                 as: "deptFlowFormActivities"
             }
-        ],
+        ]
     })
     return deptForms
 }
