@@ -3,6 +3,7 @@ const NotFoundError = require("../error/http/notFoundError")
 const coreActionsConst = require("../const/tmp/coreActionsConst")
 const coreFormFlowConst = require("../const/tmp/coreFormFlowConst")
 const sequelizeUtil = require("../utils/sequelizeUtil")
+const dateUtil = require("../utils/dateUtil")
 
 models.processModel.hasMany(models.processReviewModel,
     {
@@ -19,7 +20,7 @@ models.processModel.hasMany(models.processDetailsModel,
 )
 
 const getProcessByIds = async (ids) => {
-    const processes = await models.processModel.findAll({
+    let processes = await models.processModel.findAll({
         include: [
             {
                 model: models.processReviewModel,
@@ -31,7 +32,16 @@ const getProcessByIds = async (ids) => {
         }
     })
 
-    return sequelizeUtil.extractDataValues(processes)
+    processes = sequelizeUtil.extractDataValues(processes)
+    // 兼容未入库的数据
+    return processes.map((item) => {
+        return {
+            ...item,
+            creatTimeGMT: dateUtil.format2Str(item.createTime, "YYYY-MM-DDTHH:mm:ss") + "Z",
+            modifiedTimeGMT: dateUtil.format2Str(item.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"
+        }
+    })
+
 }
 
 const getAllProcesses = async () => {
