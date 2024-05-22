@@ -653,7 +653,10 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate) => {
     }
 
     const todayFlows = await globalGetter.getTodayFlows()
-    flows = flows.concat(todayFlows)
+    flows = flows.concat(todayFlows.map(flow => {
+        // 返回新的Flow, 防止修改内存中的数据结构
+        return {...flow}
+    }))
     // 根据时间区间过滤掉不在区间内的完成节点，todo和forcast的数据不用处理
     for (const flow of flows) {
         const newOverallProcessFlow = []
@@ -662,7 +665,7 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate) => {
                 newOverallProcessFlow.push(item)
                 continue
             }
-            if ( startDoneDate && endDoneDate && item.type === flowReviewTypeConst.HISTORY) {
+            if (startDoneDate && endDoneDate && item.type === flowReviewTypeConst.HISTORY) {
                 let doneTime = item.doneTime
                 if (!doneTime) {
                     doneTime = dateUtil.formatGMT2Str(item.operateTimeGMT)
