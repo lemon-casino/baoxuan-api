@@ -1,6 +1,6 @@
 const Sequelize = require("sequelize")
 const sequelize = require('../model/init');
-const { DataTypes,where, col } =Sequelize;
+const {DataTypes, where, col} = Sequelize;
 const getSingleItemTaoBaoModel = require("../model/singleItemTaobaoModel")
 const singleItemTaoBaoModel = getSingleItemTaoBaoModel(sequelize)
 const uuidUtil = require("../utils/uuidUtil")
@@ -11,6 +11,7 @@ const NotFoundError = require("../error/http/notFoundError")
 const moment = require("moment");
 const getABnormal_tm = require("../model/ABbnormal_TM");
 const ABbnormal_TM = getABnormal_tm(sequelize);
+
 /**
  * 保存淘宝的单品表数据
  * @param item
@@ -29,18 +30,31 @@ const saveSingleItemTaoBao = async (item) => {
 }
 
 /**
+ * 更新数据
+ * @param item
+ * @returns {Promise<*>}
+ */
+const updateSingleItemTaoBao = async (item) => {
+    const result = await singleItemTaoBaoModel.update(item, {
+        where: {id: item.id}
+    })
+    return result
+}
+
+/**
  * 根据batchId和linkId删除数据
  * @param batchId
  * @param linkId
- * @returns {Promise<*|null>}
+ * @returns {Promise<<number>>}
  */
 const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (batchId, linkId) => {
-    return await singleItemTaoBaoModel.destroy({
+    const result = await singleItemTaoBaoModel.destroy({
         where: {
             batchId,
             linkId: linkId.toString()
         }
     })
+    return result
 }
 
 
@@ -128,36 +142,36 @@ const getTaoBaoSingleItems = async (pageIndex,
     if (errorItems) {
         for (const errorItem of errorItems) {
             // console.log("异常的条件",errorItem)
-            if (errorItem.sqlValue){
+            if (errorItem.sqlValue) {
                 where[errorItem.field] = {[errorItem.operator]: errorItem.sqlValue}
-            }else{
+            } else {
                 // console.log("到异常的条件",where)
                 // 这个异常 需要进行条件查询
-                if(errorItem.field === "profitRate"){
+                if (errorItem.field === "profitRate") {
                     abnormalWhere[errorItem.lessThan] = "true"
                     where[errorItem.field] = {[errorItem.operator]: errorItem.value}
                 }
                 //手淘人数市场占比环比（7天）下降
-                if (errorItem.field === "shouTaoPeopleNumMarketRateCircleRate7Day"){
+                if (errorItem.field === "shouTaoPeopleNumMarketRateCircleRate7Day") {
                     where["salesMarketRateCircleRate7Day"] = {"$ne": errorItem.value}
                 }
                 //坑市场占比环比（7天）下降
-                if (errorItem.field === "salesMarketRateCircleRate7Day"){
+                if (errorItem.field === "salesMarketRateCircleRate7Day") {
                     where["shouTaoPeopleNumMarketRateCircleRate7Day"] = {"$gt": errorItem.value}
                 }
 
                 //手淘人数市场占比环比（日）下降
-                if (errorItem.field === "shouTaoPeopleNumMarketRateCircleRateDay"){
+                if (errorItem.field === "shouTaoPeopleNumMarketRateCircleRateDay") {
                     where["salesMarketRateCircleRateDay"] = {"$ne": errorItem.value}
                 }
                 //坑市场占比环比（日天）下降
-                if (errorItem.field === "salesMarketRateCircleRateDay"){
+                if (errorItem.field === "salesMarketRateCircleRateDay") {
                     where["shouTaoPeopleNumMarketRateCircleRateDay"] = {"$gt": errorItem.value}
                 }
 
                 where[errorItem.field] = {[errorItem.operator]: errorItem.value}
 
-               // console.log(abnormalWhere)
+                // console.log(abnormalWhere)
 
             }
         }
@@ -194,8 +208,8 @@ const getTaoBaoSingleItems = async (pageIndex,
             attributes: [], // Don't fetch any additional fields from ItemInfoModel
             required: true,
             on: {
-                '$singleItemTaoBaoModel.date$': { [Sequelize.Op.eq]: Sequelize.col('ABbnormal_TM.date') },
-                '$singleItemTaoBaoModel.link_id$': { [Sequelize.Op.eq]: Sequelize.col('ABbnormal_TM.link_id') }
+                '$singleItemTaoBaoModel.date$': {[Sequelize.Op.eq]: Sequelize.col('ABbnormal_TM.date')},
+                '$singleItemTaoBaoModel.link_id$': {[Sequelize.Op.eq]: Sequelize.col('ABbnormal_TM.link_id')}
             },
             where: abnormalWhere
         }],
@@ -203,8 +217,8 @@ const getTaoBaoSingleItems = async (pageIndex,
         limit: pageSize,
         where,
         order: [["linkId", "asc"], ["date", "asc"]],
-        logging:false,
-        group: ['singleItemTaoBaoModel.date','singleItemTaoBaoModel.id','ABbnormal_TM.new_16_30','ABbnormal_TM.new_30_60','ABbnormal_TM.negative_profit_60','ABbnormal_TM.old'],
+        logging: false,
+        group: ['singleItemTaoBaoModel.date', 'singleItemTaoBaoModel.id', 'ABbnormal_TM.new_16_30', 'ABbnormal_TM.new_30_60', 'ABbnormal_TM.negative_profit_60', 'ABbnormal_TM.old'],
     })
     result.rows = result.rows.map(function (item) {
         return item.get({plain: true})
@@ -212,7 +226,7 @@ const getTaoBaoSingleItems = async (pageIndex,
     //console.log(result.count.length)
 
     // pagingUtil.paging(Math.ceil(result.count / pageSize), result.count, result.rows)  result.count 为总数
-    return  pagingUtil.paging(Math.ceil(result.count.length / pageSize), result.count.length, result.rows)
+    return pagingUtil.paging(Math.ceil(result.count.length / pageSize), result.count.length, result.rows)
 }
 
 /**
@@ -376,5 +390,6 @@ module.exports = {
     sumPaymentByProductLineLeader,
     getSingleItemsBy,
     getLatestBatchIdRecords,
-    getLinkHierarchy
+    getLinkHierarchy,
+    updateSingleItemTaoBao
 }

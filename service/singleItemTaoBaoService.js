@@ -481,15 +481,15 @@ async function ToBeOnTheShelves(productLineLeaders) {
  * @returns {Promise<{sum: number, items: [{name: string, sum: number}, {name: string, sum: number}, {name: string, sum: number}]}|{sum: number, items: *[]}|{fightingOnOld: *, fightingOnNew: *}>}
  */
 const getLinkOperationCount = async (
-                                     satisfiedSingleItems,
-                                     productLineLeaders) => {
+    satisfiedSingleItems,
+    productLineLeaders) => {
 
     return [
         {operation: await getSelfDoSingleItemLinkOperationCount(satisfiedSingleItems)},
         {ToBeOnTheShelves: await ToBeOnTheShelves(productLineLeaders)},
         {fighting: await getSelfFightingSingleItemLinkOperationCount(satisfiedSingleItems, await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING))},
         {error: await getSelfErrorSingleItemLinkOperationCount(satisfiedSingleItems)}
-];
+    ];
 }
 
 function link_operational_data(result, singleItems) {
@@ -628,12 +628,12 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
                 if (exp.field === "profitRate") {
                     // if(singleItem[exp.lessThan] === "true"){
                     //reallyShipmentAmount 小于0
-                    if(exp.lessThan === "negative_profit_60"){
-                        if (singleItem[exp.lessThan] === "true"){
-                            return  singleItem["profitRate"]*1 <0
+                    if (exp.lessThan === "negative_profit_60") {
+                        if (singleItem[exp.lessThan] === "true") {
+                            return singleItem["profitRate"] * 1 < 0
                         }
-                        return   false
-                    }else {
+                        return false
+                    } else {
                         return singleItem[exp.lessThan] === "true";
                     }
 
@@ -643,28 +643,28 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
                 }
                 // 坑市场占比环比（7天）
                 if (exp.field === "salesMarketRateCircleRate7Day") {
-                    return    singleItem["salesMarketRateCircleRate7Day"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"]*1>-20
+                    return singleItem["salesMarketRateCircleRate7Day"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 > -20
                 }
                 //手淘人数市场占比环比（7天）
                 if (exp.field === "shouTaoPeopleNumMarketRateCircleRate7Day") {
 
-                    return    ( singleItem["salesMarketRateCircleRate7Day"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"]*1<-20) || ( singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"]*1<-20 && singleItem["salesMarketRateCircleRate7Day"]*1>-20)
+                    return (singleItem["salesMarketRateCircleRate7Day"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 < -20) || (singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 < -20 && singleItem["salesMarketRateCircleRate7Day"] * 1 > -20)
 
                 }
 
                 // 坑市场占比环比（日天）
                 if (exp.field === "salesMarketRateCircleRateDay") {
-                    return    singleItem["salesMarketRateCircleRateDay"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"]*1>-20
+                    return singleItem["salesMarketRateCircleRateDay"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 > -20
                 }
                 //手淘人数市场占比环比（日天）
                 if (exp.field === "shouTaoPeopleNumMarketRateCircleRateDay") {
 
-                    return    ( singleItem["salesMarketRateCircleRateDay"]*1<-20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"]*1<-20) || ( singleItem["shouTaoPeopleNumMarketRateCircleRateDay"]*1<-20 && singleItem["salesMarketRateCircleRateDay"]*1>-20)
+                    return (singleItem["salesMarketRateCircleRateDay"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 < -20) || (singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 < -20 && singleItem["salesMarketRateCircleRateDay"] * 1 > -20)
 
 
                 }
                 if (exp.field === "wanXiangTaiProductionRate" || exp.field === "shoppingCatSumRoi" || exp.field === "accuratePeoplePromotionProductionRate") {
-                     // 这些投产比 是每天的计算 现在计算逻辑可以改为3天平均低于2 三天的平均值
+                    // 这些投产比 是每天的计算 现在计算逻辑可以改为3天平均低于2 三天的平均值
 
                 }
 
@@ -1139,9 +1139,13 @@ const getUniqueSingleItems = (singleItems) => {
     return uniqueSingleItems
 }
 
+const updateSingleItemTaoBao = async (item) => {
+    const result = singleItemTaoBaoRepo.updateSingleItemTaoBao(item)
+    return result
+}
+
 // 方法映射，为接口调用使用
 const availableFunctionsMap = {"getLinkErrorQueryFields": getLinkErrorQueryFields}
-
 
 module.exports = {
     saveSingleItemTaoBao,
@@ -1160,5 +1164,6 @@ module.exports = {
     getLatestBatchIdRecords,
     getUniqueSingleItems,
     attachPercentageTagToField,
-    getTaoBaoSingleItemsWithStatistic
+    getTaoBaoSingleItemsWithStatistic,
+    updateSingleItemTaoBao
 }
