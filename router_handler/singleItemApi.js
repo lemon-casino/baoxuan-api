@@ -131,11 +131,25 @@ const getLatest = async (req, res, next) => {
     }
 }
 
+const updateSingleItemTaoBao = async (req, res, next) => {
+    try {
+        const item = req.body
+        joiUtil.validate({
+            body: {value: item, schema: joiUtil.commonJoiSchemas.required}
+        })
+        await singleItemTaoBaoService.updateSingleItemTaoBao(item)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
     getTaoBaoSingleItemsWithStatistic,
     getSearchDataTaoBaoSingleItem,
     getSingleItemDetails,
-    getLatest
+    getLatest,
+    updateSingleItemTaoBao
 }
