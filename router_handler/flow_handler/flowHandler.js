@@ -46,8 +46,11 @@ const getCoreDataByType = async (req, res, next) => {
         const {deptId, startDate, endDate} = req.query
 
         joiUtil.validate({
-            deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required}
+            deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
         })
+
         let result = []
         if (req.params.type === "action") {
             const userNames = req.query.userNames
@@ -69,9 +72,32 @@ const getCoreDataByType = async (req, res, next) => {
     }
 }
 
+/**
+ * 获取全流程全节点的统计数据
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<*>}
+ */
+const getOverallFormsAndReviewItemsStat = async (req, res, next) => {
+    try {
+        const {startDate, endDate} = req.query
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        await flowService.getOverallFormsAndReviewItemsStat(startDate, endDate)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+
 module.exports = {
     getFlowsByIds,
     getTodayFlowsByIds,
     updateRunningFlowEmergency,
-    getCoreDataByType
+    getCoreDataByType,
+    getOverallFormsAndReviewItemsStat
 }

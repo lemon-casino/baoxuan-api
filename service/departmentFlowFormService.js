@@ -3,7 +3,7 @@ const departmentRepo = require("../repository/departmentRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
 const NotFoundError = require("../error/http/notFoundError")
 const SqlError = require("../error/sqlError")
-const deptFlowFormConfigConvertor = require("../convertor/deptFlowFormConfigConvertor")
+const deptFlowFormConfigConvertor = require("../convertor/deptFlowFormConvertor")
 
 const saveDepartmentFlowForm = async (deptId, formId) => {
 

@@ -23,6 +23,24 @@ const getJsonFromUnionFormattedJsonArr = (jsonArr, childKey, key, value) => {
     return result
 }
 
+const flatMatchedJsonArr = (jsonArr, matchedFunc) => {
+    joiUtil.validate({
+        jsonArr: {value: jsonArr, schema: joiUtil.commonJoiSchemas.arrayRequired},
+        matchedFunc: {value: matchedFunc, schema: joiUtil.commonJoiSchemas.funcRequired}
+    })
+    let matchedNodes = []
+    for (const item of jsonArr) {
+        if (item.children && item.length > 0) {
+            matchedNodes = matchedNodes.concat(flatMatchedJsonArr(item.children, matchedFunc))
+        }
+        if (matchedFunc(item)) {
+            matchedNodes.push(item)
+        }
+    }
+    return matchedNodes
+}
+
 module.exports = {
-    getJsonFromUnionFormattedJsonArr
+    getJsonFromUnionFormattedJsonArr,
+    flatMatchedJsonArr
 }

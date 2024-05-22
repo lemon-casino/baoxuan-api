@@ -32,4 +32,6 @@ router.get("/core-flow", async (req, res, next) => {
     }
 )
 
+router.get("/statistic/all-review-items", flowHandler.getOverallFormsAndReviewItemsStat)
+
 module.exports = router;

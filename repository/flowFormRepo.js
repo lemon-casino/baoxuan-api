@@ -1,6 +1,14 @@
 const models = require('../model')
 const sequelizeUtil = require("../utils/sequelizeUtil")
 
+models.flowfromsModel.hasMany(
+    models.flowformsreviewsModel,
+    {
+        foreignKey: 'form_id',
+        as: "flowFormReviews"
+    }
+)
+
 /**
  * 获取表单详情
  * @param formId
@@ -75,9 +83,26 @@ const updateFormAndAddDetails = async (form, detailsArr) => {
     }
 }
 
+/**
+ * 获取所有流程表单和最新的审核流程
+ * @returns {Promise<<Model[]>>}
+ */
+const getAllFlowFormsWithReviews = async () => {
+    const flowForms = await models.flowfromsModel.findAll({
+        include: [{
+            model: models.flowformsreviewsModel,
+            as: "flowFormReviews",
+            order: [["create_time", "desc"]],
+            limit: 1
+        }]
+    })
+    return flowForms
+}
+
 module.exports = {
     getFormDetails,
     getAllForms,
+    getAllFlowFormsWithReviews,
     updateFormAndAddDetails,
     saveFormAndDetails
 }

@@ -222,7 +222,6 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
             for (const action of actions) {
                 const firstFilteredReviewItems = flowUtil.flatReviewItems(flow).overallprocessflow.filter(
                     item => action.nodeIds.includes(item.activityId) && userNames.includes(item.operatorName))
-
                 // 如果流程节点中还没有统计的节点信息（可能未开始），则直接跳过
                 if (firstFilteredReviewItems.length === 0) {
                     continue

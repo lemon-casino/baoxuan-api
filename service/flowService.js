@@ -1,5 +1,8 @@
 const FlowForm = require("../model/flowfrom")
 const flowRepo = require("../repository/flowRepo")
+const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo")
+const flowFormRepo = require("../repository/flowFormRepo")
+const userRepo = require("../repository/userRepo")
 const formService = require("../service/flowFormService")
 const departmentService = require("../service/departmentService")
 const dingDingService = require("../service/dingDingService")
@@ -12,9 +15,11 @@ const flowUtil = require("../utils/flowUtil")
 const NotFoundError = require("../error/http/notFoundError")
 const ParameterError = require("../error/parameterError")
 const flowStatistic = require("../core/flowStatistic")
-const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo");
-const deptFlowFormConfigConvertor = require("../convertor/deptFlowFormConfigConvertor");
-const {flowReviewTypeConst} = require("../const/flowConst");
+const deptFlowFormConfigConvertor = require("../convertor/deptFlowFormConvertor")
+const {flowReviewTypeConst} = require("../const/flowConst")
+const algorithmUtil = require("../utils/algorithmUtil")
+const {timingFormFlowNodes} = require("../const/formConst")
+const deptFlowFormConvertor = require("../convertor/deptFlowFormConvertor")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -662,7 +667,7 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate) => {
                 newOverallProcessFlow.push(item)
                 continue
             }
-            if ( startDoneDate && endDoneDate && item.type === flowReviewTypeConst.HISTORY) {
+            if (startDoneDate && endDoneDate && item.type === flowReviewTypeConst.HISTORY) {
                 let doneTime = item.doneTime
                 if (!doneTime) {
                     doneTime = dateUtil.formatGMT2Str(item.operateTimeGMT)
@@ -687,6 +692,32 @@ const getCoreFormFlowConfig = async (deptId) => {
     return coreFormFlowConfig
 }
 
+const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate) => {
+    const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
+    const allFormsWithReviews = await flowFormRepo.getAllFlowFormsWithReviews()
+
+    // 过滤不必要的节点
+    for (const form of allFormsWithReviews) {
+        let formReviewItems = []
+        const flowFormReviews = form.flowFormReviews
+        if (flowFormReviews.length > 0) {
+            formReviewItems = flowFormReviews[0].formReview
+            form.formReview = algorithmUtil.flatMatchedJsonArr(formReviewItems, (item) => {
+                return timingFormFlowNodes.includes(item.componentName)
+            })
+            // 节点信息转化成”部门流程“的格式
+            form.deptFlowFormActivities = form.formReview.map(item => {
+                return {...item, activityId: item.id, activityName: item.title}
+            })
+        }
+    }
+
+    const overallFormsConfig = deptFlowFormConvertor.convert(allFormsWithReviews)
+    const allUsers = await userRepo.getAllUsers()
+    const allUserNames = allUsers.map(user => user.nickname)
+    const result = await flowStatistic.getDeptCoreFlow(allUserNames, flows, overallFormsConfig)
+    return flowUtil.attachIdsAndSum(result)
+}
 
 module.exports = {
     filterFlowsByTimesRange,
@@ -717,5 +748,6 @@ module.exports = {
     getCoreActionData,
     getCoreFlowData,
     getCoreActionsConfig,
-    getCoreFormFlowConfig
+    getCoreFormFlowConfig,
+    getOverallFormsAndReviewItemsStat
 }

@@ -1,10 +1,13 @@
+const sha256 = require("sha256")
 const formReviewRepo = require("../repository/formReviewRepo")
 const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
 const dingDingReq = require("../core/dingDingReq")
 const redisService = require("../service/redisService")
-const sha256 = require("sha256")
 const formImportantItems = require("../const/tmp/formImportantItems")
+const {timingFormFlowNodes} = require("../const/formConst")
+const deptFlowFormConvertor = require("../convertor/deptFlowFormConvertor")
+const algorithmUtil = require("../utils/algorithmUtil")
 
 /**
  * 根据重要性获取form  默认：普通
@@ -228,20 +231,6 @@ function extractTitle(node) {
 
 
 const refactorReviewItems = (nodes, lastTimingNode) => {
-    // 节点释义
-    // const componentNames = [
-    //     "CanvasEngine", // 根节点
-    //     "ApplyNode", // 发起节点
-    //     "OperatorNode", // 操作节点
-    //     "ApprovalNode", // 审批节点
-    //     "ConditionContainer", // 条件分支 type =="parallel"（并发） 没有type 是普通（非并发）
-    //     "ParallelNode", // 并发分支节点
-    //     "ConditionNode", // 标准分支节点（非并发）
-    //     "CarbonNode", // 额外节点示例
-    //     "EndNode" // 结束节点
-    // ];
-
-    const requiredTimingComponentNames = ["CarbonNode", "ApplyNode", "OperatorNode", "ApprovalNode"];
     const processedNodes = []
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
@@ -256,7 +245,7 @@ const refactorReviewItems = (nodes, lastTimingNode) => {
         // 获取当前节点的直接上一次的计时节点
         let lastTimingNodes = []
         if (i > 0) {
-            if (requiredTimingComponentNames.includes(nodes[i - 1].componentName)) {
+            if (timingFormFlowNodes.includes(nodes[i - 1].componentName)) {
                 lastTimingNode = nodes[i - 1]
             }
             if (lastTimingNode) {
@@ -270,11 +259,11 @@ const refactorReviewItems = (nodes, lastTimingNode) => {
         } else {
             lastTimingNode && lastTimingNodes.push(lastTimingNode.id)
         }
-        if (requiredTimingComponentNames.includes(node.componentName)) {
+        if (timingFormFlowNodes.includes(node.componentName)) {
             newNode = {...newNode, lastTimingNodes}
         }
 
-        if (requiredTimingComponentNames.includes(node.componentName)) {
+        if (timingFormFlowNodes.includes(node.componentName)) {
             newNode = {
                 ...newNode,
                 isTime: true,

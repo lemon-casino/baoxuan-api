@@ -14,7 +14,8 @@ const commonJoiSchemas = {
     strRequired: Joi.string().required(),
     numberRequired: Joi.string().alphanum().min(0).required(),
     dateRequired: Joi.date().required(),
-    arrayRequired: Joi.array().required()
+    arrayRequired: Joi.array().required(),
+    funcRequired: Joi.func().required()
 }
 
 const commonArgsSchemas = {
