@@ -31,5 +31,6 @@ router.get("/core-flow", async (req, res, next) => {
         await flowHandler.getCoreDataByType(req, res, next)
     }
 )
+router.get("/all-overdue-running-flows", flowHandler.getAllOverDueRunningFlows)
 
 module.exports = router;
