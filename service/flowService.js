@@ -610,7 +610,7 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
     if (deptForms.length === 0) {
         throw new NotFoundError(`未找到部门：${deptId}的统计流程节点的配置信息`)
     }
-    const coreFlowFormConfig = deptFlowFormConvertor.convert(deptForms)
+    const coreFlowFormConfig = deptFlowFormConvertor.convertDeptForms(deptForms)
     const result = await flowStatistic.getDeptCoreFlow(userNames, flows, coreFlowFormConfig)
     return flowUtil.attachIdsAndSum(result)
 }
@@ -737,11 +737,21 @@ const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate, for
         }
     }
 
-    const overallFormsConfig = deptFlowFormConvertor.convert(allFormsWithReviews)
+    const overallFormsConfig = deptFlowFormConvertor.convertDeptForms(allFormsWithReviews)
     const allUsers = await userRepo.getAllUsers()
     const allUserNames = allUsers.map(user => user.nickname)
     const result = await flowStatistic.getDeptCoreFlow(allUserNames, flows, overallFormsConfig)
     return flowUtil.attachIdsAndSum(result)
+}
+
+const getOverallFormsAndReviewItemsStatDividedByDept = async (startDoneDate, endDoneDate, formIds) => {
+    const deptsForms = await departmentFlowFormRepo.getDeptFlowFormsWithActivities()
+    const resultTemplate = deptFlowFormConvertor.convertDeptsForms(deptsForms)
+
+    const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
+    const result = await flowStatistic.getOverallFlowForms([], flows, resultTemplate)
+
+    return result
 }
 
 module.exports = {
@@ -775,5 +785,6 @@ module.exports = {
     getCoreActionsConfig,
     getCoreFormFlowConfig,
     getOverallFormsAndReviewItemsStat,
-    getAllOverDueRunningFlows
+    getAllOverDueRunningFlows,
+    getOverallFormsAndReviewItemsStatDividedByDept
 }

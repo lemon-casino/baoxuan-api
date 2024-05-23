@@ -43,7 +43,8 @@ const getDeptFlowFormConfig = async (deptId) => {
     if (deptForms.length === 0) {
         throw new NotFoundError(`未找到部门：${deptId}的统计流程节点的配置信息`)
     }
-    return deptFlowFormConvertor.convert(deptForms)
+
+    return deptFlowFormConvertor.convertDeptForms(deptForms)
 }
 
 module.exports = {

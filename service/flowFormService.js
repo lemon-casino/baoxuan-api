@@ -6,8 +6,6 @@ const dingDingReq = require("../core/dingDingReq")
 const redisService = require("../service/redisService")
 const formImportantItems = require("../const/tmp/formImportantItems")
 const {timingFormFlowNodes} = require("../const/formConst")
-const deptFlowFormConvertor = require("../convertor/deptFlowFormConvertor")
-const algorithmUtil = require("../utils/algorithmUtil")
 
 /**
  * 根据重要性获取form  默认：普通

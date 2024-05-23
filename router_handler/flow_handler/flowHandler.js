@@ -140,6 +140,19 @@ const getOverallFormsAndReviewItemsStat = async (req, res, next) => {
     }
 }
 
+const getOverallFormsAndReviewItemsStatDividedByDept = async (req, res, next) => {
+    try {
+        const {startDate, endDate, formIds} = req.body
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const result = await flowService.getOverallFormsAndReviewItemsStatDividedByDept(startDate, endDate, formIds)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
 
 module.exports = {
     getFlowsByIds,
@@ -147,5 +160,6 @@ module.exports = {
     updateRunningFlowEmergency,
     getCoreDataByType,
     getAllOverDueRunningFlows,
-    getOverallFormsAndReviewItemsStat
+    getOverallFormsAndReviewItemsStat,
+    getOverallFormsAndReviewItemsStatDividedByDept
 }

@@ -12,6 +12,17 @@ const getDepartmentFlowForms = async (where) => {
     return forms
 }
 
+const getDeptFlowFormsWithActivities = async (where) => {
+    const forms = await models.deptFlowFormModel.findAll({
+        where,
+        include:[ {
+            model: models.deptFlowFormActivityModel,
+            as: "deptFlowFormActivities"
+        }]
+    })
+    return forms
+}
+
 const deleteDepartmentFlowForm = async (id) => {
     // 需要同时把 deptFlowFormActivity中的关联数据也删除
     const trans = await models.sequelize.transaction();
@@ -55,5 +66,6 @@ module.exports = {
     saveDepartmentFlowForm,
     deleteDepartmentFlowForm,
     getDepartmentFlowForms,
-    getDeptFlowFormConfig
+    getDeptFlowFormConfig,
+    getDeptFlowFormsWithActivities
 }

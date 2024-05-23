@@ -18,6 +18,9 @@ router.get("/statistic/self-today-sum", selfTodaySumHandler.getSelfTodaySum)
 router.get("/statistic/dept-joined-today/:status", deptJoinTodayHandler.todayDeptJoinedFlowsStatisticHub)
 router.get("/statistic/dept-launched-today/:status", deptLaunchTodayHandler.todayDeptLaunchedFlowsStatisticHub)
 router.get("/statistic/dept-today-sum", deptTodaySumHandler.getDeptTodaySum)
+// 参数表单的ids可能会较多
+router.post("/statistic/all-review-items", flowHandler.getOverallFormsAndReviewItemsStat)
+router.post("/statistic/all-review-items/departments", flowHandler.getOverallFormsAndReviewItemsStatDividedByDept)
 
 router.put("/running", flowHandler.updateRunningFlowEmergency)
 
@@ -33,7 +36,5 @@ router.get("/core-flow", async (req, res, next) => {
 )
 router.get("/all-overdue-running-flows", flowHandler.getAllOverDueRunningFlows)
 
-// 参数表单的ids可能会较多
-router.post("/statistic/all-review-items", flowHandler.getOverallFormsAndReviewItemsStat)
 
 module.exports = router;
