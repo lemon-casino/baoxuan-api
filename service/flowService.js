@@ -751,7 +751,7 @@ const getOverallFormsAndReviewItemsStatDividedByDept = async (startDoneDate, end
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
     const result = await flowStatistic.getOverallFlowForms([], flows, resultTemplate)
 
-    return result
+    return flowUtil.attachIdsAndSum(result)
 }
 
 module.exports = {
