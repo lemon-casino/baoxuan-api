@@ -48,8 +48,8 @@ const getCoreDataByType = async (req, res, next) => {
 
         joiUtil.validate({
             deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required},
-            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
-            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+            // startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            // endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
         })
 
         let result = []
