@@ -1,7 +1,8 @@
-const joi = require("joi")
+const ExcelJS = require('exceljs')
 const biResponse = require("../../utils/biResponse")
 const flowService = require("../../service/flowService")
 const joiUtil = require("../../utils/joiUtil")
+const BigNumber = require("bignumber.js");
 
 const getFlowsByIds = async (req, res) => {
     const {ids} = req.query
@@ -69,9 +70,56 @@ const getCoreDataByType = async (req, res, next) => {
     }
 }
 
+const getAllOverDueRunningFlows = async (req, res, next) => {
+    try {
+        const result = await flowService.getAllOverDueRunningFlows()
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('runningOverdueFlows');
+
+        worksheet.columns = [
+            {header: '流程名', key: 'processInstanceName', width: 100},
+            {header: '当前所在部门', key: 'department', width: 20},
+            {header: '当前节点', key: 'action', width: 30},
+            {header: '操作人', key: 'operator', width: 10},
+            {header: '操作时间', key: 'operateTime', width: 20},
+            {header: '实际耗时', key: 'cost', width: 10},
+            {header: '规定时长', key: 'requiredCost', width: 10},
+            {header: '已卡滞时长', key: 'overDueDuration', width: 10}
+        ]
+
+        for (const flow of result) {
+            for (const item of flow.overDueReviewItems) {
+                worksheet.addRow(
+                    {
+                        id: flow.processInstanceId,
+                        processInstanceName: flow.title,
+                        department: item.department,
+                        action: item.showName,
+                        operator: item.operatorName,
+                        operateTime: item.activeTimeGMT,
+                        cost: item.cost,
+                        requiredCost: item.requiredCost,
+                        overDueDuration: new BigNumber(parseFloat(item.cost)).minus(parseFloat(item.requiredCost.toString()))
+                    }
+                );
+            }
+        }
+
+        const buffer = await workbook.xlsx.writeBuffer();
+
+        res.setHeader('Content-Disposition', 'attachment; filename="overdueRunningFlows.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        return res.send(buffer)
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getFlowsByIds,
     getTodayFlowsByIds,
     updateRunningFlowEmergency,
-    getCoreDataByType
+    getCoreDataByType,
+    getAllOverDueRunningFlows
 }
