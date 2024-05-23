@@ -1,3 +1,4 @@
+const formReviewRepo = require("../repository/formReviewRepo")
 const flowUtil = require("../utils/flowUtil")
 const flowFormReviewUtil = require("../utils/flowFormReviewUtil")
 const {opFunctions} = require("../const/operatorConst")
@@ -203,7 +204,6 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
         const currentFormFlows = flows.filter(flow => flow.formUuid === formId)
         for (const flow of currentFormFlows) {
             // 统计待转入时，需要知道要统计节点的临近的工作节点的状况
-            // 循环中最耗时的地方
             // 如果该流程中要统计所有核心节点都没有待转入状态，则不必获取表单流程详情
             let flowFormReviews = flowReviewItemsMap[flow.reviewId] || []
             if (!flowFormReviews) {
