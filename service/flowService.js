@@ -20,6 +20,9 @@ const {flowReviewTypeConst} = require("../const/flowConst")
 const algorithmUtil = require("../utils/algorithmUtil")
 const {timingFormFlowNodes} = require("../const/formConst")
 const deptFlowFormConvertor = require("../convertor/deptFlowFormConvertor")
+const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo");
+const deptFlowFormConfigConvertor = require("../convertor/deptFlowFormConfigConvertor");
+const {flowReviewTypeConst, flowStatusConst} = require("../const/flowConst");
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -695,6 +698,27 @@ const getCoreFormFlowConfig = async (deptId) => {
     return coreFormFlowConfig
 }
 
+const getAllOverDueRunningFlows = async () => {
+    const allFlows = await globalGetter.getTodayFlows()
+    const doingFlows = allFlows.filter(flow => flow.instanceStatus === flowStatusConst.RUNNING)
+
+    const overDueFlows = []
+    for (const flow of doingFlows) {
+        flow.overDueReviewItems = flow.overallprocessflow.filter(item => item.type === flowReviewTypeConst.TODO && item.isOverDue)
+        // 添加当前操作人所在的部门
+        for (const reviewItem of flow.overDueReviewItems) {
+            const userDepartments = await departmentService.getDepartmentOfUser(reviewItem.operatorUserId)
+            if (userDepartments.length > 0) {
+                reviewItem.department = userDepartments[userDepartments.length - 1].dep_detail.name
+            }
+        }
+        if (flow.overDueReviewItems.length > 0) {
+            overDueFlows.push(flow)
+        }
+    }
+    return overDueFlows
+}
+
 const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate) => {
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
     const allFormsWithReviews = await flowFormRepo.getAllFlowFormsWithReviews()
@@ -752,5 +776,6 @@ module.exports = {
     getCoreFlowData,
     getCoreActionsConfig,
     getCoreFormFlowConfig,
-    getOverallFormsAndReviewItemsStat
+    getOverallFormsAndReviewItemsStat,
+    getAllOverDueRunningFlows
 }
