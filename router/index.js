@@ -8,7 +8,7 @@ module.exports = {
     "/user/script": require("./script"),
     "/user/flowpath": require("./flow"),
     "/flow": require("./flowRouter"),
-    "/user/flowform":  require("./flowform"),
+    "/user/flowform":  require("./flowFormRouter"),
     "/user/flowformreview": require("./flow-form-review"),
     "/util": require("./util"),
     "/form":  require("./formRouter"),
@@ -25,5 +25,6 @@ module.exports = {
     "/dept": require("./departmentRouter"),
     "/depts": require("./departmentRouter"),
     "/dept-flow-form": require("./departmentFlowFormRouter"),
-    "/dept-flow-form-activity": require("./departmentFlowFormActivityRouter")
+    "/dept-flow-form-activity": require("./departmentFlowFormActivityRouter"),
+    "/forms":  require("./flowFormRouter"),
 }

@@ -28,7 +28,8 @@ const getFormDetails = async (formId) => {
  */
 const getAllForms = async (where) => {
     const result = await models.flowfromsModel.findAll({
-        where
+        where,
+        order:[["status", "asc"]]
     })
     return sequelizeUtil.extractDataValues(result)
 }
@@ -84,17 +85,23 @@ const updateFormAndAddDetails = async (form, detailsArr) => {
 }
 
 /**
- * 获取所有流程表单和最新的审核流程
+ * 获取流程表单和最新的审核流程
+ * @param formIds 为空时获取全部
  * @returns {Promise<<Model[]>>}
  */
-const getAllFlowFormsWithReviews = async () => {
+const getAllFlowFormsWithReviews = async (formIds) => {
+    const where = {}
+    if (formIds && formIds.length > 0) {
+        where.flowFormId = {$in: formIds}
+    }
     const flowForms = await models.flowfromsModel.findAll({
         include: [{
             model: models.flowformsreviewsModel,
             as: "flowFormReviews",
             order: [["create_time", "desc"]],
             limit: 1
-        }]
+        }],
+        where
     })
     return flowForms
 }

@@ -715,9 +715,9 @@ const getAllOverDueRunningFlows = async () => {
     return overDueFlows
 }
 
-const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate) => {
+const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate, formIds) => {
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
-    const allFormsWithReviews = await flowFormRepo.getAllFlowFormsWithReviews()
+    const allFormsWithReviews = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
 
     // 过滤不必要的节点并统一字段属性
     for (const form of allFormsWithReviews) {

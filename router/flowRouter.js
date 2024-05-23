@@ -33,6 +33,7 @@ router.get("/core-flow", async (req, res, next) => {
 )
 router.get("/all-overdue-running-flows", flowHandler.getAllOverDueRunningFlows)
 
-router.get("/statistic/all-review-items", flowHandler.getOverallFormsAndReviewItemsStat)
+// 参数表单的ids可能会较多
+router.post("/statistic/all-review-items", flowHandler.getOverallFormsAndReviewItemsStat)
 
 module.exports = router;

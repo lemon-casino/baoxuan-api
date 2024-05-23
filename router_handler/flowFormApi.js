@@ -1,5 +1,6 @@
 const FlowFormModel = require("../model/flowfrom");
 const biResponse = require("../utils/biResponse")
+const flowFormService = require("../service/flowFormService")
 
 // 获取流程表单列表
 exports.getFlowFormList = (req, res) => {
@@ -9,9 +10,9 @@ exports.getFlowFormList = (req, res) => {
     }
     //获取流程列表
     FlowFormModel.getFlowFormList(queryData).then(function (menuTree) {
-        return res.send(biResponse.success( menuTree || []));
+        return res.send(biResponse.success(menuTree || []));
     });
-};
+}
 
 // 更新流程表单数据
 exports.updateFlowForm = (req, res) => {
@@ -24,5 +25,14 @@ exports.updateFlowForm = (req, res) => {
     }
     FlowFormModel.updateFlowForm({status, form_id}).then(function (menuTree) {
         return res.send(biResponse.success(true));
-    });
-};
+    })
+}
+
+exports.getAllFlowForms = async (req, res, next) => {
+    try {
+        const allForms = await flowFormService.getAllForms()
+        return res.send(biResponse.success(allForms))
+    } catch (e) {
+        next(e)
+    }
+}
