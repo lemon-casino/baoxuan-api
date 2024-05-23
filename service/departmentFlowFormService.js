@@ -3,7 +3,7 @@ const departmentRepo = require("../repository/departmentRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
 const NotFoundError = require("../error/http/notFoundError")
 const SqlError = require("../error/sqlError")
-const deptFlowFormConfigConvertor = require("../convertor/deptFlowFormConvertor")
+const deptFlowFormConvertor = require("../convertor/deptFlowFormConvertor")
 
 const saveDepartmentFlowForm = async (deptId, formId) => {
 
@@ -43,7 +43,7 @@ const getDeptFlowFormConfig = async (deptId) => {
     if (deptForms.length === 0) {
         throw new NotFoundError(`未找到部门：${deptId}的统计流程节点的配置信息`)
     }
-    return deptFlowFormConfigConvertor.convert(deptForms)
+    return deptFlowFormConvertor.convert(deptForms)
 }
 
 module.exports = {

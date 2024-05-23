@@ -610,7 +610,7 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
     if (deptForms.length === 0) {
         throw new NotFoundError(`未找到部门：${deptId}的统计流程节点的配置信息`)
     }
-    const coreFlowFormConfig = deptFlowFormConfigConvertor.convert(deptForms)
+    const coreFlowFormConfig = deptFlowFormConvertor.convert(deptForms)
     const result = await flowStatistic.getDeptCoreFlow(userNames, flows, coreFlowFormConfig)
     return flowUtil.attachIdsAndSum(result)
 }
