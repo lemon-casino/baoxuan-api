@@ -14,7 +14,7 @@ const formFlowNodeTypes = {
     CarbonNode: {name: "CarbonNode", desc: "抄送"},
     EndNode: {name: "EndNode", desc: "结束节点"}
 }
-const timingFormFlowNodes = ["CarbonNode", "ApplyNode", "OperatorNode", "ApprovalNode"]
+const timingFormFlowNodes = ["CarbonNode", "OperatorNode", "ApprovalNode"]
 
 module.exports = {
     timingFormFlowNodes,

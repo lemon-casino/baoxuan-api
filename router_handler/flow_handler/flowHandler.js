@@ -133,8 +133,8 @@ const getOverallFormsAndReviewItemsStat = async (req, res, next) => {
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
         })
-        await flowService.getOverallFormsAndReviewItemsStat(startDate, endDate)
-        return res.send(biResponse.success())
+        const result = await flowService.getOverallFormsAndReviewItemsStat(startDate, endDate)
+        return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
     }

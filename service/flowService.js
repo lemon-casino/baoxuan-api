@@ -1,6 +1,5 @@
 const FlowForm = require("../model/flowfrom")
 const flowRepo = require("../repository/flowRepo")
-const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
 const userRepo = require("../repository/userRepo")
 const formService = require("../service/flowFormService")
@@ -15,14 +14,11 @@ const flowUtil = require("../utils/flowUtil")
 const NotFoundError = require("../error/http/notFoundError")
 const ParameterError = require("../error/parameterError")
 const flowStatistic = require("../core/flowStatistic")
-const deptFlowFormConfigConvertor = require("../convertor/deptFlowFormConvertor")
-const {flowReviewTypeConst} = require("../const/flowConst")
 const algorithmUtil = require("../utils/algorithmUtil")
 const {timingFormFlowNodes} = require("../const/formConst")
 const deptFlowFormConvertor = require("../convertor/deptFlowFormConvertor")
-const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo");
-const deptFlowFormConfigConvertor = require("../convertor/deptFlowFormConfigConvertor");
-const {flowReviewTypeConst, flowStatusConst} = require("../const/flowConst");
+const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo")
+const {flowReviewTypeConst, flowStatusConst} = require("../const/flowConst")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -723,8 +719,10 @@ const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate) => 
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
     const allFormsWithReviews = await flowFormRepo.getAllFlowFormsWithReviews()
 
-    // 过滤不必要的节点
+    // 过滤不必要的节点并统一字段属性
     for (const form of allFormsWithReviews) {
+        form.formId = form.flowFormId
+        form.formName = form.flowFormName
         let formReviewItems = []
         const flowFormReviews = form.flowFormReviews
         if (flowFormReviews.length > 0) {
