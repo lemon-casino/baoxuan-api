@@ -233,6 +233,7 @@ const getTodayRunningFlows = async () => {
                 flow.emergency = currentFlow[0].emergency
             }
         }
+        flow.overallprocessflow = flow.overallprocessflow || []
     }
     return runningFlows
 }
@@ -246,6 +247,7 @@ const getTodayFinishedFlows = async () => {
     const todayFinishedFlows = await getFinishedFlows(timeRangeOfToday)
     for (let flow of todayFinishedFlows) {
         flow.dataKeyDetails = await flowFormDetailsService.getDataKeyDetails(flow)
+        flow.overallprocessflow = flow.overallprocessflow || []
     }
     return todayFinishedFlows
 }
