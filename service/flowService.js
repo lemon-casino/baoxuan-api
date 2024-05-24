@@ -610,7 +610,7 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
     if (deptForms.length === 0) {
         throw new NotFoundError(`未找到部门：${deptId}的统计流程节点的配置信息`)
     }
-    const coreFlowFormConfig = deptFlowFormConvertor.convertDeptForms(deptForms)
+    const coreFlowFormConfig = deptFlowFormConvertor.convert2FormsActivitiesHierarchy(deptForms)
     const result = await flowStatistic.getDeptCoreFlow(userNames, flows, coreFlowFormConfig)
     return flowUtil.attachIdsAndSum(result)
 }
@@ -737,7 +737,7 @@ const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate, for
         }
     }
 
-    const overallFormsConfig = deptFlowFormConvertor.convertDeptForms(allFormsWithReviews)
+    const overallFormsConfig = deptFlowFormConvertor.convert2FormsActivitiesHierarchy(allFormsWithReviews)
     const allUsers = await userRepo.getAllUsers()
     const allUserNames = allUsers.map(user => user.nickname)
     const result = await flowStatistic.getDeptCoreFlow(allUserNames, flows, overallFormsConfig)
@@ -745,12 +745,10 @@ const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate, for
 }
 
 const getOverallFormsAndReviewItemsStatDividedByDept = async (startDoneDate, endDoneDate, formIds) => {
-    const deptsForms = await departmentFlowFormRepo.getDeptFlowFormsWithActivities()
-    const resultTemplate = deptFlowFormConvertor.convertDeptsForms(deptsForms)
-
+    const depsForms = await departmentFlowFormRepo.getDeptFlowFormsWithActivities()
+    const data = deptFlowFormConvertor.convert2FormsDepsActivitiesHierarchy(depsForms)
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
-    const result = await flowStatistic.getOverallFlowForms([], flows, resultTemplate)
-
+    const result = await flowStatistic.getOverallFlowForms([], flows, data)
     return flowUtil.attachIdsAndSum(result)
 }
 

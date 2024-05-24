@@ -4,9 +4,9 @@ const {opCodes} = require("../const/operatorConst")
  * 对单个部门配置的表单数据进行格式转化
  *
  * @param deptForms
- * @returns {*[]}  [{formName: "", ... , actions: [{name: "", nodeIds: []}]}]
+ * @returns {*[]} [{formId: "" , ... , children: [{activityName: "", children: []}]}]
  */
-const convertDeptForms = (deptForms) => {
+const convert2FormsActivitiesHierarchy = (deptForms) => {
     const result = []
     for (const form of deptForms) {
         const tmpResult = {
@@ -37,15 +37,15 @@ const convertDeptForms = (deptForms) => {
 }
 
 /**
- * 对对部门的表单配置数据格式转化
+ * 对部门的表单配置数据格式转化
  *
- * @param deptsForms
- * @returns {*[]} [{formId:"",... ,children:[deptName: "", ... , children: [{actionName: "", children: []}]]}]
+ * @param depsForms
+ * @returns {*[]} [{formId:"",... ,children:[deptName: "", ... , children: [{activityName: "", children: []}]]}]
  */
-const convertDeptsForms = (deptsForms) => {
+const convert2FormsDepsActivitiesHierarchy = (depsForms) => {
     const result = []
 
-    for (const form of deptsForms) {
+    for (const form of depsForms) {
         let formResult = result.filter(item => item.formId === form.formId)
         if (!formResult || formResult.length === 0) {
             result.push({formId: form.formId, formName: form.formName, children: []})
@@ -70,7 +70,7 @@ const convertDeptsForms = (deptsForms) => {
         for (const reviewItem of reviewItems) {
             let actionResult = deptResult.children.filter(item => item.actionName === reviewItem.activityName)
             if (!actionResult || actionResult.length === 0) {
-                deptResult.children.push({actionName: reviewItem.activityName, children: []})
+                deptResult.children.push({activityName: reviewItem.activityName, children: []})
                 actionResult = deptResult.children[deptResult.children.length - 1]
             } else {
                 actionResult = actionResult[0]
@@ -82,6 +82,6 @@ const convertDeptsForms = (deptsForms) => {
 }
 
 module.exports = {
-    convertDeptForms,
-    convertDeptsForms
+    convert2FormsActivitiesHierarchy,
+    convert2FormsDepsActivitiesHierarchy
 }
