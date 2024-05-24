@@ -1,5 +1,5 @@
-const {flowReviewTypeConst} = require("../const/flowConst");
-const {opCodes} = require("../const/operatorConst");
+const {flowReviewTypeConst} = require("../const/flowConst")
+const {opCodes} = require("../const/operatorConst")
 /**
  * 对单个部门配置的表单数据进行格式转化
  *
@@ -12,7 +12,7 @@ const convertDeptForms = (deptForms) => {
         const tmpResult = {
             formName: form.formName,
             formId: form.formId,
-            actions: []
+            children: []
         }
         const reviewItems = form.deptFlowFormActivities
         if (!reviewItems || reviewItems.length === 0) {
@@ -23,11 +23,11 @@ const convertDeptForms = (deptForms) => {
         for (const item of reviewItems) {
             let tmpActivity = null
             if (Object.keys(actionNames).includes(item.activityName)) {
-                const action = tmpResult.actions.filter(action => action.name === item.activityName)
-                action[0].nodeIds.push(item.activityId)
+                const activity = tmpResult.children.filter(activity => activity.name === item.activityName)
+                activity[0].children.push(item.activityId)
             } else {
-                tmpActivity = {name: item.activityName, nodeIds: [item.activityId]}
-                tmpResult.actions.push(tmpActivity)
+                tmpActivity = {activityName: item.activityName, children: [item.activityId]}
+                tmpResult.children.push(tmpActivity)
             }
             actionNames[item.activityName] = 1
         }

@@ -8,6 +8,12 @@ const {
 } = require("../const/flowConst")
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
+const statusArr = [
+    {name: "待转入", type: flowReviewTypeConst.FORCAST},
+    {name: "进行中", type: flowReviewTypeConst.TODO},
+    {name: "已完成", type: flowReviewTypeConst.HISTORY},
+    {name: "已逾期", type: "OVERDUE"},
+]
 
 const getDeptCoreAction = async (userNames, flows, coreConfig) => {
     const finalResult = []
@@ -136,7 +142,7 @@ const getDeptCoreAction = async (userNames, flows, coreConfig) => {
     return finalResult
 }
 
-const sumReviewItemsToResultNode = (processInstanceId, resultNode, key, value) => {
+const sumReviewItemsToResultNode = (processInstanceId, key, value, resultNode) => {
     const alreadyCount = resultNode.children.filter(item => item[[key]] === value)
     if (alreadyCount.length > 0) {
         alreadyCount[0].ids.push(processInstanceId)
@@ -153,22 +159,15 @@ const sumReviewItemsToResultNode = (processInstanceId, resultNode, key, value) =
 const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
     const finalResult = []
 
-    const nodeTypes = [
-        {name: "待转入", type: flowReviewTypeConst.FORCAST},
-        {name: "进行中", type: flowReviewTypeConst.TODO},
-        {name: "已完成", type: flowReviewTypeConst.HISTORY},
-        {name: "已逾期", type: "OVERDUE"},
-    ]
-
     const flowReviewItemsMap = {}
     for (const coreFormConfig of coreFormFlowConfigs) {
-        const {formName, formId, actions} = coreFormConfig
+        const {formName, formId, children: activities} = coreFormConfig
 
         const formResult = {formId, formName, children: []}
         // 初始化结果
-        for (const action of actions) {
-            const actionResult = {name: action.name, children: []}
-            for (const nodeType of nodeTypes) {
+        for (const activity of activities) {
+            const actionResult = {name: activity.name, children: []}
+            for (const nodeType of statusArr) {
                 const typeResult = {type: nodeType.type, name: nodeType.name}
 
                 if (nodeType.type.toUpperCase() === "OVERDUE") {
@@ -209,26 +208,26 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
             const processInstanceId = flow.processInstanceId
 
             // 将流程根据节点和状态进行统计
-            for (const action of actions) {
+            for (const activity of activities) {
                 const firstFilteredReviewItems = flowUtil.flatReviewItems(flow).overallprocessflow.filter(
-                    item => action.nodeIds.includes(item.activityId) && userNames.includes(item.operatorName))
+                    item => activity.children.includes(item.activityId) && userNames.includes(item.operatorName))
                 // 如果流程节点中还没有统计的节点信息（可能未开始），则直接跳过
                 if (firstFilteredReviewItems.length === 0) {
                     continue
                 }
 
-                const currActionResult = formResult.children.filter(item => item.name === action.name)[0]
-                for (const nodeType of nodeTypes) {
-                    const typeResult = currActionResult.children.filter(item => item.type === nodeType.type)[0]
+                const activityResult = formResult.children.filter(activity => activity.name === activity.name)[0]
+                for (const statusObj of statusArr) {
+                    const statusResult = activityResult.children.filter(status => status.type === statusObj.type)[0]
 
                     // 1.待转入：存在节点的状态为forcast 并且临近的节点(s)的状态为todo
-                    if (nodeType.type === flowReviewTypeConst.FORCAST) {
+                    if (statusObj.type === flowReviewTypeConst.FORCAST) {
                         // 找到该节点的临近的节点(s)
                         if (flowFormReviews.length === 0) {
                             continue
                         }
 
-                        const forecastReviewItems = firstFilteredReviewItems.filter(item => item.type === flowReviewTypeConst.FORCAST)
+                        const forecastReviewItems = firstFilteredReviewItems.filter(reviewItem => reviewItem.type === flowReviewTypeConst.FORCAST)
                         if (forecastReviewItems.length == 0) {
                             continue
                         }
@@ -258,33 +257,33 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
                                 break
                             }
                         }
-                        if (lastNodeIsDoing && !typeResult.ids.includes(processInstanceId)) {
+                        if (lastNodeIsDoing && !statusResult.ids.includes(processInstanceId)) {
                             const userNames = [...new Set(forecastReviewItems.map(item => item.operatorName))].join("-")
-                            sumReviewItemsToResultNode(processInstanceId, typeResult, "userName", userNames)
+                            sumReviewItemsToResultNode(processInstanceId, "userName", userNames, statusResult)
                             break
                         }
                     }
                     // 2. 进行中
-                    else if (nodeType.type === flowReviewTypeConst.TODO) {
+                    else if (statusObj.type === flowReviewTypeConst.TODO) {
                         // 存在进行中的节点即算为进行中
                         const todoReviewItems = firstFilteredReviewItems.filter(item => item.type === flowReviewTypeConst.TODO)
                         if (todoReviewItems.length > 0) {
                             // 存在部分节点已完成的情况，不要标记出来
                             const userNames = [...new Set(firstFilteredReviewItems.map(item => item.operatorName))].join("-")
-                            sumReviewItemsToResultNode(processInstanceId, typeResult, "userName", userNames)
+                            sumReviewItemsToResultNode(processInstanceId, "userName", userNames, statusResult)
                         }
                     }
                     // 3. 已完成
-                    else if (nodeType.type === flowReviewTypeConst.HISTORY) {
+                    else if (statusObj.type === flowReviewTypeConst.HISTORY) {
                         // 所有的节点状态都为history时才算完成
                         const historyReviewItems = firstFilteredReviewItems.filter(item => item.type === flowReviewTypeConst.HISTORY)
                         if (historyReviewItems.length === firstFilteredReviewItems.length) {
                             const userNames = [...new Set(firstFilteredReviewItems.map(item => item.operatorName))].join("-")
-                            sumReviewItemsToResultNode(processInstanceId, typeResult, "userName", userNames)
+                            sumReviewItemsToResultNode(processInstanceId, "userName", userNames, statusResult)
                         }
                     }
                     // 4.逾期
-                    else if (nodeType.type === "OVERDUE") {
+                    else if (statusObj.type === "OVERDUE") {
                         const overDueNodes = firstFilteredReviewItems.filter(item => item.isOverDue)
                         // 判断是完成还是进行中
                         if (overDueNodes.length === 0) {
@@ -294,13 +293,13 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
                         // 并行分支的条件下，可能会有一个流程出现两种状态的逾期情况
                         const tmpTodoOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.TODO)
                         if (tmpTodoOverdue.length > 0) {
-                            const todoOverDueResult = typeResult.children.filter(item => item.type === flowReviewTypeConst.TODO)[0]
-                            sumReviewItemsToResultNode(processInstanceId, todoOverDueResult, "userName", userNames)
+                            const todoOverDueResult = statusResult.children.filter(item => item.type === flowReviewTypeConst.TODO)[0]
+                            sumReviewItemsToResultNode(processInstanceId, "userName", userNames, todoOverDueResult)
                         }
                         const tmpHistoryOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.HISTORY)
                         if (tmpHistoryOverdue.length === overDueNodes.length) {
-                            const historyOverDueResult = typeResult.children.filter(item => item.type === flowReviewTypeConst.HISTORY)[0]
-                            sumReviewItemsToResultNode(processInstanceId, historyOverDueResult, "userName", userNames)
+                            const historyOverDueResult = statusResult.children.filter(item => item.type === flowReviewTypeConst.HISTORY)[0]
+                            sumReviewItemsToResultNode(processInstanceId, "userName", userNames, historyOverDueResult)
                         }
                     }
                 }
@@ -313,33 +312,24 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
 
 const getOverallFlowForms = async (deptIds, flows, flowFormConfigs) => {
     const finalResult = []
-
-    const nodeTypes = [
-        {name: "待转入", type: flowReviewTypeConst.FORCAST, children: []},
-        {name: "进行中", type: flowReviewTypeConst.TODO, children: []},
-        {name: "已完成", type: flowReviewTypeConst.HISTORY, children: []},
-        {name: "已逾期", type: "OVERDUE", children: []}
-    ]
-
     const flowReviewItemsMap = {}
-
     for (const formConfig of flowFormConfigs) {
         const formResult = {...formConfig, children: []}
         // 初始化结果
         for (const dept of formConfig.children) {
             const deptResult = {...dept, children: []}
-            for (const nodeType of nodeTypes) {
-                const typeResult = {...nodeType, children: []}
-                if (nodeType.type.toUpperCase() === "OVERDUE") {
-                    typeResult.children = [
+            for (const statusObj of statusArr) {
+                const statusResult = {...statusObj, children: []}
+                if (statusObj.type.toUpperCase() === "OVERDUE") {
+                    statusResult.children = [
                         {type: flowReviewTypeConst.TODO, name: "进行中", ids: [], sum: 0, children: []},
                         {type: flowReviewTypeConst.HISTORY, name: "已完成", ids: [], sum: 0, children: []}
                     ]
                 } else {
-                    typeResult.ids = []
-                    typeResult.sum = 0
+                    statusResult.ids = []
+                    statusResult.sum = 0
                 }
-                deptResult.children.push(typeResult)
+                deptResult.children.push(statusResult)
             }
             formResult.children.push(deptResult)
         }
@@ -363,19 +353,17 @@ const getOverallFlowForms = async (deptIds, flows, flowFormConfigs) => {
             // 将流程根据节点和状态进行统计
             for (const deptResult of formResult.children) {
                 const deptConfig = formConfig.children.filter(dept => dept.deptId === deptResult.deptId)[0]
-
-                for (const typeResult of deptResult.children) {
-
-                    for (const actionConfig of deptConfig.children) {
+                for (const statusResult of deptResult.children) {
+                    for (const activityConfig of deptConfig.children) {
                         const firstFilteredReviewItems = flowUtil.flatReviewItems(flow).overallprocessflow.filter(
-                            item => actionConfig.children.includes(item.activityId))
+                            item => activityConfig.children.includes(item.activityId))
                         // 如果流程节点中还没有统计的节点信息（可能未开始），则直接跳过
                         if (firstFilteredReviewItems.length === 0) {
                             continue
                         }
 
                         // 1.待转入：存在节点的状态为forcast 并且临近的节点(s)的状态为todo
-                        if (typeResult.type === flowReviewTypeConst.FORCAST) {
+                        if (statusResult.type === flowReviewTypeConst.FORCAST) {
                             // 找到该节点的临近的节点(s)
                             if (flowFormReviews.length === 0) {
                                 continue
@@ -412,32 +400,32 @@ const getOverallFlowForms = async (deptIds, flows, flowFormConfigs) => {
                                 }
                             }
 
-                            const actionFlowIds = typeResult.children.filter(item => item.activityName === actionConfig.actionName)
+                            const actionFlowIds = statusResult.children.filter(item => item.activityName === activityConfig.actionName)
                             if (lastNodeIsDoing) {
                                 if (actionFlowIds.length > 0 && actionFlowIds[0].ids.includes(processInstanceId)) {
                                     continue
                                 }
-                                sumReviewItemsToResultNode(processInstanceId, typeResult, "activityName", actionConfig.actionName)
+                                sumReviewItemsToResultNode(processInstanceId, "activityName", activityConfig.actionName, statusResult)
                             }
                         }
                         // 2. 进行中
-                        else if (typeResult.type === flowReviewTypeConst.TODO) {
+                        else if (statusResult.type === flowReviewTypeConst.TODO) {
                             // 存在进行中的节点即算为进行中
                             const todoReviewItems = firstFilteredReviewItems.filter(item => item.type === flowReviewTypeConst.TODO)
                             if (todoReviewItems.length > 0) {
-                                sumReviewItemsToResultNode(processInstanceId, typeResult, "activityName", actionConfig.actionName)
+                                sumReviewItemsToResultNode(processInstanceId, "activityName", activityConfig.actionName, statusResult)
                             }
                         }
                         // 3. 已完成
-                        else if (typeResult.type === flowReviewTypeConst.HISTORY) {
+                        else if (statusResult.type === flowReviewTypeConst.HISTORY) {
                             // 所有的节点状态都为history时才算完成
                             const historyReviewItems = firstFilteredReviewItems.filter(item => item.type === flowReviewTypeConst.HISTORY)
                             if (historyReviewItems.length === firstFilteredReviewItems.length) {
-                                sumReviewItemsToResultNode(processInstanceId, typeResult, "activityName", actionConfig.actionName)
+                                sumReviewItemsToResultNode(processInstanceId, "activityName", activityConfig.actionName, statusResult)
                             }
                         }
                         // 4.逾期
-                        else if (typeResult.type === "OVERDUE") {
+                        else if (statusResult.type === "OVERDUE") {
                             const overDueNodes = firstFilteredReviewItems.filter(item => item.isOverDue)
                             // 判断是完成还是进行中
                             if (overDueNodes.length === 0) {
@@ -447,13 +435,13 @@ const getOverallFlowForms = async (deptIds, flows, flowFormConfigs) => {
                             // 并行分支的条件下，可能会有一个流程出现两种状态的逾期情况
                             const tmpTodoOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.TODO)
                             if (tmpTodoOverdue.length > 0) {
-                                const todoOverDueResult = typeResult.children.filter(item => item.type === flowReviewTypeConst.TODO)[0]
-                                sumReviewItemsToResultNode(processInstanceId, todoOverDueResult, "activityName", actionConfig.actionName)
+                                const todoOverDueResult = statusResult.children.filter(item => item.type === flowReviewTypeConst.TODO)[0]
+                                sumReviewItemsToResultNode(processInstanceId, "activityName", activityConfig.actionName, todoOverDueResult)
                             }
                             const tmpHistoryOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.HISTORY)
                             if (tmpHistoryOverdue.length === overDueNodes.length) {
-                                const historyOverDueResult = typeResult.children.filter(item => item.type === flowReviewTypeConst.HISTORY)[0]
-                                sumReviewItemsToResultNode(processInstanceId, historyOverDueResult, "activityName", actionConfig.actionName)
+                                const historyOverDueResult = statusResult.children.filter(item => item.type === flowReviewTypeConst.HISTORY)[0]
+                                sumReviewItemsToResultNode(processInstanceId, "activityName", activityConfig.actionName, historyOverDueResult)
                             }
                         }
                     }
