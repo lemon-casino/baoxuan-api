@@ -142,7 +142,7 @@ const getDeptCoreAction = async (userNames, flows, coreConfig) => {
     return finalResult
 }
 
-const sumReviewItemsToResultNode = (processInstanceId, key, value, resultNode) => {
+const statReviewItemsToResultNode = (processInstanceId, key, value, resultNode) => {
     const alreadyCount = resultNode.children.filter(item => item[[key]] === value)
     if (alreadyCount.length > 0) {
         alreadyCount[0].ids.push(processInstanceId)
@@ -194,7 +194,7 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
             // 统计待转入时，需要知道要统计节点的临近的工作节点的状况
             // 如果该流程中要统计所有核心节点都没有待转入状态，则不必获取表单流程详情
             let flowFormReviews = flowReviewItemsMap[flow.reviewId] || []
-            if (!flowFormReviews) {
+            if (flowFormReviews.length === 0) {
                 const formReview = await formReviewRepo.getDetailsById(flow.reviewId)
                 if (!formReview) {
                     logger.warn(`未在flowFormReview中找到表单${flow.formUuid}的配置信息`)
@@ -209,8 +209,6 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
 
             // 将流程根据节点和状态进行统计
             for (const activity of activities) {
-
-
                 const firstFilteredReviewItems = flowUtil.flatReviewItems(flow).overallprocessflow.filter(
                     item => activity.children.includes(item.activityId) && userNames.includes(item.operatorName))
                 // 如果流程节点中还没有统计的节点信息（可能未开始），则直接跳过
@@ -218,10 +216,9 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
                     continue
                 }
 
-                const activityResult = formResult.children.filter(activity => activity.name === activity.name)[0]
+                const activityResult = formResult.children.filter(item => item.activityName === activity.activityName)[0]
                 for (const statusObj of statusArr) {
-                    const statusResult = activityResult.children.filter(status => status.type === statusObj.type)[0]
-
+                    let statusResult = activityResult.children.filter(status => status.type === statusObj.type)[0]
 
                     // 1.待转入：存在节点的状态为forcast 并且临近的节点(s)的状态为todo
                     if (statusObj.type === flowReviewTypeConst.FORCAST) {
@@ -262,7 +259,7 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
                         }
                         if (lastNodeIsDoing && !statusResult.ids.includes(processInstanceId)) {
                             const userNames = [...new Set(forecastReviewItems.map(item => item.operatorName))].join("-")
-                            sumReviewItemsToResultNode(processInstanceId, "userName", userNames, statusResult)
+                            statReviewItemsToResultNode(processInstanceId, "userName", userNames, statusResult)
                             break
                         }
                     }
@@ -273,7 +270,7 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
                         if (todoReviewItems.length > 0) {
                             // 存在部分节点已完成的情况，不要标记出来
                             const userNames = [...new Set(firstFilteredReviewItems.map(item => item.operatorName))].join("-")
-                            sumReviewItemsToResultNode(processInstanceId, "userName", userNames, statusResult)
+                            statReviewItemsToResultNode(processInstanceId, "userName", userNames, statusResult)
                         }
                     }
                     // 3. 已完成
@@ -282,7 +279,7 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
                         const historyReviewItems = firstFilteredReviewItems.filter(item => item.type === flowReviewTypeConst.HISTORY)
                         if (historyReviewItems.length === firstFilteredReviewItems.length) {
                             const userNames = [...new Set(firstFilteredReviewItems.map(item => item.operatorName))].join("-")
-                            sumReviewItemsToResultNode(processInstanceId, "userName", userNames, statusResult)
+                            statReviewItemsToResultNode(processInstanceId, "userName", userNames, statusResult)
                         }
                     }
                     // 4.逾期
@@ -297,16 +294,14 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
                         const tmpTodoOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.TODO)
                         if (tmpTodoOverdue.length > 0) {
                             const todoOverDueResult = statusResult.children.filter(item => item.type === flowReviewTypeConst.TODO)[0]
-                            sumReviewItemsToResultNode(processInstanceId, "userName", userNames, todoOverDueResult)
+                            statReviewItemsToResultNode(processInstanceId, "userName", userNames, todoOverDueResult)
                         }
                         const tmpHistoryOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.HISTORY)
                         if (tmpHistoryOverdue.length === overDueNodes.length) {
                             const historyOverDueResult = statusResult.children.filter(item => item.type === flowReviewTypeConst.HISTORY)[0]
-                            sumReviewItemsToResultNode(processInstanceId, "userName", userNames, historyOverDueResult)
+                            statReviewItemsToResultNode(processInstanceId, "userName", userNames, historyOverDueResult)
                         }
                     }
-
-
                 }
             }
         }
@@ -456,6 +451,7 @@ const getOverallFlowForms = async (deptIds, flows, formsDepsConfig) => {
                             if (overDueNodes.length === 0) {
                                 continue
                             }
+
                             // 并行分支的条件下，可能会有一个流程出现两种状态的逾期情况
                             const tmpTodoOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.TODO)
                             if (tmpTodoOverdue.length > 0) {
