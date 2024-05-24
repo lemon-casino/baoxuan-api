@@ -23,8 +23,8 @@ const convertDeptForms = (deptForms) => {
         for (const item of reviewItems) {
             let tmpActivity = null
             if (Object.keys(actionNames).includes(item.activityName)) {
-                const activity = tmpResult.children.filter(activity => activity.name === item.activityName)
-                activity[0].children.push(item.activityId)
+                const activities = tmpResult.children.filter(activity => activity.activityName === item.activityName)
+                activities[0].children.push(item.activityId)
             } else {
                 tmpActivity = {activityName: item.activityName, children: [item.activityId]}
                 tmpResult.children.push(tmpActivity)
