@@ -166,7 +166,7 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
         const formResult = {formId, formName, children: []}
         // 初始化结果
         for (const activity of activities) {
-            const actionResult = {name: activity.name, children: []}
+            const actionResult = {activityName: activity.activityName, children: []}
             for (const nodeType of statusArr) {
                 const typeResult = {type: nodeType.type, name: nodeType.name}
 
