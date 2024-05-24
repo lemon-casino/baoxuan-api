@@ -351,29 +351,10 @@ const getOverallFlowForms = async (deptIds, flows, formsDepsConfig) => {
     const flowReviewItemsMap = {}
     for (const formDeps of formsDepsConfig) {
         const formResult = initSingleFormResult(formDeps)
-        // const formResult = {...formDeps, children: []}
-        // // 初始化结果
-        // for (const dept of formDeps.children) {
-        //     const deptResult = {...dept, children: []}
-        //     for (const statusObj of statusArr) {
-        //         const statusResult = {...statusObj, children: []}
-        //         if (statusObj.type.toUpperCase() === "OVERDUE") {
-        //             statusResult.children = [
-        //                 {type: flowReviewTypeConst.TODO, name: "进行中", ids: [], sum: 0, children: []},
-        //                 {type: flowReviewTypeConst.HISTORY, name: "已完成", ids: [], sum: 0, children: []}
-        //             ]
-        //         } else {
-        //             statusResult.ids = []
-        //             statusResult.sum = 0
-        //         }
-        //         deptResult.children.push(statusResult)
-        //     }
-        //     formResult.children.push(deptResult)
-        // }
-
         flows = flows.filter(flow => flow.formUuid === formDeps.formId)
-
         for (const flow of flows) {
+
+
             let flowFormReviews = flowReviewItemsMap[flow.reviewId] || []
             if (!flowFormReviews || flowFormReviews.length === 0) {
                 const formReview = await formReviewRepo.getDetailsById(flow.reviewId)
@@ -386,14 +367,21 @@ const getOverallFlowForms = async (deptIds, flows, formsDepsConfig) => {
                 }
             }
 
+
+
             const processInstanceId = flow.processInstanceId
 
 
+
+            // func(flow, formResult, flowReviewItemsMap)
+
+
+
             // 根据formResult的内容和配置的节点条件统计流程到最下层
-            for (const deptResult of formResult.children) {
-                const deptConfig = formDeps.children.filter(dept => dept.deptId === deptResult.deptId)[0]
-                for (const statusResult of deptResult.children) {
-                    for (const activityConfig of deptConfig.children) {
+            for (const formChildResult of formResult.children) {
+                for (const statusResult of formChildResult.children) {
+                    const childConfig = formDeps.children.filter(dept => dept.deptId === formChildResult.deptId)[0]
+                    for (const activityConfig of childConfig.children) {
 
 
                         const firstFilteredReviewItems = flowUtil.flatReviewItems(flow).overallprocessflow.filter(
@@ -443,12 +431,12 @@ const getOverallFlowForms = async (deptIds, flows, formsDepsConfig) => {
                                 }
                             }
 
-                            const actionFlowIds = statusResult.children.filter(item => item.activityName === activityConfig.actionName)
+                            const actionFlowIds = statusResult.children.filter(item => item.activityName === activityConfig.activityName)
                             if (lastNodeIsDoing) {
                                 if (actionFlowIds.length > 0 && actionFlowIds[0].ids.includes(processInstanceId)) {
                                     continue
                                 }
-                                sumReviewItemsToResultNode(processInstanceId, "activityName", activityConfig.actionName, statusResult)
+                                sumReviewItemsToResultNode(processInstanceId, "activityName", activityConfig.activityName, statusResult)
                             }
                         }
                         // 2. 进行中
