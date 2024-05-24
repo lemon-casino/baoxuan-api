@@ -663,6 +663,9 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate) => {
     }))
     // 根据时间区间过滤掉不在区间内的完成节点，todo和forcast的数据不用处理
     for (const flow of flows) {
+        if (!flow.overallprocessflow){
+            continue
+        }
         const newOverallProcessFlow = []
         for (const item of flow.overallprocessflow) {
             if (item.type === flowReviewTypeConst.TODO || item.type === flowReviewTypeConst.FORCAST) {
