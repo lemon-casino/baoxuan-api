@@ -24,7 +24,8 @@ const getProcessByIds = async (ids) => {
         include: [
             {
                 model: models.processReviewModel,
-                as: "overallprocessflow"
+                as: "overallprocessflow",
+                order: [["orderIndex", "asc"]]
             }
         ],
         where: {
