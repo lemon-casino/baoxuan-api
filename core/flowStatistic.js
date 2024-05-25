@@ -185,7 +185,11 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
         for (const flow of currentFormFlows) {
             // 统计待转入时，需要知道要统计节点的临近的工作节点的状况
             // 如果该流程中要统计所有核心节点都没有待转入状态，则不必获取表单流程详情
-            const flowFormReviews = await getFlowReviewItems(flow.reviewId, flowReviewItemsMap)
+            let flowFormReviews = []
+            if (flow.reviewId) {
+                flowFormReviews = await getFlowReviewItems(flow.reviewId, flowReviewItemsMap)
+            }
+
             // 将流程根据节点和状态进行统计
             for (const activity of activities) {
                 const firstFilteredReviewItems = flowUtil.flatReviewItems(flow).overallprocessflow.filter(
@@ -372,7 +376,10 @@ const getOverallFlowForms = async (deptIds, flows, formsDepsConfig) => {
         const formResult = initSingleFormResult(form)
         flows = flows.filter(flow => flow.formUuid === form.formId)
         for (const flow of flows) {
-            const flowFormReviews = await getFlowReviewItems(flow.reviewId, flowReviewItemsMap)
+            let flowFormReviews = []
+            if (flow.reviewId) {
+                flowFormReviews = await getFlowReviewItems(flow.reviewId, flowReviewItemsMap)
+            }
             for (const formChildResult of formResult.children) {
                 for (const statusResult of formChildResult.children) {
                     const childConfig = form.children.filter(dept => dept.deptId === formChildResult.deptId)[0]
