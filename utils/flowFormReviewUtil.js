@@ -1,10 +1,11 @@
-const getReviewItem = (nodeId, reviewItems) => {
+const getReviewItem = (activityId, reviewItems) => {
+    console.log('----', reviewItems)
     for (const reviewItem of reviewItems) {
-        if (nodeId === reviewItem.id) {
+        if (activityId === reviewItem.id) {
             return reviewItem
         }
         if (reviewItem.children && reviewItem.children.length > 0) {
-            const tmpReviewItem = getReviewItem(nodeId, reviewItem.children)
+            const tmpReviewItem = getReviewItem(activityId, reviewItem.children)
             if (tmpReviewItem) {
                 return tmpReviewItem
             }
