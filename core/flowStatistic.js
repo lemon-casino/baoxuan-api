@@ -392,8 +392,8 @@ const getOverallFlowForms = async (deptIds, flows, formsDepsConfig) => {
     const flowReviewItemsMap = {}
     for (const form of formsDepsConfig) {
         const formResult = initSingleFormResult(form)
-        flows = flows.filter(flow => flow.formUuid === form.formId)
-        for (const flow of flows) {
+        const currFormFlows = flows.filter(flow => flow.formUuid === form.formId)
+        for (const flow of currFormFlows) {
             let flowFormReviews = []
             if (flow.reviewId) {
                 flowFormReviews = await getFlowReviewItems(flow.reviewId, flowReviewItemsMap)
