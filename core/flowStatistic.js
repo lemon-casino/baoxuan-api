@@ -220,7 +220,7 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
             formFlowStatusStatResult.sum = formFlowStatusStatResult.ids.length
         }
         // 添加对该表单所对应的所有流程的汇总
-        formResult.FlowsStat = formFlowStatResult
+        formResult.flowsStat = formFlowStatResult
         finalResult.push(formResult)
     }
     return finalResult
