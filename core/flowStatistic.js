@@ -188,7 +188,9 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
 
         const formFlowStatResult = [
             {status: flowStatusConst.RUNNING, name: "进行中", sum: 0, ids: []},
-            {status: flowStatusConst.COMPLETE, name: "已完成", sum: 0, ids: []}
+            {status: flowStatusConst.COMPLETE, name: "已完成", sum: 0, ids: []},
+            {status: flowStatusConst.TERMINATED, name: "终止", sum: 0, ids: []},
+            {status: flowStatusConst.ERROR, name: "异常", sum: 0, ids: []}
         ]
 
         for (const flow of currentFormFlows) {
@@ -214,13 +216,12 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
                     statFlow(flow, activity, statusResult, "userName", flowFormReviews, firstFilteredReviewItems)
                 }
             }
-
-            let formFlowStatusStatResult = formFlowStatResult[1]
-            if (flow.instanceStatus === flowStatusConst.RUNNING) {
-                formFlowStatusStatResult = formFlowStatResult[0]
+            for (const statusResult of formFlowStatResult) {
+                if(statusResult.status === flow.instanceStatus){
+                    statusResult.ids.push(flow.processInstanceId)
+                    statusResult.sum = statusResult.ids.length
+                }
             }
-            formFlowStatusStatResult.ids.push(flow.processInstanceId)
-            formFlowStatusStatResult.sum = formFlowStatusStatResult.ids.length
         }
         // 添加对该表单所对应的所有流程的汇总
         formResult.flowsStat = formFlowStatResult
