@@ -198,7 +198,7 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
                 const activityResult = formResult.children.filter(item => item.activityName === activity.activityName)[0]
                 for (const statusObj of statusArr) {
                     const statusResult = activityResult.children.filter(status => status.type === statusObj.type)[0]
-                    statFlow(flow, activity, statusResult, "userName", flowFormReviews)
+                    statFlow(flow, activity, statusResult, "userName", flowFormReviews, firstFilteredReviewItems)
                 }
             }
         }
@@ -264,14 +264,10 @@ const getFlowReviewItems = async (reviewId, flowReviewItemsMap) => {
  * @param statusResult
  * @param statKey
  * @param flowFormReviews
+ * @param firstFilteredReviewItems
  */
-const statFlow = (flow, activityConfig, statusResult, statKey, flowFormReviews) => {
+const statFlow = (flow, activityConfig, statusResult, statKey, flowFormReviews, firstFilteredReviewItems) => {
     const processInstanceId = flow.processInstanceId
-
-    const firstFilteredReviewItems = flowUtil.flatReviewItems(flow).overallprocessflow.filter(
-        item => activityConfig.children.includes(item.activityId)
-    )
-
     let statValue = ""
     if (statKey === "activityName") {
         statValue = activityConfig.activityName
@@ -381,7 +377,10 @@ const getOverallFlowForms = async (deptIds, flows, formsDepsConfig) => {
                 for (const statusResult of formChildResult.children) {
                     const childConfig = form.children.filter(dept => dept.deptId === formChildResult.deptId)[0]
                     for (const activityConfig of childConfig.children) {
-                        statFlow(flow, activityConfig, statusResult, "activityName", flowFormReviews)
+                        const firstFilteredReviewItems = flowUtil.flatReviewItems(flow).overallprocessflow.filter(
+                            item => activityConfig.children.includes(item.activityId)
+                        )
+                        statFlow(flow, activityConfig, statusResult, "activityName", flowFormReviews, firstFilteredReviewItems)
                     }
                 }
             }

@@ -1,5 +1,4 @@
 const getReviewItem = (activityId, reviewItems) => {
-    console.log('----', reviewItems)
     for (const reviewItem of reviewItems) {
         if (activityId === reviewItem.id) {
             return reviewItem
