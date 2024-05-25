@@ -4,6 +4,7 @@ const coreActionsConst = require("../const/tmp/coreActionsConst")
 const coreFormFlowConst = require("../const/tmp/coreFormFlowConst")
 const sequelizeUtil = require("../utils/sequelizeUtil")
 const dateUtil = require("../utils/dateUtil")
+const {TimeoutError} = require("sequelize");
 
 models.processModel.hasMany(models.processReviewModel,
     {
@@ -36,7 +37,14 @@ const getProcessByIds = async (ids) => {
     processes = sequelizeUtil.extractDataValues(processes)
     // 兼容未入库的数据
     return processes.map((process) => {
-        process.overallprocessflow = sequelizeUtil.extractDataValues(process.overallprocessflow).sort((curr, next) => curr.orderIndex - next.orderIndex)
+        process.overallprocessflow = sequelizeUtil.extractDataValues(process.overallprocessflow).sort((curr, next) => {
+            //相邻的节点完成时间会有相同的情况，顾增加两层判断（ orderIndex 为入库时添加的）
+            const timeDuration = curr.doneTime - next.doneTime
+            if (timeDuration === 0) {
+                return curr.orderIndex - next.orderIndex
+            }
+            return timeDuration
+        })
         process.overallprocessflow = process.overallprocessflow.map(item => {
             return {...item, operateTimeGMT: dateUtil.format2Str(item.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"}
         })
