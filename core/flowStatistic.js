@@ -153,8 +153,11 @@ const getDeptCoreAction = async (userNames, flows, coreConfig) => {
 const statReviewItemsToResultNode = (processInstanceId, key, value, resultNode) => {
     const alreadyCount = resultNode.children.filter(item => item[[key]] === value)
     if (alreadyCount.length > 0) {
-        alreadyCount[0].ids.push(processInstanceId)
-        alreadyCount[0].sum = alreadyCount[0].ids.length
+        const alreadyObj = alreadyCount[0]
+        if (!alreadyObj.ids.includes(processInstanceId)) {
+            alreadyObj.ids.push(processInstanceId)
+            alreadyObj.sum = alreadyObj.ids.length
+        }
     } else {
         resultNode.children.push({
             [key]: value,
