@@ -744,9 +744,11 @@ const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate, for
     }
 
     const overallFormsConfig = deptFlowFormConvertor.convert2FormsActivitiesHierarchy(allFormsWithReviews)
-    const allUsers = await userRepo.getAllUsers()
-    const allUserNames = allUsers.map(user => user.nickname)
-    const result = await flowStatistic.getDeptCoreFlow(allUserNames, flows, overallFormsConfig)
+    // 对于离职的人，钉钉里的人员信息会丢失，导致对不上，宜搭里会将流程中离职的人置为name[已离职]
+    // todo：临时处理：先用null 代表全部，需要及时同步员工信息到数据库
+    // const allUsers = await userRepo.getAllUsers()
+    // const allUserNames = allUsers.map(user => user.nickname)
+    const result = await flowStatistic.getDeptCoreFlow(null, flows, overallFormsConfig)
     return flowUtil.attachIdsAndSum(result)
 }
 

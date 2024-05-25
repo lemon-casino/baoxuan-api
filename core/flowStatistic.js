@@ -203,17 +203,21 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
 
             // 将流程根据节点和状态进行统计
             for (const activity of activities) {
-                const firstFilteredReviewItems = flowUtil.flatReviewItems(flow).overallprocessflow.filter(
-                    item => activity.children.includes(item.activityId) && userNames.includes(item.operatorName))
+                let filteredReviewItems = flowUtil.flatReviewItems(flow).overallprocessflow.filter(
+                    item => activity.children.includes(item.activityId))
+                if(userNames){
+                    filteredReviewItems.filter(item=> userNames.includes(item.operatorName))
+                }
+
                 // 如果流程节点中还没有统计的节点信息（可能未开始），则直接跳过
-                if (firstFilteredReviewItems.length === 0) {
+                if (filteredReviewItems.length === 0) {
                     continue
                 }
 
                 const activityResult = formResult.children.filter(item => item.activityName === activity.activityName)[0]
                 for (const statusObj of statusArr) {
                     const statusResult = activityResult.children.filter(status => status.type === statusObj.type)[0]
-                    statFlow(flow, activity, statusResult, "userName", flowFormReviews, firstFilteredReviewItems)
+                    statFlow(flow, activity, statusResult, "userName", flowFormReviews, filteredReviewItems)
                 }
             }
             for (const statusResult of formFlowStatResult) {
