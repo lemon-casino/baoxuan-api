@@ -1,8 +1,10 @@
 const ExcelJS = require('exceljs')
 const biResponse = require("../../utils/biResponse")
 const flowService = require("../../service/flowService")
+const flowFormService = require("../../service/flowFormService")
 const joiUtil = require("../../utils/joiUtil")
 const BigNumber = require("bignumber.js");
+const {getFlowForm} = require("../../service/flowFormService");
 
 const getFlowsByIds = async (req, res) => {
     const {ids} = req.query
@@ -80,6 +82,7 @@ const getAllOverDueRunningFlows = async (req, res, next) => {
         const worksheet = workbook.addWorksheet('runningOverdueFlows');
 
         worksheet.columns = [
+            {header: '流程表单名', key: 'flowFromName', width: 30},
             {header: '流程名', key: 'processInstanceName', width: 100},
             {header: '当前所在部门', key: 'department', width: 20},
             {header: '当前节点', key: 'action', width: 30},
@@ -90,11 +93,20 @@ const getAllOverDueRunningFlows = async (req, res, next) => {
             {header: '已卡滞时长', key: 'overDueDuration', width: 10}
         ]
 
+        const flowFormMap = {}
         for (const flow of result) {
+            let flowForm = flowFormMap[flow.formUuid]
+
+            if (!flowForm) {
+                flowForm = await flowFormService.getFlowForm(flow.formUuid)
+                flowFormMap[flow.formUuid] = flowForm
+            }
+
             for (const item of flow.overDueReviewItems) {
                 worksheet.addRow(
                     {
                         id: flow.processInstanceId,
+                        flowFromName: flowForm.flowFormName,
                         processInstanceName: flow.title,
                         department: item.department,
                         action: item.showName,

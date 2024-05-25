@@ -299,6 +299,11 @@ const getDeptFlowForms = async (deptId) => {
     return flowForms
 }
 
+const getFlowForm = async (formId) => {
+    const flowForm = await flowFormRepo.getFormDetails(formId)
+    return flowForm
+}
+
 module.exports = {
     getDeptFlowForms,
     getAllForms,
@@ -307,5 +312,6 @@ module.exports = {
     syncFormsFromDingDing,
     getFlowFormsByDeptIdAndImportant,
     getFormEmergencyItems,
-    refactorReviewItems
+    refactorReviewItems,
+    getFlowForm
 }
