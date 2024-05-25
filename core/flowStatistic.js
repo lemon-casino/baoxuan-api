@@ -4,7 +4,7 @@ const flowFormReviewUtil = require("../utils/flowFormReviewUtil")
 const {opFunctions} = require("../const/operatorConst")
 const {
     flowReviewTypeConst,
-    activityIdMappingConst
+    activityIdMappingConst, flowStatusConst
 } = require("../const/flowConst")
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
@@ -182,6 +182,12 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
         const formResult = initSingleFormResult(coreFormConfig)
         // 根据动作配置信息对flow进行统计
         const currentFormFlows = flows.filter(flow => flow.formUuid === coreFormConfig.formId)
+
+        const formFlowStatResult = [
+            {status: flowStatusConst.RUNNING, name: "进行中", sum: 0, ids: []},
+            {status: flowStatusConst.COMPLETE, name: "已完成", sum: 0, ids: []}
+        ]
+
         for (const flow of currentFormFlows) {
             // 统计待转入时，需要知道要统计节点的临近的工作节点的状况
             // 如果该流程中要统计所有核心节点都没有待转入状态，则不必获取表单流程详情
@@ -205,7 +211,16 @@ const getDeptCoreFlow = async (userNames, flows, coreFormFlowConfigs) => {
                     statFlow(flow, activity, statusResult, "userName", flowFormReviews, firstFilteredReviewItems)
                 }
             }
+
+            let formFlowStatusStatResult = formFlowStatResult[1]
+            if (flow.instanceStatus === flowStatusConst.RUNNING) {
+                formFlowStatusStatResult = formFlowStatResult[0]
+            }
+            formFlowStatusStatResult.ids.push(flow.processInstanceId)
+            formFlowStatusStatResult.sum = formFlowStatusStatResult.ids.length
         }
+        // 添加对该表单所对应的所有流程的汇总
+        formResult.FlowsStat = formFlowStatResult
         finalResult.push(formResult)
     }
     return finalResult
