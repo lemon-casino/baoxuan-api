@@ -25,7 +25,7 @@ const getProcessByIds = async (ids) => {
             {
                 model: models.processReviewModel,
                 as: "overallprocessflow",
-                order: [["orderIndex", "asc"]]
+                order: [["order_index", "asc"]]
             }
         ],
         where: {
@@ -36,7 +36,7 @@ const getProcessByIds = async (ids) => {
     processes = sequelizeUtil.extractDataValues(processes)
     // 兼容未入库的数据
     return processes.map((process) => {
-        process.overallprocessflow = sequelizeUtil.extractDataValues(process.overallprocessflow).sort((curr, next) => curr.doneTime - next.doneTime)
+        process.overallprocessflow = sequelizeUtil.extractDataValues(process.overallprocessflow).sort((curr, next) => curr.orderIndex - next.orderIndex)
         process.overallprocessflow = process.overallprocessflow.map(item => {
             return {...item, operateTimeGMT: dateUtil.format2Str(item.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"}
         })
