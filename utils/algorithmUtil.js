@@ -30,7 +30,7 @@ const flatMatchedJsonArr = (jsonArr, matchedFunc) => {
     })
     let matchedNodes = []
     for (const item of jsonArr) {
-        if (item.children && item.length > 0) {
+        if (item.children && item.children.length > 0) {
             matchedNodes = matchedNodes.concat(flatMatchedJsonArr(item.children, matchedFunc))
         }
         if (matchedFunc(item)) {
