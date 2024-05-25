@@ -6,7 +6,7 @@ const activityIdMappingConst = {
 const flowStatusConst = {
     RUNNING: "RUNNING",
     ERROR: "ERROR",
-    COMPLETE: "COMPLETE",
+    COMPLETE: "COMPLETED",
     TERMINATED: "TERMINATED"
 }
 
