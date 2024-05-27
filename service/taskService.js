@@ -51,6 +51,8 @@ const syncUserWithDepartment = async () => {
     const usersWithDepartment = await dingDingService.getUsersWithDepartmentFromDingDing()
     await redisUtil.setValue(redisKeys.AllUsersWithDepartment, JSON.stringify(usersWithDepartment))
     globalSetter.setGlobalUsers(usersWithDepartment)
+
+    // todo：同步人员信息入库
 }
 
 const syncForm = async () => {
