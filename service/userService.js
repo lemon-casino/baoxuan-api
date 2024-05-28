@@ -77,7 +77,7 @@ const getUserDetails = async (id) => {
  * @returns {Promise<[{[p: string]: *}]|*[]>}
  */
 const getTMInnerGroups = async (userId) => {
-    const innerGroup = await getInnerGroups(userId, "903075138", "天猫组", tmInnerGroup.group)
+    const innerGroup = await getInnerGroups(57, "903075138", tmInnerGroup.group)
     return innerGroup
 }
 
@@ -87,11 +87,11 @@ const getTMInnerGroups = async (userId) => {
  * @returns {Promise<*[]|[*]|[{[p: string]: *}]|[]>}
  */
 const getVisionInnerGroups = async (userId) => {
-    const innerGroup = await getInnerGroups(userId, "482162119", "视觉部", visionInnerGroup.group)
+    const innerGroup = await getInnerGroups(userId, "482162119", visionInnerGroup.group)
     return innerGroup
 }
 
-const getInnerGroups = async (userId, deptId, deptName, innerGroup) => {
+const getInnerGroups = async (userId, deptId, innerGroup) => {
     let isLeader = false
     let currentUser = []
     const userDDId = await getDingDingUserId(userId)
@@ -103,7 +103,7 @@ const getInnerGroups = async (userId, deptId, deptName, innerGroup) => {
             throw new NotFoundError(`未找到用户：${userDDId}的部门信息`)
         }
         for (const dept of departments) {
-            if (dept.dep_detail.name === deptName && dept.leader) {
+            if (dept.dep_detail.dept_id.toString() === deptId.toString() && dept.leader) {
                 isLeader = true
                 break
             }
@@ -112,7 +112,7 @@ const getInnerGroups = async (userId, deptId, deptName, innerGroup) => {
         if (!isLeader) {
             currentUser = department.dep_user.filter(user => user.userid === userDDId)
             if (currentUser.length === 0) {
-                throw new NotFoundError(`未找到用户：${userDDId}在${deptName}下的详细信息`)
+                throw new NotFoundError(`未找到用户：${userDDId}在${deptId}下的详细信息`)
             }
         }
     }
