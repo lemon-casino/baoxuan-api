@@ -104,7 +104,7 @@ const getCoreFormFlowConfig = async (deptId) => {
  * @returns {Promise<[]|*>}
  */
 const getProcessWithReviewByReviewItemDoneTime = async (startDoneDateTime, enDoneDateTime) => {
-    const processWithReview = await models.processModel.findAll({
+    let processWithReview = await models.processModel.findAll({
         include: [
             {
                 model: models.processReviewModel,
@@ -113,6 +113,9 @@ const getProcessWithReviewByReviewItemDoneTime = async (startDoneDateTime, enDon
             }
         ],
         order: [["process_instance_id", "desc"]]
+    })
+    processWithReview = processWithReview.map((item) => {
+        return item.get({plain: true})
     })
     return processWithReview
 }
@@ -132,7 +135,7 @@ const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateT
         }
     ).slice(0, -1);
 
-    const processWithData = await models.processModel.findAll({
+    let processWithData = await models.processModel.findAll({
         include: [
             {
                 model: models.processDetailsModel,
@@ -143,6 +146,9 @@ const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateT
         order: [["process_instance_id", "desc"]]
     })
 
+    processWithData = processWithData.map((item) => {
+        return item.get({plain: true})
+    })
     return processWithData
 }
 

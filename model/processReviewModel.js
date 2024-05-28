@@ -14,11 +14,11 @@ module.exports = sequelize => {
     },
     processInstanceId: {
       type: DataTypes.STRING(100),
-      allowNull: true,
+      allowNull: false,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: null,
+      comment: "流程id",
       field: "process_instance_id"
     },
     orderIndex: {
@@ -57,15 +57,6 @@ module.exports = sequelize => {
       comment: "动作",
       field: "action"
     },
-    actionExit: {
-      type: DataTypes.STRING(20),
-      allowNull: true,
-      defaultValue: null,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "格式化的action",
-      field: "action_exit"
-    },
     dataId: {
       type: DataTypes.STRING(20),
       allowNull: true,
@@ -76,7 +67,7 @@ module.exports = sequelize => {
       field: "data_id"
     },
     remark: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.TEXT,
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
@@ -102,6 +93,15 @@ module.exports = sequelize => {
       comment: "显示名称",
       field: "show_name"
     },
+    actionExit: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "格式化的action",
+      field: "action_exit"
+    },
     activityId: {
       type: DataTypes.STRING(20),
       allowNull: true,
@@ -126,7 +126,7 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "操作时间",
+      comment: "完成时间",
       field: "done_time"
     },
     operatorUserId: {
@@ -184,9 +184,9 @@ module.exports = sequelize => {
       field: "limited_time"
     },
     isOverDue: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.BOOLEAN,
       allowNull: true,
-      defaultValue: null,
+      defaultValue: 0,
       primaryKey: false,
       autoIncrement: false,
       comment: "是否逾期",

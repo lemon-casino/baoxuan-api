@@ -605,14 +605,22 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
  */
 const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) => {
     // 根据时间获取需要统计的流程数据（今天+历史）
-    const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
-    const deptForms = await departmentFlowFormRepo.getDeptFlowFormConfig(deptId)
-    if (deptForms.length === 0) {
-        throw new NotFoundError(`未找到部门：${deptId}的统计流程节点的配置信息`)
-    }
-    const coreFlowFormConfig = deptFlowFormConvertor.convert2FormsActivitiesHierarchy(deptForms)
-    const result = await flowStatistic.getDeptCoreFlow(userNames, flows, coreFlowFormConfig)
-    return flowUtil.attachIdsAndSum(result)
+    const deptCoreForms = await flowRepo.getCoreFormFlowConfig(deptId)
+    const deptCoreFormIds = deptCoreForms.map(item => item.formId)
+    const deptFormsWithReviews = await flowFormRepo.getAllFlowFormsWithReviews(deptCoreFormIds)
+    const deptFormsStat = await getFormFlowStat(userNames, deptFormsWithReviews, startDoneDate, endDoneDate)
+    // const validDeptFormsStat = []
+    // 部门的统计走表单全节点的统计：去掉多余的（数据为0）节点
+    // for (const formStat of deptFormsStat) {
+    //     const validFormStat = {formName: formStat.formName, formId: formStat.formId, children: []}
+    //     for (const activityStat of formStat.children) {
+    //         if (activityStat.sum && activityStat.sum > 0) {
+    //             validFormStat.children.push(activityStat)
+    //         }
+    //     }
+    //     validDeptFormsStat.push(validFormStat)
+    // }
+    return deptFormsStat
 }
 
 /**
@@ -721,35 +729,76 @@ const getAllOverDueRunningFlows = async () => {
     return overDueFlows
 }
 
-const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate, formIds) => {
+const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate) => {
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
-    const allFormsWithReviews = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
+    const result = await flowStatistic.getDeptCoreFlow(userNames, flows, forms)
+    // 对结果进行转换
+    for (const formStat of result) {
+        for (const activityStat of formStat.children) {
+            const activityOverdue = {
+                name: "逾期", type: "OVERDUE", children: [
+                    {name: "进行中", type: "TODO", sum: 0, ids: [], children: []},
+                    {name: "已完成", type: "HISTORY", sum: 0, ids: [], children: []}
+                ]
+            }
+            for (const statusStat of activityStat.children) {
+                if (statusStat.type === flowReviewTypeConst.FORCAST) {
+                    continue
+                }
 
-    // 过滤不必要的节点并统一字段属性
-    for (const form of allFormsWithReviews) {
-        form.formId = form.flowFormId
-        form.formName = form.flowFormName
-        let formReviewItems = []
-        const flowFormReviews = form.flowFormReviews
-        if (flowFormReviews.length > 0) {
-            formReviewItems = flowFormReviews[0].formReview
-            form.formReview = algorithmUtil.flatMatchedJsonArr(formReviewItems, (item) => {
-                return timingFormFlowNodes.includes(item.componentName)
-            })
-            // 节点信息转化成”部门流程“的格式
-            form.deptFlowFormActivities = form.formReview.map(item => {
-                return {...item, activityId: item.id, activityName: item.title}
-            })
+                // 对进行中和已完成的状态进行处理
+                // 对应状态的逾期
+                const activityOverdueStat = activityOverdue.children.filter(item => item.type === statusStat.type)[0]
+                // 将进行中或已完成中的逾期搬移到逾期
+                activityOverdueStat.children = statusStat.children[1].children
+
+                // const uniqueUserStat = {}
+                // for (const item of activityOverdueStat.children) {
+                //     if (!Object.keys(uniqueUserStat).includes(item.userName)) {
+                //         uniqueUserStat[item.userName] = {}
+                //     }
+                //     uniqueUserStat[item.userName].ids = (uniqueUserStat[item.userName].ids || []).concat(item.ids)
+                //     uniqueUserStat[item.userName].sum = uniqueUserStat[item.userName].ids.length
+                // }
+                // activityOverdueStat.children = []
+                // for (const key of Object.keys(uniqueUserStat)) {
+                //     activityOverdueStat.children.push({
+                //         userName: key,
+                //         ids: uniqueUserStat[key].ids,
+                //         sum: uniqueUserStat[key].ids.length
+                //     })
+                // }
+
+                // 将进行中或已完成状态下的逾期和未逾期数据合并
+                statusStat.children = statusStat.children[0].children.concat(statusStat.children[1].children)
+                // 合并节点下逾期和未逾期数据
+                const uniqueStateStat = {}
+                for (const item of statusStat.children) {
+                    if (!Object.keys(uniqueStateStat).includes(item.userName)) {
+                        uniqueStateStat[item.userName] = {}
+                    }
+                    uniqueStateStat[item.userName].ids = (uniqueStateStat[item.userName].ids || []).concat(item.ids)
+                    uniqueStateStat[item.userName].sum = uniqueStateStat[item.userName].ids.length
+                }
+                statusStat.children = []
+                for (const key of Object.keys(uniqueStateStat)) {
+                    statusStat.children.push({
+                        userName: key,
+                        ids: uniqueStateStat[key].ids,
+                        sum: uniqueStateStat[key].ids.length
+                    })
+                }
+            }
+            activityStat.children.push(activityOverdue)
         }
     }
-
-    const overallFormsConfig = deptFlowFormConvertor.convert2FormsActivitiesHierarchy(allFormsWithReviews)
-    // 对于离职的人，钉钉里的人员信息会丢失，导致对不上，宜搭里会将流程中离职的人置为name[已离职]
-    // todo：临时处理：先用null 代表全部，需要及时同步员工信息到数据库
-    // const allUsers = await userRepo.getAllUsers()
-    // const allUserNames = allUsers.map(user => user.nickname)
-    const result = await flowStatistic.getDeptCoreFlow(null, flows, overallFormsConfig)
     return flowUtil.attachIdsAndSum(result)
+}
+
+const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate, formIds) => {
+    const allFormsWithReviews = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
+    const result = await getFormFlowStat(null, allFormsWithReviews, startDoneDate, endDoneDate)
+    return result
 }
 
 const getOverallFormsAndReviewItemsStatDividedByDept = async (startDoneDate, endDoneDate, formIds) => {

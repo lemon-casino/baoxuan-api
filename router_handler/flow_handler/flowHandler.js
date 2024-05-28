@@ -62,7 +62,6 @@ const getCoreDataByType = async (req, res, next) => {
             })
             result = await flowService.getCoreActionData(deptId, userNames, startDate, endDate)
         } else {
-            // const userId = req.user.id
             const userNames = req.query.userNames
             joiUtil.validate({
                 userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.strRequired}
@@ -133,12 +132,13 @@ const getAllOverDueRunningFlows = async (req, res, next) => {
 
 /**
  * 获取全流程全节点的统计数据
+ *
  * @param req
  * @param res
  * @param next
  * @returns {Promise<*>}
  */
-const getOverallFormsAndReviewItemsStat = async (req, res, next) => {
+const getFormFlowStat = async (req, res, next) => {
     try {
         const {startDate, endDate, formIds} = req.body
         joiUtil.validate({
@@ -172,6 +172,6 @@ module.exports = {
     updateRunningFlowEmergency,
     getCoreDataByType,
     getAllOverDueRunningFlows,
-    getOverallFormsAndReviewItemsStat,
+    getOverallFormsAndReviewItemsStat: getFormFlowStat,
     getOverallFormsAndReviewItemsStatDividedByDept
 }

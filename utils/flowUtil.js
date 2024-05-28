@@ -228,8 +228,10 @@ const attachIdsAndSum = (data) => {
             const uniqueIds = {}
             for (const child of item.children) {
                 const newChild = attachIdsAndSum(child)
-                for (const id of newChild.ids) {
-                    uniqueIds[id] = 1
+                if (!child.excludeUpSum) {
+                    for (const id of newChild.ids) {
+                        uniqueIds[id] = 1
+                    }
                 }
             }
             item.ids = Object.keys(uniqueIds)

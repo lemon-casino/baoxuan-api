@@ -1,3 +1,4 @@
+const _ = require("lodash")
 const regexConst = require("../const/regexConst")
 const ParameterError = require("../error/parameterError")
 
@@ -15,13 +16,13 @@ const opFunctions = {
         return src === value
     },
     EqualAny: (src, value) => {
-        if (value instanceof Array) {
+        if (_.isArray(value)) {
             return value.includes(src)
         }
         return false
     },
     Contain: (src, value) => {
-        if (value instanceof String) {
+        if (_.isString(value)) {
             return src.includes(value)
         }
         return false

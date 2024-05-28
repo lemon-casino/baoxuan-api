@@ -98,7 +98,7 @@ module.exports = sequelize => {
             type: DataTypes.VIRTUAL,
             get() {
                 const createTime = this.getDataValue("doneTime")
-                return createTime.replace(".000", "")
+                return createTime && dateUtil.format2Str(createTime)
             }
         },
         createTime: {
@@ -114,7 +114,7 @@ module.exports = sequelize => {
             type: DataTypes.VIRTUAL,
             get() {
                 const createTime = this.getDataValue("createTime")
-                return createTime.replace(".000", "")
+                return createTime && dateUtil.format2Str(createTime)
             }
         },
         stockedTime: {

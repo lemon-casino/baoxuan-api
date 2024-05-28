@@ -26,7 +26,11 @@ const convert2FormsActivitiesHierarchy = (deptForms) => {
                 const activities = tmpResult.children.filter(activity => activity.activityName === item.activityName)
                 activities[0].children.push(item.activityId)
             } else {
-                tmpActivity = {activityName: item.activityName, children: [item.activityId]}
+                tmpActivity = {
+                    activityId: item.activityId,
+                    activityName: item.activityName,
+                    children: [item.activityId]
+                }
                 tmpResult.children.push(tmpActivity)
             }
             actionNames[item.activityName] = 1
