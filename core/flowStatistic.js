@@ -314,7 +314,7 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
                 return item
             })
             const params = {
-                flowFormReviews: await getFlowReviewItems(flow.reviewId, flowReviewItemsMap),
+                flowFormReviews: flow.reviewId ? await getFlowReviewItems(flow.reviewId, flowReviewItemsMap) : [],
                 statKey: "userName",
                 originActivities: flow.overallprocessflow
             }
