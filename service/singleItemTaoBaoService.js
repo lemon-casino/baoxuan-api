@@ -340,7 +340,7 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
     } else {
         if (departments) {
             for (const dept of departments) {
-                if (dept.dep_detail.name === "天猫组" && dept.leader) {
+                if (dept.dep_detail.dept_id.toString() === "903075138" && dept.leader) {
                     isTMLeader = true
                     break
                 }
