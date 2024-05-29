@@ -29,7 +29,7 @@ const getFormDetails = async (formId) => {
 const getAllForms = async (where) => {
     const result = await models.flowfromsModel.findAll({
         where,
-        order:[["status", "asc"]]
+        order: [["status", "asc"]]
     })
     return sequelizeUtil.extractDataValues(result)
 }
@@ -103,7 +103,7 @@ const getAllFlowFormsWithReviews = async (formIds) => {
         }],
         where
     })
-    return flowForms
+    return flowForms.map(item => item.get({plain: true}))
 }
 
 module.exports = {

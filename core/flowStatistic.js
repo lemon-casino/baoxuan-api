@@ -209,6 +209,7 @@ const findActivityStatusResult = (userActivities, activityResult, params) => {
         userActivities[0].isOverDue = false
     }
     const activityOverdueStatusResult = activityStatusResult.children.filter(item => userActivities[0].isOverDue === item.isOverDue)[0]
+
     return activityOverdueStatusResult
 }
 
@@ -266,9 +267,9 @@ const countFlowIntoFormResultByActivities = async (formResult, params) => {
         //     activityResult = formResult.children[formResult.children.length - 1]
         // }
         // params.filteredReviewItems = userActivities
+
         if (params.statKey === "userName") {
             const userActivities = params.originActivities.filter(item => activityResult.activityIds.includes(item.activityId))
-
             if (userActivities.length === 0) {
                 continue
             }
@@ -296,14 +297,12 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
     const flowReviewItemsMap = {}
     for (const form of forms) {
         const formResult = {formId: form.flowFormId, formName: form.flowFormName, children: []}
-
         const formFlowStatResult = [
             {status: flowStatusConst.RUNNING, name: "进行中", sum: 0, ids: []},
             {status: flowStatusConst.COMPLETE, name: "已完成", sum: 0, ids: []},
             {status: flowStatusConst.TERMINATED, name: "终止", sum: 0, ids: []},
             {status: flowStatusConst.ERROR, name: "异常", sum: 0, ids: []}
         ]
-
         // 根据动作配置信息对flow进行统计
         const formFlows = flows.filter(flow => flow.formUuid === form.flowFormId)
         for (const flow of formFlows) {
@@ -313,6 +312,7 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
                 }
                 return item
             })
+
             const params = {
                 flowFormReviews: flow.reviewId ? await getFlowReviewItems(flow.reviewId, flowReviewItemsMap) : [],
                 statKey: "userName",
@@ -336,6 +336,7 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
 
                 if (sameActivities.length === 0) {
                     formResult.children.push({
+                        orderIndex: activity.orderIndex,
                         activityIds: [activity.activityId],
                         activityName: activity.showName,
                         children: _.cloneDeep(overdueMixedStatusStructure)
@@ -354,6 +355,16 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
                 }
             }
         }
+
+        // 根据最新的流程表单对节点进行排序，不在其中的节点拍到后面
+        const sortFormResultAccordingToLatestReviewItems = (formResult, reviewItems) => {
+            const containedKeys = []
+
+
+            formResult.children.sort()
+        }
+
+        const formReviews = form.flowFormReviews[0]?.formReview
 
         // 添加对该表单所对应的所有流程的汇总
         formResult.flowsStat = formFlowStatResult

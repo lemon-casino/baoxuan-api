@@ -733,6 +733,9 @@ const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate) => 
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
     const result = await flowStatistic.getDeptCoreFlow(userNames, flows, forms)
     // 对结果进行转换
+    const extractOverdueDataToAloneNode = ()=>{
+
+    }
     for (const formStat of result) {
         for (const activityStat of formStat.children) {
             const activityOverdue = {
@@ -751,23 +754,6 @@ const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate) => 
                 const activityOverdueStat = activityOverdue.children.filter(item => item.type === statusStat.type)[0]
                 // 将进行中或已完成中的逾期搬移到逾期
                 activityOverdueStat.children = statusStat.children[1].children
-
-                // const uniqueUserStat = {}
-                // for (const item of activityOverdueStat.children) {
-                //     if (!Object.keys(uniqueUserStat).includes(item.userName)) {
-                //         uniqueUserStat[item.userName] = {}
-                //     }
-                //     uniqueUserStat[item.userName].ids = (uniqueUserStat[item.userName].ids || []).concat(item.ids)
-                //     uniqueUserStat[item.userName].sum = uniqueUserStat[item.userName].ids.length
-                // }
-                // activityOverdueStat.children = []
-                // for (const key of Object.keys(uniqueUserStat)) {
-                //     activityOverdueStat.children.push({
-                //         userName: key,
-                //         ids: uniqueUserStat[key].ids,
-                //         sum: uniqueUserStat[key].ids.length
-                //     })
-                // }
 
                 // 将进行中或已完成状态下的逾期和未逾期数据合并
                 statusStat.children = statusStat.children[0].children.concat(statusStat.children[1].children)
