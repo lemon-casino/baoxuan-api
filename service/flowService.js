@@ -629,9 +629,10 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
  * 历史数据转成Redis中的格式统一处理
  * @param startDoneDate
  * @param endDoneDate
- * @returns {Promise<*|[]|*[]|*[]>}
+ * @param formIds
+ * @returns {Promise<*[]>}
  */
-const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate) => {
+const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate, formIds) => {
 
     if ((startDoneDate || endDoneDate) && !(startDoneDate && endDoneDate)) {
         throw new ParameterError("时间区间不完整")
@@ -644,8 +645,16 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate) => {
             throw new ParameterError("结束日期不能小于开始日期")
         }
         const processDataReviewItem = await Promise.all([
-            flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate)),
-            flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate))
+            flowRepo.getProcessDataByReviewItemDoneTime(
+                dateUtil.startOfDay(startDoneDate),
+                dateUtil.endOfDay(endDoneDate),
+                formIds
+            ),
+            flowRepo.getProcessWithReviewByReviewItemDoneTime(
+                dateUtil.startOfDay(startDoneDate),
+                dateUtil.endOfDay(endDoneDate),
+                formIds
+            )
         ])
 
         flows = processDataReviewItem[1]
@@ -664,7 +673,10 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate) => {
         }
     }
 
-    const todayFlows = await globalGetter.getTodayFlows()
+    let todayFlows = await globalGetter.getTodayFlows()
+    if (formIds && formIds.length > 0) {
+        todayFlows = todayFlows.filter(flow => formIds.includes(flow.formUuid))
+    }
     flows = flows.concat(todayFlows.map(flow => {
         // 返回新的Flow, 防止修改内存中的数据结构
         return {...flow}
@@ -729,13 +741,9 @@ const getAllOverDueRunningFlows = async () => {
     return overDueFlows
 }
 
-const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate) => {
-    const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
+const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate, formIds) => {
+    const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
     const result = await flowStatistic.getDeptCoreFlow(userNames, flows, forms)
-    // 对结果进行转换
-    const extractOverdueDataToAloneNode = ()=>{
-
-    }
     for (const formStat of result) {
         for (const activityStat of formStat.children) {
             const activityOverdue = {
@@ -783,7 +791,7 @@ const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate) => 
 
 const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate, formIds) => {
     const allFormsWithReviews = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
-    const result = await getFormFlowStat(null, allFormsWithReviews, startDoneDate, endDoneDate)
+    const result = await getFormFlowStat(null, allFormsWithReviews, startDoneDate, endDoneDate, formIds)
     return result
 }
 
@@ -796,7 +804,7 @@ const getOverallFormsAndReviewItemsStatDividedByDept = async (startDoneDate, end
     // const data = deptFlowFormConvertor.convert2FormsDepsActivitiesHierarchy(depsForms)
 
     const forms = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
-    const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
+    const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
     const result = await flowStatistic.getOverallFlowForms([], flows, forms)
     return flowUtil.attachIdsAndSum(result)
 }

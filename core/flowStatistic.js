@@ -333,7 +333,6 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
             }
             for (const activity of userActivities) {
                 const sameActivities = formResult.children.filter(item => item.activityName === activity.showName)
-
                 if (sameActivities.length === 0) {
                     formResult.children.push({
                         activityIds: [activity.activityId],

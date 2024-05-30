@@ -103,7 +103,11 @@ const getCoreFormFlowConfig = async (deptId) => {
  * @param id
  * @returns {Promise<[]|*>}
  */
-const getProcessWithReviewByReviewItemDoneTime = async (startDoneDateTime, enDoneDateTime) => {
+const getProcessWithReviewByReviewItemDoneTime = async (startDoneDateTime, enDoneDateTime, formIds) => {
+    const where = {}
+    if (formIds && formIds.length > 0) {
+        where.formUuid = {$in: formIds}
+    }
     let processWithReview = await models.processModel.findAll({
         include: [
             {
@@ -112,6 +116,7 @@ const getProcessWithReviewByReviewItemDoneTime = async (startDoneDateTime, enDon
                 where: {done_time: {$between: [startDoneDateTime, enDoneDateTime]}}
             }
         ],
+        where,
         order: [["process_instance_id", "desc"]]
     })
     processWithReview = processWithReview.map((item) => {
@@ -128,13 +133,19 @@ const getProcessWithReviewByReviewItemDoneTime = async (startDoneDateTime, enDon
  * @param enDoneDateTime
  * @returns {Promise<*>}
  */
-const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateTime) => {
+const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateTime, formIds) => {
     const tempSQL = models.sequelize.dialect.QueryGenerator.selectQuery("process_review", {
             attributes: ['process_instance_id'],
             where: {done_time: {$between: [startDoneDateTime, enDoneDateTime]}}
         }
     ).slice(0, -1);
 
+    const where = {
+        process_instance_id: {$in: models.sequelize.literal(`(${tempSQL})`)},
+    }
+    if (formIds && formIds.length > 0) {
+        where.formUuid = {$in: formIds}
+    }
     let processWithData = await models.processModel.findAll({
         include: [
             {
@@ -142,7 +153,7 @@ const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateT
                 as: "data"
             }
         ],
-        where: {process_instance_id: {$in: models.sequelize.literal(`(${tempSQL})`)}},
+        where,
         order: [["process_instance_id", "desc"]]
     })
 
