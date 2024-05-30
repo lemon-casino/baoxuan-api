@@ -570,13 +570,13 @@ const statFlow = (flow, activityConfig, statusResult, statKey, flowFormReviews, 
  *
  * @param deptIds
  * @param flows
- * @param formsDepsConfig
+ * @param forms
  * @returns {Promise<*[]>}
  */
-const getOverallFlowForms = async (deptIds, flows, formsDepsConfig) => {
+const getOverallFlowForms = async (deptIds, flows, forms) => {
     const finalResult = []
     const flowReviewItemsMap = {}
-    for (const form of formsDepsConfig) {
+    for (const form of forms) {
         const formResult = initSingleFormResult(form, overdueAloneStatusStructure)
         const currFormFlows = flows.filter(flow => flow.formUuid === form.formId)
         for (const flow of currFormFlows) {
