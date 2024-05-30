@@ -589,7 +589,7 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
  * @returns {Promise<*[]>}
  */
 const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) => {
-    const computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
+    const computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, null)
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptId)
     const result = await flowStatistic.getDeptCoreAction(userNames, computedFlows, coreActionConfig)
     return flowUtil.attachIdsAndSum(result)
@@ -681,6 +681,11 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate, formIds) => {
         // 返回新的Flow, 防止修改内存中的数据结构
         return {...flow}
     }))
+
+    return flows
+}
+
+const removeUnmatchedDateActivities = (flows, startDoneDate, endDoneDate) => {
     // 根据时间区间过滤掉不在区间内的完成节点，todo和forcast的数据不用处理
     for (const flow of flows) {
         if (!flow.overallprocessflow) {
@@ -743,7 +748,8 @@ const getAllOverDueRunningFlows = async () => {
 }
 
 const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate, formIds) => {
-    const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
+    let flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
+    flows = removeUnmatchedDateActivities(flows, startDoneDate, endDoneDate)
     const result = await flowStatistic.getUserFlowStat(userNames, flows, forms)
     for (const formStat of result) {
         for (const activityStat of formStat.children) {
@@ -853,5 +859,6 @@ module.exports = {
     getCoreFormFlowConfig,
     getOverallFormsAndReviewItemsStat,
     getAllOverDueRunningFlows,
-    getOverallFormsAndReviewItemsStatDividedByDept
+    getOverallFormsAndReviewItemsStatDividedByDept,
+    removeUnmatchedDateActivities
 }
