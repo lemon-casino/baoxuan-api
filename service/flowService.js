@@ -687,10 +687,6 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate, formIds) => {
             continue
         }
 
-        if (flow.processInstanceId === "512fb253-4251-49c6-ac47-2791d3ed80ff") {
-            console.log('-----')
-        }
-
         const newOverallProcessFlow = []
         for (const item of flow.overallprocessflow) {
             if (item.type === flowReviewTypeConst.TODO || item.type === flowReviewTypeConst.FORCAST) {
