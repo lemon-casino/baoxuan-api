@@ -7,6 +7,7 @@ const {
     flowReviewTypeConst,
     activityIdMappingConst, flowStatusConst
 } = require("../const/flowConst")
+const NotFoundError = require("../error/http/notFoundError")
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 
@@ -227,8 +228,14 @@ const countFlowIntoActivityResultByActivities = async (activityResult, params) =
     }
 }
 
-// 将flow统计到activity中
-const countFlowIntoFormResultByActivities = async (formResult, params) => {
+/**
+ *  将flow统计到activityResult中
+ *
+ * @param formResult
+ * @param params
+ * @returns {Promise<void>}
+ */
+const countFlowIntoActivityResult = async (formResult, params) => {
     // 将流程根据节点和状态进行统计
     for (const activityResult of formResult.children) {
         if (params.statKey === "userName") {
@@ -268,6 +275,71 @@ const sortFormResultAccordingToLatestReviewItems = (formResult, reviewItems) => 
     formResult.children.sort((curr, next) => curr.order - next.order)
 }
 
+/**
+ * 生成需要的 params
+ *
+ * @param flow
+ * @param userNames
+ * @param flowFormReviews
+ * @returns {Promise<{statKey: string, originActivities: *, flowFormReviews}>}
+ */
+const prepareParam = async (flow, userNames, flowFormReviews) => {
+    const params = {
+        // 最新的表单流程，用于处理待转入查找最近的工作节点
+        flowFormReviews: flowFormReviews,
+        // 原始的审核流程，判断待转入用
+        originActivities: flow.overallprocessflow,
+        // 最底层汇总key
+        statKey: "userName"
+    }
+    if (userNames) {
+        // 筛选判断人名的fun
+        params.funcUserNames = {opCode: opCodes.Contain, value: userNames}
+    }
+    return params
+}
+
+/**
+ * 根据流程的审核节点生成activityResult放到 formResult中
+ *
+ * @param formResult
+ * @param flow
+ * @param userNames
+ * @returns {*}
+ */
+const preGenerateActivityResult = (formResult, flow, userNames) => {
+    flow.overallprocessflow = flow.overallprocessflow.map(item => {
+        if (!item.activityId) {
+            return {...item, activityId: "unKnown", showName: "未知"}
+        }
+        return item
+    })
+
+    // 因为流程经常改动，根据最新的表单流程生成的formResult会有节点信息丢失
+    // 补充formResult的信息
+    let userActivities = flow.overallprocessflow
+    if (userNames) {
+        userActivities = userActivities.filter(item => userNames.includes(item.operatorName))
+    }
+
+    if (userActivities.length === 0) {
+        throw new NotFoundError("未找到相关的审核节点")
+    }
+
+    for (const activity of userActivities) {
+        const sameActivities = formResult.children.filter(item => item.activityName === activity.showName)
+        if (sameActivities.length === 0) {
+            formResult.children.push({
+                activityIds: [activity.activityId],
+                activityName: activity.showName,
+                children: _.cloneDeep(overdueMixedStatusStructure)
+            })
+        } else {
+            sameActivities[0].activityIds.push(activity.activityId)
+        }
+    }
+    return formResult
+}
 
 /**
  * 获取部门的核心流程
@@ -282,56 +354,21 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
 
     const flowReviewItemsMap = {}
     for (const form of forms) {
-        const formResult = {formId: form.flowFormId, formName: form.flowFormName, children: []}
         const formFlowStatResult = [
             {status: flowStatusConst.RUNNING, name: "进行中", sum: 0, ids: []},
             {status: flowStatusConst.COMPLETE, name: "已完成", sum: 0, ids: []},
             {status: flowStatusConst.TERMINATED, name: "终止", sum: 0, ids: []},
             {status: flowStatusConst.ERROR, name: "异常", sum: 0, ids: []}
         ]
+        const formResult = {formId: form.flowFormId, formName: form.flowFormName, children: []}
         // 根据动作配置信息对flow进行统计
         const formFlows = flows.filter(flow => flow.formUuid === form.flowFormId)
         for (const flow of formFlows) {
-            flow.overallprocessflow = flow.overallprocessflow.map(item => {
-                if (!item.activityId) {
-                    return {...item, activityId: "unKnown", showName: "未知"}
-                }
-                return item
-            })
-            const params = {
-                flowFormReviews: flow.reviewId ? await getFlowReviewItems(flow.reviewId, flowReviewItemsMap) : [],
-                statKey: "userName",
-                originActivities: flow.overallprocessflow
-            }
-            if (userNames) {
-                params.funcUserNames = {opCode: opCodes.Contain, value: userNames}
-            }
-            // 因为流程经常改动，根据最新的表单流程生成的formResult会有节点信息丢失
-            // 补充formResult的信息
-            let userActivities = flow.overallprocessflow
-            if (userNames) {
-                userActivities = userActivities.filter(item => userNames.includes(item.operatorName))
-            }
-
-            if (userActivities.length === 0) {
-                continue
-            }
-
-            for (const activity of userActivities) {
-                const sameActivities = formResult.children.filter(item => item.activityName === activity.showName)
-                if (sameActivities.length === 0) {
-                    formResult.children.push({
-                        activityIds: [activity.activityId],
-                        activityName: activity.showName,
-                        children: _.cloneDeep(overdueMixedStatusStructure)
-                    })
-                } else {
-                    sameActivities[0].activityIds.push(activity.activityId)
-                }
-            }
-            // 将flow中的activities（formStatConfig.children） 统计到formResult中
-            await countFlowIntoFormResultByActivities(formResult, params)
-
+            const flowReviewItems = flow.reviewId ? await getFlowReviewItems(flow.reviewId, flowReviewItemsMap) : []
+            const params = await prepareParam(flow, userNames, flowReviewItems)
+            const formResultWithActivity = await preGenerateActivityResult(formResult, flow, userNames)
+            await countFlowIntoActivityResult(formResultWithActivity, params)
+            // 根据流程状态汇总流程
             for (const statusResult of formFlowStatResult) {
                 if (statusResult.status === flow.instanceStatus) {
                     statusResult.ids.push(flow.processInstanceId)
@@ -441,7 +478,7 @@ const getFlowReviewItems = async (reviewId, flowReviewItemsMap) => {
  * @param flow
  * @param activityConfig
  * @param statusResult
- * @param statKey
+ * @param statKey 统计的key：人名-userName、部门-deptName
  * @param flowFormReviews
  * @param firstFilteredReviewItems
  */
