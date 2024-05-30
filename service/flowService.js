@@ -686,6 +686,11 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate, formIds) => {
         if (!flow.overallprocessflow) {
             continue
         }
+
+        if (flow.processInstanceId === "512fb253-4251-49c6-ac47-2791d3ed80ff") {
+            console.log('-----')
+        }
+
         const newOverallProcessFlow = []
         for (const item of flow.overallprocessflow) {
             if (item.type === flowReviewTypeConst.TODO || item.type === flowReviewTypeConst.FORCAST) {
@@ -697,7 +702,7 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate, formIds) => {
                 if (!doneTime) {
                     doneTime = dateUtil.formatGMT2Str(item.operateTimeGMT)
                 }
-                if (dateUtil.duration(doneTime, startDoneDate) >= 0 && dateUtil.duration(endDoneDate, doneTime) >= 0) {
+                if (dateUtil.duration(doneTime, dateUtil.startOfDay(startDoneDate)) >= 0 && dateUtil.duration(dateUtil.endOfDay(endDoneDate), doneTime) >= 0) {
                     newOverallProcessFlow.push(item)
                     continue
                 }
