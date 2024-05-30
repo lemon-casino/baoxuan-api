@@ -744,11 +744,11 @@ const getAllOverDueRunningFlows = async () => {
 
 const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate, formIds) => {
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
-    const result = await flowStatistic.getDeptCoreFlow(userNames, flows, forms)
+    const result = await flowStatistic.getUserFlowStat(userNames, flows, forms)
     for (const formStat of result) {
         for (const activityStat of formStat.children) {
             const activityOverdue = {
-                name: "逾期", type: "OVERDUE", children: [
+                name: "逾期", type: "OVERDUE", excludeUpSum: true, children: [
                     {name: "进行中", type: "TODO", sum: 0, ids: [], children: []},
                     {name: "已完成", type: "HISTORY", sum: 0, ids: [], children: []}
                 ]

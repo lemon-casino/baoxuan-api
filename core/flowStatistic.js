@@ -143,11 +143,11 @@ const getDeptCoreAction = async (userNames, flows, coreConfig) => {
  * 将 processInstanceId 统计到 resultNode中key=value的ids中
  *
  * @param processInstanceId
- * @param key
- * @param value
- * @param resultNode
+ * @param key 过滤的键
+ * @param value 过滤的值
+ * @param resultNode 统计到的结果节点
  */
-const statReviewItemsToResultNode = (processInstanceId, key, value, resultNode) => {
+const statFlowToResultNode = (processInstanceId, key, value, resultNode) => {
     const alreadyCount = resultNode.children.filter(item => item[[key]] === value)
     if (alreadyCount.length > 0) {
         const alreadyObj = alreadyCount[0]
@@ -172,11 +172,13 @@ const statReviewItemsToResultNode = (processInstanceId, key, value, resultNode) 
  * @param params
  * @returns {*|null}
  */
-const findActivityStatusResult = (userActivities, activityResult, params) => {
-    if (userActivities[0].type === flowReviewTypeConst.FORCAST) {
+const findActivityStatusResult = (params, activityResult) => {
+    const {activity} = params
+    // 第一个节点为forcast， 则其他节点均为forcast
+    if (activity.type === flowReviewTypeConst.FORCAST) {
         //  flowFormReviews>1的情况在分支条件下会出现，同样只要判断第一个即可
         // const forecastReviewItem = forecastReviewItems[0]
-        const reviewItem = flowFormReviewUtil.getReviewItem(userActivities[0].activityId, params.flowFormReviews)
+        const reviewItem = flowFormReviewUtil.getReviewItem(activity.activityId, params.flowFormReviews)
         if (reviewItem && reviewItem.lastTimingNodes && reviewItem.lastTimingNodes.length > 0) {
             // 所有的临近节点状态都为进行中
             let lastNodeIsDoing = true
@@ -199,33 +201,31 @@ const findActivityStatusResult = (userActivities, activityResult, params) => {
         return null
     }
 
-    const todoReviewItems = userActivities.filter(item => item.type === flowReviewTypeConst.TODO)
+    // // 存在一个进行中的节点
+    // const todoReviewItems = activity.filter(item => item.type === flowReviewTypeConst.TODO)
+    //
+    // let activityStatusResult = null
+    // let flowReviewType = flowReviewTypeConst.HISTORY
+    // if (todoReviewItems.length > 0) {
+    //     flowReviewType = flowReviewTypeConst.TODO
+    // }
+    const activityStatusResult = activityResult.children.filter(item => item.type === activity.type)[0]
 
-    let activityStatusResult = null
-    let flowReviewType = flowReviewTypeConst.HISTORY
-    if (todoReviewItems.length > 0) {
-        flowReviewType = flowReviewTypeConst.TODO
+    if (!activity.isOverDue) {
+        activity.isOverDue = false
     }
-    activityStatusResult = activityResult.children.filter(item => item.type === flowReviewType)[0]
-
-    if (!userActivities[0].isOverDue) {
-        userActivities[0].isOverDue = false
-    }
-    const activityOverdueStatusResult = activityStatusResult.children.filter(item => userActivities[0].isOverDue === item.isOverDue)[0]
+    const activityOverdueStatusResult = activityStatusResult.children.filter(item => activity.isOverDue === item.isOverDue)[0]
 
     return activityOverdueStatusResult
 }
 
 // 将根据节点状态，将流程 统计到 activityResult 中
-const countFlowIntoActivityResultByActivities = async (activityResult, params) => {
-    const activityStatusResult = findActivityStatusResult(params.userActivities, activityResult, params)
+const countFlowIntoActivityResult = async (activityResult, params) => {
+    // 查找需要汇总到的匹配状态的activityStatusResult中
+    const activityStatusResult = findActivityStatusResult(params, activityResult)
     // 待转入状态可能会不用统计，返回null
     if (activityStatusResult) {
-        if (params.statValues && params.statValues.length > 0) {
-            for (const statValue of params.statValues) {
-                statReviewItemsToResultNode(params.originActivities[0].processInstanceId, params.statKey, statValue, activityStatusResult)
-            }
-        }
+        statFlowToResultNode(params.originActivities[0].processInstanceId, params.statKey, params.statValue, activityStatusResult)
     }
 }
 
@@ -236,7 +236,7 @@ const countFlowIntoActivityResultByActivities = async (activityResult, params) =
  * @param params
  * @returns {Promise<void>}
  */
-const countFlowIntoActivityResult = async (formResult, params) => {
+const countFlowIntoActivitiesResult = async (formResult, params) => {
     // 将流程根据节点和状态进行统计
     for (const activityResult of formResult.children) {
         if (params.statKey === "userName") {
@@ -244,13 +244,18 @@ const countFlowIntoActivityResult = async (formResult, params) => {
             if (userActivities.length === 0) {
                 continue
             }
-            params.userActivities = userActivities
             // 分别汇总到多个人
-            params.statValues = userActivities.map(item => item.operatorName)
+            for (const userActivity of userActivities) {
+                params.activity = userActivity
+                params.statValue = userActivity.operatorName
+                await countFlowIntoActivityResult(activityResult, params)
+            }
         } else {
-            params.statValues = [activityResult.activityName]
+            // todo: 等开发
+            params.currActivity = []
+            params.statValue = activityResult.activityName
+            await countFlowIntoActivityResult(activityResult, params)
         }
-        await countFlowIntoActivityResultByActivities(activityResult, params)
     }
 }
 
@@ -309,6 +314,7 @@ const prepareParam = async (flow, userNames, flowFormReviews) => {
  * @returns {*}
  */
 const preGenerateActivityResult = (formResult, flow, userNames) => {
+    // 对于异常的节点自定义为unknown表示
     flow.overallprocessflow = flow.overallprocessflow.map(item => {
         if (!item.activityId) {
             return {...item, activityId: "unKnown", showName: "未知"}
@@ -350,7 +356,7 @@ const preGenerateActivityResult = (formResult, flow, userNames) => {
  * @param forms 表单的统计配置 [formName:"", ..., children: [{activityName: "",..., children: []}]]
  * @returns {Promise<*[]>}
  */
-const getDeptCoreFlow = async (userNames, flows, forms) => {
+const getUserFlowStat = async (userNames, flows, forms) => {
     const finalResult = []
 
     const flowReviewItemsMap = {}
@@ -376,7 +382,7 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
                 }
             }
 
-            await countFlowIntoActivityResult(formResultWithActivity, params)
+            await countFlowIntoActivitiesResult(formResultWithActivity, params)
             // 根据流程状态汇总流程
             for (const statusResult of formFlowStatResult) {
                 if (statusResult.status === flow.instanceStatus) {
@@ -405,7 +411,7 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
 }
 
 const overdueAloneStatusStructure = [
-    {name: "待转入", type: flowReviewTypeConst.FORCAST, children: [], excludeUpSum: true},
+    {name: "待转入", type: flowReviewTypeConst.FORCAST, excludeUpSum: true, children: []},
     {
         name: "进行中",
         type: flowReviewTypeConst.TODO,
@@ -416,7 +422,7 @@ const overdueAloneStatusStructure = [
         children: []
     },
     {
-        name: "已逾期", type: "OVERDUE", children: [
+        name: "已逾期", type: "OVERDUE", excludeUpSum: true, children: [
             {
                 name: "进行中",
                 type: flowReviewTypeConst.TODO,
@@ -527,7 +533,7 @@ const statFlow = (flow, activityConfig, statusResult, statKey, flowFormReviews, 
                             if (statKey === "userName") {
                                 statValue = [...new Set(forecastReviewItems.map(item => item.operatorName))].join("-")
                             }
-                            statReviewItemsToResultNode(processInstanceId, statKey, statValue, statusResult)
+                            statFlowToResultNode(processInstanceId, statKey, statValue, statusResult)
                         }
                     }
                 }
@@ -541,7 +547,7 @@ const statFlow = (flow, activityConfig, statusResult, statKey, flowFormReviews, 
                 if (statKey === "userName") {
                     statValue = [...new Set(firstFilteredReviewItems.map(item => item.operatorName))].join("-")
                 }
-                statReviewItemsToResultNode(processInstanceId, statKey, statValue, statusResult)
+                statFlowToResultNode(processInstanceId, statKey, statValue, statusResult)
             }
         }
         // 3. 已完成
@@ -552,7 +558,7 @@ const statFlow = (flow, activityConfig, statusResult, statKey, flowFormReviews, 
                 if (statKey === "userName") {
                     statValue = [...new Set(firstFilteredReviewItems.map(item => item.operatorName))].join("-")
                 }
-                statReviewItemsToResultNode(processInstanceId, statKey, statValue, statusResult)
+                statFlowToResultNode(processInstanceId, statKey, statValue, statusResult)
             }
         }
         // 4.逾期
@@ -567,7 +573,7 @@ const statFlow = (flow, activityConfig, statusResult, statKey, flowFormReviews, 
                 }
                 if (tmpTodoOverdue.length > 0) {
                     const todoOverDueResult = statusResult.children.filter(item => item.type === flowReviewTypeConst.TODO)[0]
-                    statReviewItemsToResultNode(processInstanceId, statKey, statValue, todoOverDueResult)
+                    statFlowToResultNode(processInstanceId, statKey, statValue, todoOverDueResult)
                 }
                 const tmpHistoryOverdue = overDueNodes.filter(item => item.type === flowReviewTypeConst.HISTORY)
                 if (tmpHistoryOverdue.length === overDueNodes.length) {
@@ -575,7 +581,7 @@ const statFlow = (flow, activityConfig, statusResult, statKey, flowFormReviews, 
                     if (statKey === "userName") {
 
                     }
-                    statReviewItemsToResultNode(processInstanceId, statKey, statValue, historyOverDueResult)
+                    statFlowToResultNode(processInstanceId, statKey, statValue, historyOverDueResult)
                 }
             }
         }
@@ -621,6 +627,6 @@ const getOverallFlowForms = async (deptIds, flows, formsDepsConfig) => {
 
 module.exports = {
     getDeptCoreAction,
-    getDeptCoreFlow,
+    getUserFlowStat,
     getOverallFlowForms
 }
