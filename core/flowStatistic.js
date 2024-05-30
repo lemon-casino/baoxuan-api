@@ -8,6 +8,7 @@ const {
     activityIdMappingConst, flowStatusConst
 } = require("../const/flowConst")
 const NotFoundError = require("../error/http/notFoundError")
+const {errorCodes} = require("../const/errorConst");
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 
@@ -366,7 +367,15 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
         for (const flow of formFlows) {
             const flowReviewItems = flow.reviewId ? await getFlowReviewItems(flow.reviewId, flowReviewItemsMap) : []
             const params = await prepareParam(flow, userNames, flowReviewItems)
-            const formResultWithActivity = await preGenerateActivityResult(formResult, flow, userNames)
+            let formResultWithActivity = null
+            try {
+                formResultWithActivity = await preGenerateActivityResult(formResult, flow, userNames)
+            } catch (e) {
+                if (e.code === errorCodes.notFound) {
+                    continue
+                }
+            }
+
             await countFlowIntoActivityResult(formResultWithActivity, params)
             // 根据流程状态汇总流程
             for (const statusResult of formFlowStatResult) {
