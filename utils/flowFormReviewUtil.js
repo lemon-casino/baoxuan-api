@@ -48,7 +48,7 @@ const getFormExecutePaths = (activities, lastActivityId = null, paths = []) => {
             // 找到直接上一节点所在的path，跟进
             countActivity(
                 {activityId: activity.id, activityName: activity.title},
-                activities[i - 1].id, paths)
+                lastActivityId || activities[i - 1].id, paths)
 
             // 预先生成条件分支所需要的节点
             const activityPaths = getActivityPaths(activity.id, paths)
@@ -87,7 +87,7 @@ const getFormExecutePaths = (activities, lastActivityId = null, paths = []) => {
 }
 
 /**
- *
+ * 获取表单流程的最长执行路径
  *
  * @param activities
  * @returns {*[]}

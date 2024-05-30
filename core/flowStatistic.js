@@ -336,7 +336,6 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
 
                 if (sameActivities.length === 0) {
                     formResult.children.push({
-                        orderIndex: activity.orderIndex,
                         activityIds: [activity.activityId],
                         activityName: activity.showName,
                         children: _.cloneDeep(overdueMixedStatusStructure)
@@ -358,13 +357,30 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
 
         // 根据最新的流程表单对节点进行排序，不在其中的节点拍到后面
         const sortFormResultAccordingToLatestReviewItems = (formResult, reviewItems) => {
-            const containedKeys = []
+            const longestExecutePath = flowFormReviewUtil.getLongestFormExecutePath(reviewItems)
+            if (longestExecutePath[0].activityName = "发起") {
+                longestExecutePath[0].activityName = "提交申请"
+                longestExecutePath[0].activityId = activityIdMappingConst[longestExecutePath[0].activityId]
+            }
 
-
-            formResult.children.sort()
+            formResult.children.map(item => {
+                const activityIndex = longestExecutePath.findIndex(activity => activity.activityName === item.activityName)
+                if (activityIndex > -1) {
+                    item.order = activityIndex
+                } else if (item.activityName === "未知") {
+                    item.order = 999
+                } else {
+                    item.order = 777
+                }
+                return item
+            })
+            formResult.children.sort((curr, next) => curr.order - next.order)
         }
 
         const formReviews = form.flowFormReviews[0]?.formReview
+        if (formReviews && formReviews.length > 0) {
+            sortFormResultAccordingToLatestReviewItems(formResult, formReviews)
+        }
 
         // 添加对该表单所对应的所有流程的汇总
         formResult.flowsStat = formFlowStatResult

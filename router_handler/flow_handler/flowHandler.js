@@ -138,7 +138,7 @@ const getAllOverDueRunningFlows = async (req, res, next) => {
  * @param next
  * @returns {Promise<*>}
  */
-const getFormFlowStat = async (req, res, next) => {
+const getOverallFormsAndReviewItemsStat = async (req, res, next) => {
     try {
         const {startDate, endDate, formIds} = req.body
         joiUtil.validate({
@@ -172,6 +172,6 @@ module.exports = {
     updateRunningFlowEmergency,
     getCoreDataByType,
     getAllOverDueRunningFlows,
-    getOverallFormsAndReviewItemsStat: getFormFlowStat,
+    getOverallFormsAndReviewItemsStat,
     getOverallFormsAndReviewItemsStatDividedByDept
 }
