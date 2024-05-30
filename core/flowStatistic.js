@@ -32,9 +32,7 @@ const getDeptCoreAction = async (userNames, flows, coreConfig) => {
             // 根据配置中状态的计算规则进行统计
             for (const rule of rules) {
                 let currentFlows = flows.filter((flow) => flow.formUuid === rule.formId)
-                if (rule.formId === "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3") {
-                    console.log('-----')
-                }
+
                 // 需要计算的节点对
                 for (const flowNodeRule of rule.flowNodeRules) {
                     if (rule.flowDetailsRules) {
@@ -46,13 +44,7 @@ const getDeptCoreAction = async (userNames, flows, coreConfig) => {
                     }
 
                     const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = flowNodeRule
-
                     for (let flow of currentFlows) {
-
-                        if (flow.processInstanceId === "7d955fab-a8e9-4440-bfee-8f162dc40d0b"){
-                            console.log('---')
-                        }
-
                         const processInstanceId = flow.processInstanceId
                         let fromMatched = false
                         let toMatched = false
