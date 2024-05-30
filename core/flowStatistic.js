@@ -418,10 +418,12 @@ const overdueMixedStatusStructure = [
 const initSingleFormResult = (form, statusStructure) => {
     const formResult = {...form, children: []}
     // 当前children 的数据包括：部门或者节点
-    for (const formChild of form.children) {
-        const formChildResult = {...formChild, children: []}
-        formChildResult.children = _.cloneDeep(statusStructure)
-        formResult.children.push(formChildResult)
+    if (form.children && form.children.length > 0) {
+        for (const formChild of form.children) {
+            const formChildResult = {...formChild, children: []}
+            formChildResult.children = _.cloneDeep(statusStructure)
+            formResult.children.push(formChildResult)
+        }
     }
     return formResult
 }
