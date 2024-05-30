@@ -225,16 +225,18 @@ const attachIdsAndSum = (data) => {
 
     const handleItem = (item) => {
         if (item.children) {
-            const uniqueIds = {}
+            // const uniqueIds = []
+            const allIds = []
             for (const child of item.children) {
                 const newChild = attachIdsAndSum(child)
                 if (!child.excludeUpSum) {
                     for (const id of newChild.ids) {
-                        uniqueIds[id] = 1
+                        // uniqueIds[id] = 1
+                        allIds.push(id)
                     }
                 }
             }
-            item.ids = Object.keys(uniqueIds)
+            item.ids = allIds //Object.keys(uniqueIds)
         }
         if (item.ids) {
             item.sum = item.ids.length
@@ -244,6 +246,7 @@ const attachIdsAndSum = (data) => {
         }
         return item
     }
+
 
     if (data instanceof Array) {
         for (let item of data) {
@@ -291,6 +294,6 @@ module.exports = {
     isUserDoneOverDueFlow,
     isUserErrorFlow,
     isUserTerminatedFlow,
-    attachIdsAndSum,
+    attachIdsAndSum: attachIdsAndSum,
     getLatestUniqueReviewItems
 }

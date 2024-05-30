@@ -767,22 +767,22 @@ const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate, for
                 // 将进行中或已完成状态下的逾期和未逾期数据合并
                 statusStat.children = statusStat.children[0].children.concat(statusStat.children[1].children)
                 // 合并节点下逾期和未逾期数据
-                const uniqueStateStat = {}
-                for (const item of statusStat.children) {
-                    if (!Object.keys(uniqueStateStat).includes(item.userName)) {
-                        uniqueStateStat[item.userName] = {}
-                    }
-                    uniqueStateStat[item.userName].ids = (uniqueStateStat[item.userName].ids || []).concat(item.ids)
-                    uniqueStateStat[item.userName].sum = uniqueStateStat[item.userName].ids.length
-                }
-                statusStat.children = []
-                for (const key of Object.keys(uniqueStateStat)) {
-                    statusStat.children.push({
-                        userName: key,
-                        ids: uniqueStateStat[key].ids,
-                        sum: uniqueStateStat[key].ids.length
-                    })
-                }
+                // const uniqueStateStat = {}
+                // for (const item of statusStat.children) {
+                //     if (!Object.keys(uniqueStateStat).includes(item.userName)) {
+                //         uniqueStateStat[item.userName] = {}
+                //     }
+                //     uniqueStateStat[item.userName].ids = (uniqueStateStat[item.userName].ids || []).concat(item.ids)
+                //     uniqueStateStat[item.userName].sum = uniqueStateStat[item.userName].ids.length
+                // }
+                // statusStat.children = []
+                // for (const key of Object.keys(uniqueStateStat)) {
+                //     statusStat.children.push({
+                //         userName: key,
+                //         ids: uniqueStateStat[key].ids,
+                //         sum: uniqueStateStat[key].ids.length
+                //     })
+                // }
             }
             activityStat.children.push(activityOverdue)
         }
@@ -793,7 +793,18 @@ const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate, for
 const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate, formIds) => {
     const allFormsWithReviews = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
     const result = await getFormFlowStat(null, allFormsWithReviews, startDoneDate, endDoneDate, formIds)
-    return result
+    // 获取用户的部门信息，用于前端将人汇总都部门下
+    let allUsers = await redisService.getAllUsersDetail()
+    // 仅保留关键信息
+    const pureUsers = allUsers.map(user => {
+        return {
+            userId: user.userid,
+            userName: user.name,
+            departmentId: user.leader_in_dept[0].dept_id,
+            departmentName: user.leader_in_dept[0].dep_detail.name
+        }
+    })
+    return {stat: result, users: pureUsers}
 }
 
 const getOverallFormsAndReviewItemsStatDividedByDept = async (startDoneDate, endDoneDate, formIds) => {

@@ -200,11 +200,12 @@ const findActivityStatusResult = (userActivities, activityResult, params) => {
     const todoReviewItems = userActivities.filter(item => item.type === flowReviewTypeConst.TODO)
 
     let activityStatusResult = null
+    let flowReviewType = flowReviewTypeConst.HISTORY
     if (todoReviewItems.length > 0) {
-        activityStatusResult = activityResult.children.filter(item => item.type === flowReviewTypeConst.TODO)[0]
-    } else {
-        activityStatusResult = activityResult.children.filter(item => item.type === flowReviewTypeConst.HISTORY)[0]
+        flowReviewType = flowReviewTypeConst.TODO
     }
+    activityStatusResult = activityResult.children.filter(item => item.type === flowReviewType)[0]
+
     if (!userActivities[0].isOverDue) {
         userActivities[0].isOverDue = false
     }
@@ -218,7 +219,11 @@ const countFlowIntoActivityResultByActivities = async (activityResult, params) =
     const activityStatusResult = findActivityStatusResult(params.userActivities, activityResult, params)
     // 待转入状态可能会不用统计，返回null
     if (activityStatusResult) {
-        statReviewItemsToResultNode(params.originActivities[0].processInstanceId, params.statKey, params.statValue, activityStatusResult)
+        if (params.statValues && params.statValues.length > 0) {
+            for (const statValue of params.statValues) {
+                statReviewItemsToResultNode(params.originActivities[0].processInstanceId, params.statKey, statValue, activityStatusResult)
+            }
+        }
     }
 }
 
@@ -226,62 +231,43 @@ const countFlowIntoActivityResultByActivities = async (activityResult, params) =
 const countFlowIntoFormResultByActivities = async (formResult, params) => {
     // 将流程根据节点和状态进行统计
     for (const activityResult of formResult.children) {
-        // }
-        // for (let i = 0; i < activities.length; i++) {
-        //     const activity = activities[i]
-        // let userActivities = flowUtil.flatReviewItems(flow).overallprocessflow
-        // .filter(
-        //     item => activity.children.includes(item.activityId))
-        //
-        // if (Object.keys(params).length > 0) {
-        //     for (const pkey of Object.keys(params)) {
-        //         if (pkey.startsWith("func")) {
-        //             userActivities = userActivities.filter(item => {
-        //                 return opFunctions[params[pkey].opCode](params[pkey].value, item.operatorName)
-        //             })
-        //         }
-        //     }
-        // }
-        // if (userActivities.length === 0) {
-        //     if (i === activities.length - 1) {
-        //         // 根据模版没有找到保存位置的流程，根据审核流的操作信息补充结果模板信息
-        //         for (const pkey of Object.keys(params)) {
-        //             if (pkey.startsWith("func")) {
-        //                 userActivities = flow.overallprocessflow.filter(item => {
-        //                     return opFunctions[params[pkey].opCode](params[pkey].value, item.operatorName)
-        //                 })
-        //             }
-        //         }
-        //     } else {
-        //         continue
-        //     }
-        // }
-        // let activityResult = formResult.children.filter(item => item.activityName === activity.activityName)[0]
-        // 流程调整导致activity无法完匹配的情况
-        // if (!activityResult) {
-        //     formResult.children.push({
-        //         activityId: activity.activityId,
-        //         activityName: activity.activityName,
-        //         children: JSON.parse(JSON.stringify(statusStructure))
-        //     })
-        //     activityResult = formResult.children[formResult.children.length - 1]
-        // }
-        // params.filteredReviewItems = userActivities
-
         if (params.statKey === "userName") {
             const userActivities = params.originActivities.filter(item => activityResult.activityIds.includes(item.activityId))
             if (userActivities.length === 0) {
                 continue
             }
-
             params.userActivities = userActivities
-            params.statValue = [...new Set(userActivities.map(item => item.operatorName))].join("-")
+            // 分别汇总到多个人
+            params.statValues = userActivities.map(item => item.operatorName)
         } else {
-            params.statValue = activityResult.activityName
+            params.statValues = [activityResult.activityName]
         }
         await countFlowIntoActivityResultByActivities(activityResult, params)
     }
 }
+
+// 根据最新的流程表单对节点进行排序，不在其中的节点拍到后面
+const sortFormResultAccordingToLatestReviewItems = (formResult, reviewItems) => {
+    const longestExecutePath = flowFormReviewUtil.getLongestFormExecutePath(reviewItems)
+    if (longestExecutePath[0].activityName = "发起") {
+        longestExecutePath[0].activityName = "提交申请"
+        longestExecutePath[0].activityId = activityIdMappingConst[longestExecutePath[0].activityId]
+    }
+    // 根据最新的流程表单节点顺序，为结果中的节点增加order，进行排序
+    formResult.children.map(item => {
+        const activityIndex = longestExecutePath.findIndex(activity => activity.activityName === item.activityName)
+        if (activityIndex > -1) {
+            item.order = activityIndex
+        } else if (item.activityName === "未知") {
+            item.order = 999
+        } else {
+            item.order = 777
+        }
+        return item
+    })
+    formResult.children.sort((curr, next) => curr.order - next.order)
+}
+
 
 /**
  * 获取部门的核心流程
@@ -312,7 +298,6 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
                 }
                 return item
             })
-
             const params = {
                 flowFormReviews: flow.reviewId ? await getFlowReviewItems(flow.reviewId, flowReviewItemsMap) : [],
                 statKey: "userName",
@@ -331,6 +316,7 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
             if (userActivities.length === 0) {
                 continue
             }
+
             for (const activity of userActivities) {
                 const sameActivities = formResult.children.filter(item => item.activityName === activity.showName)
                 if (sameActivities.length === 0) {
@@ -354,31 +340,15 @@ const getDeptCoreFlow = async (userNames, flows, forms) => {
             }
         }
 
-        // 根据最新的流程表单对节点进行排序，不在其中的节点拍到后面
-        const sortFormResultAccordingToLatestReviewItems = (formResult, reviewItems) => {
-            const longestExecutePath = flowFormReviewUtil.getLongestFormExecutePath(reviewItems)
-            if (longestExecutePath[0].activityName = "发起") {
-                longestExecutePath[0].activityName = "提交申请"
-                longestExecutePath[0].activityId = activityIdMappingConst[longestExecutePath[0].activityId]
-            }
-
-            formResult.children.map(item => {
-                const activityIndex = longestExecutePath.findIndex(activity => activity.activityName === item.activityName)
-                if (activityIndex > -1) {
-                    item.order = activityIndex
-                } else if (item.activityName === "未知") {
-                    item.order = 999
-                } else {
-                    item.order = 777
-                }
-                return item
-            })
-            formResult.children.sort((curr, next) => curr.order - next.order)
-        }
-
         const formReviews = form.flowFormReviews[0]?.formReview
         if (formReviews && formReviews.length > 0) {
             sortFormResultAccordingToLatestReviewItems(formResult, formReviews)
+        }
+
+        // remove activityIds
+        for (let i = 0; i < formResult.children.length; i++) {
+            const activityResult = formResult.children[i]
+            formResult.children[i] = {activityName: activityResult.activityName, children: activityResult.children}
         }
 
         // 添加对该表单所对应的所有流程的汇总
@@ -425,6 +395,7 @@ const overdueMixedStatusStructure = [
         children: [{name: "未逾期", isOverDue: false, children: []}, {name: "逾期", isOverDue: true, children: []}]
     }
 ]
+
 /**
  * 初始化单个表单的数据
  *
