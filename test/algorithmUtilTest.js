@@ -2252,7 +2252,7 @@ describe("algorithmUtil", () => {
                 "description": "",
                 "componentName": "EndNode"
             }]
-        const result = algorithmUtil.formExecutePaths(xuanPinHuiForm)
+        const result = algorithmUtil.getFormExecutePaths(xuanPinHuiForm)
         // assert.equal(result[0].children.length, 22)
         // assert.equal(result[1].children.length, 22)
         // assert.equal(result[2].children.length, 21)
@@ -2265,7 +2265,7 @@ describe("algorithmUtil", () => {
         // assert.equal(result[9].children.length, 14)
         // assert.equal(result[10].children.length, 14)
         // assert.equal(result[11].children.length, 11)
-        const result1 = algorithmUtil.formExecutePaths(xuanPinHuiForm1)
+        const result1 = algorithmUtil.getFormExecutePaths(xuanPinHuiForm1)
         // assert.equal(result1[0].children.length, 18)
         // assert.equal(result1[1].children.length, 20)
         // assert.equal(result1[2].children.length, 20)
@@ -2278,7 +2278,7 @@ describe("algorithmUtil", () => {
         // assert.equal(result1[9].children.length, 14)
         // assert.equal(result1[10].children.length, 14)
         // assert.equal(result1[11].children.length, 11)
-        const result2 = algorithmUtil.formExecutePaths(tmForm)
+        const result2 = algorithmUtil.getFormExecutePaths(tmForm)
         console.log(result)
     })
 })
