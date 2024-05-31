@@ -1,7 +1,6 @@
 const FlowForm = require("../model/flowfrom")
 const flowRepo = require("../repository/flowRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
-const userRepo = require("../repository/userRepo")
 const formService = require("../service/flowFormService")
 const departmentService = require("../service/departmentService")
 const dingDingService = require("../service/dingDingService")
@@ -13,11 +12,9 @@ const dateUtil = require("../utils/dateUtil")
 const flowUtil = require("../utils/flowUtil")
 const NotFoundError = require("../error/http/notFoundError")
 const ParameterError = require("../error/parameterError")
-const flowStatistic = require("../core/flowStatistic")
-const algorithmUtil = require("../utils/algorithmUtil")
-const {timingFormFlowNodes} = require("../const/formConst")
-const deptFlowFormConvertor = require("../convertor/deptFlowFormConvertor")
-const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo")
+const departmentCoreActivityStat = require("../core/statistic/departmentCoreActivityStat")
+const departmentsOverallFlowsStat = require("../core/statistic/departmentsOverallFlowsStat")
+const userFlowStat = require("../core/statistic/userFlowsStat")
 const {flowReviewTypeConst, flowStatusConst} = require("../const/flowConst")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
@@ -589,9 +586,9 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
  * @returns {Promise<*[]>}
  */
 const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) => {
-    const computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate)
+    const computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, null)
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptId)
-    const result = await flowStatistic.getDeptCoreAction(userNames, computedFlows, coreActionConfig)
+    const result = await departmentCoreActivityStat.get(userNames, computedFlows, coreActionConfig)
     return flowUtil.attachIdsAndSum(result)
 }
 
@@ -681,6 +678,11 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate, formIds) => {
         // 返回新的Flow, 防止修改内存中的数据结构
         return {...flow}
     }))
+
+    return flows
+}
+
+const removeUnmatchedDateActivities = (flows, startDoneDate, endDoneDate) => {
     // 根据时间区间过滤掉不在区间内的完成节点，todo和forcast的数据不用处理
     for (const flow of flows) {
         if (!flow.overallprocessflow) {
@@ -743,12 +745,13 @@ const getAllOverDueRunningFlows = async () => {
 }
 
 const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate, formIds) => {
-    const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
-    const result = await flowStatistic.getDeptCoreFlow(userNames, flows, forms)
+    let flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
+    flows = removeUnmatchedDateActivities(flows, startDoneDate, endDoneDate)
+    const result = await userFlowStat.get(userNames, flows, forms)
     for (const formStat of result) {
         for (const activityStat of formStat.children) {
             const activityOverdue = {
-                name: "逾期", type: "OVERDUE", children: [
+                name: "逾期", type: "OVERDUE", excludeUpSum: true, children: [
                     {name: "进行中", type: "TODO", sum: 0, ids: [], children: []},
                     {name: "已完成", type: "HISTORY", sum: 0, ids: [], children: []}
                 ]
@@ -767,22 +770,22 @@ const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate, for
                 // 将进行中或已完成状态下的逾期和未逾期数据合并
                 statusStat.children = statusStat.children[0].children.concat(statusStat.children[1].children)
                 // 合并节点下逾期和未逾期数据
-                const uniqueStateStat = {}
-                for (const item of statusStat.children) {
-                    if (!Object.keys(uniqueStateStat).includes(item.userName)) {
-                        uniqueStateStat[item.userName] = {}
-                    }
-                    uniqueStateStat[item.userName].ids = (uniqueStateStat[item.userName].ids || []).concat(item.ids)
-                    uniqueStateStat[item.userName].sum = uniqueStateStat[item.userName].ids.length
-                }
-                statusStat.children = []
-                for (const key of Object.keys(uniqueStateStat)) {
-                    statusStat.children.push({
-                        userName: key,
-                        ids: uniqueStateStat[key].ids,
-                        sum: uniqueStateStat[key].ids.length
-                    })
-                }
+                // const uniqueStateStat = {}
+                // for (const item of statusStat.children) {
+                //     if (!Object.keys(uniqueStateStat).includes(item.userName)) {
+                //         uniqueStateStat[item.userName] = {}
+                //     }
+                //     uniqueStateStat[item.userName].ids = (uniqueStateStat[item.userName].ids || []).concat(item.ids)
+                //     uniqueStateStat[item.userName].sum = uniqueStateStat[item.userName].ids.length
+                // }
+                // statusStat.children = []
+                // for (const key of Object.keys(uniqueStateStat)) {
+                //     statusStat.children.push({
+                //         userName: key,
+                //         ids: uniqueStateStat[key].ids,
+                //         sum: uniqueStateStat[key].ids.length
+                //     })
+                // }
             }
             activityStat.children.push(activityOverdue)
         }
@@ -793,20 +796,31 @@ const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate, for
 const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate, formIds) => {
     const allFormsWithReviews = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
     const result = await getFormFlowStat(null, allFormsWithReviews, startDoneDate, endDoneDate, formIds)
-    return result
+    // 获取用户的部门信息，用于前端将人汇总都部门下
+    let allUsers = await redisService.getAllUsersDetail()
+    // 仅保留关键信息
+    const pureUsers = allUsers.map(user => {
+        return {
+            userId: user.userid,
+            userName: user.name,
+            departmentId: user.leader_in_dept[0].dept_id,
+            departmentName: user.leader_in_dept[0].dep_detail.name
+        }
+    })
+    return {stat: result, users: pureUsers}
 }
 
 const getOverallFormsAndReviewItemsStatDividedByDept = async (startDoneDate, endDoneDate, formIds) => {
-    const where = {}
-    if (formIds && formIds.length > 0) {
-        where.formId = {$in: formIds}
-    }
-    const depsForms = await departmentFlowFormRepo.getDeptFlowFormsWithActivities(where)
-    const data = deptFlowFormConvertor.convert2FormsDepsActivitiesHierarchy(depsForms)
+    // const where = {}
+    // if (formIds && formIds.length > 0) {
+    //     where.formId = {$in: formIds}
+    // }
+    // const depsForms = await departmentFlowFormRepo.getDeptFlowFormsWithActivities(where)
+    // const data = deptFlowFormConvertor.convert2FormsDepsActivitiesHierarchy(depsForms)
 
     const forms = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
-    const result = await flowStatistic.getOverallFlowForms([], flows, data)
+    const result = await departmentsOverallFlowsStat.get([], flows, forms)
     return flowUtil.attachIdsAndSum(result)
 }
 
@@ -842,5 +856,6 @@ module.exports = {
     getCoreFormFlowConfig,
     getOverallFormsAndReviewItemsStat,
     getAllOverDueRunningFlows,
-    getOverallFormsAndReviewItemsStatDividedByDept
+    getOverallFormsAndReviewItemsStatDividedByDept,
+    removeUnmatchedDateActivities
 }
