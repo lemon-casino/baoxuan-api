@@ -7,9 +7,9 @@ const sequelizeUtil = require("../utils/sequelizeUtil")
 const innerGroupConst = require("../const/tmp/innerGroupConst")
 const whiteList = require("../config/whiteList")
 
-const getUserDetails = async (userId) => {
+const getUserDetails = async (where) => {
     const details = await models.usersModel.findAll({
-        where: {userId}
+        where
     })
 
     const data = sequelizeUtil.extractDataValues(details)
@@ -86,8 +86,38 @@ const getDepartmentUsers = async (userDDId, deptId) => {
     return [user]
 }
 
+/**
+ * 根据在职人员将库中的其他人员设置为离职
+ *
+ * @param onJobUserIds
+ * @returns {Promise<void>}
+ */
+const updateUserResignByOnJobUserIds = async (onJobUserIds) => {
+    await models.usersModel.update(
+        {
+            isResign: true,
+            updateTime: new Date()
+        },
+        {
+            where: {dingdingUserId: {"$notIn": onJobUserIds}}
+        }
+    )
+}
+
+/**
+ * 保存用户信息
+ *
+ * @param user
+ * @returns {Promise<void>}
+ */
+const saveUser = async (user) => {
+    await models.usersModel.create(user);
+}
+
 module.exports = {
     getUserDetails,
     getAllUsers,
-    getDepartmentUsers
+    getDepartmentUsers,
+    updateUserResignByOnJobUserIds,
+    saveUser
 }

@@ -1,3 +1,4 @@
+const bcrypt = require("bcryptjs")
 const UsersModel = require("../model/users");
 const redisService = require("../service/redisService")
 const departmentService = require("../service/departmentService")
@@ -6,6 +7,7 @@ const whiteList = require("../config/whiteList")
 const globalGetter = require("../global/getter")
 const NotFoundError = require("../error/http/notFoundError")
 const {tmInnerGroup, visionInnerGroup} = require("../const/tmp/innerGroupConst")
+const {errorCodes} = require("../const/errorConst");
 
 const getDingDingUserId = async (user_id) => {
     const user = await UsersModel.findOne({
@@ -67,7 +69,7 @@ const getUserSelfOrPartnersOfDepartment = async (ddUserId, deptId) => {
  * @returns {Promise<*>}
  */
 const getUserDetails = async (id) => {
-    const details = await userRepo.getUserDetails(id)
+    const details = await userRepo.getUserDetails({userId: id})
     return details
 }
 
@@ -176,6 +178,40 @@ const getAllUsers = async () => {
     return users
 }
 
+/**
+ * 同步用户信息： 保存新用户、离职的职位离职状态
+ *
+ * @returns {Promise<void>}
+ */
+const syncUserToDB = async (usersInRedis) => {
+    // 新人入库
+    for (const user of usersInRedis) {
+        const newUser = {
+            username: user.mobile,
+            dingdingUserId: user.userid,
+            password: bcrypt.hashSync("123456", 10),
+            nickname: user.name,
+            email: "",
+            status: 1,
+            createTime: new Date(),
+            updateTime: new Date(),
+            isResign: 0
+        }
+        try {
+            await userRepo.getUserDetails({dingdingUserId: user.userid})
+        } catch (e) {
+            if (e.code === errorCodes.userError) {
+                await userRepo.saveUser(newUser)
+            }
+        }
+    }
+
+    // 更新离职状态
+    const onJobUserIds = usersInRedis.map(user => user.userid)
+    await userRepo.updateUserResignByOnJobUserIds(onJobUserIds)
+
+}
+
 module.exports = {
     getDingDingUserId,
     getUsersOfDepartment,
@@ -183,5 +219,6 @@ module.exports = {
     getUserSelfOrPartnersOfDepartment,
     getTMInnerGroups,
     getVisionInnerGroups,
-    getAllUsers
+    getAllUsers,
+    syncUserToDB
 }

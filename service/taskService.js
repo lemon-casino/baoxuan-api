@@ -4,6 +4,7 @@ const flowService = require("../service/flowService")
 const flowFormService = require("../service/flowFormService")
 const workingDayService = require("../service/workingDayService")
 const userLogService = require("../service/userLogService")
+const userService = require("../service/userService")
 const redisUtil = require("../utils/redisUtil")
 const dateUtil = require("../utils/dateUtil")
 const {redisKeys} = require("../const/redisConst")
@@ -51,8 +52,7 @@ const syncUserWithDepartment = async () => {
     const usersWithDepartment = await dingDingService.getUsersWithDepartmentFromDingDing()
     await redisUtil.setValue(redisKeys.AllUsersWithDepartment, JSON.stringify(usersWithDepartment))
     globalSetter.setGlobalUsers(usersWithDepartment)
-    // todo：同步人员信息入库
-
+    await userService.syncUserToDB(usersWithDepartment)
 }
 
 const syncForm = async () => {
