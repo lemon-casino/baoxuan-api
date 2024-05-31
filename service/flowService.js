@@ -769,23 +769,23 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
 
                 // 将进行中或已完成状态下的逾期和未逾期数据合并
                 statusStat.children = statusStat.children[0].children.concat(statusStat.children[1].children)
-                // 合并节点下逾期和未逾期数据
-                // const uniqueStateStat = {}
-                // for (const item of statusStat.children) {
-                //     if (!Object.keys(uniqueStateStat).includes(item.userName)) {
-                //         uniqueStateStat[item.userName] = {}
-                //     }
-                //     uniqueStateStat[item.userName].ids = (uniqueStateStat[item.userName].ids || []).concat(item.ids)
-                //     uniqueStateStat[item.userName].sum = uniqueStateStat[item.userName].ids.length
-                // }
-                // statusStat.children = []
-                // for (const key of Object.keys(uniqueStateStat)) {
-                //     statusStat.children.push({
-                //         userName: key,
-                //         ids: uniqueStateStat[key].ids,
-                //         sum: uniqueStateStat[key].ids.length
-                //     })
-                // }
+                // 合并节点下逾期和未逾期数据：人名去重
+                const uniqueStateStat = {}
+                for (const item of statusStat.children) {
+                    if (!Object.keys(uniqueStateStat).includes(item.userName)) {
+                        uniqueStateStat[item.userName] = {}
+                    }
+                    uniqueStateStat[item.userName].ids = (uniqueStateStat[item.userName].ids || []).concat(item.ids)
+                    uniqueStateStat[item.userName].sum = uniqueStateStat[item.userName].ids.length
+                }
+                statusStat.children = []
+                for (const key of Object.keys(uniqueStateStat)) {
+                    statusStat.children.push({
+                        userName: key,
+                        ids: uniqueStateStat[key].ids,
+                        sum: uniqueStateStat[key].ids.length
+                    })
+                }
             }
             activityStat.children.push(activityOverdue)
         }
