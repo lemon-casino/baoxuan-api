@@ -157,13 +157,13 @@ const statFlow = (flow, activityConfig, statusResult, statKey, flowFormReviews, 
  *
  * @param deptIds
  * @param flows
- * @param formsDepsConfig
+ * @param forms
  * @returns {Promise<*[]>}
  */
-const get = async (deptIds, flows, formsDepsConfig) => {
+const get = async (deptIds, flows, forms) => {
     const finalResult = []
     const formsReviewCache = {}
-    for (const form of formsDepsConfig) {
+    for (const form of forms) {
         const formResult = initSingleFormResult(form, overdueAloneStatusStructure)
         const currFormFlows = flows.filter(flow => flow.formUuid === form.formId)
         for (const flow of currFormFlows) {

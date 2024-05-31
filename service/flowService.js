@@ -604,8 +604,7 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
     // 根据时间获取需要统计的流程数据（今天+历史）
     const deptCoreForms = await flowRepo.getCoreFormFlowConfig(deptId)
     const deptCoreFormIds = deptCoreForms.map(item => item.formId)
-    const deptFormsWithReviews = await flowFormRepo.getAllFlowFormsWithReviews(deptCoreFormIds)
-    const deptFormsStat = await getFormFlowStat(userNames, deptFormsWithReviews, startDoneDate, endDoneDate)
+    const deptFormsStat = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, deptCoreFormIds)
     // const validDeptFormsStat = []
     // 部门的统计走表单全节点的统计：去掉多余的（数据为0）节点
     // for (const formStat of deptFormsStat) {
@@ -744,10 +743,11 @@ const getAllOverDueRunningFlows = async () => {
     return overDueFlows
 }
 
-const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate, formIds) => {
+const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) => {
     let flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
     flows = removeUnmatchedDateActivities(flows, startDoneDate, endDoneDate)
-    const result = await userFlowStat.get(userNames, flows, forms)
+    const formsWithReview = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
+    const result = await userFlowStat.get(userNames, flows, formsWithReview)
     for (const formStat of result) {
         for (const activityStat of formStat.children) {
             const activityOverdue = {
@@ -793,13 +793,12 @@ const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate, for
     return flowUtil.attachIdsAndSum(result)
 }
 
-const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate, formIds) => {
-    const allFormsWithReviews = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
-    const result = await getFormFlowStat(null, allFormsWithReviews, startDoneDate, endDoneDate, formIds)
+const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) => {
+    const formsStatResult = await getUserFlowsStat(null, startDoneDate, endDoneDate, formIds)
     // 获取用户的部门信息，用于前端将人汇总都部门下
-    let allUsers = await redisService.getAllUsersDetail()
+    let allUsersWithDepartment = await redisService.getAllUsersDetail()
     // 仅保留关键信息
-    const pureUsers = allUsers.map(user => {
+    const pureUsersWithDepartment = allUsersWithDepartment.map(user => {
         return {
             userId: user.userid,
             userName: user.name,
@@ -807,20 +806,19 @@ const getOverallFormsAndReviewItemsStat = async (startDoneDate, endDoneDate, for
             departmentName: user.leader_in_dept[0].dep_detail.name
         }
     })
-    return {stat: result, users: pureUsers}
+
+    const formsDepsStatResult = []
+    // 将对节点的统计扩充到部门的统计
+    for (const formResult of formsStatResult) {
+        const newFormResult = {...formResult, children: []}
+    }
+    return {stat: formsStatResult, users: pureUsersWithDepartment}
 }
 
-const getOverallFormsAndReviewItemsStatDividedByDept = async (startDoneDate, endDoneDate, formIds) => {
-    // const where = {}
-    // if (formIds && formIds.length > 0) {
-    //     where.formId = {$in: formIds}
-    // }
-    // const depsForms = await departmentFlowFormRepo.getDeptFlowFormsWithActivities(where)
-    // const data = deptFlowFormConvertor.convert2FormsDepsActivitiesHierarchy(depsForms)
-
+const getDepartmentsOverallFlowsStat = async (startDoneDate, endDoneDate, formIds, departmentIds) => {
     const forms = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
-    const result = await departmentsOverallFlowsStat.get([], flows, forms)
+    const result = await departmentsOverallFlowsStat.get(departmentIds, flows, forms)
     return flowUtil.attachIdsAndSum(result)
 }
 
@@ -854,8 +852,8 @@ module.exports = {
     getCoreFlowData,
     getCoreActionsConfig,
     getCoreFormFlowConfig,
-    getOverallFormsAndReviewItemsStat,
+    getFormsFlowsActivitiesStat,
     getAllOverDueRunningFlows,
-    getOverallFormsAndReviewItemsStatDividedByDept,
+    getDepartmentsOverallFlowsStat,
     removeUnmatchedDateActivities
 }

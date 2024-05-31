@@ -19,8 +19,8 @@ router.get("/statistic/dept-joined-today/:status", deptJoinTodayHandler.todayDep
 router.get("/statistic/dept-launched-today/:status", deptLaunchTodayHandler.todayDeptLaunchedFlowsStatisticHub)
 router.get("/statistic/dept-today-sum", deptTodaySumHandler.getDeptTodaySum)
 // 参数表单的ids可能会较多
-router.post("/statistic/all-review-items", flowHandler.getOverallFormsAndReviewItemsStat)
-router.post("/statistic/all-review-items/departments", flowHandler.getOverallFormsAndReviewItemsStatDividedByDept)
+router.post("/statistic/all-review-items", flowHandler.getFormsFlowsActivitiesStat)
+router.post("/statistic/all-review-items/departments", flowHandler.getDepartmentsOverallFlowsStat)
 
 router.put("/running", flowHandler.updateRunningFlowEmergency)
 
