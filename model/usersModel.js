@@ -119,6 +119,15 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "用户描述: 0是男，1是女",
       field: "describe"
+    },
+    isResign: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: 0,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "是否离职 0-否 1-是",
+      field: "is_resign"
     }
   };
   const options = {
