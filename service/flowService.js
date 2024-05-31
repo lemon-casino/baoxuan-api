@@ -1,7 +1,6 @@
 const FlowForm = require("../model/flowfrom")
 const flowRepo = require("../repository/flowRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
-const userRepo = require("../repository/userRepo")
 const formService = require("../service/flowFormService")
 const departmentService = require("../service/departmentService")
 const dingDingService = require("../service/dingDingService")
@@ -13,11 +12,9 @@ const dateUtil = require("../utils/dateUtil")
 const flowUtil = require("../utils/flowUtil")
 const NotFoundError = require("../error/http/notFoundError")
 const ParameterError = require("../error/parameterError")
-const flowStatistic = require("../core/flowStatistic")
-const algorithmUtil = require("../utils/algorithmUtil")
-const {timingFormFlowNodes} = require("../const/formConst")
-const deptFlowFormConvertor = require("../convertor/deptFlowFormConvertor")
-const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo")
+const departmentCoreActivityStat = require("../core/statistic/departmentCoreActivityStat")
+const departmentsOverallFlowsStat = require("../core/statistic/departmentsOverallFlowsStat")
+const userFlowStat = require("../core/statistic/userFlowsStat")
 const {flowReviewTypeConst, flowStatusConst} = require("../const/flowConst")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
@@ -591,7 +588,7 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
 const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) => {
     const computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, null)
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptId)
-    const result = await flowStatistic.getDeptCoreAction(userNames, computedFlows, coreActionConfig)
+    const result = await departmentCoreActivityStat.get(userNames, computedFlows, coreActionConfig)
     return flowUtil.attachIdsAndSum(result)
 }
 
@@ -750,7 +747,7 @@ const getAllOverDueRunningFlows = async () => {
 const getFormFlowStat = async (userNames, forms, startDoneDate, endDoneDate, formIds) => {
     let flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
     flows = removeUnmatchedDateActivities(flows, startDoneDate, endDoneDate)
-    const result = await flowStatistic.getUserFlowStat(userNames, flows, forms)
+    const result = await userFlowStat.get(userNames, flows, forms)
     for (const formStat of result) {
         for (const activityStat of formStat.children) {
             const activityOverdue = {
@@ -823,7 +820,7 @@ const getOverallFormsAndReviewItemsStatDividedByDept = async (startDoneDate, end
 
     const forms = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
-    const result = await flowStatistic.getOverallFlowForms([], flows, forms)
+    const result = await departmentsOverallFlowsStat.get([], flows, forms)
     return flowUtil.attachIdsAndSum(result)
 }
 
