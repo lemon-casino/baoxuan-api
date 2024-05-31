@@ -35,7 +35,7 @@ const getLinkOperationCount = async (req, res, next) => {
 
         const result = await singleItemTaoBaoService.getLinkOperationCount(
             singleItems,
-            productLineLeaders)
+            productLineLeaders, JSON.parse(timeRange))
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)

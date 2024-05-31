@@ -239,6 +239,7 @@ const getLinkErrorQueryFields = async (status) => {
  * @param linkStatus
  * @param timeRange
  * @param clickingAdditionalParams
+ * @param jis
  * @returns {Promise<{marketRioData: *[], profitData: ({name: string, sum: number, items: *[]}|{name: string, sum: null, items: *[]})[], paymentData: (*|*[]), pagingSingleItems: ({pageCount: *, data: *, pageIndex: *, pageSize: *}|null)}>}
  */
 const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
@@ -251,7 +252,7 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
                                                  linkHierarchies,
                                                  linkStatus,
                                                  timeRange,
-                                                 clickingAdditionalParams) => {
+                                                 clickingAdditionalParams, jis) => {
 
     // 链接问题处理数据需要对clickingAdditionalParams进行转化
     for (let i = 0; i < clickingAdditionalParams.length; i++) {
@@ -285,18 +286,26 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
         linkStatus,
         timeRange,
         clickingAdditionalParams)
+
     /**
      *  付费数据： 精准人群、车、万象台
      * 支付数据：按照新品老品分别统计发货金额和利润额，
      *         利润率按照新老品指定的利润区间统计
      * 获取市场占有率数据
      */
+    let paymentData = []
+    let profitData = []
+    let marketRioData = []
+    if (jis) {
         //付费数据
-    const paymentData = await getPayment(singleItems)
-    //  支付数据
-    const profitData = await getProfitData(singleItems)
-    // 市场占有率
-    const marketRioData = await getMarketRatioData(singleItems)
+        paymentData = await getPayment(singleItems)
+        //  支付数据
+        profitData = await getProfitData(singleItems)
+        // 市场占有率
+        marketRioData = await getMarketRatioData(singleItems)
+    }
+
+
     return {
         pagingSingleItems,
         paymentData,
@@ -363,6 +372,7 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
         }
         noGroupedUsers.push(user.name)
     }
+    // noGroupedUsers.push("无操作")
     groupingResult.push({"未分组": noGroupedUsers})
 
 
@@ -421,6 +431,7 @@ const getSingleItemById = async (id) => {
  * @param linkStatus
  * @param timeRange
  * @param clickingAdditionalParams
+ * @param jis
  * @returns {Promise<void>}
  */
 const getAllSatisfiedSingleItems = async (productLineLeaders,
@@ -433,6 +444,7 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
                                           timeRange,
                                           clickingAdditionalParams) => {
     const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
+
     const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
         999999,
         productLineLeaders,
@@ -482,13 +494,13 @@ async function ToBeOnTheShelves(productLineLeaders) {
  */
 const getLinkOperationCount = async (
     satisfiedSingleItems,
-    productLineLeaders) => {
+    productLineLeaders, timeRange) => {
 
     return [
         {operation: await getSelfDoSingleItemLinkOperationCount(satisfiedSingleItems)},
         {ToBeOnTheShelves: await ToBeOnTheShelves(productLineLeaders)},
         {fighting: await getSelfFightingSingleItemLinkOperationCount(satisfiedSingleItems, await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING))},
-        {error: await getSelfErrorSingleItemLinkOperationCount(satisfiedSingleItems)}
+        {error: await getSelfErrorSingleItemLinkOperationCount(productLineLeaders, satisfiedSingleItems, timeRange)}
     ];
 }
 
@@ -612,9 +624,11 @@ const getSelfFightingSingleItemLinkOperationCount = async (singleItems, fighting
 /**
  * 获取本人链接操作数据（异常数据）
  * @returns {Promise<{sum: number, items: *[]}>}
+ * @param productLineLeaders
  * @param singleItems  获得的数据
+ * @param timeRange
  */
-const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
+const getSelfErrorSingleItemLinkOperationCount = async (productLineLeaders, singleItems, timeRange) => {
     const result = {sum: 0, items: []}
     // 通过map过滤重复的数据
     const uniqueItems = {}
@@ -626,20 +640,6 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
                 let value = exp.value
                 let fieldValue = singleItem[exp.field]
                 if (exp.field === "profitRate") {
-                    // if(singleItem[exp.lessThan] === "true"){
-                    //reallyShipmentAmount 小于0
-                    if (exp.lessThan === "negative_profit_60") {
-                        if (singleItem[exp.lessThan] === "true") {
-                            return singleItem["profitRate"] * 1 < 0
-                        }
-                        return false
-                    } else {
-                        return singleItem[exp.lessThan] === "true";
-                    }
-
-                    //     return  singleItem[exp.field] < parseFloat(exp.value)
-                    // }
-
                 }
                 // 坑市场占比环比（7天）
                 if (exp.field === "salesMarketRateCircleRate7Day") {
@@ -649,6 +649,7 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
                 if (exp.field === "shouTaoPeopleNumMarketRateCircleRate7Day") {
 
                     return (singleItem["salesMarketRateCircleRate7Day"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 < -20) || (singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 < -20 && singleItem["salesMarketRateCircleRate7Day"] * 1 > -20)
+
 
                 }
 
@@ -660,11 +661,6 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
                 if (exp.field === "shouTaoPeopleNumMarketRateCircleRateDay") {
 
                     return (singleItem["salesMarketRateCircleRateDay"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 < -20) || (singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 < -20 && singleItem["salesMarketRateCircleRateDay"] * 1 > -20)
-
-
-                }
-                if (exp.field === "wanXiangTaiProductionRate" || exp.field === "shoppingCatSumRoi" || exp.field === "accuratePeoplePromotionProductionRate") {
-                    // 这些投产比 是每天的计算 现在计算逻辑可以改为3天平均低于2 三天的平均值
 
                 }
 
@@ -698,10 +694,17 @@ const getSelfErrorSingleItemLinkOperationCount = async (singleItems) => {
         })
 
         result.items.push({name: item.name, sum: items.length, clickingAdditionalParams: item.values})
+
         for (const tmp of items) {
             uniqueItems[tmp.id] = 1
         }
     }
+    const sum = await singleItemTaoBaoRepo.getError60SingleIte(productLineLeaders, timeRange)
+    result.items.forEach((item) => {
+        if (item.name === "累计60天负利润") {
+            item.sum = sum
+        }
+    })
     result.sum = Object.keys(uniqueItems).length
     // result.items.sort((a, b) => b.sum - a.sum);
     return result;

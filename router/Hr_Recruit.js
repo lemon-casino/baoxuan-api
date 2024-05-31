@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Hr_RecruitmentDepartmentPositions = require('../service/Hr_RecruitmentDepartmentPositions');
+const Hr_RecruitmentDepartmentPositions = require('../repository/Hr_RecruitmentDepartmentPositions');
 const {success} = require("../utils/biResponse");
 const globalGetter = require("../global/getter")
 const {flowStatusConst} = require("../const/flowConst")

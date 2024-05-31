@@ -53,10 +53,14 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
             linkHierarchies,
             linkStatus,
             timeRange,
-            clickingAdditionalParams
+            clickingAdditionalParams,
+            jis
         } = req.query
-
         joiUtil.validate({pageIndex, pageSize})
+        //
+        let ces = jis === undefined ? true : JSON.parse(jis)
+        // string 转换为 boolean ces = JSON.parse(jis)
+        // console.log(typeof jis, typeof ces)
         const result = await singleItemTaoBaoService.getTaoBaoSingleItemsWithStatistic(
             parseInt(pageIndex),
             parseInt(pageSize),
@@ -68,7 +72,9 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
             JSON.parse(linkHierarchies || "[]"),
             linkStatus,
             JSON.parse(timeRange),
-            JSON.parse(clickingAdditionalParams || "[]"))
+            JSON.parse(clickingAdditionalParams || "[]"),
+            ces
+        )
 
         return res.send(biResponse.success(result))
     } catch (e) {
@@ -103,7 +109,7 @@ const getSingleItemDetails = async (req, res, next) => {
     try {
         const id = req.params.id
         joiUtil.validate({id})
-        const result = await singleItemTaoBaoService.getSingleItemById(id)
+        const result = await singleItemTaoBaoService.getSingleItemById(id.split(","))
         const data = singleItemTaoBaoService.attachPercentageTagToField(result)
         return res.send(biResponse.success(data))
     } catch (e) {

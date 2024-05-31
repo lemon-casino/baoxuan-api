@@ -1,4 +1,3 @@
-
 const ChannengFenxiSumModel = require('../model/channengFenxiSum');
 const RenshiRichangModel = require('../model/resumeResult');
 const renshiRichangModel = require('../model/renshiRichang');
@@ -9,26 +8,27 @@ const getHrDepartment = async (startDate, endDate,) => {
     try {
         // 计算offset
         return await ChannengFenxiSumModel.sequelize.query(
-            `
-            WITH CalculatedValues AS (
+            `  WITH CalculatedValues AS (
                 SELECT
-                    cfs.section,cfs.matching_resume_volume AS matchingResumeVolume,
+                    section,max(matching_resume_volume) AS matching_resume_volume,
                     SUM(IF(rr.position LIKE CONCAT('%', cfs.keyword, '%'), rr.number_preliminary_applicants, 0)) AS passTheFirstTest,
                     SUM(IF(rr.position LIKE CONCAT('%', cfs.keyword, '%'), rr.number_of_re_examinations, 0)) AS passTheSecondExamination,
                     SUM(IF(rr.position LIKE CONCAT('%', cfs.keyword, '%'), rr.offer_number, 0)) AS offer_number,
                     SUM(IF(rr.position LIKE CONCAT('%', cfs.keyword, '%'), rr.attendance, 0)) AS startWorkThisMonth
-                FROM
-                    channeng_fenxi_sum cfs
+                FROM (
+                     select  section, max(cfs.matching_resume_volume) AS matching_resume_volume ,   cfs.keyword AS keyword FROM  channeng_fenxi_sum cfs
+                                          group by section,  keyword
+                     ) AS  cfs
                 LEFT JOIN
                     renshi_richang rr ON rr.position LIKE CONCAT('%', cfs.keyword, '%')
                 WHERE
                     rr.date BETWEEN :startDate AND :endDate
                 GROUP BY
-                    cfs.section,cfs.matching_resume_volume
+                    cfs.section
             )
             SELECT
                 section,
-                SUM(matchingResumeVolume) As matchingResumeVolume,
+                matching_resume_volume As matchingResumeVolume,
                 SUM(passTheFirstTest)AS passTheFirstTest,
                 SUM(passTheSecondExamination)AS passTheSecondExamination,
                 SUM(startWorkThisMonth) AS startWorkThisMonth,
@@ -54,34 +54,36 @@ const getHrQuarters = async (startDate, endDate) => {
         // 计算offset
         return await ChannengFenxiSumModel.sequelize.query(
             `
-            WITH CalculatedValues AS (
+  WITH CalculatedValues AS (
                 SELECT
-                    cfs.keyword,cfs.matching_resume_volume AS matchingResumeVolume,
+                    keyword,max(matching_resume_volume) AS matching_resume_volume,
                     SUM(IF(rr.position LIKE CONCAT('%', cfs.keyword, '%'), rr.number_preliminary_applicants, 0)) AS passTheFirstTest,
                     SUM(IF(rr.position LIKE CONCAT('%', cfs.keyword, '%'), rr.number_of_re_examinations, 0)) AS passTheSecondExamination,
                     SUM(IF(rr.position LIKE CONCAT('%', cfs.keyword, '%'), rr.offer_number, 0)) AS offer_number,
                     SUM(IF(rr.position LIKE CONCAT('%', cfs.keyword, '%'), rr.attendance, 0)) AS startWorkThisMonth
-                FROM
-                    channeng_fenxi_sum cfs
+                FROM (
+                     select  section, max(cfs.matching_resume_volume) AS matching_resume_volume ,   cfs.keyword AS keyword FROM  channeng_fenxi_sum cfs
+                                          group by section,  keyword
+                     ) AS  cfs
                 LEFT JOIN
                     renshi_richang rr ON rr.position LIKE CONCAT('%', cfs.keyword, '%')
                 WHERE
                     rr.date BETWEEN :startDate AND :endDate
                 GROUP BY
-                    cfs.keyword,cfs.matching_resume_volume
+                    cfs.keyword
             )
             SELECT
                 keyword,
-                SUM(matchingResumeVolume) AS matchingResumeVolume,
-                SUM(passTheFirstTest) AS  passTheFirstTest,
-                SUM(passTheSecondExamination) AS passTheSecondExamination,
+                matching_resume_volume As matchingResumeVolume,
+                SUM(passTheFirstTest)AS passTheFirstTest,
+                SUM(passTheSecondExamination)AS passTheSecondExamination,
                 SUM(startWorkThisMonth) AS startWorkThisMonth,
                 SUM(offer_number) AS offer_number,
                 CONCAT(FORMAT(IF(SUM(passTheFirstTest) > 0, 100.0 * SUM(passTheSecondExamination) / SUM(passTheFirstTest), 0), 2), '%') AS secondTestPassRate
             FROM
                 CalculatedValues
-            GROUP BY
-                keyword
+           GROUP BY
+            keyword
         `, {
                 replacements: {startDate, endDate},
                 type: QueryTypes.SELECT
@@ -97,16 +99,17 @@ const getMatching = async (startDate, endDate,) => {
     try {
         // 计算offset
         return await RenshiRichangModel.findAll({
-                attributes: [
-                    [Sequelize.literal(`SUBSTRING_INDEX(position, ' _', 1)`), 'position'],
-                    ['keyword', 'keyword'],
-                    ['number_resumes', 'numberResumes']
-                ],
-                where: {
-                    date: {
-                        $between: [startDate, endDate]
-                    }
-                }});
+            attributes: [
+                [Sequelize.literal(`SUBSTRING_INDEX(position, ' _', 1)`), 'position'],
+                ['keyword', 'keyword'],
+                ['number_resumes', 'numberResumes']
+            ],
+            where: {
+                date: {
+                    $between: [startDate, endDate]
+                }
+            }
+        });
     } catch (error) {
         throw new Error('查询数据失败', error);
     }
@@ -189,7 +192,6 @@ const getOnboarding = async () => {
         // );
 
 
-
     } catch (error) {
         throw new Error('Failed to query onboarding data', error);
     }
@@ -211,8 +213,6 @@ const getInvert = async () => {
             logging: true,
             raw: true
         });
-
-
 
 
     } catch (error) {
@@ -238,8 +238,6 @@ const getRecommend = async () => {
         });
 
 
-
-
     } catch (error) {
         throw new Error('Failed to query onboarding data', error);
     }
@@ -249,35 +247,52 @@ const getHrRecruitment = async (startDate, endDate,) => {
     try {
         // 计算offset
         return await ChannengFenxiSumModel.sequelize.query(
-            `            WITH CalculatedValues AS (
+            `    
+             WITH CalculatedValues AS (
                 SELECT
-                    cfs.keyword, cfs.target_number_demand, cfs.target_completions,cfs.rate_of_completion,cfs.matching_resume_volume,cfs.amount_invitation ,cfs.area_reach ,cfs.second_test_pass_rate,
+                   MAX(cfs.target_number_demand) AS target_number_demand ,
+                   cfs.keyword,
+                   MAX(cfs.amount_invitation) AS amount_invitation,
+                   MAX(cfs.target_completions) AS target_completions ,
+                    MAX(cfs.matching_resume_volume) AS matching_resume_volume,
+                    MAX(rate_of_completion) AS rate_of_completion,
+                    SUM(second_test_pass_rate) AS second_test_pass_rate,
                     SUM(IF(rr.position LIKE CONCAT('%', cfs.keyword, '%'), rr.number_preliminary_applicants, 0)) AS passTheFirstTest,
                     SUM(IF(rr.position LIKE CONCAT('%', cfs.keyword, '%'), rr.number_of_re_examinations, 0)) AS passTheSecondExamination,
                     SUM(IF(rr.position LIKE CONCAT('%', cfs.keyword, '%'), rr.offer_number, 0)) AS offer_number,
-                    SUM(IF(rr.position LIKE CONCAT('%', cfs.keyword, '%'), rr.attendance, 0)) AS startWorkThisMonth
+                    SUM(IF(rr.position LIKE CONCAT('%', cfs.keyword, '%'), rr.attendance, 0)) AS startWorkThisMonth,
+                    MAX(area_reach) AS area_reach
                 FROM
-                    channeng_fenxi_sum cfs
+                   (select  keyword,   SUM(rate_of_completion) AS rate_of_completion,
+                   SUM(amount_invitation) AS amount_invitation,
+                   MAX(target_number_demand) target_number_demand,
+                             MAX(cfs.target_completions) target_completions,
+                             max(cfs.matching_resume_volume) AS matching_resume_volume ,
+                            SUM(second_test_pass_rate) AS second_test_pass_rate,
+                             SUM(area_reach) AS area_reach
+                              FROM  channeng_fenxi_sum cfs
+                                          group by   keyword
+                     ) AS  cfs
                 LEFT JOIN
                     renshi_richang rr ON rr.position LIKE CONCAT('%', cfs.keyword, '%')
                 WHERE
                     rr.date BETWEEN :startDate AND :endDate
                 GROUP BY
-                    cfs.keyword,cfs.target_number_demand,target_completions,rate_of_completion,second_test_pass_rate,matching_resume_volume,amount_invitation,area_reach
+                    cfs.keyword
             )
             SELECT
                 keyword AS position ,
-                SUM(target_number_demand) AS targetNumberDemand,
-                SUM(target_completions) AS target_completions,
-                CONCAT(FORMAT(IF(SUM(rate_of_completion) > 0, SUM(rate_of_completion), 0), 2), '%') AS rateOfCompletion,
+                MAX(amount_invitation) AS amountInvitation,
+                MAX(target_number_demand) AS targetNumberDemand,
+                MAX(target_completions) AS target_completions,
+                MAX(matching_resume_volume) AS matchingResumeVolume,
+                  CONCAT(FORMAT(IF(SUM(rate_of_completion) > 0, SUM(rate_of_completion), 0), 2), '%') AS rateOfCompletion,
                 SUM(passTheFirstTest) AS passTheFirstTest,
                 SUM(passTheSecondExamination) AS passTheSecondExamination,
                 SUM(startWorkThisMonth) AS startWorkThisMonth,
                 SUM(second_test_pass_rate) AS secondTestPassRate,
-                SUM(matching_resume_volume) AS matchingResumeVolume,
-                SUM(amount_invitation) AS amountInvitation,
                 CONCAT(FORMAT(IF(SUM(passTheSecondExamination) > 0, 100.0 * SUM(startWorkThisMonth) / SUM(passTheSecondExamination), 0), 2), '%') AS conversionRate,
-                 SUM(area_reach) AS areaReach,
+                SUM(area_reach) AS areaReach,
                  CONCAT(FORMAT(IF(SUM(passTheFirstTest) > 0, 100.0 * SUM(passTheSecondExamination) / SUM(passTheFirstTest), 0), 2), '%') AS secondTestPassRate
             FROM
                 CalculatedValues
