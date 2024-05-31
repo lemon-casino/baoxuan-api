@@ -1,3 +1,4 @@
+const _ = require("lodash")
 const FlowForm = require("../model/flowfrom")
 const flowRepo = require("../repository/flowRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
@@ -604,7 +605,8 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
     // 根据时间获取需要统计的流程数据（今天+历史）
     const deptCoreForms = await flowRepo.getCoreFormFlowConfig(deptId)
     const deptCoreFormIds = deptCoreForms.map(item => item.formId)
-    const deptFormsStat = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, deptCoreFormIds)
+    let deptFormsStat = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, deptCoreFormIds)
+    return flowUtil.attachIdsAndSum(deptFormsStat)
     // const validDeptFormsStat = []
     // 部门的统计走表单全节点的统计：去掉多余的（数据为0）节点
     // for (const formStat of deptFormsStat) {
@@ -616,7 +618,7 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
     //     }
     //     validDeptFormsStat.push(validFormStat)
     // }
-    return deptFormsStat
+    // return deptFormsStat
 }
 
 /**
@@ -790,14 +792,39 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
             activityStat.children.push(activityOverdue)
         }
     }
-    return flowUtil.attachIdsAndSum(result)
+    return result
 }
 
+
+const overdueAloneStatusStructure = [
+    {name: "待转入", type: flowReviewTypeConst.FORCAST, excludeUpSum: true, children: []},
+    {
+        name: "进行中",
+        type: flowReviewTypeConst.TODO,
+        children: []
+    },
+    {
+        name: "已完成", type: flowReviewTypeConst.HISTORY,
+        children: []
+    },
+    {
+        name: "已逾期", type: "OVERDUE", excludeUpSum: true, children: [
+            {
+                name: "进行中",
+                type: flowReviewTypeConst.TODO,
+                children: []
+            },
+            {
+                name: "已完成", type: flowReviewTypeConst.HISTORY,
+                children: []
+            }]
+    }
+]
 const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) => {
-    const formsStatResult = await getUserFlowsStat(null, startDoneDate, endDoneDate, formIds)
+    const originResult = await getUserFlowsStat(null, startDoneDate, endDoneDate, formIds)
     // 获取用户的部门信息，用于前端将人汇总都部门下
     let allUsersWithDepartment = await redisService.getAllUsersDetail()
-    // 仅保留关键信息
+    // 过滤不必要的信息
     const pureUsersWithDepartment = allUsersWithDepartment.map(user => {
         return {
             userId: user.userid,
@@ -806,13 +833,79 @@ const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) 
             departmentName: user.leader_in_dept[0].dep_detail.name
         }
     })
-
+    // 转化成按不同统计的结构数据
     const formsDepsStatResult = []
-    // 将对节点的统计扩充到部门的统计
-    for (const formResult of formsStatResult) {
-        const newFormResult = {...formResult, children: []}
+    for (const originFormResult of originResult) {
+        const newFormResult = {...originFormResult, children: []}
+        for (const originActivityResult of originFormResult.children) {
+            // 找到当前节点最底下的人所在的部门
+            // - 将状态下对从人的角度的统计 => 拉出人的统计加上状态信息
+            const operatorsResult = []
+            for (const originStatusResult of originActivityResult.children) {
+
+                const tmpTypes = [originStatusResult.type]
+
+                // originStatusResult 会分为人的统计、逾期:进行中-已完成
+                for (const originMaybeOperatorResult of originStatusResult.children) {
+                    if (originMaybeOperatorResult.children) {
+                        for (const operatorResult of originMaybeOperatorResult.children) {
+                            const newTypes = _.cloneDeep(tmpTypes)
+                            newTypes.push(originMaybeOperatorResult.type)
+                            operatorsResult.push({
+                                types: newTypes,
+                                ...operatorResult
+                            })
+                        }
+                    } else {
+                        operatorsResult.push({
+                            types: tmpTypes,
+                            ...originMaybeOperatorResult
+                        })
+                    }
+                }
+            }
+            // 将该人的统计数据转成按部门数据
+            for (const operatorResult of operatorsResult) {
+                let userDepName = "未知"
+                const userDeps = pureUsersWithDepartment.filter(user => user.userName === operatorResult.userName)
+                if (userDeps.length > 0) {
+                    userDepName = userDeps[0].departmentName
+                }
+                let deptResult = null
+                const tmpDepartmentsResult = newFormResult.children.filter(depResult => depResult.deptName === userDepName)
+                if (tmpDepartmentsResult.length === 0) {
+                    newFormResult.children.push({deptName: userDepName, children: overdueAloneStatusStructure})
+                    deptResult = newFormResult.children[newFormResult.children.length - 1]
+                } else {
+                    deptResult = tmpDepartmentsResult[0]
+                }
+
+                // 找到新的部门结构中对应的statusResult
+                let deptStatusResult = deptResult.children.filter(item => item.type === operatorResult.types[0])[0]
+                if (operatorResult.types.length > 1) {
+                    deptStatusResult = deptStatusResult.children.filter(item => item.type === operatorResult.types[1])[0]
+                }
+
+                const tmpActivityResults = deptStatusResult.children.filter(item => item.activityName === originActivityResult.activityName)
+                let activityResult = null
+                if (tmpActivityResults.length === 0) {
+                    deptStatusResult.children.push({activityName: originActivityResult.activityName, children: []})
+                    activityResult = deptStatusResult.children[deptStatusResult.children.length - 1]
+                } else {
+                    activityResult = tmpActivityResults[0]
+                }
+                activityResult.children.push({
+                    userName: operatorResult.userName,
+                    ids: operatorResult.ids,
+                    sum: operatorResult.sum
+                })
+            }
+        }
+        formsDepsStatResult.push(newFormResult)
     }
-    return {stat: formsStatResult, users: pureUsersWithDepartment}
+    const activityStatResult = flowUtil.attachIdsAndSum(originResult)
+    const deptStatResult = flowUtil.attachIdsAndSum(formsDepsStatResult)
+    return {activityStat: activityStatResult, deptStat: deptStatResult, users: pureUsersWithDepartment}
 }
 
 const getDepartmentsOverallFlowsStat = async (startDoneDate, endDoneDate, formIds, departmentIds) => {
