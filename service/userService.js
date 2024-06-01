@@ -68,8 +68,8 @@ const getUserSelfOrPartnersOfDepartment = async (ddUserId, deptId) => {
  * @param id
  * @returns {Promise<*>}
  */
-const getUserDetails = async (id) => {
-    const details = await userRepo.getUserDetails({userId: id})
+const getUserDetails = async (where) => {
+    const details = await userRepo.getUserDetails(where)
     return details
 }
 
