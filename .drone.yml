@@ -15,6 +15,7 @@ steps:
       script:
         - cd /data/prod/baoxuan-api
         - git pull
+        - npm install
         - ./start.sh -m prod
 
   - name: notify
