@@ -1,0 +1,43 @@
+kind: pipeline
+type: docker
+name: zaio-api-deploy
+
+steps:
+  - name: ssh-deploy
+    image: registry-intl.cn-shenzhen.aliyuncs.com/sztest/sz:ssh
+    settings:
+      host:
+        from_secret: host
+      password:
+        from_secret: password
+      username: zaio
+      port: 22
+      script:
+        - cd /data/prod/baoxuan-api
+#        - kill -9 $(lsof -i:8080 | awk '{print $2}' | tail -n 2)
+#        - nohup java -jar `cat latest_jar` > nohup.out 2>&1 &
+        - echo 'hello world'
+
+  - name: notify
+    image: drillster/drone-email
+    settings:
+      host: smtp.qq.com
+      port: 465
+      username: 1875483499@qq.com
+      password:
+        from_secret: qq_smtp_code
+      from: 1875483499@qq.com
+      recipients: 1875483499@qq.com
+    when:
+      status:
+        - success
+        - failure
+
+trigger:
+  ref:
+    - refs/tags/*
+
+volumes:
+  - name: build
+    host:
+      path: /data/prod/baoxuan-api

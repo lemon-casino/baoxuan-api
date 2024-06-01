@@ -818,7 +818,8 @@ const getOverallFormsAndReviewItemsStatDividedByDept = async (startDoneDate, end
     // const depsForms = await departmentFlowFormRepo.getDeptFlowFormsWithActivities(where)
     // const data = deptFlowFormConvertor.convert2FormsDepsActivitiesHierarchy(depsForms)
 
-    const forms = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
+    const forms =
+        await flowFormRepo.getAllFlowFormsWithReviews(formIds)
     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
     const result = await departmentsOverallFlowsStat.get([], flows, forms)
     return flowUtil.attachIdsAndSum(result)
