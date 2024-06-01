@@ -10,7 +10,7 @@ steps:
         from_secret: host
       password:
         from_secret: password
-      username: zaio
+      username: root
       port: 22
       script:
         - cd /data/prod/baoxuan-api
