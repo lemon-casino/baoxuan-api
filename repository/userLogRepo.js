@@ -60,7 +60,7 @@ const durationStatistic = async (userId, timeRange, isOnline) => {
     if (userId) {
         where.userId = userId
     }
-    if (isOnline !== null) {
+    if (isOnline !== undefined) {
         where.isOnline = isOnline
     }
 
@@ -70,7 +70,7 @@ const durationStatistic = async (userId, timeRange, isOnline) => {
             ["user_id", "userId"],
             [models.Sequelize.fn('SUM', models.Sequelize.literal('TIME_TO_SEC(TIMEDIFF(last_online_time, login_time))')), 'duration']
         ],
-        where: {},
+        where,
         group: ["user_id", "user_name"]
     })
     return sequelizeUtil.extractDataValues(result)
