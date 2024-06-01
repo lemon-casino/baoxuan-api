@@ -40,8 +40,18 @@ const put_user_table = async (req, res) => {
 const sort_user_table = async (req, res) => {
 
     try {
-        
+
         rest.table = await tianmao__user_tableService.sort_user_table(req.body, req.user.id);
+        return res.send(success(rest.table));
+
+    } catch (e) {
+    }
+}
+const tmall_user_table = async (req, res) => {
+
+    try {
+
+        rest.table = await tianmao__user_tableService.tmall_user_table(req.body);
         return res.send(success(rest.table));
 
     } catch (e) {
@@ -50,5 +60,6 @@ const sort_user_table = async (req, res) => {
 module.exports = {
     get_user_table,
     put_user_table,
-    sort_user_table
+    sort_user_table,
+    tmall_user_table
 }

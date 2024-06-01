@@ -1,7 +1,11 @@
 const usersto = require('../model/usersto');
+const sequelize = require("../model/init");
 const userTableStructureModel = require('../model/userTableStructure');
+const getSingleItemTaoBaoModel = require("../model/singleItemTaobaoModel")
+const singleItemTaoBaoModel = getSingleItemTaoBaoModel(sequelize);
 const sequelizeUtil = require("../utils/sequelizeUtil");
 const {Sequelize, QueryTypes, Op} = require('sequelize');
+
 const get_user_table = async (id) => {
     try {
         return await usersto.findOne({
@@ -106,7 +110,7 @@ const inst_user_table_one = async (dingdingUserId) => {
         )
 
     } catch (error) {
-        throw new Error('更新数据失败');
+        throw new Error('批量复制all-one数据失败');
     }
 
 };
@@ -135,7 +139,21 @@ const install_user_table_one = async (title) => {
         });
 
     } catch (error) {
-        throw new Error('删除数据失败');
+        throw new Error('批量添加数据失败');
+    }
+
+};
+
+const put_tmall_table = async (item) => {
+    try {
+        return await singleItemTaoBaoModel.update(item, {
+            where: {id: item.id},
+            logging: false
+        })
+
+
+    } catch (error) {
+        throw new Error('更新数据失败');
     }
 
 };
@@ -148,5 +166,6 @@ module.exports = {
     put_user_table,
     inst_user_table_one,
     del_user_table,
-    install_user_table_one
+    install_user_table_one,
+    put_tmall_table
 };

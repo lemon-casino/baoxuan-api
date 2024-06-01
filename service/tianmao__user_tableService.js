@@ -54,9 +54,20 @@ const sort_user_table = async (title, id) => {
     } catch (e) {
     }
 }
+const tmall_user_table = async (linkdata) => {
+    try {
+        linkdata.shoppingCatSumRoi = linkdata.shoppingCatSumRoi.replace('%', '');
+        linkdata.accuratePeoplePromotionProductionRate = linkdata.accuratePeoplePromotionProductionRate.replace('%', '');
+        linkdata.wanXiangTaiProductionRate = linkdata.wanXiangTaiProductionRate.replace('%', '');
+        delete linkdata._X_ROW_KEY;
+        await tian_mao_link_user_table.put_tmall_table(linkdata)
+    } catch (e) {
+    }
+}
 
 module.exports = {
     get_user_table,
     put_user_table,
-    sort_user_table
+    sort_user_table,
+    tmall_user_table
 }

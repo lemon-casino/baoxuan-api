@@ -8,4 +8,5 @@ router.put("/table", tmall_link.put_user_table)
 //排序功能
 router.use(bodyParser.json());
 router.post("/table/sort", tmall_link.sort_user_table)
+router.put("/table/tmall", tmall_link.tmall_user_table)
 module.exports = router;
