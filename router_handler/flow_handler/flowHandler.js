@@ -138,28 +138,28 @@ const getAllOverDueRunningFlows = async (req, res, next) => {
  * @param next
  * @returns {Promise<*>}
  */
-const getOverallFormsAndReviewItemsStat = async (req, res, next) => {
+const getFormsFlowsActivitiesStat = async (req, res, next) => {
     try {
         const {startDate, endDate, formIds} = req.body
         joiUtil.validate({
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
         })
-        const result = await flowService.getOverallFormsAndReviewItemsStat(startDate, endDate, formIds)
+        const result = await flowService.getFormsFlowsActivitiesStat(startDate, endDate, formIds)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
     }
 }
 
-const getOverallFormsAndReviewItemsStatDividedByDept = async (req, res, next) => {
+const getDepartmentsOverallFlowsStat = async (req, res, next) => {
     try {
-        const {startDate, endDate, formIds} = req.body
+        const {startDate, endDate, formIds, departmentIds} = req.body
         joiUtil.validate({
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
         })
-        const result = await flowService.getOverallFormsAndReviewItemsStatDividedByDept(startDate, endDate, formIds)
+        const result = await flowService.getDepartmentsOverallFlowsStat(startDate, endDate, formIds, departmentIds)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -172,6 +172,6 @@ module.exports = {
     updateRunningFlowEmergency,
     getCoreDataByType,
     getAllOverDueRunningFlows,
-    getOverallFormsAndReviewItemsStat,
-    getOverallFormsAndReviewItemsStatDividedByDept
+    getFormsFlowsActivitiesStat,
+    getDepartmentsOverallFlowsStat
 }

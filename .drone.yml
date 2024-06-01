@@ -1,6 +1,6 @@
 kind: pipeline
 type: docker
-name: zaio-api-deploy
+name: bi-api-deploy
 
 steps:
   - name: ssh-deploy
@@ -14,11 +14,8 @@ steps:
       port: 22
       script:
         - cd /data/prod/baoxuan-api
-#        - kill -9 $(lsof -i:8080 | awk '{print $2}' | tail -n 2)
-#        - nohup java -jar `cat latest_jar` > nohup.out 2>&1 &
         - git pull
         - ./start.sh -m prod
-#        - nohup npm run prod > logs/nohup.out 2>&1 &
 
   - name: notify
     image: drillster/drone-email
