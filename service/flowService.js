@@ -833,16 +833,16 @@ const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) 
             departmentName: user.leader_in_dept[0].dep_detail.name
         }
     })
+
     // 转化成按不同统计的结构数据
     const formsDepsStatResult = []
     for (const originFormResult of originResult) {
-        const newFormResult = {...originFormResult, children: []}
+        const newFormResult = {formId: originFormResult.formId, formName: originFormResult.formName, children: []}
         for (const originActivityResult of originFormResult.children) {
             // 找到当前节点最底下的人所在的部门
             // - 将状态下对从人的角度的统计 => 拉出人的统计加上状态信息
             const operatorsResult = []
             for (const originStatusResult of originActivityResult.children) {
-
                 const tmpTypes = [originStatusResult.type]
 
                 // originStatusResult 会分为人的统计、逾期:进行中-已完成
@@ -874,7 +874,7 @@ const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) 
                 let deptResult = null
                 const tmpDepartmentsResult = newFormResult.children.filter(depResult => depResult.deptName === userDepName)
                 if (tmpDepartmentsResult.length === 0) {
-                    newFormResult.children.push({deptName: userDepName, children: overdueAloneStatusStructure})
+                    newFormResult.children.push({deptName: userDepName, children: _.cloneDeep(overdueAloneStatusStructure)})
                     deptResult = newFormResult.children[newFormResult.children.length - 1]
                 } else {
                     deptResult = tmpDepartmentsResult[0]
@@ -903,6 +903,7 @@ const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) 
         }
         formsDepsStatResult.push(newFormResult)
     }
+
     const activityStatResult = flowUtil.attachIdsAndSum(originResult)
     const deptStatResult = flowUtil.attachIdsAndSum(formsDepsStatResult)
     return {activityStat: activityStatResult, deptStat: deptStatResult, users: pureUsersWithDepartment}
