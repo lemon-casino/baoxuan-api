@@ -901,6 +901,7 @@ const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) 
                 })
             }
         }
+        newFormResult.flowsStat = originFormResult.flowsStat
         formsDepsStatResult.push(newFormResult)
     }
 
