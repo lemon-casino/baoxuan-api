@@ -95,7 +95,6 @@ const getHrQuarters = async (startDate, endDate) => {
 
 };
 const getMatching = async (startDate, endDate,) => {
-    console.log(startDate, endDate);
     try {
         // 计算offset
         return await RenshiRichangModel.findAll({
@@ -179,7 +178,7 @@ const getOnboarding = async () => {
                 ]
             },
             group: [Sequelize.fn('date_format', Sequelize.col('date'), '%m')], //分组
-            logging: true,
+            logging: false,
             raw: true
         });
         // return await renshiRichangModel.sequelize.query(
@@ -210,7 +209,7 @@ const getInvert = async () => {
                 ]
             },
             group: [Sequelize.fn('date_format', Sequelize.col('date'), '%m')], //分组
-            logging: true,
+            logging: false,
             raw: true
         });
 
@@ -233,7 +232,7 @@ const getRecommend = async () => {
                 ]
             },
             group: [Sequelize.fn('date_format', Sequelize.col('date'), '%m')], //分组
-            logging: true,
+            logging: false,
             raw: true
         });
 

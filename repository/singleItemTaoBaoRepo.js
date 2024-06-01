@@ -474,7 +474,7 @@ const getSingleItemById = async (id) => {
                 [Op.in]: id
             }
         },
-        logging: true
+        logging: false
 
     })
     if (singleItem && singleItem.length > 0) {
