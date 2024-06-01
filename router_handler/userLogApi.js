@@ -47,7 +47,13 @@ const iAmDown = async (req, res, next) => {
 
 const durationStatistic = async (req, res, next) => {
     try {
-        const result = await userLogService.durationStatistic()
+        const {userId, startDate, endDate, isOnline} = req.query
+        const validateItems = {startDate, endDate}
+        joiUtil.validate(validateItems)
+        const result = await userLogService.durationStatistic(
+            userId,
+            [dateUtil.startOfDay(startDate), dateUtil.endOfDay(endDate)],
+            isOnline)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)

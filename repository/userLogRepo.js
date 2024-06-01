@@ -55,13 +55,22 @@ const getLatestUserLog = async (userId) => {
     return sequelizeUtil.extractDataValues(userLatestLog)
 }
 
-const durationStatistic = async () => {
+const durationStatistic = async (userId, timeRange, isOnline) => {
+    const where = {loginTime: {$between: timeRange}}
+    if (userId) {
+        where.userId = userId
+    }
+    if (isOnline !== null) {
+        where.isOnline = isOnline
+    }
+
     const result = await models.userLogModel.findAll({
         attributes: [
             ["user_name", "userName"],
             ["user_id", "userId"],
             [models.Sequelize.fn('SUM', models.Sequelize.literal('TIME_TO_SEC(TIMEDIFF(last_online_time, login_time))')), 'duration']
         ],
+        where: {},
         group: ["user_id", "user_name"]
     })
     return sequelizeUtil.extractDataValues(result)
@@ -75,11 +84,29 @@ const setUserDown = async (userId) => {
     })
 }
 
+/**
+ * 获取有过登录的用户
+ *
+ * @returns {Promise<void>}
+ */
+const getHasLoggedUsers = async () => {
+    const loggedUsers = await models.userLogModel.findAll({
+        attributes: [
+            ["user_name", "userName"],
+            ["user_id", "userId"]
+        ],
+        group: ["user_id", "user_name"]
+    })
+
+    return loggedUsers.map(user => user.get({plain: true}))
+}
+
 module.exports = {
     saveUserLog,
     getUserLogs,
     updateFields,
     getLatestUserLog,
     durationStatistic,
-    setUserDown
+    setUserDown,
+    getHasLoggedUsers
 }

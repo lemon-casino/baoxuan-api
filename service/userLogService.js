@@ -1,9 +1,10 @@
 const userLogRepo = require("../repository/userLogRepo")
+const userRepo = require("../repository/userRepo")
 const uuidUtil = require("../utils/uuidUtil")
 const redisUtil = require("../utils/redisUtil")
 const userService = require("../service/userService")
 const onlineCheckConst = require("../const/onlineCheckConst")
-
+const {redisKeys} = require("../const/redisConst");
 
 const getUserLogs = async (pageIndex, pageSize, userId, timeRange, isOnline) => {
     const userLogs = await userLogRepo.getUserLogs(parseInt(pageIndex),
@@ -64,26 +65,27 @@ const iAmDown = async (userId) => {
     }
 }
 
-const durationStatistic = async () => {
-    const allUsers = await userService.getAllUsers()
-    let userStatistic = await userLogRepo.durationStatistic()
-    const loginUserIds = {}
-    for (const user of userStatistic) {
-        loginUserIds[user.userId] = 1
-    }
+const durationStatistic = async (userId, timeRange, isOnline) => {
+    const allUsers = await userRepo.getAllUsers()
+    let loginStatistic = await userLogRepo.durationStatistic(userId, timeRange, isOnline)
+    loginStatistic = loginStatistic.sort((curr, next) => {
+        return parseInt(next.duration || "0") - parseInt(curr.duration || "0")
+    })
+
+    // 按部门统计从未登录过的用户
+    const neverLoginUsers = []
+    const loggedUsers = await userLogRepo.getHasLoggedUsers()
+    const loggedUserIds = loggedUsers.map(user => user.userId)
     for (const user of allUsers) {
-        if (!Object.keys(loginUserIds).includes(user.userId.toString())) {
-            userStatistic.push({
+        if (!loggedUserIds.includes(user.userId.toString()) && user.status.toString() === "1" && !user.isResign) {
+            neverLoginUsers.push({
                 userId: user.userId,
-                userName: user.nickname,
-                duration: "0"
+                userName: user.nickname
             })
         }
     }
-    userStatistic = userStatistic.sort((curr, next) => {
-        return parseInt(next.duration || "0") - parseInt(curr.duration || "0")
-    })
-    return userStatistic
+
+    return {loginStatistic, neverLoginUsers}
 }
 
 const setUserDown = async (userId) => {

@@ -22,7 +22,7 @@ const getUserDetails = async (where) => {
 
 const getAllUsers = async () => {
     const users = await models.usersModel.findAll({
-        attributes: {exclude: ["password", "dingdingUserId", "userPic", "status"]},
+        attributes: {exclude: ["password", "dingdingUserId", "userPic"]},
         where: {
             status: 1
         }
