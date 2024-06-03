@@ -1,3 +1,4 @@
+const redisRepo = require("../repository/redisRepo")
 const {dingDingConfig, dingDingBIApplicationConfig} = require("../config")
 const httpUtil = require("../utils/httpUtil")
 const dingDingUtil = require("../utils/dingDingUtil")
@@ -316,10 +317,8 @@ const getDingDingApplicationToken = async (appKey, appSecret) => {
 }
 
 const getAttendances = async (pageIndex, pageSize, workDateFrom, workDateTo, userIds) => {
-    const token = await getDingDingApplicationToken(dingDingBIApplicationConfig.appKey,
-        dingDingBIApplicationConfig.appSecret)
-
-    const url = `https://oapi.dingtalk.com/attendance/list?access_token=${token}`
+    const biToken = await redisRepo.getBiToken()
+    const url = `https://oapi.dingtalk.com/attendance/list?access_token=${biToken}`
     const body = {
         workDateFrom,
         workDateTo,
@@ -383,8 +382,8 @@ const getResignInfo = async (token, userIds) => {
     if (userIds.length > 50) {
         throw new ParameterError("参数userIds的最大长度为50")
     }
-    const url = "https://api.dingtalk.com//v1.0/hrm/employees/dimissionInfos"
-    const params = [{userIdList: userIds}]
+    const url = "https://api.dingtalk.com/v1.0/hrm/employees/dimissionInfos"
+    const params = {userIdList: userIds}
     return await httpUtil.get(url, params, token)
 }
 

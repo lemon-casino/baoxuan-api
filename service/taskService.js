@@ -81,7 +81,7 @@ const syncUserLogin = async () => {
 }
 
 const syncResignEmployeeInfo = async () => {
-    const {access_token: accessToken} = await redisRepo.getToken();
+    const accessToken = await redisRepo.getBiToken();
     const allResignEmployees = await userRepo.getResignEmployees(accessToken)
     // 更新人员离职信息
     for (const employee of allResignEmployees) {

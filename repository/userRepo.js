@@ -120,14 +120,18 @@ const saveUser = async (user) => {
 
 const getResignEmployees = async (token) => {
     // 分页获取所有离职人员id列表
-    const getPagingResignEmployees = async (token, nextToken, allResignEmployees = []) => {
-        const {nextToken: dNextToken, hasMore, userIdList} = await dingDingReq.getResignEmployees(token, nextToken)
-        allResignEmployees = allResignEmployees.concat(userIdList)
+    const getPagingResignEmployees = async (token, nextToken) => {
+        let {
+            nextToken: dNextToken,
+            hasMore,
+            userIdList: allResignEmployees
+        } = await dingDingReq.getResignEmployees(token, nextToken)
+
         if (hasMore) {
-            await getPagingResignEmployees(token, dNextToken)
-        } else {
-            return allResignEmployees
+            const data = await getPagingResignEmployees(token, dNextToken, allResignEmployees)
+            allResignEmployees = allResignEmployees.concat(data)
         }
+        return allResignEmployees
     }
     let allResignEmployees = await getPagingResignEmployees(token, 0)
 

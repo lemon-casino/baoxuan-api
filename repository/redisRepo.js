@@ -6,10 +6,19 @@ const setToken = async (ddToken) => {
     await redisUtil.setValue(redisKeys.DDToken, JSON.stringify(ddToken), 7200)
 }
 
+const setBiToken = async (biToken) => {
+    await redisUtil.setValue(redisKeys.BiToken, JSON.stringify(biToken), 7200)
+}
+
 const getToken = async () => {
     const reply = await redisUtil.getValue(redisKeys.DDToken);
     return JSON.parse(reply);
-};
+}
+
+const getBiToken = async () => {
+    const reply = await redisUtil.getValue(redisKeys.BiToken);
+    return JSON.parse(reply);
+}
 
 const getDepartments = async () => {
     const reply = await redisUtil.getValue(redisKeys.Department);
@@ -67,7 +76,9 @@ const setTodayFlows = async (flows) => {
 }
 
 module.exports = {
+    setBiToken,
     setToken,
+    getBiToken,
     getToken,
     getDepartments,
     getAllUsersDetail,
