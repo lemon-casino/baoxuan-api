@@ -1,3 +1,5 @@
+const userRepo = require("../repository/userRepo")
+const redisRepo = require("../repository/redisRepo")
 const globalSetter = require("../global/setter")
 const dingDingService = require("../service/dingDingService")
 const flowService = require("../service/flowService")
@@ -78,6 +80,19 @@ const syncUserLogin = async () => {
     }
 }
 
+const syncResignEmployeeInfo = async () => {
+    const {access_token: accessToken} = await redisRepo.getToken();
+    const allResignEmployees = await userRepo.getResignEmployees(accessToken)
+    // 更新人员离职信息
+    for (const employee of allResignEmployees) {
+        employee.lastWorkDay = new Date(employee.lastWorkDay)
+        employee.resignStatus = employee.status
+        employee.voluntaryReason = JSON.stringify(employee.voluntaryReason)
+        employee.passiveReason = JSON.stringify(employee.passiveReason)
+        await userRepo.updateUserResignInfo(employee)
+    }
+}
+
 module.exports = {
     syncWorkingDay,
     syncTodayRunningAndFinishedFlows,
@@ -87,5 +102,6 @@ module.exports = {
     syncUserWithDepartment,
     syncForm,
     syncDingDingToken,
-    syncUserLogin
+    syncUserLogin,
+    syncResignEmployeeInfo
 }

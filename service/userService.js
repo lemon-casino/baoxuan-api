@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs")
 const UsersModel = require("../model/users");
-const redisService = require("../service/redisService")
+const redisRepo = require("../repository/redisRepo")
 const departmentService = require("../service/departmentService")
 const userRepo = require("../repository/userRepo")
 const whiteList = require("../config/whiteList")
@@ -22,7 +22,7 @@ const getDingDingUserId = async (user_id) => {
 };
 
 const getUsersOfDepartment = async (departmentId) => {
-    const usersOfDepartments = await redisService.getUsersUnderDepartment()
+    const usersOfDepartments = await redisRepo.getUsersUnderDepartment()
     let department = null
     for (const usersOfDepartment of usersOfDepartments) {
         department = departmentService.findMatchedDepartmentFromRoot(departmentId, usersOfDepartment)
@@ -173,8 +173,8 @@ const reGrouping = async (deptId, selfDefinedInnerGroup) => {
     return groupingResult
 }
 
-const getAllUsers = async () => {
-    const users = await userRepo.getAllUsers();
+const getEnabledUsers = async () => {
+    const users = await userRepo.getEnabledUsers();
     return users
 }
 
@@ -219,6 +219,6 @@ module.exports = {
     getUserSelfOrPartnersOfDepartment,
     getTMInnerGroups,
     getVisionInnerGroups,
-    getAllUsers,
+    getEnabledUsers,
     syncUserToDB
 }

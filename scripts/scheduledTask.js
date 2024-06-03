@@ -7,11 +7,13 @@ const taskService = require("../service/taskService")
 let syncWorkingDayCron = "0 5 9 * * ?"
 let syncTodayRunningAndFinishedFlowsCron = "0 0/5 8-22 * * ?"
 let syncMissingCompletedFlowsCron = "0 0 23 * * ?"
+// todo：更新部门的频率可以完全手动代替
 let syncDepartmentCron = "0 0 5 * * ?"
 let syncDepartmentWithUserCron = "0 30 5 * * ?"
 let syncUserWithDepartmentCron = "0 0 6 * * ?"
 let syncFormCron = "0 30 6 * * ?"
-let syncUserLogin = "0 0/5 * * * ?"
+let syncUserLoginCron = "0 0/5 * * * ?"
+let syncResignEmployeeCron = "0 0 7 * * ?"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
     syncTodayRunningAndFinishedFlowsCron = "0 10 12 * * ?"
@@ -20,7 +22,8 @@ if (process.env.NODE_ENV === "dev") {
     syncDepartmentWithUserCron = "0 0 7 * * ?"
     syncUserWithDepartmentCron = "0 30 7 * * ?"
     syncFormCron = "0 18 11 * * ?"
-    syncUserLogin = "40 20 23 * * ?"
+    syncUserLoginCron = "40 20 23 * * ?"
+    syncResignEmployeeCron = "40 46 13 * * ?"
 }
 
 /**
@@ -85,8 +88,17 @@ schedule.scheduleJob(syncFormCron, async function () {
     await taskService.syncForm()
 })
 
-
-schedule.scheduleJob(syncUserLogin, async function () {
+/**
+ * 同步用户的登录信息
+ */
+schedule.scheduleJob(syncUserLoginCron, async function () {
     await taskService.syncUserLogin()
 })
 
+/**
+ * 同步离职人员的离职信息
+ *
+ */
+schedule.scheduleJob(syncResignEmployeeCron, async function () {
+    await taskService.syncResignEmployeeInfo()
+})

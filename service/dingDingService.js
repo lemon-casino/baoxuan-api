@@ -10,7 +10,8 @@ const FlowFormReview = require("../model/flowformreview")
 // 引入时间格式化方法
 const {logger} = require("../utils/log")
 const dateUtil = require("../utils/dateUtil")
-const redisService = require("./redisService")
+const redisRepo = require("../repository/redisRepo")
+const userRepo = require("../repository/userRepo")
 const {flowStatusConst} = require("../const/flowConst")
 const ForbiddenError = require("../error/http/forbiddenError")
 const globalGetter = require("../global/getter")
@@ -28,7 +29,7 @@ const {
     getToken,
     getDepartments,
     getAllProcessFlow
-} = redisService;
+} = redisRepo;
 
 // 分页获取表单所有的流程详情
 const getFlowsByStatusAndTimeRange = async (
@@ -91,13 +92,14 @@ const getFlowsByStatusAndTimeRange = async (
 const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesRange, timeAction) => {
     // 1.获取所有宜搭表单数据
     const allForms = await dingDingReq.getAllForms(ddAccessToken, userId);
+    const allUsers = await userRepo.getAllUsers({})
     // 循环请求宜搭实例详情和审核详情数据
     let flows = [];
     if (allForms) {
         for (let i = 0; i < allForms.length; i++) {
             const formUuid = allForms[i].formUuid;
             console.log(`loop form process: ${i + 1}:${allForms.length}(${allForms[i].title.zhCN}:${formUuid})`)
-            const allData = await getFlowsByStatusAndTimeRange(
+            const result = await getFlowsByStatusAndTimeRange(
                 timesRange,
                 timeAction,
                 status,
@@ -105,7 +107,34 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
                 userId,
                 formUuid
             )
-            flows = flows.concat(allData);
+
+            const replaceOperator = (activity, allUsers) => {
+                if (activity.operatorName.indexOf("[已离职]")) {
+                    const dbUsers = allUsers.filter(user => user.dingdingUserId === activity.operatorUserId)
+                    if (dbUsers.length > 0) {
+                        // 离职之前做的工作不用动，其他的相关的节点信息改为代理人
+                        if (!activity.operateTimeGMT ||
+                            dateUtil.duration(dateUtil.formatGMT2Str(activity.operateTimeGMT), dbUsers[0].lastWorkDay) > 0) {
+                            activity.operatorName = dbUsers[0].handoverUserId
+                            activity.operatorUserId = dbUsers[0].handoverUserName
+                        }
+                    }
+                }
+                return activity
+            }
+
+            // 对离职的人员，将在离职之后地时间节点的operator更改为代理人
+            for (const flow of result) {
+                for (const userActivity of flow.overallprocessflow) {
+                    if (userActivity.domainList.length > 0) {
+                        for (const domain of userActivity.domainList) {
+                            replaceOperator(domain, allUsers)
+                        }
+                    }
+                    replaceOperator(userActivity, allUsers)
+                }
+            }
+            flows = flows.concat(result);
         }
     }
     return flows;
@@ -113,7 +142,7 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
 
 const getDingDingToken = async () => {
     const ddToken = await dingDingReq.getDingDingCorpToken();
-    await redisService.setToken(ddToken)
+    await redisRepo.setToken(ddToken)
 };
 
 

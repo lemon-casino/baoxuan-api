@@ -359,6 +359,35 @@ const createProcess = async (token, formId, userId, processCode, departmentId, f
     return await httpUtil.post(url, body, token)
 }
 
+/**
+ * 获取离职的员工信息
+ *
+ * @param token
+ * @returns {Promise<*|undefined>}
+ */
+const getResignEmployees = async (token, nextToken = 0) => {
+    const url = "https://api.dingtalk.com/v1.0/hrm/employees/dismissions"
+    // 接口单次最大查询条数为50
+    const params = {nextToken, maxResults: 30}
+    return await httpUtil.get(url, params, token)
+}
+
+/**
+ * 人员离职的信息
+ *
+ * @param token
+ * @param userIds 最大长度为50
+ * @returns {Promise<*|undefined>}
+ */
+const getResignInfo = async (token, userIds) => {
+    if (userIds.length > 50) {
+        throw new ParameterError("参数userIds的最大长度为50")
+    }
+    const url = "https://api.dingtalk.com//v1.0/hrm/employees/dimissionInfos"
+    const params = [{userIdList: userIds}]
+    return await httpUtil.get(url, params, token)
+}
+
 module.exports = {
     getDingDingToken,
     getDingDingApplicationToken,
@@ -387,5 +416,7 @@ module.exports = {
     getAllForms,
     getAllFlowIds,
     getFlowIdsByFormId,
-    createProcess
+    createProcess,
+    getResignEmployees,
+    getResignInfo
 }

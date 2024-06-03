@@ -2,11 +2,12 @@ const _ = require("lodash")
 const FlowForm = require("../model/flowfrom")
 const flowRepo = require("../repository/flowRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
+const userRepo = require("../repository/userRepo")
 const formService = require("../service/flowFormService")
 const departmentService = require("../service/departmentService")
 const dingDingService = require("../service/dingDingService")
 const processService = require("../service/processService")
-const redisService = require("../service/redisService")
+const redisRepo = require("../repository/redisRepo")
 const globalGetter = require("../global/getter")
 const globalSetter = require("../global/setter")
 const dateUtil = require("../utils/dateUtil")
@@ -574,7 +575,7 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
         return flow
     })
 
-    await redisService.setTodayFlows(newTodayFlows)
+    await redisRepo.setTodayFlows(newTodayFlows)
     globalSetter.setGlobalTodayRunningAndFinishedFlows(newTodayFlows)
 }
 
@@ -675,6 +676,7 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate, formIds) => {
     if (formIds && formIds.length > 0) {
         todayFlows = todayFlows.filter(flow => formIds.includes(flow.formUuid))
     }
+
     flows = flows.concat(todayFlows.map(flow => {
         // 返回新的Flow, 防止修改内存中的数据结构
         return {...flow}
@@ -823,7 +825,7 @@ const overdueAloneStatusStructure = [
 const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) => {
     const originResult = await getUserFlowsStat(null, startDoneDate, endDoneDate, formIds)
     // 获取用户的部门信息，用于前端将人汇总都部门下
-    let allUsersWithDepartment = await redisService.getAllUsersDetail()
+    let allUsersWithDepartment = await redisRepo.getAllUsersDetail()
     // 过滤不必要的信息
     const pureUsersWithDepartment = allUsersWithDepartment.map(user => {
         return {
