@@ -138,8 +138,8 @@ const getResignEmployees = async (token) => {
     let allResignEmployeesDetails = []
     while (allResignEmployees.length > 0) {
         // 根据ids获取人员离职详情，单次最大支持50
-        allResignEmployees = allResignEmployees.splice(0, 50)
-        const usersResignInfo = await dingDingReq.getResignInfo(token, allResignEmployees)
+        const pagingResignEmployees = allResignEmployees.splice(0, 50)
+        const usersResignInfo = await dingDingReq.getResignInfo(token, pagingResignEmployees)
         allResignEmployeesDetails = allResignEmployeesDetails.concat(usersResignInfo.result)
     }
     return allResignEmployeesDetails

@@ -21,11 +21,10 @@ const get = async (url, params, token) => {
     // }
     // const newUrl = `${url}${query}`
     const config = {headers: {contentType: "application/x-www-form-urlencoded"}}
-    config.body = params
+    config.data = params
     if (token) {
         config.headers["x-acs-dingtalk-access-token"] = token
     }
-
 
     try {
         const response = await axios.get(url, config);

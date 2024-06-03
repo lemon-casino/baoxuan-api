@@ -81,10 +81,13 @@ const syncUserLogin = async () => {
 }
 
 const syncResignEmployeeInfo = async () => {
-    const accessToken = await redisRepo.getBiToken();
+    const accessToken = await redisRepo.getBiToken()
     const allResignEmployees = await userRepo.getResignEmployees(accessToken)
     // 更新人员离职信息
     for (const employee of allResignEmployees) {
+        if (employee.userId === "161148516526645710") {
+            console.log('=====')
+        }
         employee.lastWorkDay = new Date(employee.lastWorkDay)
         employee.resignStatus = employee.status
         employee.voluntaryReason = JSON.stringify(employee.voluntaryReason)
