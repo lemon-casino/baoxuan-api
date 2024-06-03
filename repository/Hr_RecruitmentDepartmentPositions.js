@@ -128,8 +128,6 @@ const getPoProgressMap = async (startDate, endDate,) => {
                     channeng_fenxi_sum cfs
                 LEFT JOIN
                     renshi_richang rr ON rr.position LIKE CONCAT('%', cfs.keyword, '%')
-                WHERE
-                    rr.date BETWEEN :startDate AND :endDate
                 GROUP BY
                     cfs.keyword,cfs.matching_resume_volume
             )
@@ -146,6 +144,8 @@ const getPoProgressMap = async (startDate, endDate,) => {
                 replacements: {startDate, endDate},
                 type: QueryTypes.SELECT
             }
+            //                    WHERE
+            //                     rr.date BETWEEN :startDate AND :endDate
         );
     } catch (error) {
         throw new Error('查询数据失败');
@@ -156,10 +156,12 @@ const getHead = async (startDate, endDate,) => {
         // 计算offset
         return await ChannengFenxiSumModel.sequelize.query(
             `select  name AS position,  FORMAT(COALESCE(SUM(number_of_re_examinations) / NULLIF(SUM(number_preliminary_applicants), 0), 0) * 100,2) AS secondTestPassRate
-     ,sum(attendance) AS attendance   from  renshi_richang  where date BETWEEN :startDate AND :endDate  group by  name;`, {
+     ,sum(attendance) AS attendance   from  renshi_richang    group by  name;`, {
                 replacements: {startDate, endDate},
+                logging: false,
                 type: QueryTypes.SELECT
             }
+            //     where date BETWEEN :startDate AND :endDate
         );
     } catch (error) {
         throw new Error('查询数据失败');
@@ -209,7 +211,7 @@ const getInvert = async () => {
                 ]
             },
             group: [Sequelize.fn('date_format', Sequelize.col('date'), '%m')], //分组
-            logging: false,
+            logging: true,
             raw: true
         });
 
