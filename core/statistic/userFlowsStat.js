@@ -13,6 +13,12 @@ const NotFoundError = require("../../error/http/notFoundError")
 /**
  * 获取人的流程统计
  *
+ * 思路： 1. 根据form生成formResult
+ *       2. 遍历flow累加生成所有的activityResult（不同的时期的流程审核节点会更改）并包含状态信息
+ *       3. 根据activityResult中的activityIds和activityName获取flow中匹配的节点
+ *       4. 根据找到的节点，配合不同的状态和isOverdue找到要归算到的底层的结果节点
+ *       5. 将flow根据人名统计到所属的结果集中
+ *
  * @param userNames 需要过滤出来的人名， 为空时会统计全公司所有人
  * @param flows 需要统计的流程
  * @param forms 表单的统计配置 [formName:"", ..., children: [{activityName: "",..., children: []}]]
@@ -22,6 +28,7 @@ const get = async (userNames, flows, forms) => {
     const finalResult = []
     const formsReviewCache = {}
     for (const form of forms) {
+        // 用于根据状态统计流程数据
         const formFlowStatResult = [
             {status: flowStatusConst.RUNNING, name: "进行中", sum: 0, ids: []},
             {status: flowStatusConst.COMPLETE, name: "已完成", sum: 0, ids: []},
@@ -33,6 +40,7 @@ const get = async (userNames, flows, forms) => {
         const formFlows = flows.filter(flow => flow.formUuid === form.flowFormId)
         for (const flow of formFlows) {
             const flowReviewItems = flow.reviewId ? await commonLogic.getFormReview(flow.reviewId, formsReviewCache) : []
+            //
             const params = await prepareParam(flow, userNames, flowReviewItems)
             let formResultWithActivity = null
             try {
@@ -44,7 +52,8 @@ const get = async (userNames, flows, forms) => {
             }
 
             await countFlowIntoActivitiesResult(formResultWithActivity, params)
-            // 根据流程状态汇总流程
+
+            // 单独的根据流程状态汇总流程
             for (const statusResult of formFlowStatResult) {
                 if (statusResult.status === flow.instanceStatus) {
                     statusResult.ids.push(flow.processInstanceId)
@@ -53,12 +62,13 @@ const get = async (userNames, flows, forms) => {
             }
         }
 
+        // 根据最新的流程表单的节点执行顺序对结果进行排序
         const formReviews = form.flowFormReviews[0]?.formReview
         if (formReviews && formReviews.length > 0) {
             sortFormResultAccordingToLatestReviewItems(formResult, formReviews)
         }
 
-        // remove activityIds
+        // 删除前端不需要的 activityIds
         for (let i = 0; i < formResult.children.length; i++) {
             const activityResult = formResult.children[i]
             formResult.children[i] = {activityName: activityResult.activityName, children: activityResult.children}
@@ -82,8 +92,12 @@ const get = async (userNames, flows, forms) => {
 const countFlowIntoActivitiesResult = async (formResult, params) => {
     // 将流程根据节点和状态进行统计
     for (const activityResult of formResult.children) {
+
         if (params.statKey === "userName") {
-            const userActivities = params.originActivities.filter(item => activityResult.activityIds.includes(item.activityId))
+            // 不仅要判断id还有名称一致：【提交申请】和【重新提交】id是一样的
+            const userActivities = params.originActivities.filter(item =>
+                activityResult.activityIds.includes(item.activityId) &&
+                activityResult.activityName === item.showName)
             if (userActivities.length === 0) {
                 continue
             }
@@ -238,14 +252,6 @@ const findActivityStatusResult = (params, activityResult) => {
         return null
     }
 
-    // // 存在一个进行中的节点
-    // const todoReviewItems = activity.filter(item => item.type === flowReviewTypeConst.TODO)
-    //
-    // let activityStatusResult = null
-    // let flowReviewType = flowReviewTypeConst.HISTORY
-    // if (todoReviewItems.length > 0) {
-    //     flowReviewType = flowReviewTypeConst.TODO
-    // }
     const activityStatusResult = activityResult.children.filter(item => item.type === activity.type)[0]
 
     if (!activity.isOverDue) {

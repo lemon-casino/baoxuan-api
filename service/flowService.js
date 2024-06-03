@@ -820,6 +820,15 @@ const overdueAloneStatusStructure = [
             }]
     }
 ]
+
+/**
+ * 获取全流程数据
+ *
+ * @param startDoneDate
+ * @param endDoneDate
+ * @param formIds
+ * @returns {Promise<{activityStat: *, deptStat: *, users: *}>}
+ */
 const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) => {
     const originResult = await getUserFlowsStat(null, startDoneDate, endDoneDate, formIds)
     // 获取用户的部门信息，用于前端将人汇总都部门下
