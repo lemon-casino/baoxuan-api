@@ -99,26 +99,21 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     timeRange,
                                     clickingAdditionalParams) => {
 
-    let startDateTime = new Date();
-    let endDateTime = new Date();
+
     let one = timeRange[0];
     let to = timeRange[1]
+    let startDateTime = new Date(one);
+    let endDateTime = new Date(to);
     const daysInRange = getDaysInRange(one, to);
 
-    if (daysInRange === 1) {
-        startDateTime.setDate(startDateTime.getDate() - 7);
-        endDateTime = new Date(to);
-
-    }
-    if (daysInRange <= 7 && daysInRange > 1 || daysInRange > 7) {
-        startDateTime = new Date(one);
-        endDateTime = new Date(to);
-    }
     const where = {date: {$between: [startDateTime, endDateTime]}}
 
     if (Array.isArray(errorItems) && errorItems.length > 0) {
         if ((errorItems[0].lessThan === "negative_profit_60")) {
-            // 定义关联
+            if (daysInRange === 1) {
+                startDateTime.setDate(startDateTime.getDate() - 7);
+                endDateTime = new Date(to);
+            }
             singleItemTaoBaoModel.belongsTo(ABbnormal_TM, {
                 foreignKey: 'linkId',
                 targetKey: 'linkId'
@@ -226,7 +221,7 @@ const getTaoBaoSingleItems = async (pageIndex,
                 having: sequelize.literal("SUM(singleItemTaobaoModel.profit_amount) < 0"),
                 offset: pageIndex * pageSize,
                 limit: pageSize,
-                logging: true,
+                logging: false,
             };
 // 执行查询
             let result = await singleItemTaoBaoModel.findAndCountAll(query)
@@ -379,21 +374,16 @@ const getErrorSingleItemsTotal = async (productLineLeaders,
 
 // 异常项累计60天负利润
 const getError60SingleIte = async (productLineLeaders, timeRange) => {
-    let startDateTime = new Date();
-    let endDateTime = new Date();
     let one = timeRange[0];
     let to = timeRange[1]
+    let startDateTime = new Date(one);
+    let endDateTime = new Date(to);
     const daysInRange = getDaysInRange(one, to);
     if (daysInRange === 1) {
         startDateTime.setDate(startDateTime.getDate() - 7);
         endDateTime = new Date(to);
 
     }
-    if (daysInRange <= 7 && daysInRange > 1 || daysInRange > 7) {
-        startDateTime = new Date(one);
-        endDateTime = new Date(to);
-    }
-
 
     const result = await singleItemTaoBaoModel.sequelize.query(
         `SELECT COUNT(1) AS shouTaoVisitors
