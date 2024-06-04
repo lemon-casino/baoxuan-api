@@ -640,6 +640,20 @@ const getSelfErrorSingleItemLinkOperationCount = async (productLineLeaders, sing
                 let value = exp.value
                 let fieldValue = singleItem[exp.field]
                 if (exp.field === "profitRate") {
+                    // if(singleItem[exp.lessThan] === "true"){
+                    //reallyShipmentAmount 小于0
+                    if (exp.lessThan === "negative_profit_60") {
+                        if (singleItem[exp.lessThan] === "true") {
+                            return singleItem["profitRate"] * 1 < 0
+                        }
+                        return false
+                    } else {
+                        return singleItem[exp.lessThan] === "true";
+                    }
+
+                    //     return  singleItem[exp.field] < parseFloat(exp.value)
+                    // }
+
                 }
                 // 坑市场占比环比（7天）
                 if (exp.field === "salesMarketRateCircleRate7Day") {
@@ -692,6 +706,9 @@ const getSelfErrorSingleItemLinkOperationCount = async (productLineLeaders, sing
             }
             return true
         })
+        items.forEach((itemx) => {
+            console.log(itemx.linkId)
+        });
 
         result.items.push({name: item.name, sum: items.length, clickingAdditionalParams: item.values})
 
