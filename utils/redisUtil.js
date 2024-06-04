@@ -20,7 +20,7 @@ const setValue = async (key, value, expire) => {
     } catch (err) {
         throw err;
     }
-};
+}
 
 const getValue = async (key) => {
     return await redis.get(key)

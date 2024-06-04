@@ -706,12 +706,8 @@ const getSelfErrorSingleItemLinkOperationCount = async (productLineLeaders, sing
             }
             return true
         })
+
         result.items.push({name: item.name, sum: items.length, clickingAdditionalParams: item.values})
-
-        items.forEach((itemx) => {
-            console.log(itemx.linkId)
-        });
-
 
         for (const tmp of items) {
             uniqueItems[tmp.id] = 1

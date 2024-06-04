@@ -66,7 +66,7 @@ const iAmDown = async (userId) => {
 }
 
 const durationStatistic = async (userId, timeRange, isOnline) => {
-    const allUsers = await userRepo.getAllUsers()
+    const allUsers = await userRepo.getEnabledUsers()
     let loginStatistic = await userLogRepo.durationStatistic(userId, timeRange, isOnline)
     loginStatistic = loginStatistic.sort((curr, next) => {
         return parseInt(next.duration || "0") - parseInt(curr.duration || "0")

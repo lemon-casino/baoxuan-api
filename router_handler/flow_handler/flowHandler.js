@@ -151,20 +151,20 @@ const getFormsFlowsActivitiesStat = async (req, res, next) => {
         next(e)
     }
 }
-
-const getDepartmentsOverallFlowsStat = async (req, res, next) => {
-    try {
-        const {startDate, endDate, formIds, departmentIds} = req.body
-        joiUtil.validate({
-            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
-            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
-        })
-        const result = await flowService.getDepartmentsOverallFlowsStat(startDate, endDate, formIds, departmentIds)
-        return res.send(biResponse.success(result))
-    } catch (e) {
-        next(e)
-    }
-}
+//
+// const getDepartmentsOverallFlowsStat = async (req, res, next) => {
+//     try {
+//         const {startDate, endDate, formIds, departmentIds} = req.body
+//         joiUtil.validate({
+//             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+//             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+//         })
+//         const result = await flowService.getDepartmentsOverallFlowsStat(startDate, endDate, formIds, departmentIds)
+//         return res.send(biResponse.success(result))
+//     } catch (e) {
+//         next(e)
+//     }
+// }
 
 module.exports = {
     getFlowsByIds,
@@ -173,5 +173,5 @@ module.exports = {
     getCoreDataByType,
     getAllOverDueRunningFlows,
     getFormsFlowsActivitiesStat,
-    getDepartmentsOverallFlowsStat
+    // getDepartmentsOverallFlowsStat
 }

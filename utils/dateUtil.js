@@ -1,5 +1,7 @@
 const moment = require("moment")
 const momentUnitConst = require("../const/momentUnitConst")
+const mathUtil = require("../utils/mathUtil")
+const ParameterError = require("../error/parameterError")
 
 const formatGMT = (datetimeOfGMT, pattern) => {
     if (!pattern) {
@@ -61,6 +63,13 @@ const add = (date, amount, unitOfTime = momentUnitConst.DAYS) => {
     return moment(date).add(amount, unitOfTime)
 }
 
+const convertTimestampToDate = (timestamp, pattern = 'YYYY-MM-DD HH:mm:ss') => {
+    if (!mathUtil.isPositiveInteger(timestamp)) {
+        throw new ParameterError("参数timestamp要为正整数")
+    }
+    return moment(timestamp).format(pattern)
+}
+
 module.exports = {
     duration,
     delay,
@@ -75,5 +84,6 @@ module.exports = {
     format2Str,
     startOfDay,
     endOfDay,
-    add
+    add,
+    convertTimestampToDate
 }

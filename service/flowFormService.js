@@ -3,7 +3,7 @@ const formReviewRepo = require("../repository/formReviewRepo")
 const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
 const dingDingReq = require("../core/dingDingReq")
-const redisService = require("../service/redisService")
+const redisRepo = require("../repository/redisRepo")
 const formImportantItems = require("../const/tmp/formImportantItems")
 const {timingFormFlowNodes} = require("../const/formConst")
 
@@ -43,7 +43,7 @@ const getFormsWithReviewItemsByImportance = async (isImportant) => {
  */
 const syncFormsFromDingDing = async () => {
     const userId = "073105202321093148";
-    const tokenObj = await redisService.getToken()
+    const tokenObj = await redisRepo.getToken()
     const token = tokenObj.access_token
     const allFormsInDB = await flowFormRepo.getAllForms({})
     // 获取钉钉的form信息

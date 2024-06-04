@@ -9,7 +9,7 @@ const {formatDateTime} = require("../utils/tools");
 const dateUtil = require("../utils/dateUtil")
 const excelUtil = require("../utils/excelUtil")
 const biResponse = require("../utils/biResponse")
-const redisService = require("../service/redisService")
+const redisRepo = require("../repository/redisRepo")
 const departmentService = require("../service/departmentService")
 const userService = require("../service/userService")
 const flowService = require("../service/flowService")
@@ -140,8 +140,8 @@ const handle_fq_cy_liuc = async (
         异常: {data: [], depUser: new Map(), depList: []},
     };
 
-    const allUserDetails = await redisService.getAllUsersDetail();
-    const allFlowsInDingDing = await redisService.getAllFlowsUntilNow();
+    const allUserDetails = await redisRepo.getAllUsersDetail();
+    const allFlowsInDingDing = await redisRepo.getAllFlowsUntilNow();
     // 获取当前用户下的所有流程数据
     const currentUsers = allUserDetails.filter((item) => item.userid === ddUserId);
     if (currentUsers.length > 0) {
@@ -349,7 +349,7 @@ const statusTypes = {flowStatus: "flowStatus", reviewStatus: "reviewStatus"}
 
 
 const handleSelfJoinedFlowsOfStatus = async (userId, status) => {
-    const flowsOfUser = redisService.getAllUsersDetail().filter((user) => {
+    const flowsOfUser = redisRepo.getAllUsersDetail().filter((user) => {
         return user.user_id === userId
     })
 }
@@ -461,8 +461,8 @@ const handleDepartmentLaunchOrJoinFlows = async (
 ) => {
     const startDate = new Date(timesRange[0]);
     const endDate = new Date(timesRange[1]);
-    const allUsersOfAllDepartments = await redisService.getUsersUnderDepartment();
-    const ddAllFlows = await redisService.getAllFlowsUntilNow();
+    const allUsersOfAllDepartments = await redisRepo.getUsersUnderDepartment();
+    const ddAllFlows = await redisRepo.getAllFlowsUntilNow();
     const results = [];
     const usersOfParentDepartment = allUsersOfAllDepartments.filter((item) => item.dept_id == parentDepartmentId);
 
@@ -836,7 +836,7 @@ exports.getdepartment = async (req, res) => {
     // 获取钉钉user_id
     const dd_id = await userService.getDingDingUserId(req.user.id);
     // 获取钉钉Token
-    const {access_token} = await redisService.getToken();
+    const {access_token} = await redisRepo.getToken();
     let dep_info = [];
     // 管理员身份
     if (whiteList.pepArr().includes(dd_id)) {
@@ -856,7 +856,7 @@ const getDepartmentOfUser = async (ddUserId, ddAccessToken, parentDepartmentId, 
     let dep_info = [];
     // 根据userid判断是否存在于白名单中
     if (whiteList.pepArr().includes(ddUserId)) {
-        const allDepts = await redisService.getDepartments();
+        const allDepts = await redisRepo.getDepartments();
         const subDepartments = await departmentService.getSubDeptLev(allDepts, parentDepartmentId)
         if (subDepartments.length === 0) {
             const parentDepartmentDetails = allDepts.filter((item) => item.dept_id == parentDepartmentId);
@@ -893,7 +893,7 @@ const getDepartmentOfUser = async (ddUserId, ddAccessToken, parentDepartmentId, 
 exports.getSelfLaunchDoingFlowsStatistic = async (req, res) => {
     const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
     const ddUserId = await userService.getDingDingUserId(req.user.id);
-    const {access_token: ddAccessToken} = await redisService.getToken();
+    const {access_token: ddAccessToken} = await redisRepo.getToken();
     // 单个
     const dep_info = await getDepartmentOfUser(ddUserId, ddAccessToken, parentDepartmentId, subDepartmentId)
     const isAdmin = dep_info && dep_info.length ? dep_info[0].leader : false;
@@ -925,7 +925,7 @@ exports.getSelfJoinDoingFlowsStatistic = async (req, res) => {
 
     const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
     const ddUserId = await userService.getDingDingUserId(req.user.id);
-    const {access_token: ddAccessToken} = await redisService.getToken();
+    const {access_token: ddAccessToken} = await redisRepo.getToken();
 
     // 单个
     let dep_info = getDepartmentOfUser(ddUserId, ddAccessToken, parentDepartmentId, subDepartmentId)
@@ -945,7 +945,7 @@ exports.getSelfJoinDoingFlowsStatistic = async (req, res) => {
 exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
     const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
     const ddUserId = await userService.getDingDingUserId(req.user.id);
-    const {access_token: ddAccessToken} = await redisService.getToken();
+    const {access_token: ddAccessToken} = await redisRepo.getToken();
 
     // 统计指定项目组下的流程数据
     if (subDepartmentId) {
@@ -1071,7 +1071,7 @@ exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
 exports.getDepartmentJoinDoingFlowsStatistic = async (req, res) => {
     const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
     const ddUserId = await userService.getDingDingUserId(req.user.id);
-    const {access_token: ddAccessToken} = await redisService.getToken();
+    const {access_token: ddAccessToken} = await redisRepo.getToken();
 
     if (subDepartmentId) {
         // 单个
@@ -1160,7 +1160,7 @@ exports.getoverview = async (req, res) => {
     // 获取钉钉user_id
     const dd_id = await userService.getDingDingUserId(req.user.id);
     // 获取钉钉Token
-    const {access_token} = await redisService.getToken();
+    const {access_token} = await redisRepo.getToken();
     // 返回格式
     const resObj = {
         code: 200,
@@ -1348,7 +1348,7 @@ exports.getoverview = async (req, res) => {
 // 获取流程表单数据
 exports.getprocessformlist = async (req, res) => {
     // 钉钉token
-    const {access_token} = await redisService.getToken();
+    const {access_token} = await redisRepo.getToken();
     const userid = "073105202321093148"; // 涛哥id
     // 1.获取所有宜搭表单数据
     const yd_form = await dd.getAllForms(access_token, userid);
@@ -1440,7 +1440,7 @@ exports.getprocessformlist = async (req, res) => {
 // 修改流程表单数据
 exports.editprocessformobj = async (req, res) => {
     // 钉钉token
-    const {access_token} = await redisService.getToken();
+    const {access_token} = await redisRepo.getToken();
     const userid = "073105202321093148"; // 涛哥id
     // 1.获取所有宜搭表单数据
     const yd_form = await dd.getAllForms(access_token, userid);
@@ -1459,7 +1459,7 @@ exports.editprocessformobj = async (req, res) => {
 // 获取所有流程表单的审核流列表
 exports.getliuchenglist = async (req, res) => {
     const userid = "073105202321093148"; // 涛哥id
-    const {access_token} = await redisService.getToken();
+    const {access_token} = await redisRepo.getToken();
     const list = [];
     // 1.获取所有宜搭表单数据
     const yd_form = await dd.getAllForms(access_token, userid);

@@ -5,7 +5,6 @@ const RemoteError = require("../error/remoteError")
 // 状态码不一定准确，故使用关键词 [400, 403]
 const dingDingRateLimitErrorKeywords = ["过多", "频繁", "流控", "限制"]
 
-const delayTime = 0
 const get = async (url, params, token) => {
     logger.info(`${process.pid}:${url}`)
     let query = ""
@@ -16,13 +15,13 @@ const get = async (url, params, token) => {
             if (i > 0) {
                 query = `${query}&`
             }
-            query = `${query}&${keys[i]}=${params[keys[i]]}`
+            query = `${query}${keys[i]}=${params[keys[i]]}`
         }
     }
     const newUrl = `${url}${query}`
-    let config = null
+    const config = {headers: {}}
     if (token) {
-        config = {headers: {"x-acs-dingtalk-access-token": token}}
+        config.headers["x-acs-dingtalk-access-token"] = token
     }
 
     try {

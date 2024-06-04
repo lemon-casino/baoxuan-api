@@ -1,3 +1,5 @@
+const userRepo = require("../repository/userRepo")
+const redisRepo = require("../repository/redisRepo")
 const globalSetter = require("../global/setter")
 const dingDingService = require("../service/dingDingService")
 const flowService = require("../service/flowService")
@@ -78,6 +80,34 @@ const syncUserLogin = async () => {
     }
 }
 
+const syncResignEmployeeInfo = async () => {
+    const accessToken = await redisRepo.getBiToken()
+    const allResignEmployees = await userRepo.getResignEmployees(accessToken)
+    // 更新人员离职信息
+    const onJobEmployees = await redisRepo.getAllUsersDetail()
+    for (const employee of allResignEmployees) {
+        // employee中的userId和db中的userId不对应，对应dingdingUserId
+        const newEmployee = {}
+        newEmployee.dingdingUserId = employee.userId
+        if (employee.lastWorkDay) {
+            newEmployee.lastWorkDay = dateUtil.convertTimestampToDate(employee.lastWorkDay)
+        }
+        newEmployee.resignStatus = employee.status
+        newEmployee.preStatus = employee.preStatus
+        newEmployee.reasonMemo = employee.reasonMemo
+        newEmployee.voluntaryReason = JSON.stringify(employee.voluntaryReason)
+        newEmployee.passiveReason = JSON.stringify(employee.passiveReason)
+        newEmployee.handoverUserId = employee.handoverUserId
+        if (employee.handoverUserId) {
+            const tmpHandoverUsers = onJobEmployees.filter(user => user.userid === employee.handoverUserId)
+            if (tmpHandoverUsers.length > 0) {
+                newEmployee.handoverUserName = tmpHandoverUsers[0].name
+            }
+        }
+        await userRepo.updateUserResignInfo(newEmployee)
+    }
+}
+
 module.exports = {
     syncWorkingDay,
     syncTodayRunningAndFinishedFlows,
@@ -87,5 +117,6 @@ module.exports = {
     syncUserWithDepartment,
     syncForm,
     syncDingDingToken,
-    syncUserLogin
+    syncUserLogin,
+    syncResignEmployeeInfo
 }

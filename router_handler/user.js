@@ -520,7 +520,7 @@ exports.getUsersOfDepartment = async (req, res, next) => {
 
 exports.getAllUsers = async (req, res, next) => {
     try {
-        const users = await userService.getAllUsers()
+        const users = await userService.getEnabledUsers()
         res.send(biResponse.success(users))
     } catch (e) {
         next(e)
