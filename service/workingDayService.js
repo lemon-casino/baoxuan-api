@@ -1,10 +1,7 @@
 const BigNumber = require("bignumber.js")
 const workingDayRepo = require("../repository/workinDayRepo")
-const dingDingService = require("../service/dingDingService")
-const ForbiddenError = require("../error/http/forbiddenError")
-const ParameterError = require("../error/parameterError")
+const redisRepo = require("../repository/redisRepo")
 const dateUtil = require("../utils/dateUtil")
-const globalGetter = require("../global/getter")
 const {dateFormatReg} = require("../const/regexConst")
 
 
@@ -33,8 +30,10 @@ const getWorkingDayByRange = async (startDate, endDate) => {
  * @returns {Promise<boolean>}
  */
 const isWorkingDayOf = async (date) => {
-    const result = await workingDayRepo.isWorkingDayOf(date)
-    return result
+    const allWorkingDays = await redisRepo.getAllWorkingDays()
+    return allWorkingDays.filter(day => day === date).length > 0
+    // const result = await workingDayRepo.isWorkingDayOf(date)
+    // return result
 }
 
 /**
@@ -79,7 +78,7 @@ const computeValidWorkingDurationOfExecutionFlow = async (startDateTime, endDate
         // 计算新的开始时间
         const newStartDateTime = dateUtil.add(startDateTime, 1).format("YYYY-MM-DD 09:00:00")
         // 如果新的开始时间 > 结束时间 则返回0
-        if (dateUtil.duration(newStartDateTime, endDateTime)>=0) {
+        if (dateUtil.duration(newStartDateTime, endDateTime) >= 0) {
             return 0
         }
         return await computeValidWorkingDuration(newStartDateTime, endDateTime)

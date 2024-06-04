@@ -75,6 +75,11 @@ const setTodayFlows = async (flows) => {
     return true
 }
 
+const getAllWorkingDays = async () => {
+    const allWorkingDays = await redisUtil.lRange(redisKeys.WorkingDays, 0, 9999)
+    return allWorkingDays
+}
+
 module.exports = {
     setBiToken,
     setToken,
@@ -88,5 +93,6 @@ module.exports = {
     setUsersUnderDepartment,
     getAllFlowUntilNowByTimeRange,
     getTodayRunningAndFinishedFlows,
-    setTodayFlows
+    setTodayFlows,
+    getAllWorkingDays
 }

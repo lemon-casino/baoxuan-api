@@ -30,8 +30,18 @@ const getKeys = async (keyPattern) => {
     return await redis.keys(keyPattern)
 }
 
+const rPush = async (key, value) => {
+    return await redis.rPush(key, value)
+}
+
+const lRange = async (key, start, end) => {
+    return await redis.lRange(key, start, end)
+}
+
 module.exports = {
     setValue,
     getValue,
-    getKeys
+    getKeys,
+    rPush,
+    lRange
 };
