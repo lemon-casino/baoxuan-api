@@ -125,5 +125,13 @@ describe("workingDayService", () => {
             console.log(duration)
             assert.equal(duration, 9)
         })
+        it("isWorkingDayOf", async()=>{
+            const isWorkingDay = await workingDayService.isWorkingDay("2024-05-21")
+            assert.equal(isWorkingDay, true)
+        })
+        it("isWorkingDayOf", async()=>{
+            const isWorkingDay = await workingDayService.isWorkingDay("2024-06-02")
+            assert.equal(isWorkingDay, false)
+        })
     })
 })
