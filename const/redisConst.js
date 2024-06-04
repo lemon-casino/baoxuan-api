@@ -12,7 +12,8 @@ const redisKeys = {
     // new key
     "FlowsOfRunningAndFinishedOfToday": "flows:today:running_and_finished",
     "BiToken": "bases:bi_token",
-    "WorkingDays": "bases:working_days"
+    "WorkingDays": "bases:working_days",
+    "QRCodes": "QRCodes"
 }
 
 module.exports = {
