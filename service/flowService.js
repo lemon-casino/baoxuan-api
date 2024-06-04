@@ -837,79 +837,114 @@ const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) 
     let allUsersWithDepartment = await redisRepo.getAllUsersDetail()
     // 过滤不必要的信息
     const pureUsersWithDepartment = allUsersWithDepartment.map(user => {
-        return {
+        const pureUser = {
             userId: user.userid,
-            userName: user.name,
-            departmentId: user.leader_in_dept[0].dept_id,
-            departmentName: user.leader_in_dept[0].dep_detail.name
+            userName: user.name
         }
+        if (user.multiDeptStat) {
+            pureUser.departments = user.leader_in_dept.map(dept => {
+                return {deptId: dept.dept_id, deptName: dept.dep_detail.name, statForms: dept.statForms}
+            })
+        } else {
+            pureUser.departments = [
+                {
+                    deptId: user.leader_in_dept[0].dept_id,
+                    deptName: user.leader_in_dept[0].dep_detail.name
+                }
+            ]
+        }
+
+        return pureUser
     })
 
-    // 转化成按不同统计的结构数据
+    // 转化成按部门统计的结构数据
     const formsDepsStatResult = []
     for (const originFormResult of originResult) {
         const newFormResult = {formId: originFormResult.formId, formName: originFormResult.formName, children: []}
         for (const originActivityResult of originFormResult.children) {
             // 找到当前节点最底下的人所在的部门
             // - 将状态下对从人的角度的统计 => 拉出人的统计加上状态信息
-            const operatorsResult = []
+            const originOperatorsResult = []
             for (const originStatusResult of originActivityResult.children) {
                 const tmpTypes = [originStatusResult.type]
 
-                // originStatusResult 会分为人的统计、逾期:进行中-已完成
+                // 为了通过人计算部门的统计便利和结合状态抓取在新结构中需要被统计到哪个节点的便利，
+                // 将activity下状态-人的信息进行扁平处理，转成{userName: "", ids:[], sum:0, types:[]}
+                //    - types:逾期被单独统计的，又分为进行中和已完成逾期，这种情况下types-["overdue", "running"]
+                //    - 若是进行中， 则types-[running]
                 for (const originMaybeOperatorResult of originStatusResult.children) {
                     if (originMaybeOperatorResult.children) {
                         for (const operatorResult of originMaybeOperatorResult.children) {
                             const newTypes = _.cloneDeep(tmpTypes)
                             newTypes.push(originMaybeOperatorResult.type)
-                            operatorsResult.push({
+                            originOperatorsResult.push({
                                 types: newTypes,
                                 ...operatorResult
                             })
                         }
                     } else {
-                        operatorsResult.push({
+                        originOperatorsResult.push({
                             types: tmpTypes,
                             ...originMaybeOperatorResult
                         })
                     }
                 }
             }
-            // 将该人的统计数据转成按部门数据
-            for (const operatorResult of operatorsResult) {
+
+            // 根据上面对人和状态的转换数据，转成人所在部门的统计
+            for (const originOperatorResult of originOperatorsResult) {
+
+                // 多部门的情况下： 按流程表单汇总不同的部门
+                // 根据配置中汇总部门需要统计的流程，将结果拆分进行统计
                 let userDepName = "未知"
-                const userDeps = pureUsersWithDepartment.filter(user => user.userName === operatorResult.userName)
-                if (userDeps.length > 0) {
-                    userDepName = userDeps[0].departmentName
+                const tmpUser = pureUsersWithDepartment.filter(user => user.userName === originOperatorResult.userName)
+                const currUser = tmpUser[0]
+                if (currUser.multiDeptStat) {
+                    // 找到当前表单需要被统计到的部门
+                    const tmpDeps = currUser.departments.filter(dept => dept.statForms.includes(originFormResult.formId))
+                    if (tmpDeps.length > 0) {
+                        userDepName = tmpDeps[0].deptName
+                    }
+                } else {
+                    userDepName = currUser.departments[0].deptName
                 }
+
+                // 1. 从最终的结果中找到该用户所在的部门节点，没有的话则添加
                 let deptResult = null
                 const tmpDepartmentsResult = newFormResult.children.filter(depResult => depResult.deptName === userDepName)
                 if (tmpDepartmentsResult.length === 0) {
-                    newFormResult.children.push({deptName: userDepName, children: _.cloneDeep(overdueAloneStatusStructure)})
+                    newFormResult.children.push({
+                        deptName: userDepName,
+                        children: _.cloneDeep(overdueAloneStatusStructure)
+                    })
                     deptResult = newFormResult.children[newFormResult.children.length - 1]
                 } else {
                     deptResult = tmpDepartmentsResult[0]
                 }
 
-                // 找到新的部门结构中对应的statusResult
-                let deptStatusResult = deptResult.children.filter(item => item.type === operatorResult.types[0])[0]
-                if (operatorResult.types.length > 1) {
-                    deptStatusResult = deptStatusResult.children.filter(item => item.type === operatorResult.types[1])[0]
+                // 2. 找到新的部门结构中对应的 statusResult
+                let deptStatusResult = deptResult.children.filter(item => item.type === originOperatorResult.types[0])[0]
+                if (originOperatorResult.types.length > 1) {
+                    deptStatusResult = deptStatusResult.children.filter(item => item.type === originOperatorResult.types[1])[0]
                 }
 
-                const tmpActivityResults = deptStatusResult.children.filter(item => item.activityName === originActivityResult.activityName)
+                // 3. 从上一步的 statusResult 中找到进一步要被统计到的工作节点
                 let activityResult = null
+                const tmpActivityResults = deptStatusResult.children.filter(item => item.activityName === originActivityResult.activityName)
                 if (tmpActivityResults.length === 0) {
                     deptStatusResult.children.push({activityName: originActivityResult.activityName, children: []})
                     activityResult = deptStatusResult.children[deptStatusResult.children.length - 1]
                 } else {
                     activityResult = tmpActivityResults[0]
                 }
+
+                // 4. 将原来对人的共计数据，转移到新的节点上
                 activityResult.children.push({
-                    userName: operatorResult.userName,
-                    ids: operatorResult.ids,
-                    sum: operatorResult.sum
+                    userName: originOperatorResult.userName,
+                    ids: originOperatorResult.ids,
+                    sum: originOperatorResult.sum
                 })
+
             }
         }
         newFormResult.flowsStat = originFormResult.flowsStat
