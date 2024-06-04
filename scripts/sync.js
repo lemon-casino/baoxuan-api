@@ -203,4 +203,5 @@ const computeValidWorkingDuration = async () => {
     const duration = await workingDayService.computeValidWorkingDuration("2024-04-15 10:00:00", "2024-04-16 11:03:24")
 }
 
-taskService.syncUserWithDepartment()
+// taskService.syncUserWithDepartment()
+// taskService.syncDingDingToken()

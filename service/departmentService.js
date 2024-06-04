@@ -1,5 +1,5 @@
 const whiteList = require("../config/whiteList");
-const redisService = require("../service/redisService")
+const redisRepo = require("../repository/redisRepo")
 const dateUtil = require("../utils/dateUtil")
 const globalGetter = require("../global/getter")
 const NotFoundError = require("../error/http/notFoundError")
@@ -27,7 +27,7 @@ const getSubDeptLev = async (depLists, dept_id) => {
 
 // 返回用户部门层级
 const getDepLev = async (ddAccessToken, ddUserId) => {
-    const userDetails = await redisService.getAllUsersDetail();
+    const userDetails = await redisRepo.getAllUsersDetail();
     // 返回用户详情
     const userInfo = userDetails.filter((item) => item.userid === ddUserId);
     if (userInfo.length > 0) {
@@ -148,7 +148,7 @@ const getDepartmentOfUser = async (userId) => {
     let departmentsOfCurrentUser = []
     let allUsersDetail = await globalGetter.getUsers()
     if (!allUsersDetail || allUsersDetail.length === 0) {
-        allUsersDetail = await redisService.getAllUsersDetail();
+        allUsersDetail = await redisRepo.getAllUsersDetail();
     }
     if (allUsersDetail && allUsersDetail.length > 0) {
         for (const item of allUsersDetail) {

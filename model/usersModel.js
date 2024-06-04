@@ -21,6 +21,78 @@ module.exports = sequelize => {
       comment: "用户名",
       field: "username"
     },
+    lastWorkDay: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";最后工作日",
+      field: "last_work_day"
+    },
+    reasonMemo: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";离职原因备注",
+      field: "reason_memo"
+    },
+    preStatus: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";离职前工作状态：  1：待入职；  2：试用期；  3：正式。",
+      field: "pre_status"
+    },
+    handoverUserId: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";离职交接人的userId",
+      field: "handover_user_id"
+    },
+    handoverUserName: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "handover_user_name"
+    },
+    resignStatus: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";离职状态：  1：待离职。  2：已离职。  3：非待离职或非已离职。  4：已提交离职审批单，审批单暂未通过。",
+      field: "resign_status"
+    },
+    voluntaryReason: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";主动原因",
+      field: "voluntary_reason"
+    },
+    passiveReason: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";被动原因",
+      field: "passive_reason"
+    },
     dingdingUserId: {
       type: DataTypes.STRING(255),
       allowNull: true,

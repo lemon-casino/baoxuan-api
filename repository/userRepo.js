@@ -4,6 +4,7 @@ const UserError = require("../error/userError")
 const NotFoundError = require("../error/http/notFoundError")
 const departmentRepo = require("../repository/departmentRepo")
 const sequelizeUtil = require("../utils/sequelizeUtil")
+const dingDingReq = require("../core/dingDingReq")
 const innerGroupConst = require("../const/tmp/innerGroupConst")
 const whiteList = require("../config/whiteList")
 
@@ -20,13 +21,16 @@ const getUserDetails = async (where) => {
     }
 }
 
-const getAllUsers = async () => {
+const getAllUsers = async (where) => {
     const users = await models.usersModel.findAll({
         attributes: {exclude: ["password", "dingdingUserId", "userPic"]},
-        where: {
-            status: 1
-        }
+        where
     })
+    return users
+}
+
+const getEnabledUsers = async () => {
+    const users = await getAllUsers({status: 1})
     return users
 }
 
@@ -114,10 +118,49 @@ const saveUser = async (user) => {
     await models.usersModel.create(user);
 }
 
+const getResignEmployees = async (token) => {
+    // 分页获取所有离职人员id列表
+    const getPagingResignEmployees = async (token, nextToken) => {
+        let {
+            nextToken: dNextToken,
+            hasMore,
+            userIdList: allResignEmployees
+        } = await dingDingReq.getResignEmployees(token, nextToken)
+
+        if (hasMore) {
+            const data = await getPagingResignEmployees(token, dNextToken, allResignEmployees)
+            allResignEmployees = allResignEmployees.concat(data)
+        }
+        return allResignEmployees
+    }
+    let allResignEmployees = await getPagingResignEmployees(token, 0)
+
+    let allResignEmployeesDetails = []
+    while (allResignEmployees.length > 0) {
+        // 根据ids获取人员离职详情，单次最大支持50
+        const pagingResignEmployees = allResignEmployees.splice(0, 50)
+        const usersResignInfo = await dingDingReq.getResignInfo(token, pagingResignEmployees)
+        allResignEmployeesDetails = allResignEmployeesDetails.concat(usersResignInfo.result)
+    }
+    return allResignEmployeesDetails
+}
+
+const updateUserResignInfo = async (user) => {
+    const result = await models.usersModel.update(user,
+        {
+            where: {dingdingUserId: user.userId}
+        }
+    )
+    return result
+}
+
 module.exports = {
     getUserDetails,
     getAllUsers,
+    getEnabledUsers,
     getDepartmentUsers,
     updateUserResignByOnJobUserIds,
-    saveUser
+    saveUser,
+    getResignEmployees,
+    updateUserResignInfo
 }

@@ -10,7 +10,8 @@ const FlowFormReview = require("../model/flowformreview")
 // 引入时间格式化方法
 const {logger} = require("../utils/log")
 const dateUtil = require("../utils/dateUtil")
-const redisService = require("./redisService")
+const redisRepo = require("../repository/redisRepo")
+const userRepo = require("../repository/userRepo")
 const {flowStatusConst} = require("../const/flowConst")
 const ForbiddenError = require("../error/http/forbiddenError")
 const globalGetter = require("../global/getter")
@@ -19,42 +20,22 @@ const flowFormDetailsService = require("../service/flowFormDetailsService")
 const departmentService = require("../service/departmentService")
 const flowFormService = require("../service/flowFormService")
 const formReviewRepo = require("../repository/formReviewRepo")
+const {dingDingBIApplicationConfig} = require("../config");
 
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
 const executionFlowFormId = "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU"
 
 const {
-    getToken,
-    getDepartments,
-    getAllProcessFlow
-} = redisService;
+    getToken, getDepartments, getAllProcessFlow
+} = redisRepo;
 
 // 分页获取表单所有的流程详情
-const getFlowsByStatusAndTimeRange = async (
-    timesRange = ["2023-01-01 00:00:00", dateUtil.endOfToday()],
-    timeAction,
-    status,
-    token,
-    userId,
-    formUuid,
-    pageNumber = 1,
-    pageSize = 99
-) => {
+const getFlowsByStatusAndTimeRange = async (timesRange = ["2023-01-01 00:00:00", dateUtil.endOfToday()], timeAction, status, token, userId, formUuid, pageNumber = 1, pageSize = 99) => {
     const fromTimeGMT = timeAction ? timesRange[0] : null;
     const toTimeGMT = timeAction ? timesRange[1] : null;
     // 2.分页去请求所有流程id
-    const resLiuChengList = await dingDingReq.getFlowsOfStatusAndTimeRange(
-        fromTimeGMT,
-        toTimeGMT,
-        timeAction,
-        status,
-        token,
-        userId,
-        formUuid,
-        pageSize,
-        pageNumber
-    );
+    const resLiuChengList = await dingDingReq.getFlowsOfStatusAndTimeRange(fromTimeGMT, toTimeGMT, timeAction, status, token, userId, formUuid, pageSize, pageNumber);
 
     if (!resLiuChengList) {
         return []
@@ -63,25 +44,12 @@ const getFlowsByStatusAndTimeRange = async (
     // 获取对应的流程的审核记录
     for (let i = 0; i < allData.length; i++) {
         // await dateUtil.delay()
-        allData[i]["overallprocessflow"] = await getAllProcessFlow(
-            token,
-            userId,
-            allData[i].processInstanceId
-        );
+        allData[i]["overallprocessflow"] = await getAllProcessFlow(token, userId, allData[i].processInstanceId);
         console.log(`(page: ${pageNumber})get flowReviewItems process：${i + 1}/${allData.length}`);
     }
     // 如果总数大于当前页数*每页数量，继续请求
     if (resLiuChengList.totalCount > pageNumber * pageSize) {
-        const nextPageData = await getFlowsByStatusAndTimeRange(
-            timesRange,
-            timeAction,
-            status,
-            token,
-            userId,
-            formUuid,
-            pageNumber + 1,
-            pageSize
-        );
+        const nextPageData = await getFlowsByStatusAndTimeRange(timesRange, timeAction, status, token, userId, formUuid, pageNumber + 1, pageSize);
         allData = allData.concat(nextPageData);
     }
     return allData;
@@ -91,41 +59,59 @@ const getFlowsByStatusAndTimeRange = async (
 const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesRange, timeAction) => {
     // 1.获取所有宜搭表单数据
     const allForms = await dingDingReq.getAllForms(ddAccessToken, userId);
+    const allUsers = await userRepo.getAllUsers({})
     // 循环请求宜搭实例详情和审核详情数据
     let flows = [];
     if (allForms) {
         for (let i = 0; i < allForms.length; i++) {
             const formUuid = allForms[i].formUuid;
             console.log(`loop form process: ${i + 1}:${allForms.length}(${allForms[i].title.zhCN}:${formUuid})`)
-            const allData = await getFlowsByStatusAndTimeRange(
-                timesRange,
-                timeAction,
-                status,
-                ddAccessToken,
-                userId,
-                formUuid
-            )
-            flows = flows.concat(allData);
+            const result = await getFlowsByStatusAndTimeRange(timesRange, timeAction, status, ddAccessToken, userId, formUuid)
+
+            const replaceOperator = (activity, allUsers) => {
+                if (activity.operatorName.indexOf("[已离职]")) {
+                    const dbUsers = allUsers.filter(user => user.dingdingUserId === activity.operatorUserId)
+                    if (dbUsers.length > 0) {
+                        // 离职之前做的工作不用动，其他的相关的节点信息改为代理人
+                        if (!activity.operateTimeGMT || dateUtil.duration(dateUtil.formatGMT2Str(activity.operateTimeGMT), dbUsers[0].lastWorkDay) > 0) {
+                            activity.operatorName = dbUsers[0].handoverUserId
+                            activity.operatorUserId = dbUsers[0].handoverUserName
+                        }
+                    }
+                }
+                return activity
+            }
+
+            // 对离职的人员，将在离职之后地时间节点的operator更改为代理人
+            for (const flow of result) {
+                for (const userActivity of flow.overallprocessflow) {
+                    if (userActivity.domainList.length > 0) {
+                        for (const domain of userActivity.domainList) {
+                            replaceOperator(domain, allUsers)
+                        }
+                    }
+                    replaceOperator(userActivity, allUsers)
+                }
+            }
+            flows = flows.concat(result);
         }
     }
     return flows;
 };
 
 const getDingDingToken = async () => {
+    // 后面这俩仅需要保留一个
     const ddToken = await dingDingReq.getDingDingCorpToken();
-    await redisService.setToken(ddToken)
-};
+    await redisRepo.setToken(ddToken)
+
+    const biToken = await dingDingReq.getDingDingApplicationToken(dingDingBIApplicationConfig.appKey, dingDingBIApplicationConfig.appSecret)
+    await redisRepo.setBiToken(biToken)
+}
 
 
 const getFlowsFromDingDing = async (status, timesRange, timeAction) => {
     const {access_token} = await getToken();
-    const flows = await getFlowsThroughFormFromYiDa(
-        access_token,
-        com_userid,
-        status,
-        timesRange,
-        timeAction
-    );
+    const flows = await getFlowsThroughFormFromYiDa(access_token, com_userid, status, timesRange, timeAction);
     return flows || [];
 };
 
@@ -192,8 +178,7 @@ const getAllFormsFromDingDing = async () => {
     //循环插入/更新表单
     yd_form.result.data.forEach(async (item) => {
         await FlowFormModel.upsert({
-            flow_form_id: item.formUuid,
-            flow_form_name: item.title.zhCN,
+            flow_form_id: item.formUuid, flow_form_name: item.title.zhCN,
         });
     });
     return yd_form;
@@ -258,11 +243,11 @@ const getTodayFinishedFlows = async () => {
  * @returns {Promise<*[]>}
  */
 const getFinishedFlows = async (timeRange) => {
-    const statusArr = [
-        {"name": "ERROR", "timeAction": "modified", "timeRange": timeRange},
-        {"name": "COMPLETED", "timeAction": "modified", "timeRange": timeRange},
-        {"name": "TERMINATED", "timeAction": "modified", "timeRange": timeRange}
-    ]
+    const statusArr = [{"name": "ERROR", "timeAction": "modified", "timeRange": timeRange}, {
+        "name": "COMPLETED",
+        "timeAction": "modified",
+        "timeRange": timeRange
+    }, {"name": "TERMINATED", "timeAction": "modified", "timeRange": timeRange}]
     let flows = [];
     for (const statusObj of statusArr) {
         const tmpFlows = await getFlowsOfStatusAndTimeRange(statusObj.name, statusObj.timeRange, statusObj.timeAction)

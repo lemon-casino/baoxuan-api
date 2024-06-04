@@ -1,4 +1,4 @@
-const redisService = require("../service/redisService")
+const redisRepo = require("../repository/redisRepo")
 const setter = require("./setter")
 
 global.users = []
@@ -14,12 +14,12 @@ const initial = async () => {
 }
 
 const initGlobalTodayRunningAndFinishedFlows = async () => {
-    const todayRunningAndFinishedFlows = await redisService.getTodayRunningAndFinishedFlows();
+    const todayRunningAndFinishedFlows = await redisRepo.getTodayRunningAndFinishedFlows();
     setter.setGlobalTodayRunningAndFinishedFlows(todayRunningAndFinishedFlows)
 }
 
 const initGlobalUsers = async () => {
-    const users = await redisService.getAllUsersDetail();
+    const users = await redisRepo.getAllUsersDetail();
     // 去掉不需要的内容
     const newUsers = users.map((user) => {
         return {...user}
@@ -28,12 +28,12 @@ const initGlobalUsers = async () => {
 }
 
 const initGlobalDepartments = async () => {
-    const departments = await redisService.getDepartments();
+    const departments = await redisRepo.getDepartments();
     setter.setGlobalDepartments(departments)
 }
 
 const initGlobalUsersOfDepartments = async () => {
-    const usersOfDepartments = await redisService.getUsersUnderDepartment();
+    const usersOfDepartments = await redisRepo.getUsersUnderDepartment();
     let newUsersOfDepartments = []
     for (const usersOfDepartment of usersOfDepartments) {
         const newUsersOfDepartment = clearFlowsDataOfUser(usersOfDepartment);
