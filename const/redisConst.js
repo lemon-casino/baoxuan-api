@@ -11,7 +11,8 @@ const redisKeys = {
     "DDToken": "bases:dd_token",//ddCorpToken
     // new key
     "FlowsOfRunningAndFinishedOfToday": "flows:today:running_and_finished",
-    "BiToken": "bases:bi_token"
+    "BiToken": "bases:bi_token",
+    "WorkingDays": "bases:working_days"
 }
 
 module.exports = {

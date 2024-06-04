@@ -17,6 +17,7 @@ const syncWorkingDay = async () => {
     const isWorkingDay = await dingDingService.isWorkingDay(date)
     if (isWorkingDay) {
         await workingDayService.saveWorkingDay(date)
+        await redisUtil.rPush(redisKeys.WorkingDays, date)
     }
 }
 

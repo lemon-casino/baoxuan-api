@@ -203,7 +203,14 @@ const computeValidWorkingDuration = async () => {
     const duration = await workingDayService.computeValidWorkingDuration("2024-04-15 10:00:00", "2024-04-16 11:03:24")
 }
 
+const initRedisWorkingDays = async () => {
+    const workingDays = await workingDayService.getWorkingDayByRange()
+    for (const workingDay of workingDays) {
+        await redisUtil.rPush(redisKeys.WorkingDays, workingDay.workingDate)
+    }
+}
+initRedisWorkingDays()
 // taskService.syncUserWithDepartment()
 // taskService.syncDingDingToken()
 // taskService.syncResignEmployeeInfo()
-taskService.syncTodayRunningAndFinishedFlows()
+// taskService.syncTodayRunningAndFinishedFlows()
