@@ -5,29 +5,27 @@ const RemoteError = require("../error/remoteError")
 // 状态码不一定准确，故使用关键词 [400, 403]
 const dingDingRateLimitErrorKeywords = ["过多", "频繁", "流控", "限制"]
 
-const delayTime = 0
 const get = async (url, params, token) => {
     logger.info(`${process.pid}:${url}`)
-    // let query = ""
-    // if (params) {
-    //     query = "?"
-    //     const keys = Object.keys(params)
-    //     for (let i = 0; i < keys.length; i++) {
-    //         if (i > 0) {
-    //             query = `${query}&`
-    //         }
-    //         query = `${query}${keys[i]}=${params[keys[i]]}`
-    //     }
-    // }
-    // const newUrl = `${url}${query}`
-    const config = {headers: {contentType: "application/x-www-form-urlencoded"}}
-    config.data = params
+    let query = ""
+    if (params) {
+        query = "?"
+        const keys = Object.keys(params)
+        for (let i = 0; i < keys.length; i++) {
+            if (i > 0) {
+                query = `${query}&`
+            }
+            query = `${query}${keys[i]}=${params[keys[i]]}`
+        }
+    }
+    const newUrl = `${url}${query}`
+    const config = {headers: {}}
     if (token) {
         config.headers["x-acs-dingtalk-access-token"] = token
     }
 
     try {
-        const response = await axios.get(url, config);
+        const response = await axios.get(newUrl, config);
         return response.data;
     } catch (error) {
         if (error.response) {

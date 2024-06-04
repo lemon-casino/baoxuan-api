@@ -8,6 +8,11 @@ const sum = (...nums) => {
     return result
 }
 
+function isPositiveInteger(value) {
+    return /^\d+$/.test(value) && parseInt(value) > 0
+}
+
 module.exports = {
-    sum
+    sum,
+    isPositiveInteger
 }

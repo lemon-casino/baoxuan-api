@@ -205,3 +205,5 @@ const computeValidWorkingDuration = async () => {
 
 // taskService.syncUserWithDepartment()
 // taskService.syncDingDingToken()
+taskService.syncResignEmployeeInfo()
+// taskService.syncDingDingToken()

@@ -84,15 +84,25 @@ const syncResignEmployeeInfo = async () => {
     const accessToken = await redisRepo.getBiToken()
     const allResignEmployees = await userRepo.getResignEmployees(accessToken)
     // 更新人员离职信息
+    const onJobEmployees = await redisRepo.getAllUsersDetail()
     for (const employee of allResignEmployees) {
-        if (employee.userId === "161148516526645710") {
-            console.log('=====')
+        // employee中的userId和db中的userId不对应，对应dingdingUserId
+        const newEmployee = {}
+        newEmployee.dingdingUserId = employee.userId
+        newEmployee.lastWorkDay = dateUtil.convertTimestampToDate(employee.lastWorkDay)
+        newEmployee.resignStatus = employee.status
+        newEmployee.preStatus = employee.preStatus
+        newEmployee.reasonMemo = employee.reasonMemo
+        newEmployee.voluntaryReason = JSON.stringify(employee.voluntaryReason)
+        newEmployee.passiveReason = JSON.stringify(employee.passiveReason)
+        newEmployee.handoverUserId = employee.handoverUserId
+        if (employee.handoverUserId) {
+            const tmpHandoverUsers = onJobEmployees.filter(user => user.userid === employee.handoverUserId)
+            if (tmpHandoverUsers.length > 0) {
+                newEmployee.handoverUserName = tmpHandoverUsers[0].name
+            }
         }
-        employee.lastWorkDay = new Date(employee.lastWorkDay)
-        employee.resignStatus = employee.status
-        employee.voluntaryReason = JSON.stringify(employee.voluntaryReason)
-        employee.passiveReason = JSON.stringify(employee.passiveReason)
-        await userRepo.updateUserResignInfo(employee)
+        await userRepo.updateUserResignInfo(newEmployee)
     }
 }
 

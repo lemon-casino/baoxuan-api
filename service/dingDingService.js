@@ -105,7 +105,7 @@ const getDingDingToken = async () => {
     await redisRepo.setToken(ddToken)
 
     const biToken = await dingDingReq.getDingDingApplicationToken(dingDingBIApplicationConfig.appKey, dingDingBIApplicationConfig.appSecret)
-    await redisRepo.setBiToken(biToken)
+    await redisRepo.setBiToken(biToken.access_token)
 }
 
 

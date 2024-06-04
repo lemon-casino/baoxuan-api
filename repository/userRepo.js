@@ -128,7 +128,7 @@ const getResignEmployees = async (token) => {
         } = await dingDingReq.getResignEmployees(token, nextToken)
 
         if (hasMore) {
-            const data = await getPagingResignEmployees(token, dNextToken, allResignEmployees)
+            const data = await getPagingResignEmployees(token, dNextToken)
             allResignEmployees = allResignEmployees.concat(data)
         }
         return allResignEmployees
@@ -148,7 +148,7 @@ const getResignEmployees = async (token) => {
 const updateUserResignInfo = async (user) => {
     const result = await models.usersModel.update(user,
         {
-            where: {dingdingUserId: user.userId}
+            where: {dingdingUserId: user.dingdingUserId}
         }
     )
     return result

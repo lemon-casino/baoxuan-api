@@ -25,10 +25,30 @@ const getDingDingToken = async (code) => {
 
 // 1.获取企业内部应用的access_token
 const getDingDingCorpToken = async () => {
-    const url = `https://oapi.dingtalk.com/gettoken`
+    // const url = "https://oapi.dingtalk.com/gettoken"
+    // const params = {
+    //     appkey: appKey,
+    //     appsecret: appSecret
+    // }
+    // return await httpUtil.get(url, params)
+    return await getDingDingApplicationToken(appKey, appSecret)
+}
+
+/**
+ * 获取钉钉内部应用的token
+ *
+ * @param appKey
+ * @param appSecret
+ * @returns {Promise<void>}
+ */
+const getDingDingApplicationToken = async (appKey, appSecret) => {
+    if (!appKey || !appSecret) {
+        throw new ParameterError("参数appKey、appSecret不能为空")
+    }
+    const url = "https://oapi.dingtalk.com/gettoken"
+    // 不要使用驼峰，接口调用参数要全部些小
     const params = {
-        appkey: appKey,
-        appsecret: appSecret
+        appkey: appKey, appsecret: appSecret
     }
     return await httpUtil.get(url, params)
 }
@@ -297,25 +317,6 @@ const getFormFields = async (formId, userId, token) => {
     return result
 }
 
-/**
- * 获取钉钉内部应用的token
- * @param appKey
- * @param appSecret
- * @returns {Promise<void>}
- */
-const getDingDingApplicationToken = async (appKey, appSecret) => {
-    if (!appKey || !appSecret) {
-        throw new ParameterError("参数appKey、appSecret不能为空")
-    }
-    const url = "https://oapi.dingtalk.com/gettoken"
-    // 不要使用驼峰，接口调用参数要全部些小
-    const params = {
-        appkey: appKey, appsecret: appSecret
-    }
-    const result = await httpUtil.get(url, params)
-    return result.access_token
-}
-
 const getAttendances = async (pageIndex, pageSize, workDateFrom, workDateTo, userIds) => {
     const biToken = await redisRepo.getBiToken()
     const url = `https://oapi.dingtalk.com/attendance/list?access_token=${biToken}`
@@ -383,7 +384,7 @@ const getResignInfo = async (token, userIds) => {
         throw new ParameterError("参数userIds的最大长度为50")
     }
     const url = "https://api.dingtalk.com/v1.0/hrm/employees/dimissionInfos"
-    const params = {userIdList: userIds}
+    const params = {userIdList: JSON.stringify(userIds)}
     return await httpUtil.get(url, params, token)
 }
 
