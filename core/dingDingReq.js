@@ -1,5 +1,4 @@
-const redisRepo = require("../repository/redisRepo")
-const {dingDingConfig, dingDingBIApplicationConfig} = require("../config")
+const {dingDingConfig} = require("../config")
 const httpUtil = require("../utils/httpUtil")
 const dingDingUtil = require("../utils/dingDingUtil")
 const ParameterError = require("../error/parameterError")
@@ -317,9 +316,8 @@ const getFormFields = async (formId, userId, token) => {
     return result
 }
 
-const getAttendances = async (pageIndex, pageSize, workDateFrom, workDateTo, userIds) => {
-    const biToken = await redisRepo.getBiToken()
-    const url = `https://oapi.dingtalk.com/attendance/list?access_token=${biToken}`
+const getAttendances = async (pageIndex, pageSize, workDateFrom, workDateTo, userIds, token) => {
+    const url = `https://oapi.dingtalk.com/attendance/list?access_token=${token}`
     const body = {
         workDateFrom,
         workDateTo,

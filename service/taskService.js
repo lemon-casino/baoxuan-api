@@ -89,7 +89,9 @@ const syncResignEmployeeInfo = async () => {
         // employee中的userId和db中的userId不对应，对应dingdingUserId
         const newEmployee = {}
         newEmployee.dingdingUserId = employee.userId
-        newEmployee.lastWorkDay = dateUtil.convertTimestampToDate(employee.lastWorkDay)
+        if (employee.lastWorkDay) {
+            newEmployee.lastWorkDay = dateUtil.convertTimestampToDate(employee.lastWorkDay)
+        }
         newEmployee.resignStatus = employee.status
         newEmployee.preStatus = employee.preStatus
         newEmployee.reasonMemo = employee.reasonMemo

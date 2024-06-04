@@ -21,16 +21,23 @@ const getUserDetails = async (where) => {
     }
 }
 
-const getAllUsers = async (where) => {
-    const users = await models.usersModel.findAll({
+const getAllUsersWithoutPrivateFields = async (where) => {
+    let users = await models.usersModel.findAll({
         attributes: {exclude: ["password", "dingdingUserId", "userPic"]},
         where
     })
-    return users
+    return users.map(user => user.get({plain: true}))
+}
+
+const getAllUsers = async (where) => {
+    let users = await models.usersModel.findAll({
+        where
+    })
+    return users.map(user => user.get({plain: true}))
 }
 
 const getEnabledUsers = async () => {
-    const users = await getAllUsers({status: 1})
+    const users = await getAllUsersWithoutPrivateFields({status: 1})
     return users
 }
 
@@ -157,6 +164,7 @@ const updateUserResignInfo = async (user) => {
 module.exports = {
     getUserDetails,
     getAllUsers,
+    getAllUsersWithoutPrivateFields,
     getEnabledUsers,
     getDepartmentUsers,
     updateUserResignByOnJobUserIds,

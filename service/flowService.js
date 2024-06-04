@@ -921,12 +921,12 @@ const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) 
     return {activityStat: activityStatResult, deptStat: deptStatResult, users: pureUsersWithDepartment}
 }
 
-const getDepartmentsOverallFlowsStat = async (startDoneDate, endDoneDate, formIds, departmentIds) => {
-    const forms = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
-    const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
-    const result = await departmentsOverallFlowsStat.get(departmentIds, flows, forms)
-    return flowUtil.attachIdsAndSum(result)
-}
+// const getDepartmentsOverallFlowsStat = async (startDoneDate, endDoneDate, formIds, departmentIds) => {
+//     const forms = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
+//     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
+//     const result = await departmentsOverallFlowsStat.get(departmentIds, flows, forms)
+//     return flowUtil.attachIdsAndSum(result)
+// }
 
 module.exports = {
     filterFlowsByTimesRange,
@@ -960,6 +960,6 @@ module.exports = {
     getCoreFormFlowConfig,
     getFormsFlowsActivitiesStat,
     getAllOverDueRunningFlows,
-    getDepartmentsOverallFlowsStat,
+    // getDepartmentsOverallFlowsStat,
     removeUnmatchedDateActivities
 }

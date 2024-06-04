@@ -69,11 +69,15 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
             const result = await getFlowsByStatusAndTimeRange(timesRange, timeAction, status, ddAccessToken, userId, formUuid)
 
             const replaceOperator = (activity, allUsers) => {
-                if (activity.operatorName.indexOf("[已离职]")) {
+                const hasResigned = activity.operatorName.includes("[已离职]")
+                if (hasResigned) {
                     const dbUsers = allUsers.filter(user => user.dingdingUserId === activity.operatorUserId)
                     if (dbUsers.length > 0) {
                         // 离职之前做的工作不用动，其他的相关的节点信息改为代理人
-                        if (!activity.operateTimeGMT || dateUtil.duration(dateUtil.formatGMT2Str(activity.operateTimeGMT), dbUsers[0].lastWorkDay) > 0) {
+                        const undoAfterResign = !activity.operateTimeGMT
+                        const doAfterResign = activity.operateTimeGMT &&
+                            dateUtil.duration(dateUtil.formatGMT2Str(activity.operateTimeGMT), dateUtil.format2Str(dbUsers[0].lastWorkDay)) > 0
+                        if (undoAfterResign || doAfterResign) {
                             activity.operatorName = dbUsers[0].handoverUserId
                             activity.operatorUserId = dbUsers[0].handoverUserName
                         }
@@ -427,7 +431,8 @@ const getTodayRunningAndFinishedFlows = async () => {
  * @returns {Promise<*>}
  */
 const getAttendances = async (pageIndex, pageSize, workDateFrom, workDateTo, userIds) => {
-    const attendances = await dingDingReq.getAttendances(pageIndex, pageSize, workDateFrom, workDateTo, userIds)
+    const biToken = await redisRepo.getBiToken()
+    const attendances = await dingDingReq.getAttendances(pageIndex, pageSize, workDateFrom, workDateTo, userIds, biToken)
     return attendances
 }
 
