@@ -1,4 +1,6 @@
+const assert = require("assert")
 const redisUtil = require("../utils/redisUtil")
+const redisRepo = require("../repository/redisRepo")
 
 describe("redisUtil", () => {
     it("rPush", async () => {
@@ -16,5 +18,9 @@ describe("redisUtil", () => {
     it("lRange", async () => {
         const days = await redisUtil.lRange("test:working_days", 0, 99999)
         console.log(days)
+    })
+    it("getAllWorkingDays", async()=>{
+        const workingDays = await redisRepo.getAllWorkingDays()
+        // assert.equal(workingDays.length, 78)
     })
 })
