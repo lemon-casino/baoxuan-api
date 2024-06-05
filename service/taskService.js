@@ -25,7 +25,7 @@ const syncWorkingDay = async () => {
 const syncTodayRunningAndFinishedFlows = async () => {
     logger.info("开始同步今日流程数据...")
     const flows = await dingDingService.getTodayRunningAndFinishedFlows()
-    await redisUtil.setValue(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
+    await redisUtil.setValue(redisKeys.TodayRunningAndFinishedFlows, JSON.stringify(flows))
     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
     logger.info(`同步完成，共:${flows.length}条数据`)
 }
@@ -42,13 +42,13 @@ const syncDingDingToken = async () => {
 
 const syncDepartment = async () => {
     const depList = await dingDingService.getDepartmentFromDingDing()
-    await redisUtil.setValue(redisKeys.Department, JSON.stringify(depList.result))
+    await redisUtil.setValue(redisKeys.Departments, JSON.stringify(depList.result))
     globalSetter.setGlobalDepartments(depList.result)
 }
 
 const syncDepartmentWithUser = async () => {
     const allDepartmentsWithUsers = await dingDingService.getDepartmentsWithUsersFromDingDing()
-    await redisUtil.setValue(redisKeys.UsersUnderDepartment, JSON.stringify(allDepartmentsWithUsers))
+    await redisUtil.setValue(redisKeys.DepartmentsUsers, JSON.stringify(allDepartmentsWithUsers))
     globalSetter.setGlobalUsersOfDepartments(allDepartmentsWithUsers)
 }
 
@@ -59,7 +59,7 @@ const syncUserWithDepartment = async () => {
         for (let user of usersWithDepartment) {
             if (user.userid === extension.userId) {
                 // 补充附加属性
-                if(extension.attachValues){
+                if (extension.attachValues) {
                     for (const attachKey of Object.keys(extension.attachValues)) {
                         user[attachKey] = extension.attachValues[attachKey]
                     }
@@ -78,7 +78,7 @@ const syncUserWithDepartment = async () => {
         }
     }
 
-    await redisUtil.setValue(redisKeys.AllUsersWithDepartment, JSON.stringify(usersWithDepartment))
+    await redisUtil.setValue(redisKeys.Users, JSON.stringify(usersWithDepartment))
     globalSetter.setGlobalUsers(usersWithDepartment)
     await userService.syncUserToDB(usersWithDepartment)
 }

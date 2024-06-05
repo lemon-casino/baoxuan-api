@@ -1,19 +1,12 @@
 const redisKeys = {
-    // old key
-    "AllFinishedFlowsBeforeToday": "flows:before_today:all_finished_flows", //sql_liuchengdata
-    "AllNotFinishedFlowsBeforeToday": "flows:before_today:all_not_finished_flows", // AllNoCompletedLiu_Old
-    "AllFlowsOfToday": "flows:today:all_flows", //getTodayAllLiu_New
-    "AllDoingFlowsOfToday": "flows:today:all_doing_flows",
-    "AllFlowsUntilNow": "flows:all_flows_until_now", // newLiuChengList
-    "Department": "bases:departments", // dep_List
-    "UsersUnderDepartment": "bases:departments:users", //dep_userList
-    "AllUsersWithDepartment": "bases:users", //userAllDetail
-    "DDToken": "bases:dd_token",//ddCorpToken
-    // new key
-    "FlowsOfRunningAndFinishedOfToday": "flows:today:running_and_finished",
+    "TodayRunningAndFinishedFlows": "flows:today:running_and_finished",
+    "Departments": "bases:departments",
+    "DepartmentsUsers": "bases:departments:users",
+    "Users": "bases:users",
+    "DDToken": "bases:dd_token",
     "BiToken": "bases:bi_token",
     "WorkingDays": "bases:working_days",
-    "QRCodes": "QRCodes"
+    "QRCodes": "qr_codes"
 }
 
 module.exports = {

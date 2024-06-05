@@ -141,7 +141,7 @@ const handle_fq_cy_liuc = async (
     };
 
     const allUserDetails = await redisRepo.getAllUsersDetail();
-    const allFlowsInDingDing = await redisRepo.getAllFlowsUntilNow();
+    const allFlowsInDingDing = []
     // 获取当前用户下的所有流程数据
     const currentUsers = allUserDetails.filter((item) => item.userid === ddUserId);
     if (currentUsers.length > 0) {
@@ -462,7 +462,7 @@ const handleDepartmentLaunchOrJoinFlows = async (
     const startDate = new Date(timesRange[0]);
     const endDate = new Date(timesRange[1]);
     const allUsersOfAllDepartments = await redisRepo.getUsersUnderDepartment();
-    const ddAllFlows = await redisRepo.getAllFlowsUntilNow();
+    const ddAllFlows = []
     const results = [];
     const usersOfParentDepartment = allUsersOfAllDepartments.filter((item) => item.dept_id == parentDepartmentId);
 

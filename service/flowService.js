@@ -307,7 +307,7 @@ const getTodayFlowsByIds = async (ids) => {
             satisfiedFlows.push({...flow, originator: {userId: flow.originatorId}})
         }
     }
-    // const satisfiedFlows = await flowsOfRunningAndFinishedOfToday.filter((item) => ids.includes(item.processInstanceId))
+
     // 为流程添加发起人的部门信息
     for (const flow of satisfiedFlows) {
         let departmentNames = ""

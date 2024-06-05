@@ -1,23 +1,8 @@
-const axios = require("axios");
 const dd = require("../core/dingDingReq");
-// 引入用户模型
 const UsersModel = require("../model/users");
 const {generateToken} = require("../utils/token");
 const tokenConfig = require("../config/index").tokenConfig;
 const biResponse = require("../utils/biResponse")
-
-// 定义获取流程列表的API接口URL
-const GET_PROCESS_LIST_URL =
-    "https://oapi.dingtalk.com/robot/send?access_token=";
-
-// 定义获取流程列表的请求参数
-const PROCESS_LIST_PARAM = {
-    type: "oa",
-    open_id: "YOUR_OPEN_ID", // 钉钉应用的管理员账号的OpenID
-    process_code: "YOUR_PROCESS_CODE", // 流程的编码
-    page: 1, // 页码，默认为1
-    page_size: 10, // 每页的数量，默认为10
-};
 
 exports.getddUserList = async (req, res) => {
     // 钉钉授权流程
@@ -42,13 +27,6 @@ exports.getddUserList = async (req, res) => {
     const getddUserLists = async (corpTokenToken, userid) => {
         const userInfo = await dd.getUserInfoByUserIdAndToken(corpTokenToken, userid);
         if (userInfo.errmsg === "ok") {
-            // name: 员工姓名
-            // avatar: 员工头像
-            // mobile: 员工手机号
-            // email: 员工邮箱
-            // dept_id_list: 员工所属部门id列表
-            // hired_date: 员工入职时间
-            // leader_in_dept 员工在对应的部门中是否是主管，返回true或false
             const {
                 name,
                 avatar,
