@@ -11,6 +11,7 @@ const redisUtil = require("../utils/redisUtil")
 const dateUtil = require("../utils/dateUtil")
 const {redisKeys} = require("../const/redisConst")
 const onlineCheckConst = require("../const/onlineCheckConst")
+const extensionsConst = require("../const/tmp/extensionsConst")
 
 const syncWorkingDay = async () => {
     const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
@@ -53,6 +54,30 @@ const syncDepartmentWithUser = async () => {
 
 const syncUserWithDepartment = async () => {
     const usersWithDepartment = await dingDingService.getUsersWithDepartmentFromDingDing()
+    // 添加需要补充的人员信息
+    for (const extension of extensionsConst.userDeptExtensions) {
+        let matchedUser = null
+        for (const user of usersWithDepartment) {
+            if (user.userid === extension.userId) {
+                matchedUser = user
+                break
+            }
+        }
+        if (matchedUser) {
+            // 补充附加属性
+            matchedUser = {...matchedUser, ...extension.attachValues}
+            // 部门信息扩展
+            if (extension.depsExtensions) {
+                for (const deptExt of extension.depsExtensions) {
+                    const tmpDeps = matchedUser.leader_in_dept.filter(dept => dept.dept_id.toString() === deptExt.deptId)
+                    if (tmpDeps.length > 0) {
+                        tmpDeps[0].statForms = deptExt.statForms
+                    }
+                }
+            }
+        }
+    }
+
     await redisUtil.setValue(redisKeys.AllUsersWithDepartment, JSON.stringify(usersWithDepartment))
     globalSetter.setGlobalUsers(usersWithDepartment)
     await userService.syncUserToDB(usersWithDepartment)
