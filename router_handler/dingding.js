@@ -10,7 +10,7 @@ exports.getddUserList = async (req, res) => {
         // 1.根据code获取用户token
         let UserToken = await dd.getDingDingToken(code);
         // 1.获取企业内部应用的access_token
-        let CorpToken = await dd.getDingDingCorpToken();
+        let CorpToken = await dd.getDingDingAccessToken();
         // 2.根据token获取通讯录用户信息，得到unionid
         const {nick, unionId, avatarUrl, openId, mobile} = await dd.getUserInfoByToken(
             UserToken.accessToken

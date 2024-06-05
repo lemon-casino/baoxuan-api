@@ -20,7 +20,6 @@ const flowFormDetailsService = require("../service/flowFormDetailsService")
 const departmentService = require("../service/departmentService")
 const flowFormService = require("../service/flowFormService")
 const formReviewRepo = require("../repository/formReviewRepo")
-const {dingDingBIApplicationConfig} = require("../config");
 
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
@@ -119,12 +118,8 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
 };
 
 const getDingDingToken = async () => {
-    // 后面这俩仅需要保留一个
-    const ddToken = await dingDingReq.getDingDingCorpToken();
+    const ddToken = await dingDingReq.getDingDingAccessToken()
     await redisRepo.setToken(ddToken)
-
-    const biToken = await dingDingReq.getDingDingApplicationToken(dingDingBIApplicationConfig.appKey, dingDingBIApplicationConfig.appSecret)
-    await redisRepo.setBiToken(biToken.access_token)
 }
 
 
@@ -444,6 +439,7 @@ const getTodayRunningAndFinishedFlows = async () => {
 
 /**
  * 获取打卡记录
+ *
  * @param pageIndex
  * @param pageSize
  * @param workDateFrom
@@ -452,8 +448,8 @@ const getTodayRunningAndFinishedFlows = async () => {
  * @returns {Promise<*>}
  */
 const getAttendances = async (pageIndex, pageSize, workDateFrom, workDateTo, userIds) => {
-    const biToken = await redisRepo.getBiToken()
-    const attendances = await dingDingReq.getAttendances(pageIndex, pageSize, workDateFrom, workDateTo, userIds, biToken)
+    const {access_token: accessToken} = await redisRepo.getToken()
+    const attendances = await dingDingReq.getAttendances(pageIndex, pageSize, workDateFrom, workDateTo, userIds, accessToken)
     return attendances
 }
 

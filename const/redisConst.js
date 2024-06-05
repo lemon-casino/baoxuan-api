@@ -4,7 +4,6 @@ const redisKeys = {
     "DepartmentsUsers": "bases:departments:users",
     "Users": "bases:users",
     "DDToken": "bases:dd_token",
-    "BiToken": "bases:bi_token",
     "WorkingDays": "bases:working_days",
     "QRCodes": "qr_codes"
 }
