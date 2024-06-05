@@ -340,9 +340,9 @@ const getTodayFlowsByIds = async (ids) => {
             }
         }
         if (departmentNames.startsWith(",")) {
-            flow.departmentName = departmentNames.substring(1)
+            flow.deptName = departmentNames.substring(1)
         } else {
-            flow.departmentName = departmentNames
+            flow.deptName = departmentNames
         }
 
     }
