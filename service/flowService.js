@@ -842,7 +842,7 @@ const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) 
             userName: user.name
         }
         if (user.multiDeptStat) {
-            user.multiDeptStat = true
+            pureUser.multiDeptStat = true
             pureUser.departments = user.leader_in_dept.map(dept => {
                 return {deptId: dept.dept_id, deptName: dept.dep_detail.name, statForms: dept.statForms}
             })
