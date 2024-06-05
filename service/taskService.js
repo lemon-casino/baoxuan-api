@@ -56,24 +56,24 @@ const syncUserWithDepartment = async () => {
     const usersWithDepartment = await dingDingService.getUsersWithDepartmentFromDingDing()
     // 添加需要补充的人员信息
     for (const extension of extensionsConst.userDeptExtensions) {
-        let matchedUser = null
-        for (const user of usersWithDepartment) {
+        for (let user of usersWithDepartment) {
             if (user.userid === extension.userId) {
-                matchedUser = user
-                break
-            }
-        }
-        if (matchedUser) {
-            // 补充附加属性
-            matchedUser = {...matchedUser, ...extension.attachValues}
-            // 部门信息扩展
-            if (extension.depsExtensions) {
-                for (const deptExt of extension.depsExtensions) {
-                    const tmpDeps = matchedUser.leader_in_dept.filter(dept => dept.dept_id.toString() === deptExt.deptId)
-                    if (tmpDeps.length > 0) {
-                        tmpDeps[0].statForms = deptExt.statForms
+                // 补充附加属性
+                if(extension.attachValues){
+                    for (const attachKey of Object.keys(extension.attachValues)) {
+                        user[attachKey] = extension.attachValues[attachKey]
                     }
                 }
+                // 部门信息扩展
+                if (extension.depsExtensions) {
+                    for (const deptExt of extension.depsExtensions) {
+                        const tmpDeps = user.leader_in_dept.filter(dept => dept.dept_id.toString() === deptExt.deptId)
+                        if (tmpDeps.length > 0) {
+                            tmpDeps[0].statForms = deptExt.statForms
+                        }
+                    }
+                }
+                break
             }
         }
     }
