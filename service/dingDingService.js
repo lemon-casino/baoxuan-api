@@ -170,6 +170,12 @@ const getUsersWithDepartmentFromDingDing = async () => {
     const allUsersFromDepartments = [];
     // 获取部门下的所有用户信息
     for (const item of departmentList) {
+        if (item.dep_chil && item.dep_chil.length > 0) {
+            for (const subItem of item.dep_chil) {
+                const res = await dingDingReq.getDeptUserList(access_token, subItem.dept_id);
+                allUsersFromDepartments.push(res.result.userid_list)
+            }
+        }
         const res = await dingDingReq.getDeptUserList(access_token, item.dept_id);
         allUsersFromDepartments.push(res.result.userid_list);
     }

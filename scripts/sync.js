@@ -12,8 +12,6 @@ const flowService = require("../service/flowService")
 const processDetailsService = require("../service/processDetailsService")
 const flowFormDetailsService = require("../service/flowFormDetailsService")
 const workingDayService = require("../service/workingDayService")
-const taskService = require("../service/taskService")
-const {logger} = require("../utils/log")
 
 const {redisKeys} = require("../const/redisConst")
 
@@ -63,9 +61,6 @@ const getTodayRunningAndFinishedFlows = async () => {
     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
 }
 
-// processService.correctStrFieldToJson();
-
-
 const getHistoryFinishedFlows = async () => {
     const pullTimeRange = []
     // 获取拉取钉钉完成流程的起始时间（异常情况下，当天更新失败，可能下次会拉取多天的）
@@ -104,10 +99,6 @@ const getHistoryFinishedFlows = async () => {
     }
 }
 
-// flowFormService.syncFormsFromDingDing()
-
-// dingDingData.getDingDingToken();
-
 /**
  * 将流程数据中的originator信息拆出来
  * @returns {Promise<void>}
@@ -128,7 +119,6 @@ const extractProcessOriginator = async () => {
         console.log(`流程中originator信息同步进度：${index}/${allFlows.length}`)
     }
 }
-// extractProcessOriginator()
 
 /**git
  * 流程中data数据的拆分
@@ -163,8 +153,6 @@ const extractProcessData = async () => {
     }
 }
 
-// extractProcessData()
-
 /**
  * 提取流程的审核信息
  * @returns {Promise<void>}
@@ -185,11 +173,6 @@ const extractProcessReview = async () => {
         console.log(`流程信息同步进度：${index}/${allFlows.length}`)
     }
 }
-// extractProcessReview()
-
-// flowService.syncMissingCompletedFlows()
-// 同步3.1号~3.31的已完成流程入库
-// dingDingService.handleAsyncAllFinishedFlowsByTimeRange("2024-03-01 00:00:00","2024-03-31 23:59:00");
 
 const syncWorkingDay = async () => {
     const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
@@ -209,8 +192,17 @@ const initRedisWorkingDays = async () => {
         await redisUtil.rPush(redisKeys.WorkingDays, workingDay.workingDate)
     }
 }
-initRedisWorkingDays()
-// taskService.syncUserWithDepartment()
-// taskService.syncDingDingToken()
-// taskService.syncResignEmployeeInfo()
-// taskService.syncTodayRunningAndFinishedFlows()
+
+module.exports = {
+    getTodayRunningAndFinishedFlows,
+    initRedis,
+    syncProcessReviewInDb,
+    extractProcessReviewToAloneTale,
+    getHistoryFinishedFlows,
+    extractProcessOriginator,
+    extractProcessData,
+    extractProcessReview,
+    syncWorkingDay,
+    computeValidWorkingDuration,
+    initRedisWorkingDays
+}
