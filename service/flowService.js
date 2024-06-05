@@ -312,6 +312,7 @@ const getTodayFlowsByIds = async (ids) => {
     for (const flow of satisfiedFlows) {
         let departmentNames = ""
         const departmentsOfUser = await departmentService.getDepartmentOfUser(flow.originator.userId)
+
         // 人员的leader_in_dept 是一种扁平的结构，有子部门的归算的子部门，没有的就归算到一级部门下
         // 获取一级部门信息
         const topDepartments = departmentsOfUser.filter((dep) => {
@@ -321,23 +322,27 @@ const getTodayFlowsByIds = async (ids) => {
             return false
         })
 
-        for (const department of topDepartments) {
-            const subDepartments = departmentsOfUser.filter((dep) => {
-                if (dep && dep.dep_detail && dep.dep_detail.parent_id) {
-                    return dep.dep_detail.parent_id === department.dep_detail.dept_id
+        if (topDepartments.length > 0) {
+            for (const department of topDepartments) {
+                const subDepartments = departmentsOfUser.filter((dep) => {
+                    if (dep && dep.dep_detail && dep.dep_detail.parent_id) {
+                        return dep.dep_detail.parent_id === department.dep_detail.dept_id
+                    }
+                    return false
+                })
+                // 存在子部门统计到子部门下
+                if (subDepartments.length > 0) {
+                    for (const subDepartment of subDepartments) {
+                        departmentNames = `${departmentNames},${subDepartment.dep_detail.name}`
+                    }
                 }
-                return false
-            })
-            // 存在子部门统计到子部门下
-            if (subDepartments.length > 0) {
-                for (const subDepartment of subDepartments) {
-                    departmentNames = `${departmentNames},${subDepartment.dep_detail.name}`
+                // 没有子部门统计到一级部门下
+                else {
+                    departmentNames = `${departmentNames},${department.dep_detail.name}`
                 }
             }
-            // 没有子部门统计到一级部门下
-            else {
-                departmentNames = `${departmentNames},${department.dep_detail.name}`
-            }
+        } else {
+            departmentNames = departmentsOfUser.map(dept => dept.dep_detail.name).join(",")
         }
         if (departmentNames.startsWith(",")) {
             flow.deptName = departmentNames.substring(1)
