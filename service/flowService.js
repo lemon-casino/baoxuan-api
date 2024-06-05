@@ -899,14 +899,16 @@ const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) 
                 let userDepName = "未知"
                 const tmpUser = pureUsersWithDepartment.filter(user => user.userName === originOperatorResult.userName)
                 const currUser = tmpUser[0]
-                if (currUser.multiDeptStat) {
-                    // 找到当前表单需要被统计到的部门
-                    const tmpDeps = currUser.departments.filter(dept => dept.statForms.includes(originFormResult.formId))
-                    if (tmpDeps.length > 0) {
-                        userDepName = tmpDeps[0].deptName
+                if (currUser) {
+                    if (currUser.multiDeptStat) {
+                        // 找到当前表单需要被统计到的部门
+                        const tmpDeps = currUser.departments.filter(dept => dept.statForms.includes(originFormResult.formId))
+                        if (tmpDeps.length > 0) {
+                            userDepName = tmpDeps[0].deptName
+                        }
+                    } else {
+                        userDepName = currUser.departments[0].deptName
                     }
-                } else {
-                    userDepName = currUser.departments[0].deptName
                 }
 
                 // 1. 从最终的结果中找到该用户所在的部门节点，没有的话则添加
