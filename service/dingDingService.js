@@ -71,19 +71,34 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
             const replaceOperator = (activity, allUsers) => {
                 const hasResigned = activity.operatorName.includes("[已离职]")
                 if (hasResigned) {
-                    const dbUsers = allUsers.filter(user => user.dingdingUserId === activity.operatorUserId)
+                    // operator：domainList中的用户ID
+                    // operatorUserId：父节点中的用户ID
+                    const operatorId = activity.operatorUserId || activity.operator
+                    const dbUsers = allUsers.filter(user => user.dingdingUserId === operatorId)
                     if (dbUsers.length > 0) {
+                        const user = dbUsers[0]
+                        // 不存在代理人直接返回
+                        if (!user.handoverUserId) {
+                            return
+                        }
+
                         // 离职之前做的工作不用动，其他的相关的节点信息改为代理人
                         const undoAfterResign = !activity.operateTimeGMT
                         const doAfterResign = activity.operateTimeGMT &&
-                            dateUtil.duration(dateUtil.formatGMT2Str(activity.operateTimeGMT), dateUtil.format2Str(dbUsers[0].lastWorkDay)) > 0
+                            dateUtil.duration(dateUtil.formatGMT2Str(activity.operateTimeGMT), dateUtil.format2Str(user.lastWorkDay)) > 0
                         if (undoAfterResign || doAfterResign) {
-                            activity.operatorName = dbUsers[0].handoverUserId
-                            activity.operatorUserId = dbUsers[0].handoverUserName
+                            activity.operatorName = user.handoverUserName
+                            activity.operatorDisplayName = user.handoverUserName
+                            // domainList和父节点中的显示的用户字段不一样
+                            if (Object.keys(activity).includes("operatorUserId")) {
+                                activity.operatorUserId = user.handoverUserId
+                            }
+                            if (Object.keys(activity).includes("operator")) {
+                                activity.operator = user.handoverUserId
+                            }
                         }
                     }
                 }
-                return activity
             }
 
             // 对离职的人员，将在离职之后地时间节点的operator更改为代理人
