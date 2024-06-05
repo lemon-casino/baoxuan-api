@@ -18,6 +18,7 @@ const departmentCoreActivityStat = require("../core/statistic/departmentCoreActi
 const departmentsOverallFlowsStat = require("../core/statistic/departmentsOverallFlowsStat")
 const userFlowStat = require("../core/statistic/userFlowsStat")
 const {flowReviewTypeConst, flowStatusConst} = require("../const/flowConst")
+const noRequiredStatActivityConst = require("../const/tmp/noRequiredStatActivityConst")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -714,6 +715,24 @@ const removeUnmatchedDateActivities = (flows, startDoneDate, endDoneDate) => {
     return flows
 }
 
+const removeNoRequiredActivities = (flows) => {
+    const activitiesName = noRequiredStatActivityConst.names
+    for (const flow of flows) {
+        if (!flow.overallprocessflow) {
+            continue
+        }
+
+        const newOverallProcessFlow = []
+        for (const item of flow.overallprocessflow) {
+            if (!activitiesName.includes(item.showName)) {
+                newOverallProcessFlow.push(item)
+            }
+        }
+        flow.overallprocessflow = newOverallProcessFlow
+    }
+    return flows
+}
+
 const getCoreActionsConfig = async (deptId) => {
     const coreActionsConfig = await flowRepo.getCoreActionsConfig(deptId)
     return coreActionsConfig
@@ -749,9 +768,14 @@ const getAllOverDueRunningFlows = async () => {
 
 const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) => {
     let flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
+    // 排除不在时间区间中的节点
     flows = removeUnmatchedDateActivities(flows, startDoneDate, endDoneDate)
+    // 排除不需要统计的节点
+    flows = removeNoRequiredActivities(flows)
     const formsWithReview = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
+    // 统计流程数据
     const result = await userFlowStat.get(userNames, flows, formsWithReview)
+    // 将result中进行中和已完成的逾期单独提取出来
     for (const formStat of result) {
         for (const activityStat of formStat.children) {
             const activityOverdue = {
