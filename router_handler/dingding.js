@@ -122,7 +122,7 @@ exports.getddUserList = async (req, res) => {
 };
 exports.getLiuChengList = async (req, res) => {
     try {
-        let aa = await dd.corpAccessToken();
+        let aa = await dd.getDingDingAccessToken()
         return res.send(aa);
     } catch (error) {
         return res.send(biResponse.serverError(error.message));
@@ -132,8 +132,8 @@ exports.getDpList = async (req, res) => {
     try {
         let user_id = req.body?.user_id;
         console.log(user_id);
-        let token = await dd.corpAccessToken();
-        let dpData = await dd.getDp(token.accessToken, 3203266220231269);
+        let {access_token: accessToken} = await dd.getDingDingAccessToken()
+        let dpData = await dd.getDp(accessToken, 3203266220231269);
         return res.send(dpData);
     } catch (e) {
         console.log(e);
@@ -142,8 +142,8 @@ exports.getDpList = async (req, res) => {
 exports.getDpInfo = async (req, res) => {
     try {
         let dp_id = req.body?.dp_id;
-        let token = await dd.corpAccessToken();
-        let dpData = await dd.getDpInfo(token.accessToken, 913539395);
+        let {access_token: accessToken} = await dd.getDingDingAccessToken();
+        let dpData = await dd.getDpInfo(accessToken, 913539395);
         return res.send(dpData);
     } catch (e) {
         console.log(e);

@@ -26,7 +26,7 @@ const getUserDingDingAccessToken = async (code) => {
 }
 
 /**
- * 获取应用与钉钉通讯的token
+ * 钉钉内部登录-免密场景：获取应用与钉钉通讯的token
  *
  * @returns {Promise<*|undefined>}
  */
