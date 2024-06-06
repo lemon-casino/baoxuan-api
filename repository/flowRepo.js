@@ -4,7 +4,6 @@ const coreActionsConst = require("../const/tmp/coreActionsConst")
 const coreFormFlowConst = require("../const/tmp/coreFormFlowConst")
 const sequelizeUtil = require("../utils/sequelizeUtil")
 const dateUtil = require("../utils/dateUtil")
-const {TimeoutError} = require("sequelize");
 
 models.processModel.hasMany(models.processReviewModel,
     {
