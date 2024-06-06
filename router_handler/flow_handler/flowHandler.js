@@ -159,6 +159,5 @@ module.exports = {
     updateRunningFlowEmergency,
     getCoreDataByType,
     getAllOverDueRunningFlows,
-    getFormsFlowsActivitiesStat,
-    // getDepartmentsOverallFlowsStat
+    getFormsFlowsActivitiesStat
 }
