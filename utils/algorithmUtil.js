@@ -1,6 +1,5 @@
 const _ = require("lodash")
 const joiUtil = require("../utils/joiUtil")
-const uuidUtil = require("../utils/uuidUtil")
 
 const getJsonFromUnionFormattedJsonArr = (jsonArr, childKey, key, value) => {
     joiUtil.validate({

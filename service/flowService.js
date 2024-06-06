@@ -15,10 +15,10 @@ const flowUtil = require("../utils/flowUtil")
 const NotFoundError = require("../error/http/notFoundError")
 const ParameterError = require("../error/parameterError")
 const departmentCoreActivityStat = require("../core/statistic/departmentCoreActivityStat")
-const departmentsOverallFlowsStat = require("../core/statistic/departmentsOverallFlowsStat")
 const userFlowStat = require("../core/statistic/userFlowsStat")
 const {flowReviewTypeConst, flowStatusConst} = require("../const/flowConst")
 const noRequiredStatActivityConst = require("../const/tmp/noRequiredStatActivityConst")
+const whiteList = require("../config/whiteList")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -614,18 +614,6 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
     const deptCoreFormIds = deptCoreForms.map(item => item.formId)
     let deptFormsStat = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, deptCoreFormIds)
     return flowUtil.attachIdsAndSum(deptFormsStat)
-    // const validDeptFormsStat = []
-    // 部门的统计走表单全节点的统计：去掉多余的（数据为0）节点
-    // for (const formStat of deptFormsStat) {
-    //     const validFormStat = {formName: formStat.formName, formId: formStat.formId, children: []}
-    //     for (const activityStat of formStat.children) {
-    //         if (activityStat.sum && activityStat.sum > 0) {
-    //             validFormStat.children.push(activityStat)
-    //         }
-    //     }
-    //     validDeptFormsStat.push(validFormStat)
-    // }
-    // return deptFormsStat
 }
 
 /**
@@ -855,13 +843,30 @@ const overdueAloneStatusStructure = [
 /**
  * 获取全流程数据
  *
+ * @param userId
  * @param startDoneDate
  * @param endDoneDate
  * @param formIds
  * @returns {Promise<{activityStat: *, deptStat: *, users: *}>}
  */
-const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) => {
-    const originResult = await getUserFlowsStat(null, startDoneDate, endDoneDate, formIds)
+const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, formIds, deptId) => {
+    const userDDId = (await userRepo.getAllUsers({userId}))[0].dingdingUserId
+    let userNames = ""
+    if (!whiteList.pepArr().includes(userDDId)) {
+        if (!deptId) {
+            throw new ParameterError("参数deptId不能为空")
+        }
+        // 根据userId的身份获取其下的用户(s)
+        const users = await userRepo.getDepartmentUsers(userDDId, deptId)
+
+        // todo: 6.6 人员信息已开启定时入库，让流程先跑一段时间，后面针对管理员的情况，从库中拉取全部人就行，不用下面这么诡异了
+        // 管理员权限下，若是通过获取已经入库的所有人员，可能会有人员不全的情况（前期未及时入库），
+        // 如果使用空值表示获取所有人，会跟通过deptId获取人员为空时相冲突
+        // 所以在部门的情况下，在为查询到人员的情况下，使用一个特殊人名加以区分
+        userNames = users.map(user => user.userName).join(",") || "我就是例外"
+    }
+
+    const originResult = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, formIds)
     // 获取用户的部门信息，用于前端将人汇总都部门下
     let allUsersWithDepartment = await redisRepo.getAllUsersDetail()
     // 过滤不必要的信息
