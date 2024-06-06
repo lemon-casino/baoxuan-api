@@ -163,7 +163,15 @@ const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateT
     return processWithData
 }
 
+const getAloneProcessByIds = async (ids) => {
+    const result = await models.processModel.findAll({
+        where: {processInstanceId: {$in: ids}}
+    })
+    return result.map(item => item.get({plain: true}))
+}
+
 module.exports = {
+    getAloneProcessByIds,
     getProcessByIds,
     getAllProcesses,
     updateProcess,

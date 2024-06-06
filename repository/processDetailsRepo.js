@@ -29,8 +29,15 @@ const saveProcessDetailsArrWithOutTrans = async (detailsArr, transaction) => {
     return true
 }
 
+const getProcessDetailsByProcessInstanceIds = async (ids) => {
+    const result = await models.processDetailsModel.findAll({
+        where: {processInstanceId: {$in: ids}}
+    })
+    return result.map(item => item.get({plain: true}))
+}
 
 module.exports = {
     saveProcessDetailsArr,
-    saveProcessDetailsArrWithOutTrans
+    saveProcessDetailsArrWithOutTrans,
+    getProcessDetailsByProcessInstanceIds
 }

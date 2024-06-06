@@ -43,9 +43,18 @@ const updateProcessReviewCostInfo = async (id, execution) => {
     return result;
 }
 
+const getProcessReviewByDoneTimeRange = async (startDoneTime, endDoneTime) => {
+    const processReviews = await models.processReviewModel.findAll({
+        where: {doneTime: {$between: [startDoneTime, endDoneTime]}}
+    })
+
+    return processReviews.map(item => item.get({plain: true}))
+}
+
 module.exports = {
     getProcessReviewsByProcessId,
     saveProcessReview,
     updateProcessReviewCostInfo,
-    saveBatchProcessReviews
+    saveBatchProcessReviews,
+    getProcessReviewByDoneTimeRange
 }

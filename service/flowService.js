@@ -1,6 +1,8 @@
 const _ = require("lodash")
 const FlowForm = require("../model/flowfrom")
 const flowRepo = require("../repository/flowRepo")
+const processReviewRepo = require("../repository/processReviewRepo")
+const processDetailsRepo = require("../repository/processDetailsRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
 const userRepo = require("../repository/userRepo")
 const formService = require("../service/flowFormService")
@@ -637,19 +639,43 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate, formIds) => {
         if (dateUtil.duration(endDoneDate, startDoneDate) < 0) {
             throw new ParameterError("结束日期不能小于开始日期")
         }
-        const processDataReviewItem = await Promise.all([
-            flowRepo.getProcessDataByReviewItemDoneTime(
-                dateUtil.startOfDay(startDoneDate),
-                dateUtil.endOfDay(endDoneDate),
-                formIds
-            ),
-            flowRepo.getProcessWithReviewByReviewItemDoneTime(
-                dateUtil.startOfDay(startDoneDate),
-                dateUtil.endOfDay(endDoneDate),
-                formIds
-            )
-        ])
 
+        console.time("--- processReviews ---")
+        const processReviews = await processReviewRepo.getProcessReviewByDoneTimeRange(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate))
+        console.timeEnd("--- processReviews ---")
+        const processInstanceIds = []
+        const uniqueIds = {}
+        for (const processReview of processReviews) {
+            // if (){}
+            uniqueIds[processReview.processInstanceId] = 1
+            processInstanceIds.push(processReview.processInstanceId)
+        }
+        // processInstanceIds = []
+        console.time("--- processes ---")
+        const processes = await flowRepo.getAloneProcessByIds(processInstanceIds)
+        console.timeEnd("--- processes ---")
+        console.time("--- processesDetails ---")
+        const processesDetails = await processDetailsRepo.getProcessDetailsByProcessInstanceIds(processInstanceIds)
+        console.timeEnd("--- processesDetails ---")
+
+
+        // const processDataReviewItem = await Promise.all([
+        //     // 5.8s
+        //     flowRepo.getProcessDataByReviewItemDoneTime(
+        //         dateUtil.startOfDay(startDoneDate),
+        //         dateUtil.endOfDay(endDoneDate),
+        //         formIds
+        //     ),
+        //     // 2.8s
+        //     flowRepo.getProcessWithReviewByReviewItemDoneTime(
+        //         dateUtil.startOfDay(startDoneDate),
+        //         dateUtil.endOfDay(endDoneDate),
+        //         formIds
+        //     )
+        // ])
+        console.timeEnd("--- getflows ---")
+
+        console.time("--- flows merge ----")
         flows = processDataReviewItem[1]
         // 合并流程的data和审核流信息
         for (let i = 0; i < flows.length; i++) {
@@ -664,6 +690,8 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate, formIds) => {
             }
             flows[i].data = currData
         }
+
+        console.timeEnd("--- flows merge ----")
     }
 
     let todayFlows = await globalGetter.getTodayFlows()
