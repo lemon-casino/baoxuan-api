@@ -11,19 +11,21 @@ const redisUtil = require("../utils/redisUtil")
 const dateUtil = require("../utils/dateUtil")
 const {redisKeys} = require("../const/redisConst")
 const onlineCheckConst = require("../const/onlineCheckConst")
+const extensionsConst = require("../const/tmp/extensionsConst")
 
 const syncWorkingDay = async () => {
     const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
     const isWorkingDay = await dingDingService.isWorkingDay(date)
     if (isWorkingDay) {
         await workingDayService.saveWorkingDay(date)
+        await redisUtil.rPush(redisKeys.WorkingDays, date)
     }
 }
 
 const syncTodayRunningAndFinishedFlows = async () => {
     logger.info("开始同步今日流程数据...")
     const flows = await dingDingService.getTodayRunningAndFinishedFlows()
-    await redisUtil.setValue(redisKeys.FlowsOfRunningAndFinishedOfToday, JSON.stringify(flows))
+    await redisUtil.setValue(redisKeys.TodayRunningAndFinishedFlows, JSON.stringify(flows))
     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
     logger.info(`同步完成，共:${flows.length}条数据`)
 }
@@ -40,19 +42,43 @@ const syncDingDingToken = async () => {
 
 const syncDepartment = async () => {
     const depList = await dingDingService.getDepartmentFromDingDing()
-    await redisUtil.setValue(redisKeys.Department, JSON.stringify(depList.result))
+    await redisUtil.setValue(redisKeys.Departments, JSON.stringify(depList.result))
     globalSetter.setGlobalDepartments(depList.result)
 }
 
 const syncDepartmentWithUser = async () => {
     const allDepartmentsWithUsers = await dingDingService.getDepartmentsWithUsersFromDingDing()
-    await redisUtil.setValue(redisKeys.UsersUnderDepartment, JSON.stringify(allDepartmentsWithUsers))
+    await redisUtil.setValue(redisKeys.DepartmentsUsers, JSON.stringify(allDepartmentsWithUsers))
     globalSetter.setGlobalUsersOfDepartments(allDepartmentsWithUsers)
 }
 
 const syncUserWithDepartment = async () => {
     const usersWithDepartment = await dingDingService.getUsersWithDepartmentFromDingDing()
-    await redisUtil.setValue(redisKeys.AllUsersWithDepartment, JSON.stringify(usersWithDepartment))
+    // 添加需要补充的人员信息
+    for (const extension of extensionsConst.userDeptExtensions) {
+        for (let user of usersWithDepartment) {
+            if (user.userid === extension.userId) {
+                // 补充附加属性
+                if (extension.attachValues) {
+                    for (const attachKey of Object.keys(extension.attachValues)) {
+                        user[attachKey] = extension.attachValues[attachKey]
+                    }
+                }
+                // 部门信息扩展
+                if (extension.depsExtensions) {
+                    for (const deptExt of extension.depsExtensions) {
+                        const tmpDeps = user.leader_in_dept.filter(dept => dept.dept_id.toString() === deptExt.deptId)
+                        if (tmpDeps.length > 0) {
+                            tmpDeps[0].statForms = deptExt.statForms
+                        }
+                    }
+                }
+                break
+            }
+        }
+    }
+
+    await redisUtil.setValue(redisKeys.Users, JSON.stringify(usersWithDepartment))
     globalSetter.setGlobalUsers(usersWithDepartment)
     await userService.syncUserToDB(usersWithDepartment)
 }
@@ -81,7 +107,7 @@ const syncUserLogin = async () => {
 }
 
 const syncResignEmployeeInfo = async () => {
-    const accessToken = await redisRepo.getBiToken()
+    const {access_token: accessToken} = await redisRepo.getToken()
     const allResignEmployees = await userRepo.getResignEmployees(accessToken)
     // 更新人员离职信息
     const onJobEmployees = await redisRepo.getAllUsersDetail()

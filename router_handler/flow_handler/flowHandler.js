@@ -131,7 +131,7 @@ const getAllOverDueRunningFlows = async (req, res, next) => {
 }
 
 /**
- * 获取全流程全节点的统计数据
+ * 获取全流程全节点的统计数据(可以分部门)
  *
  * @param req
  * @param res
@@ -140,31 +140,18 @@ const getAllOverDueRunningFlows = async (req, res, next) => {
  */
 const getFormsFlowsActivitiesStat = async (req, res, next) => {
     try {
-        const {startDate, endDate, formIds} = req.body
+        const {startDate, endDate, formIds, deptId} = req.body
+        const userId = req.user.id
         joiUtil.validate({
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
         })
-        const result = await flowService.getFormsFlowsActivitiesStat(startDate, endDate, formIds)
+        const result = await flowService.getFormsFlowsActivitiesStat(userId, startDate, endDate, formIds, deptId)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
     }
 }
-//
-// const getDepartmentsOverallFlowsStat = async (req, res, next) => {
-//     try {
-//         const {startDate, endDate, formIds, departmentIds} = req.body
-//         joiUtil.validate({
-//             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
-//             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
-//         })
-//         const result = await flowService.getDepartmentsOverallFlowsStat(startDate, endDate, formIds, departmentIds)
-//         return res.send(biResponse.success(result))
-//     } catch (e) {
-//         next(e)
-//     }
-// }
 
 module.exports = {
     getFlowsByIds,
@@ -172,6 +159,5 @@ module.exports = {
     updateRunningFlowEmergency,
     getCoreDataByType,
     getAllOverDueRunningFlows,
-    getFormsFlowsActivitiesStat,
-    // getDepartmentsOverallFlowsStat
+    getFormsFlowsActivitiesStat
 }

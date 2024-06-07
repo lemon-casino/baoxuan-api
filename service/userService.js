@@ -7,6 +7,7 @@ const whiteList = require("../config/whiteList")
 const globalGetter = require("../global/getter")
 const NotFoundError = require("../error/http/notFoundError")
 const {tmInnerGroup, visionInnerGroup} = require("../const/tmp/innerGroupConst")
+const innerGroups = require("../const/tmp/innerGroupConst")
 const {errorCodes} = require("../const/errorConst");
 
 const getDingDingUserId = async (user_id) => {
@@ -51,13 +52,13 @@ const getUserSelfOrPartnersOfDepartment = async (ddUserId, deptId) => {
         throw new NotFoundError("没有找到您所在的部门信息")
     }
     userWithDepartment = userWithDepartment[0]
-    const isLeaderOfTM = userWithDepartment.leader_in_dept.filter((dept) => {
+    const isLeader = userWithDepartment.leader_in_dept.filter((dept) => {
         return dept.dept_id === deptId && dept.leader
     }).length > 0
     // 默认获取个人
     let users = [{name: userWithDepartment.name, userid: usersWithDepartment.userid}]
     // leader: 获取部门下所有人的统计信息
-    if (isLeaderOfTM || whiteList.pepArr().includes(ddUserId)) {
+    if (isLeader || whiteList.pepArr().includes(ddUserId)) {
         users = await departmentService.getUsersOfDepartment(deptId)
     }
     return users
@@ -73,13 +74,17 @@ const getUserDetails = async (where) => {
     return details
 }
 
+const getUsers = async (userId) => {
+
+}
+
 /**
  * 获取用户可以查看基于内部分组的人员信息
  * @param userId
  * @returns {Promise<[{[p: string]: *}]|*[]>}
  */
 const getTMInnerGroups = async (userId) => {
-    const innerGroup = await getInnerGroups(57, "903075138", tmInnerGroup.group)
+    const innerGroup = await getInnerGroups(userId, "903075138")
     return innerGroup
 }
 
@@ -89,11 +94,11 @@ const getTMInnerGroups = async (userId) => {
  * @returns {Promise<*[]|[*]|[{[p: string]: *}]|[]>}
  */
 const getVisionInnerGroups = async (userId) => {
-    const innerGroup = await getInnerGroups(userId, "482162119", visionInnerGroup.group)
+    const innerGroup = await getInnerGroups(userId, "482162119")
     return innerGroup
 }
 
-const getInnerGroups = async (userId, deptId, innerGroup) => {
+const getInnerGroups = async (userId, deptId) => {
     let isLeader = false
     let currentUser = []
     const userDDId = await getDingDingUserId(userId)
@@ -116,6 +121,13 @@ const getInnerGroups = async (userId, deptId, innerGroup) => {
             if (currentUser.length === 0) {
                 throw new NotFoundError(`未找到用户：${userDDId}在${deptId}下的详细信息`)
             }
+        }
+    }
+
+    let innerGroup = []
+    for (const groupKey of Object.keys(innerGroups)) {
+        if (innerGroups[groupKey].deptId === deptId) {
+            innerGroup = innerGroups[groupKey].group
         }
     }
 
@@ -219,6 +231,7 @@ module.exports = {
     getUserSelfOrPartnersOfDepartment,
     getTMInnerGroups,
     getVisionInnerGroups,
+    getUsers,
     getEnabledUsers,
     syncUserToDB
 }

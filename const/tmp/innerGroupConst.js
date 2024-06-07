@@ -9,7 +9,13 @@ const tmInnerGroupVersion2 = [
     {
         groupCode: "zmtGroup", groupName: "朱梦婷组",
         members: [
-            {userName: "朱梦婷", isLeader: true}, {userName: "安静淼"}, {userName: "薛娜"}
+            {
+                userName: "朱梦婷",
+                userDDId: "01281701265226240386",
+                isLeader: true
+            },
+            {userName: "安静淼", userDDId: "142218413823748364"},
+            {userName: "薛娜", userDDId: "17403303641083361"}
         ]
     },
     {
@@ -27,6 +33,7 @@ const tmInnerGroupVersion2 = [
         ]
     }
 ]
+
 const tmInnerGroup = {
     deptId: "903075138",
     group: tmInnerGroupVersion2,

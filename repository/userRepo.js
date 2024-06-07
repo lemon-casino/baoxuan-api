@@ -6,6 +6,7 @@ const departmentRepo = require("../repository/departmentRepo")
 const sequelizeUtil = require("../utils/sequelizeUtil")
 const dingDingReq = require("../core/dingDingReq")
 const innerGroupConst = require("../const/tmp/innerGroupConst")
+const objectConvertUtil = require("../utils/objectConvertUtil")
 const whiteList = require("../config/whiteList")
 
 const getUserDetails = async (where) => {
@@ -50,6 +51,7 @@ const getEnabledUsers = async () => {
 const getDepartmentUsers = async (userDDId, deptId) => {
     // 处理管理员-部门主管-普通组员
     const departmentUsers = await departmentRepo.getDepartmentUsers(deptId)
+    objectConvertUtil.map(departmentUsers, {"userid": "userDDId", "name": "userName"})
     if (whiteList.pepArr().includes(userDDId)) {
         return departmentUsers
     }
@@ -65,9 +67,15 @@ const getDepartmentUsers = async (userDDId, deptId) => {
         throw new NotFoundError(`在Redis(base:departments)中未找部门${deptId}的信息`)
     }
 
-    const tmpUserDepartments = user.leader_in_dept.filter(dept => dept.dept_id.toString() === deptId)
+    const tmpUserDepartments = user.leader_in_dept.filter(dept => dept.dept_id.toString() === deptId.toString())
     if (tmpUserDepartments.length === 0) {
         throw new NotFoundError(`用户:${user.name}不在${department.name}中`)
+    }
+    // 用户在该部门中是什么角色
+    const isLeader = tmpUserDepartments[0].leader
+    if (isLeader) {
+
+        return departmentUsers
     }
 
     let innerGroups = []
@@ -80,20 +88,15 @@ const getDepartmentUsers = async (userDDId, deptId) => {
 
     // 处理内部组的情况
     for (const innerGroup of innerGroups) {
-        const innerGroupUser = innerGroup.members.filter(member => member.userId === userDDId)
-        if (innerGroupUser.length > 0 && innerGroupUser[0].leader) {
+        const innerGroupUser = innerGroup.members.filter(member => member.userDDId === userDDId)
+        if (innerGroupUser.length > 0 && innerGroupUser[0].isLeader) {
             return innerGroup.members
         }
         if (innerGroupUser.length > 0) {
-            return [innerGroupUser]
+            return innerGroupUser
         }
     }
 
-    // 用户在该部门中是什么角色
-    const isLeader = tmpUserDepartments[0].leader
-    if (isLeader) {
-        return departmentUsers
-    }
     return [user]
 }
 

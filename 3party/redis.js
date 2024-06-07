@@ -3,7 +3,7 @@ const redisConfig = require("../config/index").redisConfig;
 const userLogRepo = require("../repository/userLogRepo")
 
 const options = {
-    url: `redis://${redisConfig.url}:${redisConfig.port}`,
+    url: `redis://${redisConfig.url}:${redisConfig.port}/0`,
 }
 if (redisConfig.password) {
     options["password"] = redisConfig.password

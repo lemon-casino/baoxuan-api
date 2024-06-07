@@ -1,23 +1,8 @@
-const axios = require("axios");
 const dd = require("../core/dingDingReq");
-// 引入用户模型
 const UsersModel = require("../model/users");
 const {generateToken} = require("../utils/token");
 const tokenConfig = require("../config/index").tokenConfig;
 const biResponse = require("../utils/biResponse")
-
-// 定义获取流程列表的API接口URL
-const GET_PROCESS_LIST_URL =
-    "https://oapi.dingtalk.com/robot/send?access_token=";
-
-// 定义获取流程列表的请求参数
-const PROCESS_LIST_PARAM = {
-    type: "oa",
-    open_id: "YOUR_OPEN_ID", // 钉钉应用的管理员账号的OpenID
-    process_code: "YOUR_PROCESS_CODE", // 流程的编码
-    page: 1, // 页码，默认为1
-    page_size: 10, // 每页的数量，默认为10
-};
 
 exports.getddUserList = async (req, res) => {
     // 钉钉授权流程
@@ -25,7 +10,7 @@ exports.getddUserList = async (req, res) => {
         // 1.根据code获取用户token
         let UserToken = await dd.getDingDingToken(code);
         // 1.获取企业内部应用的access_token
-        let CorpToken = await dd.getDingDingCorpToken();
+        let CorpToken = await dd.getDingDingAccessToken();
         // 2.根据token获取通讯录用户信息，得到unionid
         const {nick, unionId, avatarUrl, openId, mobile} = await dd.getUserInfoByToken(
             UserToken.accessToken
@@ -42,13 +27,6 @@ exports.getddUserList = async (req, res) => {
     const getddUserLists = async (corpTokenToken, userid) => {
         const userInfo = await dd.getUserInfoByUserIdAndToken(corpTokenToken, userid);
         if (userInfo.errmsg === "ok") {
-            // name: 员工姓名
-            // avatar: 员工头像
-            // mobile: 员工手机号
-            // email: 员工邮箱
-            // dept_id_list: 员工所属部门id列表
-            // hired_date: 员工入职时间
-            // leader_in_dept 员工在对应的部门中是否是主管，返回true或false
             const {
                 name,
                 avatar,
@@ -144,7 +122,7 @@ exports.getddUserList = async (req, res) => {
 };
 exports.getLiuChengList = async (req, res) => {
     try {
-        let aa = await dd.corpAccessToken();
+        let aa = await dd.getDingDingAccessToken()
         return res.send(aa);
     } catch (error) {
         return res.send(biResponse.serverError(error.message));
@@ -154,8 +132,8 @@ exports.getDpList = async (req, res) => {
     try {
         let user_id = req.body?.user_id;
         console.log(user_id);
-        let token = await dd.corpAccessToken();
-        let dpData = await dd.getDp(token.accessToken, 3203266220231269);
+        let {access_token: accessToken} = await dd.getDingDingAccessToken()
+        let dpData = await dd.getDp(accessToken, 3203266220231269);
         return res.send(dpData);
     } catch (e) {
         console.log(e);
@@ -164,8 +142,8 @@ exports.getDpList = async (req, res) => {
 exports.getDpInfo = async (req, res) => {
     try {
         let dp_id = req.body?.dp_id;
-        let token = await dd.corpAccessToken();
-        let dpData = await dd.getDpInfo(token.accessToken, 913539395);
+        let {access_token: accessToken} = await dd.getDingDingAccessToken();
+        let dpData = await dd.getDpInfo(accessToken, 913539395);
         return res.send(dpData);
     } catch (e) {
         console.log(e);

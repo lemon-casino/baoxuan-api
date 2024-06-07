@@ -448,6 +448,10 @@ const tmCoreFormFlowsConfig = [
 
 const mbCoreFormFlowConfig = [
     {
+        formName: "外包视觉制作流程",
+        formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18"
+    },
+    {
         formName: "美编任务运营发布",
         formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
         actions: [

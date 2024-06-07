@@ -4,7 +4,6 @@ const coreActionsConst = require("../const/tmp/coreActionsConst")
 const coreFormFlowConst = require("../const/tmp/coreFormFlowConst")
 const sequelizeUtil = require("../utils/sequelizeUtil")
 const dateUtil = require("../utils/dateUtil")
-const {TimeoutError} = require("sequelize");
 
 models.processModel.hasMany(models.processReviewModel,
     {
@@ -163,7 +162,15 @@ const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateT
     return processWithData
 }
 
+const getAloneProcessByIds = async (ids) => {
+    const result = await models.processModel.findAll({
+        where: {processInstanceId: {$in: ids}}
+    })
+    return result.map(item => item.get({plain: true}))
+}
+
 module.exports = {
+    getAloneProcessByIds,
     getProcessByIds,
     getAllProcesses,
     updateProcess,

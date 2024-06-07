@@ -1,6 +1,8 @@
 const _ = require("lodash")
 const FlowForm = require("../model/flowfrom")
 const flowRepo = require("../repository/flowRepo")
+const processReviewRepo = require("../repository/processReviewRepo")
+const processDetailsRepo = require("../repository/processDetailsRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
 const userRepo = require("../repository/userRepo")
 const formService = require("../service/flowFormService")
@@ -15,9 +17,10 @@ const flowUtil = require("../utils/flowUtil")
 const NotFoundError = require("../error/http/notFoundError")
 const ParameterError = require("../error/parameterError")
 const departmentCoreActivityStat = require("../core/statistic/departmentCoreActivityStat")
-const departmentsOverallFlowsStat = require("../core/statistic/departmentsOverallFlowsStat")
 const userFlowStat = require("../core/statistic/userFlowsStat")
 const {flowReviewTypeConst, flowStatusConst} = require("../const/flowConst")
+const noRequiredStatActivityConst = require("../const/tmp/noRequiredStatActivityConst")
+const whiteList = require("../config/whiteList")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -306,11 +309,12 @@ const getTodayFlowsByIds = async (ids) => {
             satisfiedFlows.push({...flow, originator: {userId: flow.originatorId}})
         }
     }
-    // const satisfiedFlows = await flowsOfRunningAndFinishedOfToday.filter((item) => ids.includes(item.processInstanceId))
+
     // 为流程添加发起人的部门信息
     for (const flow of satisfiedFlows) {
         let departmentNames = ""
         const departmentsOfUser = await departmentService.getDepartmentOfUser(flow.originator.userId)
+
         // 人员的leader_in_dept 是一种扁平的结构，有子部门的归算的子部门，没有的就归算到一级部门下
         // 获取一级部门信息
         const topDepartments = departmentsOfUser.filter((dep) => {
@@ -320,28 +324,32 @@ const getTodayFlowsByIds = async (ids) => {
             return false
         })
 
-        for (const department of topDepartments) {
-            const subDepartments = departmentsOfUser.filter((dep) => {
-                if (dep && dep.dep_detail && dep.dep_detail.parent_id) {
-                    return dep.dep_detail.parent_id === department.dep_detail.dept_id
+        if (topDepartments.length > 0) {
+            for (const department of topDepartments) {
+                const subDepartments = departmentsOfUser.filter((dep) => {
+                    if (dep && dep.dep_detail && dep.dep_detail.parent_id) {
+                        return dep.dep_detail.parent_id === department.dep_detail.dept_id
+                    }
+                    return false
+                })
+                // 存在子部门统计到子部门下
+                if (subDepartments.length > 0) {
+                    for (const subDepartment of subDepartments) {
+                        departmentNames = `${departmentNames},${subDepartment.dep_detail.name}`
+                    }
                 }
-                return false
-            })
-            // 存在子部门统计到子部门下
-            if (subDepartments.length > 0) {
-                for (const subDepartment of subDepartments) {
-                    departmentNames = `${departmentNames},${subDepartment.dep_detail.name}`
+                // 没有子部门统计到一级部门下
+                else {
+                    departmentNames = `${departmentNames},${department.dep_detail.name}`
                 }
             }
-            // 没有子部门统计到一级部门下
-            else {
-                departmentNames = `${departmentNames},${department.dep_detail.name}`
-            }
+        } else {
+            departmentNames = departmentsOfUser.map(dept => dept.dep_detail.name).join(",")
         }
         if (departmentNames.startsWith(",")) {
-            flow.departmentName = departmentNames.substring(1)
+            flow.deptName = departmentNames.substring(1)
         } else {
-            flow.departmentName = departmentNames
+            flow.deptName = departmentNames
         }
 
     }
@@ -608,18 +616,6 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
     const deptCoreFormIds = deptCoreForms.map(item => item.formId)
     let deptFormsStat = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, deptCoreFormIds)
     return flowUtil.attachIdsAndSum(deptFormsStat)
-    // const validDeptFormsStat = []
-    // 部门的统计走表单全节点的统计：去掉多余的（数据为0）节点
-    // for (const formStat of deptFormsStat) {
-    //     const validFormStat = {formName: formStat.formName, formId: formStat.formId, children: []}
-    //     for (const activityStat of formStat.children) {
-    //         if (activityStat.sum && activityStat.sum > 0) {
-    //             validFormStat.children.push(activityStat)
-    //         }
-    //     }
-    //     validDeptFormsStat.push(validFormStat)
-    // }
-    // return deptFormsStat
 }
 
 /**
@@ -643,12 +639,26 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate, formIds) => {
         if (dateUtil.duration(endDoneDate, startDoneDate) < 0) {
             throw new ParameterError("结束日期不能小于开始日期")
         }
+
+        // let processReviews = await processReviewRepo.getProcessReviewByDoneTimeRange(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate))
+        // const processInstanceIds = processReviews.map(item => item.processInstanceId)
+        // let processes = await flowRepo.getAloneProcessByIds(processInstanceIds)
+        // let processesDetails = await processDetailsRepo.getProcessDetailsByProcessInstanceIds(processInstanceIds)
+        // for (const process of processes) {
+        //     const details = processesDetails.slice(item => item.processInstanceId === process.processInstanceId)
+        //     const reviews = processReviews.slice(item => item.processInstanceId === process.processInstanceId)
+        //     process.data = details
+        //     process.overallprocessflow = reviews
+        // }
+
         const processDataReviewItem = await Promise.all([
+            // 5.8s
             flowRepo.getProcessDataByReviewItemDoneTime(
                 dateUtil.startOfDay(startDoneDate),
                 dateUtil.endOfDay(endDoneDate),
                 formIds
             ),
+            // 2.8s
             flowRepo.getProcessWithReviewByReviewItemDoneTime(
                 dateUtil.startOfDay(startDoneDate),
                 dateUtil.endOfDay(endDoneDate),
@@ -714,6 +724,24 @@ const removeUnmatchedDateActivities = (flows, startDoneDate, endDoneDate) => {
     return flows
 }
 
+const removeNoRequiredActivities = (flows) => {
+    const activitiesName = noRequiredStatActivityConst.names
+    for (const flow of flows) {
+        if (!flow.overallprocessflow) {
+            continue
+        }
+
+        const newOverallProcessFlow = []
+        for (const item of flow.overallprocessflow) {
+            if (!activitiesName.includes(item.showName)) {
+                newOverallProcessFlow.push(item)
+            }
+        }
+        flow.overallprocessflow = newOverallProcessFlow
+    }
+    return flows
+}
+
 const getCoreActionsConfig = async (deptId) => {
     const coreActionsConfig = await flowRepo.getCoreActionsConfig(deptId)
     return coreActionsConfig
@@ -749,9 +777,14 @@ const getAllOverDueRunningFlows = async () => {
 
 const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) => {
     let flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
+    // 排除不在时间区间中的节点
     flows = removeUnmatchedDateActivities(flows, startDoneDate, endDoneDate)
+    // 排除不需要统计的节点
+    flows = removeNoRequiredActivities(flows)
     const formsWithReview = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
+    // 统计流程数据
     const result = await userFlowStat.get(userNames, flows, formsWithReview)
+    // 将result中进行中和已完成的逾期单独提取出来
     for (const formStat of result) {
         for (const activityStat of formStat.children) {
             const activityOverdue = {
@@ -826,90 +859,145 @@ const overdueAloneStatusStructure = [
 /**
  * 获取全流程数据
  *
+ * @param userId
  * @param startDoneDate
  * @param endDoneDate
  * @param formIds
  * @returns {Promise<{activityStat: *, deptStat: *, users: *}>}
  */
-const getFormsFlowsActivitiesStat = async (startDoneDate, endDoneDate, formIds) => {
-    const originResult = await getUserFlowsStat(null, startDoneDate, endDoneDate, formIds)
+const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, formIds, deptId) => {
+    const userDDId = (await userRepo.getAllUsers({userId}))[0].dingdingUserId
+    let userNames = ""
+    if (!whiteList.pepArr().includes(userDDId)) {
+        if (!deptId) {
+            throw new ParameterError("参数deptId不能为空")
+        }
+        // 根据userId的身份获取其下的用户(s)
+        const users = await userRepo.getDepartmentUsers(userDDId, deptId)
+
+        // todo: 6.6 人员信息已开启定时入库，让流程先跑一段时间，后面针对管理员的情况，从库中拉取全部人就行，不用下面这么诡异了
+        // 管理员权限下，若是通过获取已经入库的所有人员，可能会有人员不全的情况（前期未及时入库），
+        // 如果使用空值表示获取所有人，会跟通过deptId获取人员为空时相冲突
+        // 所以在部门的情况下，在为查询到人员的情况下，使用一个特殊人名加以区分
+        userNames = users.map(user => user.userName).join(",") || "我就是例外"
+    }
+
+    const originResult = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, formIds)
     // 获取用户的部门信息，用于前端将人汇总都部门下
     let allUsersWithDepartment = await redisRepo.getAllUsersDetail()
     // 过滤不必要的信息
     const pureUsersWithDepartment = allUsersWithDepartment.map(user => {
-        return {
+        const pureUser = {
             userId: user.userid,
-            userName: user.name,
-            departmentId: user.leader_in_dept[0].dept_id,
-            departmentName: user.leader_in_dept[0].dep_detail.name
+            userName: user.name
         }
+        if (user.multiDeptStat) {
+            pureUser.multiDeptStat = true
+            pureUser.departments = user.leader_in_dept.map(dept => {
+                return {deptId: dept.dept_id, deptName: dept.dep_detail.name, statForms: dept.statForms}
+            })
+        } else {
+            pureUser.departments = [
+                {
+                    deptId: user.leader_in_dept[0].dept_id,
+                    deptName: user.leader_in_dept[0].dep_detail.name
+                }
+            ]
+        }
+
+        return pureUser
     })
 
-    // 转化成按不同统计的结构数据
+    // 转化成按部门统计的结构数据
     const formsDepsStatResult = []
     for (const originFormResult of originResult) {
         const newFormResult = {formId: originFormResult.formId, formName: originFormResult.formName, children: []}
         for (const originActivityResult of originFormResult.children) {
             // 找到当前节点最底下的人所在的部门
             // - 将状态下对从人的角度的统计 => 拉出人的统计加上状态信息
-            const operatorsResult = []
+            const originOperatorsResult = []
             for (const originStatusResult of originActivityResult.children) {
                 const tmpTypes = [originStatusResult.type]
 
-                // originStatusResult 会分为人的统计、逾期:进行中-已完成
+                // 为了通过人计算部门的统计便利和结合状态抓取在新结构中需要被统计到哪个节点的便利，
+                // 将activity下状态-人的信息进行扁平处理，转成{userName: "", ids:[], sum:0, types:[]}
+                //    - types:逾期被单独统计的，又分为进行中和已完成逾期，这种情况下types-["overdue", "running"]
+                //    - 若是进行中， 则types-[running]
                 for (const originMaybeOperatorResult of originStatusResult.children) {
                     if (originMaybeOperatorResult.children) {
                         for (const operatorResult of originMaybeOperatorResult.children) {
                             const newTypes = _.cloneDeep(tmpTypes)
                             newTypes.push(originMaybeOperatorResult.type)
-                            operatorsResult.push({
+                            originOperatorsResult.push({
                                 types: newTypes,
                                 ...operatorResult
                             })
                         }
                     } else {
-                        operatorsResult.push({
+                        originOperatorsResult.push({
                             types: tmpTypes,
                             ...originMaybeOperatorResult
                         })
                     }
                 }
             }
-            // 将该人的统计数据转成按部门数据
-            for (const operatorResult of operatorsResult) {
+
+            // 根据上面对人和状态的转换数据，转成人所在部门的统计
+            for (const originOperatorResult of originOperatorsResult) {
+
+                // 多部门的情况下： 按流程表单汇总不同的部门
+                // 根据配置中汇总部门需要统计的流程，将结果拆分进行统计
                 let userDepName = "未知"
-                const userDeps = pureUsersWithDepartment.filter(user => user.userName === operatorResult.userName)
-                if (userDeps.length > 0) {
-                    userDepName = userDeps[0].departmentName
+                const tmpUser = pureUsersWithDepartment.filter(user => user.userName === originOperatorResult.userName)
+                const currUser = tmpUser[0]
+                if (currUser) {
+                    if (currUser.multiDeptStat) {
+                        // 找到当前表单需要被统计到的部门
+                        const tmpDeps = currUser.departments.filter(dept => dept.statForms.includes(originFormResult.formId))
+                        if (tmpDeps.length > 0) {
+                            userDepName = tmpDeps[0].deptName
+                        }
+                    } else {
+                        userDepName = currUser.departments[0].deptName
+                    }
                 }
+
+                // 1. 从最终的结果中找到该用户所在的部门节点，没有的话则添加
                 let deptResult = null
                 const tmpDepartmentsResult = newFormResult.children.filter(depResult => depResult.deptName === userDepName)
                 if (tmpDepartmentsResult.length === 0) {
-                    newFormResult.children.push({deptName: userDepName, children: _.cloneDeep(overdueAloneStatusStructure)})
+                    newFormResult.children.push({
+                        deptName: userDepName,
+                        children: _.cloneDeep(overdueAloneStatusStructure)
+                    })
                     deptResult = newFormResult.children[newFormResult.children.length - 1]
                 } else {
                     deptResult = tmpDepartmentsResult[0]
                 }
 
-                // 找到新的部门结构中对应的statusResult
-                let deptStatusResult = deptResult.children.filter(item => item.type === operatorResult.types[0])[0]
-                if (operatorResult.types.length > 1) {
-                    deptStatusResult = deptStatusResult.children.filter(item => item.type === operatorResult.types[1])[0]
+                // 2. 找到新的部门结构中对应的 statusResult
+                let deptStatusResult = deptResult.children.filter(item => item.type === originOperatorResult.types[0])[0]
+                if (originOperatorResult.types.length > 1) {
+                    deptStatusResult = deptStatusResult.children.filter(item => item.type === originOperatorResult.types[1])[0]
                 }
 
-                const tmpActivityResults = deptStatusResult.children.filter(item => item.activityName === originActivityResult.activityName)
+                // 3. 从上一步的 statusResult 中找到进一步要被统计到的工作节点
                 let activityResult = null
+                const tmpActivityResults = deptStatusResult.children.filter(item => item.activityName === originActivityResult.activityName)
                 if (tmpActivityResults.length === 0) {
                     deptStatusResult.children.push({activityName: originActivityResult.activityName, children: []})
                     activityResult = deptStatusResult.children[deptStatusResult.children.length - 1]
                 } else {
                     activityResult = tmpActivityResults[0]
                 }
+
+                // 4. 将原来对人的共计数据，转移到新的节点上
                 activityResult.children.push({
-                    userName: operatorResult.userName,
-                    ids: operatorResult.ids,
-                    sum: operatorResult.sum
+                    userName: originOperatorResult.userName,
+                    ids: originOperatorResult.ids,
+                    sum: originOperatorResult.sum
                 })
+
             }
         }
         newFormResult.flowsStat = originFormResult.flowsStat

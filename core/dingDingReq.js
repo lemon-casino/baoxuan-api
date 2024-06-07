@@ -10,9 +10,12 @@ const appKey = dingDingConfig.appKey;
 const appSecret = dingDingConfig.appSecret;
 
 // accessToken的有效期为7200秒（2小时），有效期内重复获取会返回相同结果并自动续期，过期后获取会返回新的accessToken。
-// 1.根据code获取用户token
-const getDingDingToken = async (code) => {
-    const url = "https://api.dingtalk.com//v1.0/oauth2/userAccessToken"
+
+/**
+ * 根据code获取用户token
+ */
+const getUserDingDingAccessToken = async (code) => {
+    const url = "https://api.dingtalk.com/v1.0/oauth2/userAccessToken"
     const data = {
         clientId: appKey,
         clientSecret: appSecret,
@@ -22,28 +25,32 @@ const getDingDingToken = async (code) => {
     return await httpUtil.post(url, data)
 }
 
-// 1.获取企业内部应用的access_token
-const getDingDingCorpToken = async () => {
-    // const url = "https://oapi.dingtalk.com/gettoken"
-    // const params = {
-    //     appkey: appKey,
-    //     appsecret: appSecret
-    // }
-    // return await httpUtil.get(url, params)
-    return await getDingDingApplicationToken(appKey, appSecret)
+/**
+ * 钉钉内部登录-免密场景：获取应用与钉钉通讯的token
+ *
+ * @returns {Promise<*|undefined>}
+ */
+const corpAccessToken = async () => {
+    const url = "https://api.dingtalk.com/v1.0/oauth2/accessToken"
+    const data = {
+        appKey: appKey,
+        appSecret: appSecret,
+    }
+    return await httpUtil.post(url, data)
 }
 
 /**
- * 获取钉钉内部应用的token
+ * 获取企业内部应用的 access_token，用于访问应用中开通的接口
  *
  * @param appKey
  * @param appSecret
- * @returns {Promise<void>}
+ * @returns {Promise<*|undefined>}
  */
-const getDingDingApplicationToken = async (appKey, appSecret) => {
-    if (!appKey || !appSecret) {
-        throw new ParameterError("参数appKey、appSecret不能为空")
-    }
+const getDingDingAccessToken = async () => {
+    // appKey, appSecret
+    // if (!appKey || !appSecret) {
+    //     throw new ParameterError("参数appKey、appSecret不能为空")
+    // }
     const url = "https://oapi.dingtalk.com/gettoken"
     // 不要使用驼峰，接口调用参数要全部些小
     const params = {
@@ -52,7 +59,12 @@ const getDingDingApplicationToken = async (appKey, appSecret) => {
     return await httpUtil.get(url, params)
 }
 
-// 2.根据用户token获取通讯录用户信息
+/**
+ * 根据用户token获取通讯录用户信息
+ *
+ * @param token
+ * @returns {Promise<*|undefined>}
+ */
 const getUserInfoByToken = async (token) => {
     const url = "https://api.dingtalk.com/v1.0/contact/users/me"
     return await httpUtil.get(url, null, token)
@@ -72,7 +84,13 @@ const getUserInfoByUserIdAndToken = async (token, userid) => {
     return await httpUtil.post(url, data)
 }
 
-// 5.获取所有宜搭表单数据
+/**
+ * 获取表单数据
+ *
+ * @param token
+ * @param userid
+ * @returns {Promise<*>}
+ */
 const getAllForms = async (token, userid) => {
     const url = "https://api.dingtalk.com/v1.0/yida/forms"
     const params = {
@@ -87,7 +105,16 @@ const getAllForms = async (token, userid) => {
     return result
 }
 
-// 6.获取宜搭流程id列表
+/**
+ * 获取流程详情
+ *
+ * @param token
+ * @param userId
+ * @param formUuid
+ * @param pageSize
+ * @param pageNumber
+ * @returns {Promise<*|undefined>}
+ */
 const getAllFlowIds = async (
     token,
     userId,
@@ -105,7 +132,14 @@ const getAllFlowIds = async (
     return await httpUtil.post(url, data, token)
 }
 
-// 6.1 根据表单获取多个流程id
+/**
+ * 根据表单获取流程数据
+ *
+ * @param token
+ * @param userId
+ * @param formUuid
+ * @returns {Promise<*|undefined>}
+ */
 const getFlowIdsByFormId = async (token, userId, formUuid) => {
     const url = `https://api.dingtalk.com/v1.0/yida/forms/instances/ids/${appType}/${formUuid}`
     const data = {
@@ -137,7 +171,14 @@ const getFlowsByFormId = async (
     return await httpUtil.post(url, data, token)
 }
 
-// 7.批量获取宜搭流程实例详情
+/**
+ * 批量获取宜搭流程实例详情
+ *
+ * @param token
+ * @param userId
+ * @param processInstanceIds
+ * @returns {Promise<*|undefined>}
+ */
 const getBatchFlowsByIds = async (token, userId, processInstanceIds) => {
     const url = "https://api.dingtalk.com/v1.0/yida/processes/instances/searchWithIds"
     const params = {
@@ -148,7 +189,6 @@ const getBatchFlowsByIds = async (token, userId, processInstanceIds) => {
     }
     return await httpUtil.get(url, params, token)
 }
-
 
 const getFlowsOfStatus = async (
     status,
@@ -274,15 +314,6 @@ const getOaAllProcess = async (access_token, userId) => {
     return await httpUtil.get(url, params, access_token)
 }
 
-const corpAccessToken = async () => {
-    const url = "https://api.dingtalk.com/v1.0/oauth2/accessToken"
-    const data = {
-        appKey: appKey,
-        appSecret: appSecret,
-    }
-    return await httpUtil.post(url, data)
-}
-
 //根据dingding用户id获取部门列表
 const getDp = async (access_token, user_id) => {
     const url = `https://oapi.dingtalk.com/topapi/v2/department/listparentbyuser?access_token=${access_token}`
@@ -387,9 +418,8 @@ const getResignInfo = async (token, userIds) => {
 }
 
 module.exports = {
-    getDingDingToken,
-    getDingDingApplicationToken,
-    getDingDingCorpToken,
+    getDingDingToken: getUserDingDingAccessToken,
+    getDingDingAccessToken,
     getFormFields,
     getDpInfo,
     getDp,

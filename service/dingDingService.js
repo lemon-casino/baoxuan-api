@@ -20,7 +20,6 @@ const flowFormDetailsService = require("../service/flowFormDetailsService")
 const departmentService = require("../service/departmentService")
 const flowFormService = require("../service/flowFormService")
 const formReviewRepo = require("../repository/formReviewRepo")
-const {dingDingBIApplicationConfig} = require("../config");
 
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
@@ -71,19 +70,34 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
             const replaceOperator = (activity, allUsers) => {
                 const hasResigned = activity.operatorName.includes("[已离职]")
                 if (hasResigned) {
-                    const dbUsers = allUsers.filter(user => user.dingdingUserId === activity.operatorUserId)
+                    // operator：domainList中的用户ID
+                    // operatorUserId：父节点中的用户ID
+                    const operatorId = activity.operatorUserId || activity.operator
+                    const dbUsers = allUsers.filter(user => user.dingdingUserId === operatorId)
                     if (dbUsers.length > 0) {
+                        const user = dbUsers[0]
+                        // 不存在代理人直接返回
+                        if (!user.handoverUserId) {
+                            return
+                        }
+
                         // 离职之前做的工作不用动，其他的相关的节点信息改为代理人
                         const undoAfterResign = !activity.operateTimeGMT
                         const doAfterResign = activity.operateTimeGMT &&
-                            dateUtil.duration(dateUtil.formatGMT2Str(activity.operateTimeGMT), dateUtil.format2Str(dbUsers[0].lastWorkDay)) > 0
+                            dateUtil.duration(dateUtil.formatGMT2Str(activity.operateTimeGMT), dateUtil.format2Str(user.lastWorkDay)) > 0
                         if (undoAfterResign || doAfterResign) {
-                            activity.operatorName = dbUsers[0].handoverUserId
-                            activity.operatorUserId = dbUsers[0].handoverUserName
+                            activity.operatorName = user.handoverUserName
+                            activity.operatorDisplayName = user.handoverUserName
+                            // domainList和父节点中的显示的用户字段不一样
+                            if (Object.keys(activity).includes("operatorUserId")) {
+                                activity.operatorUserId = user.handoverUserId
+                            }
+                            if (Object.keys(activity).includes("operator")) {
+                                activity.operator = user.handoverUserId
+                            }
                         }
                     }
                 }
-                return activity
             }
 
             // 对离职的人员，将在离职之后地时间节点的operator更改为代理人
@@ -104,12 +118,8 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
 };
 
 const getDingDingToken = async () => {
-    // 后面这俩仅需要保留一个
-    const ddToken = await dingDingReq.getDingDingCorpToken();
+    const ddToken = await dingDingReq.getDingDingAccessToken()
     await redisRepo.setToken(ddToken)
-
-    const biToken = await dingDingReq.getDingDingApplicationToken(dingDingBIApplicationConfig.appKey, dingDingBIApplicationConfig.appSecret)
-    await redisRepo.setBiToken(biToken.access_token)
 }
 
 
@@ -155,6 +165,12 @@ const getUsersWithDepartmentFromDingDing = async () => {
     const allUsersFromDepartments = [];
     // 获取部门下的所有用户信息
     for (const item of departmentList) {
+        if (item.dep_chil && item.dep_chil.length > 0) {
+            for (const subItem of item.dep_chil) {
+                const res = await dingDingReq.getDeptUserList(access_token, subItem.dept_id);
+                allUsersFromDepartments.push(res.result.userid_list)
+            }
+        }
         const res = await dingDingReq.getDeptUserList(access_token, item.dept_id);
         allUsersFromDepartments.push(res.result.userid_list);
     }
@@ -423,6 +439,7 @@ const getTodayRunningAndFinishedFlows = async () => {
 
 /**
  * 获取打卡记录
+ *
  * @param pageIndex
  * @param pageSize
  * @param workDateFrom
@@ -431,8 +448,8 @@ const getTodayRunningAndFinishedFlows = async () => {
  * @returns {Promise<*>}
  */
 const getAttendances = async (pageIndex, pageSize, workDateFrom, workDateTo, userIds) => {
-    const biToken = await redisRepo.getBiToken()
-    const attendances = await dingDingReq.getAttendances(pageIndex, pageSize, workDateFrom, workDateTo, userIds, biToken)
+    const {access_token: accessToken} = await redisRepo.getToken()
+    const attendances = await dingDingReq.getAttendances(pageIndex, pageSize, workDateFrom, workDateTo, userIds, accessToken)
     return attendances
 }
 

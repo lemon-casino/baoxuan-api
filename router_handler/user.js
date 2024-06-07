@@ -35,6 +35,7 @@ const redis = require("../utils/redisUtil.js");
 const {generateToken, decodedToken, verifyToken} = require("../utils/token");
 const tokenConfig = require("../config/index").tokenConfig;
 const biResponse = require("../utils/biResponse")
+const {redisKeys} = require("../const/redisConst");
 
 
 /**
@@ -45,31 +46,17 @@ exports.getCheckCode = async (req, res, next) => {
     try {
         // 生成验证码，获取catcha，有{data,text}两个属性，data为svg格式图片、text为验证码
         const captcha = svgCaptcha.create({
-            size: 4,
-            ignoreChars: "0o1lpaqd",
-            color: true,
-            noise: 6,
-            background: "#aead5b",
-            height: 32,
-            width: 100,
+            size: 4, ignoreChars: "0o1lpaqd", color: true, noise: 6, background: "#aead5b", height: 32, width: 100,
         });
         // 验证码键和缓存时间
         const uuid = Uuid.v4();
         const effectTime = 10 * 60;
 
         // 存入redis
-        const result = await redis.setValue(
-            uuid,
-            captcha.text.toLowerCase(),
-            effectTime
-        );
+        const result = await redis.setValue(`${redisKeys.QRCodes}:${uuid}`, captcha.text.toLowerCase(), effectTime);
         if (result) {
             res.send({
-                code: 200,
-                uuid,
-                textCode: captcha.text,
-                message: "获取验证码成功",
-                data: captcha.data,
+                code: 200, uuid, textCode: captcha.text, message: "获取验证码成功", data: captcha.data,
             });
         } else {
             throw new HttpError("验证码获取失败")
@@ -89,7 +76,7 @@ exports.login = async (req, res, next) => {
         }
         // 验证验证码
         const {username, password, checkCode, uuid} = value;
-        const captcha = await redis.getValue(uuid);
+        const captcha = await redis.getValue(`${redisKeys.QRCodes}:${uuid}`);
         if (!captcha) {
             throw new HttpError("图形验证码已过期，请点击图片刷新")
         }
@@ -98,11 +85,7 @@ exports.login = async (req, res, next) => {
         }
         // todo: 先保留
         const user = {
-            token: null,
-            refreshToken: null,
-            brief: null,
-            permissions: null,
-            departments: null
+            token: null, refreshToken: null, brief: null, permissions: null, departments: null
         }
 
         const {token, refreshToken} = await getTokenAndRefreshToken(username, password)
@@ -239,17 +222,15 @@ const getTokenAndRefreshToken = async (userName, password) => {
     }
 
 
-    const token = "Bearer " + generateToken(
-        {id: brief.user_id, username: brief.username},
-        tokenConfig.jwtSecretKey,
-        tokenConfig.secretKeyExpire
-    )
+    const token = "Bearer " + generateToken({
+        id: brief.user_id,
+        username: brief.username
+    }, tokenConfig.jwtSecretKey, tokenConfig.secretKeyExpire)
 
-    const refreshToken = generateToken(
-        {id: brief.user_id, username: brief.username},
-        tokenConfig.jwtRefrechSecretKey,
-        tokenConfig.refreshSerectKeyExpire
-    );
+    const refreshToken = generateToken({
+        id: brief.user_id,
+        username: brief.username
+    }, tokenConfig.jwtRefrechSecretKey, tokenConfig.refreshSerectKeyExpire);
     return {token, refreshToken}
 }
 
@@ -274,9 +255,7 @@ exports.addUser = (req, res, next) => {
             username: value.username,
         },
     }).then(async (result) => {
-        if (result && result.length)
-            return res.send(biResponse.serverError("用户名被占用，请更换后重试！"));
-        else {
+        if (result && result.length) return res.send(biResponse.serverError("用户名被占用，请更换后重试！")); else {
             // const password = 'admin123';
             const password = value.password;
             // 加密
@@ -286,22 +265,17 @@ exports.addUser = (req, res, next) => {
             const compareResult = bcrypt.compareSync(password, result.password);
             if (compareResult) {
                 // 用浏览器可识别的固定格式生成token
-                const token =
-                    "Bearer " +
-                    generateToken(
-                        {id: result.user_id, username: result.username},
-                        tokenConfig.jwtSecretKey,
-                        tokenConfig.secretKeyExpire
-                    );
+                const token = "Bearer " + generateToken({
+                    id: result.user_id,
+                    username: result.username
+                }, tokenConfig.jwtSecretKey, tokenConfig.secretKeyExpire);
                 // 生成长时refreshToken
-                const refreshToken = generateToken(
-                    {id: result.user_id, username: result.username},
-                    tokenConfig.jwtRefrechSecretKey,
-                    tokenConfig.refreshSerectKeyExpire
-                );
+                const refreshToken = generateToken({
+                    id: result.user_id,
+                    username: result.username
+                }, tokenConfig.jwtRefrechSecretKey, tokenConfig.refreshSerectKeyExpire);
                 return res.send(biResponse.success({
-                    token,
-                    refreshToken,
+                    token, refreshToken,
                 }));
             }
         }
@@ -319,18 +293,14 @@ exports.refreshToken = (req, res) => {
         // 对refreshToken进行解码获得id、username
         let {id, username} = decodedToken(refreshToken);
         // 续签生成新的token
-        const token =
-            "Bearer " +
-            generateToken({id, username}, tokenConfig.jwtSecretKey, tokenConfig.secretKeyExpire);
+        const token = "Bearer " + generateToken({id, username}, tokenConfig.jwtSecretKey, tokenConfig.secretKeyExpire);
         // 续签长时token
-        const newRefreshToken = generateToken(
-            {id, username},
-            tokenConfig.jwtRefrechSecretKey,
-            tokenConfig.refreshSerectKeyExpire
-        );
+        const newRefreshToken = generateToken({
+            id,
+            username
+        }, tokenConfig.jwtRefrechSecretKey, tokenConfig.refreshSerectKeyExpire);
         res.send(biResponse.success({
-            token,
-            refreshToken: newRefreshToken,
+            token, refreshToken: newRefreshToken,
         }));
     } else {
         res.send(biResponse.serverError(_res.message));
@@ -358,12 +328,8 @@ exports.getList = (req, res, next) => {
     if (status === "0" || status === "1") where.status = {[Op.eq]: status};
 
     UsersModel.findAndCountAll({
-        attributes: {exclude: ["password"]},
-        include: [{model: RolesModel}], // 预先加载角色模型
-        distinct: true,
-        offset: offset,
-        limit: limit,
-        where: where,
+        attributes: {exclude: ["password"]}, include: [{model: RolesModel}], // 预先加载角色模型
+        distinct: true, offset: offset, limit: limit, where: where,
     }).then(function (users) {
         return res.send(biResponse.success(users));
     });
@@ -382,16 +348,13 @@ exports.editUser = (req, res, next) => {
             [Op.and]: {
                 user_id: {
                     [Op.ne]: user_id,
-                },
-                username: {
+                }, username: {
                     [Op.eq]: value.username,
                 },
             },
         },
     }).then((result) => {
-        if (result && result.length)
-            return res.send(biResponse.serverError("用户名被占用，请更换后重试！"));
-        else {
+        if (result && result.length) return res.send(biResponse.serverError("用户名被占用，请更换后重试！")); else {
             const result = UsersModel.updateUser(user_id, req.body);
             result.then(function (ret) {
                 if (ret === true) {
@@ -442,8 +405,7 @@ exports.editPassword = (req, res, next) => {
             return res.send(biResponse.serverError("原密码不正确"));
         }
         const data = {
-            password: bcrypt.hashSync(value.password, 10),
-            update_time: new Date(),
+            password: bcrypt.hashSync(value.password, 10), update_time: new Date(),
         };
         const result = UsersModel.update(data, {
             where: {
@@ -469,8 +431,7 @@ exports.getUserinfoById = (req, res, next) => {
     }
     let user_id = value.user_id;
     UsersModel.findOne({
-        attributes: {exclude: ["password"]},
-        include: [{model: RolesModel}], // 预先加载角色模型
+        attributes: {exclude: ["password"]}, include: [{model: RolesModel}], // 预先加载角色模型
         where: {
             user_id: user_id,
         },
