@@ -22,6 +22,7 @@ const {flowReviewTypeConst, flowStatusConst} = require("../const/flowConst")
 const noRequiredStatActivityConst = require("../const/tmp/noRequiredStatActivityConst")
 const whiteList = require("../config/whiteList")
 const {flowStatus} = require("../const/statisticStatusConst");
+const {flow} = require("lodash");
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -600,7 +601,7 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
     const computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, null)
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptId)
     const result = await departmentCoreActivityStat.get(userNames, computedFlows, coreActionConfig)
-    return flowUtil.attachIdsAndSum(result)
+    return flowUtil.statIdsAndSumFromBottom(result)
 }
 
 /**
@@ -616,7 +617,7 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
     const deptCoreForms = await flowRepo.getCoreFormFlowConfig(deptId)
     const deptCoreFormIds = deptCoreForms.map(item => item.formId)
     let deptFormsStat = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, deptCoreFormIds)
-    return flowUtil.attachIdsAndSum(deptFormsStat)
+    return flowUtil.removeSumEqualZeroFormStat(flowUtil.statIdsAndSumFromBottom(deptFormsStat))
 }
 
 /**
@@ -841,12 +842,13 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
     }
     // 根据节点状态对流程进行统计
     for (const formStat of formResult) {
-        // 用于根据状态统计流程数据
-        const flowStatResult = [
-            {status: flowStatusConst.RUNNING, name: "进行中", sum: 0, ids: []},
-            {status: flowStatusConst.COMPLETE, name: "已完成", sum: 0, ids: []},
-            {status: flowStatusConst.TERMINATED, name: "终止", sum: 0, ids: []},
-            {status: flowStatusConst.ERROR, name: "异常", sum: 0, ids: []}
+        const sumAndIds = {sum: 0, ids: []}
+        // 统计流程状态的模版
+        const flowStatusStatResult = [
+            {status: flowStatusConst.RUNNING, name: "进行中", ...sumAndIds},
+            {status: flowStatusConst.COMPLETE, name: "已完成", ...sumAndIds},
+            {status: flowStatusConst.TERMINATED, name: "终止", ...sumAndIds},
+            {status: flowStatusConst.ERROR, name: "异常", ...sumAndIds}
         ]
         const statProcessToStatusResult = (processInstanceId, status, formStatusResult) => {
             const tmpStatusResult = formStatusResult.filter(statusResult => statusResult.status === status)[0]
@@ -858,15 +860,18 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
         for (const flow of formFlows) {
             // 流程异常则算为异常
             if (flow.instanceStatus === flowStatusConst.ERROR) {
-                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.ERROR, flowStatResult)
+                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.ERROR, flowStatusStatResult)
                 continue
             }
 
             // 终止节点的operator在userNames中，算为终止
             if (flow.instanceStatus === flowStatusConst.TERMINATED) {
                 const lastActivity = flow.overallprocessflow[flow.overallprocessflow.length - 1]
+                if (!lastActivity) {
+                    continue
+                }
                 if (!userNames || (userNames && userNames.includes(lastActivity.operatorName))) {
-                    statProcessToStatusResult(flow.processInstanceId, flowStatusConst.TERMINATED, flowStatResult)
+                    statProcessToStatusResult(flow.processInstanceId, flowStatusConst.TERMINATED, flowStatusStatResult)
                 }
                 continue
             }
@@ -880,18 +885,18 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
             // 存在进行中的节点，则算为进行中
             const doingActivities = activities.filter(activity => activity.type === flowReviewTypeConst.TODO)
             if (doingActivities.length > 0) {
-                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.RUNNING, flowStatResult)
+                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.RUNNING, flowStatusStatResult)
                 continue
             }
 
             // 如果节点都已完成，则算为完成
             const doneActivities = activities.filter(activity => activity.type === flowReviewTypeConst.HISTORY)
             if (doneActivities.length === activities.length) {
-                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.COMPLETE, flowStatResult)
+                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.COMPLETE, flowStatusStatResult)
             }
         }
 
-        formStat.flowsStat = flowStatResult
+        formStat.flowsStat = flowStatusStatResult
     }
 
     return formResult
@@ -1071,17 +1076,11 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
         formsDepsStatResult.push(newFormResult)
     }
 
-    const activityStatResult = flowUtil.attachIdsAndSum(originResult)
-    const deptStatResult = flowUtil.attachIdsAndSum(formsDepsStatResult)
+    const activityStatResult = flowUtil.removeSumEqualZeroFormStat(flowUtil.statIdsAndSumFromBottom(originResult))
+    const deptStatResult = flowUtil.removeSumEqualZeroFormStat(flowUtil.statIdsAndSumFromBottom(formsDepsStatResult))
+
     return {activityStat: activityStatResult, deptStat: deptStatResult, users: pureUsersWithDepartment}
 }
-
-// const getDepartmentsOverallFlowsStat = async (startDoneDate, endDoneDate, formIds, departmentIds) => {
-//     const forms = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
-//     const flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
-//     const result = await departmentsOverallFlowsStat.get(departmentIds, flows, forms)
-//     return flowUtil.attachIdsAndSum(result)
-// }
 
 module.exports = {
     filterFlowsByTimesRange,
