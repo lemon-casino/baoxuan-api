@@ -126,8 +126,11 @@ const sortFormResultAccordingToLatestReviewItems = (formResult, reviewItems) => 
     // 根据最新的流程表单节点顺序，为结果中的节点增加order，进行排序
     formResult.children.map(item => {
         const activityIndex = longestExecutePath.findIndex(activity => activity.activityName === item.activityName)
+        // 添加标记：该节点是否在最新的表单流程中
+        item.isInLatestFormFlow = false
         if (activityIndex > -1) {
             item.order = activityIndex
+            item.isInLatestReviews = true
         } else if (item.activityName === "未知") {
             item.order = 999
         } else {
