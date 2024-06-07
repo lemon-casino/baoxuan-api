@@ -28,13 +28,7 @@ const get = async (userNames, flows, forms) => {
     const finalResult = []
     const formsReviewCache = {}
     for (const form of forms) {
-        // 用于根据状态统计流程数据
-        const formFlowStatResult = [
-            {status: flowStatusConst.RUNNING, name: "进行中", sum: 0, ids: []},
-            {status: flowStatusConst.COMPLETE, name: "已完成", sum: 0, ids: []},
-            {status: flowStatusConst.TERMINATED, name: "终止", sum: 0, ids: []},
-            {status: flowStatusConst.ERROR, name: "异常", sum: 0, ids: []}
-        ]
+
         let formResult = {formId: form.flowFormId, formName: form.flowFormName, children: []}
         // 根据动作配置信息对flow进行统计
         const formFlows = flows.filter(flow => flow.formUuid === form.flowFormId)
@@ -52,14 +46,6 @@ const get = async (userNames, flows, forms) => {
             }
 
             await countFlowIntoActivitiesResult(formResultWithActivity, params)
-
-            // 单独的根据流程状态汇总流程
-            for (const statusResult of formFlowStatResult) {
-                if (statusResult.status === flow.instanceStatus) {
-                    statusResult.ids.push(flow.processInstanceId)
-                    statusResult.sum = statusResult.ids.length
-                }
-            }
         }
 
         // 根据最新的流程表单的节点执行顺序对结果进行排序
@@ -77,9 +63,6 @@ const get = async (userNames, flows, forms) => {
                 children: activityResult.children
             }
         }
-
-        // 添加对该表单所对应的所有流程的汇总
-        formResult.flowsStat = formFlowStatResult
         finalResult.push(formResult)
     }
     return finalResult

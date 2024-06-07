@@ -21,6 +21,7 @@ const userFlowStat = require("../core/statistic/userFlowsStat")
 const {flowReviewTypeConst, flowStatusConst} = require("../const/flowConst")
 const noRequiredStatActivityConst = require("../const/tmp/noRequiredStatActivityConst")
 const whiteList = require("../config/whiteList")
+const {flowStatus} = require("../const/statisticStatusConst");
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -783,9 +784,9 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
     flows = removeNoRequiredActivities(flows)
     const formsWithReview = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
     // 统计流程数据
-    const result = await userFlowStat.get(userNames, flows, formsWithReview)
+    const formResult = await userFlowStat.get(userNames, flows, formsWithReview)
     // 将result中进行中和已完成的逾期单独提取出来
-    for (const formStat of result) {
+    for (const formStat of formResult) {
         for (const activityStat of formStat.children) {
             const activityOverdue = {
                 name: "逾期", type: "OVERDUE", excludeUpSum: true, children: [
@@ -826,8 +827,57 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
             }
             activityStat.children.push(activityOverdue)
         }
+
+        // 添加对该表单所对应的所有流程的汇总
+        // 用于根据状态统计流程数据
+        const formFlowStatResult = [
+            {status: flowStatusConst.RUNNING, name: "进行中", sum: 0, ids: []},
+            {status: flowStatusConst.COMPLETE, name: "已完成", sum: 0, ids: []},
+            {status: flowStatusConst.TERMINATED, name: "终止", sum: 0, ids: []},
+            {status: flowStatusConst.ERROR, name: "异常", sum: 0, ids: []}
+        ]
+        const statProcessToStatusResult = (processInstanceId, status, formStatusResult) => {
+            const tmpStatusResult = formStatusResult.filter(statusResult => statusResult.status === status)[0]
+            tmpStatusResult.ids.push(processInstanceId)
+            tmpStatusResult.sum = tmpStatusResult.ids.length
+        }
+
+        const formFlows = flows.filter(flow => flow.formUuid === formStat.formId)
+        for (const flow of formFlows) {
+            if (flow.instanceStatus === flowStatusConst.ERROR) {
+                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.ERROR, formFlowStatResult)
+                continue
+            }
+
+            if (flow.instanceStatus === flowStatusConst.TERMINATED) {
+                const lastActivity = flow.overallprocessflow[flow.overallprocessflow.length - 1]
+                if (!userNames || (userNames && userNames.includes(lastActivity.operatorName))) {
+                    statProcessToStatusResult(flow.processInstanceId, flowStatusConst.TERMINATED, formFlowStatResult)
+                }
+                continue
+            }
+
+            // 过滤有效的节点
+            let activities = flow.overallprocessflow
+            if (userNames) {
+                activities.filter(activity => userNames.includes(activity.operatorName))
+            }
+
+            const doingActivities = activities.filter(activity => activity.type === flowReviewTypeConst.TODO)
+            if (doingActivities.length > 0) {
+                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.RUNNING, formFlowStatResult)
+                continue
+            }
+
+            const doneActivities = activities.filter(activity => activity.type === flowReviewTypeConst.HISTORY)
+            if (doneActivities.length === activities.length) {
+                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.COMPLETE, formFlowStatResult)
+            }
+        }
+
+        formStat.flowsStat = formFlowStatResult
     }
-    return result
+    return formResult
 }
 
 
