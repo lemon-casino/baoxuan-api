@@ -54,7 +54,8 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
             linkStatus,
             timeRange,
             clickingAdditionalParams,
-            jis
+            jis,
+            problem
         } = req.query
         joiUtil.validate({pageIndex, pageSize})
         //
@@ -73,7 +74,8 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
             linkStatus,
             JSON.parse(timeRange),
             JSON.parse(clickingAdditionalParams || "[]"),
-            ces
+            ces,
+            problem
         )
 
         return res.send(biResponse.success(result))

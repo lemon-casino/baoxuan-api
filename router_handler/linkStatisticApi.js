@@ -13,7 +13,7 @@ const joiUtil = require("../utils/joiUtil")
  */
 const getLinkOperationCount = async (req, res, next) => {
     try {
-        let {productLineLeaders,timeRange} = req.query
+        let {productLineLeaders, timeRange} = req.query
         joiUtil.validate({productLineLeaders: {value: productLineLeaders, schema: Joi.string().required()}})
         productLineLeaders = JSON.parse(productLineLeaders)
         const latestSingleItems = await singleItemTaoBaoService.getLatestBatchIdRecords(1)
@@ -29,9 +29,9 @@ const getLinkOperationCount = async (req, res, next) => {
             null,
             JSON.parse(timeRange),
             null)
-       //console.log(singleItems.length)
+        //console.log(singleItems.length)
         // 去掉重复的
-       // const uniqueSingleItems = singleItemTaoBaoService.getUniqueSingleItems(singleItems)
+        // const uniqueSingleItems = singleItemTaoBaoService.getUniqueSingleItems(singleItems)
 
         const result = await singleItemTaoBaoService.getLinkOperationCount(
             singleItems,
@@ -54,7 +54,7 @@ const getErrorLinkCount = async (req, res, next) => {
         const latestSingleItems = await singleItemTaoBaoService.getLatestBatchIdRecords(1)
         const latestDate = latestSingleItems[0]["batchId"]
         const timeRange = [dateUtil.startOfDay(latestDate), dateUtil.endOfDay(latestDate)]
-
+//
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
             JSON.parse(productLineLeaders),
             null,
