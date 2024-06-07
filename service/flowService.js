@@ -844,13 +844,12 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
     // 根据节点状态对流程进行统计
     for (const formStat of formResult) {
 
-        const sumAndIds = {sum: 0, ids: []}
         // 统计流程状态的模版
         const flowStatusStatResult = [
-            {status: flowStatusConst.RUNNING, name: "进行中", ...sumAndIds},
-            {status: flowStatusConst.COMPLETE, name: "已完成", ...sumAndIds},
-            {status: flowStatusConst.TERMINATED, name: "终止", ...sumAndIds},
-            {status: flowStatusConst.ERROR, name: "异常", ...sumAndIds}
+            {status: flowStatusConst.RUNNING, name: "进行中", sum: 0, ids: []},
+            {status: flowStatusConst.COMPLETE, name: "已完成", sum: 0, ids: []},
+            {status: flowStatusConst.TERMINATED, name: "终止", sum: 0, ids: []},
+            {status: flowStatusConst.ERROR, name: "异常", sum: 0, ids: []}
         ]
         const statProcessToStatusResult = (processInstanceId, status, formStatusResult) => {
             const tmpStatusResult = formStatusResult.filter(statusResult => statusResult.status === status)[0]
@@ -860,9 +859,6 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
 
         const formFlows = flows.filter(flow => flow.formUuid === formStat.formId)
         for (const flow of formFlows) {
-            if (flow.title === "李杨发起的天猫链接上架流程大象滑索袋重上") {
-                console.log("===")
-            }
             // 流程异常则算为异常
             if (flow.instanceStatus === flowStatusConst.ERROR) {
                 statProcessToStatusResult(flow.processInstanceId, flowStatusConst.ERROR, flowStatusStatResult)
