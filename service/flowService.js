@@ -606,6 +606,7 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
 
 /**
  * 统计部门的核心流程指定节点的数据
+ *
  * @param deptId
  * @param userId
  * @param startDoneDate
@@ -842,6 +843,9 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
     }
     // 根据节点状态对流程进行统计
     for (const formStat of formResult) {
+        if (formStat.formName === "天猫链接上架流程") {
+            console.log("----")
+        }
         const sumAndIds = {sum: 0, ids: []}
         // 统计流程状态的模版
         const flowStatusStatResult = [
@@ -858,6 +862,9 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
 
         const formFlows = flows.filter(flow => flow.formUuid === formStat.formId)
         for (const flow of formFlows) {
+            if (flow.title === "郭淇发起的天猫链接上架流程冰球模具老品重上") {
+                console.log("===")
+            }
             // 流程异常则算为异常
             if (flow.instanceStatus === flowStatusConst.ERROR) {
                 statProcessToStatusResult(flow.processInstanceId, flowStatusConst.ERROR, flowStatusStatResult)
@@ -879,7 +886,7 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
             // 获取仅包含 userNames 的节点，为空时获取所有节点
             let activities = flow.overallprocessflow
             if (userNames) {
-                activities.filter(activity => userNames.includes(activity.operatorName))
+                activities = activities.filter(activity => userNames.includes(activity.operatorName))
             }
 
             // 存在进行中的节点，则算为进行中
@@ -901,7 +908,6 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
 
     return formResult
 }
-
 
 const overdueAloneStatusStructure = [
     {name: "待转入", type: flowReviewTypeConst.FORCAST, excludeUpSum: true, children: []},
