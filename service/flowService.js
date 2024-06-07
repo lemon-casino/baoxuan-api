@@ -776,16 +776,27 @@ const getAllOverDueRunningFlows = async () => {
     return overDueFlows
 }
 
+/**
+ * 统计用户完成的工作量
+ *
+ * @param userNames 为空时，统计所有用户的工作量
+ * @param startDoneDate
+ * @param endDoneDate
+ * @param formIds
+ * @returns {Promise<*[]>}
+ */
 const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) => {
     let flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
     // 排除不在时间区间中的节点
     flows = removeUnmatchedDateActivities(flows, startDoneDate, endDoneDate)
     // 排除不需要统计的节点
     flows = removeNoRequiredActivities(flows)
+    // 获取表单的最新的审核流
     const formsWithReview = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
     // 统计流程数据
     const formResult = await userFlowStat.get(userNames, flows, formsWithReview)
     // 将result中进行中和已完成的逾期单独提取出来
+
     for (const formStat of formResult) {
         for (const activityStat of formStat.children) {
             const activityOverdue = {
@@ -827,10 +838,11 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
             }
             activityStat.children.push(activityOverdue)
         }
-
-        // 添加对该表单所对应的所有流程的汇总
+    }
+    // 根据节点状态对流程进行统计
+    for (const formStat of formResult) {
         // 用于根据状态统计流程数据
-        const formFlowStatResult = [
+        const flowStatResult = [
             {status: flowStatusConst.RUNNING, name: "进行中", sum: 0, ids: []},
             {status: flowStatusConst.COMPLETE, name: "已完成", sum: 0, ids: []},
             {status: flowStatusConst.TERMINATED, name: "终止", sum: 0, ids: []},
@@ -844,39 +856,44 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
 
         const formFlows = flows.filter(flow => flow.formUuid === formStat.formId)
         for (const flow of formFlows) {
+            // 流程异常则算为异常
             if (flow.instanceStatus === flowStatusConst.ERROR) {
-                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.ERROR, formFlowStatResult)
+                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.ERROR, flowStatResult)
                 continue
             }
 
+            // 终止节点的operator在userNames中，算为终止
             if (flow.instanceStatus === flowStatusConst.TERMINATED) {
                 const lastActivity = flow.overallprocessflow[flow.overallprocessflow.length - 1]
                 if (!userNames || (userNames && userNames.includes(lastActivity.operatorName))) {
-                    statProcessToStatusResult(flow.processInstanceId, flowStatusConst.TERMINATED, formFlowStatResult)
+                    statProcessToStatusResult(flow.processInstanceId, flowStatusConst.TERMINATED, flowStatResult)
                 }
                 continue
             }
 
-            // 过滤有效的节点
+            // 获取仅包含 userNames 的节点，为空时获取所有节点
             let activities = flow.overallprocessflow
             if (userNames) {
                 activities.filter(activity => userNames.includes(activity.operatorName))
             }
 
+            // 存在进行中的节点，则算为进行中
             const doingActivities = activities.filter(activity => activity.type === flowReviewTypeConst.TODO)
             if (doingActivities.length > 0) {
-                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.RUNNING, formFlowStatResult)
+                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.RUNNING, flowStatResult)
                 continue
             }
 
+            // 如果节点都已完成，则算为完成
             const doneActivities = activities.filter(activity => activity.type === flowReviewTypeConst.HISTORY)
             if (doneActivities.length === activities.length) {
-                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.COMPLETE, formFlowStatResult)
+                statProcessToStatusResult(flow.processInstanceId, flowStatusConst.COMPLETE, flowStatResult)
             }
         }
 
-        formStat.flowsStat = formFlowStatResult
+        formStat.flowsStat = flowStatResult
     }
+
     return formResult
 }
 

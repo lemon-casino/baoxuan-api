@@ -28,13 +28,11 @@ const get = async (userNames, flows, forms) => {
     const finalResult = []
     const formsReviewCache = {}
     for (const form of forms) {
-
         let formResult = {formId: form.flowFormId, formName: form.flowFormName, children: []}
         // 根据动作配置信息对flow进行统计
         const formFlows = flows.filter(flow => flow.formUuid === form.flowFormId)
         for (const flow of formFlows) {
             const flowReviewItems = flow.reviewId ? await commonLogic.getFormReview(flow.reviewId, formsReviewCache) : []
-            //
             const params = await prepareParam(flow, userNames, flowReviewItems)
             let formResultWithActivity = null
             try {
