@@ -35,7 +35,7 @@ const get = async (userNames, flows, forms) => {
             {status: flowStatusConst.TERMINATED, name: "终止", sum: 0, ids: []},
             {status: flowStatusConst.ERROR, name: "异常", sum: 0, ids: []}
         ]
-        const formResult = {formId: form.flowFormId, formName: form.flowFormName, children: []}
+        let formResult = {formId: form.flowFormId, formName: form.flowFormName, children: []}
         // 根据动作配置信息对flow进行统计
         const formFlows = flows.filter(flow => flow.formUuid === form.flowFormId)
         for (const flow of formFlows) {
@@ -71,7 +71,11 @@ const get = async (userNames, flows, forms) => {
         // 删除前端不需要的 activityIds
         for (let i = 0; i < formResult.children.length; i++) {
             const activityResult = formResult.children[i]
-            formResult.children[i] = {activityName: activityResult.activityName, children: activityResult.children}
+            formResult.children[i] = {
+                activityName: activityResult.activityName,
+                isInLatestFormFlow: activityResult.isInLatestFormFlow,
+                children: activityResult.children
+            }
         }
 
         // 添加对该表单所对应的所有流程的汇总
@@ -130,7 +134,7 @@ const sortFormResultAccordingToLatestReviewItems = (formResult, reviewItems) => 
         item.isInLatestFormFlow = false
         if (activityIndex > -1) {
             item.order = activityIndex
-            item.isInLatestReviews = true
+            item.isInLatestFormFlow = true
         } else if (item.activityName === "未知") {
             item.order = 999
         } else {
