@@ -67,7 +67,7 @@ const getDepartmentUsers = async (userDDId, deptId) => {
         throw new NotFoundError(`在Redis(base:departments)中未找部门${deptId}的信息`)
     }
 
-    const tmpUserDepartments = user.leader_in_dept.filter(dept => dept.dept_id.toString() === deptId)
+    const tmpUserDepartments = user.leader_in_dept.filter(dept => dept.dept_id.toString() === deptId.toString())
     if (tmpUserDepartments.length === 0) {
         throw new NotFoundError(`用户:${user.name}不在${department.name}中`)
     }
