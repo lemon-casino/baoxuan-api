@@ -843,9 +843,7 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
     }
     // 根据节点状态对流程进行统计
     for (const formStat of formResult) {
-        if (formStat.formName === "天猫链接上架流程") {
-            console.log("----")
-        }
+
         const sumAndIds = {sum: 0, ids: []}
         // 统计流程状态的模版
         const flowStatusStatResult = [
@@ -862,7 +860,7 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
 
         const formFlows = flows.filter(flow => flow.formUuid === formStat.formId)
         for (const flow of formFlows) {
-            if (flow.title === "郭淇发起的天猫链接上架流程冰球模具老品重上") {
+            if (flow.title === "李杨发起的天猫链接上架流程大象滑索袋重上") {
                 console.log("===")
             }
             // 流程异常则算为异常
@@ -898,7 +896,7 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
 
             // 如果节点都已完成，则算为完成
             const doneActivities = activities.filter(activity => activity.type === flowReviewTypeConst.HISTORY)
-            if (doneActivities.length === activities.length) {
+            if (doneActivities.length > 0 && doneActivities.length === activities.length) {
                 statProcessToStatusResult(flow.processInstanceId, flowStatusConst.COMPLETE, flowStatusStatResult)
             }
         }
