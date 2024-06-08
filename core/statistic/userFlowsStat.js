@@ -31,28 +31,48 @@ const get = async (userNames, flows, forms) => {
         let formResult = {formId: form.flowFormId, formName: form.flowFormName, children: []}
         // 根据动作配置信息对flow进行统计
         const formFlows = flows.filter(flow => flow.formUuid === form.flowFormId)
+        // 1. 根据flow找到所有需要统计的节点，并生成结果模版数据
         for (const flow of formFlows) {
-            const flowReviewItems = flow.reviewId ? await commonLogic.getFormReview(flow.reviewId, formsReviewCache) : []
-            const params = await prepareParam(flow, userNames, flowReviewItems)
-            let formResultWithActivity = null
+            // const flowReviewItems = flow.reviewId ? await commonLogic.getFormReview(flow.reviewId, formsReviewCache) : []
+            // const params = await prepareParam(flow, userNames, flowReviewItems)
             try {
-                formResultWithActivity = await preGenerateActivityResult(formResult, flow, userNames)
+                await preGenerateActivityResultToFormResult(formResult, flow, userNames)
+                // // 根据最新的流程表单的节点执行顺序对结果进行排序
+                // // 如果activityResult 中已经存在 isInLatestFormFlow 的节点说明已经获取了最新的审核流程节点，
+                // // 说明已经被有效的排序了，后面如果有旧的节点直接放到后面就好了
+                // const hasOrderedByLatestFormReview = formResult.children.length > 0 && formResult.children[0].isInLatestFormFlow
+                // if (!hasOrderedByLatestFormReview) {
+                //     const formReviews = form.flowFormReviews[0]?.formReview
+                //     if (formReviews && formReviews.length > 0) {
+                //         sortFormResultAccordingToLatestReviewItems(formResult, formReviews)
+                //     }
+                // }
             } catch (e) {
                 if (e.code === errorCodes.notFound) {
                     continue
                 }
             }
-
-            await countFlowIntoActivitiesResult(formResultWithActivity, params)
+            // await countFlowIntoActivitiesResult(formResult, params)
         }
 
-        // 根据最新的流程表单的节点执行顺序对结果进行排序
+        // 2. 根据最新的流程表单的节点执行顺序对结果进行排序
         const formReviews = form.flowFormReviews[0]?.formReview
         if (formReviews && formReviews.length > 0) {
             sortFormResultAccordingToLatestReviewItems(formResult, formReviews)
         }
+        // 个人或部门查看的情况，usernames没有数据表示全流程，将第一个是最新流程的第一个节点添加标记
+        if (userNames && formResult.children.length > 0 && formResult.children[0].isInLatestFormFlow) {
+            formResult.children[0].isCurrentFlowStartActivity = true
+        }
 
-        // 删除前端不需要的 activityIds
+        // 3. 开始统计流程数据
+        for (const flow of formFlows) {
+            const flowReviewItems = flow.reviewId ? await commonLogic.getFormReview(flow.reviewId, formsReviewCache) : []
+            const params = await prepareParam(flow, userNames, flowReviewItems)
+            await countFlowIntoActivitiesResult(formResult, params)
+        }
+
+        // 4. 删除前端不需要的 activityIds
         for (let i = 0; i < formResult.children.length; i++) {
             const activityResult = formResult.children[i]
             formResult.children[i] = {
@@ -77,7 +97,6 @@ const get = async (userNames, flows, forms) => {
 const countFlowIntoActivitiesResult = async (formResult, params) => {
     // 将流程根据节点和状态进行统计
     for (const activityResult of formResult.children) {
-
         if (params.statKey === "userName") {
             // 不仅要判断id还有名称一致：【提交申请】和【重新提交】id是一样的
             const userActivities = params.originActivities.filter(item =>
@@ -158,7 +177,7 @@ const prepareParam = async (flow, userNames, flowFormReviews) => {
  * @param userNames
  * @returns {*}
  */
-const preGenerateActivityResult = (formResult, flow, userNames) => {
+const preGenerateActivityResultToFormResult = (formResult, flow, userNames) => {
     // 对于异常的节点自定义为unknown表示
     flow.overallprocessflow = flow.overallprocessflow.map(item => {
         if (!item.activityId) {
@@ -190,7 +209,7 @@ const preGenerateActivityResult = (formResult, flow, userNames) => {
             sameActivities[0].activityIds.push(activity.activityId)
         }
     }
-    return formResult
+    // return formResult
 }
 
 // 将根据节点状态，将流程 统计到 activityResult 中
@@ -215,7 +234,14 @@ const findActivityStatusResult = (params, activityResult) => {
     const {activity} = params
     // 第一个节点为forcast， 则其他节点均为forcast
     if (activity.type === flowReviewTypeConst.FORCAST) {
-        //  flowFormReviews>1的情况在分支条件下会出现，同样只要判断第一个即可
+        // 1. 部门的第一个节点，只要状态是forcast的节点即算为待转入
+        if (activityResult.isCurrentFlowStartActivity) {
+            const activityForecastResult = activityResult.children.filter(item => item.type === flowReviewTypeConst.FORCAST)
+            return activityForecastResult[0]
+        }
+
+        // 2. 其他情况都要判断紧挨着的上一节点为forcast的才算为待转入
+        // flowFormReviews>1的情况在分支条件下会出现，同样只要判断第一个即可
         // const forecastReviewItem = forecastReviewItems[0]
         const reviewItem = flowFormReviewUtil.getReviewItem(activity.activityId, params.flowFormReviews)
         if (reviewItem && reviewItem.lastTimingNodes && reviewItem.lastTimingNodes.length > 0) {

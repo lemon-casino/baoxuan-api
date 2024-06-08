@@ -798,7 +798,6 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) 
     // 统计流程数据
     const formResult = await userFlowStat.get(userNames, flows, formsWithReview)
     // 将result中进行中和已完成的逾期单独提取出来
-
     for (const formStat of formResult) {
         for (const activityStat of formStat.children) {
             const activityOverdue = {
@@ -1114,6 +1113,5 @@ module.exports = {
     getCoreFormFlowConfig,
     getFormsFlowsActivitiesStat,
     getAllOverDueRunningFlows,
-    // getDepartmentsOverallFlowsStat,
     removeUnmatchedDateActivities
 }
