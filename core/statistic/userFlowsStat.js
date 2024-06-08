@@ -31,28 +31,18 @@ const get = async (userNames, flows, forms) => {
         let formResult = {formId: form.flowFormId, formName: form.flowFormName, children: []}
         // 根据动作配置信息对flow进行统计
         const formFlows = flows.filter(flow => flow.formUuid === form.flowFormId)
-        // 1. 根据flow找到所有需要统计的节点，并生成结果模版数据
+
+        // 1. 根据flow找到所有需要统计的节点，并生成结果模版数据，全部生成完后，进行下一步的一次性排序
         for (const flow of formFlows) {
-            // const flowReviewItems = flow.reviewId ? await commonLogic.getFormReview(flow.reviewId, formsReviewCache) : []
-            // const params = await prepareParam(flow, userNames, flowReviewItems)
-            try {
-                await preGenerateActivityResultToFormResult(formResult, flow, userNames)
-                // // 根据最新的流程表单的节点执行顺序对结果进行排序
-                // // 如果activityResult 中已经存在 isInLatestFormFlow 的节点说明已经获取了最新的审核流程节点，
-                // // 说明已经被有效的排序了，后面如果有旧的节点直接放到后面就好了
-                // const hasOrderedByLatestFormReview = formResult.children.length > 0 && formResult.children[0].isInLatestFormFlow
-                // if (!hasOrderedByLatestFormReview) {
-                //     const formReviews = form.flowFormReviews[0]?.formReview
-                //     if (formReviews && formReviews.length > 0) {
-                //         sortFormResultAccordingToLatestReviewItems(formResult, formReviews)
-                //     }
-                // }
-            } catch (e) {
-                if (e.code === errorCodes.notFound) {
-                    continue
-                }
+            // 根据userNames 过滤需要的流程节点
+            if (userNames) {
+                flow.overallprocessflow = flow.overallprocessflow.filter(item => {
+                    return userNames.includes(item.operatorName)
+                })
             }
-            // await countFlowIntoActivitiesResult(formResult, params)
+            if (flow.overallprocessflow.length > 0) {
+                await preGenerateActivityResultToFormResult(formResult, flow, userNames)
+            }
         }
 
         // 2. 根据最新的流程表单的节点执行顺序对结果进行排序
@@ -68,7 +58,7 @@ const get = async (userNames, flows, forms) => {
         // 3. 开始统计流程数据
         for (const flow of formFlows) {
             const flowReviewItems = flow.reviewId ? await commonLogic.getFormReview(flow.reviewId, formsReviewCache) : []
-            const params = await prepareParam(flow, userNames, flowReviewItems)
+            const params = await prepareParam(flow, flowReviewItems, userNames)
             await countFlowIntoActivitiesResult(formResult, params)
         }
 
@@ -112,10 +102,6 @@ const countFlowIntoActivitiesResult = async (formResult, params) => {
                 await countFlowIntoActivityResult(activityResult, params)
             }
         } else {
-            // todo: 等开发
-            params.currActivity = []
-            params.statValue = activityResult.activityName
-            await countFlowIntoActivityResult(activityResult, params)
         }
     }
 }
@@ -149,11 +135,10 @@ const sortFormResultAccordingToLatestReviewItems = (formResult, reviewItems) => 
  * 生成需要的 params
  *
  * @param flow
- * @param userNames
  * @param flowFormReviews
- * @returns {Promise<{statKey: string, originActivities: *, flowFormReviews}>}
+ * @returns {Promise<{statKey: string, originActivities, flowFormReviews}>}
  */
-const prepareParam = async (flow, userNames, flowFormReviews) => {
+const prepareParam = async (flow, flowFormReviews, userNames) => {
     const params = {
         // 最新的表单流程，用于处理待转入查找最近的工作节点
         flowFormReviews: flowFormReviews,
@@ -170,14 +155,14 @@ const prepareParam = async (flow, userNames, flowFormReviews) => {
 }
 
 /**
- * 根据流程的审核节点生成activityResult放到 formResult中
+ * 将流程的审核节点生成activityResult放到 formResult中
  *
  * @param formResult
  * @param flow
  * @param userNames
  * @returns {*}
  */
-const preGenerateActivityResultToFormResult = (formResult, flow, userNames) => {
+const preGenerateActivityResultToFormResult = (formResult, flow) => {
     // 对于异常的节点自定义为unknown表示
     flow.overallprocessflow = flow.overallprocessflow.map(item => {
         if (!item.activityId) {
@@ -186,18 +171,7 @@ const preGenerateActivityResultToFormResult = (formResult, flow, userNames) => {
         return item
     })
 
-    // 因为流程经常改动，根据最新的表单流程生成的formResult会有节点信息丢失
-    // 补充formResult的信息
-    let userActivities = flow.overallprocessflow
-    if (userNames) {
-        userActivities = userActivities.filter(item => userNames.includes(item.operatorName))
-    }
-
-    if (userActivities.length === 0) {
-        throw new NotFoundError("未找到相关的审核节点")
-    }
-
-    for (const activity of userActivities) {
+    for (const activity of flow.overallprocessflow) {
         const sameActivities = formResult.children.filter(item => item.activityName === activity.showName)
         if (sameActivities.length === 0) {
             formResult.children.push({
