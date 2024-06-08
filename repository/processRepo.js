@@ -36,7 +36,7 @@ const saveProcess = async (process) => {
 
         const data = process.data
         for (const key of Object.keys(data)) {
-            const fieldDetails = flowFormDetails.filter((item) => item.fieldId === key)
+            const fieldDetails = flowFormDetails.filter((item) => key.includes(item.fieldId))
             const fieldValue = data[key] instanceof Array ? JSON.stringify(data[key]) : data[key]
             const details = {
                 id: uuidUtil.getId(),
