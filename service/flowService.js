@@ -1055,6 +1055,9 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                 // 查找用户在该form(跨部门)和部门(可为空)下需要被统计到的部门名称
                 const findUserStatDeptName = (user, formId, deptId) => {
                     let userDepName = "未知"
+                    if (!user) {
+                        return userDepName
+                    }
                     // 部门模块数据
                     if (deptId) {
                         const tmpUserDept = user.departments.filter(dept => dept.deptId.toString() === deptId.toString())
