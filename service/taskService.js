@@ -14,12 +14,14 @@ const onlineCheckConst = require("../const/onlineCheckConst")
 const extensionsConst = require("../const/tmp/extensionsConst")
 
 const syncWorkingDay = async () => {
+    console.log("同步进行中...")
     const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
     const isWorkingDay = await dingDingService.isWorkingDay(date)
     if (isWorkingDay) {
         await workingDayService.saveWorkingDay(date)
         await redisUtil.rPush(redisKeys.WorkingDays, date)
     }
+    console.log("同步完成")
 }
 
 const syncTodayRunningAndFinishedFlows = async () => {
@@ -31,9 +33,9 @@ const syncTodayRunningAndFinishedFlows = async () => {
 }
 
 const syncMissingCompletedFlows = async () => {
-    console.log("开始同步历史已完成流程...")
+    console.log("同步进行中...")
     await flowService.syncMissingCompletedFlows()
-    console.log("同步历史已完成流程结束")
+    console.log("同步完成")
 }
 
 const syncDingDingToken = async () => {
@@ -41,18 +43,22 @@ const syncDingDingToken = async () => {
 }
 
 const syncDepartment = async () => {
+    console.log("同步进行中...")
     const depList = await dingDingService.getDepartmentFromDingDing()
     await redisUtil.setValue(redisKeys.Departments, JSON.stringify(depList.result))
     globalSetter.setGlobalDepartments(depList.result)
 }
 
 const syncDepartmentWithUser = async () => {
+    console.log("同步进行中...")
     const allDepartmentsWithUsers = await dingDingService.getDepartmentsWithUsersFromDingDing()
     await redisUtil.setValue(redisKeys.DepartmentsUsers, JSON.stringify(allDepartmentsWithUsers))
     globalSetter.setGlobalUsersOfDepartments(allDepartmentsWithUsers)
+    console.log("同步完成")
 }
 
 const syncUserWithDepartment = async () => {
+    console.log("同步进行中...")
     const usersWithDepartment = await dingDingService.getUsersWithDepartmentFromDingDing()
     // 添加需要补充的人员信息
     for (const extension of extensionsConst.userDeptExtensions) {
@@ -81,13 +87,17 @@ const syncUserWithDepartment = async () => {
     await redisUtil.setValue(redisKeys.Users, JSON.stringify(usersWithDepartment))
     globalSetter.setGlobalUsers(usersWithDepartment)
     await userService.syncUserToDB(usersWithDepartment)
+    console.log("同步完成")
 }
 
 const syncForm = async () => {
+    console.log("同步进行中...")
     await flowFormService.syncFormsFromDingDing()
+    console.log("同步完成")
 }
 
 const syncUserLogin = async () => {
+    console.log("同步进行中...")
     const userOnlineInRedis = await redisUtil.getKeys(
         `${onlineCheckConst.REDIS_LOGIN_KEY_PREFIX}:*`)
 
@@ -104,9 +114,11 @@ const syncUserLogin = async () => {
             }
         }
     }
+    console.log("同步完成")
 }
 
 const syncResignEmployeeInfo = async () => {
+    console.log("同步进行中...")
     const {access_token: accessToken} = await redisRepo.getToken()
     const allResignEmployees = await userRepo.getResignEmployees(accessToken)
     // 更新人员离职信息
@@ -132,6 +144,7 @@ const syncResignEmployeeInfo = async () => {
         }
         await userRepo.updateUserResignInfo(newEmployee)
     }
+    console.log("同步完成")
 }
 
 module.exports = {

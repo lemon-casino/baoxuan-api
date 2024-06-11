@@ -448,6 +448,18 @@ const tmCoreFormFlowsConfig = [
 
 const mbCoreFormFlowConfig = [
     {
+        formName: "营视觉流程（拍摄+美编）",
+        formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3"
+    },
+    {
+        formName: "美编修图任务",
+        formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYCs"
+    },
+    {
+        formName: "外包修图视觉流程",
+        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV"
+    },
+    {
         formName: "外包视觉制作流程",
         formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18"
     },
