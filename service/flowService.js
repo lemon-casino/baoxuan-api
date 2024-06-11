@@ -1131,7 +1131,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
 
     // 根据配置过滤部门要隐藏的表单统计
     if (deptId) {
-        const tmpDeps = deptHiddenFormsConst.filter(item => item.deptId === deptId)
+        const tmpDeps = deptHiddenFormsConst.filter(item => item.deptId.toString() === deptId.toString())
         if (tmpDeps.length > 0) {
             const deptHiddenFormIds = tmpDeps[0].forms.map(item => item.formId)
             activityStatResult = activityStatResult.filter(item => !deptHiddenFormIds.includes(item.formId))
