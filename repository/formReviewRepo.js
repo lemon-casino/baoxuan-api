@@ -11,9 +11,6 @@ const getFormReviewByFormId = async (formId) => {
 
 const getDetailsById = async (id) => {
     const result = await models.flowformsreviewsModel.findByPk(id)
-    if (!result){
-        console.log('---')
-    }
     return sequelizeUtil.extractDataValues(result)
 }
 

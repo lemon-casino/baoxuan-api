@@ -13,7 +13,8 @@ const userDeptExtensions = [
                 deptName: "产品设计部",
                 statForms: [
                     {formId: "FORM-2529762FC54F44849153E5564C1628FAHFKN", formName: "开发新品设计流程"},
-                    {formId: "FORM-CC0B476071F24581B129A24835910B81AK56", formName: "宝可梦新品开发流程"}
+                    {formId: "FORM-CC0B476071F24581B129A24835910B81AK56", formName: "宝可梦新品开发流程"},
+                    {formId: "FORM-A4E422EFCDB643A6B21648BFE79FC13DPKZO", formName: "包装设计流程"}
                 ]
             },
             {

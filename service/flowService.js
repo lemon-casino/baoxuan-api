@@ -1,8 +1,6 @@
 const _ = require("lodash")
 const FlowForm = require("../model/flowfrom")
 const flowRepo = require("../repository/flowRepo")
-const processReviewRepo = require("../repository/processReviewRepo")
-const processDetailsRepo = require("../repository/processDetailsRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
 const userRepo = require("../repository/userRepo")
 const formService = require("../service/flowFormService")
@@ -21,8 +19,7 @@ const userFlowStat = require("../core/statistic/userFlowsStat")
 const {flowReviewTypeConst, flowStatusConst} = require("../const/flowConst")
 const noRequiredStatActivityConst = require("../const/tmp/noRequiredStatActivityConst")
 const whiteList = require("../config/whiteList")
-const {flowStatus} = require("../const/statisticStatusConst");
-const {flow} = require("lodash");
+const {userDeptExtensions} = require("../const/tmp/extensionsConst")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -782,17 +779,22 @@ const getAllOverDueRunningFlows = async () => {
  * 统计用户完成的工作量
  *
  * @param userNames 为空时，统计所有用户的工作量
+ * @param userNames
  * @param startDoneDate
  * @param endDoneDate
  * @param formIds
+ * @param deptId 针对部门的统计
+ * @param filterActivitiesFunc 过滤flow的节点的function
  * @returns {Promise<*[]>}
  */
-const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds) => {
+const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, filterActivitiesFunc) => {
     let flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
     // 排除不在时间区间中的节点
     flows = removeUnmatchedDateActivities(flows, startDoneDate, endDoneDate)
     // 排除不需要统计的节点
     flows = removeNoRequiredActivities(flows)
+    flows = filterActivitiesFunc(flows)
+
     // 获取表单的最新的审核流
     const formsWithReview = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
     // 统计流程数据
@@ -952,12 +954,11 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
         // 如果使用空值表示获取所有人，会跟通过deptId获取人员为空时相冲突
         // 所以在部门的情况下，在为查询到人员的情况下，使用一个特殊人名加以区分
         userNames = users.map(user => user.userName).join(",")
-        if (!isAdmin) {
+        if (!userNames && !isAdmin) {
             userNames = "就是让你找不到"
         }
     }
 
-    const originResult = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, formIds)
     // 获取用户的部门信息，用于前端将人汇总都部门下
     let allUsersWithDepartment = await redisRepo.getAllUsersDetail()
     // 过滤不必要的信息
@@ -979,8 +980,36 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                 }
             ]
         }
-
         return pureUser
+    })
+
+    const originResult = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, formIds, (flows) => {
+        const multiDeptUserIds = pureUsersWithDepartment.filter(user => userNames.includes(user.userName) && user.multiDeptStat).map(user => user.userId)
+        // 人员跨部门的情况下，在指定部门下统计指定的表单，管理中台全流程忽略
+        // 针对部门的统计，存在人员跨部门，需要根据forms分别统计
+        if (deptId) {
+            for (const flow of flows) {
+                const multiDeptUserActivities = flow.overallprocessflow.filter(activity => multiDeptUserIds.includes(activity.operatorUserId))
+                for (const activity of multiDeptUserActivities) {
+                    // 用户多部门的配置信息
+                    const tmpOperatorDeptExtensions = userDeptExtensions.filter(item => item.userId === activity.operatorUserId)
+                    if (tmpOperatorDeptExtensions.length === 0) {
+                        continue
+                    }
+
+                    const userMultiDeptConfig = tmpOperatorDeptExtensions[0].depsExtensions
+                    // 配置中部门统计的form跟当前的deptId部门参数不匹配时，过滤掉
+                    for (const deptConfig of userMultiDeptConfig) {
+                        const isFormInStatForms = deptConfig.statForms.filter(form => form.formId === flow.formUuid).length > 0
+                        if (isFormInStatForms && deptConfig.deptId !== deptId) {
+                            flow.overallprocessflow = flow.overallprocessflow.filter(item => item.activityId !== activity.activityId)
+                            break
+                        }
+                    }
+                }
+            }
+        }
+        return flows
     })
 
     // 转化成按部门统计的结构数据
@@ -1019,34 +1048,37 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
 
             // 根据上面对人和状态的转换数据，转成人所在部门的统计
             for (const originOperatorResult of originOperatorsResult) {
-
                 // 多部门的情况下： 按流程表单汇总不同的部门
                 // 根据配置中汇总部门需要统计的流程，将结果拆分进行统计
-                let userDepName = "未知"
                 const currUser = pureUsersWithDepartment.filter(user => user.userName === originOperatorResult.userName)[0]
 
-                if (currUser) {
+                // 查找用户在该form(跨部门)和部门(可为空)下需要被统计到的部门名称
+                const findUserStatDeptName = (user, formId, deptId) => {
+                    let userDepName = "未知"
                     // 部门模块数据
                     if (deptId) {
-                        const tmpUserDept = currUser.departments.filter(dept => dept.deptId.toString() === deptId.toString())
+                        const tmpUserDept = user.departments.filter(dept => dept.deptId.toString() === deptId.toString())
                         if (tmpUserDept.length > 0) {
                             userDepName = tmpUserDept[0].deptName
                         }
-                    } else {
-                        // 管理中台的全流程
-                        if (currUser.multiDeptStat) {
+                    }
+                    // 管理中台的全流程
+                    else {
+                        if (user.multiDeptStat) {
                             // 找到当前表单需要被统计到的部门
-                            const tmpDeps = currUser.departments.filter(dept => dept.statForms.includes(originFormResult.formId))
+                            const tmpDeps = user.departments.filter(dept => {
+                                return dept.statForms.filter(item => item.formId === formId).length > 0
+                            })
                             if (tmpDeps.length > 0) {
                                 userDepName = tmpDeps[0].deptName
-                            } else {
-                                userDepName = currUser.departments[0].deptName
                             }
                         } else {
-                            userDepName = currUser.departments[0].deptName
+                            userDepName = user.departments[0].deptName
                         }
                     }
+                    return userDepName
                 }
+                const userDepName = findUserStatDeptName(currUser, originFormResult.formId, deptId)
 
                 // 1. 从最终的结果中找到该用户所在的部门节点，没有的话则添加
                 let deptResult = null
@@ -1077,7 +1109,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                     activityResult = tmpActivityResults[0]
                 }
 
-                // 4. 将原来对人的共计数据，转移到新的节点上
+                // 4. 将原来对人的统计数据，转移到新的节点上
                 activityResult.children.push({
                     userName: originOperatorResult.userName,
                     ids: originOperatorResult.ids,
