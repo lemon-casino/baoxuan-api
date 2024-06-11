@@ -58,7 +58,15 @@ const syncFormsFromDingDing = async () => {
 
         // 老的 form 判断内容是否修改，是就同步
         if (formsInDB.length > 0) {
+            // 表单名称可能会修改需要进行同步
+            const updateForm = {
+                flowFormId: form.formUuid,
+                flowFormName: form.title.zhCN
+            }
+            await flowFormRepo.updateFlowForm(updateForm)
+
             const formInDB = formsInDB[0]
+            // 表单详情信息是否被更改
             if (hashOfDetails === formInDB.detailsHash) {
                 continue
             }
