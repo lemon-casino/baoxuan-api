@@ -1023,19 +1023,28 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                 // 多部门的情况下： 按流程表单汇总不同的部门
                 // 根据配置中汇总部门需要统计的流程，将结果拆分进行统计
                 let userDepName = "未知"
-                const tmpUser = pureUsersWithDepartment.filter(user => user.userName === originOperatorResult.userName)
-                const currUser = tmpUser[0]
+                const currUser = pureUsersWithDepartment.filter(user => user.userName === originOperatorResult.userName)[0]
+
                 if (currUser) {
-                    if (currUser.multiDeptStat) {
-                        // 找到当前表单需要被统计到的部门
-                        const tmpDeps = currUser.departments.filter(dept => dept.statForms.includes(originFormResult.formId))
-                        if (tmpDeps.length > 0) {
-                            userDepName = tmpDeps[0].deptName
+                    // 部门模块数据
+                    if (deptId) {
+                        const tmpUserDept = currUser.departments.filter(dept => dept.deptId.toString() === deptId.toString())
+                        if (tmpUserDept.length > 0) {
+                            userDepName = tmpUserDept[0].deptName
+                        }
+                    } else {
+                        // 管理中台的全流程
+                        if (currUser.multiDeptStat) {
+                            // 找到当前表单需要被统计到的部门
+                            const tmpDeps = currUser.departments.filter(dept => dept.statForms.includes(originFormResult.formId))
+                            if (tmpDeps.length > 0) {
+                                userDepName = tmpDeps[0].deptName
+                            } else {
+                                userDepName = currUser.departments[0].deptName
+                            }
                         } else {
                             userDepName = currUser.departments[0].deptName
                         }
-                    } else {
-                        userDepName = currUser.departments[0].deptName
                     }
                 }
 
