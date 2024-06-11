@@ -1031,6 +1031,8 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                         const tmpDeps = currUser.departments.filter(dept => dept.statForms.includes(originFormResult.formId))
                         if (tmpDeps.length > 0) {
                             userDepName = tmpDeps[0].deptName
+                        } else {
+                            userDepName = currUser.departments[0].deptName
                         }
                     } else {
                         userDepName = currUser.departments[0].deptName
