@@ -1,5 +1,8 @@
 const userRepo = require("../repository/userRepo")
 const redisRepo = require("../repository/redisRepo")
+const processTmpRepo = require("../repository/processTmpRepo")
+const processReviewTmpRepo = require("../repository/processReviewTmpRepo")
+const processDetailsTmpRepo = require("../repository/processDetailsTmpRepo")
 const globalSetter = require("../global/setter")
 const dingDingService = require("../service/dingDingService")
 const flowService = require("../service/flowService")
@@ -12,6 +15,9 @@ const dateUtil = require("../utils/dateUtil")
 const {redisKeys} = require("../const/redisConst")
 const onlineCheckConst = require("../const/onlineCheckConst")
 const extensionsConst = require("../const/tmp/extensionsConst")
+const models = require("../model");
+const uuidUtil = require("../utils/uuidUtil");
+const flowFormDetailsRepo = require("../repository/flowFormDetailsRepo");
 
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
@@ -147,7 +153,32 @@ const syncResignEmployeeInfo = async () => {
     console.log("同步完成")
 }
 
+/**
+ * 将Redis中的数据同步到数据库中
+ * 当前需求时为了更准确的从sql中计算所有完成的工作
+ *
+ * 可以简单粗暴的进行删除-插入：核心的工作统计还是redis+process进行
+ *
+ * @returns {Promise<void>}
+ */
+const syncRunningProcess = async () => {
+    console.time("syncRunningProcess")
+    await processTmpRepo.truncate()
+    await processReviewTmpRepo.truncate()
+    await processDetailsTmpRepo.truncate()
+
+    const todayRunningFlows = await redisRepo.getTodayRunningAndFinishedFlows()
+    let count = 1
+    for (const flow of todayRunningFlows) {
+        console.log(`${count}/${todayRunningFlows.length}`)
+        await processTmpRepo.save(flow)
+        count = count + 1
+    }
+    console.timeEnd("syncRunningProcess")
+}
+
 module.exports = {
+    syncRunningProcess,
     syncWorkingDay,
     syncTodayRunningAndFinishedFlows,
     syncMissingCompletedFlows,

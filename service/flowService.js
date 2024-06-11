@@ -20,6 +20,7 @@ const {flowReviewTypeConst, flowStatusConst} = require("../const/flowConst")
 const noRequiredStatActivityConst = require("../const/tmp/noRequiredStatActivityConst")
 const whiteList = require("../config/whiteList")
 const {userDeptExtensions} = require("../const/tmp/extensionsConst")
+const deptHiddenFormsConst = require("../const/tmp/deptHiddenFormsConst")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -1125,8 +1126,18 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
         formsDepsStatResult.push(newFormResult)
     }
 
-    const activityStatResult = flowUtil.removeSumEqualZeroFormStat(flowUtil.statIdsAndSumFromBottom(originResult))
-    const deptStatResult = flowUtil.removeSumEqualZeroFormStat(flowUtil.statIdsAndSumFromBottom(formsDepsStatResult))
+    let activityStatResult = flowUtil.removeSumEqualZeroFormStat(flowUtil.statIdsAndSumFromBottom(originResult))
+    let deptStatResult = flowUtil.removeSumEqualZeroFormStat(flowUtil.statIdsAndSumFromBottom(formsDepsStatResult))
+
+    // 根据配置过滤部门要隐藏的表单统计
+    if (deptId) {
+        const tmpDeps = deptHiddenFormsConst.filter(item => item.deptId === deptId)
+        if (tmpDeps.length > 0) {
+            const deptHiddenFormIds = tmpDeps[0].forms.map(item => item.formId)
+            activityStatResult = activityStatResult.filter(item => !deptHiddenFormIds.includes(item.formId))
+            deptStatResult = deptStatResult.filter(item => !deptHiddenFormIds.includes(item.formId))
+        }
+    }
 
     return {activityStat: activityStatResult, deptStat: deptStatResult, users: pureUsersWithDepartment}
 }

@@ -4,7 +4,7 @@ const {
 module.exports = sequelize => {
   const attributes = {
     processInstanceId: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(50),
       allowNull: false,
       defaultValue: null,
       primaryKey: true,
@@ -22,7 +22,7 @@ module.exports = sequelize => {
       field: "weight"
     },
     processCode: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(50),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
@@ -31,7 +31,7 @@ module.exports = sequelize => {
       field: "process_code"
     },
     formUuid: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(50),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
@@ -49,7 +49,7 @@ module.exports = sequelize => {
       field: "title"
     },
     approvedResult: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(30),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
@@ -58,7 +58,7 @@ module.exports = sequelize => {
       field: "approved_result"
     },
     instanceStatus: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(30),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
@@ -76,7 +76,7 @@ module.exports = sequelize => {
       field: "action_executor"
     },
     version: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.STRING(20),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,

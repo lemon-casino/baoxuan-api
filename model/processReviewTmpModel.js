@@ -13,7 +13,7 @@ module.exports = sequelize => {
       field: "id"
     },
     processInstanceId: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(50),
       allowNull: false,
       defaultValue: null,
       primaryKey: false,
@@ -103,7 +103,7 @@ module.exports = sequelize => {
       field: "action_exit"
     },
     activityId: {
-      type: DataTypes.STRING(20),
+      type: DataTypes.STRING(60),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
@@ -120,14 +120,14 @@ module.exports = sequelize => {
       comment: "操作人",
       field: "operator_name"
     },
-    doneTime: {
+    operateTime: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "完成时间",
-      field: "done_time"
+      comment: "操作时间",
+      field: "operate_time"
     },
     operatorUserId: {
       type: DataTypes.STRING(30),
@@ -148,7 +148,7 @@ module.exports = sequelize => {
       field: "task_hold_time"
     },
     operatorPhotoUrl: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(300),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,

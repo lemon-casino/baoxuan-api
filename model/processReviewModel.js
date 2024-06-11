@@ -13,7 +13,7 @@ module.exports = sequelize => {
       field: "id"
     },
     processInstanceId: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(50),
       allowNull: false,
       defaultValue: null,
       primaryKey: false,
@@ -148,7 +148,7 @@ module.exports = sequelize => {
       field: "task_hold_time"
     },
     operatorPhotoUrl: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(300),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
@@ -196,7 +196,12 @@ module.exports = sequelize => {
   const options = {
     tableName: "process_review",
     comment: "",
-    indexes: []
+    indexes: [{
+      name: "process_instance_id",
+      unique: false,
+      type: "BTREE",
+      fields: ["process_instance_id"]
+    }]
   };
   const ProcessReviewModel = sequelize.define("processReviewModel", attributes, options);
   return ProcessReviewModel;

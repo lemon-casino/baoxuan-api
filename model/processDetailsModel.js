@@ -22,7 +22,7 @@ module.exports = sequelize => {
       field: "process_instance_id"
     },
     fieldId: {
-      type: DataTypes.STRING(30),
+      type: DataTypes.STRING(50),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
