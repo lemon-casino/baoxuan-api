@@ -67,26 +67,29 @@ const syncUserWithDepartment = async () => {
     console.log("同步进行中...")
     const usersWithDepartment = await dingDingService.getUsersWithDepartmentFromDingDing()
     // 添加需要补充的人员信息
-    for (const extension of extensionsConst.userDeptExtensions) {
-        for (let user of usersWithDepartment) {
-            if (user.userid === extension.userId) {
-                // 补充附加属性
-                if (extension.attachValues) {
-                    for (const attachKey of Object.keys(extension.attachValues)) {
-                        user[attachKey] = extension.attachValues[attachKey]
-                    }
-                }
-                // 部门信息扩展
-                if (extension.depsExtensions) {
-                    for (const deptExt of extension.depsExtensions) {
-                        const tmpDeps = user.leader_in_dept.filter(dept => dept.dept_id.toString() === deptExt.deptId)
-                        if (tmpDeps.length > 0) {
-                            tmpDeps[0].statForms = deptExt.statForms
-                        }
-                    }
-                }
-                break
+    for (const extension of extensionsConst.getExtensions()) {
+        const user = usersWithDepartment.find(user => user.userid === extension.userId)
+        if (!user) {
+            continue
+        }
+        // 补充附加属性
+        if (extension.attachValues) {
+            for (const attachKey of Object.keys(extension.attachValues)) {
+                user[attachKey] = extension.attachValues[attachKey]
             }
+        }
+        // 部门信息扩展
+        if (extension.depsExtensions) {
+            for (const deptExt of extension.depsExtensions) {
+                const tmpDeps = user.leader_in_dept.filter(dept => dept.dept_id.toString() === deptExt.deptId)
+                if (tmpDeps.length > 0) {
+                    tmpDeps[0].statForms = deptExt.statForms
+                }
+            }
+        }
+        // 添加虚拟部门
+        if (extension.virtualDeps) {
+            user.leader_in_dept.push(...extension.virtualDeps)
         }
     }
 

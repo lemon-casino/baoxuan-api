@@ -103,7 +103,21 @@ const getLongestFormExecutePath = (activities) => {
     return longestFormExecutePath
 }
 
+/**
+ * 根据fieldId获取对应的表单值
+ *
+ * 表单种定义的fieldId，在钉钉返回实际表单数据时，有时会在field后面添加"_id"或者"_value"
+ *
+ * @param fieldId
+ * @param data
+ * @returns {*}
+ */
+const getFieldValue = (fieldId, data) => {
+    return data[fieldId] || data[`${fieldId}_id`] || data[`${fieldId}_value`]
+}
+
 module.exports = {
+    getFieldValue,
     getReviewItem,
     getFormExecutePaths,
     getLongestFormExecutePath

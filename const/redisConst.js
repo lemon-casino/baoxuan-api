@@ -5,7 +5,8 @@ const redisKeys = {
     "Users": "bases:users",
     "DDToken": "bases:dd_token",
     "WorkingDays": "bases:working_days",
-    "QRCodes": "qr_codes"
+    "QRCodes": "qr_codes",
+    "OutSourcingUsers": "out"
 }
 
 module.exports = {
