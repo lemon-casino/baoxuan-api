@@ -74,7 +74,6 @@ const getDepartmentUsers = async (userDDId, deptId) => {
     // 用户在该部门中是什么角色
     const isLeader = tmpUserDepartments[0].leader
     if (isLeader) {
-
         return departmentUsers
     }
 

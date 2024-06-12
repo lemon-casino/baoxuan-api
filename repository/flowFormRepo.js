@@ -106,7 +106,14 @@ const getAllFlowFormsWithReviews = async (formIds) => {
     return flowForms.map(item => item.get({plain: true}))
 }
 
+const updateFlowForm = async (form) => {
+    return await models.flowfromsModel.update(form, {
+        where: {flowFormId: form.flowFormId}
+    })
+}
+
 module.exports = {
+    updateFlowForm,
     getFormDetails,
     getAllForms,
     getAllFlowFormsWithReviews,

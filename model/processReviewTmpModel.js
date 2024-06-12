@@ -120,14 +120,14 @@ module.exports = sequelize => {
       comment: "操作人",
       field: "operator_name"
     },
-    doneTime: {
+    operateTime: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "完成时间",
-      field: "done_time"
+      comment: "操作时间",
+      field: "operate_time"
     },
     operatorUserId: {
       type: DataTypes.STRING(30),
@@ -194,7 +194,7 @@ module.exports = sequelize => {
     }
   };
   const options = {
-    tableName: "process_review",
+    tableName: "process_review_tmp",
     comment: "",
     indexes: [{
       name: "process_instance_id",
@@ -203,6 +203,6 @@ module.exports = sequelize => {
       fields: ["process_instance_id"]
     }]
   };
-  const ProcessReviewModel = sequelize.define("processReviewModel", attributes, options);
-  return ProcessReviewModel;
+  const ProcessReviewTmpModel = sequelize.define("processReviewTmpModel", attributes, options);
+  return ProcessReviewTmpModel;
 };

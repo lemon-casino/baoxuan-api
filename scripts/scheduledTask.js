@@ -5,7 +5,7 @@ const taskService = require("../service/taskService")
 // 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况
 
 let syncWorkingDayCron = "0 5 9 * * ?"
-let syncTodayRunningAndFinishedFlowsCron = "0 0/5 8-22 * * ?"
+let syncTodayRunningAndFinishedFlowsCron = "0 0/5 8-21 * * ?"
 let syncMissingCompletedFlowsCron = "0 0 23 * * ?"
 // todo：更新部门的频率可以完全手动代替
 let syncDepartmentCron = "0 0 5 * * ?"
@@ -14,6 +14,7 @@ let syncUserWithDepartmentCron = "0 0 6 * * ?"
 let syncFormCron = "0 30 6 * * ?"
 let syncUserLoginCron = "0 0/5 * * * ?"
 let syncResignEmployeeCron = "0 0 7 * * ?"
+let syncRunningFlowsCron = "0 0 22 * * ?"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
     syncTodayRunningAndFinishedFlowsCron = "0 10 12 * * ?"
@@ -102,3 +103,11 @@ schedule.scheduleJob(syncUserLoginCron, async function () {
 schedule.scheduleJob(syncResignEmployeeCron, async function () {
     await taskService.syncResignEmployeeInfo()
 })
+
+/**
+ * 同步进行中的流程到数据库
+ */
+schedule.scheduleJob(syncRunningFlowsCron, async function () {
+    await taskService.syncRunningProcess()
+})
+

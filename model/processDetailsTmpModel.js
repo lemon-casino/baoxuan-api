@@ -50,10 +50,10 @@ module.exports = sequelize => {
     }
   };
   const options = {
-    tableName: "process_details",
+    tableName: "process_details_tmp",
     comment: "",
     indexes: []
   };
-  const ProcessDetailsModel = sequelize.define("processDetailsModel", attributes, options);
-  return ProcessDetailsModel;
+  const ProcessDetailsTmpModel = sequelize.define("processDetailsTmpModel", attributes, options);
+  return ProcessDetailsTmpModel;
 };

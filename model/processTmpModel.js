@@ -58,7 +58,7 @@ module.exports = sequelize => {
       field: "approved_result"
     },
     instanceStatus: {
-      type: DataTypes.STRING(20),
+      type: DataTypes.STRING(30),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
@@ -84,14 +84,14 @@ module.exports = sequelize => {
       comment: "版本",
       field: "version"
     },
-    doneTime: {
+    operateTime: {
       type: DataTypes.DATE,
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "完成时间",
-      field: "done_time"
+      comment: "操作时间",
+      field: "operate_time"
     },
     createTime: {
       type: DataTypes.DATE,
@@ -140,10 +140,10 @@ module.exports = sequelize => {
     }
   };
   const options = {
-    tableName: "process",
+    tableName: "process_tmp",
     comment: "",
     indexes: []
   };
-  const ProcessModel = sequelize.define("processModel", attributes, options);
-  return ProcessModel;
+  const ProcessTmpModel = sequelize.define("processTmpModel", attributes, options);
+  return ProcessTmpModel;
 };

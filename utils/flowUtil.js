@@ -221,14 +221,14 @@ const isUserJoinFlow = (userId, flow, reviewItems) => {
  * @param data
  * @returns {*}
  */
-const attachIdsAndSum = (data) => {
+const statIdsAndSumFromBottom = (data) => {
 
     const handleItem = (item) => {
         if (item.children) {
             // const uniqueIds = []
             const allIds = []
             for (const child of item.children) {
-                const newChild = attachIdsAndSum(child)
+                const newChild = statIdsAndSumFromBottom(child)
                 if (!child.excludeUpSum) {
                     for (const id of newChild.ids) {
                         // uniqueIds[id] = 1
@@ -284,7 +284,12 @@ const getLatestUniqueReviewItems = (reviewItems) => {
     return newReviewItems
 }
 
+const removeSumEqualZeroFormStat = (formsStat) => {
+    return formsStat.filter(item => item.sum > 0)
+}
+
 module.exports = {
+    removeSumEqualZeroFormStat,
     flatReviewItems,
     isUserDoingFlow,
     isUserTodoFlow,
@@ -294,6 +299,6 @@ module.exports = {
     isUserDoneOverDueFlow,
     isUserErrorFlow,
     isUserTerminatedFlow,
-    attachIdsAndSum: attachIdsAndSum,
+    statIdsAndSumFromBottom,
     getLatestUniqueReviewItems
 }
