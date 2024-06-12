@@ -103,7 +103,7 @@ module.exports = sequelize => {
       field: "action_exit"
     },
     activityId: {
-      type: DataTypes.STRING(60),
+      type: DataTypes.STRING(100),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
