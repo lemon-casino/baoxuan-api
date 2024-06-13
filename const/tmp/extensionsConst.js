@@ -51,17 +51,17 @@ const getExtensions = () => {
  * @param deptId
  * @returns {*[]}
  */
-const getUsersHaveVirtualTargetDept = (deptId) => {
-    const users = []
-    const usersWithVirtualDeps = userDeptExtensions.filter(item => item.virtualDeps)
-    for (const userDeps of usersWithVirtualDeps) {
-        const hasTargetVirtualDept = userDeps.virtualDeps.filter(item => item.dept_id.toString() === deptId.toString()).length > 0
-        if (hasTargetVirtualDept) {
-            users.push({userId: userDeps.userId, userName: userDeps.userName})
-        }
-    }
-    return users
-}
+// const getUsersHaveVirtualTargetDept = (deptId) => {
+//     const users = []
+//     const usersWithVirtualDeps = userDeptExtensions.filter(item => item.virtualDeps)
+//     for (const userDeps of usersWithVirtualDeps) {
+//         const hasTargetVirtualDept = userDeps.virtualDeps.filter(item => item.dept_id.toString() === deptId.toString()).length > 0
+//         if (hasTargetVirtualDept) {
+//             users.push({userId: userDeps.userId, userName: userDeps.userName})
+//         }
+//     }
+//     return users
+// }
 
 /**
  * 获取用户的extension信息
@@ -106,5 +106,5 @@ module.exports = {
     getExtensions,
     getUserVirtualDeps,
     getUserDepsExtensions,
-    getUsersHaveVirtualTargetDept
+    // getUsersHaveVirtualTargetDept
 }

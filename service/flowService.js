@@ -1004,12 +1004,12 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
     if (deptId) {
         // 根据userId的身份获取其下的用户(s)
         const realUsers = await userRepo.getDepartmentUsers(userDDId, deptId)
-        const virtualUsers = extensionsConst.getUsersHaveVirtualTargetDept(deptId)
+        // const virtualUsers = extensionsConst.getUsersHaveVirtualTargetDept(deptId)
         // todo: 6.6 人员信息已开启定时入库，让流程先跑一段时间，后面针对管理员的情况，从库中拉取全部人就行，不用下面这么诡异了
         // 管理员权限下，若是通过获取已经入库的所有人员，可能会有人员不全的情况（前期未及时入库）
         // 如果使用空值表示获取所有人，会跟通过deptId获取人员为空时相冲突
         // 所以在部门的情况下，在为查询到人员的情况下，使用一个特殊人名加以区分
-        userNames = realUsers.concat(virtualUsers).map(user => user.userName).join(",")
+        userNames = realUsers.map(user => user.userName).join(",")
         if (!userNames && !isAdmin) {
             userNames = "就是让你找不到"
         }
