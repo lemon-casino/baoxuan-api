@@ -1,42 +1,13 @@
-const express = require('express');
-const router = express.Router();
-const Hr_RecruitmentDepartmentPositions = require('../repository/Hr_RecruitmentDepartmentPositions');
+const Hr_RecruitmentDepartmentPositions = require('../repository/hrRecruitmentRepo');
 const {success} = require("../utils/biResponse");
 const globalGetter = require("../global/getter")
 const {flowStatusConst} = require("../const/flowConst")
 const PERSONNEL_AUDITS = "FORM-027086325D5B4B24885D75A541FD633E7AMV"
 
-function extracted(timeRange, startDate, endDate) {
-    if (timeRange === undefined) {
-        const currentDate = new Date();
-        startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-    } else {
-        timeRange = JSON.parse(timeRange);
-        startDate = timeRange[0];
-        endDate = timeRange[1];
-    }
-    return {startDate, endDate};
-}
-
 // 招聘数据看板 部门面试情况 岗位面试情况   -RecruitmentDepartmentPositions
-router.get('/RecruitmentDepartmentPositions', async (req, res) => {
+const recruitmentDepartment = async (startDate, endDate, rest) => {
 
-    let startDate;
-    let endDate;
-    const rest = {
-        department: [],
-        quarters: [],
-    }
     try {
-        let {timeRange} = req.query;
-        // let {page, pageSize} = req.query;
-        // //如果page  pageSize 没有传递过来  默认为1  10
-        //  page = page || 1;
-        //  pageSize = pageSize || 10;
-        const __ret = extracted(timeRange, startDate, endDate);
-        startDate = __ret.startDate;
-        endDate = __ret.endDate;
 
         // 这个是部门面试情况
         rest.department = await Hr_RecruitmentDepartmentPositions.getHrDepartment(startDate, endDate);
@@ -56,11 +27,11 @@ router.get('/RecruitmentDepartmentPositions', async (req, res) => {
         const runningFlow = todayFlows.filter((flow) => flow.instanceStatus === flowStatusConst.RUNNING && flow.formUuid === PERSONNEL_AUDITS);
         //console.log(runningFlow)
 
-        return res.send(success(rest));
+        return rest
     } catch (error) {
-        res.status(500).json({message: error.message});
+        return {message: error.message};
     }
-});
+};
 
 
 // 招聘渠道分析
@@ -75,30 +46,12 @@ async function updateAttendanceData(sourceData, targetArray) {
             targetItem.attendance = item.attendance;
         }
     });
-};
+}
 
 // 进度图
-router.get('/progressMap', async (req, res) => {
-    let startDate;
-    let endDate;
-    const createMonthObject = () => Array.from({length: 12}, (_, i) => ({
-        attendance: 0,
-        month: `${i + 1}`.padStart(2, '0')
-    }));
+const progressMap = async (startDate, endDate, rest) => {
 
-    const rest = {
-        PoProgressMap: [],
-        Head: [],
-        Onboarding: createMonthObject(),
-        Invert: createMonthObject(),
-        Recommend: createMonthObject()
-    };
     try {
-        let {timeRange} = req.query;
-        const __ret = extracted(timeRange, startDate, endDate);
-        startDate = __ret.startDate;
-        endDate = __ret.endDate;
-
         // //根据时间来筛选数据
         rest.PoProgressMap = await Hr_RecruitmentDepartmentPositions.getPoProgressMap(startDate, endDate);
         rest.Head = await Hr_RecruitmentDepartmentPositions.getHead(startDate, endDate);
@@ -106,31 +59,19 @@ router.get('/progressMap', async (req, res) => {
         await updateAttendanceData('getOnboarding', rest.Onboarding);
         await updateAttendanceData('getInvert', rest.Invert);
         await updateAttendanceData('getRecommend', rest.Recommend);
-        return res.send(success(rest));
+        return rest
     } catch (error) {
-        res.status(500).json({message: error.message});
+        return {message: error.message};
     }
 
-});
+};
 
 // 招聘人才动态 -RecruitmentTalentDynamic
 
-router.get('/RecruitmentTalentDynamic', async (req, res) => {
+const recruitmentTalent = async (startDate, endDate, rest) => {
 
-    let startDate;
-    let endDate;
-    const rest = {
-        quarters: [],
-    }
+
     try {
-        let {timeRange} = req.query;
-        // let {page, pageSize} = req.query;
-        // //如果page  pageSize 没有传递过来  默认为1  10
-        //  page = page || 1;
-        //  pageSize = pageSize || 10;
-        const __ret = extracted(timeRange, startDate, endDate);
-        startDate = __ret.startDate;
-        endDate = __ret.endDate;
 
         // 这个是岗位面试情况
         rest.quarters = await Hr_RecruitmentDepartmentPositions.getHrRecruitment(startDate, endDate);
@@ -143,10 +84,50 @@ router.get('/RecruitmentTalentDynamic', async (req, res) => {
         //         item.matchingResumeVolume = 0; // 如果没有匹配项，将匹配简历量设置为0
         //     }
         // });
-        return res.send(success(rest));
+        return rest
     } catch (error) {
-        res.status(500).json({message: error.message});
+        return {message: error.message};
     }
-});
+};
 
-module.exports = router;
+const employeeManagement = async (page, pageSize, quarters, department, rest) => {
+
+
+    try {
+
+
+        const formatDate = date => new Date(date).toLocaleDateString();
+        const employeeData = await Hr_RecruitmentDepartmentPositions.employeeManagement(parseInt(page), parseInt(pageSize), quarters, department);
+        rest.employee = {
+            ...employeeData,
+            rows: employeeData.rows.map(item => ({
+                ...item,
+                birthday: formatDate(item.birthday),
+                onBoardTime: formatDate(item.onBoardTime)
+            }))
+        };
+        rest.filterItems.push({
+            title: '岗位',
+            key: 'quarters',
+            value: await Hr_RecruitmentDepartmentPositions.quarters(),
+        })
+        rest.filterItems.push({
+            title: '部门',
+            key: 'department',
+            value: await Hr_RecruitmentDepartmentPositions.department(),
+        })
+
+
+        return rest
+    } catch (error) {
+        return {message: error.message};
+    }
+
+};
+
+module.exports = {
+    recruitmentDepartment,
+    recruitmentTalent,
+    progressMap,
+    employeeManagement
+}

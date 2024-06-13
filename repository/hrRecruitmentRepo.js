@@ -4,6 +4,9 @@ const renshiRichangModel = require('../model/renshiRichang');
 const sequelizeUtil = require("../utils/sequelizeUtil");
 const {Sequelize, QueryTypes, Op} = require('sequelize');
 const {query} = require("../model/init");
+const getZaiZhiRen = require("../model/zaiZhiRen")
+const sequelize = require("../model/init");
+const ZaiZhiRen = getZaiZhiRen(sequelize)
 const getHrDepartment = async (startDate, endDate,) => {
     try {
         // 计算offset
@@ -308,6 +311,95 @@ const getHrRecruitment = async (startDate, endDate,) => {
         throw new Error('查询数据失败');
     }
 };
+
+const employeeManagement = async (page, pageSize, quarters, department) => {
+    try {
+        // const where = {date: {$between: [startDateTime, endDateTime]}}
+        const where = {};
+
+
+        if (quarters) {
+            where.position = quarters
+        }
+        if (department) {
+            where.section = department
+        }
+
+        const offset = (page - 1) * pageSize;
+        return await ZaiZhiRen.findAndCountAll(
+            {
+                attributes: {exclude: ['id']},
+                limit: pageSize,
+                offset: offset,
+                order: [['onBoardTime', 'DESC']],
+                where,
+                raw: true,
+                logging: true
+            }
+        );
+
+
+        // return await ZaiZhiRen.findAll({
+        //         // attributes: [
+        //         //     [Sequelize.fn('sum', Sequelize.col('attendance')), 'attendance'], // Sum of attendance
+        //         //     [Sequelize.fn('date_format', Sequelize.col('date'), '%m'), 'month'] // 时间
+        //         // ],
+        //         // where: {
+        //         //     // // 开始时间 结束时间
+        //         //     // date: {
+        //         //     //     $between: [startDate, endDate]
+        //         //     // }
+        //         // },
+        //     }
+        // );
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
+const department = async () => {
+    try {
+
+        return await ZaiZhiRen.findAll({
+            attributes: [
+                [Sequelize.fn('DISTINCT', Sequelize.col('section')), 'section']
+            ],
+            where: {
+                section: {
+                    [Op.ne]: '北京八千行商贸有限公司'
+                }
+            },
+            raw: true,
+            logging: true
+        });
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
+const quarters = async () => {
+    try {
+
+        return await ZaiZhiRen.findAll({
+            attributes: [
+                [Sequelize.fn('DISTINCT', Sequelize.col('position')), 'position']
+            ],
+            where: {
+                position: {
+                    [Op.ne]: null
+                }
+            },
+            raw: true,
+            logging: true
+        });
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
 module.exports = {
     getHrDepartment,
     getHrQuarters,
@@ -317,5 +409,8 @@ module.exports = {
     getOnboarding,
     getInvert,
     getRecommend,
-    getHrRecruitment
+    getHrRecruitment,
+    employeeManagement,
+    department,
+    quarters
 };

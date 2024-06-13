@@ -20,11 +20,12 @@ module.exports = {
     "/download/:filename": require("./fileRouter"),
     "/tima/video": require("./videoRouter"),
     "/tima/workload": require("./Tm_Workload"),
-    "/hr/recruit": require("./Hr_Recruit"),
+    "/hr/recruit": require("./personnelRouter"),
     "/dept": require("./departmentRouter"),
     "/depts": require("./departmentRouter"),
     "/dept-flow-form": require("./departmentFlowFormRouter"),
     "/dept-flow-form-activity": require("./departmentFlowFormActivityRouter"),
     "/forms": require("./flowFormRouter"),
     "/operation/tian/linkData": require("./tableStructure"),
+
 }
