@@ -7,7 +7,9 @@ const flowStatusConst = {
     RUNNING: "RUNNING",
     ERROR: "ERROR",
     COMPLETE: "COMPLETED",
-    TERMINATED: "TERMINATED"
+    TERMINATED: "TERMINATED",
+    // 自定义的状态
+    OVERDUE: "OVERDUE"
 }
 
 const flowReviewTypeConst = {

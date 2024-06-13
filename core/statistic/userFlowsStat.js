@@ -101,7 +101,6 @@ const countFlowIntoActivitiesResult = async (formResult, params) => {
                 params.statValue = userActivity.operatorName
                 await countFlowIntoActivityResult(activityResult, params)
             }
-        } else {
         }
     }
 }
@@ -144,6 +143,8 @@ const prepareParam = async (flow, flowFormReviews, userNames) => {
         flowFormReviews: flowFormReviews,
         // 原始的审核流程，判断待转入用
         originActivities: flow.overallprocessflow,
+        // 流程id最终统计使用，forcast节点没有processInstanceId信息
+        processInstanceId: flow.processInstanceId,
         // 最底层汇总key
         statKey: "userName"
     }
@@ -172,6 +173,9 @@ const preGenerateActivityResultToFormResult = (formResult, flow) => {
     })
 
     for (const activity of flow.overallprocessflow) {
+        if (activity.ignoreStat) {
+            continue
+        }
         const sameActivities = formResult.children.filter(item => item.activityName === activity.showName)
         if (sameActivities.length === 0) {
             formResult.children.push({
@@ -183,7 +187,6 @@ const preGenerateActivityResultToFormResult = (formResult, flow) => {
             sameActivities[0].activityIds.push(activity.activityId)
         }
     }
-    // return formResult
 }
 
 // 将根据节点状态，将流程 统计到 activityResult 中
@@ -192,7 +195,7 @@ const countFlowIntoActivityResult = async (activityResult, params) => {
     const activityStatusResult = findActivityStatusResult(params, activityResult)
     // 待转入状态可能会不用统计，返回null
     if (activityStatusResult) {
-        commonLogic.statFlowToResultNode(params.originActivities[0].processInstanceId, params.statKey, params.statValue, activityStatusResult)
+        commonLogic.statFlowToResultNode(params.processInstanceId, params.statKey, params.statValue, activityStatusResult)
     }
 }
 

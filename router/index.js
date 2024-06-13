@@ -27,5 +27,5 @@ module.exports = {
     "/dept-flow-form-activity": require("./departmentFlowFormActivityRouter"),
     "/forms": require("./flowFormRouter"),
     "/operation/tian/linkData": require("./tableStructure"),
-
+    "/product-attrs": require("./dianShangOperationAttributeRouter")
 }

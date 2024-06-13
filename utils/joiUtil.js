@@ -20,6 +20,7 @@ const commonJoiSchemas = {
 
 const commonArgsSchemas = {
     id: commonJoiSchemas.required,
+    page: commonJoiSchemas.numberRequired,
     pageIndex: commonJoiSchemas.numberRequired,
     pageSize: Joi.string().alphanum().min(1).required(),
     startDate: commonJoiSchemas.dateRequired,
