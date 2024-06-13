@@ -853,19 +853,16 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
                 outSourceChargerFieldId: "textField_lx48e5gk"
             }
         ]
-        const assignerIds = ["281338354935548795", "01622516570029465425"]
+        
         const outSourcingUsers = {}
         for (const flow of flows) {
             const outSourcingFormIds = outSourcingForms.map(item => item.formId)
             if (outSourcingFormIds.includes(flow.formUuid)) {
                 const {outSourceChargerFieldId} = outSourcingForms.filter(item => item.formId === flow.formUuid)[0]
-                for (const activity of flow.overallprocessflow) {
-                    if (assignerIds.includes(activity.operatorUserId)) {
-                        const username = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
-                        if (username) {
-                            outSourcingUsers[username] = 1
-                        }
-                    }
+
+                const username = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
+                if (username) {
+                    outSourcingUsers[username] = 1
                 }
             }
         }
