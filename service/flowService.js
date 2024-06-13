@@ -1014,49 +1014,51 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
             userNames = "就是让你找不到"
         }
     }
-    const appendOrReplaceWithOutSourcingActivity = (flows, isAppend) => {
-        const outSourcingForms = [
-            {
-                formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
-                formName: "外包拍摄视觉流程",
-                outSourceChargerFieldId: "textField_lvumnj2k"
-            },
-            {
-                formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                formName: "外包修图视觉流程",
-                outSourceChargerFieldId: "textField_lx48e5gk"
-            }
-        ]
-        const assignerIds = ["281338354935548795", "01622516570029465425"]
-        // 虚拟部门在视觉部的需要克隆
-        for (const flow of flows) {
-            const outSourcingFormIds = outSourcingForms.map(item => item.formId)
-            if (outSourcingFormIds.includes(flow.formUuid)) {
-                const {outSourceChargerFieldId} = outSourcingForms.filter(item => item.formId === flow.formUuid)[0]
-                const newOverallProcessFlow = []
-                for (const activity of flow.overallprocessflow) {
-                    if (assignerIds.includes(activity.operatorUserId)) {
-                        if (isAppend) {
-                            newOverallProcessFlow.push(activity)
-                        }
-                        const fieldValue = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
-                        newOverallProcessFlow.push({
-                            ...activity,
-                            operatorName: fieldValue,
-                            operatorDisplayName: fieldValue,
-                            operatorUserId: ""
-                        })
-                    } else {
-                        newOverallProcessFlow.push(activity)
-                    }
-                }
-                flow.overallprocessflow = newOverallProcessFlow
-            }
-        }
-        return flows
-    }
+
+    // const appendOrReplaceWithOutSourcingActivity = (flows, isAppend) => {
+    //     const outSourcingForms = [
+    //         {
+    //             formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+    //             formName: "外包拍摄视觉流程",
+    //             outSourceChargerFieldId: "textField_lvumnj2k"
+    //         },
+    //         {
+    //             formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+    //             formName: "外包修图视觉流程",
+    //             outSourceChargerFieldId: "textField_lx48e5gk"
+    //         }
+    //     ]
+    //     const assignerIds = ["281338354935548795", "01622516570029465425"]
+    //     // 虚拟部门在视觉部的需要克隆
+    //     for (const flow of flows) {
+    //         const outSourcingFormIds = outSourcingForms.map(item => item.formId)
+    //         if (outSourcingFormIds.includes(flow.formUuid)) {
+    //             const {outSourceChargerFieldId} = outSourcingForms.filter(item => item.formId === flow.formUuid)[0]
+    //             const newOverallProcessFlow = []
+    //             for (const activity of flow.overallprocessflow) {
+    //                 if (assignerIds.includes(activity.operatorUserId)) {
+    //                     if (isAppend) {
+    //                         newOverallProcessFlow.push(activity)
+    //                     }
+    //                     const fieldValue = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
+    //                     newOverallProcessFlow.push({
+    //                         ...activity,
+    //                         operatorName: fieldValue,
+    //                         operatorDisplayName: fieldValue,
+    //                         operatorUserId: ""
+    //                     })
+    //                 } else {
+    //                     newOverallProcessFlow.push(activity)
+    //                 }
+    //             }
+    //             flow.overallprocessflow = newOverallProcessFlow
+    //         }
+    //     }
+    //     return flows
+    // }
     // 获取用户的部门信息，用于前端将人汇总都部门下
     // 过滤不必要的信息
+
     const pureUsersWithDepartment = await redisRepo.getAllUsersWithKeyFields()
     const originResult = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, formIds,
         // 对执行中台分配外包的流程分情况进行处理
@@ -1064,11 +1066,84 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
         // 2.执行中台本部门deptId="902515853"或者其他部门,不需要改变
         // 3.视觉部deptId="482162119", 需要进行替换
         (flows) => {
-            if (!deptId) {
-                return appendOrReplaceWithOutSourcingActivity(flows, true)
-            } else if (deptId.toString() === "482162119") {
-                return appendOrReplaceWithOutSourcingActivity(flows, false)
+            // if (!deptId) {
+            //     return appendOrReplaceWithOutSourcingActivity(flows, true)
+            // } else if (deptId.toString() === "482162119") {
+            //     return appendOrReplaceWithOutSourcingActivity(flows, false)
+            // }
+            // return flows
+
+            const outSourcingForms = [
+                {
+                    formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+                    formName: "外包拍摄视觉流程",
+                    outSourceChargerFieldId: "textField_lvumnj2k"
+                },
+
+            ]
+            const assignerIds = ["281338354935548795", "01622516570029465425"]
+
+            // 替换赵天鹏或者王耀庆为外包人的信息
+            const outSourcingPhotography = {
+                formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+                formName: "外包拍摄视觉流程",
+                outSourceChargerFieldId: "textField_lvumnj2k"
             }
+            // 执行中台需要看到他们自己的工作，其他部门或者全流程都算视觉-外包美编的
+            if (deptId.toString() !== "902515853") {
+                const outSourcingPhotographyFlows = flows.filter(flow => flow.formUuid === outSourcingPhotography.formId)
+                for (const flow of outSourcingPhotographyFlows) {
+                    const fieldValue = flowFormReviewUtil.getFieldValue(outSourcingPhotographyFlows.outSourceChargerFieldId, flow.data)
+                    const assignerActivities = flow.overallprocessflow.filter(activity => assignerIds.includes(activity.operatorUserId))
+                    // note：拆节点时需要再处理
+                    for (const activity of assignerActivities) {
+                        activity.operatorName = fieldValue
+                        activity.operatorDisplayName = fieldValue
+                        activity.operatorUserId = ""
+                    }
+                }
+            }
+
+            // 替换最后一个节点为外包人的信息
+            const outSourcingEditPicture = {
+                formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                formName: "外包修图视觉流程",
+                outSourceChargerFieldId: "textField_lx48e5gk"
+            }
+            const outSourcingEditPictureFlows = flows.filter(flow => flow.formUuid === outSourcingEditPicture.formId)
+            for (const flow of outSourcingEditPictureFlows) {
+                const fieldValue = flowFormReviewUtil.getFieldValue(outSourcingEditPicture.outSourceChargerFieldId, flow.data)
+                const lastActivity = flow.overallprocessflow[flow.overallprocessflow.length - 1]
+                lastActivity.operatorName = fieldValue
+                lastActivity.operatorDisplayName = fieldValue
+                lastActivity.operatorUserId = ""
+            }
+
+            // 虚拟部门在视觉部的需要克隆
+            // for (const flow of flows) {
+            //     const outSourcingFormIds = outSourcingForms.map(item => item.formId)
+            //     if (outSourcingFormIds.includes(flow.formUuid)) {
+            //         const {outSourceChargerFieldId} = outSourcingForms.filter(item => item.formId === flow.formUuid)[0]
+            //         const newOverallProcessFlow = []
+            //         for (const activity of flow.overallprocessflow) {
+            //             if (assignerIds.includes(activity.operatorUserId)) {
+            //                 if (isAppend) {
+            //                     newOverallProcessFlow.push(activity)
+            //                 }
+            //                 const fieldValue = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
+            //                 newOverallProcessFlow.push({
+            //                     ...activity,
+            //                     operatorName: fieldValue,
+            //                     operatorDisplayName: fieldValue,
+            //                     operatorUserId: ""
+            //                 })
+            //             } else {
+            //                 newOverallProcessFlow.push(activity)
+            //             }
+            //         }
+            //         flow.overallprocessflow = newOverallProcessFlow
+            //     }
+            // }
             return flows
         },
         (flows) => {
