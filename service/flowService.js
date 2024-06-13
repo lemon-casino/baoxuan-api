@@ -789,53 +789,56 @@ const getAllOverDueRunningFlows = async () => {
  * @param setActivitiesIgnoreStatFunc 设置对流程中的节点不进行统计
  * @returns {Promise<*[]>}
  */
-const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, setActivitiesIgnoreStatFunc) => {
-    let flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
-    // 排除完成节点不在时间区间中的节点: 对待转入的统计没影响
-    flows = removeUnmatchedDateActivities(flows, startDoneDate, endDoneDate)
-    // 排除不需要统计的节点: 对待转入的统计没影响
-    flows = removeNoRequiredActivities(flows)
+const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, handleOutSourcingActivityFunc, setActivitiesIgnoreStatFunc) => {
+    const originFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
 
-    const cloneAssignToOutSourcingNode = (flows) => {
-        const outSourcingForms = [
-            {
-                formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
-                formName: "外包拍摄视觉流程",
-                outSourceChargerFieldId: "textField_lvumnj2k"
-            },
-            {
-                formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                formName: "外包修图视觉流程",
-                outSourceChargerFieldId: "textField_lx48e5gk"
-            }
-        ]
-        const assignerIds = ["281338354935548795", "01622516570029465425"]
-        // 虚拟部门在视觉部的需要克隆
-        for (const flow of flows) {
-            const outSourcingFormIds = outSourcingForms.map(item => item.formId)
-            if (outSourcingFormIds.includes(flow.formUuid)) {
-                const {outSourceChargerFieldId} = outSourcingForms.filter(item => item.formId === flow.formUuid)[0]
-                const newOverallProcessFlow = []
-                for (const activity of flow.overallprocessflow) {
-                    newOverallProcessFlow.push(activity)
-                    if (assignerIds.includes(activity.operatorUserId)) {
-                        const fieldValue = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
-                        newOverallProcessFlow.push({
-                            ...activity,
-                            operatorName: fieldValue,
-                            operatorDisplayName: fieldValue,
-                            operatorUserId: ""
-                        })
-                    }
-                }
-                flow.overallprocessflow = newOverallProcessFlow
-            }
-        }
-        return flows
-    }
+    let modifiedFlows = _.cloneDeep(originFlows)
+    // 排除完成节点不在时间区间中的节点: 对待转入的统计没影响
+    modifiedFlows = removeUnmatchedDateActivities(modifiedFlows, startDoneDate, endDoneDate)
+    // 排除不需要统计的节点: 对待转入的统计没影响
+    modifiedFlows = removeNoRequiredActivities(modifiedFlows)
+    // const cloneAssignToOutSourcingNode = (flows) => {
+    //     const outSourcingForms = [
+    //         {
+    //             formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+    //             formName: "外包拍摄视觉流程",
+    //             outSourceChargerFieldId: "textField_lvumnj2k"
+    //         },
+    //         {
+    //             formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+    //             formName: "外包修图视觉流程",
+    //             outSourceChargerFieldId: "textField_lx48e5gk"
+    //         }
+    //     ]
+    //     const assignerIds = ["281338354935548795", "01622516570029465425"]
+    //     // 虚拟部门在视觉部的需要克隆
+    //     for (const flow of flows) {
+    //         const outSourcingFormIds = outSourcingForms.map(item => item.formId)
+    //         if (outSourcingFormIds.includes(flow.formUuid)) {
+    //             const {outSourceChargerFieldId} = outSourcingForms.filter(item => item.formId === flow.formUuid)[0]
+    //             const newOverallProcessFlow = []
+    //             for (const activity of flow.overallprocessflow) {
+    //                 newOverallProcessFlow.push(activity)
+    //                 if (assignerIds.includes(activity.operatorUserId)) {
+    //                     const fieldValue = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
+    //                     newOverallProcessFlow.push({
+    //                         ...activity,
+    //                         operatorName: fieldValue,
+    //                         operatorDisplayName: fieldValue,
+    //                         operatorUserId: ""
+    //                     })
+    //                 }
+    //             }
+    //             flow.overallprocessflow = newOverallProcessFlow
+    //         }
+    //     }
+    //     return flows
+    // }
     // 对于通过赵天鹏或王耀庆进行“中转”分配外包的流程（需要统计到外包的人头上），
     // 克隆赵天鹏或王耀庆所在的节点信息，将操作人更改为实际外包人
-    flows = cloneAssignToOutSourcingNode(flows)
+    // 条件：deptId="" 全流程下clone、deptId="902515853"天鹏所在执行中台不动、deptId="482162119"在视觉部门则替换
+    modifiedFlows = handleOutSourcingActivityFunc(modifiedFlows) //cloneAssignToOutSourcingNode(modifiedFlows)
+    modifiedFlows = setActivitiesIgnoreStatFunc(modifiedFlows)
     // 将外包人的名字添加到userNames中
     const getVisionOutSourcingNames = (flows) => {
         const outSourcingForms = [
@@ -868,18 +871,18 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
         }
         return Object.keys(outSourcingUsers)
     }
-    const outVisionSourcingUsers = getVisionOutSourcingNames(flows)
+    const outVisionSourcingUsers = getVisionOutSourcingNames(modifiedFlows)
     for (const outSourcingUser of outVisionSourcingUsers) {
         // 将视觉外包人的信息同步到Redis，便于后面转成部门统计
         await redisRepo.setOutSourcingUser("482162119", outSourcingUser)
     }
     userNames = userNames && `${userNames},${outVisionSourcingUsers.join(",")}`
-    flows = setActivitiesIgnoreStatFunc(flows)
-
     // 获取表单的最新的审核流
     const formsWithReview = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
     // 统计流程数据
-    const formResult = await userFlowStat.get(userNames, flows, formsWithReview)
+    const formResult = await userFlowStat.get(userNames, modifiedFlows, formsWithReview)
+
+
     // 将result中进行中和已完成的逾期单独提取出来
     for (const formStat of formResult) {
         for (const activityStat of formStat.children) {
@@ -923,15 +926,17 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
             activityStat.children.push(activityOverdue)
         }
     }
+
+
     // 根据节点状态对流程进行统计
     for (const formStat of formResult) {
-
         // 统计流程状态的模版
         const flowStatusStatResult = [
             {status: flowStatusConst.RUNNING, name: "进行中", sum: 0, ids: []},
             {status: flowStatusConst.COMPLETE, name: "已完成", sum: 0, ids: []},
             {status: flowStatusConst.TERMINATED, name: "终止", sum: 0, ids: []},
-            {status: flowStatusConst.ERROR, name: "异常", sum: 0, ids: []}
+            {status: flowStatusConst.ERROR, name: "异常", sum: 0, ids: []},
+            {status: flowStatusConst.OVERDUE, name: "逾期", sum: 0, ids: []}
         ]
         const statProcessToStatusResult = (processInstanceId, status, formStatusResult) => {
             const tmpStatusResult = formStatusResult.filter(statusResult => statusResult.status === status)[0]
@@ -939,7 +944,7 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
             tmpStatusResult.sum = tmpStatusResult.ids.length
         }
 
-        const formFlows = flows.filter(flow => flow.formUuid === formStat.formId)
+        const formFlows = originFlows.filter(flow => flow.formUuid === formStat.formId)
         for (const flow of formFlows) {
             // 流程异常则算为异常
             if (flow.instanceStatus === flowStatusConst.ERROR) {
@@ -976,6 +981,19 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
             const doneActivities = activities.filter(activity => activity.type === flowReviewTypeConst.HISTORY)
             if (doneActivities.length > 0 && doneActivities.length === activities.length) {
                 statProcessToStatusResult(flow.processInstanceId, flowStatusConst.COMPLETE, flowStatusStatResult)
+            }
+
+            // 逾期：操作人的节点中有逾期计为逾期
+            const overdueActivities = flow.overallprocessflow.filter(activity => activity.isOverDue)
+            if (overdueActivities.length > 0) {
+                if (userNames) {
+                    const userOverdueActivities = overdueActivities.filter(activity => userNames.includes(activity.operatorName))
+                    if (userOverdueActivities.length > 0) {
+                        statProcessToStatusResult(flow.processInstanceId, flowStatusConst.OVERDUE, flowStatusStatResult)
+                    }
+                } else {
+                    statProcessToStatusResult(flow.processInstanceId, flowStatusConst.OVERDUE, flowStatusStatResult)
+                }
             }
         }
 
@@ -1039,40 +1057,88 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
             userNames = "就是让你找不到"
         }
     }
-
+    const appendOrReplaceWithOutSourcingActivity = (flows, isAppend) => {
+        const outSourcingForms = [
+            {
+                formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+                formName: "外包拍摄视觉流程",
+                outSourceChargerFieldId: "textField_lvumnj2k"
+            },
+            {
+                formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                formName: "外包修图视觉流程",
+                outSourceChargerFieldId: "textField_lx48e5gk"
+            }
+        ]
+        const assignerIds = ["281338354935548795", "01622516570029465425"]
+        // 虚拟部门在视觉部的需要克隆
+        for (const flow of flows) {
+            const outSourcingFormIds = outSourcingForms.map(item => item.formId)
+            if (outSourcingFormIds.includes(flow.formUuid)) {
+                const {outSourceChargerFieldId} = outSourcingForms.filter(item => item.formId === flow.formUuid)[0]
+                const newOverallProcessFlow = []
+                for (const activity of flow.overallprocessflow) {
+                    if (assignerIds.includes(activity.operatorUserId)) {
+                        if (isAppend) {
+                            newOverallProcessFlow.push(activity)
+                        }
+                        const fieldValue = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
+                        newOverallProcessFlow.push({
+                            ...activity,
+                            operatorName: fieldValue,
+                            operatorDisplayName: fieldValue,
+                            operatorUserId: ""
+                        })
+                    } else {
+                        newOverallProcessFlow.push(activity)
+                    }
+                }
+                flow.overallprocessflow = newOverallProcessFlow
+            }
+        }
+        return flows
+    }
     // 获取用户的部门信息，用于前端将人汇总都部门下
     // 过滤不必要的信息
     const pureUsersWithDepartment = await redisRepo.getAllUsersWithKeyFields()
-    const originResult = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, formIds, (flows) => {
-        // 人员跨部门的情况下，在指定部门下统计指定的表单，管理中台全流程忽略
-        // 针对部门的统计，存在人员跨部门，需要根据forms分别统计
-        if (deptId) {
-            const multiDeptUserIds = pureUsersWithDepartment.filter(user => userNames.includes(user.userName) && user.multiDeptStat).map(user => user.userId)
-            for (const flow of flows) {
-                // 过滤掉不必要的流程
-                const multiDeptUserActivities = flow.overallprocessflow.filter(activity => multiDeptUserIds.includes(activity.operatorUserId))
-                for (const activity of multiDeptUserActivities) {
-
-                    if (activity.operatorUserId === "0625414814781392") {
-                        console.log("---")
-                    }
-
-                    // 用户多部门的配置信息
-                    const userDepsExtensions = extensionsConst.getUserDepsExtensions(activity.operatorUserId)
-                    // 配置中部门统计的form跟当前的deptId部门参数不匹配时，过滤掉
-                    for (const deptExt of userDepsExtensions) {
-                        const isFormInStatForms = deptExt.statForms.filter(form => form.formId === flow.formUuid).length > 0
-                        // 跨部门人配置中该流程所在的form不在当前部门，为该节点添加ignoreStat标记
-                        if (isFormInStatForms && deptExt.deptId.toString() !== deptId.toString()) {
-                            const currActivity = flow.overallprocessflow.filter(item => item.activityId === activity.activityId)[0]
-                            currActivity.ignoreStat = true
+    const originResult = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, formIds,
+        // 对执行中台分配外包的流程分情况进行处理
+        // 1.全流程deptId=""，进行节点clone
+        // 2.执行中台本部门deptId="902515853"或者其他部门,不需要改变
+        // 3.视觉部deptId="482162119", 需要进行替换
+        (flows) => {
+            if (!deptId) {
+                return appendOrReplaceWithOutSourcingActivity(flows, true)
+            } else if (deptId.toString() === "482162119") {
+                return appendOrReplaceWithOutSourcingActivity(flows, false)
+            }
+            return flows
+        },
+        (flows) => {
+            // 人员跨部门的情况下，在指定部门下统计指定的表单，管理中台全流程忽略
+            // 针对部门的统计，存在人员跨部门，需要根据forms分别统计
+            if (deptId) {
+                const multiDeptUserIds = pureUsersWithDepartment.filter(user => userNames.includes(user.userName) && user.multiDeptStat).map(user => user.userId)
+                for (const flow of flows) {
+                    // 过滤掉不必要的流程
+                    const multiDeptUserActivities = flow.overallprocessflow.filter(activity => multiDeptUserIds.includes(activity.operatorUserId))
+                    for (const activity of multiDeptUserActivities) {
+                        // 用户多部门的配置信息
+                        const userDepsExtensions = extensionsConst.getUserDepsExtensions(activity.operatorUserId)
+                        // 配置中部门统计的form跟当前的deptId部门参数不匹配时，过滤掉
+                        for (const deptExt of userDepsExtensions) {
+                            const isFormInStatForms = deptExt.statForms.filter(form => form.formId === flow.formUuid).length > 0
+                            // 跨部门人配置中该流程所在的form不在当前部门，为该节点添加ignoreStat标记
+                            if (isFormInStatForms && deptExt.deptId.toString() !== deptId.toString()) {
+                                const currActivity = flow.overallprocessflow.filter(item => item.activityId === activity.activityId)[0]
+                                currActivity.ignoreStat = true
+                            }
                         }
                     }
                 }
             }
-        }
-        return flows
-    })
+            return flows
+        })
 
     // 转化成按部门统计的结构数据
     const formsDepsStatResult = []
