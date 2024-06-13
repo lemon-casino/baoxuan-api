@@ -797,46 +797,6 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
     modifiedFlows = removeUnmatchedDateActivities(modifiedFlows, startDoneDate, endDoneDate)
     // 排除不需要统计的节点: 对待转入的统计没影响
     modifiedFlows = removeNoRequiredActivities(modifiedFlows)
-    // const cloneAssignToOutSourcingNode = (flows) => {
-    //     const outSourcingForms = [
-    //         {
-    //             formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
-    //             formName: "外包拍摄视觉流程",
-    //             outSourceChargerFieldId: "textField_lvumnj2k"
-    //         },
-    //         {
-    //             formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-    //             formName: "外包修图视觉流程",
-    //             outSourceChargerFieldId: "textField_lx48e5gk"
-    //         }
-    //     ]
-    //     const assignerIds = ["281338354935548795", "01622516570029465425"]
-    //     // 虚拟部门在视觉部的需要克隆
-    //     for (const flow of flows) {
-    //         const outSourcingFormIds = outSourcingForms.map(item => item.formId)
-    //         if (outSourcingFormIds.includes(flow.formUuid)) {
-    //             const {outSourceChargerFieldId} = outSourcingForms.filter(item => item.formId === flow.formUuid)[0]
-    //             const newOverallProcessFlow = []
-    //             for (const activity of flow.overallprocessflow) {
-    //                 newOverallProcessFlow.push(activity)
-    //                 if (assignerIds.includes(activity.operatorUserId)) {
-    //                     const fieldValue = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
-    //                     newOverallProcessFlow.push({
-    //                         ...activity,
-    //                         operatorName: fieldValue,
-    //                         operatorDisplayName: fieldValue,
-    //                         operatorUserId: ""
-    //                     })
-    //                 }
-    //             }
-    //             flow.overallprocessflow = newOverallProcessFlow
-    //         }
-    //     }
-    //     return flows
-    // }
-    // 对于通过赵天鹏或王耀庆进行“中转”分配外包的流程（需要统计到外包的人头上），
-    // 克隆赵天鹏或王耀庆所在的节点信息，将操作人更改为实际外包人
-    // 条件：deptId="" 全流程下clone、deptId="902515853"天鹏所在执行中台不动、deptId="482162119"在视觉部门则替换
     modifiedFlows = handleOutSourcingActivityFunc(modifiedFlows) //cloneAssignToOutSourcingNode(modifiedFlows)
     modifiedFlows = setActivitiesIgnoreStatFunc(modifiedFlows)
     // 将外包人的名字添加到userNames中
@@ -853,7 +813,7 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
                 outSourceChargerFieldId: "textField_lx48e5gk"
             }
         ]
-        
+
         const outSourcingUsers = {}
         for (const flow of flows) {
             const outSourcingFormIds = outSourcingForms.map(item => item.formId)
