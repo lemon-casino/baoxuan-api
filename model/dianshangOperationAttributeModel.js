@@ -227,6 +227,60 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: null,
       field: "dept_name"
+    },
+    skuId: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "sku_id"
+    },
+    code: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";编码",
+      field: "code"
+    },
+    devLeader: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";开发负责人",
+      field: "dev_leader"
+    },
+    costPrice: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";成本价",
+      field: "cost_price"
+    },
+    supplyPrice: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";供货价",
+      field: "supply_price"
+    },
+    level3Category: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";三级类目",
+      field: "level_3_category"
     }
   };
   const options = {
