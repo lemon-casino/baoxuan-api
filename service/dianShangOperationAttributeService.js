@@ -1,11 +1,14 @@
 const dianShangOperationAttributeRepo = require("../repository/dianShangOperationAttributeRepo")
 
-const getPagingOperateAttributes = async (pageIndex,
+const getPagingOperateAttributes = async (deptId,
+                                          pageIndex,
                                           pageSize,
                                           productLine,
                                           operatorName,
                                           linkId) => {
-    const result = await dianShangOperationAttributeRepo.getOperateAttributes(pageIndex,
+    const result = await dianShangOperationAttributeRepo.getOperateAttributes(
+        deptId,
+        pageIndex,
         pageSize,
         productLine,
         operatorName,

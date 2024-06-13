@@ -5,15 +5,17 @@ const biResponse = require("../utils/biResponse")
 const getPagingOperateAttributes = async (req, res, next) => {
     try {
         const {
+            deptId,
             // 前端页码从1开始好处理
             page,
             pageSize,
             productLine,
             operatorName,
-            linkId
+            linkId,
         } = req.query
-        joiUtil.validate({page, pageSize})
+        joiUtil.validate({page, pageSize, deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required}})
         const result = await dianShangOperationAttributeService.getPagingOperateAttributes(
+            deptId,
             Math.max(parseInt(page) - 1, 0),
             parseInt(pageSize),
             productLine,

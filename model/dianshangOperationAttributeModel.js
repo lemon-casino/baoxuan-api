@@ -209,6 +209,24 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "更新时间",
       field: "update_time"
+    },
+    deptId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "部门id",
+      field: "dept_id"
+    },
+    deptName: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: null,
+      field: "dept_name"
     }
   };
   const options = {

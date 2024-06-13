@@ -1,12 +1,13 @@
 const models = require('../model')
 const pagingUtil = require("../utils/pagingUtil")
 
-const getOperateAttributes = async (pageIndex,
+const getOperateAttributes = async (deptId,
+                                    pageIndex,
                                     pageSize,
                                     productLine,
                                     operatorName,
                                     linkId) => {
-    const where = {}
+    const where = {deptId}
     if (productLine) {
         where.goodName = {$like: `%${productLine}%`}
     }
@@ -21,6 +22,7 @@ const getOperateAttributes = async (pageIndex,
         where,
         offset: pageIndex * pageSize,
         limit: pageSize,
+        order: [["createTime", "desc"]]
     })
 
     return pagingUtil.paging(Math.ceil(result.count / pageSize), result.count, result.rows)

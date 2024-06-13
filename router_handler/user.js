@@ -471,7 +471,7 @@ exports.getVisionInnerGroups = async (req, res, next) => {
 
 exports.getUsersOfDepartment = async (req, res, next) => {
     try {
-        const {deptId} = req.params
+        const {deptId} = req.query
         const usersOfDepartment = await userService.getUsersOfDepartment(deptId)
         res.send(biResponse.success(usersOfDepartment))
     } catch (e) {
