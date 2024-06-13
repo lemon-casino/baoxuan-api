@@ -873,7 +873,7 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
         // 将视觉外包人的信息同步到Redis，便于后面转成部门统计
         await redisRepo.setOutSourcingUser("482162119", outSourcingUser)
     }
-    userNames = `${userNames},${outVisionSourcingUsers.join(",")}`
+    userNames = userNames && `${userNames},${outVisionSourcingUsers.join(",")}`
     flows = setActivitiesIgnoreStatFunc(flows)
 
     // 获取表单的最新的审核流
@@ -1137,10 +1137,12 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                             if (user.multiDeptStat) {
                                 // 找到当前表单需要被统计到的部门
                                 const tmpDeps = user.departments.filter(dept => {
-                                    return dept.statForms.filter(item => item.formId === formId).length > 0
+                                    return dept.statForms && dept.statForms.filter(item => item.formId === formId).length > 0
                                 })
                                 if (tmpDeps.length > 0) {
                                     userDepName = tmpDeps[0].deptName
+                                } else {
+                                    userDepName = user.departments[0].deptName
                                 }
                             } else {
                                 userDepName = user.departments[0].deptName
