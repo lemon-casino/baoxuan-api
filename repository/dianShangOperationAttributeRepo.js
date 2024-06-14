@@ -14,7 +14,7 @@ const getOperateAttributes = async (deptId,
         where.goodName = {$like: `%${productLine}%`}
     }
     if (operatorName) {
-        where.operator = operatorName
+        where.operator ={$like: `%${operatorName}%`}
     }
     if (linkId) {
         where.goodsId = {$like: `%${linkId}%`}
