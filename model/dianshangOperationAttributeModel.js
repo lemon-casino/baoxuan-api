@@ -84,6 +84,15 @@ module.exports = sequelize => {
       comment: null,
       field: "purchase_director"
     },
+    maintenanceLeader: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";维护负责人",
+      field: "maintenance_leader"
+    },
     targets: {
       type: DataTypes.STRING(32),
       allowNull: true,
