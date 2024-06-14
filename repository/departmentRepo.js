@@ -44,7 +44,24 @@ const saveDepartmentToDb = async (dept) => {
     })
 }
 
+/**
+ * 获取数据中部门下的人员信息
+ *
+ * @param deptId
+ */
+const getDbDeptUsers = async (deptId) => {
+    const deptUsers = await models.deptsUsersModel.findAll({
+        where: {deptId}
+    })
+    const userIds = deptUsers.map(item => item.userId)
+    const users = await models.usersModel.findAll({
+        where: {dingdingUserId: {$in: userIds}}
+    })
+    return users.map(user => user.get({plain: true}))
+}
+
 module.exports = {
+    getDbDeptUsers,
     getDepartmentDetails,
     getDepartmentUsers,
     getDepartments: getDepartmentsFromRedis,
