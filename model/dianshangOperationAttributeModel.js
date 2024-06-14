@@ -18,7 +18,7 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "链接ID",
+      comment: null,
       field: "goods_id"
     },
     linkAttribute: {
@@ -27,7 +27,7 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "链接属性",
+      comment: null,
       field: "link_attribute"
     },
     importantAttribute: {
@@ -36,7 +36,7 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "链接属性2",
+      comment: null,
       field: "important_attribute"
     },
     goodsName: {
@@ -45,7 +45,7 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "产品线",
+      comment: null,
       field: "goods_name"
     },
     briefName: {
@@ -54,7 +54,7 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "商品简称",
+      comment: null,
       field: "brief_name"
     },
     lineDirector: {
@@ -63,7 +63,7 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "产品线负责人",
+      comment: null,
       field: "line_director"
     },
     operator: {
@@ -72,7 +72,7 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "运营负责人（产品负责人）",
+      comment: null,
       field: "operator"
     },
     purchaseDirector: {
@@ -81,43 +81,43 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "采购负责人",
+      comment: null,
       field: "purchase_director"
     },
     targets: {
       type: DataTypes.STRING(32),
       allowNull: true,
-      defaultValue: "0",
+      defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "目标",
+      comment: null,
       field: "targets"
     },
     profitTarget: {
       type: DataTypes.STRING(255),
       allowNull: true,
-      defaultValue: "0",
+      defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "利润目标",
+      comment: null,
       field: "profit_target"
     },
     searchTarget: {
       type: DataTypes.STRING(255),
       allowNull: true,
-      defaultValue: "0",
+      defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "手淘搜索目标",
+      comment: null,
       field: "search_target"
     },
     pitTarget: {
       type: DataTypes.STRING(255),
       allowNull: true,
-      defaultValue: "0",
+      defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "坑产目标",
+      comment: null,
       field: "pit_target"
     },
     onsaleDate: {
@@ -126,7 +126,7 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "上架日期",
+      comment: null,
       field: "onsale_date"
     },
     firstCategory: {
@@ -135,7 +135,7 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "一级类目",
+      comment: null,
       field: "first_category"
     },
     secondCategory: {
@@ -144,53 +144,26 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "二级类目",
+      comment: null,
       field: "second_category"
     },
     goodsLine1: {
       type: DataTypes.STRING(255),
       allowNull: true,
-      defaultValue: "",
+      defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "产品线1",
+      comment: null,
       field: "goods_line1"
     },
     goodsLine2: {
       type: DataTypes.STRING(255),
       allowNull: true,
-      defaultValue: "",
+      defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "产品线2",
+      comment: null,
       field: "goods_line2"
-    },
-    customize1: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      defaultValue: "",
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "自定义1",
-      field: "customize1"
-    },
-    customize2: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      defaultValue: "",
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "自定义2",
-      field: "customize2"
-    },
-    customize3: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      defaultValue: "",
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "自定义3",
-      field: "customize3"
     },
     createTime: {
       type: DataTypes.DATE,
@@ -198,7 +171,7 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "创建时间",
+      comment: null,
       field: "create_time"
     },
     updateTime: {
@@ -207,7 +180,7 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "更新时间",
+      comment: null,
       field: "update_time"
     },
     deptId: {
@@ -246,15 +219,6 @@ module.exports = sequelize => {
       comment: ";编码",
       field: "code"
     },
-    devLeader: {
-      type: DataTypes.STRING(30),
-      allowNull: true,
-      defaultValue: null,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: ";开发负责人",
-      field: "dev_leader"
-    },
     costPrice: {
       type: DataTypes.DECIMAL,
       allowNull: true,
@@ -281,6 +245,105 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: ";三级类目",
       field: "level_3_category"
+    },
+    shopName: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";店铺名称",
+      field: "shop_name"
+    },
+    customize1: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: null,
+      field: "customize1"
+    },
+    customize2: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: null,
+      field: "customize2"
+    },
+    customize3: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: null,
+      field: "customize3"
+    },
+    customize4: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "customize4"
+    },
+    customize5: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "customize5"
+    },
+    customize6: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "customize6"
+    },
+    customize7: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "customize7"
+    },
+    customize8: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "customize8"
+    },
+    customize9: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "customize9"
+    },
+    customize10: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "customize10"
     }
   };
   const options = {
