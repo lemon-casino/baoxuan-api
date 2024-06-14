@@ -214,7 +214,7 @@ const getInvert = async () => {
                 ]
             },
             group: [Sequelize.fn('date_format', Sequelize.col('date'), '%m')], //分组
-            logging: true,
+            logging: false,
             raw: true
         });
 
@@ -334,7 +334,7 @@ const employeeManagement = async (page, pageSize, quarters, department) => {
                 order: [['onBoardTime', 'DESC']],
                 where,
                 raw: true,
-                logging: true
+                logging: false
             }
         );
 
@@ -371,7 +371,7 @@ const department = async () => {
                 }
             },
             raw: true,
-            logging: true
+            logging: false
         });
 
 
@@ -393,7 +393,7 @@ const quarters = async () => {
                 }
             },
             raw: true,
-            logging: true
+            logging: false
         });
 
     } catch (error) {

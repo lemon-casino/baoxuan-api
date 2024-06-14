@@ -96,14 +96,19 @@ const employeeManagement = async (page, pageSize, quarters, department, rest) =>
     try {
 
 
-        const formatDate = date => new Date(date).toLocaleDateString();
+        // 如果data为空   则返回空 如果不为空  则返回data new Date(date).toLocaleDateString();
+        const formatDate = date => date ? new Date(date).toLocaleDateString() : '';
         const employeeData = await Hr_RecruitmentDepartmentPositions.employeeManagement(parseInt(page), parseInt(pageSize), quarters, department);
         rest.employee = {
             ...employeeData,
             rows: employeeData.rows.map(item => ({
                 ...item,
                 birthday: formatDate(item.birthday),
-                onBoardTime: formatDate(item.onBoardTime)
+                onBoardTime: formatDate(item.onBoardTime),
+                startDateFirstContract: formatDate(item.startDateFirstContract),
+                firstContractExpirationDate: formatDate(item.firstContractExpirationDate),
+                currentContractStartingDate: formatDate(item.currentContractStartingDate),
+                currentContractExpirationDate: formatDate(item.currentContractExpirationDate)
             }))
         };
         rest.filterItems.push({
