@@ -3,6 +3,7 @@ const redisRepo = require("../repository/redisRepo")
 const processTmpRepo = require("../repository/processTmpRepo")
 const processReviewTmpRepo = require("../repository/processReviewTmpRepo")
 const processDetailsTmpRepo = require("../repository/processDetailsTmpRepo")
+const departmentRepo = require("../repository/departmentRepo")
 const globalSetter = require("../global/setter")
 const dingDingService = require("../service/dingDingService")
 const flowService = require("../service/flowService")
@@ -15,9 +16,6 @@ const dateUtil = require("../utils/dateUtil")
 const {redisKeys} = require("../const/redisConst")
 const onlineCheckConst = require("../const/onlineCheckConst")
 const extensionsConst = require("../const/tmp/extensionsConst")
-const models = require("../model");
-const uuidUtil = require("../utils/uuidUtil");
-const flowFormDetailsRepo = require("../repository/flowFormDetailsRepo");
 
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
@@ -53,6 +51,9 @@ const syncDepartment = async () => {
     const depList = await dingDingService.getDepartmentFromDingDing()
     await redisUtil.setValue(redisKeys.Departments, JSON.stringify(depList.result))
     globalSetter.setGlobalDepartments(depList.result)
+    // 将部门信息同步数据库
+    await departmentRepo.saveDepartmentToDbIgnoreExist(depList.result)
+    console.log("同步完成")
 }
 
 const syncDepartmentWithUser = async () => {
