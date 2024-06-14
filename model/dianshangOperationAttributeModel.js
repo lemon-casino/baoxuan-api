@@ -193,7 +193,7 @@ module.exports = sequelize => {
       field: "update_time"
     },
     deptId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING(30),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
