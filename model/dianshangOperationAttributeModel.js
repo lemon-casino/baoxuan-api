@@ -264,6 +264,15 @@ module.exports = sequelize => {
       comment: ";店铺名称",
       field: "shop_name"
     },
+    platform: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";平台",
+      field: "platform"
+    },
     customize1: {
       type: DataTypes.STRING(255),
       allowNull: true,
