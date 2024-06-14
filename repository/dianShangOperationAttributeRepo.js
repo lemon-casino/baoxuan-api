@@ -6,8 +6,9 @@ const getOperateAttributes = async (deptId,
                                     pageSize,
                                     productLine,
                                     operatorName,
-                                    linkId) => {
-    const where = {deptId}
+                                    linkId,
+                                    platform) => {
+    const where = {deptId, platform}
     if (productLine) {
         where.goodName = {$like: `%${productLine}%`}
     }
