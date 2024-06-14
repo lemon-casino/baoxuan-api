@@ -1,17 +1,24 @@
 const models = require('../model')
 
-const save = async (depUser) => {
+const save = async (deptId, userId) => {
     try {
-        await models.deptsUsersModel.create({
-            deptId: dept.dept_id, deptName: dept.name, parentId: dept.parent_id
-        })
+        return await models.deptsUsersModel.create({deptId, userId})
     } catch (e) {
         if (e.original.code !== "ER_DUP_ENTRY") {
             throw e
         }
+        return true
     }
 }
 
+const updateInvalidInfo = async (deptId, userIds) => {
+    return await models.deptsUsersModel.update(
+        {isValid: false, invalidDate: new Date()},
+        {where: {deptId, userId: {$notIn: userIds}}}
+    )
+}
+
 module.exports = {
-    save
+    save,
+    updateInvalidInfo
 }

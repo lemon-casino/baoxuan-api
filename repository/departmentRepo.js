@@ -38,30 +38,15 @@ const getDepartmentsFromRedis = async () => {
  *
  * @returns {Promise<void>}
  */
-const saveDepartmentToDbIgnoreExist = async (depts) => {
-    const loopSaveDept = async (depts) => {
-        for (const dept of depts) {
-            try {
-                await models.deptsModel.create({
-                    deptId: dept.dept_id, deptName: dept.name, parentId: dept.parent_id
-                })
-            } catch (e) {
-                if (e.original.code !== "ER_DUP_ENTRY") {
-                    throw e
-                }
-            }
-
-            if (dept.dep_chil && dept.dep_chil.length > 0) {
-                await loopSaveDept(dept.dep_chil)
-            }
-        }
-    }
-    await loopSaveDept(depts)
+const saveDepartmentToDb = async (dept) => {
+    return await models.deptsModel.create({
+        deptId: dept.dept_id, deptName: dept.name, parentId: dept.parent_id
+    })
 }
 
 module.exports = {
     getDepartmentDetails,
     getDepartmentUsers,
     getDepartments: getDepartmentsFromRedis,
-    saveDepartmentToDbIgnoreExist
+    saveDepartmentToDb
 }
