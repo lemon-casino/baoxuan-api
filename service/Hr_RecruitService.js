@@ -121,7 +121,7 @@ const employeeManagement = async (page, pageSize, quarters, department, rest) =>
             key: 'department',
             value: await Hr_RecruitmentDepartmentPositions.department(),
         })
-
+        rest.statistics = await Hr_RecruitmentDepartmentPositions.statistics();
 
         return rest
     } catch (error) {

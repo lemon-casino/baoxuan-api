@@ -315,9 +315,10 @@ const getHrRecruitment = async (startDate, endDate,) => {
 const employeeManagement = async (page, pageSize, quarters, department) => {
     try {
         // const where = {date: {$between: [startDateTime, endDateTime]}}
-        const where = {};
-
-
+        const where = {
+            section: {[Op.ne]: '北京八千行商贸有限公司'}
+        };
+        
         if (quarters) {
             where.position = quarters
         }
@@ -367,11 +368,11 @@ const department = async () => {
             ],
             where: {
                 section: {
-                    [Op.ne]: '北京八千行商贸有限公司'
+                    [Op.ne]: '北京八千行商贸有限公司',
                 }
             },
             raw: true,
-            logging: false
+            logging: true
         });
 
 
@@ -400,6 +401,45 @@ const quarters = async () => {
         throw new Error('查询数据失败');
     }
 };
+
+
+const statistics = async () => {
+    console.log("来到这里")
+    try {
+        /*select
+  count(1) as 总数,
+  count(case when contract_company is not null then 1 end) as 合同管理数量
+from zai_zhi_ren;*/
+        return await ZaiZhiRen.sequelize.query(
+            `SELECT
+    total,
+    contractManagementQuantity,
+    numberOfNewEmployees,
+    CASE
+        WHEN contractManagementQuantity = 0 THEN 0
+        ELSE ROUND(numberOfNewEmployees / contractManagementQuantity, 2)
+    END as recentRatio
+FROM (
+    SELECT
+        COUNT(1) AS total,
+        COUNT(CASE WHEN contract_company IS NOT NULL THEN 1 END) AS contractManagementQuantity,
+        COUNT(CASE WHEN on_board_time >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND on_board_time <= LAST_DAY(CURDATE()) THEN 1 END) AS numberOfNewEmployees
+    FROM
+        zai_zhi_ren
+) as subquery;`,
+            {
+                type: QueryTypes.SELECT,
+                logging: true
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
+
 module.exports = {
     getHrDepartment,
     getHrQuarters,
@@ -412,5 +452,6 @@ module.exports = {
     getHrRecruitment,
     employeeManagement,
     department,
-    quarters
+    quarters,
+    statistics
 };

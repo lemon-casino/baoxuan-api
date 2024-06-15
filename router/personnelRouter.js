@@ -7,4 +7,5 @@ router.get("/RecruitmentTalentDynamic", hrRecruit.recruitmentTalent)
 router.get("/progressMap", hrRecruit.progressMap)
 // 人事 员工管理
 router.get("/employeeManagement", hrRecruit.employeeManagement)
+
 module.exports = router
