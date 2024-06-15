@@ -58,7 +58,7 @@ const getDepartmentUsers = async (userDDId, deptId) => {
 
     const users = await globalGetter.getUsers()
     objectConvertUtil.map(users, {"userid": "userDDId", "name": "userName"})
-    const tmpUsers = users.filter(user => user.userDDId === userDDId)
+    const tmpUsers = users.filter(user => user.userDDId.toString() === userDDId)
     if (tmpUsers.length === 0) {
         throw new NotFoundError(`在Redis(base:users)中未找员工${userDDId}的信息`)
     }
