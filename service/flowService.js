@@ -778,6 +778,22 @@ const getAllOverDueRunningFlows = async () => {
     return overDueFlows
 }
 
+// 将审核节点中domainList的数据提出来
+const levelUpDomainList = (flows) => {
+    for (const flow of flows) {
+        let newOverallProcessFlow = []
+        for (const activity of flow.overallprocessflow) {
+            if (activity.domainList.length > 0) {
+                newOverallProcessFlow = newOverallProcessFlow.concat(activity.domainList)
+            } else {
+                newOverallProcessFlow.push(activity)
+            }
+        }
+        flow.overallprocessflow = newOverallProcessFlow
+    }
+    return flows
+}
+
 /**
  * 统计用户完成的工作量
  *
@@ -800,6 +816,7 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
     modifiedFlows = removeNoRequiredActivities(modifiedFlows)
     modifiedFlows = handleOutSourcingActivityFunc && handleOutSourcingActivityFunc(modifiedFlows) //cloneAssignToOutSourcingNode(modifiedFlows)
     modifiedFlows = setActivitiesIgnoreStatFunc && setActivitiesIgnoreStatFunc(modifiedFlows)
+    modifiedFlows = levelUpDomainList(modifiedFlows)
 
     // 对于视觉部(482162119)和管理中台(902643613)，将外包人的名字添加到userNames中
     if (["902643613", "482162119"].includes(deptId.toString())) {
@@ -844,7 +861,6 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
     // 统计流程数据
     const formResult = await userFlowStat.get(userNames, modifiedFlows, formsWithReview)
 
-
     // 将result中进行中和已完成的逾期单独提取出来
     for (const formStat of formResult) {
         for (const activityStat of formStat.children) {
@@ -888,7 +904,6 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
             activityStat.children.push(activityOverdue)
         }
     }
-
 
     // 根据节点状态对流程进行统计
     for (const formStat of formResult) {
@@ -1127,32 +1142,6 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                     lastActivity.operatorUserId = ""
                 }
             }
-
-            // 虚拟部门在视觉部的需要克隆
-            // for (const flow of flows) {
-            //     const outSourcingFormIds = outSourcingForms.map(item => item.formId)
-            //     if (outSourcingFormIds.includes(flow.formUuid)) {
-            //         const {outSourceChargerFieldId} = outSourcingForms.filter(item => item.formId === flow.formUuid)[0]
-            //         const newOverallProcessFlow = []
-            //         for (const activity of flow.overallprocessflow) {
-            //             if (assignerIds.includes(activity.operatorUserId)) {
-            //                 if (isAppend) {
-            //                     newOverallProcessFlow.push(activity)
-            //                 }
-            //                 const fieldValue = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
-            //                 newOverallProcessFlow.push({
-            //                     ...activity,
-            //                     operatorName: fieldValue,
-            //                     operatorDisplayName: fieldValue,
-            //                     operatorUserId: ""
-            //                 })
-            //             } else {
-            //                 newOverallProcessFlow.push(activity)
-            //             }
-            //         }
-            //         flow.overallprocessflow = newOverallProcessFlow
-            //     }
-            // }
             return flows
         },
         (flows) => {
