@@ -49,7 +49,7 @@ const getEnabledUsers = async () => {
  * @returns {Promise<*|*[]|void>}
  */
 const getDepartmentUsers = async (userDDId, deptId) => {
-    // 处理管理员-部门主管-普通组员
+    // 处理管理员-部门主管-普通人员
     const departmentUsers = await departmentRepo.getDepartmentUsers(deptId)
     objectConvertUtil.map(departmentUsers, {"userid": "userDDId", "name": "userName"})
     if (whiteList.pepArr().includes(userDDId.toString())) {
@@ -57,8 +57,11 @@ const getDepartmentUsers = async (userDDId, deptId) => {
     }
 
     const users = await globalGetter.getUsers()
-    objectConvertUtil.map(users, {"userid": "userDDId", "name": "userName"})
-    const tmpUsers = users.filter(user => user.userDDId.toString() === userDDId.toString())
+    const tmpUsers = users.filter(user => {
+        return user.userid.toString() === userDDId.toString()
+    })
+    objectConvertUtil.map(tmpUsers, {"userid": "userDDId", "name": "userName"})
+
     if (tmpUsers.length === 0) {
         throw new NotFoundError(`在Redis(base:users)中未找员工${userDDId}的信息`)
     }
