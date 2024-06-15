@@ -1,3 +1,4 @@
+const _ = require("lodash")
 const redisRepo = require("../repository/redisRepo")
 
 const getTodayFlows = async () => {
@@ -5,7 +6,7 @@ const getTodayFlows = async () => {
     if (!todayFlows || todayFlows.length === 0) {
         todayFlows = await redisRepo.getTodayRunningAndFinishedFlows();
     }
-    return todayFlows
+    return _.cloneDeep(todayFlows)
 }
 
 const getUsers = async () => {
@@ -13,7 +14,7 @@ const getUsers = async () => {
     if (!users || users.length === 0) {
         users = await redisRepo.getAllUsersDetail()
     }
-    return users;
+    return _.cloneDeep(users)
 }
 
 const getDepartments = async () => {
@@ -21,7 +22,7 @@ const getDepartments = async () => {
     if (!departments || departments.length === 0) {
         departments = await redisRepo.getDepartments()
     }
-    return departments;
+    return _.cloneDeep(departments)
 }
 
 const getUsersOfDepartments = async () => {
@@ -29,7 +30,7 @@ const getUsersOfDepartments = async () => {
     if (!usersOfDepartments || usersOfDepartments.length === 0) {
         usersOfDepartments = await redisRepo.getUsersUnderDepartment()
     }
-    return usersOfDepartments;
+    return _.cloneDeep(usersOfDepartments)
 }
 
 module.exports = {
