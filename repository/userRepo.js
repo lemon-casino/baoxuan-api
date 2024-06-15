@@ -49,7 +49,7 @@ const getEnabledUsers = async () => {
  * @returns {Promise<*|*[]|void>}
  */
 const getDepartmentUsers = async (userDDId, deptId) => {
-    // 处理管理员-部门主管-普通组员
+    // 处理管理员-部门主管-普通人员
     const departmentUsers = await departmentRepo.getDepartmentUsers(deptId)
     objectConvertUtil.map(departmentUsers, {"userid": "userDDId", "name": "userName"})
     if (whiteList.pepArr().includes(userDDId.toString())) {
