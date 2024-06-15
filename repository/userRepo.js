@@ -52,13 +52,13 @@ const getDepartmentUsers = async (userDDId, deptId) => {
     // 处理管理员-部门主管-普通组员
     const departmentUsers = await departmentRepo.getDepartmentUsers(deptId)
     objectConvertUtil.map(departmentUsers, {"userid": "userDDId", "name": "userName"})
-    if (whiteList.pepArr().includes(userDDId)) {
+    if (whiteList.pepArr().includes(userDDId.toString())) {
         return departmentUsers
     }
 
     const users = await globalGetter.getUsers()
     objectConvertUtil.map(users, {"userid": "userDDId", "name": "userName"})
-    const tmpUsers = users.filter(user => user.userDDId.toString() === userDDId)
+    const tmpUsers = users.filter(user => user.userDDId.toString() === userDDId.toString())
     if (tmpUsers.length === 0) {
         throw new NotFoundError(`在Redis(base:users)中未找员工${userDDId}的信息`)
     }
