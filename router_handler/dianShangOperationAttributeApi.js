@@ -9,9 +9,11 @@ const getPagingOperateAttributes = async (req, res, next) => {
             // 前端页码从1开始好处理
             page,
             pageSize,
-            productLine,
-            operatorName,
-            linkId,
+            goodsName: productLine,
+            operator: operatorName,
+            goodsId: linkId,
+            platform,
+            shopName
         } = req.query
         joiUtil.validate({page, pageSize, deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required}})
         const result = await dianShangOperationAttributeService.getPagingOperateAttributes(
@@ -20,7 +22,9 @@ const getPagingOperateAttributes = async (req, res, next) => {
             parseInt(pageSize),
             productLine,
             operatorName,
-            linkId)
+            linkId,
+            platform,
+            shopName)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)

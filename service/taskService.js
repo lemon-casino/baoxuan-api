@@ -3,6 +3,8 @@ const redisRepo = require("../repository/redisRepo")
 const processTmpRepo = require("../repository/processTmpRepo")
 const processReviewTmpRepo = require("../repository/processReviewTmpRepo")
 const processDetailsTmpRepo = require("../repository/processDetailsTmpRepo")
+const departmentRepo = require("../repository/departmentRepo")
+const departmentUsersRepo = require("../repository/departmentUsersRepo")
 const globalSetter = require("../global/setter")
 const dingDingService = require("../service/dingDingService")
 const flowService = require("../service/flowService")
@@ -15,9 +17,6 @@ const dateUtil = require("../utils/dateUtil")
 const {redisKeys} = require("../const/redisConst")
 const onlineCheckConst = require("../const/onlineCheckConst")
 const extensionsConst = require("../const/tmp/extensionsConst")
-const models = require("../model");
-const uuidUtil = require("../utils/uuidUtil");
-const flowFormDetailsRepo = require("../repository/flowFormDetailsRepo");
 
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
@@ -53,6 +52,24 @@ const syncDepartment = async () => {
     const depList = await dingDingService.getDepartmentFromDingDing()
     await redisUtil.setValue(redisKeys.Departments, JSON.stringify(depList.result))
     globalSetter.setGlobalDepartments(depList.result)
+    // 将部门信息同步数据库
+    await loopSaveDept(depList.result)
+    console.log("同步完成")
+}
+
+const loopSaveDept = async (deps) => {
+    for (const dept of deps) {
+        try {
+            await departmentRepo.saveDepartmentToDb()
+        } catch (e) {
+            if (e.original.code !== "ER_DUP_ENTRY") {
+                throw e
+            }
+        }
+        if (dept.dep_chil && dept.dep_chil.length > 0) {
+            await loopSaveDept(dept.dep_chil)
+        }
+    }
 }
 
 const syncDepartmentWithUser = async () => {
@@ -60,7 +77,23 @@ const syncDepartmentWithUser = async () => {
     const allDepartmentsWithUsers = await dingDingService.getDepartmentsWithUsersFromDingDing()
     await redisUtil.setValue(redisKeys.DepartmentsUsers, JSON.stringify(allDepartmentsWithUsers))
     globalSetter.setGlobalUsersOfDepartments(allDepartmentsWithUsers)
+    // 保存入库并设置无效关系： 离职、调部门等
+    await loopSaveDeptUserAndSetInvalidInfo(allDepartmentsWithUsers)
     console.log("同步完成")
+}
+
+const loopSaveDeptUserAndSetInvalidInfo = async (depsUsers) => {
+    for (const depUsers of depsUsers) {
+        const users = depUsers.dep_user
+        for (const user of users) {
+            await departmentUsersRepo.save(depUsers.dept_id, user.userid)
+        }
+        const userIds = users.map(item => item.userid)
+        await departmentUsersRepo.updateInvalidInfo(depUsers.dept_id, userIds)
+        if (depUsers.dep_chil && depUsers.dep_chil.length > 0) {
+            await loopSaveDeptUserAndSetInvalidInfo(depUsers.dep_chil)
+        }
+    }
 }
 
 const syncUserWithDepartment = async () => {

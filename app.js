@@ -57,10 +57,4 @@ app.use((err, req, res, next) => {
 
 app.listen(serverConfig.port, function () {
     console.log(`Bi node本地启动地址 http://127.0.0.1:${serverConfig.port}`);
-});
-
-// process.on("SIGTERM", () => {
-//     app.close(() => {
-//         process.exit(0)
-//     })
-// })
+})
