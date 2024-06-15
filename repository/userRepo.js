@@ -57,7 +57,8 @@ const getDepartmentUsers = async (userDDId, deptId) => {
     }
 
     const users = await globalGetter.getUsers()
-    const tmpUsers = users.filter(user => user.userid === userDDId)
+    objectConvertUtil.map(users, {"userid": "userDDId", "name": "userName"})
+    const tmpUsers = users.filter(user => user.userDDId === userDDId)
     if (tmpUsers.length === 0) {
         throw new NotFoundError(`在Redis(base:users)中未找员工${userDDId}的信息`)
     }
@@ -69,7 +70,7 @@ const getDepartmentUsers = async (userDDId, deptId) => {
 
     const tmpUserDepartments = user.leader_in_dept.filter(dept => dept.dept_id.toString() === deptId.toString())
     if (tmpUserDepartments.length === 0) {
-        throw new NotFoundError(`用户:${user.name}不在${department.name}中`)
+        throw new NotFoundError(`用户:${user.userName}不在${department.name}中`)
     }
     // 用户在该部门中是什么角色
     const isLeader = tmpUserDepartments[0].leader
