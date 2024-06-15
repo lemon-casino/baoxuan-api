@@ -921,7 +921,22 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
             tmpStatusResult.sum = tmpStatusResult.ids.length
         }
 
-        const formFlows = originFlows.filter(flow => flow.formUuid === formStat.formId)
+
+        const loopGetIds = (statNode) => {
+            let ids = []
+            if (statNode.ids) {
+                ids = ids.concat(statNode.ids)
+            }
+            if (statNode.children && statNode.children.length > 0) {
+                for (const ds of statNode.children) {
+                    ids = ids.concat(loopGetIds(ds))
+                }
+            }
+            return ids
+        }
+
+        const formStatIds = loopGetIds(formStat)
+        const formFlows = originFlows.filter(flow => formStatIds.includes(flow.processInstanceId))
         for (const flow of formFlows) {
             // 流程异常则算为异常
             if (flow.instanceStatus === flowStatusConst.ERROR) {
