@@ -1076,14 +1076,14 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
             // }
             // return flows
 
-            const outSourcingForms = [
-                {
-                    formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
-                    formName: "外包拍摄视觉流程",
-                    outSourceChargerFieldId: "textField_lvumnj2k"
-                },
-
-            ]
+            // const outSourcingForms = [
+            //     {
+            //         formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+            //         formName: "外包拍摄视觉流程",
+            //         outSourceChargerFieldId: "textField_lvumnj2k"
+            //     },
+            //
+            // ]
             const assignerIds = ["281338354935548795", "01622516570029465425"]
 
             // 替换赵天鹏或者王耀庆为外包人的信息
