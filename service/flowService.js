@@ -783,7 +783,7 @@ const levelUpDomainList = (flows) => {
     for (const flow of flows) {
         let newOverallProcessFlow = []
         for (const activity of flow.overallprocessflow) {
-            if (activity.domainList.length > 0) {
+            if (activity.domainList && activity.domainList.length > 0) {
                 newOverallProcessFlow = newOverallProcessFlow.concat(activity.domainList)
             } else {
                 newOverallProcessFlow.push(activity)
