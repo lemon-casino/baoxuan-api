@@ -1093,7 +1093,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                 outSourceChargerFieldId: "textField_lvumnj2k"
             }
             // 执行中台需要看到他们自己的工作，其他部门或者全流程都算视觉-外包美编的
-            if (deptId.toString() !== "902515853") {
+            if (deptId && deptId.toString() !== "902515853") {
                 const outSourcingPhotographyFlows = flows.filter(flow => flow.formUuid === outSourcingPhotography.formId)
                 for (const flow of outSourcingPhotographyFlows) {
                     const fieldValue = flowFormReviewUtil.getFieldValue(outSourcingPhotographyFlows.outSourceChargerFieldId, flow.data)
