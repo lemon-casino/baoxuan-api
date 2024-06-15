@@ -1115,11 +1115,13 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
             }
             const outSourcingEditPictureFlows = flows.filter(flow => flow.formUuid === outSourcingEditPicture.formId)
             for (const flow of outSourcingEditPictureFlows) {
-                const fieldValue = flowFormReviewUtil.getFieldValue(outSourcingEditPicture.outSourceChargerFieldId, flow.data)
-                const lastActivity = flow.overallprocessflow[flow.overallprocessflow.length - 1]
-                lastActivity.operatorName = fieldValue
-                lastActivity.operatorDisplayName = fieldValue
-                lastActivity.operatorUserId = ""
+                if (flow.overallprocessflow && flow.overallprocessflow.length > 0) {
+                    const fieldValue = flowFormReviewUtil.getFieldValue(outSourcingEditPicture.outSourceChargerFieldId, flow.data)
+                    const lastActivity = flow.overallprocessflow[flow.overallprocessflow.length - 1]
+                    lastActivity.operatorName = fieldValue
+                    lastActivity.operatorDisplayName = fieldValue
+                    lastActivity.operatorUserId = ""
+                }
             }
 
             // 虚拟部门在视觉部的需要克隆
