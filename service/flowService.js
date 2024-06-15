@@ -617,7 +617,7 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
     // 根据时间获取需要统计的流程数据（今天+历史）
     const deptCoreForms = await flowRepo.getCoreFormFlowConfig(deptId)
     const deptCoreFormIds = deptCoreForms.map(item => item.formId)
-    let deptFormsStat = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, deptCoreFormIds)
+    let deptFormsStat = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, deptCoreFormIds, deptId, null, null)
     return flowUtil.removeSumEqualZeroFormStat(flowUtil.statIdsAndSumFromBottom(deptFormsStat))
 }
 
@@ -790,7 +790,7 @@ const getAllOverDueRunningFlows = async () => {
  * @param setActivitiesIgnoreStatFunc 设置对流程中的节点不进行统计
  * @returns {Promise<*[]>}
  */
-const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, handleOutSourcingActivityFunc, setActivitiesIgnoreStatFunc) => {
+const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, deptId, handleOutSourcingActivityFunc, setActivitiesIgnoreStatFunc) => {
     const originFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
 
     let modifiedFlows = _.cloneDeep(originFlows)
@@ -798,43 +798,47 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
     modifiedFlows = removeUnmatchedDateActivities(modifiedFlows, startDoneDate, endDoneDate)
     // 排除不需要统计的节点: 对待转入的统计没影响
     modifiedFlows = removeNoRequiredActivities(modifiedFlows)
-    modifiedFlows = handleOutSourcingActivityFunc(modifiedFlows) //cloneAssignToOutSourcingNode(modifiedFlows)
-    modifiedFlows = setActivitiesIgnoreStatFunc(modifiedFlows)
-    // 将外包人的名字添加到userNames中
-    const getVisionOutSourcingNames = (flows) => {
-        const outSourcingForms = [
-            {
-                formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
-                formName: "外包拍摄视觉流程",
-                outSourceChargerFieldId: "textField_lvumnj2k"
-            },
-            {
-                formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                formName: "外包修图视觉流程",
-                outSourceChargerFieldId: "textField_lx48e5gk"
-            }
-        ]
+    modifiedFlows = handleOutSourcingActivityFunc && handleOutSourcingActivityFunc(modifiedFlows) //cloneAssignToOutSourcingNode(modifiedFlows)
+    modifiedFlows = setActivitiesIgnoreStatFunc && setActivitiesIgnoreStatFunc(modifiedFlows)
 
-        const outSourcingUsers = {}
-        for (const flow of flows) {
-            const outSourcingFormIds = outSourcingForms.map(item => item.formId)
-            if (outSourcingFormIds.includes(flow.formUuid)) {
-                const {outSourceChargerFieldId} = outSourcingForms.filter(item => item.formId === flow.formUuid)[0]
+    // 对于视觉部(482162119)和管理中台(902643613)，将外包人的名字添加到userNames中
+    if (["902643613", "482162119"].includes(deptId.toString())) {
+        const getVisionOutSourcingNames = (flows) => {
+            const outSourcingForms = [
+                {
+                    formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+                    formName: "外包拍摄视觉流程",
+                    outSourceChargerFieldId: "textField_lvumnj2k"
+                },
+                {
+                    formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                    formName: "外包修图视觉流程",
+                    outSourceChargerFieldId: "textField_lx48e5gk"
+                }
+            ]
 
-                const username = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
-                if (username) {
-                    outSourcingUsers[username] = 1
+            const outSourcingUsers = {}
+            for (const flow of flows) {
+                const outSourcingFormIds = outSourcingForms.map(item => item.formId)
+                if (outSourcingFormIds.includes(flow.formUuid)) {
+                    const {outSourceChargerFieldId} = outSourcingForms.filter(item => item.formId === flow.formUuid)[0]
+
+                    const username = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
+                    if (username) {
+                        outSourcingUsers[username] = 1
+                    }
                 }
             }
+            return Object.keys(outSourcingUsers)
         }
-        return Object.keys(outSourcingUsers)
+        const outVisionSourcingUsers = getVisionOutSourcingNames(modifiedFlows)
+        for (const outSourcingUser of outVisionSourcingUsers) {
+            // 将视觉外包人的信息同步到Redis，便于后面转成部门统计
+            await redisRepo.setOutSourcingUser("482162119", outSourcingUser)
+        }
+        userNames = userNames && `${userNames},${outVisionSourcingUsers.join(",")}`
     }
-    const outVisionSourcingUsers = getVisionOutSourcingNames(modifiedFlows)
-    for (const outSourcingUser of outVisionSourcingUsers) {
-        // 将视觉外包人的信息同步到Redis，便于后面转成部门统计
-        await redisRepo.setOutSourcingUser("482162119", outSourcingUser)
-    }
-    userNames = userNames && `${userNames},${outVisionSourcingUsers.join(",")}`
+
     // 获取表单的最新的审核流
     const formsWithReview = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
     // 统计流程数据
@@ -1063,7 +1067,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
     // 过滤不必要的信息
 
     const pureUsersWithDepartment = await redisRepo.getAllUsersWithKeyFields()
-    const originResult = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, formIds,
+    const originResult = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, formIds, deptId,
         // 对执行中台分配外包的流程分情况进行处理
         // 1.全流程deptId=""，进行节点clone
         // 2.执行中台本部门deptId="902515853"或者其他部门,不需要改变
