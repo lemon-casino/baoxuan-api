@@ -235,7 +235,6 @@ function extractTitle(node) {
     return node.props.name || "";
 }
 
-
 const refactorReviewItems = (nodes, lastTimingNode) => {
     const processedNodes = []
     for (let i = 0; i < nodes.length; i++) {

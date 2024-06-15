@@ -47,6 +47,15 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: null,
       field: "form_name"
+    },
+    isCore: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: 0,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";是否是核心流程",
+      field: "is_core"
     }
   };
   const options = {
