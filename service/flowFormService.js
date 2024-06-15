@@ -311,6 +311,19 @@ const getFlowForm = async (formId) => {
     return flowForm
 }
 
+const getDeptFlowFormsWithCore = async (deptId) => {
+    const flowForms = await getAllForms()
+    const deptFlowForms = await departmentFlowFormRepo.getDepartmentFlowForms({deptId, isCore: true})
+
+    for (const form of flowForms) {
+        const data = deptFlowForms.filter(item => item.formId === form.flowFormId)
+        if (data.length > 0) {
+            form.isCore = true
+        }
+    }
+    return flowForms
+}
+
 module.exports = {
     getDeptFlowForms,
     getAllForms,
@@ -320,5 +333,6 @@ module.exports = {
     getFlowFormsByDeptIdAndImportant,
     getFormEmergencyItems,
     refactorReviewItems,
-    getFlowForm
+    getFlowForm,
+    getDeptFlowFormsWithCore
 }

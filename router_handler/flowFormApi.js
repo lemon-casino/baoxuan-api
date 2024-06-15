@@ -3,7 +3,7 @@ const biResponse = require("../utils/biResponse")
 const flowFormService = require("../service/flowFormService")
 
 // 获取流程表单列表
-exports.getFlowFormList = (req, res) => {
+const getFlowFormList = (req, res) => {
     let queryData = {};
     if (req.query.status) {
         queryData.status = req.query.status;
@@ -15,7 +15,7 @@ exports.getFlowFormList = (req, res) => {
 }
 
 // 更新流程表单数据
-exports.updateFlowForm = (req, res) => {
+const updateFlowForm = (req, res) => {
     const {status, form_id} = req.body;
     if (!status) {
         return res.send(biResponse.serverError("更新失败"));
@@ -28,11 +28,17 @@ exports.updateFlowForm = (req, res) => {
     })
 }
 
-exports.getAllFlowForms = async (req, res, next) => {
+const getAllFlowForms = async (req, res, next) => {
     try {
         const allForms = await flowFormService.getAllForms()
         return res.send(biResponse.success(allForms))
     } catch (e) {
         next(e)
     }
+}
+
+module.exports = {
+    getFlowFormList,
+    getAllFlowForms,
+    updateFlowForm
 }
