@@ -1,4 +1,4 @@
-const dd = require("../core/dingDingReq");
+const dd = require("../core/yiDaReq");
 const UsersModel = require("../model/users");
 const {generateToken} = require("../utils/token");
 const tokenConfig = require("../config/index").tokenConfig;

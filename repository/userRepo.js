@@ -4,7 +4,7 @@ const UserError = require("../error/userError")
 const NotFoundError = require("../error/http/notFoundError")
 const departmentRepo = require("../repository/departmentRepo")
 const sequelizeUtil = require("../utils/sequelizeUtil")
-const dingDingReq = require("../core/dingDingReq")
+const yiDaReq = require("../core/yiDaReq")
 const innerGroupConst = require("../const/tmp/innerGroupConst")
 const objectConvertUtil = require("../utils/objectConvertUtil")
 const whiteList = require("../config/whiteList")
@@ -138,7 +138,7 @@ const getResignEmployees = async (token) => {
             nextToken: dNextToken,
             hasMore,
             userIdList: allResignEmployees
-        } = await dingDingReq.getResignEmployees(token, nextToken)
+        } = await yiDaReq.getResignEmployees(token, nextToken)
 
         if (hasMore) {
             const data = await getPagingResignEmployees(token, dNextToken)
@@ -152,7 +152,7 @@ const getResignEmployees = async (token) => {
     while (allResignEmployees.length > 0) {
         // 根据ids获取人员离职详情，单次最大支持50
         const pagingResignEmployees = allResignEmployees.splice(0, 50)
-        const usersResignInfo = await dingDingReq.getResignInfo(token, pagingResignEmployees)
+        const usersResignInfo = await yiDaReq.getResignInfo(token, pagingResignEmployees)
         allResignEmployeesDetails = allResignEmployeesDetails.concat(usersResignInfo.result)
     }
     return allResignEmployeesDetails

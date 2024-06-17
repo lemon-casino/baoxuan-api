@@ -9,7 +9,7 @@ const UsersModel = require("../model/users");
 const RolesModel = require("../model/roles");
 const MenusModel = require("../model/menus");
 const RolesMenusModel = require("../model/roles-menus");
-const dd = require("../core/dingDingReq");
+const dd = require("../core/yiDaReq");
 // 引入封装好的redis
 const redisUtil = require("../utils/redisUtil.js");
 const dd_data = require("../service/dingDingService.js");

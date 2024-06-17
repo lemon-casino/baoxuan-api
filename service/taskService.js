@@ -1,5 +1,6 @@
 const userRepo = require("../repository/userRepo")
 const redisRepo = require("../repository/redisRepo")
+const oaProcessTemplateRepo = require("../repository/oaProcessTemplateRepo")
 const processTmpRepo = require("../repository/processTmpRepo")
 const processReviewTmpRepo = require("../repository/processReviewTmpRepo")
 const processDetailsTmpRepo = require("../repository/processDetailsTmpRepo")
@@ -17,6 +18,9 @@ const dateUtil = require("../utils/dateUtil")
 const {redisKeys} = require("../const/redisConst")
 const onlineCheckConst = require("../const/onlineCheckConst")
 const extensionsConst = require("../const/tmp/extensionsConst")
+const adminConst = require("../const/adminConst")
+const sequelizeErrorConst = require("../const/sequelizeErrorConst")
+const dingDingReq = require("../core/dingDingReq")
 
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
@@ -26,6 +30,7 @@ const syncWorkingDay = async () => {
         await workingDayService.saveWorkingDay(date)
         await redisUtil.rPush(redisKeys.WorkingDays, date)
     }
+    logger.info("同步完成：syncWorkingDay")
     console.log("同步完成")
 }
 
@@ -40,11 +45,13 @@ const syncTodayRunningAndFinishedFlows = async () => {
 const syncMissingCompletedFlows = async () => {
     console.log("同步进行中...")
     await flowService.syncMissingCompletedFlows()
+    logger.info("同步完成：syncMissingCompletedFlows")
     console.log("同步完成")
 }
 
 const syncDingDingToken = async () => {
     await dingDingService.getDingDingToken()
+    logger.info("同步完成：syncDingDingToken")
 }
 
 const syncDepartment = async () => {
@@ -54,6 +61,7 @@ const syncDepartment = async () => {
     globalSetter.setGlobalDepartments(depList.result)
     // 将部门信息同步数据库
     await loopSaveDept(depList.result)
+    logger.info("同步完成：syncDepartment")
     console.log("同步完成")
 }
 
@@ -79,6 +87,7 @@ const syncDepartmentWithUser = async () => {
     globalSetter.setGlobalUsersOfDepartments(allDepartmentsWithUsers)
     // 保存入库并设置无效关系： 离职、调部门等
     await loopSaveDeptUserAndSetInvalidInfo(allDepartmentsWithUsers)
+    logger.info("同步完成：syncDepartmentWithUser")
     console.log("同步完成")
 }
 
@@ -129,12 +138,14 @@ const syncUserWithDepartment = async () => {
     await redisUtil.setValue(redisKeys.Users, JSON.stringify(usersWithDepartment))
     globalSetter.setGlobalUsers(usersWithDepartment)
     await userService.syncUserToDB(usersWithDepartment)
+    logger.info("同步完成：syncUserWithDepartment")
     console.log("同步完成")
 }
 
 const syncForm = async () => {
     console.log("同步进行中...")
     await flowFormService.syncFormsFromDingDing()
+    logger.info("同步完成：syncForm")
     console.log("同步完成")
 }
 
@@ -156,6 +167,7 @@ const syncUserLogin = async () => {
             }
         }
     }
+    logger.info("同步完成：syncUserLogin")
     console.log("同步完成")
 }
 
@@ -186,6 +198,7 @@ const syncResignEmployeeInfo = async () => {
         }
         await userRepo.updateUserResignInfo(newEmployee)
     }
+    logger.info("同步完成：syncResignEmployeeInfo")
     console.log("同步完成")
 }
 
@@ -210,10 +223,32 @@ const syncRunningProcess = async () => {
         await processTmpRepo.save(flow)
         count = count + 1
     }
+    logger.info("同步完成：syncRunningProcess")
     console.timeEnd("syncRunningProcess")
 }
 
+const syncOaProcessTemplates = async () => {
+    console.log("同步进行中...")
+    const {access_token: accessToken} = await redisRepo.getToken()
+    const data = await dingDingReq.getOAProcessTemplates(accessToken, adminConst.adminDingDingId)
+    for (const template of data.result) {
+        template.modifiedTime = dateUtil.formatGMT2Str(template.gmtModified)
+        try {
+            await oaProcessTemplateRepo.save(template, false)
+        } catch (e) {
+            if (e.name === sequelizeErrorConst.SequelizeUniqueConstraintError) {
+                await oaProcessTemplateRepo.update(template, template.processCode)
+            } else {
+                throw e
+            }
+        }
+    }
+    logger.info("同步完成：syncOaProcessTemplates")
+    console.log("同步完成")
+}
+
 module.exports = {
+    syncOaProcessTemplates,
     syncRunningProcess,
     syncWorkingDay,
     syncTodayRunningAndFinishedFlows,
