@@ -6,7 +6,7 @@ const save = async (model) => {
 }
 
 const update = async (model, processCode) => {
-    await oaProcessTemplateModel.update(model, {where: processCode})
+    await oaProcessTemplateModel.update(model, {where: {processCode}})
 }
 
 module.exports = {
