@@ -3043,6 +3043,37 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "美编修图任务",
+                        formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYC",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx41cnvt", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "",
+                                    name: "",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "",
+                                    name: "",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "",
+                                    name: "",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "",
+                                    id: ""
+                                }
+                            }
+                        ]
                     }
                 ]
             },
