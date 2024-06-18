@@ -372,7 +372,7 @@ const department = async () => {
                 }
             },
             raw: true,
-            logging: true
+            logging: false
         });
 
 
@@ -438,7 +438,7 @@ FROM (
 ) as subquery;`,
             {
                 type: QueryTypes.SELECT,
-                logging: true
+                logging: false
             }
         );
 
@@ -522,7 +522,7 @@ const departmentEcharts = async () => {
                 ['section', 'section']
             ],
             group: ['section'],
-            
+
             raw: true,
             logging: false
         });
