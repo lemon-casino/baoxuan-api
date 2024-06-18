@@ -129,10 +129,45 @@ const employeeManagement = async (page, pageSize, quarters, department, rest) =>
     }
 
 };
+const StatisticsEcharts = async (rest) => {
+
+    try {
+
+        /* 职级
+         RankEcharts: [],
+        //入职
+        EmploymentEcharts: [],
+        //员工年龄列表
+        AgeEcharts: [],
+        //学历分布
+        qualificationEcharts: []
+        // 部门分布
+        departmentEcharts
+        、*/
+        rest.qualificationEcharts = await Hr_RecruitmentDepartmentPositions.qualificationEcharts();
+        const data = await Hr_RecruitmentDepartmentPositions.employmentEcharts();
+        rest.AgeEcharts = await Hr_RecruitmentDepartmentPositions.AgeEcharts();
+
+        rest.EmploymentEcharts.forEach(item => {
+            const targetItem = data.find(target => item.month === target.month);
+            if (targetItem) {
+                item.total = targetItem.total;
+            }
+        });
+
+        rest.departmentEcharts = await Hr_RecruitmentDepartmentPositions.departmentEcharts();
+
+        return rest
+    } catch (error) {
+        return {message: error.message};
+    }
+
+};
 
 module.exports = {
     recruitmentDepartment,
     recruitmentTalent,
     progressMap,
-    employeeManagement
+    employeeManagement,
+    StatisticsEcharts
 }

@@ -448,6 +448,90 @@ FROM (
     }
 };
 
+const qualificationEcharts = async () => {
+    try {
+
+        //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
+        return await ZaiZhiRen.findAll({
+            attributes: [
+                [Sequelize.fn('COUNT', Sequelize.col('educational_background')), 'total'],
+                ['educational_background', 'qualification']
+            ],
+            group: ['educational_background'],
+            raw: true,
+            logging: false
+        });
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
+
+const AgeEcharts = async () => {
+    try {
+
+
+        return await ZaiZhiRen.sequelize.query(
+            `    select COUNT(*) AS total, age   
+                FROM ( 
+                    SELECT TIMESTAMPDIFF(YEAR, birthday, CURDATE()) AS age 
+                    FROM zai_zhi_ren ) AS subquery 
+                    GROUP BY age;
+                `, {
+                type: QueryTypes.SELECT
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
+
+const employmentEcharts = async () => {
+    try {
+
+
+        return await ZaiZhiRen.sequelize.query(
+            ` SELECT COUNT(*) AS total, MONTH(on_board_time) AS month FROM zai_zhi_ren WHERE
+                YEAR(on_board_time) = YEAR(CURDATE())   
+                GROUP BY 
+                MONTH(on_board_time)
+                ORDER BY
+                month;
+            `, {
+                type: QueryTypes.SELECT
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+const departmentEcharts = async () => {
+    try {
+
+        //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
+        return await ZaiZhiRen.findAll({
+            attributes: [
+                [Sequelize.fn('COUNT', Sequelize.col('section')), 'total'],
+                ['section', 'section']
+            ],
+            group: ['section'],
+            
+            raw: true,
+            logging: false
+        });
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
 
 module.exports = {
     getHrDepartment,
@@ -462,5 +546,9 @@ module.exports = {
     employeeManagement,
     department,
     quarters,
-    statistics
+    statistics,
+    qualificationEcharts,
+    AgeEcharts,
+    employmentEcharts,
+    departmentEcharts
 };
