@@ -938,11 +938,12 @@ const mbCoreActionsConfig = [
                             {fieldId: "radioField_lwyq3if9", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
                         ],
                         flowNodeRules: [
+                            // 都算作确认拍摄类型的操作人(张老师)
                             {
                                 from: {
                                     id: "node_oclx00ubuy7",
                                     name: "确认拍摄类型",
-                                    status: ["FORCAST", "TODO"]
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx00ubuyn",
@@ -950,16 +951,16 @@ const mbCoreActionsConfig = [
                                     status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "执行助理、摄影负责人",
-                                    id: "employeeField_lwyq3ifd"
+                                    from: "process",
+                                    name: "确认拍摄类型",
+                                    id: "node_oclx00ubuy7"
                                 }
                             },
                             {
                                 from: {
                                     id: "node_oclx00ubuy7",
                                     name: "确认拍摄类型",
-                                    status: ["FORCAST", "TODO"]
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx03jr071w",
@@ -967,9 +968,9 @@ const mbCoreActionsConfig = [
                                     status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "外拍负责人",
-                                    id: "textField_lx08f35y"
+                                    from: "process",
+                                    name: "确认拍摄类型",
+                                    id: "node_oclx00ubuy7"
                                 }
                             }
                         ]
@@ -1482,60 +1483,60 @@ const mbCoreActionsConfig = [
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "大美编负责人",
-                                    id: "employeeField_lwyt5hfa"
+                                    from: "process",
+                                    name: "确认修图属性",
+                                    id: "node_oclx1f3cl76"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclx5j5bv41",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    id: "node_oclx1f3cl76",
+                                    name: "确认修图属性",
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx5j5bv41",
                                     name: "分配美编",
-                                    status: ["TODO"]
+                                    status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "小美编负责人",
-                                    id: "employeeField_lwyq3ifh"
+                                    from: "process",
+                                    name: "确认修图属性",
+                                    id: "node_oclx1f3cl76"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclx5j5bv42",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    id: "node_oclx1f3cl76",
+                                    name: "确认修图属性",
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx5j5bv42",
                                     name: "分配美编",
-                                    status: ["TODO"]
+                                    status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "小美编负责人",
-                                    id: "employeeField_lwyq3ifh"
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5j5bv42"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclx5j5bv43",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    id: "node_oclx1f3cl76",
+                                    name: "确认修图属性",
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx5j5bv43",
                                     name: "分配美编",
-                                    status: ["TODO"]
+                                    status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "小美编负责人",
-                                    id: "employeeField_lwyq3ifh"
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5j5bv43"
                                 }
                             },
                             {
@@ -1553,6 +1554,91 @@ const mbCoreActionsConfig = [
                                     from: "form",
                                     name: "大美编负责人",
                                     id: "employeeField_lwyt5hfa"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70w3",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70w3",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4kc70w3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4bnhfb2",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx4bnhfb2",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4bnhfb2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx03jr071x",
+                                    name: "确认视觉性质",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx03jr071x",
+                                    name: "确认视觉性质",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "确认视觉性质",
+                                    id: "node_oclx03jr071x"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx1flxsv1",
+                                    name: "分配大美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx1flxsv1",
+                                    name: "分配大美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配大美编",
+                                    id: "node_oclx1flxsv1"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wi",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wi",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4kc70wi"
                                 }
                             },
                         ]
@@ -1576,60 +1662,111 @@ const mbCoreActionsConfig = [
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "大美编负责人",
-                                    id: "employeeField_lx41cnvv"
+                                    from: "process",
+                                    name: "确认是否AI",
+                                    id: "node_oclx422jq8p"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclx5ij0pq5",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    id: "node_oclx422jq8p",
+                                    name: "确认是否AI",
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx5ij0pq5",
                                     name: "分配美编",
-                                    status: ["TODO"]
+                                    status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "小美编负责人",
-                                    id: "employeeField_lx41cnw3"
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5ij0pq5"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclx5ij0pq6",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    id: "node_oclx422jq8p",
+                                    name: "确认是否AI",
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx5ij0pq6",
                                     name: "分配美编",
-                                    status: ["TODO"]
+                                    status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "小美编负责人",
-                                    id: "employeeField_lx41cnw3"
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5ij0pq6"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclx5ij0pq7",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    id: "node_oclx422jq8p",
+                                    name: "确认是否AI",
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx5ij0pq7",
                                     name: "分配美编",
+                                    status: ["FORCAST", "TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5ij0pq7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxfqmy8l2",
+                                    name: "分配大美编后期修图",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxfqmy8l2",
+                                    name: "分配大美编后期修图",
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "大美编负责人",
-                                    id: "employeeField_lx41cnvv"
+                                    from: "process",
+                                    name: "分配大美编后期修图",
+                                    id: "node_oclxfqmy8l2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxfqmy8l3",
+                                    name: "大美编修图确认修图属性",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxfqmy8l3",
+                                    name: "大美编修图确认修图属性",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图确认修图属性",
+                                    id: "node_oclxfqmy8l3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4b3zdl5",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx4b3zdl5",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4b3zdl5"
                                 }
                             }
                         ]
@@ -1643,24 +1780,19 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "",
-                                    name: "",
-                                    status: [""]
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
                                 },
                                 to: {
-                                    id: "",
-                                    name: "",
-                                    status: [""]
-                                },
-                                overdue: {
-                                    id: "",
-                                    name: "",
-                                    status: [""]
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
                                 },
                                 ownerRule: {
-                                    from: "",
-                                    name: "",
-                                    id: ""
+                                    from: "process",
+                                    name: "分配外包美编制作",
+                                    id: "node_ockpz6phx73"
                                 }
                             }
                         ]
@@ -2614,28 +2746,6 @@ const mbCoreActionsConfig = [
                             },
                             {
                                 from: {
-                                    id: "node_oclx4kc70w3",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx4kc70w3",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx4kc70w3",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "分配中美编",
-                                    id: "node_oclx4kc70w3"
-                                }
-                            },
-                            {
-                                from: {
                                     id: "node_oclxcz6yq72",
                                     name: "中美编自修",
                                     status: ["TODO"]
@@ -2676,28 +2786,6 @@ const mbCoreActionsConfig = [
                                     from: "process",
                                     name: "小美编套版",
                                     id: "node_oclx1f3cl7b"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx4kc70w6",
-                                    name: "外包修图数量",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx4kc70w6",
-                                    name: "外包修图数量",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx4kc70w6",
-                                    name: "外包修图数量",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "外包修图数量",
-                                    id: "node_oclx4kc70w6"
                                 }
                             },
                             {
@@ -2746,28 +2834,6 @@ const mbCoreActionsConfig = [
                             },
                             {
                                 from: {
-                                    id: "node_oclx4bnhfb2",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx4bnhfb2",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx4bnhfb2",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "分配中美编",
-                                    id: "node_oclx4bnhfb2"
-                                }
-                            },
-                            {
-                                from: {
                                     id: "node_oclx4kc70w4",
                                     name: "中美编自修",
                                     status: ["TODO"]
@@ -2812,28 +2878,6 @@ const mbCoreActionsConfig = [
                             },
                             {
                                 from: {
-                                    id: "node_oclx4dqaay1",
-                                    name: "外包修图数量",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx4dqaay1",
-                                    name: "外包修图数量",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx4dqaay1",
-                                    name: "外包修图数量",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "外包修图数量",
-                                    id: "node_oclx4dqaay1"
-                                }
-                            },
-                            {
-                                from: {
                                     id: "node_oclx4bnhfb3",
                                     name: "大美编修图",
                                     status: ["TODO"]
@@ -2852,28 +2896,6 @@ const mbCoreActionsConfig = [
                                     from: "process",
                                     name: "大美编修图",
                                     id: "node_oclx4bnhfb3"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx4kc70wi",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx4kc70wi",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx4kc70wi",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "分配中美编",
-                                    id: "node_oclx4kc70wi"
                                 }
                             },
                             {
@@ -3213,6 +3235,37 @@ const mbCoreActionsConfig = [
                                     from: "process",
                                     name: "套版编负责人",
                                     id: "node_oclx5gvwwq10"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
                                 }
                             }
                         ]
@@ -4428,6 +4481,37 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORYHISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            }
+                        ]
                     }
                 ]
             }
@@ -4582,11 +4666,12 @@ const mbCoreActionsConfig = [
                             {fieldId: "radioField_lwyq3if9", opCode: opCodes.EqualAny, value: ["半套"]}
                         ],
                         flowNodeRules: [
+                            // 都算作确认拍摄类型的操作人(张老师)
                             {
                                 from: {
                                     id: "node_oclx00ubuy7",
                                     name: "确认拍摄类型",
-                                    status: ["FORCAST", "TODO"]
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx00ubuyn",
@@ -4594,16 +4679,16 @@ const mbCoreActionsConfig = [
                                     status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "执行助理、摄影负责人",
-                                    id: "employeeField_lwyq3ifd"
+                                    from: "process",
+                                    name: "确认拍摄类型",
+                                    id: "node_oclx00ubuy7"
                                 }
                             },
                             {
                                 from: {
                                     id: "node_oclx00ubuy7",
                                     name: "确认拍摄类型",
-                                    status: ["FORCAST", "TODO"]
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx03jr071w",
@@ -4611,9 +4696,9 @@ const mbCoreActionsConfig = [
                                     status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "外拍负责人",
-                                    id: "textField_lx08f35y"
+                                    from: "process",
+                                    name: "确认拍摄类型",
+                                    id: "node_oclx00ubuy7"
                                 }
                             }
                         ]
@@ -5125,60 +5210,60 @@ const mbCoreActionsConfig = [
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "大美编负责人",
-                                    id: "employeeField_lwyt5hfa"
+                                    from: "process",
+                                    name: "确认修图属性",
+                                    id: "node_oclx1f3cl76"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclx5j5bv41",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    id: "node_oclx1f3cl76",
+                                    name: "确认修图属性",
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx5j5bv41",
                                     name: "分配美编",
-                                    status: ["TODO"]
+                                    status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "小美编负责人",
-                                    id: "employeeField_lwyq3ifh"
+                                    from: "process",
+                                    name: "确认修图属性",
+                                    id: "node_oclx1f3cl76"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclx5j5bv42",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    id: "node_oclx1f3cl76",
+                                    name: "确认修图属性",
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx5j5bv42",
                                     name: "分配美编",
-                                    status: ["TODO"]
+                                    status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "小美编负责人",
-                                    id: "employeeField_lwyq3ifh"
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5j5bv42"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclx5j5bv43",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    id: "node_oclx1f3cl76",
+                                    name: "确认修图属性",
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx5j5bv43",
                                     name: "分配美编",
-                                    status: ["TODO"]
+                                    status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "小美编负责人",
-                                    id: "employeeField_lwyq3ifh"
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5j5bv43"
                                 }
                             },
                             {
@@ -5196,10 +5281,249 @@ const mbCoreActionsConfig = [
                                     from: "form",
                                     name: "大美编负责人",
                                     id: "employeeField_lwyt5hfa"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70w3",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70w3",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4kc70w3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4bnhfb2",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx4bnhfb2",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4bnhfb2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx03jr071x",
+                                    name: "确认视觉性质",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx03jr071x",
+                                    name: "确认视觉性质",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "确认视觉性质",
+                                    id: "node_oclx03jr071x"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx1flxsv1",
+                                    name: "分配大美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx1flxsv1",
+                                    name: "分配大美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配大美编",
+                                    id: "node_oclx1flxsv1"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wi",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wi",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4kc70wi"
                                 }
                             }
                         ]
                     },
+                    {
+                        formName: "美编修图任务",
+                        formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYC",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx41cnvt", opCode: opCodes.EqualAny, value: ["半套"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx422jq8p",
+                                    name: "确认是否AI",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx422jq8p",
+                                    name: "确认是否AI",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "确认是否AI",
+                                    id: "node_oclx422jq8p"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx422jq8p",
+                                    name: "确认是否AI",
+                                    status: ["TODO", "HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5ij0pq5",
+                                    name: "分配美编",
+                                    status: ["FORCAST", "TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5ij0pq5"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx422jq8p",
+                                    name: "确认是否AI",
+                                    status: ["TODO", "HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5ij0pq6",
+                                    name: "分配美编",
+                                    status: ["FORCAST", "TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5ij0pq6"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx422jq8p",
+                                    name: "确认是否AI",
+                                    status: ["TODO", "HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5ij0pq7",
+                                    name: "分配美编",
+                                    status: ["FORCAST", "TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5ij0pq7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxfqmy8l2",
+                                    name: "分配大美编后期修图",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxfqmy8l2",
+                                    name: "分配大美编后期修图",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配大美编后期修图",
+                                    id: "node_oclxfqmy8l2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxfqmy8l3",
+                                    name: "大美编修图确认修图属性",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxfqmy8l3",
+                                    name: "大美编修图确认修图属性",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图确认修图属性",
+                                    id: "node_oclxfqmy8l3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4b3zdl5",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx4b3zdl5",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4b3zdl5"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["半套"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配外包美编制作",
+                                    id: "node_ockpz6phx73"
+                                }
+                            }
+                        ]
+                    }
                 ]
             },
             {
@@ -6753,6 +7077,37 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["半套"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            }
+                        ]
                     }
                 ]
             },
@@ -7968,6 +8323,37 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["半套"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORYHISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            }
+                        ]
                     }
                 ]
             }
@@ -8128,7 +8514,7 @@ const mbCoreActionsConfig = [
                                 from: {
                                     id: "node_oclx00ubuy7",
                                     name: "确认拍摄类型",
-                                    status: ["FORCAST", "TODO"]
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx00ubuyn",
@@ -8136,26 +8522,9 @@ const mbCoreActionsConfig = [
                                     status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "执行助理、摄影负责人",
-                                    id: "employeeField_lwyq3ifd"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx00ubuy7",
+                                    from: "process",
                                     name: "确认拍摄类型",
-                                    status: ["FORCAST", "TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx03jr071w",
-                                    name: "通知外包负责人",
-                                    status: ["FORCAST", "TODO"]
-                                },
-                                ownerRule: {
-                                    from: "form",
-                                    name: "外拍负责人",
-                                    id: "textField_lx08f35y"
+                                    id: "node_oclx00ubuy7"
                                 }
                             }
                         ]
@@ -8669,81 +9038,61 @@ const mbCoreActionsConfig = [
                                     name: "确认修图属性",
                                     status: ["TODO"]
                                 },
-                                overdue: {
+                                ownerRule: {
+                                    from: "form",
+                                    name: "确认修图属性",
+                                    id: "node_oclx4kc70wa"
+                                }
+                            },
+                            {
+                                from: {
                                     id: "node_oclx4kc70wa",
                                     name: "确认修图属性",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "form",
-                                    name: "大美编负责人",
-                                    id: "employeeField_lwyt5hfa"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx5j5bv44",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx5j5bv44",
                                     name: "分配美编",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx5j5bv44",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "小美编负责人",
-                                    id: "employeeField_lwyq3ifh"
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5j5bv44"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclx5j5bv45",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    id: "node_oclx4kc70wa",
+                                    name: "确认修图属性",
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx5j5bv45",
                                     name: "分配美编",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx5j5bv45",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "小美编负责人",
-                                    id: "employeeField_lwyq3ifh"
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5j5bv45"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclx5j5bv46",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    id: "node_oclx4kc70wa",
+                                    name: "确认修图属性",
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx5j5bv46",
                                     name: "分配美编",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx5j5bv46",
-                                    name: "分配美编",
-                                    status: ["TODO"]
+                                    status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "大美编负责人",
-                                    id: "employeeField_lwyt5hfa"
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5j5bv46"
                                 }
                             },
                             {
@@ -8757,15 +9106,198 @@ const mbCoreActionsConfig = [
                                     name: "拍摄完成",
                                     status: ["TODO"]
                                 },
-                                overdue: {
-                                    id: "node_oclxcz6yq74",
-                                    name: "拍摄完成",
-                                    status: ["TODO"]
-                                },
                                 ownerRule: {
                                     from: "form",
                                     name: "大美编负责人",
                                     id: "employeeField_lwyt5hfa"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "美编修图任务",
+                        formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYC",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx41cnvt", opCode: opCodes.EqualAny, value: ["散图"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx422jq8p",
+                                    name: "确认是否AI",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx422jq8p",
+                                    name: "确认是否AI",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "确认是否AI",
+                                    id: "node_oclx422jq8p"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5ij0pq1",
+                                    name: "分配美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx5ij0pq1",
+                                    name: "分配美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5ij0pq1"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5ij0pq2",
+                                    name: "分配美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx5ij0pq2",
+                                    name: "分配美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5ij0pq2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5ij0pq3",
+                                    name: "分配美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx5ij0pq3",
+                                    name: "分配美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配美编",
+                                    id: "node_oclx5ij0pq3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxfqmy8l1",
+                                    name: "分配大美编后期修图",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxfqmy8l1",
+                                    name: "分配大美编后期修图",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配大美编后期修图",
+                                    id: "node_oclxfqmy8l1"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwqa",
+                                    name: "大美编修图确认修图属性",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwqa",
+                                    name: "大美编修图确认修图属性",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图确认修图属性",
+                                    id: "node_oclx5gvwwqa"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwqc",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwqc",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx5gvwwqc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "",
+                                    name: "",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "",
+                                    name: "",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "",
+                                    id: ""
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "",
+                                    name: "",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "",
+                                    name: "",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "",
+                                    id: ""
+                                }
+                            },
+                        ]
+                    },
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["散图"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配外包美编制作",
+                                    id: "node_ockpz6phx73"
                                 }
                             }
                         ]
@@ -10038,6 +10570,37 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["散图"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            }
+                        ]
                     }
                 ]
             },
@@ -11058,6 +11621,37 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["散图"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORYHISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            }
+                        ]
                     }
                 ]
             }
@@ -11158,14 +11752,14 @@ const mbCoreActionsConfig = [
                         formName: "运营视觉流程（拍摄+美编）",
                         formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lwyq3if9", opCode: opCodes.EqualAny, value: ["散图"]}
+                            {fieldId: "radioField_lwyq3if9", opCode: opCodes.EqualAny, value: ["视频"]}
                         ],
                         flowNodeRules: [
                             {
                                 from: {
                                     id: "node_oclx00ubuy7",
                                     name: "确认拍摄类型",
-                                    status: ["FORCAST", "TODO"]
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx00ubuyn",
@@ -11173,16 +11767,16 @@ const mbCoreActionsConfig = [
                                     status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "执行助理、摄影负责人",
-                                    id: "employeeField_lwyq3ifd"
+                                    from: "process",
+                                    name: "确认拍摄类型",
+                                    id: "node_oclx00ubuy7"
                                 }
                             },
                             {
                                 from: {
                                     id: "node_oclx00ubuy7",
                                     name: "确认拍摄类型",
-                                    status: ["FORCAST", "TODO"]
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx03jr071w",
@@ -11190,9 +11784,9 @@ const mbCoreActionsConfig = [
                                     status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "外拍负责人",
-                                    id: "textField_lx08f35y"
+                                    from: "process",
+                                    name: "确认拍摄类型",
+                                    id: "node_oclx00ubuy7"
                                 }
                             }
                         ]
@@ -11489,19 +12083,19 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclx1ixqtj4",
-                                    name: "分配剪辑负责人",
-                                    status: ["TODO"]
+                                    id: "node_oclx03jr071x",
+                                    name: "确认视觉性质",
+                                    status: ["TODO", "HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclx1ixqtj4",
                                     name: "分配剪辑负责人",
-                                    status: ["TODO"]
+                                    status: ["FORCAST", "TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "剪辑负责人",
-                                    id: "employeeField_lwyq3iff"
+                                    from: "process",
+                                    name: "分配剪辑负责人",
+                                    id: "node_oclx1ixqtj4"
                                 }
                             },
                             {
@@ -11516,9 +12110,61 @@ const mbCoreActionsConfig = [
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "剪辑负责人",
-                                    id: "employeeField_lwyq3iff"
+                                    from: "process",
+                                    name: "分配剪辑负责人",
+                                    id: "node_oclx1ixqtj2"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "美编修图任务",
+                        formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYC",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx41cnvt", opCode: opCodes.EqualAny, value: ["视频"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx42mxwc1",
+                                    name: "分配剪辑负责人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx42mxwc1",
+                                    name: "分配剪辑负责人",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配剪辑负责人",
+                                    id: "node_oclx42mxwc1"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["视频"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配外包美编制作",
+                                    id: "node_ockpz6phx73"
                                 }
                             }
                         ]
@@ -11696,6 +12342,37 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["视频"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            }
+                        ]
                     }
                 ]
             },
@@ -11867,6 +12544,37 @@ const mbCoreActionsConfig = [
                                     from: "process",
                                     name: "剪辑视频",
                                     id: "node_oclx5gvwwqh"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["视频"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORYHISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
                                 }
                             }
                         ]
