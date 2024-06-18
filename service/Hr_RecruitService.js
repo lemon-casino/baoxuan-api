@@ -155,8 +155,41 @@ const StatisticsEcharts = async (rest) => {
             }
         });
 
-        rest.departmentEcharts = await Hr_RecruitmentDepartmentPositions.departmentEcharts();
+        const departmentEcharts = await Hr_RecruitmentDepartmentPositions.departmentEcharts();
+        // 定义需要统计的部门
+        const targetSections = [
+            '天猫部', '京东部', '拼多多部', '猫超部', '淘工厂部', '抖音/快手部', 'coupang部'
+        ];
+        // 过滤出目标部门的数据
+        const filteredData = departmentEcharts.filter(item => targetSections.includes(item.section));
 
+        const middlePlatform = [
+            '数据中台部', '客服部', '采购部', '开发部门', '视觉部', '执行中台部', '管理中台', '总经办'
+        ];
+        const middlePlatformdData = departmentEcharts.filter(item => middlePlatform.includes(item.section));
+
+        const rearEnd = [
+            '财务部', '人力', '行政', '法务'
+        ];
+        const rearEnddData = departmentEcharts.filter(item => rearEnd.includes(item.section));
+
+        //         计算总和生成最终的对象
+        rest.departmentEcharts = [
+            {
+                section: '前端',
+                total: filteredData.reduce((sum, item) => sum + item.total, 0),
+                data: filteredData
+            }, {
+                section: '中台',
+                total: middlePlatformdData.reduce((sum, item) => sum + item.total, 0),
+                data: middlePlatformdData
+            }
+            , {
+                section: '后端',
+                total: rearEnddData.reduce((sum, item) => sum + item.total, 0),
+                data: rearEnddData
+            }
+        ];
         return rest
     } catch (error) {
         return {message: error.message};
