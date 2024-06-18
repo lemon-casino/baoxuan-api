@@ -512,6 +512,26 @@ const employmentEcharts = async () => {
         throw new Error('查询数据失败');
     }
 };
+const departmentEcharts = async () => {
+    try {
+
+        //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
+        return await ZaiZhiRen.findAll({
+            attributes: [
+                [Sequelize.fn('COUNT', Sequelize.col('section')), 'total'],
+                ['section', 'section']
+            ],
+            group: ['section'],
+            
+            raw: true,
+            logging: false
+        });
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
 
 module.exports = {
     getHrDepartment,
@@ -529,5 +549,6 @@ module.exports = {
     statistics,
     qualificationEcharts,
     AgeEcharts,
-    employmentEcharts
+    employmentEcharts,
+    departmentEcharts
 };

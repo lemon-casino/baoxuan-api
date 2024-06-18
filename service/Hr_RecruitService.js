@@ -141,6 +141,8 @@ const StatisticsEcharts = async (rest) => {
         AgeEcharts: [],
         //学历分布
         qualificationEcharts: []
+        // 部门分布
+        departmentEcharts
         、*/
         rest.qualificationEcharts = await Hr_RecruitmentDepartmentPositions.qualificationEcharts();
         const data = await Hr_RecruitmentDepartmentPositions.employmentEcharts();
@@ -152,6 +154,9 @@ const StatisticsEcharts = async (rest) => {
                 item.total = targetItem.total;
             }
         });
+
+        rest.departmentEcharts = await Hr_RecruitmentDepartmentPositions.departmentEcharts();
+
         return rest
     } catch (error) {
         return {message: error.message};

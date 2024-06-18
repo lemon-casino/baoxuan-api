@@ -145,7 +145,8 @@ const showTalent = async (req, res, next) => {
         //员工列表
         AgeEcharts: [],
         //学历分布
-        qualificationEcharts: []
+        qualificationEcharts: [],
+        departmentEcharts: []
 
     };
     try {
