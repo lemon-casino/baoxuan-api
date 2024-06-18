@@ -598,9 +598,148 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
  * @returns {Promise<*[]>}
  */
 const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) => {
-    const computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, null)
+    const getFormIds = (actionConfig) => {
+        const ids = {}
+        for (const configItem of actionConfig) {
+            const actionStatuses = configItem.actionStatus
+            for (const actionItem of actionStatuses) {
+                for (const formRule of actionItem.rules) {
+                    ids[formRule.formId] = 1
+                }
+            }
+        }
+        return Object.keys(ids)
+    }
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptId)
+    // 筛选出参与统计的表单流程
+    const formIds = getFormIds(coreActionConfig)
+    const computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
+
     const result = await departmentCoreActivityStat.get(userNames, computedFlows, coreActionConfig)
+    // 节点汇总
+    // 生成结果模板
+    const getActivitySumStructure = (result) => {
+        const structure = []
+        // todo：good idea： 没时间实现了
+        // 保留2层深度的结构信息, 将底层基于人的统计信息忽略
+        for (const actStat of result) {
+            for (const subActStat of actStat.children) {
+                const isExist = structure.filter(item => item.nameCN === subActStat.nameCN).length > 0
+                if (!isExist) {
+                    for (const overDueStat of subActStat.children) {
+                        overDueStat.children = []
+                    }
+                    structure.push(subActStat)
+                }
+            }
+        }
+        return structure
+    }
+    const statActivityResult = getActivitySumStructure(_.cloneDeep(result))
+
+    // 转换统计以动作统计
+    for (const actionStatResult of result) {
+        const coreActionName = actionStatResult.actionName
+        const subStatusActionsResult = actionStatResult.children
+        for (const subActionResult of subStatusActionsResult) {
+            const subOverdueActionsResult = subActionResult.children
+            for (const overdueResult of subOverdueActionsResult) {
+                // 获取逾期节点下所有人的汇总
+                const getOverdueIds = (overdueResult) => {
+                    let overdueIds = []
+                    for (const userStatResult of overdueResult.children) {
+                        overdueIds = overdueIds.concat(userStatResult.ids)
+                    }
+                    return overdueIds
+                }
+                const ids = getOverdueIds(overdueResult)
+                const findTargetActResult = (subActStatName, overDueName) => {
+                    const subActStatResult = statActivityResult.filter(item => item.nameCN === subActStatName)[0]
+                    if (subActStatResult) {
+                        const subActOverdueStatResult = subActStatResult.children.filter(item => item.nameCN === overDueName)[0]
+                        return subActOverdueStatResult
+                    }
+                    return null
+                }
+
+                const targetActResult = findTargetActResult(subActionResult.nameCN, overdueResult.nameCN)
+                if (targetActResult) {
+                    targetActResult.children.push({actionName: coreActionName, ids: ids})
+                }
+            }
+        }
+    }
+
+    const overdueConfig = [
+        {nameCN: "逾期", nameEN: "overdue", children: []},
+        {nameCN: "未逾期", nameEN: "notOverdue", children: []}
+    ]
+    const flowStatConfig = [
+        {
+            nameCN: "待转入",
+            nameEN: "TODO",
+            children: _.cloneDeep(overdueConfig)
+        },
+        {
+
+            nameCN: "进行中",
+            nameEN: "DOING",
+            children: _.cloneDeep(overdueConfig)
+        },
+        {
+
+            nameCN: "已完成",
+            nameEN: "DONE",
+            children: _.cloneDeep(overdueConfig)
+        }
+        // {
+        //     nameCN: "逾期",
+        //     nameEN: "OVERDUE",
+        //     children: _.cloneDeep(overdueConfig)
+        // }
+    ]
+    const getFlowSumStructure = (result) => {
+        // 根据流程进行汇总
+        const sumFlowStat = []
+        for (const coreActionResult of result) {
+            sumFlowStat.push({
+                nameCN: coreActionResult.actionName,
+                nameEN: coreActionResult.actionCode,
+                children: _.cloneDeep(flowStatConfig)
+            })
+        }
+        return sumFlowStat
+    }
+
+    const statusShortTextMap = {"待": "TODO", "中": "DOING", "完": "DONE"}
+    const statFlowResult = getFlowSumStructure(_.cloneDeep(result))
+    for (const originActionStatResult of result) {
+
+        const actionStatResult = statFlowResult.filter(item => item.nameCN === originActionStatResult.actionName)[0]
+        for (const originSubActResult of originActionStatResult.children) {
+            const subActName = originSubActResult.nameCN.replace("待拍", "").replace("进行中", "").replace("完成", "").replace("待入", "")
+            for (const originOverdueResult of originSubActResult.children) {
+                // 统计节点下所有人的的ids
+                let overdueIds = []
+                for (const userStatResult of originOverdueResult.children) {
+                    overdueIds = overdueIds.concat(userStatResult.ids)
+                }
+
+                // 找到要汇入的结果节点
+                for (const shortText of Object.keys(statusShortTextMap)) {
+                    if (originSubActResult.nameCN.includes(shortText)) {
+                        const status = statusShortTextMap[shortText]
+                        const statusResult = actionStatResult.children.filter(item => item.nameEN === status)[0]
+                        const overdueResult = statusResult.children.filter(item => item.nameCN === originOverdueResult.nameCN)[0]
+                        overdueResult.children.push({nameCN: subActName, ids: overdueIds})
+                    }
+                }
+            }
+        }
+    }
+
+    result.unshift({actionName: "工作量汇总", actionCode: "sumActStat", children: statActivityResult})
+    result.unshift({actionName: "流程汇总", actionCode: "sumFlowStat", children: statFlowResult})
     return flowUtil.statIdsAndSumFromBottom(result)
 }
 
