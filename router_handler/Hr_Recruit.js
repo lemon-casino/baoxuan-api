@@ -130,9 +130,39 @@ const employeeManagement = async (req, res, next) => {
 
 };
 
+
+const showTalent = async (req, res, next) => {
+
+    const createMonthObject = () => Array.from({length: 12}, (_, i) => ({
+        total: 0,
+        month: i + 1
+    }));
+    let rest = {
+        //职级
+        RankEcharts: [],
+        //入职
+        EmploymentEcharts: createMonthObject(),
+        //员工列表
+        AgeEcharts: [],
+        //学历分布
+        qualificationEcharts: []
+
+    };
+    try {
+
+        await Hr_RecruitService.StatisticsEcharts(rest);
+
+        return res.send(success(rest));
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
+
+};
+
 module.exports = {
     recruitmentDepartment,
     recruitmentTalent,
     progressMap,
-    employeeManagement
+    employeeManagement,
+    showTalent
 }
