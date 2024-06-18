@@ -819,7 +819,7 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
     modifiedFlows = levelUpDomainList(modifiedFlows)
 
     // 对于视觉部(482162119)和管理中台(902643613)，将外包人的名字添加到userNames中
-    if (["902643613", "482162119"].includes(deptId.toString())) {
+    if (deptId && ["902643613", "482162119"].includes(deptId.toString())) {
         const getVisionOutSourcingNames = (flows) => {
             const outSourcingForms = [
                 {

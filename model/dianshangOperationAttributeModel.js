@@ -273,6 +273,24 @@ module.exports = sequelize => {
       comment: ";平台",
       field: "platform"
     },
+    visitorTarget: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: "0",
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";商品访客目标",
+      field: "visitor_target"
+    },
+    exploitDirector: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";开发负责人",
+      field: "exploit_director"
+    },
     customize1: {
       type: DataTypes.STRING(255),
       allowNull: true,
