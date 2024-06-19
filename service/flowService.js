@@ -804,31 +804,6 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
             }
         }
     }
-    //
-    // for (const originActionStatResult of result) {
-    //
-    //     const actionStatResult = statFlowResult.filter(item => item.nameCN === originActionStatResult.actionName)[0]
-    //     for (const originSubActResult of originActionStatResult.children) {
-    //         const subActName = originSubActResult.nameCN.replace("待拍", "").replace("进行中", "").replace("已完成", "").replace("完成", "").replace("待入", "")
-    //         for (const originOverdueResult of originSubActResult.children) {
-    //             // 统计节点下所有人的的ids
-    //             let overdueIds = []
-    //             for (const userStatResult of originOverdueResult.children) {
-    //                 overdueIds = overdueIds.concat(userStatResult.ids)
-    //             }
-    //
-    //             // 找到要汇入的结果节点
-    //             for (const shortText of Object.keys(statusShortTextMap)) {
-    //                 if (originSubActResult.nameCN.includes(shortText)) {
-    //                     const status = statusShortTextMap[shortText]
-    //                     const statusResult = actionStatResult.children.filter(item => item.nameEN === status)[0]
-    //                     const overdueResult = statusResult.children.filter(item => item.nameCN === originOverdueResult.nameCN)[0]
-    //                     overdueResult.children.push({nameCN: subActName, ids: overdueIds})
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
 
     result.unshift({actionName: "工作量汇总", actionCode: "sumActStat", children: statActivityResult})
     result.unshift({actionName: "流程汇总", actionCode: "sumFlowStat", children: statFlowResult})

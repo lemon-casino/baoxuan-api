@@ -1245,6 +1245,28 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
+                                    id: "node_oclm91902f1",
+                                    name: "安排执行统计五维表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclm91902f1",
+                                    name: "安排执行统计五维表",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclm91902f1",
+                                    name: "安排执行统计五维表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvktxsdb"
+                                }
+                            },
+                            {
+                                from: {
                                     id: "node_ocln14cs9r2",
                                     name: "样品与道具准备",
                                     status: ["TODO"]
