@@ -831,7 +831,9 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
                                 if (tmpOverdueStatResult.children.length === 0) {
                                     tmpOverdueStatResult.children.push({nameCN: "合计", ids: [flow.processInstanceId]})
                                 }else {
-                                    tmpOverdueStatResult.children[0].ids.push(flow.processInstanceId)
+                                     if(!tmpOverdueStatResult.children[0].ids.includes(flow.processInstanceId)){
+                                         tmpOverdueStatResult.children[0].ids.push(flow.processInstanceId)
+                                     }
                                 }
                             }
                             continue
