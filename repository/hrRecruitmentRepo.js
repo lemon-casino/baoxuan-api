@@ -312,7 +312,7 @@ const getHrRecruitment = async (startDate, endDate,) => {
     }
 };
 
-const employeeManagement = async (page, pageSize, quarters, department, rank, mainBody) => {
+const employeeManagement = async (page, pageSize, quarters, department, rank, mainBody, date) => {
     try {
         // const where = {date: {$between: [startDateTime, endDateTime]}}
         const where = {
@@ -322,7 +322,12 @@ const employeeManagement = async (page, pageSize, quarters, department, rank, ma
         if (quarters) {
             where.position = quarters
         }
+        if (date) {
+            console.log(JSON.parse(date)[0], JSON.parse(date)[1])
+            where.onBoardTime = {$between: [JSON.parse(date)[0], JSON.parse(date)[1]]}
+        }
         if (department) {
+
             where.section = department
         }
         if (rank) {

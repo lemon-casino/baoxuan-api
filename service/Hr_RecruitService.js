@@ -90,7 +90,7 @@ const recruitmentTalent = async (startDate, endDate, rest) => {
     }
 };
 
-const employeeManagement = async (page, pageSize, quarters, department, rank, abnormal, idling, mainBody, approval, rest) => {
+const employeeManagement = async (page, pageSize, quarters, department, rank, mainBody, date, rest) => {
 
 
     try {
@@ -98,7 +98,7 @@ const employeeManagement = async (page, pageSize, quarters, department, rank, ab
 
         // 如果data为空   则返回空 如果不为空  则返回data new Date(date).toLocaleDateString();
         const formatDate = date => date ? new Date(date).toLocaleDateString() : '';
-        const employeeData = await Hr_RecruitmentDepartmentPositions.employeeManagement(parseInt(page), parseInt(pageSize), quarters, department, rank, mainBody);
+        const employeeData = await Hr_RecruitmentDepartmentPositions.employeeManagement(parseInt(page), parseInt(pageSize), quarters, department, rank, mainBody, date);
         //  这些需要有变动的时候 再进行联动修改  abnormal, idling, approval
         rest.employee = {
             ...employeeData,
