@@ -121,8 +121,8 @@ const employeeManagement = async (page, pageSize, quarters, department, rest) =>
             key: 'department',
             value: await Hr_RecruitmentDepartmentPositions.department(),
         })
+        // 员工档案 员工合同管路   本月新员工数量 本月离职员工数量
         rest.statistics = await Hr_RecruitmentDepartmentPositions.statistics();
-
         return rest
     } catch (error) {
         return {message: error.message};
@@ -146,7 +146,27 @@ const StatisticsEcharts = async (rest) => {
         、*/
         rest.qualificationEcharts = await Hr_RecruitmentDepartmentPositions.qualificationEcharts();
         const data = await Hr_RecruitmentDepartmentPositions.employmentEcharts();
-        rest.AgeEcharts = await Hr_RecruitmentDepartmentPositions.AgeEcharts();
+        const AgeEcharts = await Hr_RecruitmentDepartmentPositions.AgeEcharts();
+
+        const groups = [
+            {label: '19', min: -Infinity, max: 19, total: 0, data: []},
+            {label: '20-29', min: 20, max: 29, total: 0, data: []},
+            {label: '30-39', min: 30, max: 39, total: 0, data: []},
+            {label: '40-49', min: 40, max: 49, total: 0, data: []},
+            {label: '50-59', min: 50, max: 59, total: 0, data: []}
+        ];
+        AgeEcharts.forEach(item => {
+            if (item.age !== null) {
+                for (let group of groups) {
+                    if (item.age >= group.min && item.age <= group.max) {
+                        group.total += item.total;
+                        group.data.push(item);
+                        break;
+                    }
+                }
+            }
+        });
+        rest.AgeEcharts = groups
 
         rest.EmploymentEcharts.forEach(item => {
             const targetItem = data.find(target => item.month === target.month);
