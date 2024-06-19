@@ -612,11 +612,13 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptId)
     // 筛选出参与统计的表单流程
     const formIds = getFormIds(coreActionConfig)
-    const computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
+    let computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
+    computedFlows = removeUnmatchedDateActivities(computedFlows, startDoneDate, endDoneDate)
     // todo: 视觉(482162119)和全流程的统计userNames要加上外包的信息
     //   先单独处理，要不就得把外包的人全部返回视觉的前端，可能还得改http method，
     //   等数据ok稳定后需要整理
     const user = await userRepo.getUserDetails({userId})
+
     const userDDId = user.dingdingUserId
     // 有条件地为userNames添加外包人信息、离职人员信息
     let canGetDeptOutSourcingUsers = false
