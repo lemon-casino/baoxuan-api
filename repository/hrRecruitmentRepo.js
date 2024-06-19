@@ -452,15 +452,13 @@ const qualificationEcharts = async () => {
     try {
 
         //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
-        return await ZaiZhiRen.findAll({
-            attributes: [
-                [Sequelize.fn('COUNT', Sequelize.col('educational_background')), 'total'],
-                ['educational_background', 'qualification']
-            ],
-            group: ['educational_background'],
-            raw: true,
-            logging: false
-        });
+        return await ZaiZhiRen.sequelize.query(
+            `  SELECT COUNT(1) AS total,  COALESCE(educational_background, '-') AS educational_background
+                 FROM           zai_zhi_ren         GROUP BY  COALESCE(educational_background, '-');
+                `, {
+                type: QueryTypes.SELECT
+            }
+        );
 
 
     } catch (error) {
