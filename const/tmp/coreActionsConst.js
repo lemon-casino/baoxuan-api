@@ -974,6 +974,32 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "外包拍摄视觉流程",
+                        formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lv670frf", opCode: opCodes.Contain, value: ["套"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48rz9a1",
+                                    name: "运营填写样品信息-分配执行",
+                                    status: ["TODO", "HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx49xlb31",
+                                    name: "通知外拍摄影师等待收图",
+                                    status: ["FORCAST", "TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "外拍审核",
+                                    id: "node_oclx49xlb32"
+                                }
+                            },
+                        ]
                     }
                 ]
             },
@@ -1170,8 +1196,33 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "外包拍摄视觉流程",
+                        formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lv670frf", opCode: opCodes.Contain, value: ["套"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx49xlb32",
+                                    name: "外拍审核",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx49xlb32",
+                                    name: "外拍审核",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "外拍审核",
+                                    id: "node_oclx49xlb32"
+                                }
+                            },
+                        ]
                     }
-
                 ]
             },
             {
@@ -1317,6 +1368,32 @@ const mbCoreActionsConfig = [
                                     id: "node_oclxcz6yq71"
                                 }
                             }
+                        ]
+                    },
+                    {
+                        formName: "外包拍摄视觉流程",
+                        formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lv670frf", opCode: opCodes.Contain, value: ["套"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx49xlb32",
+                                    name: "外拍审核",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx49xlb32",
+                                    name: "外拍审核",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "外拍审核",
+                                    id: "node_oclx49xlb32"
+                                }
+                            },
                         ]
                     }
                 ]
