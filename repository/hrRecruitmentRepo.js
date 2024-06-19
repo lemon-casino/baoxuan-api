@@ -453,7 +453,7 @@ const qualificationEcharts = async () => {
 
         //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
         return await ZaiZhiRen.sequelize.query(
-            `  SELECT COUNT(1) AS total,  COALESCE(educational_background, '-') AS educational_background
+            `  SELECT COUNT(1) AS total,  COALESCE(educational_background, '-') AS qualification
                  FROM           zai_zhi_ren         GROUP BY  COALESCE(educational_background, '-');
                 `, {
                 type: QueryTypes.SELECT
