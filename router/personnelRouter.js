@@ -10,4 +10,7 @@ router.get("/employeeManagement", hrRecruit.employeeManagement)
 //人事 展示
 router.get("/show", hrRecruit.showTalent)
 
+//人事 履历
+router.get("/curriculumVitae", hrRecruit.curriculumVitae)
+
 module.exports = router

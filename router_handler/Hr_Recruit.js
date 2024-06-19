@@ -115,13 +115,22 @@ const employeeManagement = async (req, res, next) => {
     };
     try {
 
-        let {page, pageSize, quarters, department} = req.query;
+        /*       page: 1
+               pageSize: 20
+               department: 执行中台部
+               quarters: 采购助理
+               rank: 助理
+               abnormal: transfer
+               idling: 1
+               mainBody: 北京超速树懒科技有限公司
+               approval:*/
+        let {page, pageSize, quarters, department, rank, abnormal, idling, mainBody, approval} = req.query;
 //如果page  pageSize  quarters没有传递过来  默认为1  10
         page = page || 1;
         pageSize = pageSize || 20;
 
 
-        await Hr_RecruitService.employeeManagement(parseInt(page), parseInt(pageSize), quarters, department, rest);
+        await Hr_RecruitService.employeeManagement(parseInt(page), parseInt(pageSize), quarters, department, rank, abnormal, idling, mainBody, approval, rest);
 
         return res.send(success(rest));
     } catch (error) {
@@ -133,15 +142,11 @@ const employeeManagement = async (req, res, next) => {
 
 const showTalent = async (req, res, next) => {
 
-    const createMonthObject = () => Array.from({length: 12}, (_, i) => ({
-        total: 0,
-        month: i + 1
-    }));
     let rest = {
         //职级
         RankEcharts: [],
         //入职
-        EmploymentEcharts: createMonthObject(),
+        EmploymentEcharts: [],
         //员工列表
         AgeEcharts: [],
         //学历分布
@@ -160,10 +165,38 @@ const showTalent = async (req, res, next) => {
 
 };
 
+const curriculumVitae = async (req, res, next) => {
+
+    const {name} = req.query
+    let rest = {
+        //基本资料
+        basicInformation: {},
+        //教育经历
+        educationalExperience: [],
+        //工作经历
+        workExperience: [],
+        //任职信息
+        employmentInformation: {},
+        //其他信息
+        otherInformation: {}
+    };
+    try {
+
+        await Hr_RecruitService.curriculumVitae(name, rest);
+
+        return res.send(success(rest));
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
+
+};
+
+
 module.exports = {
     recruitmentDepartment,
     recruitmentTalent,
     progressMap,
     employeeManagement,
-    showTalent
+    showTalent,
+    curriculumVitae
 }
