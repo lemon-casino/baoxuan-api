@@ -115,13 +115,13 @@ const employeeManagement = async (req, res, next) => {
     };
     try {
 
-        let {page, pageSize, quarters, department} = req.query;
-//如果page  pageSize  quarters没有传递过来  默认为1  10
+        //  let {page, pageSize, quarters, department, rank, abnormal, idling, mainBody, approval} = req.query;
+        let {page, pageSize, quarters, department, rank, mainBody, date} = req.query;
         page = page || 1;
         pageSize = pageSize || 20;
 
-
-        await Hr_RecruitService.employeeManagement(parseInt(page), parseInt(pageSize), quarters, department, rest);
+// abnormal, idling, mainBody, approval, rest
+        await Hr_RecruitService.employeeManagement(parseInt(page), parseInt(pageSize), quarters, department, rank, mainBody, date, rest);
 
         return res.send(success(rest));
     } catch (error) {
@@ -133,15 +133,11 @@ const employeeManagement = async (req, res, next) => {
 
 const showTalent = async (req, res, next) => {
 
-    const createMonthObject = () => Array.from({length: 12}, (_, i) => ({
-        total: 0,
-        month: i + 1
-    }));
     let rest = {
         //职级
         RankEcharts: [],
         //入职
-        EmploymentEcharts: createMonthObject(),
+        EmploymentEcharts: [],
         //员工列表
         AgeEcharts: [],
         //学历分布
@@ -160,10 +156,38 @@ const showTalent = async (req, res, next) => {
 
 };
 
+const curriculumVitae = async (req, res, next) => {
+
+    const {name} = req.query
+    let rest = {
+        //基本资料
+        basicInformation: {},
+        //教育经历
+        educationalExperience: [],
+        //工作经历
+        workExperience: [],
+        //任职信息
+        employmentInformation: {},
+        //其他信息
+        otherInformation: {}
+    };
+    try {
+
+        await Hr_RecruitService.curriculumVitae(name, rest);
+
+        return res.send(success(rest));
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
+
+};
+
+
 module.exports = {
     recruitmentDepartment,
     recruitmentTalent,
     progressMap,
     employeeManagement,
-    showTalent
+    showTalent,
+    curriculumVitae
 }
