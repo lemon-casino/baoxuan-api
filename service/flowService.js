@@ -787,7 +787,13 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
                                 needToStatResult = statusResult.children.find(item => item.nameCN === (overdueActivity[0].isOverDue ? "逾期" : "未逾期"))
                             }
 
+
                             if (fromNodeMatched && toNodeMatched) {
+                                if(!overdueNode){
+                                    console.log("---")
+                                }
+
+
                                 if (keyText === "完" && i < formRule.flowNodeRules.length - 1) {
                                     continue
                                 }

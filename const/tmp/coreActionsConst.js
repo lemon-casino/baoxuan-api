@@ -2296,6 +2296,11 @@ const mbCoreActionsConfig = [
                                     name: "确认是否AI",
                                     status: ["TODO"]
                                 },
+                                overdue: {
+                                    id: "node_oclx422jq8p",
+                                    name: "确认是否AI",
+                                    status: ["TODO"]
+                                },
                                 ownerRule: {
                                     from: "process",
                                     name: "确认是否AI",
@@ -2304,14 +2309,19 @@ const mbCoreActionsConfig = [
                             },
                             {
                                 from: {
-                                    id: "node_oclx422jq8p",
-                                    name: "确认是否AI",
-                                    status: ["TODO", "HISTORY"]
+                                    id: "node_oclx5ij0pq5",
+                                    name: "分配美编",
+                                    status: ["TODO"]
                                 },
                                 to: {
                                     id: "node_oclx5ij0pq5",
                                     name: "分配美编",
-                                    status: ["FORCAST", "TODO"]
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5ij0pq5",
+                                    name: "分配美编",
+                                    status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "process",
@@ -2321,14 +2331,19 @@ const mbCoreActionsConfig = [
                             },
                             {
                                 from: {
-                                    id: "node_oclx422jq8p",
-                                    name: "确认是否AI",
-                                    status: ["TODO", "HISTORY"]
+                                    id: "node_oclx5ij0pq6",
+                                    name: "分配美编",
+                                    status: ["TODO"]
                                 },
                                 to: {
                                     id: "node_oclx5ij0pq6",
                                     name: "分配美编",
-                                    status: ["FORCAST", "TODO"]
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5ij0pq6",
+                                    name: "分配美编",
+                                    status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "process",
@@ -2338,70 +2353,24 @@ const mbCoreActionsConfig = [
                             },
                             {
                                 from: {
-                                    id: "node_oclx422jq8p",
-                                    name: "确认是否AI",
-                                    status: ["TODO", "HISTORY"]
+                                    id: "node_oclx5ij0pq7",
+                                    name: "分配美编",
+                                    status: ["TODO"]
                                 },
                                 to: {
                                     id: "node_oclx5ij0pq7",
                                     name: "分配美编",
-                                    status: ["FORCAST", "TODO"]
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5ij0pq7",
+                                    name: "分配美编",
+                                    status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "process",
                                     name: "分配美编",
                                     id: "node_oclx5ij0pq7"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclxfqmy8l2",
-                                    name: "分配大美编后期修图",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclxfqmy8l2",
-                                    name: "分配大美编后期修图",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "分配大美编后期修图",
-                                    id: "node_oclxfqmy8l2"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclxfqmy8l3",
-                                    name: "大美编修图确认修图属性",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclxfqmy8l3",
-                                    name: "大美编修图确认修图属性",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "大美编修图确认修图属性",
-                                    id: "node_oclxfqmy8l3"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx4b3zdl5",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx4b3zdl5",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "分配中美编",
-                                    id: "node_oclx4b3zdl5"
                                 }
                             }
                         ]
@@ -3831,6 +3800,72 @@ const mbCoreActionsConfig = [
                                     from: "process",
                                     name: "套版编负责人",
                                     id: "node_oclx5gvwwq10"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxfqmy8l2",
+                                    name: "分配大美编后期修图",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxfqmy8l2",
+                                    name: "分配大美编后期修图",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclxfqmy8l2",
+                                    name: "分配大美编后期修图",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配大美编后期修图",
+                                    id: "node_oclxfqmy8l2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxfqmy8l3",
+                                    name: "大美编修图确认修图属性",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxfqmy8l3",
+                                    name: "大美编修图确认修图属性",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclxfqmy8l3",
+                                    name: "大美编修图确认修图属性",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图确认修图属性",
+                                    id: "node_oclxfqmy8l3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4b3zdl5",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx4b3zdl5",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4b3zdl5",
+                                    name: "分配中美编",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4b3zdl5"
                                 }
                             }
                         ]
@@ -5559,6 +5594,11 @@ const mbCoreActionsConfig = [
                                     name: "确认是否AI",
                                     status: ["TODO"]
                                 },
+                                overdue: {
+                                    id: "node_oclx422jq8p",
+                                    name: "确认是否AI",
+                                    status: ["TODO"]
+                                },
                                 ownerRule: {
                                     from: "process",
                                     name: "确认是否AI",
@@ -5567,14 +5607,19 @@ const mbCoreActionsConfig = [
                             },
                             {
                                 from: {
-                                    id: "node_oclx422jq8p",
-                                    name: "确认是否AI",
-                                    status: ["TODO", "HISTORY"]
+                                    id: "node_oclx5ij0pq5",
+                                    name: "分配美编",
+                                    status: ["TODO"]
                                 },
                                 to: {
                                     id: "node_oclx5ij0pq5",
                                     name: "分配美编",
-                                    status: ["FORCAST", "TODO"]
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5ij0pq5",
+                                    name: "分配美编",
+                                    status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "process",
@@ -5584,14 +5629,19 @@ const mbCoreActionsConfig = [
                             },
                             {
                                 from: {
-                                    id: "node_oclx422jq8p",
-                                    name: "确认是否AI",
-                                    status: ["TODO", "HISTORY"]
+                                    id: "node_oclx5ij0pq6",
+                                    name: "分配美编",
+                                    status: ["TODO"]
                                 },
                                 to: {
                                     id: "node_oclx5ij0pq6",
                                     name: "分配美编",
-                                    status: ["FORCAST", "TODO"]
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5ij0pq6",
+                                    name: "分配美编",
+                                    status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "process",
@@ -5601,70 +5651,24 @@ const mbCoreActionsConfig = [
                             },
                             {
                                 from: {
-                                    id: "node_oclx422jq8p",
-                                    name: "确认是否AI",
-                                    status: ["TODO", "HISTORY"]
+                                    id: "node_oclx5ij0pq7",
+                                    name: "分配美编",
+                                    status: ["TODO"]
                                 },
                                 to: {
                                     id: "node_oclx5ij0pq7",
                                     name: "分配美编",
-                                    status: ["FORCAST", "TODO"]
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5ij0pq7",
+                                    name: "分配美编",
+                                    status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "process",
                                     name: "分配美编",
                                     id: "node_oclx5ij0pq7"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclxfqmy8l2",
-                                    name: "分配大美编后期修图",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclxfqmy8l2",
-                                    name: "分配大美编后期修图",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "分配大美编后期修图",
-                                    id: "node_oclxfqmy8l2"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclxfqmy8l3",
-                                    name: "大美编修图确认修图属性",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclxfqmy8l3",
-                                    name: "大美编修图确认修图属性",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "大美编修图确认修图属性",
-                                    id: "node_oclxfqmy8l3"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx4b3zdl5",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx4b3zdl5",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "分配中美编",
-                                    id: "node_oclx4b3zdl5"
                                 }
                             }
                         ]
@@ -8442,6 +8446,11 @@ const mbCoreActionsConfig = [
                                     name: "确认是否AI",
                                     status: ["TODO"]
                                 },
+                                overdue: {
+                                    id: "node_oclx422jq8p",
+                                    name: "确认是否AI",
+                                    status: ["TODO"]
+                                },
                                 ownerRule: {
                                     from: "process",
                                     name: "确认是否AI",
@@ -8450,140 +8459,70 @@ const mbCoreActionsConfig = [
                             },
                             {
                                 from: {
-                                    id: "node_oclx5ij0pq1",
+                                    id: "node_oclx5ij0pq5",
                                     name: "分配美编",
                                     status: ["TODO"]
                                 },
                                 to: {
-                                    id: "node_oclx5ij0pq1",
+                                    id: "node_oclx5ij0pq5",
+                                    name: "分配美编",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5ij0pq5",
                                     name: "分配美编",
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "process",
                                     name: "分配美编",
-                                    id: "node_oclx5ij0pq1"
+                                    id: "node_oclx5ij0pq5"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclx5ij0pq2",
+                                    id: "node_oclx5ij0pq6",
                                     name: "分配美编",
                                     status: ["TODO"]
                                 },
                                 to: {
-                                    id: "node_oclx5ij0pq2",
+                                    id: "node_oclx5ij0pq6",
                                     name: "分配美编",
                                     status: ["TODO"]
                                 },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "分配美编",
-                                    id: "node_oclx5ij0pq2"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx5ij0pq3",
-                                    name: "分配美编",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx5ij0pq3",
+                                overdue: {
+                                    id: "node_oclx5ij0pq6",
                                     name: "分配美编",
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "process",
                                     name: "分配美编",
-                                    id: "node_oclx5ij0pq3"
+                                    id: "node_oclx5ij0pq6"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclxfqmy8l1",
-                                    name: "分配大美编后期修图",
+                                    id: "node_oclx5ij0pq7",
+                                    name: "分配美编",
                                     status: ["TODO"]
                                 },
                                 to: {
-                                    id: "node_oclxfqmy8l1",
-                                    name: "分配大美编后期修图",
+                                    id: "node_oclx5ij0pq7",
+                                    name: "分配美编",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5ij0pq7",
+                                    name: "分配美编",
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "分配大美编后期修图",
-                                    id: "node_oclxfqmy8l1"
+                                    name: "分配美编",
+                                    id: "node_oclx5ij0pq7"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx5gvwwqa",
-                                    name: "大美编修图确认修图属性",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx5gvwwqa",
-                                    name: "大美编修图确认修图属性",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "大美编修图确认修图属性",
-                                    id: "node_oclx5gvwwqa"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx5gvwwqc",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx5gvwwqc",
-                                    name: "分配中美编",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "分配中美编",
-                                    id: "node_oclx5gvwwqc"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "",
-                                    name: "",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "",
-                                    name: "",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "",
-                                    id: ""
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "",
-                                    name: "",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "",
-                                    name: "",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "",
-                                    id: ""
-                                }
-                            },
+                            }
                         ]
                     },
                     {
