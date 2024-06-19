@@ -552,10 +552,9 @@ const mainBody = async () => {
         //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
         return await ZaiZhiRen.findAll({
             attributes: [
-                ['contract_company', 'mainBody']
+                ['COALESCE(contract_company, \'-\')', 'mainBody']
             ],
             group: ['contract_company'],
-
             raw: true,
             logging: false
         });
