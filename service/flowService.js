@@ -704,15 +704,18 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
         nameEN: "notOverdue",
         children: []
     }]
-    const flowStatConfig = [{
-        nameCN: "待转入", nameEN: "TODO", children: _.cloneDeep(overdueConfig)
-    }, {
+    const flowStatConfig = [
+        {
+            nameCN: "待转入", nameEN: "TODO", children: _.cloneDeep(overdueConfig)
+        },
+        {
 
-        nameCN: "进行中", nameEN: "DOING", children: _.cloneDeep(overdueConfig)
-    }, {
+            nameCN: "进行中", nameEN: "DOING", children: _.cloneDeep(overdueConfig)
+        },
+        {
 
-        nameCN: "已完成", nameEN: "DONE", children: _.cloneDeep(overdueConfig)
-    }
+            nameCN: "已完成", nameEN: "DONE"// , children: _.cloneDeep(overdueConfig)
+        }
         // {
         //     nameCN: "逾期",
         //     nameEN: "OVERDUE",
@@ -734,6 +737,50 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
 
     // const statusShortTextMap = {"待": "TODO", "中": "DOING", "完": "DONE"}
     const statusKeyText = ["待", "中", "完"]
+    const visionDoneMap = [
+        //
+        {
+            formName: "运营新品流程",
+            formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+            doneActivityIds: ["node_ockpz6phx73"]
+        },
+        //
+        {
+            formName: "运营拍摄流程",
+            formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
+            doneActivityIds: ["node_oclvkpzz4g1", "node_oclvkqswtb4", "node_oclvkpzz4g3", "node_oclvkqswtbc", "node_oclvkpzz4g4"]
+        },
+        {
+            formName: "天猫链接上架流程",
+            formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
+            doneActivityIds: ["node_oclm91ca7l9"]
+        },
+        {
+            formName: "运营视觉流程（拍摄+美编）",
+            formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
+            doneActivityIds: ["node_oclx03jr074d"]
+        },
+        {
+            formName: "美编修图任务",
+            formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYC",
+            doneActivityIds: ["node_oclx422jq8o"]
+        },
+        {
+            formName: "美编任务运营发布",
+            formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
+            doneActivityIds: [
+                "node_oclvghx5li1",
+                "node_oclvt49cil4",
+                "node_oclw7dfsbp4",
+                "node_oclvghx5li7",
+                "node_oclvghx5li8",
+                "node_oclw7dfsbp7",
+                "node_oclvghx5li9",
+                "node_oclvghx5lia",
+                "node_oclwhrd6j63"
+            ]
+        }
+    ]
     const statFlowResult = getFlowSumStructure(_.cloneDeep(result))
     for (const actionResult of statFlowResult) {
         // 找到同名的配置
@@ -773,11 +820,22 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
                     for (const flow of formFlows) {
                         const activities = flow.overallprocessflow
 
+                        if (keyText === "完") {
+                            const visionDoneAct = visionDoneMap.find(item => item.formId === flow.formUuid)
+                            const tmpVisionDoneActs = activities.filter(item => visionDoneAct.doneActivityIds.includes(item.activityId) &&
+                                item.type === flowReviewTypeConst.HISTORY)
+                            if (tmpVisionDoneActs.length > 0) {
+                                if (!statusResult.ids) {
+                                    statusResult.ids = []
+                                }
+                                statusResult.ids.push(flow.processInstanceId)
+                                statusResult.sum = statusResult.ids.length
+                            }
+                            continue
+                        }
+
                         for (let i = 0; i < formRule.flowNodeRules.length; i++) {
-
                             const flowNodeRule = formRule.flowNodeRules[i]
-
-
                             const {from: fromNode, to: toNode, overdue: overdueNode} = flowNodeRule
                             const fromNodeMatched = activities.filter(
                                 item => item.activityId === fromNode.id &&
@@ -799,9 +857,6 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
                             }
 
                             if (fromNodeMatched && toNodeMatched) {
-                                if (keyText === "完" && i < formRule.flowNodeRules.length - 1) {
-                                    continue
-                                }
                                 const tmpSubActionResult = needToStatResult.children.find(item => item.nameCN === actionName)
                                 if (tmpSubActionResult) {
                                     tmpSubActionResult.ids.push(flow.processInstanceId)
