@@ -9,13 +9,13 @@ models.deptFlowFormModel.hasMany(models.deptFlowFormActivityModel,
 
 const getDepartmentFlowForms = async (where) => {
     const forms = await models.deptFlowFormModel.findAll({where})
-    return forms
+    return forms.map(item => item.get({plain: true}))
 }
 
 const getDeptFlowFormsWithActivities = async (where) => {
     const forms = await models.deptFlowFormModel.findAll({
         where,
-        include:[ {
+        include: [{
             model: models.deptFlowFormActivityModel,
             as: "deptFlowFormActivities"
         }]
@@ -62,10 +62,15 @@ const getDeptFlowFormConfig = async (deptId) => {
     return deptForms
 }
 
+const updateIsCore = async (deptId, formId, type, isCore) => {
+    return await models.deptFlowFormModel.update({isCore}, {where: {deptId, formId, type}})
+}
+
 module.exports = {
     saveDepartmentFlowForm,
     deleteDepartmentFlowForm,
     getDepartmentFlowForms,
     getDeptFlowFormConfig,
-    getDeptFlowFormsWithActivities
+    getDeptFlowFormsWithActivities,
+    updateIsCore
 }

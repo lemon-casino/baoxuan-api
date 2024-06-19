@@ -56,6 +56,15 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: ";是否是核心流程",
       field: "is_core"
+    },
+    type: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: "1",
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";1:部门统计审核节点配置  2:配置部门核心流程",
+      field: "type"
     }
   };
   const options = {

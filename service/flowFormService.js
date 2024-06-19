@@ -290,17 +290,20 @@ const refactorReviewItems = (nodes, lastTimingNode) => {
  * @param deptId
  * @returns {Promise<void>}
  */
-const getDeptFlowForms = async (deptId) => {
+const getDeptFlowForms = async (deptId, type) => {
     const flowForms = await getAllForms()
     const deptFlowForms = await departmentFlowFormRepo.getDepartmentFlowForms({deptId})
 
     for (const form of flowForms) {
-        const data = deptFlowForms.filter(item => item.formId === form.flowFormId)
-        if (data.length > 0) {
-            form.deptFlowFormId = data[0].id
+        const deptForms = deptFlowForms.filter(item => item.formId === form.flowFormId && item.type.toString() === type)
+        if (deptForms.length > 0) {
+            form.deptFlowFormId = deptForms[0].id
             form.selected = true
+            const deptCoreForms = deptForms.filter(item => item.isCore)
+            form.isCore = deptCoreForms.length > 0
         } else {
             form.selected = false
+            form.isCore = false
         }
     }
     return flowForms
@@ -309,19 +312,6 @@ const getDeptFlowForms = async (deptId) => {
 const getFlowForm = async (formId) => {
     const flowForm = await flowFormRepo.getFormDetails(formId)
     return flowForm
-}
-
-const getDeptFlowFormsWithCore = async (deptId) => {
-    const flowForms = await getAllForms()
-    const deptFlowForms = await departmentFlowFormRepo.getDepartmentFlowForms({deptId, isCore: true})
-
-    for (const form of flowForms) {
-        const data = deptFlowForms.filter(item => item.formId === form.flowFormId)
-        if (data.length > 0) {
-            form.isCore = true
-        }
-    }
-    return flowForms
 }
 
 module.exports = {
@@ -333,6 +323,5 @@ module.exports = {
     getFlowFormsByDeptIdAndImportant,
     getFormEmergencyItems,
     refactorReviewItems,
-    getFlowForm,
-    getDeptFlowFormsWithCore
+    getFlowForm
 }

@@ -30,7 +30,7 @@ const getFlowFormsByDeptIdAndImportant = async (req, res, next) => {
     }
 }
 
-const getDeptFlowFormsWithCore = async (req, res, next) => {
+const getDeptFlowFormsWithCoreTag = async (req, res, next) => {
     try {
         const {deptId} = req.query
         joiUtil.validate({deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required}})
@@ -42,5 +42,7 @@ const getDeptFlowFormsWithCore = async (req, res, next) => {
 }
 
 module.exports = {
-    getFormsByImportance, getFlowFormsByDeptIdAndImportant, getDeptFlowFormsWithCore
+    getFormsByImportance,
+    getFlowFormsByDeptIdAndImportant,
+    getDeptFlowFormsWithCoreTag
 }

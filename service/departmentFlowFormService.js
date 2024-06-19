@@ -2,30 +2,35 @@ const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo")
 const departmentRepo = require("../repository/departmentRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
 const NotFoundError = require("../error/http/notFoundError")
-const SqlError = require("../error/sqlError")
 const deptFlowFormConvertor = require("../convertor/deptFlowFormConvertor")
 
-const saveDepartmentFlowForm = async (deptId, formId) => {
-
+const saveDepartmentFlowForm = async (deptId, formId, type, isCore) => {
     const department = await departmentRepo.getDepartmentDetails(deptId)
-
     const formDetails = await flowFormRepo.getFormDetails(formId)
     if (!formDetails) {
         throw new NotFoundError(`未在库中找到表单：${formId}的信息`)
     }
-    const data = await departmentFlowFormRepo.getDepartmentFlowForms({deptId, formId})
-    if (data && data.length > 0) {
-        throw new SqlError(`${department.name}下已经添加了${formDetails.flowFormName}`)
+
+    const data = await departmentFlowFormRepo.getDepartmentFlowForms({deptId, formId, type})
+    // 存在则更新isCore
+    const exist = data && data.length > 0
+    if (exist) {
+        const needToUpdateIsCore = isCore !== null
+        if (needToUpdateIsCore) {
+            return await departmentFlowFormRepo.updateIsCore(deptId, formId, type, isCore)
+        }
+        return true
     }
 
     const model = {
         deptId,
         deptName: department.name,
         formId,
-        formName: formDetails.flowFormName
+        formName: formDetails.flowFormName,
+        isCore,
+        type
     }
-    const result = await departmentFlowFormRepo.saveDepartmentFlowForm(model)
-    return result
+    return await departmentFlowFormRepo.saveDepartmentFlowForm(model)
 }
 
 const deleteDepartmentFlowForm = async (id) => {
