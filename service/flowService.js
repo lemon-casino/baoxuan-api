@@ -717,7 +717,7 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
 
         const actionStatResult = statFlowResult.filter(item => item.nameCN === originActionStatResult.actionName)[0]
         for (const originSubActResult of originActionStatResult.children) {
-            const subActName = originSubActResult.nameCN.replace("待拍", "").replace("进行中", "").replace("完成", "").replace("已完成", "").replace("待入", "")
+            const subActName = originSubActResult.nameCN.replace("待拍", "").replace("进行中", "").replace("已完成", "").replace("完成", "").replace("待入", "")
             for (const originOverdueResult of originSubActResult.children) {
                 // 统计节点下所有人的的ids
                 let overdueIds = []
