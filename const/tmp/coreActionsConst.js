@@ -906,6 +906,270 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
+                                    id: "node_oclkvznwuu1",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclkvznwuu1",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclkvznwuu1",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclohx0w4s1",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclohx0w4s1",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclohx0w4s1",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclix34wly1",
+                                    name: "审核执行统计五给出样品明细",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclix34wly1",
+                                    name: "审核执行统计五给出样品明细",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclix34wly1",
+                                    name: "审核执行统计五给出样品明细",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclwketkev4",
+                                    name: "执行确认样品来源",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclwketkev4",
+                                    name: "执行确认样品来源",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclwketkev4",
+                                    name: "执行确认样品来源",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclwketkev6",
+                                    name: "执行联系样品到公司",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclwketkev6",
+                                    name: "执行联系样品到公司",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclwketkev6",
+                                    name: "执行联系样品到公司",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclwkf0tuy1",
+                                    name: "开发联系样品",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclwkf0tuy1",
+                                    name: "开发联系样品",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclwkf0tuy1",
+                                    name: "开发联系样品",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclii6vcap1",
+                                    name: "五维表分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap1",
+                                    name: "五维表分析",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap1",
+                                    name: "五维表分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclto83mms5",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclto83mms5",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclto83mms5",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvx64tg92",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvx64tg92",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvx64tg92",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclii6vcap2",
+                                    name: "项目负责人审核方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap2",
+                                    name: "项目负责人审核方案",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap2",
+                                    name: "项目负责人审核方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltseng6r1",
+                                    name: "执行运营确认样品到公司",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltseng6r1",
+                                    name: "执行运营确认样品到公司",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltseng6r1",
+                                    name: "执行运营确认样品到公司",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
                                     id: "node_oclii6vcap3",
                                     name: "视觉方案审核",
                                     status: ["TODO"]
