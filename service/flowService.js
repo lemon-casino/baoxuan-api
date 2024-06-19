@@ -829,7 +829,7 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
                                 item.type === flowReviewTypeConst.HISTORY)
                             if (tmpVisionDoneActs.length > 0) {
                                 if (tmpOverdueStatResult.children.length === 0) {
-                                    tmpOverdueStatResult.children.push({nameCN: "", ids: [flow.processInstanceId]})
+                                    tmpOverdueStatResult.children.push({nameCN: "合计", ids: [flow.processInstanceId]})
                                 }else {
                                     tmpOverdueStatResult.children[0].ids.push(flow.processInstanceId)
                                 }
