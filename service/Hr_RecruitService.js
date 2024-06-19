@@ -126,6 +126,11 @@ const employeeManagement = async (page, pageSize, quarters, department, rest) =>
             key: 'mainBody',
             value: await Hr_RecruitmentDepartmentPositions.mainBody(),
         })
+        rest.filterItems.push({
+            title: '职级',
+            key: 'rank',
+            value: await Hr_RecruitmentDepartmentPositions.rank(),
+        })
         // 员工档案 员工合同管路   本月新员工数量 本月离职员工数量
         rest.statistics = await Hr_RecruitmentDepartmentPositions.statistics();
         return rest
@@ -221,10 +226,24 @@ const StatisticsEcharts = async (rest) => {
 
 };
 
+
+const curriculumVitae = async (name, rest) => {
+
+    try {
+        rest.basicInformation = await Hr_RecruitmentDepartmentPositions.basicInformation(name)
+
+        return rest
+    } catch (error) {
+        return {message: error.message};
+    }
+
+};
+
 module.exports = {
     recruitmentDepartment,
     recruitmentTalent,
     progressMap,
     employeeManagement,
-    StatisticsEcharts
+    StatisticsEcharts,
+    curriculumVitae
 }

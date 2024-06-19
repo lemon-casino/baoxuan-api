@@ -552,7 +552,7 @@ const mainBody = async () => {
         //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
         return await ZaiZhiRen.findAll({
             attributes: [
-                ['contract_company', 'mainBody']
+                ['COALESCE(`contract_company`, \'-\')', 'mainBody']
             ],
             group: ['contract_company'],
 
@@ -565,6 +565,35 @@ const mainBody = async () => {
         throw new Error('查询数据失败');
     }
 };
+
+const basicInformation = async (name) => {
+    try {
+
+        //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
+        return ""
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+const rank = async () => {
+    try {
+
+        //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
+
+        return await ZaiZhiRen.sequelize.query(
+            `  SELECT DISTINCT COALESCE(\`rank\`, '-') AS \`rank\` FROM zai_zhi_ren;
+                `, {
+                type: QueryTypes.SELECT
+            }
+        );
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
 module.exports = {
     getHrDepartment,
     getHrQuarters,
@@ -583,5 +612,7 @@ module.exports = {
     AgeEcharts,
     employmentEcharts,
     departmentEcharts,
-    mainBody
+    mainBody,
+    basicInformation,
+    rank
 };
