@@ -21,6 +21,7 @@ const extensionsConst = require("../const/tmp/extensionsConst")
 const adminConst = require("../const/adminConst")
 const sequelizeErrorConst = require("../const/sequelizeErrorConst")
 const dingDingReq = require("../core/dingDingReq")
+const yiDaReq = require("../core/yiDaReq")
 
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
@@ -174,7 +175,7 @@ const syncUserLogin = async () => {
 const syncResignEmployeeInfo = async () => {
     console.log("同步进行中...")
     const {access_token: accessToken} = await redisRepo.getToken()
-    const allResignEmployees = await userRepo.getResignEmployees(accessToken)
+    const allResignEmployees = await yiDaReq.getResignEmployees(accessToken)
     // 更新人员离职信息
     const onJobEmployees = await redisRepo.getAllUsersDetail()
     for (const employee of allResignEmployees) {

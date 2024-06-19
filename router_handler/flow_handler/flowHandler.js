@@ -47,7 +47,7 @@ const updateRunningFlowEmergency = async (req, res, next) => {
 const getCoreDataByType = async (req, res, next) => {
     try {
         const {deptId, startDate, endDate} = req.query
-
+        const userId = req.user.id
         joiUtil.validate({
             deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required},
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
@@ -60,7 +60,7 @@ const getCoreDataByType = async (req, res, next) => {
             joiUtil.validate({
                 userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.strRequired}
             })
-            result = await flowService.getCoreActionData(deptId, userNames, startDate, endDate)
+            result = await flowService.getCoreActionData(userId, deptId, userNames, startDate, endDate)
         } else {
             const userNames = req.query.userNames
             joiUtil.validate({

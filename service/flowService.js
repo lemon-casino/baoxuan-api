@@ -599,7 +599,7 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
  * @param endDoneDate
  * @returns {Promise<*[]>}
  */
-const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) => {
+const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDoneDate) => {
     const getFormIds = (actionConfig) => {
         const ids = {}
         for (const configItem of actionConfig) {
@@ -616,6 +616,36 @@ const getCoreActionData = async (deptId, userNames, startDoneDate, endDoneDate) 
     // 筛选出参与统计的表单流程
     const formIds = getFormIds(coreActionConfig)
     const computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
+    // todo: 视觉(482162119)和全流程的统计userNames要加上外包的信息
+    //   先单独处理，要不就得把外包的人全部返回视觉的前端，可能还得改http method，
+    //   等数据ok稳定后需要整理
+    const user = await userRepo.getUserDetails({userId})
+    const userDDId = user.dingdingUserId
+    // 有条件地为userNames添加外包人信息、离职人员信息
+    let canGetDeptOutSourcingUsers = false
+    let canGetResignUsers = false
+    if (whiteList.pepArr().includes(userDDId)) {
+        canGetDeptOutSourcingUsers = true
+        canGetResignUsers = true
+    } else {
+        const redisUsers = await redisRepo.getAllUsersDetail()
+        const userTargetDeps = redisUsers.find(u => u.userid === userDDId).leader_in_dept
+        const userCurrDept = userTargetDeps.find(item => item.dept_id.toString() === deptId)
+        if (userCurrDept && userCurrDept.leader) {
+            canGetDeptOutSourcingUsers = true
+            canGetResignUsers = true
+        }
+    }
+    if (canGetResignUsers) {
+        const deptResignUsers = await userRepo.getDeptResignUsers(deptId)
+        const strDeptResignUsers = deptResignUsers.map(item => `${item.nickname}[已离职]`).join(",")
+        userNames = `${userNames},${strDeptResignUsers}`
+    }
+    if (canGetDeptOutSourcingUsers) {
+        const deptOutSourcingUsers = await redisRepo.getOutSourcingUsers(deptId)
+        const strDeptOutSourcingUsers = deptOutSourcingUsers.join(",")
+        userNames = `${userNames},${strDeptOutSourcingUsers}`
+    }
 
     const result = await departmentCoreActivityStat.get(userNames, computedFlows, coreActionConfig)
     // 节点汇总

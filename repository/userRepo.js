@@ -4,7 +4,6 @@ const UserError = require("../error/userError")
 const NotFoundError = require("../error/http/notFoundError")
 const departmentRepo = require("../repository/departmentRepo")
 const sequelizeUtil = require("../utils/sequelizeUtil")
-const yiDaReq = require("../core/yiDaReq")
 const innerGroupConst = require("../const/tmp/innerGroupConst")
 const objectConvertUtil = require("../utils/objectConvertUtil")
 const whiteList = require("../config/whiteList")
@@ -131,32 +130,6 @@ const saveUser = async (user) => {
     await models.usersModel.create(user);
 }
 
-const getResignEmployees = async (token) => {
-    // 分页获取所有离职人员id列表
-    const getPagingResignEmployees = async (token, nextToken) => {
-        let {
-            nextToken: dNextToken,
-            hasMore,
-            userIdList: allResignEmployees
-        } = await yiDaReq.getResignEmployees(token, nextToken)
-
-        if (hasMore) {
-            const data = await getPagingResignEmployees(token, dNextToken)
-            allResignEmployees = allResignEmployees.concat(data)
-        }
-        return allResignEmployees
-    }
-    let allResignEmployees = await getPagingResignEmployees(token, 0)
-
-    let allResignEmployeesDetails = []
-    while (allResignEmployees.length > 0) {
-        // 根据ids获取人员离职详情，单次最大支持50
-        const pagingResignEmployees = allResignEmployees.splice(0, 50)
-        const usersResignInfo = await yiDaReq.getResignInfo(token, pagingResignEmployees)
-        allResignEmployeesDetails = allResignEmployeesDetails.concat(usersResignInfo.result)
-    }
-    return allResignEmployeesDetails
-}
 
 const updateUserResignInfo = async (user) => {
     const result = await models.usersModel.update(user,
@@ -167,6 +140,36 @@ const updateUserResignInfo = async (user) => {
     return result
 }
 
+/**
+ * 获取全部离职人员信息
+ *
+ * @returns {Promise<*>}
+ */
+const getAllResignUsers = async () => {
+    const resignUsers = await models.usersModel.findAll({where: {isResign: true}})
+    return resignUsers.map(item => item.get({plain: true}))
+}
+
+/**
+ * 获取部门下离职人员的详情
+ *
+ * @param deptId
+ * @returns {Promise<<Model[]>>}
+ */
+const getDeptResignUsers = async (deptId) => {
+    const deptUsers = await models.deptsUsersModel.findAll({
+        where: {deptId}
+    })
+    const deptUserIds = deptUsers.map(item => item.userId)
+    const deptResignUsers = await models.usersModel.findAll({
+        where: {
+            dingdingUserId: {$in: deptUserIds},
+            isResign: true
+        }
+    })
+    return sequelizeUtil.extractDataValues(deptResignUsers)
+}
+
 module.exports = {
     getUserDetails,
     getAllUsers,
@@ -175,6 +178,7 @@ module.exports = {
     getDepartmentUsers,
     updateUserResignByOnJobUserIds,
     saveUser,
-    getResignEmployees,
-    updateUserResignInfo
+    updateUserResignInfo,
+    getAllResignUsers,
+    getDeptResignUsers
 }

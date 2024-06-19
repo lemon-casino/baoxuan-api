@@ -23,6 +23,7 @@ const get = async (userNames, flows, coreConfig) => {
 
             // 根据配置中状态的计算规则进行统计
             for (const rule of rules) {
+
                 let currentFlows = flows.filter((flow) => flow.formUuid === rule.formId)
 
                 // 需要计算的节点对
@@ -77,7 +78,7 @@ const get = async (userNames, flows, coreConfig) => {
                             let ownerName = ""
                             const {from, id} = ownerRule
                             if (from.toUpperCase() === ownerFrom.FORM) {
-                                ownerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id][0]
+                                ownerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id]
                             } else {
                                 const processReviewId = activityIdMappingConst[id] || id
                                 const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
