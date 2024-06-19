@@ -413,9 +413,7 @@ const convertSelfStatisticToDept = (statistic, userName, resultTemplate) => {
                     deptOfTemplate.ids[id] = 1
                 }
                 deptOfTemplate.users.push({
-                    userName: userName,
-                    sum: notComputedDept.sum,
-                    ids: notComputedDept.ids
+                    userName: userName, sum: notComputedDept.sum, ids: notComputedDept.ids
                 })
                 resultTemplate.departments[i] = deptOfTemplate
                 break
@@ -468,9 +466,7 @@ const getDeptStatistic = async (funOfTodaySelfStatistic, deptId, status, importa
     // 根据departments 下的ids和resultTemplate的ids 分别算出对应的sum
     const idArr = Object.keys(resultTemplate.ids)
     return {
-        ids: idArr,
-        sum: idArr.length,
-        departments: resultTemplate.departments.map(item => {
+        ids: idArr, sum: idArr.length, departments: resultTemplate.departments.map(item => {
             return {
                 deptName: item.deptName,
                 sum: Object.keys(item.ids).length,
@@ -702,28 +698,20 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
         }
     }
 
-    const overdueConfig = [
-        {nameCN: "逾期", nameEN: "overdue", children: []},
-        {nameCN: "未逾期", nameEN: "notOverdue", children: []}
-    ]
-    const flowStatConfig = [
-        {
-            nameCN: "待转入",
-            nameEN: "TODO",
-            children: _.cloneDeep(overdueConfig)
-        },
-        {
+    const overdueConfig = [{nameCN: "逾期", nameEN: "overdue", children: []}, {
+        nameCN: "未逾期",
+        nameEN: "notOverdue",
+        children: []
+    }]
+    const flowStatConfig = [{
+        nameCN: "待转入", nameEN: "TODO", children: _.cloneDeep(overdueConfig)
+    }, {
 
-            nameCN: "进行中",
-            nameEN: "DOING",
-            children: _.cloneDeep(overdueConfig)
-        },
-        {
+        nameCN: "进行中", nameEN: "DOING", children: _.cloneDeep(overdueConfig)
+    }, {
 
-            nameCN: "已完成",
-            nameEN: "DONE",
-            children: _.cloneDeep(overdueConfig)
-        }
+        nameCN: "已完成", nameEN: "DONE", children: _.cloneDeep(overdueConfig)
+    }
         // {
         //     nameCN: "逾期",
         //     nameEN: "OVERDUE",
@@ -743,32 +731,104 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
         return sumFlowStat
     }
 
-    const statusShortTextMap = {"待": "TODO", "中": "DOING", "完": "DONE"}
+    // const statusShortTextMap = {"待": "TODO", "中": "DOING", "完": "DONE"}
+    const statusKeyText = ["待", "中", "完"]
     const statFlowResult = getFlowSumStructure(_.cloneDeep(result))
-    for (const originActionStatResult of result) {
-
-        const actionStatResult = statFlowResult.filter(item => item.nameCN === originActionStatResult.actionName)[0]
-        for (const originSubActResult of originActionStatResult.children) {
-            const subActName = originSubActResult.nameCN.replace("待拍", "").replace("进行中", "").replace("已完成", "").replace("完成", "").replace("待入", "")
-            for (const originOverdueResult of originSubActResult.children) {
-                // 统计节点下所有人的的ids
-                let overdueIds = []
-                for (const userStatResult of originOverdueResult.children) {
-                    overdueIds = overdueIds.concat(userStatResult.ids)
+    for (const actionResult of statFlowResult) {
+        // 找到同名的配置
+        const sameNameActionConfig = coreActionConfig.filter(item => item.actionName === actionResult.nameCN)[0]
+        // 从配置 coreActionConfig 中找到类似‘全套-待xxx’中的rules
+        for (const statusResult of actionResult.children) {
+            const keyText = statusKeyText.filter(key => statusResult.nameCN.includes(key))[0]
+            // 找到具有想匹配关键词的状态节点(s)
+            const sameKeyTextStatusesConfig = sameNameActionConfig.actionStatus.filter(item => item.nameCN.includes(keyText))
+            // 分别根据其中的配置，统计流程并放到逾期下对应的摄影或美编节点下
+            for (const statusConfig of sameKeyTextStatusesConfig) {
+                // 获取需要统计到的节点名称
+                const getPureActionName = (text) => {
+                    const uselessKeyText = ["待", "拍", "入", "进", "行", "中", "已", "完", "成"]
+                    for (const key of uselessKeyText) {
+                        text = text.replace(key, "")
+                    }
+                    return text
                 }
 
-                // 找到要汇入的结果节点
-                for (const shortText of Object.keys(statusShortTextMap)) {
-                    if (originSubActResult.nameCN.includes(shortText)) {
-                        const status = statusShortTextMap[shortText]
-                        const statusResult = actionStatResult.children.filter(item => item.nameEN === status)[0]
-                        const overdueResult = statusResult.children.filter(item => item.nameCN === originOverdueResult.nameCN)[0]
-                        overdueResult.children.push({nameCN: subActName, ids: overdueIds})
+                const {nameCN, rules} = statusConfig
+                const actionName = getPureActionName(nameCN)
+
+                // 根据表单的统计规则，将流程统计到对应的节点下
+                for (const formRule of rules) {
+                    const formFlows = computedFlows.filter(flow => flow.formUuid === formRule.formId)
+
+                    // 将流程统计到对应结果状态中，包含逾期
+                    for (const flow of formFlows) {
+                        const activities = flow.overallprocessflow
+
+                        for (let i = 0; i < formRule.flowNodeRules.length; i++) {
+                            const flowNodeRule = formRule.flowNodeRules[i]
+
+                            const {from: fromNode, to: toNode, overdue: overdueNode} = flowNodeRule
+                            const fromNodeMatched = activities.filter(
+                                item => item.activityId === fromNode.id &&
+                                    fromNode.status.includes(item.type)).length > 0
+                            const toNodeMatched = activities.filter(
+                                item => item.activityId === toNode.id &&
+                                    toNode.status.includes(item.type)).length > 0
+                            // 对于没有逾期的结果统计直接统计到状态下
+                            let needToStatResult = statusResult
+                            if (overdueNode) {
+                                const overdueActivity = activities.filter(
+                                    item => item.activityId === overdueNode.id &&
+                                        overdueNode.status.includes(item.type))
+                                if (overdueActivity.length === 0) {
+                                    continue
+                                }
+                                // 找到结果中的逾期统计节点
+                                needToStatResult = statusResult.children.find(item => item.nameCN === (overdueActivity[0].isOverDue ? "逾期" : "未逾期"))
+                            }
+
+                            if (fromNodeMatched && toNodeMatched) {
+                                if (keyText === "完" && i < formRule.flowNodeRules.length - 1) {
+                                    continue
+                                }
+                                const tmpSubActionResult = needToStatResult.children.find(item => item.nameCN === actionName)
+                                if (tmpSubActionResult) {
+                                    tmpSubActionResult.ids.push(flow.processInstanceId)
+                                } else {
+                                    needToStatResult.children.push({nameCN: actionName, ids: [flow.processInstanceId]})
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     }
+    //
+    // for (const originActionStatResult of result) {
+    //
+    //     const actionStatResult = statFlowResult.filter(item => item.nameCN === originActionStatResult.actionName)[0]
+    //     for (const originSubActResult of originActionStatResult.children) {
+    //         const subActName = originSubActResult.nameCN.replace("待拍", "").replace("进行中", "").replace("已完成", "").replace("完成", "").replace("待入", "")
+    //         for (const originOverdueResult of originSubActResult.children) {
+    //             // 统计节点下所有人的的ids
+    //             let overdueIds = []
+    //             for (const userStatResult of originOverdueResult.children) {
+    //                 overdueIds = overdueIds.concat(userStatResult.ids)
+    //             }
+    //
+    //             // 找到要汇入的结果节点
+    //             for (const shortText of Object.keys(statusShortTextMap)) {
+    //                 if (originSubActResult.nameCN.includes(shortText)) {
+    //                     const status = statusShortTextMap[shortText]
+    //                     const statusResult = actionStatResult.children.filter(item => item.nameEN === status)[0]
+    //                     const overdueResult = statusResult.children.filter(item => item.nameCN === originOverdueResult.nameCN)[0]
+    //                     overdueResult.children.push({nameCN: subActName, ids: overdueIds})
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     result.unshift({actionName: "工作量汇总", actionCode: "sumActStat", children: statActivityResult})
     result.unshift({actionName: "流程汇总", actionCode: "sumFlowStat", children: statFlowResult})
@@ -825,20 +885,9 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate, formIds) => {
         //     process.overallprocessflow = reviews
         // }
 
-        const processDataReviewItem = await Promise.all([
-            // 5.8s
-            flowRepo.getProcessDataByReviewItemDoneTime(
-                dateUtil.startOfDay(startDoneDate),
-                dateUtil.endOfDay(endDoneDate),
-                formIds
-            ),
-            // 2.8s
-            flowRepo.getProcessWithReviewByReviewItemDoneTime(
-                dateUtil.startOfDay(startDoneDate),
-                dateUtil.endOfDay(endDoneDate),
-                formIds
-            )
-        ])
+        const processDataReviewItem = await Promise.all([// 5.8s
+            flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds), // 2.8s
+            flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds)])
 
         flows = processDataReviewItem[1]
         // 合并流程的data和审核流信息
@@ -992,18 +1041,15 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
     // 对于视觉部(482162119)和管理中台(902643613)，将外包人的名字添加到userNames中
     if (deptId && ["902643613", "482162119"].includes(deptId.toString())) {
         const getVisionOutSourcingNames = (flows) => {
-            const outSourcingForms = [
-                {
-                    formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
-                    formName: "外包拍摄视觉流程",
-                    outSourceChargerFieldId: "textField_lvumnj2k"
-                },
-                {
-                    formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                    formName: "外包修图视觉流程",
-                    outSourceChargerFieldId: "textField_lx48e5gk"
-                }
-            ]
+            const outSourcingForms = [{
+                formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+                formName: "外包拍摄视觉流程",
+                outSourceChargerFieldId: "textField_lvumnj2k"
+            }, {
+                formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                formName: "外包修图视觉流程",
+                outSourceChargerFieldId: "textField_lx48e5gk"
+            }]
 
             const outSourcingUsers = {}
             for (const flow of flows) {
@@ -1036,10 +1082,16 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
     for (const formStat of formResult) {
         for (const activityStat of formStat.children) {
             const activityOverdue = {
-                name: "逾期", type: "OVERDUE", excludeUpSum: true, children: [
-                    {name: "进行中", type: "TODO", sum: 0, ids: [], children: []},
-                    {name: "已完成", type: "HISTORY", sum: 0, ids: [], children: []}
-                ]
+                name: "逾期",
+                type: "OVERDUE",
+                excludeUpSum: true,
+                children: [{name: "进行中", type: "TODO", sum: 0, ids: [], children: []}, {
+                    name: "已完成",
+                    type: "HISTORY",
+                    sum: 0,
+                    ids: [],
+                    children: []
+                }]
             }
             for (const statusStat of activityStat.children) {
                 if (statusStat.type === flowReviewTypeConst.FORCAST) {
@@ -1066,9 +1118,7 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
                 statusStat.children = []
                 for (const key of Object.keys(uniqueStateStat)) {
                     statusStat.children.push({
-                        userName: key,
-                        ids: uniqueStateStat[key].ids,
-                        sum: uniqueStateStat[key].ids.length
+                        userName: key, ids: uniqueStateStat[key].ids, sum: uniqueStateStat[key].ids.length
                     })
                 }
             }
@@ -1079,13 +1129,22 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
     // 根据节点状态对流程进行统计
     for (const formStat of formResult) {
         // 统计流程状态的模版
-        const flowStatusStatResult = [
-            {status: flowStatusConst.RUNNING, name: "进行中", sum: 0, ids: []},
-            {status: flowStatusConst.COMPLETE, name: "已完成", sum: 0, ids: []},
-            {status: flowStatusConst.TERMINATED, name: "终止", sum: 0, ids: []},
-            {status: flowStatusConst.ERROR, name: "异常", sum: 0, ids: []},
-            {status: flowStatusConst.OVERDUE, name: "逾期", sum: 0, ids: []}
-        ]
+        const flowStatusStatResult = [{
+            status: flowStatusConst.RUNNING,
+            name: "进行中",
+            sum: 0,
+            ids: []
+        }, {status: flowStatusConst.COMPLETE, name: "已完成", sum: 0, ids: []}, {
+            status: flowStatusConst.TERMINATED,
+            name: "终止",
+            sum: 0,
+            ids: []
+        }, {status: flowStatusConst.ERROR, name: "异常", sum: 0, ids: []}, {
+            status: flowStatusConst.OVERDUE,
+            name: "逾期",
+            sum: 0,
+            ids: []
+        }]
         const statProcessToStatusResult = (processInstanceId, status, formStatusResult) => {
             const tmpStatusResult = formStatusResult.filter(statusResult => statusResult.status === status)[0]
             tmpStatusResult.ids.push(processInstanceId)
@@ -1165,30 +1224,22 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
     return formResult
 }
 
-const overdueAloneStatusStructure = [
-    {name: "待转入", type: flowReviewTypeConst.FORCAST, excludeUpSum: true, children: []},
-    {
-        name: "进行中",
-        type: flowReviewTypeConst.TODO,
-        children: []
-    },
-    {
-        name: "已完成", type: flowReviewTypeConst.HISTORY,
-        children: []
-    },
-    {
-        name: "已逾期", type: "OVERDUE", excludeUpSum: true, children: [
-            {
-                name: "进行中",
-                type: flowReviewTypeConst.TODO,
-                children: []
-            },
-            {
-                name: "已完成", type: flowReviewTypeConst.HISTORY,
-                children: []
-            }]
-    }
-]
+const overdueAloneStatusStructure = [{
+    name: "待转入",
+    type: flowReviewTypeConst.FORCAST,
+    excludeUpSum: true,
+    children: []
+}, {
+    name: "进行中", type: flowReviewTypeConst.TODO, children: []
+}, {
+    name: "已完成", type: flowReviewTypeConst.HISTORY, children: []
+}, {
+    name: "已逾期", type: "OVERDUE", excludeUpSum: true, children: [{
+        name: "进行中", type: flowReviewTypeConst.TODO, children: []
+    }, {
+        name: "已完成", type: flowReviewTypeConst.HISTORY, children: []
+    }]
+}]
 
 /**
  * 获取全流程数据
@@ -1224,8 +1275,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
     }
 
     const pureUsersWithDepartment = await redisRepo.getAllUsersWithKeyFields()
-    const originResult = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, formIds, deptId,
-        // 对执行中台分配外包的流程分情况进行处理
+    const originResult = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, formIds, deptId, // 对执行中台分配外包的流程分情况进行处理
         // 1.全流程deptId=""，进行节点clone
         // 2.执行中台本部门deptId="902515853"或者其他部门,不需要改变
         // 3.视觉部deptId="482162119", 需要进行替换
@@ -1271,8 +1321,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                 }
             }
             return flows
-        },
-        (flows) => {
+        }, (flows) => {
             // 人员跨部门的情况下，在指定部门下统计指定的表单，管理中台全流程忽略
             // 针对部门的统计，存在人员跨部门，需要根据forms分别统计
             if (deptId) {
@@ -1318,14 +1367,12 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                             const newTypes = _.cloneDeep(tmpTypes)
                             newTypes.push(originMaybeOperatorResult.type)
                             originOperatorsResult.push({
-                                types: newTypes,
-                                ...operatorResult
+                                types: newTypes, ...operatorResult
                             })
                         }
                     } else {
                         originOperatorsResult.push({
-                            types: tmpTypes,
-                            ...originMaybeOperatorResult
+                            types: tmpTypes, ...originMaybeOperatorResult
                         })
                     }
                 }
@@ -1382,8 +1429,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                 const tmpDepartmentsResult = newFormResult.children.filter(depResult => depResult.deptName === userDepName)
                 if (tmpDepartmentsResult.length === 0) {
                     newFormResult.children.push({
-                        deptName: userDepName,
-                        children: _.cloneDeep(overdueAloneStatusStructure)
+                        deptName: userDepName, children: _.cloneDeep(overdueAloneStatusStructure)
                     })
                     deptResult = newFormResult.children[newFormResult.children.length - 1]
                 } else {
@@ -1435,8 +1481,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
     let deptCoreForms = []
     if (deptId) {
         deptCoreForms = await departmentFlowFormRepo.getDepartmentFlowForms({
-            deptId,
-            type: deptFlowFormConst.deptFlowFormCore
+            deptId, type: deptFlowFormConst.deptFlowFormCore
         })
     } else {
         deptCoreForms = await flowFormRepo.getAllForms({status: "1"})
