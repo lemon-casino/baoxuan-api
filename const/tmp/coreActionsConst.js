@@ -11216,6 +11216,11 @@ const mbCoreActionsConfig = [
                                     name: "分配剪辑负责人",
                                     status: ["TODO"]
                                 },
+                                overdue: {
+                                    id: "node_oclx42mxwc1",
+                                    name: "分配剪辑负责人",
+                                    status: ["TODO"]
+                                },
                                 ownerRule: {
                                     from: "process",
                                     name: "分配剪辑负责人",
