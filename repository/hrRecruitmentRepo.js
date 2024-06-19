@@ -312,7 +312,7 @@ const getHrRecruitment = async (startDate, endDate,) => {
     }
 };
 
-const employeeManagement = async (page, pageSize, quarters, department) => {
+const employeeManagement = async (page, pageSize, quarters, department, rank, mainBody) => {
     try {
         // const where = {date: {$between: [startDateTime, endDateTime]}}
         const where = {
@@ -325,6 +325,13 @@ const employeeManagement = async (page, pageSize, quarters, department) => {
         if (department) {
             where.section = department
         }
+        if (rank) {
+            where.rank = mainBody === '-' ? null : rank;
+        }
+        if (mainBody) {
+            where.contractCompany = mainBody === '-' ? null : mainBody;
+        }
+
 
         const offset = (page - 1) * pageSize;
         return await ZaiZhiRen.findAndCountAll(

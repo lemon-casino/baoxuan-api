@@ -115,13 +115,22 @@ const employeeManagement = async (req, res, next) => {
     };
     try {
 
-        let {page, pageSize, quarters, department} = req.query;
+        /*       page: 1
+               pageSize: 20
+               department: 执行中台部
+               quarters: 采购助理
+               rank: 助理
+               abnormal: transfer
+               idling: 1
+               mainBody: 北京超速树懒科技有限公司
+               approval:*/
+        let {page, pageSize, quarters, department, rank, abnormal, idling, mainBody, approval} = req.query;
 //如果page  pageSize  quarters没有传递过来  默认为1  10
         page = page || 1;
         pageSize = pageSize || 20;
 
 
-        await Hr_RecruitService.employeeManagement(parseInt(page), parseInt(pageSize), quarters, department, rest);
+        await Hr_RecruitService.employeeManagement(parseInt(page), parseInt(pageSize), quarters, department, rank, abnormal, idling, mainBody, approval, rest);
 
         return res.send(success(rest));
     } catch (error) {
