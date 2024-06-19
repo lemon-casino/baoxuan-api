@@ -2,7 +2,7 @@ const sha256 = require("sha256")
 const formReviewRepo = require("../repository/formReviewRepo")
 const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo")
 const flowFormRepo = require("../repository/flowFormRepo")
-const dingDingReq = require("../core/dingDingReq")
+const yiDaReq = require("../core/yiDaReq")
 const redisRepo = require("../repository/redisRepo")
 const formImportantItems = require("../const/tmp/formImportantItems")
 const {timingFormFlowNodes} = require("../const/formConst")
@@ -47,13 +47,13 @@ const syncFormsFromDingDing = async () => {
     const token = tokenObj.access_token
     const allFormsInDB = await flowFormRepo.getAllForms({})
     // 获取钉钉的form信息
-    const allFormsInDingDing = await dingDingReq.getAllForms(token, userId)
+    const allFormsInDingDing = await yiDaReq.getAllForms(token, userId)
 
     for (const form of allFormsInDingDing) {
         let formsInDB = allFormsInDB.filter((item) => {
             return item.flowFormId === form.formUuid
         })
-        const formDetailsResult = await dingDingReq.getFormFields(form.formUuid, userId, token)
+        const formDetailsResult = await yiDaReq.getFormFields(form.formUuid, userId, token)
         const hashOfDetails = sha256(JSON.stringify(formDetailsResult.result))
 
         // 老的 form 判断内容是否修改，是就同步

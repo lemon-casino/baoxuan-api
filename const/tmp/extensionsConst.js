@@ -62,7 +62,6 @@ const getExtensions = () => {
 //     }
 //     return users
 // }
-
 /**
  * 获取用户的extension信息
  *

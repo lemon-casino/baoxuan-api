@@ -96,14 +96,19 @@ const employeeManagement = async (page, pageSize, quarters, department, rest) =>
     try {
 
 
-        const formatDate = date => new Date(date).toLocaleDateString();
+        // 如果data为空   则返回空 如果不为空  则返回data new Date(date).toLocaleDateString();
+        const formatDate = date => date ? new Date(date).toLocaleDateString() : '';
         const employeeData = await Hr_RecruitmentDepartmentPositions.employeeManagement(parseInt(page), parseInt(pageSize), quarters, department);
         rest.employee = {
             ...employeeData,
             rows: employeeData.rows.map(item => ({
                 ...item,
                 birthday: formatDate(item.birthday),
-                onBoardTime: formatDate(item.onBoardTime)
+                onBoardTime: formatDate(item.onBoardTime),
+                startDateFirstContract: formatDate(item.startDateFirstContract),
+                firstContractExpirationDate: formatDate(item.firstContractExpirationDate),
+                currentContractStartingDate: formatDate(item.currentContractStartingDate),
+                currentContractExpirationDate: formatDate(item.currentContractExpirationDate)
             }))
         };
         rest.filterItems.push({
@@ -116,8 +121,95 @@ const employeeManagement = async (page, pageSize, quarters, department, rest) =>
             key: 'department',
             value: await Hr_RecruitmentDepartmentPositions.department(),
         })
+        // 员工档案 员工合同管路   本月新员工数量 本月离职员工数量
+        rest.statistics = await Hr_RecruitmentDepartmentPositions.statistics();
+        return rest
+    } catch (error) {
+        return {message: error.message};
+    }
 
+};
+const StatisticsEcharts = async (rest) => {
 
+    try {
+
+        /* 职级
+         RankEcharts: [],
+        //入职
+        EmploymentEcharts: [],
+        //员工年龄列表
+        AgeEcharts: [],
+        //学历分布
+        qualificationEcharts: []
+        // 部门分布
+        departmentEcharts
+        、*/
+        rest.qualificationEcharts = await Hr_RecruitmentDepartmentPositions.qualificationEcharts();
+        const data = await Hr_RecruitmentDepartmentPositions.employmentEcharts();
+        const AgeEcharts = await Hr_RecruitmentDepartmentPositions.AgeEcharts();
+
+        const groups = [
+            {label: '19', min: -Infinity, max: 19, total: 0, data: []},
+            {label: '20-29', min: 20, max: 29, total: 0, data: []},
+            {label: '30-39', min: 30, max: 39, total: 0, data: []},
+            {label: '40-49', min: 40, max: 49, total: 0, data: []},
+            {label: '50-59', min: 50, max: 59, total: 0, data: []}
+        ];
+        AgeEcharts.forEach(item => {
+            if (item.age !== null) {
+                for (let group of groups) {
+                    if (item.age >= group.min && item.age <= group.max) {
+                        group.total += item.total;
+                        group.data.push(item);
+                        break;
+                    }
+                }
+            }
+        });
+        rest.AgeEcharts = groups
+
+        rest.EmploymentEcharts.forEach(item => {
+            const targetItem = data.find(target => item.month === target.month);
+            if (targetItem) {
+                item.total = targetItem.total;
+            }
+        });
+
+        const departmentEcharts = await Hr_RecruitmentDepartmentPositions.departmentEcharts();
+        // 定义需要统计的部门
+        const targetSections = [
+            '天猫部', '京东部', '拼多多部', '猫超部', '淘工厂部', '抖音/快手部', 'coupang部'
+        ];
+        // 过滤出目标部门的数据
+        const filteredData = departmentEcharts.filter(item => targetSections.includes(item.section));
+
+        const middlePlatform = [
+            '数据中台部', '客服部', '采购部', '开发部门', '视觉部', '执行中台部', '管理中台', '总经办'
+        ];
+        const middlePlatformdData = departmentEcharts.filter(item => middlePlatform.includes(item.section));
+
+        const rearEnd = [
+            '财务部', '人力', '行政', '法务'
+        ];
+        const rearEnddData = departmentEcharts.filter(item => rearEnd.includes(item.section));
+
+        //         计算总和生成最终的对象
+        rest.departmentEcharts = [
+            {
+                section: '前端',
+                total: filteredData.reduce((sum, item) => sum + item.total, 0),
+                data: filteredData
+            }, {
+                section: '中台',
+                total: middlePlatformdData.reduce((sum, item) => sum + item.total, 0),
+                data: middlePlatformdData
+            }
+            , {
+                section: '后端',
+                total: rearEnddData.reduce((sum, item) => sum + item.total, 0),
+                data: rearEnddData
+            }
+        ];
         return rest
     } catch (error) {
         return {message: error.message};
@@ -129,5 +221,6 @@ module.exports = {
     recruitmentDepartment,
     recruitmentTalent,
     progressMap,
-    employeeManagement
+    employeeManagement,
+    StatisticsEcharts
 }

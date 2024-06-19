@@ -15,7 +15,11 @@ const getPagingOperateAttributes = async (req, res, next) => {
             platform,
             shopName
         } = req.query
-        joiUtil.validate({page, pageSize, deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required}})
+        joiUtil.validate({
+            page, pageSize,
+            deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required},
+            platform: {value: platform, schema: joiUtil.commonJoiSchemas.required}
+        })
         const result = await dianShangOperationAttributeService.getPagingOperateAttributes(
             deptId,
             Math.max(parseInt(page) - 1, 0),

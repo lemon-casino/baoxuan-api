@@ -1,6 +1,6 @@
 const {redisKeys} = require("../const/redisConst")
 const redisUtil = require("../utils/redisUtil")
-const dingDingReq = require("../core/dingDingReq")
+const yiDaReq = require("../core/yiDaReq")
 
 const setToken = async (ddToken) => {
     await redisUtil.setValue(redisKeys.DDToken, JSON.stringify(ddToken), 7200)
@@ -53,7 +53,7 @@ const getAllUsersWithKeyFields = async () => {
 
 // 根据流程id获取全部审批流程详情
 const getAllProcessFlow = async (token, userId, formInstanceId) => {
-    const data = await dingDingReq.getProcessRecord(token, userId, formInstanceId);
+    const data = await yiDaReq.getProcessRecord(token, userId, formInstanceId);
     if (data) {
         return data.result;
     }

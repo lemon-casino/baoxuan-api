@@ -214,7 +214,7 @@ const getInvert = async () => {
                 ]
             },
             group: [Sequelize.fn('date_format', Sequelize.col('date'), '%m')], //分组
-            logging: true,
+            logging: false,
             raw: true
         });
 
@@ -315,8 +315,9 @@ const getHrRecruitment = async (startDate, endDate,) => {
 const employeeManagement = async (page, pageSize, quarters, department) => {
     try {
         // const where = {date: {$between: [startDateTime, endDateTime]}}
-        const where = {};
-
+        const where = {
+            name: {[Op.notLike]: '机器人'}
+        };
 
         if (quarters) {
             where.position = quarters
@@ -334,7 +335,7 @@ const employeeManagement = async (page, pageSize, quarters, department) => {
                 order: [['onBoardTime', 'DESC']],
                 where,
                 raw: true,
-                logging: true
+                logging: false
             }
         );
 
@@ -367,11 +368,11 @@ const department = async () => {
             ],
             where: {
                 section: {
-                    [Op.ne]: '北京八千行商贸有限公司'
+                    [Op.ne]: '北京八千行商贸有限公司',
                 }
             },
             raw: true,
-            logging: true
+            logging: false
         });
 
 
@@ -393,13 +394,145 @@ const quarters = async () => {
                 }
             },
             raw: true,
-            logging: true
+            logging: false
         });
 
     } catch (error) {
         throw new Error('查询数据失败');
     }
 };
+
+
+const statistics = async () => {
+    try {
+        /*select
+  count(1) as 总数,
+  count(case when contract_company is not null then 1 end) as 合同管理数量
+from zai_zhi_ren;*/
+        return await ZaiZhiRen.sequelize.query(
+            `SELECT
+    total,
+    contractManagementQuantity,
+    numberOfNewEmployees,
+    CASE
+        WHEN contractManagementQuantity = 0 THEN 0
+        ELSE ROUND(numberOfNewEmployees / contractManagementQuantity, 2)
+    END as recentRatio,
+    numberresignations,
+    Joined_onth,
+    Idling,
+    total - jumptotal AS jumptotal,
+    recentTotal
+FROM (
+    SELECT
+        COUNT(1) AS total,
+        COUNT(CASE WHEN   on_board_time <=  LAST_DAY(CURDATE() - INTERVAL 1 MONTH)  and  employee_status != '离职'     THEN 1 END) AS recentTotal,
+        COUNT(CASE WHEN   contract_company IS NOT NULL THEN 1 END) AS contractManagementQuantity,
+        COUNT(CASE WHEN   on_board_time >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND on_board_time <= LAST_DAY(CURDATE()) THEN 1 END) AS numberOfNewEmployees,
+        COUNT(CASE WHEN  employee_status = '离职' AND turnover_time >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND turnover_time <= LAST_DAY(CURDATE()) THEN 1 END) AS numberresignations,
+        COUNT(CASE WHEN  employee_status != '离职' AND on_board_time >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND on_board_time <= LAST_DAY(CURDATE()) THEN 1 END) AS Joined_onth,
+        COUNT(CASE WHEN  employee_status = '离职' AND turnover_time >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND turnover_time <= LAST_DAY(CURDATE())  AND on_board_time >= DATE_FORMAT(CURDATE(), '%Y-%m-01') AND on_board_time <= LAST_DAY(CURDATE())  THEN 1 END) AS Idling,
+        COUNT(CASE WHEN  employee_status = '离职'  THEN 1 END) AS jumptotal
+    FROM
+        zai_zhi_ren
+) as subquery;`,
+            {
+                type: QueryTypes.SELECT,
+                logging: false
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
+const qualificationEcharts = async () => {
+    try {
+
+        //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
+        return await ZaiZhiRen.findAll({
+            attributes: [
+                [Sequelize.fn('COUNT', Sequelize.col('educational_background')), 'total'],
+                ['educational_background', 'qualification']
+            ],
+            group: ['educational_background'],
+            raw: true,
+            logging: false
+        });
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
+
+const AgeEcharts = async () => {
+    try {
+
+
+        return await ZaiZhiRen.sequelize.query(
+            `    select COUNT(*) AS total, age   
+                FROM ( 
+                    SELECT TIMESTAMPDIFF(YEAR, birthday, CURDATE()) AS age 
+                    FROM zai_zhi_ren ) AS subquery 
+                    GROUP BY age;
+                `, {
+                type: QueryTypes.SELECT
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
+
+const employmentEcharts = async () => {
+    try {
+
+
+        return await ZaiZhiRen.sequelize.query(
+            ` SELECT COUNT(*) AS total, MONTH(on_board_time) AS month FROM zai_zhi_ren WHERE
+                YEAR(on_board_time) = YEAR(CURDATE())   
+                GROUP BY 
+                MONTH(on_board_time)
+                ORDER BY
+                month;
+            `, {
+                type: QueryTypes.SELECT
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+const departmentEcharts = async () => {
+    try {
+
+        //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
+        return await ZaiZhiRen.findAll({
+            attributes: [
+                [Sequelize.fn('COUNT', Sequelize.col('section')), 'total'],
+                ['section', 'section']
+            ],
+            group: ['section'],
+
+            raw: true,
+            logging: false
+        });
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
 module.exports = {
     getHrDepartment,
     getHrQuarters,
@@ -412,5 +545,10 @@ module.exports = {
     getHrRecruitment,
     employeeManagement,
     department,
-    quarters
+    quarters,
+    statistics,
+    qualificationEcharts,
+    AgeEcharts,
+    employmentEcharts,
+    departmentEcharts
 };
