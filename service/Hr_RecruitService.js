@@ -121,6 +121,11 @@ const employeeManagement = async (page, pageSize, quarters, department, rest) =>
             key: 'department',
             value: await Hr_RecruitmentDepartmentPositions.department(),
         })
+        rest.filterItems.push({
+            title: '主体',
+            key: 'mainBody',
+            value: await Hr_RecruitmentDepartmentPositions.mainBody(),
+        })
         // 员工档案 员工合同管路   本月新员工数量 本月离职员工数量
         rest.statistics = await Hr_RecruitmentDepartmentPositions.statistics();
         return rest
