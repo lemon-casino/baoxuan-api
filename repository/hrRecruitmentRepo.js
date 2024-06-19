@@ -546,6 +546,24 @@ const departmentEcharts = async () => {
     }
 };
 
+const mainBody = async () => {
+    try {
+
+        //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
+        return await ZaiZhiRen.findAll({
+            attributes: [
+                ['COALESCE(contract_company, \'-\')', 'mainBody']
+            ],
+            group: ['contract_company'],
+            raw: true,
+            logging: false
+        });
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
 module.exports = {
     getHrDepartment,
     getHrQuarters,
@@ -563,5 +581,6 @@ module.exports = {
     qualificationEcharts,
     AgeEcharts,
     employmentEcharts,
-    departmentEcharts
+    departmentEcharts,
+    mainBody
 };
