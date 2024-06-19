@@ -496,13 +496,28 @@ const employmentEcharts = async () => {
 
 
         return await ZaiZhiRen.sequelize.query(
-            ` SELECT COUNT(*) AS total, MONTH(on_board_time) AS month FROM zai_zhi_ren WHERE
-                YEAR(on_board_time) = YEAR(CURDATE())   
-                GROUP BY 
-                MONTH(on_board_time)
-                ORDER BY
-                month;
-            `, {
+            `SELECT
+    CASE
+        WHEN TIMESTAMPDIFF(YEAR, on_board_time, NOW()) < 1 THEN '一年以内'
+        WHEN TIMESTAMPDIFF(YEAR, on_board_time, NOW()) BETWEEN 1 AND 3 THEN '1-3年'
+        WHEN TIMESTAMPDIFF(YEAR, on_board_time, NOW()) BETWEEN 3 AND 5 THEN '3-5年'
+        WHEN TIMESTAMPDIFF(YEAR, on_board_time, NOW()) BETWEEN 5 AND 10 THEN '5-10年'
+        ELSE '10年以上'
+    END AS classificationOfYearsOfEmployment,
+    COUNT(*) AS numberOfEmployees,
+    GROUP_CONCAT(name SEPARATOR ', ') AS data
+FROM
+    zai_zhi_ren
+GROUP BY
+    classificationOfYearsOfEmployment
+ORDER BY
+    CASE
+        WHEN classificationOfYearsOfEmployment = '一年以内' THEN 1
+        WHEN classificationOfYearsOfEmployment = '1-3年' THEN 2
+        WHEN classificationOfYearsOfEmployment = '3-5年' THEN 3
+        WHEN classificationOfYearsOfEmployment = '5-10年' THEN 4
+        ELSE 5
+    END; `, {
                 type: QueryTypes.SELECT
             }
         );
@@ -522,7 +537,7 @@ const departmentEcharts = async () => {
                 ['section', 'section']
             ],
             group: ['section'],
-            
+
             raw: true,
             logging: false
         });

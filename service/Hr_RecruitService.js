@@ -145,7 +145,7 @@ const StatisticsEcharts = async (rest) => {
         departmentEcharts
         、*/
         rest.qualificationEcharts = await Hr_RecruitmentDepartmentPositions.qualificationEcharts();
-        const data = await Hr_RecruitmentDepartmentPositions.employmentEcharts();
+        rest.EmploymentEcharts = await Hr_RecruitmentDepartmentPositions.employmentEcharts();
         const AgeEcharts = await Hr_RecruitmentDepartmentPositions.AgeEcharts();
 
         const groups = [
@@ -168,12 +168,6 @@ const StatisticsEcharts = async (rest) => {
         });
         rest.AgeEcharts = groups
 
-        rest.EmploymentEcharts.forEach(item => {
-            const targetItem = data.find(target => item.month === target.month);
-            if (targetItem) {
-                item.total = targetItem.total;
-            }
-        });
 
         const departmentEcharts = await Hr_RecruitmentDepartmentPositions.departmentEcharts();
         // 定义需要统计的部门
