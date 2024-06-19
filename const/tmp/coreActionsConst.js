@@ -1413,7 +1413,7 @@ const mbCoreActionsConfig = [
                         }]
                     },
                     {
-                        formName: " 天猫链接上架流程",
+                        formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
                             {fieldId: "radioField_lv7ht3fd", opCode: opCodes.EqualAny, value: ["全套", "套图"]}

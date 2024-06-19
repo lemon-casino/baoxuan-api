@@ -12,7 +12,7 @@ const joiErrorMessages = {
 const commonJoiSchemas = {
     required: Joi.required(),
     strRequired: Joi.string().required(),
-    numberRequired: Joi.string().alphanum().min(0).required(),
+    numberRequired: Joi.number().min(0).required(),
     dateRequired: Joi.date().required(),
     arrayRequired: Joi.array().required(),
     funcRequired: Joi.func().required()
