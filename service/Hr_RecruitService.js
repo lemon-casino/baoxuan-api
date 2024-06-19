@@ -123,6 +123,7 @@ const employeeManagement = async (page, pageSize, quarters, department, rest) =>
         })
         // 员工档案 员工合同管路   本月新员工数量 本月离职员工数量
         rest.statistics = await Hr_RecruitmentDepartmentPositions.statistics();
+
         return rest
     } catch (error) {
         return {message: error.message};
@@ -145,7 +146,12 @@ const StatisticsEcharts = async (rest) => {
         departmentEcharts
         、*/
         rest.qualificationEcharts = await Hr_RecruitmentDepartmentPositions.qualificationEcharts();
-        const data = await Hr_RecruitmentDepartmentPositions.employmentEcharts();
+
+        rest.EmploymentEcharts = await Hr_RecruitmentDepartmentPositions.employmentEcharts();
+        rest.EmploymentEcharts.forEach(item => {
+            item.data = item.data.split(',');
+        })
+
         const AgeEcharts = await Hr_RecruitmentDepartmentPositions.AgeEcharts();
 
         const groups = [
@@ -168,12 +174,6 @@ const StatisticsEcharts = async (rest) => {
         });
         rest.AgeEcharts = groups
 
-        rest.EmploymentEcharts.forEach(item => {
-            const targetItem = data.find(target => item.month === target.month);
-            if (targetItem) {
-                item.total = targetItem.total;
-            }
-        });
 
         const departmentEcharts = await Hr_RecruitmentDepartmentPositions.departmentEcharts();
         // 定义需要统计的部门
