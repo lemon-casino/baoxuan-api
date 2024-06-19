@@ -743,8 +743,8 @@ const getSelfFightingSingleItemLinkOperationCount = async (singleItems, fighting
 //
 //         result.items.push({name: item.name, sum: items.length, clickingAdditionalParams: item.values})
 //
-//         for (const tmp of items) {
-//             uniqueItems[tmp.id] = 1
+//         for (const tmp1.json of items) {
+//             uniqueItems[tmp1.json.id] = 1
 //         }
 //     }
 //     const sum = await singleItemTaoBaoRepo.getError60SingleIte(productLineLeaders, timeRange)

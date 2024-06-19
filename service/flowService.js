@@ -25,6 +25,7 @@ const whiteList = require("../config/whiteList")
 const extensionsConst = require("../const/tmp/extensionsConst")
 const deptHiddenFormsConst = require("../const/tmp/deptHiddenFormsConst")
 const deptFlowFormConst = require("../const/deptFlowFormConst")
+const {opFunctions} = require("../const/operatorConst");
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -758,14 +759,24 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
 
                 // 根据表单的统计规则，将流程统计到对应的节点下
                 for (const formRule of rules) {
-                    const formFlows = computedFlows.filter(flow => flow.formUuid === formRule.formId)
+                    let formFlows = computedFlows.filter(flow => flow.formUuid === formRule.formId)
+
+                    if (formRule.flowDetailsRules) {
+                        for (const detailsRule of formRule.flowDetailsRules) {
+                            formFlows = formFlows.filter(flow => {
+                                return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
+                            })
+                        }
+                    }
 
                     // 将流程统计到对应结果状态中，包含逾期
                     for (const flow of formFlows) {
                         const activities = flow.overallprocessflow
 
                         for (let i = 0; i < formRule.flowNodeRules.length; i++) {
+
                             const flowNodeRule = formRule.flowNodeRules[i]
+
 
                             const {from: fromNode, to: toNode, overdue: overdueNode} = flowNodeRule
                             const fromNodeMatched = activities.filter(
@@ -787,13 +798,7 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
                                 needToStatResult = statusResult.children.find(item => item.nameCN === (overdueActivity[0].isOverDue ? "逾期" : "未逾期"))
                             }
 
-
                             if (fromNodeMatched && toNodeMatched) {
-                                if(!overdueNode){
-                                    console.log("---")
-                                }
-
-
                                 if (keyText === "完" && i < formRule.flowNodeRules.length - 1) {
                                     continue
                                 }
