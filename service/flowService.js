@@ -699,11 +699,13 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
         }
     }
 
-    const overdueConfig = [{nameCN: "逾期", nameEN: "overdue", children: []}, {
-        nameCN: "未逾期",
-        nameEN: "notOverdue",
-        children: []
-    }]
+    const overdueConfig = [
+        {nameCN: "逾期", nameEN: "overdue", children: []},
+        {
+            nameCN: "未逾期",
+            nameEN: "notOverdue",
+            children: []
+        }]
     const flowStatConfig = [
         {
             nameCN: "待转入", nameEN: "TODO", children: _.cloneDeep(overdueConfig)
@@ -714,7 +716,7 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
         },
         {
 
-            nameCN: "已完成", nameEN: "DONE"// , children: _.cloneDeep(overdueConfig)
+            nameCN: "已完成", nameEN: "DONE", children: _.cloneDeep(overdueConfig)
         }
         // {
         //     nameCN: "逾期",
@@ -821,15 +823,16 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
                         const activities = flow.overallprocessflow
 
                         if (keyText === "完") {
+                            const tmpOverdueStatResult = statusResult.children.find(item => item.nameCN === "未逾期")
                             const visionDoneAct = visionDoneMap.find(item => item.formId === flow.formUuid)
                             const tmpVisionDoneActs = activities.filter(item => visionDoneAct.doneActivityIds.includes(item.activityId) &&
                                 item.type === flowReviewTypeConst.HISTORY)
                             if (tmpVisionDoneActs.length > 0) {
-                                if (!statusResult.ids) {
-                                    statusResult.ids = []
+                                if (tmpOverdueStatResult.children.length === 0) {
+                                    tmpOverdueStatResult.children.push({nameCN: "", ids: [flow.processInstanceId]})
+                                }else {
+                                    tmpOverdueStatResult.children[0].ids.push(flow.processInstanceId)
                                 }
-                                statusResult.ids.push(flow.processInstanceId)
-                                statusResult.sum = statusResult.ids.length
                             }
                             continue
                         }
