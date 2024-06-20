@@ -716,7 +716,7 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
         }]
     const flowStatConfig = [
         {
-            nameCN: "待转入", nameEN: "TODO", excludeUpSum: true, children: _.cloneDeep(overdueConfig)
+            nameCN: "待转入", nameEN: "TODO", children: _.cloneDeep(overdueConfig)
         },
         {
 
