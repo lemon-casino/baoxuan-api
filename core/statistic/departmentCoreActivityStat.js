@@ -24,13 +24,6 @@ const get = async (userNames, flows, coreConfig) => {
             // 根据配置中状态的计算规则进行统计
             for (const rule of rules) {
 
-                if (actionName ==="散图"){
-                    console.log("----")
-                }
-
-                if (rule.formId === "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV") {
-                    console.log("----")
-                }
                 let currentFlows = flows.filter((flow) => flow.formUuid === rule.formId)
 
                 // 需要计算的节点对
