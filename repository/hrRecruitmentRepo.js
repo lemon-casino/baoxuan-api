@@ -699,59 +699,57 @@ const mainBodyecharts = async () => {
 };
 const joiningAndLeaving = async () => {
     try {
-
-
         return await ZaiZhiRen.sequelize.query(
             `
-            WITH months AS (
-    SELECT '01' AS month UNION ALL
-    SELECT '02' UNION ALL
-    SELECT '03' UNION ALL
-    SELECT '04' UNION ALL
-    SELECT '05' UNION ALL
-    SELECT '06' UNION ALL
-    SELECT '07' UNION ALL
-    SELECT '08' UNION ALL
-    SELECT '09' UNION ALL
-    SELECT '10' UNION ALL
-    SELECT '11' UNION ALL
-    SELECT '12'
-),
-on_board AS (
-    SELECT
-        DATE_FORMAT(on_board_time, '%m') AS month,
-        COUNT(*) AS on_board_count
-    FROM
-        zai_zhi_ren
-    WHERE
-        YEAR(on_board_time) = YEAR(CURDATE())
-    GROUP BY
-        DATE_FORMAT(on_board_time, '%m')
-),
-turnover AS (
-    SELECT
-        DATE_FORMAT(turnover_time, '%m') AS month,
-        COUNT(*) AS turnover_count
-    FROM
-        zai_zhi_ren
-    WHERE
-        YEAR(turnover_time) = YEAR(CURDATE())
-    GROUP BY
-        DATE_FORMAT(turnover_time, '%m')
-)
-SELECT
-    m.month,
-    COALESCE(ob.on_board_count, 0) AS on_board_count,
-    COALESCE(tu.turnover_count, 0) AS turnover_count
-FROM
-    months m
-LEFT JOIN
-    on_board ob ON m.month = ob.month
-LEFT JOIN
-    turnover tu ON m.month = tu.month
-ORDER BY
-    m.month;
-                `,
+                    WITH months AS (
+            SELECT '01' AS month UNION ALL
+            SELECT '02' UNION ALL
+            SELECT '03' UNION ALL
+            SELECT '04' UNION ALL
+            SELECT '05' UNION ALL
+            SELECT '06' UNION ALL
+            SELECT '07' UNION ALL
+            SELECT '08' UNION ALL
+            SELECT '09' UNION ALL
+            SELECT '10' UNION ALL
+            SELECT '11' UNION ALL
+            SELECT '12'
+        ),
+        on_board AS (
+            SELECT
+                DATE_FORMAT(on_board_time, '%m') AS month,
+                COUNT(*) AS on_board_count
+            FROM
+                zai_zhi_ren
+            WHERE
+                YEAR(on_board_time) = YEAR(CURDATE())
+            GROUP BY
+                DATE_FORMAT(on_board_time, '%m')
+        ),
+        turnover AS (
+            SELECT
+                DATE_FORMAT(turnover_time, '%m') AS month,
+                COUNT(*) AS turnover_count
+            FROM
+                zai_zhi_ren
+            WHERE
+                YEAR(turnover_time) = YEAR(CURDATE())
+            GROUP BY
+                DATE_FORMAT(turnover_time, '%m')
+        )
+        SELECT
+            m.month,
+            COALESCE(ob.on_board_count, 0) AS on_board_count,
+            COALESCE(tu.turnover_count, 0) AS turnover_count
+        FROM
+            months m
+        LEFT JOIN
+            on_board ob ON m.month = ob.month
+        LEFT JOIN
+            turnover tu ON m.month = tu.month
+        ORDER BY
+            m.month;
+                        `,
             {
                 type: QueryTypes.SELECT
             }
