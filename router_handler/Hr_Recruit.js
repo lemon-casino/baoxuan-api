@@ -206,7 +206,8 @@ const employeeFiles = async (req, res, next) => {
     const {date} = req.query
     let rest = {
         gender: {},
-        mainBody: {}
+        mainBody: {},
+        joiningAndLeaving: []
     }
     try {
         await Hr_RecruitService.employeeFiles(rest);
