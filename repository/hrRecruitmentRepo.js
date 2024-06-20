@@ -589,13 +589,14 @@ const basicInformation = async (name) => {
         throw new Error('查询数据失败');
     }
 };
-const rank = async () => {
+const RankEcharts = async () => {
     try {
 
         //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
 
         return await ZaiZhiRen.sequelize.query(
-            `  SELECT DISTINCT COALESCE(\`rank\`, '-') AS \`rank\` FROM zai_zhi_ren;
+            `SELECT DISTINCT COALESCE(\`rank\`, '-') AS \`rank\`,
+                 COUNT(*) AS total FROM zai_zhi_ren  GROUP BY \`rank\`;
                 `, {
                 type: QueryTypes.SELECT
             }
@@ -626,5 +627,5 @@ module.exports = {
     departmentEcharts,
     mainBody,
     basicInformation,
-    rank
+    RankEcharts
 };

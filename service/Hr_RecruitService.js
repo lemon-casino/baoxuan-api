@@ -157,6 +157,7 @@ const StatisticsEcharts = async (rest) => {
         、*/
         rest.qualificationEcharts = await Hr_RecruitmentDepartmentPositions.qualificationEcharts();
 
+        rest.RankEcharts = await Hr_RecruitmentDepartmentPositions.RankEcharts();
         rest.EmploymentEcharts = await Hr_RecruitmentDepartmentPositions.employmentEcharts();
         rest.EmploymentEcharts.forEach(item => {
             item.data = item.data.split(',');
