@@ -13,4 +13,7 @@ router.get("/show", hrRecruit.showTalent)
 //人事 履历
 router.get("/curriculumVitae", hrRecruit.curriculumVitae)
 
+// 根据用户名 模糊比配
+router.get("/name", hrRecruit.curriculumVitaelikename)
+
 module.exports = router
