@@ -237,8 +237,15 @@ const StatisticsEcharts = async (rest) => {
 const curriculumVitae = async (name, rest) => {
 
     try {
-        rest.basicInformation = await Hr_RecruitmentDepartmentPositions.basicInformation(name)
-
+        const formatDate = date => date ? new Date(date).toLocaleDateString() : '';
+        const basicInformation = await Hr_RecruitmentDepartmentPositions.basicInformation(name)
+        rest.basicInformation = {
+            ...basicInformation,
+            data: basicInformation.map(item => ({
+                ...item,
+                birthday: formatDate(item.birthday),
+            }))
+        }.data;
         return rest
     } catch (error) {
         return {message: error.message};
