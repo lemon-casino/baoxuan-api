@@ -200,6 +200,22 @@ const curriculumVitaelikename = async (req, res, next) => {
     }
 
 };
+
+const employeeFiles = async (req, res, next) => {
+
+    const {date} = req.query
+    let rest = {
+        gender: {},
+        mainBody: {}
+    }
+    try {
+        await Hr_RecruitService.employeeFiles(rest);
+        return res.send(success(rest));
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
+
+};
 module.exports = {
     recruitmentDepartment,
     recruitmentTalent,
@@ -207,5 +223,6 @@ module.exports = {
     employeeManagement,
     showTalent,
     curriculumVitae,
-    curriculumVitaelikename
+    curriculumVitaelikename,
+    employeeFiles
 }
