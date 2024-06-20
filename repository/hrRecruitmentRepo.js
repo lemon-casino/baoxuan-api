@@ -323,7 +323,6 @@ const employeeManagement = async (page, pageSize, quarters, department, rank, ma
             where.position = quarters
         }
         if (date) {
-            console.log(JSON.parse(date)[0], JSON.parse(date)[1])
             where.onBoardTime = {$between: [JSON.parse(date)[0], JSON.parse(date)[1]]}
         }
         if (department) {
@@ -421,6 +420,8 @@ const statistics = async () => {
   count(1) as 总数,
   count(case when contract_company is not null then 1 end) as 合同管理数量
 from zai_zhi_ren;*/
+
+        console.log("来到这里")
         return await ZaiZhiRen.sequelize.query(
             `SELECT
     total,
@@ -564,7 +565,7 @@ const mainBody = async () => {
         //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
         return await ZaiZhiRen.findAll({
             attributes: [
-                ['COALESCE(`contract_company`, \'-\')', 'mainBody']
+                [Sequelize.fn('COALESCE', Sequelize.col('contract_company'), '-'), 'mainBody']
             ],
             group: ['contract_company'],
             raw: true,
@@ -644,6 +645,23 @@ const curriculumVitaelikename = async () => {
     }
 };
 
+
+const rank = async () => {
+    try {
+
+        //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
+
+        return await ZaiZhiRen.sequelize.query(
+            `SELECT DISTINCT COALESCE(\`rank\`, '-') AS \`rank\` FROM zai_zhi_ren`, {
+                type: QueryTypes.SELECT
+            }
+        );
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
 module.exports = {
     getHrDepartment,
     getHrQuarters,
@@ -665,5 +683,6 @@ module.exports = {
     mainBody,
     basicInformation,
     RankEcharts,
-    curriculumVitaelikename
+    curriculumVitaelikename,
+    rank
 };
