@@ -5,9 +5,7 @@ const hrRecruit = require('../router_handler/Hr_Recruit');
 router.get("/RecruitmentDepartmentPositions", hrRecruit.recruitmentDepartment)
 router.get("/RecruitmentTalentDynamic", hrRecruit.recruitmentTalent)
 router.get("/progressMap", hrRecruit.progressMap)
-//招聘管理 看板数据信息
 
-router.get("/kanbanData", hrRecruit.kanbanData)
 // 人事 员工管理
 router.get("/employeeManagement", hrRecruit.employeeManagement)
 //人事 展示
