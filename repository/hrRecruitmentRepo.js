@@ -565,7 +565,7 @@ const mainBody = async () => {
         //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
         return await ZaiZhiRen.findAll({
             attributes: [
-                [Sequelize.fn('COALESCE', Sequelize.col('contract_company'), '-'), 'mainBody']
+                [Sequelize.fn('COALESCE', Sequelize.col('contract_company'), '-'), 'mainBody'],
             ],
             group: ['contract_company'],
             raw: true,
@@ -662,6 +662,40 @@ const rank = async () => {
     }
 };
 
+const gender = async () => {
+    try {
+
+        //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
+
+        return await ZaiZhiRen.sequelize.query(
+            `select  sex ,COUNT(1) AS quantity from  zai_zhi_ren  where  employee_status!='离职' group by  sex`, {
+                type: QueryTypes.SELECT
+            }
+        );
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
+
+const mainBodyecharts = async () => {
+    try {
+
+
+        return await ZaiZhiRen.sequelize.query(
+            `SELECT COUNT(1) AS quantity,  COALESCE(contract_company, '-') AS mainBody 
+                FROM  zai_zhi_ren where  employee_status!='离职' GROUP BY  COALESCE(contract_company, '-');`,
+            {
+                type: QueryTypes.SELECT
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
 module.exports = {
     getHrDepartment,
     getHrQuarters,
@@ -684,5 +718,6 @@ module.exports = {
     basicInformation,
     RankEcharts,
     curriculumVitaelikename,
-    rank
+    rank,
+    gender, mainBodyecharts
 };

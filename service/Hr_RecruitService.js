@@ -267,6 +267,19 @@ const curriculumVitaelikename = async (rest) => {
 
 };
 
+const employeeFiles = async (rest) => {
+//        gender: {},
+//         mainBody: {}
+    try {
+        rest.gender = await Hr_RecruitmentDepartmentPositions.gender();
+        rest.mainBody = await Hr_RecruitmentDepartmentPositions.mainBodyecharts();
+
+    } catch (error) {
+        return {message: error.message};
+    }
+
+};
+
 module.exports = {
     recruitmentDepartment,
     recruitmentTalent,
@@ -274,5 +287,6 @@ module.exports = {
     employeeManagement,
     StatisticsEcharts,
     curriculumVitae,
-    curriculumVitaelikename
+    curriculumVitaelikename,
+    employeeFiles
 }
