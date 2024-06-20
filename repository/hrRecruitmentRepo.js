@@ -580,8 +580,29 @@ const mainBody = async () => {
 const basicInformation = async (name) => {
     try {
 
-        //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
-        return ""
+
+        return await ZaiZhiRen.findAll({
+            attributes: [
+                'name',
+                'sex',
+                'birthday',
+                'nation',
+                'educationalBackground',
+                'documentNumber',
+                'maritalStatus',
+                'contactNumber',
+                'cardAddress',
+                'emergencyContactName',
+                'phoneNumber',
+                'address'
+
+            ],
+            where: {
+                name: name
+            },
+            raw: true,
+            logging: false
+        });
 
 
     } catch (error) {
@@ -597,6 +618,23 @@ const RankEcharts = async () => {
             `SELECT DISTINCT COALESCE(\`rank\`, '-') AS \`rank\`,
                  COUNT(*) AS total FROM zai_zhi_ren  GROUP BY \`rank\`;
                 `, {
+                type: QueryTypes.SELECT
+            }
+        );
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
+
+const curriculumVitaelikename = async () => {
+    try {
+
+        //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
+
+        return await ZaiZhiRen.sequelize.query(
+            `select group_concat( DISTINCT name) AS name  FROM zai_zhi_ren   where name !='影刀机器人' ; `, {
                 type: QueryTypes.SELECT
             }
         );
@@ -626,5 +664,6 @@ module.exports = {
     departmentEcharts,
     mainBody,
     basicInformation,
-    RankEcharts
+    RankEcharts,
+    curriculumVitaelikename
 };

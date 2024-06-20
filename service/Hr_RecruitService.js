@@ -242,11 +242,26 @@ const curriculumVitae = async (name, rest) => {
 
 };
 
+
+const curriculumVitaelikename = async (rest) => {
+
+    try {
+        let data = await Hr_RecruitmentDepartmentPositions.curriculumVitaelikename();
+        // console.log()
+        // let split = data.split(',');
+        return data[0].name.split(',')
+    } catch (error) {
+        return {message: error.message};
+    }
+
+};
+
 module.exports = {
     recruitmentDepartment,
     recruitmentTalent,
     progressMap,
     employeeManagement,
     StatisticsEcharts,
-    curriculumVitae
+    curriculumVitae,
+    curriculumVitaelikename
 }

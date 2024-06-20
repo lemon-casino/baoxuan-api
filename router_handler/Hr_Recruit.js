@@ -183,11 +183,26 @@ const curriculumVitae = async (req, res, next) => {
 };
 
 
+const curriculumVitaelikename = async (req, res, next) => {
+
+    // const {name} = req.query
+
+    try {
+        // name
+        let rest = await Hr_RecruitService.curriculumVitaelikename();
+
+        return res.send(success(rest));
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
+
+};
 module.exports = {
     recruitmentDepartment,
     recruitmentTalent,
     progressMap,
     employeeManagement,
     showTalent,
-    curriculumVitae
+    curriculumVitae,
+    curriculumVitaelikename
 }
