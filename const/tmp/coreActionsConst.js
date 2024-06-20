@@ -1522,8 +1522,8 @@ const mbCoreActionsConfig = [
                                 },
                                 ownerRule: {
                                     from: "form",
-                                    name: "外包美编负责人",
-                                    id: "textField_lx48e5gk"
+                                    name: "外包摄影负责人",
+                                    id: "textField_lvumnj2k"
                                 }
                             },
                             {
@@ -1544,8 +1544,8 @@ const mbCoreActionsConfig = [
                                 },
                                 ownerRule: {
                                     from: "form",
-                                    name: "外包美编负责人",
-                                    id: "textField_lx48e5gk"
+                                    name: "外包摄影责人",
+                                    id: "textField_lvumnj2k"
                                 }
                             }
                         ]
@@ -1777,7 +1777,7 @@ const mbCoreActionsConfig = [
                                 ownerRule: {
                                     from: "form",
                                     name: "外包美编负责人",
-                                    id: "textField_lx48e5gk"
+                                    id: "textField_lvumnj2k"
                                 }
                             },
                             {
