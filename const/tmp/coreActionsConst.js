@@ -1755,7 +1755,7 @@ const mbCoreActionsConfig = [
                         formName: "外包拍摄视觉流程",
                         formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv670frf", opCode: opCodes.Contain, value: ["套"]}
+                            {fieldId: "radioField_lv670frf", opCode: opCodes.Contain, value: "套"}
                         ],
                         flowNodeRules: [
                             {
@@ -1961,7 +1961,7 @@ const mbCoreActionsConfig = [
                         formName: "外包拍摄视觉流程",
                         formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv670frf", opCode: opCodes.Contain, value: ["套"]}
+                            {fieldId: "radioField_lv670frf", opCode: opCodes.Contain, value: "套"}
                         ],
                         flowNodeRules: [
                             {
