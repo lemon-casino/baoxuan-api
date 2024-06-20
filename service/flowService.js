@@ -710,7 +710,7 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
         }]
     const flowStatConfig = [
         {
-            nameCN: "待转入", nameEN: "TODO", children: _.cloneDeep(overdueConfig)
+            nameCN: "待转入", nameEN: "TODO", ignoreStat: true, children: _.cloneDeep(overdueConfig)
         },
         {
 
@@ -720,11 +720,6 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
 
             nameCN: "已完成", nameEN: "DONE", children: _.cloneDeep(overdueConfig)
         }
-        // {
-        //     nameCN: "逾期",
-        //     nameEN: "OVERDUE",
-        //     children: _.cloneDeep(overdueConfig)
-        // }
     ]
     const getFlowSumStructure = (result) => {
         // 根据流程进行汇总
