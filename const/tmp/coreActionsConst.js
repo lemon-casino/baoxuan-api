@@ -901,7 +901,7 @@ const mbCoreActionsConfig = [
                             {
                                 fieldId: "radioField_ltjt0ykc",
                                 opCode: opCodes.EqualAny,
-                                value: ["全套", "套图", "散图", "视频"]
+                                value: ["全套", "套图"]
                             }
                         ],
                         flowNodeRules: [
@@ -1595,7 +1595,7 @@ const mbCoreActionsConfig = [
                             {
                                 fieldId: "radioField_ltjt0ykc",
                                 opCode: opCodes.EqualAny,
-                                value: ["全套", "套图", "散图", "视频"]
+                                value: ["全套", "套图"]
                             }
                         ],
                         flowNodeRules: [
@@ -1848,7 +1848,7 @@ const mbCoreActionsConfig = [
                             {
                                 fieldId: "radioField_ltjt0ykc",
                                 opCode: opCodes.EqualAny,
-                                value: ["全套", "套图", "散图", "视频"]
+                                value: ["全套", "套图"]
                             }
                         ],
                         flowNodeRules: [{
@@ -2062,7 +2062,7 @@ const mbCoreActionsConfig = [
                             {
                                 fieldId: "radioField_ltjt0ykc",
                                 opCode: opCodes.EqualAny,
-                                value: ["全套", "套图", "散图", "视频"]
+                                value: ["全套", "套图"]
                             }
                         ],
                         flowNodeRules: [{
@@ -2992,7 +2992,7 @@ const mbCoreActionsConfig = [
                             {
                                 fieldId: "radioField_ltjt0ykc",
                                 opCode: opCodes.EqualAny,
-                                value: ["全套", "套图", "散图", "视频"]
+                                value: ["全套", "套图"]
                             }
                         ],
                         flowNodeRules: [
@@ -4452,7 +4452,7 @@ const mbCoreActionsConfig = [
                             {
                                 fieldId: "radioField_ltjt0ykc",
                                 opCode: opCodes.EqualAny,
-                                value: ["全套", "套图", "散图", "视频"]
+                                value: ["全套", "套图"]
                             }
                         ],
                         flowNodeRules: [
@@ -8322,6 +8322,349 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
+                    {
+                        formName: "运营新品流程",
+                        formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+                        flowDetailsRules: [
+                            {
+                                fieldId: "radioField_ltjt0ykc",
+                                opCode: opCodes.EqualAny,
+                                value: ["散图"]
+                            }
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclkvznwuu1",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclkvznwuu1",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclkvznwuu1",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclohx0w4s1",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclohx0w4s1",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclohx0w4s1",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclix34wly1",
+                                    name: "审核执行统计五给出样品明细",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclix34wly1",
+                                    name: "审核执行统计五给出样品明细",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclix34wly1",
+                                    name: "审核执行统计五给出样品明细",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclwketkev4",
+                                    name: "执行确认样品来源",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclwketkev4",
+                                    name: "执行确认样品来源",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclwketkev4",
+                                    name: "执行确认样品来源",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclwketkev6",
+                                    name: "执行联系样品到公司",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclwketkev6",
+                                    name: "执行联系样品到公司",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclwketkev6",
+                                    name: "执行联系样品到公司",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclwkf0tuy1",
+                                    name: "开发联系样品",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclwkf0tuy1",
+                                    name: "开发联系样品",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclwkf0tuy1",
+                                    name: "开发联系样品",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclii6vcap1",
+                                    name: "五维表分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap1",
+                                    name: "五维表分析",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap1",
+                                    name: "五维表分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclto83mms5",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclto83mms5",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclto83mms5",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvx64tg92",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvx64tg92",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvx64tg92",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclii6vcap2",
+                                    name: "项目负责人审核方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap2",
+                                    name: "项目负责人审核方案",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap2",
+                                    name: "项目负责人审核方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltseng6r1",
+                                    name: "执行运营确认样品到公司",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltseng6r1",
+                                    name: "执行运营确认样品到公司",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltseng6r1",
+                                    name: "执行运营确认样品到公司",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclii6vcap3",
+                                    name: "视觉方案审核",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap3",
+                                    name: "视觉方案审核",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap3",
+                                    name: "视觉方案审核",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "视觉方案审核",
+                                    id: "node_oclii6vcap3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclii6vcap5",
+                                    name: "样品与道具确认",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap5",
+                                    name: "样品与道具确认",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap5",
+                                    name: "样品与道具确认",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclii6vcap6",
+                                    name: "摄影确认样品与道具",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap6",
+                                    name: "摄影确认样品与道具",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap6",
+                                    name: "摄影确认样品与道具",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            }
+                        ]
+                    },
                 ]
             },
             {
@@ -8465,7 +8808,64 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
-                    }
+                    },
+                    {
+                        formName: "运营新品流程",
+                        formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+                        flowDetailsRules: [
+                            {
+                                fieldId: "radioField_ltjt0ykc",
+                                opCode: opCodes.EqualAny,
+                                value: ["散图"]
+                            }
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclii6vcap6",
+                                    name: "摄影确认样品与道具",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap6",
+                                    name: "摄影确认样品与道具",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap6",
+                                    name: "摄影确认样品与道具",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "摄影确认样品与道具",
+                                    id: "node_oclii6vcap6"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclii6vcap7",
+                                    name: "摄影拍照",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap7",
+                                    name: "摄影拍照",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap7",
+                                    name: "摄影拍照",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "摄影拍照",
+                                    id: "node_oclii6vcap7"
+                                }
+                            }
+                        ]
+                    },
                 ]
             },
             {
@@ -8587,6 +8987,39 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "运营新品流程",
+                        formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+                        flowDetailsRules: [
+                            {
+                                fieldId: "radioField_ltjt0ykc",
+                                opCode: opCodes.EqualAny,
+                                value: ["散图"]
+                            }
+                        ],
+                        flowNodeRules: [{
+                            from: {
+                                id: "node_oclii6vcap7",
+                                name: "摄影拍照",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclii6vcap7",
+                                name: "摄影拍照",
+                                status: ["HISTORY"]
+                            },
+                            overdue: {
+                                id: "node_oclii6vcap7",
+                                name: "摄影拍照",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "摄影拍照",
+                                id: "node_oclii6vcap7"
+                            }
+                        }]
                     }
                 ]
             },
@@ -8952,7 +9385,40 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
-                    }
+                    },
+                    {
+                        formName: "运营新品流程",
+                        formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+                        flowDetailsRules: [
+                            {
+                                fieldId: "radioField_ltjt0ykc",
+                                opCode: opCodes.EqualAny,
+                                value: ["散图"]
+                            }
+                        ],
+                        flowNodeRules: [{
+                            from: {
+                                id: "node_oclii6vcap8",
+                                name: "分配美编制作",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclii6vcap8",
+                                name: "分配美编制作",
+                                status: ["TODO"]
+                            },
+                            overdue: {
+                                id: "node_oclii6vcap8",
+                                name: "分配美编制作",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "分配美编制作",
+                                id: "node_oclii6vcap8"
+                            }
+                        }]
+                    },
                 ]
             },
             {
@@ -10113,6 +10579,107 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "运营新品流程",
+                        formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+                        flowDetailsRules: [
+                            {
+                                fieldId: "radioField_ltjt0ykc",
+                                opCode: opCodes.EqualAny,
+                                value: ["散图"]
+                            }
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclvksud0d8",
+                                    name: "重点精修美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvksud0d8",
+                                    name: "重点精修美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvksud0d8",
+                                    name: "重点精修美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvksud0d8"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvksud0d9",
+                                    name: "简单美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvksud0d9",
+                                    name: "简单美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvksud0d9",
+                                    name: "简单美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvksud0d9"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvksud0db",
+                                    name: "重点精修美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvksud0db",
+                                    name: "重点精修美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvksud0db",
+                                    name: "重点精修美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvksud0db"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvksud0dc",
+                                    name: "简单美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvksud0dc",
+                                    name: "简单美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvksud0dc",
+                                    name: "简单美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvksud0dc"
+                                }
+                            }
+                        ]
                     }
                 ]
             },
@@ -11076,7 +11643,64 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
-                    }
+                    },
+                    {
+                        formName: "运营新品流程",
+                        formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+                        flowDetailsRules: [
+                            {
+                                fieldId: "radioField_ltjt0ykc",
+                                opCode: opCodes.EqualAny,
+                                value: ["散图"]
+                            }
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclvksud0d9",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvksud0d9",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvksud0d9",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvksud0d9"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvksud0dc",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvksud0dc",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvksud0dc",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvksud0dc"
+                                }
+                            }
+                        ]
+                    },
                 ]
             }
         ]
@@ -11370,7 +11994,350 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
-                    }
+                    },
+                    {
+                        formName: "运营新品流程",
+                        formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+                        flowDetailsRules: [
+                            {
+                                fieldId: "radioField_ltjt0ykc",
+                                opCode: opCodes.EqualAny,
+                                value: ["视频"]
+                            }
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclkvznwuu1",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclkvznwuu1",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclkvznwuu1",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclohx0w4s1",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclohx0w4s1",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclohx0w4s1",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclix0goa91",
+                                    name: "统计五维表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclix34wly1",
+                                    name: "审核执行统计五给出样品明细",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclix34wly1",
+                                    name: "审核执行统计五给出样品明细",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclix34wly1",
+                                    name: "审核执行统计五给出样品明细",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclwketkev4",
+                                    name: "执行确认样品来源",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclwketkev4",
+                                    name: "执行确认样品来源",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclwketkev4",
+                                    name: "执行确认样品来源",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclwketkev6",
+                                    name: "执行联系样品到公司",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclwketkev6",
+                                    name: "执行联系样品到公司",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclwketkev6",
+                                    name: "执行联系样品到公司",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclwkf0tuy1",
+                                    name: "开发联系样品",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclwkf0tuy1",
+                                    name: "开发联系样品",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclwkf0tuy1",
+                                    name: "开发联系样品",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclii6vcap1",
+                                    name: "五维表分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap1",
+                                    name: "五维表分析",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap1",
+                                    name: "五维表分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclto83mms5",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclto83mms5",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclto83mms5",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvx64tg92",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvx64tg92",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvx64tg92",
+                                    name: "组长审核方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclii6vcap2",
+                                    name: "项目负责人审核方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap2",
+                                    name: "项目负责人审核方案",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap2",
+                                    name: "项目负责人审核方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_ocltseng6r1",
+                                    name: "执行运营确认样品到公司",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocltseng6r1",
+                                    name: "执行运营确认样品到公司",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocltseng6r1",
+                                    name: "执行运营确认样品到公司",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclii6vcap3",
+                                    name: "视觉方案审核",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap3",
+                                    name: "视觉方案审核",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap3",
+                                    name: "视觉方案审核",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "视觉方案审核",
+                                    id: "node_oclii6vcap3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclii6vcap5",
+                                    name: "样品与道具确认",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap5",
+                                    name: "样品与道具确认",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap5",
+                                    name: "样品与道具确认",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclii6vcap6",
+                                    name: "摄影确认样品与道具",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap6",
+                                    name: "摄影确认样品与道具",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap6",
+                                    name: "摄影确认样品与道具",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc"
+                                }
+                            }
+                        ]
+                    },
                 ]
             },
             {
@@ -11435,6 +12402,63 @@ const mbCoreActionsConfig = [
                                     from: "process",
                                     name: "拍摄完成",
                                     id: "node_oclx1f3cl7k"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "运营新品流程",
+                        formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+                        flowDetailsRules: [
+                            {
+                                fieldId: "radioField_ltjt0ykc",
+                                opCode: opCodes.EqualAny,
+                                value: ["视频"]
+                            }
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclii6vcap6",
+                                    name: "摄影确认样品与道具",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap6",
+                                    name: "摄影确认样品与道具",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap6",
+                                    name: "摄影确认样品与道具",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "摄影确认样品与道具",
+                                    id: "node_oclii6vcap6"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclii6vcap7",
+                                    name: "摄影拍照",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap7",
+                                    name: "摄影拍照",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap7",
+                                    name: "摄影拍照",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "摄影拍照",
+                                    id: "node_oclii6vcap7"
                                 }
                             }
                         ]
@@ -11507,6 +12531,39 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "运营新品流程",
+                        formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+                        flowDetailsRules: [
+                            {
+                                fieldId: "radioField_ltjt0ykc",
+                                opCode: opCodes.EqualAny,
+                                value: ["视频"]
+                            }
+                        ],
+                        flowNodeRules: [{
+                            from: {
+                                id: "node_oclii6vcap7",
+                                name: "摄影拍照",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclii6vcap7",
+                                name: "摄影拍照",
+                                status: ["HISTORY"]
+                            },
+                            overdue: {
+                                id: "node_oclii6vcap7",
+                                name: "摄影拍照",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "摄影拍照",
+                                id: "node_oclii6vcap7"
+                            }
+                        }]
                     }
                 ]
             },
