@@ -101,6 +101,30 @@ const recruitmentTalent = async (req, res, next) => {
     }
 };
 
+//  招聘管理 看板数据信息
+
+
+const kanbanData = async (req, res, next) => {
+
+
+    let rest = {};
+    try {
+
+        //  let {page, pageSize, quarters, department, rank, abnormal, idling, mainBody, approval} = req.query;
+        let {date} = req.query;
+
+
+// abnormal, idling, mainBody, approval, rest
+        await Hr_RecruitService.kanbanData(date, rest);
+
+        return res.send(success(rest));
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
+
+};
+
+
 const employeeManagement = async (req, res, next) => {
 
 
@@ -204,5 +228,6 @@ module.exports = {
     employeeManagement,
     showTalent,
     curriculumVitae,
+    kanbanData,
     curriculumVitaelikename
 }

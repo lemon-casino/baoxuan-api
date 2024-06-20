@@ -267,6 +267,20 @@ const curriculumVitaelikename = async (rest) => {
 
 };
 
+const kanbanData = async (date, rest) => {
+
+    try {
+        let data = await Hr_RecruitmentDepartmentPositions.kanbanData(date);
+        // console.log()
+        // let split = data.split(',');
+        return data[0].name.split(',')
+    } catch (error) {
+        return {message: error.message};
+    }
+
+};
+
+
 module.exports = {
     recruitmentDepartment,
     recruitmentTalent,
@@ -274,5 +288,6 @@ module.exports = {
     employeeManagement,
     StatisticsEcharts,
     curriculumVitae,
+    kanbanData,
     curriculumVitaelikename
 }

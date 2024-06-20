@@ -662,6 +662,21 @@ const rank = async () => {
     }
 };
 
+const kanbanData = async () => {
+    try {
+
+        //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
+
+        return await ChannengFenxiSumModel.sequelize.query(
+            `SELECT DISTINCT COALESCE(\`rank\`, '-') AS \`rank\` FROM zai_zhi_ren`, {
+                type: QueryTypes.SELECT
+            }
+        );
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
 module.exports = {
     getHrDepartment,
     getHrQuarters,
@@ -682,6 +697,7 @@ module.exports = {
     departmentEcharts,
     mainBody,
     basicInformation,
+    kanbanData,
     RankEcharts,
     curriculumVitaelikename,
     rank
