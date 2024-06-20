@@ -99,7 +99,7 @@ const employeeManagement = async (page, pageSize, quarters, department, rank, ma
         // 员工档案 员工合同管路   本月新员工数量 本月离职员工数量
         rest.statistics = await Hr_RecruitmentDepartmentPositions.statistics();
         // 如果data为空   则返回空 如果不为空  则返回data new Date(date).toLocaleDateString();
-        const formatDate = date => date ? new Date(date).toLocaleDateString() : '';
+        const formatDate = date => date ? new Date(date).toLocaleDateString() : '-';
         const employeeData = await Hr_RecruitmentDepartmentPositions.employeeManagement(parseInt(page), parseInt(pageSize), quarters, department, rank, mainBody, date);
         //  这些需要有变动的时候 再进行联动修改  abnormal, idling, approval
         rest.employee = {
@@ -237,7 +237,7 @@ const StatisticsEcharts = async (rest) => {
 const curriculumVitae = async (name, rest) => {
 
     try {
-        const formatDate = date => date ? new Date(date).toLocaleDateString() : '';
+        const formatDate = date => date ? new Date(date).toLocaleDateString() : '-';
         const basicInformation = await Hr_RecruitmentDepartmentPositions.basicInformation(name)
         rest.basicInformation = {
             ...basicInformation,
