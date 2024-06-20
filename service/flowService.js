@@ -600,7 +600,7 @@ const removeFlowByStatus = (flows, flowStatus) => {
  * @param endDoneDate
  * @returns {Promise<*[]>}
  */
-const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDoneDate) => {
+const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneDate) => {
     const getFormIds = (actionConfig) => {
         const ids = {}
         for (const configItem of actionConfig) {
@@ -1593,7 +1593,7 @@ module.exports = {
     syncMissingCompletedFlows,
     getFlowFormValues,
     updateRunningFlowEmergency,
-    getCoreActionData,
+    getCoreActions,
     getCoreFlowData,
     getCoreActionsConfig,
     getCoreFormFlowConfig,

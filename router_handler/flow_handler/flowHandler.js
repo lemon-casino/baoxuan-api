@@ -60,7 +60,7 @@ const getCoreActions = async (req, res, next) => {
         joiUtil.validate({
             userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.strRequired}
         })
-        const result = await flowService.getCoreActionData(userId, deptId, userNames, startDate, endDate)
+        const result = await flowService.getCoreActions(userId, deptId, userNames, startDate, endDate)
         // } else {
         //     const userNames = req.query.userNames
         //     joiUtil.validate({

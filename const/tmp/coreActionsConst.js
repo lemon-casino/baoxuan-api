@@ -1521,9 +1521,9 @@ const mbCoreActionsConfig = [
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
-                                    from: "process",
-                                    name: "运营填写样品信息-分配执行",
-                                    id: "node_oclx48rz9a1"
+                                    from: "form",
+                                    name: "外包美编负责人",
+                                    id: "textField_lx48e5gk"
                                 }
                             },
                             {
@@ -1543,33 +1543,11 @@ const mbCoreActionsConfig = [
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
-                                    from: "process",
-                                    name: "执行填写快递单号",
-                                    id: "node_oclx00ubuyu"
+                                    from: "form",
+                                    name: "外包美编负责人",
+                                    id: "textField_lx48e5gk"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx49xlb31",
-                                    name: "通知外拍摄影师等待收图",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx49xlb31",
-                                    name: "通知外拍摄影师等待收图",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx49xlb31",
-                                    name: "通知外拍摄影师等待收图",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "通知外拍摄影师等待收图",
-                                    id: "node_oclx49xlb31"
-                                }
-                            },
+                            }
                         ]
                     }
                 ]
@@ -1780,6 +1758,28 @@ const mbCoreActionsConfig = [
                             {fieldId: "radioField_lv670frf", opCode: opCodes.Contain, value: ["套"]}
                         ],
                         flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx49xlb31",
+                                    name: "通知外拍摄影师等待收图",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx49xlb31",
+                                    name: "通知外拍摄影师等待收图",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx49xlb31",
+                                    name: "通知外拍摄影师等待收图",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包美编负责人",
+                                    id: "textField_lx48e5gk"
+                                }
+                            },
                             {
                                 from: {
                                     id: "node_oclx49xlb32",
@@ -8926,7 +8926,7 @@ const mbCoreActionsConfig = [
                         formName: "外包修图视觉流程",
                         formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["散图"]}
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.Equal, value: "散图"}
                         ],
                         flowNodeRules: [
                             {
@@ -10087,7 +10087,7 @@ const mbCoreActionsConfig = [
                         formName: "外包修图视觉流程",
                         formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["散图"]}
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.Equal, value: "散图"}
                         ],
                         flowNodeRules: [
                             {
