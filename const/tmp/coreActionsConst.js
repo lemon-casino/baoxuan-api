@@ -1497,81 +1497,81 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包拍摄视觉流程",
-                    //     formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lv670frf", opCode: opCodes.Contain, value: "套"}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_oclx48rz9a1",
-                    //                 name: "运营填写样品信息-分配执行",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_oclx48rz9a1",
-                    //                 name: "运营填写样品信息-分配执行",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_oclx48rz9a1",
-                    //                 name: "运营填写样品信息-分配执行",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "process",
-                    //                 name: "运营填写样品信息-分配执行",
-                    //                 id: "node_oclx48rz9a1"
-                    //             }
-                    //         },
-                    //         {
-                    //             from: {
-                    //                 id: "node_oclx48rz9a1",
-                    //                 name: "执行填写快递单号",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_oclx49xlb31",
-                    //                 name: "执行填写快递单号",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_oclx00ubuyu",
-                    //                 name: "执行填写快递单号",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "process",
-                    //                 name: "执行填写快递单号",
-                    //                 id: "node_oclx00ubuyu"
-                    //             }
-                    //         },
-                    //         {
-                    //             from: {
-                    //                 id: "node_oclx49xlb31",
-                    //                 name: "通知外拍摄影师等待收图",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_oclx49xlb31",
-                    //                 name: "通知外拍摄影师等待收图",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_oclx49xlb31",
-                    //                 name: "通知外拍摄影师等待收图",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "process",
-                    //                 name: "通知外拍摄影师等待收图",
-                    //                 id: "node_oclx49xlb31"
-                    //             }
-                    //         },
-                    //     ]
-                    // }
+                    {
+                        formName: "外包拍摄视觉流程",
+                        formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lv670frf", opCode: opCodes.Contain, value: "套"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48rz9a1",
+                                    name: "运营填写样品信息-分配执行",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx48rz9a1",
+                                    name: "运营填写样品信息-分配执行",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48rz9a1",
+                                    name: "运营填写样品信息-分配执行",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "运营填写样品信息-分配执行",
+                                    id: "node_oclx48rz9a1"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx48rz9a1",
+                                    name: "执行填写快递单号",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx49xlb31",
+                                    name: "执行填写快递单号",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx00ubuyu",
+                                    name: "执行填写快递单号",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行填写快递单号",
+                                    id: "node_oclx00ubuyu"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx49xlb31",
+                                    name: "通知外拍摄影师等待收图",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx49xlb31",
+                                    name: "通知外拍摄影师等待收图",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx49xlb31",
+                                    name: "通知外拍摄影师等待收图",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "通知外拍摄影师等待收图",
+                                    id: "node_oclx49xlb31"
+                                }
+                            },
+                        ]
+                    }
                 ]
             },
             {
@@ -1773,37 +1773,37 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包拍摄视觉流程",
-                    //     formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lv670frf", opCode: opCodes.Contain, value: ["套"]}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_oclx49xlb32",
-                    //                 name: "外拍审核",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_oclx49xlb32",
-                    //                 name: "外拍审核",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_oclx49xlb32",
-                    //                 name: "外拍审核",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "process",
-                    //                 name: "外拍审核",
-                    //                 id: "node_oclx49xlb32"
-                    //             }
-                    //         },
-                    //     ]
-                    // }
+                    {
+                        formName: "外包拍摄视觉流程",
+                        formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lv670frf", opCode: opCodes.Contain, value: ["套"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx49xlb32",
+                                    name: "外拍审核",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx49xlb32",
+                                    name: "外拍审核",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx49xlb32",
+                                    name: "外拍审核",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "外拍审核",
+                                    id: "node_oclx49xlb32"
+                                }
+                            },
+                        ]
+                    }
                 ]
             },
             {
@@ -1957,37 +1957,37 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包拍摄视觉流程",
-                    //     formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lv670frf", opCode: opCodes.Contain, value: ["套"]}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_oclx49xlb32",
-                    //                 name: "外拍审核",
-                    //                 status: ["HISTORY"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_oclx49xlb32",
-                    //                 name: "外拍审核",
-                    //                 status: ["HISTORY"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_oclx49xlb32",
-                    //                 name: "外拍审核",
-                    //                 status: ["HISTORY"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "process",
-                    //                 name: "外拍审核",
-                    //                 id: "node_oclx49xlb32"
-                    //             }
-                    //         },
-                    //     ]
-                    // }
+                    {
+                        formName: "外包拍摄视觉流程",
+                        formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lv670frf", opCode: opCodes.Contain, value: ["套"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx49xlb32",
+                                    name: "外拍审核",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx49xlb32",
+                                    name: "外拍审核",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx49xlb32",
+                                    name: "外拍审核",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "外拍审核",
+                                    id: "node_oclx49xlb32"
+                                }
+                            },
+                        ]
+                    }
                 ]
             },
             {
@@ -2379,37 +2379,37 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包修图视觉流程",
-                    //     formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_ockpz6phx73",
-                    //                 name: "分配外包美编制作",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_ockpz6phx73",
-                    //                 name: "分配外包美编制作",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_ockpz6phx73",
-                    //                 name: "分配外包美编制作",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "process",
-                    //                 name: "分配外包美编制作",
-                    //                 id: "node_ockpz6phx73"
-                    //             }
-                    //         }
-                    //     ]
-                    // }
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配外包美编制作",
+                                    id: "node_ockpz6phx73"
+                                }
+                            }
+                        ]
+                    }
                 ]
             },
             {
@@ -4169,37 +4169,37 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包修图视觉流程",
-                    //     formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "form",
-                    //                 name: "外包修图中",
-                    //                 id: "textField_lx48e5gk"
-                    //             }
-                    //         }
-                    //     ]
-                    // }
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            }
+                        ]
+                    }
                 ]
             },
             {
@@ -5409,37 +5409,37 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包修图视觉流程",
-                    //     formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["HISTORY"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["HISTORYHISTORY"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["HISTORY"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "form",
-                    //                 name: "外包修图中",
-                    //                 id: "textField_lx48e5gk"
-                    //             }
-                    //         }
-                    //     ]
-                    // }
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORYHISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            }
+                        ]
+                    }
                 ]
             }
         ]
@@ -6066,37 +6066,37 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包修图视觉流程",
-                    //     formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["半套"]}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_ockpz6phx73",
-                    //                 name: "分配外包美编制作",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_ockpz6phx73",
-                    //                 name: "分配外包美编制作",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_ockpz6phx73",
-                    //                 name: "分配外包美编制作",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "process",
-                    //                 name: "分配外包美编制作",
-                    //                 id: "node_ockpz6phx73"
-                    //             }
-                    //         }
-                    //     ]
-                    // }
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["半套"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配外包美编制作",
+                                    id: "node_ockpz6phx73"
+                                }
+                            }
+                        ]
+                    }
                 ]
             },
             {
@@ -7047,37 +7047,37 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包修图视觉流程",
-                    //     formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["半套"]}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "form",
-                    //                 name: "外包修图中",
-                    //                 id: "textField_lx48e5gk"
-                    //             }
-                    //         }
-                    //     ]
-                    // }
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["半套"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            }
+                        ]
+                    }
                 ]
             },
             {
@@ -7943,37 +7943,37 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包修图视觉流程",
-                    //     formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["半套"]}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["HISTORY"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["HISTORYHISTORY"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["HISTORY"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "form",
-                    //                 name: "外包修图中",
-                    //                 id: "textField_lx48e5gk"
-                    //             }
-                    //         }
-                    //     ]
-                    // }
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["半套"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORYHISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            }
+                        ]
+                    }
                 ]
             }
         ]
@@ -8922,37 +8922,37 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包修图视觉流程",
-                    //     formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["散图"]}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_ockpz6phx73",
-                    //                 name: "分配外包美编制作",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_ockpz6phx73",
-                    //                 name: "分配外包美编制作",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_ockpz6phx73",
-                    //                 name: "分配外包美编制作",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "process",
-                    //                 name: "分配外包美编制作",
-                    //                 id: "node_ockpz6phx73"
-                    //             }
-                    //         }
-                    //     ]
-                    // }
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["散图"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配外包美编制作",
+                                    id: "node_ockpz6phx73"
+                                }
+                            }
+                        ]
+                    }
                 ]
             },
             {
@@ -10083,37 +10083,37 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包修图视觉流程",
-                    //     formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["散图"]}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "form",
-                    //                 name: "外包修图中",
-                    //                 id: "textField_lx48e5gk"
-                    //             }
-                    //         }
-                    //     ]
-                    // }
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["散图"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            }
+                        ]
+                    }
                 ]
             },
             {
@@ -11046,37 +11046,37 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包修图视觉流程",
-                    //     formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["散图"]}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["HISTORY"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["HISTORYHISTORY"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["HISTORY"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "form",
-                    //                 name: "外包修图中",
-                    //                 id: "textField_lx48e5gk"
-                    //             }
-                    //         }
-                    //     ]
-                    // }
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["散图"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORYHISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            }
+                        ]
+                    }
                 ]
             }
         ]
@@ -11649,37 +11649,37 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包修图视觉流程",
-                    //     formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["视频"]}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_ockpz6phx73",
-                    //                 name: "分配外包美编制作",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_ockpz6phx73",
-                    //                 name: "分配外包美编制作",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_ockpz6phx73",
-                    //                 name: "分配外包美编制作",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "process",
-                    //                 name: "分配外包美编制作",
-                    //                 id: "node_ockpz6phx73"
-                    //             }
-                    //         }
-                    //     ]
-                    // }
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["视频"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ockpz6phx73",
+                                    name: "分配外包美编制作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配外包美编制作",
+                                    id: "node_ockpz6phx73"
+                                }
+                            }
+                        ]
+                    }
                 ]
             },
             {
@@ -11876,37 +11876,37 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包修图视觉流程",
-                    //     formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["视频"]}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["TODO"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "form",
-                    //                 name: "外包修图中",
-                    //                 id: "textField_lx48e5gk"
-                    //             }
-                    //         }
-                    //     ]
-                    // }
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["视频"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            }
+                        ]
+                    }
                 ]
             },
             {
@@ -12081,37 +12081,37 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     },
-                    // {
-                    //     formName: "外包修图视觉流程",
-                    //     formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                    //     flowDetailsRules: [
-                    //         {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["视频"]}
-                    //     ],
-                    //     flowNodeRules: [
-                    //         {
-                    //             from: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["HISTORY"]
-                    //             },
-                    //             to: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["HISTORYHISTORY"]
-                    //             },
-                    //             overdue: {
-                    //                 id: "node_oclx48iwil1",
-                    //                 name: "外包修图中",
-                    //                 status: ["HISTORY"]
-                    //             },
-                    //             ownerRule: {
-                    //                 from: "form",
-                    //                 name: "外包修图中",
-                    //                 id: "textField_lx48e5gk"
-                    //             }
-                    //         }
-                    //     ]
-                    // }
+                    {
+                        formName: "外包修图视觉流程",
+                        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["视频"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORYHISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            }
+                        ]
+                    }
                 ]
             }
         ]

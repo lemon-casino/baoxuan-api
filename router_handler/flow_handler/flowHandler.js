@@ -44,7 +44,7 @@ const updateRunningFlowEmergency = async (req, res, next) => {
     }
 }
 
-const getCoreDataByType = async (req, res, next) => {
+const getCoreActions = async (req, res, next) => {
     try {
         const {deptId, startDate, endDate} = req.query
         const userId = req.user.id
@@ -54,20 +54,20 @@ const getCoreDataByType = async (req, res, next) => {
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
         })
 
-        let result = []
-        if (req.params.type === "action") {
-            const userNames = req.query.userNames
-            joiUtil.validate({
-                userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.strRequired}
-            })
-            result = await flowService.getCoreActionData(userId, deptId, userNames, startDate, endDate)
-        } else {
-            const userNames = req.query.userNames
-            joiUtil.validate({
-                userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.strRequired}
-            })
-            result = await flowService.getCoreFlowData(deptId, userNames, startDate, endDate)
-        }
+        // let result = []
+        // if (req.params.type === "action") {
+        const userNames = req.query.userNames
+        joiUtil.validate({
+            userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const result = await flowService.getCoreActionData(userId, deptId, userNames, startDate, endDate)
+        // } else {
+        //     const userNames = req.query.userNames
+        //     joiUtil.validate({
+        //         userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.strRequired}
+        //     })
+        //     result = await flowService.getCoreFlowData(deptId, userNames, startDate, endDate)
+        // }
         res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -157,7 +157,7 @@ module.exports = {
     getFlowsByIds,
     getTodayFlowsByIds,
     updateRunningFlowEmergency,
-    getCoreDataByType,
+    getCoreActions,
     getAllOverDueRunningFlows,
     getFormsFlowsActivitiesStat
 }
