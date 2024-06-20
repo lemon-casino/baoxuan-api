@@ -668,7 +668,7 @@ const gender = async () => {
         //select  COUNT(1) AS total ,educational_background from  zai_zhi_ren group by  educational_background
 
         return await ZaiZhiRen.sequelize.query(
-            `select  COALESCE(sex, '未知') AS sex ,COUNT(1) AS quantity from
+            `select  COALESCE(sex, '未知') AS name ,COUNT(1) AS value from
       zai_zhi_ren  where  employee_status!='离职' group by  sex`, {
                 type: QueryTypes.SELECT
             }
@@ -685,7 +685,7 @@ const mainBodyecharts = async () => {
 
 
         return await ZaiZhiRen.sequelize.query(
-            `SELECT COUNT(1) AS quantity,  COALESCE(contract_company, '-') AS mainBody 
+            `SELECT COUNT(1) AS value,  COALESCE(contract_company, '-') AS name 
                 FROM  zai_zhi_ren where  employee_status!='离职' GROUP BY  COALESCE(contract_company, '-');`,
             {
                 type: QueryTypes.SELECT
