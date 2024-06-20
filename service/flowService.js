@@ -832,10 +832,10 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
                             if (tmpVisionDoneActs.length > 0) {
                                 if (tmpOverdueStatResult.children.length === 0) {
                                     tmpOverdueStatResult.children.push({nameCN: "合计", ids: [flow.processInstanceId]})
-                                }else {
-                                     if(!tmpOverdueStatResult.children[0].ids.includes(flow.processInstanceId)){
-                                         tmpOverdueStatResult.children[0].ids.push(flow.processInstanceId)
-                                     }
+                                } else {
+                                    if (!tmpOverdueStatResult.children[0].ids.includes(flow.processInstanceId)) {
+                                        tmpOverdueStatResult.children[0].ids.push(flow.processInstanceId)
+                                    }
                                 }
                             }
                             continue
@@ -1529,7 +1529,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
     let deptCoreForms = []
     if (deptId) {
         deptCoreForms = await departmentFlowFormRepo.getDepartmentFlowForms({
-            deptId, type: deptFlowFormConst.deptFlowFormCore
+            deptId: deptId, type: deptFlowFormConst.deptFlowFormCore, isCore: true
         })
     } else {
         deptCoreForms = await flowFormRepo.getAllForms({status: "1"})
@@ -1553,8 +1553,6 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
     }
     orderedActivityStatResult = orderedActivityStatResult.concat(activityStatResult)
     orderedDeptStatResult = orderedDeptStatResult.concat(deptStatResult)
-
-
     return {activityStat: orderedActivityStatResult, deptStat: orderedDeptStatResult, users: pureUsersWithDepartment}
 }
 

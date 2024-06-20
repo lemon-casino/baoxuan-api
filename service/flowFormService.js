@@ -292,7 +292,7 @@ const refactorReviewItems = (nodes, lastTimingNode) => {
  */
 const getDeptFlowForms = async (deptId, type) => {
     const flowForms = await getAllForms()
-    const deptFlowForms = await departmentFlowFormRepo.getDepartmentFlowForms({deptId})
+    const deptFlowForms = await departmentFlowFormRepo.getDepartmentFlowForms({deptId, type})
 
     for (const form of flowForms) {
         const deptForms = deptFlowForms.filter(item => item.formId === form.flowFormId && item.type.toString() === type)
