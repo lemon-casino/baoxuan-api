@@ -588,6 +588,10 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
     globalSetter.setGlobalTodayRunningAndFinishedFlows(newTodayFlows)
 }
 
+const removeFlowByStatus = (flows, flowStatus) => {
+    return flows.filter(item => item.instanceStatus !== flowStatus)
+}
+
 /**
  * 获取表单流程中核心动作汇总数据（人->逾期->动作）
  * @param deptId
@@ -612,8 +616,10 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptId)
     // 筛选出参与统计的表单流程
     const formIds = getFormIds(coreActionConfig)
-    let computedFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
-    computedFlows = removeUnmatchedDateActivities(computedFlows, startDoneDate, endDoneDate)
+    let flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
+    // 过滤终止的流程
+    flows = removeFlowByStatus(flows, flowStatusConst.TERMINATED)
+    flows = removeUnmatchedDateActivities(flows, startDoneDate, endDoneDate)
     // todo: 视觉(482162119)和全流程的统计userNames要加上外包的信息
     //   先单独处理，要不就得把外包的人全部返回视觉的前端，可能还得改http method，
     //   等数据ok稳定后需要整理
@@ -646,7 +652,7 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
         userNames = `${userNames},${strDeptOutSourcingUsers}`
     }
 
-    const result = await departmentCoreActivityStat.get(userNames, computedFlows, coreActionConfig)
+    const result = await departmentCoreActivityStat.get(userNames, flows, coreActionConfig)
     // 节点汇总
     // 生成结果模板
     const getActivitySumStructure = (result) => {
@@ -805,7 +811,7 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
 
                 // 根据表单的统计规则，将流程统计到对应的节点下
                 for (const formRule of rules) {
-                    let formFlows = computedFlows.filter(flow => flow.formUuid === formRule.formId)
+                    let formFlows = flows.filter(flow => flow.formUuid === formRule.formId)
 
                     if (formRule.flowDetailsRules) {
                         for (const detailsRule of formRule.flowDetailsRules) {
