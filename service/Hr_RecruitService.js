@@ -273,7 +273,7 @@ const employeeFiles = async (rest) => {
     try {
         rest.gender = await Hr_RecruitmentDepartmentPositions.gender();
         rest.mainBody = await Hr_RecruitmentDepartmentPositions.mainBodyecharts();
-
+        rest.joiningAndLeaving = await Hr_RecruitmentDepartmentPositions.joiningAndLeaving();
     } catch (error) {
         return {message: error.message};
     }
