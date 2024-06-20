@@ -784,6 +784,16 @@ const getCoreActionData = async (userId, deptId, userNames, startDoneDate, endDo
                 "node_oclvghx5lia",
                 "node_oclwhrd6j63"
             ]
+        },
+        {
+            formName: "外包拍摄视觉流程",
+            formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+            doneActivityIds: ["node_oclx49xlb32"]
+        },
+        {
+            formName: "外包修图视觉流程",
+            formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+            doneActivityIds: ["node_oclx48iwil1"]
         }
     ]
     const statFlowResult = getFlowSumStructure(_.cloneDeep(result))
