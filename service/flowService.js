@@ -1538,16 +1538,16 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
     let orderedActivityStatResult = []
     let orderedDeptStatResult = []
     for (const deptCoreFlow of deptCoreForms) {
-        const tmpActivityStatResult = activityStatResult.find(item => item.formId === deptCoreFlow.flowFormId)
+        const tmpActivityStatResult = activityStatResult.find(item => item.formId === deptCoreFlow.formId)
         if (tmpActivityStatResult) {
             orderedActivityStatResult.push(tmpActivityStatResult)
-            const index = activityStatResult.findIndex(item => item.formId === deptCoreFlow.flowFormId)
+            const index = activityStatResult.findIndex(item => item.formId === deptCoreFlow.formId)
             activityStatResult.splice(index, 1)
         }
-        const tmpDeptStatResult = deptStatResult.find(item => item.formId === deptCoreFlow.flowFormId)
+        const tmpDeptStatResult = deptStatResult.find(item => item.formId === deptCoreFlow.formId)
         if (tmpDeptStatResult) {
             orderedDeptStatResult.push(tmpDeptStatResult)
-            const index = deptStatResult.findIndex(item => item.formId === deptCoreFlow.flowFormId)
+            const index = deptStatResult.findIndex(item => item.formId === deptCoreFlow.formId)
             deptStatResult.splice(index, 1)
         }
     }
