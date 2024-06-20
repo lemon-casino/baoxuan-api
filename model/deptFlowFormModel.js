@@ -65,6 +65,24 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: ";1:部门统计审核节点配置  2:配置部门核心流程",
       field: "type"
+    },
+    createTime: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "create_time"
+    },
+    updateTime: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "update_time"
     }
   };
   const options = {

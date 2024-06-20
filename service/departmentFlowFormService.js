@@ -17,7 +17,9 @@ const saveDepartmentFlowForm = async (deptId, formId, type, isCore) => {
     if (exist) {
         const needToUpdateIsCore = isCore !== null
         if (needToUpdateIsCore) {
-            return await departmentFlowFormRepo.updateIsCore(deptId, formId, type, isCore)
+            const data = {isCore, updateTime: new Date()}
+            const where = {deptId, formId, type}
+            return await departmentFlowFormRepo.update(data, where)
         }
         return true
     }
@@ -28,7 +30,9 @@ const saveDepartmentFlowForm = async (deptId, formId, type, isCore) => {
         formId,
         formName: formDetails.flowFormName,
         isCore,
-        type
+        type,
+        createTime: new Date(),
+        updateTime: new Date()
     }
     return await departmentFlowFormRepo.saveDepartmentFlowForm(model)
 }

@@ -297,15 +297,25 @@ const getDeptFlowForms = async (deptId, type) => {
     for (const form of flowForms) {
         const deptForms = deptFlowForms.filter(item => item.formId === form.flowFormId && item.type.toString() === type)
         if (deptForms.length > 0) {
+            form.createTime = deptForms[0].createTime
+            form.updateTime = deptForms[0].updateTime
             form.deptFlowFormId = deptForms[0].id
             form.selected = true
             const deptCoreForms = deptForms.filter(item => item.isCore)
             form.isCore = deptCoreForms.length > 0
         } else {
+            form.createTime = ""
+            form.updateTime = ""
             form.selected = false
             form.isCore = false
         }
     }
+    flowForms.sort((cur, next) => {
+        if (next.isCore === cur.isCore) {
+            return next.updateTime - cur.updateTime
+        }
+        return next.isCore - cur.isCore
+    })
     return flowForms
 }
 

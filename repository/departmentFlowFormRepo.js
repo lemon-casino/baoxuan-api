@@ -62,8 +62,9 @@ const getDeptFlowFormConfig = async (deptId) => {
     return deptForms
 }
 
-const updateIsCore = async (deptId, formId, type, isCore) => {
-    return await models.deptFlowFormModel.update({isCore}, {where: {deptId, formId, type}})
+const update = async (data, where) => {
+    const result = await models.deptFlowFormModel.update(data, {where})
+    return result
 }
 
 module.exports = {
@@ -72,5 +73,5 @@ module.exports = {
     getDepartmentFlowForms,
     getDeptFlowFormConfig,
     getDeptFlowFormsWithActivities,
-    updateIsCore
+    update
 }
