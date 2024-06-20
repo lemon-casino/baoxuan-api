@@ -2416,7 +2416,7 @@ const mbCoreActionsConfig = [
                         formName: "美编任务运营发布",
                         formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
                         flowDetailsRules: [
-                            {fieldId: "selectField_liikmvi4", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                            {fieldId: "radioField_lv641k3b", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
                         ],
                         flowNodeRules: [{
                             from: {
@@ -3911,7 +3911,7 @@ const mbCoreActionsConfig = [
                         formName: "美编任务运营发布",
                         formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
                         flowDetailsRules: [
-                            {fieldId: "selectField_liikmvi4", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                            {fieldId: "radioField_lv641k3b", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
                         ],
                         flowNodeRules: [{
                             from: {
@@ -5372,7 +5372,7 @@ const mbCoreActionsConfig = [
                         formName: "美编任务运营发布",
                         formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
                         flowDetailsRules: [
-                            {fieldId: "selectField_liikmvi4", opCode: opCodes.EqualAny, value: ["半套"]}
+                            {fieldId: "radioField_lv641k3b", opCode: opCodes.EqualAny, value: ["半套"]}
                         ],
                         flowNodeRules: [{
                             from: {
@@ -5714,7 +5714,7 @@ const mbCoreActionsConfig = [
                         formName: "美编任务运营发布",
                         formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
                         flowDetailsRules: [
-                            {fieldId: "selectField_liikmvi4", opCode: opCodes.EqualAny, value: ["半套"]}
+                            {fieldId: "radioField_lv641k3b", opCode: opCodes.EqualAny, value: ["半套"]}
                         ],
                         flowNodeRules: [
                             {
@@ -6695,7 +6695,7 @@ const mbCoreActionsConfig = [
                         formName: "美编任务运营发布",
                         formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
                         flowDetailsRules: [
-                            {fieldId: "selectField_liikmvi4", opCode: opCodes.EqualAny, value: ["半套"]}
+                            {fieldId: "radioField_lv641k3b", opCode: opCodes.EqualAny, value: ["半套"]}
                         ],
                         flowNodeRules: [
                             {
@@ -8202,7 +8202,7 @@ const mbCoreActionsConfig = [
                         formName: "美编任务运营发布",
                         formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
                         flowDetailsRules: [
-                            {fieldId: "selectField_liikmvi4", opCode: opCodes.Equal, value: "散图"}
+                            {fieldId: "radioField_lv641k3b", opCode: opCodes.Equal, value: "散图"}
                         ],
                         flowNodeRules: [{
                             from: {
@@ -8566,7 +8566,7 @@ const mbCoreActionsConfig = [
                         formName: "美编任务运营发布",
                         formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
                         flowDetailsRules: [
-                            {fieldId: "selectField_liikmvi4", opCode: opCodes.Equal, value: "散图"}
+                            {fieldId: "radioField_lv641k3b", opCode: opCodes.Equal, value: "散图"}
                         ],
                         flowNodeRules: [
                             {
@@ -9682,7 +9682,7 @@ const mbCoreActionsConfig = [
                         formName: "美编任务运营发布",
                         formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
                         flowDetailsRules: [
-                            {fieldId: "selectField_liikmvi4", opCode: opCodes.Equal, value: "散图"}
+                            {fieldId: "radioField_lv641k3b", opCode: opCodes.Equal, value: "散图"}
                         ],
                         flowNodeRules: [
                             {
@@ -11098,7 +11098,7 @@ const mbCoreActionsConfig = [
                         formName: "美编任务运营发布",
                         formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
                         flowDetailsRules: [
-                            {fieldId: "selectField_liikmvi4", opCode: opCodes.Equal, value: "视频"}
+                            {fieldId: "radioField_lv641k3b", opCode: opCodes.Equal, value: "视频"}
                         ],
                         flowNodeRules: [{
                             from: {
@@ -11270,7 +11270,7 @@ const mbCoreActionsConfig = [
                         formName: "美编任务运营发布",
                         formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
                         flowDetailsRules: [
-                            {fieldId: "selectField_liikmvi4", opCode: opCodes.Equal, value: "视频"}
+                            {fieldId: "radioField_lv641k3b", opCode: opCodes.Equal, value: "视频"}
                         ],
                         flowNodeRules: [
                             {
@@ -11475,7 +11475,7 @@ const mbCoreActionsConfig = [
                         formName: "美编任务运营发布",
                         formId: "FORM-WV866IC1JU8B99PU77CDKBMZ4N5K251FLKIILS",
                         flowDetailsRules: [
-                            {fieldId: "selectField_liikmvi4", opCode: opCodes.Equal, value: "视频"}
+                            {fieldId: "radioField_lv641k3b", opCode: opCodes.Equal, value: "视频"}
                         ],
                         flowNodeRules: [
                             {
