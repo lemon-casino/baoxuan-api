@@ -800,7 +800,8 @@ const mbCoreActionsConfig = [
                         formName: "运营拍摄流程",
                         formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套", "套图"]},
+                            {fieldId: "selectField_ljxvfuiw", opCode: opCodes.Contain, value: "套"}
                         ],
                         flowNodeRules: [
                             {
@@ -1581,7 +1582,8 @@ const mbCoreActionsConfig = [
                         formName: "运营拍摄流程",
                         formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套", "套图"]},
+                            {fieldId: "selectField_ljxvfuiw", opCode: opCodes.Contain, value: "套"}
                         ],
                         flowNodeRules: [
                             {
@@ -1812,7 +1814,8 @@ const mbCoreActionsConfig = [
                         formName: "运营拍摄流程",
                         formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套", "套图"]},
+                            {fieldId: "selectField_ljxvfuiw", opCode: opCodes.Contain, value: "套"}
                         ],
                         flowNodeRules: [{
                             from: {
@@ -2024,7 +2027,8 @@ const mbCoreActionsConfig = [
                         formName: "运营拍摄流程",
                         formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套", "套图"]},
+                            {fieldId: "selectField_ljxvfuiw", opCode: opCodes.Contain, value: "套"}
                         ],
                         flowNodeRules: [
                             {
@@ -2843,7 +2847,8 @@ const mbCoreActionsConfig = [
                         formName: "运营拍摄流程",
                         formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套", "套图"]},
+                            {fieldId: "selectField_ljxvfuiw", opCode: opCodes.Contain, value: "套"}
                         ],
                         flowNodeRules: [
                             {
@@ -2932,6 +2937,50 @@ const mbCoreActionsConfig = [
                                     from: "process",
                                     name: "简单美编完成任务",
                                     id: "node_oclrj9wznyi"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvkpzz4g3",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvkpzz4g3",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvkpzz4g3",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "审核美编工作",
+                                    id: "node_oclvkpzz4g3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvkpzz4g1",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvkpzz4g1",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvkpzz4g1",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "审核美编工作",
+                                    id: "node_oclvkpzz4g1"
                                 }
                             }
                         ]
@@ -4346,51 +4395,52 @@ const mbCoreActionsConfig = [
                         formName: "运营拍摄流程",
                         formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套", "套图"]},
+                            {fieldId: "selectField_ljxvfuiw", opCode: opCodes.Contain, value: "套"}
                         ],
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclrj9wzny6",
-                                    name: "简单美编完成任务",
+                                    id: "node_oclvkpzz4g3",
+                                    name: "审核美编工作",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclrj9wzny6",
-                                    name: "简单美编完成任务",
+                                    id: "node_oclvkpzz4g3",
+                                    name: "审核美编工作",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclrj9wzny6",
-                                    name: "简单美编完成任务",
+                                    id: "node_oclvkpzz4g3",
+                                    name: "审核美编工作",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "简单美编完成任务",
-                                    id: "node_oclrj9wzny6"
+                                    name: "审核美编工作",
+                                    id: "node_oclvkpzz4g3"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclrj9wznyi",
-                                    name: "简单美编完成任务",
+                                    id: "node_oclvkpzz4g1",
+                                    name: "审核美编工作",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclrj9wznyi",
-                                    name: "简单美编完成任务",
+                                    id: "node_oclvkpzz4g1",
+                                    name: "审核美编工作",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclrj9wznyi",
-                                    name: "简单美编完成任务",
+                                    id: "node_oclvkpzz4g1",
+                                    name: "审核美编工作",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "简单美编完成任务",
-                                    id: "node_oclrj9wznyi"
+                                    name: "审核美编工作",
+                                    id: "node_oclvkpzz4g1"
                                 }
                             }
                         ]
@@ -7940,7 +7990,8 @@ const mbCoreActionsConfig = [
                         formName: "运营拍摄流程",
                         formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "散图"}
+                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "散图"},
+                            {fieldId: "selectField_ljxvfuiw", opCode: opCodes.Equal, value: "部分图片"}
                         ],
                         flowNodeRules: [
                             {
@@ -8281,7 +8332,8 @@ const mbCoreActionsConfig = [
                         formName: "运营拍摄流程",
                         formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "散图"}
+                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "散图"},
+                            {fieldId: "selectField_ljxvfuiw", opCode: opCodes.Equal, value: "部分图片"}
                         ],
                         flowNodeRules: [
                             {
@@ -8424,7 +8476,8 @@ const mbCoreActionsConfig = [
                         formName: "运营拍摄流程",
                         formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "散图"}
+                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "散图"},
+                            {fieldId: "selectField_ljxvfuiw", opCode: opCodes.Equal, value: "部分图片"}
                         ],
                         flowNodeRules: [
                             {
@@ -8574,7 +8627,8 @@ const mbCoreActionsConfig = [
                         formName: "运营拍摄流程",
                         formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "散图"}
+                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "散图"},
+                            {fieldId: "selectField_ljxvfuiw", opCode: opCodes.Equal, value: "部分图片"}
                         ],
                         flowNodeRules: [{
                             from: {
@@ -9028,7 +9082,8 @@ const mbCoreActionsConfig = [
                         formName: "运营拍摄流程",
                         formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "散图"}
+                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "散图"},
+                            {fieldId: "selectField_ljxvfuiw", opCode: opCodes.Equal, value: "部分图片"}
                         ],
                         flowNodeRules: [
                             {
@@ -9077,6 +9132,28 @@ const mbCoreActionsConfig = [
                             },
                             {
                                 from: {
+                                    id: "node_oclvkqswtb4",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvkqswtb4",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvkqswtb4",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "审核美编工作",
+                                    id: "node_oclvkqswtb4"
+                                }
+                            },
+                            {
+                                from: {
                                     id: "node_oclvkqswtba",
                                     name: "重点精修美编完成任务",
                                     status: ["TODO"]
@@ -9117,6 +9194,28 @@ const mbCoreActionsConfig = [
                                     from: "process",
                                     name: "简单美编完成任务",
                                     id: "node_oclvkqswtbb"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvkqswtbc",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvkqswtbc",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvkqswtbc",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "审核美编工作",
+                                    id: "node_oclvkqswtbc"
                                 }
                             }
                         ]
@@ -10166,75 +10265,53 @@ const mbCoreActionsConfig = [
                         formName: "运营拍摄流程",
                         formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "散图"}
+                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "散图"},
+                            {fieldId: "selectField_ljxvfuiw", opCode: opCodes.Equal, value: "部分图片"}
                         ],
-                        flowNodeRules: [
+                        flowNodeRules: [{
+                            from: {
+                                id: "node_oclvkqswtb4",
+                                name: "审核美编工作",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclvkqswtb4",
+                                name: "审核美编工作",
+                                status: ["HISTORY"]
+                            },
+                            overdue: {
+                                id: "node_oclvkqswtb4",
+                                name: "审核美编工作",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "审核美编工作",
+                                id: "node_oclvkqswtb4"
+                            }
+                        },
                             {
                                 from: {
-                                    id: "node_oclvkqswtb3",
-                                    name: "简单美编完成任务",
+                                    id: "node_oclvkqswtbc",
+                                    name: "审核美编工作",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvkqswtb3",
-                                    name: "简单美编完成任务",
+                                    id: "node_oclvkqswtbc",
+                                    name: "审核美编工作",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclvkqswtb3",
-                                    name: "简单美编完成任务",
+                                    id: "node_oclvkqswtbc",
+                                    name: "审核美编工作",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "简单美编完成任务",
-                                    id: "node_oclvkqswtb3"
+                                    name: "审核美编工作",
+                                    id: "node_oclvkqswtbc"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclvkqswtbb",
-                                    name: "简单美编完成任务",
-                                    status: ["HISTORY"]
-                                },
-                                to: {
-                                    id: "node_oclvkqswtbb",
-                                    name: "简单美编完成任务",
-                                    status: ["HISTORY"]
-                                },
-                                overdue: {
-                                    id: "node_oclvkqswtbb",
-                                    name: "简单美编完成任务",
-                                    status: ["HISTORY"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "简单美编完成任务",
-                                    id: "node_oclvkqswtbb"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclvkqswtbb",
-                                    name: "简单美编完成任务",
-                                    status: ["HISTORY"]
-                                },
-                                to: {
-                                    id: "node_oclvkqswtbb",
-                                    name: "简单美编完成任务",
-                                    status: ["HISTORY"]
-                                },
-                                overdue: {
-                                    id: "node_oclvkqswtbb",
-                                    name: "简单美编完成任务",
-                                    status: ["HISTORY"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "简单美编完成任务",
-                                    id: "node_oclvkqswtbb"
-                                }
-                            },
+                            }
                         ]
                     },
                     {
@@ -11690,7 +11767,29 @@ const mbCoreActionsConfig = [
                                     name: "视频剪辑完成",
                                     id: "node_oclrj9wznym"
                                 }
-                            }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvkpzz4g4",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvkpzz4g4",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvkpzz4g4",
+                                    name: "审核美编工作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "审核美编工作",
+                                    id: "node_oclvkpzz4g4"
+                                }
+                            },
                         ]
                     },
                     {
@@ -11852,28 +11951,50 @@ const mbCoreActionsConfig = [
                             {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "视频"}
                         ],
                         flowNodeRules: [
+                            // {
+                            //     from: {
+                            //         id: "node_oclrj9wznym",
+                            //         name: "视频剪辑完成",
+                            //         status: ["HISTORY"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclrj9wznym",
+                            //         name: "视频剪辑完成",
+                            //         status: ["HISTORY"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclrj9wznym",
+                            //         name: "视频剪辑完成",
+                            //         status: ["HISTORY"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "视频剪辑完成",
+                            //         id: "node_oclrj9wznym"
+                            //     }
+                            // },
                             {
                                 from: {
-                                    id: "node_oclrj9wznym",
-                                    name: "视频剪辑完成",
+                                    id: "node_oclvkpzz4g4",
+                                    name: "审核美编工作",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclrj9wznym",
-                                    name: "视频剪辑完成",
+                                    id: "node_oclvkpzz4g4",
+                                    name: "审核美编工作",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclrj9wznym",
-                                    name: "视频剪辑完成",
+                                    id: "node_oclvkpzz4g4",
+                                    name: "审核美编工作",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "视频剪辑完成",
-                                    id: "node_oclrj9wznym"
+                                    name: "审核美编工作",
+                                    id: "node_oclvkpzz4g4"
                                 }
-                            }
+                            },
                         ]
                     },
                     {
