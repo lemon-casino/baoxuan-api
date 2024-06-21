@@ -286,12 +286,44 @@ const employeeFiles = async (rest) => {
         rest.mainBody = calculatePercentage(await Hr_RecruitmentDepartmentPositions.mainBodyecharts(), 'value', 'name');
         rest.department = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentdDistributed(), 'value', 'name');
         //入离职信息
-        //rest.joiningAndLeaving = await Hr_RecruitmentDepartmentPositions.joiningAndLeaving();
+        //
     } catch (error) {
         return {message: error.message};
     }
 
 };
+
+
+const entryAndResignation = async (rest) => {
+    /*
+    * // 每个月的在职情况
+    annualEmployment: [],
+        //月度入职
+        departmentOnboarding: [], -
+        // 月度离职
+        departmentResignation: [],-
+        //
+        departmentEntryAndExitl:[] -
+        // 对比: []
+        joiningAndLeaving: [],
+        //入离职环比
+        entryAndExitRatio: []
+    * */
+    try {
+        rest.departmentOnboarding = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentOnboarding(), 'value', 'name');
+        rest.departmentResignation = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentResignation(), 'value', 'name');
+        rest.joiningAndLeaving = await Hr_RecruitmentDepartmentPositions.joiningAndLeaving();
+        rest.departmentEntryAndExit = await Hr_RecruitmentDepartmentPositions.departmentEntryAndExit();
+        // rest.department = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentdDistributed(), 'value', 'name');
+        //入离职信息
+        console.log("--------------------")
+
+    } catch (error) {
+        return {message: error.message};
+    }
+
+};
+
 
 module.exports = {
     recruitmentDepartment,
@@ -301,5 +333,6 @@ module.exports = {
     StatisticsEcharts,
     curriculumVitae,
     curriculumVitaelikename,
-    employeeFiles
+    employeeFiles,
+    entryAndResignation,
 }

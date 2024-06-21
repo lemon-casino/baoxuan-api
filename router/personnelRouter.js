@@ -21,6 +21,7 @@ router.get("/name", hrRecruit.curriculumVitaelikename)
 router.get("/employeeFiles", hrRecruit.employeeFiles)
 
 //月度入离职查询
+router.get("/entryAndResignation", hrRecruit.entryAndResignation)
 
 //月度异动查询
 

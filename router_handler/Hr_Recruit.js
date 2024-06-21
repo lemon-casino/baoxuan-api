@@ -219,6 +219,33 @@ const employeeFiles = async (req, res, next) => {
     }
 
 };
+
+
+const entryAndResignation = async (req, res, next) => {
+
+    let rest = {
+        // 每个月的在职情况
+        annualEmployment: [],
+        //月度入职
+        departmentOnboarding: [],
+        // 月度离职
+        departmentResignation: [],
+        //按部门当月的入离职情况
+        departmentEntryAndExit: [],
+        // 对比: []
+        joiningAndLeaving: [],
+        //入离职环比
+        entryAndExitRatio: []
+    }
+    try {
+        await Hr_RecruitService.entryAndResignation(rest);
+        return res.send(success(rest));
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
+
+};
+
 module.exports = {
     recruitmentDepartment,
     recruitmentTalent,
@@ -227,5 +254,6 @@ module.exports = {
     showTalent,
     curriculumVitae,
     curriculumVitaelikename,
-    employeeFiles
+    employeeFiles,
+    entryAndResignation
 }
