@@ -253,6 +253,17 @@ const curriculumVitae = async (name, rest) => {
 
 };
 
+// 公用 函数 作用是将数值转化为百分比占总得到百分比
+function calculatePercentage(data, valueKey, nameKey) {
+    // 计算总数
+    const total = data.reduce((sum, item) => sum + item[valueKey], 0);
+
+    // 计算每个类别的占比并添加百分比符号
+    return data.map(item => ({
+        [nameKey]: item[nameKey],
+        [valueKey]: ((item[valueKey] / total) * 100).toFixed(2) + '%'
+    }));
+}
 
 const curriculumVitaelikename = async (rest) => {
 
@@ -271,9 +282,11 @@ const employeeFiles = async (rest) => {
 //        gender: {},
 //         mainBody: {}
     try {
-        rest.gender = await Hr_RecruitmentDepartmentPositions.gender();
-        rest.mainBody = await Hr_RecruitmentDepartmentPositions.mainBodyecharts();
-        rest.joiningAndLeaving = await Hr_RecruitmentDepartmentPositions.joiningAndLeaving();
+        rest.gender = calculatePercentage(await Hr_RecruitmentDepartmentPositions.gender(), 'value', 'name');
+        rest.mainBody = calculatePercentage(await Hr_RecruitmentDepartmentPositions.mainBodyecharts(), 'value', 'name');
+        rest.department = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentdDistributed(), 'valuqqqe', 'name');
+        //入离职信息
+        //rest.joiningAndLeaving = await Hr_RecruitmentDepartmentPositions.joiningAndLeaving();
     } catch (error) {
         return {message: error.message};
     }
