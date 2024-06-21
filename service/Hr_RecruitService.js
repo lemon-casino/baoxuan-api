@@ -284,7 +284,7 @@ const employeeFiles = async (rest) => {
     try {
         rest.gender = calculatePercentage(await Hr_RecruitmentDepartmentPositions.gender(), 'value', 'name');
         rest.mainBody = calculatePercentage(await Hr_RecruitmentDepartmentPositions.mainBodyecharts(), 'value', 'name');
-        rest.department = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentdDistributed(), 'valuqqqe', 'name');
+        rest.department = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentdDistributed(), 'value', 'name');
         //入离职信息
         //rest.joiningAndLeaving = await Hr_RecruitmentDepartmentPositions.joiningAndLeaving();
     } catch (error) {
