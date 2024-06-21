@@ -1,6 +1,7 @@
 const ExcelJS = require('exceljs')
 const biResponse = require("../../utils/biResponse")
 const flowService = require("../../service/flowService")
+const coreActionService = require("../../service/core/coreActionService")
 const flowFormService = require("../../service/flowFormService")
 const joiUtil = require("../../utils/joiUtil")
 const BigNumber = require("bignumber.js");
@@ -54,7 +55,7 @@ const getCoreActions = async (req, res, next) => {
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired},
             userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.strRequired}
         })
-        const result = await flowService.getCoreActions(userId, deptId, userNames, startDate, endDate)
+        const result = await coreActionService.getCoreActions(userId, deptId, userNames, startDate, endDate)
         res.send(biResponse.success(result))
     } catch (e) {
         next(e)

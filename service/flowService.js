@@ -589,7 +589,7 @@ const updateRunningFlowEmergency = async (ids, emergency) => {
     globalSetter.setGlobalTodayRunningAndFinishedFlows(newTodayFlows)
 }
 
-const removeFlowByStatus = (flows, flowStatus) => {
+const removeTargetStatusFlows = (flows, flowStatus) => {
     return flows.filter(item => item.instanceStatus !== flowStatus)
 }
 
@@ -602,56 +602,78 @@ const removeFlowByStatus = (flows, flowStatus) => {
  * @returns {Promise<*[]>}
  */
 const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneDate) => {
-    const getFormIds = (actionConfig) => {
-        const ids = {}
-        for (const configItem of actionConfig) {
-            const actionStatuses = configItem.actionStatus
-            for (const actionItem of actionStatuses) {
-                for (const formRule of actionItem.rules) {
-                    ids[formRule.formId] = 1
+    const coreActionConfig = await flowRepo.getCoreActionsConfig(deptId)
+    // 从配置中获取外包和非外包表单流程分开进行汇总
+    const extractInnerAndOutSourcingFormsFromConfig = (coreActionConfig) => {
+        const forms = {"inner": [], "outSourcing": []}
+        if (coreActionConfig instanceof Array) {
+            for (const item of coreActionConfig) {
+                // 找到有form的配置信息直接拿出来
+                if (Object.keys(item).includes("formId")) {
+                    const tmpForm = {formName: item.formName, formId: item.formId}
+                    if (item.formName.includes("外包")) {
+                        forms.outSourcing.push(tmpForm)
+                    } else {
+                        forms.inner.push(tmpForm)
+                    }
+                    continue
+                }
+                // 当前item不存在form先关的配置信息
+                for (const key of Object.keys(item)) {
+                    if (item[key] instanceof Array) {
+                        const tmpForms = extractInnerAndOutSourcingFormsFromConfig(item[key])
+                        forms.inner = forms.inner.concat(tmpForms.inner)
+                        forms.outSourcing = forms.outSourcing.concat(tmpForms.outSourcing)
+                    }
                 }
             }
         }
-        return Object.keys(ids)
+        forms.inner = algorithmUtil.removeJsonArrDuplicateItems(forms.inner, "formId")
+        forms.outSourcing = algorithmUtil.removeJsonArrDuplicateItems(forms.outSourcing, "formId")
+        return forms
     }
-    const coreActionConfig = await flowRepo.getCoreActionsConfig(deptId)
+    const differentForms = extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
+    const configuredFormIds = differentForms.inner.concat(differentForms.outSourcing).map(item => item.formId)
     // 筛选出参与统计的表单流程
-    const formIds = getFormIds(coreActionConfig)
-    let flows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
+    let flows = await getCombinedFlowsOfHistoryAndToday(startDoneDate, endDoneDate, configuredFormIds)
     // 过滤终止的流程
-    flows = removeFlowByStatus(flows, flowStatusConst.TERMINATED)
-    flows = removeUnmatchedDateActivities(flows, startDoneDate, endDoneDate)
-    // todo: 视觉(482162119)和全流程的统计userNames要加上外包的信息
-    //   先单独处理，要不就得把外包的人全部返回视觉的前端，可能还得改http method，
-    //   等数据ok稳定后需要整理
-    const user = await userRepo.getUserDetails({userId})
+    flows = removeTargetStatusFlows(flows, flowStatusConst.TERMINATED)
+    flows = removeDoneActivitiesNotInDoneDateRange(flows, startDoneDate, endDoneDate)
 
-    const userDDId = user.dingdingUserId
-    // 有条件地为userNames添加外包人信息、离职人员信息
-    let canGetDeptOutSourcingUsers = false
-    let canGetResignUsers = false
-    if (whiteList.pepArr().includes(userDDId)) {
-        canGetDeptOutSourcingUsers = true
-        canGetResignUsers = true
-    } else {
-        const redisUsers = await redisRepo.getAllUsersDetail()
-        const userTargetDeps = redisUsers.find(u => u.userid === userDDId).leader_in_dept
-        const userCurrDept = userTargetDeps.find(item => item.dept_id.toString() === deptId)
-        if (userCurrDept && userCurrDept.leader) {
+    const getExtraUserNames = async (userId, deptId) => {
+        // todo: 视觉(482162119)和全流程的统计userNames要加上外包的信息
+        //   先单独处理，要不就得把外包的人全部返回视觉的前端，可能还得改http method，
+        //   等数据ok稳定后需要整理
+        const user = await userRepo.getUserDetails({userId})
+        const userDDId = user.dingdingUserId
+        // 有条件地为userNames添加外包人信息、离职人员信息
+        let canGetDeptOutSourcingUsers = false
+        let canGetResignUsers = false
+        if (whiteList.pepArr().includes(userDDId)) {
             canGetDeptOutSourcingUsers = true
             canGetResignUsers = true
+        } else {
+            const redisUsers = await redisRepo.getAllUsersDetail()
+            const userTargetDeps = redisUsers.find(u => u.userid === userDDId).leader_in_dept
+            const userCurrDept = userTargetDeps.find(item => item.dept_id.toString() === deptId)
+            if (userCurrDept && userCurrDept.leader) {
+                canGetDeptOutSourcingUsers = true
+                canGetResignUsers = true
+            }
         }
+        if (canGetResignUsers) {
+            const deptResignUsers = await userRepo.getDeptResignUsers(deptId)
+            const strDeptResignUsers = deptResignUsers.map(item => `${item.nickname}[已离职]`).join(",")
+            userNames = `${userNames},${strDeptResignUsers}`
+        }
+
+        if (canGetDeptOutSourcingUsers) {
+            return await redisRepo.getOutSourcingUsers(deptId)
+        }
+        return []
     }
-    if (canGetResignUsers) {
-        const deptResignUsers = await userRepo.getDeptResignUsers(deptId)
-        const strDeptResignUsers = deptResignUsers.map(item => `${item.nickname}[已离职]`).join(",")
-        userNames = `${userNames},${strDeptResignUsers}`
-    }
-    if (canGetDeptOutSourcingUsers) {
-        const deptOutSourcingUsers = await redisRepo.getOutSourcingUsers(deptId)
-        const strDeptOutSourcingUsers = deptOutSourcingUsers.join(",")
-        userNames = `${userNames},${strDeptOutSourcingUsers}`
-    }
+    const deptExtraUserNames = await getExtraUserNames(userId, deptId)
+    userNames = `${userNames},${deptExtraUserNames.join(",")}`
 
     // 基于人的汇总(最基本的明细统计)
     const userStatResult = await departmentCoreActivityStat.get(userNames, flows, coreActionConfig)
@@ -867,37 +889,6 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
     }
     const statusStatFlowResult = convertToStatusStatResult(flows, coreActionConfig, userStatResult)
 
-    // 从配置中获取外包和非外包表单流程分开进行汇总
-    const extractInnerAndOutSourcingFormsFromConfig = (coreActionConfig) => {
-        const forms = {"inner": [], "outSourcing": []}
-        if (coreActionConfig instanceof Array) {
-            for (const item of coreActionConfig) {
-                // 找到有form的配置信息直接拿出来
-                if (Object.keys(item).includes("formId")) {
-                    const tmpForm = {formName: item.formName, formId: item.formId}
-                    if (item.formName.includes("外包")) {
-                        forms.outSourcing.push(tmpForm)
-                    } else {
-                        forms.inner.push(tmpForm)
-                    }
-                    continue
-                }
-                // 当前item不存在form先关的配置信息
-                for (const key of Object.keys(item)) {
-                    if (item[key] instanceof Array) {
-                        const tmpForms = extractInnerAndOutSourcingFormsFromConfig(item[key])
-                        forms.inner = forms.inner.concat(tmpForms.inner)
-                        forms.outSourcing = forms.outSourcing.concat(tmpForms.outSourcing)
-                    }
-                }
-            }
-        }
-        forms.inner = algorithmUtil.removeJsonArrDuplicateItems(forms.inner, "formId")
-        forms.outSourcing = algorithmUtil.removeJsonArrDuplicateItems(forms.outSourcing, "formId")
-        return forms
-    }
-
-    const differentForms = extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
     // 筛选出内部表单的流程数
     const innerFormIds = differentForms.inner.map(item => item.formId)
     const innerFlows = flows.filter(item => innerFormIds.includes(item.formUuid))
@@ -949,7 +940,7 @@ const getCoreFlowData = async (deptId, userNames, startDoneDate, endDoneDate) =>
  * @param formIds
  * @returns {Promise<*[]>}
  */
-const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate, formIds) => {
+const getCombinedFlowsOfHistoryAndToday = async (startDoneDate, endDoneDate, formIds) => {
 
     if ((startDoneDate || endDoneDate) && !(startDoneDate && endDoneDate)) {
         throw new ParameterError("时间区间不完整")
@@ -962,18 +953,7 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate, formIds) => {
             throw new ParameterError("结束日期不能小于开始日期")
         }
 
-        // let processReviews = await processReviewRepo.getProcessReviewByDoneTimeRange(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate))
-        // const processInstanceIds = processReviews.map(item => item.processInstanceId)
-        // let processes = await flowRepo.getAloneProcessByIds(processInstanceIds)
-        // let processesDetails = await processDetailsRepo.getProcessDetailsByProcessInstanceIds(processInstanceIds)
-        // for (const process of processes) {
-        //     const details = processesDetails.slice(item => item.processInstanceId === process.processInstanceId)
-        //     const reviews = processReviews.slice(item => item.processInstanceId === process.processInstanceId)
-        //     process.data = details
-        //     process.overallprocessflow = reviews
-        // }
-
-        const processDataReviewItem = await Promise.all([// 5.8s
+        const processDataReviewItem = await Promise.all([
             flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds), // 2.8s
             flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds)])
 
@@ -1006,7 +986,7 @@ const getFlowsByDoneTimeRange = async (startDoneDate, endDoneDate, formIds) => {
     return flows
 }
 
-const removeUnmatchedDateActivities = (flows, startDoneDate, endDoneDate) => {
+const removeDoneActivitiesNotInDoneDateRange = (flows, startDoneDate, endDoneDate) => {
     // 根据时间区间过滤掉不在区间内的完成节点，todo和forcast的数据不用处理
     for (const flow of flows) {
         if (!flow.overallprocessflow) {
@@ -1115,11 +1095,11 @@ const levelUpDomainList = (flows) => {
  * @returns {Promise<*[]>}
  */
 const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, deptId, handleOutSourcingActivityFunc, setActivitiesIgnoreStatFunc) => {
-    const originFlows = await getFlowsByDoneTimeRange(startDoneDate, endDoneDate, formIds)
+    const originFlows = await getCombinedFlowsOfHistoryAndToday(startDoneDate, endDoneDate, formIds)
 
     let modifiedFlows = _.cloneDeep(originFlows)
     // 排除完成节点不在时间区间中的节点: 对待转入的统计没影响
-    modifiedFlows = removeUnmatchedDateActivities(modifiedFlows, startDoneDate, endDoneDate)
+    modifiedFlows = removeDoneActivitiesNotInDoneDateRange(modifiedFlows, startDoneDate, endDoneDate)
     // 排除不需要统计的节点: 对待转入的统计没影响
     modifiedFlows = removeNoRequiredActivities(modifiedFlows)
     modifiedFlows = handleOutSourcingActivityFunc && handleOutSourcingActivityFunc(modifiedFlows) //cloneAssignToOutSourcingNode(modifiedFlows)
@@ -1612,5 +1592,5 @@ module.exports = {
     getCoreFormFlowConfig,
     getFormsFlowsActivitiesStat,
     getAllOverDueRunningFlows,
-    removeUnmatchedDateActivities
+    removeUnmatchedDateActivities: removeDoneActivitiesNotInDoneDateRange
 }
