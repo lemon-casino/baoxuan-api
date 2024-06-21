@@ -760,6 +760,90 @@ const joiningAndLeaving = async () => {
         throw new Error('查询数据失败');
     }
 };
+
+const departmentdDistributed = async () => {
+    try {
+        return await ZaiZhiRen.sequelize.query(
+            `select  COUNT(1) AS value ,section AS name  from  zai_zhi_ren group by section`,
+            {
+                type: QueryTypes.SELECT
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
+const departmentOnboarding = async () => {
+    try {
+        return await ZaiZhiRen.sequelize.query(
+            `SELECT
+    section AS name,
+    COUNT(*) AS value 
+FROM
+    zai_zhi_ren
+WHERE
+    YEAR(on_board_time) = YEAR(CURDATE()) AND
+    MONTH(on_board_time) = MONTH(CURDATE())
+GROUP BY
+    section;`,
+            {
+                type: QueryTypes.SELECT
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+const departmentResignation = async () => {
+    try {
+        return await ZaiZhiRen.sequelize.query(
+            `SELECT
+    section AS name,
+    COUNT(*) AS value 
+FROM
+    zai_zhi_ren
+WHERE
+    YEAR(turnover_time) = YEAR(CURDATE()) AND
+    MONTH(turnover_time) = MONTH(CURDATE())
+GROUP BY
+    section;`,
+            {
+                type: QueryTypes.SELECT
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
+
+const departmentEntryAndExit = async () => {
+    try {
+        return await ZaiZhiRen.sequelize.query(
+            `SELECT section,
+    SUM(CASE WHEN YEAR(on_board_time) = YEAR(CURDATE()) AND MONTH(on_board_time) = MONTH(CURDATE()) THEN 1 ELSE 0 END) AS num_of_new_employees,
+    SUM(CASE WHEN YEAR(turnover_time) = YEAR(CURDATE()) AND MONTH(turnover_time) = MONTH(CURDATE()) THEN 1 ELSE 0 END) AS num_of_leaving_employees
+        FROM
+            zai_zhi_ren
+            GROUP BY  section;`,
+            {
+                type: QueryTypes.SELECT
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
 module.exports = {
     getHrDepartment,
     getHrQuarters,
@@ -785,5 +869,8 @@ module.exports = {
     rank,
     gender,
     mainBodyecharts,
-    joiningAndLeaving
+    joiningAndLeaving,
+    departmentOnboarding,
+    departmentResignation,
+    departmentEntryAndExit
 };

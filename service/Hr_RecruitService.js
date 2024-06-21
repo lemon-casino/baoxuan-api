@@ -253,6 +253,17 @@ const curriculumVitae = async (name, rest) => {
 
 };
 
+// 公用 函数 作用是将数值转化为百分比占总得到百分比
+function calculatePercentage(data, valueKey, nameKey) {
+    // 计算总数
+    const total = data.reduce((sum, item) => sum + item[valueKey], 0);
+
+    // 计算每个类别的占比并添加百分比符号
+    return data.map(item => ({
+        [nameKey]: item[nameKey],
+        [valueKey]: ((item[valueKey] / total) * 100).toFixed(2) + '%'
+    }));
+}
 
 const curriculumVitaelikename = async (rest) => {
 
@@ -271,14 +282,48 @@ const employeeFiles = async (rest) => {
 //        gender: {},
 //         mainBody: {}
     try {
-        rest.gender = await Hr_RecruitmentDepartmentPositions.gender();
-        rest.mainBody = await Hr_RecruitmentDepartmentPositions.mainBodyecharts();
-        rest.joiningAndLeaving = await Hr_RecruitmentDepartmentPositions.joiningAndLeaving();
+        rest.gender = calculatePercentage(await Hr_RecruitmentDepartmentPositions.gender(), 'value', 'name');
+        rest.mainBody = calculatePercentage(await Hr_RecruitmentDepartmentPositions.mainBodyecharts(), 'value', 'name');
+        rest.department = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentdDistributed(), 'value', 'name');
+        //入离职信息
+        //
     } catch (error) {
         return {message: error.message};
     }
 
 };
+
+
+const entryAndResignation = async (rest) => {
+    /*
+    * // 每个月的在职情况
+    annualEmployment: [],
+        //月度入职
+        departmentOnboarding: [], -
+        // 月度离职
+        departmentResignation: [],-
+        //
+        departmentEntryAndExitl:[] -
+        // 对比: []
+        joiningAndLeaving: [],
+        //入离职环比
+        entryAndExitRatio: []
+    * */
+    try {
+        rest.departmentOnboarding = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentOnboarding(), 'value', 'name');
+        rest.departmentResignation = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentResignation(), 'value', 'name');
+        rest.joiningAndLeaving = await Hr_RecruitmentDepartmentPositions.joiningAndLeaving();
+        rest.departmentEntryAndExit = await Hr_RecruitmentDepartmentPositions.departmentEntryAndExit();
+        // rest.department = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentdDistributed(), 'value', 'name');
+        //入离职信息
+        console.log("--------------------")
+
+    } catch (error) {
+        return {message: error.message};
+    }
+
+};
+
 
 module.exports = {
     recruitmentDepartment,
@@ -288,5 +333,6 @@ module.exports = {
     StatisticsEcharts,
     curriculumVitae,
     curriculumVitaelikename,
-    employeeFiles
+    employeeFiles,
+    entryAndResignation,
 }

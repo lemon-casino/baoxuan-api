@@ -17,8 +17,22 @@ router.get("/curriculumVitae", hrRecruit.curriculumVitae)
 // 根据用户名 模糊比配
 router.get("/name", hrRecruit.curriculumVitaelikename)
 
-//员工档案
-
+// 员工结构分布
 router.get("/employeeFiles", hrRecruit.employeeFiles)
+
+//月度入离职查询
+router.get("/entryAndResignation", hrRecruit.entryAndResignation)
+
+//月度异动查询
+
+// 月度转正查询
+
+//月度试用期查询
+
+// 人力成本分析
+
+//员工离职档案查询
+
+// 劳动合同管理
 
 module.exports = router
