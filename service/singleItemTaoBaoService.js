@@ -15,7 +15,7 @@ const {
     fieldsWithPercentageTag
 } = require("../const/singleItemConst")
 const linkTypeUtil = require("../utils/linkTypeUtil")
-const jsonUtil = require("../utils/jsonUtil")
+const sequelizeUtil = require("../utils/sequelizeUtil")
 const globalGetter = require("../global/getter")
 const NotFoundError = require("../error/http/notFoundError")
 const ForbiddenError = require("../error/http/forbiddenError")
@@ -944,19 +944,19 @@ const getPayment = async (singleItems) => {
             {
                 name: "精准词", sum: 0,
                 clickingAdditionalParams: [
-                    jsonUtil.getSqlFieldQuery("cartSumPayment", "$gt", 0)
+                    sequelizeUtil.getSqlFieldQuery("cartSumPayment", "$gt", 0)
                 ]
             },
             {
                 name: "万相台", sum: 0,
                 clickingAdditionalParams: [
-                    jsonUtil.getSqlFieldQuery("wanXiangTaiSumPayment", "$gt", 0)
+                    sequelizeUtil.getSqlFieldQuery("wanXiangTaiSumPayment", "$gt", 0)
                 ]
             },
             {
                 name: "精准人群", sum: 0,
                 clickingAdditionalParams: [
-                    jsonUtil.getSqlFieldQuery("accuratePeopleSumPayment", "$gt", 0)
+                    sequelizeUtil.getSqlFieldQuery("accuratePeopleSumPayment", "$gt", 0)
                 ]
             }
         ]
@@ -969,19 +969,19 @@ const getPayment = async (singleItems) => {
             {
                 name: "精准词", sum: 0,
                 clickingAdditionalParams: [
-                    jsonUtil.getSqlFieldQuery("shoppingCartSumAmount", "$gt", 0)
+                    sequelizeUtil.getSqlFieldQuery("shoppingCartSumAmount", "$gt", 0)
                 ]
             },
             {
                 name: "万相台", sum: 0,
                 clickingAdditionalParams: [
-                    jsonUtil.getSqlFieldQuery("wanXiangTaiCost", "$gt", 0)
+                    sequelizeUtil.getSqlFieldQuery("wanXiangTaiCost", "$gt", 0)
                 ]
             },
             {
                 name: "精准人群", sum: 0,
                 clickingAdditionalParams: [
-                    jsonUtil.getSqlFieldQuery("accuratePeoplePromotionCost", "$gt", 0)
+                    sequelizeUtil.getSqlFieldQuery("accuratePeoplePromotionCost", "$gt", 0)
                 ]
             }]
     })
@@ -996,19 +996,19 @@ const getPayment = async (singleItems) => {
     const cartSumPaymentLinkIds = singleItems.filter(item => item.cartSumPayment === 0 && item.shoppingCartSumAmount === 0).map(item => item.linkId)
     if (cartSumPaymentLinkIds.length > 0) {
         roiResult.items[0].clickingAdditionalParams = [
-            jsonUtil.getSqlFieldQuery("linkId", "$notIn", cartSumPaymentLinkIds)
+            sequelizeUtil.getSqlFieldQuery("linkId", "$notIn", cartSumPaymentLinkIds)
         ]
     }
     const wanXiangTaiSumPaymentLinkIds = singleItems.filter(item => item.wanXiangTaiSumPayment === 0 && item.wanXiangTaiCost === 0).map(item => item.linkId)
     if (wanXiangTaiSumPaymentLinkIds.length > 0) {
         roiResult.items[1].clickingAdditionalParams = [
-            jsonUtil.getSqlFieldQuery("linkId", "$notIn", wanXiangTaiSumPaymentLinkIds)
+            sequelizeUtil.getSqlFieldQuery("linkId", "$notIn", wanXiangTaiSumPaymentLinkIds)
         ]
     }
     const accuratePeopleSumPaymentLinkIds = singleItems.filter(item => item.accuratePeopleSumPayment === 0 && item.accuratePeoplePromotionCost === 0).map(item => item.linkId)
     if (accuratePeopleSumPaymentLinkIds.length > 0) {
         roiResult.items[2].clickingAdditionalParams = [
-            jsonUtil.getSqlFieldQuery("linkId", "$notIn", accuratePeopleSumPaymentLinkIds)
+            sequelizeUtil.getSqlFieldQuery("linkId", "$notIn", accuratePeopleSumPaymentLinkIds)
         ]
     }
     result.push(roiResult)
@@ -1072,11 +1072,11 @@ const getProfitData = async (singleItems) => {
             deliveryAmountStatistic.items.push({
                 name: `${linkTypeGroup.name}${linkHierarchy || ''}`,
                 sum: 0,
-                clickingAdditionalParams: [jsonUtil.getSqlFieldQuery("reallyShipmentAmount", "$gt", 0)]
+                clickingAdditionalParams: [sequelizeUtil.getSqlFieldQuery("reallyShipmentAmount", "$gt", 0)]
             })
             profitAmountStatistic.items.push({
                 name: `${linkTypeGroup.name}${linkHierarchy || ''}`, sum: 0,
-                clickingAdditionalParams: [jsonUtil.getSqlFieldQuery("profitAmount", "$gt", 0)]
+                clickingAdditionalParams: [sequelizeUtil.getSqlFieldQuery("profitAmount", "$gt", 0)]
             })
         }
     }
@@ -1117,7 +1117,7 @@ const getProfitData = async (singleItems) => {
                 for (let i = 0; i < currentSumProfitRateItems.length; i++) {
                     if (currentSumProfitRateItems[i].name === item.name) {
                         currentSumProfitRateItems[i].sum = currentSumProfitRateItems[i].sum + 1
-                        currentSumProfitRateItems[i].clickingAdditionalParams = [jsonUtil.getSqlFieldQuery("profitRate", "$between", item.range)]
+                        currentSumProfitRateItems[i].clickingAdditionalParams = [sequelizeUtil.getSqlFieldQuery("profitRate", "$between", item.range)]
                         break
                     }
                 }
@@ -1207,7 +1207,7 @@ const getMarketRatioData = async (singleItems) => {
                     name: tmpItem.item.name,
                     sum: tmpItem.item.sum,
                     clickingAdditionalParams: [
-                        jsonUtil.getSqlFieldQuery(tmpItem.item.field, "$between", tmpItem.item.range)
+                        sequelizeUtil.getSqlFieldQuery(tmpItem.item.field, "$between", tmpItem.item.range)
                     ]
                 }]
             })
@@ -1228,7 +1228,7 @@ const getMarketRatioData = async (singleItems) => {
                             name: tmpItem.item.name,
                             sum: tmpItem.item.sum,
                             clickingAdditionalParams: [
-                                jsonUtil.getSqlFieldQuery(tmpItem.item.field, "$between", tmpItem.item.range)
+                                sequelizeUtil.getSqlFieldQuery(tmpItem.item.field, "$between", tmpItem.item.range)
                             ]
                         })
                         hasComputed = true
@@ -1244,7 +1244,7 @@ const getMarketRatioData = async (singleItems) => {
                         name: tmpItem.item.name,
                         sum: tmpItem.item.sum,
                         clickingAdditionalParams: [
-                            jsonUtil.getSqlFieldQuery(tmpItem.item.field, "$between", tmpItem.item.range)
+                            sequelizeUtil.getSqlFieldQuery(tmpItem.item.field, "$between", tmpItem.item.range)
                         ]
                     }]
                 })

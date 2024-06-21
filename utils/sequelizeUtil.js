@@ -10,6 +10,10 @@ const extractDataValues = (result) => {
 
 }
 
+const getSqlFieldQuery = (field, operator, value) => {
+    return {field, operator, value}
+}
+
 module.exports = {
     extractDataValues
 }
