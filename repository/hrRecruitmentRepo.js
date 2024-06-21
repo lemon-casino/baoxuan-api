@@ -760,6 +760,21 @@ const joiningAndLeaving = async () => {
         throw new Error('查询数据失败');
     }
 };
+
+const departmentdDistributed = async () => {
+    try {
+        return await ZaiZhiRen.sequelize.query(
+            `select  COUNT(1) AS value ,section AS name  from  zai_zhi_ren group by section`,
+            {
+                type: QueryTypes.SELECT
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
 module.exports = {
     getHrDepartment,
     getHrQuarters,
@@ -785,5 +800,6 @@ module.exports = {
     rank,
     gender,
     mainBodyecharts,
-    joiningAndLeaving
+    joiningAndLeaving,
+    departmentdDistributed
 };
