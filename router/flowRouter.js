@@ -23,16 +23,7 @@ router.post("/statistic/all-review-items", flowHandler.getFormsFlowsActivitiesSt
 
 router.put("/running", flowHandler.updateRunningFlowEmergency)
 
-router.get("/core-action", async (req, res, next) => {
-    // req.params.type = "action"
-    await flowHandler.getCoreActions(req, res, next)
-})
-
-// router.get("/core-flow", async (req, res, next) => {
-//         req.params.type = "flow"
-// await flowHandler.getCoreActions(req, res, next)
-// }
-// )
+router.get("/core-action", flowHandler.getCoreActions)
 
 router.get("/all-overdue-running-flows", flowHandler.getAllOverDueRunningFlows)
 

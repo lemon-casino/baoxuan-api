@@ -709,23 +709,12 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
 
     const overdueConfig = [
         {nameCN: "逾期", nameEN: "overdue", children: []},
-        {
-            nameCN: "未逾期",
-            nameEN: "notOverdue",
-            children: []
-        }]
+        {nameCN: "未逾期", nameEN: "notOverdue", children: []}
+    ]
     const flowStatConfig = [
-        {
-            nameCN: "待转入", nameEN: "TODO", children: _.cloneDeep(overdueConfig)
-        },
-        {
-
-            nameCN: "进行中", nameEN: "DOING", children: _.cloneDeep(overdueConfig)
-        },
-        {
-
-            nameCN: "已完成", nameEN: "DONE", children: _.cloneDeep(overdueConfig)
-        }
+        {nameCN: "待转入", nameEN: "TODO", children: _.cloneDeep(overdueConfig)},
+        {nameCN: "进行中", nameEN: "DOING", children: _.cloneDeep(overdueConfig)},
+        {nameCN: "已完成", nameEN: "DONE", children: _.cloneDeep(overdueConfig)}
     ]
     const getFlowSumStructure = (result) => {
         // 根据流程进行汇总
@@ -740,16 +729,13 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
         return sumFlowStat
     }
 
-    // const statusShortTextMap = {"待": "TODO", "中": "DOING", "完": "DONE"}
     const statusKeyText = ["待", "中", "完"]
     const visionDoneMap = [
-        //
         {
             formName: "运营新品流程",
             formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
             doneActivityIds: ["node_ockpz6phx73"]
         },
-        //
         {
             formName: "运营拍摄流程",
             formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
@@ -822,13 +808,10 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
                 // 根据表单的统计规则，将流程统计到对应的节点下
                 for (const formRule of rules) {
                     let formFlows = flows.filter(flow => flow.formUuid === formRule.formId)
-
-                    if (formRule.flowDetailsRules) {
-                        for (const detailsRule of formRule.flowDetailsRules) {
-                            formFlows = formFlows.filter(flow => {
-                                return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
-                            })
-                        }
+                    for (const detailsRule of formRule.flowDetailsRules) {
+                        formFlows = formFlows.filter(flow => {
+                            return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
+                        })
                     }
 
                     // 将流程统计到对应结果状态中，包含逾期
