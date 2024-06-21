@@ -4,8 +4,7 @@ const flowService = require("../../service/flowService")
 const coreActionService = require("../../service/core/coreActionService")
 const flowFormService = require("../../service/flowFormService")
 const joiUtil = require("../../utils/joiUtil")
-const BigNumber = require("bignumber.js");
-const {getFlowForm} = require("../../service/flowFormService");
+const BigNumber = require("bignumber.js")
 
 const getFlowsByIds = async (req, res) => {
     const {ids} = req.query

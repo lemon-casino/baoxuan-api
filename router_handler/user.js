@@ -76,13 +76,13 @@ exports.login = async (req, res, next) => {
         }
         // 验证验证码
         const {username, password, checkCode, uuid} = value;
-        const captcha = await redis.getValue(`${redisKeys.QRCodes}:${uuid}`);
-        if (!captcha) {
-            throw new HttpError("图形验证码已过期，请点击图片刷新")
-        }
-        if (checkCode.toLowerCase() !== captcha.toLowerCase()) {
-            throw new HttpError("图形验证码不正确，请重新输入")
-        }
+        // const captcha = await redis.getValue(`${redisKeys.QRCodes}:${uuid}`);
+        // if (!captcha) {
+        //     throw new HttpError("图形验证码已过期，请点击图片刷新")
+        // }
+        // if (checkCode.toLowerCase() !== captcha.toLowerCase()) {
+        //     throw new HttpError("图形验证码不正确，请重新输入")
+        // }
         // todo: 先保留
         const user = {
             token: null, refreshToken: null, brief: null, permissions: null, departments: null

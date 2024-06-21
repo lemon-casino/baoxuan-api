@@ -222,7 +222,6 @@ const isUserJoinFlow = (userId, flow, reviewItems) => {
  * @returns {*}
  */
 const statIdsAndSumFromBottom = (data) => {
-
     const handleItem = (item) => {
         if (item.children) {
             // const uniqueIds = []
