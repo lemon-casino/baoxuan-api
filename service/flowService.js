@@ -911,12 +911,12 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
     userStatResult.unshift({
         actionName: "工作量汇总", actionCode: "sumActStat", children: activityStatResult
     })
-    userStatResult.unshift({
-        actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
-    })
-    userStatResult.unshift({
-        actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
-    })
+    // userStatResult.unshift({
+    //     actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
+    // })
+    // userStatResult.unshift({
+    //     actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
+    // })
     userStatResult.unshift({
         actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
     })
