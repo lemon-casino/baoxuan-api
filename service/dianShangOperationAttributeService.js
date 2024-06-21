@@ -7,7 +7,8 @@ const getPagingOperateAttributes = async (deptId,
                                           operatorName,
                                           linkId,
                                           platform,
-                                          shopName) => {
+                                          shopName,
+                                          skuId) => {
     const result = await dianShangOperationAttributeRepo.getOperateAttributes(
         deptId,
         pageIndex,
@@ -16,7 +17,8 @@ const getPagingOperateAttributes = async (deptId,
         operatorName,
         linkId,
         platform,
-        shopName)
+        shopName,
+        skuId)
 
     return result
 }

@@ -13,7 +13,8 @@ const getPagingOperateAttributes = async (req, res, next) => {
             operator: operatorName,
             goodsId: linkId,
             platform,
-            shopName
+            shopName,
+            skuId
         } = req.query
         joiUtil.validate({
             page, pageSize,
@@ -28,7 +29,8 @@ const getPagingOperateAttributes = async (req, res, next) => {
             operatorName,
             linkId,
             platform,
-            shopName)
+            shopName,
+            skuId)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)

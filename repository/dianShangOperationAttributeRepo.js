@@ -8,19 +8,23 @@ const getOperateAttributes = async (deptId,
                                     operatorName,
                                     linkId,
                                     platform,
-                                    shopName) => {
+                                    shopName,
+                                    skuId) => {
     const where = {deptId, platform}
     if (productLine) {
         where.goodsName = {$like: `%${productLine}%`}
     }
     if (operatorName) {
-        where.operator ={$like: `%${operatorName}%`}
+        where.operator = {$like: `%${operatorName}%`}
     }
     if (linkId) {
         where.goodsId = {$like: `%${linkId}%`}
     }
     if (shopName) {
         where.shopName = {$like: `%${shopName}%`}
+    }
+    if (skuId) {
+        where.skuId = {$like: `%${skuId}%`}
     }
 
     const result = await models.dianshangOperationAttributeModel.findAndCountAll({
