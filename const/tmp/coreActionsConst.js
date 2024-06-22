@@ -4330,7 +4330,7 @@ const mbCoreActionsConfig = [
                         formName: "外包修图视觉流程",
                         formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
+                            {fieldId: "radioField_lx48e5gm", opCode: opCodes.Equal, value: "全套"}
                         ],
                         flowNodeRules: [
                             {

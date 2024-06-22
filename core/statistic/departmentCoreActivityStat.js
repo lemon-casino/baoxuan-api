@@ -78,6 +78,10 @@ const get = async (userNames, flows, coreConfig) => {
                             const {from, id} = ownerRule
                             if (from.toUpperCase() === ownerFrom.FORM) {
                                 ownerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id]
+                                // 如果是数组的格式，转成以“,”连接的字符串
+                                if (ownerName instanceof Array) {
+                                    ownerName = ownerName.join(",")
+                                }
                             } else {
                                 const processReviewId = activityIdMappingConst[id] || id
                                 const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)

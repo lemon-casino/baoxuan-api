@@ -3,7 +3,7 @@ const flowRepo = require("../../repository/flowRepo")
 const userRepo = require("../../repository/userRepo")
 const redisRepo = require("../../repository/redisRepo")
 const flowCommonService = require("../common/flowCommonService")
-const {flowStatusConst, flowReviewTypeConst} = require("../../const/flowConst")
+const {flowStatusConst} = require("../../const/flowConst")
 const {opFunctions} = require("../../const/operatorConst")
 const whiteList = require("../../config/whiteList")
 const departmentCoreActivityStat = require("../../core/statistic/departmentCoreActivityStat")
@@ -231,6 +231,12 @@ const convertToStatusStatResult = (flows, coreActionConfig, userStatResult) => {
 
                     // 将流程统计到对应结果状态中，包含逾期
                     for (const flow of formFlows) {
+
+
+                        if (flow.processInstanceId === "9a399820-5ac8-4a43-88c8-cd9fefbafe95") {
+                            console.log("-----")
+                        }
+
                         const activities = flow.overallprocessflow
 
                         for (let i = 0; i < formRule.flowNodeRules.length; i++) {
