@@ -6,6 +6,7 @@ const processReviewTmpRepo = require("../repository/processReviewTmpRepo")
 const processDetailsTmpRepo = require("../repository/processDetailsTmpRepo")
 const departmentRepo = require("../repository/departmentRepo")
 const departmentUsersRepo = require("../repository/departmentUsersRepo")
+const oaProcessRepo = require("../repository/oaProcessRepo")
 const globalSetter = require("../global/setter")
 const dingDingService = require("../service/dingDingService")
 const flowService = require("../service/flowService")
@@ -19,8 +20,9 @@ const {redisKeys} = require("../const/redisConst")
 const onlineCheckConst = require("../const/onlineCheckConst")
 const extensionsConst = require("../const/tmp/extensionsConst")
 const adminConst = require("../const/adminConst")
+const flowConst = require("../const/flowConst")
 const sequelizeErrorConst = require("../const/sequelizeErrorConst")
-const dingDingReq = require("../core/dingDingReq")
+const oaReq = require("../core/dingDingReq/oaReq")
 const yiDaReq = require("../core/yiDaReq")
 
 const syncWorkingDay = async () => {
@@ -231,7 +233,7 @@ const syncRunningProcess = async () => {
 const syncOaProcessTemplates = async () => {
     console.log("同步进行中...")
     const {access_token: accessToken} = await redisRepo.getToken()
-    const data = await dingDingReq.getOAProcessTemplates(accessToken, adminConst.adminDingDingId)
+    const data = await oaReq.getOAProcessTemplates(accessToken, adminConst.adminDingDingId)
     for (const template of data.result) {
         template.modifiedTime = dateUtil.formatGMT2Str(template.gmtModified)
         try {
@@ -246,6 +248,50 @@ const syncOaProcessTemplates = async () => {
     }
     logger.info("同步完成：syncOaProcessTemplates")
     console.log("同步完成")
+}
+
+const syncHROaDoneProcess = async (processCode) => {
+    const oAFormLatestDoneTime = new Date(await oaProcessRepo.getOAFormLatestDoneTime(processCode) || "2024-06-01 00:00:00").getMilliseconds()
+    const endTimeStamp = new Date().getMilliseconds()
+    const token = await redisRepo.getToken()
+    const allUsers = await userRepo.getAllUsers()
+    const userIds = allUsers.map(item => item.dingdingUserId)
+
+    const getPagingOAProcessIds = async (token, processCode, startTime, endTime, nextToken, userIds) => {
+        let oaProcessIds = []
+        const data = {
+            processCode,
+            startTime,
+            endTime,
+            nextToken,
+            //接口限制最大20
+            maxResults: 20,
+            userIds,
+            statuses: [flowConst.oaApprovalStatus.COMPLETED, flowConst.oaApprovalStatus.TERMINATED]
+        }
+        const result = await oaReq.getOAProcessIds(token, data)
+
+        if (result.success) {
+            const {list, nextToken} = result.result
+            oaProcessIds = oaProcessIds.concat(list)
+            if (nextToken) {
+                const pagingOaProcessIds = await getPagingOAProcessIds(token, processCode, startTime, endTime, nextToken, userIds)
+                oaProcessIds = oaProcessIds.concat(pagingOaProcessIds)
+            }
+        }
+        return oaProcessIds
+    }
+    const oaProcessIds = await getPagingOAProcessIds(token, processCode, oAFormLatestDoneTime, endTimeStamp, null, userIds)
+
+    const oaProcesses = []
+    for (const oaProcessId of oaProcessIds) {
+        const details = await oaReq.getOAProcessDetails(token, oaProcessId)
+        oaProcesses.push(details)
+    }
+    oaProcesses.sort((cur, next) => cur.fininshTime - next.finishTime)
+    for (const oaProcess of oaProcesses) {
+
+    }
 }
 
 module.exports = {

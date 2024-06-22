@@ -1,30 +1,4 @@
-// 此模块中调用的钉钉接口次数有限制：1w次/月
-
-const httpUtil = require("../utils/httpUtil");
-
-/**
- * 获取打卡记录
- *
- * @param pageIndex
- * @param pageSize
- * @param workDateFrom
- * @param workDateTo
- * @param userIds
- * @param token
- * @returns {Promise<any|undefined>}
- */
-const getAttendances = async (pageIndex, pageSize, workDateFrom, workDateTo, userIds, token) => {
-    const url = `https://oapi.dingtalk.com/attendance/list?access_token=${token}`
-    const body = {
-        workDateFrom,
-        workDateTo,
-        "offset": pageIndex * pageSize,
-        "limit": pageSize,
-        "userIdList": userIds,
-        "isI18n": false,
-    }
-    return await httpUtil.post(url, body)
-}
+const httpUtil = require("../../utils/httpUtil")
 
 /**
  * 获取当前企业所有可管理的表单
@@ -916,9 +890,10 @@ const getOAProcessDetails = async (accessToken, processInstanceId) => {
     return await httpUtil.get(url, params, accessToken)
 }
 
+
 module.exports = {
-    getAttendances,
     getOAProcessTemplates,
     getOAProcessIds,
-    getOAProcessDetails
+    getOAProcessDetails,
 }
+
