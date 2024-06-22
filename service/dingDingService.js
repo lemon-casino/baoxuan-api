@@ -43,11 +43,6 @@ const getFlowsByStatusAndTimeRange = async (timesRange = ["2023-01-01 00:00:00",
     let allData = resLiuChengList.data;
     // 获取对应的流程的审核记录
     for (let i = 0; i < allData.length; i++) {
-
-        if (allData[i].processInstanceId === "0fd5f3dd-57c2-47bd-845d-6dbf6107f4a3") {
-            console.log("------")
-        }
-
         // await dateUtil.delay()
         allData[i]["overallprocessflow"] = await getAllProcessFlow(token, userId, allData[i].processInstanceId);
         console.log(`(page: ${pageNumber})get flowReviewItems process：${i + 1}/${allData.length}`);

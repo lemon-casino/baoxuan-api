@@ -86,7 +86,7 @@ const dep_list = [
 ];
 // 获取token
 const getToken = async () => {
-    const reply = await redisUtil.getValue(redisKeys.DDToken);
+    const reply = await redisUtil.get(redisKeys.DDToken);
     return JSON.parse(reply);
 };
 // 导入需要的验证规则对象

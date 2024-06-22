@@ -40,7 +40,7 @@ const syncWorkingDay = async () => {
 const syncTodayRunningAndFinishedFlows = async () => {
     logger.info("开始同步今日流程数据...")
     const flows = await dingDingService.getTodayRunningAndFinishedFlows()
-    await redisUtil.setValue(redisKeys.TodayRunningAndFinishedFlows, JSON.stringify(flows))
+    await redisUtil.set(redisKeys.TodayRunningAndFinishedFlows, JSON.stringify(flows))
     globalSetter.setGlobalTodayRunningAndFinishedFlows(flows)
     logger.info(`同步完成，共:${flows.length}条数据`)
 }
@@ -60,7 +60,7 @@ const syncDingDingToken = async () => {
 const syncDepartment = async () => {
     console.log("同步进行中...")
     const depList = await dingDingService.getDepartmentFromDingDing()
-    await redisUtil.setValue(redisKeys.Departments, JSON.stringify(depList.result))
+    await redisUtil.set(redisKeys.Departments, JSON.stringify(depList.result))
     globalSetter.setGlobalDepartments(depList.result)
     // 将部门信息同步数据库
     await loopSaveDept(depList.result)
@@ -86,7 +86,7 @@ const loopSaveDept = async (deps) => {
 const syncDepartmentWithUser = async () => {
     console.log("同步进行中...")
     const allDepartmentsWithUsers = await dingDingService.getDepartmentsWithUsersFromDingDing()
-    await redisUtil.setValue(redisKeys.DepartmentsUsers, JSON.stringify(allDepartmentsWithUsers))
+    await redisUtil.set(redisKeys.DepartmentsUsers, JSON.stringify(allDepartmentsWithUsers))
     globalSetter.setGlobalUsersOfDepartments(allDepartmentsWithUsers)
     // 保存入库并设置无效关系： 离职、调部门等
     await loopSaveDeptUserAndSetInvalidInfo(allDepartmentsWithUsers)
@@ -138,7 +138,7 @@ const syncUserWithDepartment = async () => {
         }
     }
 
-    await redisUtil.setValue(redisKeys.Users, JSON.stringify(usersWithDepartment))
+    await redisUtil.set(redisKeys.Users, JSON.stringify(usersWithDepartment))
     globalSetter.setGlobalUsers(usersWithDepartment)
     await userService.syncUserToDB(usersWithDepartment)
     logger.info("同步完成：syncUserWithDepartment")
@@ -250,24 +250,65 @@ const syncOaProcessTemplates = async () => {
     console.log("同步完成")
 }
 
-const syncHROaDoneProcess = async (processCode) => {
-    const oAFormLatestDoneTime = new Date(await oaProcessRepo.getOAFormLatestDoneTime(processCode) || "2024-06-01 00:00:00").getMilliseconds()
-    const endTimeStamp = new Date().getMilliseconds()
-    const token = await redisRepo.getToken()
-    const allUsers = await userRepo.getAllUsers()
+/**
+ * 将已完成和取消的流程入库
+ *
+ * @param processCode
+ * @returns {Promise<void>}
+ */
+const syncHROaFinishedProcess = async (processCode) => {
+    const finishedOaProcesses = await getHROaDifferentStatusProcess(processCode, [flowConst.oaApprovalStatus.COMPLETED, flowConst.oaApprovalStatus.TERMINATED], null)
+    for (const oaProcess of finishedOaProcesses) {
+        await oaProcessRepo.save(oaProcess)
+    }
+}
+
+/**
+ * 将进行中的流程保存到Redis
+ *
+ * @param processCodes
+ * @returns {Promise<void>}
+ */
+const syncHROaNotStockedProcess = async (processCodes) => {
+    let allNotStockedOaProcesses = []
+    for (const processCode of processCodes) {
+        const notStockedOaProcesses = await getHROaDifferentStatusProcess(
+            processCode,
+            [flowConst.oaApprovalStatus.RUNNING, flowConst.oaApprovalStatus.COMPLETED, flowConst.oaApprovalStatus.TERMINATED],
+            null)
+        allNotStockedOaProcesses = allNotStockedOaProcesses.concat(notStockedOaProcesses)
+    }
+
+    await redisUtil.set(redisKeys.Oa, JSON.stringify(allNotStockedOaProcesses))
+}
+
+/**
+ * 获取流程数据
+ *
+ * @param processCode oa流程表单id
+ * @param statuses 流程状态
+ * @param startTime 筛选的开始时间，为空时，从数据库中获取，库中不存在时，设置为最早的时间：2024-06-01 00:00:00
+ * @returns {Promise<*[]>}
+ */
+const getHROaDifferentStatusProcess = async (processCode, statuses, startTime) => {
+    const oAFormLatestDoneTime = startTime || new Date(await oaProcessRepo.getOAFormLatestDoneTime(processCode) || "2024-06-01 00:00:00").valueOf()
+    const endTimeStamp = Date.now()
+    const {access_token: token} = await redisRepo.getToken()
+    const allUsers = await userRepo.getAllUsers({isResign: false})
     const userIds = allUsers.map(item => item.dingdingUserId)
 
-    const getPagingOAProcessIds = async (token, processCode, startTime, endTime, nextToken, userIds) => {
+    const getPagingOAProcessIds = async (token, processCode, startTime, endTime, nextToken, userIds, statuses) => {
         let oaProcessIds = []
         const data = {
             processCode,
             startTime,
             endTime,
             nextToken,
-            //接口限制最大20
+            // 接口限制最大20
             maxResults: 20,
+            // 一次最多为10
             userIds,
-            statuses: [flowConst.oaApprovalStatus.COMPLETED, flowConst.oaApprovalStatus.TERMINATED]
+            statuses
         }
         const result = await oaReq.getOAProcessIds(token, data)
 
@@ -281,17 +322,31 @@ const syncHROaDoneProcess = async (processCode) => {
         }
         return oaProcessIds
     }
-    const oaProcessIds = await getPagingOAProcessIds(token, processCode, oAFormLatestDoneTime, endTimeStamp, null, userIds)
 
-    const oaProcesses = []
+    let oaProcessIds = []
+    while (userIds.length > 0) {
+        const _10UserIds = userIds.splice(0, Math.min(10, userIds.length))
+        const tmpOaProcessIds = await getPagingOAProcessIds(
+            token,
+            processCode,
+            oAFormLatestDoneTime,
+            endTimeStamp,
+            0,
+            _10UserIds,
+            statuses)
+        oaProcessIds = oaProcessIds.concat(tmpOaProcessIds)
+    }
+
+    let oaProcesses = []
     for (const oaProcessId of oaProcessIds) {
         const details = await oaReq.getOAProcessDetails(token, oaProcessId)
-        oaProcesses.push(details)
+        if (details.success) {
+            details.result.processCode = processCode
+            details.result.processInstanceId = oaProcessId
+            oaProcesses.push(details.result)
+        }
     }
-    oaProcesses.sort((cur, next) => cur.fininshTime - next.finishTime)
-    for (const oaProcess of oaProcesses) {
-
-    }
+    return oaProcesses.sort((cur, next) => dateUtil.formatGMT(cur.finishTime) - dateUtil.formatGMT(next.finishTime))
 }
 
 module.exports = {
@@ -306,5 +361,7 @@ module.exports = {
     syncForm,
     syncDingDingToken,
     syncUserLogin,
-    syncResignEmployeeInfo
+    syncResignEmployeeInfo,
+    syncHROaNotStockedProcess,
+    syncHROaFinishedProcess
 }
