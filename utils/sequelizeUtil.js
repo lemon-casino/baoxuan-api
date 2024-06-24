@@ -15,5 +15,6 @@ const getSqlFieldQuery = (field, operator, value) => {
 }
 
 module.exports = {
-    extractDataValues
+    extractDataValues,
+    getSqlFieldQuery
 }
