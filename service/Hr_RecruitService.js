@@ -258,9 +258,10 @@ function calculatePercentage(data, valueKey, nameKey) {
     // 计算总数，使用parseFloat确保处理数据类型正确
     const total = data.reduce((sum, item) => sum + parseFloat(item[valueKey]), 0);
     // 计算每个类别的占比并添加百分比符号
+
     return data.map(item => ({
         [nameKey]: item[nameKey],
-        [valueKey]: ((parseFloat(item[valueKey]) / total) * 100).toFixed(2)
+        [valueKey]: total === 0 ? 0 : ((parseFloat(item[valueKey]) / total) * 100).toFixed(2)
     }));
 }
 
@@ -282,6 +283,27 @@ function mergeArrays(targetArray, sourceArray, key, mergeField) {
     });
 }
 
+
+// 计算每个的在职情况
+function calculateEmployeeCount(initialCount, plan) {
+    const currentMonth = (`0${new Date().getMonth() + 1}`).slice(-2);
+    let currentCount = initialCount;
+    const result = plan.map((item, index) => {
+        if (item.month <= currentMonth) {
+            currentCount += item.on_board_count - item.turnover_count;
+            return {
+                month: item.month,
+                numberOfEmployees: currentCount
+            };
+        } else {
+            return {
+                month: item.month,
+                numberOfEmployees: 0
+            };
+        }
+    });
+    return result;
+}
 
 const curriculumVitaelikename = async (rest) => {
 
@@ -315,15 +337,15 @@ const employeeFiles = async (rest) => {
 const entryAndResignation = async (rest) => {
     /*
     * // 每个月的在职情况
-    annualEmployment: [],
-        //月度入职
+        annualEmployment: [],
+        //月度入职 百分比
         departmentOnboarding: [], -
-        // 月度离职
+        // 月度离职 百分比
         departmentResignation: [],-
-        //
-        departmentEntryAndExitl:[] -
-        // 对比: []
-        joiningAndLeaving: [],
+        //按部门入离职 真实的数字
+        departmentEntryAndExit:[] -
+        // 按月份入离职对比: 真实的数字
+        joiningAndLeaving: [],-
         //入离职环比
         entryAndExitRatio: []
     * */
@@ -331,20 +353,31 @@ const entryAndResignation = async (rest) => {
 
 
         //
+        const shuliang = await Hr_RecruitmentDepartmentPositions.in_service_employees();
 
         rest.departmentOnboarding = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentOnboarding(), 'value', 'name');
         rest.departmentResignation = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentResignation(), 'value', 'name');
 
         const join = await Hr_RecruitmentDepartmentPositions.joiningAndLeaving()
-        const joiningAndLeaving = calculatePercentage(join, 'on_board_count', 'month');
-        const joining = calculatePercentage(join, 'turnover_count', 'month');
-        mergeArrays(joiningAndLeaving, joining, 'month', 'turnover_count');
-        rest.joiningAndLeaving = joiningAndLeaving;
+
+
+        rest.annualEmployment = calculateEmployeeCount(shuliang[0].in_service_employees, join);
+
+
+        //月度入离职百分比
+        // const joiningAndLeaving = calculatePercentage(join, 'on_board_count', 'month');
+        // const joining = calculatePercentage(join, 'turnover_count', 'month');
+        // mergeArrays(joiningAndLeaving, joining, 'month', 'turnover_count');
+        // rest.joiningAndLeaving = joiningAndLeaving;
+
+        rest.joiningAndLeaving = join;
         const departmen = await Hr_RecruitmentDepartmentPositions.departmentEntryAndExit();
-        const num_of_new_employees = calculatePercentage(departmen, 'num_of_new_employees', 'section');
-        const num_of_leaving_employees = calculatePercentage(departmen, 'num_of_leaving_employees', 'section');
-        mergeArrays(num_of_new_employees, num_of_leaving_employees, 'section', 'num_of_leaving_employees');
-        rest.departmentEntryAndExit = num_of_new_employees
+
+        // const num_of_new_employees = calculatePercentage(departmen, 'num_of_new_employees', 'section');
+        // const num_of_leaving_employees = calculatePercentage(departmen, 'num_of_leaving_employees', 'section');
+        // mergeArrays(num_of_new_employees, num_of_leaving_employees, 'section', 'num_of_leaving_employees');
+        // rest.departmentEntryAndExit = num_of_new_employees
+        rest.departmentEntryAndExit = departmen;
         // rest.department = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentdDistributed(), 'value', 'name');
         //入离职信息
         console.log("--------------------")
