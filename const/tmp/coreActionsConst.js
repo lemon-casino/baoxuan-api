@@ -1212,28 +1212,6 @@ const mbCoreActionsConfig = [
                                     name: "摄影负责人",
                                     id: "employeeField_lvkss8pc"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclii6vcap6",
-                                    name: "摄影确认样品与道具",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclii6vcap6",
-                                    name: "摄影确认样品与道具",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclii6vcap6",
-                                    name: "摄影确认样品与道具",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "form",
-                                    name: "摄影负责人",
-                                    id: "employeeField_lvkss8pc"
-                                }
                             }
                         ]
                     },
@@ -1779,29 +1757,7 @@ const mbCoreActionsConfig = [
                                     name: "外包美编负责人",
                                     id: "textField_lvumnj2k"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx49xlb32",
-                                    name: "外拍审核",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx49xlb32",
-                                    name: "外拍审核",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx49xlb32",
-                                    name: "外拍审核",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "外拍审核",
-                                    id: "node_oclx49xlb32"
-                                }
-                            },
+                            }
                         ]
                     }
                 ]
@@ -1966,26 +1922,26 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclx49xlb32",
-                                    name: "外拍审核",
+                                    id: "node_oclx49xlb31",
+                                    name: "通知外拍摄影师等待收图",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclx49xlb32",
-                                    name: "外拍审核",
+                                    id: "node_oclx49xlb31",
+                                    name: "通知外拍摄影师等待收图",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclx49xlb32",
-                                    name: "外拍审核",
+                                    id: "node_oclx49xlb31",
+                                    name: "通知外拍摄影师等待收图",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
-                                    from: "process",
-                                    name: "外拍审核",
-                                    id: "node_oclx49xlb32"
+                                    from: "form",
+                                    name: "外包美编负责人",
+                                    id: "textField_lvumnj2k"
                                 }
-                            },
+                            }
                         ]
                     }
                 ]
@@ -2065,28 +2021,30 @@ const mbCoreActionsConfig = [
                                 value: ["全套", "套图"]
                             }
                         ],
-                        flowNodeRules: [{
-                            from: {
-                                id: "node_oclii6vcap8",
-                                name: "分配美编制作",
-                                status: ["TODO"]
-                            },
-                            to: {
-                                id: "node_oclii6vcap8",
-                                name: "分配美编制作",
-                                status: ["TODO"]
-                            },
-                            overdue: {
-                                id: "node_oclii6vcap8",
-                                name: "分配美编制作",
-                                status: ["TODO"]
-                            },
-                            ownerRule: {
-                                from: "process",
-                                name: "分配美编制作",
-                                id: "node_oclii6vcap8"
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclii6vcap8",
+                                    name: "分配美编制作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap8",
+                                    name: "分配美编制作",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap8",
+                                    name: "分配美编制作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配美编制作",
+                                    id: "node_oclii6vcap8"
+                                }
                             }
-                        }]
+                        ]
                     },
                     {
                         formName: "天猫链接上架流程",
@@ -2467,28 +2425,28 @@ const mbCoreActionsConfig = [
                                     id: "node_oclvgffo396"
                                 }
                             },
-                            {
-                                from: {
-                                    id: "node_oclvghx5li1",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvghx5li1",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclvghx5li1",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5li1"
-                                }
-                            },
+                            // {
+                            //     from: {
+                            //         id: "node_oclvghx5li1",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvghx5li1",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvghx5li1",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编任务",
+                            //         id: "node_oclvghx5li1"
+                            //     }
+                            // },
 
                             {
                                 from: {
@@ -2534,28 +2492,28 @@ const mbCoreActionsConfig = [
                                     id: "node_oclvt49cil3"
                                 }
                             },
-                            {
-                                from: {
-                                    id: "node_oclvt49cil4",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvt49cil4",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclvt49cil4",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvt49cil4"
-                                }
-                            },
+                            // {
+                            //     from: {
+                            //         id: "node_oclvt49cil4",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvt49cil4",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvt49cil4",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编任务",
+                            //         id: "node_oclvt49cil4"
+                            //     }
+                            // },
 
                             {
                                 from: {
@@ -2579,28 +2537,28 @@ const mbCoreActionsConfig = [
                                     id: "node_oclw7dfsbp2"
                                 }
                             },
-                            {
-                                from: {
-                                    id: "node_oclw7dfsbp4",
-                                    name: " 审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclw7dfsbp4",
-                                    name: " 审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclw7dfsbp4",
-                                    name: " 审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclw7dfsbp4"
-                                }
-                            },
+                            // {
+                            //     from: {
+                            //         id: "node_oclw7dfsbp4",
+                            //         name: " 审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclw7dfsbp4",
+                            //         name: " 审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclw7dfsbp4",
+                            //         name: " 审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编任务",
+                            //         id: "node_oclw7dfsbp4"
+                            //     }
+                            // },
 
                             // {
                             //     from: {
@@ -3008,50 +2966,50 @@ const mbCoreActionsConfig = [
                                     id: "node_oclrj9wznyi"
                                 }
                             },
-                            {
-                                from: {
-                                    id: "node_oclvkpzz4g3",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvkpzz4g3",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclvkpzz4g3",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编工作",
-                                    id: "node_oclvkpzz4g3"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclvkpzz4g1",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvkpzz4g1",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclvkpzz4g1",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编工作",
-                                    id: "node_oclvkpzz4g1"
-                                }
-                            }
+                            // {
+                            //     from: {
+                            //         id: "node_oclvkpzz4g3",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvkpzz4g3",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvkpzz4g3",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编工作",
+                            //         id: "node_oclvkpzz4g3"
+                            //     }
+                            // },
+                            // {
+                            //     from: {
+                            //         id: "node_oclvkpzz4g1",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvkpzz4g1",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvkpzz4g1",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编工作",
+                            //         id: "node_oclvkpzz4g1"
+                            //     }
+                            // }
                         ]
                     },
                     {
@@ -3153,28 +3111,28 @@ const mbCoreActionsConfig = [
                                     id: "node_oclvksud0dc"
                                 }
                             },
-                            {
-                                from: {
-                                    id: "node_ockpz6phx73",
-                                    name: "视觉完成确认审核",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_ockpz6phx73",
-                                    name: "视觉完成确认审核",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_ockpz6phx73",
-                                    name: "视觉完成确认审核",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "视觉完成确认审核",
-                                    id: "node_ockpz6phx73"
-                                }
-                            }
+                            // {
+                            //     from: {
+                            //         id: "node_ockpz6phx73",
+                            //         name: "视觉完成确认审核",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_ockpz6phx73",
+                            //         name: "视觉完成确认审核",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_ockpz6phx73",
+                            //         name: "视觉完成确认审核",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "视觉完成确认审核",
+                            //         id: "node_ockpz6phx73"
+                            //     }
+                            // }
                         ]
                     },
                     {
@@ -3446,28 +3404,6 @@ const mbCoreActionsConfig = [
                                     from: "process",
                                     name: "简单美编完成任务",
                                     id: "node_oclvxczr49k"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclm91ca7l9",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclm91ca7l9",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclm91ca7l9",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclm91ca7l9"
                                 }
                             }
                         ]
@@ -3962,28 +3898,6 @@ const mbCoreActionsConfig = [
                                     name: "分配中美编",
                                     id: "node_oclx4kc70wi"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核图片",
-                                    id: "node_oclx03jr074d"
-                                }
                             }
                         ]
                     },
@@ -4301,28 +4215,6 @@ const mbCoreActionsConfig = [
                                     name: "分配中美编",
                                     id: "node_oclx4b3zdl5"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审批人",
-                                    id: "node_oclx422jq8o"
-                                }
                             }
                         ]
                     },
@@ -4372,70 +4264,114 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclvghx5li1",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgffo395",
+                                    name: "精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvghx5li1",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgffo395",
+                                    name: "精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclvghx5li1",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgffo395",
+                                    name: "精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5li1"
+                                    name: "精修美编完成任务",
+                                    id: "node_oclvgffo395"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclvt49cil4",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgffo396",
+                                    name: "简单美编任务完成",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvt49cil4",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgffo396",
+                                    name: "简单美编任务完成",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclvt49cil4",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgffo396",
+                                    name: "简单美编任务完成",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvt49cil4"
+                                    name: "简单美编任务完成",
+                                    id: "node_oclvgffo396"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclw7dfsbp4",
-                                    name: "审核美编任务",
+                                    id: "node_oclvt49cil2",
+                                    name: "精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclw7dfsbp4",
-                                    name: "审核美编任务",
+                                    id: "node_oclvt49cil2",
+                                    name: "精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclw7dfsbp4",
-                                    name: "审核美编任务",
+                                    id: "node_oclvt49cil2",
+                                    name: "精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclw7dfsbp4"
+                                    name: "精修美编完成任务",
+                                    id: "node_oclvt49cil2"
                                 }
-                            }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvt49cil3",
+                                    name: "简单美编任务完成",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvt49cil3",
+                                    name: "简单美编任务完成",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvt49cil3",
+                                    name: "简单美编任务完成",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编任务完成",
+                                    id: "node_oclvt49cil3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclw7dfsbp2",
+                                    name: " 精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclw7dfsbp2",
+                                    name: " 精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclw7dfsbp2",
+                                    name: " 精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "精修美编完成任务",
+                                    id: "node_oclw7dfsbp2"
+                                }
+                            },
                         ]
                     },
                     {
@@ -4448,48 +4384,136 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclvkpzz4g3",
-                                    name: "审核美编工作",
+                                    id: "node_oclrj9wzny7",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvkpzz4g3",
-                                    name: "审核美编工作",
+                                    id: "node_oclrj9wzny7",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclvkpzz4g3",
-                                    name: "审核美编工作",
+                                    id: "node_oclrj9wzny7",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编工作",
-                                    id: "node_oclvkpzz4g3"
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclrj9wzny7"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclvkpzz4g1",
-                                    name: "审核美编工作",
+                                    id: "node_oclrj9wzny6",
+                                    name: "简单美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvkpzz4g1",
-                                    name: "审核美编工作",
+                                    id: "node_oclrj9wzny6",
+                                    name: "简单美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclvkpzz4g1",
-                                    name: "审核美编工作",
+                                    id: "node_oclrj9wzny6",
+                                    name: "简单美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编工作",
-                                    id: "node_oclvkpzz4g1"
+                                    name: "简单美编完成任务",
+                                    id: "node_oclrj9wzny6"
                                 }
-                            }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclrj9wznyh",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclrj9wznyh",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclrj9wznyh",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclrj9wznyh"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclrj9wznyi",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclrj9wznyi",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclrj9wznyi",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclrj9wznyi"
+                                }
+                            },
+                            // {
+                            //     from: {
+                            //         id: "node_oclvkpzz4g3",
+                            //         name: "审核美编工作",
+                            //         status: ["HISTORY"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvkpzz4g3",
+                            //         name: "审核美编工作",
+                            //         status: ["HISTORY"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvkpzz4g3",
+                            //         name: "审核美编工作",
+                            //         status: ["HISTORY"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编工作",
+                            //         id: "node_oclvkpzz4g3"
+                            //     }
+                            // },
+                            // {
+                            //     from: {
+                            //         id: "node_oclvkpzz4g1",
+                            //         name: "审核美编工作",
+                            //         status: ["HISTORY"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvkpzz4g1",
+                            //         name: "审核美编工作",
+                            //         status: ["HISTORY"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvkpzz4g1",
+                            //         name: "审核美编工作",
+                            //         status: ["HISTORY"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编工作",
+                            //         id: "node_oclvkpzz4g1"
+                            //     }
+                            // }
                         ]
                     },
                     {
@@ -4505,26 +4529,92 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_ockpz6phx73",
-                                    name: "视觉完成确认审核",
+                                    id: "node_oclvksud0d8",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_ockpz6phx73",
-                                    name: "视觉完成确认审核",
+                                    id: "node_oclvksud0d8",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_ockpz6phx73",
-                                    name: "视觉完成确认审核",
+                                    id: "node_oclvksud0d8",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "视觉完成确认审核",
-                                    id: "node_ockpz6phx73"
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvksud0d8"
                                 }
-                            }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvksud0d9",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvksud0d9",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvksud0d9",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvksud0d9"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvksud0db",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvksud0db",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvksud0db",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvksud0db"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvksud0dc",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvksud0dc",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvksud0dc",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvksud0dc"
+                                }
+                            },
                         ]
                     },
                     {
@@ -4536,24 +4626,266 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclm91ca7l9",
-                                    name: "审核美编任务",
+                                    id: "node_oclvxgf8mzc",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclm91ca7l9",
-                                    name: "审核美编任务",
+                                    id: "node_oclvxgf8mzc",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclm91ca7l9",
-                                    name: "审核美编任务",
+                                    id: "node_oclvxgf8mzc",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclm91ca7l9"
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvxgf8mzc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxgf8mzd",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxgf8mzd",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxgf8mzd",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvxgf8mzd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr495",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr495",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr495",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvxczr495"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr496",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr496",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr496",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvxczr496"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr498",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr498",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr498",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvxczr498"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr499",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr499",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr499",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvxczr499"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxgf8mzf",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxgf8mzf",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxgf8mzf",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvxgf8mzf"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxgf8mzg",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxgf8mzg",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxgf8mzg",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvxgf8mzg"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr49g",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr49g",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr49g",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvxczr49g"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr49h",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr49h",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr49h",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvxczr49h"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr49j",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr49j",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr49j",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvxczr49j"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr49k",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr49k",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr49k",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvxczr49k"
                                 }
                             }
                         ]
@@ -4567,24 +4899,486 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
+                                    id: "node_oclx1f3cl77",
+                                    name: "小美编修图",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
+                                    id: "node_oclx1f3cl77",
+                                    name: "小美编修图",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
+                                    id: "node_oclx1f3cl77",
+                                    name: "小美编修图",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核图片",
-                                    id: "node_oclx03jr074d"
+                                    name: "小美编修图",
+                                    id: "node_oclx1f3cl77"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx1f3cl78",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx1f3cl78",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx1f3cl78",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "AI作图",
+                                    id: "node_oclx1f3cl78"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx00ubuyy",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx00ubuyy",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx00ubuyy",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx00ubuyy"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4jrkfs2",
+                                    name: "小美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4jrkfs2",
+                                    name: "小美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4jrkfs2",
+                                    name: "小美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "小美编修图",
+                                    id: "node_oclx4jrkfs2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4jrkfs3",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4jrkfs3",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4jrkfs3",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "AI作图",
+                                    id: "node_oclx4jrkfs3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4jrkfs4",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4jrkfs4",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4jrkfs4",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4jrkfs4"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx30pi4f6",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx30pi4f6",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx30pi4f6",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx30pi4f6"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxcz6yq72",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclxcz6yq72",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclxcz6yq72",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "中美编自修",
+                                    id: "node_oclxcz6yq72"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx1f3cl7b",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx1f3cl7b",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx1f3cl7b",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "小美编套版",
+                                    id: "node_oclx1f3cl7b"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70w7",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70w7",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70w7",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4kc70w7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70w2",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70w2",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70w2",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4kc70w2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70w4",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70w4",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70w4",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "中美编自修",
+                                    id: "node_oclx4kc70w4"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70w5",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70w5",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70w5",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "小美编套版",
+                                    id: "node_oclx4kc70w5"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4bnhfb3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4bnhfb3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4bnhfb3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4bnhfb3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wj",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wj",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wj",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "中美编自修",
+                                    id: "node_oclx4kc70wj"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wx",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wx",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wx",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "小美编套版",
+                                    id: "node_oclx4kc70wx"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wy",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wy",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wy",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "外包修图数量",
+                                    id: "node_oclx4kc70wy"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wz",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wz",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wz",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4kc70wz"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70w3",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70w3",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70w3",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4kc70w3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4bnhfb2",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4bnhfb2",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4bnhfb2",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4bnhfb2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx1flxsv1",
+                                    name: "分配大美编",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx1flxsv1",
+                                    name: "分配大美编",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx1flxsv1",
+                                    name: "分配大美编",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配大美编",
+                                    id: "node_oclx1flxsv1"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wi",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wi",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wi",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4kc70wi"
                                 }
                             }
                         ]
@@ -4598,24 +5392,310 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
+                                    id: "node_oclx422jq87",
+                                    name: "小美编负责人",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
+                                    id: "node_oclx422jq87",
+                                    name: "小美编负责人",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
+                                    id: "node_oclx422jq87",
+                                    name: "小美编负责人",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审批人",
-                                    id: "node_oclx422jq8o"
+                                    name: "小美编负责人",
+                                    id: "node_oclx422jq87"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx422jq88",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx422jq88",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx422jq88",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "AI修图",
+                                    id: "node_oclx422jq88"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx422jq89",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx422jq89",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx422jq89",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx422jq89"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwq1",
+                                    name: "小美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwq1",
+                                    name: "小美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwq1",
+                                    name: "小美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "小美编负责人",
+                                    id: "node_oclx5gvwwq1"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwq2",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwq2",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwq2",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "AI修图",
+                                    id: "node_oclx5gvwwq2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwq3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwq3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwq3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx5gvwwq3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx422jq8j",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx422jq8j",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx422jq8j",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "中美编负责人",
+                                    id: "node_oclx422jq8j"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx422jq8k",
+                                    name: "套版美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx422jq8k",
+                                    name: "套版美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx422jq8k",
+                                    name: "套版美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "套版美编负责人",
+                                    id: "node_oclx422jq8k"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4b3zdl3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4b3zdl3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4b3zdl3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4b3zdl3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwqz",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwqz",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwqz",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "中美编负责人",
+                                    id: "node_oclx5gvwwqz"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwq10",
+                                    name: "套版编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwq10",
+                                    name: "套版编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwq10",
+                                    name: "套版编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "套版编负责人",
+                                    id: "node_oclx5gvwwq10"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxfqmy8l2",
+                                    name: "分配大美编后期修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclxfqmy8l2",
+                                    name: "分配大美编后期修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclxfqmy8l2",
+                                    name: "分配大美编后期修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配大美编后期修图",
+                                    id: "node_oclxfqmy8l2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxfqmy8l3",
+                                    name: "大美编修图确认修图属性",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclxfqmy8l3",
+                                    name: "大美编修图确认修图属性",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclxfqmy8l3",
+                                    name: "大美编修图确认修图属性",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图确认修图属性",
+                                    id: "node_oclxfqmy8l3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4b3zdl5",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4b3zdl5",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4b3zdl5",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4b3zdl5"
                                 }
                             }
                         ]
@@ -5373,116 +6453,116 @@ const mbCoreActionsConfig = [
                                     id: "node_oclwhrd6j62"
                                 }
                             },
-                            {
-                                from: {
-                                    id: "node_oclvghx5li7",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvghx5li7",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclvghx5li7",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5li7"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclvghx5li8",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvghx5li8",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclvghx5li8",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5li8"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclw7dfsbp7",
-                                    name: " 审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclw7dfsbp7",
-                                    name: " 审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclw7dfsbp7",
-                                    name: " 审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclw7dfsbp7"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclvghx5lia",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvghx5lia",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclvghx5lia",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5lia"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclwhrd6j63",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclwhrd6j63",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclwhrd6j63",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclwhrd6j63"
-                                }
-                            },
+                            // {
+                            //     from: {
+                            //         id: "node_oclvghx5li7",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvghx5li7",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvghx5li7",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编任务",
+                            //         id: "node_oclvghx5li7"
+                            //     }
+                            // },
+                            // {
+                            //     from: {
+                            //         id: "node_oclvghx5li8",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvghx5li8",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvghx5li8",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编任务",
+                            //         id: "node_oclvghx5li8"
+                            //     }
+                            // },
+                            // {
+                            //     from: {
+                            //         id: "node_oclw7dfsbp7",
+                            //         name: " 审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclw7dfsbp7",
+                            //         name: " 审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclw7dfsbp7",
+                            //         name: " 审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编任务",
+                            //         id: "node_oclw7dfsbp7"
+                            //     }
+                            // },
+                            // {
+                            //     from: {
+                            //         id: "node_oclvghx5lia",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvghx5lia",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvghx5lia",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编任务",
+                            //         id: "node_oclvghx5lia"
+                            //     }
+                            // },
+                            // {
+                            //     from: {
+                            //         id: "node_oclwhrd6j63",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclwhrd6j63",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclwhrd6j63",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编任务",
+                            //         id: "node_oclwhrd6j63"
+                            //     }
+                            // },
                         ]
                     },
                     {
@@ -5997,28 +7077,6 @@ const mbCoreActionsConfig = [
                                     name: "大美编修图",
                                     id: "node_oclx4kc70wz"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核图片",
-                                    id: "node_oclx03jr074d"
-                                }
                             }
                         ]
                     },
@@ -6270,28 +7328,6 @@ const mbCoreActionsConfig = [
                                     name: "套版编负责人",
                                     id: "node_oclx5gvwwq10"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审批人",
-                                    id: "node_oclx422jq8o"
-                                }
                             }
                         ]
                     },
@@ -6341,112 +7377,112 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclvghx5li7",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0z2",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvghx5li7",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0z2",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclvghx5li7",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0z2",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5li7"
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvgh4l0z2"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclvghx5li8",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zb",
+                                    name: "精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvghx5li8",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zb",
+                                    name: "精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclvghx5li8",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zb",
+                                    name: "精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5li8"
+                                    name: "精修美编完成任务",
+                                    id: "node_oclvgh4l0zb"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclw7dfsbp7",
-                                    name: " 审核美编任务",
+                                    id: "node_oclw7dfsbp6",
+                                    name: " 精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclw7dfsbp7",
-                                    name: " 审核美编任务",
+                                    id: "node_oclw7dfsbp6",
+                                    name: " 精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclw7dfsbp7",
-                                    name: " 审核美编任务",
+                                    id: "node_oclw7dfsbp6",
+                                    name: " 精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclw7dfsbp7"
+                                    name: "精修美编完成任务",
+                                    id: "node_oclw7dfsbp6"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclvghx5lia",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zf",
+                                    name: "简单任务完成",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvghx5lia",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zf",
+                                    name: "简单任务完成",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclvghx5lia",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zf",
+                                    name: "简单任务完成",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5lia"
+                                    name: "简单任务完成",
+                                    id: "node_oclvt49cil2"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclwhrd6j63",
-                                    name: "审核美编任务",
+                                    id: "node_oclwhrd6j62",
+                                    name: "建模美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclwhrd6j63",
-                                    name: "审核美编任务",
+                                    id: "node_oclwhrd6j62",
+                                    name: "建模美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclwhrd6j63",
-                                    name: "审核美编任务",
+                                    id: "node_oclwhrd6j62",
+                                    name: "建模美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclwhrd6j63"
+                                    name: "建模美编完成任务",
+                                    id: "node_oclwhrd6j62"
                                 }
                             },
                         ]
@@ -6460,24 +7496,508 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
+                                    id: "node_oclx1f3cl77",
+                                    name: "小美编修图",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
+                                    id: "node_oclx1f3cl77",
+                                    name: "小美编修图",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
+                                    id: "node_oclx1f3cl77",
+                                    name: "小美编修图",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核图片",
-                                    id: "node_oclx03jr074d"
+                                    name: "小美编修图",
+                                    id: "node_oclx1f3cl77"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx1f3cl78",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx1f3cl78",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx1f3cl78",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "AI作图",
+                                    id: "node_oclx1f3cl78"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx00ubuyy",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx00ubuyy",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx00ubuyy",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx00ubuyy"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4jrkfs2",
+                                    name: "小美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4jrkfs2",
+                                    name: "小美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4jrkfs2",
+                                    name: "小美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "小美编修图",
+                                    id: "node_oclx4jrkfs2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4jrkfs3",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4jrkfs3",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4jrkfs3",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "AI作图",
+                                    id: "node_oclx4jrkfs3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4jrkfs4",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4jrkfs4",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4jrkfs4",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4jrkfs4"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx30pi4f6",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx30pi4f6",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx30pi4f6",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx30pi4f6"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70w3",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70w3",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70w3",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4kc70w3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxcz6yq72",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclxcz6yq72",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclxcz6yq72",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "中美编自修",
+                                    id: "node_oclxcz6yq72"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx1f3cl7b",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx1f3cl7b",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx1f3cl7b",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "小美编套版",
+                                    id: "node_oclx1f3cl7b"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70w6",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70w6",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70w6",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "外包修图数量",
+                                    id: "node_oclx4kc70w6"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70w7",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70w7",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70w7",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4kc70w7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70w2",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70w2",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70w2",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4kc70w2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4bnhfb2",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4bnhfb2",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4bnhfb2",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4bnhfb2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70w4",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70w4",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70w4",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "中美编自修",
+                                    id: "node_oclx4kc70w4"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70w5",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70w5",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70w5",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "小美编套版",
+                                    id: "node_oclx4kc70w5"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4dqaay1",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4dqaay1",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4dqaay1",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "外包修图数量",
+                                    id: "node_oclx4dqaay1"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4bnhfb3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4bnhfb3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4bnhfb3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4bnhfb3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wi",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wi",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wi",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4kc70wi"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wj",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wj",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wj",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "中美编自修",
+                                    id: "node_oclx4kc70wj"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wx",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wx",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wx",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "小美编套版",
+                                    id: "node_oclx4kc70wx"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wy",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wy",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wy",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "外包修图数量",
+                                    id: "node_oclx4kc70wy"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wz",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wz",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wz",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4kc70wz"
                                 }
                             }
                         ]
@@ -6491,24 +8011,244 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
+                                    id: "node_oclx422jq87",
+                                    name: "小美编负责人",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
+                                    id: "node_oclx422jq87",
+                                    name: "小美编负责人",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
+                                    id: "node_oclx422jq87",
+                                    name: "小美编负责人",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审批人",
-                                    id: "node_oclx422jq8o"
+                                    name: "小美编负责人",
+                                    id: "node_oclx422jq87"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx422jq88",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx422jq88",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx422jq88",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "AI修图",
+                                    id: "node_oclx422jq88"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx422jq89",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx422jq89",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx422jq89",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx422jq89"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwq1",
+                                    name: "小美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwq1",
+                                    name: "小美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwq1",
+                                    name: "小美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "小美编负责人",
+                                    id: "node_oclx5gvwwq1"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwq2",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwq2",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwq2",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "AI修图",
+                                    id: "node_oclx5gvwwq2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwq3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwq3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwq3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx5gvwwq3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx422jq8j",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx422jq8j",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx422jq8j",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "中美编负责人",
+                                    id: "node_oclx422jq8j"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx422jq8k",
+                                    name: "套版美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx422jq8k",
+                                    name: "套版美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx422jq8k",
+                                    name: "套版美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "套版美编负责人",
+                                    id: "node_oclx422jq8k"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4b3zdl3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4b3zdl3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4b3zdl3",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4b3zdl3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwqz",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwqz",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwqz",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "中美编负责人",
+                                    id: "node_oclx5gvwwqz"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwq10",
+                                    name: "套版编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwq10",
+                                    name: "套版编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwq10",
+                                    name: "套版编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "套版编负责人",
+                                    id: "node_oclx5gvwwq10"
                                 }
                             }
                         ]
@@ -7659,7 +9399,7 @@ const mbCoreActionsConfig = [
                         }]
                     },
                     {
-                        formName: " 天猫链接上架流程",
+                        formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
                             {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "部分图片"}
@@ -7968,28 +9708,30 @@ const mbCoreActionsConfig = [
                                 value: ["散图"]
                             }
                         ],
-                        flowNodeRules: [{
-                            from: {
-                                id: "node_oclii6vcap8",
-                                name: "分配美编制作",
-                                status: ["TODO"]
-                            },
-                            to: {
-                                id: "node_oclii6vcap8",
-                                name: "分配美编制作",
-                                status: ["TODO"]
-                            },
-                            overdue: {
-                                id: "node_oclii6vcap8",
-                                name: "分配美编制作",
-                                status: ["TODO"]
-                            },
-                            ownerRule: {
-                                from: "process",
-                                name: "分配美编制作",
-                                id: "node_oclii6vcap8"
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclii6vcap8",
+                                    name: "分配美编制作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclii6vcap8",
+                                    name: "分配美编制作",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclii6vcap8",
+                                    name: "分配美编制作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配美编制作",
+                                    id: "node_oclii6vcap8"
+                                }
                             }
-                        }]
+                        ]
                     },
                 ]
             },
@@ -8114,116 +9856,117 @@ const mbCoreActionsConfig = [
                                     id: "node_oclwhrd6j62"
                                 }
                             },
-                            {
-                                from: {
-                                    id: "node_oclvghx5li7",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvghx5li7",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclvghx5li7",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5li7"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclvghx5li8",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvghx5li8",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclvghx5li8",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5li8"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclw7dfsbp7",
-                                    name: " 审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclw7dfsbp7",
-                                    name: " 审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclw7dfsbp7",
-                                    name: " 审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclw7dfsbp7"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclvghx5lia",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvghx5lia",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclvghx5lia",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5lia"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclwhrd6j63",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclwhrd6j63",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclwhrd6j63",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclwhrd6j63"
-                                }
-                            },
+
+                            // {
+                            //     from: {
+                            //         id: "node_oclvghx5li7",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvghx5li7",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvghx5li7",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编任务",
+                            //         id: "node_oclvghx5li7"
+                            //     }
+                            // },
+                            // {
+                            //     from: {
+                            //         id: "node_oclvghx5li8",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvghx5li8",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvghx5li8",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编任务",
+                            //         id: "node_oclvghx5li8"
+                            //     }
+                            // },
+                            // {
+                            //     from: {
+                            //         id: "node_oclw7dfsbp7",
+                            //         name: " 审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclw7dfsbp7",
+                            //         name: " 审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclw7dfsbp7",
+                            //         name: " 审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编任务",
+                            //         id: "node_oclw7dfsbp7"
+                            //     }
+                            // },
+                            // {
+                            //     from: {
+                            //         id: "node_oclvghx5lia",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvghx5lia",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvghx5lia",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编任务",
+                            //         id: "node_oclvghx5lia"
+                            //     }
+                            // },
+                            // {
+                            //     from: {
+                            //         id: "node_oclwhrd6j63",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclwhrd6j63",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclwhrd6j63",
+                            //         name: "审核美编任务",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编任务",
+                            //         id: "node_oclwhrd6j63"
+                            //     }
+                            // },
                         ]
                     },
                     {
@@ -8280,28 +10023,6 @@ const mbCoreActionsConfig = [
                             },
                             {
                                 from: {
-                                    id: "node_oclvkqswtb4",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvkqswtb4",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclvkqswtb4",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编工作",
-                                    id: "node_oclvkqswtb4"
-                                }
-                            },
-                            {
-                                from: {
                                     id: "node_oclvkqswtba",
                                     name: "重点精修美编完成任务",
                                     status: ["TODO"]
@@ -8344,28 +10065,50 @@ const mbCoreActionsConfig = [
                                     id: "node_oclvkqswtbb"
                                 }
                             },
-                            {
-                                from: {
-                                    id: "node_oclvkqswtbc",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvkqswtbc",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclvkqswtbc",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编工作",
-                                    id: "node_oclvkqswtbc"
-                                }
-                            }
+                            // {
+                            //     from: {
+                            //         id: "node_oclvkqswtb4",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvkqswtb4",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvkqswtb4",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编工作",
+                            //         id: "node_oclvkqswtb4"
+                            //     }
+                            // },
+                            // {
+                            //     from: {
+                            //         id: "node_oclvkqswtbc",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvkqswtbc",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvkqswtbc",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编工作",
+                            //         id: "node_oclvkqswtbc"
+                            //     }
+                            // }
                         ]
                     },
                     {
@@ -8637,28 +10380,6 @@ const mbCoreActionsConfig = [
                                     from: "process",
                                     name: "简单美编完成任务",
                                     id: "node_oclvxczr49k"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclm91ca7l9",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclm91ca7l9",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclm91ca7l9",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclm91ca7l9"
                                 }
                             }
                         ]
@@ -9065,28 +10786,6 @@ const mbCoreActionsConfig = [
                                     name: "大美编修图",
                                     id: "node_oclx4kc70wt"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核图片",
-                                    id: "node_oclx03jr074d"
-                                }
                             }
                         ]
                     },
@@ -9272,28 +10971,6 @@ const mbCoreActionsConfig = [
                                     name: "套版美编负责人",
                                     id: "node_oclx5gvwwqe"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审批人",
-                                    id: "node_oclx422jq8o"
-                                }
                             }
                         ]
                     },
@@ -9427,28 +11104,28 @@ const mbCoreActionsConfig = [
                                     id: "node_oclvksud0dc"
                                 }
                             },
-                            {
-                                from: {
-                                    id: "node_ockpz6phx73",
-                                    name: "视觉完成确认审核",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_ockpz6phx73",
-                                    name: "视觉完成确认审核",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_ockpz6phx73",
-                                    name: "视觉完成确认审核",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "视觉完成确认审核",
-                                    id: "node_ockpz6phx73"
-                                }
-                            }
+                            // {
+                            //     from: {
+                            //         id: "node_ockpz6phx73",
+                            //         name: "视觉完成确认审核",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_ockpz6phx73",
+                            //         name: "视觉完成确认审核",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_ockpz6phx73",
+                            //         name: "视觉完成确认审核",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "视觉完成确认审核",
+                            //         id: "node_ockpz6phx73"
+                            //     }
+                            // }
                         ]
                     }
                 ]
@@ -9466,112 +11143,112 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclvghx5li7",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0z2",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvghx5li7",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0z2",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclvghx5li7",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0z2",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5li7"
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvgh4l0z2"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclvghx5li8",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zb",
+                                    name: "精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvghx5li8",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zb",
+                                    name: "精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclvghx5li8",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zb",
+                                    name: "精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5li8"
+                                    name: "精修美编完成任务",
+                                    id: "node_oclvgh4l0zb"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclw7dfsbp7",
-                                    name: " 审核美编任务",
+                                    id: "node_oclw7dfsbp6",
+                                    name: " 精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclw7dfsbp7",
-                                    name: " 审核美编任务",
+                                    id: "node_oclw7dfsbp6",
+                                    name: " 精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclw7dfsbp7",
-                                    name: " 审核美编任务",
+                                    id: "node_oclw7dfsbp6",
+                                    name: " 精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclw7dfsbp7"
+                                    name: "精修美编完成任务",
+                                    id: "node_oclw7dfsbp6"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclvghx5lia",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zf",
+                                    name: "简单任务完成",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvghx5lia",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zf",
+                                    name: "简单任务完成",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclvghx5lia",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zf",
+                                    name: "简单任务完成",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5lia"
+                                    name: "简单任务完成",
+                                    id: "node_oclvt49cil2"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclwhrd6j63",
-                                    name: "审核美编任务",
+                                    id: "node_oclwhrd6j62",
+                                    name: "建模美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclwhrd6j63",
-                                    name: "审核美编任务",
+                                    id: "node_oclwhrd6j62",
+                                    name: "建模美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclwhrd6j63",
-                                    name: "审核美编任务",
+                                    id: "node_oclwhrd6j62",
+                                    name: "建模美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclwhrd6j63"
+                                    name: "建模美编完成任务",
+                                    id: "node_oclwhrd6j62"
                                 }
                             }
                         ]
@@ -9583,50 +11260,139 @@ const mbCoreActionsConfig = [
                             {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "散图"},
                             {fieldId: "selectField_ljxvfuiw", opCode: opCodes.Equal, value: "部分图片"}
                         ],
-                        flowNodeRules: [{
-                            from: {
-                                id: "node_oclvkqswtb4",
-                                name: "审核美编工作",
-                                status: ["HISTORY"]
-                            },
-                            to: {
-                                id: "node_oclvkqswtb4",
-                                name: "审核美编工作",
-                                status: ["HISTORY"]
-                            },
-                            overdue: {
-                                id: "node_oclvkqswtb4",
-                                name: "审核美编工作",
-                                status: ["HISTORY"]
-                            },
-                            ownerRule: {
-                                from: "process",
-                                name: "审核美编工作",
-                                id: "node_oclvkqswtb4"
-                            }
-                        },
+                        flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclvkqswtbc",
-                                    name: "审核美编工作",
+                                    id: "node_oclvkqswtb2",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvkqswtbc",
-                                    name: "审核美编工作",
+                                    id: "node_oclvkqswtb2",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclvkqswtbc",
-                                    name: "审核美编工作",
+                                    id: "node_oclvkqswtb2",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编工作",
-                                    id: "node_oclvkqswtbc"
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvkqswtb2"
                                 }
-                            }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvkqswtb3",
+                                    name: "简单美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvkqswtb3",
+                                    name: "简单美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvkqswtb3",
+                                    name: "简单美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvkqswtb3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvkqswtba",
+                                    name: "重点精修美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvkqswtba",
+                                    name: "重点精修美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvkqswtba",
+                                    name: "重点精修美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvkqswtba"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvkqswtbb",
+                                    name: "简单美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvkqswtbb",
+                                    name: "简单美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclvkqswtbb",
+                                    name: "简单美编完成任务",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvkqswtbb"
+                                }
+                            },
+                            //     {
+                            //     from: {
+                            //         id: "node_oclvkqswtb4",
+                            //         name: "审核美编工作",
+                            //         status: ["HISTORY"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvkqswtb4",
+                            //         name: "审核美编工作",
+                            //         status: ["HISTORY"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvkqswtb4",
+                            //         name: "审核美编工作",
+                            //         status: ["HISTORY"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编工作",
+                            //         id: "node_oclvkqswtb4"
+                            //     }
+                            // },
+                            //     {
+                            //         from: {
+                            //             id: "node_oclvkqswtbc",
+                            //             name: "审核美编工作",
+                            //             status: ["HISTORY"]
+                            //         },
+                            //         to: {
+                            //             id: "node_oclvkqswtbc",
+                            //             name: "审核美编工作",
+                            //             status: ["HISTORY"]
+                            //         },
+                            //         overdue: {
+                            //             id: "node_oclvkqswtbc",
+                            //             name: "审核美编工作",
+                            //             status: ["HISTORY"]
+                            //         },
+                            //         ownerRule: {
+                            //             from: "process",
+                            //             name: "审核美编工作",
+                            //             id: "node_oclvkqswtbc"
+                            //         }
+                            //     }
                         ]
                     },
                     {
@@ -9638,24 +11404,266 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclm91ca7l9",
-                                    name: "审核美编任务",
+                                    id: "node_oclvxgf8mzc",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclm91ca7l9",
-                                    name: "审核美编任务",
+                                    id: "node_oclvxgf8mzc",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclm91ca7l9",
-                                    name: "审核美编任务",
+                                    id: "node_oclvxgf8mzc",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclm91ca7l9"
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvxgf8mzc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxgf8mzd",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxgf8mzd",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxgf8mzd",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvxgf8mzd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr495",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr495",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr495",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvxczr495"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr496",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr496",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr496",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvxczr496"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr498",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr498",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr498",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvxczr498"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr499",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr499",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr499",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvxczr499"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxgf8mzf",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxgf8mzf",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxgf8mzf",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvxgf8mzf"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxgf8mzg",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxgf8mzg",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxgf8mzg",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvxgf8mzg"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr49g",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr49g",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr49g",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvxczr49g"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr49h",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr49h",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr49h",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvxczr49h"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr49j",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr49j",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr49j",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvxczr49j"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvxczr49k",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvxczr49k",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvxczr49k",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvxczr49k"
                                 }
                             }
                         ]
@@ -9669,24 +11677,398 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
+                                    id: "node_oclx4kc70wb",
+                                    name: "小美编修图",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
+                                    id: "node_oclx4kc70wb",
+                                    name: "小美编修图",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
+                                    id: "node_oclx4kc70wb",
+                                    name: "小美编修图",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核图片",
-                                    id: "node_oclx03jr074d"
+                                    name: "小美编修图",
+                                    id: "node_oclx4kc70wb"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wc",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wc",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wc",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "AI作图",
+                                    id: "node_oclx4kc70wc"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wd",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wd",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wd",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4kc70wd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70we",
+                                    name: "小美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70we",
+                                    name: "小美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70we",
+                                    name: "小美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "小美编修图",
+                                    id: "node_oclx4kc70we"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wf",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wf",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wf",
+                                    name: "AI作图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "AI作图",
+                                    id: "node_oclx4kc70wf"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wg",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wg",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wg",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4kc70wg"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wh",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wh",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wh",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4kc70wh"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wp",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wp",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wp",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4kc70wp"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxcz6yq75",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclxcz6yq75",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclxcz6yq75",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "中美编自修",
+                                    id: "node_oclxcz6yq75"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wr",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wr",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wr",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "小美编套版",
+                                    id: "node_oclx4kc70wr"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wl",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wl",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wl",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "外包修图数量",
+                                    id: "node_oclx4kc70wl"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wm",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wm",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wm",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4kc70wm"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wo",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wo",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wo",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4kc70wo"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wv",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wv",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wv",
+                                    name: "分配中美编",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配中美编",
+                                    id: "node_oclx4kc70wv"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxcz6yq76",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclxcz6yq76",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclxcz6yq76",
+                                    name: "中美编自修",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "中美编自修",
+                                    id: "node_oclxcz6yq76"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wk",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wk",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wk",
+                                    name: "小美编套版",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "小美编套版",
+                                    id: "node_oclx4kc70wk"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70ws",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70ws",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70ws",
+                                    name: "外包修图数量",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "外包修图数量",
+                                    id: "node_oclx4kc70ws"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx4kc70wt",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx4kc70wt",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx4kc70wt",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx4kc70wt"
                                 }
                             }
                         ]
@@ -9700,24 +12082,178 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
+                                    id: "node_oclx5gvwwq4",
+                                    name: "小美编负责人",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
+                                    id: "node_oclx5gvwwq4",
+                                    name: "小美编负责人",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
+                                    id: "node_oclx5gvwwq4",
+                                    name: "小美编负责人",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审批人",
-                                    id: "node_oclx422jq8o"
+                                    name: "小美编负责人",
+                                    id: "node_oclx5gvwwq4"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwq5",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwq5",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwq5",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "AI修图",
+                                    id: "node_oclx5gvwwq5"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwq6",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwq6",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwq6",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx5gvwwq6"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwq7",
+                                    name: "小美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwq7",
+                                    name: "小美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwq7",
+                                    name: "小美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "小美编负责人",
+                                    id: "node_oclx5gvwwq7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwq8",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwq8",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwq8",
+                                    name: "AI修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "AI修图",
+                                    id: "node_oclx5gvwwq8"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwq9",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwq9",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwq9",
+                                    name: "大美编修图",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "大美编修图",
+                                    id: "node_oclx5gvwwq9"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwqd",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwqd",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwqd",
+                                    name: "中美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "中美编负责人",
+                                    id: "node_oclx5gvwwqd"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx5gvwwqe",
+                                    name: "套版美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx5gvwwqe",
+                                    name: "套版美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx5gvwwqe",
+                                    name: "套版美编负责人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "套版美编负责人",
+                                    id: "node_oclx5gvwwqe"
                                 }
                             }
                         ]
@@ -9766,26 +12302,92 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_ockpz6phx73",
-                                    name: "视觉完成确认审核",
+                                    id: "node_oclvksud0d8",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_ockpz6phx73",
-                                    name: "视觉完成确认审核",
+                                    id: "node_oclvksud0d8",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_ockpz6phx73",
-                                    name: "视觉完成确认审核",
+                                    id: "node_oclvksud0d8",
+                                    name: "重点精修美编完成任务",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "视觉完成确认审核",
-                                    id: "node_ockpz6phx73"
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvksud0d8"
                                 }
-                            }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvksud0d9",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvksud0d9",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvksud0d9",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvksud0d9"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvksud0db",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvksud0db",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvksud0db",
+                                    name: "重点精修美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "重点精修美编完成任务",
+                                    id: "node_oclvksud0db"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvksud0dc",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvksud0dc",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclvksud0dc",
+                                    name: "简单美编完成任务",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "简单美编完成任务",
+                                    id: "node_oclvksud0dc"
+                                }
+                            },
                         ]
                     },
                 ]
@@ -10824,7 +13426,38 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
-                    }
+                    },
+                    {
+                        formName: "运营拍摄流程",
+                        formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "视频"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclrj9wzny1",
+                                    name: "分配美编制作",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclrj9wzny1",
+                                    name: "分配美编制作",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclrj9wzny1",
+                                    name: "分配美编制作",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "视频剪辑人",
+                                    id: "employeeField_lvkqb1hu"
+                                }
+                            }
+                        ]
+                    },
                 ]
             },
             {
@@ -10859,28 +13492,6 @@ const mbCoreActionsConfig = [
                                     name: "视频剪辑任务完成",
                                     id: "node_oclvgh4l0zd"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclvghx5li9",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvghx5li9",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclvghx5li9",
-                                    name: "审核美编任务",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5li9"
-                                }
                             }
                         ]
                     },
@@ -10913,28 +13524,28 @@ const mbCoreActionsConfig = [
                                     id: "node_oclrj9wznym"
                                 }
                             },
-                            {
-                                from: {
-                                    id: "node_oclvkpzz4g4",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvkpzz4g4",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclvkpzz4g4",
-                                    name: "审核美编工作",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核美编工作",
-                                    id: "node_oclvkpzz4g4"
-                                }
-                            },
+                            // {
+                            //     from: {
+                            //         id: "node_oclvkpzz4g4",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     to: {
+                            //         id: "node_oclvkpzz4g4",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     overdue: {
+                            //         id: "node_oclvkpzz4g4",
+                            //         name: "审核美编工作",
+                            //         status: ["TODO"]
+                            //     },
+                            //     ownerRule: {
+                            //         from: "process",
+                            //         name: "审核美编工作",
+                            //         id: "node_oclvkpzz4g4"
+                            //     }
+                            // },
                         ]
                     },
                     {
@@ -10987,28 +13598,6 @@ const mbCoreActionsConfig = [
                                     name: "剪辑负责人",
                                     id: "employeeField_lwyq3iff"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审核图片",
-                                    id: "node_oclx03jr074d"
-                                }
                             }
                         ]
                     },
@@ -11039,28 +13628,6 @@ const mbCoreActionsConfig = [
                                     from: "process",
                                     name: "剪辑视频",
                                     id: "node_oclx5gvwwqh"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
-                                    status: ["TODO"]
-                                },
-                                overdue: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "审批人",
-                                    id: "node_oclx422jq8o"
                                 }
                             }
                         ]
@@ -11111,24 +13678,24 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclvghx5li9",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zd",
+                                    name: "视频剪辑任务完成",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvghx5li9",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zd",
+                                    name: "视频剪辑任务完成",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclvghx5li9",
-                                    name: "审核美编任务",
+                                    id: "node_oclvgh4l0zd",
+                                    name: "视频剪辑任务完成",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编任务",
-                                    id: "node_oclvghx5li9"
+                                    name: "视频剪辑任务完成",
+                                    id: "node_oclvgh4l0zd"
                                 }
                             }
                         ]
@@ -11140,50 +13707,28 @@ const mbCoreActionsConfig = [
                             {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "视频"}
                         ],
                         flowNodeRules: [
-                            // {
-                            //     from: {
-                            //         id: "node_oclrj9wznym",
-                            //         name: "视频剪辑完成",
-                            //         status: ["HISTORY"]
-                            //     },
-                            //     to: {
-                            //         id: "node_oclrj9wznym",
-                            //         name: "视频剪辑完成",
-                            //         status: ["HISTORY"]
-                            //     },
-                            //     overdue: {
-                            //         id: "node_oclrj9wznym",
-                            //         name: "视频剪辑完成",
-                            //         status: ["HISTORY"]
-                            //     },
-                            //     ownerRule: {
-                            //         from: "process",
-                            //         name: "视频剪辑完成",
-                            //         id: "node_oclrj9wznym"
-                            //     }
-                            // },
                             {
                                 from: {
-                                    id: "node_oclvkpzz4g4",
-                                    name: "审核美编工作",
+                                    id: "node_oclrj9wznym",
+                                    name: "视频剪辑完成",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclvkpzz4g4",
-                                    name: "审核美编工作",
+                                    id: "node_oclrj9wznym",
+                                    name: "视频剪辑完成",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclvkpzz4g4",
-                                    name: "审核美编工作",
+                                    id: "node_oclrj9wznym",
+                                    name: "视频剪辑完成",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审核美编工作",
-                                    id: "node_oclvkpzz4g4"
+                                    name: "视频剪辑完成",
+                                    id: "node_oclrj9wznym"
                                 }
-                            },
+                            }
                         ]
                     },
                     {
@@ -11195,24 +13740,46 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
+                                    id: "node_oclx1ixqtj5",
+                                    name: "视频剪辑",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
+                                    id: "node_oclx1ixqtj5",
+                                    name: "视频剪辑",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclx03jr074d",
-                                    name: "审核图片",
+                                    id: "node_oclx1ixqtj5",
+                                    name: "视频剪辑",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
-                                    from: "process",
-                                    name: "审核图片",
-                                    id: "node_oclx03jr074d"
+                                    from: "form",
+                                    name: "剪辑负责人",
+                                    id: "employeeField_lwyq3iff"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx1ixqtj3",
+                                    name: "视频剪辑",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx1ixqtj3",
+                                    name: "视频剪辑",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx1ixqtj3",
+                                    name: "视频剪辑",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "剪辑负责人",
+                                    id: "employeeField_lwyq3iff"
                                 }
                             }
                         ]
@@ -11226,24 +13793,24 @@ const mbCoreActionsConfig = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
+                                    id: "node_oclx5gvwwqh",
+                                    name: "剪辑视频",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
+                                    id: "node_oclx5gvwwqh",
+                                    name: "剪辑视频",
                                     status: ["HISTORY"]
                                 },
                                 overdue: {
-                                    id: "node_oclx422jq8o",
-                                    name: "审批人",
+                                    id: "node_oclx5gvwwqh",
+                                    name: "剪辑视频",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "审批人",
-                                    id: "node_oclx422jq8o"
+                                    name: "剪辑视频",
+                                    id: "node_oclx5gvwwqh"
                                 }
                             }
                         ]
