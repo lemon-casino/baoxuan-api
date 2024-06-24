@@ -14,7 +14,7 @@ const getUserLogs = async (pageIndex, pageSize, userId, timeRange, isOnline) => 
 
 const iAmOnline = async (userId) => {
     const userLoginKey = `${onlineCheckConst.REDIS_LOGIN_KEY_PREFIX}:${userId}`
-    let logId = await redisUtil.getValue(userLoginKey)
+    let logId = await redisUtil.get(userLoginKey)
     let createNewLog = false
     // 用户首次登录
     if (!logId) {
@@ -55,7 +55,7 @@ const iAmOnline = async (userId) => {
     }
 
     // 比前端接口回调的频率多1倍的时间作为用户下线的判断
-    await redisUtil.setValue(userLoginKey, logId, 3 * onlineCheckConst.intervalConfig.interval)
+    await redisUtil.set(userLoginKey, logId, 3 * onlineCheckConst.intervalConfig.interval)
 }
 
 const iAmDown = async (userId) => {

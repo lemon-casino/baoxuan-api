@@ -30,27 +30,66 @@ const getKeys = async (keyPattern) => {
     return await redis.keys(keyPattern)
 }
 
+/**
+ * 往list中添加数据
+ *
+ * @param key
+ * @param value
+ * @returns {Promise<number>}
+ */
 const rPush = async (key, value) => {
     return await redis.rPush(key, value)
 }
 
+/**
+ * 获取list中指定范围的数据
+ *
+ * @param key
+ * @param start
+ * @param end
+ * @returns
+ */
 const lRange = async (key, start, end) => {
     return await redis.lRange(key, start, end)
 }
 
+/**
+ * 获取key为list结构的所有数据
+ *
+ * @param key
+ * @returns
+ */
+const lAll = async (key) => {
+    return lRange(key, Number.MAX_VALUE)
+}
+
+/**
+ * 往set中添加数据
+ *
+ * @param key
+ * @param value
+ * @returns {Promise<number>}
+ */
 const sAdd = async (key, value) => {
     return await redis.sAdd(key, value)
 }
 
+/**
+ * 获取set结构数据
+ *
+ * @param key
+ * @returns
+ */
 const sMembers = async (key) => {
     return await redis.sMembers(key)
 }
 
 module.exports = {
-    setValue: set,
-    getValue: get,
+    set,
+    get,
     getKeys,
     rPush,
+    lAll,
     lRange,
     sAdd,
     sMembers
