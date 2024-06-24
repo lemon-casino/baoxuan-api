@@ -226,13 +226,13 @@ const entryAndResignation = async (req, res, next) => {
     let rest = {
         // 每个月的在职情况
         annualEmployment: [],
-        //月度入职
+        //月度入职 百分比
         departmentOnboarding: [],
-        // 月度离职
+        // 月度离职 百分比
         departmentResignation: [],
         //按部门当月的入离职情况
         departmentEntryAndExit: [],
-        // 对比: []
+        //  按月份入离职对比: 真实的数字
         joiningAndLeaving: [],
         //入离职环比
         entryAndExitRatio: []
