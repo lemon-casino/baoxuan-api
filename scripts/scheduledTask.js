@@ -28,6 +28,13 @@ if (process.env.NODE_ENV === "dev") {
 }
 
 /**
+ * 钉钉限制次数调用的接口每天凌晨置0
+ */
+schedule.scheduleJob("0 0 0 * * ?", async function () {
+    await taskService.resetDingDingApiInvokeCount()
+})
+
+/**
  * 每天9:05确认当天是否是工作日并将日期入库
  */
 schedule.scheduleJob(syncWorkingDayCron, async function () {

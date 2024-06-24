@@ -1,13 +1,8 @@
 const extractDataValues = (result) => {
     if (result instanceof Array) {
-        const data = []
-        for (const item of result) {
-            data.push(item.dataValues)
-        }
-        return data
+        return result.map(item => item.get({plain: true}))
     }
-    return result.dataValues
-
+    return result.get({plain: true})
 }
 
 const getSqlFieldQuery = (field, operator, value) => {
@@ -15,5 +10,6 @@ const getSqlFieldQuery = (field, operator, value) => {
 }
 
 module.exports = {
-    extractDataValues
+    extractDataValues,
+    getSqlFieldQuery
 }

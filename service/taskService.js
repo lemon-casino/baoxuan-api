@@ -7,6 +7,7 @@ const processDetailsTmpRepo = require("../repository/processDetailsTmpRepo")
 const departmentRepo = require("../repository/departmentRepo")
 const departmentUsersRepo = require("../repository/departmentUsersRepo")
 const oaProcessRepo = require("../repository/oaProcessRepo")
+const attendanceRepo = require("../repository/attendanceRepo")
 const globalSetter = require("../global/setter")
 const dingDingService = require("../service/dingDingService")
 const flowService = require("../service/flowService")
@@ -24,6 +25,7 @@ const flowConst = require("../const/flowConst")
 const sequelizeErrorConst = require("../const/sequelizeErrorConst")
 const oaReq = require("../core/dingDingReq/oaReq")
 const intelligentHRReq = require("../core/dingDingReq/intelligentHRReq")
+const attendanceReq = require("../core/dingDingReq/attendanceReq")
 
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
@@ -349,6 +351,24 @@ const getHROaDifferentStatusProcess = async (processCode, statuses, startTime) =
     return oaProcesses.sort((cur, next) => dateUtil.formatGMT(cur.finishTime) - dateUtil.formatGMT(next.finishTime))
 }
 
+const syncAttendance = async () => {
+    const userIds = (await userRepo.getAllUsers({isResign: false})).map(item => item.dingdingUserId)
+    const {access_token: token} = await redisRepo.getToken()
+    const result = await attendanceReq.getTodayAttendances(userIds, token)
+    for (const item of result) {
+        try {
+            await attendanceRepo.save(item)
+        } catch (e) {
+            if (e.name !== sequelizeErrorConst.SequelizeUniqueConstraintError) {
+                throw e
+            }
+        }
+    }
+}
+const resetDingDingApiInvokeCount = async () => {
+    await redisUtil.set(redisKeys.StatCountTodayDingDingApiInvoke, 0)
+}
+
 module.exports = {
     syncOaProcessTemplates,
     syncRunningProcess,
@@ -363,5 +383,7 @@ module.exports = {
     syncUserLogin,
     syncResignEmployeeInfo,
     syncHROaNotStockedProcess,
-    syncHROaFinishedProcess
+    syncHROaFinishedProcess,
+    syncAttendance,
+    resetDingDingApiInvokeCount
 }
