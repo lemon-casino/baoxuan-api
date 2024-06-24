@@ -260,7 +260,7 @@ function calculatePercentage(data, valueKey, nameKey) {
     // 计算每个类别的占比并添加百分比符号
     return data.map(item => ({
         [nameKey]: item[nameKey],
-        [valueKey]: ((parseFloat(item[valueKey]) / total) * 100).toFixed(2) + '%'
+        [valueKey]: ((parseFloat(item[valueKey]) / total) * 100).toFixed(2)
     }));
 }
 
@@ -328,6 +328,10 @@ const entryAndResignation = async (rest) => {
         entryAndExitRatio: []
     * */
     try {
+
+
+        //
+
         rest.departmentOnboarding = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentOnboarding(), 'value', 'name');
         rest.departmentResignation = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentResignation(), 'value', 'name');
 
