@@ -51,11 +51,21 @@ const taskTypeConst = {
     COMMON_ONE_BY_ONE: "COMMON_ONE_BY_ONE"
 }
 
+const oaApprovalStatus = {
+    // 审批中
+    RUNNING: "RUNNING",
+    // 已撤销
+    TERMINATED: "TERMINATED",
+    // COMPLETED
+    COMPLETED: "COMPLETED"
+}
+
 module.exports = {
     flowStatusConst,
     flowReviewTypeConst,
     activityIdMappingConst,
     operateTypeConst,
     actionExitConst,
-    taskTypeConst
+    taskTypeConst,
+    oaApprovalStatus
 }
