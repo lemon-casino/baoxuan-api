@@ -233,27 +233,26 @@ const convertToStatusStatResult = (flows, coreActionConfig, userStatResult) => {
                     // 将流程统计到对应结果状态中，包含逾期
                     for (const flow of formFlows) {
                         const activities = flow.overallprocessflow
-                        // if (keyText === "完") {
-                        //     const tmpOverdueStatResult = statusResult.children.find(item => item.nameCN === "未逾期")
-                        //     const visionDoneAct = visionFormDoneActivityIds.find(item => item.formId === flow.formUuid)
-                        //     const tmpVisionDoneActs = activities.filter(item =>
-                        //         visionDoneAct.doneActivityIds.includes(item.activityId) &&
-                        //         item.type === flowReviewTypeConst.HISTORY)
-                        //
-                        //     if (tmpVisionDoneActs.length > 0) {
-                        //         if (tmpOverdueStatResult.children.length === 0) {
-                        //             tmpOverdueStatResult.children.push({
-                        //                 nameCN: "合计", ids: [flow.processInstanceId]
-                        //             })
-                        //         } else {
-                        //             if (!tmpOverdueStatResult.children[0].ids.includes(flow.processInstanceId)) {
-                        //                 tmpOverdueStatResult.children[0].ids.push(flow.processInstanceId)
-                        //             }
-                        //         }
-                        //     }
-                        //     continue
-                        // }
+                        if (keyText === "完") {
+                            const tmpOverdueStatResult = statusResult.children.find(item => item.nameCN === "未逾期")
+                            const visionDoneAct = visionFormDoneActivityIds.find(item => item.formId === flow.formUuid)
+                            const tmpVisionDoneActs = activities.filter(item =>
+                                visionDoneAct.doneActivityIds.includes(item.activityId) &&
+                                item.type === flowReviewTypeConst.HISTORY)
 
+                            if (tmpVisionDoneActs.length > 0) {
+                                if (tmpOverdueStatResult.children.length === 0) {
+                                    tmpOverdueStatResult.children.push({
+                                        nameCN: "合计", ids: [flow.processInstanceId]
+                                    })
+                                } else {
+                                    if (!tmpOverdueStatResult.children[0].ids.includes(flow.processInstanceId)) {
+                                        tmpOverdueStatResult.children[0].ids.push(flow.processInstanceId)
+                                    }
+                                }
+                            }
+                            continue
+                        }
 
                         for (let i = 0; i < formRule.flowNodeRules.length; i++) {
                             const flowNodeRule = formRule.flowNodeRules[i]
