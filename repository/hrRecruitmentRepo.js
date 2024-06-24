@@ -844,6 +844,21 @@ const departmentEntryAndExit = async () => {
     }
 };
 
+const in_service_employees = async () => {
+    try {
+        return await ZaiZhiRen.sequelize.query(
+            `SELECT  COUNT(*) AS in_service_employees    FROM zai_zhi_ren    WHERE turnover_time is null  and   YEAR(on_board_time) < YEAR(CURDATE()); `,
+            {
+                type: QueryTypes.SELECT
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
 module.exports = {
     getHrDepartment,
     getHrQuarters,
@@ -872,5 +887,6 @@ module.exports = {
     joiningAndLeaving,
     departmentOnboarding,
     departmentResignation,
-    departmentEntryAndExit
+    departmentEntryAndExit,
+    in_service_employees
 };

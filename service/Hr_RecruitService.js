@@ -258,9 +258,10 @@ function calculatePercentage(data, valueKey, nameKey) {
     // 计算总数，使用parseFloat确保处理数据类型正确
     const total = data.reduce((sum, item) => sum + parseFloat(item[valueKey]), 0);
     // 计算每个类别的占比并添加百分比符号
+
     return data.map(item => ({
         [nameKey]: item[nameKey],
-        [valueKey]: ((parseFloat(item[valueKey]) / total) * 100).toFixed(2)
+        [valueKey]: total === 0 ? 0 : ((parseFloat(item[valueKey]) / total) * 100).toFixed(2)
     }));
 }
 
@@ -282,6 +283,27 @@ function mergeArrays(targetArray, sourceArray, key, mergeField) {
     });
 }
 
+
+// 计算每个的在职情况
+function calculateEmployeeCount(initialCount, plan) {
+    const currentMonth = (`0${new Date().getMonth() + 1}`).slice(-2);
+    let currentCount = initialCount;
+    const result = plan.map((item, index) => {
+        if (item.month <= currentMonth) {
+            currentCount += item.on_board_count - item.turnover_count;
+            return {
+                month: item.month,
+                numberOfEmployees: currentCount
+            };
+        } else {
+            return {
+                month: item.month,
+                numberOfEmployees: 0
+            };
+        }
+    });
+    return result;
+}
 
 const curriculumVitaelikename = async (rest) => {
 
@@ -331,14 +353,21 @@ const entryAndResignation = async (rest) => {
 
 
         //
+        const shuliang = await Hr_RecruitmentDepartmentPositions.in_service_employees();
 
         rest.departmentOnboarding = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentOnboarding(), 'value', 'name');
         rest.departmentResignation = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentResignation(), 'value', 'name');
 
         const join = await Hr_RecruitmentDepartmentPositions.joiningAndLeaving()
+
+
+        rest.annualEmployment = calculateEmployeeCount(shuliang[0].in_service_employees, join);
+
+
         const joiningAndLeaving = calculatePercentage(join, 'on_board_count', 'month');
         const joining = calculatePercentage(join, 'turnover_count', 'month');
         mergeArrays(joiningAndLeaving, joining, 'month', 'turnover_count');
+
         rest.joiningAndLeaving = joiningAndLeaving;
         const departmen = await Hr_RecruitmentDepartmentPositions.departmentEntryAndExit();
         const num_of_new_employees = calculatePercentage(departmen, 'num_of_new_employees', 'section');
