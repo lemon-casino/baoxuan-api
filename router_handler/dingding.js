@@ -1,4 +1,5 @@
-const dd = require("../core/yiDaReq");
+const contactsReq = require("../core/dingDingReq/contactsReq")
+const credentialsReq = require("../core/dingDingReq/credentialsReq")
 const UsersModel = require("../model/users");
 const {generateToken} = require("../utils/token");
 const tokenConfig = require("../config/index").tokenConfig;
@@ -8,15 +9,15 @@ exports.getddUserList = async (req, res) => {
     // 钉钉授权流程
     const ddAuth = async (code) => {
         // 1.根据code获取用户token
-        let UserToken = await dd.getDingDingToken(code);
+        let UserToken = await credentialsReq.getUserDingDingAccessToken(code);
         // 1.获取企业内部应用的access_token
-        let CorpToken = await dd.getDingDingAccessToken();
+        let CorpToken = await credentialsReq.getDingDingAccessToken();
         // 2.根据token获取通讯录用户信息，得到unionid
-        const {nick, unionId, avatarUrl, openId, mobile} = await dd.getUserInfoByToken(
+        const {nick, unionId, avatarUrl, openId, mobile} = await contactsReq.getUserInfoByToken(
             UserToken.accessToken
         );
         //  3.根据unionid获取用户的userid
-        const userIdinfo = await dd.getUserIdByUnionIdAndToken(CorpToken.access_token, unionId);
+        const userIdinfo = await contactsReq.getUserIdByUnionIdAndToken(CorpToken.access_token, unionId);
         return {
             userid: userIdinfo.result.userid,
             corpTokenToken: CorpToken.access_token,
@@ -25,7 +26,7 @@ exports.getddUserList = async (req, res) => {
 
     // 返回个人信息
     const getddUserLists = async (corpTokenToken, userid) => {
-        const userInfo = await dd.getUserInfoByUserIdAndToken(corpTokenToken, userid);
+        const userInfo = await contactsReq.getUserInfoByUserIdAndToken(corpTokenToken, userid);
         if (userInfo.errmsg === "ok") {
             const {
                 name,
@@ -37,10 +38,10 @@ exports.getddUserList = async (req, res) => {
                 leader_in_dept,
             } = userInfo.result;
             let promises = leader_in_dept.map(async (item) => {
-                const {result} = await dd.getDpInfo(corpTokenToken, item.dept_id);
+                const {result} = await contactsReq.getDpInfo(corpTokenToken, item.dept_id);
                 // 如果是主管获取当前部门下的所有员工userid
                 if (item.leader) {
-                    const user_result = await dd.getDeptUserList(
+                    const user_result = await contactsReq.getDeptUserList(
                         corpTokenToken,
                         item.dept_id
                     );
@@ -122,7 +123,7 @@ exports.getddUserList = async (req, res) => {
 };
 exports.getLiuChengList = async (req, res) => {
     try {
-        let aa = await dd.getDingDingAccessToken()
+        let aa = await credentialsReq.getDingDingAccessToken()
         return res.send(aa);
     } catch (error) {
         return res.send(biResponse.serverError(error.message));
@@ -132,8 +133,8 @@ exports.getDpList = async (req, res) => {
     try {
         let user_id = req.body?.user_id;
         console.log(user_id);
-        let {access_token: accessToken} = await dd.getDingDingAccessToken()
-        let dpData = await dd.getDp(accessToken, 3203266220231269);
+        let {access_token: accessToken} = await credentialsReq.getDingDingAccessToken()
+        let dpData = await contactsReq.getDp(accessToken, 3203266220231269);
         return res.send(dpData);
     } catch (e) {
         console.log(e);
@@ -142,8 +143,8 @@ exports.getDpList = async (req, res) => {
 exports.getDpInfo = async (req, res) => {
     try {
         let dp_id = req.body?.dp_id;
-        let {access_token: accessToken} = await dd.getDingDingAccessToken();
-        let dpData = await dd.getDpInfo(accessToken, 913539395);
+        let {access_token: accessToken} = await credentialsReq.getDingDingAccessToken();
+        let dpData = await contactsReq.getDpInfo(accessToken, 913539395);
         return res.send(dpData);
     } catch (e) {
         console.log(e);

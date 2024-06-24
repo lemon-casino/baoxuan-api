@@ -1,6 +1,5 @@
-// 此模块中调用的钉钉接口次数有限制：1w次/月
-
-const httpUtil = require("../utils/httpUtil");
+const httpUtil = require("../../utils/httpUtil");
+const requireInvokeLimit = require("./requireInvokeLimit");
 
 /**
  * 获取打卡记录
@@ -14,6 +13,8 @@ const httpUtil = require("../utils/httpUtil");
  * @returns {Promise<any|undefined>}
  */
 const getAttendances = async (pageIndex, pageSize, workDateFrom, workDateTo, userIds, token) => {
+    await requireInvokeLimit.count()
+
     const url = `https://oapi.dingtalk.com/attendance/list?access_token=${token}`
     const body = {
         workDateFrom,

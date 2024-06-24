@@ -23,7 +23,7 @@ const adminConst = require("../const/adminConst")
 const flowConst = require("../const/flowConst")
 const sequelizeErrorConst = require("../const/sequelizeErrorConst")
 const oaReq = require("../core/dingDingReq/oaReq")
-const yiDaReq = require("../core/yiDaReq")
+const intelligentHRReq = require("../core/dingDingReq/intelligentHRReq")
 
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
@@ -177,7 +177,7 @@ const syncUserLogin = async () => {
 const syncResignEmployeeInfo = async () => {
     console.log("同步进行中...")
     const {access_token: accessToken} = await redisRepo.getToken()
-    const allResignEmployees = await yiDaReq.getResignEmployees(accessToken)
+    const allResignEmployees = await intelligentHRReq.getResignEmployees(accessToken)
     // 更新人员离职信息
     const onJobEmployees = await redisRepo.getAllUsersDetail()
     for (const employee of allResignEmployees) {

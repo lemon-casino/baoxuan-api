@@ -53,7 +53,7 @@ exports.getCheckCode = async (req, res, next) => {
         const effectTime = 10 * 60;
 
         // 存入redis
-        const result = await redis.setValue(`${redisKeys.QRCodes}:${uuid}`, captcha.text.toLowerCase(), effectTime);
+        const result = await redis.set(`${redisKeys.QRCodes}:${uuid}`, captcha.text.toLowerCase(), effectTime);
         if (result) {
             res.send({
                 code: 200, uuid, textCode: captcha.text, message: "获取验证码成功", data: captcha.data,

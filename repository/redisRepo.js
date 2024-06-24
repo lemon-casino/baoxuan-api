@@ -1,6 +1,6 @@
 const {redisKeys} = require("../const/redisConst")
 const redisUtil = require("../utils/redisUtil")
-const yiDaReq = require("../core/yiDaReq")
+const yiDaReq = require("../core/dingDingReq/yiDaReq")
 
 const setToken = async (ddToken) => {
     await redisUtil.set(redisKeys.DDToken, JSON.stringify(ddToken), 7200)
