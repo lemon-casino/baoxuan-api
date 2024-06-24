@@ -255,15 +255,33 @@ const curriculumVitae = async (name, rest) => {
 
 // 公用 函数 作用是将数值转化为百分比占总得到百分比
 function calculatePercentage(data, valueKey, nameKey) {
-    // 计算总数
-    const total = data.reduce((sum, item) => sum + item[valueKey], 0);
-
+    // 计算总数，使用parseFloat确保处理数据类型正确
+    const total = data.reduce((sum, item) => sum + parseFloat(item[valueKey]), 0);
     // 计算每个类别的占比并添加百分比符号
     return data.map(item => ({
         [nameKey]: item[nameKey],
-        [valueKey]: ((item[valueKey] / total) * 100).toFixed(2) + '%'
+        [valueKey]: ((parseFloat(item[valueKey]) / total) * 100).toFixed(2)
     }));
 }
+
+
+/**
+ * 合并两个数组，根据指定的键和要合并的字段。
+ *
+ * @param {Array} targetArray - 目标数组，合并后结果会存储到这个数组中。
+ * @param {Array} sourceArray - 源数组，包含要合并的数据。
+ * @param {String} key - 用于匹配的键。
+ * @param {String} mergeField - 要合并的字段名。
+ */
+function mergeArrays(targetArray, sourceArray, key, mergeField) {
+    targetArray.forEach(item => {
+        const match = sourceArray.find(sourceItem => sourceItem[key] === item[key]);
+        if (match) {
+            item[mergeField] = match[mergeField];
+        }
+    });
+}
+
 
 const curriculumVitaelikename = async (rest) => {
 
@@ -310,10 +328,23 @@ const entryAndResignation = async (rest) => {
         entryAndExitRatio: []
     * */
     try {
+
+
+        //
+
         rest.departmentOnboarding = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentOnboarding(), 'value', 'name');
         rest.departmentResignation = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentResignation(), 'value', 'name');
-        rest.joiningAndLeaving = await Hr_RecruitmentDepartmentPositions.joiningAndLeaving();
-        rest.departmentEntryAndExit = await Hr_RecruitmentDepartmentPositions.departmentEntryAndExit();
+
+        const join = await Hr_RecruitmentDepartmentPositions.joiningAndLeaving()
+        const joiningAndLeaving = calculatePercentage(join, 'on_board_count', 'month');
+        const joining = calculatePercentage(join, 'turnover_count', 'month');
+        mergeArrays(joiningAndLeaving, joining, 'month', 'turnover_count');
+        rest.joiningAndLeaving = joiningAndLeaving;
+        const departmen = await Hr_RecruitmentDepartmentPositions.departmentEntryAndExit();
+        const num_of_new_employees = calculatePercentage(departmen, 'num_of_new_employees', 'section');
+        const num_of_leaving_employees = calculatePercentage(departmen, 'num_of_leaving_employees', 'section');
+        mergeArrays(num_of_new_employees, num_of_leaving_employees, 'section', 'num_of_leaving_employees');
+        rest.departmentEntryAndExit = num_of_new_employees
         // rest.department = calculatePercentage(await Hr_RecruitmentDepartmentPositions.departmentdDistributed(), 'value', 'name');
         //入离职信息
         console.log("--------------------")
