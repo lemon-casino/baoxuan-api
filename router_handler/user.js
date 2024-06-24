@@ -224,11 +224,13 @@ const getTokenAndRefreshToken = async (userName, password) => {
 
     const token = "Bearer " + generateToken({
         id: brief.user_id,
+        userId: brief.dingding_user_id,
         username: brief.username
     }, tokenConfig.jwtSecretKey, tokenConfig.secretKeyExpire)
 
     const refreshToken = generateToken({
         id: brief.user_id,
+        userId: brief.dingding_user_id,
         username: brief.username
     }, tokenConfig.jwtRefrechSecretKey, tokenConfig.refreshSerectKeyExpire);
     return {token, refreshToken}
