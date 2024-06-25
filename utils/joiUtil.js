@@ -1,3 +1,4 @@
+const _ = require("lodash")
 const Joi = require("joi")
 const ParameterError = require("../error/parameterError")
 
@@ -6,12 +7,16 @@ const joiErrorMessages = {
     "any.empty": "内容不能为空",
     "string.empty": "内容不能为空",
     "string.alphanum": "必须为0或正整数",
-    "date.base": "日期格式不正确"
+    "date.base": "日期格式不正确",
+    "number.min": (min) => {
+        return `不能小于${min}`
+    }
 }
 
 const commonJoiSchemas = {
     required: Joi.required(),
     strRequired: Joi.string().required(),
+    positiveIntegerRequired: Joi.number().min(1).required(),
     numberRequired: Joi.number().min(0).required(),
     dateRequired: Joi.date().required(),
     arrayRequired: Joi.array().required(),
@@ -20,9 +25,9 @@ const commonJoiSchemas = {
 
 const commonArgsSchemas = {
     id: commonJoiSchemas.required,
-    page: commonJoiSchemas.numberRequired,
+    page: commonJoiSchemas.positiveIntegerRequired,
     pageIndex: commonJoiSchemas.numberRequired,
-    pageSize: Joi.string().alphanum().min(1).required(),
+    pageSize: commonJoiSchemas.positiveIntegerRequired,
     startDate: commonJoiSchemas.dateRequired,
     endDate: commonJoiSchemas.dateRequired
 }
@@ -70,9 +75,13 @@ const validate = (items) => {
     const error = schemas.validate(tmpValues).error
 
     if (error) {
-        const {type, context: {label, key}} = error.details[0]
-        const errorMsg = joiErrorMessages[type]
+        const {type, context: {label, key, limit, value}} = error.details[0]
+        let errorMsg = joiErrorMessages[type]
         if (errorMsg) {
+            if (_.isFunction(errorMsg)) {
+                errorMsg = errorMsg(limit)
+            }
+
             throw new ParameterError(`参数：${key} ${errorMsg}`)
         }
         throw new ParameterError(`${error.message}(${type})`)
