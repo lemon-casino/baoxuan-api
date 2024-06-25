@@ -5,9 +5,9 @@ module.exports = sequelize => {
   const attributes = {
     id: {
       type: DataTypes.STRING(255),
-      allowNull: true,
+      allowNull: false,
       defaultValue: null,
-      primaryKey: false,
+      primaryKey: true,
       autoIncrement: false,
       comment: null,
       field: "id"

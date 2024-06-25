@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const departmentApi = require('../router_handler/');
+const deptCoreActionApi = require('../router_handler/deptCoreActionApi');
 
-router.get("/", departmentApi.getDepartments)
-router.get("/:deptId/users", departmentApi.getDeptUsers)
-router.get("/users", departmentApi.getAllUsers)
+router.get("/", deptCoreActionApi.getDeptCoreActionsConfig)
+router.post("/", deptCoreActionApi.save)
+router.delete("/", deptCoreActionApi.delDeptCoreActionConfig)
 
 module.exports = router

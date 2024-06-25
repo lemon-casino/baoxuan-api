@@ -22,7 +22,7 @@ module.exports = sequelize => {
       field: "action_name"
     },
     parentId: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: null,
       primaryKey: false,

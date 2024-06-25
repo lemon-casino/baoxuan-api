@@ -28,5 +28,6 @@ module.exports = {
     "/forms": require("./flowFormRouter"),
     "/operation/tian/linkData": require("./tableStructure"),
     "/product-attrs": require("./dianShangOperationAttributeRouter"),
-    "/attendance": require("./attendanceRouter")
+    "/attendance": require("./attendanceRouter"),
+    "/dept-core-action-config": require("./deptCoreActionRouter")
 }

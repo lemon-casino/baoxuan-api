@@ -32,11 +32,15 @@ const commonArgsSchemas = {
     endDate: commonJoiSchemas.dateRequired
 }
 
+const clarityValidate = (schema, data) => {
+    _validate(schema, data)
+}
+
 /**
  *
  * @param items {}
  */
-const validate = (items) => {
+const mixedValidate = (items) => {
     // schema查找优先级： 自定义-commonRepo.js-无
     let tmpSchemas = {}
     let tmpValues = {}
@@ -70,10 +74,11 @@ const validate = (items) => {
             }
         }
     }
+    _validate(tmpSchemas, tmpValues)
+}
 
-    const schemas = Joi.object(tmpSchemas)
-    const error = schemas.validate(tmpValues).error
-
+const _validate = (schema, data) => {
+    const error = Joi.object(schema).validate(data).error
     if (error) {
         const {type, context: {label, key, limit, value}} = error.details[0]
         let errorMsg = joiErrorMessages[type]
@@ -89,6 +94,7 @@ const validate = (items) => {
 }
 
 module.exports = {
-    validate,
+    clarityValidate,
+    validate: mixedValidate,
     commonJoiSchemas
 }

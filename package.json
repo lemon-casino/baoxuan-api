@@ -47,6 +47,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "typescript": "^5.5.2",
     "cross-env": "^7.0.3",
     "mocha": "^10.4.0"
   }
