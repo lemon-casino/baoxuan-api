@@ -1,24 +1,24 @@
 const {redisKeys} = require("../const/redisConst")
 const redisUtil = require("../utils/redisUtil")
-const yiDaReq = require("../core/yiDaReq")
+const yiDaReq = require("../core/dingDingReq/yiDaReq")
 
 const setToken = async (ddToken) => {
-    await redisUtil.setValue(redisKeys.DDToken, JSON.stringify(ddToken), 7200)
+    await redisUtil.set(redisKeys.DDToken, JSON.stringify(ddToken), 7200)
 }
 
 const getToken = async () => {
-    const reply = await redisUtil.getValue(redisKeys.DDToken);
+    const reply = await redisUtil.get(redisKeys.DDToken);
     return JSON.parse(reply);
 }
 
 const getDepartments = async () => {
-    const reply = await redisUtil.getValue(redisKeys.Departments);
+    const reply = await redisUtil.get(redisKeys.Departments);
     return JSON.parse(reply);
 };
 
 // 获取redis所有详情用户信息
 const getAllUsersDetail = async () => {
-    const reply = await redisUtil.getValue(redisKeys.Users);
+    const reply = await redisUtil.get(redisKeys.Users);
     return JSON.parse(reply);
 };
 
@@ -61,22 +61,22 @@ const getAllProcessFlow = async (token, userId, formInstanceId) => {
 };
 
 const setUsersUnderDepartment = async (departments) => {
-    await redisUtil.setValue(redisKeys.DepartmentsUsers, JSON.stringify(departments));
+    await redisUtil.set(redisKeys.DepartmentsUsers, JSON.stringify(departments));
 }
 
 // 获取所有部门下的所有用户信息
 const getUsersUnderDepartment = async () => {
-    const reply = await redisUtil.getValue(redisKeys.DepartmentsUsers);
+    const reply = await redisUtil.get(redisKeys.DepartmentsUsers);
     return JSON.parse(reply);
 };
 
 const getTodayRunningAndFinishedFlows = async () => {
-    const result = await redisUtil.getValue(redisKeys.TodayRunningAndFinishedFlows)
+    const result = await redisUtil.get(redisKeys.TodayRunningAndFinishedFlows)
     return JSON.parse(result)
 }
 
 const setTodayFlows = async (flows) => {
-    await redisUtil.setValue(redisKeys.TodayRunningAndFinishedFlows, JSON.stringify(flows))
+    await redisUtil.set(redisKeys.TodayRunningAndFinishedFlows, JSON.stringify(flows))
     return true
 }
 

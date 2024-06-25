@@ -1,5 +1,5 @@
 const schedule = require("node-schedule");
-const dd = require("../core/yiDaReq");
+const dd = require("../core/dingDingReq/yiDaReq");
 const fs = require
 const redis = require("redis");
 

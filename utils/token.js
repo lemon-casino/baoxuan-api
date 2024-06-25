@@ -8,17 +8,18 @@ const tkconf = require('../config/index');
  * @returns
  */
 const generateToken = function (user, serect, time) {
-  //创建token并导出
+    //创建token并导出
 
-  const token = jwt.sign(
-    {
-      id: user.id,
-      username: user.username
-    },
-    serect,
-    { expiresIn: time + 's' }
-  );
-  return token;
+    const token = jwt.sign(
+        {
+            id: user.id,
+            userId: user.userId,
+            username: user.username
+        },
+        serect,
+        {expiresIn: time + 's'}
+    );
+    return token;
 };
 /**
  * token解析函数
@@ -26,8 +27,8 @@ const generateToken = function (user, serect, time) {
  * @returns
  */
 const decodedToken = function (token) {
-  const decoded = jwt.decode(token);
-  return decoded;
+    const decoded = jwt.decode(token);
+    return decoded;
 };
 /**
  * 验证对应的refreshToken
@@ -35,13 +36,13 @@ const decodedToken = function (token) {
  * @returns
  */
 const verifyToken = function verify_refreshToken(refreshToken) {
-  return jwt.verify(refreshToken, tkconf.jwtRefrechSecretKey, (err, decode) => {
-    return err ? err : 1;
-  });
+    return jwt.verify(refreshToken, tkconf.jwtRefrechSecretKey, (err, decode) => {
+        return err ? err : 1;
+    });
 };
 
 module.exports = {
-  generateToken,
-  decodedToken,
-  verifyToken
+    generateToken,
+    decodedToken,
+    verifyToken
 };

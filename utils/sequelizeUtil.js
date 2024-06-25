@@ -1,13 +1,17 @@
 const extractDataValues = (result) => {
     if (result instanceof Array) {
-        const data = []
-        for (const item of result) {
-            data.push(item.dataValues)
-        }
-        return data
+        return result.map(item => {
+            if (item.get && typeof item.get === "function") {
+                return item.get({plain: true})
+            }
+            return item
+        })
     }
-    return result.dataValues
 
+    if (result.get && typeof result.get === "function") {
+        return result.get({plain: true})
+    }
+    return result
 }
 
 const getSqlFieldQuery = (field, operator, value) => {

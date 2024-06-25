@@ -6,4 +6,11 @@ const paging = (pageCount, total, data) => {
     }
 }
 
-module.exports = {paging}
+const defaultPaging = (data, pageSize) => {
+    return paging(Math.ceil(data.count / pageSize), data.count, data.rows)
+}
+
+module.exports = {
+    paging,
+    defaultPaging
+}

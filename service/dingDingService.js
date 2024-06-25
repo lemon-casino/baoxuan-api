@@ -1,6 +1,8 @@
 const ExcelJS = require("exceljs")
-const yiDaReq = require("../core/yiDaReq")
-const dingDingReq = require("../core/dingDingReq")
+const yiDaReq = require("../core/dingDingReq/yiDaReq")
+const credentialsReq = require("../core/dingDingReq/credentialsReq")
+const contactsReq = require("../core/dingDingReq/contactsReq")
+const dingDingReq = require("../core/dingDingReq/attendanceReq")
 // 引入封装好的redis
 const redisUtil = require("../utils/redisUtil.js");
 // 引入流程表单模型
@@ -43,11 +45,6 @@ const getFlowsByStatusAndTimeRange = async (timesRange = ["2023-01-01 00:00:00",
     let allData = resLiuChengList.data;
     // 获取对应的流程的审核记录
     for (let i = 0; i < allData.length; i++) {
-
-        if (allData[i].processInstanceId === "0fd5f3dd-57c2-47bd-845d-6dbf6107f4a3") {
-            console.log("------")
-        }
-
         // await dateUtil.delay()
         allData[i]["overallprocessflow"] = await getAllProcessFlow(token, userId, allData[i].processInstanceId);
         console.log(`(page: ${pageNumber})get flowReviewItems process：${i + 1}/${allData.length}`);
@@ -124,7 +121,7 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
 };
 
 const getDingDingToken = async () => {
-    const ddToken = await yiDaReq.getDingDingAccessToken()
+    const ddToken = await credentialsReq.getDingDingAccessToken()
     await redisRepo.setToken(ddToken)
 }
 
@@ -138,10 +135,10 @@ const getFlowsFromDingDing = async (status, timesRange, timeAction) => {
 
 const getDepartmentFromDingDing = async () => {
     const {access_token} = await getToken();
-    const depList = await yiDaReq.getSubDeptAll(access_token);
+    const depList = await contactsReq.getSubDeptAll(access_token);
 
     for (const item of depList.result) {
-        const dep_chil = await yiDaReq.getSubDeptAll(access_token, item.dept_id);
+        const dep_chil = await contactsReq.getSubDeptAll(access_token, item.dept_id);
         item.dep_chil = dep_chil.result;
     }
     return depList
@@ -153,7 +150,7 @@ const getDepartmentsWithUsersFromDingDing = async () => {
     const allDepartments = await getDepartments();
     const loopDept = async (depList) => {
         for (const item of depList) {
-            const res = await yiDaReq.getDeptUser_def(access_token, item.dept_id, 0, 100);
+            const res = await contactsReq.getDeptUser_def(access_token, item.dept_id, 0, 100);
             item.dep_user = res.result.list;
             if (item.dep_chil && item.dep_chil.length > 0) {
                 await loopDept(item.dep_chil);
@@ -173,11 +170,11 @@ const getUsersWithDepartmentFromDingDing = async () => {
     for (const item of departmentList) {
         if (item.dep_chil && item.dep_chil.length > 0) {
             for (const subItem of item.dep_chil) {
-                const res = await yiDaReq.getDeptUserList(access_token, subItem.dept_id);
+                const res = await contactsReq.getDeptUserList(access_token, subItem.dept_id);
                 allUsersFromDepartments.push(res.result.userid_list)
             }
         }
-        const res = await yiDaReq.getDeptUserList(access_token, item.dept_id);
+        const res = await contactsReq.getDeptUserList(access_token, item.dept_id);
         allUsersFromDepartments.push(res.result.userid_list);
     }
     // 用户去重
@@ -185,9 +182,9 @@ const getUsersWithDepartmentFromDingDing = async () => {
     const userDetails = [];
     // 根据用户id获取用户详情
     for (let userId of uniqueUsers) {
-        const userDetail = await yiDaReq.getUserInfoByUserIdAndToken(access_token, userId)
+        const userDetail = await contactsReq.getUserInfoByUserIdAndToken(access_token, userId)
         for (let dep of userDetail.result.leader_in_dept) {
-            const dep_res = await yiDaReq.getDpInfo(access_token, dep.dept_id);
+            const dep_res = await contactsReq.getDpInfo(access_token, dep.dept_id);
             dep.dep_detail = dep_res.result;
         }
         userDetails.push(userDetail.result);
