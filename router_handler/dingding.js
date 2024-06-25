@@ -94,13 +94,21 @@ exports.getddUserList = async (req, res) => {
         const token =
             "Bearer " +
             generateToken(
-                {id: is_userId.user_id, username: is_userId.username},
+                {
+                    id: is_userId.user_id,
+                    userId: is_userId.dingding_user_id,
+                    username: is_userId.username
+                },
                 tokenConfig.jwtSecretKey,
                 tokenConfig.secretKeyExpire
             );
         // 生成长时refreshToken
         const refreshToken = generateToken(
-            {id: is_userId.user_id, username: is_userId.username},
+            {
+                id: is_userId.user_id,
+                userId: is_userId.dingding_user_id,
+                username: is_userId.username
+            },
             tokenConfig.jwtRefrechSecretKey,
             tokenConfig.refreshSerectKeyExpire
         );
