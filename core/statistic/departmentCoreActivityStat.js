@@ -74,23 +74,26 @@ const get = async (userNames, flows, coreConfig) => {
 
                         if (parallelOperators.length === 0) {
                             // 找到该公工作量的负责人
-                            let ownerName = ""
-                            const {from, id} = ownerRule
+                            let ownerName = "未分配"
+                            const {from, id, defaultUserName} = ownerRule
                             if (from.toUpperCase() === ownerFrom.FORM) {
                                 ownerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id]
                                 // 如果是数组的格式，转成以“,”连接的字符串
                                 if (ownerName instanceof Array) {
                                     ownerName = ownerName.join(",")
                                 }
+                                if(!ownerName){
+                                    ownerName = defaultUserName
+                                }
                             } else {
                                 const processReviewId = activityIdMappingConst[id] || id
                                 const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
                                 ownerName = reviewItems.length > 0 && reviewItems[0].operatorName
                             }
-                            if (!ownerName) {
-                                logger.warn(`没有匹配到计数规则的所有人。流程：${processInstanceId},rule: ${JSON.stringify(ownerRule)}`)
-                                continue
-                            }
+                            // if (!ownerName) {
+                            //     logger.warn(`没有匹配到计数规则的所有人。流程：${processInstanceId},rule: ${JSON.stringify(ownerRule)}`)
+                            //     continue
+                            // }
                             parallelOperators.push(ownerName)
                         }
 
