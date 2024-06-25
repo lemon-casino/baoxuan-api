@@ -5796,7 +5796,8 @@ const mbCoreActionsConfig = [
                                 ownerRule: {
                                     from: "process",
                                     name: "确认拍摄类型",
-                                    id: "node_oclx00ubuy7"
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             },
                             {
@@ -5817,8 +5818,9 @@ const mbCoreActionsConfig = [
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "分配执行",
-                                    id: "node_oclx00ubuyc"
+                                    name: "确认拍摄类型",
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             },
                             {
@@ -5839,8 +5841,9 @@ const mbCoreActionsConfig = [
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "执行确认样品",
-                                    id: "node_oclx00ubuyd"
+                                    name: "确认拍摄类型",
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             },
                             {
@@ -5906,7 +5909,8 @@ const mbCoreActionsConfig = [
                                 ownerRule: {
                                     from: "process",
                                     name: "确认拍摄类型",
-                                    id: "node_oclx00ubuy7"
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             },
                             {
@@ -5928,7 +5932,8 @@ const mbCoreActionsConfig = [
                                 ownerRule: {
                                     from: "process",
                                     name: "确认拍摄类型",
-                                    id: "node_oclx00ubuy7"
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             },
                             {
@@ -5950,7 +5955,8 @@ const mbCoreActionsConfig = [
                                 ownerRule: {
                                     from: "process",
                                     name: "确认拍摄类型",
-                                    id: "node_oclx00ubuy7"
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             }
                         ]
@@ -8525,7 +8531,8 @@ const mbCoreActionsConfig = [
                                 ownerRule: {
                                     from: "process",
                                     name: "确认拍摄类型",
-                                    id: "node_oclx00ubuy7"
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             },
                             {
@@ -8545,9 +8552,10 @@ const mbCoreActionsConfig = [
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
+                                    // 指定为张杰
                                     from: "process",
-                                    name: "确认拍摄类型",
-                                    id: "node_oclx00ubuy7"
+                                    name: "审核方案分配摄像/美编负责人",
+                                    id: "node_oclx00ubuye"
                                 }
                             },
                             {
@@ -8613,7 +8621,8 @@ const mbCoreActionsConfig = [
                                 ownerRule: {
                                     from: "process",
                                     name: "确认拍摄类型",
-                                    id: "node_oclx00ubuy7"
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             },
                             {
@@ -8635,7 +8644,8 @@ const mbCoreActionsConfig = [
                                 ownerRule: {
                                     from: "process",
                                     name: "确认拍摄类型",
-                                    id: "node_oclx00ubuy7"
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             },
                             {
@@ -8657,7 +8667,8 @@ const mbCoreActionsConfig = [
                                 ownerRule: {
                                     from: "process",
                                     name: "确认拍摄类型",
-                                    id: "node_oclx00ubuy7"
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             }
                         ]
@@ -12593,8 +12604,9 @@ const mbCoreActionsConfig = [
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "分配执行",
-                                    id: "node_oclx00ubuyc"
+                                    name: "确认拍摄类型",
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             },
                             {
@@ -12615,8 +12627,9 @@ const mbCoreActionsConfig = [
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "执行确认样品",
-                                    id: "node_oclx00ubuyd"
+                                    name: "确认拍摄类型",
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             },
                             {
@@ -12682,7 +12695,8 @@ const mbCoreActionsConfig = [
                                 ownerRule: {
                                     from: "process",
                                     name: "确认拍摄类型",
-                                    id: "node_oclx00ubuy7"
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             },
                             {
@@ -12704,7 +12718,8 @@ const mbCoreActionsConfig = [
                                 ownerRule: {
                                     from: "process",
                                     name: "确认拍摄类型",
-                                    id: "node_oclx00ubuy7"
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             },
                             {
@@ -12726,7 +12741,8 @@ const mbCoreActionsConfig = [
                                 ownerRule: {
                                     from: "process",
                                     name: "确认拍摄类型",
-                                    id: "node_oclx00ubuy7"
+                                    id: "node_oclx00ubuy7",
+                                    defaultUserName: "张杰"
                                 }
                             }
                         ]

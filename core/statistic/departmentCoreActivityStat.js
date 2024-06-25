@@ -82,18 +82,14 @@ const get = async (userNames, flows, coreConfig) => {
                                 if (ownerName instanceof Array) {
                                     ownerName = ownerName.join(",")
                                 }
-                                if(!ownerName){
+                                if (!ownerName) {
                                     ownerName = defaultUserName
                                 }
                             } else {
                                 const processReviewId = activityIdMappingConst[id] || id
                                 const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
-                                ownerName = reviewItems.length > 0 && reviewItems[0].operatorName
+                                ownerName = reviewItems.length > 0 ? reviewItems[0].operatorName : defaultUserName
                             }
-                            // if (!ownerName) {
-                            //     logger.warn(`没有匹配到计数规则的所有人。流程：${processInstanceId},rule: ${JSON.stringify(ownerRule)}`)
-                            //     continue
-                            // }
                             parallelOperators.push(ownerName)
                         }
 
