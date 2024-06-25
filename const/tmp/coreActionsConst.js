@@ -8524,8 +8524,8 @@ const mbCoreActionsConfig = [
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "分配执行",
-                                    id: "node_oclx00ubuyc"
+                                    name: "确认拍摄类型",
+                                    id: "node_oclx00ubuy7"
                                 }
                             },
                             {
@@ -8546,8 +8546,8 @@ const mbCoreActionsConfig = [
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "执行确认样品",
-                                    id: "node_oclx00ubuyd"
+                                    name: "确认拍摄类型",
+                                    id: "node_oclx00ubuy7"
                                 }
                             },
                             {
