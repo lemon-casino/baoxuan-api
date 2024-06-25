@@ -15,6 +15,7 @@ let syncFormCron = "0 30 6 * * ?"
 let syncUserLoginCron = "0 0/5 * * * ?"
 let syncResignEmployeeCron = "0 0 7 * * ?"
 let syncRunningFlowsCron = "0 0 22 * * ?"
+let tmallLinkAnomalyDetection = "0 0 23 * * ?"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
     syncTodayRunningAndFinishedFlowsCron = "0 10 12 * * ?"
@@ -109,5 +110,12 @@ schedule.scheduleJob(syncResignEmployeeCron, async function () {
  */
 schedule.scheduleJob(syncRunningFlowsCron, async function () {
     await taskService.syncRunningProcess()
+})
+
+
+/*
+* 每天处理异常链接是否存在tmallLinkAnomalyDetection*/
+schedule.scheduleJob(tmallLinkAnomalyDetection, async function () {
+    await taskService.tmallLinkAnomalyDetection()
 })
 

@@ -221,7 +221,7 @@ const getTaoBaoSingleItems = async (pageIndex,
                 having: sequelize.literal("SUM(singleItemTaobaoModel.profit_amount) < 0"),
                 offset: pageIndex * pageSize,
                 limit: pageSize,
-                logging: false,
+                logging: true,
             };
 // 执行查询
             let result = await singleItemTaoBaoModel.findAndCountAll(query)

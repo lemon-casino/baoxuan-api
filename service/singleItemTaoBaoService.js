@@ -768,7 +768,9 @@ const getlinkingIssues = async (productLineLeaders, singleItems, timeRange) => {
     }
     // 通过map过滤重复的数据
     const uniqueItems = {}
+    // 进行中异常
     const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING)
+    // 当前完成的异常
     const completeErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.COMPLETE)
     for (const item of taoBaoErrorItems) {
         const items = singleItems.filter((singleItem) => {

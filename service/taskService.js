@@ -22,6 +22,7 @@ const adminConst = require("../const/adminConst")
 const sequelizeErrorConst = require("../const/sequelizeErrorConst")
 const dingDingReq = require("../core/dingDingReq")
 const yiDaReq = require("../core/yiDaReq")
+const {flowStatusConst} = require("../const/flowConst");
 
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
@@ -247,6 +248,16 @@ const syncOaProcessTemplates = async () => {
     logger.info("同步完成：syncOaProcessTemplates")
     console.log("同步完成")
 }
+/*
+* 天猫异常定时任务*/
+const tmallLinkAnomalyDetection = async () => {
+    logger.info("同步开始：天猫链接异常检测")
+    //获得运营优化方案 FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB 的redis 运行中的流程
+    console.log(await flowService.getFlowFormValues("FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB", "textField_lqhp0b0d", flowStatusConst.RUNNING))
+    // 获得运营优化方案 FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB 的redis 运行中的流程
+    const runningFlows = await redisRepo.getTodayRunningAndFinishedFlows()
+    logger.info("同步完成：天猫链接异常检测")
+}
 
 module.exports = {
     syncOaProcessTemplates,
@@ -260,5 +271,6 @@ module.exports = {
     syncForm,
     syncDingDingToken,
     syncUserLogin,
-    syncResignEmployeeInfo
+    syncResignEmployeeInfo,
+    tmallLinkAnomalyDetection
 }
