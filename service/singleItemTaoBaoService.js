@@ -292,9 +292,9 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
         pagingSingleItems.data = processItems(pagingSingleItems.data, runningErrorLinkIds);
         // 循环 pagingSingleItems
         pagingSingleItems.total = pagingSingleItems.data.length
-        for (let item of pagingSingleItems.data) {
-            console.log('item-->' + pagingSingleItems.total, item.linkId)
-        }
+        // for (let item of pagingSingleItems.data) {
+        //     console.log('item-->' + pagingSingleItems.total, item.linkId)
+        // }
 
     }
 
@@ -773,6 +773,7 @@ const getlinkingIssues = async (productLineLeaders, singleItems, timeRange) => {
     // 当前完成的异常
     const completeErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.COMPLETE)
     for (const item of taoBaoErrorItems) {
+        const recordTheLinkID = []
         const items = singleItems.filter((singleItem) => {
             for (const exp of item.values) {
                 let value = exp.value
@@ -795,25 +796,19 @@ const getlinkingIssues = async (productLineLeaders, singleItems, timeRange) => {
                 }
                 // 坑市场占比环比（7天）
                 if (exp.field === "salesMarketRateCircleRate7Day") {
-                    return singleItem["salesMarketRateCircleRate7Day"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 > -20
+                    return compareMarketRate(exp.field, singleItem, -20);
                 }
                 //手淘人数市场占比环比（7天）
                 if (exp.field === "shouTaoPeopleNumMarketRateCircleRate7Day") {
-
-                    return (singleItem["salesMarketRateCircleRate7Day"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 < -20) || (singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 < -20 && singleItem["salesMarketRateCircleRate7Day"] * 1 > -20)
-
-
+                    return compareShouTaoPeopleNumMarketRate(exp.field, singleItem, -20);
                 }
-
                 // 坑市场占比环比（日天）
                 if (exp.field === "salesMarketRateCircleRateDay") {
-                    return singleItem["salesMarketRateCircleRateDay"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 > -20
+                    return compareMarketRate(exp.field, singleItem, -20);
                 }
                 //手淘人数市场占比环比（日天）
                 if (exp.field === "shouTaoPeopleNumMarketRateCircleRateDay") {
-
-                    return (singleItem["salesMarketRateCircleRateDay"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 < -20) || (singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 < -20 && singleItem["salesMarketRateCircleRateDay"] * 1 > -20)
-
+                    return compareShouTaoPeopleNumMarketRate(exp.field, singleItem, -20);
                 }
 
 
@@ -844,7 +839,14 @@ const getlinkingIssues = async (productLineLeaders, singleItems, timeRange) => {
             }
             return true
         })
-        result.error.items.push({name: item.name, sum: items.length, clickingAdditionalParams: item.values})
+        // 把符合条件的linkId记录下来 给recordTheLinkID
+        recordTheLinkID.push(...items.map(item => item.linkId));
+        result.error.items.push({
+            name: item.name,
+            recordTheLinkID: recordTheLinkID,
+            sum: items.length,
+            clickingAdditionalParams: item.values
+        })
 
         function processItems(items, errorLinkIds) {
             return [...new Map(
@@ -877,6 +879,18 @@ const getlinkingIssues = async (productLineLeaders, singleItems, timeRange) => {
     })
     result.error.sum = Object.keys(uniqueItems).length
     return result;
+}
+
+function compareMarketRate(field, singleItem, compareValue) {
+    const salesMarketRate = singleItem[field] * 1;
+    const shouTaoPeopleNumMarketRate = singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1;
+    return salesMarketRate < compareValue && shouTaoPeopleNumMarketRate > compareValue;
+}
+
+function compareShouTaoPeopleNumMarketRate(field, singleItem, compareValue) {
+    const salesMarketRate = singleItem["salesMarketRateCircleRate7Day"] * 1;
+    const shouTaoPeopleNumMarketRate = singleItem[field] * 1;
+    return (salesMarketRate < compareValue && shouTaoPeopleNumMarketRate < compareValue) || (shouTaoPeopleNumMarketRate < compareValue && salesMarketRate > compareValue);
 }
 
 /**
