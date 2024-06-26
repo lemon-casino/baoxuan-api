@@ -3,11 +3,15 @@ const Joi = require("joi")
 const ParameterError = require("../error/parameterError")
 
 const joiErrorMessages = {
+    "date.base": "日期格式不正确",
+    "number.base": "要求为数字",
+    "string.base": "要求为字符串",
+    "array.base": "要求为数组",
+    
     "any.required": "为必传参数",
     "any.empty": "内容不能为空",
     "string.empty": "内容不能为空",
     "string.alphanum": "必须为0或正整数",
-    "date.base": "日期格式不正确",
     "number.min": (min) => {
         return `不能小于${min}`
     }

@@ -12,7 +12,7 @@ const getRulesByDeptCoreActionId = async (deptCoreActionId) => {
 }
 
 const getRulesById = async (id) => {
-    const result = await deptCoreActionRuleConfigRepo.getRulesById({id})
+    const result = await deptCoreActionRuleConfigRepo.getRulesById(id)
     return result
 }
 
