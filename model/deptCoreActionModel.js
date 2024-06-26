@@ -50,11 +50,11 @@ module.exports = sequelize => {
     },
     path: {
       type: DataTypes.STRING(255),
-      allowNull: false,
+      allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: ";",
+      comment: null,
       field: "path"
     }
   };
