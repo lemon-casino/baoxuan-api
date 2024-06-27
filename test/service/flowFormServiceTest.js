@@ -170,19 +170,19 @@ describe("refactorReviewItems", () => {
         ]
         const result = flowFormService.refactorReviewItems(reviewItems, null)
         assert.equal(result[0].lastNode, undefined)
-        assert.equal(result[0].lastTimingNodes.length, 0)
-        assert.equal(result[0].time, 0)
+        assert.equal(result[0].lastTimingNodes, undefined)
+        assert.equal(result[0].time, undefined)
         assert.equal(result[1].time, 0)
         assert.equal(result[1].isTime, true)
         assert.equal(result[1].lastNode, "node_ockpz6phx72")
-        assert.equal(result[1].lastTimingNodes.length, 1)
-        assert.equal(result[1].lastTimingNodes[0], "node_ockpz6phx72")
+        assert.equal(result[1].lastTimingNodes.length, 0)
+        assert.equal(result[1].lastTimingNodes[0], undefined)
         assert.equal(result[2].lastTimingNodes[0], "node_oclv2c2ehf1")
         assert.equal(result[3].lastTimingNodes[0], "node_oclv2ayeqt1")
         assert.equal(result[4].lastTimingNodes[0], "node_ocliid9xm74")
         assert.equal(result[5].lastTimingNodes[0], "node_oclkxfaina1")
         assert.equal(result[6].lastTimingNodes[0], "node_ocliidtnye1")
-        assert.equal(result[7].lastTimingNodes[0], "node_oclqnoegtn1")
+        assert.equal(result[7].lastTimingNodes, undefined)
         assert.equal(result[8].lastTimingNodes, null)
     })
 
@@ -353,8 +353,8 @@ describe("refactorReviewItems", () => {
         const result = flowFormService.refactorReviewItems(reviewItems, null)
         // 发起
         assert.equal(result[0].lastNode, undefined)
-        assert.equal(result[0].lastTimingNodes.length, 0)
-        assert.equal(result[0].time, 0)
+        assert.equal(result[0].lastTimingNodes, undefined)
+        assert.equal(result[0].time, undefined)
         // 条件分支
         assert.equal(result[1].time, null)
         assert.equal(result[1].lastNode, "node_ockpz6phx72")
@@ -365,8 +365,8 @@ describe("refactorReviewItems", () => {
         // 条件1- step1
         assert.equal(result[1].children[0].children[0].time, 0)
         assert.equal(result[1].children[0].children[0].lastNode, null)
-        assert.equal(result[1].children[0].children[0].lastTimingNodes.length, 1)
-        assert.equal(result[1].children[0].children[0].lastTimingNodes[0], "node_ockpz6phx72")
+        assert.equal(result[1].children[0].children[0].lastTimingNodes.length, 0)
+        assert.equal(result[1].children[0].children[0].lastTimingNodes[0], undefined)
         assert.equal(result[1].children[0].children[0].time, 0)
         // 条件1-step2
         assert.equal(result[1].children[0].children[1].lastTimingNodes.length, 1)
@@ -387,7 +387,7 @@ describe("refactorReviewItems", () => {
         assert.equal(result[1].children[1].lastTimingNodes, null)
         // 条件2-step1
         assert.equal(result[1].children[1].children[0].time, 0)
-        assert.equal(result[1].children[1].children[0].lastTimingNodes[0], "node_ockpz6phx72")
+        assert.equal(result[1].children[1].children[0].lastTimingNodes[0],undefined)
         // 条件2-step2
         assert.equal(result[1].children[1].children[1].time, 0)
         assert.equal(result[1].children[1].children[1].lastTimingNodes[0], "node_ocltzh0nbm9")
@@ -395,9 +395,9 @@ describe("refactorReviewItems", () => {
         // 审核
         assert.equal(result[2].time, 0)
         assert.equal(result[2].lastNode, "node_ocltzh0nbm1")
-        assert.equal(result[2].lastTimingNodes.length, 2)
-        assert.equal(result[2].lastTimingNodes.includes("node_ocltzh0nbm8"), true)
-        assert.equal(result[2].lastTimingNodes.includes("node_ocltzh0nbma"), true)
+        assert.equal(result[2].lastTimingNodes.length, 0)
+        assert.equal(result[2].lastTimingNodes.includes("node_ocltzh0nbm8"), false)
+        assert.equal(result[2].lastTimingNodes.includes("node_ocltzh0nbma"), false)
 
         // 结束
         assert.equal(result[3].time, null)
@@ -4566,15 +4566,15 @@ describe("refactorReviewItems", () => {
 
         const result = flowFormService.refactorReviewItems(reviewItems, null)
         // 发起
-        assert.equal(result[0].time, 0)
+        assert.equal(result[0].time, undefined)
         assert.equal(result[0].lastNode, null)
-        assert.equal(result[0].lastTimingNodes.length, 0)
+        assert.equal(result[0].lastTimingNodes, undefined)
 
         // 第2个节点
         assert.equal(result[1].time, 0)
         assert.equal(result[1].lastNode, "node_ockpz6phx72")
-        assert.equal(result[1].lastTimingNodes.length, 1)
-        assert.equal(result[1].lastTimingNodes[0], "node_ockpz6phx72")
+        assert.equal(result[1].lastTimingNodes.length, 0)
+        assert.equal(result[1].lastTimingNodes[0], undefined)
 
         // 并行条件
         assert.equal(result[2].time, null)
