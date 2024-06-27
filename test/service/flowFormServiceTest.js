@@ -387,7 +387,7 @@ describe("refactorReviewItems", () => {
         assert.equal(result[1].children[1].lastTimingNodes, null)
         // 条件2-step1
         assert.equal(result[1].children[1].children[0].time, 0)
-        assert.equal(result[1].children[1].children[0].lastTimingNodes[0],undefined)
+        assert.equal(result[1].children[1].children[0].lastTimingNodes[0], undefined)
         // 条件2-step2
         assert.equal(result[1].children[1].children[1].time, 0)
         assert.equal(result[1].children[1].children[1].lastTimingNodes[0], "node_ocltzh0nbm9")
