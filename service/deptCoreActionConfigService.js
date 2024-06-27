@@ -12,9 +12,9 @@ const save = async (model) => {
     // 保存成功后，需要将该数据的id信息连同parentId更新到当前数据的path中
     const savedResult = await deptCoreActionRepo.save(model)
     if (parentConfig) {
-        savedResult.path = `${parentConfig.path}-${savedResult.id}`
+        savedResult.path = `${parentConfig.path}${savedResult.id}-`
     } else {
-        savedResult.path = savedResult.id
+        savedResult.path = `-${savedResult.id}-`
     }
     await deptCoreActionRepo.update(savedResult)
     return savedResult

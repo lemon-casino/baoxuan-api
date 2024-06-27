@@ -3,13 +3,9 @@ const deptCoreActionModel = models.deptCoreActionModel
 const deptCoreActionRuleModel = models.deptCoreActionRuleModel
 const sequelizeUtil = require("../utils/sequelizeUtil")
 
-deptCoreActionModel.hasMany(deptCoreActionRuleModel,
-    {
-        foreignKey: "deptCoreActionId",
-        sourceKey: "id",
-        as: "rules"
-    }
-)
+deptCoreActionModel.hasMany(deptCoreActionRuleModel, {
+    foreignKey: "deptCoreActionId", sourceKey: "id", as: "rules"
+})
 
 const getDeptCoreActions = async (deptId) => {
     const result = await deptCoreActionModel.findAll({
@@ -32,7 +28,7 @@ const save = async (model) => {
 
 const delDeptCoreAction = async (id) => {
     const result = await models.deptCoreActionModel.destroy({
-        where: {path: {$like: id}}
+        where: {path: {$like: `%-${id}-%`}}
     })
     return result
 }
@@ -45,19 +41,12 @@ const update = async (model) => {
 const getDeptCoreActionsWithRules = async (deptId) => {
     const result = await models.deptCoreActionModel.findAll({
         include: [{
-            model: deptCoreActionRuleModel,
-            as: "rules"
-        }],
-        where: {deptId}
+            model: deptCoreActionRuleModel, as: "rules"
+        }], where: {deptId}
     })
     return sequelizeUtil.extractDataValues(result)
 }
 
 module.exports = {
-    update,
-    save,
-    getDeptCoreActions,
-    getDeptCoreActionsWithRules,
-    delDeptCoreAction,
-    getDeptCoreActionConfig
+    update, save, getDeptCoreActions, getDeptCoreActionsWithRules, delDeptCoreAction, getDeptCoreActionConfig
 }
