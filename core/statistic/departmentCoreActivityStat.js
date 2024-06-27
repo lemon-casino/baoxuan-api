@@ -4,8 +4,27 @@ const flowUtil = require("../../utils/flowUtil")
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 
+/**
+ * 根据人名和核心动作配置信息统计流程
+ *
+ *
+ * @param userNames
+ * @param flows
+ * @param coreConfig
+ * @returns {Promise<*[]>}  返回的结构同配置的动作结构
+ */
 const get = async (userNames, flows, coreConfig) => {
     const finalResult = []
+
+    // 从 coreConfig 中查找所有含有rules数据路径，然后进行统计汇总
+    for (const config of coreConfig) {
+        if (config.rules && config.rules.length > 0) {
+            config.stat = {"name": 10}
+        }
+    }
+
+    console.log("ui")
+
     // 根据配置信息获取基于所有人的数据
     // eg：[{actionName: "市场分析", children: [{"nameCN": "待做", children: [{nameCN:"逾期", children:[{userName: "张三", sum: 1, ids: ["xxx"]}]}]}]}]
     for (const action of coreConfig) {
