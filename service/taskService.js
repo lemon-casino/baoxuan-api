@@ -317,14 +317,19 @@ const tmallLinkAnomalyDetection = async () => {
     //转换数据
 
     const userlist = await userService.getDingDingUserIdAndNickname()
-    logger.info("天猫链接异常同步进行中...notStartedExceptions.items：", notStartedExceptions.items)
+    logger.info("天猫链接异常同步进行中...notStartedExceptions.items：", notStartedExceptions)
     const linkIdMap = notStartedExceptions.items.reduce((acc, item) => {
         item.recordTheLinkID.forEach((record) => {
             const matchingUser = userlist.find((user) => user.nickname === record.productLineLeader);
             const uuid = matchingUser ? matchingUser.dingding_user_id : null;
             //不记录undefined 的数据
             if (acc[record.linkId]) {
-                acc[record.linkId].name = [acc[record.linkId].name, item.name].join(',');
+                //如果 linkId 已存在，则将新名称推送到数组
+                if (Array.isArray(acc[record.linkId].name)) {
+                    acc[record.linkId].name.push(item.name);
+                } else {
+                    acc[record.linkId].name = [acc[record.linkId].name, item.name];
+                }
                 acc[record.linkId].productLineLeader = record.productLineLeader;
                 acc[record.linkId].linkType = record.linkType;
                 acc[record.linkId].uuid = uuid;
@@ -361,7 +366,12 @@ const tmallLinkAnomalyDetection = async () => {
 
 // 清理 undefined 键值对
     const cleanedLinkIdMap = Object.entries(linkIdMap)
+        //删除key 为undefined的
         .filter(([key, value]) => key !== 'undefined')
+        //删除 value的name 只是费比超过15%的  比如 name:'费比超过15%‘和linkType的标签是新品30 或者新品60 这条数据过滤掉
+        //如果value的name 有其它的异常 比如 name:'费比超过15%,老品利润率低于15%'   linkType的标签是新品30 或者新品60   删除掉  费比超过15%字 注意整体name  name:'老品利润率低于15%'
+
+
         .reduce((acc, [key, value]) => {
             acc[key] = value;
             return acc;
@@ -379,32 +389,37 @@ const tmallLinkAnomalyDetection = async () => {
         return [start.toString(), end.toString()];
     };
 
-    const sendRequests = async () => {
-        for (const [key, value] of Object.entries(cleanedLinkIdMap)) {
-            const userId = value.uuid;
-            const multiSelectField_lwufb7oy = value.name.split(',');
-            const cascadeDateField_lloq9vjk = getNextWeekTimestamps();
-            const textField_liihs7kv = value.productName;
+    // const sendRequests = async () => {
+    //     for (const [key, value] of Object.entries(cleanedLinkIdMap)) {
+    //         const userId = value.uuid;
+    //         const multiSelectField_lwufb7oy = value.name.split(',');
+    //         const cascadeDateField_lloq9vjk = getNextWeekTimestamps();
+    //         const textField_liihs7kv = value.productName;
+    //         const textField_liihs7kw = key;
+    //         const employeeField_liihs7l0 = [userId];
+    //         const formDataJsonStr = JSON.stringify({
+    //             textField_liihs7kv,
+    //             textField_liihs7kw,
+    //             employeeField_liihs7l0,
+    //             radioField_lx30hv7y: "否",
+    //             radioField_lwuecm6c: "是",
+    //             selectField_liihs7ky: "老猫",
+    //             selectField_liihs7kz: "老品问题",
+    //             multiSelectField_lwufb7oy,
+    //             cascadeDateField_lloq9vjk
+    //         }, null, 2);
+    //
+    //         try {
+    //             await dingDingService.createProcess(formId, userId, processCode, formDataJsonStr);
+    //             logger.info(`发起宜搭 bi测试流程成功 for linkId ${key}`);
+    //         } catch (e) {
+    //             logger.error(`发起宜搭 bi测试流程失败 for linkId ${key}`, e);
+    //         }
+    //     }
+    // };
+    // await sendRequests();
 
-            const formDataJsonStr = JSON.stringify({
-                textField_liihs7kv,
-                radioField_lx30hv7y: "否",
-                radioField_lwuecm6c: "是",
-                selectField_liihs7ky: "老猫",
-                selectField_liihs7kz: "老品问题",
-                multiSelectField_lwufb7oy,
-                cascadeDateField_lloq9vjk
-            }, null, 2);
 
-            try {
-                await dingDingService.createProcess(formId, userId, processCode, formDataJsonStr);
-                logger.info(`发起宜搭 bi测试流程成功 for linkId ${key}`);
-            } catch (e) {
-                logger.error(`发起宜搭 bi测试流程失败 for linkId ${key}`, e);
-            }
-        }
-    };
-    await sendRequests();
     /*    // bi测试流程
         const formId = "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB"
         const userId = "223851243926087312"
