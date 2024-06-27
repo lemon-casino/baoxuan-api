@@ -1,6 +1,6 @@
 const assert = require("assert")
-const redisUtil = require("../utils/redisUtil")
-const redisRepo = require("../repository/redisRepo")
+const redisUtil = require("../../utils/redisUtil")
+const redisRepo = require("../../repository/redisRepo")
 
 describe("redisUtil", () => {
     it("rPush", async () => {

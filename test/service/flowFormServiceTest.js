@@ -1,4 +1,4 @@
-const flowFormService = require("../service/flowFormService")
+const flowFormService = require("../../service/flowFormService")
 const assert = require('assert')
 
 describe("refactorReviewItems", () => {

@@ -1,5 +1,5 @@
-const dingDingService = require("../service/dingDingService")
-const taskService = require("../service/taskService")
+const dingDingService = require("../../service/dingDingService")
+const taskService = require("../../service/taskService")
 
 describe("", () => {
     it("getFlowsOfStatusAndTimeRange", async () => {

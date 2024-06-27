@@ -1,4 +1,4 @@
-const flowFormDetailsService = require("../service/flowFormDetailsService")
+const flowFormDetailsService = require("../../service/flowFormDetailsService")
 
 describe("", () => {
     it("", async () => {

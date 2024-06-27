@@ -1,4 +1,4 @@
-const flowService = require("../service/flowService")
+const flowService = require("../../service/flowService")
 
 describe("flowService", () => {
     describe("getCoreActionData", () => {
