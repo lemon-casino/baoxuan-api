@@ -518,12 +518,12 @@ async function ToBeOnTheShelves(productLineLeaders) {
  * 获取链接操作数据
  * @param satisfiedSingleItems
  * @param productLineLeaders
+ * @param timeRange
  * @returns {Promise<{sum: number, items: [{name: string, sum: number}, {name: string, sum: number}, {name: string, sum: number}]}|{sum: number, items: *[]}|{fightingOnOld: *, fightingOnNew: *}>}
  */
 const getLinkOperationCount = async (
     satisfiedSingleItems,
     productLineLeaders, timeRange) => {
-
     const newva = await getlinkingIssues(productLineLeaders, satisfiedSingleItems, timeRange)
 
     return [
@@ -535,6 +535,12 @@ const getLinkOperationCount = async (
         {done: newva.done}
 
     ];
+}
+
+const getLinknewvaCount = async (
+    satisfiedSingleItems,
+    productLineLeaders, timeRange) => {
+    return await getlinkingto(productLineLeaders, satisfiedSingleItems, timeRange)
 }
 
 function link_operational_data(result, singleItems) {
@@ -773,6 +779,134 @@ const getlinkingIssues = async (productLineLeaders, singleItems, timeRange) => {
     // 当前完成的异常
     const completeErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.COMPLETE)
     for (const item of taoBaoErrorItems) {
+        const items = singleItems.filter((singleItem) => {
+            for (const exp of item.values) {
+                let value = exp.value
+                let fieldValue = singleItem[exp.field]
+                if (exp.field === "profitRate") {
+                    // if(singleItem[exp.lessThan] === "true"){
+                    //reallyShipmentAmount 小于0
+                    if (exp.lessThan === "negative_profit_60") {
+                        if (singleItem[exp.lessThan] === "true") {
+                            return singleItem["profitRate"] * 1 < 0
+                        }
+                        return false
+                    } else {
+                        return singleItem[exp.lessThan] === "true";
+                    }
+
+                    //     return  singleItem[exp.field] < parseFloat(exp.value)
+                    // }
+
+                }
+                // 坑市场占比环比（7天）
+                if (exp.field === "salesMarketRateCircleRate7Day") {
+                    return compareMarketRate(exp.field, singleItem, -20);
+                }
+                //手淘人数市场占比环比（7天）
+                if (exp.field === "shouTaoPeopleNumMarketRateCircleRate7Day") {
+                    return compareShouTaoPeopleNumMarketRate(exp.field, singleItem, -20);
+                }
+                // 坑市场占比环比（日天）
+                if (exp.field === "salesMarketRateCircleRateDay") {
+                    return compareMarketRate(exp.field, singleItem, -20);
+                }
+                //手淘人数市场占比环比（日天）
+                if (exp.field === "shouTaoPeopleNumMarketRateCircleRateDay") {
+                    return compareShouTaoPeopleNumMarketRate(exp.field, singleItem, -20);
+                }
+
+
+                if (exp.comparator) {
+                    let tmpResult = true
+                    // 如果value为数字需要转化
+                    const isNumber = /^(\-|\+)?\d+(\.\d+)?$/.test(value)
+                    if (isNumber) {
+                        value = parseFloat(value)
+                        fieldValue = parseFloat(fieldValue)
+                        tmpResult = eval(`${fieldValue}${exp.comparator}${value}`)
+                    } else {
+                        tmpResult = eval(`"${fieldValue}"
+                        ${exp.comparator}
+                        "${value}"`)
+                    }
+
+                    if (!tmpResult) {
+                        return false
+                    }
+                }
+                if (exp.min) {
+                    const minMatch = fieldValue >= parseFloat(exp.min)
+                    if (!minMatch) {
+                        return false
+                    }
+                }
+            }
+            return true
+        })
+        result.error.items.push({
+            name: item.name,
+            sum: items.length,
+            clickingAdditionalParams: item.values
+        })
+
+        function processItems(items, errorLinkIds) {
+            return [...new Map(
+                items
+                    .sort((a, b) => new Date(b.batchId) - new Date(a.batchId))
+                    .map(item => [item.linkId, item])
+            ).values()].filter(item => {
+                return errorLinkIds.includes(item.linkId);
+            });
+        }
+
+        const running = processItems(items, runningErrorLinkIds);
+        const complete = processItems(items, completeErrorLinkIds);
+
+        result.ongoing.items.push({
+            name: item.name,
+            sum: running.length,
+            clickingAdditionalParams: item.values
+        });
+        result.ongoing.sum += running.length;
+        result.done.items.push({
+            name: item.name,
+            sum: complete.length,
+            clickingAdditionalParams: item.values
+        });
+        result.done.sum += complete.length;
+
+        for (const tmp of items) {
+            uniqueItems[tmp.id] = 1
+        }
+    }
+
+
+    const sum = await singleItemTaoBaoRepo.getError60SingleIte(productLineLeaders, timeRange)
+
+    result.error.items.forEach((item) => {
+        if (item.name === "累计60天负利润") {
+            item.sum = sum.length
+        }
+    })
+    result.error.sum = Object.keys(uniqueItems).length
+    return result;
+}
+
+
+const getlinkingto = async (productLineLeaders, singleItems, timeRange) => {
+    const result = {
+        error: {items: [], sum: 0},
+        ongoing: {items: [], sum: 0},
+        done: {items: [], sum: 0}
+    }
+    // 通过map过滤重复的数据
+    const uniqueItems = {}
+    // 进行中异常
+    const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING)
+    // 当前完成的异常
+    const completeErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.COMPLETE)
+    for (const item of taoBaoErrorItems) {
         const recordTheLinkID = []
         const items = singleItems.filter((singleItem) => {
             for (const exp of item.values) {
@@ -839,8 +973,9 @@ const getlinkingIssues = async (productLineLeaders, singleItems, timeRange) => {
             }
             return true
         })
+        // logger.info("天猫链接异常同步进行中...->items", items)
         // 把符合条件的linkId记录下来 给recordTheLinkID
-        recordTheLinkID.push(...items.map(item => item.linkId));
+        recordTheLinkID.push(...items.map(item => ({name: item.productName, linkId: item.linkId})));
         result.error.items.push({
             name: item.name,
             recordTheLinkID: recordTheLinkID,
@@ -848,20 +983,38 @@ const getlinkingIssues = async (productLineLeaders, singleItems, timeRange) => {
             clickingAdditionalParams: item.values
         })
 
+        const completedInOperation = []
+
         function processItems(items, errorLinkIds) {
             return [...new Map(
                 items
                     .sort((a, b) => new Date(b.batchId) - new Date(a.batchId))
                     .map(item => [item.linkId, item])
-            ).values()].filter(item => errorLinkIds.includes(item.linkId));
+            ).values()].filter(item => {
+                const isInErrorLinkIds = errorLinkIds.includes(item.linkId);
+                if (isInErrorLinkIds) {
+                    completedInOperation.push(...items.map(item => ({name: item.productName, linkId: item.linkId})));
+                }
+                return isInErrorLinkIds;
+            });
         }
 
         const running = processItems(items, runningErrorLinkIds);
         const complete = processItems(items, completeErrorLinkIds);
 
-        result.ongoing.items.push({name: item.name, sum: running.length, clickingAdditionalParams: item.values});
+        result.ongoing.items.push({
+            name: item.name,
+            sum: running.length,
+            recordTheLinkID: completedInOperation,
+            clickingAdditionalParams: item.values
+        });
         result.ongoing.sum += running.length;
-        result.done.items.push({name: item.name, sum: complete.length, clickingAdditionalParams: item.values});
+        result.done.items.push({
+            name: item.name,
+            sum: complete.length,
+            recordTheLinkID: completedInOperation,
+            clickingAdditionalParams: item.values
+        });
         result.done.sum += complete.length;
 
         for (const tmp of items) {
@@ -874,7 +1027,8 @@ const getlinkingIssues = async (productLineLeaders, singleItems, timeRange) => {
 
     result.error.items.forEach((item) => {
         if (item.name === "累计60天负利润") {
-            item.sum = sum
+            item.recordTheLinkID.push(...sum.map(item => ({name: item.productName, linkId: item.linkId})));
+            item.sum = sum.length
         }
     })
     result.error.sum = Object.keys(uniqueItems).length
@@ -1332,6 +1486,7 @@ const updateSingleItemTaoBao = async (item) => {
 // 方法映射，为接口调用使用
 const availableFunctionsMap = {"getLinkErrorQueryFields": getLinkErrorQueryFields}
 
+
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
@@ -1350,5 +1505,6 @@ module.exports = {
     getUniqueSingleItems,
     attachPercentageTagToField,
     getTaoBaoSingleItemsWithStatistic,
-    updateSingleItemTaoBao
+    updateSingleItemTaoBao,
+    getLinknewvaCount
 }

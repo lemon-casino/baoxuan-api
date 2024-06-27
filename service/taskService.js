@@ -28,8 +28,10 @@ const intelligentHRReq = require("../core/dingDingReq/intelligentHRReq")
 const attendanceReq = require("../core/dingDingReq/attendanceReq")
 const {flowStatusConst} = require("../const/flowConst");
 const singleItemTaoBaoService = require("./singleItemTaoBaoService");
-const {getTaoBaoSingleItemsWithStatistic, getLinkOperationCount} = require("./singleItemTaoBaoService");
-
+const {
+    getLinknewvaCount
+} = require("./singleItemTaoBaoService");
+const {createProcess} = require("../service/dingDingService")
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
     const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
@@ -254,14 +256,13 @@ const syncOaProcessTemplates = async () => {
     logger.info("同步完成：syncOaProcessTemplates")
     console.log("同步完成")
 }
+
+
 /*
 * 天猫异常定时任务*/
 const tmallLinkAnomalyDetection = async () => {
-    logger.info("同步开始：天猫链接异常检测")
-    //获得运营优化方案 FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB 的redis 运行中的流程
-    console.log(await flowService.getFlowFormValues("FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB", "textField_lqhp0b0d", flowStatusConst.RUNNING))
+    logger.info("天猫链接异常同步进行中...")
     //获得天猫链接数据异常的链接id
-    const defaultMembers = ref([]);
     const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(14)
     // 获得所有负责人的信息
     const productLineLeaders = result.productLineLeaders.reduce((acc, group) => {
@@ -269,20 +270,108 @@ const tmallLinkAnomalyDetection = async () => {
         acc.push(...group[Object.keys(group)[0]]);
         return acc;
     }, []); // 初始值是一个空数组 []
-
-
-    // 查询所有负责人属于 异常的链接的数据
-    await getLinkOperationCount({
-        singleItems,
+    // logger.info("天猫链接异常同步进行中...来到了负责人这里")
+    const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
         productLineLeaders,
-        timeRange,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        //开始时间"2024-06-24", 结束时间  "2024-06-25"
+        JSON.parse("[\"2024-06-25 00:0\",\"2024-06-25 23:59\"]"),
+        null)
+    // 查询所有负责人属于 异常的链接的数据
+    const data = await getLinknewvaCount(singleItems, productLineLeaders, ['2024-06-25 00:0', '2024-06-25 23:59'])
+    // 获取所有 recordTheLinkID
+    const getAllRecordTheLinkID = (items) => {
+        return items.reduce((acc, item) => {
+            return acc.concat(item.recordTheLinkID);
+        }, []);
+    };
 
-    })
+// 获取所有 ongoing 和 done 的 recordTheLinkID
+    const ongoingRecordTheLinkID = getAllRecordTheLinkID(data.ongoing.items);
+    const doneRecordTheLinkID = getAllRecordTheLinkID(data.done.items);
+
+// 创建一个 Set 来存储 ongoing 和 done 的 recordTheLinkID
+    const ongoingAndDoneRecordTheLinkID = new Set([...ongoingRecordTheLinkID, ...doneRecordTheLinkID]);
+
+// 初始化一个对象来存储没有发起的异常
+    const notStartedExceptions = {items: [], sum: 0};
+
+// 从 error 中的每个异常项中移除 ongoing 和 done 中已经存在的 recordTheLinkID
+    data.error.items.forEach(item => {
+        const remainingRecordTheLinkID = item.recordTheLinkID.filter(id => !ongoingAndDoneRecordTheLinkID.has(id));
+        if (remainingRecordTheLinkID.length > 0) {
+            notStartedExceptions.items.push({
+                name: item.name,
+                recordTheLinkID: remainingRecordTheLinkID
+            });
+            notStartedExceptions.sum += remainingRecordTheLinkID.length;
+        }
+    });
+    //  logger.info("天猫链接异常同步进行中...来到了数据刷选：", notStartedExceptions)
+
+    //转换数据
+
+    function transformData(data) {
+        const result = {};
+        data.forEach((item) => {
+            item.recordTheLinkID.forEach((link) => {
+                if (!result[link.linkId]) {
+                    result[link.linkId] = [item.name];
+                } else {
+                    result[link.linkId].push(item.name);
+                }
+            });
+        });
+
+        return result;
+    }
+
+
+    const transformedData = transformData(notStartedExceptions.items);
+    logger.info('transformedData', transformedData)
+    // logger.info("天猫链接异常同步进行中...->获得没有发起的天猫异常", transformedData)
+
+    // bi测试流程
+    const formId = "FORM-620E0853BB9E43B2A3265925E6B758B01JWI"
+    const userId = "223851243926087312"
+    const processCode = "TPROC--IS866C9196OIKPW7DDD3U47B4U8A28D6ZPDTLP"
+    const formDataJsonStr = "{\"textField_ltwu34bu\":\"pricture_name\", \"textField_ltwu34bw\":\"" + transformedData + "\"}"
+
+    await dingDingService.createProcess(formId, userId, processCode, formDataJsonStr).catch(
+        e => {
+            logger.error("发起宜搭 bi测试流程失败", e)
+        }
+    ).finally(
+        () => {
+            logger.info("发起宜搭 bi测试流程成功")
+        }
+    )
+
+    //发起宜搭 bi测试流程
+
+
+    //所有的异常 id 减去正在进行中的异常 减去已完成的 剩下的 都是需要推送的异常
+
+
+    //是否需要从redis中获取正在进行中的流程
+
+
     // 获得运营优化方案 FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB 的redis 运行中的流程
-    const runningFlows = await redisRepo.getTodayRunningAndFinishedFlows()
+    //  const runningFlows = await redisRepo.getTodayRunningAndFinishedFlows()
+
+
     logger.info("同步完成：天猫链接异常检测")
 }
 
+
+tmallLinkAnomalyDetection().then(r => {
+    console.log("xx")
+})
 /**
  * 将已完成和取消的流程入库
  *

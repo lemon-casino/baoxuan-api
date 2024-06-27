@@ -385,10 +385,10 @@ const getError60SingleIte = async (productLineLeaders, timeRange) => {
 
     }
 
-    const result = await singleItemTaoBaoModel.sequelize.query(
-        `SELECT COUNT(1) AS shouTaoVisitors
+    return singleItemTaoBaoModel.sequelize.query(
+        `SELECT   link_id AS link_id, product_name
 FROM (
-  SELECT singleItemTaobaoModel.link_id
+  SELECT singleItemTaobaoModel.link_id,singleItemTaobaoModel.product_name
   FROM single_item_taobao AS singleItemTaobaoModel
   INNER JOIN abnormal_tm AS ABbnormal_TM
   ON singleItemTaobaoModel.date = ABbnormal_TM.date
@@ -399,7 +399,7 @@ FROM (
   AND DATEDIFF(CURRENT_DATE, ItemInfoModel.上架日期) > 60
   WHERE singleItemTaobaoModel.product_line_leader in (:productLineLeaders)
   and singleItemTaobaoModel.batch_id between :startDateTime and :endDateTime
-  GROUP BY singleItemTaobaoModel.link_id
+  GROUP BY singleItemTaobaoModel.link_id,singleItemTaobaoModel.product_name
   HAVING SUM(singleItemTaobaoModel.profit_amount) < 0
 ) AS subquery;`, {
             replacements: {productLineLeaders, startDateTime, endDateTime},
@@ -407,7 +407,6 @@ FROM (
             logging: false
         }
     );
-    return result[0].shouTaoVisitors;
 }
 /**
  * 获取异常的单品表数据
