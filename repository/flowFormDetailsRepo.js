@@ -29,7 +29,7 @@ const getFormDifferentVersionsDetails = async (formId) => {
         const version = formDetails[0].version
         let sameVersionDetails = formDetails.filter(item => item.version === version)
         sameVersionDetails = sameVersionDetails.sort((curr, next) => curr.id - next.id)
-        differentVersionsDetails.push({title: `Version${version}`, details: sameVersionDetails})
+        differentVersionsDetails.push({title: `表单版本${version}`, details: sameVersionDetails})
 
         const hasCountedIds = sameVersionDetails.map(item => item.id)
         formDetails = formDetails.filter(item => !hasCountedIds.includes(item.id))
