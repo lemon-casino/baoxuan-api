@@ -975,7 +975,14 @@ const getlinkingto = async (productLineLeaders, singleItems, timeRange) => {
         })
         // logger.info("天猫链接异常同步进行中...->items", items)
         // 把符合条件的linkId记录下来 给recordTheLinkID
-        recordTheLinkID.push(...items.map(item => ({name: item.productName, linkId: item.linkId})));
+        // logger.info("天猫链接异常同步进行中 items...", items)
+        recordTheLinkID.push(...items.map(item => ({
+            name: item.productName,
+            linkId: item.linkId,
+            productLineLeader: item.productLineLeader,
+            linkType: item.linkType,
+
+        })));
         result.error.items.push({
             name: item.name,
             recordTheLinkID: recordTheLinkID,
@@ -993,7 +1000,12 @@ const getlinkingto = async (productLineLeaders, singleItems, timeRange) => {
             ).values()].filter(item => {
                 const isInErrorLinkIds = errorLinkIds.includes(item.linkId);
                 if (isInErrorLinkIds) {
-                    completedInOperation.push(...items.map(item => ({name: item.productName, linkId: item.linkId})));
+                    completedInOperation.push(...items.map(item => ({
+                        name: item.productName,
+                        linkId: item.linkId,
+                        productLineLeader: item.productLineLeader,
+                        linkType: item.linkType
+                    })));
                 }
                 return isInErrorLinkIds;
             });

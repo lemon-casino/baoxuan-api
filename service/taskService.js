@@ -316,41 +316,119 @@ const tmallLinkAnomalyDetection = async () => {
 
     //转换数据
 
-    function transformData(data) {
-        const result = {};
-        data.forEach((item) => {
-            item.recordTheLinkID.forEach((link) => {
-                if (!result[link.linkId]) {
-                    result[link.linkId] = [item.name];
-                } else {
-                    result[link.linkId].push(item.name);
-                }
-            });
+    const userlist = await userService.getDingDingUserIdAndNickname()
+    logger.info("天猫链接异常同步进行中...notStartedExceptions.items：", notStartedExceptions.items)
+    const linkIdMap = notStartedExceptions.items.reduce((acc, item) => {
+        item.recordTheLinkID.forEach((record) => {
+            const matchingUser = userlist.find((user) => user.nickname === record.productLineLeader);
+            const uuid = matchingUser ? matchingUser.dingding_user_id : null;
+            //不记录undefined 的数据
+            if (acc[record.linkId]) {
+                acc[record.linkId].name = [acc[record.linkId].name, item.name].join(',');
+                acc[record.linkId].productLineLeader = record.productLineLeader;
+                acc[record.linkId].linkType = record.linkType;
+                acc[record.linkId].uuid = uuid;
+                //产品名称
+                acc[record.linkId].productName = record.name;
+            } else {
+                acc[record.linkId] = {
+                    productName: record.name,
+                    name: item.name,
+                    productLineLeader: record.productLineLeader,
+                    linkType: record.linkType,
+                    uuid: uuid,
+                };
+            }
         });
+        return acc;
+    }, {});
+    // const linkIdMap = notStartedExceptions.items.reduce((acc, item) => {
+    //     item.recordTheLinkID.forEach((record) => {
+    //         if (acc[record.linkId]) {
+    //             acc[record.linkId].name = [acc[record.linkId].name, item.name].join(',');
+    //             acc[record.linkId].productLineLeader = record.productLineLeader;
+    //             acc[record.linkId].linkType = record.linkType;
+    //         } else {
+    //             acc[record.linkId] = {
+    //                 name: item.name,
+    //                 productLineLeader: record.productLineLeader,
+    //                 linkType: record.linkType,
+    //             };
+    //         }
+    //     });
+    //     return acc;
+    // }, {});
 
-        return result;
-    }
+// 清理 undefined 键值对
+    const cleanedLinkIdMap = Object.entries(linkIdMap)
+        .filter(([key, value]) => key !== 'undefined')
+        .reduce((acc, [key, value]) => {
+            acc[key] = value;
+            return acc;
+        }, {});
+
+    logger.info('transformedData', cleanedLinkIdMap)
 
 
-    const transformedData = transformData(notStartedExceptions.items);
-    logger.info('transformedData', transformedData)
-    // logger.info("天猫链接异常同步进行中...->获得没有发起的天猫异常", transformedData)
+    const formId = "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB";
+    const processCode = "TPROC--CP766081CPAB676X6KT35742KAC22BLLKHIILC";
+    const getNextWeekTimestamps = () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).getTime();
+        const end = start + 7 * 24 * 60 * 60 * 1000;
+        return [start.toString(), end.toString()];
+    };
 
-    // bi测试流程
-    const formId = "FORM-620E0853BB9E43B2A3265925E6B758B01JWI"
-    const userId = "223851243926087312"
-    const processCode = "TPROC--IS866C9196OIKPW7DDD3U47B4U8A28D6ZPDTLP"
-    const formDataJsonStr = "{\"textField_ltwu34bu\":\"pricture_name\", \"textField_ltwu34bw\":\"" + transformedData + "\"}"
+    const sendRequests = async () => {
+        for (const [key, value] of Object.entries(cleanedLinkIdMap)) {
+            const userId = value.uuid;
+            const multiSelectField_lwufb7oy = value.name.split(',');
+            const cascadeDateField_lloq9vjk = getNextWeekTimestamps();
+            const textField_liihs7kv = value.productName;
 
-    await dingDingService.createProcess(formId, userId, processCode, formDataJsonStr).catch(
-        e => {
-            logger.error("发起宜搭 bi测试流程失败", e)
+            const formDataJsonStr = JSON.stringify({
+                textField_liihs7kv,
+                radioField_lx30hv7y: "否",
+                radioField_lwuecm6c: "是",
+                selectField_liihs7ky: "老猫",
+                selectField_liihs7kz: "老品问题",
+                multiSelectField_lwufb7oy,
+                cascadeDateField_lloq9vjk
+            }, null, 2);
+
+            try {
+                await dingDingService.createProcess(formId, userId, processCode, formDataJsonStr);
+                logger.info(`发起宜搭 bi测试流程成功 for linkId ${key}`);
+            } catch (e) {
+                logger.error(`发起宜搭 bi测试流程失败 for linkId ${key}`, e);
+            }
         }
-    ).finally(
-        () => {
-            logger.info("发起宜搭 bi测试流程成功")
-        }
-    )
+    };
+    await sendRequests();
+    /*    // bi测试流程
+        const formId = "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB"
+        const userId = "223851243926087312"
+        const processCode = "TPROC--CP766081CPAB676X6KT35742KAC22BLLKHIILC"
+        const formDataJsonStr = "{\n" +
+            "  \"textField_liihs7kv\": \"113测试\",\n" +
+            "  \"radioField_lx30hv7y\": \"否\",\n" +
+            "  \"radioField_lwuecm6c\": \"是\",\n" +
+            "  \"selectField_liihs7ky\": \"老猫\",\n" +
+            "  \"selectField_liihs7kz\": \"老品问题\",\n" +
+            "  \"multiSelectField_lwufb7oy\": [\"累计60天负利润\",\"老品利润率低于15%\"],\n" +
+            "  \"cascadeDateField_lloq9vjk\": [\"1719417600000\",\"1719763200000\"],\n" +
+            "}"
+
+
+        await dingDingService.createProcess(formId, userId, processCode, formDataJsonStr).catch(
+            e => {
+                logger.error("发起宜搭 bi测试流程失败", e)
+            }
+        ).finally(
+            () => {
+                logger.info("发起宜搭 bi测试流程成功")
+            }
+        )*/
 
     //发起宜搭 bi测试流程
 
