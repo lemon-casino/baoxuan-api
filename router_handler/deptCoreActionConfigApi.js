@@ -20,7 +20,7 @@ const getDeptCoreActionsConfig = async (req, res, next) => {
         joiUtil.validate({
             deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.strRequired}
         })
-        const deptFlowForms = await deptCoreActionService.getDeptCoreActions(deptId)
+        const deptFlowForms = await deptCoreActionService.getDeptCoreActionsWithRules(deptId)
         return res.send(biResponse.success(deptFlowForms))
     } catch (e) {
         next(e)

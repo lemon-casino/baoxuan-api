@@ -3,19 +3,7 @@ const deptCoreActionRepo = require("../repository/deptCoreActionConfigRepo")
 const getDeptCoreActions = async (deptId) => {
     const data = await deptCoreActionRepo.getDeptCoreActions(deptId)
     // 根据 parentId 转化数据结构
-    let sortedData = data.sort((curr, next) => next.id - curr.id)
-
-    let currData = sortedData.find(item => !item.children)
-    while (currData) {
-        // 获取匹配的子项
-        const children = sortedData.filter(item => item.parentId === currData.id)
-        currData.children = children
-        // 从原数据sortedData中移除已经匹配过的数据
-        const childrenIds = children.map(item => item.id)
-        sortedData = sortedData.filter(item => !childrenIds.includes(item.id))
-        currData = sortedData.find(item => !item.children)
-    }
-    return sortedData
+    return _collapseCoreActions(data)
 }
 
 const save = async (model) => {
@@ -36,6 +24,37 @@ const delDeptCoreAction = async (id) => {
     return deptCoreActionRepo.delDeptCoreAction(id)
 }
 
+const getDeptCoreActionsWithRules = async (deptId) => {
+    const originCoreActions = await deptCoreActionRepo.getDeptCoreActionsWithRules(deptId)
+    return _collapseCoreActions(originCoreActions)
+}
+
+/**
+ * 将扁平的结构转成children包裹的结构
+ *
+ * @param coreActions
+ * @returns {*}
+ * @private
+ */
+const _collapseCoreActions = (coreActions) => {
+    coreActions = coreActions.sort((curr, next) => next.id - curr.id)
+
+    let currData = coreActions.find(item => !item.children)
+    while (currData) {
+        // 获取匹配的子项
+        const children = coreActions.filter(item => item.parentId === currData.id)
+        currData.children = children
+        // 从原数据sortedData中移除已经匹配过的数据
+        const childrenIds = children.map(item => item.id)
+        coreActions = coreActions.filter(item => !childrenIds.includes(item.id))
+        currData = coreActions.find(item => !item.children)
+    }
+    return coreActions
+}
+
 module.exports = {
-    save, getDeptCoreActions, delDeptCoreAction
+    save,
+    getDeptCoreActions,
+    getDeptCoreActionsWithRules,
+    delDeptCoreAction
 }
