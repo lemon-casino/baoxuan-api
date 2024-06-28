@@ -13,5 +13,7 @@ module.exports = [
     "/user/flowpath/getoaallprocess",
     "/user/flowpath/getyidaprocess",
     "/flow/all-overdue-running-flows",
+    "/flow/all-overdue-running-flows",
+    "/form-reviews",
     /^\/download\/.*/,
 ]
