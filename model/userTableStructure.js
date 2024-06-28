@@ -91,6 +91,15 @@ module.exports = sequelize.define('userTableStructureModel', {
         comment: null,
         field: "editable"
     },
+    tableType: {
+        type: DataTypes.INTEGER(1),
+        allowNull: true,
+        defaultValue: "1",
+        primaryKey: false,
+        autoIncrement: false,
+        comment: null,
+        field: "tableType"
+    }
 }, {
     tableName: "user_table_structure",
     comment: "",

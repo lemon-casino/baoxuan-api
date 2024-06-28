@@ -9,7 +9,7 @@ const rest = {
 const get_user_table = async (req, res) => {
 
     try {
-        rest.table = await tianmao__user_tableService.get_user_table(req.user.id);
+        rest.table = await tianmao__user_tableService.get_user_table(req.user.id, req.query.tableType);
         rest.table.forEach(item => {
             item.visible = item.visible === 1;
             item.editable = item.editable === 1;
@@ -29,8 +29,7 @@ const get_user_table = async (req, res) => {
 const put_user_table = async (req, res) => {
 
     try {
-
-        rest.table = await tianmao__user_tableService.put_user_table(req.query.title, req.query.uptitle, req.user.id);
+        rest.table = await tianmao__user_tableService.put_user_table(req.query.title, req.query.uptitle, req.user.id, req.query.tableType);
         return res.send(success(rest.table));
 
     } catch (e) {
