@@ -9886,7 +9886,7 @@ const mbCoreActionsConfig = [
                                 ownerRule: {
                                     from: "process",
                                     name: "简单任务完成",
-                                    id: "node_oclvt49cil2"
+                                    id: "node_oclvgh4l0zf"
                                 }
                             },
                             {
@@ -9910,118 +9910,7 @@ const mbCoreActionsConfig = [
                                     name: "建模美编完成任务",
                                     id: "node_oclwhrd6j62"
                                 }
-                            },
-
-                            // {
-                            //     from: {
-                            //         id: "node_oclvghx5li7",
-                            //         name: "审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     to: {
-                            //         id: "node_oclvghx5li7",
-                            //         name: "审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     overdue: {
-                            //         id: "node_oclvghx5li7",
-                            //         name: "审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     ownerRule: {
-                            //         from: "process",
-                            //         name: "审核美编任务",
-                            //         id: "node_oclvghx5li7"
-                            //     }
-                            // },
-                            // {
-                            //     from: {
-                            //         id: "node_oclvghx5li8",
-                            //         name: "审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     to: {
-                            //         id: "node_oclvghx5li8",
-                            //         name: "审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     overdue: {
-                            //         id: "node_oclvghx5li8",
-                            //         name: "审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     ownerRule: {
-                            //         from: "process",
-                            //         name: "审核美编任务",
-                            //         id: "node_oclvghx5li8"
-                            //     }
-                            // },
-                            // {
-                            //     from: {
-                            //         id: "node_oclw7dfsbp7",
-                            //         name: " 审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     to: {
-                            //         id: "node_oclw7dfsbp7",
-                            //         name: " 审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     overdue: {
-                            //         id: "node_oclw7dfsbp7",
-                            //         name: " 审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     ownerRule: {
-                            //         from: "process",
-                            //         name: "审核美编任务",
-                            //         id: "node_oclw7dfsbp7"
-                            //     }
-                            // },
-                            // {
-                            //     from: {
-                            //         id: "node_oclvghx5lia",
-                            //         name: "审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     to: {
-                            //         id: "node_oclvghx5lia",
-                            //         name: "审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     overdue: {
-                            //         id: "node_oclvghx5lia",
-                            //         name: "审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     ownerRule: {
-                            //         from: "process",
-                            //         name: "审核美编任务",
-                            //         id: "node_oclvghx5lia"
-                            //     }
-                            // },
-                            // {
-                            //     from: {
-                            //         id: "node_oclwhrd6j63",
-                            //         name: "审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     to: {
-                            //         id: "node_oclwhrd6j63",
-                            //         name: "审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     overdue: {
-                            //         id: "node_oclwhrd6j63",
-                            //         name: "审核美编任务",
-                            //         status: ["TODO"]
-                            //     },
-                            //     ownerRule: {
-                            //         from: "process",
-                            //         name: "审核美编任务",
-                            //         id: "node_oclwhrd6j63"
-                            //     }
-                            // },
+                            }
                         ]
                     },
                     {
