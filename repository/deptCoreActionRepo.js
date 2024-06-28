@@ -14,7 +14,7 @@ const getDeptCoreActions = async (deptId) => {
     return sequelizeUtil.extractDataValues(result)
 }
 
-const getDeptCoreActionConfig = async (id) => {
+const getDeptCoreAction = async (id) => {
     const result = await deptCoreActionModel.findOne({
         where: {id}
     })
@@ -48,5 +48,10 @@ const getDeptCoreActionsWithRules = async (deptId) => {
 }
 
 module.exports = {
-    update, save, getDeptCoreActions, getDeptCoreActionsWithRules, delDeptCoreAction, getDeptCoreActionConfig
+    update,
+    save,
+    getDeptCoreActions,
+    getDeptCoreActionsWithRules,
+    delDeptCoreAction,
+    getDeptCoreAction
 }

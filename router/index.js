@@ -30,6 +30,6 @@ module.exports = {
     "/operation/tian/linkData": require("./tableStructure"),
     "/product-attrs": require("./dianShangOperationAttributeRouter"),
     "/attendance": require("./attendanceRouter"),
-    "/core-action-config": require("./deptCoreActionConfigRouter"),
-    "/core-action-rule": require("./deptCoreActionRuleRouter")
+    "/dept-core-action": require("./deptCoreActionRouter"),
+    "/dept-core-action-rule": require("./deptCoreActionRuleRouter")
 }

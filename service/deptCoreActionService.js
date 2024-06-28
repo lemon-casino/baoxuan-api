@@ -6,9 +6,9 @@ const getDeptCoreActions = async (deptId) => {
     return _collapseCoreActions(data)
 }
 
-const save = async (model) => {
+const saveDeptCoreAction = async (model) => {
     // 找到父节点的path
-    const parentConfig = await deptCoreActionRepo.getDeptCoreActionConfig(model.parentId)
+    const parentConfig = await deptCoreActionRepo.getDeptCoreAction(model.parentId)
     // 保存成功后，需要将该数据的id信息连同parentId更新到当前数据的path中
     const savedResult = await deptCoreActionRepo.save(model)
     if (parentConfig) {
@@ -27,6 +27,10 @@ const delDeptCoreAction = async (id) => {
 const getDeptCoreActionsWithRules = async (deptId) => {
     const originCoreActions = await deptCoreActionRepo.getDeptCoreActionsWithRules(deptId)
     return _collapseCoreActions(originCoreActions)
+}
+
+const updateDeptCoreAction = async (model) => {
+    return (await deptCoreActionRepo.update(model))
 }
 
 /**
@@ -53,8 +57,9 @@ const _collapseCoreActions = (coreActions) => {
 }
 
 module.exports = {
-    save,
+    saveDeptCoreAction,
     getDeptCoreActions,
     getDeptCoreActionsWithRules,
-    delDeptCoreAction
+    delDeptCoreAction,
+    updateDeptCoreAction
 }
