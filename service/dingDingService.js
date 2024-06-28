@@ -33,7 +33,7 @@ const {
 } = redisRepo;
 
 // 分页获取表单所有的流程详情
-const getFlowsByStatusAndTimeRange = async (timesRange = ["2023-01-01 00:00:00", dateUtil.endOfToday()], timeAction, status, token, userId, formUuid, pageNumber = 1, pageSize = 99) => {
+const getFlowsByStatusAndTimeRange = async (timesRange = ["2023-01-01 00:00:00", dateUtil.endOfToday()], timeAction, status, token, userId, formUuid, pageNumber = 1, pageSize = 20) => {
     const fromTimeGMT = timeAction ? timesRange[0] : null;
     const toTimeGMT = timeAction ? timesRange[1] : null;
     // 2.分页去请求所有流程id

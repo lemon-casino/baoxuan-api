@@ -1,4 +1,4 @@
-const flowUtil = require("../utils/flowUtil")
+const flowUtil = require("../../utils/flowUtil")
 const assert = require("assert")
 
 describe("flowUtil", ()=>{

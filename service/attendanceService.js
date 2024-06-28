@@ -1,4 +1,5 @@
 const attendanceRepo = require("../repository/attendanceRepo")
+const dateUtil = require("../utils/dateUtil")
 
 const save = async (model) => {
     return await attendanceRepo.save(model)
@@ -7,9 +8,11 @@ const save = async (model) => {
 const getPagingAttendance = async (pageIndex, pageSize, startTime, endTime, userId) => {
     const where = {
         userCheckTime: {
-            $in: [startTime, endTime]
-        },
-        userId
+            $between: [dateUtil.startOfDay(startTime), dateUtil.endOfDay(endTime)]
+        }
+    }
+    if (userId) {
+        where.userId = userId
     }
     return attendanceRepo.getPagingAttendance(pageIndex, pageSize, where)
 }

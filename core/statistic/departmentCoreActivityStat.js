@@ -4,8 +4,27 @@ const flowUtil = require("../../utils/flowUtil")
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 
+/**
+ * 根据人名和核心动作配置信息统计流程
+ *
+ *
+ * @param userNames
+ * @param flows
+ * @param coreConfig
+ * @returns {Promise<*[]>}  返回的结构同配置的动作结构
+ */
 const get = async (userNames, flows, coreConfig) => {
     const finalResult = []
+
+    // 从 coreConfig 中查找所有含有rules数据路径，然后进行统计汇总
+    for (const config of coreConfig) {
+        if (config.rules && config.rules.length > 0) {
+            config.stat = {"name": 10}
+        }
+    }
+
+    console.log("ui")
+
     // 根据配置信息获取基于所有人的数据
     // eg：[{actionName: "市场分析", children: [{"nameCN": "待做", children: [{nameCN:"逾期", children:[{userName: "张三", sum: 1, ids: ["xxx"]}]}]}]}]
     for (const action of coreConfig) {
@@ -74,22 +93,21 @@ const get = async (userNames, flows, coreConfig) => {
 
                         if (parallelOperators.length === 0) {
                             // 找到该公工作量的负责人
-                            let ownerName = ""
-                            const {from, id} = ownerRule
+                            let ownerName = "未分配"
+                            const {from, id, defaultUserName} = ownerRule
                             if (from.toUpperCase() === ownerFrom.FORM) {
                                 ownerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id]
                                 // 如果是数组的格式，转成以“,”连接的字符串
                                 if (ownerName instanceof Array) {
                                     ownerName = ownerName.join(",")
                                 }
+                                if (!ownerName) {
+                                    ownerName = defaultUserName
+                                }
                             } else {
                                 const processReviewId = activityIdMappingConst[id] || id
                                 const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
-                                ownerName = reviewItems.length > 0 && reviewItems[0].operatorName
-                            }
-                            if (!ownerName) {
-                                logger.warn(`没有匹配到计数规则的所有人。流程：${processInstanceId},rule: ${JSON.stringify(ownerRule)}`)
-                                continue
+                                ownerName = reviewItems.length > 0 ? reviewItems[0].operatorName : defaultUserName
                             }
                             parallelOperators.push(ownerName)
                         }

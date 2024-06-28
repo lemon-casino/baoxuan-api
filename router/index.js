@@ -10,6 +10,7 @@ module.exports = {
     "/flow": require("./flowRouter"),
     "/user/flowform": require("./flowFormRouter"),
     "/user/flowformreview": require("./flow-form-review"),
+    "/form-reviews": require("./flowFormReviewRouter"),
     "/util": require("./util"),
     "/form": require("./formRouter"),
     "/single-item": require("./singleItemRouter"),
@@ -27,5 +28,8 @@ module.exports = {
     "/dept-flow-form-activity": require("./departmentFlowFormActivityRouter"),
     "/forms": require("./flowFormRouter"),
     "/operation/tian/linkData": require("./tableStructure"),
-    "/product-attrs": require("./dianShangOperationAttributeRouter")
+    "/product-attrs": require("./dianShangOperationAttributeRouter"),
+    "/attendance": require("./attendanceRouter"),
+    "/core-action-config": require("./deptCoreActionConfigRouter"),
+    "/core-action-rule-config": require("./deptCoreActionRuleRouter")
 }
