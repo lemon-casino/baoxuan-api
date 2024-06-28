@@ -1,4 +1,4 @@
-const deptCoreActionRuleConfigRepo = require("../repository/deptCoreActionRuleConfigRepo")
+const deptCoreActionRuleConfigRepo = require("../repository/deptCoreActionFormRuleRepo")
 const sequelizeUtil = require("../utils/sequelizeUtil");
 
 const save = async (model) => {

@@ -1,14 +1,14 @@
 const models = require('../model')
-const deptCoreActionRuleModels = models.deptCoreActionRuleModel
+const deptCoreActionFormRuleModel = models.deptCoreActionFormRuleModel
 const sequelizeUtil = require("../utils/sequelizeUtil")
 
 const save = async (model) => {
-    const result = await deptCoreActionRuleModels.create(model)
+    const result = await deptCoreActionFormRuleModel.create(model)
     return sequelizeUtil.extractDataValues(result)
 }
 
 const _getRules = async (where) => {
-    const result = await deptCoreActionRuleModels.findAll({where})
+    const result = await deptCoreActionFormRuleModel.findAll({where})
     return sequelizeUtil.extractDataValues(result)
 }
 
@@ -23,7 +23,7 @@ const getRulesById = async (id) => {
 }
 
 const _delRule = async (where) => {
-    const result = await deptCoreActionRuleModels.destroy({where})
+    const result = await deptCoreActionFormRuleModel.destroy({where})
     return result
 }
 

@@ -1,10 +1,10 @@
 const models = require('../model')
 const deptCoreActionModel = models.deptCoreActionModel
-const deptCoreActionRuleModel = models.deptCoreActionRuleModel
+const deptCoreActionFormRuleModel = models.deptCoreActionFormRuleModel
 const sequelizeUtil = require("../utils/sequelizeUtil")
 
-deptCoreActionModel.hasMany(deptCoreActionRuleModel, {
-    foreignKey: "deptCoreActionId", sourceKey: "id", as: "rules"
+deptCoreActionModel.hasMany(deptCoreActionFormRuleModel, {
+    foreignKey: "deptCoreActionId", sourceKey: "id", as: "formRules"
 })
 
 const getDeptCoreActions = async (deptId) => {
@@ -41,7 +41,7 @@ const update = async (model) => {
 const getDeptCoreActionsWithRules = async (deptId) => {
     const result = await models.deptCoreActionModel.findAll({
         include: [{
-            model: deptCoreActionRuleModel, as: "rules"
+            model: deptCoreActionFormRuleModel, as: "formRules"
         }], where: {deptId}
     })
     return sequelizeUtil.extractDataValues(result)

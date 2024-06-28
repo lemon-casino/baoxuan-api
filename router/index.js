@@ -31,5 +31,5 @@ module.exports = {
     "/product-attrs": require("./dianShangOperationAttributeRouter"),
     "/attendance": require("./attendanceRouter"),
     "/core-action-config": require("./deptCoreActionConfigRouter"),
-    "/core-action-rule-config": require("./deptCoreActionRuleRouter")
+    "/core-action-rule": require("./deptCoreActionRuleRouter")
 }

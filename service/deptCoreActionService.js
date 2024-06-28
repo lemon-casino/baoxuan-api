@@ -1,4 +1,4 @@
-const deptCoreActionRepo = require("../repository/deptCoreActionConfigRepo")
+const deptCoreActionRepo = require("../repository/deptCoreActionRepo")
 
 const getDeptCoreActions = async (deptId) => {
     const data = await deptCoreActionRepo.getDeptCoreActions(deptId)

@@ -1,10 +1,10 @@
 const biResponse = require("../utils/biResponse")
 const joiUtil = require("../utils/joiUtil")
-const deptCoreActionRuleConfigService = require('../service/deptCoreActionRuleConfigService')
-const deptCoreActionRuleSchema = require("../schema/deptCoreActionRuleSchema")
+const deptCoreActionRuleConfigService = require('../service/deptCoreActionFormRuleService')
+const deptCoreActionRuleSchema = require("../schema/deptCoreActionFormRuleSchema")
 const ParameterError = require("../error/parameterError")
 
-const save = async (req, res, next) => {
+const saveFormRule = async (req, res, next) => {
     try {
         const data = req.body
         joiUtil.clarityValidate(deptCoreActionRuleSchema.saveParamsSchema, data)
@@ -15,7 +15,7 @@ const save = async (req, res, next) => {
     }
 }
 
-const getDeptCoreActionRulesConfig = async (req, res, next) => {
+const getDeptCoreActionFormRules = async (req, res, next) => {
     try {
         const {id, type} = req.query
         joiUtil.validate({id, type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}})
@@ -33,7 +33,7 @@ const getDeptCoreActionRulesConfig = async (req, res, next) => {
     }
 }
 
-const delCoreActionRuleConfig = async (req, res, next) => {
+const delCoreActionFormRule = async (req, res, next) => {
     try {
         const {id, type} = req.query
         joiUtil.validate({id, type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}})
@@ -52,7 +52,7 @@ const delCoreActionRuleConfig = async (req, res, next) => {
 }
 
 module.exports = {
-    save,
-    getDeptCoreActionRulesConfig,
-    delCoreActionRuleConfig
+    saveFormRule,
+    getDeptCoreActionFormRules,
+    delCoreActionFormRule
 }
