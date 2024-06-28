@@ -1,8 +1,8 @@
 const deptCoreActionRuleConfigRepo = require("../repository/deptCoreActionFormRuleRepo")
 const sequelizeUtil = require("../utils/sequelizeUtil");
 
-const save = async (model) => {
-    const result = await deptCoreActionRuleConfigRepo.save(model)
+const saveFormRule = async (model) => {
+    const result = await deptCoreActionRuleConfigRepo.saveFormRule(model)
     return sequelizeUtil.extractDataValues(result)
 }
 
@@ -27,7 +27,7 @@ const deleteRuleByFormId = async (formId) => {
 }
 
 module.exports = {
-    save,
+    saveFormRule,
     getRulesById,
     getRulesByDeptCoreActionId,
     deleteRuleById,

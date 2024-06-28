@@ -2,11 +2,8 @@ const models = require('../model')
 const deptCoreActionFormDetailsRuleModel = models.deptCoreActionFormDetailsRuleModel
 const sequelizeUtil = require("../utils/sequelizeUtil")
 
-const getFormDetailsRule = async (formId) => {
-    const result = await deptCoreActionFormDetailsRuleModel.findAll({
-        where: {formId}
-    })
-    return sequelizeUtil.extractDataValues(result)
+const getFormDetailsRule = async (formRuleId) => {
+    return (await getFormDetailsRuleByWhere({deptCoreActionFormRuleId: formRuleId}))
 }
 
 const saveFormDetailsRule = async (model) => {
@@ -25,7 +22,15 @@ const updateFormDetailsRule = async (model) => {
     }))
 }
 
+const getFormDetailsRuleByWhere = async (where) => {
+    const result = await deptCoreActionFormDetailsRuleModel.findAll({
+        where
+    })
+    return sequelizeUtil.extractDataValues(result)
+}
+
 module.exports = {
+    getFormDetailsRuleByWhere,
     getFormDetailsRule,
     saveFormDetailsRule,
     deleteFormDetailsRule,

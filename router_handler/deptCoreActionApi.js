@@ -49,9 +49,21 @@ const delDeptCoreAction = async (req, res, next) => {
     }
 }
 
+const getDeptCoreActionForms = async (req, res, next) => {
+    try {
+        const {id} = req.query
+        joiUtil.validate({id})
+        const deptFlowForms = await deptCoreActionService.getDeptCoreActionForms(id)
+        return res.send(biResponse.success(deptFlowForms))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDeptCoreActions,
     updateDeptCoreAction,
     saveDeptCoreAction,
-    delDeptCoreAction
+    delDeptCoreAction,
+    getDeptCoreActionForms
 }

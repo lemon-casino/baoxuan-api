@@ -33,6 +33,10 @@ const updateDeptCoreAction = async (model) => {
     return (await deptCoreActionRepo.update(model))
 }
 
+const getDeptCoreActionForms = async (coreActionId) => {
+    return (await deptCoreActionRepo.getDeptCoreActionForms(coreActionId))
+}
+
 /**
  * 将扁平的结构转成children包裹的结构
  *
@@ -61,5 +65,6 @@ module.exports = {
     getDeptCoreActions,
     getDeptCoreActionsWithRules,
     delDeptCoreAction,
-    updateDeptCoreAction
+    updateDeptCoreAction,
+    getDeptCoreActionForms
 }

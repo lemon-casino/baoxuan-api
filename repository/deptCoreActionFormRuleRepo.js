@@ -2,9 +2,14 @@ const models = require('../model')
 const deptCoreActionFormRuleModel = models.deptCoreActionFormRuleModel
 const sequelizeUtil = require("../utils/sequelizeUtil")
 
-const save = async (model) => {
-    const result = await deptCoreActionFormRuleModel.create(model)
-    return sequelizeUtil.extractDataValues(result)
+const saveFormRule = async (model) => {
+    const where = {formId: model.formId, deptCoreActionId: model.deptCoreActionId}
+    const savedFormRule = await _getRules(where)
+    if (savedFormRule.length === 0) {
+        const result = await deptCoreActionFormRuleModel.create(model)
+        return sequelizeUtil.extractDataValues(result)
+    }
+    return savedFormRule[0]
 }
 
 const _getRules = async (where) => {
@@ -13,34 +18,29 @@ const _getRules = async (where) => {
 }
 
 const getRulesByDeptCoreActionId = async (deptCoreActionId) => {
-    const result = await _getRules({deptCoreActionId})
-    return result
+    return (await _getRules({deptCoreActionId}))
 }
 
 const getRulesById = async (id) => {
-    const result = await _getRules({id})
-    return result
+    return (await _getRules({id}))
 }
 
 const _delRule = async (where) => {
-    const result = await deptCoreActionFormRuleModel.destroy({where})
-    return result
+    return (await deptCoreActionFormRuleModel.destroy({where}))
 }
 
 const deleteRuleById = async (id) => {
     const where = {id}
-    const result = await _delRule(where)
-    return result
+    return (await _delRule(where))
 }
 
 const deleteRuleByFormId = async (formId) => {
     const where = {formId}
-    const result = await _delRule(where)
-    return result
+    return (await _delRule(where))
 }
 
 module.exports = {
-    save,
+    saveFormRule,
     getRulesById,
     getRulesByDeptCoreActionId,
     deleteRuleById,
