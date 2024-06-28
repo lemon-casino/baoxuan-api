@@ -7,6 +7,12 @@ const saveParamsSchema = {
     deptName: joiUtil.commonJoiSchemas.strRequired
 }
 
+const updateParamsSchema = {
+    id: joiUtil.commonJoiSchemas.numberRequired,
+    ...saveParamsSchema
+}
+
 module.exports = {
+    updateParamsSchema,
     saveParamsSchema
 }

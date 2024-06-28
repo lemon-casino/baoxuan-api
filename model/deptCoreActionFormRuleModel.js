@@ -38,31 +38,13 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: null,
       field: "form_name"
-    },
-    dataParams: {
-      type: DataTypes.JSON,
-      allowNull: true,
-      defaultValue: null,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "表单参数",
-      field: "data_params"
-    },
-    activityParams: {
-      type: DataTypes.JSON,
-      allowNull: true,
-      defaultValue: null,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "节点参数",
-      field: "activity_params"
     }
   };
   const options = {
-    tableName: "dept_core_action_rule",
+    tableName: "dept_core_action_form_rule",
     comment: "",
     indexes: []
   };
-  const DeptCoreActionRuleModel = sequelize.define("deptCoreActionRuleModel", attributes, options);
-  return DeptCoreActionRuleModel;
+  const DeptCoreActionFormRuleModel = sequelize.define("deptCoreActionFormRuleModel", attributes, options);
+  return DeptCoreActionFormRuleModel;
 };
