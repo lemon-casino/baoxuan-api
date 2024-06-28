@@ -1277,8 +1277,8 @@ const mbCoreActionsConfig = [
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "样品与道具准备",
-                                    id: "node_ocln14cs9r2",
+                                    name: "审核视觉方案",
+                                    id: "node_oclofn02iu1",
                                     defaultUserName: "张杰"
                                 }
                             },
