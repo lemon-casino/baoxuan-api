@@ -8,28 +8,51 @@ const rest = {
 
 const get_user_table = async (req, res) => {
 
+
+    let tableType = req.query.tableType
+
     try {
-        rest.table = await tianmao__user_tableService.get_user_table(req.user.id, req.query.tableType);
-        rest.table.forEach(item => {
+        rest.table = await tianmao__user_tableService.get_user_table(req.user.id, tableType * 1);
+        // rest.table.forEach(item => {
+        //     item.visible = item.visible === 1;
+        //     item.editable = item.editable === 1;
+        // });
+        // rest.table.map(item => {
+        //     if (typeof item.editRender === 'string') {
+        //         item.editRender = JSON.parse(item.editRender);
+        //     }
+        // });
+        // console.log(rest.table)
+        const parseKeys = ['slots', 'editRender'];
+        let cleanedTable = rest.table.map(item => {
+            // 转换visible和editable字段为布尔值
             item.visible = item.visible === 1;
             item.editable = item.editable === 1;
-        });
-        rest.table.map(item => {
-            if (typeof item.editRender === 'string') {
-                item.editRender = JSON.parse(item.editRender);
+            item.editing = item.editing === 1;
+            // 如果editRender是字符串，则解析为对象
+
+            // 过滤掉值为null的字段
+            let newItem = {};
+            for (let key in item) {
+                if (item[key] !== null) {
+                    newItem[key] = parseKeys.includes(key) ? JSON.parse(item[key]) : item[key];
+                }
             }
+
+            return newItem;
         });
+
         // 怎加一个字段  用来判断是否是固定列
-        return res.send(success(rest.table));
+        return res.send(success(cleanedTable));
 
     } catch (e) {
     }
 }
 
 const put_user_table = async (req, res) => {
-
+    let tableType = req.query.tableType
     try {
-        rest.table = await tianmao__user_tableService.put_user_table(req.query.title, req.query.uptitle, req.user.id, req.query.tableType);
+        rest.table = await tianmao__user_tableService.put_user_table(req.query.field, req.query.title, req.user.id, tableType * 1);
         return res.send(success(rest.table));
 
     } catch (e) {

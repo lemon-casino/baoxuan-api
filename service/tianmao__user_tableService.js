@@ -5,15 +5,13 @@ const get_user_table = async (id, tableType) => {
 
 
         const user = await tian_mao_link_user_table.get_user_table(id, tableType);
-
         if (user && user.dingdingUserId) {
             const newVar = await tian_mao_link_user_table.count_structure(user.dingdingUserId, tableType);
             if (newVar > 0) {
                 //说明   这里存在内容
                 return await tian_mao_link_user_table.getAll_user_table(user.dingdingUserId, tableType);
             } else {
-
-                return await tian_mao_link_user_table.getAll_user_table_one(tableType);
+                return await tian_mao_link_user_table.getAll_user_table_one(tableType)
             }
 
         }
@@ -23,18 +21,18 @@ const get_user_table = async (id, tableType) => {
 }
 
 
-const put_user_table = async (title, uptitle, id, tableType) => {
+const put_user_table = async (field, title, id, tableType) => {
     try {
 
         const user = await tian_mao_link_user_table.get_user_table(id);
 
         const newVar = await tian_mao_link_user_table.count_structure(user.dingdingUserId, tableType);
-
+        console.log(field, title, id, tableType)
         if (newVar <= 0) {
             //这里是复制数据
             await tian_mao_link_user_table.inst_user_table_one(user.dingdingUserId, tableType);
         }
-        await tian_mao_link_user_table.put_user_table(title, uptitle, user.dingdingUserId, tableType);
+        await tian_mao_link_user_table.put_user_table(field, title, user.dingdingUserId, tableType);
     } catch (e) {
     }
 }

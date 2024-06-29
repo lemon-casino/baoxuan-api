@@ -1,6 +1,8 @@
 const usersto = require('../model/usersto');
 const sequelize = require("../model/init");
-const userTableStructureModel = require('../model/userTableStructure');
+const getUserTableStructureModel = require('../model/userTableStructure');
+const userTableStructureModel = getUserTableStructureModel(sequelize);
+
 const getSingleItemTaoBaoModel = require("../model/singleItemTaobaoModel")
 const singleItemTaoBaoModel = getSingleItemTaoBaoModel(sequelize);
 const sequelizeUtil = require("../utils/sequelizeUtil");
@@ -28,6 +30,7 @@ const count_structure = async (id, tableType) => {
                 user_id: id,
                 tableType: tableType
             },
+            raw: true,
             logging: false
         })
     } catch (error) {
@@ -38,20 +41,13 @@ const count_structure = async (id, tableType) => {
 const getAll_user_table_one = async (tableType) => {
     try {
         return await userTableStructureModel.findAll({
-            attributes: [
-                'field',
-                'fixed',
-                'width',
-                'title',
-                'editRender',
-                'visible',
-                'version',
-                'editable'
-            ],
+            attributes: {exclude: ["userId", 'tableType']},
             where: {
                 user_id: "all-one",
                 tableType: tableType
-            }
+            },
+            raw: true,
+            logging: false
         })
     } catch (error) {
         throw new Error('查询数据失败');
@@ -59,23 +55,15 @@ const getAll_user_table_one = async (tableType) => {
 
 };
 const getAll_user_table = async (dingdingUserId, tableType) => {
-// select  COUNT(1) from  user_table_structure where  user_id='id;
     try {
         return await userTableStructureModel.findAll({
-            attributes: [
-                'field',
-                'fixed',
-                'width',
-                'title',
-                'editRender',
-                'visible',
-                'version',
-                'editable'
-            ],
+            attributes: {exclude: ["userId", 'tableType']},
             where: {
                 user_id: dingdingUserId,
                 tableType: tableType
-            }
+            },
+            raw: true,
+            logging: false
         })
     } catch (error) {
         throw new Error('查询用户数据失败');
@@ -84,20 +72,22 @@ const getAll_user_table = async (dingdingUserId, tableType) => {
 };
 
 
-const put_user_table = async (title, uptitle, dingdingUserId, tableType) => {
+const put_user_table = async (field, title, dingdingUserId, tableType) => {
     try {
         return await userTableStructureModel.update({
-            title: uptitle
+            title: title
         }, {
             where: {
-                title: title,
+                field: field,
                 user_id: {
                     [Op.eq]: dingdingUserId
                 },
                 tableType: {
                     [Op.eq]: tableType
                 }
-            }
+            },
+            raw: true,
+            logging: true
 
         })
     } catch (error) {
@@ -107,6 +97,7 @@ const put_user_table = async (title, uptitle, dingdingUserId, tableType) => {
 };
 
 const inst_user_table_one = async (dingdingUserId, tableType) => {
+    //批量复制
     try {
         userTableStructureModel.sequelize.query(
             `insert into user_table_structure (user_id, field, fixed, width, title, editRender, visible, editRender_version,tableType)
@@ -115,6 +106,8 @@ const inst_user_table_one = async (dingdingUserId, tableType) => {
  ;`,
             {
                 type: QueryTypes.INSERT,
+                raw: true,
+                logging: true
             }
         )
 
@@ -130,6 +123,7 @@ const del_user_table = async (dingdingUserId) => {
             where: {
                 user_id: dingdingUserId
             },
+            raw: true,
             logging: false
         })
 
@@ -144,6 +138,7 @@ const install_user_table_one = async (title) => {
     try {
         //批量添加数据
         return await userTableStructureModel.bulkCreate(title, {
+            raw: true,
             logging: false
         });
 
