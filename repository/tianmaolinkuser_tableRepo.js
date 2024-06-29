@@ -100,10 +100,11 @@ const inst_user_table_one = async (dingdingUserId, tableType) => {
     //批量复制
     try {
         userTableStructureModel.sequelize.query(
-            `insert into user_table_structure (user_id, field, fixed, width, title, editRender, visible, editRender_version,tableType,type,editing,slots)
- select '${dingdingUserId}', field, fixed, width, title, editRender, visible, editRender_version,tableType ,type ,editing ,slots   from user_table_structure 
- where user_id='all-one' and tableType=${tableType}
- ;`,
+            `INSERT INTO user_table_structure 
+    (user_id, field, fixed, width, title, editRender, visible, editRender_version, tableType, \`type\`, editing, slots)
+    SELECT '${dingdingUserId}', field, fixed, width, title, editRender, visible, editRender_version, tableType, \`type\`, editing, slots 
+    FROM user_table_structure 
+    WHERE user_id='all-one' AND tableType=${tableType};`,
             {
                 type: QueryTypes.INSERT,
                 raw: true,
