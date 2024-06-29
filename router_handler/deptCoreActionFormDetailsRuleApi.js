@@ -5,8 +5,11 @@ const deptCoreActionFormDetailsRuleService = require('../service/deptCoreActionF
 
 const getFormDetailsRule = async (req, res, next) => {
     try {
-        const {formRuleId} = req.query
-        joiUtil.validate({formRuleId: {value: formRuleId, schema: joiUtil.commonJoiSchemas.strRequired}})
+        const {formRuleId, formId} = req.query
+        joiUtil.validate(
+            {formRuleId: {value: formRuleId, schema: joiUtil.commonJoiSchemas.strRequired}},
+            {formId: {value: formId, schema: joiUtil.commonJoiSchemas.strRequired}}
+        )
         const deptFlowForms = await deptCoreActionFormDetailsRuleService.getFormDetailsRule(formRuleId)
         return res.send(biResponse.success(deptFlowForms))
     } catch (e) {

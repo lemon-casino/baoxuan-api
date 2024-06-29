@@ -1,7 +1,21 @@
-const deptCoreActionFormDetailsRuleRepo = require("../repository/deptCoreActionFormDetailsRuleRepo");
+const deptCoreActionFormDetailsRuleRepo = require("../repository/deptCoreActionFormDetailsRuleRepo")
+const flowFormDetailsRepo = require("../repository/flowFormDetailsRepo")
 
-const getFormDetailsRule = async (formRuleId) => {
-    return (await deptCoreActionFormDetailsRuleRepo.getFormDetailsRule(formRuleId))
+const getFormDetailsRule = async (formId, formRuleId) => {
+    const formDifferentVersionDetails = await flowFormDetailsRepo.getFormDifferentVersionsDetails(formId)
+    const formDetailsRules = (await deptCoreActionFormDetailsRuleRepo.getFormDetailsRule(formRuleId))
+    for (const formDetailsRule of formDetailsRules) {
+        const currVersionDetails = formDifferentVersionDetails.find(item => item.title === `表单版本${formDetailsRule.version}`)
+        if (currVersionDetails) {
+            const activity = currVersionDetails.details.find(item => item.activityId === formDetailsRule.activityId)
+            if (activity) {
+                activity.opCode = formDetailsRule.opCode
+                activity.value = formDetailsRule.value
+                activity.formDetailRuleId = formDetailsRule.id
+            }
+        }
+    }
+    return formDifferentVersionDetails
 }
 
 const saveFormDetailsRule = async (model) => {

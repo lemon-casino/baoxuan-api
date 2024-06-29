@@ -4,4 +4,4 @@ const flowFormReviewApi = require("../router_handler/flowFormReviewApi")
 
 router.get("/", flowFormReviewApi.getFormReviews)
 
-module.exports = router;
+module.exports = router
