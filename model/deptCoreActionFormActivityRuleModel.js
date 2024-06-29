@@ -40,7 +40,7 @@ module.exports = sequelize => {
       field: "status"
     },
     owner: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.JSON,
       allowNull: true,
       defaultValue: null,
       primaryKey: false,

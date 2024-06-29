@@ -12,8 +12,8 @@ const getFormDetailsRule = async (req, res, next) => {
                 formId: {value: formId, schema: joiUtil.commonJoiSchemas.strRequired}
             }
         )
-        const deptFlowForms = await deptCoreActionFormDetailsRuleService.getFormDetailsRule(formId, formRuleId)
-        return res.send(biResponse.success(deptFlowForms))
+        const formDetailsRule = await deptCoreActionFormDetailsRuleService.getFormDetailsRule(formId, formRuleId)
+        return res.send(biResponse.success(formDetailsRule))
     } catch (e) {
         next(e)
     }
@@ -23,8 +23,8 @@ const saveFormDetailsRule = async (req, res, next) => {
     try {
         const data = req.body
         joiUtil.clarityValidate(saveParamsSchema, data)
-        const deptFlowForms = await deptCoreActionFormDetailsRuleService.saveFormDetailsRule(data)
-        return res.send(biResponse.success(deptFlowForms))
+        const formDetailsRule = await deptCoreActionFormDetailsRuleService.saveFormDetailsRule(data)
+        return res.send(biResponse.success(formDetailsRule))
     } catch (e) {
         next(e)
     }
@@ -34,8 +34,8 @@ const updateFormDetailsRule = async (req, res, next) => {
     try {
         const data = req.body
         joiUtil.clarityValidate(updateParamsSchema, data)
-        const deptFlowForms = await deptCoreActionFormDetailsRuleService.updateFormDetailsRule(data)
-        return res.send(biResponse.success(deptFlowForms))
+        const formDetailsRule = await deptCoreActionFormDetailsRuleService.updateFormDetailsRule(data)
+        return res.send(biResponse.success(formDetailsRule))
     } catch (e) {
         next(e)
     }

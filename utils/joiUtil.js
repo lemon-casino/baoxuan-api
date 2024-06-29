@@ -7,7 +7,8 @@ const joiErrorMessages = {
     "number.base": "要求为数字",
     "string.base": "要求为字符串",
     "array.base": "要求为数组",
-    
+    "object.base": "要求为json对象",
+
     "any.required": "为必传参数",
     "any.empty": "内容不能为空",
     "string.empty": "内容不能为空",
@@ -24,7 +25,8 @@ const commonJoiSchemas = {
     numberRequired: Joi.number().min(0).required(),
     dateRequired: Joi.date().required(),
     arrayRequired: Joi.array().required(),
-    funcRequired: Joi.func().required()
+    funcRequired: Joi.func().required(),
+    objectRequire: Joi.object().required()
 }
 
 const commonArgsSchemas = {

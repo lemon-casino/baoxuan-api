@@ -11,11 +11,19 @@ const deleteFormActivityRule = async (id) => {
     return (await deptCoreActionFormActivityRuleModel.destroy({where: {id}}))
 }
 
-const updateFormActivityRule = async (model) => {
-    return (await deptCoreActionFormActivityRuleModel.update(model, {where: {id: model.id}}))
+const updateFormActivityRule = async (data) => {
+    return (await deptCoreActionFormActivityRuleModel.update(data, {where: {id: data.id}}))
+}
+
+const getFormActivityRules = async (formRuleId) => {
+    const result = await deptCoreActionFormActivityRuleModel.findAll({
+        where: {deptCoreActionFormRuleId: formRuleId}
+    })
+    return sequelizeUtil.extractDataValues(result)
 }
 
 module.exports = {
+    getFormActivityRules,
     updateFormActivityRule,
     saveFormActivityRule,
     deleteFormActivityRule

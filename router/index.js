@@ -32,5 +32,6 @@ module.exports = {
     "/attendance": require("./attendanceRouter"),
     "/dept-core-action": require("./deptCoreActionRouter"),
     "/dept-core-action-form-rule": require("./deptCoreActionFormRuleRouter"),
-    "/dept-core-action-form-details-rule": require("./deptCoreActionFormDetailsRuleRouter")
+    "/dept-core-action-form-details-rule": require("./deptCoreActionFormDetailsRuleRouter"),
+    "/dept-core-action-form-activity-rule": require("./deptCoreActionFormActivityRuleRouter")
 }
