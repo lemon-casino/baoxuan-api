@@ -3,6 +3,9 @@ const sequelize = require("../model/init");
 const getUserTableStructureModel = require('../model/userTableStructure');
 const userTableStructureModel = getUserTableStructureModel(sequelize);
 
+
+const getRoles = require('../model/roles');
+const getroles = new getRoles(sequelize);
 const getSingleItemTaoBaoModel = require("../model/singleItemTaobaoModel")
 const singleItemTaoBaoModel = getSingleItemTaoBaoModel(sequelize);
 const sequelizeUtil = require("../utils/sequelizeUtil");
@@ -23,6 +26,23 @@ const get_user_table = async (id) => {
         throw new Error('查询用户数据失败');
     }
 };
+const get_roles = async (id) => {
+    try {
+        //
+        return await getroles.sequelize.query(
+            `select   role_name from roles where  role_id in (select  role_id from  users_roles where user_id=${id})`,
+            {
+                raw: true,
+                logging: true
+            }
+        )
+
+
+    } catch (error) {
+        throw new Error('查询用户数据失败');
+    }
+};
+
 const count_structure = async (id, tableType) => {
     try {
         return await userTableStructureModel.count({
@@ -163,6 +183,24 @@ const put_tmall_table = async (item) => {
 
 };
 
+const del_alluser_table = async () => {
+    try {
+        //delete   from  user_table_structure where  user_id!='all-one';
+        return await userTableStructureModel.destroy({
+            where: {
+                user_id: {
+                    [Op.ne]: 'all-one'
+                }
+            },
+            logging: false
+        })
+
+    } catch (error) {
+        throw new Error('删除数据失败');
+    }
+
+};
+
 module.exports = {
     get_user_table,
     count_structure,
@@ -172,5 +210,7 @@ module.exports = {
     inst_user_table_one,
     del_user_table,
     install_user_table_one,
-    put_tmall_table
+    put_tmall_table,
+    get_roles,
+    del_alluser_table
 };
