@@ -23,15 +23,45 @@ const get_user_table = async (id, tableType) => {
 
 const put_user_table = async (field, title, id, tableType) => {
     try {
+        console.log(id)
 
         const user = await tian_mao_link_user_table.get_user_table(id);
 
-        const newVar = await tian_mao_link_user_table.count_structure(user.dingdingUserId, tableType);
-        if (newVar <= 0) {
-            //这里是复制数据
-            await tian_mao_link_user_table.inst_user_table_one(user.dingdingUserId, tableType);
+        const roles = await tian_mao_link_user_table.get_roles(id);
+
+        //这块权限
+        console.log(roles)
+        // roles =[
+        //   [ { role_name: '客服部-部长' }, { role_name: '普通用户' } ],
+        //   [ { role_name: '客服部-部长' }, { role_name: '普通用户' } ]
+        // ] 判断角色 roles 有没有 超级管理员 或者 没有客服部-部长
+        function checkRoles(roles) {
+            return roles.some(roleGroup =>
+                roleGroup.some(role =>
+                    role.role_name === '超级管理员' ||
+                    role.role_name === '天猫组-组长'
+                )
+            );
         }
-        await tian_mao_link_user_table.put_user_table(field, title, user.dingdingUserId, tableType);
+
+        if (checkRoles(roles)) {
+            // 则
+            console.log(field)
+            await tian_mao_link_user_table.put_user_table(field, title, 'all-one', 1);
+            await tian_mao_link_user_table.put_user_table(field, title, 'all-one', 2);
+            await tian_mao_link_user_table.del_alluser_table();
+        } else {
+
+            const newVar = await tian_mao_link_user_table.count_structure(user.dingdingUserId, tableType);
+            if (newVar <= 0) {
+                //这里是复制数据
+                await tian_mao_link_user_table.inst_user_table_one(user.dingdingUserId, tableType);
+            }
+
+            await tian_mao_link_user_table.put_user_table(field, title, user.dingdingUserId, tableType);
+        }
+
+
     } catch (e) {
     }
 }
