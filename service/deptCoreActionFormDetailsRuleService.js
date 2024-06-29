@@ -3,7 +3,7 @@ const flowFormDetailsRepo = require("../repository/flowFormDetailsRepo")
 
 const getFormDetailsRule = async (formId, formRuleId) => {
     const formDifferentVersionDetails = await flowFormDetailsRepo.getFormDifferentVersionsDetails(formId)
-    const formDetailsRules = (await deptCoreActionFormDetailsRuleRepo.getFormDetailsRule(formRuleId))
+    const formDetailsRules = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRule(formRuleId)
     for (const formDetailsRule of formDetailsRules) {
         const currVersionDetails = formDifferentVersionDetails.find(item => item.title === `表单版本${formDetailsRule.version}`)
         if (currVersionDetails) {
