@@ -15,15 +15,13 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
  */
 const get = async (userNames, flows, coreConfig) => {
     const finalResult = []
-
-    // 从 coreConfig 中查找所有含有rules数据路径，然后进行统计汇总
-    for (const config of coreConfig) {
-        if (config.rules && config.rules.length > 0) {
-            config.stat = {"name": 10}
-        }
-    }
-
-    console.log("ui")
+    //
+    // // 从 coreConfig 中查找所有含有rules数据路径，然后进行统计汇总
+    // for (const config of coreConfig) {
+    //     if (config.rules && config.rules.length > 0) {
+    //         config.stat = {"name": 10}
+    //     }
+    // }
 
     // 根据配置信息获取基于所有人的数据
     // eg：[{actionName: "市场分析", children: [{"nameCN": "待做", children: [{nameCN:"逾期", children:[{userName: "张三", sum: 1, ids: ["xxx"]}]}]}]}]
@@ -43,7 +41,6 @@ const get = async (userNames, flows, coreConfig) => {
             // 根据配置中状态的计算规则进行统计
             for (const rule of rules) {
                 let currentFlows = flows.filter((flow) => flow.formUuid === rule.formId)
-
                 // 需要计算的节点对
                 for (const flowNodeRule of rule.flowNodeRules) {
                     if (rule.flowDetailsRules) {
@@ -56,6 +53,7 @@ const get = async (userNames, flows, coreConfig) => {
 
                     const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = flowNodeRule
                     for (let flow of currentFlows) {
+
                         const processInstanceId = flow.processInstanceId
                         let fromMatched = false
                         let toMatched = false
@@ -127,8 +125,12 @@ const get = async (userNames, flows, coreConfig) => {
                                 userFlows = notOverDueResult.children.filter(item => item.userName === operator)
                             }
                             if (userFlows.length > 0 && userFlows[0].ids && userFlows[0].ids.length > 0) {
-                                userFlows[0].ids.push(processInstanceId)
-                                userFlows[0].sum = userFlows[0].ids.length
+                                // 避免一人在同一流程中干多个活重复计算
+                                if (!userFlows[0].ids.includes(processInstanceId)) {
+                                    userFlows[0].ids.push(processInstanceId)
+                                    userFlows[0].sum = userFlows[0].ids.length
+                                }
+
                             } else {
                                 userFlows = {userName: operator, sum: 1, ids: [processInstanceId]}
                                 if (isOverDue) {

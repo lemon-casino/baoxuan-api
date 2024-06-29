@@ -44,14 +44,57 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
     let userNameArr = userNames.includes(",") ? userNames.split(",") : [userNames]
     userNameArr = userNameArr.filter(item => !!item)
     const userStatArr = []
+    // 外包人员录入错乱，需要整理
+    const mixedOutSourcingUsers = [
+        {
+            username: "皓峰摄影",
+            children: ["德化皓峰", "皓峰摄影", "黄建榉"]
+        },
+        {
+            username: "秒峰摄影",
+            children: ["秒峰摄影", "妙峰", "陈辉灿"]
+        },
+        {
+            username: "周俊腾",
+            children: ["周", "周俊腾"]
+        },
+        {
+            username: "徐彩玉",
+            children: ["语嫣", "徐彩玉"]
+        },
+        {
+            username: "芬芬",
+            children: ["芬芬", "​芬​芬"]
+        },
+        {
+            username: "美丽满屋",
+            children: ["美丽满屋", "广东美丽满屋"]
+        }
+        // {username: "", children: [""]},
+        // {username: "", children: [""]},
+    ]
+
+    const users = mixedOutSourcingUsers
     for (const username of userNameArr) {
-        const getActionChildren = (username) => {
+        let isErrOutSourcingUser = false
+        for (const mixedOutSourcingUser of mixedOutSourcingUsers) {
+            if (mixedOutSourcingUser.children.includes(username)) {
+                isErrOutSourcingUser = true
+                break
+            }
+        }
+        if (!isErrOutSourcingUser) {
+            users.push({username, children: [username]})
+        }
+    }
+
+    for (const user of users) {
+        const getActionChildren = (usernames) => {
             const statusKeyTexts = ["待", "中", "完"]
             const leve1Actions = ["待转入", "进行中", "已完成"]
             const leve2Actions = ["逾期", "未逾期"]
             const result = []
             for (const l1Action of leve1Actions) {
-
                 // const actionAndStatus = l1Action.split("-")
                 // const basicUserStat = userStatResult.find(item => item.actionName === actionAndStatus[0])
                 const currStatusKeyText = statusKeyTexts.find(key => l1Action.includes(key))
@@ -59,9 +102,7 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
                 const l1ActionStructure = {nameCN: l1Action, nameEN: "", children: []}
                 for (const l2Action of leve2Actions) {
                     const l2ActionStructure = {
-                        nameCN: l2Action,
-                        nameEN: "",
-                        children: []
+                        nameCN: l2Action, nameEN: "", children: []
                     }
 
                     // 找出所有key所对应的逾期所包含的children
@@ -71,9 +112,11 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
                         const sameKeyTextStat = result.children.filter(item => item.nameCN.includes(currStatusKeyText))
                         for (const statusActionStat of sameKeyTextStat) {
                             const overdueActionStat = statusActionStat.children.find(item => item.nameCN === l2Action)
-                            const userActionStat = overdueActionStat.children.find(item => item.userName === username)
-                            if (userActionStat) {
-                                ids = ids.concat(userActionStat.ids)
+                            const userActionStat = overdueActionStat.children.filter(item => usernames.includes(item.userName))
+                            if (userActionStat.length > 0) {
+                                for (const stat of userActionStat) {
+                                    ids = ids.concat(stat.ids)
+                                }
                             }
                         }
                         l2ActionStructure.children.push({userName: actionName, ids, sum: ids.length})
@@ -84,10 +127,12 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
             }
             return result
         }
-        const userStatStructure = {
-            actionName: username, actionCode: "userActStat", children: getActionChildren(username)
+        if(!user.username.includes("离职")){
+            const userStatStructure = {
+                actionName: user.username, actionCode: "userActStat", children: getActionChildren(user.children)
+            }
+            userStatArr.push(userStatStructure)
         }
-        userStatArr.push(userStatStructure)
     }
     for (const userStat of userStatArr) {
         userStatResult.unshift(userStat)
@@ -238,18 +283,12 @@ const convertToActivityStat = (userStatResult) => {
  */
 const convertToStatusStatResult = (flows, coreActionConfig, userStatResult) => {
     const overdueConfigTemplate = [{nameCN: "逾期", nameEN: "overdue", children: []}, {
-        nameCN: "未逾期",
-        nameEN: "notOverdue",
-        children: []
+        nameCN: "未逾期", nameEN: "notOverdue", children: []
     }]
     const flowStatConfigTemplate = [{
-        nameCN: "待转入",
-        nameEN: "TODO",
-        children: _.cloneDeep(overdueConfigTemplate)
+        nameCN: "待转入", nameEN: "TODO", children: _.cloneDeep(overdueConfigTemplate)
     }, {nameCN: "进行中", nameEN: "DOING", children: _.cloneDeep(overdueConfigTemplate)}, {
-        nameCN: "已完成",
-        nameEN: "DONE",
-        children: _.cloneDeep(overdueConfigTemplate)
+        nameCN: "已完成", nameEN: "DONE", children: _.cloneDeep(overdueConfigTemplate)
     }]
 
     const statusKeyTexts = ["待", "中", "完"]
