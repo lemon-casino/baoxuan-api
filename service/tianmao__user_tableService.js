@@ -27,7 +27,6 @@ const put_user_table = async (field, title, id, tableType) => {
         const user = await tian_mao_link_user_table.get_user_table(id);
 
         const newVar = await tian_mao_link_user_table.count_structure(user.dingdingUserId, tableType);
-        console.log(field, title, id, tableType)
         if (newVar <= 0) {
             //这里是复制数据
             await tian_mao_link_user_table.inst_user_table_one(user.dingdingUserId, tableType);
