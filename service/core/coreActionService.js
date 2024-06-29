@@ -40,10 +40,62 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
     const outSourcingFlows = combinedFlows.filter(item => outSourcingFormIds.includes(item.formUuid))
     const outSourcingStatusStatFlowResult = convertToStatusStatResult(outSourcingFlows, coreActionConfig, userStatResult)
 
+    // 以人为主线统计工作量
+    let userNameArr = userNames.includes(",") ? userNames.split(",") : [userNames]
+    userNameArr = userNameArr.filter(item => !!item)
+    for (const username of userNameArr) {
+        const getActionChildren = (username) => {
+            const statusKeyTexts = ["待", "中", "完"]
+            const leve1Actions = [
+                "全套-待转入", "全套-进行中", "全套-已完成",
+                "半套-待转入", "半套-进行中", "半套-已完成",
+                "散图-待转入", "散图-进行中", "散图-已完成",
+                "视频-待转入", "视频-进行中", "散图-已完成"
+            ]
+            const leve2Actions = ["逾期", "未逾期"]
+            const result = []
+            for (const l1Action of leve1Actions) {
+                const actionAndStatus = l1Action.split("-")
+                const basicUserStat = userStatResult.find(item => item.actionName === actionAndStatus[0])
+                const currStatusKeyText = statusKeyTexts.find(key => actionAndStatus[1].includes(key))
+
+                const l1ActionStructure = {nameCN: l1Action, nameEN: "", children: []}
+                for (const l2Action of leve2Actions) {
+                    const l2ActionStructure = {
+                        nameCN: l2Action,
+                        nameEN: "",
+                        children: []
+                    }
+
+                    let ids = []
+                    // 对于待转入-进行中-已完成的状态都会有美编和视摄影（摄影进行中，美编进行中）
+                    const sameKeyTextStat = basicUserStat.children.filter(item => item.nameCN.includes(currStatusKeyText))
+                    for (const statusStat of sameKeyTextStat) {
+                        const overDueStatusUserStat = statusStat.children.find(item => item.nameCN === l2Action)
+                        const originUserState = overDueStatusUserStat.children.find(item => item.userName === username)
+                        if (originUserState) {
+                            ids = ids.concat(originUserState.ids)
+                        }
+                    }
+                    l2ActionStructure.children.push({userName: "合计", ids, sum: ids.length})
+
+                    l1ActionStructure.children.push(l2ActionStructure)
+                }
+                result.push(l1ActionStructure)
+            }
+            return result
+        }
+        const userStatStructure = {
+            actionName: username, actionCode: "userActStat", children: getActionChildren(username)
+        }
+        userStatResult.unshift(userStatStructure)
+    }
+
     // 向结果中填充数据
     userStatResult.unshift({
         actionName: "工作量汇总", actionCode: "sumActStat", children: activityStatResult
     })
+
     userStatResult.unshift({
         actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
     })
@@ -184,15 +236,20 @@ const convertToActivityStat = (userStatResult) => {
  * @returns {*[]}
  */
 const convertToStatusStatResult = (flows, coreActionConfig, userStatResult) => {
-    const overdueConfigTemplate = [
-        {nameCN: "逾期", nameEN: "overdue", children: []},
-        {nameCN: "未逾期", nameEN: "notOverdue", children: []}
-    ]
-    const flowStatConfigTemplate = [
-        {nameCN: "待转入", nameEN: "TODO", children: _.cloneDeep(overdueConfigTemplate)},
-        {nameCN: "进行中", nameEN: "DOING", children: _.cloneDeep(overdueConfigTemplate)},
-        {nameCN: "已完成", nameEN: "DONE", children: _.cloneDeep(overdueConfigTemplate)}
-    ]
+    const overdueConfigTemplate = [{nameCN: "逾期", nameEN: "overdue", children: []}, {
+        nameCN: "未逾期",
+        nameEN: "notOverdue",
+        children: []
+    }]
+    const flowStatConfigTemplate = [{
+        nameCN: "待转入",
+        nameEN: "TODO",
+        children: _.cloneDeep(overdueConfigTemplate)
+    }, {nameCN: "进行中", nameEN: "DOING", children: _.cloneDeep(overdueConfigTemplate)}, {
+        nameCN: "已完成",
+        nameEN: "DONE",
+        children: _.cloneDeep(overdueConfigTemplate)
+    }]
 
     const statusKeyTexts = ["待", "中", "完"]
     const statusStatFlowResult = getFlowSumStructure(_.cloneDeep(userStatResult), flowStatConfigTemplate)
@@ -276,8 +333,7 @@ const convertToStatusStatResult = (flows, coreActionConfig, userStatResult) => {
                     if (!visionFormDoneActivity) {
                         continue
                     }
-                    const requiredDoneActivities = flow.overallprocessflow.filter(item => visionFormDoneActivity.doneActivityIds.includes(item.activityId) &&
-                        item.type === flowReviewTypeConst.HISTORY)
+                    const requiredDoneActivities = flow.overallprocessflow.filter(item => visionFormDoneActivity.doneActivityIds.includes(item.activityId) && item.type === flowReviewTypeConst.HISTORY)
                     if (requiredDoneActivities.length === 0) {
                         continue
                     }
