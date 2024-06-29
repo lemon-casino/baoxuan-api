@@ -87,7 +87,7 @@ const put_user_table = async (field, title, dingdingUserId, tableType) => {
                 }
             },
             raw: true,
-            logging: true
+            logging: false
 
         })
     } catch (error) {
@@ -107,7 +107,7 @@ const inst_user_table_one = async (dingdingUserId, tableType) => {
             {
                 type: QueryTypes.INSERT,
                 raw: true,
-                logging: true
+                logging: false
             }
         )
 
