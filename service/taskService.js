@@ -26,7 +26,12 @@ const sequelizeErrorConst = require("../const/sequelizeErrorConst")
 const oaReq = require("../core/dingDingReq/oaReq")
 const intelligentHRReq = require("../core/dingDingReq/intelligentHRReq")
 const attendanceReq = require("../core/dingDingReq/attendanceReq")
-
+const {flowStatusConst} = require("../const/flowConst");
+const singleItemTaoBaoService = require("./singleItemTaoBaoService");
+const {
+    getLinknewvaCount
+} = require("./singleItemTaoBaoService");
+const {createProcess} = require("../service/dingDingService")
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
     const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
@@ -252,6 +257,179 @@ const syncOaProcessTemplates = async () => {
     console.log("同步完成")
 }
 
+
+/*
+* 天猫异常定时任务*/
+const tmallLinkAnomalyDetection = async () => {
+    logger.info("天猫链接异常同步进行中...")
+    //获得天猫链接数据异常的链接id
+    const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(14)
+    // 获得所有负责人的信息
+    const productLineLeaders = result.productLineLeaders.reduce((acc, group) => {
+        // 使用展开操作符将当前对象的第一个键对应的数组的所有元素添加到累加器数组中
+        acc.push(...group[Object.keys(group)[0]]);
+        return acc;
+    }, []); // 初始值是一个空数组 []
+    // logger.info("天猫链接异常同步进行中...来到了负责人这里")
+    const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
+        productLineLeaders,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        //开始时间"2024-06-24", 结束时间  "2024-06-25"
+        JSON.parse("[\"2024-06-25 00:0\",\"2024-06-25 23:59\"]"),
+        null)
+    // 查询所有负责人属于 异常的链接的数据
+    const data = await getLinknewvaCount(singleItems, productLineLeaders, ['2024-06-25 00:0', '2024-06-25 23:59'])
+    // 获取所有 recordTheLinkID
+    const getAllRecordTheLinkID = (items) => {
+        return items.reduce((acc, item) => {
+            return acc.concat(item.recordTheLinkID);
+        }, []);
+    };
+
+// 获取所有 ongoing 和 done 的 recordTheLinkID
+    const ongoingRecordTheLinkID = getAllRecordTheLinkID(data.ongoing.items);
+    const doneRecordTheLinkID = getAllRecordTheLinkID(data.done.items);
+
+// 创建一个 Set 来存储 ongoing 和 done 的 recordTheLinkID
+    const ongoingAndDoneRecordTheLinkID = new Set([...ongoingRecordTheLinkID, ...doneRecordTheLinkID]);
+
+// 初始化一个对象来存储没有发起的异常
+    const notStartedExceptions = {items: [], sum: 0};
+
+// 从 error 中的每个异常项中移除 ongoing 和 done 中已经存在的 recordTheLinkID
+    data.error.items.forEach(item => {
+        const remainingRecordTheLinkID = item.recordTheLinkID.filter(id => !ongoingAndDoneRecordTheLinkID.has(id));
+        if (remainingRecordTheLinkID.length > 0) {
+            notStartedExceptions.items.push({
+                name: item.name,
+                recordTheLinkID: remainingRecordTheLinkID
+            });
+            notStartedExceptions.sum += remainingRecordTheLinkID.length;
+        }
+    });
+    //  logger.info("天猫链接异常同步进行中...来到了数据刷选：", notStartedExceptions)
+
+    //转换数据
+
+    const userlist = await userService.getDingDingUserIdAndNickname()
+    logger.info("天猫链接异常同步进行中...notStartedExceptions.items：", notStartedExceptions)
+    const linkIdMap = notStartedExceptions.items.reduce((acc, item) => {
+        item.recordTheLinkID.forEach((record) => {
+            const matchingUser = userlist.find((user) => user.nickname === record.productLineLeader);
+            const uuid = matchingUser ? matchingUser.dingding_user_id : null;
+            //不记录undefined 的数据
+            if (acc[record.linkId]) {
+                //如果 linkId 已存在，则将新名称推送到数组
+                if (Array.isArray(acc[record.linkId].name)) {
+                    acc[record.linkId].name.push(item.name);
+                } else {
+                    acc[record.linkId].name = [acc[record.linkId].name, item.name];
+                }
+                acc[record.linkId].productLineLeader = record.productLineLeader;
+                acc[record.linkId].linkType = record.linkType;
+                acc[record.linkId].uuid = uuid;
+                //产品名称
+                acc[record.linkId].productName = record.name;
+            } else {
+                acc[record.linkId] = {
+                    productName: record.name,
+                    name: [item.name],
+                    productLineLeader: record.productLineLeader,
+                    linkType: record.linkType,
+                    uuid: uuid,
+                };
+            }
+        });
+        return acc;
+    }, {});
+
+// 清理 undefined 键值对
+    const cleanedLinkIdMap = Object.entries(linkIdMap)
+        //删除key 为undefined的
+        .filter(([key, value]) =>
+            key !== 'undefined'
+            //删除 value的name 是数组  如果只是费比超过15%的  比如 name:['费比超过15%‘]和 linkType的标签是新品30 或者新品60 这条数据过滤掉
+            && !((Array.isArray(value.name) && value.name.length === 1 && value.name[0] === '费比超过15%' && (value.linkType === '新品30' || value.linkType === '新品60')))
+        )
+        .reduce((acc, [key, value]) => {
+            acc[key] = value;
+            return acc;
+        }, {});
+
+    logger.info('transformedData', cleanedLinkIdMap)
+
+
+    const formId = "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB";
+    const processCode = "TPROC--CP766081CPAB676X6KT35742KAC22BLLKHIILC";
+    const getNextWeekTimestamps = () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).getTime();
+        const end = start + 7 * 24 * 60 * 60 * 1000;
+        return [start.toString(), end.toString()];
+    };
+
+    /*    const sendRequests = async () => {
+            for (const [key, value] of Object.entries(cleanedLinkIdMap)) {
+                //删除 value的name 是数组 有其它的异常 比如 name:['费比超过15%','老品利润率低于15%']   linkType的标签是新品30 或者新品60   删除掉  费比超过15% 这个数组中的费比超过15%
+                if (Array.isArray(value.name) && value.name.length > 1 && value.name.includes('费比超过15%') && (value.linkType === '新品30' || value.linkType === '新品60'))
+                {
+                    value.name = value.name.filter(name => name !== '费比超过15%');
+                }
+
+                const userId = value.uuid;
+                const multiSelectField_lwufb7oy = value.name;
+                const cascadeDateField_lloq9vjk = getNextWeekTimestamps();
+                const textField_liihs7kv = value.productName;
+                const textField_liihs7kw = key;
+                const employeeField_liihs7l0 = [userId];
+                const formDataJsonStr = JSON.stringify({
+                    textField_liihs7kv,
+                    textField_liihs7kw,
+                    employeeField_liihs7l0,
+                    radioField_lx30hv7y: "否",
+                    radioField_lwuecm6c: "是",
+                    selectField_liihs7ky: "老猫",
+                    selectField_liihs7kz: "老品问题",
+                    multiSelectField_lwufb7oy,
+                    cascadeDateField_lloq9vjk
+                }, null, 2);
+
+                try {
+                    await dingDingService.createProcess(formId, userId, processCode, formDataJsonStr);
+                    logger.info(`发起宜搭 bi测试流程成功 for linkId ${key}`);
+                } catch (e) {
+                    logger.error(`发起宜搭 bi测试流程失败 for linkId ${key}`, e);
+                }
+            }
+        };
+        await sendRequests();*/
+
+
+    //发起宜搭 bi测试流程
+
+
+    //所有的异常 id 减去正在进行中的异常 减去已完成的 剩下的 都是需要推送的异常
+
+
+    //是否需要从redis中获取正在进行中的流程
+
+
+    // 获得运营优化方案 FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB 的redis 运行中的流程
+    //  const runningFlows = await redisRepo.getTodayRunningAndFinishedFlows()
+
+
+    logger.info("同步完成：天猫链接异常检测")
+}
+
+
+// tmallLinkAnomalyDetection().then(r => {
+//     console.log("xx")
+// })
 /**
  * 将已完成和取消的流程入库
  *
@@ -381,6 +559,8 @@ module.exports = {
     syncForm,
     syncDingDingToken,
     syncUserLogin,
+    syncResignEmployeeInfo,
+    tmallLinkAnomalyDetection,
     syncResignEmployeeInfo,
     syncHROaNotStockedProcess,
     syncHROaFinishedProcess,

@@ -9,6 +9,8 @@ const NotFoundError = require("../error/http/notFoundError")
 const {tmInnerGroup, visionInnerGroup} = require("../const/tmp/innerGroupConst")
 const innerGroups = require("../const/tmp/innerGroupConst")
 const {errorCodes} = require("../const/errorConst");
+const models = require("../model");
+const {Sequelize, Op} = require("sequelize");
 
 const getDingDingUserId = async (user_id) => {
     const user = await UsersModel.findOne({
@@ -224,6 +226,21 @@ const syncUserToDB = async (usersInRedis) => {
 
 }
 
+const getDingDingUserIdAndNickname = async () => {
+    try {
+
+        return await UsersModel.findAll({
+            attributes: ['dingding_user_id', 'nickname'],
+            raw: true,
+            logging: false
+        });
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
+
 module.exports = {
     getDingDingUserId,
     getUsersOfDepartment,
@@ -233,5 +250,6 @@ module.exports = {
     getVisionInnerGroups,
     getUsers,
     getEnabledUsers,
-    syncUserToDB
+    syncUserToDB,
+    getDingDingUserIdAndNickname
 }

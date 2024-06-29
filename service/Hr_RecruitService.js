@@ -286,9 +286,15 @@ function mergeArrays(targetArray, sourceArray, key, mergeField) {
 
 // 计算每个的在职情况
 function calculateEmployeeCount(initialCount, plan) {
-    const currentMonth = (`0${new Date().getMonth() + 1}`).slice(-2);
+    // 输入验证
+    if (typeof initialCount !== 'number' || !Array.isArray(plan) || plan.length === 0 || !plan.every(item => item.hasOwnProperty('month') && item.hasOwnProperty('on_board_count') && item.hasOwnProperty('turnover_count'))) {
+        throw new Error('输入无效：initialCount 必须是数字，plan 必须是有效对象的非空数组。');
+    }
+
+    const currentMonth = (`0${new Date().getUTCMonth() + 1}`).slice(-2); // 使用UTC月份
     let currentCount = initialCount;
-    const result = plan.map((item, index) => {
+
+    return plan.map((item, index) => {
         if (item.month <= currentMonth) {
             currentCount += item.on_board_count - item.turnover_count;
             return {
@@ -302,7 +308,6 @@ function calculateEmployeeCount(initialCount, plan) {
             };
         }
     });
-    return result;
 }
 
 const curriculumVitaelikename = async (rest) => {

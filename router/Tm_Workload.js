@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const TM_StoreDataService = require('../service/TM_StoreDataService');
 const {success} = require("../utils/biResponse");
-const userService = require("../service/userService");
 
 // 提取出来的处理日期范围的函数
 const handleDateRange = (timeRange) => {
@@ -18,17 +17,16 @@ const handleDateRange = (timeRange) => {
 
 router.get('/storedata', async (req, res) => {
     try {
-        let { timeRange } = req.query;
-        const { page, pageSize } = req.query;
+        let {timeRange} = req.query;
+        const {page, pageSize} = req.query;
         timeRange = handleDateRange(timeRange);
         // 增加 分页功能
-        const videos = await TM_StoreDataService.getVideosByDateRange(timeRange,page,pageSize);
+        const videos = await TM_StoreDataService.getVideosByDateRange(timeRange, page, pageSize);
         return res.send(success(videos));
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({message: error.message});
     }
 });
-
 
 
 module.exports = router;
