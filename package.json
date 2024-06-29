@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "concurrently \"mocha --recursive\" \"cross-env NODE_ENV=dev node-dev app.js\"",
+    "start": " \"cross-env NODE_ENV=dev node-dev app.js\"",
     "sync": "cross-env NODE_ENV=dev node-dev scripts/sync.js",
     "sync_prod": "cross-env NODE_ENV=prod node-dev scripts/sync.js",
     "prod": "cross-env NODE_ENV=prod node-dev app.js",
