@@ -47,6 +47,15 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: null,
       field: "owner"
+    },
+    version: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "version"
     }
   };
   const options = {
