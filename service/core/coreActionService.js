@@ -12,7 +12,7 @@ const departmentCoreActivityStat = require("../../core/statistic/departmentCoreA
 const flowUtil = require("../../utils/flowUtil")
 const algorithmUtil = require("../../utils/algorithmUtil")
 
-const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneDate) => {
+const getCoreActions = async (userId, deptId, innerUserNames, startDoneDate, endDoneDate) => {
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptId)
     const differentForms = extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
     const configuredFormIds = differentForms.inner.concat(differentForms.outSourcing).map(item => item.formId)
@@ -23,149 +23,50 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
 
     const {resignedUsers, outUsers} = await getOutAndResignedUsers(userId, deptId)
     const outUserNames = outUsers.map(item => item.userName)
-    userNames = `${userNames},${resignedUsers.join(",")},${outUserNames.join(",")}`
+    const requiredUserNames = `${innerUserNames},${resignedUsers.join(",")},${outUserNames.join(",")}`
 
     // 基于人的汇总(最基本的明细统计)
-    const userStatResult = await departmentCoreActivityStat.get(userNames, combinedFlows, coreActionConfig)
+    const actionStatBasedOnUserResult = await departmentCoreActivityStat.get(requiredUserNames, combinedFlows, coreActionConfig)
 
-    const activityStatResult = convertToActivityStat(userStatResult)
+    const sumUserActionStatResult = sumUserActionStat(actionStatBasedOnUserResult)
 
-    const statusStatFlowResult = convertToStatusStatResult(combinedFlows, coreActionConfig, userStatResult)
+    const statusStatFlowResult = convertToFlowStatResult(combinedFlows, coreActionConfig, actionStatBasedOnUserResult)
 
     // 对内部的流程进行转化统计
     const innerFormIds = differentForms.inner.map(item => item.formId)
     const innerFlows = combinedFlows.filter(item => innerFormIds.includes(item.formUuid))
-    const innerStatusStatFlowResult = convertToStatusStatResult(innerFlows, coreActionConfig, userStatResult)
+    const innerStatusStatFlowResult = convertToFlowStatResult(innerFlows, coreActionConfig, actionStatBasedOnUserResult)
 
     // 对外包的流程进行转化统计
     const outSourcingFormIds = differentForms.outSourcing.map(item => item.formId)
     const outSourcingFlows = combinedFlows.filter(item => outSourcingFormIds.includes(item.formUuid))
-    const outSourcingStatusStatFlowResult = convertToStatusStatResult(outSourcingFlows, coreActionConfig, userStatResult)
+    const outSourcingStatusStatFlowResult = convertToFlowStatResult(outSourcingFlows, coreActionConfig, actionStatBasedOnUserResult)
 
-    // 以人为主线统计工作量
-    let userNameArr = userNames.includes(",") ? userNames.split(",") : [userNames]
-    userNameArr = userNameArr.filter(item => !!item)
-    const userStatArr = []
-    // 外包人员录入错乱，需要整理
-    const mixedOutSourcingUsers = [
-        {
-            username: "皓峰摄影",
-            children: ["德化皓峰", "皓峰摄影", "黄建榉"]
-        },
-        {
-            username: "秒峰摄影",
-            children: ["秒峰摄影", "妙峰", "陈辉灿"]
-        },
-        {
-            username: "周俊腾",
-            children: ["周", "周俊腾"]
-        },
-        {
-            username: "徐彩玉",
-            children: ["语嫣", "徐彩玉"]
-        },
-        {
-            username: "芬芬",
-            children: ["芬芬", " 芬 芬"]
-        },
-        {
-            username: "美丽满屋",
-            children: ["美丽满屋", "广东美丽满屋"]
-        }
-    ]
+    // 从人的角度统计工作量
+    let innerUserNameArr = innerUserNames.includes(",") ? innerUserNames.split(",") : [innerUserNames]
+    // 过滤掉因为split可能存在的空值
+    innerUserNameArr = innerUserNameArr.filter(item => !!item)
+    const userStatArr = convertToUserActionResult(innerUserNameArr, outUsers, actionStatBasedOnUserResult)
 
-    const users = mixedOutSourcingUsers
-    for (const username of userNameArr) {
-        let isErrOutSourcingUser = false
-        for (const mixedOutSourcingUser of mixedOutSourcingUsers) {
-            if (mixedOutSourcingUser.children.includes(username)) {
-                isErrOutSourcingUser = true
-                break
-            }
-        }
-        if (!isErrOutSourcingUser) {
-            users.push({username, children: [username]})
-        }
-    }
-
-    for (const user of users) {
-        const getActionChildren = (usernames) => {
-            const statusKeyTexts = ["待", "中", "完"]
-            const leve1Actions = ["待转入", "进行中", "已完成"]
-            const leve2Actions = ["逾期", "未逾期"]
-            const result = []
-            for (const l1Action of leve1Actions) {
-                // const actionAndStatus = l1Action.split("-")
-                // const basicUserStat = userStatResult.find(item => item.actionName === actionAndStatus[0])
-                const currStatusKeyText = statusKeyTexts.find(key => l1Action.includes(key))
-
-                const l1ActionStructure = {nameCN: l1Action, nameEN: "", children: []}
-                for (const l2Action of leve2Actions) {
-                    const l2ActionStructure = {
-                        nameCN: l2Action, nameEN: "", children: []
-                    }
-
-                    // 找出所有key所对应的逾期所包含的children
-                    for (const result of userStatResult) {
-                        let ids = []
-                        const actionName = result.actionName
-                        const sameKeyTextStat = result.children.filter(item => item.nameCN.includes(currStatusKeyText))
-                        for (const statusActionStat of sameKeyTextStat) {
-                            const overdueActionStat = statusActionStat.children.find(item => item.nameCN === l2Action)
-                            const userActionStat = overdueActionStat.children.filter(item => usernames.includes(item.userName))
-                            if (userActionStat.length > 0) {
-                                for (const stat of userActionStat) {
-                                    ids = ids.concat(stat.ids)
-                                }
-                            }
-                        }
-                        l2ActionStructure.children.push({userName: actionName, ids, sum: ids.length})
-                    }
-                    l1ActionStructure.children.push(l2ActionStructure)
-                }
-                result.push(l1ActionStructure)
-            }
-            return result
-        }
-        if (!user.username.includes("离职")) {
-            const isOut = outUserNames.includes(user.username)
-            let attrs = {}
-            if (isOut) {
-                const outUser = outUsers.find(item => item.userName === user.username)
-                attrs = {
-                    isOut: true,
-                    outGroupCode: outUser.groupCode,
-                    outGroupName: outUser.groupName
-                }
-            }
-            const userStatStructure = {
-                actionCode: "userActStat",
-                actionName: user.username,
-                attrs,
-                children: getActionChildren(user.children)
-            }
-            userStatArr.push(userStatStructure)
-        }
-    }
     for (const userStat of userStatArr) {
-        userStatResult.unshift(userStat)
+        actionStatBasedOnUserResult.unshift(userStat)
     }
     // 向结果中填充数据
-    userStatResult.unshift({
-        actionName: "工作量汇总", actionCode: "sumActStat", children: activityStatResult
+    actionStatBasedOnUserResult.unshift({
+        actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult
     })
 
-    userStatResult.unshift({
+    actionStatBasedOnUserResult.unshift({
         actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
     })
-    userStatResult.unshift({
+    actionStatBasedOnUserResult.unshift({
         actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
     })
-    userStatResult.unshift({
+    actionStatBasedOnUserResult.unshift({
         actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
     })
 
-    return flowUtil.statIdsAndSumFromBottom(userStatResult)
+    return flowUtil.statIdsAndSumFromBottom(actionStatBasedOnUserResult)
 }
 
 /**
@@ -253,7 +154,7 @@ const getOutAndResignedUsers = async (userId, deptId) => {
  * @param userStatResult
  * @returns {*[]}
  */
-const convertToActivityStat = (userStatResult) => {
+const sumUserActionStat = (userStatResult) => {
     const activityStatResult = getActivityStatStructure(_.cloneDeep(userStatResult))
     for (const actionStatResult of userStatResult) {
         const coreActionName = actionStatResult.actionName
@@ -297,7 +198,7 @@ const convertToActivityStat = (userStatResult) => {
  * @param userStatResult
  * @returns {*[]}
  */
-const convertToStatusStatResult = (flows, coreActionConfig, userStatResult) => {
+const convertToFlowStatResult = (flows, coreActionConfig, userStatResult) => {
     const overdueConfigTemplate = [{nameCN: "逾期", nameEN: "overdue", children: []}, {
         nameCN: "未逾期", nameEN: "notOverdue", children: []
     }]
@@ -447,6 +348,109 @@ const convertToStatusStatResult = (flows, coreActionConfig, userStatResult) => {
         }
     }
     return statusStatFlowResult
+}
+
+const convertToUserActionResult = (innerUserNames, outUsers, userStatResult) => {
+    const userStatArr = []
+    // 外包人员录入错乱，需要根据配置整理整理人员参数结构
+    const mixedOutSourcingUsers = [
+        {
+            username: "皓峰摄影",
+            children: ["德化皓峰", "皓峰摄影", "黄建榉"]
+        },
+        {
+            username: "秒峰摄影",
+            children: ["秒峰摄影", "妙峰", "陈辉灿"]
+        },
+        {
+            username: "周俊腾",
+            children: ["周", "周俊腾"]
+        },
+        {
+            username: "徐彩玉",
+            children: ["语嫣", "徐彩玉"]
+        },
+        {
+            username: "芬芬",
+            children: ["芬芬", " 芬 芬"]
+        },
+        {
+            username: "美丽满屋",
+            children: ["美丽满屋", "广东美丽满屋"]
+        }
+    ]
+    const userNamesArr = innerUserNames.concat(outUsers.map(item => item.userName))
+    const newStructureUsers = mixedOutSourcingUsers
+    for (const username of userNamesArr) {
+        let isErrOutSourcingUser = false
+        for (const mixedOutSourcingUser of mixedOutSourcingUsers) {
+            if (mixedOutSourcingUser.children.includes(username)) {
+                isErrOutSourcingUser = true
+                break
+            }
+        }
+        if (!isErrOutSourcingUser) {
+            newStructureUsers.push({username, children: [username]})
+        }
+    }
+
+    for (const user of newStructureUsers) {
+        const getActionChildren = (usernames) => {
+            const statusKeyTexts = ["待", "中", "完"]
+            const leve1Actions = ["待转入", "进行中", "已完成"]
+            const leve2Actions = ["逾期", "未逾期"]
+            const result = []
+            for (const l1Action of leve1Actions) {
+                const currStatusKeyText = statusKeyTexts.find(key => l1Action.includes(key))
+                const l1ActionStructure = {nameCN: l1Action, nameEN: "", children: []}
+                for (const l2Action of leve2Actions) {
+                    const l2ActionStructure = {
+                        nameCN: l2Action, nameEN: "", children: []
+                    }
+
+                    // 找出所有key所对应的逾期所包含的children
+                    for (const result of userStatResult) {
+                        let ids = []
+                        const actionName = result.actionName
+                        const sameKeyTextStat = result.children.filter(item => item.nameCN.includes(currStatusKeyText))
+                        for (const statusActionStat of sameKeyTextStat) {
+                            const overdueActionStat = statusActionStat.children.find(item => item.nameCN === l2Action)
+                            const userActionStat = overdueActionStat.children.filter(item => usernames.includes(item.userName))
+                            if (userActionStat.length > 0) {
+                                for (const stat of userActionStat) {
+                                    ids = ids.concat(stat.ids)
+                                }
+                            }
+                        }
+                        l2ActionStructure.children.push({userName: actionName, ids, sum: ids.length})
+                    }
+                    l1ActionStructure.children.push(l2ActionStructure)
+                }
+                result.push(l1ActionStructure)
+            }
+            return result
+        }
+
+        if (!user.username.includes("离职")) {
+            const tmpOutUsers = outUsers.filter(item => item.userName === user.username) //outUserNames.includes(user.username)
+            let attrs = {}
+            if (tmpOutUsers.length > 0) {
+                attrs = {
+                    isOut: true,
+                    groupCode: outUsers[0].groupCode,
+                    groupName: outUsers[0].groupName
+                }
+            }
+            const userStatStructure = {
+                actionCode: "userActStat",
+                actionName: user.username,
+                attrs,
+                children: getActionChildren(user.children)
+            }
+            userStatArr.push(userStatStructure)
+        }
+    }
+    return userStatArr
 }
 
 /**
