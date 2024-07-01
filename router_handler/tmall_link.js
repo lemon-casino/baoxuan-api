@@ -1,6 +1,5 @@
 const tianmao__user_tableService = require("../service/tianmao__user_tableService");
 const {success} = require("../utils/biResponse");
-
 const rest = {
     table: [],
 }
@@ -10,7 +9,6 @@ const get_user_table = async (req, res) => {
 
 
     let tableType = req.query.tableType
-
     try {
         rest.table = await tianmao__user_tableService.get_user_table(req.user.id, tableType * 1);
         // rest.table.forEach(item => {
@@ -50,14 +48,10 @@ const get_user_table = async (req, res) => {
 }
 
 const put_user_table = async (req, res) => {
-    let tableType = req.query.tableType
+    let tableType = req.body.tableType
     try {
-        //  如果获取的参数没有 或者为 undefined tableType * 1 NaN  则报错返回
-        if (!req.query.field || !req.query.title || isNaN(tableType * 1)) {
-            return res.send(success('参数错误'));
-        }
 
-        rest.table = await tianmao__user_tableService.put_user_table(req.query.field, req.query.title, req.user.id, tableType * 1);
+        rest.table = await tianmao__user_tableService.put_user_table(req.body.field, req.body.title, req.user.id, tableType);
         return res.send(success(rest.table));
 
     } catch (e) {
