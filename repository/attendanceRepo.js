@@ -1,5 +1,5 @@
-const models = require('../model')
-const pagingUtil = require("../utils/pagingUtil")
+const models = require('@/model')
+const pagingUtil = require("@/utils/pagingUtil")
 
 models.attendanceModel.belongsTo(
     models.usersModel,

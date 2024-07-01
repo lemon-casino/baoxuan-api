@@ -1,4 +1,4 @@
-const workingDayService = require("../../service/workingDayService")
+const workingDayService = require("@/service/workingDayService")
 const assert = require('assert')
 
 describe("workingDayService", () => {

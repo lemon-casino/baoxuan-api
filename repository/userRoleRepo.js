@@ -1,4 +1,4 @@
-const models = require('../model')
+const models = require('@/model')
 
 const getRoleByUserId = async (userId) => {
     const roles = await models.userRoleModel.findAll({

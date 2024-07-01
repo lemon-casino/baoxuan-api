@@ -1,5 +1,5 @@
 const HttpError = require("./http/httpError")
-const {errorCodes} = require("../const/errorConst")
+const {errorCodes} = require("@/const/errorConst")
 
 class RemoteError extends HttpError {
     constructor(message, stack) {

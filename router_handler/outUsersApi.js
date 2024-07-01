@@ -1,7 +1,7 @@
-const outUsersService = require('../service/outUsersService')
-const biResponse = require("../utils/biResponse")
-const joiUtil = require("../utils/joiUtil")
-const {updateParamsSchema} = require("../schema/outUsersSchema")
+const outUsersService = require('@/service/outUsersService')
+const biResponse = require("@/utils/biResponse")
+const joiUtil = require("@/utils/joiUtil")
+const {updateParamsSchema} = require("@/schema/outUsersSchema")
 
 const getOutUsers = async (req, res, next) => {
     try {

@@ -1,5 +1,5 @@
-const {errorMessages, errorCodes} = require("../const/errorConst")
-const {successCodes, successMessages} = require("../const/successConst")
+const {errorMessages, errorCodes} = require("@/const/errorConst")
+const {successCodes, successMessages} = require("@/const/successConst")
 
 const format = (code, message, data) => {
     return {code, message, data}

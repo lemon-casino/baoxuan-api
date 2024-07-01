@@ -1,6 +1,6 @@
 const axios = require("axios")
 const dateUtil = require("./dateUtil")
-const RemoteError = require("../error/remoteError")
+const RemoteError = require("@/error/remoteError")
 
 // 状态码不一定准确，故使用关键词 [400, 403]
 const dingDingRateLimitErrorKeywords = ["过多", "频繁", "流控", "限制"]

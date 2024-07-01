@@ -1,5 +1,5 @@
-const attendanceRepo = require("../repository/attendanceRepo")
-const dateUtil = require("../utils/dateUtil")
+const attendanceRepo = require("@/repository/attendanceRepo")
+const dateUtil = require("@/utils/dateUtil")
 
 const save = async (model) => {
     return await attendanceRepo.save(model)

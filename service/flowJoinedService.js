@@ -1,10 +1,10 @@
 const flowService = require("./flowService")
-const departmentService = require("../service/departmentService")
-const globalGetter = require("../global/getter")
-const flowUtil = require("../utils/flowUtil")
-const dateUtil = require("../utils/dateUtil")
-const {flowStatusConst,flowReviewTypeConst} = require("../const/flowConst")
-const NotFoundError = require("../error/http/notFoundError")
+const departmentService = require("@/service/departmentService")
+const globalGetter = require("@/global/getter")
+const flowUtil = require("@/utils/flowUtil")
+const dateUtil = require("@/utils/dateUtil")
+const {flowStatusConst,flowReviewTypeConst} = require("@/const/flowConst")
+const NotFoundError = require("@/error/http/notFoundError")
 
 /**
  * 本人参与： 已逾期的流程数量（流程可重复）

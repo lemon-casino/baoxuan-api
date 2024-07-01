@@ -1,6 +1,6 @@
-const joiUtil = require("../../../utils/joiUtil")
-const biResponse = require("../../../utils/biResponse")
-const flowJoinedService = require("../../../service/flowJoinedService")
+const joiUtil = require("@/utils/joiUtil")
+const biResponse = require("@/utils/biResponse")
+const flowJoinedService = require("@/service/flowJoinedService")
 const statusMapProcessorHub = require("./statusMapProcessorHub")
 
 const deptJoinedStatusProcessorMap = {

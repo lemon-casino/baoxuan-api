@@ -1,5 +1,5 @@
-const taskService = require('../service/taskService')
-const biResponse = require("../utils/biResponse")
+const taskService = require('@/service/taskService')
+const biResponse = require("@/utils/biResponse")
 
 /**
  * 同步工作日信息

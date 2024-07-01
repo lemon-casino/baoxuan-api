@@ -1,4 +1,4 @@
-const httpUtil = require("../../utils/httpUtil")
+const httpUtil = require("@/utils/httpUtil")
 const requireInvokeLimit = require("./requireInvokeLimit")
 
 /**

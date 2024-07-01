@@ -1,4 +1,4 @@
-const models = require('../model')
+const models = require('@/model')
 const oaProcessTemplateModel = models.oaProcessTemplateModel
 
 const save = async (model) => {

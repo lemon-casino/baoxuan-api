@@ -1,9 +1,9 @@
-const {flowReviewTypeConst} = require("../../const/flowConst")
-const dateUtil = require("../../utils/dateUtil")
-const ParameterError = require("../../error/parameterError");
-const flowRepo = require("../../repository/flowRepo");
-const globalGetter = require("../../global/getter");
-const flowFormReviewUtil = require("../../utils/flowFormReviewUtil");
+const {flowReviewTypeConst} = require("@/const/flowConst")
+const dateUtil = require("@/utils/dateUtil")
+const ParameterError = require("@/error/parameterError");
+const flowRepo = require("@/repository/flowRepo");
+const globalGetter = require("@/global/getter");
+const flowFormReviewUtil = require("@/utils/flowFormReviewUtil");
 
 /**
  * 移除指定状态的流程

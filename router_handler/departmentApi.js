@@ -1,6 +1,6 @@
-const departmentService = require('../service/departmentService')
-const biResponse = require("../utils/biResponse")
-const joiUtil = require("../utils/joiUtil")
+const departmentService = require('@/service/departmentService')
+const biResponse = require("@/utils/biResponse")
+const joiUtil = require("@/utils/joiUtil")
 
 const getDeptUsers = async (req, res, next) => {
     try {

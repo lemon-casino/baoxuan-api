@@ -1,4 +1,4 @@
-const linkTypeConst = require("../const/linkTypeConst")
+const linkTypeConst = require("@/const/linkTypeConst")
 
 const taoBaoSingleItemMap = {
     "batchId": "批次号",

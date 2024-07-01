@@ -1,5 +1,5 @@
 const schedule = require("node-schedule")
-const taskService = require("../service/taskService")
+const taskService = require("@/service/taskService")
 
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20(貌似不准确)，涉及的宜搭接口暂时没有qps和总调用量的限制
 // 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况

@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const taskApi = require('../router_handler/taskApi')
+const taskApi = require('@/router_handler/taskApi')
 
 router.post('/working-day', taskApi.syncWorkingDay)
 router.post('/today-flows', taskApi.syncTodayRunningAndFinishedFlows)

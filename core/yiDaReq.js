@@ -1,7 +1,7 @@
-const {dingDingConfig} = require("../config")
-const httpUtil = require("../utils/httpUtil")
-const dingDingUtil = require("../utils/dingDingUtil")
-const ParameterError = require("../error/parameterError")
+const {dingDingConfig} = require("@/config")
+const httpUtil = require("@/utils/httpUtil")
+const dingDingUtil = require("@/utils/dingDingUtil")
+const ParameterError = require("@/error/parameterError")
 
 // 宜搭配置
 const systemToken = dingDingConfig.systemToken;

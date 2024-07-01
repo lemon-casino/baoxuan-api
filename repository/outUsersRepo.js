@@ -1,6 +1,6 @@
-const models = require('../model')
+const models = require('@/model')
 const outUsersModel = models.outUsersModel
-const sequelizeUtil = require("../utils/sequelizeUtil")
+const sequelizeUtil = require("@/utils/sequelizeUtil")
 
 const getOutUsers = async (where = {}) => {
     const outUsers = await outUsersModel.findAll({

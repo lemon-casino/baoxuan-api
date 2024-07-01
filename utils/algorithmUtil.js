@@ -1,5 +1,5 @@
 const _ = require("lodash")
-const joiUtil = require("../utils/joiUtil")
+const joiUtil = require("@/utils/joiUtil")
 
 /**
  * 从不限深度且具有相同结构的json数组中，找到需要的键值匹配的数据项

@@ -1,12 +1,12 @@
-const models = require('../model');
-const globalGetter = require("../global/getter")
-const UserError = require("../error/userError")
-const NotFoundError = require("../error/http/notFoundError")
+const models = require('@/model');
+const globalGetter = require("@/global/getter")
+const UserError = require("@/error/userError")
+const NotFoundError = require("@/error/http/notFoundError")
 const departmentRepo = require("./departmentRepo")
-const sequelizeUtil = require("../utils/sequelizeUtil")
-const innerGroupConst = require("../const/tmp/innerGroupConst")
-const objectConvertUtil = require("../utils/objectConvertUtil")
-const whiteList = require("../config/whiteList")
+const sequelizeUtil = require("@/utils/sequelizeUtil")
+const innerGroupConst = require("@/const/tmp/innerGroupConst")
+const objectConvertUtil = require("@/utils/objectConvertUtil")
+const whiteList = require("@/config/whiteList")
 
 const getUserDetails = async (where) => {
     const details = await models.usersModel.findAll({

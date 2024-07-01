@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const userLogApi = require('../router_handler/userLogApi')
+const userLogApi = require('@/router_handler/userLogApi')
 
 router.get("/config", userLogApi.getOnlineCheckConfig)
 router.get("/i-am-online", userLogApi.iAmOnline)

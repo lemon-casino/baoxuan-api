@@ -1,6 +1,6 @@
 const _ = require("lodash")
-const regexConst = require("../const/regexConst")
-const ParameterError = require("../error/parameterError")
+const regexConst = require("@/const/regexConst")
+const ParameterError = require("@/error/parameterError")
 
 const opCodes = {
     Equal: "Equal",

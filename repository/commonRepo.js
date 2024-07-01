@@ -1,4 +1,4 @@
-const pagingUtil = require("../utils/pagingUtil")
+const pagingUtil = require("@/utils/pagingUtil")
 
 const getPagingData = async (model, pageIndex, pageSize, where, order) => {
     const satisfiedCount = await model.count({

@@ -1,9 +1,9 @@
 const _ = require("lodash")
-const flowUtil = require("../../utils/flowUtil")
-const flowFormReviewUtil = require("../../utils/flowFormReviewUtil")
+const flowUtil = require("@/utils/flowUtil")
+const flowFormReviewUtil = require("@/utils/flowFormReviewUtil")
 const {
     flowReviewTypeConst
-} = require("../../const/flowConst")
+} = require("@/const/flowConst")
 const commonLogic = require("./commonLogic")
 
 const overdueAloneStatusStructure = [

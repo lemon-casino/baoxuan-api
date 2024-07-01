@@ -1,7 +1,7 @@
-const httpUtil = require("../../utils/httpUtil")
+const httpUtil = require("@/utils/httpUtil")
 const requireInvokeLimit = require("./requireInvokeLimit")
-const RemoteError = require("../../error/remoteError")
-const dateUtil = require("../../utils/dateUtil")
+const RemoteError = require("@/error/remoteError")
+const dateUtil = require("@/utils/dateUtil")
 
 const pageSize = 50
 

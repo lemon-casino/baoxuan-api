@@ -1,5 +1,5 @@
 const _ = require("lodash")
-const redisRepo = require("../repository/redisRepo")
+const redisRepo = require("@/repository/redisRepo")
 
 const getTodayFlows = async () => {
     let todayFlows = global.todayRunningAndFinishedFlows

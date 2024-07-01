@@ -1,6 +1,6 @@
-const formReviewService = require("../service/formReviewService")
-const biResponse = require("../utils/biResponse")
-const joiUtil = require("../utils/joiUtil")
+const formReviewService = require("@/service/formReviewService")
+const biResponse = require("@/utils/biResponse")
+const joiUtil = require("@/utils/joiUtil")
 
 const getFormReviews = async (req, res, next) => {
     try {

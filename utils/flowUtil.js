@@ -1,4 +1,4 @@
-const {flowStatusConst, flowReviewTypeConst} = require("../const/flowConst")
+const {flowStatusConst, flowReviewTypeConst} = require("@/const/flowConst")
 const dateUtil = require("./dateUtil")
 
 /**

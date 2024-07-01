@@ -1,5 +1,5 @@
-const httpUtil = require("../../utils/httpUtil");
-const ParameterError = require("../../error/parameterError");
+const httpUtil = require("@/utils/httpUtil");
+const ParameterError = require("@/error/parameterError");
 
 /**
  * 获取离职的员工信息

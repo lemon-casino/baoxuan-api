@@ -1,7 +1,7 @@
-const models = require('../model')
+const models = require('@/model')
 const _ = require("lodash")
-const globalGetter = require("../global/getter")
-const algorithmUtil = require("../utils/algorithmUtil")
+const globalGetter = require("@/global/getter")
+const algorithmUtil = require("@/utils/algorithmUtil")
 
 /**
  * 查找部门详情

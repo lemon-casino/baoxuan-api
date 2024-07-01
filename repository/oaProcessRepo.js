@@ -1,9 +1,9 @@
-const models = require('../model')
+const models = require('@/model')
 const oaProcessModel = models.oaProcessModel
 const oaProcessDetailsModel = models.oaProcessDetailsModel
 const oaProcessOperateRecordModel = models.oaProcessOperateRecordModel
 const oaProcessTaskModel = models.oaProcessTaskModel
-const uuidUtil = require("../utils/uuidUtil")
+const uuidUtil = require("@/utils/uuidUtil")
 
 const save = async (model) => {
     const transaction = await models.sequelize.transaction()

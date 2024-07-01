@@ -1,4 +1,4 @@
-const biResponse = require("../../../utils/biResponse")
+const biResponse = require("@/utils/biResponse")
 const deptLaunchTodayHandler = require("./deptLaunchTodayHandler")
 const deptJoinTodayHandler = require("./deptJoinTodayHandler")
 

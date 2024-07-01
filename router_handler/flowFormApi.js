@@ -1,6 +1,6 @@
-const FlowFormModel = require("../model/flowfrom");
-const biResponse = require("../utils/biResponse")
-const flowFormService = require("../service/flowFormService")
+const FlowFormModel = require("@/model/flowfrom");
+const biResponse = require("@/utils/biResponse")
+const flowFormService = require("@/service/flowFormService")
 
 // 获取流程表单列表
 const getFlowFormList = (req, res) => {

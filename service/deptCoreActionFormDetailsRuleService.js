@@ -1,5 +1,5 @@
-const deptCoreActionFormDetailsRuleRepo = require("../repository/deptCoreActionFormDetailsRuleRepo")
-const flowFormDetailsRepo = require("../repository/flowFormDetailsRepo")
+const deptCoreActionFormDetailsRuleRepo = require("@/repository/deptCoreActionFormDetailsRuleRepo")
+const flowFormDetailsRepo = require("@/repository/flowFormDetailsRepo")
 
 const getFormDetailsRule = async (formId, formRuleId) => {
     const formDifferentVersionDetails = await flowFormDetailsRepo.getFormDifferentVersionsDetails(formId)

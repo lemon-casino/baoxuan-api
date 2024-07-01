@@ -1,4 +1,4 @@
-const models = require('../model')
+const models = require('@/model')
 
 models.deptFlowFormModel.hasMany(models.deptFlowFormActivityModel,
     {

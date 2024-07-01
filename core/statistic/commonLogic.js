@@ -1,4 +1,4 @@
-const formReviewRepo = require("../../repository/formReviewRepo")
+const formReviewRepo = require("@/repository/formReviewRepo")
 
 /*
 * 统计相关的通用逻辑

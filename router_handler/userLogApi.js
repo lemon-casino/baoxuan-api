@@ -1,8 +1,8 @@
-const userLogService = require("../service/userLogService")
-const biResponse = require("../utils/biResponse")
-const dateUtil = require("../utils/dateUtil")
-const joiUtil = require("../utils/joiUtil")
-const onlineCheckConst = require("../const/onlineCheckConst")
+const userLogService = require("@/service/userLogService")
+const biResponse = require("@/utils/biResponse")
+const dateUtil = require("@/utils/dateUtil")
+const joiUtil = require("@/utils/joiUtil")
+const onlineCheckConst = require("@/const/onlineCheckConst")
 
 const getUserLogs = async (req, res, next) => {
     try {

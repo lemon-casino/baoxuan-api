@@ -1,4 +1,4 @@
-const biResponse = require("../../../utils/biResponse")
+const biResponse = require("@/utils/biResponse")
 const selfJoinTodayHandler = require("./selfJoinTodayHandler")
 const selfLaunchTodayHandler = require("./selfLaunchTodayHandler")
 

@@ -1,7 +1,7 @@
-const biResponse = require("../utils/biResponse")
-const joiUtil = require("../utils/joiUtil")
-const flowFormService = require('../service/flowFormService')
-const departmentFlowFormService = require('../service/departmentFlowFormService')
+const biResponse = require("@/utils/biResponse")
+const joiUtil = require("@/utils/joiUtil")
+const flowFormService = require('@/service/flowFormService')
+const departmentFlowFormService = require('@/service/departmentFlowFormService')
 
 const getDepartmentFlowForms = async (req, res, next) => {
     try {

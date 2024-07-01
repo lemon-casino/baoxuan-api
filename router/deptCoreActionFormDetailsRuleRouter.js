@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const deptCoreActionFormDetailsRuleApi = require("../router_handler/deptCoreActionFormDetailsRuleApi")
+const deptCoreActionFormDetailsRuleApi = require("@/router_handler/deptCoreActionFormDetailsRuleApi")
 
 router.get("/", deptCoreActionFormDetailsRuleApi.getFormDetailsRule)
 router.post("/", deptCoreActionFormDetailsRuleApi.saveFormDetailsRule)

@@ -1,5 +1,5 @@
-const models = require('../model')
-const sequelizeUtil = require("../utils/sequelizeUtil")
+const models = require('@/model')
+const sequelizeUtil = require("@/utils/sequelizeUtil")
 
 models.flowfromsModel.hasMany(
     models.flowformsreviewsModel,

@@ -1,4 +1,4 @@
-const outUsersRepo = require('../repository/outUsersRepo')
+const outUsersRepo = require('@/repository/outUsersRepo')
 
 const getOutUsers = async () => {
     return (await outUsersRepo.getOutUsers())

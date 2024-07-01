@@ -1,7 +1,7 @@
-const models = require('../model')
-const SQLError = require("../error/sqlError")
-const sequelizeUtil = require("../utils/sequelizeUtil")
-const pagingUtil = require("../utils/pagingUtil")
+const models = require('@/model')
+const SQLError = require("@/error/sqlError")
+const sequelizeUtil = require("@/utils/sequelizeUtil")
+const pagingUtil = require("@/utils/pagingUtil")
 
 const saveUserLog = async (userLog) => {
     try {

@@ -1,7 +1,7 @@
-const departmentFlowFormActivityRepo = require("../repository/departmentFlowFormActivityRepo")
-const formReviewRepo = require("../repository/formReviewRepo")
-const SQLError = require("../error/sqlError")
-const algorithmUtil = require("../utils/algorithmUtil")
+const departmentFlowFormActivityRepo = require("@/repository/departmentFlowFormActivityRepo")
+const formReviewRepo = require("@/repository/formReviewRepo")
+const SQLError = require("@/error/sqlError")
+const algorithmUtil = require("@/utils/algorithmUtil")
 
 const getDeptFlowFormActivities = async (formId, deptFlowFormId) => {
     const flowFormReviews = await formReviewRepo.getFormReviewByFormId(formId);

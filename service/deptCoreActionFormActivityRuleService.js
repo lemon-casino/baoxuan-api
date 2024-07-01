@@ -1,6 +1,6 @@
-const deptCoreActionFormActivityRuleRepo = require("../repository/deptCoreActionFormActivityRuleRepo")
-const formReviewRepo = require("../repository/formReviewRepo")
-const algorithmUtil = require("../utils/algorithmUtil")
+const deptCoreActionFormActivityRuleRepo = require("@/repository/deptCoreActionFormActivityRuleRepo")
+const formReviewRepo = require("@/repository/formReviewRepo")
+const algorithmUtil = require("@/utils/algorithmUtil")
 
 const getFormActivityRules = async (formId, formRuleId) => {
     const formReviews = await formReviewRepo.getFormReviewByFormId(formId)

@@ -1,10 +1,10 @@
-const userLogRepo = require("../repository/userLogRepo")
-const userRepo = require("../repository/userRepo")
-const uuidUtil = require("../utils/uuidUtil")
-const redisUtil = require("../utils/redisUtil")
-const userService = require("../service/userService")
-const onlineCheckConst = require("../const/onlineCheckConst")
-const {redisKeys} = require("../const/redisConst");
+const userLogRepo = require("@/repository/userLogRepo")
+const userRepo = require("@/repository/userRepo")
+const uuidUtil = require("@/utils/uuidUtil")
+const redisUtil = require("@/utils/redisUtil")
+const userService = require("@/service/userService")
+const onlineCheckConst = require("@/const/onlineCheckConst")
+const {redisKeys} = require("@/const/redisConst");
 
 const getUserLogs = async (pageIndex, pageSize, userId, timeRange, isOnline) => {
     const userLogs = await userLogRepo.getUserLogs(parseInt(pageIndex),

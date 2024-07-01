@@ -1,6 +1,6 @@
 const express = require("express")
 const router = express.Router()
-const formHandler = require("../router_handler/formHandler")
+const formHandler = require("@/router_handler/formHandler")
 
 router.get("/all", formHandler.getFormsByImportance);
 // 确定前端不使用了，删掉

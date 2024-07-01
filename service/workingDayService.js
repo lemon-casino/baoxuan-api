@@ -1,8 +1,8 @@
 const BigNumber = require("bignumber.js")
-const workingDayRepo = require("../repository/workinDayRepo")
-const redisRepo = require("../repository/redisRepo")
-const dateUtil = require("../utils/dateUtil")
-const {dateFormatReg} = require("../const/regexConst")
+const workingDayRepo = require("@/repository/workinDayRepo")
+const redisRepo = require("@/repository/redisRepo")
+const dateUtil = require("@/utils/dateUtil")
+const {dateFormatReg} = require("@/const/regexConst")
 
 
 /**

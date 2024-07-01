@@ -1,7 +1,7 @@
-const biResponse = require("../../../utils/biResponse")
-const flowJoinedService = require("../../../service/flowJoinedService")
+const biResponse = require("@/utils/biResponse")
+const flowJoinedService = require("@/service/flowJoinedService")
 const statusMapProcessorHub = require("./statusMapProcessorHub")
-const userService = require("../../../service/userService")
+const userService = require("@/service/userService")
 
 const selfJoinedStatusProcessorMap = {
     "error": {processor: flowJoinedService.getTodaySelfJoinedFlowsStatisticCountOfFlowStatus, mapStatus: "ERROR"},

@@ -1,6 +1,6 @@
-const attendanceService = require('../service/attendanceService')
-const biResponse = require("../utils/biResponse")
-const joiUtil = require("../utils/joiUtil")
+const attendanceService = require('@/service/attendanceService')
+const biResponse = require("@/utils/biResponse")
+const joiUtil = require("@/utils/joiUtil")
 
 const getAttendances = async (req, res, next) => {
     try {

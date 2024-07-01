@@ -1,7 +1,7 @@
-const sequelize = require('../model/init');
-const getWorkingDayModel = require("../model/workingDayModel")
+const sequelize = require('@/model/init');
+const getWorkingDayModel = require("@/model/workingDayModel")
 const workingDayModel = getWorkingDayModel(sequelize)
-const sequelizeUtil = require("../utils/sequelizeUtil")
+const sequelizeUtil = require("@/utils/sequelizeUtil")
 
 /**
  * 某天是否是工作日

@@ -1,4 +1,4 @@
-const {errorCodes} = require("../const/errorConst")
+const {errorCodes} = require("@/const/errorConst")
 
 class ParameterError extends Error {
     constructor(message) {

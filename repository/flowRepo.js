@@ -1,9 +1,9 @@
-const models = require('../model');
-const NotFoundError = require("../error/http/notFoundError")
-const coreActionsConst = require("../const/tmp/coreActionsConst")
-const coreFormFlowConst = require("../const/tmp/coreFormFlowConst")
-const sequelizeUtil = require("../utils/sequelizeUtil")
-const dateUtil = require("../utils/dateUtil")
+const models = require('@/model');
+const NotFoundError = require("@/error/http/notFoundError")
+const coreActionsConst = require("@/const/tmp/coreActionsConst")
+const coreFormFlowConst = require("@/const/tmp/coreFormFlowConst")
+const sequelizeUtil = require("@/utils/sequelizeUtil")
+const dateUtil = require("@/utils/dateUtil")
 
 models.processModel.hasMany(models.processReviewModel,
     {

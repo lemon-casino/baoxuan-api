@@ -1,5 +1,5 @@
-const flowFormDetailsRepo = require("../repository/flowFormDetailsRepo")
-const formDetailsRepo = require("../repository/flowFormDetailsRepo");
+const flowFormDetailsRepo = require("@/repository/flowFormDetailsRepo")
+const formDetailsRepo = require("@/repository/flowFormDetailsRepo");
 
 const getFormDetailsByFormId = async (formId) => {
     return await flowFormDetailsRepo.getFormDetailsByFormId(formId)

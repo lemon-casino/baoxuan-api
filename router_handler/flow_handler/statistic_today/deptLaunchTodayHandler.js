@@ -1,7 +1,7 @@
-const joiUtil = require("../../../utils/joiUtil")
-const flowLaunchedService = require("../../../service/flowLaunchedService")
+const joiUtil = require("@/utils/joiUtil")
+const flowLaunchedService = require("@/service/flowLaunchedService")
 const statusMapProcessorHub = require("./statusMapProcessorHub")
-const biResponse = require("../../../utils/biResponse")
+const biResponse = require("@/utils/biResponse")
 
 const deptLaunchedStatusProcessorMap = {
     "error": {processor: flowLaunchedService.getTodayDeptLaunchedFlowsStatisticCountOfFlowStatus, mapStatus: "ERROR"},

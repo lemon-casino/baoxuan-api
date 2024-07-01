@@ -1,5 +1,5 @@
-const models = require('../model')
-const uuidUtil = require("../utils/uuidUtil")
+const models = require('@/model')
+const uuidUtil = require("@/utils/uuidUtil")
 
 /**
  * 保存流程详情（一组）

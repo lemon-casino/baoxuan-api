@@ -1,7 +1,7 @@
 // accessToken的有效期为7200秒（2小时），有效期内重复获取会返回相同结果并自动续期，过期后获取会返回新的accessToken。
 
-const httpUtil = require("../../utils/httpUtil")
-const {dingDingConfig} = require("../../config");
+const httpUtil = require("@/utils/httpUtil")
+const {dingDingConfig} = require("@/config");
 
 const systemToken = dingDingConfig.systemToken;
 const appType = dingDingConfig.appType;

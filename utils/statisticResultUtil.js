@@ -1,5 +1,5 @@
-const globalGetter = require("../global/getter")
-const departmentService = require("../service/departmentService")
+const globalGetter = require("@/global/getter")
+const departmentService = require("@/service/departmentService")
 
 /**
  * 对结果数据去掉结果中不在deptId所指部门的信息

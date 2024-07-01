@@ -1,5 +1,5 @@
-const deptCoreActionRuleConfigRepo = require("../repository/deptCoreActionFormRuleRepo")
-const sequelizeUtil = require("../utils/sequelizeUtil");
+const deptCoreActionRuleConfigRepo = require("@/repository/deptCoreActionFormRuleRepo")
+const sequelizeUtil = require("@/utils/sequelizeUtil");
 
 const saveFormRule = async (model) => {
     const result = await deptCoreActionRuleConfigRepo.saveFormRule(model)

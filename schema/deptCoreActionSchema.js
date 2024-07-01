@@ -1,4 +1,4 @@
-const joiUtil = require("../utils/joiUtil")
+const joiUtil = require("@/utils/joiUtil")
 
 const saveParamsSchema = {
     actionName: joiUtil.commonJoiSchemas.strRequired,

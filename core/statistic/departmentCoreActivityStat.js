@@ -1,6 +1,6 @@
-const {opFunctions} = require("../../const/operatorConst")
-const {activityIdMappingConst} = require("../../const/flowConst")
-const flowUtil = require("../../utils/flowUtil")
+const {opFunctions} = require("@/const/operatorConst")
+const {activityIdMappingConst} = require("@/const/flowConst")
+const flowUtil = require("@/utils/flowUtil")
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 

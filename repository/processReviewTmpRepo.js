@@ -1,4 +1,4 @@
-const models = require('../model')
+const models = require('@/model')
 
 const truncate = async () => {
     await models.processReviewTmpModel.truncate()

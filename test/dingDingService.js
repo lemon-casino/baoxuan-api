@@ -1,4 +1,4 @@
-const dingDingService = require("../service/dingDingService")
+const dingDingService = require("@/service/dingDingService")
 const assert = require("assert")
 
 describe("dingDingService", () => {

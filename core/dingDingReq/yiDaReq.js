@@ -1,6 +1,6 @@
-const {dingDingConfig} = require("../../config")
-const httpUtil = require("../../utils/httpUtil")
-const dingDingUtil = require("../../utils/dingDingUtil")
+const {dingDingConfig} = require("@/config")
+const httpUtil = require("@/utils/httpUtil")
+const dingDingUtil = require("@/utils/dingDingUtil")
 
 // 宜搭配置
 const systemToken = dingDingConfig.systemToken;

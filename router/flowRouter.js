@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
 
-const selfJoinTodayHandler = require("../router_handler/flow_handler/statistic_today/selfJoinTodayHandler")
-const selfLaunchTodayHandler = require("../router_handler/flow_handler/statistic_today/selfLaunchTodayHandler")
-const deptJoinTodayHandler = require("../router_handler/flow_handler/statistic_today/deptJoinTodayHandler")
-const deptLaunchTodayHandler = require("../router_handler/flow_handler/statistic_today/deptLaunchTodayHandler")
-const flowHandler = require("../router_handler/flow_handler/flowHandler")
-const selfTodaySumHandler = require("../router_handler/flow_handler/statistic_today/selfTodaySumHandler")
-const deptTodaySumHandler = require("../router_handler/flow_handler/statistic_today/deptTodaySumHandler")
+const selfJoinTodayHandler = require("@/router_handler/flow_handler/statistic_today/selfJoinTodayHandler")
+const selfLaunchTodayHandler = require("@/router_handler/flow_handler/statistic_today/selfLaunchTodayHandler")
+const deptJoinTodayHandler = require("@/router_handler/flow_handler/statistic_today/deptJoinTodayHandler")
+const deptLaunchTodayHandler = require("@/router_handler/flow_handler/statistic_today/deptLaunchTodayHandler")
+const flowHandler = require("@/router_handler/flow_handler/flowHandler")
+const selfTodaySumHandler = require("@/router_handler/flow_handler/statistic_today/selfTodaySumHandler")
+const deptTodaySumHandler = require("@/router_handler/flow_handler/statistic_today/deptTodaySumHandler")
 
 router.post("/list/today", flowHandler.getTodayFlowsByIds)
 

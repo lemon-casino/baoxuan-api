@@ -1,4 +1,4 @@
-const formReviewRepo = require("../repository/formReviewRepo")
+const formReviewRepo = require("@/repository/formReviewRepo")
 
 const getFormReviewByFormId = async (formId) => {
     return formReviewRepo.getFormReviewByFormId(formId);

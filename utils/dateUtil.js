@@ -1,7 +1,7 @@
 const moment = require("moment")
-const momentUnitConst = require("../const/momentUnitConst")
-const mathUtil = require("../utils/mathUtil")
-const ParameterError = require("../error/parameterError")
+const momentUnitConst = require("@/const/momentUnitConst")
+const mathUtil = require("@/utils/mathUtil")
+const ParameterError = require("@/error/parameterError")
 
 const formatGMT = (datetimeOfGMT, pattern) => {
     if (!pattern) {

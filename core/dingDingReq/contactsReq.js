@@ -1,4 +1,4 @@
-const httpUtil = require("../../utils/httpUtil")
+const httpUtil = require("@/utils/httpUtil")
 
 /**
  * 根据unionid和企业内部应用token获取userId

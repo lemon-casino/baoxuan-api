@@ -1,7 +1,7 @@
-const flowLaunchedService = require("../../../service/flowLaunchedService")
+const flowLaunchedService = require("@/service/flowLaunchedService")
 const statusMapProcessorHub = require("./statusMapProcessorHub")
-const biResponse = require("../../../utils/biResponse")
-const userService = require("../../../service/userService")
+const biResponse = require("@/utils/biResponse")
+const userService = require("@/service/userService")
 
 const selfLaunchedStatusProcessorMap = {
     "error": {processor: flowLaunchedService.getTodaySelfLaunchedFlowsStatisticCountOfFlowStatus, mapStatus: "ERROR"},

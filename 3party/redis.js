@@ -1,6 +1,6 @@
 const redis = require("redis");
-const redisConfig = require("../config/index").redisConfig;
-const userLogRepo = require("../repository/userLogRepo")
+const redisConfig = require("@/config/index").redisConfig;
+const userLogRepo = require("@/repository/userLogRepo")
 
 const options = {
     url: `redis://${redisConfig.url}:${redisConfig.port}/0`,

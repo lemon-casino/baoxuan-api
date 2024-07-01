@@ -1,4 +1,4 @@
-const joiUtil = require("../utils/joiUtil")
+const joiUtil = require("@/utils/joiUtil")
 
 const updateParamsSchema = {
     id: joiUtil.commonJoiSchemas.numberRequired,

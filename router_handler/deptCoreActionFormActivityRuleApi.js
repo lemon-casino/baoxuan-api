@@ -1,7 +1,7 @@
-const biResponse = require("../utils/biResponse")
-const joiUtil = require("../utils/joiUtil")
-const {saveParamsSchema, updateParamsSchema} = require("../schema/deptCoreActionFormActivityRuleSchema")
-const deptCoreActionFormActivityRuleService = require('../service/deptCoreActionFormActivityRuleService')
+const biResponse = require("@/utils/biResponse")
+const joiUtil = require("@/utils/joiUtil")
+const {saveParamsSchema, updateParamsSchema} = require("@/schema/deptCoreActionFormActivityRuleSchema")
+const deptCoreActionFormActivityRuleService = require('@/service/deptCoreActionFormActivityRuleService')
 
 const getFormActivityRules = async (req, res, next) => {
     try {

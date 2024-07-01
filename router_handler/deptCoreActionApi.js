@@ -1,7 +1,7 @@
-const biResponse = require("../utils/biResponse")
-const joiUtil = require("../utils/joiUtil")
-const deptCoreActionService = require('../service/deptCoreActionService')
-const {saveParamsSchema, updateParamsSchema} = require("../schema/deptCoreActionSchema")
+const biResponse = require("@/utils/biResponse")
+const joiUtil = require("@/utils/joiUtil")
+const deptCoreActionService = require('@/service/deptCoreActionService')
+const {saveParamsSchema, updateParamsSchema} = require("@/schema/deptCoreActionSchema")
 
 const getDeptCoreActions = async (req, res, next) => {
     try {

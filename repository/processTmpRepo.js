@@ -1,6 +1,6 @@
-const models = require('../model')
-const dateUtil = require("../utils/dateUtil");
-const uuidUtil = require("../utils/uuidUtil");
+const models = require('@/model')
+const dateUtil = require("@/utils/dateUtil");
+const uuidUtil = require("@/utils/uuidUtil");
 const flowFormDetailsRepo = require("./flowFormDetailsRepo");
 
 const truncate = async () => {

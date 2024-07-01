@@ -1,6 +1,6 @@
 const _ = require("lodash")
 const Joi = require("joi")
-const ParameterError = require("../error/parameterError")
+const ParameterError = require("@/error/parameterError")
 
 const joiErrorMessages = {
     "date.base": "日期格式不正确",

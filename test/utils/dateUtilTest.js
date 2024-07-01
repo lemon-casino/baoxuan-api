@@ -1,4 +1,4 @@
-const dateUtil = require("../../utils/dateUtil")
+const dateUtil = require("@/utils/dateUtil")
 
 describe("", ()=>{
     it("", ()=>{

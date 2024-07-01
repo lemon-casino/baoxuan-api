@@ -1,8 +1,8 @@
-const models = require('../model')
+const models = require('@/model')
 const deptCoreActionModel = models.deptCoreActionModel
 const deptCoreActionFormRuleModel = models.deptCoreActionFormRuleModel
 const flowFormsModel = models.flowfromsModel
-const sequelizeUtil = require("../utils/sequelizeUtil")
+const sequelizeUtil = require("@/utils/sequelizeUtil")
 
 deptCoreActionModel.hasMany(deptCoreActionFormRuleModel, {
     foreignKey: "deptCoreActionId", sourceKey: "id", as: "formRules"

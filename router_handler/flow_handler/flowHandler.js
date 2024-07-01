@@ -1,9 +1,9 @@
 const ExcelJS = require('exceljs')
-const biResponse = require("../../utils/biResponse")
-const flowService = require("../../service/flowService")
-const coreActionService = require("../../service/core/coreActionService")
-const flowFormService = require("../../service/flowFormService")
-const joiUtil = require("../../utils/joiUtil")
+const biResponse = require("@/utils/biResponse")
+const flowService = require("@/service/flowService")
+const coreActionService = require("@/service/core/coreActionService")
+const flowFormService = require("@/service/flowFormService")
+const joiUtil = require("@/utils/joiUtil")
 const BigNumber = require("bignumber.js")
 
 const getFlowsByIds = async (req, res) => {

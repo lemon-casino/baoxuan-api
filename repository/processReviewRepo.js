@@ -1,5 +1,5 @@
-const models = require('../model')
-const uuidUtil = require("../utils/uuidUtil")
+const models = require('@/model')
+const uuidUtil = require("@/utils/uuidUtil")
 
 const getProcessReviewsByProcessId = async (processId) => {
     const result = await models.processReviewModel.findAll({

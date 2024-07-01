@@ -1,6 +1,6 @@
-const redisUtil = require("../../utils/redisUtil")
-const redisConst = require("../../const/redisConst")
-const ForbiddenError = require("../../error/http/forbiddenError")
+const redisUtil = require("@/utils/redisUtil")
+const redisConst = require("@/const/redisConst")
+const ForbiddenError = require("@/error/http/forbiddenError")
 
 const count = async (count = 200) => {
     const limitKey = redisConst.redisKeys.StatCountTodayDingDingApiInvoke

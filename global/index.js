@@ -1,4 +1,4 @@
-const redisRepo = require("../repository/redisRepo")
+const redisRepo = require("@/repository/redisRepo")
 const setter = require("./setter")
 
 global.users = []

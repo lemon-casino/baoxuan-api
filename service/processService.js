@@ -1,4 +1,4 @@
-const processRepo = require("../repository/processRepo")
+const processRepo = require("@/repository/processRepo")
 
 const getLatestModifiedProcess = async () => {
     return await processRepo.getLatestModifiedProcess();

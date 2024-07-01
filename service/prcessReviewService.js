@@ -1,4 +1,4 @@
-const processReviewRepo = require("../repository/processReviewRepo")
+const processReviewRepo = require("@/repository/processReviewRepo")
 
 const getProcessReviewsByProcessId = async (processId) => {
     return await processReviewRepo.getProcessReviewsByProcessId(processId)

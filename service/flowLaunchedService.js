@@ -1,8 +1,8 @@
 const flowService = require("./flowService")
-const statisticStatusConst = require("../const/statisticStatusConst")
-const departmentService = require("../service/departmentService")
-const globalGetter = require("../global/getter")
-const statisticResultUtil = require("../utils/statisticResultUtil")
+const statisticStatusConst = require("@/const/statisticStatusConst")
+const departmentService = require("@/service/departmentService")
+const globalGetter = require("@/global/getter")
+const statisticResultUtil = require("@/utils/statisticResultUtil")
 
 /**
  * doing error completed terminated

@@ -1,4 +1,4 @@
-const models = require('../model')
+const models = require('@/model')
 
 const getMenusByRoles = async (roleIds) => {
     await models.rolesMenusModel.findAll({

@@ -8,9 +8,9 @@
  */
 const axios = require("axios");
 const https = require("node:https");
-const flowpathHandler = require("../router_handler/flowpath");
-const FlowFormModel = require("../model/flowfrom");
-const config = require("../config/index")
+const flowpathHandler = require("@/router_handler/flowpath");
+const FlowFormModel = require("@/model/flowfrom");
+const config = require("@/config/index")
 
 const clientId = "dinglc7figruiaukkx86";
 const clientSecret =

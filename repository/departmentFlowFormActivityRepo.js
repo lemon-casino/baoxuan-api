@@ -1,5 +1,5 @@
-const sequelize = require('../model/init')
-const getDeptFlowFormActivityModel = require("../model/deptFlowFormActivityModel")
+const sequelize = require('@/model/init')
+const getDeptFlowFormActivityModel = require("@/model/deptFlowFormActivityModel")
 const deptFlowFormActivityModel = getDeptFlowFormActivityModel(sequelize)
 
 const deleteDeptFlowFormActivity = async (id) => {

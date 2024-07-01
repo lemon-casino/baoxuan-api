@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const deptCoreActionApi = require('../router_handler/deptCoreActionApi')
+const deptCoreActionApi = require('@/router_handler/deptCoreActionApi')
 
 router.get("/", deptCoreActionApi.getDeptCoreActions)
 router.get("/forms", deptCoreActionApi.getDeptCoreActionForms)

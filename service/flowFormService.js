@@ -1,11 +1,11 @@
 const sha256 = require("sha256")
-const formReviewRepo = require("../repository/formReviewRepo")
-const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo")
-const flowFormRepo = require("../repository/flowFormRepo")
-const yiDaReq = require("../core/dingDingReq/yiDaReq")
-const redisRepo = require("../repository/redisRepo")
-const formImportantItems = require("../const/tmp/formImportantItems")
-const {timingFormFlowNodes} = require("../const/formConst")
+const formReviewRepo = require("@/repository/formReviewRepo")
+const departmentFlowFormRepo = require("@/repository/departmentFlowFormRepo")
+const flowFormRepo = require("@/repository/flowFormRepo")
+const yiDaReq = require("@/core/dingDingReq/yiDaReq")
+const redisRepo = require("@/repository/redisRepo")
+const formImportantItems = require("@/const/tmp/formImportantItems")
+const {timingFormFlowNodes} = require("@/const/formConst")
 
 /**
  * 根据重要性获取form  默认：普通

@@ -1,6 +1,6 @@
-const models = require('../model')
+const models = require('@/model')
 const deptCoreActionFormRuleModel = models.deptCoreActionFormRuleModel
-const sequelizeUtil = require("../utils/sequelizeUtil")
+const sequelizeUtil = require("@/utils/sequelizeUtil")
 
 const saveFormRule = async (model) => {
     const where = {formId: model.formId, deptCoreActionId: model.deptCoreActionId}

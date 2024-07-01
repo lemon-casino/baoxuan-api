@@ -1,5 +1,5 @@
-const models = require('../model')
-const sequelizeUtil = require("../utils/sequelizeUtil")
+const models = require('@/model')
+const sequelizeUtil = require("@/utils/sequelizeUtil")
 
 const getFormReviewByFormId = async (formId) => {
     const formReviews = await models.flowformsreviewsModel.findAll({

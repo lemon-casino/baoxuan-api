@@ -1,29 +1,29 @@
 const ExcelJS = require("exceljs")
-const yiDaReq = require("../core/dingDingReq/yiDaReq")
-const credentialsReq = require("../core/dingDingReq/credentialsReq")
-const contactsReq = require("../core/dingDingReq/contactsReq")
-const dingDingReq = require("../core/dingDingReq/attendanceReq")
+const yiDaReq = require("@/core/dingDingReq/yiDaReq")
+const credentialsReq = require("@/core/dingDingReq/credentialsReq")
+const contactsReq = require("@/core/dingDingReq/contactsReq")
+const dingDingReq = require("@/core/dingDingReq/attendanceReq")
 // 引入封装好的redis
-const redisUtil = require("../utils/redisUtil.js");
+const redisUtil = require("@/utils/redisUtil.js");
 // 引入流程表单模型
-const FlowFormModel = require("../model/flowfrom");
+const FlowFormModel = require("@/model/flowfrom");
 // 引入流程数据模型
-const ProcessModel = require("../model/process");
-const FlowFormReview = require("../model/flowformreview")
+const ProcessModel = require("@/model/process");
+const FlowFormReview = require("@/model/flowformreview")
 // 引入时间格式化方法
-const {logger} = require("../utils/log")
-const dateUtil = require("../utils/dateUtil")
-const redisRepo = require("../repository/redisRepo")
-const userRepo = require("../repository/userRepo")
-const outUsersRepo = require("../repository/outUsersRepo")
-const {flowStatusConst} = require("../const/flowConst")
-const ForbiddenError = require("../error/http/forbiddenError")
-const globalGetter = require("../global/getter")
-const workingDayService = require("../service/workingDayService")
-const flowFormDetailsService = require("../service/flowFormDetailsService")
-const departmentService = require("../service/departmentService")
-const flowFormService = require("../service/flowFormService")
-const formReviewRepo = require("../repository/formReviewRepo")
+const {logger} = require("@/utils/log")
+const dateUtil = require("@/utils/dateUtil")
+const redisRepo = require("@/repository/redisRepo")
+const userRepo = require("@/repository/userRepo")
+const outUsersRepo = require("@/repository/outUsersRepo")
+const {flowStatusConst} = require("@/const/flowConst")
+const ForbiddenError = require("@/error/http/forbiddenError")
+const globalGetter = require("@/global/getter")
+const workingDayService = require("@/service/workingDayService")
+const flowFormDetailsService = require("@/service/flowFormDetailsService")
+const departmentService = require("@/service/departmentService")
+const flowFormService = require("@/service/flowFormService")
+const formReviewRepo = require("@/repository/formReviewRepo")
 const flowCommonService = require("./common/flowCommonService");
 
 // ===============公共方法 start=====================

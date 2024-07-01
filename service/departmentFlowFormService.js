@@ -1,8 +1,8 @@
-const departmentFlowFormRepo = require("../repository/departmentFlowFormRepo")
-const departmentRepo = require("../repository/departmentRepo")
-const flowFormRepo = require("../repository/flowFormRepo")
-const NotFoundError = require("../error/http/notFoundError")
-const deptFlowFormConvertor = require("../convertor/deptFlowFormConvertor")
+const departmentFlowFormRepo = require("@/repository/departmentFlowFormRepo")
+const departmentRepo = require("@/repository/departmentRepo")
+const flowFormRepo = require("@/repository/flowFormRepo")
+const NotFoundError = require("@/error/http/notFoundError")
+const deptFlowFormConvertor = require("@/convertor/deptFlowFormConvertor")
 
 const saveDepartmentFlowForm = async (deptId, formId, type, isCore) => {
     const department = await departmentRepo.getDepartmentDetails(deptId)
