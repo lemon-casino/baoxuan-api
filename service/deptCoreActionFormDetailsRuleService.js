@@ -7,7 +7,7 @@ const getFormDetailsRule = async (formId, formRuleId) => {
     for (const formDetailsRule of formDetailsRules) {
         const currVersionDetails = formDifferentVersionDetails.find(item => item.title === `表单版本${formDetailsRule.version}`)
         if (currVersionDetails) {
-            const activity = currVersionDetails.details.find(item => item.activityId === formDetailsRule.activityId)
+            const activity = currVersionDetails.details.find(item => item.fieldId === formDetailsRule.fieldId)
             if (activity) {
                 activity.opCode = formDetailsRule.opCode
                 activity.value = formDetailsRule.value
