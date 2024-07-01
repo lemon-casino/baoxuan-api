@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const TM_StoreDataService = require('../service/TM_StoreDataService');
+const TM_StoreDataService = require('../service/tianMaoStoreDataService');
 const {success} = require("../utils/biResponse");
 
 // 提取出来的处理日期范围的函数
