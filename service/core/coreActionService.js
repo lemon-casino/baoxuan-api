@@ -125,9 +125,12 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
             }
             return result
         }
-        if(!user.username.includes("离职")){
+        if (!user.username.includes("离职")) {
             const userStatStructure = {
-                actionName: user.username, actionCode: "userActStat", children: getActionChildren(user.children)
+                actionCode: "userActStat",
+                group: deptExtraUserNames.includes(user.username) ? "outSourcing" : "inner",
+                actionName: user.username,
+                children: getActionChildren(user.children)
             }
             userStatArr.push(userStatStructure)
         }
