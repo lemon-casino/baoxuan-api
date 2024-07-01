@@ -56,12 +56,10 @@ const mixedValidate = (items) => {
         const item = items[key]
         if (item && item.schema && Joi.isSchema(item.schema)) {
             tmpSchemas = {
-                ...tmpSchemas,
-                [key]: item.schema
+                ...tmpSchemas, [key]: item.schema
             }
             tmpValues = {
-                ...tmpValues,
-                [key]: item.value
+                ...tmpValues, [key]: item.value
             }
             continue
         }
@@ -76,8 +74,7 @@ const mixedValidate = (items) => {
         }
         if (hasCommonSchema) {
             tmpValues = {
-                ...tmpValues,
-                [key]: item
+                ...tmpValues, [key]: item
             }
         }
     }
@@ -85,7 +82,7 @@ const mixedValidate = (items) => {
 }
 
 const _validate = (schema, data) => {
-    const error = Joi.object(schema).validate(data, {allowUnknown: true}).error
+    const error = Joi.object(schema).validate(data).error
     if (error) {
         const {type, context: {label, key, limit, value}} = error.details[0]
         let errorMsg = joiErrorMessages[type]
@@ -101,7 +98,5 @@ const _validate = (schema, data) => {
 }
 
 module.exports = {
-    clarityValidate,
-    validate: mixedValidate,
-    commonJoiSchemas
+    clarityValidate, validate: mixedValidate, commonJoiSchemas
 }
