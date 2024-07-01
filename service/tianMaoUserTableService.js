@@ -1,4 +1,4 @@
-const tian_mao_link_user_table = require('../repository/tianmaolinkuser_tableRepo');
+const tian_mao_link_user_table = require('../repository/tianMaoLinkUserTableRepo');
 
 const get_user_table = async (id, tableType) => {
     try {

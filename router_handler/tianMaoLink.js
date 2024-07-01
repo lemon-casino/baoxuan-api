@@ -1,4 +1,4 @@
-const tianmao__user_tableService = require("../service/tianmao__user_tableService");
+const tianmao__user_tableService = require("../service/tianMaoUserTableService");
 const {success} = require("../utils/biResponse");
 const rest = {
     table: [],
