@@ -3,6 +3,7 @@ const dateUtil = require("../../utils/dateUtil")
 const ParameterError = require("../../error/parameterError");
 const flowRepo = require("../../repository/flowRepo");
 const globalGetter = require("../../global/getter");
+const flowFormReviewUtil = require("../../utils/flowFormReviewUtil");
 
 /**
  * 移除指定状态的流程
@@ -110,8 +111,36 @@ const getCombinedFlowsOfHistoryAndToday = async (startDoneDate, endDoneDate, for
 }
 
 
+const getVisionOutSourcingNames = (flows) => {
+    const outSourcingForms = [{
+        formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
+        formName: "外包拍摄视觉流程",
+        outSourceChargerFieldId: "textField_lvumnj2k"
+    }, {
+        formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
+        formName: "外包修图视觉流程",
+        outSourceChargerFieldId: "textField_lx48e5gk"
+    }]
+
+    const outSourcingUsers = {}
+    for (const flow of flows) {
+        const outSourcingFormIds = outSourcingForms.map(item => item.formId)
+        if (outSourcingFormIds.includes(flow.formUuid)) {
+            const {outSourceChargerFieldId} = outSourcingForms.filter(item => item.formId === flow.formUuid)[0]
+
+            const username = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
+            if (username) {
+                outSourcingUsers[username] = 1
+            }
+        }
+    }
+    return Object.keys(outSourcingUsers)
+}
+
+
 module.exports = {
     removeTargetStatusFlows,
     removeDoneActivitiesNotInDoneDateRange,
-    getCombinedFlowsOfHistoryAndToday
+    getCombinedFlowsOfHistoryAndToday,
+    getVisionOutSourcingNames
 }

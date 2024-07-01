@@ -735,36 +735,7 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
 
     // 对于视觉部(482162119)和管理中台(902643613)，将外包人的名字添加到userNames中
     if (deptId && ["902643613", "482162119"].includes(deptId.toString())) {
-        const getVisionOutSourcingNames = (flows) => {
-            const outSourcingForms = [{
-                formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
-                formName: "外包拍摄视觉流程",
-                outSourceChargerFieldId: "textField_lvumnj2k"
-            }, {
-                formId: "FORM-4D592E41E1C744A3BCD70DB5AC228B01V8GV",
-                formName: "外包修图视觉流程",
-                outSourceChargerFieldId: "textField_lx48e5gk"
-            }]
-
-            const outSourcingUsers = {}
-            for (const flow of flows) {
-                const outSourcingFormIds = outSourcingForms.map(item => item.formId)
-                if (outSourcingFormIds.includes(flow.formUuid)) {
-                    const {outSourceChargerFieldId} = outSourcingForms.filter(item => item.formId === flow.formUuid)[0]
-
-                    const username = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
-                    if (username) {
-                        outSourcingUsers[username] = 1
-                    }
-                }
-            }
-            return Object.keys(outSourcingUsers)
-        }
-        const outVisionSourcingUsers = getVisionOutSourcingNames(modifiedFlows)
-        for (const outSourcingUser of outVisionSourcingUsers) {
-            // 将视觉外包人的信息同步到Redis，便于后面转成部门统计
-            await redisRepo.setOutSourcingUser("482162119", outSourcingUser)
-        }
+        const outVisionSourcingUsers = await redisRepo.getOutSourcingUsers("482162119")
         userNames = userNames && `${userNames},${outVisionSourcingUsers.join(",")}`
     }
 

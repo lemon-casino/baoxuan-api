@@ -8,6 +8,7 @@ const departmentRepo = require("../repository/departmentRepo")
 const departmentUsersRepo = require("../repository/departmentUsersRepo")
 const oaProcessRepo = require("../repository/oaProcessRepo")
 const attendanceRepo = require("../repository/attendanceRepo")
+const outUsersRepo = require("../repository/outUsersRepo")
 const globalSetter = require("../global/setter")
 const dingDingService = require("../service/dingDingService")
 const flowService = require("../service/flowService")
@@ -547,6 +548,16 @@ const resetDingDingApiInvokeCount = async () => {
     await redisUtil.set(redisKeys.StatCountTodayDingDingApiInvoke, 0)
 }
 
+const syncVisionOutUsers = async () => {
+    const visionOutUsersInDb = await outUsersRepo.getOutUsers({deptId: "482162119"})
+    const visionOutUserNamesInDb = visionOutUsersInDb.map(item => item.userName)
+    const visionOutUsersInRedis = await redisRepo.getOutSourcingUsers("482162119")
+    const visionOutUsersNotInDb = visionOutUsersInRedis.filter(item => !visionOutUserNamesInDb.includes(item))
+    for (const user of visionOutUsersNotInDb) {
+        await outUsersRepo.saveOutUser({userName: user, deptId: "482162119", deptName: "视觉部"})
+    }
+}
+
 module.exports = {
     syncOaProcessTemplates,
     syncRunningProcess,
@@ -565,5 +576,6 @@ module.exports = {
     syncHROaNotStockedProcess,
     syncHROaFinishedProcess,
     syncAttendance,
-    resetDingDingApiInvokeCount
+    resetDingDingApiInvokeCount,
+    syncVisionOutUsers
 }

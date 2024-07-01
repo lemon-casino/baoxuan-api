@@ -15,6 +15,7 @@ const {logger} = require("../utils/log")
 const dateUtil = require("../utils/dateUtil")
 const redisRepo = require("../repository/redisRepo")
 const userRepo = require("../repository/userRepo")
+const outUsersRepo = require("../repository/outUsersRepo")
 const {flowStatusConst} = require("../const/flowConst")
 const ForbiddenError = require("../error/http/forbiddenError")
 const globalGetter = require("../global/getter")
@@ -23,6 +24,7 @@ const flowFormDetailsService = require("../service/flowFormDetailsService")
 const departmentService = require("../service/departmentService")
 const flowFormService = require("../service/flowFormService")
 const formReviewRepo = require("../repository/formReviewRepo")
+const flowCommonService = require("./common/flowCommonService");
 
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
@@ -242,6 +244,15 @@ const getTodayRunningFlows = async () => {
             }
         }
         flow.overallprocessflow = flow.overallprocessflow || []
+    }
+    // 将视觉外包人的信息同步到Redis，便于后面转成部门统计
+    const outVisionSourcingUsers = flowCommonService.getVisionOutSourcingNames(runningFlows)
+    const currOutVisionSourcingUsersInRedis = await redisRepo.getOutSourcingUsers("482162119") || []
+    const newOutVisionSourcingUsers = outVisionSourcingUsers.filter(item => !currOutVisionSourcingUsersInRedis.includes(item))
+    for (const newOutSourcingUser of newOutVisionSourcingUsers) {
+        await redisRepo.setOutSourcingUser("482162119", newOutSourcingUser)
+        // 如果有新增的需要保存数据库
+        await outUsersRepo.saveOutUser({userName: newOutSourcingUser, deptId: "482162119", deptName: "视觉部"})
     }
     return runningFlows
 }
