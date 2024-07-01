@@ -4271,7 +4271,7 @@ const mbCoreActionsConfig = [
                                 ownerRule: {
                                     from: "form",
                                     name: "外包修图中",
-                                    id: "textField_lx48e5gk"
+                                    id: "radioField_lxzzbsbm"
                                 }
                             }
                         ]
