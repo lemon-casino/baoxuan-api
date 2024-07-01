@@ -1,4 +1,4 @@
-const {opCodes} = require("@/operatorConst")
+const {opCodes} = require("@/const/operatorConst")
 const commonActionStatus = {TODO: "TODO", DOING: "DOING", DONE: "DONE"}
 
 const tmCoreActionsConfig = [
