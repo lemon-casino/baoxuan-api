@@ -521,19 +521,34 @@ async function ToBeOnTheShelves(productLineLeaders) {
  * @param timeRange
  * @returns {Promise<{sum: number, items: [{name: string, sum: number}, {name: string, sum: number}, {name: string, sum: number}]}|{sum: number, items: *[]}|{fightingOnOld: *, fightingOnNew: *}>}
  */
-const getLinkOperationCount = async (
-    satisfiedSingleItems,
-    productLineLeaders, timeRange) => {
-    const newva = await getlinkingIssues(productLineLeaders, satisfiedSingleItems, timeRange)
+const getLinkOperationCount = async (satisfiedSingleItems, productLineLeaders, timeRange) => {
+    // 创建所有异步操作的Promise
+    const newvaPromise = getlinkingIssues(productLineLeaders, satisfiedSingleItems, timeRange);
+    const selfDoSingleItemLinkOperationCountPromise = getSelfDoSingleItemLinkOperationCount(satisfiedSingleItems);
+    const ToBeOnTheShelvesPromise = ToBeOnTheShelves(productLineLeaders);
+    const fightingFlowFormValuesPromise = flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING);
 
+    // 等待 fightingFlowFormValuesPromise 完成后再调用 getSelfFightingSingleItemLinkOperationCount
+    const fightingPromise = fightingFlowFormValuesPromise.then(flowFormValues =>
+        getSelfFightingSingleItemLinkOperationCount(satisfiedSingleItems, flowFormValues)
+    );
+
+    // 使用 Promise.all 并行执行所有操作
+    const [newva, selfDoSingleItemLinkOperationCount, ToBeOnTheShelvesCount, fightingCount] = await Promise.all([
+        newvaPromise,
+        selfDoSingleItemLinkOperationCountPromise,
+        ToBeOnTheShelvesPromise,
+        fightingPromise
+    ]);
+
+    // 返回结果
     return [
-        {operation: await getSelfDoSingleItemLinkOperationCount(satisfiedSingleItems)},
-        {ToBeOnTheShelves: await ToBeOnTheShelves(productLineLeaders)},
-        {fighting: await getSelfFightingSingleItemLinkOperationCount(satisfiedSingleItems, await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING))},
+        {operation: selfDoSingleItemLinkOperationCount},
+        {ToBeOnTheShelves: ToBeOnTheShelvesCount},
+        {fighting: fightingCount},
         {error: newva.error},
         {ongoing: newva.ongoing},
         {done: newva.done}
-
     ];
 }
 
