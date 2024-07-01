@@ -212,7 +212,7 @@ const getLeaf = (node) => {
     return allLeaf
 }
 
-function extractTitle(node) {
+const extractTitle=(node)=> {
     if (["ApplyNode", "EndNode"].includes(node.componentName)) {
         return node.props?.name?.zh_CN || node.props?.name || "";
     }

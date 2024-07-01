@@ -32,8 +32,6 @@ const getWorkingDayByRange = async (startDate, endDate) => {
 const isWorkingDayOf = async (date) => {
     const allWorkingDays = await redisRepo.getAllWorkingDays()
     return allWorkingDays.filter(day => day === date).length > 0
-    // const result = await workingDayRepo.isWorkingDayOf(date)
-    // return result
 }
 
 /**
@@ -115,6 +113,7 @@ const computeValidWorkingDuration = async (startDateTime, endDateTime) => {
         let currEndDateTime = endDateTime
 
         const isWorkingDay = await isWorkingDayOf(currDate)
+
         if (isWorkingDay) {
             // 确定是否已经上班时间: startDateTime  9am
             // -- 9点前开始
@@ -122,6 +121,7 @@ const computeValidWorkingDuration = async (startDateTime, endDateTime) => {
             if (currentStart9AmDuration > 0) {
                 startDateTime = curr9AmDate
             }
+
             // 18点后开始
             const currentStart18PmDuration = dateUtil.duration(current18PmDate, startDateTime)
             if (currentStart18PmDuration > 0) {

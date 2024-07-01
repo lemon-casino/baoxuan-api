@@ -1,6 +1,7 @@
-const sequelize = require('../model/init');
-const getWorkingDayModel = require("../model/workingDayModel")
-const workingDayModel = getWorkingDayModel(sequelize)
+// const sequelize = require('../model/init')
+const models = require('../model')
+// const getWorkingDayModel = require("../model/workingDayModel")
+const workingDayModel = models.workingDayModel //getWorkingDayModel(sequelize)
 const sequelizeUtil = require("../utils/sequelizeUtil")
 
 /**

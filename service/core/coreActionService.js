@@ -47,7 +47,7 @@ const getCoreActions = async (userId, deptId, innerUserNames, startDoneDate, end
     let innerUserNameArr = innerUserNames.includes(",") ? innerUserNames.split(",") : [innerUserNames]
     // 过滤掉因为split可能存在的空值
     innerUserNameArr = innerUserNameArr.filter(item => !!item)
-    const userStatArr = convertToUserActionResult(innerUserNameArr, outUsers, actionStatBasedOnUserResult)
+    const userStatArr = convertToUserActionResult(actionStatBasedOnUserResult, innerUserNameArr, outUsers)
 
     for (const userStat of userStatArr) {
         actionStatBasedOnUserResult.unshift(userStat)
@@ -351,30 +351,39 @@ const convertToFlowStatResult = (flows, coreActionConfig, userStatResult) => {
     return statusStatFlowResult
 }
 
-const convertToUserActionResult = (innerUserNames, outUsers, userStatResult) => {
+/**
+ *
+ *
+ * @param innerUserNames
+ * @param outUsers
+ * @param actionStatBasedOnUserResult
+ * @returns {*[]}
+ */
+const convertToUserActionResult = (actionStatBasedOnUserResult, innerUserNames, outUsers) => {
     const userStatArr = []
     // 外包人员录入混乱，将全部人员统一格式：将凌乱的多个人名统一到一个人名上
-    const unifyUserNameFormatByConfusedOutUserName = () => {
-
-    }
-    const mixedOutSourcingUsers = visionConfusedUserNamesConst.unifiedConfusedUserNames
-    const newStructureUsers = mixedOutSourcingUsers
-    const userNamesArr = innerUserNames.concat(outUsers.map(item => item.userName))
-    for (const username of userNamesArr) {
-        let isErrOutSourcingUser = false
-        for (const mixedOutSourcingUser of mixedOutSourcingUsers) {
-            if (mixedOutSourcingUser.children.includes(username)) {
-                isErrOutSourcingUser = true
-                break
+    const mapConfusedOutUsersAndInnerUsers = (innerUserNames) => {
+        const mixedOutSourcingUsers = visionConfusedUserNamesConst.unifiedConfusedUserNames
+        const newStructureUsers = mixedOutSourcingUsers
+        const userNamesArr = innerUserNames.concat(outUsers.map(item => item.userName))
+        for (const username of userNamesArr) {
+            let isErrOutSourcingUser = false
+            for (const mixedOutSourcingUser of mixedOutSourcingUsers) {
+                if (mixedOutSourcingUser.children.includes(username)) {
+                    isErrOutSourcingUser = true
+                    break
+                }
+            }
+            if (!isErrOutSourcingUser) {
+                newStructureUsers.push({username, children: [username]})
             }
         }
-        if (!isErrOutSourcingUser) {
-            newStructureUsers.push({username, children: [username]})
-        }
+        return newStructureUsers
     }
 
+    const mappedUsers = mapConfusedOutUsersAndInnerUsers(innerUserNames)
 
-    for (const user of newStructureUsers) {
+    for (const user of mappedUsers) {
         const getActionChildren = (usernames) => {
             const statusKeyTexts = ["待", "中", "完"]
             const leve1Actions = ["待转入", "进行中", "已完成"]
@@ -389,7 +398,7 @@ const convertToUserActionResult = (innerUserNames, outUsers, userStatResult) => 
                     }
 
                     // 找出所有key所对应的逾期所包含的children
-                    for (const result of userStatResult) {
+                    for (const result of actionStatBasedOnUserResult) {
                         let ids = []
                         const actionName = result.actionName
                         const sameKeyTextStat = result.children.filter(item => item.nameCN.includes(currStatusKeyText))
@@ -412,7 +421,7 @@ const convertToUserActionResult = (innerUserNames, outUsers, userStatResult) => 
         }
 
         if (!user.username.includes("离职")) {
-            const tmpOutUsers = outUsers.filter(item => item.userName === user.username) //outUserNames.includes(user.username)
+            const tmpOutUsers = outUsers.filter(item => item.userName === user.username)
             let attrs = {}
             if (tmpOutUsers.length > 0) {
                 attrs = {
