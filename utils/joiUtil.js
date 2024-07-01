@@ -27,7 +27,8 @@ const commonJoiSchemas = {
     dateRequired: Joi.date().required(),
     arrayRequired: Joi.array().required(),
     funcRequired: Joi.func().required(),
-    objectRequire: Joi.object().required()
+    objectRequire: Joi.object().required(),
+    booleanRequired: Joi.boolean().required()
 }
 
 const commonArgsSchemas = {
@@ -82,7 +83,7 @@ const mixedValidate = (items) => {
 }
 
 const _validate = (schema, data) => {
-    const error = Joi.object(schema).validate(data).error
+    const error = Joi.object(schema).validate(data, {allowUnknown: true}).error
     if (error) {
         const {type, context: {label, key, limit, value}} = error.details[0]
         let errorMsg = joiErrorMessages[type]

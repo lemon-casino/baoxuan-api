@@ -9,6 +9,7 @@ const {opFunctions} = require("../../const/operatorConst")
 const whiteList = require("../../config/whiteList")
 const {visionFormDoneActivityIds} = require("../../const/tmp/coreActionsConst")
 const departmentCoreActivityStat = require("../../core/statistic/departmentCoreActivityStat")
+const visionConfusedUserNamesConst = require("../../const/tmp/visionConst")
 const flowUtil = require("../../utils/flowUtil")
 const algorithmUtil = require("../../utils/algorithmUtil")
 
@@ -352,35 +353,13 @@ const convertToFlowStatResult = (flows, coreActionConfig, userStatResult) => {
 
 const convertToUserActionResult = (innerUserNames, outUsers, userStatResult) => {
     const userStatArr = []
-    // 外包人员录入错乱，需要根据配置整理整理人员参数结构
-    const mixedOutSourcingUsers = [
-        {
-            username: "皓峰摄影",
-            children: ["德化皓峰", "皓峰摄影", "黄建榉"]
-        },
-        {
-            username: "秒峰摄影",
-            children: ["秒峰摄影", "妙峰", "陈辉灿"]
-        },
-        {
-            username: "周俊腾",
-            children: ["周", "周俊腾"]
-        },
-        {
-            username: "徐彩玉",
-            children: ["语嫣", "徐彩玉"]
-        },
-        {
-            username: "芬芬",
-            children: ["芬芬", " 芬 芬"]
-        },
-        {
-            username: "美丽满屋",
-            children: ["美丽满屋", "广东美丽满屋"]
-        }
-    ]
-    const userNamesArr = innerUserNames.concat(outUsers.map(item => item.userName))
+    // 外包人员录入混乱，将全部人员统一格式：将凌乱的多个人名统一到一个人名上
+    const unifyUserNameFormatByConfusedOutUserName = () => {
+
+    }
+    const mixedOutSourcingUsers = visionConfusedUserNamesConst.unifiedConfusedUserNames
     const newStructureUsers = mixedOutSourcingUsers
+    const userNamesArr = innerUserNames.concat(outUsers.map(item => item.userName))
     for (const username of userNamesArr) {
         let isErrOutSourcingUser = false
         for (const mixedOutSourcingUser of mixedOutSourcingUsers) {
@@ -393,6 +372,7 @@ const convertToUserActionResult = (innerUserNames, outUsers, userStatResult) => 
             newStructureUsers.push({username, children: [username]})
         }
     }
+
 
     for (const user of newStructureUsers) {
         const getActionChildren = (usernames) => {
