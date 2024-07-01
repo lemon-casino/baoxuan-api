@@ -4273,6 +4273,28 @@ const mbCoreActionsConfig = [
                                     name: "外包修图中",
                                     id: "radioField_lxzzbsbm"
                                 }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
                             }
                         ]
                     }
@@ -5754,6 +5776,28 @@ const mbCoreActionsConfig = [
                                     from: "form",
                                     name: "外包修图中",
                                     id: "radioField_lxzzbsbm"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
                                 }
                             }
                         ]
@@ -7392,6 +7436,28 @@ const mbCoreActionsConfig = [
                                     name: "外包修图中",
                                     id: "radioField_lxzzbsbm"
                                 }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
                             }
                         ]
                     }
@@ -8313,6 +8379,28 @@ const mbCoreActionsConfig = [
                                     from: "form",
                                     name: "外包修图中",
                                     id: "radioField_lxzzbsbm"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORYHISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
                                 }
                             }
                         ]
@@ -10946,6 +11034,28 @@ const mbCoreActionsConfig = [
                                     name: "外包修图中",
                                     id: "radioField_lxzzbsbm"
                                 }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
                             }
                         ]
                     },
@@ -12229,6 +12339,28 @@ const mbCoreActionsConfig = [
                                     from: "form",
                                     name: "外包修图中",
                                     id: "radioField_lxzzbsbm"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORYHISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
                                 }
                             }
                         ]
@@ -13626,6 +13758,28 @@ const mbCoreActionsConfig = [
                                     name: "外包修图中",
                                     id: "radioField_lxzzbsbm"
                                 }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
                             }
                         ]
                     }
@@ -13809,7 +13963,29 @@ const mbCoreActionsConfig = [
                                     name: "外包修图中",
                                     id: "radioField_lxzzbsbm"
                                 }
-                            }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORYHISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx48iwil1",
+                                    name: "外包修图中",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "外包修图中",
+                                    id: "textField_lx48e5gk"
+                                }
+                            },
                         ]
                     }
                 ]
