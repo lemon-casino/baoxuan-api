@@ -16,7 +16,7 @@ const updateOutUsers = async (req, res, next) => {
     try {
         const data = req.body
         joiUtil.clarityValidate(updateParamsSchema, data)
-        const outUsers = await outUsersService.updateOutUsers(id, data)
+        const outUsers = await outUsersService.updateOutUsers(req.params.id, data)
         return res.send(biResponse.success(outUsers))
     } catch (e) {
         next(e)
