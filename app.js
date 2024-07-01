@@ -4,6 +4,7 @@ const morgan = require('morgan')
 const {errorMessages, errorCodes} = require("./const/errorConst")
 const {logger, stream} = require("./utils/log")
 const emailUtil = require("./utils/emailUtil")
+require('module-alias').addAlias('@', __dirname)
 
 require("./scripts/scheduledTask");
 const serverConfig = require('./config/index').serverConfig
