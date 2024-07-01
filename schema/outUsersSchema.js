@@ -5,9 +5,7 @@ const updateParamsSchema = {
     userName: joiUtil.commonJoiSchemas.strRequired,
     groupCode: joiUtil.commonJoiSchemas.strRequired,
     groupName: joiUtil.commonJoiSchemas.strRequired,
-    enabled: joiUtil.commonJoiSchemas.booleanRequired,
-    deptName: joiUtil.commonJoiSchemas.strRequired,
-    deptId: joiUtil.commonJoiSchemas.strRequired
+    enabled: joiUtil.commonJoiSchemas.booleanRequired
 }
 
 module.exports = {
