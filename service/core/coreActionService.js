@@ -2,6 +2,7 @@ const _ = require("lodash")
 const flowRepo = require("../../repository/flowRepo")
 const userRepo = require("../../repository/userRepo")
 const redisRepo = require("../../repository/redisRepo")
+const outUsersRepo = require("../../repository/outUsersRepo")
 const flowCommonService = require("../common/flowCommonService")
 const {flowStatusConst, flowReviewTypeConst} = require("../../const/flowConst")
 const {opFunctions} = require("../../const/operatorConst")
@@ -20,8 +21,9 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
     combinedFlows = flowCommonService.removeTargetStatusFlows(combinedFlows, flowStatusConst.TERMINATED)
     combinedFlows = flowCommonService.removeDoneActivitiesNotInDoneDateRange(combinedFlows, startDoneDate, endDoneDate)
 
-    const deptExtraUserNames = await getExtraUserNamesFromRedisOfOut(userId, deptId)
-    userNames = `${userNames},${deptExtraUserNames.join(",")}`
+    const {resignedUsers, outUsers} = await getOutAndResignedUsers(userId, deptId)
+    const outUserNames = outUsers.map(item => item.userName)
+    userNames = `${userNames},${resignedUsers.join(",")},${outUserNames.join(",")}`
 
     // 基于人的汇总(最基本的明细统计)
     const userStatResult = await departmentCoreActivityStat.get(userNames, combinedFlows, coreActionConfig)
@@ -126,10 +128,20 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
             return result
         }
         if (!user.username.includes("离职")) {
+            const isOut = outUserNames.includes(user.username)
+            let attrs = {}
+            if (isOut) {
+                const outUser = outUsers.find(item => item.userName === user.username)
+                attrs = {
+                    isOut: true,
+                    outGroupCode: outUser.groupCode,
+                    outGroupName: outUser.groupName
+                }
+            }
             const userStatStructure = {
                 actionCode: "userActStat",
-                group: deptExtraUserNames.includes(user.username) ? "outSourcing" : "inner",
                 actionName: user.username,
+                attrs,
                 children: getActionChildren(user.children)
             }
             userStatArr.push(userStatStructure)
@@ -192,13 +204,13 @@ const extractInnerAndOutSourcingFormsFromConfig = (coreActionConfig) => {
 }
 
 /**
- *
+ * 根据userId的身份和deptId获取外包和离职人员信息
  *
  * @param userId
  * @param deptId
- * @returns {Promise<*[]>}
+ * @returns {Promise<{resignedUsers: *[], outUsers: *[]}>}
  */
-const getExtraUserNamesFromRedisOfOut = async (userId, deptId) => {
+const getOutAndResignedUsers = async (userId, deptId) => {
     // todo: 视觉(482162119)和全流程的统计userNames要加上外包的信息
     //   先单独处理，要不就得把外包的人全部返回视觉的前端，可能还得改http method，
     //   等数据ok稳定后需要整理
@@ -219,17 +231,20 @@ const getExtraUserNamesFromRedisOfOut = async (userId, deptId) => {
             canGetResignUsers = true
         }
     }
+    const result = {resignedUsers: [], outUsers: []}
     let deptResignUsersWithTag = []
     if (canGetResignUsers) {
         const deptResignUsers = await userRepo.getDeptResignUsers(deptId)
         deptResignUsersWithTag = deptResignUsers.map(item => `${item.nickname}[已离职]`)
     }
+    result.resignedUsers = deptResignUsersWithTag
 
     let outSourcingUsers = []
     if (canGetDeptOutSourcingUsers) {
-        outSourcingUsers = await redisRepo.getOutSourcingUsers(deptId)
+        outSourcingUsers = await outUsersRepo.getOutUsers({deptId, enabled: true}) // redisRepo.getOutSourcingUsers(deptId)
     }
-    return deptResignUsersWithTag.concat(outSourcingUsers)
+    result.outUsers = outSourcingUsers
+    return result
 }
 
 /**
