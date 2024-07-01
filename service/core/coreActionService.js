@@ -64,14 +64,12 @@ const getCoreActions = async (userId, deptId, userNames, startDoneDate, endDoneD
         },
         {
             username: "芬芬",
-            children: ["芬芬", "​芬​芬"]
+            children: ["芬芬", " 芬 芬"]
         },
         {
             username: "美丽满屋",
             children: ["美丽满屋", "广东美丽满屋"]
         }
-        // {username: "", children: [""]},
-        // {username: "", children: [""]},
     ]
 
     const users = mixedOutSourcingUsers
