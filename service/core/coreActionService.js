@@ -417,8 +417,8 @@ const convertToUserActionResult = (innerUserNames, outUsers, userStatResult) => 
             if (tmpOutUsers.length > 0) {
                 attrs = {
                     isOut: true,
-                    groupCode: outUsers[0].groupCode,
-                    groupName: outUsers[0].groupName
+                    groupCode: tmpOutUsers[0].groupCode,
+                    groupName: tmpOutUsers[0].groupName
                 }
             }
             const userStatStructure = {
