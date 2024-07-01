@@ -19,6 +19,7 @@ const joiErrorMessages = {
 }
 
 const commonJoiSchemas = {
+    any: Joi.any(),
     required: Joi.required(),
     strRequired: Joi.string().required(),
     positiveIntegerRequired: Joi.number().min(1).required(),
@@ -84,7 +85,7 @@ const mixedValidate = (items) => {
 }
 
 const _validate = (schema, data) => {
-    const error = Joi.object(schema).validate(data).error
+    const error = Joi.object(schema).validate(data, {allowUnknown: true}).error
     if (error) {
         const {type, context: {label, key, limit, value}} = error.details[0]
         let errorMsg = joiErrorMessages[type]
