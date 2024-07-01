@@ -1,17 +1,17 @@
 const _ = require("lodash")
-const flowRepo = require("../../repository/flowRepo")
-const userRepo = require("../../repository/userRepo")
-const redisRepo = require("../../repository/redisRepo")
-const outUsersRepo = require("../../repository/outUsersRepo")
-const flowCommonService = require("../common/flowCommonService")
-const {flowStatusConst, flowReviewTypeConst} = require("../../const/flowConst")
-const {opFunctions} = require("../../const/operatorConst")
-const whiteList = require("../../config/whiteList")
-const {visionFormDoneActivityIds} = require("../../const/tmp/coreActionsConst")
-const departmentCoreActivityStat = require("../../core/statistic/departmentCoreActivityStat")
-const visionConfusedUserNamesConst = require("../../const/tmp/visionConst")
-const flowUtil = require("../../utils/flowUtil")
-const algorithmUtil = require("../../utils/algorithmUtil")
+const flowRepo = require("@/repository/flowRepo")
+const userRepo = require("@/repository/userRepo")
+const redisRepo = require("@/repository/redisRepo")
+const outUsersRepo = require("@/repository/outUsersRepo")
+const flowCommonService = require("@/service/common/flowCommonService")
+const {flowStatusConst, flowReviewTypeConst} = require("@/const/flowConst")
+const {opFunctions} = require("@/const/operatorConst")
+const whiteList = require("@/config/whiteList")
+const {visionFormDoneActivityIds} = require("@/const/tmp/coreActionsConst")
+const departmentCoreActivityStat = require("@/core/statistic/departmentCoreActivityStat")
+const visionConfusedUserNamesConst = require("@/const/tmp/visionConst")
+const flowUtil = require("@/utils/flowUtil")
+const algorithmUtil = require("@/utils/algorithmUtil")
 
 const getCoreActions = async (userId, deptId, innerUserNames, startDoneDate, endDoneDate) => {
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptId)
@@ -426,8 +426,8 @@ const convertToUserActionResult = (actionStatBasedOnUserResult, innerUserNames, 
             if (tmpOutUsers.length > 0) {
                 attrs = {
                     isOut: true,
-                    groupCode: outUsers[0].groupCode,
-                    groupName: outUsers[0].groupName
+                    groupCode: tmpOutUsers[0].groupCode,
+                    groupName: tmpOutUsers[0].groupName
                 }
             }
             const userStatStructure = {
