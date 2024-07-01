@@ -1,4 +1,4 @@
-const Hr_RecruitService = require('../service/Hr_RecruitService');
+const Hr_RecruitService = require('../service/hrRecruitService');
 const {success} = require("../utils/biResponse");
 
 function extracted(timeRange, startDate, endDate) {

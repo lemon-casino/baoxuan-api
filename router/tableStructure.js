@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-const tmall_link = require("../router_handler/tmall_link");
+const tmall_link = require("../router_handler/tianMaoLink");
 const Validator = require("../utils/Validator");
 const registerBodyRules = {
     field: {required: true, type: "string", minLength: 1},
