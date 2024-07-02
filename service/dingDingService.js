@@ -24,7 +24,8 @@ const flowFormDetailsService = require("@/service/flowFormDetailsService")
 const departmentService = require("@/service/departmentService")
 const flowFormService = require("@/service/flowFormService")
 const formReviewRepo = require("@/repository/formReviewRepo")
-const flowCommonService = require("./common/flowCommonService");
+const flowCommonService = require("./common/flowCommonService")
+const outModifyPictureVisionPatch = require("@/patch/outModifyPictureVisionPatch")
 
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
@@ -392,6 +393,11 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
     // 注意📢：如果已经保存到Redis中的流程中的reviewId需要继承，要不流程表单更新后节点id会变动
     const todayFlows = await globalGetter.getTodayFlows()
     for (const flow of flows) {
+        const patchFlows = outModifyPictureVisionPatch.filter(item => item.processInstanceId === flow.processInstanceId)
+        if (patchFlows.length > 0) {
+            flow.data[patchFlows[0].missingFieldId] = patchFlows[0].fieldValue
+        }
+
         const reviewItems = flow.overallprocessflow
         if (!reviewItems || reviewItems.length === 0) {
             logger.warn(`流程：${flow.processInstanceId}没有审核节点信息`)
