@@ -60,50 +60,48 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
     combinedFlows = flowCommonService.removeTargetStatusFlows(combinedFlows, flowStatusConst.TERMINATED)
     combinedFlows = flowCommonService.removeDoneActivitiesNotInDoneDateRange(combinedFlows, startDoneDate, endDoneDate)
 
-    // const {resignedUsers, outUsers} = await getOutAndResignedUsers(userId, deptId)
-    // const outUserNames = outUsers.map(item => item.userName)
-    // const requiredUserNames = `${userNames},${resignedUsers.join(",")},${outUserNames.join(",")}`
-
     const requiredUserNames = requiredUsers.map(item => item.userName || item.nickname).join(",")
 
     // 基于人的汇总(最基本的明细统计)
     const actionStatBasedOnUserResult = await departmentCoreActivityStat.get(requiredUserNames, combinedFlows, coreActionConfig)
 
     const finalResult = _.cloneDeep(actionStatBasedOnUserResult)
-    const sumUserActionStatResult = sumUserActionStat(actionStatBasedOnUserResult)
-    finalResult.unshift({
-        actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult
-    })
-
-    const statusStatFlowResult = convertToFlowStatResult(combinedFlows, coreActionConfig, actionStatBasedOnUserResult)
 
     // 先仅仅处理视觉部
     if (deptId === "482162119") {
-        // 对内部的流程进行转化统计
-        const innerFormIds = differentForms.inner.map(item => item.formId)
-        const innerFlows = combinedFlows.filter(item => innerFormIds.includes(item.formUuid))
-        const innerStatusStatFlowResult = convertToFlowStatResult(innerFlows, coreActionConfig, actionStatBasedOnUserResult)
-        finalResult.unshift({
-            actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
-        })
-
-        // 对外包的流程进行转化统计
-        const outSourcingFormIds = differentForms.outSourcing.map(item => item.formId)
-        const outSourcingFlows = combinedFlows.filter(item => outSourcingFormIds.includes(item.formUuid))
-        const outSourcingStatusStatFlowResult = convertToFlowStatResult(outSourcingFlows, coreActionConfig, actionStatBasedOnUserResult)
-        finalResult.unshift({
-            actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
-        })
-
         const userStatArr = convertToUserActionResult(requiredUsers, actionStatBasedOnUserResult)
-
         for (const userStat of userStatArr) {
-            actionStatBasedOnUserResult.unshift(userStat)
+            finalResult.unshift(userStat)
         }
 
-        finalResult.unshift({
-            actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
-        })
+        // 个人的查看不用显示汇总
+        if (userNames.length > 0) {
+            const sumUserActionStatResult = sumUserActionStat(actionStatBasedOnUserResult)
+            finalResult.unshift({
+                actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult
+            })
+
+            // 对内部的流程进行转化统计
+            const innerFormIds = differentForms.inner.map(item => item.formId)
+            const innerFlows = combinedFlows.filter(item => innerFormIds.includes(item.formUuid))
+            const innerStatusStatFlowResult = convertToFlowStatResult(innerFlows, coreActionConfig, actionStatBasedOnUserResult)
+            finalResult.unshift({
+                actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
+            })
+
+            // 对外包的流程进行转化统计
+            const outSourcingFormIds = differentForms.outSourcing.map(item => item.formId)
+            const outSourcingFlows = combinedFlows.filter(item => outSourcingFormIds.includes(item.formUuid))
+            const outSourcingStatusStatFlowResult = convertToFlowStatResult(outSourcingFlows, coreActionConfig, actionStatBasedOnUserResult)
+            finalResult.unshift({
+                actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
+            })
+
+            const statusStatFlowResult = convertToFlowStatResult(combinedFlows, coreActionConfig, actionStatBasedOnUserResult)
+            finalResult.unshift({
+                actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
+            })
+        }
     }
     return flowUtil.statIdsAndSumFromBottom(finalResult)
 }
