@@ -1,5 +1,6 @@
 const models = require('@/model')
 const uuidUtil = require("@/utils/uuidUtil")
+const {QueryTypes} = require("sequelize");
 
 /**
  * 保存流程详情（一组）
@@ -35,9 +36,48 @@ const getProcessDetailsByProcessInstanceIds = async (ids) => {
     })
     return result.map(item => item.get({plain: true}))
 }
+//三天内完成的流程
+
+const theProcessIsCompletedInThreeDays = async () => {
+    try {
+        return await models.sequelize.query(
+            `SELECT
+    MAX(CASE WHEN field_id = 'textField_liihs7kw' THEN field_value END) AS textField_value,
+    MAX(CASE WHEN field_id = 'multiSelectField_lwufb7oy' THEN field_value END) AS multiSelectField_value
+FROM
+    process_details
+WHERE
+    process_instance_id IN (
+        SELECT process_instance_id
+        FROM process
+        WHERE form_uuid = 'FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB'
+          AND done_time > DATE_SUB(DATE(NOW()), INTERVAL 3 DAY)
+          AND instance_status = 'COMPLETED'
+    )
+    AND (field_id = 'textField_liihs7kw' OR field_id = 'multiSelectField_lwufb7oy')
+GROUP BY
+    process_instance_id
+HAVING
+    textField_value IS NOT NULL
+    AND multiSelectField_value IS NOT NULL; `,
+            {
+                raw: true,
+                logging: true,
+                type: QueryTypes.SELECT
+
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
 
 module.exports = {
     saveProcessDetailsArr,
     saveProcessDetailsArrWithOutTrans,
-    getProcessDetailsByProcessInstanceIds
+    getProcessDetailsByProcessInstanceIds,
+    theProcessIsCompletedInThreeDays
 }

@@ -46,35 +46,35 @@ const getLinkOperationCount = async (req, res, next) => {
  * 获取链接问题处理数据: 统计库中最新一天的
  * @returns {Promise<void>}
  */
-const getErrorLinkCount = async (req, res, next) => {
-    try {
-        const status = req.params.status
-        const {productLineLeaders} = req.query
-
-        const latestSingleItems = await singleItemTaoBaoService.getLatestBatchIdRecords(1)
-        const latestDate = latestSingleItems[0]["batchId"]
-        const timeRange = [dateUtil.startOfDay(latestDate), dateUtil.endOfDay(latestDate)]
+// const getErrorLinkCount = async (req, res, next) => {
+//     try {
+//         const status = req.params.status
+//         const {productLineLeaders} = req.query
 //
-        const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
-            JSON.parse(productLineLeaders),
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            timeRange,
-            null
-        )
-        const uniqueSingleItems = singleItemTaoBaoService.getUniqueSingleItems(singleItems)
-        const result = await singleItemTaoBaoService.getErrorLinkOperationCount(uniqueSingleItems, status)
-        return res.send(biResponse.success(result))
-    } catch (e) {
-        next(e)
-    }
-}
+//         const latestSingleItems = await singleItemTaoBaoService.getLatestBatchIdRecords(1)
+//         const latestDate = latestSingleItems[0]["batchId"]
+//         const timeRange = [dateUtil.startOfDay(latestDate), dateUtil.endOfDay(latestDate)]
+// //
+//         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
+//             JSON.parse(productLineLeaders),
+//             null,
+//             null,
+//             null,
+//             null,
+//             null,
+//             null,
+//             timeRange,
+//             null
+//         )
+//         const uniqueSingleItems = singleItemTaoBaoService.getUniqueSingleItems(singleItems)
+//         const result = await singleItemTaoBaoService.getErrorLinkOperationCount(uniqueSingleItems, status)
+//         return res.send(biResponse.success(result))
+//     } catch (e) {
+//         next(e)
+//     }
+// }
 
 module.exports = {
     getLinkOperationCount,
-    getErrorLinkCount
+    // getErrorLinkCount
 }
