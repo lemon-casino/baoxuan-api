@@ -364,10 +364,6 @@ const convertToFlowStatResult = (flows, coreActionConfig, userStatResult) => {
 
 const convertToUserActionResult = (innerUserNames, outUsers, userStatResult) => {
     const userStatArr = []
-    // 外包人员录入混乱，将全部人员统一格式：将凌乱的多个人名统一到一个人名上
-    const unifyUserNameFormatByConfusedOutUserName = () => {
-
-    }
     const mixedOutSourcingUsers = visionConfusedUserNamesConst.unifiedConfusedUserNames
     const newStructureUsers = outUsers.length > 0 ? mixedOutSourcingUsers : []
     const userNamesArr = innerUserNames.concat(outUsers.map(item => item.userName))
@@ -383,7 +379,6 @@ const convertToUserActionResult = (innerUserNames, outUsers, userStatResult) => 
             newStructureUsers.push({username, children: [username]})
         }
     }
-
 
     for (const user of newStructureUsers) {
         const getActionChildren = (usernames) => {
@@ -421,21 +416,18 @@ const convertToUserActionResult = (innerUserNames, outUsers, userStatResult) => 
             }
             return result
         }
-
         if (!user.username.includes("离职")) {
-            const tmpOutUsers = outUsers.filter(item => item.userName === user.username) //outUserNames.includes(user.username)
-            let attrs = {}
+            const tmpOutUsers = outUsers.filter(item => item.userName === user.username)
+            let tags = {}
             if (tmpOutUsers.length > 0) {
-                attrs = {
-                    isOut: true,
-                    groupCode: tmpOutUsers[0].groupCode,
-                    groupName: tmpOutUsers[0].groupName
+                tags = {
+                    isOut: true
                 }
             }
             const userStatStructure = {
                 actionCode: "userActStat",
                 actionName: user.username,
-                attrs,
+                tags,
                 children: getActionChildren(user.children)
             }
             userStatArr.push(userStatStructure)

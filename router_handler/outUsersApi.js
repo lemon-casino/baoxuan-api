@@ -12,6 +12,15 @@ const getOutUsers = async (req, res, next) => {
     }
 }
 
+const getOutUsersWithTags = async (req, res, next) => {
+    try {
+        const outUsers = await outUsersService.getOutUsersWithTags()
+        return res.send(biResponse.success(outUsers))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const updateOutUsers = async (req, res, next) => {
     try {
         const data = req.body
@@ -25,5 +34,6 @@ const updateOutUsers = async (req, res, next) => {
 
 module.exports = {
     getOutUsers,
-    updateOutUsers
+    updateOutUsers,
+    getOutUsersWithTags
 }

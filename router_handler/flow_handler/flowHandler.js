@@ -13,7 +13,6 @@ const getFlowsByIds = async (req, res) => {
         const flows = await flowService.getFlowsByIds(idsObj)
         return res.send(biResponse.success(flows))
     }
-
     return res.send(biResponse.serverError())
 }
 
