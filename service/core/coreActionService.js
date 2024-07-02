@@ -33,39 +33,46 @@ const getCoreActions = async (userId, deptId, innerUserNames, startDoneDate, end
 
     const statusStatFlowResult = convertToFlowStatResult(combinedFlows, coreActionConfig, actionStatBasedOnUserResult)
 
-    // 对内部的流程进行转化统计
-    const innerFormIds = differentForms.inner.map(item => item.formId)
-    const innerFlows = combinedFlows.filter(item => innerFormIds.includes(item.formUuid))
-    const innerStatusStatFlowResult = convertToFlowStatResult(innerFlows, coreActionConfig, actionStatBasedOnUserResult)
+    if (deptId === "482162119") {
+        // 对内部的流程进行转化统计
+        const innerFormIds = differentForms.inner.map(item => item.formId)
+        const innerFlows = combinedFlows.filter(item => innerFormIds.includes(item.formUuid))
+        const innerStatusStatFlowResult = convertToFlowStatResult(innerFlows, coreActionConfig, actionStatBasedOnUserResult)
 
-    // 对外包的流程进行转化统计
-    const outSourcingFormIds = differentForms.outSourcing.map(item => item.formId)
-    const outSourcingFlows = combinedFlows.filter(item => outSourcingFormIds.includes(item.formUuid))
-    const outSourcingStatusStatFlowResult = convertToFlowStatResult(outSourcingFlows, coreActionConfig, actionStatBasedOnUserResult)
+        // 对外包的流程进行转化统计
+        const outSourcingFormIds = differentForms.outSourcing.map(item => item.formId)
+        const outSourcingFlows = combinedFlows.filter(item => outSourcingFormIds.includes(item.formUuid))
+        const outSourcingStatusStatFlowResult = convertToFlowStatResult(outSourcingFlows, coreActionConfig, actionStatBasedOnUserResult)
 
-    // 从人的角度统计工作量
-    let innerUserNameArr = innerUserNames.includes(",") ? innerUserNames.split(",") : [innerUserNames]
-    // 过滤掉因为split可能存在的空值
-    innerUserNameArr = innerUserNameArr.filter(item => !!item)
-    const userStatArr = convertToUserActionResult(innerUserNameArr, outUsers, actionStatBasedOnUserResult)
+        // 从人的角度统计工作量
+        let innerUserNameArr = innerUserNames.includes(",") ? innerUserNames.split(",") : [innerUserNames]
+        // 过滤掉因为split可能存在的空值
+        innerUserNameArr = innerUserNameArr.filter(item => !!item)
+        const userStatArr = convertToUserActionResult(innerUserNameArr, outUsers, actionStatBasedOnUserResult)
 
-    for (const userStat of userStatArr) {
-        actionStatBasedOnUserResult.unshift(userStat)
+        for (const userStat of userStatArr) {
+            actionStatBasedOnUserResult.unshift(userStat)
+        }
+        // 向结果中填充数据
+        actionStatBasedOnUserResult.unshift({
+            actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult
+        })
+        actionStatBasedOnUserResult.unshift({
+            actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
+        })
+        actionStatBasedOnUserResult.unshift({
+            actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
+        })
+
+        actionStatBasedOnUserResult.unshift({
+            actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
+        })
+    }else{
+        // 向结果中填充数据
+        actionStatBasedOnUserResult.unshift({
+            actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult
+        })
     }
-    // 向结果中填充数据
-    actionStatBasedOnUserResult.unshift({
-        actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult
-    })
-
-    actionStatBasedOnUserResult.unshift({
-        actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
-    })
-    actionStatBasedOnUserResult.unshift({
-        actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
-    })
-    actionStatBasedOnUserResult.unshift({
-        actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
-    })
 
     return flowUtil.statIdsAndSumFromBottom(actionStatBasedOnUserResult)
 }
@@ -259,6 +266,10 @@ const convertToFlowStatResult = (flows, coreActionConfig, userStatResult) => {
                                 const {from: fromNode, to: toNode, overdue: overdueNode} = flowNodeRule
                                 const fromNodeMatched = activities.filter(item => item.activityId === fromNode.id && fromNode.status.includes(item.type)).length > 0
                                 const toNodeMatched = activities.filter(item => item.activityId === toNode.id && toNode.status.includes(item.type)).length > 0
+
+                                if (!overdueNode) {
+                                    continue
+                                }
 
                                 const overdueActivity = activities.filter(item => item.activityId === overdueNode.id && overdueNode.status.includes(item.type))
                                 if (overdueActivity.length === 0) {
