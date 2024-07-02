@@ -18,7 +18,7 @@ const getOutUsersWithTags = async (where = {}) => {
     const outUsers = await outUsersModel.findAll({
         where, include: [{model: usersTagsModel, as: "tags"}]
     })
-    return outUsers
+    return sequelizeUtil.extractDataValues(outUsers)
 }
 
 const updateOutUsers = async (id, data) => {

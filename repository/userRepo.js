@@ -170,22 +170,27 @@ const getDeptResignUsers = async (deptId) => {
     })
     const deptUserIds = deptUsers.map(item => item.userId)
     const deptResignUsers = await usersModel.findAll({
+        attributes: {exclude: ["password"]},
         where: {
             dingdingUserId: {$in: deptUserIds},
             isResign: true
-        }
+        },
+        include: [
+            {model: usersTagsModel, as: "tags"}
+        ]
     })
     return sequelizeUtil.extractDataValues(deptResignUsers)
 }
 
 const getUsersWithTagsByUsernames = async (usernames) => {
     const result = await usersModel.findAll({
+        attributes: {exclude: ["password"]},
         where: {nickname: {$in: usernames}},
         include: [
             {model: usersTagsModel, as: "tags"}
         ]
     })
-    return result
+    return sequelizeUtil.extractDataValues(result)
 }
 
 module.exports = {

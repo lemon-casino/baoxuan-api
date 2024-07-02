@@ -45,15 +45,16 @@ const updateRunningFlowEmergency = async (req, res, next) => {
 
 const getCoreActions = async (req, res, next) => {
     try {
-        const {deptId, startDate, endDate, userNames} = req.query
-        const userId = req.user.id
+        const {tags, deptId, startDate, endDate, userNames} = req.body
+        const userId = req.user.userId
         joiUtil.validate({
-            deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.required},
+            tags: {value: tags, schema: joiUtil.commonJoiSchemas.arrayRequired},
+            deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.strRequired},
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired},
-            userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.strRequired}
+            userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.arrayRequired}
         })
-        const result = await coreActionService.getCoreActions(userId, deptId, userNames, startDate, endDate)
+        const result = await coreActionService.getCoreActions(tags, userId, deptId, userNames, startDate, endDate)
         res.send(biResponse.success(result))
     } catch (e) {
         next(e)
