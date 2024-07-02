@@ -34,5 +34,7 @@ module.exports = {
     "/dept-core-action-form-rule": require("./deptCoreActionFormRuleRouter"),
     "/dept-core-action-form-details-rule": require("./deptCoreActionFormDetailsRuleRouter"),
     "/dept-core-action-form-activity-rule": require("./deptCoreActionFormActivityRuleRouter"),
-    "/out-users": require("./outUsersRouter")
+    "/out-users": require("./outUsersRouter"),
+    "/tags": require("./tagsRouter"),
+    "/users-tags": require("./usersTagsRouter")
 }

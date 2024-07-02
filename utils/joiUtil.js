@@ -99,5 +99,7 @@ const _validate = (schema, data) => {
 }
 
 module.exports = {
-    clarityValidate, validate: mixedValidate, commonJoiSchemas
+    clarityValidate,
+    validate: mixedValidate,
+    commonJoiSchemas
 }

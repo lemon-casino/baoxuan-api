@@ -67,7 +67,7 @@ const getCoreActions = async (userId, deptId, innerUserNames, startDoneDate, end
         actionStatBasedOnUserResult.unshift({
             actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
         })
-    }else{
+    } else {
         // 向结果中填充数据
         actionStatBasedOnUserResult.unshift({
             actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult
@@ -369,7 +369,7 @@ const convertToUserActionResult = (innerUserNames, outUsers, userStatResult) => 
 
     }
     const mixedOutSourcingUsers = visionConfusedUserNamesConst.unifiedConfusedUserNames
-    const newStructureUsers = mixedOutSourcingUsers
+    const newStructureUsers = outUsers.length > 0 ? mixedOutSourcingUsers : []
     const userNamesArr = innerUserNames.concat(outUsers.map(item => item.userName))
     for (const username of userNamesArr) {
         let isErrOutSourcingUser = false
