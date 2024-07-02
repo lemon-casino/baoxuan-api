@@ -1,6 +1,6 @@
 const usersTagsService = require("@/service/usersTagsService")
 const joiUtil = require("@/utils/joiUtil")
-const {saveTagSchema} = require("@/schema/tagSchema")
+const {saveTagSchema} = require("@/schema/usersTagsSchema")
 const biResponse = require("@/utils/biResponse")
 
 const saveUserTag = async (req, res, next) => {
