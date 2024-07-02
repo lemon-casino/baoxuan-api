@@ -796,18 +796,36 @@ const getlinkingIssues = async (productLineLeaders, singleItems, timeRange) => {
     for (const item of taoBaoErrorItems) {
         const items = singleItems.filter((singleItem) => {
             for (const exp of item.values) {
+                exp.exclude = exp.exclude || []
                 let value = exp.value
                 let fieldValue = singleItem[exp.field]
                 if (exp.field === "profitRate") {
                     // if(singleItem[exp.lessThan] === "true"){
                     //reallyShipmentAmount 小于0
+                    let excludeResult = true;
+                    for (const exclude of exp.exclude) {
+
+                        const excludeValue = singleItem[exclude.field];
+                        const excludeName = exclude.name;
+                        const excludeComparator = exclude.comparator;
+
+                        switch (excludeComparator) {
+                            case '!==':
+                                excludeResult = excludeValue !== excludeName;
+                                break;
+                            default:
+                                throw new Error(`Unsupported comparator: ${excludeComparator}`);
+                        }
+                    }
+
+
                     if (exp.lessThan === "negative_profit_60") {
                         if (singleItem[exp.lessThan] === "true") {
-                            return singleItem["profitRate"] * 1 < 0
+                            return singleItem["profitRate"] * 1 < 0 && excludeResult
                         }
                         return false
                     } else {
-                        return singleItem[exp.lessThan] === "true";
+                        return singleItem[exp.lessThan] === "true" && excludeResult;
                     }
 
                     //     return  singleItem[exp.field] < parseFloat(exp.value)
@@ -836,10 +854,32 @@ const getlinkingIssues = async (productLineLeaders, singleItems, timeRange) => {
                     let tmpResult = true
                     // 如果value为数字需要转化
                     const isNumber = /^(\-|\+)?\d+(\.\d+)?$/.test(value)
+
                     if (isNumber) {
+
                         value = parseFloat(value)
                         fieldValue = parseFloat(fieldValue)
-                        tmpResult = eval(`${fieldValue}${exp.comparator}${value}`)
+                        let excludeResult = true;
+                        if (exp.exclude.length > 0) {
+                            for (const exclude of exp.exclude) {
+
+                                const excludeValue = singleItem[exclude.field];
+                                const excludeName = exclude.name;
+                                const excludeComparator = exclude.comparator;
+
+                                switch (excludeComparator) {
+                                    case '!==':
+                                        excludeResult = excludeValue !== excludeName;
+                                        break;
+                                    default:
+                                        throw new Error(`Unsupported comparator: ${excludeComparator}`);
+                                }
+                            }
+
+                        }
+                        tmpResult = eval(`${fieldValue}${exp.comparator}${value}`) && excludeResult
+
+                        // console.log("eval:", eval(`${fieldValue}${exp.comparator}${value}`))
                     } else {
                         tmpResult = eval(`"${fieldValue}"
                         ${exp.comparator}
@@ -925,18 +965,36 @@ const getlinkingto = async (productLineLeaders, singleItems, timeRange) => {
         const recordTheLinkID = []
         const items = singleItems.filter((singleItem) => {
             for (const exp of item.values) {
+                exp.exclude = exp.exclude || []
                 let value = exp.value
                 let fieldValue = singleItem[exp.field]
                 if (exp.field === "profitRate") {
                     // if(singleItem[exp.lessThan] === "true"){
                     //reallyShipmentAmount 小于0
+                    let excludeResult = true;
+                    for (const exclude of exp.exclude) {
+
+                        const excludeValue = singleItem[exclude.field];
+                        const excludeName = exclude.name;
+                        const excludeComparator = exclude.comparator;
+
+                        switch (excludeComparator) {
+                            case '!==':
+                                excludeResult = excludeValue !== excludeName;
+                                break;
+                            default:
+                                throw new Error(`Unsupported comparator: ${excludeComparator}`);
+                        }
+                    }
+
+
                     if (exp.lessThan === "negative_profit_60") {
                         if (singleItem[exp.lessThan] === "true") {
-                            return singleItem["profitRate"] * 1 < 0
+                            return singleItem["profitRate"] * 1 < 0 && excludeResult
                         }
                         return false
                     } else {
-                        return singleItem[exp.lessThan] === "true";
+                        return singleItem[exp.lessThan] === "true" && excludeResult;
                     }
 
                     //     return  singleItem[exp.field] < parseFloat(exp.value)
@@ -968,7 +1026,26 @@ const getlinkingto = async (productLineLeaders, singleItems, timeRange) => {
                     if (isNumber) {
                         value = parseFloat(value)
                         fieldValue = parseFloat(fieldValue)
-                        tmpResult = eval(`${fieldValue}${exp.comparator}${value}`)
+
+                        let excludeResult = true;
+                        if (exp.exclude.length > 0) {
+                            for (const exclude of exp.exclude) {
+
+                                const excludeValue = singleItem[exclude.field];
+                                const excludeName = exclude.name;
+                                const excludeComparator = exclude.comparator;
+
+                                switch (excludeComparator) {
+                                    case '!==':
+                                        excludeResult = excludeValue !== excludeName;
+                                        break;
+                                    default:
+                                        throw new Error(`Unsupported comparator: ${excludeComparator}`);
+                                }
+                            }
+
+                        }
+                        tmpResult = eval(`${fieldValue}${exp.comparator}${value}`) && excludeResult
                     } else {
                         tmpResult = eval(`"${fieldValue}"
                         ${exp.comparator}

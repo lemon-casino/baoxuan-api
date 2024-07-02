@@ -428,9 +428,9 @@ const tmallLinkAnomalyDetection = async () => {
 }
 
 
-// tmallLinkAnomalyDetection().then(r => {
-//     console.log("xx")
-// })
+tmallLinkAnomalyDetection().then(r => {
+    console.log("xx")
+})
 /**
  * 将已完成和取消的流程入库
  *

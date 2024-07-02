@@ -75,19 +75,40 @@ const newProductFields = oldItems.map(item => {
 const taoBaoErrorItems = [
     {
         name: "老品利润率低于15%",
-        values: [{field: "profitRate", operator: "$lt",lessThan:"old", value: "15", comparator: "<"}]
+        values: [{
+            field: "profitRate",
+            operator: "$lt",
+            lessThan: "old",
+            value: "15",
+            comparator: "<",
+            exclude: [{field: "userDef1", comparator: "!==", name: "清滞销"}]
+        }]
     },
     {
         name: "新品利润率低于5%",
-        values: [{field: "profitRate", operator: "$lt", lessThan:"new_16_30", value: "5", comparator: "<"}]
+        values: [{
+            field: "profitRate",
+            operator: "$lt",
+            lessThan: "new_16_30",
+            value: "5",
+            comparator: "<",
+            exclude: [{field: "userDef1", comparator: "!==", name: "清滞销"}]
+        }]
     },
     {
         name: "新品利润率低于10%",
-        values: [{field: "profitRate", operator: "$lt", lessThan:"new_30_60", value: "10", comparator: "<"}]
+        values: [{
+            field: "profitRate",
+            operator: "$lt",
+            lessThan: "new_30_60",
+            value: "10",
+            comparator: "<",
+            exclude: [{field: "userDef1", comparator: "!==", name: "清滞销"}]
+        }]
     },
     {
         name: "累计60天负利润",
-        values: [{field: "profitRate", operator: "$lt",lessThan:"negative_profit_60", value: "0", comparator: "<"}]
+        values: [{field: "profitRate", operator: "$lt", lessThan: "negative_profit_60", value: "0", comparator: "<"}]
     },
     // {
     //     name: "手淘人数市场占比环比（7天）下降",
@@ -168,7 +189,8 @@ const taoBaoErrorItems = [
             field: "feeRate",
             operator: "$gt",
             value: "15",
-            comparator: ">"
+            comparator: ">",
+            exclude: [{field: "userDef1", comparator: "!==", name: "高毛利,不卡费比"}]
         }].concat(oldProductFields)
     }
 ]
@@ -196,13 +218,41 @@ const profitRateRangeSumTypes = [
 ]
 
 const marketRatioGroup = [
-    {type: "salesRateNormal", name: "坑产占比正常", item: {name: "0-9%", range: [0, 8.999999], field: "salesMarketRate"}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "50%及以上", range: [50, 999999], field: "salesMarketRate"}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "40%-50%", range: [40, 49.999999], field: "salesMarketRate"}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "30-40%", range: [30, 39.999999], field: "salesMarketRate"}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "20%-30%", range: [20, 29.999999], field: "salesMarketRate"}},
-    {type: "salesRateUp", name: "坑产占比提升", item: {name: "9%-20%", range: [9, 19.999999], field: "salesMarketRate"}},
-    {type: "salesRateDown", name: "坑产占比下降", item: {name: "-10%-0", range: [-10, -0.000001], field: "salesMarketRate"}},
+    {
+        type: "salesRateNormal",
+        name: "坑产占比正常",
+        item: {name: "0-9%", range: [0, 8.999999], field: "salesMarketRate"}
+    },
+    {
+        type: "salesRateUp",
+        name: "坑产占比提升",
+        item: {name: "50%及以上", range: [50, 999999], field: "salesMarketRate"}
+    },
+    {
+        type: "salesRateUp",
+        name: "坑产占比提升",
+        item: {name: "40%-50%", range: [40, 49.999999], field: "salesMarketRate"}
+    },
+    {
+        type: "salesRateUp",
+        name: "坑产占比提升",
+        item: {name: "30-40%", range: [30, 39.999999], field: "salesMarketRate"}
+    },
+    {
+        type: "salesRateUp",
+        name: "坑产占比提升",
+        item: {name: "20%-30%", range: [20, 29.999999], field: "salesMarketRate"}
+    },
+    {
+        type: "salesRateUp",
+        name: "坑产占比提升",
+        item: {name: "9%-20%", range: [9, 19.999999], field: "salesMarketRate"}
+    },
+    {
+        type: "salesRateDown",
+        name: "坑产占比下降",
+        item: {name: "-10%-0", range: [-10, -0.000001], field: "salesMarketRate"}
+    },
     {
         type: "salesRateDown",
         name: "坑产占比下降",
@@ -261,7 +311,7 @@ const marketRatioGroup = [
 ]
 
 const fieldsWithPercentageTag = [
-    "shoppingCatSumRoi","accuratePeoplePromotionProductionRate", "wanXiangTaiProductionRate"
+    "shoppingCatSumRoi", "accuratePeoplePromotionProductionRate", "wanXiangTaiProductionRate"
 ]
 
 module.exports = {
