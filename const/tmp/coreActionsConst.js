@@ -1654,7 +1654,7 @@ const mbCoreActionsConfig = [
                         formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]}
+                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]}
                         ],
                         flowNodeRules: [
                             {
@@ -1861,7 +1861,7 @@ const mbCoreActionsConfig = [
                         formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]}
+                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]}
                         ],
                         flowNodeRules: [
                             {
@@ -2077,7 +2077,7 @@ const mbCoreActionsConfig = [
                         formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]}
+                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]}
                         ],
                         flowNodeRules: [
                             {
@@ -3166,7 +3166,7 @@ const mbCoreActionsConfig = [
                         formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]}
+                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]}
                         ],
                         flowNodeRules: [
                             {
@@ -4670,7 +4670,7 @@ const mbCoreActionsConfig = [
                         formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]}
+                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]}
                         ],
                         flowNodeRules: [
                             {
@@ -8522,7 +8522,7 @@ const mbCoreActionsConfig = [
                         formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "部分图片"}
+                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.Equal, value: "部分图片"}
                         ],
                         flowNodeRules: [
                             {
@@ -9160,7 +9160,7 @@ const mbCoreActionsConfig = [
                         formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "部分图片"}
+                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.Equal, value: "部分图片"}
                         ],
                         flowNodeRules: [
                             {
@@ -9362,7 +9362,7 @@ const mbCoreActionsConfig = [
                         formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "部分图片"}
+                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.Equal, value: "部分图片"}
                         ],
                         flowNodeRules: [
                             {
@@ -9545,7 +9545,7 @@ const mbCoreActionsConfig = [
                         formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "部分图片"}
+                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.Equal, value: "部分图片"}
                         ],
                         flowNodeRules: [
                             {
@@ -10147,7 +10147,7 @@ const mbCoreActionsConfig = [
                         formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "部分图片"}
+                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.Equal, value: "部分图片"}
                         ],
                         flowNodeRules: [
                             {
@@ -11453,7 +11453,7 @@ const mbCoreActionsConfig = [
                         formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "部分图片"}
+                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.Equal, value: "部分图片"}
                         ],
                         flowNodeRules: [
                             {
