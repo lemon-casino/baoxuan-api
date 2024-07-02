@@ -48,7 +48,9 @@ const getCoreActions = async (userId, deptId, innerUserNames, startDoneDate, end
         let innerUserNameArr = innerUserNames.includes(",") ? innerUserNames.split(",") : [innerUserNames]
         // 过滤掉因为split可能存在的空值
         innerUserNameArr = innerUserNameArr.filter(item => !!item)
-        const userStatArr = convertToUserActionResult(innerUserNameArr, outUsers, actionStatBasedOnUserResult)
+        // 根据人名获取人的详细信息，主要是要tags
+        const innerUsersWithTags = await userRepo.getUsersWithTagsByUsernames(innerUserNameArr)
+        const userStatArr = convertToUserActionResult(innerUsersWithTags, outUsers, actionStatBasedOnUserResult)
 
         for (const userStat of userStatArr) {
             actionStatBasedOnUserResult.unshift(userStat)
@@ -150,7 +152,7 @@ const getOutAndResignedUsers = async (userId, deptId) => {
 
     let outSourcingUsers = []
     if (canGetDeptOutSourcingUsers) {
-        outSourcingUsers = await outUsersRepo.getOutUsers({deptId, enabled: true}) // redisRepo.getOutSourcingUsers(deptId)
+        outSourcingUsers = await outUsersRepo.getOutUsersWithTags({deptId, enabled: true}) // redisRepo.getOutSourcingUsers(deptId)
     }
     result.outUsers = outSourcingUsers
     return result
@@ -362,11 +364,11 @@ const convertToFlowStatResult = (flows, coreActionConfig, userStatResult) => {
     return statusStatFlowResult
 }
 
-const convertToUserActionResult = (innerUserNames, outUsers, userStatResult) => {
+const convertToUserActionResult = (innerUsersWithTags, outUsers, userStatResult) => {
     const userStatArr = []
     const mixedOutSourcingUsers = visionConfusedUserNamesConst.unifiedConfusedUserNames
     const newStructureUsers = outUsers.length > 0 ? mixedOutSourcingUsers : []
-    const userNamesArr = innerUserNames.concat(outUsers.map(item => item.userName))
+    const userNamesArr = innerUsersWithTags.map(item => item.nickname).concat(outUsers.map(item => item.userName))
     for (const username of userNamesArr) {
         let isErrOutSourcingUser = false
         for (const mixedOutSourcingUser of mixedOutSourcingUsers) {
@@ -418,11 +420,12 @@ const convertToUserActionResult = (innerUserNames, outUsers, userStatResult) => 
         }
         if (!user.username.includes("离职")) {
             const tmpOutUsers = outUsers.filter(item => item.userName === user.username)
-            let tags = {}
+            let tags = []
             if (tmpOutUsers.length > 0) {
-                tags = {
-                    isOut: true
-                }
+                tags = tmpOutUsers[0].tags
+            } else {
+                const tmpInnerUsers = innerUsersWithTags.filter(item => item.nickname === user.username)
+                tags = tmpInnerUsers[0].tags
             }
             const userStatStructure = {
                 actionCode: "userActStat",
