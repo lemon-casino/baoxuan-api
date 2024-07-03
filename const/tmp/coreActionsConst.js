@@ -2045,7 +2045,7 @@ const mbCoreActionsConfig = [
                             {
                                 fieldId: "radioField_ltjt0ykc",
                                 opCode: opCodes.EqualAny,
-                                value: ["全套", "套图"]
+                                value: ["全套", "套图", "视频"]
                             }
                         ],
                         flowNodeRules: [
@@ -3046,7 +3046,7 @@ const mbCoreActionsConfig = [
                             {
                                 fieldId: "radioField_ltjt0ykc",
                                 opCode: opCodes.EqualAny,
-                                value: ["全套", "套图"]
+                                value: ["全套", "套图", "视频"]
                             }
                         ],
                         flowNodeRules: [
@@ -4572,7 +4572,7 @@ const mbCoreActionsConfig = [
                             {
                                 fieldId: "radioField_ltjt0ykc",
                                 opCode: opCodes.EqualAny,
-                                value: ["全套", "套图"]
+                                value: ["全套", "套图", "视频"]
                             }
                         ],
                         flowNodeRules: [
