@@ -59,6 +59,7 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
     let combinedFlows = await flowCommonService.getCombinedFlowsOfHistoryAndToday(startDoneDate, endDoneDate, configuredFormIds)
     combinedFlows = flowCommonService.removeTargetStatusFlows(combinedFlows, flowStatusConst.TERMINATED)
     combinedFlows = flowCommonService.removeDoneActivitiesNotInDoneDateRange(combinedFlows, startDoneDate, endDoneDate)
+    combinedFlows = flowCommonService.removeRedirectActivity(combinedFlows)
 
     const requiredUserNames = requiredUsers.map(item => item.userName || item.nickname).join(",")
 
