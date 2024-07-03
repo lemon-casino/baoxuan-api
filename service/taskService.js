@@ -430,15 +430,6 @@ const tmallLinkAnomalyDetection = async () => {
     await sendRequests();
 
 
-    //发起宜搭 bi测试流程
-
-
-    //所有的异常 id 减去正在进行中的异常 减去已完成的 剩下的 都是需要推送的异常
-
-
-    //是否需要从redis中获取正在进行中的流程
-
-
     // 获得运营优化方案 FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB 的redis 运行中的流程
     //  const runningFlows = await redisRepo.getTodayRunningAndFinishedFlows()
 
