@@ -2078,6 +2078,8 @@ const mbCoreActionsConfig = [
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
                             {fieldId: "radioField_ltxy12s6", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]},
+                            // 旧流程：多选项的(,标识)统一算全套
+                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.Contain, value: ","},
                             {
                                 fieldId: "multiSelectField_lwvpqf78",
                                 opCode: opCodes.EqualAny,
@@ -3172,6 +3174,8 @@ const mbCoreActionsConfig = [
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
                             {fieldId: "radioField_ltxy12s6", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]},
+                            // 旧流程：多选项的(,标识)统一算全套
+                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.Contain, value: ","},
                             {
                                 fieldId: "multiSelectField_lwvpqf78",
                                 opCode: opCodes.EqualAny,
@@ -4681,6 +4685,8 @@ const mbCoreActionsConfig = [
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
                             {fieldId: "radioField_ltxy12s6", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]},
+                            // 旧流程：多选项的(,标识)统一算全套
+                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.Contain, value: ","},
                             {
                                 fieldId: "multiSelectField_lwvpqf78",
                                 opCode: opCodes.EqualAny,
