@@ -2077,14 +2077,13 @@ const mbCoreActionsConfig = [
                         formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]},
-                            // 旧流程：多选项的(,标识)统一算全套
-                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.Contain, value: ","},
                             {
-                                fieldId: "multiSelectField_lwvpqf78",
+                                fieldId: "radioField_ltxy12s6",
                                 opCode: opCodes.EqualAny,
-                                value: ["全套视频+图片", "全套图片"]
-                            }
+                                value: ["全套图片", "外包拍摄", "不用拍摄"]
+                            },
+                            // 旧流程：多选项的(,标识)统一算全套  "全套视频+图片","全套图片"
+                            // {fieldId: "multiSelectField_lwvpqf78", opCode: opCodes.ContainAny, value: ["套", ","]}
                         ],
                         flowNodeRules: [
                             {
@@ -3173,14 +3172,17 @@ const mbCoreActionsConfig = [
                         formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]},
-                            // 旧流程：多选项的(,标识)统一算全套
-                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.Contain, value: ","},
                             {
-                                fieldId: "multiSelectField_lwvpqf78",
+                                fieldId: "radioField_ltxy12s6",
                                 opCode: opCodes.EqualAny,
-                                value: ["全套视频+图片", "全套图片"]
-                            }
+                                value: ["全套图片", "外包拍摄", "不用拍摄"]
+                            },
+                            // 旧流程：多选项的(,标识)统一算全套
+                            // {
+                            //     fieldId: "multiSelectField_lwvpqf78",
+                            //     opCode: opCodes.ContainAny,
+                            //     value: ["套", ","]
+                            // }
                         ],
                         flowNodeRules: [
                             {
@@ -4684,14 +4686,17 @@ const mbCoreActionsConfig = [
                         formName: "天猫链接上架流程",
                         formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
                         flowDetailsRules: [
-                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.EqualAny, value: ["全套图片", "外包拍摄"]},
-                            // 旧流程：多选项的(,标识)统一算全套
-                            {fieldId: "radioField_ltxy12s6", opCode: opCodes.Contain, value: ","},
                             {
-                                fieldId: "multiSelectField_lwvpqf78",
+                                fieldId: "radioField_ltxy12s6",
                                 opCode: opCodes.EqualAny,
-                                value: ["全套视频+图片", "全套图片"]
-                            }
+                                value: ["全套图片", "外包拍摄", "不用拍摄"]
+                            },
+                            // 旧流程：多选项的(,标识)统一算全套
+                            // {
+                            //     fieldId: "multiSelectField_lwvpqf78",
+                            //     opCode: opCodes.ContainAny,
+                            //     value: "套"
+                            // }
                         ],
                         flowNodeRules: [
                             {
@@ -13865,7 +13870,11 @@ const mbCoreActionsConfig = [
                         formName: "运营执行流程",
                         formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
                         flowDetailsRules: [
-                            {fieldId: "selectField_liigx7wc", opCode: opCodes.EqualAny, value: ["视频剪辑与发布"]}
+                            {
+                                fieldId: "selectField_liigx7wc",
+                                opCode: opCodes.EqualAny,
+                                value: ["视频剪辑与发布"]
+                            }
                         ],
                         flowNodeRules: [
                             {
@@ -14374,7 +14383,11 @@ const mbCoreActionsConfig = [
                         formName: "运营执行流程",
                         formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
                         flowDetailsRules: [
-                            {fieldId: "selectField_liigx7wc", opCode: opCodes.EqualAny, value: ["视频剪辑与发布"]}
+                            {
+                                fieldId: "selectField_liigx7wc",
+                                opCode: opCodes.EqualAny,
+                                value: ["视频剪辑与发布"]
+                            }
                         ],
                         flowNodeRules: [
                             {

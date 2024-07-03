@@ -6,6 +6,7 @@ const opCodes = {
     Equal: "Equal",
     EqualAny: "EqualAny",
     Contain: "Contain",
+    ContainAny: "ContainAny",
     Bigger: "Bigger",
     BiggerOrEqual: "BiggerOrEqual",
     Lesser: "Lesser"
@@ -24,6 +25,17 @@ const opFunctions = {
     Contain: (src, value) => {
         if (_.isString(value)) {
             return src.includes(value)
+        }
+        return false
+    },
+    ContainAny: (src, value) => {
+        if (_.isArray(value)) {
+            for (const val of value) {
+                if (src.includes(val)) {
+                    return true
+                }
+            }
+            return false
         }
         return false
     },

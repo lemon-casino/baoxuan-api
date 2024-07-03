@@ -251,7 +251,10 @@ const convertToFlowStatResult = (flows, coreActionConfig, userStatResult) => {
                         if (formRule.flowDetailsRules) {
                             for (const detailsRule of formRule.flowDetailsRules) {
                                 formFlows = formFlows.filter(flow => {
-                                    return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
+                                    if (flow.data[detailsRule.fieldId]) {
+                                        return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
+                                    }
+                                    return true
                                 })
                             }
                         }
