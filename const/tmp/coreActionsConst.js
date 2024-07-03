@@ -13250,6 +13250,7 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     }
+
                 ]
             },
             {
@@ -13782,6 +13783,37 @@ const mbCoreActionsConfig = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "运营执行流程",
+                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                        flowDetailsRules: [
+                            {fieldId: "selectField_liigx7wc", opCode: opCodes.EqualAny, value: ["视频剪辑与发布"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ocluwe3jmp1",
+                                    name: "执行人",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_ocluwe3jmp1",
+                                    name: "执行人",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_ocluwe3jmp1",
+                                    name: "执行人",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocluwe3jmp1"
+                                }
+                            }
+                        ]
                     }
                 ]
             },
@@ -13986,6 +14018,37 @@ const mbCoreActionsConfig = [
                                     id: "textField_lx48e5gk"
                                 }
                             },
+                        ]
+                    },
+                    {
+                        formName: "运营执行流程",
+                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                        flowDetailsRules: [
+                            {fieldId: "selectField_liigx7wc", opCode: opCodes.EqualAny, value: ["视频剪辑与发布"]}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_ocluwe3jmp1",
+                                    name: "执行人",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_ocluwe3jmp1",
+                                    name: "执行人",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_ocluwe3jmp1",
+                                    name: "执行人",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "执行人",
+                                    id: "node_ocluwe3jmp1"
+                                }
+                            }
                         ]
                     }
                 ]
