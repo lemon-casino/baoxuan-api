@@ -46,7 +46,15 @@ const get = async (userNames, flows, coreConfig) => {
                     if (rule.flowDetailsRules) {
                         for (const detailsRule of rule.flowDetailsRules) {
                             currentFlows = currentFlows.filter(flow => {
-                                return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
+
+                                if (flow.processInstanceId === "9ead22db-e005-4fb1-97f8-aeadd4b85195"){
+                                    console.log("---")
+                                }
+
+                                if (flow.data[detailsRule.fieldId]) {
+                                    return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
+                                }
+                                return true
                             })
                         }
                     }
