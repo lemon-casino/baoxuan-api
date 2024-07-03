@@ -402,19 +402,19 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
         }
 
         // 补丁
-        const tmpRequirePatchedFlows = transmittedOfflineActivityPatch.filter(item => item.processInstanceId === flow.processInstanceId)
-        if (tmpRequirePatchedFlows.length > 0) {
-            const {targetActivityId, replacedActivities} = tmpRequirePatchedFlows[0]
-            let newOverallProcessFlows = []
-            for (const item of flow.overallprocessflow) {
-                if (item.activityId === targetActivityId) {
-                    newOverallProcessFlows = newOverallProcessFlows.concat(replacedActivities)
-                } else {
-                    newOverallProcessFlows.push(item)
-                }
-            }
-            flow.overallprocessflow = newOverallProcessFlows
-        }
+        // const tmpRequirePatchedFlows = transmittedOfflineActivityPatch.filter(item => item.processInstanceId === flow.processInstanceId)
+        // if (tmpRequirePatchedFlows.length > 0) {
+        //     const {targetActivityId, replacedActivities} = tmpRequirePatchedFlows[0]
+        //     let newOverallProcessFlows = []
+        //     for (const item of flow.overallprocessflow) {
+        //         if (item.activityId === targetActivityId) {
+        //             newOverallProcessFlows = newOverallProcessFlows.concat(replacedActivities)
+        //         } else {
+        //             newOverallProcessFlows.push(item)
+        //         }
+        //     }
+        //     flow.overallprocessflow = newOverallProcessFlows
+        // }
 
         const reviewItems = flow.overallprocessflow
         if (!reviewItems || reviewItems.length === 0) {

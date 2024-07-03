@@ -5,7 +5,7 @@ const {updateParamsSchema} = require("@/schema/outUsersSchema")
 
 const getOutUsers = async (req, res, next) => {
     try {
-        const outUsers = await outUsersService.getOutUsers()
+        const outUsers = await outUsersService.getOutUsersWithTags()
         return res.send(biResponse.success(outUsers))
     } catch (e) {
         next(e)

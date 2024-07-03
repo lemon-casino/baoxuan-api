@@ -12,7 +12,7 @@ const isDeptLeaderOfTheUser = async (userId, deptId) => {
     if (!user) {
         throw new NotFoundError(`根据userId：${userId}未在Redis中找到用户信息`)
     }
-    const userDept = user.leader_in_dept.find(item => item.dept_id === deptId)
+    const userDept = user.leader_in_dept.find(item => item.dept_id.toString() === deptId.toString())
     if (!userDept) {
         throw new NotFoundError(`未在userId：${userId}的信息中找到部门：${deptId}，用户可能不属于该部门`)
     }

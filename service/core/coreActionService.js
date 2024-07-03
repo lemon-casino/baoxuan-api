@@ -42,9 +42,10 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
     }
     // 根据标签对前面获取的所有用户进行筛选
     if (tags && tags.length > 0) {
-        requiredUsers = requiredUsers.filter(item => {
-            for (const tag of tags) {
-                if (!item.tags.includes(tag)) {
+        requiredUsers = requiredUsers.filter(user => {
+            for (const tagCode of tags) {
+                const tmpUserTags = user.tags.filter(item => item.tagCode === tagCode)
+                if (tmpUserTags.length === 0) {
                     return false
                 }
             }
@@ -66,7 +67,7 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
     // 基于人的汇总(最基本的明细统计)
     const actionStatBasedOnUserResult = await departmentCoreActivityStat.get(requiredUserNames, combinedFlows, coreActionConfig)
 
-    const finalResult = _.cloneDeep(actionStatBasedOnUserResult)
+    const finalResult = tags.length === 0 ? _.cloneDeep(actionStatBasedOnUserResult) : []
 
     // 先仅仅处理视觉部
     if (deptId === "482162119") {
@@ -76,7 +77,7 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
         }
 
         // 个人的查看不用显示汇总
-        if (userNames.length > 0) {
+        if (tags.length === 0) {
             const sumUserActionStatResult = sumUserActionStat(actionStatBasedOnUserResult)
             finalResult.unshift({
                 actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult
@@ -284,7 +285,7 @@ const convertToFlowStatResult = (flows, coreActionConfig, userStatResult) => {
                                     if (flow.data[detailsRule.fieldId]) {
                                         return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
                                     }
-                                    return true
+                                    return false
                                 })
                             }
                         }
@@ -314,7 +315,10 @@ const convertToFlowStatResult = (flows, coreActionConfig, userStatResult) => {
                                 if (fromNodeMatched && toNodeMatched) {
                                     const tmpSubActionResult = needToStatResult.children.find(item => item.nameCN === actionName)
                                     if (tmpSubActionResult) {
-                                        tmpSubActionResult.ids.push(flow.processInstanceId)
+                                        if (!tmpSubActionResult.ids.includes(flow.processInstanceId)) {
+                                            tmpSubActionResult.ids.push(flow.processInstanceId)
+                                            tmpSubActionResult.sum = tmpSubActionResult.ids.length
+                                        }
                                     } else {
                                         needToStatResult.children.push({
                                             nameCN: actionName, ids: [flow.processInstanceId]
@@ -399,7 +403,7 @@ const convertToUserActionResult = (users, userStatResult) => {
     // 因为要兼容前期混乱的外包负责人信息
     // 如果users中有 外包的人才需要visionConfusedUserNamesConst的参与
     const userStatArr = []
-    const mixedOutSourcingUsers = visionConfusedUserNamesConst.unifiedConfusedUserNames
+    const mixedOutSourcingUsers = _.cloneDeep(visionConfusedUserNamesConst.unifiedConfusedUserNames)
     let isRequiredVisionConfusedUserNamesConst = false
     for (const mixedOutSourcingUser of mixedOutSourcingUsers) {
         const user = users.find(item => (item.nickname || item.userName) === mixedOutSourcingUser.username)
