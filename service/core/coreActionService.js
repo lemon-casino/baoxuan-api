@@ -21,6 +21,7 @@ const getCoreActions = async (userId, deptId, innerUserNames, startDoneDate, end
     let combinedFlows = await flowCommonService.getCombinedFlowsOfHistoryAndToday(startDoneDate, endDoneDate, configuredFormIds)
     combinedFlows = flowCommonService.removeTargetStatusFlows(combinedFlows, flowStatusConst.TERMINATED)
     combinedFlows = flowCommonService.removeDoneActivitiesNotInDoneDateRange(combinedFlows, startDoneDate, endDoneDate)
+    combinedFlows = flowCommonService.removeRedirectActivity(combinedFlows)
 
     const {resignedUsers, outUsers} = await getOutAndResignedUsers(userId, deptId)
     const outUserNames = outUsers.map(item => item.userName)
