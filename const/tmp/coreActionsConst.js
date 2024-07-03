@@ -1198,9 +1198,9 @@ const mbCoreActionsConfig = [
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
-                                    from: "process",
-                                    name: "视觉方案审核",
-                                    id: "node_oclii6vcap3",
+                                    from: "form",
+                                    name: "摄影负责人",
+                                    id: "employeeField_lvkss8pc",
                                     defaultUserName: "张杰"
                                 }
                             },
