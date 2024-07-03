@@ -1753,6 +1753,28 @@ const mbCoreActionsConfig = [
                                     name: "拍摄完成",
                                     id: "node_oclxcz6yq71"
                                 }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "拍摄完成",
+                                    id: "node_oclx03jr07n"
+                                }
                             }
                         ]
                     },
@@ -1894,6 +1916,7 @@ const mbCoreActionsConfig = [
                             {fieldId: "radioField_lwyq3if9", opCode: opCodes.EqualAny, value: ["全套", "套图"]}
                         ],
                         flowNodeRules: [
+                            // node_oclx1f3cl7k
                             {
                                 from: {
                                     id: "node_oclx00ubuyu",
@@ -1936,6 +1959,28 @@ const mbCoreActionsConfig = [
                                     from: "process",
                                     name: "拍摄完成",
                                     id: "node_oclxcz6yq71"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "拍摄完成",
+                                    id: "node_oclx03jr07n"
                                 }
                             }
                         ]
@@ -6087,6 +6132,28 @@ const mbCoreActionsConfig = [
                                     name: "拍摄完成",
                                     id: "node_oclxcz6yq71"
                                 }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "拍摄完成",
+                                    id: "node_oclx03jr07n"
+                                }
                             }
                         ]
                     },
@@ -6145,6 +6212,28 @@ const mbCoreActionsConfig = [
                                     from: "process",
                                     name: "拍摄完成",
                                     id: "node_oclxcz6yq71"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "拍摄完成",
+                                    id: "node_oclx03jr07n"
                                 }
                             }
                         ]
@@ -9285,6 +9374,28 @@ const mbCoreActionsConfig = [
                                     name: "拍摄完成",
                                     id: "node_oclxcz6yq74"
                                 }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["TODO"]
+                                },
+                                overdue: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "拍摄完成",
+                                    id: "node_oclx03jr07n"
+                                }
                             }
                         ]
                     },
@@ -9463,6 +9574,28 @@ const mbCoreActionsConfig = [
                                     from: "process",
                                     name: "拍摄完成",
                                     id: "node_oclxcz6yq74"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["HISTORY"]
+                                },
+                                overdue: {
+                                    id: "node_oclx03jr07n",
+                                    name: "拍摄完成",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "拍摄完成",
+                                    id: "node_oclx03jr07n"
                                 }
                             }
                         ]
@@ -13279,7 +13412,6 @@ const mbCoreActionsConfig = [
                             }
                         ]
                     }
-
                 ]
             },
             {
