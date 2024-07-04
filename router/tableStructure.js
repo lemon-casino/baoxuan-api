@@ -15,4 +15,9 @@ router.put("/table", Validator.validate(registerBodyRules), tmall_link.put_user_
 router.use(bodyParser.json());
 router.post("/table/sort", tmall_link.sort_user_table)
 router.put("/table/tmall", tmall_link.tmall_user_table)
+
+//天猫异常链接维护
+router.get("/exceptionLinks", tmall_link.getExceptionLinks)
+
+
 module.exports = router;
