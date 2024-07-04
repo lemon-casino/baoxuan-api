@@ -405,7 +405,10 @@ const convertToUserActionResult = (users, userStatResult) => {
     // 因为要兼容前期混乱的外包负责人信息
     // 如果users中有 外包的人才需要visionConfusedUserNamesConst的参与
     const userStatArr = []
-    const mixedOutSourcingUsers = _.cloneDeep(visionConfusedUserNamesConst.unifiedConfusedUserNames)
+    const mixedOutSourcingUsers = _.cloneDeep(visionConfusedUserNamesConst.unifiedConfusedUserNames).filter(item => {
+        const tmpUsers = users.filter(user => user.userName === item.username)
+        return tmpUsers.length > 0
+    })
     let isRequiredVisionConfusedUserNamesConst = false
     for (const mixedOutSourcingUser of mixedOutSourcingUsers) {
         const user = users.find(item => (item.nickname || item.userName) === mixedOutSourcingUser.username)
