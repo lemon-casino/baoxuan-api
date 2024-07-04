@@ -41,8 +41,7 @@ const getFormsWithReviewItemsByImportance = async (isImportant) => {
  * 同步钉钉的form信息
  * @returns {Promise<boolean>}
  */
-const syncFormsFromDingDing = async () => {
-    const userId = "073105202321093148";
+const syncFormsFromDingDing = async (userId = "073105202321093148") => {
     const tokenObj = await redisRepo.getToken()
     const token = tokenObj.access_token
     const allFormsInDB = await flowFormRepo.getAllForms({})
@@ -212,7 +211,7 @@ const getLeaf = (node) => {
     return allLeaf
 }
 
-const extractTitle=(node)=> {
+const extractTitle = (node) => {
     if (["ApplyNode", "EndNode"].includes(node.componentName)) {
         return node.props?.name?.zh_CN || node.props?.name || "";
     }

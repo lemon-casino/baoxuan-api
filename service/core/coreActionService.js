@@ -71,12 +71,7 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
 
     // 先仅仅处理视觉部
     if (deptId === "482162119") {
-        const userStatArr = convertToUserActionResult(requiredUsers, actionStatBasedOnUserResult)
-        for (const userStat of userStatArr) {
-            finalResult.unshift(userStat)
-        }
-
-        // 个人的查看不用显示汇总
+        // 核心动作统计不用标签区分
         if (tags.length === 0) {
             const sumUserActionStatResult = sumUserActionStat(actionStatBasedOnUserResult)
             finalResult.unshift({
@@ -103,6 +98,13 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
             finalResult.unshift({
                 actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
             })
+        }
+        // 核心人的统计用标签区分
+        else {
+            const userStatArr = convertToUserActionResult(requiredUsers, actionStatBasedOnUserResult)
+            for (const userStat of userStatArr) {
+                finalResult.unshift(userStat)
+            }
         }
     }
     return flowUtil.statIdsAndSumFromBottom(finalResult)
