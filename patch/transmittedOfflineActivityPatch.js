@@ -150,5 +150,57 @@ module.exports = [
 
             }
         ]
+    },
+    {
+        processInstanceId: "d911fa75-3cdc-41b3-af02-0822dc699fae",
+        title: "赵家平发起的运营新品流程滚珠磁弹杯",
+        targetActivityId: "node_oclii6vcap7",
+        replacedActivities: [
+            {
+                "processInstanceId": "d911fa75-3cdc-41b3-af02-0822dc699fae",
+                "operateTimeGMT": "",
+                "showName": "摄影拍照",
+                "operateType": "NEW_PROCESS",
+                "remark": "",
+                "taskHoldTimeGMT": 0,
+                "type": "",
+                "operatorName": "杨雪",
+                "actionExit": "submit",
+                "operatorUserId": "1228451750859266",
+                "activityId": "node_oclii6vcap7",
+                "size": 1,
+                "dataId": 30574454866,
+                "domainList": [],
+                "operatorDisplayName": "杨雪",
+                "action": "",
+                "taskId": "null"
+            }
+        ]
+    },
+    {
+        processInstanceId: "0a94e53b-7fe8-4836-82f3-93db15758d2d",
+        title: "赵家平发起的运营新品流程滚珠磁弹杯 白色",
+        targetActivityId: "node_oclii6vcap7",
+        replacedActivities: [
+            {
+                "processInstanceId": "0a94e53b-7fe8-4836-82f3-93db15758d2d",
+                "operateTimeGMT": "",
+                "showName": "摄影拍照",
+                "operateType": "NEW_PROCESS",
+                "remark": "",
+                "taskHoldTimeGMT": 0,
+                "type": "",
+                "operatorName": "杨雪",
+                "actionExit": "submit",
+                "operatorUserId": "1228451750859266",
+                "activityId": "node_oclii6vcap7",
+                "size": 1,
+                "dataId": 30574454866,
+                "domainList": [],
+                "operatorDisplayName": "杨雪",
+                "action": "",
+                "taskId": "null"
+            }
+        ]
     }
 ]
