@@ -21,6 +21,7 @@ const NotFoundError = require("../error/http/notFoundError")
 const ForbiddenError = require("../error/http/forbiddenError")
 const ParameterError = require("../error/parameterError")
 const {tmInnerGroup} = require("../const/tmp/innerGroupConst")
+const {theProcessIsCompletedInThreeDays} = require("@/repository/processDetailsRepo");
 
 // 天猫链接打架流程表单id
 const tmFightingFlowFormId = "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J"
@@ -682,6 +683,7 @@ const getSelfFightingSingleItemLinkOperationCount = async (singleItems, fighting
  * @param singleItems  获得的数据
  * @param timeRange
  */
+
 /*
  const getSelfErrorSingleItemLinkOperationCount = async (productLineLeaders, singleItems, timeRange) => {
 //     const result = {sum: 0, items: []}
@@ -780,375 +782,196 @@ const getSelfFightingSingleItemLinkOperationCount = async (singleItems, fighting
 // }
 */
 
-// 从异常中获取
-const getlinkingIssues = async (productLineLeaders, singleItems, timeRange) => {
+async function getlinkingIssues(productLineLeaders, singleItems, timeRange) {
+    return await getLinkingCommon(productLineLeaders, singleItems, timeRange, false);
+}
+
+async function getlinkingto(productLineLeaders, singleItems, timeRange) {
+    return await getLinkingCommon(productLineLeaders, singleItems, timeRange, true);
+}
+
+async function getLinkingCommon(productLineLeaders, singleItems, timeRange, includeRecord) {
     const result = {
         error: {items: [], sum: 0},
         ongoing: {items: [], sum: 0},
         done: {items: [], sum: 0}
-    }
-    // 通过map过滤重复的数据
-    const uniqueItems = {}
-    // 进行中异常
-    const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING)
-    // 当前完成的异常
-    const completeErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.COMPLETE)
+    };
+
+    const uniqueItems = {};
+    const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING);
+    const completeErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.COMPLETE);
+    const withinThreeDays = await theProcessIsCompletedInThreeDays();
     for (const item of taoBaoErrorItems) {
-        const items = singleItems.filter((singleItem) => {
-            for (const exp of item.values) {
-                exp.exclude = exp.exclude || []
-                let value = exp.value
-                let fieldValue = singleItem[exp.field]
-                if (exp.field === "profitRate") {
-                    // if(singleItem[exp.lessThan] === "true"){
-                    //reallyShipmentAmount 小于0
-                    let excludeResult = true;
-                    for (const exclude of exp.exclude) {
-
-                        const excludeValue = singleItem[exclude.field];
-                        const excludeName = exclude.name;
-                        const excludeComparator = exclude.comparator;
-
-                        switch (excludeComparator) {
-                            case '!==':
-                                excludeResult = excludeValue !== excludeName;
-                                break;
-                            default:
-                                throw new Error(`Unsupported comparator: ${excludeComparator}`);
-                        }
-                    }
-
-
-                    if (exp.lessThan === "negative_profit_60") {
-                        if (singleItem[exp.lessThan] === "true") {
-                            return singleItem["profitRate"] * 1 < 0 && excludeResult
-                        }
-                        return false
-                    } else {
-                        return singleItem[exp.lessThan] === "true" && excludeResult;
-                    }
-
-                    //     return  singleItem[exp.field] < parseFloat(exp.value)
-                    // }
-
-                }
-                // 坑市场占比环比（7天）
-                if (exp.field === "salesMarketRateCircleRate7Day") {
-                    return compareMarketRate(exp.field, singleItem, -20);
-                }
-                //手淘人数市场占比环比（7天）
-                if (exp.field === "shouTaoPeopleNumMarketRateCircleRate7Day") {
-                    return compareShouTaoPeopleNumMarketRate(exp.field, singleItem, -20);
-                }
-                // 坑市场占比环比（日天）
-                if (exp.field === "salesMarketRateCircleRateDay") {
-                    return compareMarketRate(exp.field, singleItem, -20);
-                }
-                //手淘人数市场占比环比（日天）
-                if (exp.field === "shouTaoPeopleNumMarketRateCircleRateDay") {
-                    return compareShouTaoPeopleNumMarketRate(exp.field, singleItem, -20);
-                }
-
-
-                if (exp.comparator) {
-                    let tmpResult = true
-                    // 如果value为数字需要转化
-                    const isNumber = /^(\-|\+)?\d+(\.\d+)?$/.test(value)
-
-                    if (isNumber) {
-
-                        value = parseFloat(value)
-                        fieldValue = parseFloat(fieldValue)
-                        let excludeResult = true;
-                        if (exp.exclude.length > 0) {
-                            for (const exclude of exp.exclude) {
-
-                                const excludeValue = singleItem[exclude.field];
-                                const excludeName = exclude.name;
-                                const excludeComparator = exclude.comparator;
-
-                                switch (excludeComparator) {
-                                    case '!==':
-                                        excludeResult = excludeValue !== excludeName;
-                                        break;
-                                    default:
-                                        throw new Error(`Unsupported comparator: ${excludeComparator}`);
-                                }
-                            }
-
-                        }
-                        tmpResult = eval(`${fieldValue}${exp.comparator}${value}`) && excludeResult
-
-                        // console.log("eval:", eval(`${fieldValue}${exp.comparator}${value}`))
-                    } else {
-                        tmpResult = eval(`"${fieldValue}"
-                        ${exp.comparator}
-                        "${value}"`)
-                    }
-
-                    if (!tmpResult) {
-                        return false
-                    }
-                }
-                if (exp.min) {
-                    const minMatch = fieldValue >= parseFloat(exp.min)
-                    if (!minMatch) {
-                        return false
-                    }
-                }
-            }
-            return true
-        })
+        const items = filterItems(singleItems, item.values);
         result.error.items.push({
             name: item.name,
             sum: items.length,
-            clickingAdditionalParams: item.values
-        })
-
-        function processItems(items, errorLinkIds) {
-            return [...new Map(
-                items
-                    .sort((a, b) => new Date(b.batchId) - new Date(a.batchId))
-                    .map(item => [item.linkId, item])
-            ).values()].filter(item => {
-                return errorLinkIds.includes(item.linkId);
-            });
-        }
+            clickingAdditionalParams: item.values,
+            ...(includeRecord ? {recordTheLinkID: getRecordLinkID(items)} : {})
+        });
 
         const running = processItems(items, runningErrorLinkIds);
         const complete = processItems(items, completeErrorLinkIds);
-
         result.ongoing.items.push({
             name: item.name,
             sum: running.length,
-            clickingAdditionalParams: item.values
+            clickingAdditionalParams: item.values,
+            ...(includeRecord ? {recordTheLinkID: getRecordLinkID(running)} : {})
         });
+
         result.ongoing.sum += running.length;
+
+
         result.done.items.push({
             name: item.name,
             sum: complete.length,
-            clickingAdditionalParams: item.values
+            clickingAdditionalParams: item.values,
+            ...(includeRecord ? {recordTheLinkID: getRecordLinkID(complete)} : {})
         });
+
         result.done.sum += complete.length;
 
         for (const tmp of items) {
-            uniqueItems[tmp.id] = 1
+            uniqueItems[tmp.id] = 1;
         }
     }
-
-
-    const sum = await singleItemTaoBaoRepo.getError60SingleIte(productLineLeaders, timeRange)
-
-    result.error.items.forEach((item) => {
+    // 增加三天内完成的数据
+    withinThreeDays.forEach(entry => {
+        let values = JSON.parse(entry.multiSelectField_value);
+        values.forEach(value => {
+            let item = result.done.items.find(item => item.name === value);
+            if (item) {
+                item.sum += 1;
+            }
+        });
+    });
+    result.done.sum = result.done.items.reduce((total, item) => total + item.sum, 0);
+    const sum = await singleItemTaoBaoRepo.getError60SingleIte(productLineLeaders, timeRange);
+    result.error.items.forEach(item => {
         if (item.name === "累计60天负利润") {
-            item.sum = sum.length
+            item.sum = sum.length;
+            if (includeRecord) {
+                item.recordTheLinkID.push(...sum.map(singleItem => ({
+                    name: singleItem.productName,
+                    linkId: singleItem.linkId
+                })));
+            }
         }
-    })
-    result.error.sum = Object.keys(uniqueItems).length
+    });
+
+    result.error.sum = Object.keys(uniqueItems).length;
     return result;
 }
 
+function filterItems(singleItems, values) {
+    return singleItems.filter(singleItem => {
+        for (const exp of values) {
+            exp.exclude = exp.exclude || [];
+            let value = exp.value;
+            let fieldValue = singleItem[exp.field];
 
-const getlinkingto = async (productLineLeaders, singleItems, timeRange) => {
-    const result = {
-        error: {items: [], sum: 0},
-        ongoing: {items: [], sum: 0},
-        done: {items: [], sum: 0}
-    }
-    // 通过map过滤重复的数据
-    const uniqueItems = {}
-    // 进行中异常
-    const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING)
-    // 当前完成的异常
-    const completeErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.COMPLETE)
-    for (const item of taoBaoErrorItems) {
-        const recordTheLinkID = []
-        const items = singleItems.filter((singleItem) => {
-            for (const exp of item.values) {
-                exp.exclude = exp.exclude || []
-                let value = exp.value
-                let fieldValue = singleItem[exp.field]
-                if (exp.field === "profitRate") {
-                    // if(singleItem[exp.lessThan] === "true"){
-                    //reallyShipmentAmount 小于0
-                    let excludeResult = true;
-                    for (const exclude of exp.exclude) {
+            if (exp.field === "profitRate") {
+                let excludeResult = true;
+                for (const exclude of exp.exclude) {
+                    excludeResult = applyExclude(singleItem, exclude, excludeResult);
+                }
 
-                        const excludeValue = singleItem[exclude.field];
-                        const excludeName = exclude.name;
-                        const excludeComparator = exclude.comparator;
-
-                        switch (excludeComparator) {
-                            case '!==':
-                                excludeResult = excludeValue !== excludeName;
-                                break;
-                            default:
-                                throw new Error(`Unsupported comparator: ${excludeComparator}`);
-                        }
+                if (exp.lessThan === "negative_profit_60") {
+                    if (singleItem[exp.lessThan] === "true") {
+                        return singleItem["profitRate"] < 0 && excludeResult;
                     }
-
-
-                    if (exp.lessThan === "negative_profit_60") {
-                        if (singleItem[exp.lessThan] === "true") {
-                            return singleItem["profitRate"] * 1 < 0 && excludeResult
-                        }
-                        return false
-                    } else {
-                        return singleItem[exp.lessThan] === "true" && excludeResult;
-                    }
-
-                    //     return  singleItem[exp.field] < parseFloat(exp.value)
-                    // }
-
-                }
-                // 坑市场占比环比（7天）
-                if (exp.field === "salesMarketRateCircleRate7Day") {
-                    return compareMarketRate(exp.field, singleItem, -20);
-                }
-                //手淘人数市场占比环比（7天）
-                if (exp.field === "shouTaoPeopleNumMarketRateCircleRate7Day") {
-                    return compareShouTaoPeopleNumMarketRate(exp.field, singleItem, -20);
-                }
-                // 坑市场占比环比（日天）
-                if (exp.field === "salesMarketRateCircleRateDay") {
-                    return compareMarketRate(exp.field, singleItem, -20);
-                }
-                //手淘人数市场占比环比（日天）
-                if (exp.field === "shouTaoPeopleNumMarketRateCircleRateDay") {
-                    return compareShouTaoPeopleNumMarketRate(exp.field, singleItem, -20);
-                }
-
-
-                if (exp.comparator) {
-                    let tmpResult = true
-                    // 如果value为数字需要转化
-                    const isNumber = /^(\-|\+)?\d+(\.\d+)?$/.test(value)
-                    if (isNumber) {
-                        value = parseFloat(value)
-                        fieldValue = parseFloat(fieldValue)
-
-                        let excludeResult = true;
-                        if (exp.exclude.length > 0) {
-                            for (const exclude of exp.exclude) {
-
-                                const excludeValue = singleItem[exclude.field];
-                                const excludeName = exclude.name;
-                                const excludeComparator = exclude.comparator;
-
-                                switch (excludeComparator) {
-                                    case '!==':
-                                        excludeResult = excludeValue !== excludeName;
-                                        break;
-                                    default:
-                                        throw new Error(`Unsupported comparator: ${excludeComparator}`);
-                                }
-                            }
-
-                        }
-                        tmpResult = eval(`${fieldValue}${exp.comparator}${value}`) && excludeResult
-                    } else {
-                        tmpResult = eval(`"${fieldValue}"
-                        ${exp.comparator}
-                        "${value}"`)
-                    }
-
-                    if (!tmpResult) {
-                        return false
-                    }
-                }
-                if (exp.min) {
-                    const minMatch = fieldValue >= parseFloat(exp.min)
-                    if (!minMatch) {
-                        return false
-                    }
+                    return false;
+                } else {
+                    return singleItem[exp.lessThan] === "true" && excludeResult;
                 }
             }
-            return true
-        })
-        // logger.info("天猫链接异常同步进行中...->items", items)
-        // 把符合条件的linkId记录下来 给recordTheLinkID
-        // logger.info("天猫链接异常同步进行中 items...", items)
-        recordTheLinkID.push(...items.map(item => ({
-            name: item.productName,
-            linkId: item.linkId,
-            productLineLeader: item.productLineLeader,
-            linkType: item.linkType,
 
-        })));
-        result.error.items.push({
-            name: item.name,
-            recordTheLinkID: recordTheLinkID,
-            sum: items.length,
-            clickingAdditionalParams: item.values
-        })
+            // 坑市场占比环比（7天）
+            if (exp.field === "salesMarketRateCircleRate7Day") {
+                return compareMarketRate(exp.field, singleItem, -20);
+            }
+            //手淘人数市场占比环比（7天）
+            if (exp.field === "shouTaoPeopleNumMarketRateCircleRate7Day") {
+                return compareShouTaoPeopleNumMarketRate(exp.field, singleItem, -20);
+            }
+            // 坑市场占比环比（日天）
+            if (exp.field === "salesMarketRateCircleRateDay") {
+                return compareMarketRate(exp.field, singleItem, -20);
+            }
+            //手淘人数市场占比环比（日天）
+            if (exp.field === "shouTaoPeopleNumMarketRateCircleRateDay") {
+                return compareShouTaoPeopleNumMarketRate(exp.field, singleItem, -20);
+            }
 
-        const completedInOperation = []
-
-        function processItems(items, errorLinkIds) {
-            return [...new Map(
-                items
-                    .sort((a, b) => new Date(b.batchId) - new Date(a.batchId))
-                    .map(item => [item.linkId, item])
-            ).values()].filter(item => {
-                const isInErrorLinkIds = errorLinkIds.includes(item.linkId);
-                if (isInErrorLinkIds) {
-                    completedInOperation.push(...items.map(item => ({
-                        name: item.productName,
-                        linkId: item.linkId,
-                        productLineLeader: item.productLineLeader,
-                        linkType: item.linkType
-                    })));
-                }
-                return isInErrorLinkIds;
-            });
+            if (!evaluateExpression(exp, singleItem, fieldValue, value)) {
+                return false;
+            }
         }
+        return true;
+    });
+}
 
-        const running = processItems(items, runningErrorLinkIds);
-        const complete = processItems(items, completeErrorLinkIds);
+function applyExclude(singleItem, exclude, excludeResult) {
+    const excludeValue = singleItem[exclude.field];
+    const excludeName = exclude.name;
+    const excludeComparator = exclude.comparator;
 
-        result.ongoing.items.push({
-            name: item.name,
-            sum: running.length,
-            recordTheLinkID: completedInOperation,
-            clickingAdditionalParams: item.values
-        });
-        result.ongoing.sum += running.length;
-        result.done.items.push({
-            name: item.name,
-            sum: complete.length,
-            recordTheLinkID: completedInOperation,
-            clickingAdditionalParams: item.values
-        });
-        result.done.sum += complete.length;
+    switch (excludeComparator) {
+        case '!==':
+            return excludeResult && (excludeValue !== excludeName);
+        default:
+            throw new Error(`Unsupported comparator: ${excludeComparator}`);
+    }
+}
 
-        for (const tmp of items) {
-            uniqueItems[tmp.id] = 1
-        }
+function evaluateExpression(exp, singleItem, fieldValue, value) {
+    let result = true;
+    if (/^(\-|\+)?\d+(\.\d+)?$/.test(value)) {
+        value = parseFloat(value);
+        fieldValue = parseFloat(fieldValue);
+        result = eval(`${fieldValue}
+        ${exp.comparator}
+        ${value}`);
+    } else {
+        result = eval(`"${fieldValue}"
+        ${exp.comparator}
+        "${value}"`);
     }
 
+    if (exp.min) {
+        result = result && (fieldValue >= parseFloat(exp.min));
+    }
 
-    const sum = await singleItemTaoBaoRepo.getError60SingleIte(productLineLeaders, timeRange)
-
-    result.error.items.forEach((item) => {
-        if (item.name === "累计60天负利润") {
-            item.recordTheLinkID.push(...sum.map(item => ({name: item.productName, linkId: item.linkId})));
-            item.sum = sum.length
-        }
-    })
-    result.error.sum = Object.keys(uniqueItems).length
     return result;
+}
+
+function processItems(items, errorLinkIds) {
+    return [...new Map(
+        items.sort((a, b) => new Date(b.batchId) - new Date(a.batchId))
+            .map(item => [item.linkId, item])
+    ).values()].filter(item => errorLinkIds.includes(item.linkId));
+}
+
+function getRecordLinkID(items) {
+    return items.map(item => ({
+        name: item.productName,
+        linkId: item.linkId,
+        productLineLeader: item.productLineLeader,
+        linkType: item.linkType
+    }));
 }
 
 function compareMarketRate(field, singleItem, compareValue) {
-    const salesMarketRate = singleItem[field] * 1;
-    const shouTaoPeopleNumMarketRate = singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1;
+    const salesMarketRate = singleItem[field];
+    const shouTaoPeopleNumMarketRate = singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"];
     return salesMarketRate < compareValue && shouTaoPeopleNumMarketRate > compareValue;
 }
 
 function compareShouTaoPeopleNumMarketRate(field, singleItem, compareValue) {
-    const salesMarketRate = singleItem["salesMarketRateCircleRate7Day"] * 1;
-    const shouTaoPeopleNumMarketRate = singleItem[field] * 1;
-    return (salesMarketRate < compareValue && shouTaoPeopleNumMarketRate < compareValue) || (shouTaoPeopleNumMarketRate < compareValue && salesMarketRate > compareValue);
+    const salesMarketRate = singleItem["salesMarketRateCircleRate7Day"];
+    const shouTaoPeopleNumMarketRate = singleItem[field];
+    return (salesMarketRate < compareValue && shouTaoPeopleNumMarketRate < compareValue) ||
+        (shouTaoPeopleNumMarketRate < compareValue && salesMarketRate > compareValue);
 }
 
 /**
@@ -1156,51 +979,50 @@ function compareShouTaoPeopleNumMarketRate(field, singleItem, compareValue) {
  * @param userId
  * @param status
  */
-const getErrorLinkOperationCount = async (singleItems, status) => {
-
-    const findSingleItemsDividedByUser = (runningErrorLinkIds, singleItems, status) => {
-        const result = {sum: 0, items: []}
-        const errorSingleItems = singleItems.filter((item) => {
-            return runningErrorLinkIds.includes(item.linkId)
-        })
-
-        for (const user of usersOfTM) {
-            const singleItemsOfUser = errorSingleItems.filter((item) => item.productLineLeader === user.name)
-            result.sum = result.sum + singleItemsOfUser.length
-            result.items.push({
-                name: user.name,
-                sum: singleItemsOfUser.length,
-                clickingAdditionalParams: [{"method": "getLinkErrorQueryFields", "param": status}]
-            })
-        }
-        return result
-    }
-
-    const usersOfTM = await departmentService.getUsersOfDepartment(tmDeptId)
-
-    // 进行中
-    if (status.toUpperCase() === flowStatusConst.RUNNING) {
-        const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING)
-        const result = findSingleItemsDividedByUser(runningErrorLinkIds, singleItems, flowStatusConst.RUNNING)
-        return result
-    }
-    //  已完成
-    // todo: 后面需要补充上历史的数据
-    if (status.toUpperCase() === flowStatusConst.COMPLETE) {
-        const completeErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.COMPLETE)
-        const result = findSingleItemsDividedByUser(completeErrorLinkIds, singleItems)
-        return result
-    }
-    // todo: 需要确认成功的条件在判断
-    if (status === "success") {
-        return 0
-    }
-    // todo: 需要确认成功的条件在判断
-    if (status == "fail") {
-        return 0
-    }
-    throw new NotFoundError(`${status}还不支持`)
-}
+// const getErrorLinkOperationCount = async (singleItems, status) => {
+//
+//     const findSingleItemsDividedByUser = (runningErrorLinkIds, singleItems, status) => {
+//         const result = {sum: 0, items: []}
+//         const errorSingleItems = singleItems.filter((item) => {
+//             return runningErrorLinkIds.includes(item.linkId)
+//         })
+//
+//         for (const user of usersOfTM) {
+//             const singleItemsOfUser = errorSingleItems.filter((item) => item.productLineLeader === user.name)
+//             result.sum = result.sum + singleItemsOfUser.length
+//             result.items.push({
+//                 name: user.name,
+//                 sum: singleItemsOfUser.length,
+//                 clickingAdditionalParams: [{"method": "getLinkErrorQueryFields", "param": status}]
+//             })
+//         }
+//         return result
+//     }
+//
+//     const usersOfTM = await departmentService.getUsersOfDepartment(tmDeptId)
+//
+//     // 进行中
+//     if (status.toUpperCase() === flowStatusConst.RUNNING) {
+//         const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING)
+//         const result = findSingleItemsDividedByUser(runningErrorLinkIds, singleItems, flowStatusConst.RUNNING)
+//         return result
+//     }
+//     //  已完成
+//     // todo: 后面需要补充上历史的数据
+//     if (status.toUpperCase() === flowStatusConst.COMPLETE) {
+//         const completeErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.COMPLETE)
+//         return findSingleItemsDividedByUser(completeErrorLinkIds, singleItems)
+//     }
+//     // todo: 需要确认成功的条件在判断
+//     if (status === "success") {
+//         return 0
+//     }
+//     // todo: 需要确认成功的条件在判断
+//     if (status == "fail") {
+//         return 0
+//     }
+//     throw new NotFoundError(`${status}还不支持`)
+// }
 
 /**
  * 付费数据： 精准人群、车、万象台
@@ -1599,7 +1421,7 @@ module.exports = {
     getTaoBaoSingleItemsWitPercentageTag,
     getSearchDataTaoBaoSingleItem,
     getSingleItemById,
-    getErrorLinkOperationCount,
+    // getErrorLinkOperationCount,
     getLinkOperationCount,
     getPayment,
     getProfitData,

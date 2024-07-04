@@ -1,5 +1,5 @@
 const tian_mao_link_user_table = require('../repository/tianMaoLinkUserTableRepo');
-
+const tian_mao_allocation = require('../repository/tianMaoAllocationRepo');
 const get_user_table = async (id, tableType) => {
     try {
 
@@ -83,9 +83,30 @@ const tmall_user_table = async (linkdata) => {
     }
 }
 
+const getExceptionLinks = async (type) => {
+    try {
+        const processing = await tian_mao_allocation.exceptionLinks(type)
+        const parseExcludes = (excludeString) => {
+            try {
+                return JSON.parse(`[${excludeString.replace(/},\s*{/g, '},{')}]`);
+            } catch (error) {
+                console.error('Error parsing excludes:', error);
+                return [];
+            }
+        };
+        processing.forEach(item => {
+            item.exclude = item.exclude ? parseExcludes(item.exclude) : [];
+        })
+
+        return processing;
+    } catch (e) {
+    }
+}
+
 module.exports = {
     get_user_table,
     put_user_table,
     sort_user_table,
-    tmall_user_table
+    tmall_user_table,
+    getExceptionLinks
 }
