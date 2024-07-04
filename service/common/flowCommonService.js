@@ -1,4 +1,4 @@
-const {flowReviewTypeConst} = require("@/const/flowConst")
+const {flowReviewTypeConst, operateTypeConst} = require("@/const/flowConst")
 const dateUtil = require("@/utils/dateUtil")
 const ParameterError = require("@/error/parameterError");
 const flowRepo = require("@/repository/flowRepo");
@@ -54,6 +54,29 @@ const removeDoneActivitiesNotInDoneDateRange = (flows, startDoneDate, endDoneDat
     return flows
 }
 
+/**
+ * 去掉转接的节点
+ *
+ * @param flows
+ * @returns {*}
+ */
+const removeRedirectActivity = (flows) => {
+    for (const flow of flows) {
+        if (!flow.overallprocessflow) {
+            continue
+        }
+
+        const newOverallProcessFlow = []
+        for (const item of flow.overallprocessflow) {
+            if (item.operateType !== operateTypeConst.REDIRECT_TASK) {
+                newOverallProcessFlow.push(item)
+                continue
+            }
+        }
+        flow.overallprocessflow = newOverallProcessFlow
+    }
+    return flows
+}
 
 /**
  * 获取节点完成时间区间内的流程和todayFlows
@@ -142,5 +165,6 @@ module.exports = {
     removeTargetStatusFlows,
     removeDoneActivitiesNotInDoneDateRange,
     getCombinedFlowsOfHistoryAndToday,
-    getVisionOutSourcingNames
+    getVisionOutSourcingNames,
+    removeRedirectActivity
 }

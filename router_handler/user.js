@@ -4,12 +4,20 @@
 // 引入用户模型
 const UsersModel = require("../model/users");
 const RolesModel = require("../model/roles");
+const usersTagsModel = require("@/model/usersTagsModel")
 const userLogService = require("../service/userLogService")
 const userService = require("../service/userService")
 const tokenUtil = require("../utils/token")
 const UserError = require("../error/userError")
 const HttpError = require("../error/http/httpError")
 const ParameterError = require("../error/parameterError")
+//
+// UsersModel.hasMany(usersTagsModel, {
+//     sourceKey: "dingdingUserId",
+//     foreignKey: "userId",
+//     as: "tags"
+// })
+//
 
 const {Op} = require("sequelize");
 // 引入加密模块
@@ -330,7 +338,11 @@ exports.getList = (req, res, next) => {
     if (status === "0" || status === "1") where.status = {[Op.eq]: status};
 
     UsersModel.findAndCountAll({
-        attributes: {exclude: ["password"]}, include: [{model: RolesModel}], // 预先加载角色模型
+        attributes: {exclude: ["password"]},
+        include: [
+            {model: RolesModel},
+            // {model: usersTagsModel, as: "tags"}
+        ], // 预先加载角色模型
         distinct: true, offset: offset, limit: limit, where: where,
     }).then(function (users) {
         return res.send(biResponse.success(users));

@@ -125,7 +125,8 @@ schedule.scheduleJob(syncRunningFlowsCron, async function () {
 * 每天处理异常链接是否存在tmallLinkAnomalyDetection*/
 
 schedule.scheduleJob(linshi, async function () {
-    await taskService.tmallLinkAnomalyDetection()
+    console.log("执行了此方法")
+    // await taskService.tmallLinkAnomalyDetection()
 })
 
 

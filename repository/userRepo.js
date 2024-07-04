@@ -1,4 +1,6 @@
 const models = require('@/model');
+const usersModel = models.usersModel
+const usersTagsModel = models.usersTagsModel
 const globalGetter = require("@/global/getter")
 const UserError = require("@/error/userError")
 const NotFoundError = require("@/error/http/notFoundError")
@@ -8,8 +10,14 @@ const innerGroupConst = require("@/const/tmp/innerGroupConst")
 const objectConvertUtil = require("@/utils/objectConvertUtil")
 const whiteList = require("@/config/whiteList")
 
+usersModel.hasMany(usersTagsModel, {
+    sourceKey: "dingdingUserId",
+    foreignKey: "userId",
+    as: "tags"
+})
+
 const getUserDetails = async (where) => {
-    const details = await models.usersModel.findAll({
+    const details = await usersModel.findAll({
         where
     })
 
@@ -22,7 +30,7 @@ const getUserDetails = async (where) => {
 }
 
 const getAllUsersWithoutPrivateFields = async (where) => {
-    let users = await models.usersModel.findAll({
+    let users = await usersModel.findAll({
         attributes: {exclude: ["password", "dingdingUserId", "userPic"]},
         where
     })
@@ -30,7 +38,7 @@ const getAllUsersWithoutPrivateFields = async (where) => {
 }
 
 const getAllUsers = async (where) => {
-    let users = await models.usersModel.findAll({
+    let users = await usersModel.findAll({
         where
     })
     return users.map(user => user.get({plain: true}))
@@ -109,7 +117,7 @@ const getDepartmentUsers = async (userDDId, deptId) => {
  * @returns {Promise<void>}
  */
 const updateUserResignByOnJobUserIds = async (onJobUserIds) => {
-    await models.usersModel.update(
+    await usersModel.update(
         {
             isResign: true,
             updateTime: new Date()
@@ -127,12 +135,12 @@ const updateUserResignByOnJobUserIds = async (onJobUserIds) => {
  * @returns {Promise<void>}
  */
 const saveUser = async (user) => {
-    await models.usersModel.create(user);
+    await usersModel.create(user);
 }
 
 
 const updateUserResignInfo = async (user) => {
-    const result = await models.usersModel.update(user,
+    const result = await usersModel.update(user,
         {
             where: {dingdingUserId: user.dingdingUserId}
         }
@@ -146,7 +154,7 @@ const updateUserResignInfo = async (user) => {
  * @returns {Promise<*>}
  */
 const getAllResignUsers = async () => {
-    const resignUsers = await models.usersModel.findAll({where: {isResign: true}})
+    const resignUsers = await usersModel.findAll({where: {isResign: true}})
     return resignUsers.map(item => item.get({plain: true}))
 }
 
@@ -161,13 +169,28 @@ const getDeptResignUsers = async (deptId) => {
         where: {deptId}
     })
     const deptUserIds = deptUsers.map(item => item.userId)
-    const deptResignUsers = await models.usersModel.findAll({
+    const deptResignUsers = await usersModel.findAll({
+        attributes: {exclude: ["password"]},
         where: {
             dingdingUserId: {$in: deptUserIds},
             isResign: true
-        }
+        },
+        include: [
+            {model: usersTagsModel, as: "tags"}
+        ]
     })
     return sequelizeUtil.extractDataValues(deptResignUsers)
+}
+
+const getUsersWithTagsByUsernames = async (usernames) => {
+    const result = await usersModel.findAll({
+        attributes: {exclude: ["password"]},
+        where: {nickname: {$in: usernames}},
+        include: [
+            {model: usersTagsModel, as: "tags"}
+        ]
+    })
+    return sequelizeUtil.extractDataValues(result)
 }
 
 module.exports = {
@@ -180,5 +203,6 @@ module.exports = {
     saveUser,
     updateUserResignInfo,
     getAllResignUsers,
-    getDeptResignUsers
+    getDeptResignUsers,
+    getUsersWithTagsByUsernames
 }

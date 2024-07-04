@@ -1,6 +1,10 @@
 const models = require('@/model')
 const usersTagsModel = models.usersTagsModel
 
+const getUsersTags = async (where) => {
+    return (await usersTagsModel.findAll({where}))
+}
+
 const saveUserTag = async (data) => {
     return (await usersTagsModel.create(data))
 }
@@ -11,5 +15,6 @@ const deleteTag = async (id) => {
 
 module.exports = {
     saveUserTag,
-    deleteTag
+    deleteTag,
+    getUsersTags
 }

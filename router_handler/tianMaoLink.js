@@ -78,9 +78,22 @@ const tmall_user_table = async (req, res) => {
     } catch (e) {
     }
 }
+
+const getExceptionLinks = async (req, res) => {
+
+    try {
+
+        rest.table = await tianmao__user_tableService.getExceptionLinks(req.query.type * 1);
+        return res.send(success(rest.table));
+
+    } catch (e) {
+    }
+}
+
 module.exports = {
     get_user_table,
     put_user_table,
     sort_user_table,
-    tmall_user_table
+    tmall_user_table,
+    getExceptionLinks
 }
