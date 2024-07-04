@@ -343,7 +343,11 @@ exports.getList = (req, res, next) => {
             {model: RolesModel},
             {model: usersTagsModel, as: "tags"}
         ], // 预先加载角色模型
-        distinct: true, offset: offset, limit: limit, where: where,
+        distinct: true,
+        offset: offset,
+        limit: limit,
+        where: where,
+        order: [["status", "desc"],["create_time", "desc"]]
     }).then(function (users) {
         return res.send(biResponse.success(users));
     });
