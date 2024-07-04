@@ -1564,28 +1564,52 @@ module.exports = {
                             value: ["散图"]
                         }
                     ],
-                    flowNodeRules: [{
-                        from: {
-                            id: "node_oclii6vcap7",
-                            name: "摄影拍照",
-                            status: ["HISTORY"]
+                    flowNodeRules: [
+                        {
+                            from: {
+                                id: "node_oclii6vcap7",
+                                name: "摄影拍照",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclii6vcap7",
+                                name: "摄影拍照",
+                                status: ["HISTORY"]
+                            },
+                            overdue: {
+                                id: "node_oclii6vcap7",
+                                name: "摄影拍照",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "摄影拍照",
+                                id: "node_oclii6vcap7"
+                            }
                         },
-                        to: {
-                            id: "node_oclii6vcap7",
-                            name: "摄影拍照",
-                            status: ["HISTORY"]
-                        },
-                        overdue: {
-                            id: "node_oclii6vcap7",
-                            name: "摄影拍照",
-                            status: ["HISTORY"]
-                        },
-                        ownerRule: {
-                            from: "process",
-                            name: "摄影拍照",
-                            id: "node_oclii6vcap7"
+                        {
+                            from: {
+                                id: "node_oclii6vcap7_patch1",
+                                name: "摄影拍照",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclii6vcap7_patch1",
+                                name: "摄影拍照",
+                                status: ["HISTORY"]
+                            },
+                            overdue: {
+                                id: "node_oclii6vcap7_patch1",
+                                name: "摄影拍照",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "摄影拍照",
+                                id: "node_oclii6vcap7_patch1"
+                            }
                         }
-                    }]
+                    ]
                 }
             ]
         },

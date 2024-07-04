@@ -26,7 +26,7 @@ const flowFormService = require("@/service/flowFormService")
 const formReviewRepo = require("@/repository/formReviewRepo")
 const flowCommonService = require("./common/flowCommonService")
 const outModifyPictureVisionPatch = require("@/patch/outModifyPictureVisionPatch")
-const transmittedOfflineActivityPatch = require("@/patch/transmittedOfflineActivityPatch")
+const {patchOfflineTransmittedActivity} = require("@/patch/patchUtil")
 
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
@@ -291,6 +291,10 @@ const getFinishedFlows = async (timeRange) => {
     }
     // 对flows按照modifiedTimeGMT进行升序
     flows = flows.sort((curr, next) => dateUtil.formatGMT(curr.modifiedTimeGMT) - dateUtil.formatGMT(next.modifiedTimeGMT))
+    // 对历史数据打补丁
+    for (let flow of flows) {
+        flow = patchOfflineTransmittedActivity(flow)
+    }
     return flows
 }
 
@@ -393,7 +397,7 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
     // 同步流程的操作节点耗时信息
     // 注意📢：如果已经保存到Redis中的流程中的reviewId需要继承，要不流程表单更新后节点id会变动
     const todayFlows = await globalGetter.getTodayFlows()
-    for (const flow of flows) {
+    for (let flow of flows) {
 
         // 给数据打补丁：流程、表单统计混乱
         const patchFlows = outModifyPictureVisionPatch.filter(item => item.processInstanceId === flow.processInstanceId)
@@ -401,20 +405,7 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
             flow.data[patchFlows[0].missingFieldId] = patchFlows[0].fieldValue
         }
 
-        // 补丁
-        // const tmpRequirePatchedFlows = transmittedOfflineActivityPatch.filter(item => item.processInstanceId === flow.processInstanceId)
-        // if (tmpRequirePatchedFlows.length > 0) {
-        //     const {targetActivityId, replacedActivities} = tmpRequirePatchedFlows[0]
-        //     let newOverallProcessFlows = []
-        //     for (const item of flow.overallprocessflow) {
-        //         if (item.activityId === targetActivityId) {
-        //             newOverallProcessFlows = newOverallProcessFlows.concat(replacedActivities)
-        //         } else {
-        //             newOverallProcessFlows.push(item)
-        //         }
-        //     }
-        //     flow.overallprocessflow = newOverallProcessFlows
-        // }
+        flow = patchOfflineTransmittedActivity(flow)
 
         const reviewItems = flow.overallprocessflow
         if (!reviewItems || reviewItems.length === 0) {

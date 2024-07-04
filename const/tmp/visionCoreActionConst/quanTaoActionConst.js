@@ -1633,6 +1633,19 @@ module.exports = {
                                 id: "node_oclii6vcap7"
                             }
                         },
+                    ]
+                },
+                {
+                    formName: "运营新品流程",
+                    formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
+                    flowDetailsRules: [
+                        {
+                            fieldId: "radioField_ltjt0ykc",
+                            opCode: opCodes.EqualAny,
+                            value: ["全套", "套图"]
+                        }
+                    ],
+                    flowNodeRules: [
                         // 手动加的补丁节点
                         {
                             from: {
