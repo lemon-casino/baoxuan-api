@@ -1,4 +1,5 @@
 const models = require('../model')
+const dianShangOperationAttributeModel = models.dianshangOperationAttributeModel
 const pagingUtil = require("../utils/pagingUtil")
 
 const getOperateAttributes = async (deptId,
@@ -10,25 +11,32 @@ const getOperateAttributes = async (deptId,
                                     platform,
                                     shopName,
                                     skuId) => {
-    const where = {deptId, platform}
+
+    const andGroup = []
+    const orGroup = [{deptId}, {platform}]
     if (productLine) {
-        where.goodsName = {$like: `%${productLine}%`}
+        andGroup.push({goodsName: {$like: `%${productLine}%`}})
     }
     if (operatorName) {
-        where.operator = {$like: `%${operatorName}%`}
+        andGroup.push({operator: {$like: `%${operatorName}%`}})
     }
     if (linkId) {
-        where.goodsId = {$like: `%${linkId}%`}
+        andGroup.push({goodsId: {$like: `%${linkId}%`}})
+        orGroup.push({lineDirector: '无操作'})
     }
     if (shopName) {
-        where.shopName = {$like: `%${shopName}%`}
+        andGroup.push({shopName: {$like: `%${shopName}%`}})
     }
     if (skuId) {
-        where.skuId = {$like: `%${skuId}%`}
+        andGroup.push({skuId: {$like: `%${skuId}%`}})
     }
 
-    const result = await models.dianshangOperationAttributeModel.findAndCountAll({
-        where,
+
+    const result = await dianShangOperationAttributeModel.findAndCountAll({
+        where: {
+            $or: orGroup,
+            $and: andGroup
+        },
         offset: pageIndex * pageSize,
         limit: pageSize,
         order: [["createTime", "desc"]]
@@ -38,22 +46,22 @@ const getOperateAttributes = async (deptId,
 }
 
 const getProductAttrDetails = async (id) => {
-    const details = await models.dianshangOperationAttributeModel.findOne({
+    const details = await dianShangOperationAttributeModel.findOne({
         where: {id}
     })
     return details.get({plain: true})
 }
 
 const updateProductAttrDetails = async (details, id) => {
-    return await models.dianshangOperationAttributeModel.update(details, {where: {id}})
+    return await dianShangOperationAttributeModel.update(details, {where: {id}})
 }
 
 const saveProductAttr = async (details) => {
-    return await models.dianshangOperationAttributeModel.create(details)
+    return (await dianShangOperationAttributeModel.create(details))
 }
 
 const deleteProductAttr = async (id) => {
-    await models.dianshangOperationAttributeModel.destroy({
+    await dianShangOperationAttributeModel.destroy({
         where: {id}
     })
     return true
