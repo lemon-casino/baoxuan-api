@@ -3,6 +3,8 @@ const moment = require('moment');
 const sequelize = require('./init');
 const RolesModel = require('./roles');
 const UsersRolesModel = require('./users-roles');
+const usersTagsModel = require("@/model").usersTagsModel
+
 // 引入工具方法
 const tools = require('../utils/tools');
 // 定义表的模型 define方法第一个参数为表名，第二个参数为表字段对象
@@ -158,5 +160,6 @@ UsersModel.belongsToMany(RolesModel, {
   foreignKey: 'user_id',
   otherKey: 'role_id'
 });
+
 // 导出用户映射模型
 module.exports = UsersModel;

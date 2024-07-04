@@ -17,7 +17,12 @@ const deleteUserTag = async (id) => {
     return (await usersTagsRepo.deleteTag(id))
 }
 
+const getUserTags = async (userId) => {
+    return (await usersTagsRepo.getUsersTags({userId}))
+}
+
 module.exports = {
     saveUserTag,
-    deleteUserTag
+    deleteUserTag,
+    getUserTags
 }

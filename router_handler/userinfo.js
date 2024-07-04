@@ -9,6 +9,7 @@ const UsersModel = require("../model/users");
 const RolesModel = require("../model/roles");
 const MenusModel = require("../model/menus");
 const RolesMenusModel = require("../model/roles-menus");
+const usersTagsService = require("@/service/usersTagsService")
 const dd = require("../core/dingDingReq/yiDaReq");
 // 引入封装好的redis
 const redisUtil = require("../utils/redisUtil.js");
@@ -152,7 +153,7 @@ exports.getUserinfo = async (req, res) => {
     const user_roles = await UsersModel.findOne({
         attributes: {exclude: ["password"]},
         include: [
-            {model: RolesModel, attributes: ["role_id", "role_name", "status"]},
+            {model: RolesModel, attributes: ["role_id", "role_name", "status"]}
         ],
         where: {
             user_id: user_id,
@@ -259,6 +260,9 @@ exports.getUserinfo = async (req, res) => {
     });
     // 根据菜单id数组获取菜单详细信息
     const menus = await MenusModel.getListTree({menu_id: resource.menu_ids});
+
+    // 获取用户的tags
+    const userTags = await usersTagsService.getUserTags(ddUserId)
     return res.send(biResponse.success({
             roles: role_names,
             user_id: user_id,
@@ -269,7 +273,8 @@ exports.getUserinfo = async (req, res) => {
             menus: menus,
             buttons: buttons,
             dep_list: departmentsTemplate,
-            admin: whiteList.pepArr().includes(ddUserId)
+            admin: whiteList.pepArr().includes(ddUserId),
+            tags: userTags
         }
     ))
 };
