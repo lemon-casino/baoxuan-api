@@ -6,6 +6,7 @@ const opCodes = {
     Equal: "Equal",
     EqualAny: "EqualAny",
     Contain: "Contain",
+    NotContain: "NotContain",
     ContainAny: "ContainAny",
     Bigger: "Bigger",
     BiggerOrEqual: "BiggerOrEqual",
@@ -14,21 +15,46 @@ const opCodes = {
 
 const opFunctions = {
     Equal: (src, value) => {
+        if (_.isArray(src)) {
+            src = src.join(",")
+        }
         return src === value
     },
     EqualAny: (src, value) => {
+        if (_.isArray(src)) {
+            src = src.join(",")
+        }
+
         if (_.isArray(value)) {
             return value.includes(src)
         }
         return false
     },
     Contain: (src, value) => {
+        if (_.isArray(src)) {
+            src = src.join(",")
+        }
+
         if (_.isString(value)) {
             return src.includes(value)
         }
         return false
     },
+    NotContain:(src, value) => {
+        if (_.isArray(src)) {
+            src = src.join(",")
+        }
+
+        if (_.isString(value)) {
+            return !src.includes(value)
+        }
+        return false
+    },
     ContainAny: (src, value) => {
+        if (_.isArray(src)) {
+            src = src.join(",")
+        }
+
         if (_.isArray(value)) {
             for (const val of value) {
                 if (src.includes(val)) {
