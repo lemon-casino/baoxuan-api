@@ -123,5 +123,32 @@ module.exports = [
                 "taskId": "null"
             }
         ]
+    },
+    {
+        processInstanceId: "d774bc33-a0b9-467f-b6c9-e383b276b4d8",
+        title: "朱梦婷发起的运营视觉流程（拍摄+美编）",
+        targetActivityId: "node_oclx1f3cl7k",
+        replacedActivities: [
+            {
+                "processInstanceId": "d774bc33-a0b9-467f-b6c9-e383b276b4d8",
+                "operateTimeGMT": "",
+                "showName": "",
+                "operateType": "NEW_PROCESS",
+                "remark": "",
+                "taskHoldTimeGMT": 0,
+                "type": "",
+                "operatorName": "李净知",
+                "actionExit": "submit",
+                "operatorUserId": "01440919583726094067",
+                "activityId": "node_oclx00ubuyu",
+                "size": 1,
+                "dataId": 30574454866,
+                "domainList": [],
+                "operatorDisplayName": "李净知",
+                "action": "",
+                "taskId": "null"
+
+            }
+        ]
     }
 ]
