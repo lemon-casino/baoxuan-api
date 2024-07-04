@@ -10,7 +10,6 @@ const getUsersTags = async (where) => {
 }
 
 const saveUserTag = async (data) => {
-const saveUserTag = async (data) => {
     return (await usersTagsModel.create(data))
 }
 
