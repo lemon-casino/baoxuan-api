@@ -202,6 +202,7 @@ const syncResignEmployeeInfo = async () => {
         newEmployee.voluntaryReason = JSON.stringify(employee.voluntaryReason)
         newEmployee.passiveReason = JSON.stringify(employee.passiveReason)
         newEmployee.handoverUserId = employee.handoverUserId
+        newEmployee.status = 0 // 停用
         if (employee.handoverUserId) {
             const tmpHandoverUsers = onJobEmployees.filter(user => user.userid === employee.handoverUserId)
             if (tmpHandoverUsers.length > 0) {

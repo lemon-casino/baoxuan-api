@@ -1197,12 +1197,12 @@ module.exports = {
                             to: {
                                 id: "node_oclxcz6yq73",
                                 name: "拍摄完成",
-                                status: ["todo"]
+                                status: ["TODO"]
                             },
                             overdue: {
                                 id: "node_oclxcz6yq73",
                                 name: "拍摄完成",
-                                status: ["todo"]
+                                status: ["TODO"]
                             },
                             ownerRule: {
                                 from: "process",
@@ -1554,6 +1554,7 @@ module.exports = {
                         }
                     ]
                 },
+
                 {
                     formName: "运营新品流程",
                     formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
