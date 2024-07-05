@@ -1,26 +1,31 @@
 const ExcelJS = require('exceljs')
-const biResponse = require("@/utils/biResponse")
+const BigNumber = require("bignumber.js")
 const flowService = require("@/service/flowService")
 const coreActionService = require("@/service/core/coreActionService")
 const flowFormService = require("@/service/flowFormService")
 const joiUtil = require("@/utils/joiUtil")
-const BigNumber = require("bignumber.js")
+const biResponse = require("@/utils/biResponse")
+const flowSchema = require("@/schema/flowSchema")
 
-const getFlowsByIds = async (req, res) => {
-    const {ids} = req.query
-    if (ids) {
+const getCompletedFlowsByIds = async (req, res, next) => {
+    try {
+        joiUtil.clarityValidate(flowSchema.requiredIdsSchema, req.body)
+        const {ids} = req.query
         const idsObj = JSON.parse(ids);
-        const flows = await flowService.getFlowsByIds(idsObj)
+        const flows = await flowService.getCompletedFlowsByIds(idsObj)
         return res.send(biResponse.success(flows))
+    } catch (e) {
+        next(e)
     }
-    return res.send(biResponse.serverError())
 }
 
-const getTodayFlowsByIds = async (req, res) => {
-    const {ids} = req.body
-    if (ids && ids.length > 0) {
-        const flows = await flowService.getTodayFlowsByIds(ids)
+const getFlowsByIds = async (req, res, next) => {
+    try {
+        joiUtil.clarityValidate(flowSchema.requiredIdsSchema, req.body)
+        const flows = await flowService.getFlowsByIds(req.body.ids)
         return res.send(biResponse.success(flows))
+    } catch (e) {
+        next(e)
     }
 
     return res.send(biResponse.serverError())
@@ -29,13 +34,8 @@ const getTodayFlowsByIds = async (req, res) => {
 // 更新 Redis 中正在进行中的流程的紧急程度
 const updateRunningFlowEmergency = async (req, res, next) => {
     try {
+        joiUtil.clarityValidate(flowSchema.updateRunningFlowEmergencySchema, req.body)
         const {ids, emergency} = req.body
-        joiUtil.validate(
-            {
-                emergency: {value: emergency, schema: joiUtil.commonJoiSchemas.strRequired},
-                ids: {value: ids, schema: joiUtil.commonJoiSchemas.arrayRequired}
-            }
-        )
         await flowService.updateRunningFlowEmergency(ids, emergency)
         return res.send(biResponse.success())
     } catch (e) {
@@ -45,15 +45,9 @@ const updateRunningFlowEmergency = async (req, res, next) => {
 
 const getCoreActions = async (req, res, next) => {
     try {
+        joiUtil.clarityValidate(flowSchema.getCoreActionsSchema, req.body)
         const {tags, deptId, startDate, endDate, userNames} = req.body
         const userId = req.user.userId
-        joiUtil.validate({
-            tags: {value: tags, schema: joiUtil.commonJoiSchemas.arrayRequired},
-            deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.strRequired},
-            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
-            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired},
-            userNames: {value: userNames, schema: joiUtil.commonJoiSchemas.arrayRequired}
-        })
         const result = await coreActionService.getCoreActions(tags, userId, deptId, userNames, startDate, endDate)
         res.send(biResponse.success(result))
     } catch (e) {
@@ -141,8 +135,8 @@ const getFormsFlowsActivitiesStat = async (req, res, next) => {
 }
 
 module.exports = {
+    getCompletedFlowsByIds,
     getFlowsByIds,
-    getTodayFlowsByIds,
     updateRunningFlowEmergency,
     getCoreActions,
     getAllOverDueRunningFlows,

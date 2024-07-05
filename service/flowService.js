@@ -289,11 +289,11 @@ const sumFlowsByDepartmentOfMultiType = async (flowsOfMultiType) => {
     return result
 }
 
-const getFlowsByIds = async (ids) => {
+const getCompletedFlowsByIds = async (ids) => {
     return await flowRepo.getProcessByIds(ids);
 }
 
-const getTodayFlowsByIds = async (ids) => {
+const getFlowsByIds = async (ids) => {
     const flowsOfRunningAndFinishedOfToday = await globalGetter.getTodayFlows()
     const satisfiedFlows = []
     const matchedTodayFlowIds = []
@@ -1185,8 +1185,8 @@ module.exports = {
     flowsDividedByDepartment,
     sumFlowsByDepartment,
     sumFlowsByDepartmentOfMultiType,
+    getCompletedFlowsByIds,
     getFlowsByIds,
-    getTodayFlowsByIds,
     convertJonsToArr,
     convertSelfStatisticToDept,
     getDeptStatistic,
