@@ -1,10 +1,14 @@
 const models = require('@/model')
 const outUsersModel = models.outUsersModel
 const usersTagsModel = models.usersTagsModel
+const tagsModel = models.tagsModel
+
 const sequelizeUtil = require("@/utils/sequelizeUtil")
 
 outUsersModel.hasMany(usersTagsModel, {
-    sourceKey: "id", foreignKey: "userId", as: "tags"
+    sourceKey: "id",
+    foreignKey: "userId",
+    as: "tags"
 })
 
 const getOutUsers = async (where = {}) => {
@@ -16,7 +20,21 @@ const getOutUsers = async (where = {}) => {
 
 const getOutUsersWithTags = async (where = {}) => {
     const outUsers = await outUsersModel.findAll({
-        where, include: [{model: usersTagsModel, as: "tags"}]
+        where,
+        include: [
+            {
+                attributes: ["id", "tagCode", "userId", "isOut"],
+                model: usersTagsModel,
+                as: "tags",
+                include: [
+                    {
+                        model: tagsModel,
+                        as: "tag",
+                        attributes: ["tagCode", "tagName"]
+                    }
+                ]
+            }
+        ]
     })
     return sequelizeUtil.extractDataValues(outUsers)
 }
