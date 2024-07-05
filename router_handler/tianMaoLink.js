@@ -89,11 +89,44 @@ const getExceptionLinks = async (req, res) => {
     } catch (e) {
     }
 }
+const putExceptionLinks = async (req, res) => {
+
+    try {
+
+
+        return res.send(success(await tianmao__user_tableService.putExceptionLinks(req.body)));
+
+    } catch (e) {
+    }
+}
+const delExceptionLinks = async (req, res) => {
+
+    try {
+
+
+        return res.send(success(await tianmao__user_tableService.delExceptionLinks(req.body.id)));
+
+    } catch (e) {
+    }
+}
+const postExceptionLinksExclude = async (req, res) => {
+
+    try {
+
+
+        return res.send(success(await tianmao__user_tableService.postExceptionLinksExclude(req.body)));
+
+    } catch (e) {
+    }
+}
 
 module.exports = {
     get_user_table,
     put_user_table,
     sort_user_table,
     tmall_user_table,
-    getExceptionLinks
+    getExceptionLinks,
+    putExceptionLinks,
+    delExceptionLinks,
+    postExceptionLinksExclude
 }
