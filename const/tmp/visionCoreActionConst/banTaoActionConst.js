@@ -219,6 +219,28 @@ module.exports =  {
                     flowNodeRules: [
                         {
                             from: {
+                                id: "node_oclx4kc70w9",
+                                name: "拍摄完成",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclx4kc70w9",
+                                name: "拍摄完成",
+                                status: ["TODO"]
+                            },
+                            overdue: {
+                                id: "node_oclx4kc70w9",
+                                name: "拍摄完成",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "拍摄完成",
+                                id: "node_oclx4kc70w9"
+                            }
+                        },
+                        {
+                            from: {
                                 id: "node_oclx00ubuyu",
                                 name: "拍摄完成",
                                 status: ["TODO"]
@@ -298,6 +320,28 @@ module.exports =  {
                         {fieldId: "radioField_lwyq3if9", opCode: opCodes.EqualAny, value: ["半套"]}
                     ],
                     flowNodeRules: [
+                        {
+                            from: {
+                                id: "node_oclx4kc70w9",
+                                name: "拍摄完成",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclx4kc70w9",
+                                name: "拍摄完成",
+                                status: ["HISTORY"]
+                            },
+                            overdue: {
+                                id: "node_oclx4kc70w9",
+                                name: "拍摄完成",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "拍摄完成",
+                                id: "node_oclx4kc70w9"
+                            }
+                        },
                         {
                             from: {
                                 id: "node_oclx00ubuyu",
