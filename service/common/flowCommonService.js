@@ -68,7 +68,7 @@ const removeRedirectActivity = (flows) => {
 
         const newOverallProcessFlow = []
         for (const item of flow.overallprocessflow) {
-            if (item.operateType !== operateTypeConst.REDIRECT_TASK) {
+            if (item.operateType !== operateTypeConst.REDIRECT_TASK && item.operateType !== operateTypeConst.AGENT_REDIRECT_TASK) {
                 newOverallProcessFlow.push(item)
                 continue
             }
