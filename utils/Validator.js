@@ -1,20 +1,48 @@
+const {success} = require("@/utils/biResponse");
+const {errorMessages} = require("@/const/errorConst");
+
 class Validator {
     static validate(bodyRules = {}) {
         return (req, res, next) => {
             const errors = [];
-            // 检查 body 是否存在
+
+            // 检查是否存在请求体
             if (Object.keys(bodyRules).length > 0 && (!req.body || Object.keys(req.body).length === 0)) {
-                errors.push({location: 'body', message: 'Request body is required'});
+                errors.push({location: 'body', message: '请求体是必须的'});
             }
 
-            // 校验 body 参数
+            // 验证请求体参数
             for (const [param, rule] of Object.entries(bodyRules)) {
                 const value = req.body[param];
-                Validator.checkParam(value, rule, errors, 'body', param);
+                if (rule.each) {
+                    // 验证数组中的每个元素
+                    if (Array.isArray(value)) {
+                        value.forEach((item, index) => {
+                            Validator.checkParam(item, rule.each, errors, 'body', `${param}[${index}]`);
+                        });
+                    } else {
+                        errors.push({location: 'body', param, message: `${param} 必须是一个数组`});
+                    }
+                } else {
+                    // 标准参数验证
+                    Validator.checkParam(value, rule, errors, 'body', param);
+                }
             }
 
             if (errors.length > 0) {
-                return res.status(400).json({errors});
+                return res.send({
+                    code: 401,
+                    message: "失败",
+                    data: errors.reduce((acc, cur) => {
+                        const existing = acc.find(item => item.param === cur.param);
+                        if (existing) {
+                            existing.message += `,${cur.message}`;
+                        } else {
+                            acc.push(cur);
+                        }
+                        return acc;
+                    }, [])
+                });
             }
 
             next();
@@ -23,7 +51,7 @@ class Validator {
 
     static checkParam(value, rule, errors, location, param) {
         if (rule.required && (value === undefined || value === null)) {
-            errors.push({location, param, message: `${param} 是必填项`});
+            errors.push({location, param, message: `${param} 是必须的`});
             return;
         }
 
@@ -33,19 +61,26 @@ class Validator {
             }
 
             if (rule.minLength && typeof value === 'string' && value.length < rule.minLength) {
-                errors.push({location, param, message: `${param} 必须至少 ${rule.minLength} 个字符长度`});
+                errors.push({location, param, message: `${param} 至少需要 ${rule.minLength} 个字符`});
             }
 
             if (rule.regex && !rule.regex.test(value)) {
-                errors.push({location, param, message: `${param} 不合法`});
+                errors.push({location, param, message: `${param} 无效`});
             }
 
             if (rule.min !== undefined && typeof value === 'number' && value < rule.min) {
-                errors.push({location, param, message: `${param} 必须至少为 ${rule.min}`});
+                errors.push({location, param, message: `${param} 至少需要 ${rule.min}`});
             }
 
             if (rule.max !== undefined && typeof value === 'number' && value > rule.max) {
-                errors.push({location, param, message: `${param} 必须最多为 ${rule.max}`});
+                errors.push({location, param, message: `${param} 不能超过 ${rule.max}`});
+            }
+
+            if (rule.properties) {
+                // 验证对象的每个属性
+                for (const [prop, propRule] of Object.entries(rule.properties)) {
+                    Validator.checkParam(value[prop], propRule, errors, location, `${param}.${prop}`);
+                }
             }
         }
     }
@@ -72,14 +107,19 @@ class Validator {
     }
 }
 
-/*
- const registerBodyRules = {
+
+/* const registerBodyRules = {
   username: { required: true, type: 'string' },
   password: { required: true, type: 'string', minLength: 6 },
   email: { required: true, type: 'string', regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, minLength: 6 },
   age: { required: false, type: 'number', min: 18 },
   termsAccepted: { required: true, type: 'boolean' }
-};
-* */
+  exclude: {required: false, type: "array", minLength: 1,
+  each: {type: 'object',properties: {field: {required: true, type: 'string', regex: /^[A-Za-z0-9]+$/}
+        }
+        }
+    }
+};*/
+
 
 module.exports = Validator;
