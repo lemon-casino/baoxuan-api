@@ -7,6 +7,8 @@ const exceptionLinks = async (id) => {
 
         return await AllocationeModel.findAll(
             {
+
+                attributes: {exclude: ["typeParameters"]},
                 // attributes: {exclude: ["typeParameters", "field", "operator", "lessThan", "value", "comparator"]},
                 where: {
                     typeParameters: id,
@@ -66,14 +68,21 @@ const delExceptionLinks = async (id) => {
 }
 const addExceptionLinksExclude = async (body) => {
     try {
-        await AllocationeModel.create(
-            {
-                name: body.name,
-                field: body.field,
-                comparator: body.comparator,
-                typeParameters: 2
-            }
-        )
+
+        const {name, field, comparator, type: typeParameters} = body;
+
+        const query = `
+    INSERT INTO allocation (name, field, comparator, type)
+    VALUES (:name, :field, :comparator, :typeParameters)
+`;
+
+        await sequelize.query(query, {
+            replacements: {name, field, comparator, typeParameters},
+            type: sequelize.QueryTypes.INSERT,
+            logging: console.log // Enable logging for this query
+        });
+
+
         return '添加成功';
     } catch (error) {
         throw new Error('添加用户数据失败');

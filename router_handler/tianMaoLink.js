@@ -112,9 +112,8 @@ const delExceptionLinks = async (req, res) => {
 const postExceptionLinksExclude = async (req, res) => {
 
     try {
-
-
-        return res.send(success(await tianmao__user_tableService.postExceptionLinksExclude(req.body)));
+        await tianmao__user_tableService.postExceptionLinksExclude(req.body)
+        return res.send(success());
 
     } catch (e) {
     }
