@@ -69,11 +69,11 @@ const delExceptionLinks = async (id) => {
 const addExceptionLinksExclude = async (body) => {
     try {
 
-        const {name, field, comparator, type: typeParameters} = body;
+        const {name, field, comparator, type: typeParameters, operator, lessThan, value} = body;
 
         const query = `
-    INSERT INTO allocation (name, field, comparator, type)
-    VALUES (:name, :field, :comparator, :typeParameters)
+    INSERT INTO allocation (name, field, comparator, type, operator, lessThan, value)
+    VALUES (:name, :field, :comparator, :typeParameters , :operator, :lessThan, :value)
 `;
 
         await sequelize.query(query, {

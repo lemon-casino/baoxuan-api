@@ -283,10 +283,10 @@ const tmallLinkAnomalyDetection = async () => {
         null,
         null,
         //开始时间"2024-06-24", 结束时间  "2024-06-25"
-        JSON.parse("[\"2024-07-01 00:0\",\"2024-07-01 00:0\"]"),
+        JSON.parse("[\"2024-07-05 00:0\",\"2024-07-05 00:0\"]"),
         null)
     // 查询所有负责人属于 异常的链接的数据
-    const data = await getLinknewvaCount(singleItems, productLineLeaders, ['2024-07-01 00:0', '2024-07-01 00:0'])
+    const data = await getLinknewvaCount(singleItems, productLineLeaders, ['2024-07-05 00:0', '2024-07-05 00:0'])
     // 获取所有 recordTheLinkID
     const getAllRecordTheLinkID = (items) => {
         return items.reduce((acc, item) => {
@@ -384,14 +384,14 @@ const tmallLinkAnomalyDetection = async () => {
         acc[key] = value;
         return acc;
     }, {}))
-    const formId = "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB";
-    const processCode = "TPROC--CP766081CPAB676X6KT35742KAC22BLLKHIILC";
-    const getNextWeekTimestamps = () => {
-        const now = new Date();
-        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).getTime();
-        const end = start + 7 * 24 * 60 * 60 * 1000;
-        return [start.toString(), end.toString()];
-    };
+    const formId = "FORM-51A6DCCF660B4C1680135461E762AC82JV53";
+    const processCode = "TPROC--YAB66P61TJ4MHTIKCZN606A840IS3MVPXMLXL2";
+    // const getNextWeekTimestamps = () => {
+    //     const now = new Date();
+    //     const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).getTime();
+    //     const end = start + 7 * 24 * 60 * 60 * 1000;
+    //     return [start.toString(), end.toString()];
+    // };
 
     const sendRequests = async () => {
         for (const [key, value] of Object.entries(cleanedLinkIdMap)) {
@@ -402,26 +402,23 @@ const tmallLinkAnomalyDetection = async () => {
 
             const userId = value.uuid;
             const multiSelectField_lwufb7oy = value.name;
-            const cascadeDateField_lloq9vjk = getNextWeekTimestamps();
-            const textField_liihs7kv = value.productName;
+            // const cascadeDateField_lloq9vjk = getNextWeekTimestamps();
+            const textField_liihs7kv = value.productName + key;
             const textField_liihs7kw = key;
             const employeeField_liihs7l0 = [userId];
             //value.linkType === '新品30' 或者是value.linkType === '新品60' 都改成新品
             value.linkType = value.linkType === '新品30' || value.linkType === '新品60' ? '新品' : value.linkType;
             const formDataJsonStr = JSON.stringify({
+                radioField_lxlncgm1: "天猫",
                 textField_liihs7kv,
                 textField_liihs7kw,
                 employeeField_liihs7l0,
-                radioField_lx30hv7y: "否",
-                radioField_lwuecm6c: "是",
-                selectField_liihs7ky: "老猫",
                 selectField_liihs7kz: value.linkType.toString(),
                 multiSelectField_lwufb7oy,
-                cascadeDateField_lloq9vjk
             }, null, 2);
 
             try {
-                await dingDingService.createProcess(formId, userId, processCode, formDataJsonStr);
+                await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
                 logger.info(`发起宜搭  运营优化流程 for linkId ${key}`);
             } catch (e) {
                 logger.error(`发起宜搭  运营优化流程 失败 for linkId ${key}`, e);
