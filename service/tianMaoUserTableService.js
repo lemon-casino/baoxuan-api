@@ -88,7 +88,7 @@ const getExceptionLinks = async (type) => {
         const processing = await tian_mao_allocation.exceptionLinks(type)
         const parseExcludes = (excludeString) => {
             try {
-                return JSON.parse(`[${excludeString.replace(/},\s*{/g, '},{')}]`);
+                return JSON.parse(excludeString);
             } catch (error) {
                 console.error('Error parsing excludes:', error);
                 return [];
@@ -103,10 +103,37 @@ const getExceptionLinks = async (type) => {
     }
 }
 
+const putExceptionLinks = async (body) => {
+    try {
+
+
+        return await tian_mao_allocation.putExceptionLinks(body);
+    } catch (e) {
+    }
+}
+const delExceptionLinks = async (id) => {
+    try {
+
+
+        return await tian_mao_allocation.delExceptionLinks(id);
+    } catch (e) {
+    }
+}
+const postExceptionLinksExclude = async (body) => {
+    try {
+
+        return await tian_mao_allocation.addExceptionLinksExclude(body);
+    } catch (e) {
+    }
+}
 module.exports = {
     get_user_table,
     put_user_table,
     sort_user_table,
     tmall_user_table,
-    getExceptionLinks
+    getExceptionLinks,
+    putExceptionLinks,
+    delExceptionLinks,
+    postExceptionLinksExclude
+
 }
