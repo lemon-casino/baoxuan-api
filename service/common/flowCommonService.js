@@ -1,9 +1,10 @@
 const {flowReviewTypeConst, operateTypeConst} = require("@/const/flowConst")
 const dateUtil = require("@/utils/dateUtil")
-const ParameterError = require("@/error/parameterError");
-const flowRepo = require("@/repository/flowRepo");
-const globalGetter = require("@/global/getter");
-const flowFormReviewUtil = require("@/utils/flowFormReviewUtil");
+const ParameterError = require("@/error/parameterError")
+const flowRepo = require("@/repository/flowRepo")
+const flowFormDetailsRepo = require("@/repository/flowFormDetailsRepo")
+const globalGetter = require("@/global/getter")
+const flowFormReviewUtil = require("@/utils/flowFormReviewUtil")
 
 /**
  * 移除指定状态的流程
@@ -100,15 +101,20 @@ const getCombinedFlowsOfHistoryAndToday = async (startDoneDate, endDoneDate, for
             throw new ParameterError("结束日期不能小于开始日期")
         }
 
-        const processDataReviewItem = await Promise.all([
+        const processRelatedInfo = await Promise.all([
             flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds), // 2.8s
-            flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds)])
+            flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds),
+            flowFormDetailsRepo.getAllFormsDetails()
+        ])
 
-        flows = processDataReviewItem[1]
+        const flowsData = processRelatedInfo[0]
+        const flows = processRelatedInfo[1]
+        const flowFormDetails = processRelatedInfo[2]
+
         // 合并流程的data和审核流信息
         for (let i = 0; i < flows.length; i++) {
             const currData = {}
-            for (const item of processDataReviewItem[0][i].data) {
+            for (const item of flowsData[i].data) {
                 const fieldValue = item.fieldValue
                 if (fieldValue.startsWith("[") && fieldValue.endsWith("]")) {
                     currData[item.fieldId] = JSON.parse(fieldValue)
@@ -117,6 +123,11 @@ const getCombinedFlowsOfHistoryAndToday = async (startDoneDate, endDoneDate, for
                 }
             }
             flows[i].data = currData
+
+            const formDataKeys = flowFormDetails.filter(item => item.formId === flows[i].formUuid)
+            const dataKeyDetails = {}
+            formDataKeys.forEach(item => dataKeyDetails[item.fieldId] = item.fieldName)
+            flows[i].dataKeyDetails = dataKeyDetails
         }
     }
 

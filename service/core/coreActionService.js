@@ -1,16 +1,16 @@
 const _ = require("lodash")
+const Bignumber = require("bignumber.js")
 const flowRepo = require("@/repository/flowRepo")
 const userRepo = require("@/repository/userRepo")
-const redisRepo = require("@/repository/redisRepo")
 const outUsersRepo = require("@/repository/outUsersRepo")
 const flowCommonService = require("@/service/common/flowCommonService")
 const userCommonService = require("@/service/common/userCommonService")
 const {flowStatusConst, flowReviewTypeConst} = require("@/const/flowConst")
 const {opFunctions} = require("@/const/operatorConst")
-const whiteList = require("@/config/whiteList")
 const {visionFormDoneActivityIds} = require("@/const/tmp/coreActionsConst")
 const departmentCoreActivityStat = require("@/core/statistic/departmentCoreActivityStat")
 const visionConfusedUserNamesConst = require("@/const/tmp/visionConst")
+const statResultTemplateConst = require("@/const/statResultTemplateConst")
 const flowUtil = require("@/utils/flowUtil")
 const algorithmUtil = require("@/utils/algorithmUtil")
 
@@ -64,8 +64,158 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
 
     const requiredUserNames = requiredUsers.map(item => item.userName || item.nickname).join(",")
 
+    const statVisionUserFlowData = async (username, flow) => {
+        const visionUserFlowDataStatResultTemplate = _.cloneDeep(statResultTemplateConst.visionUserFlowDataStatResultTemplate)
+        if (username.includes("离职")) {
+            username = username.replace("", "[已离职]")
+        }
+
+        let taggedUser = await userRepo.getUsersWithTagsByUsernames([username])
+        if (taggedUser.length === 0) {
+            taggedUser = await outUsersRepo.getOutUsersWithTags({userName: username})
+        }
+        // 没有标签的用户直接返回空模板
+        if (taggedUser[0].tags.length === 0) {
+            return []
+        }
+
+        const tagsFormItemKeywordsMapping = [
+            {
+                tagCode: "lArtEditorGroup",
+                includeFormItemKws: ["大美编", "精修数量", "重点精修数量", "普通数量", "普通修图数量", "美编权重数据普通", "美编权重数据精修", "美编权重数据重点精修"],
+                excludeFormItemKws: ["小美编", "中美编", "外包"]
+            },
+            {
+                tagCode: "sArtEditorGroup",
+                includeFormItemKws: ["小美编", "简单数量", "简单修图数量", "普通数量", "普通修图数量", "美编权重数据普通", "美编权重数据简单"],
+                excludeFormItemKws: ["大美编", "中美编", "外包"]
+            },
+            {
+                tagCode: "AIGroup",
+                includeFormItemKws: ["AI"],
+                excludeFormItemKws: ["非AI", "摄影", "摄像"]
+            },
+            {
+                tagCode: "typeSettingGroup",
+                includeFormItemKws: ["排版", "套版"],
+                excludeFormItemKws: ["外包"]
+            },
+            {
+                tagCode: "modelingGroup",
+                includeFormItemKws: ["建模"],
+                excludeFormItemKws: []
+            },
+            {
+                tagCode: "clipGroup",
+                includeFormItemKws: ["剪辑", "任务数量"],
+                excludeFormItemKws: ["大美编", "小美编", "外包"]
+            },
+            {
+                tagCode: "photographyGroup",
+                includeFormItemKws: ["摄影数量", "摄影非AI数值", "摄像非AI", "视频"],
+                excludeFormItemKws: []
+            },
+            {
+                tagCode: "photographyAIGroup",
+                includeFormItemKws: ["摄影AI数量", "摄像AI数量"],
+                excludeFormItemKws: []
+            }
+        ]
+        const userTags = taggedUser[0].tags
+        const userTagsFormItemKeywordsMappings = tagsFormItemKeywordsMapping.filter(item => userTags.filter(tag => tag.tagCode === item.tagCode).length > 0)
+        if (userTagsFormItemKeywordsMappings.length === 0) {
+            return []
+        }
+
+        const isIncludeFormItemKw = (fieldName, includeFormItemKws) => {
+            for (const includeFormItemKw of includeFormItemKws) {
+                if (fieldName.includes(includeFormItemKw)) {
+                    return true
+                }
+            }
+            return false
+        }
+
+        const isExcludeFormItemKws = (fieldName, excludeFormItemKws) => {
+            for (const excludeFormItemKw of excludeFormItemKws) {
+                if (fieldName.includes(excludeFormItemKw)) {
+                    return false
+                }
+            }
+            return true
+        }
+
+        const isUserRequiredFieldName = (fieldName, userTagsFormItemKeywordsMappings) => {
+            for (const formItemKWMapping of userTagsFormItemKeywordsMappings) {
+                const {includeFormItemKws, excludeFormItemKws} = formItemKWMapping
+                if (isIncludeFormItemKw(fieldName, includeFormItemKws) && isExcludeFormItemKws(fieldName, excludeFormItemKws)) {
+                    return true
+                }
+            }
+            return false
+        }
+
+        const getUserRequiredFieldIdsByKWMapping = (flowDataKeyDetails, userTagsFormItemKeywordsMappings) => {
+            const userRequiredFields = []
+            for (const formItemKey of Object.keys(flowDataKeyDetails)) {
+                if (isUserRequiredFieldName(flow.dataKeyDetails[formItemKey], userTagsFormItemKeywordsMappings)) {
+                    userRequiredFields.push(formItemKey)
+                }
+            }
+            return userRequiredFields
+        }
+
+        const getNotEmptyUserRequiredFields = (fieldIds, data, dataKeyDetails) => {
+            const result = []
+            for (const fieldId of fieldIds) {
+                if (data[fieldId] && data[fieldId] !== "0") {
+                    result.push({fieldId, fieldName: dataKeyDetails[fieldId], value: data[fieldId]})
+                }
+            }
+            return result
+        }
+
+        const getResultNode = (fieldName, visionUserFlowDataStatResultTemplate) => {
+            const resultNode = visionUserFlowDataStatResultTemplate.find(item => {
+                const whichKW = item.formFieldNameKWs.find(kw => fieldName.includes(kw))
+                return !!whichKW
+            })
+            return resultNode
+        }
+
+        const userRequiredFieldIds = getUserRequiredFieldIdsByKWMapping(flow.dataKeyDetails, userTagsFormItemKeywordsMappings)
+
+        const userRequiredFields = getNotEmptyUserRequiredFields(userRequiredFieldIds, flow.data, flow.dataKeyDetails)
+
+        // 根据关键词将这些用户需要的表单信息分类统计
+        for (const userRequiredField of userRequiredFields) {
+            const resultNode = getResultNode(userRequiredField.fieldName, visionUserFlowDataStatResultTemplate)
+            if (resultNode) {
+                resultNode.workload = new Bignumber(resultNode.workload).plus(userRequiredField.value).toString()
+                resultNode.children.push(userRequiredField)
+            }
+        }
+
+        const notEmptyFlowDataStat = visionUserFlowDataStatResultTemplate.filter(item => item.children.length > 0)
+        const removeFormFieldNameKWs = (flowDataStat) => {
+            for (const item of flowDataStat) {
+                delete item["formFieldNameKWs"]
+            }
+            return flowDataStat
+        }
+
+
+        const result = removeFormFieldNameKWs(notEmptyFlowDataStat)
+        return result
+    }
+
     // 基于人的汇总(最基本的明细统计)
-    const actionStatBasedOnUserResult = await departmentCoreActivityStat.get(requiredUserNames, combinedFlows, coreActionConfig)
+    const actionStatBasedOnUserResult = await departmentCoreActivityStat.get(
+        requiredUserNames,
+        combinedFlows,
+        coreActionConfig,
+        statVisionUserFlowData
+    )
 
     const finalResult = tags.length === 0 ? _.cloneDeep(actionStatBasedOnUserResult) : []
 

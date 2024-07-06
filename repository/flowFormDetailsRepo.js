@@ -1,13 +1,15 @@
 const models = require('@/model')
+const flowFormDetailsModel = models.flowFormDetailsModel
+const flowFormsModel = models.flowfromsModel
 const sequelizeUtil = require("@/utils/sequelizeUtil")
 
 const saveFormDetails = async (details, transaction) => {
-    const result = await models.flowFormDetailsModel.create(details, {transaction})
+    const result = await flowFormDetailsModel.create(details, {transaction})
     return result
 }
 
 const getFormDetailsByFormId = async (formId) => {
-    const formDetails = await models.flowFormDetailsModel.findAll({
+    const formDetails = await flowFormDetailsModel.findAll({
         where: {
             formId
         }
@@ -16,7 +18,7 @@ const getFormDetailsByFormId = async (formId) => {
 }
 
 const getFormDifferentVersionsDetails = async (formId) => {
-    let formDetails = await models.flowFormDetailsModel.findAll({
+    let formDetails = await flowFormDetailsModel.findAll({
         where: {
             formId
         }
@@ -37,7 +39,7 @@ const getFormDifferentVersionsDetails = async (formId) => {
 
 
 const getFormLatestDetailsByFormId = async (formId) => {
-    const formProfile = await models.flowfromsModel.findAll(
+    const formProfile = await flowFormsModel.findAll(
         {
             where: {
                 flowFormId: formId
@@ -46,7 +48,7 @@ const getFormLatestDetailsByFormId = async (formId) => {
         }
     )
     if (formProfile.length > 0) {
-        const formDetails = await models.flowFormDetailsModel.findAll({
+        const formDetails = await flowFormDetailsModel.findAll({
             where: {
                 formId,
                 version: formProfile[0].detailsVersion
@@ -57,7 +59,13 @@ const getFormLatestDetailsByFormId = async (formId) => {
     return []
 }
 
+const getAllFormsDetails = async () => {
+    const result = await flowFormDetailsModel.findAll({})
+    return sequelizeUtil.extractDataValues(result)
+}
+
 module.exports = {
+    getAllFormsDetails,
     saveFormDetails,
     getFormDetailsByFormId,
     getFormLatestDetailsByFormId,

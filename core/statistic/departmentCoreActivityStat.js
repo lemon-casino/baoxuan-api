@@ -13,7 +13,7 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
  * @param coreConfig
  * @returns {Promise<*[]>}  返回的结构同配置的动作结构
  */
-const get = async (userNames, flows, coreConfig) => {
+const get = async (userNames, flows, coreConfig, userFlowDataStatCB) => {
     const finalResult = []
 
     // 根据配置信息获取基于所有人的数据
@@ -120,15 +120,33 @@ const get = async (userNames, flows, coreConfig) => {
                             } else {
                                 userFlows = notOverDueResult.children.filter(item => item.userName === operator)
                             }
+
+                            let userFlowDataStat = null
+                            // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
+                            if (!statusResult.nameCN.includes("待")) {
+                                const dataStatResult = await userFlowDataStatCB(operator, flow)
+                                if (dataStatResult.length > 0) {
+                                    userFlowDataStat = {
+                                        processInstanceId,
+                                        flowData: await userFlowDataStatCB(operator, flow)
+                                    }
+                                }
+                            }
+
                             if (userFlows.length > 0 && userFlows[0].ids && userFlows[0].ids.length > 0) {
                                 // 避免一人在同一流程中干多个活重复计算
                                 if (!userFlows[0].ids.includes(processInstanceId)) {
                                     userFlows[0].ids.push(processInstanceId)
                                     userFlows[0].sum = userFlows[0].ids.length
+                                    userFlowDataStat && userFlows[0].userFlowsDataStat.push(userFlowDataStat)
                                 }
-
                             } else {
-                                userFlows = {userName: operator, sum: 1, ids: [processInstanceId]}
+                                userFlows = {
+                                    userName: operator,
+                                    sum: 1,
+                                    ids: [processInstanceId],
+                                    userFlowsDataStat: userFlowDataStat ? [userFlowDataStat] : []
+                                }
                                 if (isOverDue) {
                                     overDueResult.children.push(userFlows)
                                 } else {
