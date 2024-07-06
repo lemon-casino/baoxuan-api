@@ -217,7 +217,69 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
         statVisionUserFlowData
     )
 
+    // 找到节点下所有的 userFlowsDataStat
+    const findAllUserFlowsDataStatNode = (topNode) => {
+        // 统一转成数组处理
+        if (!(_.isArray(topNode))) {
+            topNode = [topNode]
+        }
+
+        let allUserFlowsDataStatNodes = []
+
+        for (const node of topNode) {
+            if (node.userFlowsDataStat) {
+                allUserFlowsDataStatNodes = allUserFlowsDataStatNodes.concat(node.userFlowsDataStat)
+            }
+
+            if (node.children && node.children.length > 0) {
+                const subResult = findAllUserFlowsDataStatNode(node.children)
+                allUserFlowsDataStatNodes = allUserFlowsDataStatNodes.concat(subResult)
+            }
+        }
+
+        return allUserFlowsDataStatNodes
+    }
+
+    const sumWorkload = (flows) => {
+        const result = []
+        for (const flow of flows) {
+            for (const details of flow.flowData) {
+                const resultNode = result.find(item => item.nameCN === details.nameCN)
+                if (resultNode) {
+                    resultNode.sum = new Bignumber(resultNode.sum).plus(details.workload).toString()
+                } else {
+                    result.push({nameCN: details.nameCN, sum: details.workload})
+                }
+            }
+        }
+        return result
+    }
+
+    // 为节点增加表单中工作量的统计的node
+    const createFlowDataStatNode = (node) => {
+        const runningStatNode = node.children.filter(item => item.nameCN.includes("中"))
+        const completedStatNode = node.children.filter(item => item.nameCN.includes("完"))
+        const runningFlowDataStatNodes = findAllUserFlowsDataStatNode(runningStatNode)
+        const completedFlowDataStatNodes = findAllUserFlowsDataStatNode(completedStatNode)
+        const runningWorkload = sumWorkload(runningFlowDataStatNodes)
+        const completedWorkload = sumWorkload(completedFlowDataStatNodes)
+
+        const newWorkloadStatNode = {
+            nameCN: "工作量", excludeUpSum: true,
+            children: [
+                {nameCN: "进行中", children: runningWorkload},
+                {nameCN: "已完成", children: completedWorkload}
+            ]
+        }
+        return newWorkloadStatNode
+    }
+
     const finalResult = tags.length === 0 ? _.cloneDeep(actionStatBasedOnUserResult) : []
+
+    for (const item of finalResult) {
+        const workloadNode = createFlowDataStatNode(item)
+        item.children.push(workloadNode)
+    }
 
     // 先仅仅处理视觉部
     if (deptId === "482162119") {
@@ -253,6 +315,7 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
         else {
             const userStatArr = convertToUserActionResult(requiredUsers, actionStatBasedOnUserResult)
             for (const userStat of userStatArr) {
+                userStat.children.push(createFlowDataStatNode(userStat))
                 finalResult.unshift(userStat)
             }
         }

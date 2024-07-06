@@ -227,8 +227,9 @@ const statIdsAndSumFromBottom = (data) => {
             // const uniqueIds = []
             const allIds = []
             for (const child of item.children) {
-                const newChild = statIdsAndSumFromBottom(child)
+                // const newChild = statIdsAndSumFromBottom(child)
                 if (!child.excludeUpSum) {
+                    const newChild = statIdsAndSumFromBottom(child)
                     for (const id of newChild.ids) {
                         // uniqueIds[id] = 1
                         allIds.push(id)
