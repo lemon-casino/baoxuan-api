@@ -3,8 +3,6 @@ const requireInvokeLimit = require("./requireInvokeLimit")
 const RemoteError = require("@/error/remoteError")
 const dateUtil = require("@/utils/dateUtil")
 
-const pageSize = 50
-
 /**
  * 获取分页的打卡记录
  *
@@ -16,7 +14,7 @@ const pageSize = 50
  * @param token
  * @returns {Promise<any|undefined>}
  */
-const getPagingAttendances = async (pageIndex, workDateFrom, workDateTo, userIds, token) => {
+const getPagingAttendances = async (pageIndex, pageSize = 50, workDateFrom, workDateTo, userIds, token) => {
     await requireInvokeLimit.count()
 
     const url = `https://oapi.dingtalk.com/attendance/list?access_token=${token}`
@@ -40,14 +38,15 @@ const getPagingAttendances = async (pageIndex, workDateFrom, workDateTo, userIds
  * @param token
  * @returns {Promise<*[]>}
  */
-const getAttendances = async (workDateFrom, workDateTo, userIds, token) => {
-    let pageIndex = 0
+const getWorkingDaysRangAttendances = async (workDateFrom, workDateTo, userIds, token) => {
     let hasMore = true
     let attendances = []
+    let pageIndex = 0
+    const pageSize = 50
     while (hasMore) {
-        const result = await getPagingAttendances(pageIndex, workDateFrom, workDateTo, userIds, token)
+        const result = await getPagingAttendances(pageIndex, pageSize, workDateFrom, workDateTo, userIds, token)
         if (result.errmsg !== "ok") {
-            throw new RemoteError(errmsg)
+            throw new RemoteError(result.errmsg)
         }
         attendances = attendances.concat(result.recordresult)
         pageIndex = pageIndex + 1
@@ -56,11 +55,19 @@ const getAttendances = async (workDateFrom, workDateTo, userIds, token) => {
     return attendances
 }
 
+/**
+ * 获取今天当前用户的打卡情况
+ *
+ * @param userIds
+ * @param token
+ * @returns {Promise<*[]>}
+ */
 const getTodayAttendances = async (userIds, token) => {
-    return await getAttendances(dateUtil.startOfToday(), dateUtil.endOfToday(), userIds, token)
+    return await getWorkingDaysRangAttendances(dateUtil.startOfToday(), dateUtil.endOfToday(), userIds, token)
 }
 
 module.exports = {
-    getAttendances,
+    getWorkingDaysRangAttendances,
+    getPagingAttendances,
     getTodayAttendances
 }

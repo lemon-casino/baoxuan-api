@@ -27,6 +27,7 @@ const formReviewRepo = require("@/repository/formReviewRepo")
 const flowCommonService = require("./common/flowCommonService")
 const outModifyPictureVisionPatch = require("@/patch/outModifyPictureVisionPatch")
 const {patchOfflineTransmittedActivity} = require("@/patch/patchUtil")
+const RemoteError = require("@/error/remoteError");
 
 // ===============公共方法 start=====================
 const com_userid = "073105202321093148"; // 涛哥id
@@ -476,10 +477,13 @@ const getTodayRunningAndFinishedFlows = async () => {
  * @param userIds
  * @returns {Promise<*>}
  */
-const getAttendances = async (pageIndex, pageSize, workDateFrom, workDateTo, userIds) => {
+const getPagingAttendances = async (pageIndex, pageSize, workDateFrom, workDateTo, userIds) => {
     const {access_token: accessToken} = await redisRepo.getToken()
-    const attendances = await dingDingReq.getAttendances(pageIndex, pageSize, workDateFrom, workDateTo, userIds, accessToken)
-    return attendances
+    const result = await dingDingReq.getPagingAttendances(pageIndex, pageSize, workDateFrom, workDateTo, userIds, accessToken)
+    if (result.errmsg !== "ok") {
+        throw new RemoteError(result.errmsg)
+    }
+    return result.recordresult
 }
 
 /**
@@ -497,7 +501,7 @@ const isWorkingDay = async (date) => {
     }
 
     const startDateTime = dateUtil.startOfDay(date)
-    const endDateTime = dateUtil.endOfToday(date)
+    const endDateTime = dateUtil.endOfDay(date)
     // 设置50个小伙伴的userId（钉钉接口限制）
     const users = await globalGetter.getUsers()
     const limit = 40
@@ -509,13 +513,13 @@ const isWorkingDay = async (date) => {
     }
 
     // 按天统计，没人最多会有4条记录, 测试钉钉接口 pageSize最大为50， 否则会保存
-    const result = await getAttendances(0, 50, startDateTime, endDateTime, userIds)
+    const attendances = await getPagingAttendances(0, 50, startDateTime, endDateTime, userIds)
     const uniqueAttendances = {}
-    for (const attendance of result.recordresult) {
+    for (const attendance of attendances) {
         uniqueAttendances[attendance.userId] = 1
     }
     // 正常上班9点后打卡的人数会超过10（取50记录每人4条几率可以包含最多的打卡人数），不上班可能也会有人打卡，很少
-    return Object.keys(uniqueAttendances).length > 10
+    return Object.keys(uniqueAttendances).length >= 10
 }
 
 /**
@@ -543,7 +547,7 @@ module.exports = {
     getTodayRunningAndFinishedFlows,
     getFinishedFlows,
     handleAsyncAllFinishedFlowsByTimeRange,
-    getAttendances,
+    getPagingAttendances,
     isWorkingDay,
     getFlowsOfStatusAndTimeRange,
     createProcess

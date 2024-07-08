@@ -202,5 +202,31 @@ module.exports = [
                 "taskId": "null"
             }
         ]
+    },
+    {
+        processInstanceId: "31de99ae-3791-450c-b819-e8353a50ddee",
+        title: "朱梦婷发起的运营拍摄流程注水冰格全套着急",
+        targetActivityId: "node_oclrolllmq2",
+        replacedActivities: [
+            {
+                "processInstanceId": "31de99ae-3791-450c-b819-e8353a50ddee",
+                "operateTimeGMT": "",
+                "showName": "拍摄拍照",
+                "operateType": "NEW_PROCESS",
+                "remark": "",
+                "taskHoldTimeGMT": 0,
+                "type": "",
+                "operatorName": "李净知",
+                "actionExit": "submit",
+                "operatorUserId": "01440919583726094067",
+                "activityId": "node_oclii6vcap7",
+                "size": 1,
+                "dataId": 30574454866,
+                "domainList": [],
+                "operatorDisplayName": "李净知",
+                "action": "",
+                "taskId": "null"
+            }
+        ]
     }
 ]
