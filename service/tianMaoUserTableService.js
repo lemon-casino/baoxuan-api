@@ -83,25 +83,62 @@ const tmall_user_table = async (linkdata) => {
     }
 }
 
+
 const getExceptionLinks = async (type) => {
     try {
-        const processing = await tian_mao_allocation.exceptionLinks(type)
-        const parseExcludes = (excludeString) => {
-            try {
-                return JSON.parse(excludeString);
-            } catch (error) {
-                console.error('Error parsing excludes:', error);
-                return [];
-            }
-        };
-        processing.forEach(item => {
-            item.exclude = item.exclude ? parseExcludes(item.exclude) : [];
-        })
-
-        return processing;
+        if (type === 1) {
+            return await processType1Records();
+        } else if (type === 2) {
+            return await tian_mao_allocation.exceptionLinks(2);
+        } else {
+            throw new Error('Invalid type');
+        }
     } catch (e) {
+        console.error('Error fetching exception links:', e);
     }
-}
+};
+
+
+const fetchAllType2Records = async () => {
+    try {
+        const records = await tian_mao_allocation.exceptionLinks(2);
+        return records.reduce((acc, record) => {
+            acc[record.id] = record;
+            return acc;
+        }, {});
+    } catch (e) {
+        console.error('Error fetching type 2 records:', e);
+    }
+};
+
+const processType1Records = async () => {
+    try {
+        const type1Records = await tian_mao_allocation.exceptionLinks(1);
+        const type2RecordsMap = await fetchAllType2Records();
+
+        type1Records.forEach(record => {
+            if (record.exclude) {
+                const excludeIds = record.exclude.split(',');
+                record.exclude = excludeIds.map(id => {
+                    const type2Record = type2RecordsMap[id.trim()];
+                    if (type2Record) {
+                        return {
+                            field: type2Record.field,
+                            comparator: type2Record.comparator,
+                            name: type2Record.name,
+                            value: type2Record.id
+                        };
+                    }
+                    return null;
+                }).filter(Boolean);
+            }
+        });
+        return type1Records;
+    } catch (e) {
+        console.error('Error processing type 1 records:', e);
+    }
+};
+
 
 const putExceptionLinks = async (body) => {
     try {
@@ -126,6 +163,8 @@ const postExceptionLinksExclude = async (body) => {
     } catch (e) {
     }
 }
+
+
 module.exports = {
     get_user_table,
     put_user_table,
