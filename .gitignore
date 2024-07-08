@@ -23,6 +23,7 @@ package.lock.json
 *.sln
 *.sw?
 /**/*dev.*
+/**/sync_prod.js
 
 package-lock.json
 .htaccess
