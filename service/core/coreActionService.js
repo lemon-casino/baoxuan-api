@@ -251,7 +251,9 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
                 }
                 const resultNode = result.find(item => item.nameCN === details.nameCN)
                 if (resultNode) {
-                    resultNode.ids.push(flow.processInstanceId)
+                    if (!resultNode.ids.includes(flow.processInstanceId)) {
+                        resultNode.ids.push(flow.processInstanceId)
+                    }
                     resultNode.sum = new Bignumber(resultNode.sum).plus(details.workload).toString()
                 } else {
                     result.push({
