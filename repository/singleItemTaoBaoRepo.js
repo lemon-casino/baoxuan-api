@@ -346,7 +346,7 @@ const getTaoBaoSingleItems = async (pageIndex,
         where,
         // order: [["linkId", "asc"], ["date", "asc"]],
         order: [["date", "asc"]],
-        logging: false,
+        logging: true,
         group: ['singleItemTaoBaoModel.date', 'singleItemTaoBaoModel.id', 'ABbnormal_TM.new_16_30', 'ABbnormal_TM.new_30_60', 'ABbnormal_TM.negative_profit_60', 'ABbnormal_TM.old'],
     })
     result.rows = result.rows.map(function (item) {
