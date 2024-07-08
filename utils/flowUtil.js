@@ -235,7 +235,7 @@ const statIdsAndSumFromBottom = (data) => {
                 const newChild = statIdsAndSumFromBottom(child)
                 if (!child.excludeUpSum) {
                     if (newChild.sumAlone) {
-                        sum = sum + newChild.sum
+                        sum = sum + parseFloat(newChild.sum)
                     }
                     for (const id of newChild.ids) {
                         allIds.push(id)
