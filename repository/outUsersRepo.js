@@ -49,8 +49,9 @@ const getPagingOutUsersWithTags = async (pageIndex, pageSize, userName, enabled)
         where.enabled = enabled
     }
 
-
-    const result = await outUsersModel.findAndCountAll({
+    // findAndCountAll在遇到表连接的时候，返回的total是连接出来的数据量，而不是主查询去重的数据量
+    const total = await outUsersModel.count({where})
+    const result = await outUsersModel.findAll({
         where,
         offset: pageIndex * pageSize,
         limit: pageSize,
@@ -69,7 +70,8 @@ const getPagingOutUsersWithTags = async (pageIndex, pageSize, userName, enabled)
             }
         ]
     })
-    return pagingUtil.defaultPaging(result, pageSize)
+    const data = sequelizeUtil.extractDataValues(result)
+    return pagingUtil.paging(Math.ceil(total / pageSize), total, data)
 }
 
 const updateOutUsers = async (id, data) => {
