@@ -262,6 +262,42 @@ const statIdsAndSumFromBottom = (data) => {
 }
 
 /**
+ * 从下往上汇总sum
+ *
+ * @param data
+ * @returns {Array}
+ */
+const statSumFromBottom = (data) => {
+    const handleItem = (item) => {
+        let childSum = item.sum || 0
+        if (item.children) {
+            for (const child of item.children) {
+                if (!child.excludeUpSum) {
+                    const childResult = statSumFromBottom(child)
+                    childSum = childSum + parseFloat(childResult.sum)
+                }
+            }
+        }
+        item.sum = childSum
+        return item
+    }
+
+
+    if (data instanceof Array) {
+        for (let item of data) {
+            if (item.children) {
+                item.sum = handleItem(item).sum
+            }
+        }
+    } else {
+        data.sum = handleItem(data).sum
+    }
+
+    return data
+}
+
+
+/**
  * 获取最新的不重复的审核节点数据
  *
  * @param reviewItems
@@ -300,5 +336,6 @@ module.exports = {
     isUserErrorFlow,
     isUserTerminatedFlow,
     statIdsAndSumFromBottom,
+    statSumFromBottom,
     getLatestUniqueReviewItems
 }

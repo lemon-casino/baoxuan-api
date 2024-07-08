@@ -192,8 +192,8 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
         for (const userRequiredField of userRequiredFields) {
             const resultNode = getResultNode(userRequiredField.fieldName, visionUserFlowDataStatResultTemplate)
             if (resultNode) {
-                if (regexConst.floatNumberReg.test(userRequiredField.value)){
-                    resultNode.workload = new Bignumber(resultNode.workload).plus(userRequiredField.value).toString()
+                if (regexConst.floatNumberReg.test(userRequiredField.value)) {
+                    resultNode.workload = new Bignumber(resultNode.workload).plus(userRequiredField.value).toNumber()
                     resultNode.children.push(userRequiredField)
                 }
             }
@@ -273,7 +273,8 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
                 {nameCN: "已完成", children: completedWorkload}
             ]
         }
-        return newWorkloadStatNode
+
+        return flowUtil.statSumFromBottom(newWorkloadStatNode)
     }
 
     const finalResult = tags.length === 0 ? _.cloneDeep(actionStatBasedOnUserResult) : []
