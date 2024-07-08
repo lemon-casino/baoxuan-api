@@ -306,16 +306,6 @@ const getFlowsByIds = async (ids) => {
         }
     }
 
-    // for (const flow of flowsOfRunningAndFinishedOfToday) {
-    //     if (ids.includes(flow.processInstanceId)) {
-    //         satisfiedFlows.push(flow)
-    //         matchedTodayFlowIds.push(flow.processInstanceId)
-    //         if (satisfiedFlows.length === ids.length) {
-    //             break
-    //         }
-    //     }
-    // }
-
     // 需要从数据库中获取流程
     const stockedFlowIds = ids.filter(id => !matchedTodayFlowIds.includes(id))
     if (stockedFlowIds.length > 0) {
