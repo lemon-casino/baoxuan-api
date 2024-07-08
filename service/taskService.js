@@ -34,6 +34,7 @@ const {
 } = require("./singleItemTaoBaoService");
 const {createProcess} = require("@/service/dingDingService")
 const {theProcessIsCompletedInThreeDays} = require("@/repository/processDetailsRepo");
+const singleItemApi = require("@/router_handler/singleItemApi");
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
     const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
@@ -265,6 +266,8 @@ const syncOaProcessTemplates = async () => {
 * 天猫异常定时任务*/
 const tmallLinkAnomalyDetection = async () => {
     logger.info("天猫链接异常同步进行中...")
+    var newVar = await singleItemApi.getLatest();
+    logger.info(newVar, "天猫链接异常同步进行中...")
     //获得天猫链接数据异常的链接id
     const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(14)
     // 获得所有负责人的信息
@@ -274,6 +277,8 @@ const tmallLinkAnomalyDetection = async () => {
         return acc;
     }, []); // 初始值是一个空数组 []
     // logger.info("天猫链接异常同步进行中...来到了负责人这里")
+
+
     const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
         productLineLeaders,
         null,

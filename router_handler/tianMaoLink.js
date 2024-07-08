@@ -119,6 +119,16 @@ const postExceptionLinksExclude = async (req, res) => {
     }
 }
 
+const exceptionexcludeLinks = async (req, res) => {
+
+    try {
+        await tianmao__user_tableService.exceptionexcludeLinks(req.body)
+        return res.send(success());
+
+    } catch (e) {
+    }
+}
+
 module.exports = {
     get_user_table,
     put_user_table,
@@ -127,5 +137,6 @@ module.exports = {
     getExceptionLinks,
     putExceptionLinks,
     delExceptionLinks,
-    postExceptionLinksExclude
+    postExceptionLinksExclude,
+    exceptionexcludeLinks
 }

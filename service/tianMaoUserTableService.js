@@ -165,6 +165,14 @@ const postExceptionLinksExclude = async (body) => {
 }
 
 
+const exceptionexcludeLinks = async (body) => {
+    try {
+
+        return await tian_mao_allocation.exceptionexcludeLinks(body);
+    } catch (e) {
+    }
+}
+
 module.exports = {
     get_user_table,
     put_user_table,
@@ -173,6 +181,7 @@ module.exports = {
     getExceptionLinks,
     putExceptionLinks,
     delExceptionLinks,
-    postExceptionLinksExclude
+    postExceptionLinksExclude,
+    exceptionexcludeLinks
 
 }

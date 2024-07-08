@@ -54,6 +54,22 @@ router.delete("/exceptionLinks", Validator.validate({
     }
 }), tmall_link.delExceptionLinks)
 
+router.delete("/exceptionexcludeLinks", Validator.validate({
+    id: {
+        required: true,
+        type: "string",
+        regex: /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+        minLength: 36,
+        maxLength: 36
+    },
+    uuid: {
+        required: true,
+        type: "string",
+        regex: /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+        minLength: 36,
+        maxLength: 36
+    }
+}), tmall_link.exceptionexcludeLinks)
 router.post("/exceptionLinks", Validator.validate({
     name: {
         required: true,

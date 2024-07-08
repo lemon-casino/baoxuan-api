@@ -17,8 +17,12 @@ const putExceptionLinks = async (body) => {
     try {
 
         const {name, field, comparator, type, operator, lessThan, value, exclude, id} = body;
-        console.log(name, field, comparator, type, operator, lessThan, value, exclude, id)
-
+        const existingAllocation = await AllocationeModel.findOne(
+            {
+                attributes: ['exclude'],
+                where: {id: id},
+                raw: true
+            });
 
         const allocationData = {
             name: name,
@@ -30,17 +34,9 @@ const putExceptionLinks = async (body) => {
             ...(operator !== undefined ? {operator: operator} : {}),
             ...(lessThan !== undefined ? {lessThan: lessThan} : {}),
             ...(value !== undefined ? {value: value} : {}),
-            ...(exclude !== undefined ? {
-                exclude: exclude.map(item => ({
-                    "field": item.field,
-                    "comparator": item.comparator,
-                    "name": item.name,
-                    "value": item.value
-                }))
-            } : {}),
-        };
+            ...(exclude !== undefined ? {exclude: existingAllocation.exclude + "," + exclude.join(',')} : "")
 
-        console.log(allocationData)
+        };
         return await AllocationeModel.update(allocationData, {where: {id: id}, loading: true});
     } catch (error) {
         throw new Error('更新用户数据失败');
@@ -87,10 +83,41 @@ const addExceptionLinksExclude = async (body) => {
 
 }
 
+
+const exceptionexcludeLinks = async (body) => {
+    try {
+
+        const {id, uuid} = body;
+
+        const existingAllocation = await AllocationeModel.findOne(
+            {
+                attributes: ['exclude'],
+                where: {id: id},
+                raw: true
+            });
+
+        const excludeArray = existingAllocation.exclude.split(',');
+        const indexToRemove = excludeArray.indexOf(uuid);
+        if (indexToRemove !== -1) {
+            excludeArray.splice(indexToRemove, 1);
+        }
+        const updatedExclude = excludeArray.join(',');
+
+
+        return await AllocationeModel.update({exclude: updatedExclude}, {where: {id: id}});
+    } catch (error) {
+        throw new Error('删除数据失败');
+    }
+
+
+}
+
+
 module.exports = {
     exceptionLinks,
     putExceptionLinks,
     delExceptionLinks,
-    addExceptionLinksExclude
+    addExceptionLinksExclude,
+    exceptionexcludeLinks
 
 };
