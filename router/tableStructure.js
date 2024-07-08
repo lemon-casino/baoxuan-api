@@ -62,7 +62,7 @@ router.delete("/exceptionexcludeLinks", Validator.validate({
         minLength: 36,
         maxLength: 36
     },
-    uuid: {
+    exclude_id: {
         required: true,
         type: "string",
         regex: /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,

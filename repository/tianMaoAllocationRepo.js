@@ -87,7 +87,7 @@ const addExceptionLinksExclude = async (body) => {
 const exceptionexcludeLinks = async (body) => {
     try {
 
-        const {id, uuid} = body;
+        const {id, exclude_id} = body;
 
         const existingAllocation = await AllocationeModel.findOne(
             {
@@ -97,7 +97,7 @@ const exceptionexcludeLinks = async (body) => {
             });
 
         const excludeArray = existingAllocation.exclude.split(',');
-        const indexToRemove = excludeArray.indexOf(uuid);
+        const indexToRemove = excludeArray.indexOf(exclude_id);
         if (indexToRemove !== -1) {
             excludeArray.splice(indexToRemove, 1);
         }
