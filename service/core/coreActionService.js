@@ -8,6 +8,7 @@ const userCommonService = require("@/service/common/userCommonService")
 const {flowStatusConst, flowReviewTypeConst} = require("@/const/flowConst")
 const {opFunctions} = require("@/const/operatorConst")
 const {visionFormDoneActivityIds} = require("@/const/tmp/coreActionsConst")
+const regexConst = require("@/const/regexConst")
 const departmentCoreActivityStat = require("@/core/statistic/departmentCoreActivityStat")
 const visionConfusedUserNamesConst = require("@/const/tmp/visionConst")
 const statResultTemplateConst = require("@/const/statResultTemplateConst")
@@ -113,7 +114,7 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
             {
                 tagCode: "photographyGroup",
                 includeFormItemKws: ["摄影数量", "摄影非AI数值", "摄像非AI", "视频"],
-                excludeFormItemKws: []
+                excludeFormItemKws: ["产品使用视频与样品交接"]
             },
             {
                 tagCode: "photographyAIGroup",
@@ -191,8 +192,10 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
         for (const userRequiredField of userRequiredFields) {
             const resultNode = getResultNode(userRequiredField.fieldName, visionUserFlowDataStatResultTemplate)
             if (resultNode) {
-                resultNode.workload = new Bignumber(resultNode.workload).plus(userRequiredField.value).toString()
-                resultNode.children.push(userRequiredField)
+                if (regexConst.floatNumberReg.test(userRequiredField.value)){
+                    resultNode.workload = new Bignumber(resultNode.workload).plus(userRequiredField.value).toString()
+                    resultNode.children.push(userRequiredField)
+                }
             }
         }
 
@@ -203,7 +206,6 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
             }
             return flowDataStat
         }
-
 
         const result = removeFormFieldNameKWs(notEmptyFlowDataStat)
         return result
@@ -663,6 +665,7 @@ const convertToUserActionResult = (users, userStatResult) => {
                     // 找出所有key所对应的逾期所包含的children
                     for (const result of userStatResult) {
                         let ids = []
+                        let userFlowsDataStat = []
                         const actionName = result.actionName
                         const sameKeyTextStat = result.children.filter(item => item.nameCN.includes(currStatusKeyText))
                         for (const statusActionStat of sameKeyTextStat) {
@@ -671,10 +674,11 @@ const convertToUserActionResult = (users, userStatResult) => {
                             if (userActionStat.length > 0) {
                                 for (const stat of userActionStat) {
                                     ids = ids.concat(stat.ids)
+                                    userFlowsDataStat = userFlowsDataStat.concat(stat.userFlowsDataStat)
                                 }
                             }
                         }
-                        l2ActionStructure.children.push({userName: actionName, ids, sum: ids.length})
+                        l2ActionStructure.children.push({userName: actionName, ids, sum: ids.length, userFlowsDataStat})
                     }
                     l1ActionStructure.children.push(l2ActionStructure)
                 }

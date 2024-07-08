@@ -128,7 +128,7 @@ const get = async (userNames, flows, coreConfig, userFlowDataStatCB) => {
                                 if (dataStatResult.length > 0) {
                                     userFlowDataStat = {
                                         processInstanceId,
-                                        flowData: await userFlowDataStatCB(operator, flow)
+                                        flowData: dataStatResult
                                     }
                                 }
                             }
