@@ -2,6 +2,7 @@ const models = require('@/model')
 const outUsersModel = models.outUsersModel
 const usersTagsModel = models.usersTagsModel
 const tagsModel = models.tagsModel
+const pagingUtil = require("@/utils/pagingUtil")
 
 const sequelizeUtil = require("@/utils/sequelizeUtil")
 
@@ -39,6 +40,38 @@ const getOutUsersWithTags = async (where = {}) => {
     return sequelizeUtil.extractDataValues(outUsers)
 }
 
+const getPagingOutUsersWithTags = async (pageIndex, pageSize, userName, enabled) => {
+    const where = {}
+    if (userName) {
+        where.userName = {$like: `%${userName}%`}
+    }
+    if (enabled !== undefined) {
+        where.enabled = enabled
+    }
+
+
+    const result = await outUsersModel.findAndCountAll({
+        where,
+        offset: pageIndex * pageSize,
+        limit: pageSize,
+        include: [
+            {
+                attributes: ["id", "tagCode", "userId", "isOut"],
+                model: usersTagsModel,
+                as: "tags",
+                include: [
+                    {
+                        model: tagsModel,
+                        as: "tag",
+                        attributes: ["tagCode", "tagName"]
+                    }
+                ]
+            }
+        ]
+    })
+    return pagingUtil.defaultPaging(result, pageSize)
+}
+
 const updateOutUsers = async (id, data) => {
     return (await outUsersModel.update(data, {where: {id}}))
 }
@@ -51,5 +84,6 @@ module.exports = {
     saveOutUser,
     getOutUsers,
     getOutUsersWithTags,
-    updateOutUsers
+    getPagingOutUsersWithTags,
+    updateOutUsers,
 }

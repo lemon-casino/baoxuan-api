@@ -28,7 +28,8 @@ const commonJoiSchemas = {
     arrayRequired: Joi.array().required(),
     funcRequired: Joi.func().required(),
     objectRequire: Joi.object().required(),
-    booleanRequired: Joi.boolean().required()
+    booleanRequired: Joi.boolean().required(),
+    validBoolStrValue: Joi.string().valid("true", "false")
 }
 
 const commonArgsSchemas = {

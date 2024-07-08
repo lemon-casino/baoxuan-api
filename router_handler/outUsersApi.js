@@ -12,6 +12,25 @@ const getOutUsers = async (req, res, next) => {
     }
 }
 
+const getPagingOutUsers = async (req, res, next) => {
+    try {
+        let page = req.query.page
+        let pageSize = req.query.pageSize
+        const userName = req.query.userName
+        let enabled = req.query.enabled
+        joiUtil.validate({page, pageSize})
+        if (enabled) {
+            joiUtil.validate({enabled: {value: enabled, schema: joiUtil.commonJoiSchemas.validBoolStrValue}})
+            enabled = enabled === "true"
+        }
+
+        const outUsers = await outUsersService.getPagingOutUsersWithTags(Number(page) - 1, Number(pageSize), userName, enabled)
+        return res.send(biResponse.success(outUsers))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const getOutUsersWithTags = async (req, res, next) => {
     try {
         const outUsers = await outUsersService.getOutUsersWithTags()
@@ -35,5 +54,6 @@ const updateOutUsers = async (req, res, next) => {
 module.exports = {
     getOutUsers,
     updateOutUsers,
-    getOutUsersWithTags
+    getOutUsersWithTags,
+    getPagingOutUsers
 }

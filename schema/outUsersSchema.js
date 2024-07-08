@@ -8,6 +8,10 @@ const updateParamsSchema = {
     enabled: joiUtil.commonJoiSchemas.booleanRequired
 }
 
+const getPagingOutUsersSchema = {
+
+}
+
 module.exports = {
     updateParamsSchema
 }
