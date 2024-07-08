@@ -1,67 +1,107 @@
-const models = require('@/model');
+const models = require('@/model')
+const processModel = models.processModel
+const processReviewModel = models.processReviewModel
+const processDetailsModel = models.processDetailsModel
+const flowFormDetailsModel = models.flowFormDetailsModel
 const NotFoundError = require("@/error/http/notFoundError")
 const coreActionsConst = require("@/const/tmp/coreActionsConst")
 const coreFormFlowConst = require("@/const/tmp/coreFormFlowConst")
 const sequelizeUtil = require("@/utils/sequelizeUtil")
 const dateUtil = require("@/utils/dateUtil")
 
-models.processModel.hasMany(models.processReviewModel,
+processModel.hasMany(processReviewModel,
     {
         foreignKey: 'process_instance_id',
         as: "overallprocessflow"
     }
 )
 
-models.processModel.hasMany(models.processDetailsModel,
+processModel.hasMany(processDetailsModel,
     {
         foreignKey: 'process_instance_id',
         as: "data"
     }
 )
 
-const getProcessByIds = async (ids) => {
-    let processes = await models.processModel.findAll({
-        include: [
-            {
-                model: models.processReviewModel,
-                as: "overallprocessflow",
-                order: [["order_index", "asc"]]
-            }
-        ],
-        where: {
-            processInstanceId: {$in: ids}
-        }
-    })
+processModel.hasOne(flowFormDetailsModel,
+    {
+        sourceKey: "formUuid",
+        foreignKey: "form_id",
+        as: "flowFormDetails"
+    }
+)
 
-    processes = sequelizeUtil.extractDataValues(processes)
-    // 兼容未入库的数据
-    return processes.map((process) => {
-        process.overallprocessflow = sequelizeUtil.extractDataValues(process.overallprocessflow).sort((curr, next) => {
-            //相邻的节点完成时间会有相同的情况，顾增加两层判断（ orderIndex 为入库时添加的）
-            const timeDuration = curr.doneTime - next.doneTime
-            if (timeDuration === 0) {
-                return curr.orderIndex - next.orderIndex
-            }
-            return timeDuration
+const getProcessByIds = async (ids) => {
+    const processRelatedInfo = await Promise.all([
+        processModel.findAll({
+            where: {processInstanceId: {$in: ids}}
+        }),
+
+        processReviewModel.findAll({
+            where: {processInstanceId: {$in: ids}},
+            order: [["order_index", "asc"]]
+        }),
+        processDetailsModel.findAll({
+            where: {processInstanceId: {$in: ids}}
         })
-        process.overallprocessflow = process.overallprocessflow.map(item => {
+    ])
+
+    const processes = sequelizeUtil.extractDataValues(processRelatedInfo[0])
+    const processesReviewItems = sequelizeUtil.extractDataValues(processRelatedInfo[1])
+    const processesDetails = sequelizeUtil.extractDataValues(processRelatedInfo[2])
+    const formIds = processes.map(item => item.formUuid)
+    const tmpFlowsFormDetails = await flowFormDetailsModel.findAll({
+        where: {formId: {$in: formIds}}
+    })
+    const flowsFormDetails = sequelizeUtil.extractDataValues(tmpFlowsFormDetails)
+    for (const process of processes) {
+        process.createTimeGMT = dateUtil.format2Str(process.createTime, "YYYY-MM-DDTHH:mm:ss") + "Z"
+        process.modifiedTimeGMT = dateUtil.format2Str(process.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"
+
+        let processReviewItems = processesReviewItems.filter(item => item.processInstanceId === process.processInstanceId)
+        processReviewItems = processReviewItems.map(item => {
             return {...item, operateTimeGMT: dateUtil.format2Str(item.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"}
         })
-        return {
-            ...process,
-            createTimeGMT: dateUtil.format2Str(process.createTime, "YYYY-MM-DDTHH:mm:ss") + "Z",
-            modifiedTimeGMT: dateUtil.format2Str(process.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"
+        const processDetails = processesDetails.filter(item => item.processInstanceId === process.processInstanceId)
+        const processFlowFormDetails = flowsFormDetails.filter(item => item.formId === process.formUuid)
+        process.data = {}
+        for (const item of processDetails) {
+            process.data[item.fieldId] = item.fieldValue
         }
-    })
+        process.dataKeyDetails = {}
+        for (const item of processFlowFormDetails) {
+            process.dataKeyDetails[item.fieldId] = item.fieldName
+        }
+    }
+    return processes
+
+    // return processes.map((process) => {
+    //     process.overallprocessflow = sequelizeUtil.extractDataValues(process.overallprocessflow).sort((curr, next) => {
+    //         //相邻的节点完成时间会有相同的情况，顾增加两层判断（ orderIndex 为入库时添加的）
+    //         const timeDuration = curr.doneTime - next.doneTime
+    //         if (timeDuration === 0) {
+    //             return curr.orderIndex - next.orderIndex
+    //         }
+    //         return timeDuration
+    //     })
+    //     process.overallprocessflow = process.overallprocessflow.map(item => {
+    //         return {...item, operateTimeGMT: dateUtil.format2Str(item.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"}
+    //     })
+    //     return {
+    //         ...process,
+    //         createTimeGMT: dateUtil.format2Str(process.createTime, "YYYY-MM-DDTHH:mm:ss") + "Z",
+    //         modifiedTimeGMT: dateUtil.format2Str(process.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"
+    //     }
+    // })
 }
 
 const getAllProcesses = async () => {
-    const allProcesses = await models.processModel.findAll()
+    const allProcesses = await processModel.findAll()
     return allProcesses
 }
 
 const updateProcess = async (process) => {
-    await models.processModel.update(
+    await processModel.update(
         {...process},
         {
             where: {processInstanceId: process.processInstanceId}
@@ -107,10 +147,10 @@ const getProcessWithReviewByReviewItemDoneTime = async (startDoneDateTime, enDon
     if (formIds && formIds.length > 0) {
         where.formUuid = {$in: formIds}
     }
-    let processWithReview = await models.processModel.findAll({
+    let processWithReview = await processModel.findAll({
         include: [
             {
-                model: models.processReviewModel,
+                model: processReviewModel,
                 as: "overallprocessflow",
                 where: {done_time: {$between: [startDoneDateTime, enDoneDateTime]}}
             }
@@ -145,10 +185,10 @@ const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateT
     if (formIds && formIds.length > 0) {
         where.formUuid = {$in: formIds}
     }
-    let processWithData = await models.processModel.findAll({
+    let processWithData = await processModel.findAll({
         include: [
             {
-                model: models.processDetailsModel,
+                model: processDetailsModel,
                 as: "data"
             }
         ],
@@ -163,7 +203,7 @@ const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateT
 }
 
 const getAloneProcessByIds = async (ids) => {
-    const result = await models.processModel.findAll({
+    const result = await processModel.findAll({
         where: {processInstanceId: {$in: ids}}
     })
     return result.map(item => item.get({plain: true}))
