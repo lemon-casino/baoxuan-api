@@ -224,26 +224,37 @@ const isUserJoinFlow = (userId, flow, reviewItems) => {
 const statIdsAndSumFromBottom = (data) => {
     const handleItem = (item) => {
         if (item.children) {
-            // const uniqueIds = []
             const allIds = []
+            // todo: 真的需要花时间去统一下：可是...
+            // 过去统计流程的sum是根据ids确定的
+            // 现在统计表单中的数据sum需要分离开
+            // 没时间为过去统计流程数据单独修改添加sum了，涉及太多
+            // 为统计表单数据单独添加了sumAlone字段区分
+            let sum = 0
             for (const child of item.children) {
-                // const newChild = statIdsAndSumFromBottom(child)
+                const newChild = statIdsAndSumFromBottom(child)
                 if (!child.excludeUpSum) {
-                    const newChild = statIdsAndSumFromBottom(child)
+                    if (newChild.sumAlone) {
+                        sum = sum + newChild.sum
+                    }
                     for (const id of newChild.ids) {
-                        // uniqueIds[id] = 1
                         allIds.push(id)
                     }
                 }
             }
-            item.ids = allIds //Object.keys(uniqueIds)
+            item.sum = sum
+            item.ids = allIds
         }
-        if (item.ids) {
-            item.sum = item.ids.length
-        } else {
-            item.sum = 0
-            item.ids = []
+
+        if (!item.sumAlone) {
+            if (item.ids) {
+                item.sum = item.ids.length
+            } else {
+                item.sum = 0
+                item.ids = []
+            }
         }
+
         return item
     }
 

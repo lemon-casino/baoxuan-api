@@ -246,11 +246,20 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
         const result = []
         for (const flow of flows) {
             for (const details of flow.flowData) {
+                if (!details.workload || details.workload === "0") {
+                    continue
+                }
                 const resultNode = result.find(item => item.nameCN === details.nameCN)
                 if (resultNode) {
+                    resultNode.ids.push(flow.processInstanceId)
                     resultNode.sum = new Bignumber(resultNode.sum).plus(details.workload).toString()
                 } else {
-                    result.push({nameCN: details.nameCN, sum: details.workload})
+                    result.push({
+                        nameCN: details.nameCN,
+                        sum: details.workload,
+                        ids: [flow.processInstanceId],
+                        sumAlone: true
+                    })
                 }
             }
         }
@@ -267,10 +276,10 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
         const completedWorkload = sumWorkload(completedFlowDataStatNodes)
 
         const newWorkloadStatNode = {
-            nameCN: "工作量", excludeUpSum: true,
+            nameCN: "工作量", excludeUpSum: true, sumAlone: true,
             children: [
-                {nameCN: "进行中", children: runningWorkload},
-                {nameCN: "已完成", children: completedWorkload}
+                {nameCN: "进行中", sumAlone: true, children: runningWorkload},
+                {nameCN: "已完成", sumAlone: true, children: completedWorkload}
             ]
         }
 
