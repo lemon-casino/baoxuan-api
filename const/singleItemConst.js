@@ -81,7 +81,7 @@ const taoBaoErrorItems = [
             lessThan: "old",
             value: "15",
             comparator: "<",
-            exclude: [{field: "userDef1", comparator: "!==", name: "清滞销"}]
+            exclude: [{field: "userDef1", comparator: "!==", name: "f8f4de0f-3d0e-11ef-9d73-0242ac160002"}]
         }]
     },
     {
@@ -92,7 +92,7 @@ const taoBaoErrorItems = [
             lessThan: "new_16_30",
             value: "5",
             comparator: "<",
-            exclude: [{field: "userDef1", comparator: "!==", name: "清滞销"}]
+            exclude: [{field: "userDef1", comparator: "!==", name: "f8f4de0f-3d0e-11ef-9d73-0242ac160002"}]
         }]
     },
     {
@@ -103,7 +103,7 @@ const taoBaoErrorItems = [
             lessThan: "new_30_60",
             value: "10",
             comparator: "<",
-            exclude: [{field: "userDef1", comparator: "!==", name: "清滞销"}]
+            exclude: [{field: "userDef1", comparator: "!==", name: "f8f4de0f-3d0e-11ef-9d73-0242ac160002"}]
         }]
     },
     {
@@ -190,7 +190,7 @@ const taoBaoErrorItems = [
             operator: "$gt",
             value: "15",
             comparator: ">",
-            exclude: [{field: "userDef1", comparator: "!==", name: "高毛利,不卡费比"}]
+            exclude: [{field: "userDef1", comparator: "!==", name: "034e7651-3d10-11ef-9d73-0242ac160002"}]
         }].concat(oldProductFields)
     }
 ]

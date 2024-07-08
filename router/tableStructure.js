@@ -32,25 +32,15 @@ const ExceptionLinksBody = {
     },
     name: {required: true, type: "string", minLength: 1},
     field: {required: true, type: "string", minLength: 1, regex: /^[A-Za-z0-9]+$/},
-    lessThan: {required: true, type: "string"},
-    value: {required: true, type: "number"},
+    lessThan: {required: false, type: "string"},
+    value: {required: true},
     comparator: {required: true, type: "string", regex: /^(>|<|>=|<=|==|!==)$/},
     exclude: {
-        required: false, type: "array", minLength: 1,
-        each: {
-            type: 'object',
-            properties: {
-                field: {required: true, type: 'string', regex: /^[A-Za-z0-9]+$/},
-                comparator: {required: true, type: 'string', regex: /^(>|<|>=|<=|==|!==)$/},
-                name: {required: true, type: 'string'},
-                value: {
-                    required: true,
-                    type: 'string',
-                    regex: /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
-                }
-            }
-        }
+        required: false, type: "array", minLength: 1
     },
+    type: {
+        required: true, type: "number"
+    }
 }
 router.put("/exceptionLinks", Validator.validate(ExceptionLinksBody), tmall_link.putExceptionLinks)
 
@@ -64,6 +54,22 @@ router.delete("/exceptionLinks", Validator.validate({
     }
 }), tmall_link.delExceptionLinks)
 
+router.delete("/exceptionexcludeLinks", Validator.validate({
+    id: {
+        required: true,
+        type: "string",
+        regex: /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+        minLength: 36,
+        maxLength: 36
+    },
+    exclude_id: {
+        required: true,
+        type: "string",
+        regex: /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+        minLength: 36,
+        maxLength: 36
+    }
+}), tmall_link.exceptionexcludeLinks)
 router.post("/exceptionLinks", Validator.validate({
     name: {
         required: true,
@@ -71,15 +77,22 @@ router.post("/exceptionLinks", Validator.validate({
         minLength: 1
     },
     field: {
-        required: true,
+        required: false,
         type: "string",
         minLength: 1,
         regex: /^[A-Za-z0-9]+$/
     },
     comparator: {
-        required: true,
+        required: false,
         type: "string",
         regex: /^(>|<|>=|<=|==|!==)$/
     },
+    value: {required: false, type: "number"},
+    exclude: {
+        required: false, type: "array", minLength: 1,
+    },
+    type: {
+        required: false, type: "number"
+    }
 }), tmall_link.postExceptionLinksExclude)
 module.exports = router;

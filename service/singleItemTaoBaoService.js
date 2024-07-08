@@ -873,7 +873,11 @@ function filterItems(singleItems, values) {
             if (exp.field === "profitRate") {
                 let excludeResult = true;
                 for (const exclude of exp.exclude) {
+                    console.log(exclude)
                     excludeResult = applyExclude(singleItem, exclude, excludeResult);
+                    if (!excludeResult) {
+                        break;
+                    }
                 }
 
                 if (exp.lessThan === "negative_profit_60") {
@@ -926,16 +930,25 @@ function applyExclude(singleItem, exclude, excludeResult) {
 
 function evaluateExpression(exp, singleItem, fieldValue, value) {
     let result = true;
+    let excludeResult;
+    for (const exclude of exp.exclude) {
+        excludeResult = applyExclude(singleItem, exclude, excludeResult);
+        if (!excludeResult) {
+            break;
+        }
+    }
     if (/^(\-|\+)?\d+(\.\d+)?$/.test(value)) {
         value = parseFloat(value);
         fieldValue = parseFloat(fieldValue);
+        // console.log(`${fieldValue} ${exp.comparator} ${value}`)
         result = eval(`${fieldValue}
         ${exp.comparator}
-        ${value}`);
+        ${value}`) && excludeResult;
     } else {
+        //    console.log(`"${fieldValue}" ${exp.comparator} "${value}"`)
         result = eval(`"${fieldValue}"
         ${exp.comparator}
-        "${value}"`);
+        "${value}"`) && excludeResult;
     }
 
     if (exp.min) {
