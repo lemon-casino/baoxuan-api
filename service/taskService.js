@@ -266,11 +266,13 @@ const syncOaProcessTemplates = async () => {
 * 天猫异常定时任务*/
 const tmallLinkAnomalyDetection = async () => {
     logger.info("天猫链接异常同步进行中...")
-    var newVar = await singleItemApi.getLatest();
-    logger.info(newVar, "天猫链接异常同步进行中...")
+    const originalString = await singleItemTaoBaoService.getLatestBatchIdRecords(1)
+    let formattedArray = [originalString[0].batchId, originalString[0].batchId];
     //获得天猫链接数据异常的链接id
     const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(14)
     // 获得所有负责人的信息
+
+
     const productLineLeaders = result.productLineLeaders.reduce((acc, group) => {
         // 使用展开操作符将当前对象的第一个键对应的数组的所有元素添加到累加器数组中
         acc.push(...group[Object.keys(group)[0]]);
@@ -278,7 +280,7 @@ const tmallLinkAnomalyDetection = async () => {
     }, []); // 初始值是一个空数组 []
     // logger.info("天猫链接异常同步进行中...来到了负责人这里")
 
-
+    console.log(formattedArray)
     const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
         productLineLeaders,
         null,
@@ -288,10 +290,10 @@ const tmallLinkAnomalyDetection = async () => {
         null,
         null,
         //开始时间"2024-06-24", 结束时间  "2024-06-25"
-        JSON.parse("[\"2024-07-05 00:0\",\"2024-07-05 00:0\"]"),
+        formattedArray,
         null)
     // 查询所有负责人属于 异常的链接的数据
-    const data = await getLinknewvaCount(singleItems, productLineLeaders, ['2024-07-05 00:0', '2024-07-05 00:0'])
+    const data = await getLinknewvaCount(singleItems, productLineLeaders, formattedArray)
     // 获取所有 recordTheLinkID
     const getAllRecordTheLinkID = (items) => {
         return items.reduce((acc, item) => {
@@ -433,17 +435,9 @@ const tmallLinkAnomalyDetection = async () => {
         await sendRequests();*/
 
 
-    // 获得运营优化方案 FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB 的redis 运行中的流程
-    //  const runningFlows = await redisRepo.getTodayRunningAndFinishedFlows()
-
-
     logger.info("同步完成：天猫链接异常检测")
 }
 
-
-/*tmallLinkAnomalyDetection().then(r => {
-    console.log("xx")
-})*/
 /**
  * 将已完成和取消的流程入库
  *
