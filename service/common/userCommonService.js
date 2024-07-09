@@ -2,7 +2,14 @@ const redisRepo = require("@/repository/redisRepo")
 const NotFoundError = require("@/error/http/notFoundError")
 const whiteList = require("@/config/whiteList")
 
-const isDeptLeaderOfTheUser = async (userId, deptId) => {
+/**
+ *
+ *
+ * @param userId
+ * @param deptIds 如 视觉部：北京、杭州
+ * @returns {Promise<*|boolean>}
+ */
+const isDeptLeaderOfTheUser = async (userId, deptIds) => {
     if (whiteList.pepArr().includes(userId)) {
         return true
     }
@@ -12,9 +19,9 @@ const isDeptLeaderOfTheUser = async (userId, deptId) => {
     if (!user) {
         throw new NotFoundError(`根据userId：${userId}未在Redis中找到用户信息`)
     }
-    const userDept = user.leader_in_dept.find(item => item.dept_id.toString() === deptId.toString())
+    const userDept = user.leader_in_dept.find(item => deptIds.includes(item.dept_id.toString()))
     if (!userDept) {
-        throw new NotFoundError(`未在userId：${userId}的信息中找到部门：${deptId}，用户可能不属于该部门`)
+        throw new NotFoundError(`未在userId：${userId}的信息中找到部门：${deptIds}，用户可能不属于该部门`)
     }
     return userDept.leader
 }
