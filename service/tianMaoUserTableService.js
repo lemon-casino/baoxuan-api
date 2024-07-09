@@ -89,7 +89,10 @@ const getExceptionLinks = async (type) => {
         if (type === 1) {
             return await processType1Records();
         } else if (type === 2) {
-            return await tian_mao_allocation.exceptionLinks(2);
+            const records = await tian_mao_allocation.exceptionLinks(2)
+            return records.map(record => {
+                return Object.fromEntries(Object.entries(record).filter(([key, value]) => value !== null));
+            });
         } else {
             throw new Error('Invalid type');
         }
@@ -103,6 +106,12 @@ const fetchAllType2Records = async () => {
     try {
         const records = await tian_mao_allocation.exceptionLinks(2);
         return records.reduce((acc, record) => {
+            //移除null的字段
+            for (let key in record) {
+                if (record[key] === null) {
+                    delete record[key];
+                }
+            }
             acc[record.id] = record;
             return acc;
         }, {});
@@ -117,6 +126,14 @@ const processType1Records = async () => {
         const type2RecordsMap = await fetchAllType2Records();
 
         type1Records.forEach(record => {
+
+            //移除null的字段
+            for (let key in record) {
+                if (record[key] === null) {
+                    delete record[key];
+                }
+            }
+
             if (record.exclude) {
                 const excludeIds = record.exclude.split(',');
                 record.exclude = excludeIds.map(id => {

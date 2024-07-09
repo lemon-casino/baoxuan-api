@@ -280,7 +280,6 @@ const tmallLinkAnomalyDetection = async () => {
     }, []); // 初始值是一个空数组 []
     // logger.info("天猫链接异常同步进行中...来到了负责人这里")
 
-    console.log(formattedArray)
     const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
         productLineLeaders,
         null,
@@ -289,11 +288,12 @@ const tmallLinkAnomalyDetection = async () => {
         null,
         null,
         null,
-        //开始时间"2024-06-24", 结束时间  "2024-06-25"
         formattedArray,
         null)
     // 查询所有负责人属于 异常的链接的数据
     const data = await getLinknewvaCount(singleItems, productLineLeaders, formattedArray)
+    logger.info("天猫总异常...", data)
+
     // 获取所有 recordTheLinkID
     const getAllRecordTheLinkID = (items) => {
         return items.reduce((acc, item) => {
@@ -303,13 +303,16 @@ const tmallLinkAnomalyDetection = async () => {
 
 // 获取所有 ongoing 和 done 的 recordTheLinkID
     const ongoingRecordTheLinkID = getAllRecordTheLinkID(data.ongoing.items);
+    logger.info("天猫链接进行中的异常...", ongoingRecordTheLinkID)
     const doneRecordTheLinkID = getAllRecordTheLinkID(data.done.items);
+    logger.info("天猫链接今天已完成的异常...", doneRecordTheLinkID)
     const withinThreeDays = await theProcessIsCompletedInThreeDays();
 
 
 // 创建一个 Set 来存储 ongoing 和 done 的 recordTheLinkID
     const ongoingAndDoneRecordTheLinkID = new Set([...ongoingRecordTheLinkID, ...doneRecordTheLinkID]);
 
+    logger.info("天猫链接Set 来存储 ongoing 和 done 的 recordTheLinkID...", ongoingAndDoneRecordTheLinkID)
 // 初始化一个对象来存储没有发起的异常
     const notStartedExceptions = {items: [], sum: 0};
 
@@ -376,7 +379,9 @@ const tmallLinkAnomalyDetection = async () => {
     //删除三天内的已经完结的异常
     // 获取 withinThreeDays 中的所有 textField_value
     const textFieldValues = withinThreeDays.map(entry => entry.textField_value);
-    logger.info('cleanedLinkIdMap', cleanedLinkIdMap)
+
+    logger.info("天猫链接三天内已完成的异常...", withinThreeDays)
+
 
 // 过滤 cleanedLinkIdMap 中与 withinThreeDays 匹配的条目
     const filteredCleanedLinkIdMap = Object.entries(cleanedLinkIdMap).map(entry => {
@@ -387,6 +392,8 @@ const tmallLinkAnomalyDetection = async () => {
         }
         return entry;
     });
+
+
     logger.info('filteredCleanedLinkIdMap', filteredCleanedLinkIdMap.reduce((acc, [key, value]) => {
         acc[key] = value;
         return acc;

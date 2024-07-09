@@ -72,6 +72,11 @@ const newProductFields = oldItems.map(item => {
         value: item, sqlValue: oldItems
     }
 })
+
+
+//从数据库中拆除异常
+
+
 const taoBaoErrorItems = [
     {
         name: "老品利润率低于15%",
