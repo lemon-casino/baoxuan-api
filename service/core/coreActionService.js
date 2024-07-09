@@ -68,13 +68,14 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
     const statVisionUserFlowData = async (username, flow) => {
         const visionUserFlowDataStatResultTemplate = _.cloneDeep(statResultTemplateConst.visionUserFlowDataStatResultTemplate)
         if (username.includes("离职")) {
-            username = username.replace("", "[已离职]")
+            username = username.replace("[已离职]", "")
         }
 
         let taggedUser = await userRepo.getUsersWithTagsByUsernames([username])
         if (taggedUser.length === 0) {
             taggedUser = await outUsersRepo.getOutUsersWithTags({userName: username})
         }
+
         // 没有标签的用户直接返回空模板
         if (taggedUser[0].tags.length === 0) {
             return []
