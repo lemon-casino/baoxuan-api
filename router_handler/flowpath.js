@@ -237,7 +237,7 @@ const handle_fq_cy_liuc = async (
         // 获取所有用户的部门信息
         let departmentsOfUsers = await Promise.all(
             Array.from(statistic.depUser.keys()).map(async (ddUserId) =>
-                departmentService.getDepLev(ddAccessToken, ddUserId)
+                departmentService.getUserCompletedDeps(ddAccessToken, ddUserId)
             )
         );
 
@@ -841,10 +841,10 @@ exports.getdepartment = async (req, res) => {
     // 管理员身份
     if (whiteList.pepArr().includes(dd_id)) {
         // 获取子部门信息
-        dep_info = await departmentService.getSubDeptLev(await globalGetter.getDepartments(), depId);
+        dep_info = await departmentService.getSubDepsOfDeptLeader(await globalGetter.getDepartments(), depId);
     } else {
         // 返回用户详情
-        const lev_dep_list = await departmentService.getDepLev(access_token, dd_id);
+        const lev_dep_list = await departmentService.getUserCompletedDeps(access_token, dd_id);
         dep_info = lev_dep_list.filter((item) => item.dept_id == depId)[0]
             .dep_child;
     }
@@ -857,7 +857,7 @@ const getDepartmentOfUser = async (ddUserId, ddAccessToken, parentDepartmentId, 
     // 根据userid判断是否存在于白名单中
     if (whiteList.pepArr().includes(ddUserId)) {
         const allDepts = await redisRepo.getDepartments();
-        const subDepartments = await departmentService.getSubDeptLev(allDepts, parentDepartmentId)
+        const subDepartments = await departmentService.getSubDepsOfDeptLeader(allDepts, parentDepartmentId)
         if (subDepartments.length === 0) {
             const parentDepartmentDetails = allDepts.filter((item) => item.dept_id == parentDepartmentId);
             parentDepartmentDetails.forEach((element) => {
@@ -869,7 +869,7 @@ const getDepartmentOfUser = async (ddUserId, ddAccessToken, parentDepartmentId, 
         }
     } else {
         // 返回用户详情
-        const lev_dep_list = await departmentService.getDepLev(ddAccessToken, ddUserId);
+        const lev_dep_list = await departmentService.getUserCompletedDeps(ddAccessToken, ddUserId);
         const lev_dep_lists = lev_dep_list.filter(
             (item) => item.dept_id == parentDepartmentId
         );
@@ -954,7 +954,7 @@ exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(ddUserId)) {
             const depLists = await globalGetter.getDepartments();
-            const subDepartments = await departmentService.getSubDeptLev(depLists, parentDepartmentId)
+            const subDepartments = await departmentService.getSubDepsOfDeptLeader(depLists, parentDepartmentId)
             if (subDepartments.length === 0) {
                 const parentDepartment = depLists.filter((item) => item.dept_id == parentDepartmentId);
                 parentDepartment.forEach((element) => {
@@ -966,7 +966,7 @@ exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
             }
         } else {
             // 返回用户所有的部门信息
-            const departmentsOfUser = await departmentService.getDepLev(ddAccessToken, ddUserId);
+            const departmentsOfUser = await departmentService.getUserCompletedDeps(ddAccessToken, ddUserId);
             // 根据传递的 parentDepartmentId 获取一级部门信息
             const parentDepartmentsOfUser = departmentsOfUser.filter(
                 (item) => item.dept_id == parentDepartmentId
@@ -1013,7 +1013,7 @@ exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(ddUserId)) {
             const depLists = await globalGetter.getDepartments();
-            const subDepartments = await departmentService.getSubDeptLev(depLists, parentDepartmentId)
+            const subDepartments = await departmentService.getSubDepsOfDeptLeader(depLists, parentDepartmentId)
             if ((subDepartments.length === 0)) {
                 const depas = depLists.filter((item) => item.dept_id == parentDepartmentId);
                 depas.forEach((element) => {
@@ -1026,7 +1026,7 @@ exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
             subDepts = dep_info;
         } else {
             // 返回用户的部门信息
-            const departmentsOfUser = await departmentService.getDepLev(ddAccessToken, ddUserId);
+            const departmentsOfUser = await departmentService.getUserCompletedDeps(ddAccessToken, ddUserId);
             // 筛选出当前所在部门
             const ac_dep = departmentsOfUser.filter((item) => item.dept_id == parentDepartmentId);
             // 如果子部门为空
@@ -1098,19 +1098,19 @@ exports.getDepartmentJoinDoingFlowsStatistic = async (req, res) => {
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(ddUserId)) {
             const depLists = await globalGetter.getDepartments();
-            if ((await departmentService.getSubDeptLev(depLists, parentDepartmentId)).length === 0) {
+            if ((await departmentService.getSubDepsOfDeptLeader(depLists, parentDepartmentId)).length === 0) {
                 const depas = depLists.filter((item) => item.dept_id == parentDepartmentId);
                 depas.forEach((element) => {
                     element.leader = true;
                 });
                 dep_info = depas;
             } else {
-                dep_info = await departmentService.getSubDeptLev(depLists, parentDepartmentId);
+                dep_info = await departmentService.getSubDepsOfDeptLeader(depLists, parentDepartmentId);
             }
             dep_list = dep_info;
         } else {
             // 返回用户详情
-            const lev_dep_list = await departmentService.getDepLev(ddAccessToken, ddUserId);
+            const lev_dep_list = await departmentService.getUserCompletedDeps(ddAccessToken, ddUserId);
             // 筛选出当前所在部门
             const ac_dep = lev_dep_list.filter((item) => item.dept_id == parentDepartmentId);
             // 如果子部门为空
@@ -1199,20 +1199,20 @@ exports.getoverview = async (req, res) => {
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(dd_id)) {
             const depLists = await globalGetter.getDepartments();
-            if ((await departmentService.getSubDeptLev(depLists, f_dep_id)).length === 0) {
+            if ((await departmentService.getSubDepsOfDeptLeader(depLists, f_dep_id)).length === 0) {
                 const depas = depLists.filter((item) => item.dept_id == f_dep_id);
                 depas.forEach((element) => {
                     element.leader = true;
                 });
                 dep_info = depas;
             } else {
-                const dg_dep = await departmentService.getSubDeptLev(depLists, f_dep_id);
+                const dg_dep = await departmentService.getSubDepsOfDeptLeader(depLists, f_dep_id);
                 dep_info = dg_dep.filter((item) => item.dept_id == dep_q_infos.id);
             }
             dep_list = dep_info;
         } else {
             // 返回用户详情
-            const lev_dep_list = await departmentService.getDepLev(access_token, dd_id);
+            const lev_dep_list = await departmentService.getUserCompletedDeps(access_token, dd_id);
             const lev_dep_lists = lev_dep_list.filter(
                 (item) => item.dept_id == f_dep_id
             );
@@ -1276,19 +1276,19 @@ exports.getoverview = async (req, res) => {
         // 根据userid判断是否存在于白名单中
         if (whiteList.pepArr().includes(dd_id)) {
             const depLists = await globalGetter.getDepartments();
-            if ((await departmentService.getSubDeptLev(depLists, f_dep_id)).length === 0) {
+            if ((await departmentService.getSubDepsOfDeptLeader(depLists, f_dep_id)).length === 0) {
                 const depas = depLists.filter((item) => item.dept_id == f_dep_id);
                 depas.forEach((element) => {
                     element.leader = true;
                 });
                 dep_info = depas;
             } else {
-                dep_info = await departmentService.getSubDeptLev(depLists, f_dep_id);
+                dep_info = await departmentService.getSubDepsOfDeptLeader(depLists, f_dep_id);
             }
             dep_list = dep_info;
         } else {
             // 返回用户详情
-            const lev_dep_list = await departmentService.getDepLev(access_token, dd_id);
+            const lev_dep_list = await departmentService.getUserCompletedDeps(access_token, dd_id);
             // 筛选出当前所在部门
             const ac_dep = lev_dep_list.filter((item) => item.dept_id == f_dep_id);
             // 如果子部门为空

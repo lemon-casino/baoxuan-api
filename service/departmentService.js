@@ -1,97 +1,116 @@
 const whiteList = require("@/config/whiteList");
 const redisRepo = require("@/repository/redisRepo")
-const dateUtil = require("@/utils/dateUtil")
+const algorithmUtil = require("@/utils/algorithmUtil")
 const globalGetter = require("@/global/getter")
 const NotFoundError = require("@/error/http/notFoundError")
 
-// 获取指定部门Id的所有子部门和人员信息
-const getSubDeptLev = async (depLists, dept_id) => {
-    const res = [];
-    const depInfo = depLists.filter((item) => item.dept_id == dept_id);
-    for (const dept of depInfo) {
-        if (dept.dep_chil && dept.dep_chil.length > 0) {
-            for (const dept_c of dept.dep_chil) {
-                const children = await getSubDeptLev(dept.dep_chil, dept_c.dept_id);
-                res.push({
-                    dep_name: dept_c.name,
-                    dept_id: dept_c.dept_id,
-                    parent_id: dept_c.parent_id,
-                    dep_child: children,
-                    leader: true,
-                });
-            }
-        }
+/**
+ * 获取指定部门(parentDeptId)的所有子部门和人员信息
+ *
+ * @param deps
+ * @param parentDeptId
+ * @returns {Promise<*[]>}
+ */
+const getSubDepsOfDeptLeader = async (deps, parentDeptId) => {
+    const res = []
+    const parentDep = algorithmUtil.getJsonFromUnionFormattedJsonArr(deps, "dep_chil", "dept_id", parentDeptId) // deps.filter((item) => item.dept_id == parentDeptId)
+    if (!parentDep) {
+        return res
     }
-    return res;
-};
+    if (!parentDep.dep_chil || parentDep.dep_chil.length === 0) {
+        return res
+    }
+    for (const childDept of parentDep.dep_chil) {
+        const children = await getSubDepsOfDeptLeader(parentDep.dep_chil, childDept.dept_id);
+        res.push({
+            dep_name: childDept.name,
+            dept_id: childDept.dept_id,
+            parent_id: childDept.parent_id,
+            dep_child: children,
+            // 部门主管在子部门下也是leader
+            leader: true
+        })
+    }
+    return res
+}
 
-// 返回用户部门层级
-const getDepLev = async (ddAccessToken, ddUserId) => {
+/**
+ * 获取用户完整的用户信息：补充上用户所在部门是leader时所有的下级部门信息
+ *
+ * @param ddAccessToken
+ * @param ddUserId
+ * @returns {Promise<*|*[]>}
+ */
+const getUserCompletedDeps = async (ddAccessToken, ddUserId) => {
     const userDetails = await redisRepo.getAllUsersDetail();
     // 返回用户详情
     const userInfo = userDetails.filter((item) => item.userid === ddUserId);
-    if (userInfo.length > 0) {
-        // 用户所属子部门
-        const subDepartmentsOfUser = userInfo[0].leader_in_dept;
-        // 获取部门详情
-        let newSubDepartmentsDetails = [];
-        for (const dept of subDepartmentsOfUser) {
-            newSubDepartmentsDetails.push({
-                ...dept.dep_detail,
-                leader: dept.leader,
-            });
-        }
-        // 部门层级数据结构
-        const subDepartmentsOfTree = listToTree(await Promise.all(newSubDepartmentsDetails));
-
-        // 递归判断当前身份在哪个部门下是主管 获取是主管身份下的所有子部门包括人员信息
-        async function dg_dep(dep_list) {
-            for (const item of dep_list) {
-                if (item.leader) {
-                    await dateUtil.delay(50);
-                    item.dep_child =
-                        (await getSubDeptLev(await globalGetter.getDepartments(), item.dept_id)) || [];
-                }
-                if (item.dep_child.length > 0) {
-                    await dg_dep(item.dep_child);
-                }
+    if (userInfo.length === 0) {
+        return []
+    }
+    // 用户所属子部门
+    const subDepartmentsOfUser = userInfo[0].leader_in_dept;
+    // 获取部门详情
+    let newSubDepartmentsDetails = [];
+    for (const dept of subDepartmentsOfUser) {
+        newSubDepartmentsDetails.push({
+            ...dept.dep_detail,
+            leader: dept.leader,
+        });
+    }
+    // 部门层级数据结构
+    const treeFormatDeps = refactorFlatteningDepsToTree(await Promise.all(newSubDepartmentsDetails));
+    // 递归判断当前身份在哪个部门下是主管 获取是主管身份下的所有子部门包括人员信息
+    async function fillChildDepsByLeaderTag(deps, sourceDeps) {
+        for (let dept of deps) {
+            if (dept.leader) {
+                dept.dep_child = (await getSubDepsOfDeptLeader(sourceDeps, dept.dept_id)) || []
+            }
+            if (dept.dep_child.length > 0) {
+                dept = await fillChildDepsByLeaderTag(dept.dep_child, sourceDeps)
             }
         }
-
-        await dg_dep(subDepartmentsOfTree);
-        return subDepartmentsOfTree;
-    } else {
-        return [];
+        return deps
     }
-};
 
-// 获取部门层级数据结构
-const listToTree = (list) => {
-    const map = {};
-    let node;
-    const roots = [];
-    for (let i = 0; i < list.length; i += 1) {
-        map[list[i].dept_id] = i;
-        list[i].dep_child = [];
+    const allDeps = await globalGetter.getDepartments()
+    return (await fillChildDepsByLeaderTag(treeFormatDeps, allDeps))
+}
+
+/**
+ * 将扁平化的deps 根据结构中的parent_id 转成tree的结构
+ *
+ * @param deps
+ * @returns {*[]}
+ */
+const refactorFlatteningDepsToTree = (deps) => {
+    const uniqueDeps = {}
+    for (let i = 0; i < deps.length; i += 1) {
+        uniqueDeps[deps[i].dept_id] = i;
+        deps[i].dep_child = [];
     }
-    for (let i = 0; i < list.length; i += 1) {
-        node = list[i];
-        if (node.parent_id !== undefined && map[node.parent_id] !== undefined) {
-            list[map[node.parent_id]].dep_child.push(list[i]);
+
+    const treeFormatDeps = []
+    for (let i = 0; i < deps.length; i += 1) {
+        const currDep = deps[i];
+        const currDepHasValidParent = currDep.parent_id && uniqueDeps[currDep.parent_id]
+        if (currDepHasValidParent) {
+            const parentNodeIndex = uniqueDeps[currDep.parent_id]
+            deps[parentNodeIndex].dep_child.push(currDep);
         } else {
-            roots.push(list[i]);
+            treeFormatDeps.push(currDep)
         }
     }
-    return roots;
+    return treeFormatDeps;
 };
 
 const getDepartmentsOfUser = async (ddUserId, ddAccessToken, parentDepartmentId, subDepartmentId) => {
     let dep_info = [];
     if (whiteList.pepArr().includes(ddUserId)) {
-        const allDepts = await globalGetter.getDepartments();
-        const subDepartments = await getSubDeptLev(allDepts, parentDepartmentId)
+        const allDeps = await globalGetter.getDepartments();
+        const subDepartments = await getSubDepsOfDeptLeader(allDeps, parentDepartmentId)
         if (subDepartments.length === 0) {
-            const parentDepartmentDetails = allDepts.filter((item) => item.dept_id == parentDepartmentId);
+            const parentDepartmentDetails = allDeps.filter((item) => item.dept_id == parentDepartmentId);
             parentDepartmentDetails.forEach((element) => {
                 element.leader = true;
             });
@@ -101,7 +120,7 @@ const getDepartmentsOfUser = async (ddUserId, ddAccessToken, parentDepartmentId,
         }
     } else {
         // 返回用户详情
-        const lev_dep_list = await getDepLev(ddAccessToken, ddUserId);
+        const lev_dep_list = await getUserCompletedDeps(ddAccessToken, ddUserId);
         const lev_dep_lists = lev_dep_list.filter(
             (item) => item.dept_id == parentDepartmentId
         );
@@ -148,7 +167,7 @@ const getDepartmentOfUser = async (userId) => {
     let departmentsOfCurrentUser = []
     let allUsersDetail = await globalGetter.getUsers()
     if (!allUsersDetail || allUsersDetail.length === 0) {
-        allUsersDetail = await redisRepo.getAllUsersDetail();
+        allUsersDetail = await redisRepo.getAllUsersDetail()
     }
     if (allUsersDetail && allUsersDetail.length > 0) {
         for (const item of allUsersDetail) {
@@ -157,7 +176,7 @@ const getDepartmentOfUser = async (userId) => {
             }
         }
     }
-    return departmentsOfCurrentUser;
+    return departmentsOfCurrentUser
 }
 
 /**
@@ -305,8 +324,8 @@ const getAllUsers = async () => {
 module.exports = {
     getDepartments,
     getDepartmentsOfUser,
-    getDepLev,
-    getSubDeptLev,
+    getUserCompletedDeps,
+    getSubDepsOfDeptLeader,
     mergeDataByDeptId,
     getDepartmentOfUser,
     getUsersOfDepartment,

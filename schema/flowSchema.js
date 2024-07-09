@@ -2,7 +2,7 @@ const joiUtil = require("@/utils/joiUtil");
 
 const getCoreActionsSchema = {
     tags: joiUtil.commonJoiSchemas.arrayRequired,
-    deptId: joiUtil.commonJoiSchemas.strRequired,
+    deptIds: joiUtil.commonJoiSchemas.arrayRequired,
     startDate: joiUtil.commonJoiSchemas.dateRequired,
     endDate: joiUtil.commonJoiSchemas.dateRequired,
     userNames: joiUtil.commonJoiSchemas.arrayRequired

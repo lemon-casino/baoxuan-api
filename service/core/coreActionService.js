@@ -20,26 +20,28 @@ const algorithmUtil = require("@/utils/algorithmUtil")
  *
  * @param type 美编的type区分：总览（）、内部视频（innerPhotography）、内部美编（innerPs）、外包视频（outPhotography）、外包美编（outPs）
  * @param userId
- * @param deptId
+ * @param deptIds
  * @param userNames
  * @param startDoneDate
  * @param endDoneDate
  * @returns {Promise<*>}
  */
-const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, endDoneDate) => {
+const getCoreActions = async (tags, userId, deptIds, userNames, startDoneDate, endDoneDate) => {
     // 筛选的信息组成： userNames、outUserNames、resignedUserNames
     // 普通的身份不要组合 outUserNames、resignedUserNames
     let requiredUsers = await userRepo.getUsersWithTagsByUsernames(userNames) || []
-    const isDeptLeader = await userCommonService.isDeptLeaderOfTheUser(userId, deptId)
+    const isDeptLeader = await userCommonService.isDeptLeaderOfTheUser(userId, deptIds)
     if (isDeptLeader) {
-        const deptOutSourcingUsers = await outUsersRepo.getOutUsersWithTags({deptId, enabled: true})
-        requiredUsers = requiredUsers.concat(deptOutSourcingUsers)
-        const deptResignUsers = await userRepo.getDeptResignUsers(deptId)
-        const deptResignedUsers = deptResignUsers.map(item => {
-            item.nickname = `${item.nickname}[已离职]`
-            return item
-        })
-        requiredUsers = requiredUsers.concat(deptResignedUsers)
+        for (const deptId of deptIds) {
+            const deptOutSourcingUsers = await outUsersRepo.getOutUsersWithTags({deptId: deptId, enabled: true})
+            requiredUsers = requiredUsers.concat(deptOutSourcingUsers)
+            const deptResignUsers = await userRepo.getDeptResignUsers(deptId)
+            const deptResignedUsers = deptResignUsers.map(item => {
+                item.nickname = `${item.nickname}[已离职]`
+                return item
+            })
+            requiredUsers = requiredUsers.concat(deptResignedUsers)
+        }
     }
     // 根据标签对前面获取的所有用户进行筛选
     if (tags && tags.length > 0) {
@@ -54,7 +56,7 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
         })
     }
 
-    const coreActionConfig = await flowRepo.getCoreActionsConfig(deptId)
+    const coreActionConfig = await flowRepo.getCoreActionsConfig(deptIds)
     const differentForms = extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
     const configuredFormIds = differentForms.inner.concat(differentForms.outSourcing).map(item => item.formId)
 
@@ -68,13 +70,14 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
     const statVisionUserFlowData = async (username, flow) => {
         const visionUserFlowDataStatResultTemplate = _.cloneDeep(statResultTemplateConst.visionUserFlowDataStatResultTemplate)
         if (username.includes("离职")) {
-            username = username.replace("", "[已离职]")
+            username = username.replace("[已离职]", "")
         }
 
         let taggedUser = await userRepo.getUsersWithTagsByUsernames([username])
         if (taggedUser.length === 0) {
             taggedUser = await outUsersRepo.getOutUsersWithTags({userName: username})
         }
+
         // 没有标签的用户直接返回空模板
         if (taggedUser[0].tags.length === 0) {
             return []
@@ -122,6 +125,7 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
                 excludeFormItemKws: []
             }
         ]
+
         const userTags = taggedUser[0].tags
         const userTagsFormItemKeywordsMappings = tagsFormItemKeywordsMapping.filter(item => userTags.filter(tag => tag.tagCode === item.tagCode).length > 0)
         if (userTagsFormItemKeywordsMappings.length === 0) {
@@ -251,7 +255,9 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
                 }
                 const resultNode = result.find(item => item.nameCN === details.nameCN)
                 if (resultNode) {
-                    resultNode.ids.push(flow.processInstanceId)
+                    if (!resultNode.ids.includes(flow.processInstanceId)) {
+                        resultNode.ids.push(flow.processInstanceId)
+                    }
                     resultNode.sum = new Bignumber(resultNode.sum).plus(details.workload).toString()
                 } else {
                     result.push({
@@ -294,7 +300,7 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
     }
 
     // 先仅仅处理视觉部
-    if (deptId === "482162119") {
+    if (deptIds.includes("482162119")) {
         // 核心动作统计不用标签区分
         if (tags.length === 0) {
             const sumUserActionStatResult = sumUserActionStat(actionStatBasedOnUserResult)
@@ -302,26 +308,28 @@ const getCoreActions = async (tags, userId, deptId, userNames, startDoneDate, en
                 actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult
             })
 
-            // 对内部的流程进行转化统计
-            const innerFormIds = differentForms.inner.map(item => item.formId)
-            const innerFlows = combinedFlows.filter(item => innerFormIds.includes(item.formUuid))
-            const innerStatusStatFlowResult = convertToFlowStatResult(innerFlows, coreActionConfig, actionStatBasedOnUserResult)
-            finalResult.unshift({
-                actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
-            })
+            if (isDeptLeader) {
+                // 对内部的流程进行转化统计
+                const innerFormIds = differentForms.inner.map(item => item.formId)
+                const innerFlows = combinedFlows.filter(item => innerFormIds.includes(item.formUuid))
+                const innerStatusStatFlowResult = convertToFlowStatResult(innerFlows, coreActionConfig, actionStatBasedOnUserResult)
+                finalResult.unshift({
+                    actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
+                })
 
-            // 对外包的流程进行转化统计
-            const outSourcingFormIds = differentForms.outSourcing.map(item => item.formId)
-            const outSourcingFlows = combinedFlows.filter(item => outSourcingFormIds.includes(item.formUuid))
-            const outSourcingStatusStatFlowResult = convertToFlowStatResult(outSourcingFlows, coreActionConfig, actionStatBasedOnUserResult)
-            finalResult.unshift({
-                actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
-            })
+                // 对外包的流程进行转化统计
+                const outSourcingFormIds = differentForms.outSourcing.map(item => item.formId)
+                const outSourcingFlows = combinedFlows.filter(item => outSourcingFormIds.includes(item.formUuid))
+                const outSourcingStatusStatFlowResult = convertToFlowStatResult(outSourcingFlows, coreActionConfig, actionStatBasedOnUserResult)
+                finalResult.unshift({
+                    actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
+                })
 
-            const statusStatFlowResult = convertToFlowStatResult(combinedFlows, coreActionConfig, actionStatBasedOnUserResult)
-            finalResult.unshift({
-                actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
-            })
+                const statusStatFlowResult = convertToFlowStatResult(combinedFlows, coreActionConfig, actionStatBasedOnUserResult)
+                finalResult.unshift({
+                    actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
+                })
+            }
         }
         // 核心人的统计用标签区分
         else {

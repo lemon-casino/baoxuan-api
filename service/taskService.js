@@ -81,7 +81,7 @@ const syncDepartment = async () => {
 const loopSaveDept = async (deps) => {
     for (const dept of deps) {
         try {
-            await departmentRepo.saveDepartmentToDb()
+            await departmentRepo.saveDepartmentToDb(dept)
         } catch (e) {
             if (e.original.code !== "ER_DUP_ENTRY") {
                 throw e

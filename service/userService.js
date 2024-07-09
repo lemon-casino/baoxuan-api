@@ -86,21 +86,22 @@ const getUsers = async (userId) => {
  * @returns {Promise<[{[p: string]: *}]|*[]>}
  */
 const getTMInnerGroups = async (userId) => {
-    const innerGroup = await getInnerGroups(userId, "903075138")
+    const innerGroup = await getInnerGroups(userId, ["903075138"])
     return innerGroup
 }
 
 /**
  * 获取视觉部的内部分组信息
+ *
  * @param userId
  * @returns {Promise<*[]|[*]|[{[p: string]: *}]|[]>}
  */
 const getVisionInnerGroups = async (userId) => {
-    const innerGroup = await getInnerGroups(userId, "482162119")
+    const innerGroup = await getInnerGroups(userId, ["482162119", "933412643"])
     return innerGroup
 }
 
-const getInnerGroups = async (userId, deptId) => {
+const getInnerGroups = async (userId, deptIds) => {
     let isLeader = false
     let currentUser = []
     const userDDId = await getDingDingUserId(userId)
@@ -111,29 +112,44 @@ const getInnerGroups = async (userId, deptId) => {
         if (departments.length === 0) {
             throw new NotFoundError(`未找到用户：${userDDId}的部门信息`)
         }
+
         for (const dept of departments) {
-            if (dept.dep_detail.dept_id.toString() === deptId.toString() && dept.leader) {
+            if (deptIds.includes(dept.dep_detail.dept_id.toString()) && dept.leader) {
                 isLeader = true
                 break
             }
         }
-        const department = await departmentService.getDepartmentWithUsers(deptId)
+
         if (!isLeader) {
-            currentUser = department.dep_user.filter(user => user.userid === userDDId)
-            if (currentUser.length === 0) {
-                throw new NotFoundError(`未找到用户：${userDDId}在${deptId}下的详细信息`)
+            let userInDept = false
+            for (const deptId of deptIds) {
+                const department = await departmentService.getDepartmentWithUsers(deptId)
+                currentUser = department.dep_user.filter(user => user.userid === userDDId)
+                if (currentUser.length > 0) {
+                    userInDept = true
+                    break
+                }
+            }
+            if (!userInDept) {
+                throw new NotFoundError(`未找到用户：${userDDId}在${deptIds}下的详细信息`)
             }
         }
     }
 
     let innerGroup = []
     for (const groupKey of Object.keys(innerGroups)) {
-        if (innerGroups[groupKey].deptId === deptId) {
+        if (deptIds.includes(innerGroups[groupKey].deptId)) {
             innerGroup = innerGroups[groupKey].group
+            break
         }
     }
 
-    const groupingResult = await reGrouping(deptId, innerGroup)
+    let groupingResult = []
+    for (const deptId of deptIds) {
+        const tmpGroupingResult = await reGrouping(deptId, innerGroup)
+        groupingResult = groupingResult.concat(tmpGroupingResult)
+    }
+
 
     // 部门主管和管理员返回所有分组信息
     if (isLeader) {

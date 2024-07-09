@@ -2,8 +2,9 @@
 const visionUserFlowDataStatResultTemplate = [
     {nameCN: "简单", formFieldNameKWs: ["简单数量", "数据简单", "简单修图"], workload: 0, children: []},
     {nameCN: "普通", formFieldNameKWs: ["普通数量", "数据普通", "普通修图"], workload: 0, children: []},
-    {nameCN: "精修", formFieldNameKWs: ["精修数量", "数据精修"], workload: 0, children: []},
+    // 重点精修放在精修的前面，要不模糊筛选表单中重点精修的数据会被匹配到精修里面
     {nameCN: "重点精修", formFieldNameKWs: ["重点精修数量", "数据重点精修"], workload: 0, children: []},
+    {nameCN: "精修", formFieldNameKWs: ["精修数量", "数据精修"], workload: 0, children: []},
     {nameCN: "视频", formFieldNameKWs: ["拍摄视频"], workload: 0, children: []},
     {nameCN: "AI修图", formFieldNameKWs: ["AI样本数", "AI作图数", "美编AI", "AI修图"], workload: 0, children: []},
     {nameCN: "剪辑", formFieldNameKWs: ["剪辑", "任务数量"], workload: 0, children: []},
