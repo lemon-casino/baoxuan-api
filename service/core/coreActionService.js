@@ -308,26 +308,28 @@ const getCoreActions = async (tags, userId, deptIds, userNames, startDoneDate, e
                 actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult
             })
 
-            // 对内部的流程进行转化统计
-            const innerFormIds = differentForms.inner.map(item => item.formId)
-            const innerFlows = combinedFlows.filter(item => innerFormIds.includes(item.formUuid))
-            const innerStatusStatFlowResult = convertToFlowStatResult(innerFlows, coreActionConfig, actionStatBasedOnUserResult)
-            finalResult.unshift({
-                actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
-            })
+            if (isDeptLeader) {
+                // 对内部的流程进行转化统计
+                const innerFormIds = differentForms.inner.map(item => item.formId)
+                const innerFlows = combinedFlows.filter(item => innerFormIds.includes(item.formUuid))
+                const innerStatusStatFlowResult = convertToFlowStatResult(innerFlows, coreActionConfig, actionStatBasedOnUserResult)
+                finalResult.unshift({
+                    actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
+                })
 
-            // 对外包的流程进行转化统计
-            const outSourcingFormIds = differentForms.outSourcing.map(item => item.formId)
-            const outSourcingFlows = combinedFlows.filter(item => outSourcingFormIds.includes(item.formUuid))
-            const outSourcingStatusStatFlowResult = convertToFlowStatResult(outSourcingFlows, coreActionConfig, actionStatBasedOnUserResult)
-            finalResult.unshift({
-                actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
-            })
+                // 对外包的流程进行转化统计
+                const outSourcingFormIds = differentForms.outSourcing.map(item => item.formId)
+                const outSourcingFlows = combinedFlows.filter(item => outSourcingFormIds.includes(item.formUuid))
+                const outSourcingStatusStatFlowResult = convertToFlowStatResult(outSourcingFlows, coreActionConfig, actionStatBasedOnUserResult)
+                finalResult.unshift({
+                    actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
+                })
 
-            const statusStatFlowResult = convertToFlowStatResult(combinedFlows, coreActionConfig, actionStatBasedOnUserResult)
-            finalResult.unshift({
-                actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
-            })
+                const statusStatFlowResult = convertToFlowStatResult(combinedFlows, coreActionConfig, actionStatBasedOnUserResult)
+                finalResult.unshift({
+                    actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
+                })
+            }
         }
         // 核心人的统计用标签区分
         else {
