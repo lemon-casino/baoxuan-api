@@ -41,7 +41,7 @@ const tmDeptId = "903075138"
 // 链接问题处理数据需要筛选的流程表单id (运营优化方案流程)
 const errorLinkFormId = "FORM-51A6DCCF660B4C1680135461E762AC82JV53";
 const linkIdField = "textField_liihs7kw"
-
+const selectField = "multiSelectField_lwufb7oy"
 /**
  * 根据中文获取真实的数据库字段
  * @param chineseName
@@ -471,8 +471,9 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
                                           linkStatus,
                                           timeRange,
                                           clickingAdditionalParams) => {
-    const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
 
+    const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
+    console.log("你怎么这么慢")
     const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
         999999,
         productLineLeaders,
@@ -525,6 +526,7 @@ async function ToBeOnTheShelves(productLineLeaders) {
  */
 const getLinkOperationCount = async (satisfiedSingleItems, productLineLeaders, timeRange) => {
     // 创建所有异步操作的Promise
+    console.log("来到这里》》》》")
     const newvaPromise = getlinkingIssues(productLineLeaders, satisfiedSingleItems, timeRange);
     const selfDoSingleItemLinkOperationCountPromise = getSelfDoSingleItemLinkOperationCount(satisfiedSingleItems);
     const ToBeOnTheShelvesPromise = ToBeOnTheShelves(productLineLeaders);
@@ -678,7 +680,7 @@ const getSelfFightingSingleItemLinkOperationCount = async (singleItems, fighting
 }
 
 async function getlinkingIssues(productLineLeaders, singleItems, timeRange) {
-    return await getLinkingCommon(productLineLeaders, singleItems, timeRange, true);
+    return await getLinkingCommon(productLineLeaders, singleItems, timeRange, false);
 }
 
 async function getlinkingto(productLineLeaders, singleItems, timeRange) {
@@ -687,33 +689,65 @@ async function getlinkingto(productLineLeaders, singleItems, timeRange) {
 
 
 async function getLinkingCommon(productLineLeaders, singleItems, timeRange, includeRecord) {
+    console.log("来到这里")
     const result = {
         error: {items: [], sum: 0},
         ongoing: {items: [], sum: 0},
         done: {items: [], sum: 0}
     };
-    const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING);
-    const completeErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.COMPLETE);
+    const runningErrorLinkIds = await flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.RUNNING);
+    const completeErrorLinkIds = await flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.COMPLETE);
     //总异常数据
-    result.error = await getLinkingCommonTO(singleItems, timeRange, includeRecord);
+    result.error = await getLinkingCommonTO(productLineLeaders, singleItems, timeRange, includeRecord);
+
+
+    const transformData = (data) => {
+        const result = {};
+
+        data.forEach(entry => {
+            const id = Object.keys(entry)[0];
+            const issues = entry[id];
+
+            issues.forEach(issue => {
+                if (!result[issue]) {
+                    result[issue] = {name: issue, sum: 0, ids: []};
+                }
+                result[issue].sum++;
+                result[issue].ids.push(id);
+            });
+        });
+
+        return Object.values(result);
+    };
+    result.ongoing.sum = runningErrorLinkIds.length;
+    result.ongoing.items = transformData(runningErrorLinkIds)
+    const withinThreeDays = await theProcessIsCompletedInThreeDays();
+
+    //将三天已完成的withinThreeDays 添加到completeErrorLinkIds
+    const transformDatazhuanh = (data) => {
+        const result = {};
+
+        data.forEach(entry => {
+            const id = entry.textField_value;
+            const issues = JSON.parse(entry.multiSelectField_value);
+            result[id] = issues;
+        });
+
+        return [result];
+    };
+
+    completeErrorLinkIds.push(...transformDatazhuanh(withinThreeDays))
+    console.log(completeErrorLinkIds)
+    result.done.items = transformData(completeErrorLinkIds)
+    result.done.sum = completeErrorLinkIds.length + withinThreeDays.length;
     //进行中的数据
-    const running = processItems(singleItems, runningErrorLinkIds);
-
-    result.ongoing = await getLinkingCommonTO(running, timeRange, includeRecord);
-
-    result.ongoing.items.forEach(item => {
-        console.log('item', item)
-    })
-    console.log('result.ongoing', result.ongoing)
-    //已完成的数据
-    const complete = processItems(singleItems, completeErrorLinkIds);
-
-    result.done = await getLinkingCommonTO(complete, timeRange, includeRecord);
+    // const running = processItems(singleItems, runningErrorLinkIds);
+    //进行中的异常
+    console.log("running", completeErrorLinkIds)
+    // const complete = processItems(singleItems, completeErrorLinkIds);
 
 
-    /*    // 三天的已完成的数据
-        const withinThreeDays = await theProcessIsCompletedInThreeDays();
-        // 增加三天内完成的数据
+    /*    // 增加三天内完成的数据
         withinThreeDays.forEach(entry => {
             let values = JSON.parse(entry.multiSelectField_value);
             values.forEach(value => {
@@ -727,7 +761,7 @@ async function getLinkingCommon(productLineLeaders, singleItems, timeRange, incl
 }
 
 
-async function getLinkingCommonTO(singleItems, timeRange, includeRecord) {
+async function getLinkingCommonTO(productLineLeaders, singleItems, timeRange, includeRecord) {
     const result = {
         items: [],
         sum: 0,
@@ -747,7 +781,22 @@ async function getLinkingCommonTO(singleItems, timeRange, includeRecord) {
             uniqueItems[tmp.id] = 1;
         }
     }
+
+    const sum = await singleItemTaoBaoRepo.getError60SingleIte(productLineLeaders, timeRange);
+    result.items.forEach(item => {
+        if (item.name === "累计60天负利润") {
+            item.sum = sum.length;
+            if (includeRecord) {
+                item.recordTheLinkID.push(...sum.map(singleItem => ({
+                    name: singleItem.productName,
+                    linkId: singleItem.linkId
+                })));
+            }
+        }
+    });
     result.sum = Object.keys(uniqueItems).length;
+
+
     return result;
 }
 

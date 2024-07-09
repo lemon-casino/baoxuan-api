@@ -578,6 +578,29 @@ const getFlowFormValues = async (formId, fieldKey, flowStatus) => {
     return fightingLinkIds
 }
 
+const getFlowFormfieldKeyAndField = async (formId, fieldKey, selectField, flowStatus) => {
+    let fightingLinkIds = []
+    const flows = await getTodayFlowsByFormIdAndFlowStatus(formId, flowStatus)
+    for (const flow of flows) {
+        if (!flow.data) {
+            continue
+        }
+        const runningLinkId = flow.data[fieldKey]
+        const selectFieldValue = flow.data[selectField]  // Ensure selectField is properly accessed here
+        if (runningLinkId) {
+            if (runningLinkId.trim().includes(" ")) {
+                const splitLinkIds = runningLinkId.split(/\s+/)
+                for (const id of splitLinkIds) {
+                    fightingLinkIds.push({[id]: selectFieldValue})
+                }
+            } else {
+                fightingLinkIds.push({[runningLinkId]: selectFieldValue})
+            }
+        }
+    }
+    return fightingLinkIds
+}
+
 const updateRunningFlowEmergency = async (ids, emergency) => {
     const todayFlows = await globalGetter.getTodayFlows()
     const newTodayFlows = todayFlows.map(flow => {
@@ -1199,5 +1222,6 @@ module.exports = {
     getCoreActionsConfig,
     getCoreFormFlowConfig,
     getFormsFlowsActivitiesStat,
-    getAllOverDueRunningFlows
+    getAllOverDueRunningFlows,
+    getFlowFormfieldKeyAndField
 }
