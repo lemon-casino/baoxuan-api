@@ -486,7 +486,7 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
         fightingLinkIds,
         timeRange,
         clickingAdditionalParams)
-
+    console.log("你怎么这么慢3")
 
     return satisfiedSingleItems.data
 }
@@ -697,11 +697,16 @@ async function getLinkingCommon(productLineLeaders, singleItems, timeRange, incl
         done: {items: [], sum: 0}
     };
 
-    const runningErrorLinkIds = await flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.RUNNING);
-    const completeErrorLinkIds = await flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.COMPLETE);
+    // 使用 Promise.all 并行执行多个异步任务
+    const [runningErrorLinkIds, completeErrorLinkIds, errorResult, withinThreeDays] = await Promise.all([
+        flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.RUNNING),
+        flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.COMPLETE),
+        getLinkingCommonTO(productLineLeaders, singleItems, timeRange, includeRecord),
+        theProcessIsCompletedInThreeDays()
+    ]);
 
     // 总异常数据
-    result.error = await getLinkingCommonTO(productLineLeaders, singleItems, timeRange, includeRecord);
+    result.error = errorResult;
 
     const transformData = (data) => {
         const resultMap = {};
@@ -722,16 +727,14 @@ async function getLinkingCommon(productLineLeaders, singleItems, timeRange, incl
         return Object.values(resultMap);
     };
 
-    result.ongoing.sum = runningErrorLinkIds.length;
-    result.ongoing.items = transformData(runningErrorLinkIds);
-
-    const withinThreeDays = await theProcessIsCompletedInThreeDays();
-
     const transformCompletedData = (data) => {
         return data.map(entry => ({
             [entry.textField_value]: JSON.parse(entry.multiSelectField_value)
         }));
     };
+
+    result.ongoing.sum = runningErrorLinkIds.length;
+    result.ongoing.items = transformData(runningErrorLinkIds);
 
     completeErrorLinkIds.push(...transformCompletedData(withinThreeDays));
 
