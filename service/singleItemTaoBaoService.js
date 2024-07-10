@@ -680,7 +680,7 @@ const getSelfFightingSingleItemLinkOperationCount = async (singleItems, fighting
 }
 
 async function getlinkingIssues(productLineLeaders, singleItems, timeRange) {
-    return await getLinkingCommon(productLineLeaders, singleItems, timeRange, true);
+    return await getLinkingCommon(productLineLeaders, singleItems, timeRange, false);
 }
 
 async function getlinkingto(productLineLeaders, singleItems, timeRange) {
