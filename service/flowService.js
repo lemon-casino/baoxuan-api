@@ -935,7 +935,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
         if (isLeader) {
             for (const deptId of deptIds) {
                 const deptOnJobUsers = await userRepo.getDeptOnJobUsers(deptId)
-                const deptOnJobUserNames = deptOnJobUsers.map(user => user.userName).join(",")
+                const deptOnJobUserNames = deptOnJobUsers.map(user => user.nickname).join(",")
 
                 const tmpDeptResignUsers = await userRepo.getDeptResignUsers(deptId)
                 const deptResignUserNames = tmpDeptResignUsers.map(item => `${item.nickname}[已离职]`).join(",")
