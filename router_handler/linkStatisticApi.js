@@ -17,7 +17,7 @@ const getLinkOperationCount = async (req, res, next) => {
         let {productLineLeaders, timeRange} = req.query
         joiUtil.validate({productLineLeaders: {value: productLineLeaders, schema: Joi.string().required()}})
         productLineLeaders = JSON.parse(productLineLeaders)
-
+        console.log("你怎么这么慢0")
 //console.log(timeRange)
         // 天猫链接获得数据
         const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
@@ -33,7 +33,7 @@ const getLinkOperationCount = async (req, res, next) => {
         //console.log(singleItems.length)
         // 去掉重复的
         // const uniqueSingleItems = singleItemTaoBaoService.getUniqueSingleItems(singleItems)
-        console.log("你怎么这么慢")
+        console.log("你怎么这么慢1")
         const result = await singleItemTaoBaoService.getLinkOperationCount(
             singleItems,
             productLineLeaders, JSON.parse(timeRange))

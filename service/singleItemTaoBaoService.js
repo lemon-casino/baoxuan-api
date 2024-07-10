@@ -473,7 +473,7 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
                                           clickingAdditionalParams) => {
 
     const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
-    console.log("你怎么这么慢")
+    console.log("你怎么这么慢2")
     const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
         999999,
         productLineLeaders,
@@ -689,66 +689,56 @@ async function getlinkingto(productLineLeaders, singleItems, timeRange) {
 
 
 async function getLinkingCommon(productLineLeaders, singleItems, timeRange, includeRecord) {
-    console.log("来到这里")
+    console.log("来到这里");
+
     const result = {
         error: {items: [], sum: 0},
         ongoing: {items: [], sum: 0},
         done: {items: [], sum: 0}
     };
+
     const runningErrorLinkIds = await flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.RUNNING);
     const completeErrorLinkIds = await flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.COMPLETE);
-    //总异常数据
+
+    // 总异常数据
     result.error = await getLinkingCommonTO(productLineLeaders, singleItems, timeRange, includeRecord);
 
-
     const transformData = (data) => {
-        const result = {};
+        const resultMap = {};
 
         data.forEach(entry => {
             const id = Object.keys(entry)[0];
             const issues = entry[id];
 
             issues.forEach(issue => {
-                if (!result[issue]) {
-                    result[issue] = {name: issue, sum: 0, ids: []};
+                if (!resultMap[issue]) {
+                    resultMap[issue] = {name: issue, sum: 0, ids: []};
                 }
-                result[issue].sum++;
-                result[issue].ids.push(id);
+                resultMap[issue].sum++;
+                resultMap[issue].ids.push(id);
             });
         });
 
-        return Object.values(result);
+        return Object.values(resultMap);
     };
+
     result.ongoing.sum = runningErrorLinkIds.length;
-    result.ongoing.items = transformData(runningErrorLinkIds)
+    result.ongoing.items = transformData(runningErrorLinkIds);
+
     const withinThreeDays = await theProcessIsCompletedInThreeDays();
 
-    //将三天已完成的withinThreeDays 添加到completeErrorLinkIds
-    const transformDatazhuanh = (data) => {
+    const transformCompletedData = (data) => {
         return data.map(entry => ({
             [entry.textField_value]: JSON.parse(entry.multiSelectField_value)
         }));
     };
 
-    completeErrorLinkIds.push(...transformDatazhuanh(withinThreeDays))
-    result.done.items = transformData(completeErrorLinkIds)
-    result.done.sum = completeErrorLinkIds.length + withinThreeDays.length;
-    //进行中的数据
-    // const running = processItems(singleItems, runningErrorLinkIds);
-    //进行中的异常
-    // const complete = processItems(singleItems, completeErrorLinkIds);
+    completeErrorLinkIds.push(...transformCompletedData(withinThreeDays));
 
+    result.done.items = transformData(completeErrorLinkIds);
+    result.done.sum = completeErrorLinkIds.length;
 
-    /*    // 增加三天内完成的数据
-        withinThreeDays.forEach(entry => {
-            let values = JSON.parse(entry.multiSelectField_value);
-            values.forEach(value => {
-                let item = result.done.items.find(item => item.name === value);
-                if (item) {
-                    item.sum += 1;
-                }
-            });
-        });*/
+    console.log("结束");
     return result;
 }
 
