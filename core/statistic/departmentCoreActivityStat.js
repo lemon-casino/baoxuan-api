@@ -49,7 +49,6 @@ const get = async (userNames, flows, coreConfig, userFlowDataStatCB) => {
 
                     const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = flowNodeRule
                     for (let flow of currentFlows) {
-
                         const processInstanceId = flow.processInstanceId
                         let fromMatched = false
                         let toMatched = false
