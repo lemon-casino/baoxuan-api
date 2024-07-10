@@ -680,7 +680,7 @@ const getSelfFightingSingleItemLinkOperationCount = async (singleItems, fighting
 }
 
 async function getlinkingIssues(productLineLeaders, singleItems, timeRange) {
-    return await getLinkingCommon(productLineLeaders, singleItems, timeRange, false);
+    return await getLinkingCommon(productLineLeaders, singleItems, timeRange, true);
 }
 
 async function getlinkingto(productLineLeaders, singleItems, timeRange) {
@@ -725,25 +725,17 @@ async function getLinkingCommon(productLineLeaders, singleItems, timeRange, incl
 
     //将三天已完成的withinThreeDays 添加到completeErrorLinkIds
     const transformDatazhuanh = (data) => {
-        const result = {};
-
-        data.forEach(entry => {
-            const id = entry.textField_value;
-            const issues = JSON.parse(entry.multiSelectField_value);
-            result[id] = issues;
-        });
-
-        return [result];
+        return data.map(entry => ({
+            [entry.textField_value]: JSON.parse(entry.multiSelectField_value)
+        }));
     };
 
     completeErrorLinkIds.push(...transformDatazhuanh(withinThreeDays))
-    console.log(completeErrorLinkIds)
     result.done.items = transformData(completeErrorLinkIds)
     result.done.sum = completeErrorLinkIds.length + withinThreeDays.length;
     //进行中的数据
     // const running = processItems(singleItems, runningErrorLinkIds);
     //进行中的异常
-    console.log("running", completeErrorLinkIds)
     // const complete = processItems(singleItems, completeErrorLinkIds);
 
 
