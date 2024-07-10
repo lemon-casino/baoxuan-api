@@ -1995,7 +1995,7 @@ module.exports = {
                         {
                             fieldId: "radioField_ltxy12s6",
                             opCode: opCodes.EqualAny,
-                            value: ["全套图片", "外包拍摄", "不用拍摄"]
+                            value: ["全套图片", "外包拍摄"]
                         }
                     ],
                     flowNodeRules: [
@@ -3424,7 +3424,7 @@ module.exports = {
                         {
                             fieldId: "radioField_ltxy12s6",
                             opCode: opCodes.EqualAny,
-                            value: ["全套图片", "外包拍摄", "不用拍摄"]
+                            value: ["全套图片", "外包拍摄"]
                         }
                     ],
                     flowNodeRules: [
@@ -5445,7 +5445,7 @@ module.exports = {
                         {
                             fieldId: "radioField_ltxy12s6",
                             opCode: opCodes.EqualAny,
-                            value: ["全套图片", "外包拍摄", "不用拍摄"]
+                            value: ["全套图片", "外包拍摄"]
                         }
                     ],
                     flowNodeRules: [
