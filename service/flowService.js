@@ -938,10 +938,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                 const deptOnJobUserNames = deptOnJobUsers.map(user => user.userName).join(",")
 
                 const tmpDeptResignUsers = await userRepo.getDeptResignUsers(deptId)
-                const deptResignUserNames = tmpDeptResignUsers.map(item => {
-                    item.nickname = `${item.nickname}[已离职]`
-                    return item
-                }).join(",")
+                const deptResignUserNames = tmpDeptResignUsers.map(item => `${item.nickname}[已离职]`).join(",")
 
                 const deptSourcingUsers = await redisRepo.getOutSourcingUsers(deptId)
                 const deptSourcingUserNames = deptSourcingUsers.map(oUser => oUser.userName).join(",")
