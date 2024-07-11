@@ -8,7 +8,6 @@ const linkTypeConst = require("../const/linkTypeConst")
 const {flowStatusConst} = require("../const/flowConst")
 const {
     taoBaoSingleItemMap,
-    taoBaoErrorItems,
     taoBaoSingleItemStatuses,
     profitRateRangeSumTypes,
     marketRatioGroup,
@@ -22,6 +21,8 @@ const ForbiddenError = require("../error/http/forbiddenError")
 const ParameterError = require("../error/parameterError")
 const {tmInnerGroup} = require("../const/tmp/innerGroupConst")
 const {theProcessIsCompletedInThreeDays} = require("@/repository/processDetailsRepo");
+const {getExceptionLinks} = require("@/router_handler/tianMaoLink");
+const tianmao__user_tableService = require("@/service/tianMaoUserTableService");
 
 // 天猫链接打架流程表单id
 const tmFightingFlowFormId = "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J"
@@ -361,7 +362,7 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
         productLineLeaders: [],
         firstLevelProductionLines: [],
         secondLevelProductionLines: [],
-        errorItems: taoBaoErrorItems,
+        errorItems: await fetchAndProcessErrorItems(),
         linkTypes: [],
         linkHierarchies: [],
         linkStatuses: taoBaoSingleItemStatuses
@@ -753,8 +754,9 @@ async function getLinkingCommonTO(productLineLeaders, singleItems, timeRange, in
     };
 
     const uniqueItems = {};
+    
 
-    for (const item of taoBaoErrorItems) {
+    for (const item of await fetchAndProcessErrorItems()) {
         const items = filterItems(singleItems, item.values);
         result.items.push({
             name: item.name,
@@ -836,7 +838,7 @@ function filterItems(singleItems, values) {
 
 function applyExclude(singleItem, exclude, excludeResult) {
     const excludeValue = singleItem[exclude.field];
-    const excludeName = exclude.name;
+    const excludeName = exclude.value;
     const excludeComparator = exclude.comparator;
 
     switch (excludeComparator) {
@@ -1290,10 +1292,49 @@ const updateSingleItemTaoBao = async (item) => {
     const result = singleItemTaoBaoRepo.updateSingleItemTaoBao(item)
     return result
 }
+//更新来自链接属性的自定义1字段
+const updateCustom = async (id, custom) => {
+    return singleItemTaoBaoRepo.updateCustom(id, custom)
+}
 
 // 方法映射，为接口调用使用
 const availableFunctionsMap = {"getLinkErrorQueryFields": getLinkErrorQueryFields}
 
+
+// const taoBaoErrorItems = await tianmao__user_tableService.getExceptionLinks(1);
+async function fetchAndProcessErrorItems() {
+    const newItems = linkTypeConst.groups.filter(group => group.group === "new")[0].items
+    const oldProductFields = newItems.map(item => {
+        return {
+            field: "linkType", operator: "$notIn", comparator: "!==",
+            value: item, sqlValue: newItems
+        }
+    })
+    const errorItems = await tianmao__user_tableService.getExceptionLinks(1);
+    console.log(errorItems)
+    const shouldConcatOldProductFields = errorItems.some(item => item.name === "费比超过15%");
+
+    return errorItems.reduce((acc, item) => {
+        const baseValues = [{
+            field: item.field,
+            operator: item.operator,
+            lessThan: item.lessThan,
+            value: item.value,
+            comparator: item.comparator,
+            exclude: item.exclude,
+            ...(item.sqlValue && {sqlValue: JSON.parse(item.sqlValue)}),
+            ...(item.min && {min: item.min})
+        }];
+
+        const newItem = {
+            name: item.name,
+            values: shouldConcatOldProductFields ? baseValues.concat(oldProductFields) : baseValues
+        };
+
+        acc.push(newItem);
+        return acc;
+    }, []);
+}
 
 module.exports = {
     saveSingleItemTaoBao,
@@ -1314,5 +1355,6 @@ module.exports = {
     attachPercentageTagToField,
     getTaoBaoSingleItemsWithStatistic,
     updateSingleItemTaoBao,
-    getLinknewvaCount
+    getLinknewvaCount,
+    updateCustom
 }

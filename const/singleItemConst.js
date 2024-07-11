@@ -1,4 +1,5 @@
 const linkTypeConst = require("@/const/linkTypeConst")
+const tianmao__user_tableService = require("@/service/tianMaoUserTableService");
 
 const taoBaoSingleItemMap = {
     "batchId": "批次号",
@@ -76,129 +77,6 @@ const newProductFields = oldItems.map(item => {
 
 //从数据库中拆除异常
 
-
-const taoBaoErrorItems = [
-    {
-        name: "老品利润率低于15%",
-        values: [{
-            field: "profitRate",
-            operator: "$lt",
-            lessThan: "old",
-            value: "15",
-            comparator: "<",
-            exclude: [{field: "userDef1", comparator: "!==", name: "f8f4de0f-3d0e-11ef-9d73-0242ac160002"}]
-        }]
-    },
-    {
-        name: "新品利润率低于5%",
-        values: [{
-            field: "profitRate",
-            operator: "$lt",
-            lessThan: "new_16_30",
-            value: "5",
-            comparator: "<",
-            exclude: [{field: "userDef1", comparator: "!==", name: "f8f4de0f-3d0e-11ef-9d73-0242ac160002"}]
-        }]
-    },
-    {
-        name: "新品利润率低于10%",
-        values: [{
-            field: "profitRate",
-            operator: "$lt",
-            lessThan: "new_30_60",
-            value: "10",
-            comparator: "<",
-            exclude: [{field: "userDef1", comparator: "!==", name: "f8f4de0f-3d0e-11ef-9d73-0242ac160002"}]
-        }]
-    },
-    {
-        name: "累计60天负利润",
-        values: [{field: "profitRate", operator: "$lt", lessThan: "negative_profit_60", value: "0", comparator: "<"}]
-    },
-    // {
-    //     name: "手淘人数市场占比环比（7天）下降",
-    //     values: [{field: "shouTaoPeopleNumMarketRateCircleRate7Day", operator: "$lt", value: "-20", comparator: "<"}]
-    // },
-    // {
-    //     name: "坑市场占比环比（7天）下降",
-    //     values: [{field: "salesMarketRateCircleRate7Day", operator: "$gt", value: "-20", comparator: ">"}]
-    // },
-    {
-        name: "手淘人数市场占比环比（日）下降",
-        values: [{field: "shouTaoPeopleNumMarketRateCircleRateDay", operator: "$lt", value: "-20", comparator: "<"}]
-    },
-    {
-        name: "坑市场占比环比（日）",
-        values: [{field: "salesMarketRateCircleRateDay", operator: "$lt", value: "-20", comparator: "<"}]
-    },
-    // {
-    //     name: "手淘人数市场占比环比（30天）下降",
-    //     values: [{field: "shouTaoPeopleNumMarketRateCircleRate30Day", operator: "$lt", value: "-20", comparator: "<"}]
-    // },
-    // 坑市场占比环比（日、7天、30天）低于20%
-    // {
-    //     name: "坑市场占比环比（日）下降",
-    //     values: [{field: "salesMarketRateCircleRateDay", operator: "$lt", value: "-20", comparator: "<"}]
-    // },
-
-    // {
-    //     name: "坑市场占比环比（30天）下降",
-    //     values: [{field: "salesMarketRateCircleRate30Day", operator: "$lt", value: "-20", comparator: "<"}]
-    // },
-    // 投产低于2
-    {
-        name: "车总投产比低于2",
-        values: [{
-            field: "shoppingCatSumRoi",
-            operator: "$between",
-            sqlValue: [0.000001, 1.99999],
-            value: 2,
-            comparator: "<",
-            min: "0.000001",
-        }]
-    },
-    {
-        name: "精准人群推广投产比低于2",
-        values: [{
-            field: "accuratePeoplePromotionProductionRate",
-            operator: "$between",
-            sqlValue: [0.000001, 1.99999],
-            value: 2,
-            comparator: "<",
-            min: "0.000001"
-        }]
-    },
-    {
-        name: "万相台投产比低于2",
-        values: [{
-            field: "wanXiangTaiProductionRate",
-            operator: "$between",
-            sqlValue: [0.000001, 1.99999],
-            value: 2,
-            comparator: "<",
-            min: "0.000001"
-        }]
-    },
-    // 新品日搜索流量低于100，上架14天新品搜索目标达成30%以下(还未确定，找一个无法筛选出数据的条件)
-    {
-        name: "流量未起", values: [{
-            field: "feeRate",
-            operator: "$eq",
-            value: "99999",
-            comparator: "==="
-        }]
-    },
-    {
-        name: "费比超过15%",
-        values: [{
-            field: "feeRate",
-            operator: "$gt",
-            value: "15",
-            comparator: ">",
-            exclude: [{field: "userDef1", comparator: "!==", name: "034e7651-3d10-11ef-9d73-0242ac160002"}]
-        }].concat(oldProductFields)
-    }
-]
 
 const taoBaoSingleItemStatuses = [{name: "fighting", value: "打仗"}, {name: "normal", value: "正常"}]
 const taoBaoSingleItemStatusesKeys = {"fighting": "fighting", "normal": "normal"}
@@ -321,7 +199,6 @@ const fieldsWithPercentageTag = [
 
 module.exports = {
     taoBaoSingleItemMap,
-    taoBaoErrorItems,
     taoBaoSingleItemStatuses,
     taoBaoSingleItemStatusesKeys,
     profitRateRangeSumTypes,
