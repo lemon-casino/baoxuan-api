@@ -3391,29 +3391,7 @@ module.exports = {
                                 name: "简单美编完成任务",
                                 id: "node_oclvksud0dc"
                             }
-                        },
-                        // {
-                        //     from: {
-                        //         id: "node_ockpz6phx73",
-                        //         name: "视觉完成确认审核",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_ockpz6phx73",
-                        //         name: "视觉完成确认审核",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_ockpz6phx73",
-                        //         name: "视觉完成确认审核",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "视觉完成确认审核",
-                        //         id: "node_ockpz6phx73"
-                        //     }
-                        // }
+                        }
                     ]
                 },
 

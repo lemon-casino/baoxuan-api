@@ -108,7 +108,7 @@ const getCombinedFlowsOfHistoryAndToday = async (startDoneDate, endDoneDate, for
         ])
 
         const flowsData = processRelatedInfo[0]
-        const flows = processRelatedInfo[1]
+        flows = processRelatedInfo[1]
         const flowFormDetails = processRelatedInfo[2]
 
         // 合并流程的data和审核流信息

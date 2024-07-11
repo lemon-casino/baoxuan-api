@@ -49,8 +49,7 @@ exports.add_role_schema = joi.object().keys({
 // 获取角色列表的验证规则对象
 exports.get_role_list_schema = joi.object().keys({
   pageSize,
-  currentPage,
-  role_name: joi.string().min(1).max(10)
+  currentPage
 })
 // 修改角色的验证规则对象
 exports.edit_role_schema = joi.object().keys({

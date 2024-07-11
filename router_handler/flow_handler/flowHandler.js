@@ -121,13 +121,14 @@ const getAllOverDueRunningFlows = async (req, res, next) => {
  */
 const getFormsFlowsActivitiesStat = async (req, res, next) => {
     try {
-        const {startDate, endDate, formIds, deptId} = req.body
+        const {startDate, endDate, formIds, deptIds} = req.body
         const userId = req.user.id
         joiUtil.validate({
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
-            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            deptIds: {value: deptIds, schema: joiUtil.commonJoiSchemas.arrayRequired}
         })
-        const result = await flowService.getFormsFlowsActivitiesStat(userId, startDate, endDate, formIds, deptId)
+        const result = await flowService.getFormsFlowsActivitiesStat(userId, startDate, endDate, formIds, deptIds)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)

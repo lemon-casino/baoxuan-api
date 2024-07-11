@@ -26,6 +26,8 @@ const extensionsConst = require("@/const/tmp/extensionsConst")
 const deptHiddenFormsConst = require("@/const/tmp/deptHiddenFormsConst")
 const deptFlowFormConst = require("@/const/deptFlowFormConst")
 const {patchOfflineTransmittedActivity} = require("@/patch/patchUtil")
+const userCommonService = require("@/service/common/userCommonService");
+const outUsersRepo = require("@/repository/outUsersRepo");
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -744,11 +746,11 @@ const levelUpDomainList = (flows) => {
  * @param startDoneDate
  * @param endDoneDate
  * @param formIds
- * @param deptId 针对部门的统计
+ * @param deptIds 针对部门的统计: 不同分公司有相同名称的部门要合并统计
  * @param setActivitiesIgnoreStatFunc 设置对流程中的节点不进行统计
  * @returns {Promise<*[]>}
  */
-const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, deptId, handleOutSourcingActivityFunc, setActivitiesIgnoreStatFunc) => {
+const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, handleOutSourcingActivityFunc, setActivitiesIgnoreStatFunc) => {
     const originFlows = await getCombinedFlowsOfHistoryAndToday(startDoneDate, endDoneDate, formIds)
 
     let modifiedFlows = _.cloneDeep(originFlows)
@@ -761,10 +763,10 @@ const getUserFlowsStat = async (userNames, startDoneDate, endDoneDate, formIds, 
     modifiedFlows = levelUpDomainList(modifiedFlows)
 
     // 对于视觉部(482162119)和管理中台(902643613)，将外包人的名字添加到userNames中
-    if (deptId && ["902643613", "482162119"].includes(deptId.toString())) {
-        const outVisionSourcingUsers = await redisRepo.getOutSourcingUsers("482162119")
-        userNames = userNames && `${userNames},${outVisionSourcingUsers.join(",")}`
-    }
+    // if (deptIds && ["902643613", "482162119"].includes(deptIds.toString())) {
+    //     const outVisionSourcingUsers = await redisRepo.getOutSourcingUsers("482162119")
+    //     userNames = userNames && `${userNames},${outVisionSourcingUsers.join(",")}`
+    // }
 
     // 获取表单的最新的审核流
     const formsWithReview = await flowFormRepo.getAllFlowFormsWithReviews(formIds)
@@ -933,54 +935,83 @@ const overdueAloneStatusStructure = [
  * @param startDoneDate
  * @param endDoneDate
  * @param formIds
- * @returns {Promise<{activityStat: *, deptStat: *, users: *}>}
+ * @param deptIds 管理中台（管理员）查看全部门的数据：默认 [] 代表全部部门
+ * @returns {Promise<{activityStat: *[], deptStat: *[], users: *}>}
  */
-const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, formIds, deptId) => {
-    const userDDId = (await userRepo.getAllUsers({userId}))[0].dingdingUserId
-    const isAdmin = whiteList.pepArr().includes(userDDId)
-    if (!isAdmin && !deptId) {
-        throw new ParameterError("参数deptId不能为空")
+const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, formIds, deptIds) => {
+    const tmpUsers = await userRepo.getAllUsers({userId})
+    if (tmpUsers.length === 0) {
+        throw new NotFoundError(`${userId}所对应的用户在库中不存在`)
+    }
+    const user = tmpUsers[0]
+    const isAdmin = whiteList.pepArr().includes(user.dingdingUserId)
+
+    if (!isAdmin && (!deptIds || deptIds.length === 0)) {
+        throw new ParameterError("用户是非管理员，参数deptIds不能为空")
     }
 
+    const isLeader = await userCommonService.isDeptLeaderOfTheUser(user.dingdingUserId, deptIds)
+    // 为空时，默认会抓取全部人员的数据（管理员）
+    // 人员角色区分： 管理员（userNames为空，全部门全员工）、部门主管（部门下的全部员工含离职的）、普通员工（自己的）
     let userNames = ""
-    if (deptId) {
-        // 根据userId的身份获取其下的用户(s)
-        const realUsers = await userRepo.getDepartmentUsers(userDDId, deptId)
-        // 获取部门下离职的人员信息
-        const deptUsers = await departmentRepo.getDbDeptUsers(deptId)
-        const resignUserNames = deptUsers.filter(item => item.isResign).map(item => `${item.nickname}[已离职]`)
-        // todo: 6.6 人员信息已开启定时入库，让流程先跑一段时间，后面针对管理员的情况，从库中拉取全部人就行，不用下面这么诡异了
-        // 管理员权限下，若是通过获取已经入库的所有人员，可能会有人员不全的情况（前期未及时入库）
-        // 如果使用空值表示获取所有人，会跟通过deptId获取人员为空时相冲突
-        // 所以在部门的情况下，在为查询到人员的情况下，使用一个特殊人名加以区分
-        userNames = realUsers.map(user => user.userName).concat(resignUserNames).join(",")
-        if (!userNames && !isAdmin) {
-            userNames = "就是让你找不到"
+    if (!isAdmin) {
+        if (isLeader) {
+            for (const deptId of deptIds) {
+                const deptOnJobUsers = await userRepo.getDeptOnJobUsers(deptId)
+                const deptOnJobUserNames = deptOnJobUsers.map(user => user.nickname).join(",")
+
+                const tmpDeptResignUsers = await userRepo.getDeptResignUsers(deptId)
+                const deptResignUserNames = tmpDeptResignUsers.map(item => `${item.nickname}[已离职]`).join(",")
+
+                const deptSourcingUsers = await redisRepo.getOutSourcingUsers(deptId)
+                const deptSourcingUserNames = deptSourcingUsers.map(oUser => oUser.userName).join(",")
+
+                userNames = `${userNames},${deptOnJobUserNames},${deptResignUserNames},${deptSourcingUserNames}`
+            }
+
+            // 根据userId的身份获取其下的用户(s)
+            // const realUsers = await userRepo.getDepartmentUsers(userDDId, deptIds)
+
+            // 获取部门下离职的人员信息
+            // const deptUsers = await departmentRepo.getDbDeptUsers(deptIds)
+            // const resignUserNames = deptUsers.filter(item => item.isResign).map(item => `${item.nickname}[已离职]`)
+
+
+            // todo: 6.6 人员信息已开启定时入库，让流程先跑一段时间，后面针对管理员的情况，从库中拉取全部人就行，不用下面这么诡异了
+            // 管理员权限下，若是通过获取已经入库的所有人员，可能会有人员不全的情况（前期未及时入库）
+            // 如果使用空值表示获取所有人，会跟通过deptId获取人员为空时相冲突
+            // 所以在部门的情况下，在为查询到人员的情况下，使用一个特殊人名加以区分
+            // userNames = realUsers.map(user => user.userName).concat(resignUserNames).join(",")
+            // if (!userNames && !isLeader) {
+            //     userNames = "就是让你找不到"
+            // }
+        } else {
+            userNames = user.nickname
         }
     }
 
     const pureUsersWithDepartment = await redisRepo.getAllUsersWithKeyFields()
-    const originResult = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, formIds, deptId, // 对执行中台分配外包的流程分情况进行处理
+    const originResult = await getUserFlowsStat(userNames, startDoneDate, endDoneDate, formIds,
         // 1.全流程deptId=""，进行节点clone
         // 2.执行中台本部门deptId="902515853"或者其他部门,不需要改变
-        // 3.视觉部deptId="482162119", 需要进行替换
+        // 3.视觉部deptIds="482162119", 需要进行替换
         (flows) => {
-
-            const assignerIds = ["281338354935548795", "01622516570029465425"]
-
-            // 替换赵天鹏或者王耀庆为外包人的信息
+            const requiredReplacedActivityId = ["node_oclx49xlb31"]
+            // 替换节点[通知外包摄影师等待收图]为外包人的信息
             const outSourcingPhotography = {
                 formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
                 formName: "外包拍摄视觉流程",
                 outSourceChargerFieldId: "textField_lvumnj2k"
             }
+
             // 执行中台需要看到他们自己的工作，其他部门或者全流程都算视觉-外包美编的
-            if (deptId && deptId.toString() !== "902515853") {
+            const executionMidPlatformId = "902515853"
+            if (deptIds.length > 0 && !deptIds.includes(executionMidPlatformId)) {
                 const outSourcingPhotographyFlows = flows.filter(flow => flow.formUuid === outSourcingPhotography.formId)
                 for (const flow of outSourcingPhotographyFlows) {
                     const fieldValue = flowFormReviewUtil.getFieldValue(outSourcingPhotographyFlows.outSourceChargerFieldId, flow.data)
-                    const assignerActivities = flow.overallprocessflow.filter(activity => assignerIds.includes(activity.operatorUserId))
-                    // note：拆节点时需要再处理
+                    const assignerActivities = flow.overallprocessflow.filter(activity => requiredReplacedActivityId.includes(activity.activityId))
+
                     for (const activity of assignerActivities) {
                         activity.operatorName = fieldValue
                         activity.operatorDisplayName = fieldValue
@@ -995,6 +1026,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                 formName: "外包修图视觉流程",
                 outSourceChargerFieldId: "textField_lx48e5gk"
             }
+
             const outSourcingEditPictureFlows = flows.filter(flow => flow.formUuid === outSourcingEditPicture.formId)
             for (const flow of outSourcingEditPictureFlows) {
                 if (flow.overallprocessflow && flow.overallprocessflow.length > 0) {
@@ -1006,10 +1038,11 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                 }
             }
             return flows
-        }, (flows) => {
+        },
+        (flows) => {
             // 人员跨部门的情况下，在指定部门下统计指定的表单，管理中台全流程忽略
             // 针对部门的统计，存在人员跨部门，需要根据forms分别统计
-            if (deptId) {
+            if (deptIds.length > 0) {
                 const multiDeptUserIds = pureUsersWithDepartment.filter(user => userNames.includes(user.userName) && user.multiDeptStat).map(user => user.userId)
                 for (const flow of flows) {
                     // 过滤掉不必要的流程
@@ -1021,7 +1054,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                         for (const deptExt of userDepsExtensions) {
                             const isFormInStatForms = deptExt.statForms.filter(form => form.formId === flow.formUuid).length > 0
                             // 跨部门人配置中该流程所在的form不在当前部门，为该节点添加ignoreStat标记
-                            if (isFormInStatForms && deptExt.deptId.toString() !== deptId.toString()) {
+                            if (isFormInStatForms && !deptIds.includes(deptExt.deptId.toString())) {
                                 const currActivity = flow.overallprocessflow.filter(item => item.activityId === activity.activityId)[0]
                                 currActivity.ignoreStat = true
                             }
@@ -1075,18 +1108,17 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                     // 根据配置中汇总部门需要统计的流程，将结果拆分进行统计
                     const currUser = pureUsersWithDepartment.filter(user => user.userName === originOperatorResult.userName)[0]
                     // 查找用户在该form(跨部门)和部门(可为空)下需要被统计到的部门名称
-                    const findUserStatDeptName = (user, formId, deptId) => {
+                    const findUserStatDeptName = (user, formId, deptIds) => {
                         let userDepName = "未知"
                         if (!user) {
                             return userDepName
                         }
                         // 部门模块数据
-                        if (deptId) {
-                            const tmpUserDept = user.departments.filter(dept => dept.deptId.toString() === deptId.toString())
+                        if (deptIds.length > 0) {
+                            const tmpUserDept = user.departments.filter(dept => deptIds.includes(dept.deptId.toString()))
                             if (tmpUserDept.length > 0) {
                                 userDepName = tmpUserDept[0].deptName
                             }
-
                         }
                         // 管理中台的全流程
                         else {
@@ -1106,7 +1138,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
                         }
                         return userDepName
                     }
-                    userDepName = findUserStatDeptName(currUser, originFormResult.formId, deptId)
+                    userDepName = findUserStatDeptName(currUser, originFormResult.formId, deptIds)
                 }
 
                 // 1. 从最终的结果中找到该用户所在的部门节点，没有的话则添加
@@ -1154,8 +1186,8 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
     let deptStatResult = flowUtil.removeSumEqualZeroFormStat(flowUtil.statIdsAndSumFromBottom(formsDepsStatResult))
 
     // 根据配置过滤部门要隐藏的表单统计
-    if (deptId) {
-        const tmpDeps = deptHiddenFormsConst.filter(item => item.deptId.toString() === deptId.toString())
+    if (deptIds) {
+        const tmpDeps = deptHiddenFormsConst.filter(item => item.deptId.toString() === deptIds.toString())
         if (tmpDeps.length > 0) {
             const deptHiddenFormIds = tmpDeps[0].forms.map(item => item.formId)
             activityStatResult = activityStatResult.filter(item => !deptHiddenFormIds.includes(item.formId))
@@ -1164,9 +1196,9 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
     }
     // 根据流程配置的是否核心进行排序
     let deptCoreForms = []
-    if (deptId) {
+    if (deptIds) {
         deptCoreForms = await departmentFlowFormRepo.getDepartmentFlowForms({
-            deptId: deptId, type: deptFlowFormConst.deptFlowFormCore, isCore: true
+            deptId: deptIds, type: deptFlowFormConst.deptFlowFormCore, isCore: true
         })
     } else {
         deptCoreForms = await flowFormRepo.getAllForms({status: "1"})
