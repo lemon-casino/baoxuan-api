@@ -548,6 +548,23 @@ const getLatestBatchIdRecords = async (count) => {
     return data
 }
 
+// 更新自定义1字段 内容
+// const updateCustom1 = async (id, custom1) => {
+const updateCustom = async (id, custom) => {
+
+    return singleItemTaoBaoModel.sequelize.query(
+        `update  single_item_taobao set user_def_1=:id where link_id in (
+select goods_id from  dianshang_operation_attribute where userDef1=:custom
+);`, {
+            replacements: {id, custom},
+            type: QueryTypes.UPDATE,
+            logging: false
+        }
+    );
+
+}
+
+
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
@@ -562,5 +579,6 @@ module.exports = {
     getLatestBatchIdRecords,
     getLinkHierarchy,
     updateSingleItemTaoBao,
-    getError60SingleIte
+    getError60SingleIte,
+    updateCustom
 }
