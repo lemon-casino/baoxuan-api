@@ -153,19 +153,23 @@ const filterUsersByTags = (users, tags) => {
 
 /**
  * 统计视觉部员工的流程表单数据
- * @param username
+ * @param userName
  * @param flow
  * @returns {Promise<*|*[]>}
  */
-const statVisionUserFlowData = async (username, flow) => {
+const statVisionUserFlowData = async (userActivity, flow) => {
+
+    // 当前用户统计到的节点需要时正在干活的节点才要汇总表单信息
+    let {userName, activity} = userActivity
+
     const visionUserFlowDataStatResultTemplate = _.cloneDeep(statResultTemplateConst.visionUserFlowDataStatResultTemplate)
-    if (username.includes("离职")) {
-        username = username.replace("[已离职]", "")
+    if (userName.includes("离职")) {
+        userName = userName.replace("[已离职]", "")
     }
 
-    let taggedUser = await userRepo.getUsersWithTagsByUsernames([username])
+    let taggedUser = await userRepo.getUsersWithTagsByUsernames([userName])
     if (taggedUser.length === 0) {
-        taggedUser = await outUsersRepo.getOutUsersWithTags({userName: username})
+        taggedUser = await outUsersRepo.getOutUsersWithTags({userName})
     }
 
     // 没有标签的用户直接返回空模板

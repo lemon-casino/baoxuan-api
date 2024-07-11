@@ -49,6 +49,7 @@ const get = async (userNames, flows, coreConfig, userFlowDataStatCB) => {
                     }
 
                     const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = flowNodeRule
+
                     for (let flow of currentFlows) {
                         const processInstanceId = flow.processInstanceId
                         let fromMatched = false
@@ -56,7 +57,7 @@ const get = async (userNames, flows, coreConfig, userFlowDataStatCB) => {
                         let isOverDue = false
 
                         // 一个动作多人执行（会签）
-                        let parallelOperators = []
+                        let operatorsActivity = []
                         const reviewItems = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
                         for (const reviewItem of reviewItems) {
                             // 发起的节点id对应的表单流程id不一致
@@ -74,51 +75,48 @@ const get = async (userNames, flows, coreConfig, userFlowDataStatCB) => {
 
                             if (fromMatched && toMatched) {
                                 if (reviewItem.domainList && reviewItem.domainList.length > 0) {
+                                    // 包含domainList的节点直接算到节点操作人的头上
                                     for (const domain of reviewItem.domainList) {
-                                        parallelOperators.push(domain.operatorName)
+                                        operatorsActivity.push({userName: domain.operatorName, activity: reviewItem})
                                     }
+                                }
+                                // 单节点根据配置确定要计算的人头上
+                                else {
+                                    // 找到该工作量的负责人
+                                    let ownerName = "未分配"
+                                    const {from, id, defaultUserName} = ownerRule
+                                    if (from.toUpperCase() === ownerFrom.FORM) {
+                                        ownerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id]
+                                        // 如果是数组的格式，转成以“,”连接的字符串
+                                        if (ownerName instanceof Array) {
+                                            ownerName = ownerName.join(",")
+                                        }
+                                        if (!ownerName) {
+                                            ownerName = defaultUserName
+                                        }
+                                    } else {
+                                        const processReviewId = activityIdMappingConst[id] || id
+                                        const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
+                                        ownerName = reviewItems.length > 0 ? reviewItems[0].operatorName : defaultUserName
+                                    }
+                                    operatorsActivity.push({userName: ownerName, activity: reviewItem})
                                 }
                                 break
                             }
                         }
-                        if (!fromMatched || !toMatched) {
-                            continue
-                        }
 
-                        if (parallelOperators.length === 0) {
-                            // 找到该公工作量的负责人
-                            let ownerName = "未分配"
-                            const {from, id, defaultUserName} = ownerRule
-                            if (from.toUpperCase() === ownerFrom.FORM) {
-                                ownerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id]
-                                // 如果是数组的格式，转成以“,”连接的字符串
-                                if (ownerName instanceof Array) {
-                                    ownerName = ownerName.join(",")
-                                }
-                                if (!ownerName) {
-                                    ownerName = defaultUserName
-                                }
-                            } else {
-                                const processReviewId = activityIdMappingConst[id] || id
-                                const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
-                                ownerName = reviewItems.length > 0 ? reviewItems[0].operatorName : defaultUserName
-                            }
-                            parallelOperators.push(ownerName)
-                        }
-
-                        parallelOperators = parallelOperators.filter(operator => userNames.includes(operator))
-
-                        if (parallelOperators.length === 0) {
+                        operatorsActivity = operatorsActivity.filter(operator => userNames.includes(operator.userName))
+                        if (operatorsActivity.length === 0) {
                             continue
                         }
 
                         // 根据是否逾期汇总个人的ids和sum
-                        for (const operator of parallelOperators) {
+                        for (const operatorActivity of operatorsActivity) {
                             let userFlows = null
                             if (isOverDue) {
-                                userFlows = overDueResult.children.filter(item => item.userName === operator)
+                                userFlows = overDueResult.children.filter(item => item.userName === operatorActivity.userName)
                             } else {
-                                userFlows = notOverDueResult.children.filter(item => item.userName === operator)
+                                userFlows = notOverDueResult.children.filter(item => item.userName === operatorActivity.userName)
                             }
 
                             let userFlowDataStat = null
@@ -139,7 +137,7 @@ const get = async (userNames, flows, coreConfig, userFlowDataStatCB) => {
                                     }
                                 }
 
-                                const dataStatResult = await userFlowDataStatCB(operator, tmpFlow)
+                                const dataStatResult = await userFlowDataStatCB(operatorActivity, tmpFlow)
                                 if (dataStatResult.length > 0) {
                                     userFlowDataStat = {
                                         processInstanceId,
@@ -157,7 +155,7 @@ const get = async (userNames, flows, coreConfig, userFlowDataStatCB) => {
                                 }
                             } else {
                                 userFlows = {
-                                    userName: operator,
+                                    userName: operatorActivity.userName,
                                     sum: 1,
                                     ids: [processInstanceId],
                                     userFlowsDataStat: userFlowDataStat ? [userFlowDataStat] : []
