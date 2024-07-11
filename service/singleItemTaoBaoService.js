@@ -8,7 +8,6 @@ const linkTypeConst = require("../const/linkTypeConst")
 const {flowStatusConst} = require("../const/flowConst")
 const {
     taoBaoSingleItemMap,
-    taoBaoErrorItems,
     taoBaoSingleItemStatuses,
     profitRateRangeSumTypes,
     marketRatioGroup,
@@ -22,6 +21,8 @@ const ForbiddenError = require("../error/http/forbiddenError")
 const ParameterError = require("../error/parameterError")
 const {tmInnerGroup} = require("../const/tmp/innerGroupConst")
 const {theProcessIsCompletedInThreeDays} = require("@/repository/processDetailsRepo");
+const {getExceptionLinks} = require("@/router_handler/tianMaoLink");
+const tianmao__user_tableService = require("@/service/tianMaoUserTableService");
 
 // 天猫链接打架流程表单id
 const tmFightingFlowFormId = "FORM-495A1584CBE84928BB3B1E0D4AA4B56AYN1J"
@@ -361,7 +362,7 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
         productLineLeaders: [],
         firstLevelProductionLines: [],
         secondLevelProductionLines: [],
-        errorItems: taoBaoErrorItems,
+        errorItems: await fetchAndProcessErrorItems(),
         linkTypes: [],
         linkHierarchies: [],
         linkStatuses: taoBaoSingleItemStatuses
@@ -473,7 +474,7 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
                                           clickingAdditionalParams) => {
 
     const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
-    console.log("你怎么这么慢")
+    console.log("你怎么这么慢2")
     const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
         999999,
         productLineLeaders,
@@ -486,7 +487,7 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
         fightingLinkIds,
         timeRange,
         clickingAdditionalParams)
-
+    console.log("你怎么这么慢3")
 
     return satisfiedSingleItems.data
 }
@@ -680,7 +681,7 @@ const getSelfFightingSingleItemLinkOperationCount = async (singleItems, fighting
 }
 
 async function getlinkingIssues(productLineLeaders, singleItems, timeRange) {
-    return await getLinkingCommon(productLineLeaders, singleItems, timeRange, true);
+    return await getLinkingCommon(productLineLeaders, singleItems, timeRange, false);
 }
 
 async function getlinkingto(productLineLeaders, singleItems, timeRange) {
@@ -689,66 +690,59 @@ async function getlinkingto(productLineLeaders, singleItems, timeRange) {
 
 
 async function getLinkingCommon(productLineLeaders, singleItems, timeRange, includeRecord) {
-    console.log("来到这里")
+    console.log("来到这里");
+
     const result = {
         error: {items: [], sum: 0},
         ongoing: {items: [], sum: 0},
         done: {items: [], sum: 0}
     };
-    const runningErrorLinkIds = await flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.RUNNING);
-    const completeErrorLinkIds = await flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.COMPLETE);
-    //总异常数据
-    result.error = await getLinkingCommonTO(productLineLeaders, singleItems, timeRange, includeRecord);
 
+    // 使用 Promise.all 并行执行多个异步任务
+    const [runningErrorLinkIds, completeErrorLinkIds, errorResult, withinThreeDays] = await Promise.all([
+        flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.RUNNING),
+        flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.COMPLETE),
+        getLinkingCommonTO(productLineLeaders, singleItems, timeRange, includeRecord),
+        theProcessIsCompletedInThreeDays()
+    ]);
+
+    // 总异常数据
+    result.error = errorResult;
 
     const transformData = (data) => {
-        const result = {};
+        const resultMap = {};
 
         data.forEach(entry => {
             const id = Object.keys(entry)[0];
             const issues = entry[id];
 
             issues.forEach(issue => {
-                if (!result[issue]) {
-                    result[issue] = {name: issue, sum: 0, ids: []};
+                if (!resultMap[issue]) {
+                    resultMap[issue] = {name: issue, sum: 0, ids: []};
                 }
-                result[issue].sum++;
-                result[issue].ids.push(id);
+                resultMap[issue].sum++;
+                resultMap[issue].ids.push(id);
             });
         });
 
-        return Object.values(result);
+        return Object.values(resultMap);
     };
-    result.ongoing.sum = runningErrorLinkIds.length;
-    result.ongoing.items = transformData(runningErrorLinkIds)
-    const withinThreeDays = await theProcessIsCompletedInThreeDays();
 
-    //将三天已完成的withinThreeDays 添加到completeErrorLinkIds
-    const transformDatazhuanh = (data) => {
+    const transformCompletedData = (data) => {
         return data.map(entry => ({
             [entry.textField_value]: JSON.parse(entry.multiSelectField_value)
         }));
     };
 
-    completeErrorLinkIds.push(...transformDatazhuanh(withinThreeDays))
-    result.done.items = transformData(completeErrorLinkIds)
-    result.done.sum = completeErrorLinkIds.length + withinThreeDays.length;
-    //进行中的数据
-    // const running = processItems(singleItems, runningErrorLinkIds);
-    //进行中的异常
-    // const complete = processItems(singleItems, completeErrorLinkIds);
+    result.ongoing.sum = runningErrorLinkIds.length;
+    result.ongoing.items = transformData(runningErrorLinkIds);
 
+    completeErrorLinkIds.push(...transformCompletedData(withinThreeDays));
 
-    /*    // 增加三天内完成的数据
-        withinThreeDays.forEach(entry => {
-            let values = JSON.parse(entry.multiSelectField_value);
-            values.forEach(value => {
-                let item = result.done.items.find(item => item.name === value);
-                if (item) {
-                    item.sum += 1;
-                }
-            });
-        });*/
+    result.done.items = transformData(completeErrorLinkIds);
+    result.done.sum = completeErrorLinkIds.length;
+
+    console.log("结束");
     return result;
 }
 
@@ -760,8 +754,9 @@ async function getLinkingCommonTO(productLineLeaders, singleItems, timeRange, in
     };
 
     const uniqueItems = {};
+    
 
-    for (const item of taoBaoErrorItems) {
+    for (const item of await fetchAndProcessErrorItems()) {
         const items = filterItems(singleItems, item.values);
         result.items.push({
             name: item.name,
@@ -843,7 +838,7 @@ function filterItems(singleItems, values) {
 
 function applyExclude(singleItem, exclude, excludeResult) {
     const excludeValue = singleItem[exclude.field];
-    const excludeName = exclude.name;
+    const excludeName = exclude.value;
     const excludeComparator = exclude.comparator;
 
     switch (excludeComparator) {
@@ -1297,10 +1292,49 @@ const updateSingleItemTaoBao = async (item) => {
     const result = singleItemTaoBaoRepo.updateSingleItemTaoBao(item)
     return result
 }
+//更新来自链接属性的自定义1字段
+const updateCustom = async (id, custom) => {
+    return singleItemTaoBaoRepo.updateCustom(id, custom)
+}
 
 // 方法映射，为接口调用使用
 const availableFunctionsMap = {"getLinkErrorQueryFields": getLinkErrorQueryFields}
 
+
+// const taoBaoErrorItems = await tianmao__user_tableService.getExceptionLinks(1);
+async function fetchAndProcessErrorItems() {
+    const newItems = linkTypeConst.groups.filter(group => group.group === "new")[0].items
+    const oldProductFields = newItems.map(item => {
+        return {
+            field: "linkType", operator: "$notIn", comparator: "!==",
+            value: item, sqlValue: newItems
+        }
+    })
+    const errorItems = await tianmao__user_tableService.getExceptionLinks(1);
+    console.log(errorItems)
+    const shouldConcatOldProductFields = errorItems.some(item => item.name === "费比超过15%");
+
+    return errorItems.reduce((acc, item) => {
+        const baseValues = [{
+            field: item.field,
+            operator: item.operator,
+            lessThan: item.lessThan,
+            value: item.value,
+            comparator: item.comparator,
+            exclude: item.exclude,
+            ...(item.sqlValue && {sqlValue: JSON.parse(item.sqlValue)}),
+            ...(item.min && {min: item.min})
+        }];
+
+        const newItem = {
+            name: item.name,
+            values: shouldConcatOldProductFields ? baseValues.concat(oldProductFields) : baseValues
+        };
+
+        acc.push(newItem);
+        return acc;
+    }, []);
+}
 
 module.exports = {
     saveSingleItemTaoBao,
@@ -1321,5 +1355,6 @@ module.exports = {
     attachPercentageTagToField,
     getTaoBaoSingleItemsWithStatistic,
     updateSingleItemTaoBao,
-    getLinknewvaCount
+    getLinknewvaCount,
+    updateCustom
 }

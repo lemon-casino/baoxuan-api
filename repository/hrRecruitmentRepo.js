@@ -421,7 +421,7 @@ const statistics = async () => {
   count(case when contract_company is not null then 1 end) as 合同管理数量
 from zai_zhi_ren;*/
 
-        console.log("来到这里")
+        console.log("来到这里?")
         return await ZaiZhiRen.sequelize.query(
             `SELECT
     total,

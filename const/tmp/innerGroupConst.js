@@ -1,7 +1,7 @@
 // 天猫小组内容划分的临时小组结构
 const tmInnerGroupVersion1 = {
     "朱梦婷组": ["朱梦婷", "安静淼", "薛娜"],
-    "李杨组": ["李杨", "唐再宏"],
+    "李杨组": ["李杨"],
     "孙文涛组": ["孙文涛", "赵佳雯"]
 }
 
@@ -22,7 +22,6 @@ const tmInnerGroupVersion2 = [
         groupCode: "lyGroup", groupName: "李杨组",
         members: [
             {userName: "李杨", userDDId: "1902106729846298", isLeader: true},
-            {userName: "唐再宏", userDDId: "211420293021597362"}
         ]
     },
     {
