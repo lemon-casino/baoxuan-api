@@ -10,7 +10,7 @@ const {opFunctions} = require("@/const/operatorConst")
 const {visionFormDoneActivityIds} = require("@/const/tmp/coreActionsConst")
 const regexConst = require("@/const/regexConst")
 const departmentCoreActivityStat = require("@/core/statistic/departmentCoreActivityStat")
-const visionConfusedUserNamesConst = require("@/const/tmp/visionConst")
+const visionConst = require("@/const/tmp/visionConst")
 const statResultTemplateConst = require("@/const/statResultTemplateConst")
 const flowUtil = require("@/utils/flowUtil")
 const algorithmUtil = require("@/utils/algorithmUtil")
@@ -177,51 +177,8 @@ const statVisionUserFlowData = async (userActivity, flow) => {
         return []
     }
 
-    const tagsFormItemKeywordsMapping = [
-        {
-            tagCode: "lArtEditorGroup",
-            includeFormItemKws: ["大美编", "精修数量", "重点精修数量", "普通数量", "普通修图数量", "美编权重数据普通", "美编权重数据精修", "美编权重数据重点精修"],
-            excludeFormItemKws: ["小美编", "中美编", "外包"]
-        },
-        {
-            tagCode: "sArtEditorGroup",
-            includeFormItemKws: ["小美编", "简单数量", "简单修图数量", "普通数量", "普通修图数量", "美编权重数据普通", "美编权重数据简单"],
-            excludeFormItemKws: ["大美编", "中美编", "外包"]
-        },
-        {
-            tagCode: "AIGroup",
-            includeFormItemKws: ["AI"],
-            excludeFormItemKws: ["非AI", "摄影", "摄像"]
-        },
-        {
-            tagCode: "typeSettingGroup",
-            includeFormItemKws: ["排版", "套版"],
-            excludeFormItemKws: ["外包"]
-        },
-        {
-            tagCode: "modelingGroup",
-            includeFormItemKws: ["建模"],
-            excludeFormItemKws: []
-        },
-        {
-            tagCode: "clipGroup",
-            includeFormItemKws: ["剪辑", "任务数量"],
-            excludeFormItemKws: ["大美编", "小美编", "外包"]
-        },
-        {
-            tagCode: "photographyGroup",
-            includeFormItemKws: ["摄影数量", "摄影非AI数值", "摄像非AI", "视频"],
-            excludeFormItemKws: ["产品使用视频与样品交接"]
-        },
-        {
-            tagCode: "photographyAIGroup",
-            includeFormItemKws: ["摄影AI数量", "摄像AI数量"],
-            excludeFormItemKws: []
-        }
-    ]
-
     const userTags = taggedUser[0].tags
-    const userTagsFormItemKeywordsMappings = tagsFormItemKeywordsMapping.filter(item => userTags.filter(tag => tag.tagCode === item.tagCode).length > 0)
+    const userTagsFormItemKeywordsMappings = visionConst.tagsFormItemKeywordsMapping.filter(item => userTags.filter(tag => tag.tagCode === item.tagCode).length > 0)
     if (userTagsFormItemKeywordsMappings.length === 0) {
         return []
     }
@@ -242,15 +199,15 @@ const statVisionUserFlowData = async (userActivity, flow) => {
     }
 
     const notEmptyFlowDataStat = visionUserFlowDataStatResultTemplate.filter(item => item.children.length > 0)
-    const removeFormFieldNameKWs = (flowDataStat) => {
-        for (const item of flowDataStat) {
-            delete item["formFieldNameKWs"]
-        }
-        return flowDataStat
-    }
-
     const result = removeFormFieldNameKWs(notEmptyFlowDataStat)
     return result
+}
+
+const removeFormFieldNameKWs = (flowDataStat) => {
+    for (const item of flowDataStat) {
+        delete item["formFieldNameKWs"]
+    }
+    return flowDataStat
 }
 
 
@@ -691,7 +648,7 @@ const convertToUserActionResult = (users, userStatResult) => {
     // 因为要兼容前期混乱的外包负责人信息
     // 如果users中有 外包的人才需要visionConfusedUserNamesConst的参与
     const userStatArr = []
-    const mixedOutSourcingUsers = _.cloneDeep(visionConfusedUserNamesConst.unifiedConfusedUserNames).filter(item => {
+    const mixedOutSourcingUsers = _.cloneDeep(visionConst.unifiedConfusedUserNames).filter(item => {
         const tmpUsers = users.filter(user => user.userName === item.username)
         return tmpUsers.length > 0
     })

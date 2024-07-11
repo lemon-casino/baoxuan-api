@@ -16,7 +16,7 @@ const visionUserFlowDataStatResultTemplate = [
         workload: 0,
         children: []
     },
-    {nameCN: "摄影AI", formFieldNameKWs: ["摄影AI", "摄像AI", ""], workload: 0, children: []}
+    {nameCN: "摄影AI", formFieldNameKWs: ["摄影AI", "摄像AI"], workload: 0, children: []}
 ]
 
 module.exports = {
