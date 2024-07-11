@@ -39,9 +39,9 @@ const operationLeaderFieldId = "employeeField_lii5gvq3_id";
 // 天猫部门的id
 const tmDeptId = "903075138"
 // 链接问题处理数据需要筛选的流程表单id (运营优化方案流程)
-const errorLinkFormId = "FORM-CP766081CPAB676X6KT35742KAC229LLKHIILB";
+const errorLinkFormId = "FORM-51A6DCCF660B4C1680135461E762AC82JV53";
 const linkIdField = "textField_liihs7kw"
-
+const selectField = "multiSelectField_lwufb7oy"
 /**
  * 根据中文获取真实的数据库字段
  * @param chineseName
@@ -299,6 +299,7 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
 
     }
 
+
     const singleItems = await getAllSatisfiedSingleItems(
         productLineLeaderNames,
         firstLevelProductLine,
@@ -323,14 +324,14 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
     let paymentData = []
     let profitData = []
     let marketRioData = []
-    if (jis) {
-        //付费数据
-        paymentData = await getPayment(singleItems)
-        //  支付数据
-        profitData = await getProfitData(singleItems)
-        // 市场占有率
-        marketRioData = await getMarketRatioData(singleItems)
-    }
+    /*    if (jis) {
+            //付费数据
+            paymentData = await getPayment(singleItems)
+            //  支付数据
+            profitData = await getProfitData(singleItems)
+            // 市场占有率
+            marketRioData = await getMarketRatioData(singleItems)
+        }*/
 
 
     return {
@@ -470,8 +471,9 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
                                           linkStatus,
                                           timeRange,
                                           clickingAdditionalParams) => {
-    const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
 
+    const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
+    console.log("你怎么这么慢")
     const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
         999999,
         productLineLeaders,
@@ -524,6 +526,7 @@ async function ToBeOnTheShelves(productLineLeaders) {
  */
 const getLinkOperationCount = async (satisfiedSingleItems, productLineLeaders, timeRange) => {
     // 创建所有异步操作的Promise
+    console.log("来到这里》》》》")
     const newvaPromise = getlinkingIssues(productLineLeaders, satisfiedSingleItems, timeRange);
     const selfDoSingleItemLinkOperationCountPromise = getSelfDoSingleItemLinkOperationCount(satisfiedSingleItems);
     const ToBeOnTheShelvesPromise = ToBeOnTheShelves(productLineLeaders);
@@ -676,178 +679,103 @@ const getSelfFightingSingleItemLinkOperationCount = async (singleItems, fighting
     return result
 }
 
-/**
- * 获取本人链接操作数据（异常数据）
- * @returns {Promise<{sum: number, items: *[]}>}
- * @param productLineLeaders
- * @param singleItems  获得的数据
- * @param timeRange
- */
-
-/*
- const getSelfErrorSingleItemLinkOperationCount = async (productLineLeaders, singleItems, timeRange) => {
-//     const result = {sum: 0, items: []}
-//     // 通过map过滤重复的数据
-//     const uniqueItems = {}
-//     for (const item of taoBaoErrorItems) {
-//         //打印singleItems 的长度
-//         // console.log(singleItems.length)
-//         const items = singleItems.filter((singleItem) => {
-//             for (const exp of item.values) {
-//                 let value = exp.value
-//                 let fieldValue = singleItem[exp.field]
-//                 if (exp.field === "profitRate") {
-//                     // if(singleItem[exp.lessThan] === "true"){
-//                     //reallyShipmentAmount 小于0
-//                     if (exp.lessThan === "negative_profit_60") {
-//                         if (singleItem[exp.lessThan] === "true") {
-//                             return singleItem["profitRate"] * 1 < 0
-//                         }
-//                         return false
-//                     } else {
-//                         return singleItem[exp.lessThan] === "true";
-//                     }
-//
-//                     //     return  singleItem[exp.field] < parseFloat(exp.value)
-//                     // }
-//
-//                 }
-//                 // 坑市场占比环比（7天）
-//                 if (exp.field === "salesMarketRateCircleRate7Day") {
-//                     return singleItem["salesMarketRateCircleRate7Day"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 > -20
-//                 }
-//                 //手淘人数市场占比环比（7天）
-//                 if (exp.field === "shouTaoPeopleNumMarketRateCircleRate7Day") {
-//
-//                     return (singleItem["salesMarketRateCircleRate7Day"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 < -20) || (singleItem["shouTaoPeopleNumMarketRateCircleRate7Day"] * 1 < -20 && singleItem["salesMarketRateCircleRate7Day"] * 1 > -20)
-//
-//
-//                 }
-//
-//                 // 坑市场占比环比（日天）
-//                 if (exp.field === "salesMarketRateCircleRateDay") {
-//                     return singleItem["salesMarketRateCircleRateDay"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 > -20
-//                 }
-//                 //手淘人数市场占比环比（日天）
-//                 if (exp.field === "shouTaoPeopleNumMarketRateCircleRateDay") {
-//
-//                     return (singleItem["salesMarketRateCircleRateDay"] * 1 < -20 && singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 < -20) || (singleItem["shouTaoPeopleNumMarketRateCircleRateDay"] * 1 < -20 && singleItem["salesMarketRateCircleRateDay"] * 1 > -20)
-//
-//                 }
-//
-//
-//                 if (exp.comparator) {
-//                     let tmpResult = true
-//                     // 如果value为数字需要转化
-//                     const isNumber = /^(\-|\+)?\d+(\.\d+)?$/.test(value)
-//                     if (isNumber) {
-//                         value = parseFloat(value)
-//                         fieldValue = parseFloat(fieldValue)
-//                         tmpResult = eval(`${fieldValue}${exp.comparator}${value}`)
-//                     } else {
-//                         tmpResult = eval(`"${fieldValue}"
-//                         ${exp.comparator}
-//                         "${value}"`)
-//                     }
-//
-//                     if (!tmpResult) {
-//                         return false
-//                     }
-//                 }
-//                 if (exp.min) {
-//                     const minMatch = fieldValue >= parseFloat(exp.min)
-//                     if (!minMatch) {
-//                         return false
-//                     }
-//                 }
-//             }
-//             return true
-//         })
-//
-//         result.items.push({name: item.name, sum: items.length, clickingAdditionalParams: item.values})
-//
-//         for (const tmp1.json of items) {
-//             uniqueItems[tmp1.json.id] = 1
-//         }
-//     }
-//     const sum = await singleItemTaoBaoRepo.getError60SingleIte(productLineLeaders, timeRange)
-//     result.items.forEach((item) => {
-//         if (item.name === "累计60天负利润") {
-//             item.sum = sum
-//         }
-//     })
-//     result.sum = Object.keys(uniqueItems).length
-//     // result.items.sort((a, b) => b.sum - a.sum);
-//     return result;
-// }
-*/
-
 async function getlinkingIssues(productLineLeaders, singleItems, timeRange) {
-    return await getLinkingCommon(productLineLeaders, singleItems, timeRange, false);
+    return await getLinkingCommon(productLineLeaders, singleItems, timeRange, true);
 }
 
 async function getlinkingto(productLineLeaders, singleItems, timeRange) {
     return await getLinkingCommon(productLineLeaders, singleItems, timeRange, true);
 }
 
+
 async function getLinkingCommon(productLineLeaders, singleItems, timeRange, includeRecord) {
+    console.log("来到这里")
     const result = {
         error: {items: [], sum: 0},
         ongoing: {items: [], sum: 0},
         done: {items: [], sum: 0}
     };
+    const runningErrorLinkIds = await flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.RUNNING);
+    const completeErrorLinkIds = await flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.COMPLETE);
+    //总异常数据
+    result.error = await getLinkingCommonTO(productLineLeaders, singleItems, timeRange, includeRecord);
+
+
+    const transformData = (data) => {
+        const result = {};
+
+        data.forEach(entry => {
+            const id = Object.keys(entry)[0];
+            const issues = entry[id];
+
+            issues.forEach(issue => {
+                if (!result[issue]) {
+                    result[issue] = {name: issue, sum: 0, ids: []};
+                }
+                result[issue].sum++;
+                result[issue].ids.push(id);
+            });
+        });
+
+        return Object.values(result);
+    };
+    result.ongoing.sum = runningErrorLinkIds.length;
+    result.ongoing.items = transformData(runningErrorLinkIds)
+    const withinThreeDays = await theProcessIsCompletedInThreeDays();
+
+    //将三天已完成的withinThreeDays 添加到completeErrorLinkIds
+    const transformDatazhuanh = (data) => {
+        return data.map(entry => ({
+            [entry.textField_value]: JSON.parse(entry.multiSelectField_value)
+        }));
+    };
+
+    completeErrorLinkIds.push(...transformDatazhuanh(withinThreeDays))
+    result.done.items = transformData(completeErrorLinkIds)
+    result.done.sum = completeErrorLinkIds.length + withinThreeDays.length;
+    //进行中的数据
+    // const running = processItems(singleItems, runningErrorLinkIds);
+    //进行中的异常
+    // const complete = processItems(singleItems, completeErrorLinkIds);
+
+
+    /*    // 增加三天内完成的数据
+        withinThreeDays.forEach(entry => {
+            let values = JSON.parse(entry.multiSelectField_value);
+            values.forEach(value => {
+                let item = result.done.items.find(item => item.name === value);
+                if (item) {
+                    item.sum += 1;
+                }
+            });
+        });*/
+    return result;
+}
+
+
+async function getLinkingCommonTO(productLineLeaders, singleItems, timeRange, includeRecord) {
+    const result = {
+        items: [],
+        sum: 0,
+    };
 
     const uniqueItems = {};
-    const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING);
-    const completeErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.COMPLETE);
-    const withinThreeDays = await theProcessIsCompletedInThreeDays();
+
     for (const item of taoBaoErrorItems) {
         const items = filterItems(singleItems, item.values);
-        result.error.items.push({
+        result.items.push({
             name: item.name,
             sum: items.length,
             clickingAdditionalParams: item.values,
             ...(includeRecord ? {recordTheLinkID: getRecordLinkID(items)} : {})
         });
-
-        const running = processItems(items, runningErrorLinkIds);
-        const complete = processItems(items, completeErrorLinkIds);
-        result.ongoing.items.push({
-            name: item.name,
-            sum: running.length,
-            clickingAdditionalParams: item.values,
-            ...(includeRecord ? {recordTheLinkID: getRecordLinkID(running)} : {})
-        });
-
-        result.ongoing.sum += running.length;
-
-
-        result.done.items.push({
-            name: item.name,
-            sum: complete.length,
-            clickingAdditionalParams: item.values,
-            ...(includeRecord ? {recordTheLinkID: getRecordLinkID(complete)} : {})
-        });
-
-        result.done.sum += complete.length;
-
         for (const tmp of items) {
             uniqueItems[tmp.id] = 1;
         }
     }
-    // 增加三天内完成的数据
-    withinThreeDays.forEach(entry => {
-        let values = JSON.parse(entry.multiSelectField_value);
-        values.forEach(value => {
-            let item = result.done.items.find(item => item.name === value);
-            if (item) {
-                item.sum += 1;
-            }
-        });
-    });
-    result.done.sum = result.done.items.reduce((total, item) => total + item.sum, 0);
+
     const sum = await singleItemTaoBaoRepo.getError60SingleIte(productLineLeaders, timeRange);
-    result.error.items.forEach(item => {
+    result.items.forEach(item => {
         if (item.name === "累计60天负利润") {
             item.sum = sum.length;
             if (includeRecord) {
@@ -858,10 +786,12 @@ async function getLinkingCommon(productLineLeaders, singleItems, timeRange, incl
             }
         }
     });
+    result.sum = Object.keys(uniqueItems).length;
 
-    result.error.sum = Object.keys(uniqueItems).length;
+
     return result;
 }
+
 
 function filterItems(singleItems, values) {
     return singleItems.filter(singleItem => {
@@ -869,17 +799,14 @@ function filterItems(singleItems, values) {
             exp.exclude = exp.exclude || [];
             let value = exp.value;
             let fieldValue = singleItem[exp.field];
-
             if (exp.field === "profitRate") {
                 let excludeResult = true;
                 for (const exclude of exp.exclude) {
-                    console.log(exclude)
                     excludeResult = applyExclude(singleItem, exclude, excludeResult);
                     if (!excludeResult) {
                         break;
                     }
                 }
-
                 if (exp.lessThan === "negative_profit_60") {
                     if (singleItem[exp.lessThan] === "true") {
                         return singleItem["profitRate"] < 0 && excludeResult;
@@ -889,7 +816,6 @@ function filterItems(singleItems, values) {
                     return singleItem[exp.lessThan] === "true" && excludeResult;
                 }
             }
-
             // 坑市场占比环比（7天）
             if (exp.field === "salesMarketRateCircleRate7Day") {
                 return compareMarketRate(exp.field, singleItem, -20);
@@ -986,56 +912,6 @@ function compareShouTaoPeopleNumMarketRate(field, singleItem, compareValue) {
     return (salesMarketRate < compareValue && shouTaoPeopleNumMarketRate < compareValue) ||
         (shouTaoPeopleNumMarketRate < compareValue && salesMarketRate > compareValue);
 }
-
-/**
- * 获取数据
- * @param userId
- * @param status
- */
-// const getErrorLinkOperationCount = async (singleItems, status) => {
-//
-//     const findSingleItemsDividedByUser = (runningErrorLinkIds, singleItems, status) => {
-//         const result = {sum: 0, items: []}
-//         const errorSingleItems = singleItems.filter((item) => {
-//             return runningErrorLinkIds.includes(item.linkId)
-//         })
-//
-//         for (const user of usersOfTM) {
-//             const singleItemsOfUser = errorSingleItems.filter((item) => item.productLineLeader === user.name)
-//             result.sum = result.sum + singleItemsOfUser.length
-//             result.items.push({
-//                 name: user.name,
-//                 sum: singleItemsOfUser.length,
-//                 clickingAdditionalParams: [{"method": "getLinkErrorQueryFields", "param": status}]
-//             })
-//         }
-//         return result
-//     }
-//
-//     const usersOfTM = await departmentService.getUsersOfDepartment(tmDeptId)
-//
-//     // 进行中
-//     if (status.toUpperCase() === flowStatusConst.RUNNING) {
-//         const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING)
-//         const result = findSingleItemsDividedByUser(runningErrorLinkIds, singleItems, flowStatusConst.RUNNING)
-//         return result
-//     }
-//     //  已完成
-//     // todo: 后面需要补充上历史的数据
-//     if (status.toUpperCase() === flowStatusConst.COMPLETE) {
-//         const completeErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.COMPLETE)
-//         return findSingleItemsDividedByUser(completeErrorLinkIds, singleItems)
-//     }
-//     // todo: 需要确认成功的条件在判断
-//     if (status === "success") {
-//         return 0
-//     }
-//     // todo: 需要确认成功的条件在判断
-//     if (status == "fail") {
-//         return 0
-//     }
-//     throw new NotFoundError(`${status}还不支持`)
-// }
 
 /**
  * 付费数据： 精准人群、车、万象台
