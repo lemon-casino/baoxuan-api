@@ -294,7 +294,7 @@ const createFlowDataStatNode = (node) => {
         children: [
             {
                 nameCN: "进行中",
-                tooltip: "该工作量会汇总表单中预计的数据",
+                tooltip: "该工作量会统计表单中预计的数据",
                 sumAlone: true,
                 children: runningWorkload
             },
