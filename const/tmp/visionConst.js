@@ -68,5 +68,13 @@ const tagsFormItemKeywordsMapping = [
     }
 ]
 
-module.exports = {unifiedConfusedUserNames, tagsFormItemKeywordsMapping}
+const confusedActivityNameForStatFormData = [
+    "中美编自修", "中美编负责人", "套版美编负责人", "套版编负责人", "小美编负责人"
+]
+
+module.exports = {
+    unifiedConfusedUserNames,
+    tagsFormItemKeywordsMapping,
+    confusedActivityNameForStatFormData
+}
 

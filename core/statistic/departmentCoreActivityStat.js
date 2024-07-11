@@ -8,13 +8,13 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 /**
  * 根据人名和核心动作配置信息统计流程
  *
- *
- * @param userNames
+ * @param users
  * @param flows
  * @param coreConfig
- * @returns {Promise<*[]>}  返回的结构同配置的动作结构
+ * @param userFlowDataStatCB
+ * @returns {Promise<*[]>}
  */
-const get = async (userNames, flows, coreConfig, userFlowDataStatCB) => {
+const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
     const finalResult = []
 
     // 根据配置信息获取基于所有人的数据
@@ -99,13 +99,20 @@ const get = async (userNames, flows, coreConfig, userFlowDataStatCB) => {
                                         const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
                                         ownerName = reviewItems.length > 0 ? reviewItems[0].operatorName : defaultUserName
                                     }
-                                    operatorsActivity.push({userName: ownerName, activity: reviewItem})
+
+                                    const user = users.find(user => user.nickname === ownerName)
+                                    if (user) {
+                                        operatorsActivity.push({
+                                            userName: ownerName,
+                                            tags: user.tags,
+                                            activity: reviewItem
+                                        })
+                                    }
                                 }
                                 break
                             }
                         }
 
-                        operatorsActivity = operatorsActivity.filter(operator => userNames.includes(operator.userName))
                         if (operatorsActivity.length === 0) {
                             continue
                         }

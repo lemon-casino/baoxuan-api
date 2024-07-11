@@ -50,7 +50,7 @@ const getCoreActions = async (tags, userId, deptIds, userNames, startDoneDate, e
 
     // 基于人的汇总(最基本的明细统计)
     const actionStatBasedOnUserResult = await departmentCoreActivityStat.get(
-        requiredUserNames,
+        requiredUsers,
         combinedFlows,
         coreActionConfig,
         statVisionUserFlowData
@@ -141,11 +141,11 @@ const filterUsersByTags = (users, tags) => {
         users = users.filter(user => {
             for (const tagCode of tags) {
                 const tmpUserTags = user.tags.filter(item => item.tagCode === tagCode)
-                if (tmpUserTags.length === 0) {
-                    return false
+                if (tmpUserTags.length > 0) {
+                    return true
                 }
             }
-            return true
+            return false
         })
     }
     return users
@@ -158,9 +158,24 @@ const filterUsersByTags = (users, tags) => {
  * @returns {Promise<*|*[]>}
  */
 const statVisionUserFlowData = async (userActivity, flow) => {
-
     // 当前用户统计到的节点需要时正在干活的节点才要汇总表单信息
-    let {userName, activity} = userActivity
+    let {userName, tags, activity} = userActivity
+    // 仅对内部美编人员的节点做判断
+    const insideArtTagCode = tags.find(tag => tag.tagCode === "insideArt")
+    if (insideArtTagCode) {
+        let validActivity = false
+        const standardVisionActivityNamePattern = "^.*修图$"
+        const validVisionActivityNamePatternForStatFormData = visionConst.confusedActivityNameForStatFormData.concat(standardVisionActivityNamePattern)
+        for (const pattern of validVisionActivityNamePatternForStatFormData) {
+            if (new RegExp(pattern).test(activity.showName)) {
+                validActivity = true
+                break
+            }
+        }
+        if (!validActivity) {
+            return []
+        }
+    }
 
     const visionUserFlowDataStatResultTemplate = _.cloneDeep(statResultTemplateConst.visionUserFlowDataStatResultTemplate)
     if (userName.includes("离职")) {
