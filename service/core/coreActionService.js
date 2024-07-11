@@ -37,7 +37,6 @@ const getCoreActions = async (tags, userId, deptIds, userNames, startDoneDate, e
         requiredUsers = requiredUsers.concat(relatedOtherUsers)
     }
     requiredUsers = filterUsersByTags(requiredUsers, tags)
-    const requiredUserNames = requiredUsers.map(item => item.userName || item.nickname).join(",")
 
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptIds)
     const differentForms = extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
@@ -55,8 +54,9 @@ const getCoreActions = async (tags, userId, deptIds, userNames, startDoneDate, e
         coreActionConfig,
         statVisionUserFlowData
     )
-
-    const finalResult = tags.length === 0 ? _.cloneDeep(actionStatBasedOnUserResult) : []
+    // 区分核心动作、核心人员菜单
+    const isFromCoreActionMenu = tags.length === 0
+    const finalResult = isFromCoreActionMenu ? _.cloneDeep(actionStatBasedOnUserResult) : []
 
     for (const item of finalResult) {
         const workloadNode = createFlowDataStatNode(item)
@@ -66,7 +66,7 @@ const getCoreActions = async (tags, userId, deptIds, userNames, startDoneDate, e
     // 先仅仅处理视觉部
     if (deptIds.includes("482162119")) {
         // 核心动作统计不用标签区分
-        if (tags.length === 0) {
+        if (isFromCoreActionMenu) {
             const sumUserActionStatResult = sumUserActionStat(actionStatBasedOnUserResult)
             finalResult.unshift({
                 actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult

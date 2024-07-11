@@ -84,14 +84,17 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                                 else {
                                     // 找到该工作量的负责人
                                     let ownerName = "未分配"
-                                    const {from, id, defaultUserName} = ownerRule
+                                    let {from, id, defaultUserName} = ownerRule
+                                    // 外包的流程可能会存在未选择外包人的情况
                                     if (from.toUpperCase() === ownerFrom.FORM) {
-                                        ownerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id]
+                                        let tmpOwnerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id]
                                         // 如果是数组的格式，转成以“,”连接的字符串
-                                        if (ownerName instanceof Array) {
-                                            ownerName = ownerName.join(",")
+                                        if (tmpOwnerName instanceof Array) {
+                                            tmpOwnerName = tmpOwnerName.join(",")
                                         }
-                                        if (!ownerName) {
+                                        if (tmpOwnerName) {
+                                            ownerName = tmpOwnerName
+                                        } else if (defaultUserName) {
                                             ownerName = defaultUserName
                                         }
                                     } else {
@@ -100,7 +103,8 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                                         ownerName = reviewItems.length > 0 ? reviewItems[0].operatorName : defaultUserName
                                     }
 
-                                    const user = users.find(user => user.nickname === ownerName)
+                                    const user = users.find(user => user.nickname === ownerName || user.userName === ownerName)
+
                                     if (user) {
                                         operatorsActivity.push({
                                             userName: ownerName,
