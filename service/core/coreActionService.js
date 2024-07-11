@@ -31,30 +31,13 @@ const getCoreActions = async (tags, userId, deptIds, userNames, startDoneDate, e
     // 普通的身份不要组合 outUserNames、resignedUserNames
     let requiredUsers = await userRepo.getUsersWithTagsByUsernames(userNames) || []
     const isDeptLeader = await userCommonService.isDeptLeaderOfTheUser(userId, deptIds)
+
     if (isDeptLeader) {
-        for (const deptId of deptIds) {
-            const deptOutSourcingUsers = await outUsersRepo.getOutUsersWithTags({deptId: deptId, enabled: true})
-            requiredUsers = requiredUsers.concat(deptOutSourcingUsers)
-            const deptResignUsers = await userRepo.getDeptResignUsers(deptId)
-            const deptResignedUsers = deptResignUsers.map(item => {
-                item.nickname = `${item.nickname}[已离职]`
-                return item
-            })
-            requiredUsers = requiredUsers.concat(deptResignedUsers)
-        }
+        const relatedOtherUsers = await getRelatedOtherUsers(deptIds)
+        requiredUsers = requiredUsers.concat(relatedOtherUsers)
     }
-    // 根据标签对前面获取的所有用户进行筛选
-    if (tags && tags.length > 0) {
-        requiredUsers = requiredUsers.filter(user => {
-            for (const tagCode of tags) {
-                const tmpUserTags = user.tags.filter(item => item.tagCode === tagCode)
-                if (tmpUserTags.length === 0) {
-                    return false
-                }
-            }
-            return true
-        })
-    }
+    requiredUsers = filterUsersByTags(requiredUsers, tags)
+    const requiredUserNames = requiredUsers.map(item => item.userName || item.nickname).join(",")
 
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptIds)
     const differentForms = extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
@@ -64,8 +47,6 @@ const getCoreActions = async (tags, userId, deptIds, userNames, startDoneDate, e
     combinedFlows = flowCommonService.removeTargetStatusFlows(combinedFlows, flowStatusConst.TERMINATED)
     combinedFlows = flowCommonService.removeDoneActivitiesNotInDoneDateRange(combinedFlows, startDoneDate, endDoneDate)
     combinedFlows = flowCommonService.removeRedirectActivity(combinedFlows)
-
-    const requiredUserNames = requiredUsers.map(item => item.userName || item.nickname).join(",")
 
     // 基于人的汇总(最基本的明细统计)
     const actionStatBasedOnUserResult = await departmentCoreActivityStat.get(
@@ -127,7 +108,51 @@ const getCoreActions = async (tags, userId, deptIds, userNames, startDoneDate, e
 }
 
 /**
+ * 获取部门其他相关的人员：外包、离职
  *
+ * @param deptIds
+ * @returns {Promise<*[]>}
+ */
+const getRelatedOtherUsers = async (deptIds) => {
+    let otherUsers = []
+    for (const deptId of deptIds) {
+        const deptOutSourcingUsers = await outUsersRepo.getOutUsersWithTags({deptId: deptId, enabled: true})
+        otherUsers = otherUsers.concat(deptOutSourcingUsers)
+        const deptResignUsers = await userRepo.getDeptResignUsers(deptId)
+        const deptResignedUsers = deptResignUsers.map(item => {
+            item.nickname = `${item.nickname}[已离职]`
+            return item
+        })
+        otherUsers = otherUsers.concat(deptResignedUsers)
+    }
+    return otherUsers
+}
+
+/**
+ * 根据tags过滤用户
+ *
+ * @param users
+ * @param tags
+ * @returns {*}
+ */
+const filterUsersByTags = (users, tags) => {
+    // 根据标签对前面获取的所有用户进行筛选
+    if (tags && tags.length > 0) {
+        users = users.filter(user => {
+            for (const tagCode of tags) {
+                const tmpUserTags = user.tags.filter(item => item.tagCode === tagCode)
+                if (tmpUserTags.length === 0) {
+                    return false
+                }
+            }
+            return true
+        })
+    }
+    return users
+}
+
+/**
+ * 统计视觉部员工的流程表单数据
  * @param username
  * @param flow
  * @returns {Promise<*|*[]>}
@@ -197,62 +222,6 @@ const statVisionUserFlowData = async (username, flow) => {
         return []
     }
 
-    const isIncludeFormItemKw = (fieldName, includeFormItemKws) => {
-        for (const includeFormItemKw of includeFormItemKws) {
-            if (fieldName.includes(includeFormItemKw)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    const isExcludeFormItemKws = (fieldName, excludeFormItemKws) => {
-        for (const excludeFormItemKw of excludeFormItemKws) {
-            if (fieldName.includes(excludeFormItemKw)) {
-                return false
-            }
-        }
-        return true
-    }
-
-    const isUserRequiredFieldName = (fieldName, userTagsFormItemKeywordsMappings) => {
-        for (const formItemKWMapping of userTagsFormItemKeywordsMappings) {
-            const {includeFormItemKws, excludeFormItemKws} = formItemKWMapping
-            if (isIncludeFormItemKw(fieldName, includeFormItemKws) && isExcludeFormItemKws(fieldName, excludeFormItemKws)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    const getUserRequiredFieldIdsByKWMapping = (flowDataKeyDetails, userTagsFormItemKeywordsMappings) => {
-        const userRequiredFields = []
-        for (const formItemKey of Object.keys(flowDataKeyDetails)) {
-            if (isUserRequiredFieldName(flow.dataKeyDetails[formItemKey], userTagsFormItemKeywordsMappings)) {
-                userRequiredFields.push(formItemKey)
-            }
-        }
-        return userRequiredFields
-    }
-
-    const getNotEmptyUserRequiredFields = (fieldIds, data, dataKeyDetails) => {
-        const result = []
-        for (const fieldId of fieldIds) {
-            if (data[fieldId] && data[fieldId] !== "0") {
-                result.push({fieldId, fieldName: dataKeyDetails[fieldId], value: data[fieldId]})
-            }
-        }
-        return result
-    }
-
-    const getResultNode = (fieldName, visionUserFlowDataStatResultTemplate) => {
-        const resultNode = visionUserFlowDataStatResultTemplate.find(item => {
-            const whichKW = item.formFieldNameKWs.find(kw => fieldName.includes(kw))
-            return !!whichKW
-        })
-        return resultNode
-    }
-
     const userRequiredFieldIds = getUserRequiredFieldIdsByKWMapping(flow.dataKeyDetails, userTagsFormItemKeywordsMappings)
 
     const userRequiredFields = getNotEmptyUserRequiredFields(userRequiredFieldIds, flow.data, flow.dataKeyDetails)
@@ -278,6 +247,63 @@ const statVisionUserFlowData = async (username, flow) => {
 
     const result = removeFormFieldNameKWs(notEmptyFlowDataStat)
     return result
+}
+
+
+const isIncludeFormItemKw = (fieldName, includeFormItemKws) => {
+    for (const includeFormItemKw of includeFormItemKws) {
+        if (fieldName.includes(includeFormItemKw)) {
+            return true
+        }
+    }
+    return false
+}
+
+const isExcludeFormItemKws = (fieldName, excludeFormItemKws) => {
+    for (const excludeFormItemKw of excludeFormItemKws) {
+        if (fieldName.includes(excludeFormItemKw)) {
+            return false
+        }
+    }
+    return true
+}
+
+const isUserRequiredFieldName = (fieldName, userTagsFormItemKeywordsMappings) => {
+    for (const formItemKWMapping of userTagsFormItemKeywordsMappings) {
+        const {includeFormItemKws, excludeFormItemKws} = formItemKWMapping
+        if (isIncludeFormItemKw(fieldName, includeFormItemKws) && isExcludeFormItemKws(fieldName, excludeFormItemKws)) {
+            return true
+        }
+    }
+    return false
+}
+
+const getUserRequiredFieldIdsByKWMapping = (flowDataKeyDetails, userTagsFormItemKeywordsMappings) => {
+    const userRequiredFields = []
+    for (const formItemKey of Object.keys(flowDataKeyDetails)) {
+        if (isUserRequiredFieldName(flow.dataKeyDetails[formItemKey], userTagsFormItemKeywordsMappings)) {
+            userRequiredFields.push(formItemKey)
+        }
+    }
+    return userRequiredFields
+}
+
+const getNotEmptyUserRequiredFields = (fieldIds, data, dataKeyDetails) => {
+    const result = []
+    for (const fieldId of fieldIds) {
+        if (data[fieldId] && data[fieldId] !== "0") {
+            result.push({fieldId, fieldName: dataKeyDetails[fieldId], value: data[fieldId]})
+        }
+    }
+    return result
+}
+
+const getResultNode = (fieldName, visionUserFlowDataStatResultTemplate) => {
+    const resultNode = visionUserFlowDataStatResultTemplate.find(item => {
+        const whichKW = item.formFieldNameKWs.find(kw => fieldName.includes(kw))
+        return !!whichKW
+    })
+    return resultNode
 }
 
 /**
