@@ -292,8 +292,16 @@ const createFlowDataStatNode = (node) => {
     const newWorkloadStatNode = {
         nameCN: "工作量", excludeUpSum: true, sumAlone: true,
         children: [
-            {nameCN: "进行中", tooltip: "进行中会汇总预计的工作量", sumAlone: true, children: runningWorkload},
-            {nameCN: "已完成", sumAlone: true, children: completedWorkload}
+            {
+                nameCN: "进行中",
+                tooltip: "该工作量会汇总表单中预计的数据",
+                sumAlone: true,
+                children: runningWorkload
+            },
+            {
+                nameCN: "已完成",
+                sumAlone: true, children: completedWorkload
+            }
         ]
     }
 
