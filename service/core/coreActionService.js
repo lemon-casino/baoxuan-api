@@ -153,15 +153,22 @@ const filterUsersByTags = (users, tags) => {
 
 /**
  * 统计视觉部员工的流程表单数据
- * @param userName
+ *
+ * @param userActivity 用户和工作节点相关的信息
  * @param flow
  * @returns {Promise<*|*[]>}
  */
 const statVisionUserFlowData = async (userActivity, flow) => {
     // 当前用户统计到的节点需要时正在干活的节点才要汇总表单信息
-    let {userName, tags, activity} = userActivity
+    let {tags: userTags, activity} = userActivity
+
+    // 没有标签的用户直接返回空模板
+    if (userTags.length === 0) {
+        return []
+    }
+
     // 仅对内部美编人员的节点做判断
-    const insideArtTagCode = tags.find(tag => tag.tagCode === "insideArt")
+    const insideArtTagCode = userTags.find(tag => tag.tagCode === "insideArt")
     if (insideArtTagCode) {
         let validActivity = false
         const standardVisionActivityNamePattern = "^.*修图$"
@@ -178,21 +185,7 @@ const statVisionUserFlowData = async (userActivity, flow) => {
     }
 
     const visionUserFlowDataStatResultTemplate = _.cloneDeep(statResultTemplateConst.visionUserFlowDataStatResultTemplate)
-    if (userName.includes("离职")) {
-        userName = userName.replace("[已离职]", "")
-    }
 
-    let taggedUser = await userRepo.getUsersWithTagsByUsernames([userName])
-    if (taggedUser.length === 0) {
-        taggedUser = await outUsersRepo.getOutUsersWithTags({userName})
-    }
-
-    // 没有标签的用户直接返回空模板
-    if (taggedUser[0].tags.length === 0) {
-        return []
-    }
-
-    const userTags = taggedUser[0].tags
     const userTagsFormItemKeywordsMappings = visionConst.tagsFormItemKeywordsMapping.filter(item => userTags.filter(tag => tag.tagCode === item.tagCode).length > 0)
     if (userTagsFormItemKeywordsMappings.length === 0) {
         return []

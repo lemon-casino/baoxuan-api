@@ -121,8 +121,15 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                             continue
                         }
 
+
+
                         // 根据是否逾期汇总个人的ids和sum
                         for (const operatorActivity of operatorsActivity) {
+
+                            // if (flow.processInstanceId === "92b7ad96-460f-4345-94c4-eba6ce324269" && operatorActivity.user === "徐建森") {
+                            //     console.log("----")
+                            // }
+
                             let userFlows = null
                             if (isOverDue) {
                                 userFlows = overDueResult.children.filter(item => item.userName === operatorActivity.userName)
