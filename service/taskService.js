@@ -274,7 +274,6 @@ const tmallLinkAnomalyDetection = async () => {
     const Links = await tianmao__user_tableService.getExceptionLinks(2);
     //循环 Links 里面的数据
     for (const link of Links) {
-        console.log(link.id, link.name);
         let quantity = await singleItemTaoBaoService.updateCustom(link.id, link.name);
         logger.info("天猫链接异常更新链接数据面板的属性排除项", link.name, link.id, "===>", quantity);
     }
