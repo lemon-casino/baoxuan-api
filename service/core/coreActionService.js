@@ -281,7 +281,7 @@ const isUserRequiredFieldName = (fieldName, userTagsFormItemKeywordsMappings) =>
 const getUserRequiredFieldIdsByKWMapping = (flowDataKeyDetails, userTagsFormItemKeywordsMappings) => {
     const userRequiredFields = []
     for (const formItemKey of Object.keys(flowDataKeyDetails)) {
-        if (isUserRequiredFieldName(flow.dataKeyDetails[formItemKey], userTagsFormItemKeywordsMappings)) {
+        if (isUserRequiredFieldName(flowDataKeyDetails[formItemKey], userTagsFormItemKeywordsMappings)) {
             userRequiredFields.push(formItemKey)
         }
     }
