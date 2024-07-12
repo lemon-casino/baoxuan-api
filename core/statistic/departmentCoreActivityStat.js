@@ -63,7 +63,6 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                     for (let flow of currFlows) {
                         const processInstanceId = flow.processInstanceId
 
-                        // 一个动作多人执行（会签）
                         let operatorsActivity = []
                         const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
 
@@ -81,9 +80,6 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                                 if (toNode && activity.activityId === toNode.id && toNode.status.includes(activity.type)) {
                                     toMatched = true
                                 }
-                                // if (overdueNode && activity.activityId === overdueNode.id && overdueNode.status.includes(activity.type)) {
-                                //     isOverDue = activity.isOverDue
-                                // }
 
                                 if (fromMatched && toMatched) {
                                     return activity
@@ -96,7 +92,6 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                         if (!matchedActivity) {
                             continue
                         }
-
 
                         const extendActivityWithUserNameAndTags = (activity, users) => {
                             const tmpOperatorsActivity = []
@@ -153,82 +148,68 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                             continue
                         }
 
-
                         // 根据是否逾期汇总个人的ids和sum
                         for (const operatorActivity of operatorsActivity) {
 
-                            const getStatNode = (activity, overDueResult, notOverDueResult) => {
-                                if (activity.isOverDue) {
-                                    return overDueResult.children.filter(item => item.userName === operatorActivity.userName)
-                                }
-                                return notOverDueResult.children.filter(item => item.userName === operatorActivity.userName)
-                            }
-
-                            const getUserStatResult = () => {
-
-                            }
-
-                            const createStatNode = () => {
-
-                            }
-
-                            const statNode = getStatNode(matchedActivity,  overDueResult, notOverDueResult)
-
-                            const userStatResult = getUserStatResult()
-
-
-                            let userFlows = null
-                            if (matchedActivity.isOverDue) {
-                                userFlows = overDueResult.children.filter(item => item.userName === operatorActivity.userName)
-                            } else {
-                                userFlows = notOverDueResult.children.filter(item => item.userName === operatorActivity.userName)
-                            }
-
-                            let userFlowDataStat = null
-                            // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
-                            if (!statusResult.nameCN.includes("待")) {
-                                const tmpFlow = _.cloneDeep(flow)
-                                // 进行中的工作会统计表单中预计的数量 完成后需要排除掉预计的数量， 表单标识有【预计】字样
-                                if (statusResult.nameCN.includes("完")) {
-                                    const containYuJiTagKeys = []
-                                    for (const key of Object.keys(tmpFlow.dataKeyDetails)) {
-                                        if (tmpFlow.dataKeyDetails[key].includes("预计") && tmpFlow.dataKeyDetails[key].includes("数量")) {
-                                            containYuJiTagKeys.push(key)
+                            const getUserStatResult = async (statusResult, flow) => {
+                                let userFlowDataStat = null
+                                // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
+                                if (!statusResult.nameCN.includes("待")) {
+                                    const tmpFlow = _.cloneDeep(flow)
+                                    // 进行中的工作会统计表单中预计的数量 完成后需要排除掉预计的数量， 表单标识有【预计】字样
+                                    if (statusResult.nameCN.includes("完")) {
+                                        const containYuJiTagKeys = []
+                                        for (const key of Object.keys(tmpFlow.dataKeyDetails)) {
+                                            if (tmpFlow.dataKeyDetails[key].includes("预计") && tmpFlow.dataKeyDetails[key].includes("数量")) {
+                                                containYuJiTagKeys.push(key)
+                                            }
+                                        }
+                                        for (const containYuJiTagKey of containYuJiTagKeys) {
+                                            delete tmpFlow.dataKeyDetails[containYuJiTagKey]
+                                            delete tmpFlow.data[containYuJiTagKey]
                                         }
                                     }
-                                    for (const containYuJiTagKey of containYuJiTagKeys) {
-                                        delete tmpFlow.dataKeyDetails[containYuJiTagKey]
-                                        delete tmpFlow.data[containYuJiTagKey]
-                                    }
-                                }
 
-                                const dataStatResult = await userFlowDataStatCB(operatorActivity, tmpFlow)
-                                if (dataStatResult.length > 0) {
-                                    userFlowDataStat = {
-                                        processInstanceId,
-                                        flowData: dataStatResult
+                                    const dataStatResult = await userFlowDataStatCB(operatorActivity, tmpFlow)
+                                    if (dataStatResult.length > 0) {
+                                        userFlowDataStat = {
+                                            processInstanceId,
+                                            flowData: dataStatResult
+                                        }
                                     }
                                 }
+                                return userFlowDataStat
                             }
 
-                            if (userFlows.length > 0 && userFlows[0].ids && userFlows[0].ids.length > 0) {
+                            const userFlowDataStat = await getUserStatResult(statusResult, flow)
+
+                            let resultStatNode = null
+                            if (matchedActivity.isOverDue) {
+                                resultStatNode = overDueResult.children.filter(item => item.userName === operatorActivity.userName)
+                            } else {
+                                resultStatNode = notOverDueResult.children.filter(item => item.userName === operatorActivity.userName)
+                            }
+
+                            const userHasStat = resultStatNode.length > 0
+                            if (userHasStat) {
+                                const currResultStatNode = resultStatNode[0]
                                 // 避免一人在同一流程中干多个活重复计算
-                                if (!userFlows[0].ids.includes(processInstanceId)) {
-                                    userFlows[0].ids.push(processInstanceId)
-                                    userFlows[0].sum = userFlows[0].ids.length
-                                    userFlowDataStat && userFlows[0].userFlowsDataStat.push(userFlowDataStat)
+                                if (!currResultStatNode.ids.includes(processInstanceId)) {
+                                    currResultStatNode.ids.push(processInstanceId)
+                                    currResultStatNode.sum = currResultStatNode.ids.length
+                                    userFlowDataStat && currResultStatNode.userFlowsDataStat.push(userFlowDataStat)
                                 }
                             } else {
-                                userFlows = {
+                                resultStatNode = {
                                     userName: operatorActivity.userName,
                                     sum: 1,
                                     ids: [processInstanceId],
                                     userFlowsDataStat: userFlowDataStat ? [userFlowDataStat] : []
                                 }
                                 if (matchedActivity.isOverDue) {
-                                    overDueResult.children.push(userFlows)
+                                    overDueResult.children.push(resultStatNode)
                                 } else {
-                                    notOverDueResult.children.push(userFlows)
+                                    notOverDueResult.children.push(resultStatNode)
                                 }
                             }
                         }
