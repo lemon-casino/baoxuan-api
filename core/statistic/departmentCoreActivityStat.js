@@ -54,6 +54,7 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                         if (!matchedActivity) {
                             continue
                         }
+
                         operatorsActivity = extendActivityWithUserNameAndTags(matchedActivity, users, flow, ownerRule)
 
                         if (operatorsActivity.length === 0) {
@@ -64,6 +65,7 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                         for (const operatorActivity of operatorsActivity) {
 
                             const getUserStatResult = async (statusResult, flow) => {
+
                                 let userFlowDataStat = null
                                 // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
                                 if (!statusResult.nameCN.includes("待")) {
