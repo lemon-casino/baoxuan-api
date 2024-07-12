@@ -1,6 +1,7 @@
 const models = require('@/model');
 const usersModel = models.usersModel
 const usersTagsModel = models.usersTagsModel
+const deptsUsersModel = models.deptsUsersModel
 const globalGetter = require("@/global/getter")
 const UserError = require("@/error/userError")
 const NotFoundError = require("@/error/http/notFoundError")
@@ -165,20 +166,41 @@ const getAllResignUsers = async () => {
  * @returns {Promise<<Model[]>>}
  */
 const getDeptResignUsers = async (deptId) => {
-    const deptUsers = await models.deptsUsersModel.findAll({
-        where: {deptId}
-    })
+    const deptResignedUsers = await getDeptUsers(deptId, {isResign: true})
+    return sequelizeUtil.extractDataValues(deptResignedUsers)
+}
+
+/**
+ * 获取部门在职人员信息
+ *
+ * @param deptId
+ * @returns {Promise<*>}
+ */
+const getDeptOnJobUsers = async (deptId) => {
+    const deptResignedUsers = await getDeptUsers(deptId, {isResign: false})
+    return sequelizeUtil.extractDataValues(deptResignedUsers)
+}
+
+/**
+ * 获取部门下的用户信息
+ *
+ * @param deptId
+ * @param where
+ * @returns {Promise<*>}
+ */
+const getDeptUsers = async (deptId, where) => {
+    const deptUsers = await deptsUsersModel.findAll({where: {deptId}})
     const deptUserIds = deptUsers.map(item => item.userId)
+
+    const tmpWhere = {dingdingUserId: {$in: deptUserIds}, ...where}
     const deptResignUsers = await usersModel.findAll({
         attributes: {exclude: ["password"]},
-        where: {
-            dingdingUserId: {$in: deptUserIds},
-            isResign: true
-        },
+        where: tmpWhere,
         include: [
             {model: usersTagsModel, as: "tags"}
         ]
     })
+
     return sequelizeUtil.extractDataValues(deptResignUsers)
 }
 
@@ -203,6 +225,7 @@ module.exports = {
     saveUser,
     updateUserResignInfo,
     getAllResignUsers,
+    getDeptOnJobUsers,
     getDeptResignUsers,
     getUsersWithTagsByUsernames
 }

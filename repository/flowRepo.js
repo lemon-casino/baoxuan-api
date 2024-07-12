@@ -42,10 +42,12 @@ const getProcessByIds = async (ids) => {
             where: {processInstanceId: {$in: ids}},
             order: [["order_index", "asc"]]
         }),
+
         processDetailsModel.findAll({
             where: {processInstanceId: {$in: ids}}
         })
     ])
+
 
     const processes = sequelizeUtil.extractDataValues(processRelatedInfo[0])
     const processesReviewItems = sequelizeUtil.extractDataValues(processRelatedInfo[1])
@@ -56,6 +58,11 @@ const getProcessByIds = async (ids) => {
     })
     const flowsFormDetails = sequelizeUtil.extractDataValues(tmpFlowsFormDetails)
     for (const process of processes) {
+
+        if (process.processInstanceId === "35773449-999e-47c8-8d7d-7b003fe5e177") {
+            console.log("-----")
+        }
+
         process.createTimeGMT = dateUtil.format2Str(process.createTime, "YYYY-MM-DDTHH:mm:ss") + "Z"
         process.modifiedTimeGMT = dateUtil.format2Str(process.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"
 
@@ -63,37 +70,21 @@ const getProcessByIds = async (ids) => {
         processReviewItems = processReviewItems.map(item => {
             return {...item, operateTimeGMT: dateUtil.format2Str(item.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"}
         })
+        process.overallprocessflow = processReviewItems
+
         const processDetails = processesDetails.filter(item => item.processInstanceId === process.processInstanceId)
         const processFlowFormDetails = flowsFormDetails.filter(item => item.formId === process.formUuid)
         process.data = {}
         for (const item of processDetails) {
             process.data[item.fieldId] = item.fieldValue
         }
+
         process.dataKeyDetails = {}
         for (const item of processFlowFormDetails) {
             process.dataKeyDetails[item.fieldId] = item.fieldName
         }
     }
     return processes
-
-    // return processes.map((process) => {
-    //     process.overallprocessflow = sequelizeUtil.extractDataValues(process.overallprocessflow).sort((curr, next) => {
-    //         //相邻的节点完成时间会有相同的情况，顾增加两层判断（ orderIndex 为入库时添加的）
-    //         const timeDuration = curr.doneTime - next.doneTime
-    //         if (timeDuration === 0) {
-    //             return curr.orderIndex - next.orderIndex
-    //         }
-    //         return timeDuration
-    //     })
-    //     process.overallprocessflow = process.overallprocessflow.map(item => {
-    //         return {...item, operateTimeGMT: dateUtil.format2Str(item.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"}
-    //     })
-    //     return {
-    //         ...process,
-    //         createTimeGMT: dateUtil.format2Str(process.createTime, "YYYY-MM-DDTHH:mm:ss") + "Z",
-    //         modifiedTimeGMT: dateUtil.format2Str(process.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"
-    //     }
-    // })
 }
 
 const getAllProcesses = async () => {

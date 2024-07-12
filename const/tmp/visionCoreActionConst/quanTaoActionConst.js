@@ -1,4 +1,10 @@
-// rules：或的关系   flowDetailsRules：且的关系  flowNodeRules：或的关系
+/**
+ *  flowNodeRules的调整方向：
+ *  1. 每项from-to节点都是指向单一的节点，去掉逾期节点的配置
+ *  2. ownerRule需要保留
+ *
+ *  rules：或的关系   flowDetailsRules：且的关系  flowNodeRules：或的关系
+ */
 
 const {opCodes} = require("@/const/operatorConst")
 const mbActionTypes = {
@@ -1995,7 +2001,7 @@ module.exports = {
                         {
                             fieldId: "radioField_ltxy12s6",
                             opCode: opCodes.EqualAny,
-                            value: ["全套图片", "外包拍摄", "不用拍摄"]
+                            value: ["全套图片", "外包拍摄"]
                         }
                     ],
                     flowNodeRules: [
@@ -3391,29 +3397,7 @@ module.exports = {
                                 name: "简单美编完成任务",
                                 id: "node_oclvksud0dc"
                             }
-                        },
-                        // {
-                        //     from: {
-                        //         id: "node_ockpz6phx73",
-                        //         name: "视觉完成确认审核",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_ockpz6phx73",
-                        //         name: "视觉完成确认审核",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_ockpz6phx73",
-                        //         name: "视觉完成确认审核",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "视觉完成确认审核",
-                        //         id: "node_ockpz6phx73"
-                        //     }
-                        // }
+                        }
                     ]
                 },
 
@@ -3424,7 +3408,7 @@ module.exports = {
                         {
                             fieldId: "radioField_ltxy12s6",
                             opCode: opCodes.EqualAny,
-                            value: ["全套图片", "外包拍摄", "不用拍摄"]
+                            value: ["全套图片", "外包拍摄"]
                         }
                     ],
                     flowNodeRules: [
@@ -5445,7 +5429,7 @@ module.exports = {
                         {
                             fieldId: "radioField_ltxy12s6",
                             opCode: opCodes.EqualAny,
-                            value: ["全套图片", "外包拍摄", "不用拍摄"]
+                            value: ["全套图片", "外包拍摄"]
                         }
                     ],
                     flowNodeRules: [

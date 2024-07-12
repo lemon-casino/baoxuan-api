@@ -164,8 +164,8 @@ exports.getUserinfo = async (req, res) => {
 
     let departmentsOfUser = await departmentService.getDepartmentOfUser(ddUserId)
 
+    let departments = await globalGetter.getDepartments()
     if (whiteList.pepArr().includes(ddUserId)) {
-        let departments = await globalGetter.getDepartments()
         if (departments && departments.length > 0) {
             // 顾虑掉外部的部门
             const outDepartments = ["114410517"]
