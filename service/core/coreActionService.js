@@ -167,7 +167,7 @@ const statVisionUserFlowData = async (userActivity, flow) => {
     if (userTags.length === 0) {
         return []
     }
-
+ 
     let userTagCodes = userTags.map(item => item.tagCode)
 
     const userTmpTags = patchUtil.getUserTmpTags(userName, flow.processInstanceId)
