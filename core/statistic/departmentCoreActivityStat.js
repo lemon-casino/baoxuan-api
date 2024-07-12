@@ -57,13 +57,11 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                 }
 
                 for (const flowNodeRule of rule.flowNodeRules) {
-                    const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = flowNodeRule
+                    const {from: fromNode, to: toNode, ownerRule} = flowNodeRule
 
                     // 根据节点配置对流程进行汇总
                     for (let flow of currFlows) {
                         const processInstanceId = flow.processInstanceId
-
-                        let isOverDue = false
 
                         // 一个动作多人执行（会签）
                         let operatorsActivity = []
@@ -94,17 +92,23 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                             return null
                         }
 
-                        const activity = getMatchedActivity(fromNode, toNode, activities)
-                        if (!activity) {
+                        const matchedActivity = getMatchedActivity(fromNode, toNode, activities)
+                        if (!matchedActivity) {
                             continue
                         }
 
-                        const getUserActivities = (activity) => {
+
+                        const extendActivityWithUserNameAndTags = (activity, users) => {
                             const tmpOperatorsActivity = []
                             if (activity.domainList && activity.domainList.length > 0) {
                                 // 包含domainList的节点直接算到节点操作人的头上
                                 for (const domain of activity.domainList) {
-                                    tmpOperatorsActivity.push({userName: domain.operatorName, activity: activity})
+                                    const user = users.find(user => user.nickname === domain.operatorName || user.userName === domain.operatorName)
+                                    tmpOperatorsActivity.push({
+                                        userName: domain.operatorName,
+                                        tags: user.tags || [],
+                                        activity: activity
+                                    })
                                 }
                             }
                             // 单节点根据配置确定要计算的人头上
@@ -143,17 +147,38 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                             return tmpOperatorsActivity
                         }
 
-                        operatorsActivity = getUserActivities(activity)
+                        operatorsActivity = extendActivityWithUserNameAndTags(matchedActivity, users)
 
                         if (operatorsActivity.length === 0) {
                             continue
                         }
 
+
                         // 根据是否逾期汇总个人的ids和sum
                         for (const operatorActivity of operatorsActivity) {
 
+                            const getStatNode = (activity, overDueResult, notOverDueResult) => {
+                                if (activity.isOverDue) {
+                                    return overDueResult.children.filter(item => item.userName === operatorActivity.userName)
+                                }
+                                return notOverDueResult.children.filter(item => item.userName === operatorActivity.userName)
+                            }
+
+                            const getUserStatResult = () => {
+
+                            }
+
+                            const createStatNode = () => {
+
+                            }
+
+                            const statNode = getStatNode(matchedActivity,  overDueResult, notOverDueResult)
+
+                            const userStatResult = getUserStatResult()
+
+
                             let userFlows = null
-                            if (activity.isOverDue) {
+                            if (matchedActivity.isOverDue) {
                                 userFlows = overDueResult.children.filter(item => item.userName === operatorActivity.userName)
                             } else {
                                 userFlows = notOverDueResult.children.filter(item => item.userName === operatorActivity.userName)
@@ -200,7 +225,7 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                                     ids: [processInstanceId],
                                     userFlowsDataStat: userFlowDataStat ? [userFlowDataStat] : []
                                 }
-                                if (activity.isOverDue) {
+                                if (matchedActivity.isOverDue) {
                                     overDueResult.children.push(userFlows)
                                 } else {
                                     notOverDueResult.children.push(userFlows)
