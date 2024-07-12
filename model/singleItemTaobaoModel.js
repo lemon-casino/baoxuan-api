@@ -686,6 +686,15 @@ module.exports = sequelize => {
             autoIncrement: false,
             comment: "自定义属性20;",
             field: "user_def_20"
+        },
+        dayprofit60: {
+            type: DataTypes.DECIMAL,
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "累计60天利润",
+            field: "dayprofit60"
         }
     };
     const options = {

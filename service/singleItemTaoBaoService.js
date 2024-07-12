@@ -754,7 +754,7 @@ async function getLinkingCommonTO(productLineLeaders, singleItems, timeRange, in
     };
 
     const uniqueItems = {};
-    
+
 
     for (const item of await fetchAndProcessErrorItems()) {
         const items = filterItems(singleItems, item.values);
@@ -1297,13 +1297,19 @@ const updateCustom = async (id, custom) => {
     return singleItemTaoBaoRepo.updateCustom(id, custom)
 }
 
+// 自动计算打标签
+
+
+const Calculateyesterdaysdataandtagtheprofitin60days = async () => {
+    return singleItemTaoBaoRepo.Calculateyesterdaysdataandtagtheprofitin60days();
+}
 // 方法映射，为接口调用使用
 const availableFunctionsMap = {"getLinkErrorQueryFields": getLinkErrorQueryFields}
 
 
 // const taoBaoErrorItems = await tianmao__user_tableService.getExceptionLinks(1);
 async function fetchAndProcessErrorItems() {
-    const newItems = linkTypeConst.groups.filter(group => group.group === "new")[0].items
+    const newItems = linkTypeConst.groups.find(group => group.group === "new").items;
     const oldProductFields = newItems.map(item => {
         return {
             field: "linkType", operator: "$notIn", comparator: "!==",
@@ -1311,8 +1317,7 @@ async function fetchAndProcessErrorItems() {
         }
     })
     const errorItems = await tianmao__user_tableService.getExceptionLinks(1);
-    console.log(errorItems)
-    const shouldConcatOldProductFields = errorItems.some(item => item.name === "费比超过15%");
+
 
     return errorItems.reduce((acc, item) => {
         const baseValues = [{
@@ -1325,10 +1330,9 @@ async function fetchAndProcessErrorItems() {
             ...(item.sqlValue && {sqlValue: JSON.parse(item.sqlValue)}),
             ...(item.min && {min: item.min})
         }];
-
         const newItem = {
             name: item.name,
-            values: shouldConcatOldProductFields ? baseValues.concat(oldProductFields) : baseValues
+            values: item.name === "费比超过15%" ? baseValues.concat(oldProductFields) : baseValues
         };
 
         acc.push(newItem);
@@ -1356,5 +1360,6 @@ module.exports = {
     getTaoBaoSingleItemsWithStatistic,
     updateSingleItemTaoBao,
     getLinknewvaCount,
-    updateCustom
+    updateCustom,
+    Calculateyesterdaysdataandtagtheprofitin60days
 }
