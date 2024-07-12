@@ -70,6 +70,15 @@ const convertTimestampToDate = (timestamp, pattern = 'YYYY-MM-DD HH:mm:ss') => {
     return moment(timestamp).format(pattern)
 }
 
+const getSecondsFromNowToSomeHour = (hour) => {
+    const now = new Date()
+    const todaySomeHour = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    todaySomeHour.setHours(hour, 0, 0, 0)
+
+    const distanceInMilliseconds = todaySomeHour - now
+    return Math.floor(distanceInMilliseconds / 1000)
+}
+
 module.exports = {
     duration,
     delay,
@@ -85,5 +94,6 @@ module.exports = {
     startOfDay,
     endOfDay,
     add,
-    convertTimestampToDate
+    convertTimestampToDate,
+    getSecondsFromNowToSomeHour
 }
