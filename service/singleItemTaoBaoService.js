@@ -754,7 +754,7 @@ async function getLinkingCommonTO(productLineLeaders, singleItems, timeRange, in
     };
 
     const uniqueItems = {};
-    
+
 
     for (const item of await fetchAndProcessErrorItems()) {
         const items = filterItems(singleItems, item.values);
@@ -1297,6 +1297,12 @@ const updateCustom = async (id, custom) => {
     return singleItemTaoBaoRepo.updateCustom(id, custom)
 }
 
+// 自动计算打标签
+
+
+const Calculateyesterdaysdataandtagtheprofitin60days = async () => {
+    return singleItemTaoBaoRepo.Calculateyesterdaysdataandtagtheprofitin60days();
+}
 // 方法映射，为接口调用使用
 const availableFunctionsMap = {"getLinkErrorQueryFields": getLinkErrorQueryFields}
 
@@ -1356,5 +1362,6 @@ module.exports = {
     getTaoBaoSingleItemsWithStatistic,
     updateSingleItemTaoBao,
     getLinknewvaCount,
-    updateCustom
+    updateCustom,
+    Calculateyesterdaysdataandtagtheprofitin60days
 }

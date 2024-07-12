@@ -278,8 +278,8 @@ const tmallLinkAnomalyDetection = async () => {
         logger.info("天猫链接异常更新链接数据面板的属性排除项", link.name, link.id, "===>", quantity);
     }
 
-    //更新来自链接数据面板的属性 更新自动打标 [累计60天负利润]功能 以及 [累计60天负利润]功能
-
+    //更新来自链接数据面板的属性 更新自动打标 [累计60天负利润]功能 以及 [累计60天负利润]功能 (时间是自动更新的 默认是昨天的链接数据) 1代表昨天
+    await singleItemTaoBaoService.Calculateyesterdaysdataandtagtheprofitin60days()
 
     const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(14)
     // 获得所有负责人的信息
