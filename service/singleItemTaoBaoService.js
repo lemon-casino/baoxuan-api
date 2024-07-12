@@ -1309,7 +1309,7 @@ const availableFunctionsMap = {"getLinkErrorQueryFields": getLinkErrorQueryField
 
 // const taoBaoErrorItems = await tianmao__user_tableService.getExceptionLinks(1);
 async function fetchAndProcessErrorItems() {
-    const newItems = linkTypeConst.groups.filter(group => group.group === "new")[0].items
+    const newItems = linkTypeConst.groups.find(group => group.group === "new").items;
     const oldProductFields = newItems.map(item => {
         return {
             field: "linkType", operator: "$notIn", comparator: "!==",
@@ -1317,8 +1317,7 @@ async function fetchAndProcessErrorItems() {
         }
     })
     const errorItems = await tianmao__user_tableService.getExceptionLinks(1);
-    console.log(errorItems)
-    const shouldConcatOldProductFields = errorItems.some(item => item.name === "费比超过15%");
+
 
     return errorItems.reduce((acc, item) => {
         const baseValues = [{
@@ -1331,10 +1330,9 @@ async function fetchAndProcessErrorItems() {
             ...(item.sqlValue && {sqlValue: JSON.parse(item.sqlValue)}),
             ...(item.min && {min: item.min})
         }];
-
         const newItem = {
             name: item.name,
-            values: shouldConcatOldProductFields ? baseValues.concat(oldProductFields) : baseValues
+            values: item.name === "费比超过15%" ? baseValues.concat(oldProductFields) : baseValues
         };
 
         acc.push(newItem);
