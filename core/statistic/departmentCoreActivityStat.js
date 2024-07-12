@@ -9,7 +9,7 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
  * 根据人名和核心动作配置信息统计流程
  *
  * @param users
- * @param flows
+ * @param currFlows
  * @param coreConfig
  * @param userFlowDataStatCB
  * @returns {Promise<*[]>}
@@ -34,12 +34,12 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
 
             // 根据配置中状态的计算规则进行统计
             for (const rule of rules) {
-                let currentFlows = flows.filter((flow) => flow.formUuid === rule.formId)
-                // 需要计算的节点对
-                for (const flowNodeRule of rule.flowNodeRules) {
-                    if (rule.flowDetailsRules) {
-                        for (const detailsRule of rule.flowDetailsRules) {
-                            currentFlows = currentFlows.filter(flow => {
+                let currFlows = flows.filter((flow) => flow.formUuid === rule.formId)
+                // 根据配置的流程数据规则过滤流程
+                const filterFlowsByFlowDetailsRules = (flows, flowDetailsRules) => {
+                    if (flowDetailsRules) {
+                        for (const detailsRule of flowDetailsRules) {
+                            flows = flows.filter(flow => {
                                 if (flow.data[detailsRule.fieldId]) {
                                     return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
                                 }
@@ -47,91 +47,113 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                             })
                         }
                     }
+                    return flows
+                }
 
+                currFlows = filterFlowsByFlowDetailsRules(currFlows, rule.flowDetailsRules)
+
+                if (currFlows.length === 0) {
+                    continue
+                }
+
+                for (const flowNodeRule of rule.flowNodeRules) {
                     const {from: fromNode, to: toNode, overdue: overdueNode, ownerRule} = flowNodeRule
 
-                    for (let flow of currentFlows) {
+                    // 根据节点配置对流程进行汇总
+                    for (let flow of currFlows) {
                         const processInstanceId = flow.processInstanceId
-                        let fromMatched = false
-                        let toMatched = false
+
                         let isOverDue = false
 
                         // 一个动作多人执行（会签）
                         let operatorsActivity = []
-                        const reviewItems = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
-                        for (const reviewItem of reviewItems) {
-                            // 发起的节点id对应的表单流程id不一致
-                            const fromNodeId = activityIdMappingConst[fromNode.id] || fromNode.id
+                        const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
 
-                            if (fromNode && reviewItem.activityId === fromNodeId && fromNode.status.includes(reviewItem.type)) {
-                                fromMatched = true
-                            }
-                            if (toNode && reviewItem.activityId === toNode.id && toNode.status.includes(reviewItem.type)) {
-                                toMatched = true
-                            }
-                            if (overdueNode && reviewItem.activityId === overdueNode.id && overdueNode.status.includes(reviewItem.type)) {
-                                isOverDue = reviewItem.isOverDue
-                            }
+                        const getMatchedActivity = (fromNode, toNode, activities) => {
+                            let fromMatched = false
+                            let toMatched = false
 
-                            if (fromMatched && toMatched) {
-                                if (reviewItem.domainList && reviewItem.domainList.length > 0) {
-                                    // 包含domainList的节点直接算到节点操作人的头上
-                                    for (const domain of reviewItem.domainList) {
-                                        operatorsActivity.push({userName: domain.operatorName, activity: reviewItem})
-                                    }
+                            for (const activity of activities) {
+                                // 发起的节点id对应的表单流程id不一致
+                                const fromNodeId = activityIdMappingConst[fromNode.id] || fromNode.id
+
+                                if (fromNode && activity.activityId === fromNodeId && fromNode.status.includes(activity.type)) {
+                                    fromMatched = true
                                 }
-                                // 单节点根据配置确定要计算的人头上
-                                else {
-                                    // 找到该工作量的负责人
-                                    let ownerName = "未分配"
-                                    let {from, id, defaultUserName} = ownerRule
-                                    // 外包的流程可能会存在未选择外包人的情况
-                                    if (from.toUpperCase() === ownerFrom.FORM) {
-                                        let tmpOwnerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id]
-                                        // 如果是数组的格式，转成以“,”连接的字符串
-                                        if (tmpOwnerName instanceof Array) {
-                                            tmpOwnerName = tmpOwnerName.join(",")
-                                        }
-                                        if (tmpOwnerName) {
-                                            ownerName = tmpOwnerName
-                                        } else if (defaultUserName) {
-                                            ownerName = defaultUserName
-                                        }
-                                    } else {
-                                        const processReviewId = activityIdMappingConst[id] || id
-                                        const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
-                                        ownerName = reviewItems.length > 0 ? reviewItems[0].operatorName : defaultUserName
-                                    }
-
-                                    const user = users.find(user => user.nickname === ownerName || user.userName === ownerName)
-
-                                    if (user) {
-                                        operatorsActivity.push({
-                                            userName: ownerName,
-                                            tags: user.tags,
-                                            activity: reviewItem
-                                        })
-                                    }
+                                if (toNode && activity.activityId === toNode.id && toNode.status.includes(activity.type)) {
+                                    toMatched = true
                                 }
-                                break
+                                // if (overdueNode && activity.activityId === overdueNode.id && overdueNode.status.includes(activity.type)) {
+                                //     isOverDue = activity.isOverDue
+                                // }
+
+                                if (fromMatched && toMatched) {
+                                    return activity
+                                }
                             }
+                            return null
                         }
+
+                        const activity = getMatchedActivity(fromNode, toNode, activities)
+                        if (!activity) {
+                            continue
+                        }
+
+                        const getUserActivities = (activity) => {
+                            const tmpOperatorsActivity = []
+                            if (activity.domainList && activity.domainList.length > 0) {
+                                // 包含domainList的节点直接算到节点操作人的头上
+                                for (const domain of activity.domainList) {
+                                    tmpOperatorsActivity.push({userName: domain.operatorName, activity: activity})
+                                }
+                            }
+                            // 单节点根据配置确定要计算的人头上
+                            else {
+                                // 找到该工作量的负责人
+                                let ownerName = "未分配"
+                                let {from, id, defaultUserName} = ownerRule
+                                // 外包的流程可能会存在未选择外包人的情况
+                                if (from.toUpperCase() === ownerFrom.FORM) {
+                                    let tmpOwnerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id]
+                                    // 如果是数组的格式，转成以“,”连接的字符串
+                                    if (tmpOwnerName instanceof Array) {
+                                        tmpOwnerName = tmpOwnerName.join(",")
+                                    }
+                                    if (tmpOwnerName) {
+                                        ownerName = tmpOwnerName
+                                    } else if (defaultUserName) {
+                                        ownerName = defaultUserName
+                                    }
+                                } else {
+                                    const processReviewId = activityIdMappingConst[id] || id
+                                    const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
+                                    ownerName = reviewItems.length > 0 ? reviewItems[0].operatorName : defaultUserName
+                                }
+
+                                const user = users.find(user => user.nickname === ownerName || user.userName === ownerName)
+
+                                if (user) {
+                                    tmpOperatorsActivity.push({
+                                        userName: ownerName,
+                                        tags: user.tags,
+                                        activity: activity
+                                    })
+                                }
+                            }
+                            return tmpOperatorsActivity
+                        }
+
+                        operatorsActivity = getUserActivities(activity)
 
                         if (operatorsActivity.length === 0) {
                             continue
                         }
 
-
-
                         // 根据是否逾期汇总个人的ids和sum
                         for (const operatorActivity of operatorsActivity) {
 
-                            // if (flow.processInstanceId === "92b7ad96-460f-4345-94c4-eba6ce324269" && operatorActivity.user === "徐建森") {
-                            //     console.log("----")
-                            // }
-
                             let userFlows = null
-                            if (isOverDue) {
+                            if (activity.isOverDue) {
                                 userFlows = overDueResult.children.filter(item => item.userName === operatorActivity.userName)
                             } else {
                                 userFlows = notOverDueResult.children.filter(item => item.userName === operatorActivity.userName)
@@ -178,7 +200,7 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                                     ids: [processInstanceId],
                                     userFlowsDataStat: userFlowDataStat ? [userFlowDataStat] : []
                                 }
-                                if (isOverDue) {
+                                if (activity.isOverDue) {
                                     overDueResult.children.push(userFlows)
                                 } else {
                                     notOverDueResult.children.push(userFlows)
