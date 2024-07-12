@@ -1,4 +1,4 @@
-const whiteList = require("@/config/whiteList");
+const whiteList = require("@/config/whiteList")
 const redisRepo = require("@/repository/redisRepo")
 const algorithmUtil = require("@/utils/algorithmUtil")
 const globalGetter = require("@/global/getter")
@@ -60,6 +60,7 @@ const getUserCompletedDeps = async (ddAccessToken, ddUserId) => {
     }
     // 部门层级数据结构
     const treeFormatDeps = refactorFlatteningDepsToTree(await Promise.all(newSubDepartmentsDetails));
+
     // 递归判断当前身份在哪个部门下是主管 获取是主管身份下的所有子部门包括人员信息
     async function fillChildDepsByLeaderTag(deps, sourceDeps) {
         for (let dept of deps) {
@@ -265,9 +266,47 @@ const getDepartmentWithUsers = async (deptId) => {
     return requiredDepartment;
 }
 
-const getDepartments = async () => {
-    let departments = await globalGetter.getDepartments()
-    return departments
+const getNewStructureDeps = (deps) => {
+    const newDeps = []
+    for (const dep of deps) {
+        const newDep = {
+            deptId: dep.dept_id,
+            deptName: dep.name || dep.dep_detail.name,
+            isLeader: dep.leader,
+            children: []
+        }
+        if (dep.dep_chil && dep.dep_chil.length > 0) {
+            newDep.children = getNewStructureDeps(dep.dep_chil)
+        }
+        newDeps.push(newDep)
+    }
+    return newDeps
+}
+
+const getDepartments = async (userId) => {
+    const hasMaxDataAuth = whiteList.pepArr().includes(userId)
+
+    let userDeps = []
+    if (hasMaxDataAuth) {
+        userDeps = await globalGetter.getDepartments()
+    } else {
+        userDeps = await getDepartmentOfUser(userId)
+    }
+
+    const newUserDeps = getNewStructureDeps(userDeps)
+
+    for (const userDep of newUserDeps) {
+        let newSubDeps = []
+        // 获取该部门下的所有子部门
+        if (userDep.leader) {
+            const allDeps = await globalGetter.getDepartments()
+            const subDeps = algorithmUtil.getJsonFromUnionFormattedJsonArr(allDeps, "dep_chil", "parent_id", userDep.dept_id)
+            newSubDeps = getNewStructureDeps(subDeps)
+        }
+
+        newUserDeps.children = newSubDeps
+    }
+    return newUserDeps
 }
 
 const hasMatchedDeptName = (deptName, department) => {
