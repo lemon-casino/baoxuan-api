@@ -1,4 +1,10 @@
-// rules：或的关系   flowDetailsRules：且的关系  flowNodeRules：或的关系
+/**
+ *  flowNodeRules的调整方向：
+ *  1. 每项from-to节点都是指向单一的节点，去掉逾期节点的配置
+ *  2. ownerRule需要保留
+ *
+ *  rules：或的关系   flowDetailsRules：且的关系  flowNodeRules：或的关系
+ */
 
 const {opCodes} = require("@/const/operatorConst")
 const mbActionTypes = {

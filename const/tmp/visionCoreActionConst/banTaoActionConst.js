@@ -1,10 +1,18 @@
+/**
+ *  flowNodeRules的调整方向：
+ *  1. 每项from-to节点都是指向单一的节点，去掉逾期节点的配置
+ *  2. ownerRule需要保留
+ *
+ *  rules：或的关系   flowDetailsRules：且的关系  flowNodeRules：或的关系
+ */
+
 const {opCodes} = require("@/const/operatorConst")
 const mbActionTypes = {
     WAIT_TO_SHOOT: "WAIT_TO_SHOOT", BE_SHOOTING: "BE_SHOOTING", SHOOT_DONE: "SHOOT_DONE",
     WAIT_TO_PS: "WAIT_TO_PS", ON_PS: "BE_PS", PS_DONE: "PS_DONE",
     WAIT_TO_CUT: "WAIT_TO_CUT", BE_CUTTING: "BE_CUTTING", CUT_DONE: "CUT_DONE"
 }
-// rules：或的关系   flowDetailsRules：且的关系  flowNodeRules：或的关系
+
 module.exports =  {
     actionName: "半套",
     actionCode: "halfPackedPicture",
