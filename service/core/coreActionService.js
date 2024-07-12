@@ -14,6 +14,7 @@ const visionConst = require("@/const/tmp/visionConst")
 const statResultTemplateConst = require("@/const/statResultTemplateConst")
 const flowUtil = require("@/utils/flowUtil")
 const algorithmUtil = require("@/utils/algorithmUtil")
+const patchUtil = require("@/patch/patchUtil")
 
 /**
  *
@@ -160,15 +161,20 @@ const filterUsersByTags = (users, tags) => {
  */
 const statVisionUserFlowData = async (userActivity, flow) => {
     // 当前用户统计到的节点需要时正在干活的节点才要汇总表单信息
-    let {tags: userTags, activity} = userActivity
+    let {userName, tags: userTags, activity} = userActivity
 
     // 没有标签的用户直接返回空模板
     if (userTags.length === 0) {
         return []
     }
 
+    let userTagCodes = userTags.map(item => item.tagCode)
+
+    const userTmpTags = patchUtil.getUserTmpTags(userName, flow.processInstanceId)
+    userTagCodes = userTagCodes.concat(userTmpTags)
+
     // 仅对内部美编人员的节点做判断
-    const insideArtTagCode = userTags.find(tag => tag.tagCode === "insideArt")
+    const insideArtTagCode = userTagCodes.find(tagCode => tagCode === "insideArt")
     if (insideArtTagCode) {
         let validActivity = false
         const standardVisionActivityNamePattern = "^.*修图$"
@@ -186,7 +192,7 @@ const statVisionUserFlowData = async (userActivity, flow) => {
 
     const visionUserFlowDataStatResultTemplate = _.cloneDeep(statResultTemplateConst.visionUserFlowDataStatResultTemplate)
 
-    const userTagsFormItemKeywordsMappings = visionConst.tagsFormItemKeywordsMapping.filter(item => userTags.filter(tag => tag.tagCode === item.tagCode).length > 0)
+    const userTagsFormItemKeywordsMappings = visionConst.tagsFormItemKeywordsMapping.filter(item => userTagCodes.filter(tagCode => tagCode === item.tagCode).length > 0)
     if (userTagsFormItemKeywordsMappings.length === 0) {
         return []
     }
