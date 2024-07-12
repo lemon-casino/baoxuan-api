@@ -203,11 +203,14 @@ const extendActivityWithUserNameAndTags = (activity, users, flow, ownerRule) => 
         // 包含domainList的节点直接算到节点操作人的头上
         for (const domain of activity.domainList) {
             const user = users.find(user => user.nickname === domain.operatorName || user.userName === domain.operatorName)
-            tmpOperatorsActivity.push({
-                userName: domain.operatorName,
-                tags: user.tags || [],
-                activity: activity
-            })
+            if (user) {
+                tmpOperatorsActivity.push({
+                    userName: domain.operatorName,
+                    tags: user.tags || [],
+                    activity: activity
+                })
+            }
+
         }
     }
     // 单节点根据配置确定要计算的人头上
