@@ -1197,6 +1197,28 @@ module.exports = {
                     flowNodeRules: [
                         {
                             from: {
+                                id: "node_oclx00ubuyn",
+                                name: "确认样品和道具",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclx00ubuyn",
+                                name: "确认样品和道具",
+                                status: ["TODO"]
+                            },
+                            overdue: {
+                                id: "node_oclx00ubuyn",
+                                name: "确认样品和道具",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "确认样品和道具",
+                                id: "node_oclx00ubuyn"
+                            }
+                        },
+                        {
+                            from: {
                                 id: "node_oclx4kc70w9",
                                 name: "拍摄完成",
                                 status: ["TODO"]
