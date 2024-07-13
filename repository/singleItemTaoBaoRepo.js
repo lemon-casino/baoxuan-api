@@ -565,32 +565,60 @@ select goods_id from  dianshang_operation_attribute where userDef1=:custom
 }
 
 const Calculateyesterdaysdataandtagtheprofitin60days = async () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
 
-    return singleItemTaoBaoModel.sequelize.query(
-        `
-        WITH yesterday_links AS (
-    SELECT link_id
-    FROM single_item_taobao
-    WHERE date = DATE_SUB(CURDATE(), INTERVAL  DAY)
-),
-sixty_days_profit AS (
-    SELECT link_id, SUM(profit_amount) AS total_profit
-    FROM single_item_taobao
-    WHERE link_id IN (SELECT link_id FROM yesterday_links)
-      AND date BETWEEN DATE_SUB(CURDATE(), INTERVAL 60 DAY) AND DATE_SUB(CURDATE(), INTERVAL 1 DAY)
-    GROUP BY link_id
-)
--- 更新 Cumulative 字段
-UPDATE single_item_taobao sit
-JOIN sixty_days_profit sdp ON sit.link_id = sdp.link_id
-SET sit.dayprofit60 = sdp.total_profit
-WHERE sit.date = DATE_SUB(CURDATE(), INTERVAL 1 DAY);
-        `, {
-            type: QueryTypes.UPDATE,
-            logging: false
-        }
-    );
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
+    // 第一个子查询: 获取昨天的链接ID
+    const yesterdayLinks = await singleItemTaoBaoModel.findAll({
+        attributes: ['link_id'],
+        where: {
+            date: yesterday,
+        },
+        raw: true,
+    }).then(results => results.map(result => result.link_id));
+
+    if (yesterdayLinks.length === 0) {
+        console.log('No links found for yesterday.');
+        return;
+    }
+
+    // 第二个子查询: 计算过去60天的总利润
+    const sixtyDaysProfit = await singleItemTaoBaoModel.findAll({
+        attributes: [
+            'link_id',
+            [Sequelize.fn('SUM', Sequelize.col('profit_amount')), 'total_profit'],
+        ],
+        where: {
+            link_id: {
+                [Op.in]: yesterdayLinks,
+            },
+            date: {
+                [Op.between]: [sixtyDaysAgo, yesterday],
+            },
+        },
+        group: ['link_id'],
+        raw: true,
+    });
+
+    // 更新 Cumulative 字段
+    const updatePromises = sixtyDaysProfit.map(async (profit) => {
+        return singleItemTaoBaoModel.update(
+            {dayprofit60: profit.total_profit},
+            {
+                where: {
+                    link_id: profit.link_id,
+                    date: yesterday,
+                },
+            }
+        );
+    });
+
+    await Promise.all(updatePromises);
+
+    console.log('Dayprofit60 updated successfully.');
 }
 
 module.exports = {
