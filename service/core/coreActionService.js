@@ -175,10 +175,16 @@ const statVisionUserFlowData = async (userActivity, flow) => {
 
     // 仅对内部美编人员的节点做判断
     const insideArtTagCode = userTagCodes.find(tagCode => tagCode === "insideArt")
+    // 内部美编会涵盖剪辑组标签的人：不能排除掉剪辑组的标签节点
     if (insideArtTagCode) {
         let validActivity = false
         const standardVisionActivityNamePattern = "^.*修图$"
-        const validVisionActivityNamePatternForStatFormData = visionConst.confusedActivityNameForStatFormData.concat(standardVisionActivityNamePattern)
+        let validVisionActivityNamePatternForStatFormData = visionConst.confusedActivityNameForStatFormData.concat(standardVisionActivityNamePattern)
+        const clipGroupCode = userTagCodes.find(tagCode => tagCode === "clipGroup")
+        const clipGroupActivityNamePattern = ["^.*剪辑.*$", "任务数量"]
+        if(clipGroupCode){
+            validVisionActivityNamePatternForStatFormData = validVisionActivityNamePatternForStatFormData.concat(clipGroupActivityNamePattern)
+        }
         for (const pattern of validVisionActivityNamePatternForStatFormData) {
             if (new RegExp(pattern).test(activity.showName)) {
                 validActivity = true
