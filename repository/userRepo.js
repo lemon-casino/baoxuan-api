@@ -217,7 +217,9 @@ const getUsersWithTagsByUsernames = async (usernames) => {
 
 const getPagingUsers = async (deptIds, pageIndex, pageSize, nickname, status) => {
 
-    const depsUsers = await deptsUsersModel.findAll({deptId: {$in: deptIds}})
+    const depsUsers = await deptsUsersModel.findAll({
+        where: {deptId: {$in: deptIds}}
+    })
     const userIds = depsUsers.map(item => item.userId)
 
     let where = {dingdingUserId: {$in: userIds}}
