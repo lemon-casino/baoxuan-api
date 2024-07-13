@@ -2948,7 +2948,13 @@ exports.getOaAllProcess = async (req, res) => {
 // 获取所有流程设计模版数据
 exports.getprocessAuditing = async (req, res) => {
     let {data} = req.body;
+
+    logger.error("check FORM-51A6DCCF660B4C1680135461E762AC82JV53, get data")
+
     data = formatData(JSON.parse(JSON.stringify(data)));
+
+    logger.error("check FORM-51A6DCCF660B4C1680135461E762AC82JV53, formatData")
+
     await FlowFormReviewModel.addFlowFormReview(data);
 
     return res.send(biResponse.success());

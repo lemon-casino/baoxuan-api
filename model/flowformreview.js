@@ -43,6 +43,13 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
     const t = await sequelize.transaction();
     try {
         for (const item of data) {
+
+            logger.error(item.formId)
+
+            if (item.formId === "FORM-51A6DCCF660B4C1680135461E762AC82JV53") {
+                logger.error("get FORM-51A6DCCF660B4C1680135461E762AC82JV53")
+            }
+
             const depsend = {
                 form_id: item.formId,
                 modifiedTime: item.modifiedTime,
@@ -52,8 +59,12 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
                 where: {form_id: depsend.form_id},
                 order: [["modifiedTime", "desc"]]
             });
+
             // // 如果存在该记录
             if (flow) {
+                if (item.formId === "FORM-51A6DCCF660B4C1680135461E762AC82JV53") {
+                    logger.error("FORM-51A6DCCF660B4C1680135461E762AC82JV53 has exist")
+                }
                 // 如果 modifiedTime 字段不一致，更新 form_review 数据
                 if (flow.modifiedTime != depsend.modifiedTime) {
                     // 需要把以往相同节点已经添加时间的同步过来，形成新的节点
@@ -103,7 +114,13 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
                 }
                 // 如果不存在该记录，则新增
             } else {
+                if (item.formId === "FORM-51A6DCCF660B4C1680135461E762AC82JV53") {
+                    logger.error("FORM-51A6DCCF660B4C1680135461E762AC82JV53 not exist")
+                }
                 flow = await FlowFormReviewModel.create(depsend);
+                if (item.formId === "FORM-51A6DCCF660B4C1680135461E762AC82JV53") {
+                    logger.error(`FORM-51A6DCCF660B4C1680135461E762AC82JV53 saved result, ${JSON.stringify(flow)}`)
+                }
             }
         }
         // 我们提交事务.
