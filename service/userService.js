@@ -76,8 +76,18 @@ const getUserDetails = async (where) => {
     return details
 }
 
-const getUsers = async (userId) => {
-
+/**
+ * 获取用户的分页数据
+ *
+ * @param deptIds
+ * @param pageIndex
+ * @param pageSize
+ * @param nickname
+ * @param status
+ * @returns {Promise<*>}
+ */
+const getPagingUsers = async (deptIds, pageIndex, pageSize, nickname, status) => {
+    return (await userRepo.getPagingUsers(deptIds, pageIndex, pageSize, nickname, status))
 }
 
 /**
@@ -254,7 +264,7 @@ const getDingDingUserIdAndNickname = async () => {
     } catch (error) {
         throw new Error('查询数据失败');
     }
-};
+}
 
 
 module.exports = {
@@ -264,7 +274,7 @@ module.exports = {
     getUserSelfOrPartnersOfDepartment,
     getTMInnerGroups,
     getVisionInnerGroups,
-    getUsers,
+    getPagingUsers,
     getEnabledUsers,
     syncUserToDB,
     getDingDingUserIdAndNickname

@@ -1,5 +1,6 @@
 const whiteList = require("@/config/whiteList")
 const redisRepo = require("@/repository/redisRepo")
+const departmentUsersRepo = require("@/repository/departmentUsersRepo")
 const algorithmUtil = require("@/utils/algorithmUtil")
 const globalGetter = require("@/global/getter")
 const NotFoundError = require("@/error/http/notFoundError")

@@ -6,15 +6,13 @@ const router = express.Router();
 const userHandler = require('../router_handler/user');
 
 // 获取用户列表
-router.get('/list', userHandler.getList);
-// 获取用户列表
-router.get('/userInfo', userHandler.getList);
+router.post('/list', userHandler.getPagingUsers);
 // 修改用户信息
 router.post('/editUser', userHandler.editUser);
 // 登录
 router.post('/login', userHandler.login);
 // 获取tokens
-router.post('/tokens', userHandler.getTokens);
+router.post('/tokens', userHandler.getTokens)
 // 添加用户接口
 router.post('/addUser', userHandler.addUser);
 // 获取图形验证码
