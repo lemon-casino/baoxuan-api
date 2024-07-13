@@ -44,6 +44,8 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
     try {
         for (const item of data) {
 
+            logger.error(item.formId)
+
             if (item.formId === "FORM-51A6DCCF660B4C1680135461E762AC82JV53") {
                 logger.error("get FORM-51A6DCCF660B4C1680135461E762AC82JV53")
             }
