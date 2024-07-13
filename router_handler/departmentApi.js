@@ -13,7 +13,7 @@ const getDeptUsers = async (req, res, next) => {
     }
 }
 
-const getAllUsers = async (req, res, next)=>{
+const getAllUsers = async (req, res, next) => {
     try {
         const users = await departmentService.getAllUsers()
         return res.send(biResponse.success(users))
@@ -22,9 +22,10 @@ const getAllUsers = async (req, res, next)=>{
     }
 }
 
-const getDepartments =  async (req, res, next)=>{
+const getDepartments = async (req, res, next) => {
     try {
-        const departments = await departmentService.getDepartments()
+        const {userId} = req.user
+        const departments = await departmentService.getDepartments(userId)
         return res.send(biResponse.success(departments))
     } catch (e) {
         next(e)
