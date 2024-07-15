@@ -98,9 +98,6 @@ const getPagingUsers = async (deptIds, pageIndex, pageSize, nickname, status) =>
  * @returns {Promise<[{[p: string]: *}]|*[]>}
  */
 const getTMInnerGroups = async (userId) => {
-    // const innerGroup = await getInnerGroups(userId, ["903075138"])
-    // return innerGroup
-
     const result = []
     let tmInnerGroupTags = []
     let tmOnJobUsers = []

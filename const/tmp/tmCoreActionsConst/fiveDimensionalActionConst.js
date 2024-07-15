@@ -76,32 +76,6 @@ module.exports = [
                                 }
                             },
                         ]
-                    },
-                    {
-                        formName: "运营执行流程",
-                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
-                        flowDetailsRules: [
-                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "五维表统计"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: "node_oclyijfithe",
-                                    name: "执行统计五维表",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclyijfithe",
-                                    name: "执行统计五维表",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "发起人",
-                                    id: "sid-restartevent"
-                                }
-                            }
-                        ]
                     }
                 ]
             },
@@ -225,32 +199,6 @@ module.exports = [
                                 }
                             },
                         ]
-                    },
-                    {
-                        formName: "运营执行流程",
-                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
-                        flowDetailsRules: [
-                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "五维表统计"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: "node_oclyijfith3",
-                                    name: "运营分析五维统计表",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclyijfith3",
-                                    name: "运营分析五维统计表",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "运营分析五维统计表",
-                                    id: "node_oclyijfith3"
-                                }
-                            }
-                        ]
                     }
                 ]
             },
@@ -320,32 +268,6 @@ module.exports = [
                                     from: "form",
                                     name: "运营负责人",
                                     id: "employeeField_lxkb9f9a"
-                                }
-                            }
-                        ]
-                    },
-                    {
-                        formName: "运营执行流程",
-                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
-                        flowDetailsRules: [
-                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "五维表统计"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: "node_oclyijfith3",
-                                    name: "运营分析五维统计表",
-                                    status: ["HISTORY"]
-                                },
-                                to: {
-                                    id: "node_oclyijfith3",
-                                    name: "运营分析五维统计表",
-                                    status: ["HISTORY"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "运营分析五维统计表",
-                                    id: "node_oclyijfith3"
                                 }
                             }
                         ]
