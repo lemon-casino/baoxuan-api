@@ -1,21 +1,34 @@
 const models = require('@/model');
 const usersModel = models.usersModel
 const usersTagsModel = models.usersTagsModel
+const tagsModel = models.tagsModel
 const deptsUsersModel = models.deptsUsersModel
+const rolesModel = models.rolesModel
+const usersRolesModel = models.usersRolesModel
+
 const globalGetter = require("@/global/getter")
 const UserError = require("@/error/userError")
 const NotFoundError = require("@/error/http/notFoundError")
 const departmentRepo = require("./departmentRepo")
 const sequelizeUtil = require("@/utils/sequelizeUtil")
+const pagingUtil = require("@/utils/pagingUtil")
 const innerGroupConst = require("@/const/tmp/innerGroupConst")
 const objectConvertUtil = require("@/utils/objectConvertUtil")
 const whiteList = require("@/config/whiteList")
 
 usersModel.hasMany(usersTagsModel, {
-    sourceKey: "dingdingUserId",
-    foreignKey: "userId",
-    as: "tags"
+    sourceKey: "dingdingUserId", foreignKey: "userId", as: "tags"
 })
+
+usersModel.belongsToMany(rolesModel, {
+        through: {
+            model: usersRolesModel
+        },
+        foreignKey: 'userId',
+        otherKey: 'roleId',
+        as: "roles"
+    }
+)
 
 const getUserDetails = async (where) => {
     const details = await usersModel.findAll({
@@ -32,8 +45,7 @@ const getUserDetails = async (where) => {
 
 const getAllUsersWithoutPrivateFields = async (where) => {
     let users = await usersModel.findAll({
-        attributes: {exclude: ["password", "dingdingUserId", "userPic"]},
-        where
+        attributes: {exclude: ["password", "dingdingUserId", "userPic"]}, where
     })
     return users.map(user => user.get({plain: true}))
 }
@@ -118,15 +130,11 @@ const getDepartmentUsers = async (userDDId, deptId) => {
  * @returns {Promise<void>}
  */
 const updateUserResignByOnJobUserIds = async (onJobUserIds) => {
-    await usersModel.update(
-        {
-            isResign: true,
-            updateTime: new Date()
-        },
-        {
-            where: {dingdingUserId: {"$notIn": onJobUserIds}}
-        }
-    )
+    await usersModel.update({
+        isResign: true, updateTime: new Date()
+    }, {
+        where: {dingdingUserId: {"$notIn": onJobUserIds}}
+    })
 }
 
 /**
@@ -141,11 +149,9 @@ const saveUser = async (user) => {
 
 
 const updateUserResignInfo = async (user) => {
-    const result = await usersModel.update(user,
-        {
-            where: {dingdingUserId: user.dingdingUserId}
-        }
-    )
+    const result = await usersModel.update(user, {
+        where: {dingdingUserId: user.dingdingUserId}
+    })
     return result
 }
 
@@ -194,11 +200,7 @@ const getDeptUsers = async (deptId, where) => {
 
     const tmpWhere = {dingdingUserId: {$in: deptUserIds}, ...where}
     const deptResignUsers = await usersModel.findAll({
-        attributes: {exclude: ["password"]},
-        where: tmpWhere,
-        include: [
-            {model: usersTagsModel, as: "tags"}
-        ]
+        attributes: {exclude: ["password"]}, where: tmpWhere, include: [{model: usersTagsModel, as: "tags"}]
     })
 
     return sequelizeUtil.extractDataValues(deptResignUsers)
@@ -208,14 +210,45 @@ const getUsersWithTagsByUsernames = async (usernames) => {
     const result = await usersModel.findAll({
         attributes: {exclude: ["password"]},
         where: {nickname: {$in: usernames}},
-        include: [
-            {model: usersTagsModel, as: "tags"}
-        ]
+        include: [{model: usersTagsModel, as: "tags"}]
     })
     return sequelizeUtil.extractDataValues(result)
 }
 
+const getPagingUsers = async (deptIds, pageIndex, pageSize, nickname, status) => {
+
+    const depsUsers = await deptsUsersModel.findAll({
+        where: {deptId: {$in: deptIds}}
+    })
+    const userIds = depsUsers.map(item => item.userId)
+
+    let where = {dingdingUserId: {$in: userIds}}
+    if (nickname) where.nickname = {$like: `%${nickname}%`}
+    if (status) where.status = {$eq: status}
+
+    const result = await usersModel.findAndCountAll({
+        attributes: {exclude: ["password"]},
+        include: [
+            {model: rolesModel, as: "roles"},
+            {
+                model: usersTagsModel, as: "tags",
+                include: [
+                    {model: tagsModel, as: "tag"}
+                ]
+            }
+        ],
+        distinct: true,
+        offset: pageIndex * pageSize,
+        limit: pageSize,
+        where: where,
+        order: [["status", "desc"], ["create_time", "desc"]]
+    })
+
+    return pagingUtil.defaultPaging(result, pageSize)
+}
+
 module.exports = {
+    getPagingUsers,
     getUserDetails,
     getAllUsers,
     getAllUsersWithoutPrivateFields,

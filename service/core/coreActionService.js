@@ -181,7 +181,7 @@ const statVisionUserFlowData = async (userActivity, flow) => {
         const standardVisionActivityNamePattern = "^.*修图$"
         let validVisionActivityNamePatternForStatFormData = visionConst.confusedActivityNameForStatFormData.concat(standardVisionActivityNamePattern)
         const clipGroupCode = userTagCodes.find(tagCode => tagCode === "clipGroup")
-        const clipGroupActivityNamePattern = ["^.*剪辑.*$", "任务数量"]
+        const clipGroupActivityNamePattern = ["^.*剪辑.*$", "执行人"]
         if(clipGroupCode){
             validVisionActivityNamePatternForStatFormData = validVisionActivityNamePatternForStatFormData.concat(clipGroupActivityNamePattern)
         }
