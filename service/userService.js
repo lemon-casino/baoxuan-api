@@ -3,6 +3,7 @@ const UsersModel = require("@/model/users");
 const redisRepo = require("@/repository/redisRepo")
 const departmentService = require("@/service/departmentService")
 const userRepo = require("@/repository/userRepo")
+const tagsRepo = require("@/repository/tagsRepo")
 const whiteList = require("@/config/whiteList")
 const globalGetter = require("@/global/getter")
 const NotFoundError = require("@/error/http/notFoundError")
@@ -11,6 +12,7 @@ const innerGroups = require("@/const/tmp/innerGroupConst")
 const {errorCodes} = require("@/const/errorConst");
 const models = require("@/model");
 const {Sequelize, Op} = require("sequelize");
+const {isDeptLeaderOfTheUser} = require("@/service/common/userCommonService");
 
 const getDingDingUserId = async (user_id) => {
     const user = await UsersModel.findOne({
@@ -96,8 +98,89 @@ const getPagingUsers = async (deptIds, pageIndex, pageSize, nickname, status) =>
  * @returns {Promise<[{[p: string]: *}]|*[]>}
  */
 const getTMInnerGroups = async (userId) => {
-    const innerGroup = await getInnerGroups(userId, ["903075138"])
-    return innerGroup
+    // const innerGroup = await getInnerGroups(userId, ["903075138"])
+    // return innerGroup
+
+    const result = []
+    let tmInnerGroupTags = []
+    let tmOnJobUsers = []
+    const tmInnerGroupLeaderTagCode = "tmInnerGroupLeader"
+    const tmInnerGroupTagPrefix = "tmInnerGroup:"
+
+    const isLeader = await isDeptLeaderOfTheUser(userId, ["903075138"])
+    if (isLeader) {
+        tmInnerGroupTags = await tagsRepo.getTags({tagCode: {$like: `%${tmInnerGroupTagPrefix}%`}})
+        tmOnJobUsers = await userRepo.getDeptOnJobUsers("903075138")
+
+        const hasInnerGroupUserIds = []
+        for (const tmInnerGroupTag of tmInnerGroupTags) {
+            const tmpGroupResult = {groupCode: tmInnerGroupTag.tagCode, groupName: tmInnerGroupTag.tagName, members: []}
+            const currTagUsers = tmOnJobUsers.filter(user => {
+                return user.tags.filter(tag => tag.tagCode === tmInnerGroupTag.tagCode).length > 0
+            })
+            for (const user of currTagUsers) {
+                hasInnerGroupUserIds.push(user.dingdingUserId)
+                const leaderTag = user.tags.find(tag => tag.tagCode === tmInnerGroupLeaderTagCode)
+                tmpGroupResult.members.push({
+                    userName: user.nickname,
+                    userDDId: user.dingdingUserId,
+                    isLeader: !!leaderTag
+                })
+            }
+            result.push(tmpGroupResult)
+        }
+
+        // 未分组的用户
+        const dontHasInnerGroupUsers = tmOnJobUsers.filter(user => !hasInnerGroupUserIds.includes(user.dingdingUserId))
+        const tmpGroupResult = {groupCode: "noGroup", groupName: "未分组", members: []}
+        for (const user of dontHasInnerGroupUsers) {
+            tmpGroupResult.members.push({userName: user.nickname, userDDId: user.dingdingUserId, isLeader: false})
+        }
+        result.push(tmpGroupResult)
+    }
+    // 非部门领导或管理员
+    else {
+        const user = await userRepo.getUserWithTags(userId)
+        const userTMInnerGroupTag = user.tags.find(tag => tag.tagCode.includes(tmInnerGroupTagPrefix))
+        if (userTMInnerGroupTag) {
+            const tmpGroupResult = {
+                groupCode: userTMInnerGroupTag.tagCode,
+                groupName: userTMInnerGroupTag.tag.tagName,
+                members: []
+            }
+
+            // 如果是内部组组长，要获取该组的其他组员
+            const innerGroupLeader = !!user.tags.find(tag => tag.tagCode === tmInnerGroupLeaderTagCode)
+            if (innerGroupLeader) {
+                const relatedTagUsers = await userRepo.getUsersByTagCodes([userTMInnerGroupTag.tagCode])
+                for (const sameTagUser of relatedTagUsers) {
+                    tmpGroupResult.members.push({
+                        userName: sameTagUser.nickname,
+                        userDDId: sameTagUser.dingdingUserId,
+                        isLeader: sameTagUser.dingdingUserId === userId
+                    })
+                }
+                result.push(tmpGroupResult)
+            }
+            // 普通组员
+            else {
+                tmpGroupResult.members.push({userName: user.nickname, userDDId: user.dingdingUserId, isLeader: false})
+                result.push(tmpGroupResult)
+            }
+        }
+        // 未分组
+        else {
+            const tmpGroupResult = {
+                groupCode: "noGroup",
+                groupName: "未分组",
+                members: [
+                    {userName: user.nickname, userDDId: user.dingdingUserId, isLeader: false}
+                ]
+            }
+            result.push(tmpGroupResult)
+        }
+    }
+    return result
 }
 
 /**
@@ -159,7 +242,6 @@ const getInnerGroups = async (userId, deptIds) => {
         const tmpGroupingResult = await reGrouping(deptId, innerGroup)
         groupingResult = groupingResult.concat(tmpGroupingResult)
     }
-
 
     // 部门主管和管理员返回所有分组信息
     if (isLeader) {

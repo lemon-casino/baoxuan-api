@@ -215,6 +215,28 @@ const getUsersWithTagsByUsernames = async (usernames) => {
     return sequelizeUtil.extractDataValues(result)
 }
 
+const getUserWithTags = async (userId) => {
+    const result = await usersModel.findOne({
+        attributes: {exclude: ["password"]},
+        where: {dingdingUserId: userId},
+        include: [{
+            model: usersTagsModel, as: "tags",
+            include: [
+                {model: tagsModel, as: "tag"}
+            ]
+        }]
+    })
+    return sequelizeUtil.extractDataValues(result)
+}
+
+const getUsersByTagCodes = async (tagCodes) => {
+    const result = await usersModel.findAll({
+        attributes: {exclude: ["password"]},
+        include: [{model: usersTagsModel, as: "tags", where: {tagCode: {$in: tagCodes}}}]
+    })
+    return sequelizeUtil.extractDataValues(result)
+}
+
 const getPagingUsers = async (deptIds, pageIndex, pageSize, nickname, status) => {
 
     const depsUsers = await deptsUsersModel.findAll({
@@ -243,11 +265,12 @@ const getPagingUsers = async (deptIds, pageIndex, pageSize, nickname, status) =>
         where: where,
         order: [["status", "desc"], ["create_time", "desc"]]
     })
-
     return pagingUtil.defaultPaging(result, pageSize)
 }
 
 module.exports = {
+    getUsersByTagCodes,
+    getUserWithTags,
     getPagingUsers,
     getUserDetails,
     getAllUsers,
