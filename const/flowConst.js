@@ -1,3 +1,5 @@
+const startActivityId = "sid-restartevent"
+
 // 钉钉里流程设计页面的发起的id，在实际创建流程的时候会改变（两者都是固定的）
 const activityIdMappingConst = {
     "node_ockpz6phx72": "sid-restartevent"
@@ -61,6 +63,7 @@ const oaApprovalStatus = {
 }
 
 module.exports = {
+    startActivityId,
     flowStatusConst,
     flowReviewTypeConst,
     activityIdMappingConst,

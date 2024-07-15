@@ -156,7 +156,6 @@ module.exports = [
             },
         ]
     },
-
     {
         actionName: "爆款方案(老品)",
         actionCode: "hotSchema",

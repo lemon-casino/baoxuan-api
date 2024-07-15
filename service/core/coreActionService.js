@@ -59,13 +59,13 @@ const getCoreActions = async (tags, userId, deptIds, userNames, startDoneDate, e
     const isFromCoreActionMenu = tags.length === 0
     const finalResult = isFromCoreActionMenu ? _.cloneDeep(actionStatBasedOnUserResult) : []
 
-    for (const item of finalResult) {
-        const workloadNode = createFlowDataStatNode(item)
-        item.children.push(workloadNode)
-    }
-
     // 先仅仅处理视觉部
     if (deptIds.includes("482162119")) {
+        for (const item of finalResult) {
+            const workloadNode = createFlowDataStatNode(item)
+            item.children.push(workloadNode)
+        }
+
         // 核心动作统计不用标签区分
         if (isFromCoreActionMenu) {
             const sumUserActionStatResult = sumUserActionStat(actionStatBasedOnUserResult)
