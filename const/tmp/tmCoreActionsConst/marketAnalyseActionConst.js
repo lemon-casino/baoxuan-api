@@ -11,32 +11,6 @@ module.exports = [
                 nameEN: commonActionStatus.TODO,
                 rules: [
                     {
-                        formName: "运营执行流程",
-                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
-                        flowDetailsRules: [
-                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "市场统计"},
-                            {fieldId: "radioField_lyij2hvn", opCode: opCodes.Equal, value: "正推产品"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: "node_oclyijfith7",
-                                    name: "执行统计正推市场",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclvkc9r0a3",
-                                    name: "执行统计正推市场",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "发起人",
-                                    id: "sid-restartevent"
-                                }
-                            }]
-                    },
-                    {
                         formName: "运营市场统计流程",
                         formId: "FORM-8F47FCEF33E94B66B461B819B4C0A5DFIBTV",
                         flowDetailsRules: [
@@ -94,33 +68,6 @@ module.exports = [
                 nameEN: commonActionStatus.DOING,
                 rules: [
                     {
-                        formName: "运营执行流程",
-                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
-                        flowDetailsRules: [
-                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "市场统计"},
-                            {fieldId: "radioField_lyij2hvn", opCode: opCodes.Equal, value: "正推产品"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: "node_oclyij4qvn3",
-                                    name: "运营分析正推产品市场",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclyij4qvn3",
-                                    name: "运营分析正推产品市场",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "运营分析正推产品市场",
-                                    id: "node_oclyij4qvn3"
-                                }
-                            }
-                        ]
-                    },
-                    {
                         formName: "运营市场统计流程",
                         formId: "FORM-8F47FCEF33E94B66B461B819B4C0A5DFIBTV",
                         flowDetailsRules: [
@@ -142,6 +89,23 @@ module.exports = [
                                     from: "process",
                                     name: "运营分析正推产品市场",
                                     id: "node_oclyil049v7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: " node_oclyil049v9",
+                                    name: "运营完成市场分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: " node_oclyil049v9",
+                                    name: "运营完成市场分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "运营完成市场分析",
+                                    id: "node_oclyil049v9"
                                 }
                             }
                         ]
@@ -196,33 +160,6 @@ module.exports = [
                 nameEN: commonActionStatus.DONE,
                 rules: [
                     {
-                        formName: "运营执行流程",
-                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
-                        flowDetailsRules: [
-                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "市场统计"},
-                            {fieldId: "radioField_lyij2hvn", opCode: opCodes.Equal, value: "正推产品"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: "node_oclyij4qvn3",
-                                    name: "运营分析正推产品市场",
-                                    status: ["HISTORY"]
-                                },
-                                to: {
-                                    id: "node_oclyij4qvn3",
-                                    name: "运营分析正推产品市场",
-                                    status: ["HISTORY"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "运营分析正推产品市场",
-                                    id: "node_oclyij4qvn3"
-                                }
-                            }
-                        ]
-                    },
-                    {
                         formName: "运营市场统计流程",
                         formId: "FORM-8F47FCEF33E94B66B461B819B4C0A5DFIBTV",
                         flowDetailsRules: [
@@ -244,6 +181,23 @@ module.exports = [
                                     from: "process",
                                     name: "运营分析正推产品市场",
                                     id: "node_oclyil049v7"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: " node_oclyil049v9",
+                                    name: "运营完成市场分析",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: " node_oclyil049v9",
+                                    name: "运营完成市场分析",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "运营完成市场分析",
+                                    id: "node_oclyil049v9"
                                 }
                             }
                         ]
@@ -286,33 +240,6 @@ module.exports = [
                 nameCN: "待做",
                 nameEN: commonActionStatus.TODO,
                 rules: [
-                    {
-                        formName: "运营执行流程",
-                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
-                        flowDetailsRules: [
-                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "市场统计"},
-                            {fieldId: "radioField_lyij2hvn", opCode: opCodes.Equal, value: "反推产品"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: "node_oclyijfithc",
-                                    name: "执行统计反推市场",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclyijfithc",
-                                    name: "执行统计反推市场",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "发起人",
-                                    id: "sid-restartevent"
-                                }
-                            }
-                        ]
-                    },
                     {
                         formName: "运营市场统计流程",
                         formId: "FORM-8F47FCEF33E94B66B461B819B4C0A5DFIBTV",
@@ -372,33 +299,6 @@ module.exports = [
                 nameEN: commonActionStatus.DOING,
                 rules: [
                     {
-                        formName: "运营执行流程",
-                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
-                        flowDetailsRules: [
-                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "市场统计"},
-                            {fieldId: "radioField_lyij2hvn", opCode: opCodes.Equal, value: "反推产品"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: "node_oclyijfithd",
-                                    name: "运营分析反推产品市场",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclyijfithd",
-                                    name: "运营分析反推产品市场",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "运营分析反推产品市场",
-                                    id: "node_oclyijfithd"
-                                }
-                            }
-                        ]
-                    },
-                    {
                         formName: "运营市场统计流程",
                         formId: "FORM-8F47FCEF33E94B66B461B819B4C0A5DFIBTV",
                         flowDetailsRules: [
@@ -420,6 +320,23 @@ module.exports = [
                                     from: "process",
                                     name: "运营分析反推产品市场",
                                     id: "node_oclyilaomm3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: " node_oclyil049v9",
+                                    name: "运营完成市场分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: " node_oclyil049v9",
+                                    name: "运营完成市场分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "运营完成市场分析",
+                                    id: "node_oclyil049v9"
                                 }
                             }
                         ]
@@ -474,43 +391,6 @@ module.exports = [
                 nameEN: commonActionStatus.DONE,
                 rules: [
                     {
-                        formName: "运营执行流程",
-                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
-                        flowDetailsRules: [
-                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "市场统计"},
-                            {fieldId: "radioField_lyij2hvn", opCode: opCodes.Equal, value: "正推产品"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                formName: "运营执行流程",
-                                formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
-                                flowDetailsRules: [
-                                    {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "市场统计"},
-                                    {fieldId: "radioField_lyij2hvn", opCode: opCodes.Equal, value: "反推产品"}
-                                ],
-                                flowNodeRules: [
-                                    {
-                                        from: {
-                                            id: "node_oclyijfithd",
-                                            name: "运营分析反推产品市场",
-                                            status: ["HISTORY"]
-                                        },
-                                        to: {
-                                            id: "node_oclyijfithd",
-                                            name: "运营分析反推产品市场",
-                                            status: ["HISTORY"]
-                                        },
-                                        ownerRule: {
-                                            from: "process",
-                                            name: "运营分析反推产品市场",
-                                            id: "node_oclyijfithd"
-                                        }
-                                    }
-                                ]
-                            }
-                        ]
-                    },
-                    {
                         formName: "运营市场统计流程",
                         formId: "FORM-8F47FCEF33E94B66B461B819B4C0A5DFIBTV",
                         flowDetailsRules: [
@@ -532,6 +412,23 @@ module.exports = [
                                     from: "process",
                                     name: "运营分析反推产品市场",
                                     id: "node_oclyilaomm3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: " node_oclyil049v9",
+                                    name: "运营完成市场分析",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: " node_oclyil049v9",
+                                    name: "运营完成市场分析",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "运营完成市场分析",
+                                    id: "node_oclyil049v9"
                                 }
                             }
                         ]
@@ -574,33 +471,6 @@ module.exports = [
                 nameCN: "待做",
                 nameEN: commonActionStatus.TODO,
                 rules: [
-                    {
-                        formName: "运营执行流程",
-                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
-                        flowDetailsRules: [
-                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "市场统计"},
-                            {fieldId: "radioField_lyij2hvn", opCode: opCodes.Equal, value: "老品分析"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: "node_oclyijfith9",
-                                    name: "执行统计老品分析市场",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclyijfith9",
-                                    name: "执行统计老品分析市场",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "发起人",
-                                    id: "sid-restartevent"
-                                }
-                            }
-                        ]
-                    },
                     {
                         formName: "运营市场统计流程",
                         formId: "FORM-8F47FCEF33E94B66B461B819B4C0A5DFIBTV",
@@ -660,33 +530,6 @@ module.exports = [
                 nameEN: commonActionStatus.DOING,
                 rules: [
                     {
-                        formName: "运营执行流程",
-                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
-                        flowDetailsRules: [
-                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "市场统计"},
-                            {fieldId: "radioField_lyij2hvn", opCode: opCodes.Equal, value: "老品分析"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: "node_oclyijfitha",
-                                    name: "运营分析老品重上市场",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclyijfitha",
-                                    name: "运营分析老品重上市场",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "运营分析老品重上市场",
-                                    id: "node_oclyijfitha"
-                                }
-                            }
-                        ]
-                    },
-                    {
                         formName: "运营市场统计流程",
                         formId: "FORM-8F47FCEF33E94B66B461B819B4C0A5DFIBTV",
                         flowDetailsRules: [
@@ -708,6 +551,23 @@ module.exports = [
                                     from: "process",
                                     name: "运营分析老品重上市场",
                                     id: "node_oclyilaomm6"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: " node_oclyil049v9",
+                                    name: "运营完成市场分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: " node_oclyil049v9",
+                                    name: "运营完成市场分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "运营完成市场分析",
+                                    id: "node_oclyil049v9"
                                 }
                             }
                         ]
@@ -762,33 +622,6 @@ module.exports = [
                 nameEN: commonActionStatus.DONE,
                 rules: [
                     {
-                        formName: "运营执行流程",
-                        formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
-                        flowDetailsRules: [
-                            {fieldId: "selectField_liigx7wc", opCode: opCodes.Equal, value: "市场统计"},
-                            {fieldId: "radioField_lyij2hvn", opCode: opCodes.Equal, value: "老品分析"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: "node_oclyijfitha",
-                                    name: "运营分析老品重上市场",
-                                    status: ["HISTORY"]
-                                },
-                                to: {
-                                    id: "node_oclyijfitha",
-                                    name: "运营分析老品重上市场",
-                                    status: ["HISTORY"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "运营分析老品重上市场",
-                                    id: "node_oclyijfitha"
-                                }
-                            }
-                        ]
-                    },
-                    {
                         formName: "运营市场统计流程",
                         formId: "FORM-8F47FCEF33E94B66B461B819B4C0A5DFIBTV",
                         flowDetailsRules: [
@@ -810,6 +643,23 @@ module.exports = [
                                     from: "process",
                                     name: "运营分析老品重上市场",
                                     id: "node_oclyilaomm6"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: " node_oclyil049v9",
+                                    name: "运营完成市场分析",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: " node_oclyil049v9",
+                                    name: "运营完成市场分析",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "运营完成市场分析",
+                                    id: "node_oclyil049v9"
                                 }
                             }
                         ]

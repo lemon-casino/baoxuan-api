@@ -2259,6 +2259,36 @@ module.exports = {
                         }
                     ]
                 },
+                {
+                    formName: "运营执行流程",
+                    formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                    flowDetailsRules: [
+                        {
+                            fieldId: "selectField_liigx7wc",
+                            opCode: opCodes.Equal,
+                            value: "光合短视频发布"
+                        }
+                    ],
+                    flowNodeRules: [
+                        {
+                            from: {
+                                id: "node_ocluwe3jmp1",
+                                name: "视频剪辑",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_ocluwe3jmp1",
+                                name: "视频剪辑",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "视频剪辑",
+                                id: "node_ocluwe3jmp1"
+                            }
+                        }
+                    ]
+                }
             ]
         },
         {
@@ -2832,6 +2862,37 @@ module.exports = {
                                 from: "process",
                                 name: "简单美编完成任务",
                                 id: "node_oclvxczr49k"
+                            }
+                        }
+                    ]
+                },
+
+                {
+                    formName: "运营执行流程",
+                    formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
+                    flowDetailsRules: [
+                        {
+                            fieldId: "selectField_liigx7wc",
+                            opCode: opCodes.Equal,
+                            value: "光合短视频发布"
+                        }
+                    ],
+                    flowNodeRules: [
+                        {
+                            from: {
+                                id: "node_ocluwe3jmp1",
+                                name: "视频剪辑",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_ocluwe3jmp1",
+                                name: "视频剪辑",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "视频剪辑",
+                                id: "node_ocluwe3jmp1"
                             }
                         }
                     ]
