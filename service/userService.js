@@ -7,11 +7,8 @@ const tagsRepo = require("@/repository/tagsRepo")
 const whiteList = require("@/config/whiteList")
 const globalGetter = require("@/global/getter")
 const NotFoundError = require("@/error/http/notFoundError")
-const {tmInnerGroup, visionInnerGroup} = require("@/const/tmp/innerGroupConst")
 const innerGroups = require("@/const/tmp/innerGroupConst")
-const {errorCodes} = require("@/const/errorConst");
-const models = require("@/model");
-const {Sequelize, Op} = require("sequelize");
+const {errorCodes} = require("@/const/errorConst")
 const {isDeptLeaderOfTheUser} = require("@/service/common/userCommonService");
 
 const getDingDingUserId = async (user_id) => {

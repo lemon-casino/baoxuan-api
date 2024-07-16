@@ -104,6 +104,12 @@ const getCoreActions = async (tags, userId, deptIds, userNames, startDoneDate, e
                 finalResult.unshift(userStat)
             }
         }
+    } else if (deptIds.includes("903075138")) {
+        const userStatArr = convertToUserActionResult(requiredUsers, actionStatBasedOnUserResult)
+        for (const userStat of userStatArr) {
+            userStat.children.push(createFlowDataStatNode(userStat))
+            finalResult.unshift(userStat)
+        }
     }
     return flowUtil.statIdsAndSumFromBottom(finalResult)
 }
@@ -182,7 +188,7 @@ const statVisionUserFlowData = async (userActivity, flow) => {
         let validVisionActivityNamePatternForStatFormData = visionConst.confusedActivityNameForStatFormData.concat(standardVisionActivityNamePattern)
         const clipGroupCode = userTagCodes.find(tagCode => tagCode === "clipGroup")
         const clipGroupActivityNamePattern = ["^.*剪辑.*$", "执行人"]
-        if(clipGroupCode){
+        if (clipGroupCode) {
             validVisionActivityNamePatternForStatFormData = validVisionActivityNamePatternForStatFormData.concat(clipGroupActivityNamePattern)
         }
         for (const pattern of validVisionActivityNamePatternForStatFormData) {
