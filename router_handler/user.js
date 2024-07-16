@@ -330,7 +330,7 @@ exports.getPagingUsers = async (req, res, next) => {
  */
 exports.editUser = (req, res, next) => {
     const {value, error} = update_user_schema.validate(req.body);
-    const user_id = value.user_id;
+    const user_id = value.userId;
     if (error) {
         return next(error);
     }
