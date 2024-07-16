@@ -182,7 +182,7 @@ const statVisionUserFlowData = async (userActivity, flow) => {
         let validVisionActivityNamePatternForStatFormData = visionConst.confusedActivityNameForStatFormData.concat(standardVisionActivityNamePattern)
         const clipGroupCode = userTagCodes.find(tagCode => tagCode === "clipGroup")
         const clipGroupActivityNamePattern = ["^.*剪辑.*$", "执行人"]
-        if(clipGroupCode){
+        if (clipGroupCode) {
             validVisionActivityNamePatternForStatFormData = validVisionActivityNamePatternForStatFormData.concat(clipGroupActivityNamePattern)
         }
         for (const pattern of validVisionActivityNamePatternForStatFormData) {
@@ -302,17 +302,23 @@ const createFlowDataStatNode = (node) => {
     const completedWorkload = sumSameNameWorkload(completedFlowDataStatNodes)
 
     const newWorkloadStatNode = {
-        nameCN: "工作量", excludeUpSum: true, sumAlone: true,
+        nameCN: "工作量",
+        excludeUpSum: true,
+        sumAlone: true,
+        uniqueIds: true,
         children: [
             {
                 nameCN: "进行中",
                 tooltip: "该工作量会统计表单中预计的数据",
                 sumAlone: true,
-                children: runningWorkload
+                uniqueIds: true,
+                children: runningWorkload,
             },
             {
                 nameCN: "已完成",
-                sumAlone: true, children: completedWorkload
+                sumAlone: true,
+                uniqueIds: true,
+                children: completedWorkload
             }
         ]
     }

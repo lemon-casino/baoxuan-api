@@ -38,19 +38,16 @@ module.exports = [
                     {
                         formName: "选品会",
                         formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
-                        flowDetailsRules: [
-                            {fieldId: "radioField_lruf2zuu", opCode: opCodes.Equal, value: "正推产品"}
-                        ],
                         flowNodeRules: [
                             {
                                 from: {
                                     id: " node_oclyilqx4v1",
-                                    name: "执行统计正推市场",
+                                    name: "执行统计市场",
                                     status: ["TODO"]
                                 },
                                 to: {
                                     id: " node_oclyilqx4v1",
-                                    name: "执行统计正推市场",
+                                    name: "执行统计市场",
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
@@ -113,9 +110,6 @@ module.exports = [
                     {
                         formName: "选品会",
                         formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
-                        flowDetailsRules: [
-                            {fieldId: "radioField_lruf2zuu", opCode: opCodes.Equal, value: "正推产品"}
-                        ],
                         flowNodeRules: [
                             {
                                 from: {
@@ -265,32 +259,6 @@ module.exports = [
                                 }
                             }
                         ]
-                    },
-                    {
-                        formName: "选品会",
-                        formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
-                        flowDetailsRules: [
-                            {fieldId: "radioField_lruf2zuu", opCode: opCodes.Equal, value: "反推产品"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: " node_oclyilqx4v4",
-                                    name: "执行统计反推市场",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: " node_oclyilqx4v4",
-                                    name: "执行统计反推市场",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "form",
-                                    name: "天猫运营负责人",
-                                    id: "employeeField_lii9qts2"
-                                }
-                            }
-                        ]
                     }
                 ]
             },
@@ -340,49 +308,6 @@ module.exports = [
                                 }
                             }
                         ]
-                    },
-                    {
-                        formName: "选品会",
-                        formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
-                        flowDetailsRules: [
-                            {fieldId: "radioField_lruf2zuu", opCode: opCodes.Equal, value: "反推产品"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: " node_oclyilqx4v5",
-                                    name: "运营分析反推产品市场",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: " node_oclyilqx4v5",
-                                    name: "运营分析反推产品市场",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "运营分析反推产品市场",
-                                    id: "node_oclyilqx4v5"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: " node_ocliieab3b1",
-                                    name: "运营提交市场分析方案",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: " node_ocliieab3b1",
-                                    name: "运营提交市场分析方案",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "运营提交市场分析方案",
-                                    id: "node_ocliieab3b1"
-                                }
-                            }
-                        ]
                     }
                 ]
             },
@@ -429,32 +354,6 @@ module.exports = [
                                     from: "process",
                                     name: "运营完成市场分析",
                                     id: "node_oclyil049v9"
-                                }
-                            }
-                        ]
-                    },
-                    {
-                        formName: "选品会",
-                        formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
-                        flowDetailsRules: [
-                            {fieldId: "radioField_lruf2zuu", opCode: opCodes.Equal, value: "反推产品"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: " node_ocliieab3b1",
-                                    name: "运营提交市场分析方案",
-                                    status: ["HISTORY"]
-                                },
-                                to: {
-                                    id: " node_ocliieab3b1",
-                                    name: "运营提交市场分析方案",
-                                    status: ["HISTORY"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "运营提交市场分析方案",
-                                    id: "node_ocliieab3b1"
                                 }
                             }
                         ]
@@ -496,32 +395,6 @@ module.exports = [
                                 }
                             }
                         ]
-                    },
-                    {
-                        formName: "选品会",
-                        formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
-                        flowDetailsRules: [
-                            {fieldId: "radioField_lruf2zuu", opCode: opCodes.Equal, value: "老品分析"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: " node_oclyilqx4v7",
-                                    name: "执行统计老品重上市场",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: " node_oclyilqx4v7",
-                                    name: "执行统计老品重上市场",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "form",
-                                    name: "天猫运营负责人",
-                                    id: "employeeField_lii9qts2"
-                                }
-                            }
-                        ]
                     }
                 ]
             },
@@ -571,49 +444,6 @@ module.exports = [
                                 }
                             }
                         ]
-                    },
-                    {
-                        formName: "选品会",
-                        formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
-                        flowDetailsRules: [
-                            {fieldId: "radioField_lruf2zuu", opCode: opCodes.Equal, value: "老品分析"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: " node_oclyilqx4v8",
-                                    name: "运营分析老品重上市场",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: " node_oclyilqx4v8",
-                                    name: "运营分析老品重上市场",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "运营分析老品重上市场",
-                                    id: "node_oclyilqx4v8"
-                                }
-                            },
-                            {
-                                from: {
-                                    id: " node_ocliieab3b1",
-                                    name: "运营提交市场分析方案",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: " node_ocliieab3b1",
-                                    name: "运营提交市场分析方案",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "运营提交市场分析方案",
-                                    id: "node_ocliieab3b1"
-                                }
-                            }
-                        ]
                     }
                 ]
             },
@@ -660,32 +490,6 @@ module.exports = [
                                     from: "process",
                                     name: "运营完成市场分析",
                                     id: "node_oclyil049v9"
-                                }
-                            }
-                        ]
-                    },
-                    {
-                        formName: "选品会",
-                        formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
-                        flowDetailsRules: [
-                            {fieldId: "radioField_lruf2zuu", opCode: opCodes.Equal, value: "老品分析"}
-                        ],
-                        flowNodeRules: [
-                            {
-                                from: {
-                                    id: " node_ocliieab3b1",
-                                    name: "运营提交市场分析方案",
-                                    status: ["HISTORY"]
-                                },
-                                to: {
-                                    id: " node_ocliieab3b1",
-                                    name: "运营提交市场分析方案",
-                                    status: ["HISTORY"]
-                                },
-                                ownerRule: {
-                                    from: "process",
-                                    name: "运营提交市场分析方案",
-                                    id: "node_ocliieab3b1"
                                 }
                             }
                         ]
