@@ -7,6 +7,8 @@ const flowCommonService = require("@/service/common/flowCommonService");
 const userRepo = require("@/repository/userRepo");
 const userCommonService = require("@/service/common/userCommonService");
 const outUsersRepo = require("@/repository/outUsersRepo");
+const algorithmUtil = require("@/utils/algorithmUtil");
+const visionConst = require("@/const/tmp/visionConst");
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 
@@ -16,10 +18,10 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
  * @param users
  * @param currFlows
  * @param coreConfig
- * @param userFlowDataStatCB
+ * @param userFlowDataStatFunc
  * @returns {Promise<*[]>}
  */
-const stat = async (users, flows, coreConfig, userFlowDataStatCB) => {
+const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
     const finalResult = []
 
     // 根据配置信息获取基于所有人的数据
@@ -71,7 +73,15 @@ const stat = async (users, flows, coreConfig, userFlowDataStatCB) => {
 
                             const getUserStatResult = async (statusResult, flow) => {
 
+                                if (!userFlowDataStatFunc || !_.isFunction(userFlowDataStatFunc)) {
+                                    return {
+                                        processInstanceId: flow.processInstanceId,
+                                        flowData: []
+                                    }
+                                }
+
                                 let userFlowDataStat = null
+
                                 // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
                                 if (!statusResult.nameCN.includes("待")) {
                                     const tmpFlow = _.cloneDeep(flow)
@@ -89,13 +99,14 @@ const stat = async (users, flows, coreConfig, userFlowDataStatCB) => {
                                         }
                                     }
 
-                                    const dataStatResult = await userFlowDataStatCB(operatorActivity, tmpFlow)
+                                    const dataStatResult = await userFlowDataStatFunc(operatorActivity, tmpFlow)
                                     if (dataStatResult.length > 0) {
                                         userFlowDataStat = {
-                                            processInstanceId,
+                                            processInstanceId: tmpFlow.processInstanceId,
                                             flowData: dataStatResult
                                         }
                                     }
+
                                 }
                                 return userFlowDataStat
                             }
@@ -144,6 +155,41 @@ const stat = async (users, flows, coreConfig, userFlowDataStatCB) => {
         finalResult.push(actionResult)
     }
     return finalResult
+}
+
+/**
+ * 从配置中获取外包和非外包表单流程分开进行汇总
+ *
+ * @param coreActionConfig
+ * @returns {{outSourcing: *[], inner: *[]}}
+ */
+const extractInnerAndOutSourcingFormsFromConfig = (coreActionConfig) => {
+    const forms = {"inner": [], "outSourcing": []}
+    if (coreActionConfig instanceof Array) {
+        for (const item of coreActionConfig) {
+            // 找到有form的节点配置信息直接拿出来
+            if (Object.keys(item).includes("formId")) {
+                const tmpForm = {formName: item.formName, formId: item.formId}
+                if (item.formName.includes("外包")) {
+                    forms.outSourcing.push(tmpForm)
+                } else {
+                    forms.inner.push(tmpForm)
+                }
+                continue
+            }
+            // 当前item不存在form先关的配置信息
+            for (const key of Object.keys(item)) {
+                if (item[key] instanceof Array) {
+                    const tmpForms = extractInnerAndOutSourcingFormsFromConfig(item[key])
+                    forms.inner = forms.inner.concat(tmpForms.inner)
+                    forms.outSourcing = forms.outSourcing.concat(tmpForms.outSourcing)
+                }
+            }
+        }
+    }
+    forms.inner = algorithmUtil.removeJsonArrDuplicateItems(forms.inner, "formId")
+    forms.outSourcing = algorithmUtil.removeJsonArrDuplicateItems(forms.outSourcing, "formId")
+    return forms
 }
 
 /**
@@ -264,11 +310,14 @@ const filterFlows = async (formIds, startDoneDate, endDoneDate) => {
     return combinedFlows
 }
 
-const getRequiredUsers = async (userNames, userIsDeptLeader, deptIds) => {
+const getRequiredUsers = async (userNames, userIsDeptLeader, deptIds, userFilterFunc) => {
     let requiredUsers = await userRepo.getUsersWithTagsByUsernames(userNames) || []
     if (userIsDeptLeader) {
         const relatedOtherUsers = await getRelatedOtherUsers(deptIds)
         requiredUsers = requiredUsers.concat(relatedOtherUsers)
+    }
+    if (_.isFunction(userFilterFunc)) {
+        requiredUsers = userFilterFunc(requiredUsers)
     }
     return requiredUsers
 }
@@ -294,8 +343,106 @@ const getRelatedOtherUsers = async (deptIds) => {
     return otherUsers
 }
 
+
+const convertToUserActionResult = (users, userStatResult) => {
+    // 因为要兼容前期混乱的外包负责人信息
+    // 如果users中有 外包的人才需要visionConfusedUserNamesConst的参与
+    const userStatArr = []
+    const mixedOutSourcingUsers = _.cloneDeep(visionConst.unifiedConfusedUserNames).filter(item => {
+        const tmpUsers = users.filter(user => user.userName === item.username)
+        return tmpUsers.length > 0
+    })
+    let isRequiredVisionConfusedUserNamesConst = false
+    for (const mixedOutSourcingUser of mixedOutSourcingUsers) {
+        const user = users.find(item => (item.nickname || item.userName) === mixedOutSourcingUser.username)
+        if (user) {
+            isRequiredVisionConfusedUserNamesConst = true
+            break
+        }
+    }
+
+    const newStructureUsers = isRequiredVisionConfusedUserNamesConst ? mixedOutSourcingUsers : []
+    const userNamesArr = users.map(item => item.nickname || item.userName)
+    for (const username of userNamesArr) {
+        let isConfusedOutSourcingUser = false
+        for (const mixedOutSourcingUser of mixedOutSourcingUsers) {
+            if (mixedOutSourcingUser.children.includes(username)) {
+                isConfusedOutSourcingUser = true
+                break
+            }
+        }
+        if (!isConfusedOutSourcingUser) {
+            newStructureUsers.push({username, children: [username]})
+        }
+    }
+
+    for (const user of newStructureUsers) {
+        const getActionChildren = (usernames) => {
+            const statusKeyTexts = ["待", "中", "完"]
+            const leve1Actions = ["待转入", "进行中", "已完成"]
+            const leve2Actions = ["逾期", "未逾期"]
+            const result = []
+            for (const l1Action of leve1Actions) {
+                const currStatusKeyText = statusKeyTexts.find(key => l1Action.includes(key))
+                const l1ActionStructure = {nameCN: l1Action, nameEN: "", children: []}
+                for (const l2Action of leve2Actions) {
+                    const l2ActionStructure = {
+                        nameCN: l2Action, nameEN: "", children: []
+                    }
+
+                    // 找出所有key所对应的逾期所包含的children
+                    for (const result of userStatResult) {
+                        let ids = []
+                        let userFlowsDataStat = []
+                        const actionName = result.actionName
+                        const sameKeyTextStat = result.children.filter(item => item.nameCN.includes(currStatusKeyText))
+                        for (const statusActionStat of sameKeyTextStat) {
+                            const overdueActionStat = statusActionStat.children.find(item => item.nameCN === l2Action)
+                            const userActionStat = overdueActionStat.children.filter(item => usernames.includes(item.userName))
+                            if (userActionStat.length > 0) {
+                                for (const stat of userActionStat) {
+                                    ids = ids.concat(stat.ids)
+                                    userFlowsDataStat = userFlowsDataStat.concat(stat.userFlowsDataStat)
+                                }
+                            }
+                        }
+                        l2ActionStructure.children.push({userName: actionName, ids, sum: ids.length, userFlowsDataStat})
+                    }
+                    l1ActionStructure.children.push(l2ActionStructure)
+                }
+                result.push(l1ActionStructure)
+            }
+            return result
+        }
+        if (!user.username.includes("离职")) {
+            const userStatStructure = {
+                actionCode: "userActStat",
+                actionName: user.username,
+                children: getActionChildren(user.children)
+            }
+            userStatArr.push(userStatStructure)
+        }
+    }
+    return userStatArr
+}
+
+const getFlowSumStructure = (result, flowStatConfigTemplate) => {
+    const sumFlowStat = []
+    for (const coreActionResult of result) {
+        sumFlowStat.push({
+            nameCN: coreActionResult.actionName,
+            nameEN: coreActionResult.actionCode,
+            children: _.cloneDeep(flowStatConfigTemplate)
+        })
+    }
+    return sumFlowStat
+}
+
 module.exports = {
     stat,
     filterFlows,
-    getRequiredUsers
+    getRequiredUsers,
+    extractInnerAndOutSourcingFormsFromConfig,
+    convertToUserActionResult,
+    getFlowSumStructure
 }

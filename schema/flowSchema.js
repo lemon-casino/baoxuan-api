@@ -1,6 +1,9 @@
-const joiUtil = require("@/utils/joiUtil");
+const joiUtil = require("@/utils/joiUtil")
+const Joi = require("joi")
+const coreActionStatTypeConst = require("@/const/coreActionStatTypeConst")
 
 const getCoreActionsSchema = {
+    statType: Joi.string().valid(coreActionStatTypeConst.StatAction, coreActionStatTypeConst.StatUser),
     tags: joiUtil.commonJoiSchemas.arrayRequired,
     deptIds: joiUtil.commonJoiSchemas.arrayRequired,
     startDate: joiUtil.commonJoiSchemas.dateRequired,
