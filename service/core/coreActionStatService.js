@@ -1,7 +1,12 @@
 const _ = require("lodash")
 const {opFunctions} = require("@/const/operatorConst")
-const {activityIdMappingConst} = require("@/const/flowConst")
+const {activityIdMappingConst, flowStatusConst} = require("@/const/flowConst")
 const flowUtil = require("@/utils/flowUtil")
+const flowRepo = require("@/repository/flowRepo");
+const flowCommonService = require("@/service/common/flowCommonService");
+const userRepo = require("@/repository/userRepo");
+const userCommonService = require("@/service/common/userCommonService");
+const outUsersRepo = require("@/repository/outUsersRepo");
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 
@@ -14,7 +19,7 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
  * @param userFlowDataStatCB
  * @returns {Promise<*[]>}
  */
-const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
+const stat = async (users, flows, coreConfig, userFlowDataStatCB) => {
     const finalResult = []
 
     // 根据配置信息获取基于所有人的数据
@@ -251,7 +256,46 @@ const extendActivityWithUserNameAndTags = (activity, users, flow, ownerRule) => 
     return tmpOperatorsActivity
 }
 
+const filterFlows = async (formIds, startDoneDate, endDoneDate) => {
+    let combinedFlows = await flowCommonService.getCombinedFlowsOfHistoryAndToday(startDoneDate, endDoneDate, formIds)
+    combinedFlows = flowCommonService.removeTargetStatusFlows(combinedFlows, flowStatusConst.TERMINATED)
+    combinedFlows = flowCommonService.removeDoneActivitiesNotInDoneDateRange(combinedFlows, startDoneDate, endDoneDate)
+    combinedFlows = flowCommonService.removeRedirectActivity(combinedFlows)
+    return combinedFlows
+}
+
+const getRequiredUsers = async (userNames, userIsDeptLeader, deptIds) => {
+    let requiredUsers = await userRepo.getUsersWithTagsByUsernames(userNames) || []
+    if (userIsDeptLeader) {
+        const relatedOtherUsers = await getRelatedOtherUsers(deptIds)
+        requiredUsers = requiredUsers.concat(relatedOtherUsers)
+    }
+    return requiredUsers
+}
+
+/**
+ * 获取部门其他相关的人员：外包、离职
+ *
+ * @param deptIds
+ * @returns {Promise<*[]>}
+ */
+const getRelatedOtherUsers = async (deptIds) => {
+    let otherUsers = []
+    for (const deptId of deptIds) {
+        const deptOutSourcingUsers = await outUsersRepo.getOutUsersWithTags({deptId: deptId, enabled: true})
+        otherUsers = otherUsers.concat(deptOutSourcingUsers)
+        const deptResignUsers = await userRepo.getDeptResignUsers(deptId)
+        const deptResignedUsers = deptResignUsers.map(item => {
+            item.nickname = `${item.nickname}[已离职]`
+            return item
+        })
+        otherUsers = otherUsers.concat(deptResignedUsers)
+    }
+    return otherUsers
+}
 
 module.exports = {
-    get
+    stat,
+    filterFlows,
+    getRequiredUsers
 }

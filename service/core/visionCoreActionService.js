@@ -1,15 +1,15 @@
 const _ = require("lodash")
 const Bignumber = require("bignumber.js")
-const flowRepo = require("@/repository/flowRepo")
 const userRepo = require("@/repository/userRepo")
 const outUsersRepo = require("@/repository/outUsersRepo")
-const flowCommonService = require("@/service/common/flowCommonService")
+const flowRepo = require("@/repository/flowRepo")
 const userCommonService = require("@/service/common/userCommonService")
-const {flowStatusConst, flowReviewTypeConst} = require("@/const/flowConst")
+const flowCommonService = require("@/service/common/flowCommonService")
+const coreActionStatService = require("@/service/core/coreActionStatService")
+const {flowReviewTypeConst, flowStatusConst} = require("@/const/flowConst")
 const {opFunctions} = require("@/const/operatorConst")
 const {visionFormDoneActivityIds} = require("@/const/tmp/coreActionsConst")
 const regexConst = require("@/const/regexConst")
-const departmentCoreActivityStat = require("@/core/statistic/departmentCoreActivityStat")
 const visionConst = require("@/const/tmp/visionConst")
 const statResultTemplateConst = require("@/const/statResultTemplateConst")
 const flowUtil = require("@/utils/flowUtil")
@@ -27,90 +27,83 @@ const patchUtil = require("@/patch/patchUtil")
  * @param endDoneDate
  * @returns {Promise<*>}
  */
-const getCoreActions = async (tags, userId, deptIds, userNames, startDoneDate, endDoneDate) => {
+const getCoreActionStat = async (tags, userId, deptIds, userNames, startDoneDate, endDoneDate) => {
     // 筛选的信息组成： userNames、outUserNames、resignedUserNames
     // 普通的身份不要组合 outUserNames、resignedUserNames
-    let requiredUsers = await userRepo.getUsersWithTagsByUsernames(userNames) || []
-    const isDeptLeader = await userCommonService.isDeptLeaderOfTheUser(userId, deptIds)
 
-    if (isDeptLeader) {
-        const relatedOtherUsers = await getRelatedOtherUsers(deptIds)
-        requiredUsers = requiredUsers.concat(relatedOtherUsers)
-    }
+    const isDeptLeader = await userCommonService.isDeptLeaderOfTheUser(userId, deptIds)
+    let requiredUsers = await coreActionStatService.getRequiredUsers(userNames, isDeptLeader, deptIds)
     requiredUsers = filterUsersByTags(requiredUsers, tags)
 
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptIds)
     const differentForms = extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
     const configuredFormIds = differentForms.inner.concat(differentForms.outSourcing).map(item => item.formId)
-
-    let combinedFlows = await flowCommonService.getCombinedFlowsOfHistoryAndToday(startDoneDate, endDoneDate, configuredFormIds)
-    combinedFlows = flowCommonService.removeTargetStatusFlows(combinedFlows, flowStatusConst.TERMINATED)
-    combinedFlows = flowCommonService.removeDoneActivitiesNotInDoneDateRange(combinedFlows, startDoneDate, endDoneDate)
-    combinedFlows = flowCommonService.removeRedirectActivity(combinedFlows)
+    const flows = await coreActionStatService.filterFlows(configuredFormIds, startDoneDate, endDoneDate)
 
     // 基于人的汇总(最基本的明细统计)
-    const actionStatBasedOnUserResult = await departmentCoreActivityStat.get(
+    const actionStatBasedOnUserResult = await coreActionStatService.stat(
         requiredUsers,
-        combinedFlows,
+        flows,
         coreActionConfig,
         statVisionUserFlowData
     )
-    // 区分核心动作、核心人员菜单
+
+    // 区分核心动作、核心人员统计
     const isFromCoreActionMenu = tags.length === 0
     const finalResult = isFromCoreActionMenu ? _.cloneDeep(actionStatBasedOnUserResult) : []
 
-    // 先仅仅处理视觉部
-    if (deptIds.includes("482162119")) {
-        for (const item of finalResult) {
-            const workloadNode = createFlowDataStatNode(item)
-            item.children.push(workloadNode)
-        }
+    for (const item of finalResult) {
+        const workloadNode = createFlowDataStatNode(item)
+        item.children.push(workloadNode)
+    }
 
-        // 核心动作统计不用标签区分
-        if (isFromCoreActionMenu) {
-            const sumUserActionStatResult = sumUserActionStat(actionStatBasedOnUserResult)
+    // 核心动作统计不用标签区分
+    if (isFromCoreActionMenu) {
+        const sumUserActionStatResult = sumUserActionStat(actionStatBasedOnUserResult)
+        finalResult.unshift({
+            actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult
+        })
+
+        if (isDeptLeader) {
+            // 对内部的流程进行转化统计
+            const innerFormIds = differentForms.inner.map(item => item.formId)
+            const innerFlows = flows.filter(item => innerFormIds.includes(item.formUuid))
+            const innerStatusStatFlowResult = convertToFlowStatResult(innerFlows, coreActionConfig, actionStatBasedOnUserResult)
             finalResult.unshift({
-                actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult
+                actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
             })
 
-            if (isDeptLeader) {
-                // 对内部的流程进行转化统计
-                const innerFormIds = differentForms.inner.map(item => item.formId)
-                const innerFlows = combinedFlows.filter(item => innerFormIds.includes(item.formUuid))
-                const innerStatusStatFlowResult = convertToFlowStatResult(innerFlows, coreActionConfig, actionStatBasedOnUserResult)
-                finalResult.unshift({
-                    actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
-                })
+            // 对外包的流程进行转化统计
+            const outSourcingFormIds = differentForms.outSourcing.map(item => item.formId)
+            const outSourcingFlows = flows.filter(item => outSourcingFormIds.includes(item.formUuid))
+            const outSourcingStatusStatFlowResult = convertToFlowStatResult(outSourcingFlows, coreActionConfig, actionStatBasedOnUserResult)
+            finalResult.unshift({
+                actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
+            })
 
-                // 对外包的流程进行转化统计
-                const outSourcingFormIds = differentForms.outSourcing.map(item => item.formId)
-                const outSourcingFlows = combinedFlows.filter(item => outSourcingFormIds.includes(item.formUuid))
-                const outSourcingStatusStatFlowResult = convertToFlowStatResult(outSourcingFlows, coreActionConfig, actionStatBasedOnUserResult)
-                finalResult.unshift({
-                    actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
-                })
-
-                const statusStatFlowResult = convertToFlowStatResult(combinedFlows, coreActionConfig, actionStatBasedOnUserResult)
-                finalResult.unshift({
-                    actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
-                })
-            }
+            const statusStatFlowResult = convertToFlowStatResult(flows, coreActionConfig, actionStatBasedOnUserResult)
+            finalResult.unshift({
+                actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
+            })
         }
-        // 核心人的统计用标签区分
-        else {
-            const userStatArr = convertToUserActionResult(requiredUsers, actionStatBasedOnUserResult)
-            for (const userStat of userStatArr) {
-                userStat.children.push(createFlowDataStatNode(userStat))
-                finalResult.unshift(userStat)
-            }
-        }
-    } else if (deptIds.includes("903075138")) {
+    }
+    // 核心人的统计用标签区分
+    else {
         const userStatArr = convertToUserActionResult(requiredUsers, actionStatBasedOnUserResult)
         for (const userStat of userStatArr) {
             userStat.children.push(createFlowDataStatNode(userStat))
             finalResult.unshift(userStat)
         }
     }
+
+
+    // } else if (deptIds.includes("903075138")) {
+    //     const userStatArr = convertToUserActionResult(requiredUsers, actionStatBasedOnUserResult)
+    //     for (const userStat of userStatArr) {
+    //         userStat.children.push(createFlowDataStatNode(userStat))
+    //         finalResult.unshift(userStat)
+    //     }
+    // }
     return flowUtil.statIdsAndSumFromBottom(finalResult)
 }
 
@@ -798,5 +791,5 @@ const getFlowSumStructure = (result, flowStatConfigTemplate) => {
 }
 
 module.exports = {
-    getCoreActions
+    getCoreActionStat
 }
