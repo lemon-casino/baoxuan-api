@@ -1,7 +1,7 @@
 const {opCodes} = require("@/const/operatorConst")
 const commonActionStatus = {TODO: "TODO", DOING: "DOING", DONE: "DONE"}
 
-module.exports = [
+const config = [
     {
         actionName: "五维分析",
         actionCode: "fiveDimensionalAnalysis",
@@ -275,5 +275,7 @@ module.exports = [
                 ]
             },
         ]
-    },
+    }
 ]
+
+module.exports = []

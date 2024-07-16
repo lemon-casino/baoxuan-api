@@ -184,24 +184,7 @@ module.exports = [
                                     name: "运营负责人",
                                     id: "employeeField_liihs7l0"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclyjhpw091",
-                                    name: "项目负责人评估",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclyjhpw091",
-                                    name: "项目负责人评估",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "form",
-                                    name: "运营负责人",
-                                    id: "employeeField_liihs7l0"
-                                }
-                            },
+                            }
                         ]
                     }
                 ]
@@ -219,13 +202,13 @@ module.exports = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclyjhpw091",
-                                    name: "项目负责人评估",
+                                    id: "node_oclto07a599",
+                                    name: "组长审核方案",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclyjhpw091",
-                                    name: "项目负责人评估",
+                                    id: "node_oclto07a599",
+                                    name: "组长审核方案",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
@@ -234,6 +217,23 @@ module.exports = [
                                     id: "employeeField_liihs7l0"
                                 }
                             },
+                            {
+                                from: {
+                                    id: "node_oclv7ila163",
+                                    name: "组长审核方案",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclv7ila163",
+                                    name: "组长审核方案",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            }
                         ]
                     }
                 ]
@@ -422,24 +422,7 @@ module.exports = [
                                     name: "运营负责人",
                                     id: "employeeField_liihs7l0"
                                 }
-                            },
-                            {
-                                from: {
-                                    id: "node_oclyjhpw091",
-                                    name: "项目负责人评估",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclyjhpw091",
-                                    name: "项目负责人评估",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "form",
-                                    name: "运营负责人",
-                                    id: "employeeField_liihs7l0"
-                                }
-                            },
+                            }
                         ]
                     }
                 ]
@@ -457,13 +440,13 @@ module.exports = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: "node_oclyjhpw091",
-                                    name: "项目负责人评估",
+                                    id: "node_oclto07a599",
+                                    name: "组长审核方案",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: "node_oclyjhpw091",
-                                    name: "项目负责人评估",
+                                    id: "node_oclto07a599",
+                                    name: "组长审核方案",
                                     status: ["HISTORY"]
                                 },
                                 ownerRule: {
@@ -472,6 +455,23 @@ module.exports = [
                                     id: "employeeField_liihs7l0"
                                 }
                             },
+                            {
+                                from: {
+                                    id: "node_oclv7ila163",
+                                    name: "组长审核方案",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclv7ila163",
+                                    name: "组长审核方案",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            }
                         ]
                     }
                 ]
