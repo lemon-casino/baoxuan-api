@@ -41,6 +41,40 @@ module.exports = [
                         flowNodeRules: [
                             {
                                 from: {
+                                    id: "node_oclklxv8kk1",
+                                    name: "运营负责人提交市场统计模板",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclklxv8kk1",
+                                    name: "运营负责人提交市场统计模板",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "天猫运营负责人",
+                                    id: "employeeField_lii9qts2"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclix0mfzn1",
+                                    name: "执行提交市场统计表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclix0mfzn1",
+                                    name: "执行提交市场统计表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "天猫运营负责人",
+                                    id: "employeeField_lii9qts2"
+                                }
+                            },
+                            {
+                                from: {
                                     id: "node_oclyilqx4v1",
                                     name: "执行统计市场",
                                     status: ["TODO"]
