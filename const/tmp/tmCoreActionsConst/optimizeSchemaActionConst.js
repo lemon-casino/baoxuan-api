@@ -107,7 +107,7 @@ module.exports = [
                 ]
             },
             {
-                nameCN: "在做",
+                nameCN: "进行中",
                 nameEN: commonActionStatus.DOING,
                 rules: [
                     {
@@ -190,7 +190,7 @@ module.exports = [
                 ]
             },
             {
-                nameCN: "已做",
+                nameCN: "已完成",
                 nameEN: commonActionStatus.DONE,
                 rules: [
                     {
@@ -345,7 +345,7 @@ module.exports = [
                 ]
             },
             {
-                nameCN: "在做",
+                nameCN: "进行中",
                 nameEN: commonActionStatus.DOING,
                 rules: [
                     {
@@ -428,7 +428,7 @@ module.exports = [
                 ]
             },
             {
-                nameCN: "已做",
+                nameCN: "已完成",
                 nameEN: commonActionStatus.DONE,
                 rules: [
                     {
