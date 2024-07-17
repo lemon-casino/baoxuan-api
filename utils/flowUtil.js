@@ -223,9 +223,9 @@ const isUserJoinFlow = (userId, flow, reviewItems) => {
  */
 const statIdsAndSumFromBottom = (data) => {
     const handleItem = (item) => {
+        const uniqueIds = item.uniqueIds
         if (item.children) {
             const allIds = []
-            // todo: 真的需要花时间去统一下：可是...
             // 过去统计流程的sum是根据ids确定的
             // 现在统计表单中的数据sum需要分离开
             // 没时间为过去统计流程数据单独修改添加sum了，涉及太多
@@ -243,7 +243,7 @@ const statIdsAndSumFromBottom = (data) => {
                 }
             }
             item.sum = sum
-            item.ids = allIds
+            item.ids = uniqueIds ? [...new Set(allIds)] : allIds
         }
 
         if (!item.sumAlone) {

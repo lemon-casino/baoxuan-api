@@ -1,4 +1,4 @@
-const {flowReviewTypeConst, operateTypeConst} = require("@/const/flowConst")
+const {flowReviewTypeConst, operateTypeConst, startActivityId} = require("@/const/flowConst")
 const dateUtil = require("@/utils/dateUtil")
 const ParameterError = require("@/error/parameterError")
 const flowRepo = require("@/repository/flowRepo")
@@ -17,16 +17,15 @@ const removeTargetStatusFlows = (flows, flowStatus) => {
     return flows.filter(item => item.instanceStatus !== flowStatus)
 }
 
-
 /**
- * 移除流程的审核节点：完成时间不在完成时间区间内
+ * 移除流程的审核节点：完成时间不在完成时间区间内(除了发起节点)
  *
  * @param flows
  * @param startDoneDate
  * @param endDoneDate
  * @returns {*}
  */
-const removeDoneActivitiesNotInDoneDateRange = (flows, startDoneDate, endDoneDate) => {
+const removeDoneActivitiesNotInDoneDateRangeExceptStartNode = (flows, startDoneDate, endDoneDate) => {
     // 根据时间区间过滤掉不在区间内的完成节点，todo和forcast的数据不用处理
     for (const flow of flows) {
         if (!flow.overallprocessflow) {
@@ -44,7 +43,7 @@ const removeDoneActivitiesNotInDoneDateRange = (flows, startDoneDate, endDoneDat
                 if (!doneTime) {
                     doneTime = dateUtil.formatGMT2Str(item.operateTimeGMT)
                 }
-                if (dateUtil.duration(doneTime, dateUtil.startOfDay(startDoneDate)) >= 0 && dateUtil.duration(dateUtil.endOfDay(endDoneDate), doneTime) >= 0) {
+                if (item.activityId === startActivityId || dateUtil.duration(doneTime, dateUtil.startOfDay(startDoneDate)) >= 0 && dateUtil.duration(dateUtil.endOfDay(endDoneDate), doneTime) >= 0) {
                     newOverallProcessFlow.push(item)
                     continue
                 }
@@ -174,7 +173,7 @@ const getVisionOutSourcingNames = (flows) => {
 
 module.exports = {
     removeTargetStatusFlows,
-    removeDoneActivitiesNotInDoneDateRange,
+    removeDoneActivitiesNotInDoneDateRange: removeDoneActivitiesNotInDoneDateRangeExceptStartNode,
     getCombinedFlowsOfHistoryAndToday,
     getVisionOutSourcingNames,
     removeRedirectActivity

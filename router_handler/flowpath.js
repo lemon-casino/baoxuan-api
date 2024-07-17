@@ -2948,7 +2948,9 @@ exports.getOaAllProcess = async (req, res) => {
 // 获取所有流程设计模版数据
 exports.getprocessAuditing = async (req, res) => {
     let {data} = req.body;
+
     data = formatData(JSON.parse(JSON.stringify(data)));
+
     await FlowFormReviewModel.addFlowFormReview(data);
 
     return res.send(biResponse.success());

@@ -5,8 +5,8 @@ const taskService = require("@/service/taskService")
 // 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况
 
 let syncWorkingDayCron = "0 5 9 * * ?"
-let syncTodayRunningAndFinishedFlowsCron = "0 0/20 8-21 * * ?"
-let syncMissingCompletedFlowsCron = "0 0 23 * * ?"
+let syncTodayRunningAndFinishedFlowsCron = "0 0/20 7-21 * * ?"
+let syncMissingCompletedFlowsCron = "0 30 23 * * ?"
 // todo：更新部门的频率可以完全手动代替
 let syncDepartmentCron = "0 0 5 * * ?"
 let syncDepartmentWithUserCron = "0 30 5 * * ?"
@@ -14,7 +14,7 @@ let syncUserWithDepartmentCron = "0 0 6 * * ?"
 let syncFormCron = "0 30 6 * * ?"
 let syncUserLoginCron = "0 0/5 * * * ?"
 let syncResignEmployeeCron = "0 0 7 * * ?"
-let syncRunningFlowsCron = "0 0 22 * * ?"
+let syncRunningFlowsCron = "0 0 8 * * ?"
 let tmallLinkAnomalyDetection = "0 0 23 * * ?"
 let linshi = "57 15 * * *"
 if (process.env.NODE_ENV === "dev") {

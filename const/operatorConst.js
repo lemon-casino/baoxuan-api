@@ -4,6 +4,7 @@ const ParameterError = require("@/error/parameterError")
 
 const opCodes = {
     Equal: "Equal",
+    NotEqual: "NotEqual",
     EqualAny: "EqualAny",
     Contain: "Contain",
     NotContain: "NotContain",
@@ -13,17 +14,24 @@ const opCodes = {
     Lesser: "Lesser"
 }
 
+const convertArrayToStrWithDot = (val) => {
+    if (_.isArray(val)) {
+        val = val.join(",")
+    }
+    return val
+}
+
 const opFunctions = {
     Equal: (src, value) => {
-        if (_.isArray(src)) {
-            src = src.join(",")
-        }
+        src = convertArrayToStrWithDot(src)
         return src === value
     },
+    NotEqual: (src, value) => {
+        src = convertArrayToStrWithDot(src)
+        return src !== value
+    },
     EqualAny: (src, value) => {
-        if (_.isArray(src)) {
-            src = src.join(",")
-        }
+        src = convertArrayToStrWithDot(src)
 
         if (_.isArray(value)) {
             return value.includes(src)
@@ -31,19 +39,14 @@ const opFunctions = {
         return false
     },
     Contain: (src, value) => {
-        if (_.isArray(src)) {
-            src = src.join(",")
-        }
-
+        src = convertArrayToStrWithDot(src)
         if (_.isString(value)) {
             return src.includes(value)
         }
         return false
     },
-    NotContain:(src, value) => {
-        if (_.isArray(src)) {
-            src = src.join(",")
-        }
+    NotContain: (src, value) => {
+        src = convertArrayToStrWithDot(src)
 
         if (_.isString(value)) {
             return !src.includes(value)
@@ -51,9 +54,7 @@ const opFunctions = {
         return false
     },
     ContainAny: (src, value) => {
-        if (_.isArray(src)) {
-            src = src.join(",")
-        }
+        src = convertArrayToStrWithDot(src)
 
         if (_.isArray(value)) {
             for (const val of value) {

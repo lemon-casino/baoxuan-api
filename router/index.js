@@ -36,5 +36,8 @@ module.exports = {
     "/dept-core-action-form-activity-rule": require("./deptCoreActionFormActivityRuleRouter"),
     "/out-users": require("./outUsersRouter"),
     "/tags": require("./tagsRouter"),
+    "/wechat": require("./wechatRouter"),
+    "/supplier": require("./supplierRouter"),
+    "/process": require("./processRouter"),
     "/users-tags": require("./usersTagsRouter")
 }

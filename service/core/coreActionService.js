@@ -59,13 +59,13 @@ const getCoreActions = async (tags, userId, deptIds, userNames, startDoneDate, e
     const isFromCoreActionMenu = tags.length === 0
     const finalResult = isFromCoreActionMenu ? _.cloneDeep(actionStatBasedOnUserResult) : []
 
-    for (const item of finalResult) {
-        const workloadNode = createFlowDataStatNode(item)
-        item.children.push(workloadNode)
-    }
-
     // 先仅仅处理视觉部
     if (deptIds.includes("482162119")) {
+        for (const item of finalResult) {
+            const workloadNode = createFlowDataStatNode(item)
+            item.children.push(workloadNode)
+        }
+
         // 核心动作统计不用标签区分
         if (isFromCoreActionMenu) {
             const sumUserActionStatResult = sumUserActionStat(actionStatBasedOnUserResult)
@@ -181,8 +181,8 @@ const statVisionUserFlowData = async (userActivity, flow) => {
         const standardVisionActivityNamePattern = "^.*修图$"
         let validVisionActivityNamePatternForStatFormData = visionConst.confusedActivityNameForStatFormData.concat(standardVisionActivityNamePattern)
         const clipGroupCode = userTagCodes.find(tagCode => tagCode === "clipGroup")
-        const clipGroupActivityNamePattern = ["^.*剪辑.*$", "任务数量"]
-        if(clipGroupCode){
+        const clipGroupActivityNamePattern = ["^.*剪辑.*$", "执行人"]
+        if (clipGroupCode) {
             validVisionActivityNamePatternForStatFormData = validVisionActivityNamePatternForStatFormData.concat(clipGroupActivityNamePattern)
         }
         for (const pattern of validVisionActivityNamePatternForStatFormData) {
@@ -302,17 +302,23 @@ const createFlowDataStatNode = (node) => {
     const completedWorkload = sumSameNameWorkload(completedFlowDataStatNodes)
 
     const newWorkloadStatNode = {
-        nameCN: "工作量", excludeUpSum: true, sumAlone: true,
+        nameCN: "工作量",
+        excludeUpSum: true,
+        sumAlone: true,
+        uniqueIds: true,
         children: [
             {
                 nameCN: "进行中",
                 tooltip: "该工作量会统计表单中预计的数据",
                 sumAlone: true,
-                children: runningWorkload
+                uniqueIds: true,
+                children: runningWorkload,
             },
             {
                 nameCN: "已完成",
-                sumAlone: true, children: completedWorkload
+                sumAlone: true,
+                uniqueIds: true,
+                children: completedWorkload
             }
         ]
     }

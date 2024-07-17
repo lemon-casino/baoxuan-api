@@ -6,12 +6,11 @@ const UsersModel = require("../model/users");
 const RolesModel = require("../model/roles");
 const usersTagsModel = require("@/model").usersTagsModel
 const tagsModel = require("@/model").tagsModel
-const userLogService = require("../service/userLogService")
 const userService = require("../service/userService")
-const tokenUtil = require("../utils/token")
+const joiUtil = require("@/utils/joiUtil")
 const UserError = require("../error/userError")
 const HttpError = require("../error/http/httpError")
-const ParameterError = require("../error/parameterError")
+const userSchema = require("@/schema/userSchema")
 
 UsersModel.hasMany(usersTagsModel, {
     sourceKey: "dingding_user_id",
@@ -83,14 +82,8 @@ exports.login = async (req, res, next) => {
             throw new HttpError(error)
         }
         // 验证验证码
-        const {username, password, checkCode, uuid} = value;
-        // const captcha = await redis.getValue(`${redisKeys.QRCodes}:${uuid}`);
-        // if (!captcha) {
-        //     throw new HttpError("图形验证码已过期，请点击图片刷新")
-        // }
-        // if (checkCode.toLowerCase() !== captcha.toLowerCase()) {
-        //     throw new HttpError("图形验证码不正确，请重新输入")
-        // }
+        const {username, password} = value;
+
         // todo: 先保留
         const user = {
             token: null, refreshToken: null, brief: null, permissions: null, departments: null
@@ -319,54 +312,25 @@ exports.refreshToken = (req, res) => {
 /**
  * 获取用户列表
  */
-exports.getList = (req, res, next) => {
-    const {value, error} = get_list.validate(req.query);
-    if (error) {
-        throw new ParameterError(error.message)
-    }
-    // 接收前端参数
-    let {pageSize, currentPage} = req.query;
-    // 默认值
-    limit = pageSize ? Number(pageSize) : 10;
-    offset = currentPage ? Number(currentPage) : 1;
-    offset = (offset - 1) * pageSize;
-    const {username, nickname, email, status} = value;
-    let where = {};
-    if (username) where.username = {[Op.like]: `%${username}%`};
-    if (nickname) where.nickname = {[Op.like]: `%${nickname}%`};
-    if (email) where.email = email;
-    if (status === "0" || status === "1") where.status = {[Op.eq]: status};
+exports.getPagingUsers = async (req, res, next) => {
+    try {
+        joiUtil.clarityValidate(userSchema.getPagingUsersSchema, req.body)
 
-    UsersModel.findAndCountAll({
-        attributes: {exclude: ["password"]},
-        include: [
-            {model: RolesModel},
-            {
-                model: usersTagsModel,
-                as: "tags",
-                include: [
-                    {
-                        model: tagsModel,
-                        as: "tag"
-                    }
-                ]
-            }
-        ], // 预先加载角色模型
-        distinct: true,
-        offset: offset,
-        limit: limit,
-        where: where,
-        order: [["status", "desc"], ["create_time", "desc"]]
-    }).then(function (users) {
-        return res.send(biResponse.success(users));
-    });
+        const {deptIds, page, pageSize, nickname, status} = req.body
+
+        const users = await userService.getPagingUsers(deptIds, page - 1, pageSize, nickname, status)
+        return res.send(biResponse.success(users))
+
+    } catch (e) {
+        next(e)
+    }
 };
 /**
  * 修改用户
  */
 exports.editUser = (req, res, next) => {
     const {value, error} = update_user_schema.validate(req.body);
-    const user_id = value.user_id;
+    const user_id = value.userId;
     if (error) {
         return next(error);
     }
@@ -480,7 +444,7 @@ exports.getUserinfoById = (req, res, next) => {
  */
 exports.getTMInnerGroups = async (req, res, next) => {
     try {
-        const tmInnerGroups = await userService.getTMInnerGroups(req.user.id)
+        const tmInnerGroups = await userService.getTMInnerGroups(req.user.userId)
         res.send(biResponse.success(tmInnerGroups))
     } catch (e) {
         next(e)

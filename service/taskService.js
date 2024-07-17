@@ -27,16 +27,11 @@ const sequelizeErrorConst = require("@/const/sequelizeErrorConst")
 const oaReq = require("@/core/dingDingReq/oaReq")
 const intelligentHRReq = require("@/core/dingDingReq/intelligentHRReq")
 const attendanceReq = require("@/core/dingDingReq/attendanceReq")
-const {flowStatusConst} = require("@/const/flowConst");
-const singleItemTaoBaoService = require("./singleItemTaoBaoService");
+const singleItemTaoBaoService = require("./singleItemTaoBaoService")
 const {
     getLinknewvaCount
-} = require("./singleItemTaoBaoService");
-const {createProcess} = require("@/service/dingDingService")
-const {theProcessIsCompletedInThreeDays} = require("@/repository/processDetailsRepo");
-const singleItemApi = require("@/router_handler/singleItemApi");
-const {forEach} = require("lodash/core");
-const tianmao__user_tableService = require("@/service/tianMaoUserTableService");
+} = require("./singleItemTaoBaoService")
+const tianmao__user_tableService = require("@/service/tianMaoUserTableService")
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
     const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")

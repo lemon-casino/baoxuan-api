@@ -48,6 +48,10 @@ const get = async (users, flows, coreConfig, userFlowDataStatCB) => {
                     for (let flow of currFlows) {
                         const processInstanceId = flow.processInstanceId
 
+                        if (processInstanceId === "adcdd7e5-156b-4a0d-aef4-ed90ab705e4c") {
+                            console.log("---")
+                        }
+
                         let operatorsActivity = []
                         const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
                         const matchedActivity = getMatchedActivity(fromNode, toNode, activities)

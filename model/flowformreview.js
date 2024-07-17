@@ -43,6 +43,7 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
     const t = await sequelize.transaction();
     try {
         for (const item of data) {
+
             const depsend = {
                 form_id: item.formId,
                 modifiedTime: item.modifiedTime,
@@ -52,6 +53,7 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
                 where: {form_id: depsend.form_id},
                 order: [["modifiedTime", "desc"]]
             });
+
             // // 如果存在该记录
             if (flow) {
                 // 如果 modifiedTime 字段不一致，更新 form_review 数据
