@@ -391,39 +391,39 @@ const tmallLinkAnomalyDetection = async () => {
     const formId = "FORM-51A6DCCF660B4C1680135461E762AC82JV53";
     const processCode = "TPROC--YAB66P61TJ4MHTIKCZN606A840IS3MVPXMLXL2";
 
-    /*    const sendRequests = async () => {
-            for (const [key, value] of Object.entries(cleanedLinkIdMap)) {
-                //删除 value的name 是数组 有其它的异常 比如 name:['费比超过15%','老品利润率低于15%']   linkType的标签是新品30 或者新品60   删除掉  费比超过15% 这个数组中的费比超过15%
-                if (Array.isArray(value.name) && value.name.length > 1 && value.name.includes('费比超过15%') && (value.linkType === '新品30' || value.linkType === '新品60')) {
-                    value.name = value.name.filter(name => name !== '费比超过15%');
-                }
-
-                const userId = value.uuid;
-                const multiSelectField_lwufb7oy = value.name;
-                // const cascadeDateField_lloq9vjk = getNextWeekTimestamps();
-                const textField_liihs7kv = value.productName + key;
-                const textField_liihs7kw = key;
-                const employeeField_liihs7l0 = [userId];
-                //value.linkType === '新品30' 或者是value.linkType === '新品60' 都改成新品
-                value.linkType = value.linkType === '新品30' || value.linkType === '新品60' ? '新品' : value.linkType;
-                const formDataJsonStr = JSON.stringify({
-                    radioField_lxlncgm1: "天猫",
-                    textField_liihs7kv,
-                    textField_liihs7kw,
-                    employeeField_liihs7l0,
-                    selectField_liihs7kz: value.linkType.toString(),
-                    multiSelectField_lwufb7oy,
-                }, null, 2);
-
-                try {
-                    await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
-                    logger.info(`发起宜搭  运营优化流程 for linkId ${key}`);
-                } catch (e) {
-                    logger.error(`发起宜搭  运营优化流程 失败 for linkId ${key}`, e);
-                }
+    const sendRequests = async () => {
+        for (const [key, value] of Object.entries(cleanedLinkIdMap)) {
+            //删除 value的name 是数组 有其它的异常 比如 name:['费比超过15%','老品利润率低于15%']   linkType的标签是新品30 或者新品60   删除掉  费比超过15% 这个数组中的费比超过15%
+            if (Array.isArray(value.name) && value.name.length > 1 && value.name.includes('费比超过15%') && (value.linkType === '新品30' || value.linkType === '新品60')) {
+                value.name = value.name.filter(name => name !== '费比超过15%');
             }
-        };
-        await sendRequests();*/
+
+            const userId = value.uuid;
+            const multiSelectField_lwufb7oy = value.name;
+            // const cascadeDateField_lloq9vjk = getNextWeekTimestamps();
+            const textField_liihs7kv = value.productName + key;
+            const textField_liihs7kw = key;
+            const employeeField_liihs7l0 = [userId];
+            //value.linkType === '新品30' 或者是value.linkType === '新品60' 都改成新品
+            value.linkType = value.linkType === '新品30' || value.linkType === '新品60' ? '新品' : value.linkType;
+            const formDataJsonStr = JSON.stringify({
+                radioField_lxlncgm1: "天猫",
+                textField_liihs7kv,
+                textField_liihs7kw,
+                employeeField_liihs7l0,
+                selectField_liihs7kz: value.linkType.toString(),
+                multiSelectField_lwufb7oy,
+            }, null, 2);
+
+            try {
+                await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
+                logger.info(`发起宜搭  运营优化流程 for linkId ${key}`);
+            } catch (e) {
+                logger.error(`发起宜搭  运营优化流程 失败 for linkId ${key}`, e);
+            }
+        }
+    };
+    await sendRequests();
 
 
     logger.info("同步完成：天猫链接异常检测")
