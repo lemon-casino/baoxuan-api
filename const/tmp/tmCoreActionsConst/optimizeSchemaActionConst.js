@@ -114,7 +114,7 @@ module.exports = [
                         formName: "运营优化方案流程（全平台）",
                         formId: "FORM-51A6DCCF660B4C1680135461E762AC82JV53",
                         flowDetailsRules: [
-                            {fieldId: "selectField_lk0jfy7h", opCode: opCodes.Equal, value: "简单"}
+                            {fieldId: "selectField_lk0jfy7h", opCode: opCodes.NotEqual, value: "困难"}
                         ],
                         flowNodeRules: [
                             {
@@ -125,6 +125,23 @@ module.exports = [
                                 },
                                 to: {
                                     id: "node_oclyh5wg4p1",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx30wsnx1",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx30wsnx1",
                                     name: "提交优化方案",
                                     status: ["TODO"]
                                 },
@@ -226,6 +243,23 @@ module.exports = [
                                 },
                                 to: {
                                     id: "node_oclx30r79v2",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx30wsnx1",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx30wsnx1",
                                     name: "提交优化方案",
                                     status: ["HISTORY"]
                                 },
@@ -392,6 +426,23 @@ module.exports = [
                         flowNodeRules: [
                             {
                                 from: {
+                                    id: "node_oclx30wsnx1",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx30wsnx1",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
+                            {
+                                from: {
                                     id: "node_oclyh5wg4p1",
                                     name: "提交优化方案",
                                     status: ["TODO"]
@@ -490,6 +541,23 @@ module.exports = [
                             {fieldId: "selectField_lk0jfy7h", opCode: opCodes.Equal, value: "困难"}
                         ],
                         flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx30wsnx1",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx30wsnx1",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
                             {
                                 from: {
                                     id: "node_oclx30r79v2",
