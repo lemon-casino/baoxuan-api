@@ -224,6 +224,63 @@ module.exports = [
                                 }
                             },
                         ]
+                    },
+                    {
+                        formName: "天猫链接上架",
+                        formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclm91902f1",
+                                    name: "安排执行统计五维表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclm91902f1",
+                                    name: "安排执行统计五维表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "负责运营",
+                                    id: "employeeField_loy3l5ox"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclv6afgcd1",
+                                    name: "执行统计五维表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclv6afgcd1",
+                                    name: "执行统计五维表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "负责运营",
+                                    id: "employeeField_loy3l5ox"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclm91902f2",
+                                    name: "审核执行动作完成",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclm91902f2",
+                                    name: "审核执行动作完成",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "负责运营",
+                                    id: "employeeField_loy3l5ox"
+                                }
+                            },
+                        ]
                     }
                 ]
             },
@@ -273,6 +330,29 @@ module.exports = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "天猫链接上架",
+                        formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclo8dzm951",
+                                    name: "提交五维表方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclo8dzm951",
+                                    name: "提交五维表方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "负责运营",
+                                    id: "employeeField_loy3l5ox"
+                                }
+                            }
+                        ]
                     }
                 ]
             },
@@ -302,6 +382,29 @@ module.exports = [
                                     from: "process",
                                     name: "完成五维表分析",
                                     id: "node_oclymct9k28"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "天猫链接上架",
+                        formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclo8dzm951",
+                                    name: "提交五维表方案",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclo8dzm951",
+                                    name: "提交五维表方案",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "负责运营",
+                                    id: "employeeField_loy3l5ox"
                                 }
                             }
                         ]
