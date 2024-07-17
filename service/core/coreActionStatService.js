@@ -56,6 +56,11 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
                     for (let flow of currFlows) {
                         const processInstanceId = flow.processInstanceId
 
+
+                        if (processInstanceId === "dbc34c39-f676-42f3-abd6-5083ff9f5439") {
+                            console.log('----')
+                        }
+
                         let operatorsActivity = []
                         const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
                         const matchedActivity = getMatchedActivity(fromNode, toNode, activities)
@@ -204,9 +209,9 @@ const filterFlowsByFlowDetailsRules = (flows, flowDetailsRules) => {
     if (flowDetailsRules) {
         for (const detailsRule of flowDetailsRules) {
             flows = flows.filter(flow => {
-                if (flow.data[detailsRule.fieldId]) {
-                    return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
-                }
+                // if (flow.data[detailsRule.fieldId]) {
+                return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
+                // }
                 return false
             })
         }
