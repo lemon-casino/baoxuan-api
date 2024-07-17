@@ -14,7 +14,7 @@ module.exports = [
                         formName: "运营优化方案流程（全平台）",
                         formId: "FORM-51A6DCCF660B4C1680135461E762AC82JV53",
                         flowDetailsRules: [
-                            {fieldId: "selectField_lk0jfy7h", opCode: opCodes.Equal, value: "简单"}
+                            {fieldId: "selectField_lk0jfy7h", opCode: opCodes.NotEqual, value: "困难"}
                         ],
                         flowNodeRules: [
                             {
@@ -114,7 +114,7 @@ module.exports = [
                         formName: "运营优化方案流程（全平台）",
                         formId: "FORM-51A6DCCF660B4C1680135461E762AC82JV53",
                         flowDetailsRules: [
-                            {fieldId: "selectField_lk0jfy7h", opCode: opCodes.Equal, value: "简单"}
+                            {fieldId: "selectField_lk0jfy7h", opCode: opCodes.NotEqual, value: "困难"}
                         ],
                         flowNodeRules: [
                             {
