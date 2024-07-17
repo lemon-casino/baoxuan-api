@@ -290,6 +290,165 @@ module.exports = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "采购任务运营发布",
+                        formId: "FORM-0A966I819O8BZMVBE16JLAK96KK42KD1QEIILC",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclvt63juf1",
+                                    name: "运营提交市场统计模板",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvt63juf1",
+                                    name: "运营提交市场统计模板",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvt63juf2",
+                                    name: "分配执行统计市场",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvt63juf2",
+                                    name: "分配执行统计市场",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvt63juf3",
+                                    name: "执行提交市场统计",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvt63juf3",
+                                    name: "执行提交市场统计",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvesclp06",
+                                    name: "审核市场分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvesclp06",
+                                    name: "审核市场分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvt7r3d81",
+                                    name: "是否需要做五维",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvt7r3d81",
+                                    name: "是否需要做五维",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvt7r3d86",
+                                    name: "运营提交竞品id",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvt7r3d86",
+                                    name: "运营提交竞品id",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvt7r3d85",
+                                    name: "分配执行统计五维",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvt7r3d85",
+                                    name: "分配执行统计五维",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvt7r3d87",
+                                    name: "执行提交五维表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvt7r3d87",
+                                    name: "执行提交五维表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvt900fv1",
+                                    name: "审核五维分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvt900fv1",
+                                    name: "审核五维分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
+                                }
+                            }
+                        ]
                     }
                 ]
             },
@@ -339,6 +498,63 @@ module.exports = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "采购任务运营发布",
+                        formId: "FORM-0A966I819O8BZMVBE16JLAK96KK42KD1QEIILC",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclvesclp04",
+                                    name: "运营提交市场分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvesclp04",
+                                    name: "运营提交市场分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvt7r3d88",
+                                    name: "运营提交五维分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvt7r3d88",
+                                    name: "运营提交五维分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvesclp07",
+                                    name: "运营提交反选信息",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvesclp07",
+                                    name: "运营提交反选信息",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
+                                }
+                            }
+                        ]
                     }
                 ]
             },
@@ -385,6 +601,29 @@ module.exports = [
                                     from: "process",
                                     name: "运营完成市场分析",
                                     id: "node_oclyil049v9"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "采购任务运营发布",
+                        formId: "FORM-0A966I819O8BZMVBE16JLAK96KK42KD1QEIILC",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclvesclp07",
+                                    name: "运营提交反选信息",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclvesclp07",
+                                    name: "运营提交反选信息",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
                                 }
                             }
                         ]
