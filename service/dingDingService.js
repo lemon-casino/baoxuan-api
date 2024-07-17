@@ -505,6 +505,7 @@ const isWorkingDay = async (date) => {
     const endDateTime = dateUtil.endOfDay(date)
     // 设置50个小伙伴的userId（钉钉接口限制）
     const users = await globalGetter.getUsers()
+
     const limit = 40
     const userIds = []
     for (let i = 0; i < users.length - 1; i++) {

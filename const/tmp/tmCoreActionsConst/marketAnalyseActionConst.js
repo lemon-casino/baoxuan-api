@@ -233,9 +233,6 @@ module.exports = [
                     {
                         formName: "选品会",
                         formId: "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
-                        flowDetailsRules: [
-                            {fieldId: "radioField_lruf2zuu", opCode: opCodes.Equal, value: "正推产品"}
-                        ],
                         flowNodeRules: [
                             {
                                 from: {
