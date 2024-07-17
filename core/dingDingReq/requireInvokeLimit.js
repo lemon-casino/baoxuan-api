@@ -10,7 +10,7 @@ const count = async (count = 200) => {
         throw new ForbiddenError(`bi中设置的钉钉付费接口每天可调用的最大次数为:${count}，当前已经都消耗完了`)
     } else {
         const secondsTo24PM = dateUtil.getSecondsFromNowToSomeHour(24)
-        await redisUtil.set(limitKey, todayHasInvokedCount + 1, secondsTo24PM)
+        await redisUtil.set(limitKey, String(todayHasInvokedCount + 1), secondsTo24PM)
     }
 }
 
