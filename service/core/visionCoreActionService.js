@@ -99,27 +99,6 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
 }
 
 /**
- * 获取部门其他相关的人员：外包、离职
- *
- * @param deptIds
- * @returns {Promise<*[]>}
- */
-const getRelatedOtherUsers = async (deptIds) => {
-    let otherUsers = []
-    for (const deptId of deptIds) {
-        const deptOutSourcingUsers = await outUsersRepo.getOutUsersWithTags({deptId: deptId, enabled: true})
-        otherUsers = otherUsers.concat(deptOutSourcingUsers)
-        const deptResignUsers = await userRepo.getDeptResignUsers(deptId)
-        const deptResignedUsers = deptResignUsers.map(item => {
-            item.nickname = `${item.nickname}[已离职]`
-            return item
-        })
-        otherUsers = otherUsers.concat(deptResignedUsers)
-    }
-    return otherUsers
-}
-
-/**
  * 根据tags过滤用户
  *
  * @param users
@@ -411,50 +390,6 @@ const extractInnerAndOutSourcingFormsFromConfig = (coreActionConfig) => {
     forms.outSourcing = algorithmUtil.removeJsonArrDuplicateItems(forms.outSourcing, "formId")
     return forms
 }
-
-/**
- * 根据userId的身份和deptId获取外包和离职人员信息
- *
- * @param userId
- * @param deptId
- * @returns {Promise<{resignedUsers: *[], outUsers: *[]}>}
- */
-// const getOutAndResignedUsers = async (userId, deptId) => {
-//     // todo: 视觉(482162119)和全流程的统计userNames要加上外包的信息
-//     //   先单独处理，要不就得把外包的人全部返回视觉的前端，可能还得改http method，
-//     //   等数据ok稳定后需要整理
-//     const user = await userRepo.getUserDetails({userId})
-//     const userDDId = user.dingdingUserId
-//     // 有条件地为userNames添加外包人信息、离职人员信息
-//     let canGetDeptOutSourcingUsers = false
-//     let canGetResignUsers = false
-//     if (whiteList.pepArr().includes(userDDId)) {
-//         canGetDeptOutSourcingUsers = true
-//         canGetResignUsers = true
-//     } else {
-//         const redisUsers = await redisRepo.getAllUsersDetail()
-//         const userTargetDeps = redisUsers.find(u => u.userid === userDDId).leader_in_dept
-//         const userCurrDept = userTargetDeps.find(item => item.dept_id.toString() === deptId)
-//         if (userCurrDept && userCurrDept.leader) {
-//             canGetDeptOutSourcingUsers = true
-//             canGetResignUsers = true
-//         }
-//     }
-//     const result = {resignedUsers: [], outUsers: []}
-//     let deptResignUsersWithTag = []
-//     if (canGetResignUsers) {
-//         const deptResignUsers = await userRepo.getDeptResignUsers(deptId)
-//         deptResignUsersWithTag = deptResignUsers.map(item => `${item.nickname}[已离职]`)
-//     }
-//     result.resignedUsers = deptResignUsersWithTag
-//
-//     let outSourcingUsers = []
-//     if (canGetDeptOutSourcingUsers) {
-//         outSourcingUsers = await outUsersRepo.getOutUsersWithTags({deptId, enabled: true}) // redisRepo.getOutSourcingUsers(deptId)
-//     }
-//     result.outUsers = outSourcingUsers
-//     return result
-// }
 
 /**
  * 将对人的统计汇总成工作量的统计(按照核心动作名对基于人的统计的汇总)
