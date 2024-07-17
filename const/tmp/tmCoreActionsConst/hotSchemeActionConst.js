@@ -69,6 +69,40 @@ module.exports = [
                                     id: "employeeField_lxkb9f9a"
                                 }
                             },
+                            {
+                                from: {
+                                    id: "node_oclxkbw8kwh",
+                                    name: "审核执行统计五维提出样品明细",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxkbw8kwh",
+                                    name: "审核执行统计五维提出样品明细",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "执行统计五维表",
+                                    id: "employeeField_lxkb9f9a"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxkbw8kwe",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxkbw8kwe",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "执行统计五维表",
+                                    id: "employeeField_lxkb9f9a"
+                                }
+                            },
                         ]
                     }
                 ]
@@ -223,6 +257,57 @@ module.exports = [
                                     id: "employeeField_lxkb9f9a"
                                 }
                             },
+                            {
+                                from: {
+                                    id: "node_oclxkd9uquc",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxkd9uquc",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "执行统计五维表",
+                                    id: "employeeField_lxkb9f9a"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxkd9uqud",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxkd9uqud",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "执行统计五维表",
+                                    id: "employeeField_lxkb9f9a"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxkd9uque",
+                                    name: "统计五维方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxkd9uque",
+                                    name: "统计五维方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "执行统计五维表",
+                                    id: "employeeField_lxkb9f9a"
+                                }
+                            }
                         ]
                     },
                     {
@@ -328,7 +413,24 @@ module.exports = [
                                     name: "完成五维表分析",
                                     id: "node_oclymct9k28"
                                 }
-                            }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxkd9uqug",
+                                    name: "五维表分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxkd9uqug",
+                                    name: "五维表分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "五维表分析",
+                                    id: "node_oclxkd9uqug"
+                                }
+                            },
                         ]
                     },
                     {
@@ -383,7 +485,24 @@ module.exports = [
                                     name: "完成五维表分析",
                                     id: "node_oclymct9k28"
                                 }
-                            }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxkd9uqug",
+                                    name: "五维表分析",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclxkd9uqug",
+                                    name: "五维表分析",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "五维表分析",
+                                    id: "node_oclxkd9uqug"
+                                }
+                            },
                         ]
                     },
                     {
