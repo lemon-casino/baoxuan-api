@@ -4,11 +4,9 @@
 
 const _ = require("lodash")
 const commonLogic = require("./commonLogic")
-const {flowStatusConst, activityIdMappingConst, flowReviewTypeConst} = require("@/const/flowConst")
-const {errorCodes} = require("@/const/errorConst")
+const {activityIdMappingConst, flowReviewTypeConst} = require("@/const/flowConst")
 const flowFormReviewUtil = require("@/utils/flowFormReviewUtil")
 const {opCodes} = require("@/const/operatorConst")
-const NotFoundError = require("@/error/http/notFoundError")
 
 /**
  * 获取人的流程统计

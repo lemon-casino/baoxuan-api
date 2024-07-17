@@ -168,7 +168,6 @@ const getDepartmentsWithUsersFromDingDing = async () => {
 };
 
 const getUsersWithDepartmentFromDingDing = async () => {
-    // 获取token
     const {access_token} = await getToken();
     const departmentList = await getDepartments()
     const allUsersFromDepartments = [];
@@ -177,11 +176,15 @@ const getUsersWithDepartmentFromDingDing = async () => {
         if (item.dep_chil && item.dep_chil.length > 0) {
             for (const subItem of item.dep_chil) {
                 const res = await contactsReq.getDeptUserList(access_token, subItem.dept_id);
-                allUsersFromDepartments.push(res.result.userid_list)
+                if (res.errmsg === "ok") {
+                    allUsersFromDepartments.push(res.result.userid_list)
+                }
             }
         }
         const res = await contactsReq.getDeptUserList(access_token, item.dept_id);
-        allUsersFromDepartments.push(res.result.userid_list);
+        if (res.errmsg === "ok") {
+            allUsersFromDepartments.push(res.result.userid_list);
+        }
     }
     // 用户去重
     const uniqueUsers = new Set(allUsersFromDepartments.flat());

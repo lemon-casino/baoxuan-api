@@ -1,7 +1,8 @@
 const ExcelJS = require('exceljs')
 const BigNumber = require("bignumber.js")
 const flowService = require("@/service/flowService")
-const coreActionService = require("@/service/core/coreActionService")
+const visionCoreActionService = require("@/service/core/visionCoreActionService")
+const tmCoreActionService = require("@/service/core/tmCoreActionService")
 const flowFormService = require("@/service/flowFormService")
 const joiUtil = require("@/utils/joiUtil")
 const biResponse = require("@/utils/biResponse")
@@ -43,12 +44,24 @@ const updateRunningFlowEmergency = async (req, res, next) => {
     }
 }
 
-const getCoreActions = async (req, res, next) => {
+const getVisionCoreActionStat = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(flowSchema.getCoreActionsSchema, req.body)
-        const {tags, deptIds, startDate, endDate, userNames} = req.body
+        const {statType, tags, deptIds, startDate, endDate, userNames} = req.body
         const userId = req.user.userId
-        const result = await coreActionService.getCoreActions(tags, userId, deptIds, userNames, startDate, endDate)
+        const result = await visionCoreActionService.getCoreActionStat(statType, tags, userId, deptIds, userNames, startDate, endDate)
+        res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getTMCoreActionStat = async (req, res, next) => {
+    try {
+        joiUtil.clarityValidate(flowSchema.getCoreActionsSchema, req.body)
+        const {statType, deptIds, startDate, endDate, userNames} = req.body
+        const userId = req.user.userId
+        const result = await tmCoreActionService.getCoreActionStat(statType, userId, deptIds, userNames, startDate, endDate)
         res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -139,7 +152,8 @@ module.exports = {
     getCompletedFlowsByIds,
     getFlowsByIds,
     updateRunningFlowEmergency,
-    getCoreActions,
+    getVisionCoreActionStat,
+    getTMCoreActionStat,
     getAllOverDueRunningFlows,
     getFormsFlowsActivitiesStat
 }

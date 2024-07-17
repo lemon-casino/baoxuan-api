@@ -107,7 +107,7 @@ module.exports = [
                 ]
             },
             {
-                nameCN: "在做",
+                nameCN: "进行中",
                 nameEN: commonActionStatus.DOING,
                 rules: [
                     {
@@ -125,6 +125,23 @@ module.exports = [
                                 },
                                 to: {
                                     id: "node_oclyh5wg4p1",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx30wsnx1",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx30wsnx1",
                                     name: "提交优化方案",
                                     status: ["TODO"]
                                 },
@@ -207,7 +224,7 @@ module.exports = [
                 ]
             },
             {
-                nameCN: "已做",
+                nameCN: "已完成",
                 nameEN: commonActionStatus.DONE,
                 rules: [
                     {
@@ -226,6 +243,23 @@ module.exports = [
                                 },
                                 to: {
                                     id: "node_oclx30r79v2",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclx30wsnx1",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx30wsnx1",
                                     name: "提交优化方案",
                                     status: ["HISTORY"]
                                 },
@@ -380,7 +414,7 @@ module.exports = [
                 ]
             },
             {
-                nameCN: "在做",
+                nameCN: "进行中",
                 nameEN: commonActionStatus.DOING,
                 rules: [
                     {
@@ -390,6 +424,23 @@ module.exports = [
                             {fieldId: "selectField_lk0jfy7h", opCode: opCodes.Equal, value: "困难"}
                         ],
                         flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx30wsnx1",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx30wsnx1",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
                             {
                                 from: {
                                     id: "node_oclyh5wg4p1",
@@ -480,7 +531,7 @@ module.exports = [
                 ]
             },
             {
-                nameCN: "已做",
+                nameCN: "已完成",
                 nameEN: commonActionStatus.DONE,
                 rules: [
                     {
@@ -490,6 +541,23 @@ module.exports = [
                             {fieldId: "selectField_lk0jfy7h", opCode: opCodes.Equal, value: "困难"}
                         ],
                         flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx30wsnx1",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx30wsnx1",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
                             {
                                 from: {
                                     id: "node_oclx30r79v2",

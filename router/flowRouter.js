@@ -24,7 +24,8 @@ router.post("/statistic/all-review-items", flowHandler.getFormsFlowsActivitiesSt
 
 router.put("/running", flowHandler.updateRunningFlowEmergency)
 
-router.post("/core-action", flowHandler.getCoreActions)
+router.post("/vision-core-action-stat", flowHandler.getVisionCoreActionStat)
+router.post("/tm-core-action-stat", flowHandler.getTMCoreActionStat)
 
 router.get("/all-overdue-running-flows", flowHandler.getAllOverDueRunningFlows)
 

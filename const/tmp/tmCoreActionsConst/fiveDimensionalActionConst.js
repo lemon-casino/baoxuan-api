@@ -80,7 +80,7 @@ const config = [
                 ]
             },
             {
-                nameCN: "在做",
+                nameCN: "进行中",
                 nameEN: commonActionStatus.DOING,
                 rules: [
                     {
@@ -203,7 +203,7 @@ const config = [
                 ]
             },
             {
-                nameCN: "已做",
+                nameCN: "已完成",
                 nameEN: commonActionStatus.DONE,
                 rules: [
                     {
