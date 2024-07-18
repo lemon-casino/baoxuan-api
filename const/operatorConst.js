@@ -41,7 +41,7 @@ const opFunctions = {
     Contain: (src, value) => {
         src = convertArrayToStrWithDot(src)
         if (_.isString(value)) {
-            return src.includes(value)
+            return src && src.includes(value)
         }
         return false
     },
@@ -49,7 +49,7 @@ const opFunctions = {
         src = convertArrayToStrWithDot(src)
 
         if (_.isString(value)) {
-            return !src.includes(value)
+            return  src && !src.includes(value)
         }
         return false
     },
@@ -58,7 +58,7 @@ const opFunctions = {
 
         if (_.isArray(value)) {
             for (const val of value) {
-                if (src.includes(val)) {
+                if (src && src.includes(val)) {
                     return true
                 }
             }
