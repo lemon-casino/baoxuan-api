@@ -286,8 +286,10 @@ const refactorReviewItems = (nodes, lastTimingNode) => {
 
 /**
  * 获取表单列表，需要带上该deptId是否选择的标识
+ *
  * @param deptId
- * @returns {Promise<void>}
+ * @param type 是否是核心流程
+ * @returns {Promise<*[]|*>}
  */
 const getDeptFlowForms = async (deptId, type) => {
     const flowForms = await getAllForms()

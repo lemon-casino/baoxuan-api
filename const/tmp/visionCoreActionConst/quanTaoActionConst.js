@@ -6,7 +6,9 @@
  *  rules：或的关系   flowDetailsRules：且的关系  flowNodeRules：或的关系
  */
 
-const {opCodes} = require("@/const/operatorConst")
+const {opCodes} = require("@/const/ruleConst/operatorConst")
+const conditionConst = require("@/const/ruleConst/conditionConst")
+
 const mbActionTypes = {
     WAIT_TO_SHOOT: "WAIT_TO_SHOOT", BE_SHOOTING: "BE_SHOOTING", SHOOT_DONE: "SHOOT_DONE",
     WAIT_TO_PS: "WAIT_TO_PS", ON_PS: "BE_PS", PS_DONE: "PS_DONE",
@@ -26,7 +28,20 @@ module.exports = {
                     formName: "运营拍摄流程",
                     formId: "FORM-HT866U9170EBJIC28EBJC7Q078ZA3WEPPMIIL1",
                     flowDetailsRules: [
-                        {fieldId: "radioField_lv7hq6e1", opCode: opCodes.Equal, value: "套图"}
+                        {
+                            fieldId: "radioField_lv7hq6e1",
+                            opCode: opCodes.Equal,
+                            value: "套图",
+                            condition: conditionConst.condition.OR,
+                            conditionCode: conditionConst.condition.OR,
+                        },
+                        {
+                            fieldId: "selectField_ljxvfuiw",
+                            opCode: opCodes.Equal,
+                            value: "套图",
+                            condition: conditionConst.condition.OR,
+                            conditionCode: conditionConst.condition.OR,
+                        }
                     ],
                     flowNodeRules: [
                         {

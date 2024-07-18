@@ -1,5 +1,5 @@
 const {flowReviewTypeConst} = require("@/const/flowConst")
-const {opCodes} = require("@/const/operatorConst")
+const {opCodes} = require("@/const/ruleConst/operatorConst")
 /**
  * 对单个部门配置的表单数据进行格式转化
  *

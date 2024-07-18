@@ -6,7 +6,7 @@ const _ = require("lodash")
 const commonLogic = require("./commonLogic")
 const {activityIdMappingConst, flowReviewTypeConst} = require("@/const/flowConst")
 const flowFormReviewUtil = require("@/utils/flowFormReviewUtil")
-const {opCodes} = require("@/const/operatorConst")
+const {opCodes} = require("@/const/ruleConst/operatorConst")
 
 /**
  * 获取人的流程统计

@@ -6,7 +6,7 @@
  *  rules：或的关系   flowDetailsRules：且的关系  flowNodeRules：或的关系
  */
 
-const {opCodes} = require("@/const/operatorConst")
+const {opCodes} = require("@/const/ruleConst/operatorConst")
 const mbActionTypes = {
     WAIT_TO_SHOOT: "WAIT_TO_SHOOT", BE_SHOOTING: "BE_SHOOTING", SHOOT_DONE: "SHOOT_DONE",
     WAIT_TO_PS: "WAIT_TO_PS", ON_PS: "BE_PS", PS_DONE: "PS_DONE",

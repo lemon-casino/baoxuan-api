@@ -2,20 +2,25 @@ const deptCoreActionFormDetailsRuleRepo = require("@/repository/deptCoreActionFo
 const flowFormDetailsRepo = require("@/repository/flowFormDetailsRepo")
 
 const getFormDetailsRule = async (formId, formRuleId) => {
-    const formDifferentVersionDetails = await flowFormDetailsRepo.getFormDifferentVersionsDetails(formId)
+    const formDiffVersionDetails = await flowFormDetailsRepo.getFormDifferentVersionsDetails(formId)
     const formDetailsRules = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRule(formRuleId)
+
+    const formConditions = []
+
     for (const formDetailsRule of formDetailsRules) {
-        const currVersionDetails = formDifferentVersionDetails.find(item => item.title === `表单版本${formDetailsRule.version}`)
+        const currVersionDetails = formDiffVersionDetails.find(item => item.title === `表单版本${formDetailsRule.version}`)
         if (currVersionDetails) {
-            const activity = currVersionDetails.details.find(item => item.fieldId === formDetailsRule.fieldId)
-            if (activity) {
-                activity.opCode = formDetailsRule.opCode
-                activity.value = formDetailsRule.value
-                activity.formDetailRuleId = formDetailsRule.id
+            const fieldItem = currVersionDetails.details.find(item => item.fieldId === formDetailsRule.fieldId)
+            if (fieldItem) {
+                fieldItem.opCode = formDetailsRule.opCode
+                fieldItem.value = formDetailsRule.value
+                fieldItem.formDetailRuleId = formDetailsRule.id
+                formConditions.push(fieldItem)
             }
         }
     }
-    return formDifferentVersionDetails
+
+    return {formDiffVersionDetailsWithCondition: formDiffVersionDetails, formConditions}
 }
 
 const saveFormDetailsRule = async (model) => {

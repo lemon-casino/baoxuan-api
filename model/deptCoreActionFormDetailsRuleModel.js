@@ -48,6 +48,24 @@ module.exports = sequelize => {
       comment: null,
       field: "value"
     },
+    condition: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "condition"
+    },
+    conditionCode: {
+      type: DataTypes.STRING(20),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "condition_code"
+    },
     version: {
       type: DataTypes.INTEGER,
       allowNull: false,

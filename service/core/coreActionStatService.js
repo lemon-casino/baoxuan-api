@@ -1,5 +1,5 @@
 const _ = require("lodash")
-const {opFunctions} = require("@/const/operatorConst")
+const {opFunctions} = require("@/const/ruleConst/operatorConst")
 const {activityIdMappingConst, flowStatusConst, flowReviewTypeConst} = require("@/const/flowConst")
 const flowUtil = require("@/utils/flowUtil")
 const flowRepo = require("@/repository/flowRepo");
