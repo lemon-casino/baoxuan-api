@@ -242,6 +242,8 @@ const getLinkErrorQueryFields = async (status) => {
  * @param timeRange
  * @param clickingAdditionalParams
  * @param jis
+ * @param problem
+ * @param state
  * @returns {Promise<{marketRioData: *[], profitData: ({name: string, sum: number, items: *[]}|{name: string, sum: null, items: *[]})[], paymentData: (*|*[]), pagingSingleItems: ({pageCount: *, data: *, pageIndex: *, pageSize: *}|null)}>}
  */
 const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
@@ -254,93 +256,102 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
                                                  linkHierarchies,
                                                  linkStatus,
                                                  timeRange,
-                                                 clickingAdditionalParams, jis, problem) => {
+                                                 clickingAdditionalParams, jis, problem, state) => {
 
-    // 链接问题处理数据需要对clickingAdditionalParams进行转化
-    for (let i = 0; i < clickingAdditionalParams.length; i++) {
-        const param = clickingAdditionalParams[i]
-        if (Object.keys(param).includes("method") && Object.keys(availableFunctionsMap).includes(param["method"])) {
-            clickingAdditionalParams[i] = await availableFunctionsMap[param["method"]](param["param"])
+    //这是单品表数据
+    if (state === "figures") {
+
+        // 链接问题处理数据需要对clickingAdditionalParams进行转化
+        for (let i = 0; i < clickingAdditionalParams.length; i++) {
+            const param = clickingAdditionalParams[i]
+            if (Object.keys(param).includes("method") && Object.keys(availableFunctionsMap).includes(param["method"])) {
+                clickingAdditionalParams[i] = await availableFunctionsMap[param["method"]](param["param"])
+            }
+        }
+        // todo: 如果速度影响较大，两个查询可以可以考虑一个查询然后做处理
+        // 获取分页单品表数据
+        const pagingSingleItems = await getTaoBaoSingleItemsWitPercentageTag(
+            pageIndex,
+            pageSize,
+            productLineLeaderNames,
+            firstLevelProductLine,
+            secondLevelProductLine,
+            errorItems,
+            linkTypes,
+            linkHierarchies,
+            linkStatus,
+            timeRange,
+            clickingAdditionalParams)
+
+        //判断 problem 的类型 problem String 类型转 boolean
+
+
+        if (problem === "true") {
+            // 说明 在流程中
+            const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING);
+
+            function processItems(items, errorLinkIds) {
+                return [...new Map(
+                    items
+                        .sort((a, b) => new Date(b.batchId) - new Date(a.batchId))
+                        .map(item => [item.linkId, item])
+                ).values()].filter(item => errorLinkIds.includes(item.linkId));
+            }
+
+            pagingSingleItems.data = processItems(pagingSingleItems.data, runningErrorLinkIds);
+            // 循环 pagingSingleItems
+            pagingSingleItems.total = pagingSingleItems.data.length
+            // for (let item of pagingSingleItems.data) {
+            //     console.log('item-->' + pagingSingleItems.total, item.linkId)
+            // }
+
+        }
+        return {
+            pagingSingleItems
         }
     }
-    // todo: 如果速度影响较大，两个查询可以可以考虑一个查询然后做处理
-    // 获取分页单品表数据
-    const pagingSingleItems = await getTaoBaoSingleItemsWitPercentageTag(
-        pageIndex,
-        999999,
-        productLineLeaderNames,
-        firstLevelProductLine,
-        secondLevelProductLine,
-        errorItems,
-        linkTypes,
-        linkHierarchies,
-        linkStatus,
-        timeRange,
-        clickingAdditionalParams)
+    // 这是数据汇总
+    if (state === "dataAggregation") {
+        const singleItems = await getAllSatisfiedSingleItems(
+            productLineLeaderNames,
+            firstLevelProductLine,
+            secondLevelProductLine,
+            errorItems,
+            linkTypes,
+            linkHierarchies,
+            linkStatus,
+            timeRange,
+            clickingAdditionalParams)
 
-    //判断 problem 的类型 problem String 类型转 boolean
-    if (problem === "true") {
-        // 说明 在流程中
-        const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING);
 
-        function processItems(items, errorLinkIds) {
-            return [...new Map(
-                items
-                    .sort((a, b) => new Date(b.batchId) - new Date(a.batchId))
-                    .map(item => [item.linkId, item])
-            ).values()].filter(item => errorLinkIds.includes(item.linkId));
+        // 处理 链接问题的数据
+
+
+        /**
+         *  付费数据： 精准人群、车、万象台
+         * 支付数据：按照新品老品分别统计发货金额和利润额，
+         *         利润率按照新老品指定的利润区间统计
+         * 获取市场占有率数据
+         */
+        let paymentData = []
+        let profitData = []
+        let marketRioData = []
+        if (jis) {
+            //付费数据
+            paymentData = await getPayment(singleItems)
+            //  支付数据
+            profitData = await getProfitData(singleItems)
+            // 市场占有率
+            marketRioData = await getMarketRatioData(singleItems)
         }
-
-        pagingSingleItems.data = processItems(pagingSingleItems.data, runningErrorLinkIds);
-        // 循环 pagingSingleItems
-        pagingSingleItems.total = pagingSingleItems.data.length
-        // for (let item of pagingSingleItems.data) {
-        //     console.log('item-->' + pagingSingleItems.total, item.linkId)
-        // }
-
+        return {
+            paymentData,
+            profitData,
+            marketRioData
+        }
     }
 
 
-    const singleItems = await getAllSatisfiedSingleItems(
-        productLineLeaderNames,
-        firstLevelProductLine,
-        secondLevelProductLine,
-        errorItems,
-        linkTypes,
-        linkHierarchies,
-        linkStatus,
-        timeRange,
-        clickingAdditionalParams)
-
-
-    // 处理 链接问题的数据
-
-
-    /**
-     *  付费数据： 精准人群、车、万象台
-     * 支付数据：按照新品老品分别统计发货金额和利润额，
-     *         利润率按照新老品指定的利润区间统计
-     * 获取市场占有率数据
-     */
-    let paymentData = []
-    let profitData = []
-    let marketRioData = []
-    if (jis) {
-        //付费数据
-        paymentData = await getPayment(singleItems)
-        //  支付数据
-        profitData = await getProfitData(singleItems)
-        // 市场占有率
-        marketRioData = await getMarketRatioData(singleItems)
-    }
-
-
-    return {
-        pagingSingleItems,
-        paymentData,
-        profitData,
-        marketRioData
-    }
 }
 
 const attachPercentageTagToField = (item) => {
@@ -460,7 +471,6 @@ const getSingleItemById = async (id) => {
  * @param linkStatus
  * @param timeRange
  * @param clickingAdditionalParams
- * @param jis
  * @returns {Promise<void>}
  */
 const getAllSatisfiedSingleItems = async (productLineLeaders,
@@ -473,8 +483,10 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
                                           timeRange,
                                           clickingAdditionalParams) => {
 
+    console.log("你怎么这么慢?")
     const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
     console.log("你怎么这么慢2")
+    console.log(fightingLinkIds)
     const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
         999999,
         productLineLeaders,
@@ -523,12 +535,12 @@ async function ToBeOnTheShelves(productLineLeaders) {
  * @param satisfiedSingleItems
  * @param productLineLeaders
  * @param timeRange
+ * @param state
  * @returns {Promise<{sum: number, items: [{name: string, sum: number}, {name: string, sum: number}, {name: string, sum: number}]}|{sum: number, items: *[]}|{fightingOnOld: *, fightingOnNew: *}>}
  */
-const getLinkOperationCount = async (satisfiedSingleItems, productLineLeaders, timeRange) => {
-    // 创建所有异步操作的Promise
-    console.log("来到这里》》》》")
-    const newvaPromise = getlinkingIssues(productLineLeaders, satisfiedSingleItems, timeRange);
+const getLinkOperationCount_OperationalData = async (satisfiedSingleItems, productLineLeaders, timeRange) => {
+
+
     const selfDoSingleItemLinkOperationCountPromise = getSelfDoSingleItemLinkOperationCount(satisfiedSingleItems);
     const ToBeOnTheShelvesPromise = ToBeOnTheShelves(productLineLeaders);
     const fightingFlowFormValuesPromise = flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING);
@@ -539,22 +551,30 @@ const getLinkOperationCount = async (satisfiedSingleItems, productLineLeaders, t
     );
 
     // 使用 Promise.all 并行执行所有操作
-    const [newva, selfDoSingleItemLinkOperationCount, ToBeOnTheShelvesCount, fightingCount] = await Promise.all([
-        newvaPromise,
+    const [selfDoSingleItemLinkOperationCount, ToBeOnTheShelvesCount, fightingCount] = await Promise.all([
         selfDoSingleItemLinkOperationCountPromise,
         ToBeOnTheShelvesPromise,
         fightingPromise
     ]);
-
     // 返回结果
     return [
         {operation: selfDoSingleItemLinkOperationCount},
         {ToBeOnTheShelves: ToBeOnTheShelvesCount},
         {fighting: fightingCount},
-        {error: newva.error},
-        {ongoing: newva.ongoing},
-        {done: newva.done}
     ];
+
+}
+
+const getLinkOperationCount_AbnormalData = async (satisfiedSingleItems, productLineLeaders, timeRange) => {
+
+    const abnormal_dingding = await getlinkingIssues(productLineLeaders, satisfiedSingleItems, timeRange);
+    return [
+        {error: abnormal_dingding.error},
+        {ongoing: abnormal_dingding.ongoing},
+        {done: abnormal_dingding.done}
+    ]
+
+
 }
 
 const getLinknewvaCount = async (
@@ -690,13 +710,13 @@ async function getlinkingto(productLineLeaders, singleItems, timeRange) {
 
 
 async function getLinkingCommon(productLineLeaders, singleItems, timeRange, includeRecord) {
-
     const result = {
         error: {items: [], sum: 0},
         ongoing: {items: [], sum: 0},
         done: {items: [], sum: 0}
     };
 
+    console.log(productLineLeaders)
     // 使用 Promise.all 并行执行多个异步任务
     const [runningErrorLinkIds, completeErrorLinkIds, errorResult, withinThreeDays] = await Promise.all([
         flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.RUNNING),
@@ -707,21 +727,27 @@ async function getLinkingCommon(productLineLeaders, singleItems, timeRange, incl
 
     // 总异常数据
     result.error = errorResult;
-
+    const theLinkidOfThePersonInCharge = await singleItemTaoBaoRepo.getproductLineLeaders(productLineLeaders, timeRange)
+    console.log("xx", theLinkidOfThePersonInCharge)
     const transformData = (data) => {
         const resultMap = {};
 
+        //   console.log(data)
+        //查询 天猫连接数据中 用户存在的linkid
         data.forEach(entry => {
             const id = Object.keys(entry)[0];
-            const issues = entry[id];
+            if (theLinkidOfThePersonInCharge.includes(id)) {
+                const issues = entry[id];
+                issues.forEach(issue => {
+                    if (!resultMap[issue]) {
+                        resultMap[issue] = {name: issue, sum: 0, ids: []};
+                    }
+                    resultMap[issue].sum++;
+                    resultMap[issue].ids.push(id);
+                });
+            }
 
-            issues.forEach(issue => {
-                if (!resultMap[issue]) {
-                    resultMap[issue] = {name: issue, sum: 0, ids: []};
-                }
-                resultMap[issue].sum++;
-                resultMap[issue].ids.push(id);
-            });
+
         });
 
         return Object.values(resultMap);
@@ -1348,7 +1374,8 @@ module.exports = {
     getSearchDataTaoBaoSingleItem,
     getSingleItemById,
     // getErrorLinkOperationCount,
-    getLinkOperationCount,
+    getLinkOperationCount_OperationalData,
+    getLinkOperationCount_AbnormalData,
     getPayment,
     getProfitData,
     getAllSatisfiedSingleItems,
