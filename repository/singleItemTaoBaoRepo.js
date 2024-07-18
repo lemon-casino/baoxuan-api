@@ -621,6 +621,24 @@ const Calculateyesterdaysdataandtagtheprofitin60days = async () => {
     console.log('Dayprofit60 updated successfully.');
 }
 
+
+const getproductLineLeaders = async (productLineLeaders, timeRange) => {
+    const results = await singleItemTaoBaoModel.findAll({
+        attributes: ['link_id'],
+        where: {
+            productLineLeader: {
+                [Op.in]: productLineLeaders,
+            },
+            date: {
+                [Op.between]: timeRange,
+            },
+        },
+        group: ['link_id'],
+        logging: true,
+        raw: true,
+    });
+    return results.map(result => result.link_id);
+}
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
@@ -637,5 +655,6 @@ module.exports = {
     updateSingleItemTaoBao,
     getError60SingleIte,
     updateCustom,
-    Calculateyesterdaysdataandtagtheprofitin60days
+    Calculateyesterdaysdataandtagtheprofitin60days,
+    getproductLineLeaders
 }

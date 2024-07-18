@@ -710,14 +710,13 @@ async function getlinkingto(productLineLeaders, singleItems, timeRange) {
 
 
 async function getLinkingCommon(productLineLeaders, singleItems, timeRange, includeRecord) {
-    console.log(singleItems)
-    console.log(Array.isArray(singleItems))
     const result = {
         error: {items: [], sum: 0},
         ongoing: {items: [], sum: 0},
         done: {items: [], sum: 0}
     };
 
+    console.log(productLineLeaders)
     // 使用 Promise.all 并行执行多个异步任务
     const [runningErrorLinkIds, completeErrorLinkIds, errorResult, withinThreeDays] = await Promise.all([
         flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.RUNNING),
@@ -728,21 +727,27 @@ async function getLinkingCommon(productLineLeaders, singleItems, timeRange, incl
 
     // 总异常数据
     result.error = errorResult;
-
+    const theLinkidOfThePersonInCharge = await singleItemTaoBaoRepo.getproductLineLeaders(productLineLeaders, timeRange)
+    console.log("xx", theLinkidOfThePersonInCharge)
     const transformData = (data) => {
         const resultMap = {};
 
+        //   console.log(data)
+        //查询 天猫连接数据中 用户存在的linkid
         data.forEach(entry => {
             const id = Object.keys(entry)[0];
-            const issues = entry[id];
+            if (theLinkidOfThePersonInCharge.includes(id)) {
+                const issues = entry[id];
+                issues.forEach(issue => {
+                    if (!resultMap[issue]) {
+                        resultMap[issue] = {name: issue, sum: 0, ids: []};
+                    }
+                    resultMap[issue].sum++;
+                    resultMap[issue].ids.push(id);
+                });
+            }
 
-            issues.forEach(issue => {
-                if (!resultMap[issue]) {
-                    resultMap[issue] = {name: issue, sum: 0, ids: []};
-                }
-                resultMap[issue].sum++;
-                resultMap[issue].ids.push(id);
-            });
+
         });
 
         return Object.values(resultMap);
