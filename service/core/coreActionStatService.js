@@ -57,7 +57,7 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
                         const processInstanceId = flow.processInstanceId
 
 
-                        if (processInstanceId === "dbc34c39-f676-42f3-abd6-5083ff9f5439") {
+                        if (processInstanceId === "8542a4e2-6374-4d28-956a-87efd99f67f1") {
                             console.log('----')
                         }
 
@@ -258,53 +258,52 @@ const getMatchedActivity = (fromNode, toNode, activities) => {
  */
 const extendActivityWithUserNameAndTags = (activity, users, flow, ownerRule) => {
     const tmpOperatorsActivity = []
-    if (activity.domainList && activity.domainList.length > 0) {
-        // 包含domainList的节点直接算到节点操作人的头上
-        for (const domain of activity.domainList) {
-            const user = users.find(user => user.nickname === domain.operatorName || user.userName === domain.operatorName)
-            if (user) {
-                tmpOperatorsActivity.push({
-                    userName: domain.operatorName,
-                    tags: user.tags || [],
-                    activity: activity
-                })
-            }
-
-        }
-    }
+    // if (activity.domainList && activity.domainList.length > 0) {
+    //     // 包含domainList的节点直接算到节点操作人的头上
+    //     for (const domain of activity.domainList) {
+    //         const user = users.find(user => user.nickname === domain.operatorName || user.userName === domain.operatorName)
+    //         if (user) {
+    //             tmpOperatorsActivity.push({
+    //                 userName: domain.operatorName,
+    //                 tags: user.tags || [],
+    //                 activity: activity
+    //             })
+    //         }
+    //     }
+    // }
     // 单节点根据配置确定要计算的人头上
-    else {
-        // 找到该工作量的负责人
-        let ownerName = "未分配"
-        let {from, id, defaultUserName} = ownerRule
-        // 外包的流程可能会存在未选择外包人的情况
-        if (from.toUpperCase() === ownerFrom.FORM) {
-            let tmpOwnerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id]
-            // 如果是数组的格式，转成以“,”连接的字符串
-            if (tmpOwnerName instanceof Array) {
-                tmpOwnerName = tmpOwnerName.join(",")
-            }
-            if (tmpOwnerName) {
-                ownerName = tmpOwnerName
-            } else if (defaultUserName) {
-                ownerName = defaultUserName
-            }
-        } else {
-            const processReviewId = activityIdMappingConst[id] || id
-            const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
-            ownerName = reviewItems.length > 0 ? reviewItems[0].operatorName : defaultUserName
+    // else {
+    // 找到该工作量的负责人
+    let ownerName = "未分配"
+    let {from, id, defaultUserName} = ownerRule
+    // 外包的流程可能会存在未选择外包人的情况
+    if (from.toUpperCase() === ownerFrom.FORM) {
+        let tmpOwnerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id]
+        // 如果是数组的格式，转成以“,”连接的字符串
+        if (tmpOwnerName instanceof Array) {
+            tmpOwnerName = tmpOwnerName.join(",")
         }
-
-        const user = users.find(user => user.nickname === ownerName || user.userName === ownerName)
-
-        if (user) {
-            tmpOperatorsActivity.push({
-                userName: ownerName,
-                tags: user.tags,
-                activity: activity
-            })
+        if (tmpOwnerName) {
+            ownerName = tmpOwnerName
+        } else if (defaultUserName) {
+            ownerName = defaultUserName
         }
+    } else {
+        const processReviewId = activityIdMappingConst[id] || id
+        const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
+        ownerName = reviewItems.length > 0 ? reviewItems[0].operatorName : defaultUserName
     }
+
+    const user = users.find(user => user.nickname === ownerName || user.userName === ownerName)
+
+    if (user) {
+        tmpOperatorsActivity.push({
+            userName: ownerName,
+            tags: user.tags,
+            activity: activity
+        })
+    }
+    // }
     return tmpOperatorsActivity
 }
 

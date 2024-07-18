@@ -276,23 +276,6 @@ module.exports = [
                             },
                             {
                                 from: {
-                                    id: "node_oclxkd9uqud",
-                                    name: "分配执行",
-                                    status: ["TODO"]
-                                },
-                                to: {
-                                    id: "node_oclxkd9uqud",
-                                    name: "分配执行",
-                                    status: ["TODO"]
-                                },
-                                ownerRule: {
-                                    from: "form",
-                                    name: "执行统计五维表",
-                                    id: "employeeField_lxkb9f9a"
-                                }
-                            },
-                            {
-                                from: {
                                     id: "node_oclxkd9uque",
                                     name: "统计五维方案",
                                     status: ["TODO"]

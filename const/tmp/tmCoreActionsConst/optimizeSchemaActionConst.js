@@ -184,41 +184,7 @@ module.exports = [
                                     name: "运营负责人",
                                     id: "employeeField_liihs7l0"
                                 }
-                            },
-                            // {
-                            //     from: {
-                            //         id: "node_oclto07a599",
-                            //         name: "组长审核方案",
-                            //         status: ["TODO"]
-                            //     },
-                            //     to: {
-                            //         id: "node_oclto07a599",
-                            //         name: "组长审核方案",
-                            //         status: ["TODO"]
-                            //     },
-                            //     ownerRule: {
-                            //         from: "form",
-                            //         name: "运营负责人",
-                            //         id: "employeeField_liihs7l0"
-                            //     }
-                            // },
-                            // {
-                            //     from: {
-                            //         id: "node_oclv7ila163",
-                            //         name: "组长审核方案",
-                            //         status: ["TODO"]
-                            //     },
-                            //     to: {
-                            //         id: "node_oclv7ila163",
-                            //         name: "组长审核方案",
-                            //         status: ["TODO"]
-                            //     },
-                            //     ownerRule: {
-                            //         from: "form",
-                            //         name: "运营负责人",
-                            //         id: "employeeField_liihs7l0"
-                            //     }
-                            // }
+                            }
                         ]
                     }
                 ]
@@ -269,40 +235,23 @@ module.exports = [
                                     id: "employeeField_liihs7l0"
                                 }
                             },
-                            // {
-                            //     from: {
-                            //         id: "node_oclto07a599",
-                            //         name: "组长审核方案",
-                            //         status: ["HISTORY"]
-                            //     },
-                            //     to: {
-                            //         id: "node_oclto07a599",
-                            //         name: "组长审核方案",
-                            //         status: ["HISTORY"]
-                            //     },
-                            //     ownerRule: {
-                            //         from: "form",
-                            //         name: "运营负责人",
-                            //         id: "employeeField_liihs7l0"
-                            //     }
-                            // },
-                            // {
-                            //     from: {
-                            //         id: "node_oclv7ila163",
-                            //         name: "组长审核方案",
-                            //         status: ["HISTORY"]
-                            //     },
-                            //     to: {
-                            //         id: "node_oclv7ila163",
-                            //         name: "组长审核方案",
-                            //         status: ["HISTORY"]
-                            //     },
-                            //     ownerRule: {
-                            //         from: "form",
-                            //         name: "运营负责人",
-                            //         id: "employeeField_liihs7l0"
-                            //     }
-                            // }
+                            {
+                                from: {
+                                    id: "node_oclyh5wg4p1",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclyh5wg4p1",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            }
                         ]
                     }
                 ]
@@ -491,41 +440,7 @@ module.exports = [
                                     name: "运营负责人",
                                     id: "employeeField_liihs7l0"
                                 }
-                            },
-                            // {
-                            //     from: {
-                            //         id: "node_oclto07a599",
-                            //         name: "组长审核方案",
-                            //         status: ["TODO"]
-                            //     },
-                            //     to: {
-                            //         id: "node_oclto07a599",
-                            //         name: "组长审核方案",
-                            //         status: ["TODO"]
-                            //     },
-                            //     ownerRule: {
-                            //         from: "form",
-                            //         name: "运营负责人",
-                            //         id: "employeeField_liihs7l0"
-                            //     }
-                            // },
-                            // {
-                            //     from: {
-                            //         id: "node_oclv7ila163",
-                            //         name: "组长审核方案",
-                            //         status: ["TODO"]
-                            //     },
-                            //     to: {
-                            //         id: "node_oclv7ila163",
-                            //         name: "组长审核方案",
-                            //         status: ["TODO"]
-                            //     },
-                            //     ownerRule: {
-                            //         from: "form",
-                            //         name: "运营负责人",
-                            //         id: "employeeField_liihs7l0"
-                            //     }
-                            // }
+                            }
                         ]
                     }
                 ]
@@ -575,40 +490,23 @@ module.exports = [
                                     id: "employeeField_liihs7l0"
                                 }
                             },
-                            // {
-                            //     from: {
-                            //         id: "node_oclto07a599",
-                            //         name: "组长审核方案",
-                            //         status: ["HISTORY"]
-                            //     },
-                            //     to: {
-                            //         id: "node_oclto07a599",
-                            //         name: "组长审核方案",
-                            //         status: ["HISTORY"]
-                            //     },
-                            //     ownerRule: {
-                            //         from: "form",
-                            //         name: "运营负责人",
-                            //         id: "employeeField_liihs7l0"
-                            //     }
-                            // },
-                            // {
-                            //     from: {
-                            //         id: "node_oclv7ila163",
-                            //         name: "组长审核方案",
-                            //         status: ["HISTORY"]
-                            //     },
-                            //     to: {
-                            //         id: "node_oclv7ila163",
-                            //         name: "组长审核方案",
-                            //         status: ["HISTORY"]
-                            //     },
-                            //     ownerRule: {
-                            //         from: "form",
-                            //         name: "运营负责人",
-                            //         id: "employeeField_liihs7l0"
-                            //     }
-                            // }
+                            {
+                                from: {
+                                    id: "node_oclyh5wg4p1",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclyh5wg4p1",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            }
                         ]
                     }
                 ]
