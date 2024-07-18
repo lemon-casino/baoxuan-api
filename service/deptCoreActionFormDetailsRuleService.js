@@ -15,6 +15,8 @@ const getFormDetailsRule = async (formId, formRuleId) => {
                 fieldItem.opCode = formDetailsRule.opCode
                 fieldItem.value = formDetailsRule.value
                 fieldItem.formDetailRuleId = formDetailsRule.id
+                fieldItem.condition = formDetailsRule.condition
+                fieldItem.conditionCode = formDetailsRule.conditionCode
                 formConditions.push(fieldItem)
             }
         }
