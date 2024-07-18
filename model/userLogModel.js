@@ -93,15 +93,7 @@ module.exports = sequelize => {
             field: "is_online"
         },
         duration: {
-            type: DataTypes.VIRTUAL,
-            get() {
-                const loginTime = this.getDataValue("loginTime")
-                const lastOnlineTime = this.getDataValue("lastOnlineTime")
-                if (!lastOnlineTime || !loginTime) {
-                    return 0
-                }
-                return Math.max(dateUtil.duration(lastOnlineTime, loginTime), 0)
-            }
+            type: DataTypes.VIRTUAL
         }
     };
     const options = {

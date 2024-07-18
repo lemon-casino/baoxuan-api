@@ -60,7 +60,7 @@ const durationStatistic = async (userId, timeRange, isOnline) => {
     if (userId) {
         where.userId = userId
     }
-    if (isOnline !== undefined) {
+    if (isOnline) {
         where.isOnline = isOnline
     }
 
