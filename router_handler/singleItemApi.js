@@ -2,6 +2,7 @@ const Joi = require("joi")
 const singleItemTaoBaoService = require('../service/singleItemTaoBaoService')
 const biResponse = require("../utils/biResponse")
 const joiUtil = require("../utils/joiUtil")
+const {cond} = require("lodash/util");
 
 
 const saveSingleItemTaoBao = async (req, res, next) => {
@@ -62,6 +63,8 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
         let ces = jis === undefined ? true : JSON.parse(jis)
         // string 转换为 boolean ces = JSON.parse(jis)
         // console.log(typeof jis, typeof ces)
+        const state = req.params.state
+        joiUtil.validate({state})
         const result = await singleItemTaoBaoService.getTaoBaoSingleItemsWithStatistic(
             parseInt(pageIndex),
             parseInt(pageSize),
@@ -75,9 +78,10 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
             JSON.parse(timeRange),
             JSON.parse(clickingAdditionalParams || "[]"),
             ces,
-            problem
+            problem,
+            state
         )
-
+        console.log("完成 2 getTaoBaoSingleItemsWithStatistic")
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -93,7 +97,9 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
  */
 const getSearchDataTaoBaoSingleItem = async (req, res, next) => {
     try {
+        console.log("getSearchDataTaoBaoSingleItem")
         const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(req.user.id)
+        console.log("getSearchDataTaoBaoSingleIt完成em")
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
