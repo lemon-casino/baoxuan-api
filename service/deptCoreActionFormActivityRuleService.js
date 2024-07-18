@@ -5,7 +5,6 @@ const algorithmUtil = require("@/utils/algorithmUtil")
 const getFormActivityRules = async (formId, formRuleId) => {
     const formReviews = await formReviewRepo.getFormReviewByFormId(formId)
     const formActivityRules = await deptCoreActionFormActivityRuleRepo.getFormActivityRules(formRuleId)
-    const activityConditions = []
     // 将formActivityRules信息附加到formReviews
     for (const formActivityRule of formActivityRules) {
         const currVersionFormActivity = formReviews.find(item => item.id === formActivityRule.version)
@@ -14,11 +13,10 @@ const getFormActivityRules = async (formId, formRuleId) => {
             ruledActivity.status = formActivityRule.status
             ruledActivity.owner = formActivityRule.owner
             ruledActivity.ruleActivityId = formActivityRule.id
-            activityConditions.push(ruledActivity)
         }
     }
 
-    return {formReviews, activityConditions}
+    return {formReviews, activityConditions: formActivityRules}
 }
 
 const saveFormActivityRule = async (data) => {

@@ -5,7 +5,6 @@ const getFormDetailsRule = async (formId, formRuleId) => {
     const formDiffVersionDetails = await flowFormDetailsRepo.getFormDifferentVersionsDetails(formId)
     const formDetailsRules = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRule(formRuleId)
 
-    const formConditions = []
 
     for (const formDetailsRule of formDetailsRules) {
         const currVersionDetails = formDiffVersionDetails.find(item => item.title === `表单版本${formDetailsRule.version}`)
@@ -17,12 +16,11 @@ const getFormDetailsRule = async (formId, formRuleId) => {
                 fieldItem.formDetailRuleId = formDetailsRule.id
                 fieldItem.condition = formDetailsRule.condition
                 fieldItem.conditionCode = formDetailsRule.conditionCode
-                formConditions.push(fieldItem)
             }
         }
     }
 
-    return {formDiffVersionDetailsWithCondition: formDiffVersionDetails, formConditions}
+    return {formDiffVersionDetailsWithCondition: formDiffVersionDetails, formConditions: formDetailsRules}
 }
 
 const saveFormDetailsRule = async (model) => {
