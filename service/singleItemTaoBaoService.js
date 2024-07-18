@@ -325,14 +325,14 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
     let paymentData = []
     let profitData = []
     let marketRioData = []
-    /*    if (jis) {
-            //付费数据
-            paymentData = await getPayment(singleItems)
-            //  支付数据
-            profitData = await getProfitData(singleItems)
-            // 市场占有率
-            marketRioData = await getMarketRatioData(singleItems)
-        }*/
+    if (jis) {
+        //付费数据
+        paymentData = await getPayment(singleItems)
+        //  支付数据
+        profitData = await getProfitData(singleItems)
+        // 市场占有率
+        marketRioData = await getMarketRatioData(singleItems)
+    }
 
 
     return {
@@ -690,7 +690,6 @@ async function getlinkingto(productLineLeaders, singleItems, timeRange) {
 
 
 async function getLinkingCommon(productLineLeaders, singleItems, timeRange, includeRecord) {
-    console.log("来到这里");
 
     const result = {
         error: {items: [], sum: 0},
