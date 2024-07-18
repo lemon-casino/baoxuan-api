@@ -3,6 +3,7 @@ const biResponse = require("../utils/biResponse")
 const singleItemTaoBaoService = require("../service/singleItemTaoBaoService")
 const dateUtil = require("../utils/dateUtil")
 const joiUtil = require("../utils/joiUtil")
+const singleItemTaoBaoRepo = require("@/repository/singleItemTaoBaoRepo");
 
 /**
  * 获取链接操作数: 获取库中最新一天的链接操作数据
@@ -15,28 +16,52 @@ const getLinkOperationCount = async (req, res, next) => {
     try {
 
         let {productLineLeaders, timeRange} = req.query
+        const state = req.params.state
+        joiUtil.validate({state})
         joiUtil.validate({productLineLeaders: {value: productLineLeaders, schema: Joi.string().required()}})
         productLineLeaders = JSON.parse(productLineLeaders)
         console.log("你怎么这么慢0")
 //console.log(timeRange)
         // 天猫链接获得数据
-        const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
-            productLineLeaders,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            JSON.parse(timeRange),
-            null)
+
         //console.log(singleItems.length)
         // 去掉重复的
         // const uniqueSingleItems = singleItemTaoBaoService.getUniqueSingleItems(singleItems)
-        console.log("你怎么这么慢1")
-        const result = await singleItemTaoBaoService.getLinkOperationCount(
-            singleItems,
-            productLineLeaders, JSON.parse(timeRange))
+        let result = []
+        if (state === "operational") {
+            const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
+                productLineLeaders,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                JSON.parse(timeRange),
+                null)
+            result = await singleItemTaoBaoService.getLinkOperationCount_OperationalData(
+                singleItems,
+                productLineLeaders, JSON.parse(timeRange), state)
+        }
+        if (state === "error") {
+            const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
+                999999,
+                productLineLeaders,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                JSON.parse(timeRange),
+                null);
+            result = await singleItemTaoBaoService.getLinkOperationCount_AbnormalData(
+                satisfiedSingleItems.data,
+                productLineLeaders, JSON.parse(timeRange), state)
+        }
+
+
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
