@@ -338,7 +338,7 @@ const getRelatedOtherUsers = async (deptIds) => {
     for (const deptId of deptIds) {
         const deptOutSourcingUsers = await outUsersRepo.getOutUsersWithTags({deptId: deptId, enabled: true})
         otherUsers = otherUsers.concat(deptOutSourcingUsers)
-        const deptResignUsers = await userRepo.getDeptResignUsers(deptId)
+        const deptResignUsers = await userRepo.getDeptResignUsers([deptId])
         const deptResignedUsers = deptResignUsers.map(item => {
             item.nickname = `${item.nickname}[已离职]`
             return item

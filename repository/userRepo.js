@@ -168,34 +168,34 @@ const getAllResignUsers = async () => {
 /**
  * 获取部门下离职人员的详情
  *
- * @param deptId
+ * @param deptIds
  * @returns {Promise<<Model[]>>}
  */
-const getDeptResignUsers = async (deptId) => {
-    const deptResignedUsers = await getDeptUsers(deptId, {isResign: true})
+const getDeptResignUsers = async (deptIds) => {
+    const deptResignedUsers = await getDeptUsers(deptIds, {isResign: true})
     return sequelizeUtil.extractDataValues(deptResignedUsers)
 }
 
 /**
  * 获取部门在职人员信息
  *
- * @param deptId
+ * @param deptIds
  * @returns {Promise<*>}
  */
-const getDeptOnJobUsers = async (deptId) => {
-    const deptResignedUsers = await getDeptUsers(deptId, {isResign: false})
+const getDeptOnJobUsers = async (deptIds) => {
+    const deptResignedUsers = await getDeptUsers(deptIds, {isResign: false})
     return sequelizeUtil.extractDataValues(deptResignedUsers)
 }
 
 /**
  * 获取部门下的用户信息
  *
- * @param deptId
+ * @param deptIds
  * @param where
  * @returns {Promise<*>}
  */
-const getDeptUsers = async (deptId, where) => {
-    const deptUsers = await deptsUsersModel.findAll({where: {deptId}})
+const getDeptUsers = async (deptIds, where) => {
+    const deptUsers = await deptsUsersModel.findAll({where: {deptId: {$in: deptIds}}})
     const deptUserIds = deptUsers.map(item => item.userId)
 
     const tmpWhere = {dingdingUserId: {$in: deptUserIds}, ...where}

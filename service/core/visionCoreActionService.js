@@ -35,8 +35,6 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
         return filterUsersByTags(users, tags)
     })
 
-    // 有内部组组长标签的要获取同内部组的其他人员
-
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptIds)
     const differentForms = coreActionStatService.extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
     const configuredFormIds = differentForms.inner.concat(differentForms.outSourcing).map(item => item.formId)

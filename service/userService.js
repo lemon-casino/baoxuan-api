@@ -89,32 +89,25 @@ const getPagingUsers = async (deptIds, pageIndex, pageSize, nickname, status) =>
     return (await userRepo.getPagingUsers(deptIds, pageIndex, pageSize, nickname, status))
 }
 
-/**
- * 获取用户可以查看基于内部分组的人员信息
- * @param userId
- * @returns {Promise<[{[p: string]: *}]|*[]>}
- */
-const getTMInnerGroups = async (userId) => {
+const getTaggedInnerGroupUsers = async (userId, deptIds, innerGroupTagPrefix, innerGroupLeaderTagCode) => {
     const result = []
-    let tmInnerGroupTags = []
-    let tmOnJobUsers = []
-    const tmInnerGroupLeaderTagCode = "tmInnerGroupLeader"
-    const tmInnerGroupTagPrefix = "tmInnerGroup:"
+    let innerGroupTags = []
+    let onJobUsers = []
 
-    const isLeader = await isDeptLeaderOfTheUser(userId, ["903075138"])
+    const isLeader = await isDeptLeaderOfTheUser(userId, deptIds)
     if (isLeader) {
-        tmInnerGroupTags = await tagsRepo.getTags({tagCode: {$like: `%${tmInnerGroupTagPrefix}%`}})
-        tmOnJobUsers = await userRepo.getDeptOnJobUsers("903075138")
+        innerGroupTags = await tagsRepo.getTags({tagCode: {$like: `%${innerGroupTagPrefix}%`}})
+        onJobUsers = await userRepo.getDeptOnJobUsers(deptIds)
 
         const hasInnerGroupUserIds = []
-        for (const tmInnerGroupTag of tmInnerGroupTags) {
+        for (const tmInnerGroupTag of innerGroupTags) {
             const tmpGroupResult = {groupCode: tmInnerGroupTag.tagCode, groupName: tmInnerGroupTag.tagName, members: []}
-            const currTagUsers = tmOnJobUsers.filter(user => {
+            const currTagUsers = onJobUsers.filter(user => {
                 return user.tags.filter(tag => tag.tagCode === tmInnerGroupTag.tagCode).length > 0
             })
             for (const user of currTagUsers) {
                 hasInnerGroupUserIds.push(user.dingdingUserId)
-                const leaderTag = user.tags.find(tag => tag.tagCode === tmInnerGroupLeaderTagCode)
+                const leaderTag = user.tags.find(tag => tag.tagCode === innerGroupLeaderTagCode)
                 tmpGroupResult.members.push({
                     userName: user.nickname,
                     userDDId: user.dingdingUserId,
@@ -125,7 +118,7 @@ const getTMInnerGroups = async (userId) => {
         }
 
         // 未分组的用户
-        const dontHasInnerGroupUsers = tmOnJobUsers.filter(user => !hasInnerGroupUserIds.includes(user.dingdingUserId))
+        const dontHasInnerGroupUsers = onJobUsers.filter(user => !hasInnerGroupUserIds.includes(user.dingdingUserId))
         const tmpGroupResult = {groupCode: "noGroup", groupName: "未分组", members: []}
         for (const user of dontHasInnerGroupUsers) {
             tmpGroupResult.members.push({userName: user.nickname, userDDId: user.dingdingUserId, isLeader: false})
@@ -135,31 +128,31 @@ const getTMInnerGroups = async (userId) => {
     // 非部门领导或管理员
     else {
         const user = await userRepo.getUserWithTags(userId)
-        const userTMInnerGroupTag = user.tags.find(tag => tag.tagCode.includes(tmInnerGroupTagPrefix))
-        if (userTMInnerGroupTag) {
-            const tmpGroupResult = {
-                groupCode: userTMInnerGroupTag.tagCode,
-                groupName: userTMInnerGroupTag.tag.tagName,
+        const userInnerGroupTag = user.tags.find(tag => tag.tagCode.includes(innerGroupTagPrefix))
+        if (userInnerGroupTag) {
+            const groupResult = {
+                groupCode: userInnerGroupTag.tagCode,
+                groupName: userInnerGroupTag.tag.tagName,
                 members: []
             }
 
             // 如果是内部组组长，要获取该组的其他组员
-            const innerGroupLeader = !!user.tags.find(tag => tag.tagCode === tmInnerGroupLeaderTagCode)
+            const innerGroupLeader = !!user.tags.find(tag => tag.tagCode === innerGroupLeaderTagCode)
             if (innerGroupLeader) {
-                const relatedTagUsers = await userRepo.getUsersByTagCodes([userTMInnerGroupTag.tagCode])
+                const relatedTagUsers = await userRepo.getUsersByTagCodes([userInnerGroupTag.tagCode])
                 for (const sameTagUser of relatedTagUsers) {
-                    tmpGroupResult.members.push({
+                    groupResult.members.push({
                         userName: sameTagUser.nickname,
                         userDDId: sameTagUser.dingdingUserId,
                         isLeader: sameTagUser.dingdingUserId === userId
                     })
                 }
-                result.push(tmpGroupResult)
+                result.push(groupResult)
             }
             // 普通组员
             else {
-                tmpGroupResult.members.push({userName: user.nickname, userDDId: user.dingdingUserId, isLeader: false})
-                result.push(tmpGroupResult)
+                groupResult.members.push({userName: user.nickname, userDDId: user.dingdingUserId, isLeader: false})
+                result.push(groupResult)
             }
         }
         // 未分组
@@ -178,14 +171,22 @@ const getTMInnerGroups = async (userId) => {
 }
 
 /**
+ * 获取用户可以查看基于内部分组的人员信息
+ * @param userId
+ * @returns {Promise<[{[p: string]: *}]|*[]>}
+ */
+const getTMInnerGroups = async (userId) => {
+    return (await getTaggedInnerGroupUsers(userId, ["903075138"], "tmInnerGroup:", "tmInnerGroupLeader"))
+}
+
+/**
  * 获取视觉部的内部分组信息
  *
  * @param userId
  * @returns {Promise<*[]|[*]|[{[p: string]: *}]|[]>}
  */
 const getVisionInnerGroups = async (userId) => {
-    const innerGroup = await getInnerGroups(userId, ["482162119", "933412643"])
-    return innerGroup
+    return (await getTaggedInnerGroupUsers(userId, ["482162119", "933412643"], "hz:vision:", "hz:innerGroupLeader"))
 }
 
 const getInnerGroups = async (userId, deptIds) => {

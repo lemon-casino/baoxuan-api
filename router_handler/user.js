@@ -453,7 +453,7 @@ exports.getTMInnerGroups = async (req, res, next) => {
 
 exports.getVisionInnerGroups = async (req, res, next) => {
     try {
-        const tmInnerGroups = await userService.getVisionInnerGroups(req.user.id)
+        const tmInnerGroups = await userService.getVisionInnerGroups(req.user.userId)
         res.send(biResponse.success(tmInnerGroups))
     } catch (e) {
         next(e)
