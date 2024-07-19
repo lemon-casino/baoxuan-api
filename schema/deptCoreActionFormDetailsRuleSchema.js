@@ -5,6 +5,8 @@ const saveParamsSchema = {
     fieldId: joiUtil.commonJoiSchemas.strRequired,
     opCode: joiUtil.commonJoiSchemas.strRequired,
     value: joiUtil.commonJoiSchemas.strRequired,
+    condition: joiUtil.commonJoiSchemas.strRequired,
+    // conditionCode: joiUtil.commonJoiSchemas.strRequired,
     version: joiUtil.commonJoiSchemas.numberRequired
 }
 

@@ -1,4 +1,4 @@
-const {opCodes} = require("@/const/operatorConst")
+const {opCodes} = require("@/const/ruleConst/operatorConst")
 const commonActionStatus = {TODO: "TODO", DOING: "DOING", DONE: "DONE"}
 
 const config = [

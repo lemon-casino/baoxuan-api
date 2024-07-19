@@ -12,9 +12,11 @@ const getFormActivityRules = async (formId, formRuleId) => {
         if (ruledActivity) {
             ruledActivity.status = formActivityRule.status
             ruledActivity.owner = formActivityRule.owner
+            ruledActivity.ruleActivityId = formActivityRule.id
         }
     }
-    return formReviews
+
+    return {formReviews, activityConditions: formActivityRules}
 }
 
 const saveFormActivityRule = async (data) => {

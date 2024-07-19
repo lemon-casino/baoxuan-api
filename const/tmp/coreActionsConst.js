@@ -1,4 +1,4 @@
-const {opCodes} = require("@/const/operatorConst")
+const {opCodes} = require("@/const/ruleConst/operatorConst")
 
 const quanTaoActionConst = require("@/const/tmp/visionCoreActionConst/quanTaoActionConst")
 const banTaoActionConst = require("@/const/tmp/visionCoreActionConst/banTaoActionConst")
