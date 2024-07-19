@@ -684,6 +684,40 @@ module.exports = {
                                 name: "摄影负责人",
                                 id: "employeeField_lyqkh2mw"
                             }
+                        },
+                        {
+                            from: {
+                                id: "node_oclyqllinba",
+                                name: "统计样品",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclyqllinba",
+                                name: "统计样品",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "外包拍摄负责人",
+                                id: "radioField_lyqkh2nw"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclyqllinbf",
+                                name: "联系快递通知外拍负责人",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclyqllinbf",
+                                name: "联系快递通知外拍负责人",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "外包拍摄负责人",
+                                id: "radioField_lyqkh2nw"
+                            }
                         }
                     ]
                 },
@@ -1392,6 +1426,23 @@ module.exports = {
                                 id: "employeeField_lyqkh2mw"
                             }
                         },
+                        {
+                            from: {
+                                id: "node_oclyqllinbg",
+                                name: "确认拍摄完成",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclyqllinbg",
+                                name: "确认拍摄完成",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "外包拍摄负责人",
+                                id: "radioField_lyqkh2nw"
+                            }
+                        }
                     ]
                 },
 
@@ -1756,6 +1807,23 @@ module.exports = {
                                 id: "employeeField_lyqkh2mw"
                             }
                         },
+                        {
+                            from: {
+                                id: "node_oclyqllinbg",
+                                name: "确认拍摄完成",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclyqllinbg",
+                                name: "确认拍摄完成",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "外包拍摄负责人",
+                                id: "radioField_lyqkh2nw"
+                            }
+                        }
                     ]
                 },
 
@@ -3955,6 +4023,23 @@ module.exports = {
                                 name: "美编修图负责人",
                                 id: "employeeField_lyqkh2my"
                             }
+                        },
+                        {
+                            from: {
+                                id: "node_oclyqllinbj",
+                                name: "美工修图",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclyqllinbj",
+                                name: "美工修图",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "美编修图负责人",
+                                id: "employeeField_lyqkh2my"
+                            }
                         }
                     ]
                 },
@@ -5856,6 +5941,23 @@ module.exports = {
                             },
                             to: {
                                 id: "node_oclyqmp3fm3",
+                                name: "美工修图",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "美编修图负责人",
+                                id: "employeeField_lyqkh2my"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclyqllinbj",
+                                name: "美工修图",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclyqllinbj",
                                 name: "美工修图",
                                 status: ["HISTORY"]
                             },
