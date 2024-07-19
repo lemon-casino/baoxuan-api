@@ -65,9 +65,12 @@ const sort_user_table = async (title, id) => {
 
         // 循环便利title 数组 并且 给每个添加 一个字段 user_id:user.dingdingUserId
         for (let i = 0; i < title.length; i++) {
+            // 删除 title[i].id
+            delete title[i].id;
             title[i].userId = user.dingdingUserId;
             title[i].editRender = JSON.stringify(title[i].editRender);
         }
+
         await tian_mao_link_user_table.install_user_table_one(title);
     } catch (e) {
     }

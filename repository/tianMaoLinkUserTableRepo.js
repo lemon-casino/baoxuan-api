@@ -33,7 +33,7 @@ const get_roles = async (id) => {
             `select   role_name from roles where  role_id in (select  role_id from  users_roles where user_id=${id})`,
             {
                 raw: true,
-                logging: true
+                logging: false
             }
         )
 
@@ -61,7 +61,7 @@ const count_structure = async (id, tableType) => {
 const getAll_user_table_one = async (tableType) => {
     try {
         return await userTableStructureModel.findAll({
-            attributes: {exclude: ["userId", 'tableType']},
+            attributes: {exclude: ["userId" ]},
             where: {
                 user_id: "all-one",
                 tableType: tableType
@@ -77,7 +77,7 @@ const getAll_user_table_one = async (tableType) => {
 const getAll_user_table = async (dingdingUserId, tableType) => {
     try {
         return await userTableStructureModel.findAll({
-            attributes: {exclude: ["userId", 'tableType']},
+            attributes: {exclude: ["userId"]},
             where: {
                 user_id: dingdingUserId,
                 tableType: tableType
