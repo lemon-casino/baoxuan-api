@@ -81,7 +81,6 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
             problem,
             state
         )
-        console.log("完成 2 getTaoBaoSingleItemsWithStatistic")
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -97,9 +96,7 @@ const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
  */
 const getSearchDataTaoBaoSingleItem = async (req, res, next) => {
     try {
-        console.log("getSearchDataTaoBaoSingleItem")
         const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(req.user.id)
-        console.log("getSearchDataTaoBaoSingleIt完成em")
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)

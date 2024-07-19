@@ -715,8 +715,6 @@ async function getLinkingCommon(productLineLeaders, singleItems, timeRange, incl
         ongoing: {items: [], sum: 0},
         done: {items: [], sum: 0}
     };
-
-    console.log(productLineLeaders)
     // 使用 Promise.all 并行执行多个异步任务
     const [runningErrorLinkIds, completeErrorLinkIds, errorResult, withinThreeDays] = await Promise.all([
         flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.RUNNING),
@@ -728,10 +726,11 @@ async function getLinkingCommon(productLineLeaders, singleItems, timeRange, incl
     // 总异常数据
     result.error = errorResult;
     const theLinkidOfThePersonInCharge = await singleItemTaoBaoRepo.getproductLineLeaders(productLineLeaders, timeRange)
-    console.log("xx", theLinkidOfThePersonInCharge)
+    let jisu = new Set()
     const transformData = (data) => {
+        //清空jisu 的数据
+        jisu.clear()
         const resultMap = {};
-
         //   console.log(data)
         //查询 天猫连接数据中 用户存在的linkid
         data.forEach(entry => {
@@ -742,32 +741,26 @@ async function getLinkingCommon(productLineLeaders, singleItems, timeRange, incl
                     if (!resultMap[issue]) {
                         resultMap[issue] = {name: issue, sum: 0, ids: []};
                     }
+                    console.log("id", id)
+                    jisu.add(id)
                     resultMap[issue].sum++;
                     resultMap[issue].ids.push(id);
                 });
             }
-
-
         });
 
         return Object.values(resultMap);
     };
-
     const transformCompletedData = (data) => {
         return data.map(entry => ({
             [entry.textField_value]: JSON.parse(entry.multiSelectField_value)
         }));
     };
-
-    result.ongoing.sum = runningErrorLinkIds.length;
     result.ongoing.items = transformData(runningErrorLinkIds);
-
+    result.ongoing.sum = jisu.size;
     completeErrorLinkIds.push(...transformCompletedData(withinThreeDays));
-
     result.done.items = transformData(completeErrorLinkIds);
-    result.done.sum = completeErrorLinkIds.length;
-
-    console.log("结束");
+    result.done.sum = jisu.size;
     return result;
 }
 
