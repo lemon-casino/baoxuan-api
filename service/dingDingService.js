@@ -26,7 +26,7 @@ const flowFormService = require("@/service/flowFormService")
 const formReviewRepo = require("@/repository/formReviewRepo")
 const flowCommonService = require("./common/flowCommonService")
 const outModifyPictureVisionPatch = require("@/patch/outModifyPictureVisionPatch")
-const {patchOfflineTransmittedActivity} = require("@/patch/patchUtil")
+const patchUtil = require("@/patch/patchUtil")
 const RemoteError = require("@/error/remoteError");
 
 // ===============公共方法 start=====================
@@ -298,7 +298,8 @@ const getFinishedFlows = async (timeRange) => {
     flows = flows.sort((curr, next) => dateUtil.formatGMT(curr.modifiedTimeGMT) - dateUtil.formatGMT(next.modifiedTimeGMT))
     // 对历史数据打补丁
     for (let flow of flows) {
-        flow = patchOfflineTransmittedActivity(flow)
+        flow = patchUtil.patchOfflineTransmittedActivity(flow)
+        flow = patchUtil.patchFlowData(flow)
     }
     return flows
 }
@@ -403,14 +404,14 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
     // 注意📢：如果已经保存到Redis中的流程中的reviewId需要继承，要不流程表单更新后节点id会变动
     const todayFlows = await globalGetter.getTodayFlows()
     for (let flow of flows) {
-
         // 给数据打补丁：流程、表单统计混乱
         const patchFlows = outModifyPictureVisionPatch.filter(item => item.processInstanceId === flow.processInstanceId)
         if (patchFlows.length > 0) {
             flow.data[patchFlows[0].missingFieldId] = patchFlows[0].fieldValue
         }
 
-        flow = patchOfflineTransmittedActivity(flow)
+        flow = patchUtil.patchOfflineTransmittedActivity(flow)
+        flow = patchUtil.patchFlowData(flow)
 
         const reviewItems = flow.overallprocessflow
         if (!reviewItems || reviewItems.length === 0) {
