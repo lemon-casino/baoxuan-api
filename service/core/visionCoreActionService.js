@@ -1,15 +1,9 @@
 const _ = require("lodash")
 const Bignumber = require("bignumber.js")
-const userRepo = require("@/repository/userRepo")
-const outUsersRepo = require("@/repository/outUsersRepo")
 const flowRepo = require("@/repository/flowRepo")
 const userCommonService = require("@/service/common/userCommonService")
-const flowCommonService = require("@/service/common/flowCommonService")
 const coreActionStatService = require("@/service/core/coreActionStatService")
-const {flowReviewTypeConst, flowStatusConst} = require("@/const/flowConst")
 const coreActionStatTypeConst = require("@/const/coreActionStatTypeConst")
-const {opFunctions} = require("@/const/ruleConst/operatorConst")
-const {visionFormDoneActivityIds} = require("@/const/tmp/coreActionsConst")
 const regexConst = require("@/const/regexConst")
 const visionConst = require("@/const/tmp/visionConst")
 const statResultTemplateConst = require("@/const/statResultTemplateConst")
@@ -167,7 +161,7 @@ const statVisionUserFlowData = async (userActivity, flow) => {
 
     const visionUserFlowDataStatResultTemplate = _.cloneDeep(statResultTemplateConst.visionUserFlowDataStatResultTemplate)
 
-    const userTagsFormItemKeywordsMappings = visionConst.tagsFormItemKeywordsMapping.filter(item => userTagCodes.filter(tagCode => tagCode === item.tagCode).length > 0)
+    const userTagsFormItemKeywordsMappings = visionConst.getCompletedTagsFormItemKeywordsMapping(flow.formUuid)
     if (userTagsFormItemKeywordsMappings.length === 0) {
         return []
     }

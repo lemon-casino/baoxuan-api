@@ -10,6 +10,7 @@ const visionUserFlowDataStatResultTemplate = [
     {nameCN: "剪辑", formFieldNameKWs: ["剪辑", "任务数量"], workload: 0, children: []},
     {nameCN: "建模", formFieldNameKWs: ["建模"], workload: 0, children: []},
     {nameCN: "排版", formFieldNameKWs: ["排版", "套版"], workload: 0, children: []},
+    {nameCN: "开版", formFieldNameKWs: ["开版"], workload: 0, children: []},
     {
         nameCN: "非AI图片",
         formFieldNameKWs: ["拍摄图片数量", "拍摄视频数量", "摄影数量", "摄影非AI", "摄像非AI"],

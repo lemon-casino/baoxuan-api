@@ -1,17 +1,28 @@
 const FlowFormModel = require("@/model/flowfrom");
 const biResponse = require("@/utils/biResponse")
 const flowFormService = require("@/service/flowFormService")
+const taskService = require("@/service/taskService")
 
 // 获取流程表单列表
-const getFlowFormList = (req, res) => {
+const getFlowFormList = async (req, res) => {
     let queryData = {};
     if (req.query.status) {
         queryData.status = req.query.status;
     }
-    //获取流程列表
-    FlowFormModel.getFlowFormList(queryData).then(function (menuTree) {
-        return res.send(biResponse.success(menuTree || []));
-    });
+
+    // 影刀调用时，同步最新的表单信息
+    if (req.query.from && req.query.from === "yingdao") {
+        // 天鹏：281338354935548795
+        // 健康：01576511383236229829
+        // 涛哥：073105202321093148
+        const creatorIds = ["073105202321093148", "01576511383236229829", "281338354935548795"]
+        for (const creatorId of creatorIds) {
+            await taskService.syncForm(creatorId)
+        }
+    }
+
+    const menuTree = await FlowFormModel.getFlowFormList(queryData)
+    return res.send(biResponse.success(menuTree || []));
 }
 
 // 更新流程表单数据

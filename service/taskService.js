@@ -152,9 +152,9 @@ const syncUserWithDepartment = async () => {
     console.log("同步完成")
 }
 
-const syncForm = async () => {
+const syncForm = async (userId) => {
     console.log("同步进行中...")
-    await flowFormService.syncFormsFromDingDing()
+    await flowFormService.syncFormsFromDingDing(userId)
     logger.info("同步完成：syncForm")
     console.log("同步完成")
 }
