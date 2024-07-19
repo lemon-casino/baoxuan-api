@@ -21,6 +21,15 @@ module.exports = sequelize => {
       comment: null,
       field: "tag_name"
     },
+    remark: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "remark"
+    },
     createTime: {
       type: DataTypes.DATE,
       allowNull: false,
