@@ -1615,7 +1615,7 @@ module.exports = {
                         }
                     ]
                 },
-                
+
                 {
                     formName: "外包拍摄视觉流程",
                     formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
@@ -5191,6 +5191,67 @@ module.exports = {
                             }
                         }
                     ]
+                },
+
+                {
+                    formName: "运营美编修图流程",
+                    formId: "FORM-D2D43EACD2564C94AC549E40B67A9EEDQFEZ",
+                    flowDetailsRules: [
+                        {fieldId: "radioField_lx41cnvt", opCode: opCodes.Equal, value: "全套"}
+                    ],
+                    flowNodeRules: [
+                        {
+                            from: {
+                                id: "node_oclyqp11yp1",
+                                name: "修图师修图",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclyqp11yp1",
+                                name: "修图师修图",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "美编修图负责人",
+                                id: "employeeField_lx41cnvv"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclyqp11yp2",
+                                name: "AI美编修图",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclyqp11yp2",
+                                name: "AI美编修图",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "AI修图负责人",
+                                id: "employeeField_lyqolzyk"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclyqp11yp3",
+                                name: "3D建模",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclyqp11yp3",
+                                name: "3D建模",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "3D修图负责人",
+                                id: "employeeField_lyqolzyl"
+                            }
+                        },
+                    ]
                 }
             ]
         },
@@ -6903,7 +6964,7 @@ module.exports = {
                         }
                     ]
                 },
-               
+
                 {
                     formName: "美编修图任务",
                     formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYC",
@@ -7272,6 +7333,66 @@ module.exports = {
                                 id: "textField_lx48e5gk"
                             }
                         }
+                    ]
+                },
+                {
+                    formName: "运营美编修图流程",
+                    formId: "FORM-D2D43EACD2564C94AC549E40B67A9EEDQFEZ",
+                    flowDetailsRules: [
+                        {fieldId: "radioField_lx41cnvt", opCode: opCodes.Equal, value: "全套"}
+                    ],
+                    flowNodeRules: [
+                        {
+                            from: {
+                                id: "node_oclyqp11yp1",
+                                name: "修图师修图",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclyqp11yp1",
+                                name: "修图师修图",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "美编修图负责人",
+                                id: "employeeField_lx41cnvv"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclyqp11yp2",
+                                name: "AI美编修图",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclyqp11yp2",
+                                name: "AI美编修图",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "AI修图负责人",
+                                id: "employeeField_lyqolzyk"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclyqp11yp3",
+                                name: "3D建模",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclyqp11yp3",
+                                name: "3D建模",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "3D修图负责人",
+                                id: "employeeField_lyqolzyl"
+                            }
+                        },
                     ]
                 }
             ]

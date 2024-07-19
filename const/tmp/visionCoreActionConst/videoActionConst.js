@@ -2288,6 +2288,33 @@ module.exports = {
                             }
                         }
                     ]
+                },
+
+                {
+                    formName: "运营美编修图流程",
+                    formId: "FORM-D2D43EACD2564C94AC549E40B67A9EEDQFEZ",
+                    flowDetailsRules: [
+                        {fieldId: "radioField_lx41cnvt", opCode: opCodes.Equal, value: "视频"}
+                    ],
+                    flowNodeRules: [
+                        {
+                            from: {
+                                id: "node_oclyqp11yp4",
+                                name: "视频剪辑",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclyqp11yp4",
+                                name: "视频剪辑",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "剪辑负责人",
+                                id: "employeeField_lx41cnvz"
+                            }
+                        }
+                    ]
                 }
             ]
         },
@@ -2893,6 +2920,33 @@ module.exports = {
                                 from: "process",
                                 name: "视频剪辑",
                                 id: "node_ocluwe3jmp1"
+                            }
+                        }
+                    ]
+                },
+
+                {
+                    formName: "运营美编修图流程",
+                    formId: "FORM-D2D43EACD2564C94AC549E40B67A9EEDQFEZ",
+                    flowDetailsRules: [
+                        {fieldId: "radioField_lx41cnvt", opCode: opCodes.Equal, value: "视频"}
+                    ],
+                    flowNodeRules: [
+                        {
+                            from: {
+                                id: "node_oclyqp11yp4",
+                                name: "视频剪辑",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclyqp11yp4",
+                                name: "视频剪辑",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "剪辑负责人",
+                                id: "employeeField_lx41cnvz"
                             }
                         }
                     ]
