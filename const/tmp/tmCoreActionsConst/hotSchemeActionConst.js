@@ -104,6 +104,83 @@ module.exports = [
                                 }
                             },
                         ]
+                    },
+                    {
+                        formName: "爆爆款方案全平台流程",
+                        formId: "FORM-1BFAC105DDC9494B8081B6B515AC32F0453A",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lxkb9f8z", opCode: opCodes.Equal, value: "新品"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclxkbw8kwf",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxkbw8kwf",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "提交竞店ID",
+                                    id: "node_oclxkbw8kwf"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxkbw8kwe",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxkbw8kwe",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_lxkb9f9a"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclymct9k26",
+                                    name: "执行统计五维表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclymct9k26",
+                                    name: "执行统计五维表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_lxkb9f9a"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclymct9k27",
+                                    name: "审核执行统计五维统计表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclymct9k27",
+                                    name: "审核执行统计五维统计表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_lxkb9f9a"
+                                }
+                            }
+                        ]
                     }
                 ]
             },
@@ -153,6 +230,32 @@ module.exports = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "爆爆款方案全平台流程",
+                        formId: "FORM-1BFAC105DDC9494B8081B6B515AC32F0453A",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lxkb9f8z", opCode: opCodes.Equal, value: "新品"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclymct9k28",
+                                    name: "完成五维表分析与样品明细",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclymct9k28",
+                                    name: "完成五维表分析与样品明细",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "完成五维表分析与样品明细",
+                                    id: "node_oclymct9k28"
+                                }
+                            }
+                        ]
                     }
                 ]
             },
@@ -182,6 +285,32 @@ module.exports = [
                                     from: "process",
                                     name: "完成五维表分析",
                                     id: "node_oclxkcjr639"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "爆爆款方案全平台流程",
+                        formId: "FORM-1BFAC105DDC9494B8081B6B515AC32F0453A",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lxkb9f8z", opCode: opCodes.Equal, value: "新品"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclymct9k28",
+                                    name: "完成五维表分析与样品明细",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclymct9k28",
+                                    name: "完成五维表分析与样品明细",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "完成五维表分析与样品明细",
+                                    id: "node_oclymct9k28"
                                 }
                             }
                         ]
@@ -349,6 +478,83 @@ module.exports = [
                                 }
                             },
                         ]
+                    },
+                    {
+                        formName: "爆爆款方案全平台流程",
+                        formId: "FORM-1BFAC105DDC9494B8081B6B515AC32F0453A",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lxkb9f8z", opCode: opCodes.Equal, value: "老品"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclymct9k21",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclymct9k21",
+                                    name: "提交竞店ID",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "提交竞店ID",
+                                    id: "node_oclymct9k21"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxkd9uqud",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxkd9uqud",
+                                    name: "分配执行",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_lxkb9f9a"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclymct9k26",
+                                    name: "执行统计五维表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclymct9k26",
+                                    name: "执行统计五维表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_lxkb9f9a"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclymct9k27",
+                                    name: "审核执行统计五维统计表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclymct9k27",
+                                    name: "审核执行统计五维统计表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_lxkb9f9a"
+                                }
+                            }
+                        ]
                     }
                 ]
             },
@@ -438,6 +644,32 @@ module.exports = [
                                 }
                             }
                         ]
+                    },
+                    {
+                        formName: "爆爆款方案全平台流程",
+                        formId: "FORM-1BFAC105DDC9494B8081B6B515AC32F0453A",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lxkb9f8z", opCode: opCodes.Equal, value: "老品"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclymct9k28",
+                                    name: "完成五维表分析与样品明细",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclymct9k28",
+                                    name: "完成五维表分析与样品明细",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "完成五维表分析与样品明细",
+                                    id: "node_oclymct9k28"
+                                }
+                            }
+                        ]
                     }
                 ]
             },
@@ -507,6 +739,32 @@ module.exports = [
                                     from: "form",
                                     name: "负责运营",
                                     id: "employeeField_loy3l5ox"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        formName: "爆爆款方案全平台流程",
+                        formId: "FORM-1BFAC105DDC9494B8081B6B515AC32F0453A",
+                        flowDetailsRules: [
+                            {fieldId: "radioField_lxkb9f8z", opCode: opCodes.Equal, value: "老品"}
+                        ],
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclymct9k28",
+                                    name: "完成五维表分析与样品明细",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclymct9k28",
+                                    name: "完成五维表分析与样品明细",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "完成五维表分析与样品明细",
+                                    id: "node_oclymct9k28"
                                 }
                             }
                         ]
