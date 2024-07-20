@@ -1,13 +1,18 @@
 const deptCoreActionFormActivityRuleRepo = require("@/repository/deptCoreActionFormActivityRuleRepo")
 const formReviewRepo = require("@/repository/formReviewRepo")
 const algorithmUtil = require("@/utils/algorithmUtil")
+const flowConst = require("@/const/flowConst")
 
 const getFormActivityRules = async (formId, formRuleId) => {
-    const formReviews = await formReviewRepo.getFormReviewByFormId(formId)
+    const diffVersionsFormReviews = await formReviewRepo.getFormReviewByFormId(formId)
+    // 将第发起节点的id替换
+    for (const item of diffVersionsFormReviews) {
+        item.formReview[0].id = flowConst.startActivityId
+    }
     const formActivityRules = await deptCoreActionFormActivityRuleRepo.getFormActivityRules(formRuleId)
     // 将formActivityRules信息附加到formReviews
     for (const formActivityRule of formActivityRules) {
-        const currVersionFormActivity = formReviews.find(item => item.id === formActivityRule.version)
+        const currVersionFormActivity = diffVersionsFormReviews.find(item => item.id === formActivityRule.version)
         const ruledActivity = algorithmUtil.getJsonFromUnionFormattedJsonArr(currVersionFormActivity.formReview, "children", "id", formActivityRule.activityId)
         if (ruledActivity) {
             ruledActivity.status = formActivityRule.status
@@ -16,7 +21,7 @@ const getFormActivityRules = async (formId, formRuleId) => {
         }
     }
 
-    return {formReviews, activityConditions: formActivityRules}
+    return {formReviews: diffVersionsFormReviews, activityConditions: formActivityRules}
 }
 
 const saveFormActivityRule = async (data) => {
