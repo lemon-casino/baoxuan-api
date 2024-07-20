@@ -100,8 +100,9 @@ const newArtEditorTagsFormItemKeywordsMapping = {
     ]
 }
 
+// 下面的节点信息也是要统计的美编节点数据（前期起名不规范）
 const confusedActivityNameForStatFormData = [
-    "中美编自修", "中美编负责人", "套版美编负责人", "套版编负责人", "小美编负责人"
+    "中美编自修", "中美编负责人", "套版美编负责人", "套版编负责人", "小美编负责人", "确认自修外修"
 ]
 
 /**
