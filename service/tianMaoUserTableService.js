@@ -91,8 +91,8 @@ const getExceptionLinks = async (type) => {
     try {
         if (type === 1) {
             return await processType1Records();
-        } else if (type === 2) {
-            const records = await tian_mao_allocation.exceptionLinks(2)
+        } else if (type === 2 || type === 3) {
+            const records = await tian_mao_allocation.exceptionLinks(type)
             return records.map(record => {
                 return Object.fromEntries(Object.entries(record).filter(([key, value]) => value !== null));
             });
