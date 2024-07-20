@@ -449,7 +449,166 @@ module.exports = [
                                 }
                             }
                         ]
-                    }
+                    },
+                    {
+                        formName: "采购任务运营发布(全平台)",
+                        formId: "FORM-6A9E954714A64B8FA38BA44320CA928FDPBO",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclxo08rk41",
+                                    name: "反选运营提交发起市场统计任务",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxo08rk41",
+                                    name: "反选运营提交发起市场统计任务",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "反选运营负责人",
+                                    id: "employeeField_lxn3p28q"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvesclp04",
+                                    name: "反选运营提交市场分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvesclp04",
+                                    name: "反选运营提交市场分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "反选运营负责人",
+                                    id: "employeeField_lxn3p28q"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxo08rk42",
+                                    name: "审核市场分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxo08rk42",
+                                    name: "审核市场分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "反选运营负责人",
+                                    id: "employeeField_lxn3p28q"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxo86kpl9",
+                                    name: "反选运营是否需要五维分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxo86kpl9",
+                                    name: "反选运营是否需要五维分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "反选运营负责人",
+                                    id: "employeeField_lxn3p28q"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxo86kplb",
+                                    name: "运营提交竞品ID",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxo86kplb",
+                                    name: "运营提交竞品ID",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "反选运营负责人",
+                                    id: "employeeField_lxn3p28q"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxo86kplc",
+                                    name: "分配执行统计五维",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxo86kplc",
+                                    name: "分配执行统计五维",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "反选运营负责人",
+                                    id: "employeeField_lxn3p28q"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxo86kpld",
+                                    name: "执行提交五维表",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxo86kpld",
+                                    name: "执行提交五维表",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "反选运营负责人",
+                                    id: "employeeField_lxn3p28q"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxo86kple",
+                                    name: "运营审核五维分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxo86kple",
+                                    name: "运营审核五维分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "反选运营负责人",
+                                    id: "employeeField_lxn3p28q"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxo86kplf",
+                                    name: "平台负责人审核五维方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxo86kplf",
+                                    name: "平台负责人审核五维方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "反选运营负责人",
+                                    id: "employeeField_lxn3p28q"
+                                }
+                            },
+                        ]
+                    },
                 ]
             },
             {
@@ -572,7 +731,30 @@ module.exports = [
                                 }
                             }
                         ]
-                    }
+                    },
+                    {
+                        formName: "采购任务运营发布(全平台)",
+                        formId: "FORM-6A9E954714A64B8FA38BA44320CA928FDPBO",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclxnz9sbo1",
+                                    name: "提交反选信息",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxnz9sbo1",
+                                    name: "提交反选信息",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "反选运营负责人",
+                                    id: "employeeField_lxn3p28q"
+                                }
+                            }
+                        ]
+                    },
                 ]
             },
             {
@@ -661,7 +843,30 @@ module.exports = [
                                 }
                             }
                         ]
-                    }
+                    },
+                    {
+                        formName: "采购任务运营发布(全平台)",
+                        formId: "FORM-6A9E954714A64B8FA38BA44320CA928FDPBO",
+                        flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclxnz9sbo1",
+                                    name: "提交反选信息",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclxnz9sbo1",
+                                    name: "提交反选信息",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "反选运营负责人",
+                                    id: "employeeField_lxn3p28q"
+                                }
+                            }
+                        ]
+                    },
                 ]
             }
         ]
