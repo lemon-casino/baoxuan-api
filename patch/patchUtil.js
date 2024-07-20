@@ -1,5 +1,6 @@
 const transmittedOfflineActivityPatch = require("./transmittedOfflineActivityPatch")
 const visionErrAllWorksInOnePatch = require("./visionErrAllWorksInOnePatch")
+const flowDataPatch = require("./flowDataPatch")
 
 const patchOfflineTransmittedActivity = (flow) => {
     const tmpRequirePatchedFlows = transmittedOfflineActivityPatch.filter(item => item.processInstanceId === flow.processInstanceId)
@@ -37,7 +38,17 @@ const getUserTmpTags = (userName, processInstanceId) => {
     return []
 }
 
+const patchFlowData = (flow) => {
+    const requiredPatchedFlow = flowDataPatch.find(item => item.processInstanceId === flow.processInstanceId)
+    if (requiredPatchedFlow) {
+        flow.data = {...flow.data, ...requiredPatchedFlow.patchData}
+        return flow
+    }
+    return flow
+}
+
 module.exports = {
     patchOfflineTransmittedActivity,
-    getUserTmpTags
+    getUserTmpTags,
+    patchFlowData
 }

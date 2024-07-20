@@ -25,7 +25,7 @@ const whiteList = require("@/config/whiteList")
 const extensionsConst = require("@/const/tmp/extensionsConst")
 const deptHiddenFormsConst = require("@/const/tmp/deptHiddenFormsConst")
 const deptFlowFormConst = require("@/const/deptFlowFormConst")
-const {patchOfflineTransmittedActivity} = require("@/patch/patchUtil")
+const patchUtil = require("@/patch/patchUtil")
 const userCommonService = require("@/service/common/userCommonService");
 const outUsersRepo = require("@/repository/outUsersRepo");
 
@@ -533,7 +533,8 @@ const syncMissingCompletedFlows = async () => {
     let syncCount = 0
     for (let flow of finishedFlows) {
         // 对历史数据打补丁
-        flow = patchOfflineTransmittedActivity(flow)
+        flow = patchUtil.patchOfflineTransmittedActivity(flow)
+        flow = patchUtil.patchFlowData(flow)
 
         // 同一天的完工流程可以存在失败的情况 已经入库
         if (dateUtil.formatGMT2Str(flow.modifiedTimeGMT, "YYYY-MM-DD") === pullTimeRange[0].toString()) {
