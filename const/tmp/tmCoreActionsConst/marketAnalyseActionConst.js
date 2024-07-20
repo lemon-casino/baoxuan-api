@@ -647,12 +647,12 @@ module.exports = [
                                 from: {
                                     id: "node_oclvugt7k5b",
                                     name: "运营提交反选信息",
-                                    status: ["TODO"]
+                                    status: ["HISTORY"]
                                 },
                                 to: {
                                     id: "node_oclvugt7k5b",
                                     name: "运营提交反选信息",
-                                    status: ["TODO"]
+                                    status: ["HISTORY"]
                                 },
                                 ownerRule: {
                                     from: "form",
