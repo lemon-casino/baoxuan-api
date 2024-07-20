@@ -27,6 +27,16 @@ const unifiedConfusedUserNames = [
 
 const tagsFormItemKeywordsMapping = [
     {
+        tagCode: "lArtEditorGroup",
+        includeFormItemKws: ["大美编", "精修数量", "重点精修数量", "普通数量", "普通修图数量", "美编权重数据普通", "美编权重数据精修", "美编权重数据重点精修", "开版修图数量"],
+        excludeFormItemKws: ["小美编", "中美编", "外包"]
+    },
+    {
+        tagCode: "sArtEditorGroup",
+        includeFormItemKws: ["小美编", "简单数量", "简单修图数量", "普通数量", "普通修图数量", "美编权重数据普通", "美编权重数据简单"],
+        excludeFormItemKws: ["大美编", "中美编", "外包"]
+    },
+    {
         tagCode: "AIGroup",
         includeFormItemKws: ["AI"],
         excludeFormItemKws: ["非AI", "摄影", "摄像"]
@@ -95,18 +105,20 @@ const confusedActivityNameForStatFormData = [
 ]
 
 /**
- *  因为视觉流程调整，需要兼顾对老流程的统计：取消大小没变的区分
- *
+ * 因为视觉流程调整，需要兼顾对老流程的统计：取消大小美编的区分
  *
  * @param formId
  * @returns {({tagCode: string, excludeFormItemKws: string[], includeFormItemKws: string[]}|{tagCode: string, excludeFormItemKws: string[], includeFormItemKws: string[]}|{tagCode: string, excludeFormItemKws: *[], includeFormItemKws: string[]}|{tagCode: string, excludeFormItemKws: string[], includeFormItemKws: string[]}|{tagCode: string, excludeFormItemKws: string[], includeFormItemKws: string[]})[]}
  */
 const getCompletedTagsFormItemKeywordsMapping = (formId) => {
+
     const requiredNewArtEditorKWsMapping = newArtEditorTagsFormItemKeywordsMapping.formIds.includes(formId)
     if (requiredNewArtEditorKWsMapping) {
-        return tagsFormItemKeywordsMapping.concat(newArtEditorTagsFormItemKeywordsMapping.tagsKWsMapping)
+        const result = newArtEditorTagsFormItemKeywordsMapping.tagsKWsMapping.concat(tagsFormItemKeywordsMapping)
+        return result
     }
-    return tagsFormItemKeywordsMapping.concat(historyArtEditorTagsFormItemKeywordsMapping)
+    const result = historyArtEditorTagsFormItemKeywordsMapping.concat(tagsFormItemKeywordsMapping)
+    return result
 }
 
 module.exports = {

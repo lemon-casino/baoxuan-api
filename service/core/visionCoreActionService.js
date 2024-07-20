@@ -35,12 +35,7 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
     const flows = await coreActionStatService.filterFlows(configuredFormIds, startDoneDate, endDoneDate)
 
     // 基于人的汇总(最基本的明细统计)
-    const actionStatBasedOnUserResult = await coreActionStatService.stat(
-        requiredUsers,
-        flows,
-        coreActionConfig,
-        statVisionUserFlowData
-    )
+    const actionStatBasedOnUserResult = await coreActionStatService.stat(requiredUsers, flows, coreActionConfig, statVisionUserFlowData)
 
     // 区分核心动作、核心人员统计
     const isFromCoreActionMenu = statType === coreActionStatTypeConst.StatAction
@@ -162,6 +157,10 @@ const statVisionUserFlowData = async (userActivity, flow) => {
     const visionUserFlowDataStatResultTemplate = _.cloneDeep(statResultTemplateConst.visionUserFlowDataStatResultTemplate)
 
     const userTagsFormItemKeywordsMappings = visionConst.getCompletedTagsFormItemKeywordsMapping(flow.formUuid)
+        .filter(item => {
+            return userTagCodes.filter(tagCode => tagCode === item.tagCode).length > 0
+        })
+
     if (userTagsFormItemKeywordsMappings.length === 0) {
         return []
     }
@@ -265,25 +264,15 @@ const createFlowDataStatNode = (node) => {
     const completedWorkload = sumSameNameWorkload(completedFlowDataStatNodes)
 
     const newWorkloadStatNode = {
-        nameCN: "工作量",
-        excludeUpSum: true,
-        sumAlone: true,
-        uniqueIds: true,
-        children: [
-            {
-                nameCN: "进行中",
-                tooltip: "该工作量会统计表单中预计的数据",
-                sumAlone: true,
-                uniqueIds: true,
-                children: runningWorkload,
-            },
-            {
-                nameCN: "已完成",
-                sumAlone: true,
-                uniqueIds: true,
-                children: completedWorkload
-            }
-        ]
+        nameCN: "工作量", excludeUpSum: true, sumAlone: true, uniqueIds: true, children: [{
+            nameCN: "进行中",
+            tooltip: "该工作量会统计表单中预计的数据",
+            sumAlone: true,
+            uniqueIds: true,
+            children: runningWorkload,
+        }, {
+            nameCN: "已完成", sumAlone: true, uniqueIds: true, children: completedWorkload
+        }]
     }
 
     return flowUtil.statSumFromBottom(newWorkloadStatNode)
@@ -311,10 +300,7 @@ const sumSameNameWorkload = (flows) => {
                 resultNode.sum = new Bignumber(resultNode.sum).plus(details.workload).toString()
             } else {
                 result.push({
-                    nameCN: details.nameCN,
-                    sum: details.workload,
-                    ids: [flow.processInstanceId],
-                    sumAlone: true
+                    nameCN: details.nameCN, sum: details.workload, ids: [flow.processInstanceId], sumAlone: true
                 })
             }
         }
