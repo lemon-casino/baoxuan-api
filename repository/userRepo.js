@@ -124,20 +124,6 @@ const getDepartmentUsers = async (userDDId, deptId) => {
 }
 
 /**
- * 根据在职人员将库中的其他人员设置为离职
- *
- * @param onJobUserIds
- * @returns {Promise<void>}
- */
-const updateUserResignByOnJobUserIds = async (onJobUserIds) => {
-    await usersModel.update({
-        isResign: true, updateTime: new Date()
-    }, {
-        where: {dingdingUserId: {"$notIn": onJobUserIds}}
-    })
-}
-
-/**
  * 保存用户信息
  *
  * @param user
@@ -277,7 +263,6 @@ module.exports = {
     getAllUsersWithoutPrivateFields,
     getEnabledUsers,
     getDepartmentUsers,
-    updateUserResignByOnJobUserIds,
     saveUser,
     updateUserResignInfo,
     getAllResignUsers,
