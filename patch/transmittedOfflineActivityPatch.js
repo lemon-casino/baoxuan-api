@@ -1,5 +1,31 @@
 module.exports = [
     {
+        processInstanceId: "a24a5390-ff3d-47c5-b314-63a9f1547b6d",
+        title: "闻晶发起的魔法女孩马克杯运营视觉流程（拍摄+美编）",
+        targetActivityId: "node_oclx4bnhfb3",
+        replacedActivities: [
+            {
+                "processInstanceId": "bb04aa5e-2a2d-4c84-afdb-12263d68cee8",
+                "operateTimeGMT": "2024-07-20T15:24Z",
+                "showName": "大美编修图",
+                "operateType": "EXECUTE_TASK_NORMAL",
+                "remark": "",
+                "taskHoldTimeGMT": 0,
+                "type": "",
+                "operatorName": "张月坤",
+                "actionExit": "submit",
+                "operatorUserId": "045820505124242300",
+                "activityId": "node_oclx4bnhfb3",
+                "size": 1,
+                "dataId": 30574454866,
+                "domainList": [],
+                "operatorDisplayName": "张月坤",
+                "action": "同意",
+                "taskId": "null"
+            }
+        ]
+    },
+    {
         processInstanceId: "bb04aa5e-2a2d-4c84-afdb-12263d68cee8",
         title: "安静淼发起的保温饭桶换货补图运营视觉流程（拍摄+美编）",
         targetActivityId: "node_oclx4bnhfb3",
