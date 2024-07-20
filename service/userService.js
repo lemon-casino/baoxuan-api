@@ -322,11 +322,6 @@ const syncUserToDB = async (usersInRedis) => {
             }
         }
     }
-
-    // 更新离职状态
-    const onJobUserIds = usersInRedis.map(user => user.userid)
-    await userRepo.updateUserResignByOnJobUserIds(onJobUserIds)
-
 }
 
 const getDingDingUserIdAndNickname = async () => {

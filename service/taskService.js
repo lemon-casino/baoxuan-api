@@ -32,6 +32,8 @@ const {
     getLinknewvaCount
 } = require("./singleItemTaoBaoService")
 const tianmao__user_tableService = require("@/service/tianMaoUserTableService")
+const resignEmployeePatch = require("@/patch/resignEmployeePatch")
+
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
     const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
@@ -187,13 +189,19 @@ const syncResignEmployeeInfo = async () => {
     const allResignEmployees = await intelligentHRReq.getResignEmployees(accessToken)
     // 更新人员离职信息
     const onJobEmployees = await redisRepo.getAllUsersDetail()
+
     for (const employee of allResignEmployees) {
+        if (resignEmployeePatch.userIds.includes(employee.userId)) {
+            continue
+        }
+
         // employee中的userId和db中的userId不对应，对应dingdingUserId
         const newEmployee = {}
         newEmployee.dingdingUserId = employee.userId
         if (employee.lastWorkDay) {
             newEmployee.lastWorkDay = dateUtil.convertTimestampToDate(employee.lastWorkDay)
         }
+        newEmployee.isResign = true
         newEmployee.resignStatus = employee.status
         newEmployee.preStatus = employee.preStatus
         newEmployee.reasonMemo = employee.reasonMemo
