@@ -65,9 +65,12 @@ const sort_user_table = async (title, id) => {
 
         // 循环便利title 数组 并且 给每个添加 一个字段 user_id:user.dingdingUserId
         for (let i = 0; i < title.length; i++) {
+            // 删除 title[i].id
+            delete title[i].id;
             title[i].userId = user.dingdingUserId;
             title[i].editRender = JSON.stringify(title[i].editRender);
         }
+
         await tian_mao_link_user_table.install_user_table_one(title);
     } catch (e) {
     }
@@ -88,8 +91,8 @@ const getExceptionLinks = async (type) => {
     try {
         if (type === 1) {
             return await processType1Records();
-        } else if (type === 2) {
-            const records = await tian_mao_allocation.exceptionLinks(2)
+        } else if (type === 2 || type === 3) {
+            const records = await tian_mao_allocation.exceptionLinks(type)
             return records.map(record => {
                 return Object.fromEntries(Object.entries(record).filter(([key, value]) => value !== null));
             });
