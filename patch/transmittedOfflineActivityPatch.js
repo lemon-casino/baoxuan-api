@@ -8,7 +8,7 @@ module.exports = [
                 "processInstanceId": "bb04aa5e-2a2d-4c84-afdb-12263d68cee8",
                 "operateTimeGMT": "2024-07-19T10:54Z",
                 "showName": "大美编修图",
-                "operateType": "NEW_PROCESS",
+                "operateType": "EXECUTE_TASK_NORMAL",
                 "remark": "",
                 "taskHoldTimeGMT": 0,
                 "type": "",
@@ -20,7 +20,7 @@ module.exports = [
                 "dataId": 30574454866,
                 "domainList": [],
                 "operatorDisplayName": "张月坤",
-                "action": "大美编修图",
+                "action": "同意",
                 "taskId": "null"
             }
         ]

@@ -56,11 +56,6 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
                     for (let flow of currFlows) {
                         const processInstanceId = flow.processInstanceId
 
-
-                        if (processInstanceId === "8542a4e2-6374-4d28-956a-87efd99f67f1") {
-                            console.log('----')
-                        }
-
                         let operatorsActivity = []
                         const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
                         const matchedActivity = getMatchedActivity(fromNode, toNode, activities)
@@ -77,7 +72,7 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
                         // 根据是否逾期汇总个人的ids和sum
                         for (const operatorActivity of operatorsActivity) {
 
-                            const getUserStatResult = async (statusResult, flow) => {
+                            const getUserStatResult = async (statusResult, flow, operatorActivity) => {
 
                                 if (!userFlowDataStatFunc || !_.isFunction(userFlowDataStatFunc)) {
                                     return {
@@ -106,6 +101,7 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
                                     }
 
                                     const dataStatResult = await userFlowDataStatFunc(operatorActivity, tmpFlow)
+
                                     if (dataStatResult.length > 0) {
                                         userFlowDataStat = {
                                             processInstanceId: tmpFlow.processInstanceId,
@@ -117,7 +113,12 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
                                 return userFlowDataStat
                             }
 
-                            const userFlowDataStat = await getUserStatResult(statusResult, flow)
+                            const userFlowDataStat = await getUserStatResult(statusResult, flow, operatorActivity)
+
+
+                            if (flow.processInstanceId === "bb04aa5e-2a2d-4c84-afdb-12263d68cee8") {
+                                console.log("-----")
+                            }
 
                             let resultStatNode = null
                             if (matchedActivity.isOverDue) {
@@ -133,7 +134,22 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
                                 if (!currResultStatNode.ids.includes(processInstanceId)) {
                                     currResultStatNode.ids.push(processInstanceId)
                                     currResultStatNode.sum = currResultStatNode.ids.length
-                                    userFlowDataStat && currResultStatNode.userFlowsDataStat.push(userFlowDataStat)
+
+                                }
+
+                                // 同一人流程中会出现多次干不同的活，将本人所有该流程中节点工作量的统计去重处理才能保证不漏
+                                if (userFlowDataStat && userFlowDataStat.flowData.length > 0) {
+                                    const currFlowStat = currResultStatNode.userFlowsDataStat.find(item => item.processInstanceId == processInstanceId)
+                                    if (currFlowStat) {
+                                        const alreadyStatActivityNames = currFlowStat.flowData.map(item => item.nameCN)
+                                        for (const actStat of userFlowDataStat.flowData) {
+                                            if (!alreadyStatActivityNames.includes(actStat.nameCN)) {
+                                                currFlowStat.flowData.push(actStat)
+                                            }
+                                        }
+                                    } else {
+                                        currResultStatNode.userFlowsDataStat.push(userFlowDataStat)
+                                    }
                                 }
                             } else {
                                 resultStatNode = {

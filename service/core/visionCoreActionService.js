@@ -118,6 +118,7 @@ const filterUsersByTags = (users, tags) => {
  * @returns {Promise<*|*[]>}
  */
 const statVisionUserFlowData = async (userActivity, flow) => {
+
     // 当前用户统计到的节点需要时正在干活的节点才要汇总表单信息
     let {userName, tags: userTags, activity} = userActivity
 
