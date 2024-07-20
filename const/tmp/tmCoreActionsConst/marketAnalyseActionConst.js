@@ -553,6 +553,23 @@ module.exports = [
                                     name: "分配运营",
                                     id: "employeeField_lvesa8t3"
                                 }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvugt7k5b",
+                                    name: "运营提交反选信息",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvugt7k5b",
+                                    name: "运营提交反选信息",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
+                                }
                             }
                         ]
                     }
@@ -619,6 +636,23 @@ module.exports = [
                                     id: "node_oclvesclp07",
                                     name: "运营提交反选信息",
                                     status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "分配运营",
+                                    id: "employeeField_lvesa8t3"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclvugt7k5b",
+                                    name: "运营提交反选信息",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclvugt7k5b",
+                                    name: "运营提交反选信息",
+                                    status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "form",
