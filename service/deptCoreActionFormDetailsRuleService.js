@@ -2,25 +2,48 @@ const deptCoreActionFormDetailsRuleRepo = require("@/repository/deptCoreActionFo
 const flowFormDetailsRepo = require("@/repository/flowFormDetailsRepo")
 
 const getFormDetailsRule = async (formId, formRuleId) => {
-    const formDiffVersionDetails = await flowFormDetailsRepo.getFormDifferentVersionsDetails(formId)
+
     const formDetailsRules = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRule(formRuleId)
 
-
-    for (const formDetailsRule of formDetailsRules) {
-        const currVersionDetails = formDiffVersionDetails.find(item => item.title === `表单版本${formDetailsRule.version}`)
-        if (currVersionDetails) {
-            const fieldItem = currVersionDetails.details.find(item => item.fieldId === formDetailsRule.fieldId)
-            if (fieldItem) {
-                fieldItem.opCode = formDetailsRule.opCode
-                fieldItem.value = formDetailsRule.value
-                fieldItem.formDetailRuleId = formDetailsRule.id
-                fieldItem.condition = formDetailsRule.condition
-                fieldItem.conditionCode = formDetailsRule.conditionCode
+    let uniqueFields = []
+    const tmpUniqueMap = {}
+    const formDiffVersionDetails = await flowFormDetailsRepo.getFormDifferentVersionsDetails(formId)
+    // 根据fieldId和fieldName去掉重复项
+    for (const formDetails of formDiffVersionDetails) {
+        for (const detail of formDetails.details) {
+            const key = `${detail.fieldId}-${detail.fieldName}`
+            if (!Object.keys(tmpUniqueMap).includes(key)) {
+                const formDetailsRule = formDetailsRules.find(item => item.fieldId === detail.fieldId && item.fieldName === detail.fieldName)
+                if (formDetailsRule) {
+                    detail.opCode = formDetailsRule.opCode
+                    detail.value = formDetailsRule.value
+                    detail.formDetailRuleId = formDetailsRule.id
+                    detail.condition = formDetailsRule.condition
+                    detail.conditionCode = formDetailsRule.conditionCode
+                }
+                uniqueFields.push(detail)
+                tmpUniqueMap[key] = 1
             }
         }
     }
+    uniqueFields = uniqueFields.sort((curr, next) => curr.fieldName.localeCompare(next.fieldName))
 
-    return {formDiffVersionDetailsWithCondition: formDiffVersionDetails, formConditions: formDetailsRules}
+    //
+    // for (const formDetailsRule of formDetailsRules) {
+    //     const currVersionDetails = formDiffVersionDetails.find(item => item.title === `表单版本${formDetailsRule.version}`)
+    //     if (currVersionDetails) {
+    //         const fieldItem = currVersionDetails.details.find(item => item.fieldId === formDetailsRule.fieldId)
+    //         if (fieldItem) {
+    //             fieldItem.opCode = formDetailsRule.opCode
+    //             fieldItem.value = formDetailsRule.value
+    //             fieldItem.formDetailRuleId = formDetailsRule.id
+    //             fieldItem.condition = formDetailsRule.condition
+    //             fieldItem.conditionCode = formDetailsRule.conditionCode
+    //         }
+    //     }
+    // }
+
+    return {fields: uniqueFields, formConditions: formDetailsRules}
 }
 
 const saveFormDetailsRule = async (model) => {
