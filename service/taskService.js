@@ -573,7 +573,6 @@ module.exports = {
     syncUserLogin,
     syncResignEmployeeInfo,
     tmallLinkAnomalyDetection,
-    syncResignEmployeeInfo,
     syncHROaNotStockedProcess,
     syncHROaFinishedProcess,
     syncAttendance,
