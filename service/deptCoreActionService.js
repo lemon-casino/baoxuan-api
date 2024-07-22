@@ -35,12 +35,19 @@ const getDeptCoreActionsRules = async (deptIds) => {
         if (currCoreActionFormRules.length > 0) {
             coreAction.rules = []
             for (const currCoreActionFormRule of currCoreActionFormRules) {
-                const formRule = {formId: currCoreActionFormRule.formId, flowDetailsRules: [], flowNodeRules: []}
+                const formRule = {
+                    formId: currCoreActionFormRule.formId,
+                    formName: currCoreActionFormRule.formName,
+                    flowDetailsRules: [],
+                    flowNodeRules: []
+                }
                 const currCoreActionFormRuleDetailsRules = coreActionFormDetailsRules.filter(item => item.deptCoreActionFormRuleId === currCoreActionFormRule.id)
                 const pureCoreActionFormDetailsRules = currCoreActionFormRuleDetailsRules.map(item => {
                     return {
-                        fieldId: item.fieldId, fieldName: item.fieldName,
-                        opCode: item.opCode, value: item.value,
+                        fieldId: item.fieldId,
+                        fieldName: item.fieldName,
+                        opCode: item.opCode,
+                        value: item.value,
                         condition: item.condition,
                         conditionCode: item.conditionCode
                     }
