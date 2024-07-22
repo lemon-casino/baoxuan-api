@@ -22,6 +22,14 @@ const updateFormDetailsRule = async (model) => {
     }))
 }
 
+const getFormDetailsRuleByFormRuleIdAndFieldId = async (formRuleId, fieldId) => {
+    return (await getFormDetailsRuleByWhere({deptCoreActionFormRuleId: formRuleId, fieldId: fieldId}))
+}
+
+const getFormDetailsRuleByFormRuleIds= async (formRuleIds) => {
+    return (await getFormDetailsRuleByWhere({deptCoreActionFormRuleId: {$in: formRuleIds}}))
+}
+
 const getFormDetailsRuleByWhere = async (where) => {
     const result = await deptCoreActionFormDetailsRuleModel.findAll({
         where
@@ -30,8 +38,9 @@ const getFormDetailsRuleByWhere = async (where) => {
 }
 
 module.exports = {
-    getFormDetailsRuleByWhere,
     getFormDetailsRule,
+    getFormDetailsRuleByFormRuleIds,
+    getFormDetailsRuleByFormRuleIdAndFieldId,
     saveFormDetailsRule,
     deleteFormDetailsRule,
     updateFormDetailsRule

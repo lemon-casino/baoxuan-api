@@ -13,7 +13,7 @@ module.exports = sequelize => {
       field: "id"
     },
     deptCoreActionId: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.INTEGER,
       allowNull: true,
       defaultValue: null,
       primaryKey: false,

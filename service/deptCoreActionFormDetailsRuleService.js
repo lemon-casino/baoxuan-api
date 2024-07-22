@@ -2,9 +2,9 @@ const deptCoreActionFormDetailsRuleRepo = require("@/repository/deptCoreActionFo
 const flowFormDetailsRepo = require("@/repository/flowFormDetailsRepo")
 
 const getFormDetailsRule = async (formId, formRuleId) => {
-
+    
     const formDetailsRules = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRule(formRuleId)
-
+    
     let uniqueFields = []
     const tmpUniqueMap = {}
     const formDiffVersionDetails = await flowFormDetailsRepo.getFormDifferentVersionsDetails(formId)
@@ -27,15 +27,15 @@ const getFormDetailsRule = async (formId, formRuleId) => {
         }
     }
     uniqueFields = uniqueFields.sort((curr, next) => curr.fieldName.localeCompare(next.fieldName))
-
+    
     return {fields: uniqueFields, formConditions: formDetailsRules}
 }
 
 const saveFormDetailsRule = async (model) => {
-    const ruledDetails = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRuleByWhere({
-        deptCoreActionFormRuleId: model.deptCoreActionFormRuleId,
-        fieldId: model.fieldId
-    })
+    const ruledDetails = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRuleByFormRuleIdAndFieldId(
+        model.deptCoreActionFormRuleId,
+        model.fieldId
+    )
     if (ruledDetails.length === 0) {
         return (await deptCoreActionFormDetailsRuleRepo.saveFormDetailsRule(model))
     }
