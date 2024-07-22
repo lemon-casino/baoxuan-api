@@ -118,33 +118,6 @@ const getCoreActionsConfig = async (deptIds) => {
     throw new NotFoundError(`未找到部门：${deptIds}的核心动作的配置信息`)
 }
 
-const getCoreActionsConfigPro = async (deptIds) => {
-    const tmpDeptCoreActions = await deptCoreActionModel.findAll({
-        where: {deptId: {$in: deptIds}},
-        order: [["id", "asc"]]
-    })
-    
-    
-    const deptCoreActions = sequelizeUtil.extractDataValues(tmpDeptCoreActions)
-    const treeFormatResult = []
-    while (deptCoreActions.length > 0) {
-        const coreAction = deptCoreActions.splice(0, 1)[0]
-        delete coreAction["deptId"]
-        delete coreAction["deptName"]
-        delete coreAction["path"]
-        
-        const parentCoreAction = algorithmUtil.getJsonFromUnionFormattedJsonArr(treeFormatResult, "children", "id", coreAction.parentId)
-        if (parentCoreAction) {
-            coreAction.children = []
-            parentCoreAction.children.push(coreAction)
-        } else {
-            treeFormatResult.push({...coreAction, children: []})
-        }
-    }
-    
-    return treeFormatResult
-}
-
 /**
  * 获取部门的核心流程下指定节点的配置信息
  * @param deptId
@@ -237,7 +210,6 @@ module.exports = {
     getAllProcesses,
     updateProcess,
     getCoreActionsConfig,
-    getCoreActionsConfigPro,
     getCoreFormFlowConfig,
     getProcessDataByReviewItemDoneTime,
     getProcessWithReviewByReviewItemDoneTime

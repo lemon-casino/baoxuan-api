@@ -1,7 +1,12 @@
 const deptCoreActionRepo = require("@/repository/deptCoreActionRepo")
+const algorithmUtil = require("@/utils/algorithmUtil");
 
-const getDeptCoreActions = async (deptId) => {
-    const data = await deptCoreActionRepo.getDeptCoreActions(deptId)
+const getDeptCoreActions = async (deptIds) => {
+    return (await deptCoreActionRepo.getDeptCoreActions(deptIds))
+}
+
+const getTreedDeptCoreActions = async (deptIds) => {
+    const data = await deptCoreActionRepo.getDeptCoreActions(deptIds)
     // 根据 parentId 转化数据结构
     return _collapseCoreActions(data)
 }
@@ -46,7 +51,7 @@ const getDeptCoreActionForms = async (coreActionId) => {
  */
 const _collapseCoreActions = (coreActions) => {
     coreActions = coreActions.sort((curr, next) => next.id - curr.id)
-
+    
     let currData = coreActions.find(item => !item.children)
     while (currData) {
         // 获取匹配的子项
@@ -60,8 +65,28 @@ const _collapseCoreActions = (coreActions) => {
     return coreActions
 }
 
+const _convert2TreeFormat = (coreActions) => {
+    const treeFormatResult = []
+    while (coreActions.length > 0) {
+        const coreAction = coreActions.splice(0, 1)[0]
+        delete coreAction["deptId"]
+        delete coreAction["deptName"]
+        delete coreAction["path"]
+        const parentCoreAction = algorithmUtil.getJsonFromUnionFormattedJsonArr(treeFormatResult, "children", "id", coreAction.parentId)
+        if (parentCoreAction) {
+            coreAction.children = []
+            parentCoreAction.children.push(coreAction)
+        } else {
+            treeFormatResult.push({...coreAction, children: []})
+        }
+    }
+    
+    return treeFormatResult
+}
+
 module.exports = {
     saveDeptCoreAction,
+    getTreedDeptCoreActions,
     getDeptCoreActions,
     getDeptCoreActionsWithRules,
     delDeptCoreAction,

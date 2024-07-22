@@ -8,14 +8,14 @@ deptCoreActionModel.hasMany(deptCoreActionFormRuleModel, {
     foreignKey: "deptCoreActionId", sourceKey: "id", as: "formRules"
 })
 
-const getDeptCoreActions = async (deptId) => {
+const getDeptCoreActions = async (deptIds) => {
     const result = await deptCoreActionModel.findAll({
-        where: {deptId}
+        where: {deptId: {$in: deptIds}}
     })
     return sequelizeUtil.extractDataValues(result)
 }
 
-const getDeptCoreAction = async (id) => {
+const getCoreAction = async (id) => {
     const result = await deptCoreActionModel.findOne({
         where: {id}
     })
@@ -63,12 +63,13 @@ const getDeptCoreActionForms = async (coreActionId) => {
     return forms
 }
 
+
 module.exports = {
     update,
     save,
     getDeptCoreActions,
     getDeptCoreActionsWithRules,
     delDeptCoreAction,
-    getDeptCoreAction,
+    getDeptCoreAction: getCoreAction,
     getDeptCoreActionForms
 }
