@@ -3,6 +3,7 @@ const router = express.Router()
 const deptCoreActionFormActivityRuleApi = require("@/router_handler/deptCoreActionFormActivityRuleApi")
 
 router.get("/", deptCoreActionFormActivityRuleApi.getFormActivityRules)
+router.get("/activities", deptCoreActionFormActivityRuleApi.getFormActivities)
 router.post("/", deptCoreActionFormActivityRuleApi.saveFormActivityRule)
 router.put("/", deptCoreActionFormActivityRuleApi.updateFormActivityRule)
 router.delete("/", deptCoreActionFormActivityRuleApi.deleteFormActivityRule)

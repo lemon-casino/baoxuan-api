@@ -3,7 +3,7 @@ const formReviewRepo = require("@/repository/formReviewRepo")
 const algorithmUtil = require("@/utils/algorithmUtil")
 const flowConst = require("@/const/flowConst")
 
-const getFormActivityRules = async (formId, formRuleId) => {
+const getFormActivities = async (formId, formRuleId) => {
     const diffVersionsFormReviews = await formReviewRepo.getFormReviewByFormId(formId)
     // 将第发起节点的id替换
     for (const item of diffVersionsFormReviews) {
@@ -20,8 +20,11 @@ const getFormActivityRules = async (formId, formRuleId) => {
             ruledActivity.ruleActivityId = formActivityRule.id
         }
     }
+    return diffVersionsFormReviews
+}
 
-    return {formReviews: diffVersionsFormReviews, activityConditions: formActivityRules}
+const getFormActivityRules = async (formRuleId) => {
+    return (await deptCoreActionFormActivityRuleRepo.getFormActivityRules(formRuleId))
 }
 
 const saveFormActivityRule = async (data) => {
@@ -37,6 +40,7 @@ const updateFormActivityRule = async (data) => {
 }
 
 module.exports = {
+    getFormActivities,
     getFormActivityRules,
     updateFormActivityRule,
     saveFormActivityRule,

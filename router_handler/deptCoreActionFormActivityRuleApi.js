@@ -5,12 +5,25 @@ const deptCoreActionFormActivityRuleService = require('@/service/deptCoreActionF
 
 const getFormActivityRules = async (req, res, next) => {
     try {
+        const {formRuleId} = req.query
+        joiUtil.validate({
+            formRuleId: {value: formRuleId, schema: joiUtil.commonJoiSchemas.numberRequired},
+        })
+        const ruledFormActivities = await deptCoreActionFormActivityRuleService.getFormActivityRules(formRuleId)
+        return res.send(biResponse.success(ruledFormActivities))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getFormActivities = async (req, res, next) => {
+    try {
         const {formId, formRuleId} = req.query
         joiUtil.validate({
             formId: {value: formId, schema: joiUtil.commonJoiSchemas.strRequired},
             formRuleId: {value: formRuleId, schema: joiUtil.commonJoiSchemas.numberRequired},
         })
-        const ruledFormActivities = await deptCoreActionFormActivityRuleService.getFormActivityRules(formId, formRuleId)
+        const ruledFormActivities = await deptCoreActionFormActivityRuleService.getFormActivities(formId, formRuleId)
         return res.send(biResponse.success(ruledFormActivities))
     } catch (e) {
         next(e)
@@ -51,6 +64,7 @@ const deleteFormActivityRule = async (req, res, next) => {
 }
 
 module.exports = {
+    getFormActivities,
     getFormActivityRules,
     updateFormActivityRule,
     saveFormActivityRule,

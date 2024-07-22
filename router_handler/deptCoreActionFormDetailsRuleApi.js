@@ -3,7 +3,7 @@ const joiUtil = require("@/utils/joiUtil")
 const {saveParamsSchema, updateParamsSchema} = require("@/schema/deptCoreActionFormDetailsRuleSchema")
 const deptCoreActionFormDetailsRuleService = require('@/service/deptCoreActionFormDetailsRuleService')
 
-const getFormDetailsRule = async (req, res, next) => {
+const getUnSettledFormFields = async (req, res, next) => {
     try {
         const {formRuleId, formId} = req.query
         joiUtil.validate(
@@ -12,7 +12,20 @@ const getFormDetailsRule = async (req, res, next) => {
                 formId: {value: formId, schema: joiUtil.commonJoiSchemas.strRequired}
             }
         )
-        const formDetailsRule = await deptCoreActionFormDetailsRuleService.getFormDetailsRule(formId, formRuleId)
+        const formDetailsRule = await deptCoreActionFormDetailsRuleService.getUnSettledFormFields(formId, formRuleId)
+        return res.send(biResponse.success(formDetailsRule))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getFormDetailsRules = async (req, res, next) => {
+    try {
+        const {formRuleId} = req.query
+        joiUtil.validate(
+            {formRuleId: {value: formRuleId, schema: joiUtil.commonJoiSchemas.strRequired}}
+        )
+        const formDetailsRule = await deptCoreActionFormDetailsRuleService.getFormDetailsRules(formRuleId)
         return res.send(biResponse.success(formDetailsRule))
     } catch (e) {
         next(e)
@@ -53,7 +66,8 @@ const deleteFormDetailsRule = async (req, res, next) => {
 }
 
 module.exports = {
-    getFormDetailsRule,
+    getFormDetailsRules,
+    getUnSettledFormFields,
     saveFormDetailsRule,
     updateFormDetailsRule,
     deleteFormDetailsRule,
