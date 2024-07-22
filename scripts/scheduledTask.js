@@ -23,7 +23,7 @@ if (process.env.NODE_ENV === "dev") {
     syncMissingCompletedFlowsCron = "0 0 22 * * ?"
     syncDepartmentCron = "0 10 5 * * ?"
     syncDepartmentWithUserCron = "0 0 7 * * ?"
-    syncUserWithDepartmentCron = "0 30 7 * * ?"
+    syncUserWithDepartmentCron = "0 30 8 * * ?"
     syncFormCron = "0 18 11 * * ?"
     syncUserLoginCron = "40 20 23 * * ?"
     syncResignEmployeeCron = "35 5 17 * * ?"
