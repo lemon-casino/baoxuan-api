@@ -1,5 +1,6 @@
 const Joi = require("joi")
 const singleItemTaoBaoService = require('../service/singleItemTaoBaoService')
+const tmallCompetitorService = require('../service/tmallCompetitorService')
 const biResponse = require("../utils/biResponse")
 const joiUtil = require("../utils/joiUtil")
 const {cond} = require("lodash/util");
@@ -207,7 +208,7 @@ const uploadSingleIteTaoBaoCompetitorTable = async (req, res, next) => {
                     translatedItem['headOfProductLine'] = sheetName;
                     return translatedItem;
                 });
-            await singleItemTaoBaoService.uploadSingleIteTaoBaoCompetitorTable(translatedData).then(() => {
+            await tmallCompetitorService.uploadSingleIteTaoBaoCompetitorTable(translatedData).then(() => {
                 console.log(`Sheet ${sheetName} uploaded successfully`);
             }).catch((e) => {
                     return res.send(canTFindIt.success('文件解析失败',e ))

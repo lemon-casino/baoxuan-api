@@ -1360,9 +1360,7 @@ async function fetchAndProcessErrorItems() {
 }
 
 
-const uploadSingleIteTaoBaoCompetitorTable = async (item) => {
-    return await tmallCompetitorRepo.uploadSingleIteTaoBaoCompetitorTable(item);
-}
+
 
 module.exports = {
     saveSingleItemTaoBao,
@@ -1386,6 +1384,5 @@ module.exports = {
     updateSingleItemTaoBao,
     getLinknewvaCount,
     updateCustom,
-    Calculateyesterdaysdataandtagtheprofitin60days,
-    uploadSingleIteTaoBaoCompetitorTable
+    Calculateyesterdaysdataandtagtheprofitin60days
 }
