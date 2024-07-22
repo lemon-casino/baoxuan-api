@@ -394,7 +394,7 @@ const tmallLinkAnomalyDetection = async () => {
     const formId = "FORM-51A6DCCF660B4C1680135461E762AC82JV53";
     const processCode = "TPROC--YAB66P61TJ4MHTIKCZN606A840IS3MVPXMLXL2";
 
-    /*    const sendRequests = async () => {
+/*        const sendRequests = async () => {
             for (const [key, value] of Object.entries(cleanedLinkIdMap)) {
                 //删除 value的name 是数组 有其它的异常 比如 name:['费比超过15%','老品利润率低于15%']   linkType的标签是新品30 或者新品60   删除掉  费比超过15% 这个数组中的费比超过15%
                 if (Array.isArray(value.name) && value.name.length > 1 && value.name.includes('费比超过15%') && (value.linkType === '新品30' || value.linkType === '新品60')) {
