@@ -156,6 +156,15 @@ module.exports = sequelize => {
             comment: "利润率",
             field: "profit_rate"
         },
+        expense: {
+            type: DataTypes.DECIMAL,
+            allowNull: true,
+            defaultValue: "0.00",
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "费用",
+            field: "expense"
+        },
         visitors: {
             type: DataTypes.INTEGER,
             allowNull: true,

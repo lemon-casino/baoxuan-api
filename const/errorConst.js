@@ -7,6 +7,7 @@ const errorMessages = {
 }
 
 const errorCodes = {
+    "canTFindIt":400,
     "commonError": 500,
     "parameterError": 510,
     "forbiddenError": 511,

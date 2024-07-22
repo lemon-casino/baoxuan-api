@@ -108,6 +108,5 @@ module.exports = sequelize => {
     comment: "",
     indexes: []
   };
-  const TmallCompetitorModel = sequelize.define("tmallCompetitorModel", attributes, options);
-  return TmallCompetitorModel;
+  return sequelize.define("tmallCompetitorModel", attributes, options);
 };

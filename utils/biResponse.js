@@ -16,10 +16,14 @@ const simpleSuccess = (message = successMessages.common) => {
 const serverError = (message = errorMessages.common) => {
     return format(errorCodes.commonError, message)
 }
+const canTFindIt = (message = errorMessages.common) => {
+    return format(errorCodes.canTFindIt, message)
+}
 
 module.exports = {
     format,
     simpleSuccess,
     success,
-    serverError
+    serverError,
+    canTFindIt
 }
