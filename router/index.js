@@ -14,6 +14,7 @@ module.exports = {
     "/util": require("./util"),
     "/form": require("./formRouter"),
     "/single-item": require("./singleItemRouter"),
+    "/tmall/competitor": require("./tmallCompetitorRouter"),
     "/link-statistic": require("./linkStatisticRouter"),
     "/task": require("./taskRouter"),
     "/user-logs": require("./userLogRouter"),
