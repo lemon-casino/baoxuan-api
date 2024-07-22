@@ -30,6 +30,15 @@ module.exports = sequelize => {
       comment: null,
       field: "field_id"
     },
+    fieldName: {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "field_name"
+    },
     opCode: {
       type: DataTypes.STRING(50),
       allowNull: false,

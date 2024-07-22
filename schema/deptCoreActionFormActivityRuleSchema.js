@@ -4,6 +4,7 @@ const Joi = require("joi");
 const saveParamsSchema = {
     deptCoreActionFormRuleId: joiUtil.commonJoiSchemas.numberRequired,
     activityId: joiUtil.commonJoiSchemas.strRequired,
+    activityName: joiUtil.commonJoiSchemas.strRequired,
     status: joiUtil.commonJoiSchemas.strRequired,
     owner: Joi.object({
         from: joiUtil.commonJoiSchemas.strRequired,

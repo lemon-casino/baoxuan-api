@@ -30,6 +30,15 @@ module.exports = sequelize => {
       comment: null,
       field: "activity_id"
     },
+    activityName: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "activity_name"
+    },
     status: {
       type: DataTypes.STRING(255),
       allowNull: true,
