@@ -28,21 +28,6 @@ const getFormDetailsRule = async (formId, formRuleId) => {
     }
     uniqueFields = uniqueFields.sort((curr, next) => curr.fieldName.localeCompare(next.fieldName))
 
-    //
-    // for (const formDetailsRule of formDetailsRules) {
-    //     const currVersionDetails = formDiffVersionDetails.find(item => item.title === `表单版本${formDetailsRule.version}`)
-    //     if (currVersionDetails) {
-    //         const fieldItem = currVersionDetails.details.find(item => item.fieldId === formDetailsRule.fieldId)
-    //         if (fieldItem) {
-    //             fieldItem.opCode = formDetailsRule.opCode
-    //             fieldItem.value = formDetailsRule.value
-    //             fieldItem.formDetailRuleId = formDetailsRule.id
-    //             fieldItem.condition = formDetailsRule.condition
-    //             fieldItem.conditionCode = formDetailsRule.conditionCode
-    //         }
-    //     }
-    // }
-
     return {fields: uniqueFields, formConditions: formDetailsRules}
 }
 
