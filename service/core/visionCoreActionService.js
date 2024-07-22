@@ -30,7 +30,7 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
         return filterUsersByTags(users, tags)
     })
     
-    const coreActionConfig = await deptCoreActionService.getDeptCoreActionsRules(deptIds) // flowRepo.getCoreActionsConfig(deptIds)
+    const coreActionConfig = await deptCoreActionService.getDeptCoreActionsRules(deptIds)
     const differentForms = coreActionStatService.extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
     const configuredFormIds = differentForms.inner.concat(differentForms.outSourcing).map(item => item.formId)
     const flows = await coreActionStatService.filterFlows(configuredFormIds, startDoneDate, endDoneDate)

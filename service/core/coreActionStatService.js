@@ -1,13 +1,14 @@
 const _ = require("lodash")
-const {opFunctions} = require("@/const/ruleConst/operatorConst")
-const {activityIdMappingConst, flowStatusConst, flowReviewTypeConst} = require("@/const/flowConst")
-const flowUtil = require("@/utils/flowUtil")
 const flowRepo = require("@/repository/flowRepo");
-const flowCommonService = require("@/service/common/flowCommonService");
 const userRepo = require("@/repository/userRepo");
-const userCommonService = require("@/service/common/userCommonService");
 const outUsersRepo = require("@/repository/outUsersRepo");
+const flowCommonService = require("@/service/common/flowCommonService");
+const userCommonService = require("@/service/common/userCommonService");
+const flowUtil = require("@/utils/flowUtil")
 const algorithmUtil = require("@/utils/algorithmUtil");
+const {activityIdMappingConst, flowStatusConst, flowReviewTypeConst} = require("@/const/flowConst")
+const operatorConst = require("@/const/ruleConst/operatorConst")
+const conditionConst = require("@/const/ruleConst/conditionConst")
 const visionConst = require("@/const/tmp/visionConst");
 const {visionFormDoneActivityIds} = require("@/const/tmp/coreActionsConst");
 
@@ -41,23 +42,28 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
     
     const statFlowsByRules = async (resultNode, rules, flows) => {
         for (const rule of rules) {
-            let currFlows = flows.filter((flow) => flow.formUuid === rule.formId)
-            currFlows = filterFlowsByFlowDetailsRules(currFlows, rule.flowDetailsRules)
+            flows = flows.filter((flow) => flow.formUuid === rule.formId)
+            flows = filterFlowsByFlowDetailsRules(flows, rule.flowDetailsRules)
             
-            if (currFlows.length === 0) {
+            if (flows.length === 0) {
                 continue
             }
             
             for (const flowNodeRule of rule.flowNodeRules) {
-                const {from: fromNode, to: toNode, ownerRule} = flowNodeRule
+                const {
+                    activityId,
+                    status,
+                    isOverdue,
+                    owner: ownerRule
+                } = flowNodeRule
                 
                 // 根据节点配置对流程进行汇总
-                for (let flow of currFlows) {
+                for (let flow of flows) {
                     const processInstanceId = flow.processInstanceId
                     
                     let operatorsActivity = []
                     const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
-                    const matchedActivity = getMatchedActivity(fromNode, toNode, activities)
+                    const matchedActivity = getMatchedActivity(activityId, status, isOverdue, activities)
                     if (!matchedActivity) {
                         continue
                     }
@@ -122,7 +128,6 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
                             if (!currResultStatNode.ids.includes(processInstanceId)) {
                                 currResultStatNode.ids.push(processInstanceId)
                                 currResultStatNode.sum = currResultStatNode.ids.length
-                                
                             }
                             
                             // 同一人流程中会出现多次干不同的活，将本人所有该流程中节点工作量的统计去重处理才能保证不漏
@@ -152,6 +157,7 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
                 }
             }
         }
+        return resultNode
     }
     
     const result = statForHasRulesNode(coreConfig, flows)
@@ -354,47 +360,47 @@ const extractInnerAndOutSourcingFormsFromConfig = (coreActionConfig) => {
  * @returns {*}
  */
 const filterFlowsByFlowDetailsRules = (flows, flowDetailsRules) => {
+    let andFlows = _.cloneDeep(flows)
+    
     if (flowDetailsRules) {
         for (const detailsRule of flowDetailsRules) {
-            flows = flows.filter(flow => {
-                // if (flow.data[detailsRule.fieldId]) {
-                return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
-                // }
-                return false
-            })
+            if (detailsRule.condition === conditionConst.condition.AND) {
+                andFlows = andFlows.filter(flow => {
+                    return operatorConst.opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
+                })
+            } else {
+                const orFlows = _.cloneDeep(flows)
+                const requiredOrFlows = orFlows.filter(flow => {
+                    return operatorConst.opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
+                })
+                andFlows = andFlows.concat(requiredOrFlows)
+            }
         }
     }
-    return flows
+    return andFlows
 }
 
 /**
  * 获取匹配的审核节点
  *
- * @param fromNode
- * @param toNode
+ * @param activityId
+ * @param status
  * @param activities
  * @returns {*|null}
  */
-const getMatchedActivity = (fromNode, toNode, activities) => {
-    let fromMatched = false
-    let toMatched = false
+const getMatchedActivity = (activityId, status, isOverdue, activities) => {
     
     for (const activity of activities) {
         // 发起的节点id对应的表单流程id不一致
-        const fromNodeId = activityIdMappingConst[fromNode.id] || fromNode.id
-        
-        if (fromNode && activity.activityId === fromNodeId && fromNode.status.includes(activity.type)) {
-            fromMatched = true
-        }
-        if (toNode && activity.activityId === toNode.id && toNode.status.includes(activity.type)) {
-            toMatched = true
-        }
-        
-        if (fromMatched && toMatched) {
-            return activity
+        activityId = activityIdMappingConst[activityId] || activityId
+        if (activityId && activity.activityId === activityId && status.includes(activity.type)) {
+            if (isOverdue !== undefined && isOverdue === activity.isOverdue) {
+                return true
+            }
+            return false
         }
     }
-    return null
+    return false
 }
 
 /**
@@ -693,7 +699,7 @@ const statFlowsToActionByFormRule = (flows, formRule, actionName, statusResult) 
         for (const detailsRule of formRule.flowDetailsRules) {
             formFlows = formFlows.filter(flow => {
                 if (flow.data[detailsRule.fieldId]) {
-                    return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
+                    return operatorConst.opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
                 }
                 return false
             })
@@ -763,7 +769,7 @@ const statFlowsToActionByTargetFormActivityIds = (flows, actionName, coreActionS
                 // 判断视觉属性是否相同
                 let hasSameVisionAttr = false
                 for (const detailsRule of formRule.flowDetailsRules || []) {
-                    hasSameVisionAttr = opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], [actionName])
+                    hasSameVisionAttr = operatorConst.opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], [actionName])
                     if (hasSameVisionAttr) {
                         hasSameVisionAttr = true
                         break
