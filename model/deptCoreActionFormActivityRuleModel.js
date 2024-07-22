@@ -48,6 +48,15 @@ module.exports = sequelize => {
       comment: null,
       field: "status"
     },
+    isOverdue: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+      defaultValue: 0,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: ";",
+      field: "is_overdue"
+    },
     owner: {
       type: DataTypes.JSON,
       allowNull: true,
