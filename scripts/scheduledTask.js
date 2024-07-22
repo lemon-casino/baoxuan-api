@@ -110,7 +110,7 @@ schedule.scheduleJob(syncUserLoginCron, async function () {
  *
  */
 schedule.scheduleJob(syncResignEmployeeCron, async function () {
-    await taskService.syncResignEmployeeInfo()
+    // await taskService.syncResignEmployeeInfo()
 })
 
 /**
