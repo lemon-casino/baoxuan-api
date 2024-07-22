@@ -1,7 +1,7 @@
 const deptCoreActionFormDetailsRuleRepo = require("@/repository/deptCoreActionFormDetailsRuleRepo")
 const flowFormDetailsRepo = require("@/repository/flowFormDetailsRepo")
 
-const getUnSettledFormFields = async (formRuleId, formId) => {
+const getUnSettledFormFields = async (formId, formRuleId) => {
     const formDetailsRules = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRule(formRuleId)
     let uniqueUnSettledFields = []
     const tmpUniqueMap = {}
