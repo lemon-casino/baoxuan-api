@@ -958,13 +958,13 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
     if (!isAdmin) {
         if (isLeader) {
             for (const deptId of deptIds) {
-                const deptOnJobUsers = await userRepo.getDeptOnJobUsers(deptId)
+                const deptOnJobUsers = await userRepo.getDeptOnJobUsers([deptId])
                 const deptOnJobUserNames = deptOnJobUsers.map(user => user.nickname).join(",")
 
-                const tmpDeptResignUsers = await userRepo.getDeptResignUsers(deptId)
+                const tmpDeptResignUsers = await userRepo.getDeptResignUsers([deptId])
                 const deptResignUserNames = tmpDeptResignUsers.map(item => `${item.nickname}[已离职]`).join(",")
 
-                const deptSourcingUsers = await redisRepo.getOutSourcingUsers(deptId)
+                const deptSourcingUsers = await redisRepo.getOutSourcingUsers([deptId])
                 const deptSourcingUserNames = deptSourcingUsers.map(oUser => oUser.userName).join(",")
 
                 userNames = `${userNames},${deptOnJobUserNames},${deptResignUserNames},${deptSourcingUserNames}`
