@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const singleItemApi = require('../router_handler/singleItemApi')
+const competitorApi = require('../router_handler/competitorApi')
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -22,7 +22,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-router.post("/upload", upload.single('file'),singleItemApi.uploadSingleIteTaoBaoCompetitorTable)
+router.post("/upload", upload.single('file'),competitorApi.uploadSingleIteTaoBaoCompetitorTable)
 
 router.get('/download', (req, res) => {
     const filePath = path.join(uploadDirectory, 'template', uploadFileName);
@@ -37,6 +37,10 @@ router.get('/download', (req, res) => {
         res.status(404).send('文件未找到');
     }
 });
+
+// 查询天猫竞品表
+
+
 
 
 module.exports = router;
