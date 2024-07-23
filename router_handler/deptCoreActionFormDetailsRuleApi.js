@@ -2,6 +2,7 @@ const biResponse = require("@/utils/biResponse")
 const joiUtil = require("@/utils/joiUtil")
 const {saveParamsSchema, updateParamsSchema} = require("@/schema/deptCoreActionFormDetailsRuleSchema")
 const deptCoreActionFormDetailsRuleService = require('@/service/deptCoreActionFormDetailsRuleService')
+const operatorConst = require("@/const/ruleConst/operatorConst");
 
 const getUnSettledFormFields = async (req, res, next) => {
     try {
@@ -36,6 +37,11 @@ const saveFormDetailsRule = async (req, res, next) => {
     try {
         const data = req.body
         joiUtil.clarityValidate(saveParamsSchema, data)
+        // 如果是要进行数值比较的要校验Value是数字
+        if (operatorConst.opCodesValueMustBeStrNum.includes(data.opCode)) {
+            joiUtil.validate({value: {value: data.value, schema: joiUtil.commonJoiSchemas.strNumRequired}})
+        }
+        
         const formDetailsRule = await deptCoreActionFormDetailsRuleService.saveFormDetailsRule(data)
         return res.send(biResponse.success(formDetailsRule))
     } catch (e) {

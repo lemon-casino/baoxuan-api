@@ -1,5 +1,7 @@
 const _ = require("lodash")
 const Joi = require("joi")
+const regexConst = require("@/const/regexConst")
+const operatorConst = require("@/const/ruleConst/operatorConst")
 const ParameterError = require("@/error/parameterError")
 
 const joiErrorMessages = {
@@ -8,7 +10,8 @@ const joiErrorMessages = {
     "string.base": "要求为字符串",
     "array.base": "要求为数组",
     "object.base": "要求为json对象",
-
+    [`string.${regexConst.floatNumberReg}.base`]: "要求为字符串数字",
+    
     "any.required": "为必传参数",
     "any.empty": "内容不能为空",
     "string.empty": "内容不能为空",
@@ -22,6 +25,7 @@ const commonJoiSchemas = {
     any: Joi.any(),
     required: Joi.required(),
     strRequired: Joi.string().required(),
+    strNumRequired: Joi.string().regex(/^\d+\.?\d?$/).required(),
     positiveIntegerRequired: Joi.number().min(1).required(),
     numberRequired: Joi.number().min(0).required(),
     dateRequired: Joi.date().required(),
@@ -29,7 +33,8 @@ const commonJoiSchemas = {
     funcRequired: Joi.func().required(),
     objectRequire: Joi.object().required(),
     booleanRequired: Joi.boolean().required(),
-    validBoolStrValue: Joi.string().valid("true", "false")
+    validBoolStrValue: Joi.string().valid("true", "false"),
+    validOpCode: Joi.string().valid(...Object.keys(operatorConst.opCodes))
 }
 
 const commonArgsSchemas = {
@@ -86,13 +91,16 @@ const mixedValidate = (items) => {
 const _validate = (schema, data) => {
     const error = Joi.object(schema).validate(data, {allowUnknown: true}).error
     if (error) {
-        const {type, context: {label, key, limit, value}} = error.details[0]
+        let {type, context: {label, key, limit, value, regex}} = error.details[0]
+        if (type.includes("pattern")) {
+            type = type.replace("pattern", regex)
+        }
         let errorMsg = joiErrorMessages[type]
         if (errorMsg) {
             if (_.isFunction(errorMsg)) {
                 errorMsg = errorMsg(limit)
             }
-
+            
             throw new ParameterError(`参数：${key} ${errorMsg}`)
         }
         throw new ParameterError(`${error.message}(${type})`)

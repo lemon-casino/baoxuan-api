@@ -4,7 +4,7 @@ const saveParamsSchema = {
     deptCoreActionFormRuleId: joiUtil.commonJoiSchemas.numberRequired,
     fieldId: joiUtil.commonJoiSchemas.strRequired,
     fieldName: joiUtil.commonJoiSchemas.strRequired,
-    opCode: joiUtil.commonJoiSchemas.strRequired,
+    opCode: joiUtil.commonJoiSchemas.validOpCode,
     value: joiUtil.commonJoiSchemas.strRequired,
     condition: joiUtil.commonJoiSchemas.strRequired,
     version: joiUtil.commonJoiSchemas.numberRequired

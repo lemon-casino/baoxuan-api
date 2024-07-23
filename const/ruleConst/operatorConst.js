@@ -14,6 +14,10 @@ const opCodes = {
     Lesser: "Lesser"
 }
 
+const opCodesValueMustBeStrNum = [
+    "Bigger", "BiggerOrEqual", "Lesser"
+]
+
 const convertArrayToStrWithDot = (val) => {
     if (_.isArray(val)) {
         val = val.join(",")
@@ -90,5 +94,6 @@ const parameterIsNumber = (...values) => {
 
 module.exports = {
     opCodes,
+    opCodesValueMustBeStrNum,
     opFunctions
 }
