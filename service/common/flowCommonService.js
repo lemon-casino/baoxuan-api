@@ -28,7 +28,7 @@ const removeTargetStatusFlows = (flows, flowStatus) => {
  * @param endDoneDate
  * @returns {*}
  */
-const removeDoneActivitiesNotInDoneDateRangeExceptStartNode = (flows, startDoneDate, endDoneDate) => {
+const removeDoneActivitiesNotInDoneDateRangeExceptStartNode = (flows, startDoneDate, endDoneDate, reserveFirstNode = false) => {
     // 根据时间区间过滤掉不在区间内的完成节点，todo和forcast的数据不用处理
     for (const flow of flows) {
         if (!flow.overallprocessflow) {
@@ -46,9 +46,16 @@ const removeDoneActivitiesNotInDoneDateRangeExceptStartNode = (flows, startDoneD
                 if (!doneTime) {
                     doneTime = dateUtil.formatGMT2Str(item.operateTimeGMT)
                 }
-                if (item.activityId === startActivityId || dateUtil.duration(doneTime, dateUtil.startOfDay(startDoneDate)) >= 0 && dateUtil.duration(dateUtil.endOfDay(endDoneDate), doneTime) >= 0) {
-                    newOverallProcessFlow.push(item)
+                if (item.activityId === startActivityId) {
+                    if (reserveFirstNode) {
+                        newOverallProcessFlow.push(item)
+                        continue
+                    }
                     continue
+                }
+                
+                if (dateUtil.duration(doneTime, dateUtil.startOfDay(startDoneDate)) >= 0 && dateUtil.duration(dateUtil.endOfDay(endDoneDate), doneTime) >= 0) {
+                    newOverallProcessFlow.push(item)
                 }
             }
         }
@@ -176,7 +183,7 @@ const getVisionOutSourcingNames = (flows) => {
 
 module.exports = {
     removeTargetStatusFlows,
-    removeDoneActivitiesNotInDoneDateRange: removeDoneActivitiesNotInDoneDateRangeExceptStartNode,
+    removeDoneActivitiesNotInDoneDateRangeExceptStartNode,
     getCombinedFlowsOfHistoryAndToday,
     getVisionOutSourcingNames,
     removeRedirectActivity

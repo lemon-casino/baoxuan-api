@@ -41,6 +41,40 @@ module.exports = [
                         flowNodeRules: [
                             {
                                 from: {
+                                    id: "node_oclwzzaj997",
+                                    name: "审核产品",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclwzzaj997",
+                                    name: "审核产品",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "审核产品",
+                                    id: "node_oclwzzaj997"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclv1t0i397",
+                                    name: "分配运营分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclv1t0i397",
+                                    name: "分配运营分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "分配运营分析",
+                                    id: "node_oclv1t0i397"
+                                }
+                            },
+                            {
+                                from: {
                                     id: "node_oclklxv8kk1",
                                     name: "运营负责人提交市场统计模板",
                                     status: ["TODO"]
