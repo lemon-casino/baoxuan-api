@@ -393,14 +393,13 @@ const getMatchedActivity = (activityId, status, isOverdue, activities) => {
     for (const activity of activities) {
         // 发起的节点id对应的表单流程id不一致
         activityId = activityIdMappingConst[activityId] || activityId
-        if (activityId && activity.activityId === activityId && status.includes(activity.type)) {
-            if (isOverdue !== undefined && isOverdue === activity.isOverdue) {
-                return true
-            }
-            return false
+        if (activity.activityId === activityId &&
+            status.includes(activity.type) &&
+            isOverdue === activity.isOverdue) {
+            return activity
         }
     }
-    return false
+    return null
 }
 
 /**
