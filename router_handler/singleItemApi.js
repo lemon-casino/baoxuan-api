@@ -175,7 +175,9 @@ const uploadSingleIteTaoBaoCompetitorTable = async (req, res, next) => {
         const keyMapping = {
             '链接ID': 'linkId',
             '维护人': 'headOfOperations',
-            '店铺名称': 'storeName',
+            '本品店铺名称': 'storeName',
+            '竞品所在店铺名称': 'competitorsAme',
+            '竞品店铺名称': 'theAmeOfTheCompetitorsStore',
             '产品名称': 'productName',
             '竞品ID': 'competitorId',
             '类别': 'category',

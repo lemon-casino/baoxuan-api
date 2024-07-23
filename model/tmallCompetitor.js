@@ -40,16 +40,34 @@ module.exports = sequelize => {
       field: "headOf_productLine"
     },
     storeName: {
-      type: DataTypes.STRING(10),
+      type: DataTypes.STRING(100),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "店铺名称",
+      comment: "本品店铺名称",
       field: "store_name"
     },
+    competitorsAme: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "竞品所在店铺名称",
+      field: "competitors_ame"
+    },
+    theAmeOfTheCompetitorsStore: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "竞品店铺名称",
+      field: "the_ameOf_the_competitors_store"
+    },
     productName: {
-      type: DataTypes.STRING(10),
+      type: DataTypes.STRING(100),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
@@ -108,5 +126,6 @@ module.exports = sequelize => {
     comment: "",
     indexes: []
   };
-  return sequelize.define("tmallCompetitorModel", attributes, options);
+  const TmallCompetitorModel = sequelize.define("tmallCompetitorModel", attributes, options);
+  return TmallCompetitorModel;
 };
