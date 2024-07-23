@@ -216,7 +216,7 @@ const uploadSingleIteTaoBaoCompetitorTable = async (req, res, next) => {
             );
         }
 
-        return res.send(biResponse.success('文件上传并解析成功！'))
+        return res.send(biResponse.success({code:200,data:"文件上传并解析成功!"}))
     } catch (e) {
         next(e);
     }

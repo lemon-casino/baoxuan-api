@@ -4,6 +4,7 @@ const singleItemApi = require('../router_handler/singleItemApi')
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const biResponse = require("@/utils/biResponse");
 const uploadDirectory = 'file/excel/tianmao';
 const uploadFileName = '天猫竞品表.xlsx';
 // 设置存储位置和文件命名
@@ -24,8 +25,7 @@ const upload = multer({ storage: storage });
 router.post("/upload", upload.single('file'),singleItemApi.uploadSingleIteTaoBaoCompetitorTable)
 
 router.get('/download', (req, res) => {
-    const filePath = path.join(uploadDirectory+"/template", uploadFileName);
-    console.log(filePath)
+    const filePath = path.join(uploadDirectory, 'template', uploadFileName);
     if (fs.existsSync(filePath)) {
         res.download(filePath, uploadFileName, (err) => {
             if (err) {
