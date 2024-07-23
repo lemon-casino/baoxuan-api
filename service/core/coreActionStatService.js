@@ -26,15 +26,15 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
     // const finalResult = []
     
-    const statForHasRulesNode = (coreConfig, flows) => {
+    const statForHasRulesNode = async (coreConfig, flows) => {
         for (const action of coreConfig) {
             if (action.rules && action.rules.length > 0) {
-                const statResult = statFlowsByRules(action, action.rules, flows)
+                const statResult = await statFlowsByRules(action, action.rules, flows)
                 action.children = statResult
             }
             
             if (action.children && action.children.length > 0) {
-                statForHasRulesNode(action.children)
+                await statForHasRulesNode(action.children)
             }
         }
         return coreConfig
@@ -160,7 +160,7 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
         return resultNode
     }
     
-    const result = statForHasRulesNode(coreConfig, flows)
+    const result = await statForHasRulesNode(coreConfig, flows)
     return result
     
     // 根据配置信息获取基于所有人的数据
