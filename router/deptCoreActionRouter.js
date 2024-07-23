@@ -7,5 +7,6 @@ router.get("/forms", deptCoreActionApi.getDeptCoreActionForms)
 router.post("/", deptCoreActionApi.saveDeptCoreAction)
 router.put("/", deptCoreActionApi.updateDeptCoreAction)
 router.delete("/", deptCoreActionApi.delDeptCoreAction)
+router.post("/sync", deptCoreActionApi.syncDeptCoreActionsRules)
 
 module.exports = router

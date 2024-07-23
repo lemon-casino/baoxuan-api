@@ -2,7 +2,9 @@ const deptCoreActionRepo = require("@/repository/deptCoreActionRepo")
 const deptCoreActionFormRuleRepo = require("@/repository/deptCoreActionFormRuleRepo")
 const deptCoreActionFormDetailsRuleRepo = require("@/repository/deptCoreActionFormDetailsRuleRepo")
 const deptCoreActionFormActivityRuleRepo = require("@/repository/deptCoreActionFormActivityRuleRepo")
+const redisUtil = require("@/utils/redisUtil")
 const algorithmUtil = require("@/utils/algorithmUtil")
+const redisConst = require("@/const/redisConst")
 
 const getDeptCoreActions = async (deptIds) => {
     return (await deptCoreActionRepo.getDeptCoreActions(deptIds))
@@ -111,6 +113,11 @@ const getDeptCoreActionForms = async (coreActionId) => {
     return (await deptCoreActionRepo.getDeptCoreActionForms(coreActionId))
 }
 
+const syncDeptCoreActionsRules = async (deptIds) => {
+    const deptCoreActionRules = await getDeptCoreActionsRules(deptIds)
+    await redisUtil.set(`${redisConst.redisKeys.CoreActionRules}:${deptIds.join(",")}`, JSON.stringify(deptCoreActionRules))
+}
+
 /**
  * 将扁平的结构转成children包裹的结构
  *
@@ -142,5 +149,6 @@ module.exports = {
     getDeptCoreActionForms,
     delDeptCoreAction,
     updateDeptCoreAction,
-    saveDeptCoreAction
+    saveDeptCoreAction,
+    syncDeptCoreActionsRules
 }

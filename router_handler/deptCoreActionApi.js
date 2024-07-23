@@ -60,10 +60,24 @@ const getDeptCoreActionForms = async (req, res, next) => {
     }
 }
 
+const syncDeptCoreActionsRules = async (req, res, next) => {
+    try {
+        const {deptIds} = req.body
+        joiUtil.validate({
+            deptId: {value: deptIds, schema: joiUtil.commonJoiSchemas.arrayRequired}
+        })
+        await deptCoreActionService.syncDeptCoreActionsRules(deptIds)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDeptCoreActions,
     updateDeptCoreAction,
     saveDeptCoreAction,
     delDeptCoreAction,
-    getDeptCoreActionForms
+    getDeptCoreActionForms,
+    syncDeptCoreActionsRules
 }

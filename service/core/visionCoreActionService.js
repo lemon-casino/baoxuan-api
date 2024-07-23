@@ -1,16 +1,17 @@
 const _ = require("lodash")
 const Bignumber = require("bignumber.js")
-const flowRepo = require("@/repository/flowRepo")
 const userCommonService = require("@/service/common/userCommonService")
 const coreActionStatTypeConst = require("@/const/coreActionStatTypeConst")
 const coreActionStatService = require("@/service/core/coreActionStatService")
-const deptCoreActionService = require("@/service/deptCoreActionService")
 const regexConst = require("@/const/regexConst")
 const visionConst = require("@/const/tmp/visionConst")
 const statResultTemplateConst = require("@/const/statResultTemplateConst")
+const redisConst = require("@/const/redisConst")
 const flowUtil = require("@/utils/flowUtil")
 const algorithmUtil = require("@/utils/algorithmUtil")
+const redisUtil = require("@/utils/redisUtil")
 const patchUtil = require("@/patch/patchUtil")
+const NotFoundError = require("@/error/http/notFoundError")
 
 /**
  *
@@ -24,16 +25,15 @@ const patchUtil = require("@/patch/patchUtil")
  * @returns {Promise<*>}
  */
 const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, startDoneDate, endDoneDate) => {
+    const coreActionConfig = await getDeptCoreActions(deptIds)
+    const differentForms = coreActionStatService.extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
+    const configuredFormIds = differentForms.inner.concat(differentForms.outSourcing).map(item => item.formId)
+    const flows = await coreActionStatService.filterFlows(configuredFormIds, startDoneDate, endDoneDate)
     
     const isDeptLeader = await userCommonService.isDeptLeaderOfTheUser(userId, deptIds)
     const requiredUsers = await coreActionStatService.getRequiredUsers(userNames, isDeptLeader, deptIds, (users) => {
         return filterUsersByTags(users, tags)
     })
-    
-    const coreActionConfig = await deptCoreActionService.getDeptCoreActionsRules(deptIds)
-    const differentForms = coreActionStatService.extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
-    const configuredFormIds = differentForms.inner.concat(differentForms.outSourcing).map(item => item.formId)
-    const flows = await coreActionStatService.filterFlows(configuredFormIds, startDoneDate, endDoneDate)
     
     // 基于人的汇总(最基本的明细统计)
     const actionStatBasedOnUserResult = await coreActionStatService.stat(requiredUsers, flows, coreActionConfig, statVisionUserFlowData)
@@ -88,6 +88,29 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
     return flowUtil.statIdsAndSumFromBottom(finalResult)
 }
 
+/**
+ * 获取和心动动作配置信息
+ * 不存在，返回NotFoundError
+ *
+ * @param deptIds
+ * @returns {Promise<any>}
+ */
+const getDeptCoreActions = async (deptIds) => {
+    const coreActionConfigStr = await redisUtil.get(`${redisConst.redisKeys.CoreActionRules}:${deptIds.join(",")}`)
+    if (!coreActionConfigStr) {
+        const departmentsStr = await redisUtil.get(redisConst.redisKeys.Departments)
+        const departments = JSON.parse(departmentsStr)
+        const deptNames = []
+        for (const deptId of deptIds) {
+            const dept = algorithmUtil.getJsonFromUnionFormattedJsonArr(departments, "dep_chil", "dept_id", deptId)
+            if (dept) {
+                deptNames.push(dept.name)
+            }
+        }
+        throw new NotFoundError(`部门${deptNames.join(",")}没找到核心动作配置信息`)
+    }
+    return JSON.parse(coreActionConfigStr)
+}
 /**
  * 根据tags过滤用户
  *
