@@ -3,8 +3,11 @@ const dateUtil = require("@/utils/dateUtil")
 const ParameterError = require("@/error/parameterError")
 const flowRepo = require("@/repository/flowRepo")
 const flowFormDetailsRepo = require("@/repository/flowFormDetailsRepo")
+const deptCoreActionRepo = require("@/repository/deptCoreActionRepo")
 const globalGetter = require("@/global/getter")
 const flowFormReviewUtil = require("@/utils/flowFormReviewUtil")
+const sequelizeUtil = require("@/utils/sequelizeUtil");
+const algorithmUtil = require("@/utils/algorithmUtil");
 
 /**
  * 移除指定状态的流程
@@ -31,7 +34,7 @@ const removeDoneActivitiesNotInDoneDateRangeExceptStartNode = (flows, startDoneD
         if (!flow.overallprocessflow) {
             continue
         }
-
+        
         const newOverallProcessFlow = []
         for (const item of flow.overallprocessflow) {
             if (item.type === flowReviewTypeConst.TODO || item.type === flowReviewTypeConst.FORCAST) {
@@ -65,7 +68,7 @@ const removeRedirectActivity = (flows) => {
         if (!flow.overallprocessflow) {
             continue
         }
-
+        
         const newOverallProcessFlow = []
         for (const item of flow.overallprocessflow) {
             if (item.operateType !== operateTypeConst.REDIRECT_TASK && item.operateType !== operateTypeConst.AGENT_REDIRECT_TASK) {
@@ -88,28 +91,28 @@ const removeRedirectActivity = (flows) => {
  * @returns {Promise<*[]>}
  */
 const getCombinedFlowsOfHistoryAndToday = async (startDoneDate, endDoneDate, formIds) => {
-
+    
     if ((startDoneDate || endDoneDate) && !(startDoneDate && endDoneDate)) {
         throw new ParameterError("时间区间不完整")
     }
-
+    
     let flows = []
     // 获取时间区间内的入库流程
     if (startDoneDate && endDoneDate) {
         if (dateUtil.duration(endDoneDate, startDoneDate) < 0) {
             throw new ParameterError("结束日期不能小于开始日期")
         }
-
+        
         const processRelatedInfo = await Promise.all([
             flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds), // 2.8s
             flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds),
             flowFormDetailsRepo.getAllFormsDetails()
         ])
-
+        
         const flowsData = processRelatedInfo[0]
         flows = processRelatedInfo[1]
         const flowFormDetails = processRelatedInfo[2]
-
+        
         // 合并流程的data和审核流信息
         for (let i = 0; i < flows.length; i++) {
             const currData = {}
@@ -122,24 +125,24 @@ const getCombinedFlowsOfHistoryAndToday = async (startDoneDate, endDoneDate, for
                 }
             }
             flows[i].data = currData
-
+            
             const formDataKeys = flowFormDetails.filter(item => item.formId === flows[i].formUuid)
             const dataKeyDetails = {}
             formDataKeys.forEach(item => dataKeyDetails[item.fieldId] = item.fieldName)
             flows[i].dataKeyDetails = dataKeyDetails
         }
     }
-
+    
     let todayFlows = await globalGetter.getTodayFlows()
     if (formIds && formIds.length > 0) {
         todayFlows = todayFlows.filter(flow => formIds.includes(flow.formUuid))
     }
-
+    
     flows = flows.concat(todayFlows.map(flow => {
         // 返回新的Flow, 防止修改内存中的数据结构
         return {...flow}
     }))
-
+    
     return flows
 }
 
@@ -154,13 +157,13 @@ const getVisionOutSourcingNames = (flows) => {
         formName: "外包修图视觉流程",
         outSourceChargerFieldId: "textField_lx48e5gk"
     }]
-
+    
     const outSourcingUsers = {}
     for (const flow of flows) {
         const outSourcingFormIds = outSourcingForms.map(item => item.formId)
         if (outSourcingFormIds.includes(flow.formUuid)) {
             const {outSourceChargerFieldId} = outSourcingForms.filter(item => item.formId === flow.formUuid)[0]
-
+            
             const username = flowFormReviewUtil.getFieldValue(outSourceChargerFieldId, flow.data)
             if (username) {
                 outSourcingUsers[username] = 1

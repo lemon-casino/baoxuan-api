@@ -16,14 +16,24 @@ const updateFormActivityRule = async (data) => {
 }
 
 const getFormActivityRules = async (formRuleId) => {
+    return (await getFormActivityRulesByWhere({deptCoreActionFormRuleId: formRuleId}))
+}
+
+const getFormActivityRulesByFormRuleIds = async (formRuleIds) => {
+    return (await getFormActivityRulesByWhere({deptCoreActionFormRuleId: {$in: formRuleIds}}))
+}
+
+const getFormActivityRulesByWhere = async (where) => {
     const result = await deptCoreActionFormActivityRuleModel.findAll({
-        where: {deptCoreActionFormRuleId: formRuleId}
+        where
     })
     return sequelizeUtil.extractDataValues(result)
 }
 
+
 module.exports = {
     getFormActivityRules,
+    getFormActivityRulesByFormRuleIds,
     updateFormActivityRule,
     saveFormActivityRule,
     deleteFormActivityRule

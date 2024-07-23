@@ -3,12 +3,14 @@ const processModel = models.processModel
 const processReviewModel = models.processReviewModel
 const processDetailsModel = models.processDetailsModel
 const flowFormDetailsModel = models.flowFormDetailsModel
+const deptCoreActionModel = models.deptCoreActionModel
+
 const NotFoundError = require("@/error/http/notFoundError")
 const coreActionsConst = require("@/const/tmp/coreActionsConst")
 const coreFormFlowConst = require("@/const/tmp/coreFormFlowConst")
 const sequelizeUtil = require("@/utils/sequelizeUtil")
 const dateUtil = require("@/utils/dateUtil")
-const {BaseError} = require("sequelize");
+const algorithmUtil = require("@/utils/algorithmUtil")
 
 processModel.hasMany(processReviewModel,
     {
@@ -37,18 +39,18 @@ const getProcessByIds = async (ids) => {
         processModel.findAll({
             where: {processInstanceId: {$in: ids}}
         }),
-
+        
         processReviewModel.findAll({
             where: {processInstanceId: {$in: ids}},
             order: [["order_index", "asc"]]
         }),
-
+        
         processDetailsModel.findAll({
             where: {processInstanceId: {$in: ids}}
         })
     ])
-
-
+    
+    
     const processes = sequelizeUtil.extractDataValues(processRelatedInfo[0])
     const processesReviewItems = sequelizeUtil.extractDataValues(processRelatedInfo[1])
     const processesDetails = sequelizeUtil.extractDataValues(processRelatedInfo[2])
@@ -58,27 +60,27 @@ const getProcessByIds = async (ids) => {
     })
     const flowsFormDetails = sequelizeUtil.extractDataValues(tmpFlowsFormDetails)
     for (const process of processes) {
-
+        
         if (process.processInstanceId === "35773449-999e-47c8-8d7d-7b003fe5e177") {
             console.log("-----")
         }
-
+        
         process.createTimeGMT = dateUtil.format2Str(process.createTime, "YYYY-MM-DDTHH:mm:ss") + "Z"
         process.modifiedTimeGMT = dateUtil.format2Str(process.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"
-
+        
         let processReviewItems = processesReviewItems.filter(item => item.processInstanceId === process.processInstanceId)
         processReviewItems = processReviewItems.map(item => {
             return {...item, operateTimeGMT: dateUtil.format2Str(item.doneTime, "YYYY-MM-DDTHH:mm:ss") + "Z"}
         })
         process.overallprocessflow = processReviewItems
-
+        
         const processDetails = processesDetails.filter(item => item.processInstanceId === process.processInstanceId)
         const processFlowFormDetails = flowsFormDetails.filter(item => item.formId === process.formUuid)
         process.data = {}
         for (const item of processDetails) {
             process.data[item.fieldId] = item.fieldValue
         }
-
+        
         process.dataKeyDetails = {}
         for (const item of processFlowFormDetails) {
             process.dataKeyDetails[item.fieldId] = item.fieldName
@@ -171,7 +173,7 @@ const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateT
             where: {done_time: {$between: [startDoneDateTime, enDoneDateTime]}}
         }
     ).slice(0, -1);
-
+    
     const where = {
         process_instance_id: {$in: models.sequelize.literal(`(${tempSQL})`)},
     }
@@ -188,7 +190,7 @@ const getProcessDataByReviewItemDoneTime = async (startDoneDateTime, enDoneDateT
         where,
         order: [["process_instance_id", "desc"]]
     })
-
+    
     processWithData = processWithData.map((item) => {
         return item.get({plain: true})
     })

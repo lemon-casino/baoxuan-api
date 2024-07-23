@@ -1,9 +1,83 @@
 const deptCoreActionRepo = require("@/repository/deptCoreActionRepo")
+const deptCoreActionFormRuleRepo = require("@/repository/deptCoreActionFormRuleRepo")
+const deptCoreActionFormDetailsRuleRepo = require("@/repository/deptCoreActionFormDetailsRuleRepo")
+const deptCoreActionFormActivityRuleRepo = require("@/repository/deptCoreActionFormActivityRuleRepo")
+const algorithmUtil = require("@/utils/algorithmUtil")
 
-const getDeptCoreActions = async (deptId) => {
-    const data = await deptCoreActionRepo.getDeptCoreActions(deptId)
+const getDeptCoreActions = async (deptIds) => {
+    return (await deptCoreActionRepo.getDeptCoreActions(deptIds))
+}
+
+const getTreedDeptCoreActions = async (deptIds) => {
+    const data = await deptCoreActionRepo.getDeptCoreActions(deptIds)
     // 根据 parentId 转化数据结构
     return _collapseCoreActions(data)
+}
+
+const getDeptCoreActionsRules = async (deptIds) => {
+    const coreActions = await deptCoreActionRepo.getDeptCoreActions(deptIds)
+    const coreActionIds = coreActions.map(item => item.id)
+    const deptCoreActionFormRules = await deptCoreActionFormRuleRepo.getRulesByCoreActionIds(coreActionIds)
+    const coreActionFormRuleIds = deptCoreActionFormRules.map(item => item.id)
+    const coreActionFormDetailsRules = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRuleByFormRuleIds(
+        coreActionFormRuleIds
+    )
+    
+    const coreActionFormActivityRules = await deptCoreActionFormActivityRuleRepo.getFormActivityRulesByFormRuleIds(coreActionFormRuleIds)
+    const treeFormatResult = []
+    while (coreActions.length > 0) {
+        const coreAction = coreActions.splice(0, 1)[0]
+        delete coreAction["deptId"]
+        delete coreAction["deptName"]
+        delete coreAction["path"]
+        
+        const currCoreActionFormRules = deptCoreActionFormRules.filter(item => item.deptCoreActionId === coreAction.id)
+        if (currCoreActionFormRules.length > 0) {
+            coreAction.rules = []
+            for (const currCoreActionFormRule of currCoreActionFormRules) {
+                const formRule = {
+                    formId: currCoreActionFormRule.formId,
+                    formName: currCoreActionFormRule.formName,
+                    flowDetailsRules: [],
+                    flowNodeRules: []
+                }
+                const currCoreActionFormRuleDetailsRules = coreActionFormDetailsRules.filter(item => item.deptCoreActionFormRuleId === currCoreActionFormRule.id)
+                const pureCoreActionFormDetailsRules = currCoreActionFormRuleDetailsRules.map(item => {
+                    return {
+                        fieldId: item.fieldId,
+                        fieldName: item.fieldName,
+                        opCode: item.opCode,
+                        value: item.value,
+                        condition: item.condition,
+                        conditionCode: item.conditionCode
+                    }
+                })
+                formRule.flowDetailsRules = pureCoreActionFormDetailsRules
+                
+                const currCoreActionFormRuleActivityRules = coreActionFormActivityRules.filter(item => item.deptCoreActionFormRuleId === currCoreActionFormRule.id)
+                const pureCoreActionFormActivityRules = currCoreActionFormRuleActivityRules.map(item => {
+                    return {
+                        activityId: item.activityId,
+                        activityName: item.activityName,
+                        status: item.status,
+                        owner: item.owner
+                    }
+                })
+                formRule.flowNodeRules = pureCoreActionFormActivityRules
+                coreAction.rules.push(formRule)
+            }
+        }
+        
+        const parentCoreAction = algorithmUtil.getJsonFromUnionFormattedJsonArr(treeFormatResult, "children", "id", coreAction.parentId)
+        if (parentCoreAction) {
+            coreAction.children = []
+            parentCoreAction.children.push(coreAction)
+        } else {
+            treeFormatResult.push({...coreAction, children: []})
+        }
+    }
+    
+    return treeFormatResult
 }
 
 const saveDeptCoreAction = async (model) => {
@@ -46,7 +120,7 @@ const getDeptCoreActionForms = async (coreActionId) => {
  */
 const _collapseCoreActions = (coreActions) => {
     coreActions = coreActions.sort((curr, next) => next.id - curr.id)
-
+    
     let currData = coreActions.find(item => !item.children)
     while (currData) {
         // 获取匹配的子项
@@ -61,10 +135,12 @@ const _collapseCoreActions = (coreActions) => {
 }
 
 module.exports = {
-    saveDeptCoreAction,
     getDeptCoreActions,
     getDeptCoreActionsWithRules,
+    getDeptCoreActionsRules,
+    getTreedDeptCoreActions,
+    getDeptCoreActionForms,
     delDeptCoreAction,
     updateDeptCoreAction,
-    getDeptCoreActionForms
+    saveDeptCoreAction
 }

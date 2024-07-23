@@ -201,7 +201,7 @@ const syncResignEmployeeInfo = async () => {
         if (employee.lastWorkDay) {
             newEmployee.lastWorkDay = dateUtil.convertTimestampToDate(employee.lastWorkDay)
         }
-        newEmployee.isResign = true
+        // newEmployee.isResign = true
         newEmployee.resignStatus = employee.status
         newEmployee.preStatus = employee.preStatus
         newEmployee.reasonMemo = employee.reasonMemo

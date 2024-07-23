@@ -1,13 +1,14 @@
 const _ = require("lodash")
-const {opFunctions} = require("@/const/ruleConst/operatorConst")
-const {activityIdMappingConst, flowStatusConst, flowReviewTypeConst} = require("@/const/flowConst")
-const flowUtil = require("@/utils/flowUtil")
 const flowRepo = require("@/repository/flowRepo");
-const flowCommonService = require("@/service/common/flowCommonService");
 const userRepo = require("@/repository/userRepo");
-const userCommonService = require("@/service/common/userCommonService");
 const outUsersRepo = require("@/repository/outUsersRepo");
+const flowCommonService = require("@/service/common/flowCommonService");
+const userCommonService = require("@/service/common/userCommonService");
+const flowUtil = require("@/utils/flowUtil")
 const algorithmUtil = require("@/utils/algorithmUtil");
+const {activityIdMappingConst, flowStatusConst, flowReviewTypeConst} = require("@/const/flowConst")
+const operatorConst = require("@/const/ruleConst/operatorConst")
+const conditionConst = require("@/const/ruleConst/conditionConst")
 const visionConst = require("@/const/tmp/visionConst");
 const {visionFormDoneActivityIds} = require("@/const/tmp/coreActionsConst");
 
@@ -23,160 +24,297 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
  * @returns {Promise<*[]>}
  */
 const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
-    const finalResult = []
-
-    // 根据配置信息获取基于所有人的数据
-    // eg：[{actionName: "市场分析", children: [{"nameCN": "待做", children: [{nameCN:"逾期", children:[{userName: "张三", sum: 1, ids: ["xxx"]}]}]}]}]
-    for (const action of coreConfig) {
-        const {actionName, actionCode} = action
-        // 动作节点
-        const actionResult = {actionName, actionCode, children: []}
-        for (const actionStatus of action.actionStatus) {
-            const {nameCN, nameEN, rules} = actionStatus
-            // 动作的状态节点
-            let statusResult = {nameCN, nameEN, children: []}
-
-            // 动作的状态节点区分逾期-未逾期两种
-            const overDueResult = {nameCN: "逾期", nameEN: "overDue", children: []}
-            const notOverDueResult = {nameCN: "未逾期", nameEN: "notOverDue", children: []}
-
-            // 根据配置中状态的计算规则进行统计
-            for (const rule of rules) {
-                let currFlows = flows.filter((flow) => flow.formUuid === rule.formId)
-                currFlows = filterFlowsByFlowDetailsRules(currFlows, rule.flowDetailsRules)
-
-                if (currFlows.length === 0) {
-                    continue
-                }
-
-                for (const flowNodeRule of rule.flowNodeRules) {
-                    const {from: fromNode, to: toNode, ownerRule} = flowNodeRule
-
-                    // 根据节点配置对流程进行汇总
-                    for (let flow of currFlows) {
-                        const processInstanceId = flow.processInstanceId
-
-                        let operatorsActivity = []
-                        const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
-                        const matchedActivity = getMatchedActivity(fromNode, toNode, activities)
-                        if (!matchedActivity) {
-                            continue
+    // const finalResult = []
+    
+    const statForHasRulesNode = (coreConfig, flows) => {
+        for (const action of coreConfig) {
+            if (action.rules && action.rules.length > 0) {
+                const statResult = statFlowsByRules(action, action.rules, flows)
+                action.children = statResult
+            }
+            
+            if (action.children && action.children.length > 0) {
+                statForHasRulesNode(action.children)
+            }
+        }
+        return coreConfig
+    }
+    
+    const statFlowsByRules = async (resultNode, rules, flows) => {
+        for (const rule of rules) {
+            flows = flows.filter((flow) => flow.formUuid === rule.formId)
+            flows = filterFlowsByFlowDetailsRules(flows, rule.flowDetailsRules)
+            
+            if (flows.length === 0) {
+                continue
+            }
+            
+            for (const flowNodeRule of rule.flowNodeRules) {
+                const {
+                    activityId,
+                    status,
+                    isOverdue,
+                    owner: ownerRule
+                } = flowNodeRule
+                
+                // 根据节点配置对流程进行汇总
+                for (let flow of flows) {
+                    const processInstanceId = flow.processInstanceId
+                    
+                    let operatorsActivity = []
+                    const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
+                    const matchedActivity = getMatchedActivity(activityId, status, isOverdue, activities)
+                    if (!matchedActivity) {
+                        continue
+                    }
+                    
+                    operatorsActivity = extendActivityWithUserNameAndTags(matchedActivity, users, flow, ownerRule)
+                    
+                    if (operatorsActivity.length === 0) {
+                        continue
+                    }
+                    
+                    // 根据是否逾期汇总个人的ids和sum
+                    for (const operatorActivity of operatorsActivity) {
+                        
+                        const getUserStatResult = async (resultNode, flow, operatorActivity) => {
+                            
+                            if (!userFlowDataStatFunc || !_.isFunction(userFlowDataStatFunc)) {
+                                return {
+                                    processInstanceId: flow.processInstanceId,
+                                    flowData: []
+                                }
+                            }
+                            
+                            let userFlowDataStat = null
+                            
+                            // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
+                            if (!resultNode.nameCN.includes("待")) {
+                                const tmpFlow = _.cloneDeep(flow)
+                                // 进行中的工作会统计表单中预计的数量 完成后需要排除掉预计的数量， 表单标识有【预计】字样
+                                if (resultNode.nameCN.includes("完")) {
+                                    const containYuJiTagKeys = []
+                                    for (const key of Object.keys(tmpFlow.dataKeyDetails)) {
+                                        if (tmpFlow.dataKeyDetails[key].includes("预计") && tmpFlow.dataKeyDetails[key].includes("数量")) {
+                                            containYuJiTagKeys.push(key)
+                                        }
+                                    }
+                                    for (const containYuJiTagKey of containYuJiTagKeys) {
+                                        delete tmpFlow.dataKeyDetails[containYuJiTagKey]
+                                        delete tmpFlow.data[containYuJiTagKey]
+                                    }
+                                }
+                                
+                                const dataStatResult = await userFlowDataStatFunc(operatorActivity, tmpFlow)
+                                
+                                if (dataStatResult.length > 0) {
+                                    userFlowDataStat = {
+                                        processInstanceId: tmpFlow.processInstanceId,
+                                        flowData: dataStatResult
+                                    }
+                                }
+                            }
+                            return userFlowDataStat
                         }
-
-                        operatorsActivity = extendActivityWithUserNameAndTags(matchedActivity, users, flow, ownerRule)
-
-                        if (operatorsActivity.length === 0) {
-                            continue
-                        }
-
-                        // 根据是否逾期汇总个人的ids和sum
-                        for (const operatorActivity of operatorsActivity) {
-
-                            const getUserStatResult = async (statusResult, flow, operatorActivity) => {
-
-                                if (!userFlowDataStatFunc || !_.isFunction(userFlowDataStatFunc)) {
-                                    return {
-                                        processInstanceId: flow.processInstanceId,
-                                        flowData: []
-                                    }
-                                }
-
-                                let userFlowDataStat = null
-
-                                // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
-                                if (!statusResult.nameCN.includes("待")) {
-                                    const tmpFlow = _.cloneDeep(flow)
-                                    // 进行中的工作会统计表单中预计的数量 完成后需要排除掉预计的数量， 表单标识有【预计】字样
-                                    if (statusResult.nameCN.includes("完")) {
-                                        const containYuJiTagKeys = []
-                                        for (const key of Object.keys(tmpFlow.dataKeyDetails)) {
-                                            if (tmpFlow.dataKeyDetails[key].includes("预计") && tmpFlow.dataKeyDetails[key].includes("数量")) {
-                                                containYuJiTagKeys.push(key)
-                                            }
-                                        }
-                                        for (const containYuJiTagKey of containYuJiTagKeys) {
-                                            delete tmpFlow.dataKeyDetails[containYuJiTagKey]
-                                            delete tmpFlow.data[containYuJiTagKey]
-                                        }
-                                    }
-
-                                    const dataStatResult = await userFlowDataStatFunc(operatorActivity, tmpFlow)
-
-                                    if (dataStatResult.length > 0) {
-                                        userFlowDataStat = {
-                                            processInstanceId: tmpFlow.processInstanceId,
-                                            flowData: dataStatResult
-                                        }
-                                    }
-
-                                }
-                                return userFlowDataStat
+                        
+                        const userFlowDataStat = await getUserStatResult(resultNode, flow, operatorActivity)
+                        
+                        let resultStatNode = resultNode.children.filter(item => item.userName === operatorActivity.userName)
+                        
+                        const userHasStat = resultStatNode.length > 0
+                        if (userHasStat) {
+                            const currResultStatNode = resultStatNode[0]
+                            // 避免一人在同一流程中干多个活重复计算
+                            if (!currResultStatNode.ids.includes(processInstanceId)) {
+                                currResultStatNode.ids.push(processInstanceId)
+                                currResultStatNode.sum = currResultStatNode.ids.length
                             }
-
-                            const userFlowDataStat = await getUserStatResult(statusResult, flow, operatorActivity)
-
-
-                            if (flow.processInstanceId === "bb04aa5e-2a2d-4c84-afdb-12263d68cee8") {
-                                console.log("-----")
-                            }
-
-                            let resultStatNode = null
-                            if (matchedActivity.isOverDue) {
-                                resultStatNode = overDueResult.children.filter(item => item.userName === operatorActivity.userName)
-                            } else {
-                                resultStatNode = notOverDueResult.children.filter(item => item.userName === operatorActivity.userName)
-                            }
-
-                            const userHasStat = resultStatNode.length > 0
-                            if (userHasStat) {
-                                const currResultStatNode = resultStatNode[0]
-                                // 避免一人在同一流程中干多个活重复计算
-                                if (!currResultStatNode.ids.includes(processInstanceId)) {
-                                    currResultStatNode.ids.push(processInstanceId)
-                                    currResultStatNode.sum = currResultStatNode.ids.length
-
-                                }
-
-                                // 同一人流程中会出现多次干不同的活，将本人所有该流程中节点工作量的统计去重处理才能保证不漏
-                                if (userFlowDataStat && userFlowDataStat.flowData.length > 0) {
-                                    const currFlowStat = currResultStatNode.userFlowsDataStat.find(item => item.processInstanceId == processInstanceId)
-                                    if (currFlowStat) {
-                                        const alreadyStatActivityNames = currFlowStat.flowData.map(item => item.nameCN)
-                                        for (const actStat of userFlowDataStat.flowData) {
-                                            if (!alreadyStatActivityNames.includes(actStat.nameCN)) {
-                                                currFlowStat.flowData.push(actStat)
-                                            }
+                            
+                            // 同一人流程中会出现多次干不同的活，将本人所有该流程中节点工作量的统计去重处理才能保证不漏
+                            if (userFlowDataStat && userFlowDataStat.flowData.length > 0) {
+                                const currFlowStat = currResultStatNode.userFlowsDataStat.find(item => item.processInstanceId == processInstanceId)
+                                if (currFlowStat) {
+                                    const alreadyStatActivityNames = currFlowStat.flowData.map(item => item.nameCN)
+                                    for (const actStat of userFlowDataStat.flowData) {
+                                        if (!alreadyStatActivityNames.includes(actStat.nameCN)) {
+                                            currFlowStat.flowData.push(actStat)
                                         }
-                                    } else {
-                                        currResultStatNode.userFlowsDataStat.push(userFlowDataStat)
                                     }
-                                }
-                            } else {
-                                resultStatNode = {
-                                    userName: operatorActivity.userName,
-                                    sum: 1,
-                                    ids: [processInstanceId],
-                                    userFlowsDataStat: userFlowDataStat ? [userFlowDataStat] : []
-                                }
-                                if (matchedActivity.isOverDue) {
-                                    overDueResult.children.push(resultStatNode)
                                 } else {
-                                    notOverDueResult.children.push(resultStatNode)
+                                    currResultStatNode.userFlowsDataStat.push(userFlowDataStat)
                                 }
                             }
+                        } else {
+                            resultStatNode = {
+                                userName: operatorActivity.userName,
+                                sum: 1,
+                                ids: [processInstanceId],
+                                userFlowsDataStat: userFlowDataStat ? [userFlowDataStat] : []
+                            }
+                            resultNode.children.push(resultStatNode)
                         }
                     }
                 }
             }
-
-            // 汇总结果保存
-            statusResult.children.push(overDueResult)
-            statusResult.children.push(notOverDueResult)
-            actionResult.children.push(statusResult)
         }
-        finalResult.push(actionResult)
+        return resultNode
     }
-    return finalResult
+    
+    const result = statForHasRulesNode(coreConfig, flows)
+    return result
+    
+    // 根据配置信息获取基于所有人的数据
+    // eg：[{actionName: "市场分析", children: [{"nameCN": "待做", children: [{nameCN:"逾期", children:[{userName: "张三", sum: 1, ids: ["xxx"]}]}]}]}]
+    // for (const action of coreConfig) {
+    //     const {actionName, actionCode} = action
+    //     // 动作节点
+    //     const actionResult = {actionName, actionCode, children: []}
+    //     for (const actionStatus of action.actionStatus) {
+    //         const {nameCN, nameEN, rules} = actionStatus
+    //         // 动作的状态节点
+    //         let statusResult = {nameCN, nameEN, children: []}
+    //
+    //         // 动作的状态节点区分逾期-未逾期两种
+    //         const overDueResult = {nameCN: "逾期", nameEN: "overDue", children: []}
+    //         const notOverDueResult = {nameCN: "未逾期", nameEN: "notOverDue", children: []}
+    //
+    //         // 根据配置中状态的计算规则进行统计
+    //         for (const rule of rules) {
+    //             let currFlows = flows.filter((flow) => flow.formUuid === rule.formId)
+    //             currFlows = filterFlowsByFlowDetailsRules(currFlows, rule.flowDetailsRules)
+    //
+    //             if (currFlows.length === 0) {
+    //                 continue
+    //             }
+    //
+    //             for (const flowNodeRule of rule.flowNodeRules) {
+    //                 const {from: fromNode, to: toNode, ownerRule} = flowNodeRule
+    //
+    //                 // 根据节点配置对流程进行汇总
+    //                 for (let flow of currFlows) {
+    //                     const processInstanceId = flow.processInstanceId
+    //
+    //                     let operatorsActivity = []
+    //                     const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
+    //                     const matchedActivity = getMatchedActivity(fromNode, toNode, activities)
+    //                     if (!matchedActivity) {
+    //                         continue
+    //                     }
+    //
+    //                     operatorsActivity = extendActivityWithUserNameAndTags(matchedActivity, users, flow, ownerRule)
+    //
+    //                     if (operatorsActivity.length === 0) {
+    //                         continue
+    //                     }
+    //
+    //                     // 根据是否逾期汇总个人的ids和sum
+    //                     for (const operatorActivity of operatorsActivity) {
+    //
+    //                         const getUserStatResult = async (statusResult, flow, operatorActivity) => {
+    //
+    //                             if (!userFlowDataStatFunc || !_.isFunction(userFlowDataStatFunc)) {
+    //                                 return {
+    //                                     processInstanceId: flow.processInstanceId,
+    //                                     flowData: []
+    //                                 }
+    //                             }
+    //
+    //                             let userFlowDataStat = null
+    //
+    //                             // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
+    //                             if (!statusResult.nameCN.includes("待")) {
+    //                                 const tmpFlow = _.cloneDeep(flow)
+    //                                 // 进行中的工作会统计表单中预计的数量 完成后需要排除掉预计的数量， 表单标识有【预计】字样
+    //                                 if (statusResult.nameCN.includes("完")) {
+    //                                     const containYuJiTagKeys = []
+    //                                     for (const key of Object.keys(tmpFlow.dataKeyDetails)) {
+    //                                         if (tmpFlow.dataKeyDetails[key].includes("预计") && tmpFlow.dataKeyDetails[key].includes("数量")) {
+    //                                             containYuJiTagKeys.push(key)
+    //                                         }
+    //                                     }
+    //                                     for (const containYuJiTagKey of containYuJiTagKeys) {
+    //                                         delete tmpFlow.dataKeyDetails[containYuJiTagKey]
+    //                                         delete tmpFlow.data[containYuJiTagKey]
+    //                                     }
+    //                                 }
+    //
+    //                                 const dataStatResult = await userFlowDataStatFunc(operatorActivity, tmpFlow)
+    //
+    //                                 if (dataStatResult.length > 0) {
+    //                                     userFlowDataStat = {
+    //                                         processInstanceId: tmpFlow.processInstanceId,
+    //                                         flowData: dataStatResult
+    //                                     }
+    //                                 }
+    //
+    //                             }
+    //                             return userFlowDataStat
+    //                         }
+    //
+    //                         const userFlowDataStat = await getUserStatResult(statusResult, flow, operatorActivity)
+    //
+    //
+    //                         if (flow.processInstanceId === "bb04aa5e-2a2d-4c84-afdb-12263d68cee8") {
+    //                             console.log("-----")
+    //                         }
+    //
+    //                         let resultStatNode = null
+    //                         if (matchedActivity.isOverDue) {
+    //                             resultStatNode = overDueResult.children.filter(item => item.userName === operatorActivity.userName)
+    //                         } else {
+    //                             resultStatNode = notOverDueResult.children.filter(item => item.userName === operatorActivity.userName)
+    //                         }
+    //
+    //                         const userHasStat = resultStatNode.length > 0
+    //                         if (userHasStat) {
+    //                             const currResultStatNode = resultStatNode[0]
+    //                             // 避免一人在同一流程中干多个活重复计算
+    //                             if (!currResultStatNode.ids.includes(processInstanceId)) {
+    //                                 currResultStatNode.ids.push(processInstanceId)
+    //                                 currResultStatNode.sum = currResultStatNode.ids.length
+    //
+    //                             }
+    //
+    //                             // 同一人流程中会出现多次干不同的活，将本人所有该流程中节点工作量的统计去重处理才能保证不漏
+    //                             if (userFlowDataStat && userFlowDataStat.flowData.length > 0) {
+    //                                 const currFlowStat = currResultStatNode.userFlowsDataStat.find(item => item.processInstanceId == processInstanceId)
+    //                                 if (currFlowStat) {
+    //                                     const alreadyStatActivityNames = currFlowStat.flowData.map(item => item.nameCN)
+    //                                     for (const actStat of userFlowDataStat.flowData) {
+    //                                         if (!alreadyStatActivityNames.includes(actStat.nameCN)) {
+    //                                             currFlowStat.flowData.push(actStat)
+    //                                         }
+    //                                     }
+    //                                 } else {
+    //                                     currResultStatNode.userFlowsDataStat.push(userFlowDataStat)
+    //                                 }
+    //                             }
+    //                         } else {
+    //                             resultStatNode = {
+    //                                 userName: operatorActivity.userName,
+    //                                 sum: 1,
+    //                                 ids: [processInstanceId],
+    //                                 userFlowsDataStat: userFlowDataStat ? [userFlowDataStat] : []
+    //                             }
+    //                             if (matchedActivity.isOverDue) {
+    //                                 overDueResult.children.push(resultStatNode)
+    //                             } else {
+    //                                 notOverDueResult.children.push(resultStatNode)
+    //                             }
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //
+    //         // 汇总结果保存
+    //         statusResult.children.push(overDueResult)
+    //         statusResult.children.push(notOverDueResult)
+    //         actionResult.children.push(statusResult)
+    //     }
+    //     finalResult.push(actionResult)
+    // }
+    // return finalResult
 }
 
 /**
@@ -222,43 +360,42 @@ const extractInnerAndOutSourcingFormsFromConfig = (coreActionConfig) => {
  * @returns {*}
  */
 const filterFlowsByFlowDetailsRules = (flows, flowDetailsRules) => {
+    let andFlows = _.cloneDeep(flows)
+    
     if (flowDetailsRules) {
         for (const detailsRule of flowDetailsRules) {
-            flows = flows.filter(flow => {
-                // if (flow.data[detailsRule.fieldId]) {
-                return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
-                // }
-                return false
-            })
+            if (detailsRule.condition === conditionConst.condition.AND) {
+                andFlows = andFlows.filter(flow => {
+                    return operatorConst.opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
+                })
+            } else {
+                const orFlows = _.cloneDeep(flows)
+                const requiredOrFlows = orFlows.filter(flow => {
+                    return operatorConst.opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
+                })
+                andFlows = andFlows.concat(requiredOrFlows)
+            }
         }
     }
-    return flows
+    return andFlows
 }
 
 /**
  * 获取匹配的审核节点
  *
- * @param fromNode
- * @param toNode
+ * @param activityId
+ * @param status
  * @param activities
  * @returns {*|null}
  */
-const getMatchedActivity = (fromNode, toNode, activities) => {
-    let fromMatched = false
-    let toMatched = false
-
+const getMatchedActivity = (activityId, status, isOverdue, activities) => {
+    
     for (const activity of activities) {
         // 发起的节点id对应的表单流程id不一致
-        const fromNodeId = activityIdMappingConst[fromNode.id] || fromNode.id
-
-        if (fromNode && activity.activityId === fromNodeId && fromNode.status.includes(activity.type)) {
-            fromMatched = true
-        }
-        if (toNode && activity.activityId === toNode.id && toNode.status.includes(activity.type)) {
-            toMatched = true
-        }
-
-        if (fromMatched && toMatched) {
+        activityId = activityIdMappingConst[activityId] || activityId
+        if (activity.activityId === activityId &&
+            status.includes(activity.type) &&
+            isOverdue === activity.isOverdue) {
             return activity
         }
     }
@@ -309,9 +446,9 @@ const extendActivityWithUserNameAndTags = (activity, users, flow, ownerRule) => 
         const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
         ownerName = reviewItems.length > 0 ? reviewItems[0].operatorName : defaultUserName
     }
-
+    
     const user = users.find(user => user.nickname === ownerName || user.userName === ownerName)
-
+    
     if (user) {
         tmpOperatorsActivity.push({
             userName: ownerName,
@@ -381,7 +518,7 @@ const convertToUserActionResult = (users, userStatResult) => {
             break
         }
     }
-
+    
     const newStructureUsers = isRequiredVisionConfusedUserNamesConst ? mixedOutSourcingUsers : []
     const userNamesArr = users.map(item => item.nickname || item.userName)
     for (const username of userNamesArr) {
@@ -396,7 +533,7 @@ const convertToUserActionResult = (users, userStatResult) => {
             newStructureUsers.push({username, children: [username]})
         }
     }
-
+    
     for (const user of newStructureUsers) {
         const getActionChildren = (usernames) => {
             const statusKeyTexts = ["待", "中", "完"]
@@ -410,7 +547,7 @@ const convertToUserActionResult = (users, userStatResult) => {
                     const l2ActionStructure = {
                         nameCN: l2Action, nameEN: "", children: []
                     }
-
+                    
                     // 找出所有key所对应的逾期所包含的children
                     for (const result of userStatResult) {
                         let ids = []
@@ -487,9 +624,9 @@ const standardStat = (flows, statusConfigs, statusResult) => {
  * @returns {*[]}
  */
 const convertToFlowStatResult = (isStandardStat, flows, coreActionConfig, userStatResult) => {
-
+    
     const statusStatFlowResult = initResultTemplate(userStatResult)
-
+    
     const statusKeyTexts = ["待", "中", "完"]
     for (const actionResult of statusStatFlowResult) {
         // 从配置 coreActionConfig 中找到类似‘全套-待xxx’中的rules
@@ -500,7 +637,7 @@ const convertToFlowStatResult = (isStandardStat, flows, coreActionConfig, userSt
             const targetCoreActionConfig = coreActionConfig.filter(item => item.actionName === actionResult.nameCN)[0]
             // 找到具有想匹配关键词的状态节点(s)：待拍视频、待入美编
             const coreActionSameKeyTextConfig = targetCoreActionConfig.actionStatus.filter(item => item.nameCN.includes(statusKeyText))
-
+            
             if (isStandardStat) {
                 statusResult = standardStat(flows, coreActionSameKeyTextConfig, statusResult)
             } else {
@@ -528,7 +665,7 @@ const initResultTemplate = (userStatResult) => {
         {nameCN: "进行中", nameEN: "DOING", children: _.cloneDeep(overdueConfigTemplate)},
         {nameCN: "已完成", nameEN: "DONE", children: _.cloneDeep(overdueConfigTemplate)}
     ]
-
+    
     return getFlowSumStructure(_.cloneDeep(userStatResult), flowStatConfigTemplate)
 }
 
@@ -561,28 +698,28 @@ const statFlowsToActionByFormRule = (flows, formRule, actionName, statusResult) 
         for (const detailsRule of formRule.flowDetailsRules) {
             formFlows = formFlows.filter(flow => {
                 if (flow.data[detailsRule.fieldId]) {
-                    return opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
+                    return operatorConst.opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
                 }
                 return false
             })
         }
     }
-
+    
     // 将流程统计到对应结果状态中，包含逾期
     for (const flow of formFlows) {
         const activities = flow.overallprocessflow
-
+        
         // 匹配到一项即算匹配成功
         for (let i = 0; i < formRule.flowNodeRules.length; i++) {
             const flowNodeRule = formRule.flowNodeRules[i]
             const {from: fromNode, to: toNode} = flowNodeRule
-
+            
             const fromNodes = activities.filter(item => item.activityId === fromNode.id && fromNode.status.includes(item.type))
             const toNodes = activities.filter(item => item.activityId === toNode.id && toNode.status.includes(item.type))
-
+            
             if (fromNodes.length > 0 && toNodes.length > 0) {
                 const needToStatResult = statusResult.children.find(item => item.nameCN === (fromNodes[0].isOverDue ? "逾期" : "未逾期"))
-
+                
                 const tmpSubActionResult = needToStatResult.children.find(item => item.nameCN === actionName)
                 if (tmpSubActionResult) {
                     if (!tmpSubActionResult.ids.includes(flow.processInstanceId)) {
@@ -621,7 +758,7 @@ const statFlowsToActionByTargetFormActivityIds = (flows, actionName, coreActionS
         if (requiredDoneActivities.length === 0) {
             continue
         }
-
+        
         for (const statusConfig of coreActionSameKeyTextConfig) {
             const {rules} = statusConfig
             for (const formRule of rules) {
@@ -631,13 +768,13 @@ const statFlowsToActionByTargetFormActivityIds = (flows, actionName, coreActionS
                 // 判断视觉属性是否相同
                 let hasSameVisionAttr = false
                 for (const detailsRule of formRule.flowDetailsRules || []) {
-                    hasSameVisionAttr = opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], [actionName])
+                    hasSameVisionAttr = operatorConst.opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], [actionName])
                     if (hasSameVisionAttr) {
                         hasSameVisionAttr = true
                         break
                     }
                 }
-
+                
                 if (hasSameVisionAttr) {
                     // 判断是否出现过逾期
                     let overdueActivity = null
@@ -655,7 +792,7 @@ const statFlowsToActionByTargetFormActivityIds = (flows, actionName, coreActionS
                             }
                         }
                     }
-
+                    
                     const tmpOverdueStatResult = statusResult.children.find(item => item.nameCN === (overdueActivity ? "逾期" : "未逾期"))
                     // 对于完成的流程统计不用区分具体的动作，要不会重复的， 默认为”合计“
                     const defaultActionName = "合计"

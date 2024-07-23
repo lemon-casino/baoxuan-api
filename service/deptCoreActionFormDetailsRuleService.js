@@ -29,10 +29,10 @@ const getFormDetailsRules = async (formRuleId) => {
 }
 
 const saveFormDetailsRule = async (model) => {
-    const ruledDetails = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRuleByWhere({
-        deptCoreActionFormRuleId: model.deptCoreActionFormRuleId,
-        fieldId: model.fieldId
-    })
+    const ruledDetails = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRuleByFormRuleIdAndFieldId(
+        model.deptCoreActionFormRuleId,
+        model.fieldId
+    )
     if (ruledDetails.length === 0) {
         return (await deptCoreActionFormDetailsRuleRepo.saveFormDetailsRule(model))
     }

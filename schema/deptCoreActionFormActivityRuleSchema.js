@@ -6,6 +6,7 @@ const saveParamsSchema = {
     activityId: joiUtil.commonJoiSchemas.strRequired,
     activityName: joiUtil.commonJoiSchemas.strRequired,
     status: joiUtil.commonJoiSchemas.strRequired,
+    isOverdue: joiUtil.commonJoiSchemas.booleanRequired,
     owner: Joi.object({
         from: joiUtil.commonJoiSchemas.strRequired,
         id: joiUtil.commonJoiSchemas.strRequired

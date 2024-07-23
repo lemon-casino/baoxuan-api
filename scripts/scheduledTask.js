@@ -88,7 +88,7 @@ schedule.scheduleJob(syncDepartmentWithUserCron, async function () {
  * 注意：该数据依赖于Redis中的department数据：要保证更新department的定时任务优先执行完成
  */
 schedule.scheduleJob(syncUserWithDepartmentCron, async function () {
-    await taskService.syncUserWithDepartment()
+    // await taskService.syncUserWithDepartment()
 })
 
 /**
