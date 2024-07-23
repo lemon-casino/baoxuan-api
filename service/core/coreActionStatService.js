@@ -1,9 +1,7 @@
 const _ = require("lodash")
-const flowRepo = require("@/repository/flowRepo");
 const userRepo = require("@/repository/userRepo");
 const outUsersRepo = require("@/repository/outUsersRepo");
 const flowCommonService = require("@/service/common/flowCommonService");
-const userCommonService = require("@/service/common/userCommonService");
 const flowUtil = require("@/utils/flowUtil")
 const algorithmUtil = require("@/utils/algorithmUtil");
 const {activityIdMappingConst, flowStatusConst, flowReviewTypeConst} = require("@/const/flowConst")
