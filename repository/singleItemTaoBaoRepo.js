@@ -656,5 +656,5 @@ module.exports = {
     getError60SingleIte,
     updateCustom,
     Calculateyesterdaysdataandtagtheprofitin60days,
-    getproductLineLeaders
+    getproductLineLeaders,
 }
