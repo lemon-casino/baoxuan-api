@@ -24,297 +24,112 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
  * @returns {Promise<*[]>}
  */
 const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
-    // const finalResult = []
-    
-    const statForHasRulesNode = async (coreConfig, flows) => {
-        for (const action of coreConfig) {
-            if (action.rules && action.rules.length > 0) {
-                const statResult = await statFlowsByRules(action, action.rules, flows)
-                action.children = statResult
-            }
-            
-            if (action.children && action.children.length > 0) {
-                await statForHasRulesNode(action.children)
-            }
+    const result = await statForHasRulesNode(users, flows, coreConfig, userFlowDataStatFunc)
+    return result
+}
+
+/**
+ * 添加一层方法便于递归调用
+ *
+ * @param users
+ * @param flows
+ * @param coreConfig
+ * @param userFlowDataStatFunc
+ * @returns {Promise<*>}
+ */
+const statForHasRulesNode = async (users, flows, coreConfig, userFlowDataStatFunc) => {
+    for (const action of coreConfig) {
+        if (action.rules && action.rules.length > 0) {
+            const statResult = await statFlowsByRules(users, action.rules, flows, userFlowDataStatFunc, action)
+            action.children = statResult
         }
-        return coreConfig
+        
+        if (action.children && action.children.length > 0) {
+            await statForHasRulesNode(users, flows, action.children, userFlowDataStatFunc)
+        }
     }
-    
-    const statFlowsByRules = async (resultNode, rules, flows) => {
-        for (const rule of rules) {
-            flows = flows.filter((flow) => flow.formUuid === rule.formId)
-            flows = filterFlowsByFlowDetailsRules(flows, rule.flowDetailsRules)
+    return coreConfig
+}
+
+/**
+ * 根据 rule 统计流程数据
+ * 将结果放到resultNode中返回
+ *
+ * @param resultNode
+ * @param rules
+ * @param flows
+ * @param userFlowDataStatFunc
+ * @param users
+ * @returns {Promise<*>}
+ */
+const statFlowsByRules = async (users, rules, flows, userFlowDataStatFunc, resultNode) => {
+    for (const rule of rules) {
+        flows = flows.filter((flow) => flow.formUuid === rule.formId)
+        flows = filterFlowsByFlowDetailsRules(flows, rule.flowDetailsRules)
+        
+        if (flows.length === 0) {
+            continue
+        }
+        
+        for (const flowNodeRule of rule.flowNodeRules) {
+            const {activityId, status, isOverdue, owner} = flowNodeRule
             
-            if (flows.length === 0) {
-                continue
-            }
-            
-            for (const flowNodeRule of rule.flowNodeRules) {
-                const {
-                    activityId,
-                    status,
-                    isOverdue,
-                    owner: ownerRule
-                } = flowNodeRule
+            // 根据节点配置对流程进行汇总
+            for (const flow of flows) {
+                const processInstanceId = flow.processInstanceId
                 
-                // 根据节点配置对流程进行汇总
-                for (let flow of flows) {
-                    const processInstanceId = flow.processInstanceId
-                    
-                    let operatorsActivity = []
-                    const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
-                    const matchedActivity = getMatchedActivity(activityId, status, isOverdue, activities)
-                    if (!matchedActivity) {
-                        continue
+                const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
+                const matchedActivity = getMatchedActivity(activityId, status, isOverdue, activities)
+                if (!matchedActivity) {
+                    continue
+                }
+                
+                const ownerActivity = extendActivityWithOwnerNameAndTags(matchedActivity, users, flow, owner)
+                
+                if (!ownerActivity) {
+                    continue
+                }
+                
+                const userFlowDataStat = _.isFunction(userFlowDataStatFunc) && userFlowDataStatFunc(resultNode, ownerActivity, flow)
+                
+                let resultStatNode = resultNode.children.filter(item => item.userName === ownerActivity.userName)
+                
+                const userHasStat = resultStatNode.length > 0
+                if (userHasStat) {
+                    const currResultStatNode = resultStatNode[0]
+                    // 避免一人在同一流程中干多个活重复计算
+                    if (!currResultStatNode.ids.includes(processInstanceId)) {
+                        currResultStatNode.ids.push(processInstanceId)
+                        currResultStatNode.sum = currResultStatNode.ids.length
                     }
                     
-                    operatorsActivity = extendActivityWithUserNameAndTags(matchedActivity, users, flow, ownerRule)
-                    
-                    if (operatorsActivity.length === 0) {
-                        continue
-                    }
-                    
-                    // 根据是否逾期汇总个人的ids和sum
-                    for (const operatorActivity of operatorsActivity) {
-                        
-                        const getUserStatResult = async (resultNode, flow, operatorActivity) => {
-                            
-                            if (!userFlowDataStatFunc || !_.isFunction(userFlowDataStatFunc)) {
-                                return {
-                                    processInstanceId: flow.processInstanceId,
-                                    flowData: []
-                                }
-                            }
-                            
-                            let userFlowDataStat = null
-                            
-                            // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
-                            if (!resultNode.nameCN.includes("待")) {
-                                const tmpFlow = _.cloneDeep(flow)
-                                // 进行中的工作会统计表单中预计的数量 完成后需要排除掉预计的数量， 表单标识有【预计】字样
-                                if (resultNode.nameCN.includes("完")) {
-                                    const containYuJiTagKeys = []
-                                    for (const key of Object.keys(tmpFlow.dataKeyDetails)) {
-                                        if (tmpFlow.dataKeyDetails[key].includes("预计") && tmpFlow.dataKeyDetails[key].includes("数量")) {
-                                            containYuJiTagKeys.push(key)
-                                        }
-                                    }
-                                    for (const containYuJiTagKey of containYuJiTagKeys) {
-                                        delete tmpFlow.dataKeyDetails[containYuJiTagKey]
-                                        delete tmpFlow.data[containYuJiTagKey]
-                                    }
-                                }
-                                
-                                const dataStatResult = await userFlowDataStatFunc(operatorActivity, tmpFlow)
-                                
-                                if (dataStatResult.length > 0) {
-                                    userFlowDataStat = {
-                                        processInstanceId: tmpFlow.processInstanceId,
-                                        flowData: dataStatResult
-                                    }
-                                }
-                            }
-                            return userFlowDataStat
-                        }
-                        
-                        const userFlowDataStat = await getUserStatResult(resultNode, flow, operatorActivity)
-                        
-                        let resultStatNode = resultNode.children.filter(item => item.userName === operatorActivity.userName)
-                        
-                        const userHasStat = resultStatNode.length > 0
-                        if (userHasStat) {
-                            const currResultStatNode = resultStatNode[0]
-                            // 避免一人在同一流程中干多个活重复计算
-                            if (!currResultStatNode.ids.includes(processInstanceId)) {
-                                currResultStatNode.ids.push(processInstanceId)
-                                currResultStatNode.sum = currResultStatNode.ids.length
-                            }
-                            
-                            // 同一人流程中会出现多次干不同的活，将本人所有该流程中节点工作量的统计去重处理才能保证不漏
-                            if (userFlowDataStat && userFlowDataStat.flowData.length > 0) {
-                                const currFlowStat = currResultStatNode.userFlowsDataStat.find(item => item.processInstanceId == processInstanceId)
-                                if (currFlowStat) {
-                                    const alreadyStatActivityNames = currFlowStat.flowData.map(item => item.nameCN)
-                                    for (const actStat of userFlowDataStat.flowData) {
-                                        if (!alreadyStatActivityNames.includes(actStat.nameCN)) {
-                                            currFlowStat.flowData.push(actStat)
-                                        }
-                                    }
-                                } else {
-                                    currResultStatNode.userFlowsDataStat.push(userFlowDataStat)
+                    // 同一人流程中会出现多次干不同的活，将本人所有该流程中节点工作量的统计去重处理才能保证不漏
+                    if (userFlowDataStat && userFlowDataStat.flowData.length > 0) {
+                        const currFlowStat = currResultStatNode.userFlowsDataStat.find(item => item.processInstanceId == processInstanceId)
+                        if (currFlowStat) {
+                            const alreadyStatActivityNames = currFlowStat.flowData.map(item => item.nameCN)
+                            for (const actStat of userFlowDataStat.flowData) {
+                                if (!alreadyStatActivityNames.includes(actStat.nameCN)) {
+                                    currFlowStat.flowData.push(actStat)
                                 }
                             }
                         } else {
-                            resultStatNode = {
-                                userName: operatorActivity.userName,
-                                sum: 1,
-                                ids: [processInstanceId],
-                                userFlowsDataStat: userFlowDataStat ? [userFlowDataStat] : []
-                            }
-                            resultNode.children.push(resultStatNode)
+                            currResultStatNode.userFlowsDataStat.push(userFlowDataStat)
                         }
                     }
+                } else {
+                    resultStatNode = {
+                        userName: ownerActivity.userName,
+                        sum: 1,
+                        ids: [processInstanceId],
+                        userFlowsDataStat: userFlowDataStat ? [userFlowDataStat] : []
+                    }
+                    resultNode.children.push(resultStatNode)
                 }
             }
         }
-        return resultNode
     }
-    
-    const result = await statForHasRulesNode(coreConfig, flows)
-    return result
-    
-    // 根据配置信息获取基于所有人的数据
-    // eg：[{actionName: "市场分析", children: [{"nameCN": "待做", children: [{nameCN:"逾期", children:[{userName: "张三", sum: 1, ids: ["xxx"]}]}]}]}]
-    // for (const action of coreConfig) {
-    //     const {actionName, actionCode} = action
-    //     // 动作节点
-    //     const actionResult = {actionName, actionCode, children: []}
-    //     for (const actionStatus of action.actionStatus) {
-    //         const {nameCN, nameEN, rules} = actionStatus
-    //         // 动作的状态节点
-    //         let statusResult = {nameCN, nameEN, children: []}
-    //
-    //         // 动作的状态节点区分逾期-未逾期两种
-    //         const overDueResult = {nameCN: "逾期", nameEN: "overDue", children: []}
-    //         const notOverDueResult = {nameCN: "未逾期", nameEN: "notOverDue", children: []}
-    //
-    //         // 根据配置中状态的计算规则进行统计
-    //         for (const rule of rules) {
-    //             let currFlows = flows.filter((flow) => flow.formUuid === rule.formId)
-    //             currFlows = filterFlowsByFlowDetailsRules(currFlows, rule.flowDetailsRules)
-    //
-    //             if (currFlows.length === 0) {
-    //                 continue
-    //             }
-    //
-    //             for (const flowNodeRule of rule.flowNodeRules) {
-    //                 const {from: fromNode, to: toNode, ownerRule} = flowNodeRule
-    //
-    //                 // 根据节点配置对流程进行汇总
-    //                 for (let flow of currFlows) {
-    //                     const processInstanceId = flow.processInstanceId
-    //
-    //                     let operatorsActivity = []
-    //                     const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
-    //                     const matchedActivity = getMatchedActivity(fromNode, toNode, activities)
-    //                     if (!matchedActivity) {
-    //                         continue
-    //                     }
-    //
-    //                     operatorsActivity = extendActivityWithUserNameAndTags(matchedActivity, users, flow, ownerRule)
-    //
-    //                     if (operatorsActivity.length === 0) {
-    //                         continue
-    //                     }
-    //
-    //                     // 根据是否逾期汇总个人的ids和sum
-    //                     for (const operatorActivity of operatorsActivity) {
-    //
-    //                         const getUserStatResult = async (statusResult, flow, operatorActivity) => {
-    //
-    //                             if (!userFlowDataStatFunc || !_.isFunction(userFlowDataStatFunc)) {
-    //                                 return {
-    //                                     processInstanceId: flow.processInstanceId,
-    //                                     flowData: []
-    //                                 }
-    //                             }
-    //
-    //                             let userFlowDataStat = null
-    //
-    //                             // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
-    //                             if (!statusResult.nameCN.includes("待")) {
-    //                                 const tmpFlow = _.cloneDeep(flow)
-    //                                 // 进行中的工作会统计表单中预计的数量 完成后需要排除掉预计的数量， 表单标识有【预计】字样
-    //                                 if (statusResult.nameCN.includes("完")) {
-    //                                     const containYuJiTagKeys = []
-    //                                     for (const key of Object.keys(tmpFlow.dataKeyDetails)) {
-    //                                         if (tmpFlow.dataKeyDetails[key].includes("预计") && tmpFlow.dataKeyDetails[key].includes("数量")) {
-    //                                             containYuJiTagKeys.push(key)
-    //                                         }
-    //                                     }
-    //                                     for (const containYuJiTagKey of containYuJiTagKeys) {
-    //                                         delete tmpFlow.dataKeyDetails[containYuJiTagKey]
-    //                                         delete tmpFlow.data[containYuJiTagKey]
-    //                                     }
-    //                                 }
-    //
-    //                                 const dataStatResult = await userFlowDataStatFunc(operatorActivity, tmpFlow)
-    //
-    //                                 if (dataStatResult.length > 0) {
-    //                                     userFlowDataStat = {
-    //                                         processInstanceId: tmpFlow.processInstanceId,
-    //                                         flowData: dataStatResult
-    //                                     }
-    //                                 }
-    //
-    //                             }
-    //                             return userFlowDataStat
-    //                         }
-    //
-    //                         const userFlowDataStat = await getUserStatResult(statusResult, flow, operatorActivity)
-    //
-    //
-    //                         if (flow.processInstanceId === "bb04aa5e-2a2d-4c84-afdb-12263d68cee8") {
-    //                             console.log("-----")
-    //                         }
-    //
-    //                         let resultStatNode = null
-    //                         if (matchedActivity.isOverDue) {
-    //                             resultStatNode = overDueResult.children.filter(item => item.userName === operatorActivity.userName)
-    //                         } else {
-    //                             resultStatNode = notOverDueResult.children.filter(item => item.userName === operatorActivity.userName)
-    //                         }
-    //
-    //                         const userHasStat = resultStatNode.length > 0
-    //                         if (userHasStat) {
-    //                             const currResultStatNode = resultStatNode[0]
-    //                             // 避免一人在同一流程中干多个活重复计算
-    //                             if (!currResultStatNode.ids.includes(processInstanceId)) {
-    //                                 currResultStatNode.ids.push(processInstanceId)
-    //                                 currResultStatNode.sum = currResultStatNode.ids.length
-    //
-    //                             }
-    //
-    //                             // 同一人流程中会出现多次干不同的活，将本人所有该流程中节点工作量的统计去重处理才能保证不漏
-    //                             if (userFlowDataStat && userFlowDataStat.flowData.length > 0) {
-    //                                 const currFlowStat = currResultStatNode.userFlowsDataStat.find(item => item.processInstanceId == processInstanceId)
-    //                                 if (currFlowStat) {
-    //                                     const alreadyStatActivityNames = currFlowStat.flowData.map(item => item.nameCN)
-    //                                     for (const actStat of userFlowDataStat.flowData) {
-    //                                         if (!alreadyStatActivityNames.includes(actStat.nameCN)) {
-    //                                             currFlowStat.flowData.push(actStat)
-    //                                         }
-    //                                     }
-    //                                 } else {
-    //                                     currResultStatNode.userFlowsDataStat.push(userFlowDataStat)
-    //                                 }
-    //                             }
-    //                         } else {
-    //                             resultStatNode = {
-    //                                 userName: operatorActivity.userName,
-    //                                 sum: 1,
-    //                                 ids: [processInstanceId],
-    //                                 userFlowsDataStat: userFlowDataStat ? [userFlowDataStat] : []
-    //                             }
-    //                             if (matchedActivity.isOverDue) {
-    //                                 overDueResult.children.push(resultStatNode)
-    //                             } else {
-    //                                 notOverDueResult.children.push(resultStatNode)
-    //                             }
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //
-    //         // 汇总结果保存
-    //         statusResult.children.push(overDueResult)
-    //         statusResult.children.push(notOverDueResult)
-    //         actionResult.children.push(statusResult)
-    //     }
-    //     finalResult.push(actionResult)
-    // }
-    // return finalResult
+    return resultNode
 }
 
 /**
@@ -407,26 +222,11 @@ const getMatchedActivity = (activityId, status, isOverdue, activities) => {
  *
  * @param activity
  * @param users
- * @returns {*[]}
+ * @param flow
+ * @param ownerRule
+ * @returns {{activity, userName: string, tags: *}|null}
  */
-const extendActivityWithUserNameAndTags = (activity, users, flow, ownerRule) => {
-    const tmpOperatorsActivity = []
-    // if (activity.domainList && activity.domainList.length > 0) {
-    //     // 包含domainList的节点直接算到节点操作人的头上
-    //     for (const domain of activity.domainList) {
-    //         const user = users.find(user => user.nickname === domain.operatorName || user.userName === domain.operatorName)
-    //         if (user) {
-    //             tmpOperatorsActivity.push({
-    //                 userName: domain.operatorName,
-    //                 tags: user.tags || [],
-    //                 activity: activity
-    //             })
-    //         }
-    //     }
-    // }
-    // 单节点根据配置确定要计算的人头上
-    // else {
-    // 找到该工作量的负责人
+const extendActivityWithOwnerNameAndTags = (activity, users, flow, ownerRule) => {
     let ownerName = "未分配"
     let {from, id, defaultUserName} = ownerRule
     // 外包的流程可能会存在未选择外包人的情况
@@ -450,14 +250,9 @@ const extendActivityWithUserNameAndTags = (activity, users, flow, ownerRule) => 
     const user = users.find(user => user.nickname === ownerName || user.userName === ownerName)
     
     if (user) {
-        tmpOperatorsActivity.push({
-            userName: ownerName,
-            tags: user.tags,
-            activity: activity
-        })
+        return {userName: ownerName, tags: user.tags, activity: activity}
     }
-    // }
-    return tmpOperatorsActivity
+    return null
 }
 
 const filterFlows = async (formIds, startDoneDate, endDoneDate) => {

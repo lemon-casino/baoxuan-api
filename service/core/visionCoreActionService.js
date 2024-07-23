@@ -135,16 +135,24 @@ const filterUsersByTags = (users, tags) => {
 }
 
 /**
+ *
  * 统计视觉部员工的流程表单数据
  *
- * @param userActivity 用户和工作节点相关的信息
+ * @param userTags 用户标签
  * @param flow
+ * @param rectifyDataParams 纠正数据的参数
  * @returns {Promise<*|*[]>}
  */
-const statVisionUserFlowData = async (userActivity, flow) => {
+const statVisionUserFlowData = async (resultNode, ownerActivity, flow) => {
+    const {nameCN: actionName} = resultNode
+    
+    // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
+    if (!actionName.includes("中") && !actionName.includes("完")) {
+        return null
+    }
     
     // 当前用户统计到的节点需要时正在干活的节点才要汇总表单信息
-    let {userName, tags: userTags, activity} = userActivity
+    let {userName, tags: userTags, activity} = ownerActivity
     
     // 没有标签的用户直接返回空模板
     if (userTags.length === 0) {
@@ -190,6 +198,7 @@ const statVisionUserFlowData = async (userActivity, flow) => {
         return []
     }
     
+    flow = preHandleFlowData(actionName, flow)
     const userRequiredFieldIds = getUserRequiredFieldIdsByKWMapping(flow.dataKeyDetails, userTagsFormItemKeywordsMappings)
     
     const userRequiredFields = getNotEmptyUserRequiredFields(userRequiredFieldIds, flow.data, flow.dataKeyDetails)
@@ -209,6 +218,34 @@ const statVisionUserFlowData = async (userActivity, flow) => {
     const result = removeFormFieldNameKWs(notEmptyFlowDataStat)
     return result
 }
+
+
+/**
+ * 预处理flow的data 数据
+ * 如果 actionName中包含“完”关键字，则过滤表单中含有“预计”字样的项
+ *
+ * @param actionName
+ * @param flow
+ * @returns {unknown}
+ */
+const preHandleFlowData = (actionName, flow) => {
+    const tmpFlow = _.cloneDeep(flow)
+    // 进行中的工作会统计表单中预计的数量 完成后需要排除掉预计的数量， 表单标识有【预计】字样
+    if (actionName.includes("完")) {
+        const containYuJiTagKeys = []
+        for (const key of Object.keys(tmpFlow.dataKeyDetails)) {
+            if (tmpFlow.dataKeyDetails[key].includes("预计") && tmpFlow.dataKeyDetails[key].includes("数量")) {
+                containYuJiTagKeys.push(key)
+            }
+        }
+        for (const containYuJiTagKey of containYuJiTagKeys) {
+            delete tmpFlow.dataKeyDetails[containYuJiTagKey]
+            delete tmpFlow.data[containYuJiTagKey]
+        }
+    }
+    return tmpFlow
+}
+
 
 const removeFormFieldNameKWs = (flowDataStat) => {
     for (const item of flowDataStat) {
