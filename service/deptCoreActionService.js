@@ -5,6 +5,9 @@ const deptCoreActionFormActivityRuleRepo = require("@/repository/deptCoreActionF
 const redisUtil = require("@/utils/redisUtil")
 const algorithmUtil = require("@/utils/algorithmUtil")
 const redisConst = require("@/const/redisConst")
+const models = require("@/model")
+const NotFoundError = require("@/error/http/notFoundError")
+const ForbiddenError = require("@/error/http/forbiddenError")
 
 const getDeptCoreActions = async (deptIds) => {
     return (await deptCoreActionRepo.getDeptCoreActions(deptIds))
@@ -118,6 +121,71 @@ const syncDeptCoreActionsRules = async (deptIds) => {
     await redisUtil.set(`${redisConst.redisKeys.CoreActionRules}:${deptIds.join(",")}`, JSON.stringify(deptCoreActionRules))
 }
 
+const copyActionRules = async (srcActionId, targetActionId) => {
+    const srcFormRules = await deptCoreActionFormRuleRepo.getRulesByCoreActionIds([srcActionId])
+    if (srcFormRules.length === 0) {
+        throw new NotFoundError(`根据参数srcActionId：${srcActionId}未找到动作配置信息`)
+    }
+    
+    const targetAction = await deptCoreActionRepo.getDeptCoreAction(targetActionId)
+    if (!targetAction) {
+        throw new NotFoundError(`根据参数targetActionId：${targetActionId}未找到该动作信息`)
+    }
+    
+    // 如果已经配置了信息则不用复制
+    const targetFormRules = await deptCoreActionFormRuleRepo.getRulesByCoreActionIds([targetActionId])
+    const targetFormRuleIds = targetFormRules.map(item => item.id)
+    const targetFormDetailsRules = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRuleByFormRuleIds(targetFormRuleIds)
+    if (targetFormDetailsRules.length > 0) {
+        throw new ForbiddenError(`目标动作id：${targetActionId}已经添加了表单配置`)
+    }
+    
+    const targetFormActivitiesRules = await deptCoreActionFormActivityRuleRepo.getFormActivityRulesByFormRuleIds(targetFormRuleIds)
+    if (targetFormActivitiesRules.length > 0) {
+        throw new ForbiddenError(`目标动作id：${targetActionId}已经添加了节点配置`)
+    }
+    
+    const formRuleIds = srcFormRules.map(item => item.id)
+    
+    const formDetailsRules = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRuleByFormRuleIds(formRuleIds)
+    const formActivitiesRules = await deptCoreActionFormActivityRuleRepo.getFormActivityRulesByFormRuleIds(formRuleIds)
+    
+    const transaction = await models.sequelize.transaction()
+    try {
+        for (const formRule of srcFormRules) {
+            
+            const targetActionFormRule = {
+                formId: formRule.formId,
+                formName: formRule.formName,
+                deptCoreActionId: targetActionId
+            }
+            
+            const tmpResult = await deptCoreActionFormRuleRepo.saveFormRule(targetActionFormRule, transaction)
+            const targetActionFormRuleId = tmpResult.id
+            const currFormRuleDetailsRules = formDetailsRules.filter(item => item.deptCoreActionFormRuleId === formRule.id)
+            const targetActionFormRuleDetailsRules = currFormRuleDetailsRules.map(item => {
+                delete item["id"]
+                return {...item, deptCoreActionFormRuleId: targetActionFormRuleId}
+            })
+            await deptCoreActionFormDetailsRuleRepo.bulkCreate(targetActionFormRuleDetailsRules, transaction)
+            
+            const currFormRuleActivitiesRules = formActivitiesRules.filter(item => item.deptCoreActionFormRuleId === formRule.id)
+            const targetActionFormRuleActivitiesRules = currFormRuleActivitiesRules.map(item => {
+                delete item["id"]
+                return {...item, deptCoreActionFormRuleId: targetActionFormRuleId}
+            })
+            await deptCoreActionFormActivityRuleRepo.bulkCreate(targetActionFormRuleActivitiesRules, transaction)
+        }
+        
+        await transaction.commit()
+        return true
+    } catch (e) {
+        await transaction.rollback()
+        throw e
+    }
+    
+}
+
 /**
  * 将扁平的结构转成children包裹的结构
  *
@@ -165,5 +233,6 @@ module.exports = {
     delDeptCoreAction,
     updateDeptCoreAction,
     saveDeptCoreAction,
-    syncDeptCoreActionsRules
+    syncDeptCoreActionsRules,
+    copyActionRules
 }

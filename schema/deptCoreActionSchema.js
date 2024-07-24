@@ -12,7 +12,13 @@ const updateParamsSchema = {
     ...saveParamsSchema
 }
 
+const copyCoreActionRules = {
+    srcActionId: joiUtil.commonJoiSchemas.numberRequired,
+    targetActionId: joiUtil.commonJoiSchemas.numberRequired
+}
+
 module.exports = {
     updateParamsSchema,
-    saveParamsSchema
+    saveParamsSchema,
+    copyCoreActionRules
 }

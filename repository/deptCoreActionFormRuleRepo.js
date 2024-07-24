@@ -2,11 +2,17 @@ const models = require('@/model')
 const deptCoreActionFormRuleModel = models.deptCoreActionFormRuleModel
 const sequelizeUtil = require("@/utils/sequelizeUtil")
 
-const saveFormRule = async (model) => {
+const saveFormRule = async (model, transaction) => {
     const where = {formId: model.formId, deptCoreActionId: model.deptCoreActionId}
     const savedFormRule = await _getRules(where)
     if (savedFormRule.length === 0) {
-        const result = await deptCoreActionFormRuleModel.create(model)
+        let result = null
+        if (transaction) {
+            result = await deptCoreActionFormRuleModel.create(model, {transaction})
+        } else {
+            result = await deptCoreActionFormRuleModel.create(model)
+        }
+        
         return sequelizeUtil.extractDataValues(result)
     }
     return savedFormRule[0]

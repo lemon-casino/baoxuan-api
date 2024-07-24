@@ -1,7 +1,7 @@
 const biResponse = require("@/utils/biResponse")
 const joiUtil = require("@/utils/joiUtil")
 const deptCoreActionService = require('@/service/deptCoreActionService')
-const {saveParamsSchema, updateParamsSchema} = require("@/schema/deptCoreActionSchema")
+const deptCoreActionSchema = require("@/schema/deptCoreActionSchema")
 
 const getDeptCoreActions = async (req, res, next) => {
     try {
@@ -19,7 +19,7 @@ const getDeptCoreActions = async (req, res, next) => {
 const saveDeptCoreAction = async (req, res, next) => {
     try {
         const data = req.body
-        joiUtil.clarityValidate(saveParamsSchema, data)
+        joiUtil.clarityValidate(deptCoreActionSchema.saveParamsSchema, data)
         const deptFlowForms = await deptCoreActionService.saveDeptCoreAction(data)
         return res.send(biResponse.success(deptFlowForms))
     } catch (e) {
@@ -30,7 +30,7 @@ const saveDeptCoreAction = async (req, res, next) => {
 const updateDeptCoreAction = async (req, res, next) => {
     try {
         const data = req.body
-        joiUtil.clarityValidate(updateParamsSchema, data)
+        joiUtil.clarityValidate(deptCoreActionSchema.updateParamsSchema, data)
         const deptFlowForms = await deptCoreActionService.updateDeptCoreAction(data)
         return res.send(biResponse.success(deptFlowForms))
     } catch (e) {
@@ -73,11 +73,26 @@ const syncDeptCoreActionsRules = async (req, res, next) => {
     }
 }
 
+const copyActionRules = async (req, res, next) => {
+    try {
+        const data = req.body
+        joiUtil.clarityValidate(deptCoreActionSchema.copyCoreActionRules, data)
+        await deptCoreActionService.copyActionRules(
+            Number(data.srcActionId.toString()),
+            Number(data.targetActionId.toString())
+        )
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDeptCoreActions,
     updateDeptCoreAction,
     saveDeptCoreAction,
     delDeptCoreAction,
     getDeptCoreActionForms,
-    syncDeptCoreActionsRules
+    syncDeptCoreActionsRules,
+    copyActionRules
 }

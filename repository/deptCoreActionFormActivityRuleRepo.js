@@ -7,6 +7,12 @@ const saveFormActivityRule = async (model) => {
     return sequelizeUtil.extractDataValues(result)
 }
 
+const bulkCreate = async (models, transaction) => {
+    if (transaction)
+        return (await deptCoreActionFormActivityRuleModel.bulkCreate(models, {transaction}))
+    return (await deptCoreActionFormActivityRuleModel.bulkCreate(models))
+}
+
 const deleteFormActivityRule = async (id) => {
     return (await deptCoreActionFormActivityRuleModel.destroy({where: {id}}))
 }
@@ -35,6 +41,7 @@ module.exports = {
     getFormActivityRules,
     getFormActivityRulesByFormRuleIds,
     updateFormActivityRule,
+    bulkCreate,
     saveFormActivityRule,
     deleteFormActivityRule
 }

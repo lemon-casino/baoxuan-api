@@ -58,8 +58,12 @@ const getDeptCoreActionForms = async (coreActionId) => {
         const ruledForm = deptCoreActionForms.find(item => item.formId === form.flowFormId)
         if (ruledForm) {
             form.formRuleId = ruledForm.id
+        } else {
+            form.formRuleId = -1
         }
     }
+    
+    forms = forms.sort((curr, next) => next.formRuleId - curr.formRuleId)
     return forms
 }
 
