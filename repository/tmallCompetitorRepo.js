@@ -1,5 +1,6 @@
 const sequelize = require('../model/init');
 const gettmallCompetitorModel = require("../model/tmallCompetitor");
+const {Sequelize} = require("sequelize");
 const tmallCompetitorModel = gettmallCompetitorModel(sequelize);
 
 const uploadSingleIteTaoBaoCompetitorTable = async (data) => {
@@ -12,6 +13,47 @@ const uploadSingleIteTaoBaoCompetitorTable = async (data) => {
     }
 };
 
+const searchSingleIteTaoBaoCompetitorTable = async (data) => {
+    try {
+        return await tmallCompetitorModel.findAll({
+            where: data,
+            raw: true,
+            logging: true
+        });
+    } catch (e) {
+        throw e;
+    }
+};
+const conditionalFiltering = async () => {
+    try {
+        return await tmallCompetitorModel.findAll({
+            attributes: [
+                'link_id',
+                'headOf_operations',
+                'headOf_productLine',
+                'store_name',
+                'competitors_name',
+                'competitor_id'
+            ],
+            group: [
+                'link_id',
+                'headOf_operations',
+                'headOf_productLine',
+                'store_name',
+                'competitors_name',
+                'competitor_id'
+            ],
+            raw: true,
+            logging: true
+        });
+    } catch (e) {
+        throw e;
+    }
+};
+
+
 module.exports = {
-    uploadSingleIteTaoBaoCompetitorTable
+    uploadSingleIteTaoBaoCompetitorTable,
+    searchSingleIteTaoBaoCompetitorTable,
+    conditionalFiltering
 };

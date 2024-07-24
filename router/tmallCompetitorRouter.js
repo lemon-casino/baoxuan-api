@@ -40,6 +40,6 @@ router.get('/download', (req, res) => {
 
 // 查询天猫竞品表
 
-
-
+router.get("/search",competitorApi.searchSingleIteTaoBaoCompetitorTable)
+router.get("/conditionalFiltering",competitorApi.conditionalFiltering)
 module.exports = router;
