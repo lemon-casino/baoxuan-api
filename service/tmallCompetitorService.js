@@ -42,6 +42,10 @@ const conditionalFiltering = async (result) => {
         if (item.headOf_productLine && !result.headOf_productLine.some(e => e.value === item.headOf_productLine)) {
             result.headOf_productLine.push({ value: item.headOf_productLine, label: item.headOf_productLine });
         }
+        if (item.store_name && !result.store_name.some(e => e.value === item.store_name)) {
+            result.store_name.push({ value: item.store_name, label: item.store_name });
+        }
+
     });
 
     return result;

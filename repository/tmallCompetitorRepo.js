@@ -33,7 +33,7 @@ const conditionalFiltering = async () => {
                 'headOf_productLine',
                 'store_name',
                 'competitors_name',
-                'competitor_id'
+                'competitor_id',
             ],
             group: [
                 'link_id',

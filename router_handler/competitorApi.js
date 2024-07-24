@@ -97,7 +97,8 @@ const conditionalFiltering = async (req, res, next) => {
             headOf_operations:[],
             competitors_name:[],
             category:[],
-            headOf_productLine:[]
+            headOf_productLine:[],
+            store_name:[]
         }
         result= await tmallCompetitorService.conditionalFiltering(result)
         return res.send(biResponse.success(result))
