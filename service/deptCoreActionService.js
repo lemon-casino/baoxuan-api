@@ -186,6 +186,39 @@ const copyActionRules = async (srcActionId, targetActionId) => {
     
 }
 
+const copyActions = async (srcActionId, targetActionId) => {
+    const srcActionsAndChildren = await deptCoreActionRepo.getDeptCoreActionsAndChildren(srcActionId)
+    const treedActions = convertToTreeFormat(srcActionsAndChildren)
+    const transaction = await models.sequelize.transaction()
+    try {
+        
+        const loop = async (actions, parentId, path) => {
+            for (const action of actions) {
+                delete action["id"]
+                action.parentId = parentId
+                const tmpResult = await deptCoreActionRepo.save(action, transaction)
+                const newActionId = tmpResult.id
+                tmpResult.path = path ? `${path}${newActionId}-` : `-${newActionId}-`
+                await deptCoreActionRepo.update(tmpResult, transaction)
+                
+                if (action.children && action.children.length > 0) {
+                    await loop(action.children, newActionId, tmpResult.path)
+                }
+            }
+        }
+        
+        await loop(treedActions, targetActionId, "")
+        
+        await transaction.commit()
+        return true
+    } catch (e) {
+        await transaction.rollback()
+        throw e
+    }
+    
+    
+}
+
 /**
  * 将扁平的结构转成children包裹的结构
  *
@@ -234,5 +267,6 @@ module.exports = {
     updateDeptCoreAction,
     saveDeptCoreAction,
     syncDeptCoreActionsRules,
-    copyActionRules
+    copyActionRules,
+    copyActions
 }

@@ -87,6 +87,20 @@ const copyActionRules = async (req, res, next) => {
     }
 }
 
+const copyActions = async (req, res, next) => {
+    try {
+        const data = req.body
+        joiUtil.clarityValidate(deptCoreActionSchema.copyCoreActionRules, data)
+        await deptCoreActionService.copyActions(
+            Number(data.srcActionId.toString()),
+            Number(data.targetActionId.toString())
+        )
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDeptCoreActions,
     updateDeptCoreAction,
@@ -94,5 +108,6 @@ module.exports = {
     delDeptCoreAction,
     getDeptCoreActionForms,
     syncDeptCoreActionsRules,
-    copyActionRules
+    copyActionRules,
+    copyActions
 }

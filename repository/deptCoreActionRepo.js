@@ -22,8 +22,13 @@ const getCoreAction = async (id) => {
     return result
 }
 
-const save = async (model) => {
-    const result = await deptCoreActionModel.create(model)
+const save = async (model, transaction) => {
+    let result = null
+    if (transaction) {
+        result = await deptCoreActionModel.create(model, {transaction})
+    } else {
+        result = await deptCoreActionModel.create(model)
+    }
     return sequelizeUtil.extractDataValues(result)
 }
 
@@ -34,8 +39,16 @@ const delDeptCoreAction = async (id) => {
     return result
 }
 
-const update = async (model) => {
-    const result = await deptCoreActionModel.update(model, {where: {id: model.id}})
+const update = async (model, transaction) => {
+    let result = null
+    if (transaction) {
+        result = await deptCoreActionModel.update(model, {
+            where: {id: model.id},
+            transaction
+        })
+    } else {
+        result = await deptCoreActionModel.update(model, {where: {id: model.id}})
+    }
     return sequelizeUtil.extractDataValues(result)
 }
 
@@ -67,6 +80,13 @@ const getDeptCoreActionForms = async (coreActionId) => {
     return forms
 }
 
+const getDeptCoreActionsAndChildren = async (id) => {
+    const result = (await deptCoreActionModel.findAll({
+        where: {path: {$like: `%-${id}-%`}},
+        order: [["id", "asc"]]
+    }))
+    return sequelizeUtil.extractDataValues(result)
+}
 
 module.exports = {
     update,
@@ -75,5 +95,6 @@ module.exports = {
     getDeptCoreActionsWithRules,
     delDeptCoreAction,
     getDeptCoreAction: getCoreAction,
-    getDeptCoreActionForms
+    getDeptCoreActionForms,
+    getDeptCoreActionsAndChildren
 }

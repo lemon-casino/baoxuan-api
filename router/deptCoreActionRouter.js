@@ -8,6 +8,7 @@ router.post("/", deptCoreActionApi.saveDeptCoreAction)
 router.put("/", deptCoreActionApi.updateDeptCoreAction)
 router.delete("/", deptCoreActionApi.delDeptCoreAction)
 router.post("/sync", deptCoreActionApi.syncDeptCoreActionsRules)
-router.post("/copy", deptCoreActionApi.copyActionRules)
+router.post("/copy", deptCoreActionApi.copyActions)
+router.post("/copy-rules", deptCoreActionApi.copyActionRules)
 
 module.exports = router
