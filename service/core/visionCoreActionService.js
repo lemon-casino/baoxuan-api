@@ -23,36 +23,36 @@ const patchUtil = require("@/patch/patchUtil")
  * @returns {Promise<*>}
  */
 const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, startDoneDate, endDoneDate) => {
-
+    
     const isDeptLeader = await userCommonService.isDeptLeaderOfTheUser(userId, deptIds)
     const requiredUsers = await coreActionStatService.getRequiredUsers(userNames, isDeptLeader, deptIds, (users) => {
         return filterUsersByTags(users, tags)
     })
-
+    
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptIds)
     const differentForms = coreActionStatService.extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
     const configuredFormIds = differentForms.inner.concat(differentForms.outSourcing).map(item => item.formId)
     const flows = await coreActionStatService.filterFlows(configuredFormIds, startDoneDate, endDoneDate)
-
+    
     // 基于人的汇总(最基本的明细统计)
     const actionStatBasedOnUserResult = await coreActionStatService.stat(requiredUsers, flows, coreActionConfig, statVisionUserFlowData)
-
+    
     // 区分核心动作、核心人员统计
     const isFromCoreActionMenu = statType === coreActionStatTypeConst.StatAction
     const finalResult = isFromCoreActionMenu ? _.cloneDeep(actionStatBasedOnUserResult) : []
-
+    
     for (const item of finalResult) {
         const workloadNode = createFlowDataStatNode(item)
         item.children.push(workloadNode)
     }
-
+    
     // 核心动作统计不用标签区分
     if (isFromCoreActionMenu) {
         const sumUserActionStatResult = sumUserActionStat(actionStatBasedOnUserResult)
         finalResult.unshift({
             actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult
         })
-
+        
         if (isDeptLeader) {
             // 对内部的流程进行转化统计
             const innerFormIds = differentForms.inner.map(item => item.formId)
@@ -61,7 +61,7 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
             finalResult.unshift({
                 actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
             })
-
+            
             // 对外包的流程进行转化统计
             const outSourcingFormIds = differentForms.outSourcing.map(item => item.formId)
             const outSourcingFlows = flows.filter(item => outSourcingFormIds.includes(item.formUuid))
@@ -69,7 +69,7 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
             finalResult.unshift({
                 actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
             })
-
+            
             const statusStatFlowResult = coreActionStatService.convertToFlowStatResult(false, flows, coreActionConfig, actionStatBasedOnUserResult)
             finalResult.unshift({
                 actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
@@ -118,20 +118,20 @@ const filterUsersByTags = (users, tags) => {
  * @returns {Promise<*|*[]>}
  */
 const statVisionUserFlowData = async (userActivity, flow) => {
-
+    
     // 当前用户统计到的节点需要时正在干活的节点才要汇总表单信息
     let {userName, tags: userTags, activity} = userActivity
-
+    
     // 没有标签的用户直接返回空模板
     if (userTags.length === 0) {
         return []
     }
-
+    
     let userTagCodes = userTags.map(item => item.tagCode)
-
+    
     const userTmpTags = patchUtil.getUserTmpTags(userName, flow.processInstanceId)
     userTagCodes = userTagCodes.concat(userTmpTags)
-
+    
     // 仅对内部美编人员的节点做判断
     const insideArtTagCode = userTagCodes.find(tagCode => tagCode === "insideArt")
     // 内部美编会涵盖剪辑组标签的人：不能排除掉剪辑组的标签节点
@@ -154,22 +154,22 @@ const statVisionUserFlowData = async (userActivity, flow) => {
             return []
         }
     }
-
+    
     const visionUserFlowDataStatResultTemplate = _.cloneDeep(statResultTemplateConst.visionUserFlowDataStatResultTemplate)
-
+    
     const userTagsFormItemKeywordsMappings = visionConst.getCompletedTagsFormItemKeywordsMapping(flow.formUuid)
         .filter(item => {
             return userTagCodes.filter(tagCode => tagCode === item.tagCode).length > 0
         })
-
+    
     if (userTagsFormItemKeywordsMappings.length === 0) {
         return []
     }
-
+    
     const userRequiredFieldIds = getUserRequiredFieldIdsByKWMapping(flow.dataKeyDetails, userTagsFormItemKeywordsMappings)
-
+    
     const userRequiredFields = getNotEmptyUserRequiredFields(userRequiredFieldIds, flow.data, flow.dataKeyDetails)
-
+    
     // 根据关键词将这些用户需要的表单信息分类统计
     for (const userRequiredField of userRequiredFields) {
         const resultNode = getResultNode(userRequiredField.fieldName, visionUserFlowDataStatResultTemplate)
@@ -180,7 +180,7 @@ const statVisionUserFlowData = async (userActivity, flow) => {
             }
         }
     }
-
+    
     const notEmptyFlowDataStat = visionUserFlowDataStatResultTemplate.filter(item => item.children.length > 0)
     const result = removeFormFieldNameKWs(notEmptyFlowDataStat)
     return result
@@ -263,7 +263,7 @@ const createFlowDataStatNode = (node) => {
     const completedFlowDataStatNodes = findAllUserFlowsDataStatNode(completedStatNode)
     const runningWorkload = sumSameNameWorkload(runningFlowDataStatNodes)
     const completedWorkload = sumSameNameWorkload(completedFlowDataStatNodes)
-
+    
     const newWorkloadStatNode = {
         nameCN: "工作量", excludeUpSum: true, sumAlone: true, uniqueIds: true, children: [{
             nameCN: "进行中",
@@ -275,7 +275,7 @@ const createFlowDataStatNode = (node) => {
             nameCN: "已完成", sumAlone: true, uniqueIds: true, children: completedWorkload
         }]
     }
-
+    
     return flowUtil.statSumFromBottom(newWorkloadStatNode)
 }
 
@@ -320,20 +320,20 @@ const findAllUserFlowsDataStatNode = (topNode) => {
     if (!(_.isArray(topNode))) {
         topNode = [topNode]
     }
-
+    
     let allUserFlowsDataStatNodes = []
-
+    
     for (const node of topNode) {
         if (node.userFlowsDataStat) {
             allUserFlowsDataStatNodes = allUserFlowsDataStatNodes.concat(node.userFlowsDataStat)
         }
-
+        
         if (node.children && node.children.length > 0) {
             const subResult = findAllUserFlowsDataStatNode(node.children)
             allUserFlowsDataStatNodes = allUserFlowsDataStatNodes.concat(subResult)
         }
     }
-
+    
     return allUserFlowsDataStatNodes
 }
 
@@ -403,7 +403,7 @@ const sumUserActionStat = (userStatResult) => {
                     }
                     return null
                 }
-
+                
                 const targetActResult = findTargetActResult(subActionResult.nameCN, overdueResult.nameCN)
                 if (targetActResult) {
                     targetActResult.children.push({actionName: coreActionName, ids: ids})

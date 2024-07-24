@@ -59,7 +59,7 @@ const tagsFormItemKeywordsMapping = [
     {
         tagCode: "photographyGroup",
         includeFormItemKws: ["摄影数量", "拍摄图片数量", "摄影非AI数值", "摄像非AI", "摄影非AI", "视频"],
-        excludeFormItemKws: ["产品使用视频与样品交接"]
+        excludeFormItemKws: ["产品使用视频与样品交接", "视频剪辑"]
     },
     {
         tagCode: "photographyAIGroup",
