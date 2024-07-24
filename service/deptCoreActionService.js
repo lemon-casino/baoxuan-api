@@ -13,7 +13,7 @@ const getDeptCoreActions = async (deptIds) => {
 const getTreedDeptCoreActions = async (deptIds) => {
     const data = await deptCoreActionRepo.getDeptCoreActions(deptIds)
     // 根据 parentId 转化数据结构
-    return _collapseCoreActions(data)
+    return convertToTreeFormat(data)
 }
 
 const getDeptCoreActionsRules = async (deptIds) => {
@@ -102,7 +102,7 @@ const delDeptCoreAction = async (id) => {
 
 const getDeptCoreActionsWithRules = async (deptId) => {
     const originCoreActions = await deptCoreActionRepo.getDeptCoreActionsWithRules(deptId)
-    return _collapseCoreActions(originCoreActions)
+    return convertToTreeFormat(originCoreActions)
 }
 
 const updateDeptCoreAction = async (model) => {
@@ -139,6 +139,21 @@ const _collapseCoreActions = (coreActions) => {
         currData = coreActions.find(item => !item.children)
     }
     return coreActions
+}
+
+const convertToTreeFormat = (coreActions) => {
+    const treeFormatResult = []
+    while (coreActions.length > 0) {
+        const coreAction = coreActions.splice(0, 1)[0]
+        const parentCoreAction = algorithmUtil.getJsonFromUnionFormattedJsonArr(treeFormatResult, "children", "id", coreAction.parentId)
+        if (parentCoreAction) {
+            coreAction.children = []
+            parentCoreAction.children.push(coreAction)
+        } else {
+            treeFormatResult.push({...coreAction, children: []})
+        }
+    }
+    return treeFormatResult
 }
 
 module.exports = {
