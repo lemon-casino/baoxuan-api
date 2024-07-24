@@ -136,6 +136,23 @@ module.exports = [
                             },
                             {
                                 from: {
+                                    id: "node_oclytyfcut8",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclytyfcut8",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
+                            {
+                                from: {
                                     id: "node_oclyh5wg4p1",
                                     name: "提交优化方案",
                                     status: ["TODO"]
@@ -226,6 +243,23 @@ module.exports = [
                                 },
                                 to: {
                                     id: "node_oclx30wsnx1",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclytyfcut8",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclytyfcut8",
                                     name: "提交优化方案",
                                     status: ["HISTORY"]
                                 },
@@ -392,6 +426,23 @@ module.exports = [
                             },
                             {
                                 from: {
+                                    id: "node_oclytyfcut8",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclytyfcut8",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
+                            {
+                                from: {
                                     id: "node_oclyh5wg4p1",
                                     name: "提交优化方案",
                                     status: ["TODO"]
@@ -464,6 +515,23 @@ module.exports = [
                                 },
                                 to: {
                                     id: "node_oclx30wsnx1",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclytyfcut8",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclytyfcut8",
                                     name: "提交优化方案",
                                     status: ["HISTORY"]
                                 },
