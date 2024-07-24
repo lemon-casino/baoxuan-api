@@ -1,5 +1,57 @@
 module.exports = [
     {
+        processInstanceId: "60304fce-c58e-41cf-b017-3d4bf9391bf9",
+        title: "闻晶发起的观山公道杯SKU运营视觉流程（拍摄+美编）",
+        targetActivityId: "node_oclx4bnhfb3",
+        replacedActivities: [
+            {
+                "processInstanceId": "60304fce-c58e-41cf-b017-3d4bf9391bf9",
+                "operateTimeGMT": "2024-07-23T18:35Z",
+                "showName": "大美编修图",
+                "operateType": "EXECUTE_TASK_NORMAL",
+                "remark": "",
+                "taskHoldTimeGMT": 0,
+                "type": "",
+                "operatorName": "丁芳",
+                "actionExit": "submit",
+                "operatorUserId": "013017535501652498",
+                "activityId": "node_oclx4bnhfb3",
+                "size": 1,
+                "dataId": 30574454866,
+                "domainList": [],
+                "operatorDisplayName": "丁芳",
+                "action": "同意",
+                "taskId": "null"
+            }
+        ]
+    },
+    {
+        processInstanceId: "91d2af4e-0c1c-4cc8-8c32-708d1981171c",
+        title: "郭晨龙发起的316+tritan泡茶球运营视觉流程（拍摄+美编）",
+        targetActivityId: "node_oclx4bnhfb3",
+        replacedActivities: [
+            {
+                "processInstanceId": "91d2af4e-0c1c-4cc8-8c32-708d1981171c",
+                "operateTimeGMT": "2024-07-23T18:34Z",
+                "showName": "大美编修图",
+                "operateType": "EXECUTE_TASK_NORMAL",
+                "remark": "",
+                "taskHoldTimeGMT": 0,
+                "type": "",
+                "operatorName": "丁芳",
+                "actionExit": "submit",
+                "operatorUserId": "013017535501652498",
+                "activityId": "node_oclx4bnhfb3",
+                "size": 1,
+                "dataId": 30574454866,
+                "domainList": [],
+                "operatorDisplayName": "丁芳",
+                "action": "同意",
+                "taskId": "null"
+            }
+        ]
+    },
+    {
         processInstanceId: "a24a5390-ff3d-47c5-b314-63a9f1547b6d",
         title: "闻晶发起的魔法女孩马克杯运营视觉流程（拍摄+美编）",
         targetActivityId: "node_oclx4bnhfb3",
@@ -199,7 +251,7 @@ module.exports = [
                 "operatorDisplayName": "李净知",
                 "action": "",
                 "taskId": "null"
-
+                
             }
         ]
     },
