@@ -25,7 +25,7 @@ const NotFoundError = require("@/error/http/notFoundError")
  * @returns {Promise<*>}
  */
 const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, startDoneDate, endDoneDate) => {
-    const coreActionConfig = await getDeptCoreActions(deptIds)
+    const coreActionConfig = await getDeptCoreActionsConfig(deptIds)
     const differentForms = coreActionStatService.extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
     const configuredFormIds = differentForms.inner.concat(differentForms.outSourcing).map(item => item.formId)
     const flows = await coreActionStatService.filterFlows(configuredFormIds, startDoneDate, endDoneDate)
@@ -95,7 +95,7 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
  * @param deptIds
  * @returns {Promise<any>}
  */
-const getDeptCoreActions = async (deptIds) => {
+const getDeptCoreActionsConfig = async (deptIds) => {
     const coreActionConfigStr = await redisUtil.get(`${redisConst.redisKeys.CoreActionRules}:${deptIds.join(",")}`)
     if (!coreActionConfigStr) {
         const departmentsStr = await redisUtil.get(redisConst.redisKeys.Departments)
