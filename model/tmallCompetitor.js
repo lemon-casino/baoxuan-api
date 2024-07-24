@@ -36,7 +36,7 @@ module.exports = sequelize => {
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "运营负责人",
+      comment: "产品线负责人",
       field: "headOf_productLine"
     },
     storeName: {
@@ -48,14 +48,14 @@ module.exports = sequelize => {
       comment: "本品店铺名称",
       field: "store_name"
     },
-    competitorsAme: {
+    competitorsName: {
       type: DataTypes.STRING(100),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
       comment: "竞品所在店铺名称",
-      field: "competitors_ame"
+      field: "competitors_name"
     },
     theAmeOfTheCompetitorsStore: {
       type: DataTypes.STRING(100),

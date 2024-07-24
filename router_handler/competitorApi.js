@@ -34,9 +34,10 @@ const uploadSingleIteTaoBaoCompetitorTable = async (req, res, next) => {
         for (const sheetName of workbook.SheetNames) {
             const worksheet = workbook.Sheets[sheetName];
             const data = XLSX.utils.sheet_to_json(worksheet);
-
+            console.log('data',data)
             const translatedData = data
                 .filter(item => typeof item['链接ID'] === 'number' && !isNaN(item['链接ID'])) //  过滤掉链接ID不是数字的数据
+                .filter(item => item['搜索'] !== undefined && item['搜索'] !== '' && !isNaN(item['搜索']))  //过滤搜索为空的数据 或者没有搜索的数据
                 .map(item => {
                     const translatedItem = {};
                     for (const [key, value] of Object.entries(keyMapping)) {
@@ -55,6 +56,7 @@ const uploadSingleIteTaoBaoCompetitorTable = async (req, res, next) => {
                     translatedItem['headOfProductLine'] = sheetName;
                     return translatedItem;
                 });
+            console.log('translatedData',translatedData)
             await tmallCompetitorService.uploadSingleIteTaoBaoCompetitorTable(translatedData).then(() => {
                 console.log(`Sheet ${sheetName} uploaded successfully`);
             }).catch((e) => {
@@ -68,7 +70,38 @@ const uploadSingleIteTaoBaoCompetitorTable = async (req, res, next) => {
         next(e);
     }
 };
+const searchSingleIteTaoBaoCompetitorTable = async (req, res, next) => {
+    try {
+      // 删除 req.query 中的空值
+        for (let key in req.query) {
+            if (req.query[key] === '' || req.query[key] === undefined) {
+                delete req.query[key];
+            }
+        }
 
+        const  rest= await tmallCompetitorService.searchSingleIteTaoBaoCompetitorTable(req.query)
+        return res.send(biResponse.success(rest))
+    } catch (e) {
+        next(e);
+    }
+};
+const conditionalFiltering = async (req, res, next) => {
+    try {
+        let result={
+            link_id:[],
+            competitors_id:[],
+            headOf_operations:[],
+            competitors_name:[],
+            category:[]
+        }
+        result= await tmallCompetitorService.conditionalFiltering(result)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e);
+    }
+};
 module.exports = {
-    uploadSingleIteTaoBaoCompetitorTable
+    uploadSingleIteTaoBaoCompetitorTable,
+    searchSingleIteTaoBaoCompetitorTable,
+    conditionalFiltering
 }
