@@ -122,13 +122,13 @@ const getDeptCoreActionForms = async (coreActionId) => {
     for (const form of forms) {
         const ruledForm = deptCoreActionForms.find(item => item.formId === form.flowFormId)
         
-        if (ruledForm) {
+        if (!ruledForm || (!ruledForm.formDetailsRulesCount && !ruledForm.formActivityRulesCount)) {
+            form.weight = 0
+        } else {
             form.formRuleId = ruledForm.id
             form.detailsRulesCount = ruledForm.formDetailsRulesCount || 0
             form.activityRulesCount = ruledForm.formActivityRulesCount || 0
             form.weight = form.detailsRulesCount + form.activityRulesCount
-        } else {
-            form.weight = 0
         }
     }
     
