@@ -25,7 +25,7 @@ const NotFoundError = require("@/error/http/notFoundError")
  * @returns {Promise<*>}
  */
 const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, startDoneDate, endDoneDate) => {
-    const coreActionConfig = await getDeptCoreActionsConfig(deptIds)
+    const coreActionConfig = await getFirstExistDeptCoreActionsConfig(deptIds)
     const differentForms = coreActionStatService.extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
     const configuredFormIds = differentForms.inner.concat(differentForms.outSourcing).map(item => item.formId)
     const flows = await coreActionStatService.filterFlows(configuredFormIds, startDoneDate, endDoneDate)
@@ -95,8 +95,16 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
  * @param deptIds
  * @returns {Promise<any>}
  */
-const getDeptCoreActionsConfig = async (deptIds) => {
-    const coreActionConfigStr = await redisUtil.get(`${redisConst.redisKeys.CoreActionRules}:${deptIds.join(",")}`)
+const getFirstExistDeptCoreActionsConfig = async (deptIds) => {
+    
+    let coreActionConfigStr = null
+    for (const deptId of deptIds) {
+        coreActionConfigStr = await redisUtil.get(`${redisConst.redisKeys.CoreActionRules}:${deptId}`)
+        if (coreActionConfigStr) {
+            break
+        }
+    }
+    
     if (!coreActionConfigStr) {
         const departmentsStr = await redisUtil.get(redisConst.redisKeys.Departments)
         const departments = JSON.parse(departmentsStr)
