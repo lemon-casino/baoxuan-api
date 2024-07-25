@@ -142,9 +142,9 @@ const syncUserWithDepartment = async () => {
             }
         }
         // 添加虚拟部门
-        if (extension.virtualDeps) {
-            user.leader_in_dept.push(...extension.virtualDeps)
-        }
+        // if (extension.virtualDeps) {
+        //     user.leader_in_dept.push(...extension.virtualDeps)
+        // }
     }
 
     await redisUtil.set(redisKeys.Users, JSON.stringify(usersWithDepartment))
@@ -201,7 +201,7 @@ const syncResignEmployeeInfo = async () => {
         if (employee.lastWorkDay) {
             newEmployee.lastWorkDay = dateUtil.convertTimestampToDate(employee.lastWorkDay)
         }
-        // newEmployee.isResign = true
+        newEmployee.isResign = true
         newEmployee.resignStatus = employee.status
         newEmployee.preStatus = employee.preStatus
         newEmployee.reasonMemo = employee.reasonMemo
