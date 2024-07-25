@@ -24,9 +24,7 @@ const getDeptCoreActionsRules = async (deptIds) => {
     const coreActionIds = coreActions.map(item => item.id)
     const deptCoreActionFormRules = await deptCoreActionFormRuleRepo.getRulesByCoreActionIds(coreActionIds)
     const coreActionFormRuleIds = deptCoreActionFormRules.map(item => item.id)
-    const coreActionFormDetailsRules = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRuleByFormRuleIds(
-        coreActionFormRuleIds
-    )
+    const coreActionFormDetailsRules = await deptCoreActionFormDetailsRuleRepo.getFormDetailsRuleByFormRuleIds(coreActionFormRuleIds)
     
     const coreActionFormActivityRules = await deptCoreActionFormActivityRuleRepo.getFormActivityRulesByFormRuleIds(coreActionFormRuleIds)
     const treeFormatResult = []
@@ -116,9 +114,9 @@ const getDeptCoreActionForms = async (coreActionId) => {
     return (await deptCoreActionRepo.getDeptCoreActionForms(coreActionId))
 }
 
-const syncDeptCoreActionsRules = async (deptIds) => {
-    const deptCoreActionRules = await getDeptCoreActionsRules(deptIds)
-    await redisUtil.set(`${redisConst.redisKeys.CoreActionRules}:${deptIds.join(",")}`, JSON.stringify(deptCoreActionRules))
+const syncDeptCoreActionsRules = async (deptId) => {
+    const deptCoreActionRules = await getDeptCoreActionsRules([deptId])
+    await redisUtil.set(`${redisConst.redisKeys.CoreActionRules}:${deptId}`, JSON.stringify(deptCoreActionRules))
 }
 
 const copyActionRules = async (srcActionId, targetActionId) => {
@@ -155,9 +153,7 @@ const copyActionRules = async (srcActionId, targetActionId) => {
         for (const formRule of srcFormRules) {
             
             const targetActionFormRule = {
-                formId: formRule.formId,
-                formName: formRule.formName,
-                deptCoreActionId: targetActionId
+                formId: formRule.formId, formName: formRule.formName, deptCoreActionId: targetActionId
             }
             
             const tmpResult = await deptCoreActionFormRuleRepo.saveFormRule(targetActionFormRule, transaction)
