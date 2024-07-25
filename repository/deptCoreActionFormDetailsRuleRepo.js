@@ -22,6 +22,20 @@ const deleteFormDetailsRule = async (id) => {
     }))
 }
 
+const deleteFormDetailsRuleByFormRuleIds = async (formRuleIds, transaction) => {
+    if (transaction) {
+        return (await deptCoreActionFormDetailsRuleModel.destroy({
+            where: {deptCoreActionFormRuleId: {$in: formRuleIds}},
+            transaction
+        }))
+    }
+    return (await deptCoreActionFormDetailsRuleModel.destroy({
+            where: {deptCoreActionFormRuleId: {$in: formRuleIds}},
+            transaction
+        })
+    )
+}
+
 const updateFormDetailsRule = async (model) => {
     return (await deptCoreActionFormDetailsRuleModel.update(model, {
         where: {id: model.id}
@@ -50,5 +64,6 @@ module.exports = {
     saveFormDetailsRule,
     bulkCreate,
     deleteFormDetailsRule,
-    updateFormDetailsRule
+    updateFormDetailsRule,
+    deleteFormDetailsRuleByFormRuleIds
 }

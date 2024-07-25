@@ -98,7 +98,28 @@ const saveDeptCoreAction = async (model) => {
 }
 
 const delDeptCoreAction = async (id) => {
-    return deptCoreActionRepo.delDeptCoreAction(id)
+    // 找到所有相关的动作
+    const relatedCoreActions = await deptCoreActionRepo.getDeptCoreActionsAndChildren(id)
+    if (relatedCoreActions.length === 0) {
+        throw new NotFoundError(`通过参数：${id}未找到对应的动作信息`)
+    }
+    
+    const transaction = await models.sequelize.transaction()
+    try {
+        for (const coreAction of relatedCoreActions) {
+            const formRules = await deptCoreActionFormRuleRepo.getRulesByDeptCoreActionId(coreAction.id)
+            const formRuleIds = formRules.map(item => item.id)
+            await deptCoreActionFormDetailsRuleRepo.deleteFormDetailsRuleByFormRuleIds(formRuleIds, transaction)
+            await deptCoreActionFormActivityRuleRepo.deleteFormActivityRuleByFormRuleIds(formRuleIds, transaction)
+            await deptCoreActionFormRuleRepo.deleteRuleByFormRuleIds(formRuleIds, transaction)
+            await deptCoreActionRepo.delDeptCoreActionAloneById(coreAction.id, transaction)
+        }
+        await transaction.commit()
+        return true
+    } catch (e) {
+        await transaction.rollback()
+        throw e
+    }
 }
 
 const getDeptCoreActionsWithRules = async (deptId) => {
@@ -183,18 +204,20 @@ const copyActionRules = async (srcActionId, targetActionId) => {
 }
 
 const copyActions = async (srcActionId, targetActionId) => {
+    let path = ""
     if (targetActionId > 0) {
-        const hasChildActions = await deptCoreActionRepo.hasChildActions(targetActionId)
-        if (hasChildActions) {
-            throw new ForbiddenError("目标节点下为非空节点，不能执行复制操作")
+        const targetCoreAction = await deptCoreActionRepo.getDeptCoreAction(targetActionId)
+        if (!targetCoreAction) {
+            throw new ForbiddenError(`${targetActionId}所对应的目标动作不存在`)
         }
+        path = targetCoreAction.path
     }
     
     const srcActionsAndChildren = await deptCoreActionRepo.getDeptCoreActionsAndChildren(srcActionId)
     const treedActions = convertToTreeFormat(srcActionsAndChildren)
     const transaction = await models.sequelize.transaction()
     try {
-        await appendActionsToTargetAction(treedActions, targetActionId, "", transaction)
+        await appendActionsToTargetAction(treedActions, targetActionId, path, transaction)
         await transaction.commit()
         return true
     } catch (e) {

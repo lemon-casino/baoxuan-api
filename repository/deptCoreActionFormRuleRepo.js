@@ -35,7 +35,10 @@ const getRulesByCoreActionIds = async (coreActionIds) => {
     return (await _getRules({deptCoreActionId: {$in: coreActionIds}}))
 }
 
-const _delRule = async (where) => {
+const _delRule = async (where, transaction) => {
+    if (transaction) {
+        return (await deptCoreActionFormRuleModel.destroy({where, transaction}))
+    }
     return (await deptCoreActionFormRuleModel.destroy({where}))
 }
 
@@ -49,11 +52,17 @@ const deleteRuleByFormId = async (formId) => {
     return (await _delRule(where))
 }
 
+const deleteRuleByFormRuleIds = async (formRuleIds, transaction) => {
+    const where = {id: {$in: formRuleIds}}
+    return (await _delRule(where, transaction))
+}
+
 module.exports = {
     saveFormRule,
     getRulesById,
     getRulesByCoreActionIds,
     getRulesByDeptCoreActionId,
     deleteRuleById,
-    deleteRuleByFormId
+    deleteRuleByFormId,
+    deleteRuleByFormRuleIds
 }

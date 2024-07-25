@@ -17,6 +17,20 @@ const deleteFormActivityRule = async (id) => {
     return (await deptCoreActionFormActivityRuleModel.destroy({where: {id}}))
 }
 
+const deleteFormActivityRuleByFormRuleIds = async (formRuleIds, transaction) => {
+    if (transaction) {
+        return (await deptCoreActionFormActivityRuleModel.destroy({
+            where: {deptCoreActionFormRuleId: {$in: formRuleIds}},
+            transaction
+        }))
+    }
+    return (await deptCoreActionFormActivityRuleModel.destroy({
+            where: {deptCoreActionFormRuleId: {$in: formRuleIds}},
+            transaction
+        })
+    )
+}
+
 const updateFormActivityRule = async (data) => {
     return (await deptCoreActionFormActivityRuleModel.update(data, {where: {id: data.id}}))
 }
@@ -43,5 +57,6 @@ module.exports = {
     updateFormActivityRule,
     bulkCreate,
     saveFormActivityRule,
-    deleteFormActivityRule
+    deleteFormActivityRule,
+    deleteFormActivityRuleByFormRuleIds
 }

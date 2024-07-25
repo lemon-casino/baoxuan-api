@@ -32,12 +32,30 @@ const save = async (model, transaction) => {
     return sequelizeUtil.extractDataValues(result)
 }
 
-const delDeptCoreAction = async (id) => {
-    const result = await deptCoreActionModel.destroy({
+const delDeptCoreAction = async (id, transaction) => {
+    if (transaction) {
+        return (await deptCoreActionModel.destroy({
+            where: {path: {$like: `%-${id}-%`}},
+            transaction
+        }))
+    }
+    return (await deptCoreActionModel.destroy({
         where: {path: {$like: `%-${id}-%`}}
-    })
-    return result
+    }))
 }
+
+const delDeptCoreActionAloneById = async (id, transaction) => {
+    if (transaction) {
+        return (await deptCoreActionModel.destroy({
+            where: {id},
+            transaction
+        }))
+    }
+    return (await deptCoreActionModel.destroy({
+        where: {id}
+    }))
+}
+
 
 const update = async (model, transaction) => {
     let result = null
@@ -102,6 +120,7 @@ module.exports = {
     getDeptCoreActions,
     getDeptCoreActionsWithRules,
     delDeptCoreAction,
+    delDeptCoreActionAloneById,
     getDeptCoreAction: getCoreAction,
     getDeptCoreActionForms,
     getDeptCoreActionsAndChildren,
