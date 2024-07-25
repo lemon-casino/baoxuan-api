@@ -56,6 +56,15 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "最后一次操作时间",
       field: "modifiedTime"
+    },
+    versionId: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: null,
+      field: "version_id"
     }
   };
   const options = {

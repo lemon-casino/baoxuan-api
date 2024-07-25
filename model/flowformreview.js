@@ -43,17 +43,18 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
     const t = await sequelize.transaction();
     try {
         for (const item of data) {
-
+            
             const depsend = {
                 form_id: item.formId,
                 modifiedTime: item.modifiedTime,
                 form_review: item.reviewProcess,
+                versionId: item.versionId
             }
             let flow = await FlowFormReviewModel.findOne({
                 where: {form_id: depsend.form_id},
                 order: [["modifiedTime", "desc"]]
             });
-
+            
             // // 如果存在该记录
             if (flow) {
                 // 如果 modifiedTime 字段不一致，更新 form_review 数据
@@ -61,7 +62,7 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
                     // 需要把以往相同节点已经添加时间的同步过来，形成新的节点
                     const oldFormReviews = flow.form_review
                     const newFormReviews = depsend.form_review
-
+                    
                     // 查单个找节点在旧的reviewItem中保存的time
                     const getConfirmedTime = (nodeId, oldReviewItems) => {
                         // 遍历同级节点
@@ -83,7 +84,7 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
                         }
                         return 0
                     }
-
+                    
                     // 为每一项formReview 根据已保存的数据设置时间
                     const loopReviewItems = (reviewItems) => {
                         for (let i = 0; i < reviewItems.length; i++) {
@@ -132,7 +133,7 @@ FlowFormReviewModel.getFlowFormReviewList = async function (form_id) {
     } else {
         return null
     }
-
+    
 };
 // 修改流程审核流数据
 FlowFormReviewModel.updateFlowFormReview = async function (form_id, data) {
