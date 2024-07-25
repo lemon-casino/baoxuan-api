@@ -1,5 +1,31 @@
 module.exports = [
     {
+        processInstanceId: "bb1a449d-f041-4366-b686-54dea2881b35",
+        title: "薛娜发起的滑梯鸡蛋盒运营视觉流程（拍摄+美编）",
+        targetActivityId: "node_oclx4kc70w7",
+        replacedActivities: [
+            {
+                "processInstanceId": "bb1a449d-f041-4366-b686-54dea2881b35",
+                "operateTimeGMT": "2024-07-24T13:09Z",
+                "showName": "大美编修图",
+                "operateType": "EXECUTE_TASK_NORMAL",
+                "remark": "",
+                "taskHoldTimeGMT": 0,
+                "type": "",
+                "operatorName": "申云锋",
+                "actionExit": "submit",
+                "operatorUserId": "680702250229494541",
+                "activityId": "node_oclx4kc70w7",
+                "size": 1,
+                "dataId": 30574454866,
+                "domainList": [],
+                "operatorDisplayName": "申云锋",
+                "action": "同意",
+                "taskId": "null"
+            }
+        ]
+    },
+    {
         processInstanceId: "60304fce-c58e-41cf-b017-3d4bf9391bf9",
         title: "闻晶发起的观山公道杯SKU运营视觉流程（拍摄+美编）",
         targetActivityId: "node_oclx4bnhfb3",
