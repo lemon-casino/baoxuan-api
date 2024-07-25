@@ -187,9 +187,11 @@ const copyActionRules = async (srcActionId, targetActionId) => {
 }
 
 const copyActions = async (srcActionId, targetActionId) => {
-    const hasChildActions = await deptCoreActionRepo.hasChildActions(targetActionId)
-    if (hasChildActions) {
-        throw new ForbiddenError("目标节点下为非空节点，不能执行复制操作")
+    if (targetActionId > 0) {
+        const hasChildActions = await deptCoreActionRepo.hasChildActions(targetActionId)
+        if (hasChildActions) {
+            throw new ForbiddenError("目标节点下为非空节点，不能执行复制操作")
+        }
     }
     
     const srcActionsAndChildren = await deptCoreActionRepo.getDeptCoreActionsAndChildren(srcActionId)
