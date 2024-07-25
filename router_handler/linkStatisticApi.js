@@ -20,7 +20,7 @@ const getLinkOperationCount = async (req, res, next) => {
         joiUtil.validate({state})
         joiUtil.validate({productLineLeaders: {value: productLineLeaders, schema: Joi.string().required()}})
         productLineLeaders = JSON.parse(productLineLeaders)
-        console.log("你怎么这么慢0")
+        console.log("链接数据异常回显开始---")
 //console.log(timeRange)
         // 天猫链接获得数据
 
