@@ -187,36 +187,46 @@ const copyActionRules = async (srcActionId, targetActionId) => {
 }
 
 const copyActions = async (srcActionId, targetActionId) => {
+    const hasChildActions = await deptCoreActionRepo.hasChildActions(targetActionId)
+    if (hasChildActions) {
+        throw new ForbiddenError("目标节点下为非空节点，不能执行复制操作")
+    }
+    
     const srcActionsAndChildren = await deptCoreActionRepo.getDeptCoreActionsAndChildren(srcActionId)
     const treedActions = convertToTreeFormat(srcActionsAndChildren)
     const transaction = await models.sequelize.transaction()
     try {
-        
-        const loop = async (actions, parentId, path) => {
-            for (const action of actions) {
-                delete action["id"]
-                action.parentId = parentId
-                const tmpResult = await deptCoreActionRepo.save(action, transaction)
-                const newActionId = tmpResult.id
-                tmpResult.path = path ? `${path}${newActionId}-` : `-${newActionId}-`
-                await deptCoreActionRepo.update(tmpResult, transaction)
-                
-                if (action.children && action.children.length > 0) {
-                    await loop(action.children, newActionId, tmpResult.path)
-                }
-            }
-        }
-        
-        await loop(treedActions, targetActionId, "")
-        
+        await appendActionsToTargetAction(treedActions, targetActionId, "", transaction)
         await transaction.commit()
         return true
     } catch (e) {
         await transaction.rollback()
         throw e
     }
-    
-    
+}
+
+/**
+ * 将actions添加到 目标action下
+ *
+ * @param actions
+ * @param targetActionId
+ * @param path
+ * @param transaction
+ * @returns {Promise<void>}
+ */
+const appendActionsToTargetAction = async (actions, targetActionId, path, transaction) => {
+    for (const action of actions) {
+        delete action["id"]
+        action.parentId = targetActionId
+        const tmpResult = await deptCoreActionRepo.save(action, transaction)
+        const newActionId = tmpResult.id
+        tmpResult.path = path ? `${path}${newActionId}-` : `-${newActionId}-`
+        await deptCoreActionRepo.update(tmpResult, transaction)
+        
+        if (action.children && action.children.length > 0) {
+            await appendActionsToTargetAction(action.children, newActionId, tmpResult.path, transaction)
+        }
+    }
 }
 
 /**

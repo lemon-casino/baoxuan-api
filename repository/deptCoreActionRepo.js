@@ -88,6 +88,14 @@ const getDeptCoreActionsAndChildren = async (id) => {
     return sequelizeUtil.extractDataValues(result)
 }
 
+const hasChildActions = async (actionId) => {
+    const result = (await deptCoreActionModel.findAll({
+        where: {parentId: actionId}
+    }))
+    
+    return result.length > 0
+}
+
 module.exports = {
     update,
     save,
@@ -96,5 +104,6 @@ module.exports = {
     delDeptCoreAction,
     getDeptCoreAction: getCoreAction,
     getDeptCoreActionForms,
-    getDeptCoreActionsAndChildren
+    getDeptCoreActionsAndChildren,
+    hasChildActions
 }
