@@ -16,7 +16,7 @@ let syncUserLoginCron = "0 0/5 * * * ?"
 let syncResignEmployeeCron = "0 0 7 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
 let tmallLinkAnomalyDetection = "0 0 23 * * ?"
-let linshi = "42 17 * * *"
+let linshi = "50 15 * * *"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
     syncTodayRunningAndFinishedFlowsCron = "0 10 12 * * ?"
