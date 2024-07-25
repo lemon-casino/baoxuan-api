@@ -1,12 +1,26 @@
 const models = require('@/model')
 const deptCoreActionModel = models.deptCoreActionModel
 const deptCoreActionFormRuleModel = models.deptCoreActionFormRuleModel
+const deptCoreActionFormActivityRuleModel = models.deptCoreActionFormActivityRuleModel
+const deptCoreActionFormDetailsRuleModel = models.deptCoreActionFormDetailsRuleModel
 const flowFormsModel = models.flowfromsModel
 const sequelizeUtil = require("@/utils/sequelizeUtil")
 
 deptCoreActionModel.hasMany(deptCoreActionFormRuleModel, {
     foreignKey: "deptCoreActionId", sourceKey: "id", as: "formRules"
 })
+
+// deptCoreActionFormRuleModel.hasMany(deptCoreActionFormDetailsRuleModel, {
+//     foreignKey: "deptCoreActionFormRuleId",
+//     as: "detailsRules"
+// })
+//
+deptCoreActionFormRuleModel.hasMany(deptCoreActionFormActivityRuleModel, {
+    sourceKey: "id",
+    foreignKey: "deptCoreActionFormRuleId",
+    as: "activityRules"
+})
+
 
 const getDeptCoreActions = async (deptIds) => {
     const result = await deptCoreActionModel.findAll({
@@ -56,7 +70,6 @@ const delDeptCoreActionAloneById = async (id, transaction) => {
     }))
 }
 
-
 const update = async (model, transaction) => {
     let result = null
     if (transaction) {
@@ -82,19 +95,44 @@ const getDeptCoreActionsWithRules = async (deptId) => {
 const getDeptCoreActionForms = async (coreActionId) => {
     let forms = await flowFormsModel.findAll({})
     forms = sequelizeUtil.extractDataValues(forms)
-    const deptCoreActionForms = await deptCoreActionFormRuleModel.findAll({
+    let deptCoreActionForms = await deptCoreActionFormRuleModel.findAll({
+        attributes: {
+            include: [
+                [
+                    models.sequelize.literal(`(
+                    select count(*) from dept_core_action_form_activity_rule
+                                    where dept_core_action_form_rule_id=deptCoreActionFormRuleModel.id
+                    )`),
+                    "formActivityRulesCount"
+                ],
+                [
+                    models.sequelize.literal(`(
+                    select count(*) from dept_core_action_form_details_rule
+                                    where dept_core_action_form_rule_id=deptCoreActionFormRuleModel.id
+                    )`),
+                    "formDetailsRulesCount"
+                ]
+            ]
+        },
         where: {deptCoreActionId: coreActionId}
     })
+    
+    deptCoreActionForms = sequelizeUtil.extractDataValues(deptCoreActionForms)
+    
     for (const form of forms) {
         const ruledForm = deptCoreActionForms.find(item => item.formId === form.flowFormId)
+        
         if (ruledForm) {
             form.formRuleId = ruledForm.id
+            form.detailsRulesCount = ruledForm.formDetailsRulesCount || 0
+            form.activityRulesCount = ruledForm.formActivityRulesCount || 0
+            form.weight = form.detailsRulesCount + form.activityRulesCount
         } else {
-            form.formRuleId = -1
+            form.weight = 0
         }
     }
     
-    forms = forms.sort((curr, next) => next.formRuleId - curr.formRuleId)
+    forms = forms.sort((curr, next) => next.weight - curr.weight)
     return forms
 }
 
