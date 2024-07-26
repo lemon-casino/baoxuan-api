@@ -33,6 +33,8 @@ const {
 } = require("./singleItemTaoBaoService")
 const tianmao__user_tableService = require("@/service/tianMaoUserTableService")
 const resignEmployeePatch = require("@/patch/resignEmployeePatch")
+const UserError = require("@/error/userError");
+const {errorCodes} = require("@/const/errorConst");
 
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
@@ -146,7 +148,7 @@ const syncUserWithDepartment = async () => {
         //     user.leader_in_dept.push(...extension.virtualDeps)
         // }
     }
-
+    
     await redisUtil.set(redisKeys.Users, JSON.stringify(usersWithDepartment))
     globalSetter.setGlobalUsers(usersWithDepartment)
     await userService.syncUserToDB(usersWithDepartment)
@@ -165,10 +167,10 @@ const syncUserLogin = async () => {
     console.log("同步进行中...")
     const userOnlineInRedis = await redisUtil.getKeys(
         `${onlineCheckConst.REDIS_LOGIN_KEY_PREFIX}:*`)
-
+    
     if (userOnlineInRedis && userOnlineInRedis.length > 0) {
         const userIdsOnlineInRedis = userOnlineInRedis.map(item => item.split(":")[1])
-
+        
         const pageData = await userLogService.getUserLogs(0, 999, "",
             [dateUtil.startOfDay(dateUtil.dateOfEarliest()), dateUtil.endOfToday()],
             true)
@@ -189,33 +191,49 @@ const syncResignEmployeeInfo = async () => {
     const allResignEmployees = await intelligentHRReq.getResignEmployees(accessToken)
     // 更新人员离职信息
     const onJobEmployees = await redisRepo.getAllUsersDetail()
-
+    
     for (const employee of allResignEmployees) {
         if (resignEmployeePatch.userIds.includes(employee.userId)) {
             continue
         }
-
-        // employee中的userId和db中的userId不对应，对应dingdingUserId
-        const newEmployee = {}
-        newEmployee.dingdingUserId = employee.userId
-        if (employee.lastWorkDay) {
-            newEmployee.lastWorkDay = dateUtil.convertTimestampToDate(employee.lastWorkDay)
+        
+        let user = null
+        try {
+            user = await userRepo.getUserDetails({dingdingUserId: employee.userId})
+        } catch (e) {
+            if (e.code === errorCodes.userError) {
+                continue
+            }
         }
-        newEmployee.isResign = true
-        newEmployee.resignStatus = employee.status
-        newEmployee.preStatus = employee.preStatus
-        newEmployee.reasonMemo = employee.reasonMemo
-        newEmployee.voluntaryReason = JSON.stringify(employee.voluntaryReason)
-        newEmployee.passiveReason = JSON.stringify(employee.passiveReason)
-        newEmployee.handoverUserId = employee.handoverUserId
-        newEmployee.status = 0 // 停用
+        
+        if (!user) {
+            continue
+        }
+        
+        // employee中的userId和db中的userId不对应，对应dingdingUserId
+        if (user.isResign) {
+            continue
+        }
+        
+        user.dingdingUserId = employee.userId
+        if (employee.lastWorkDay) {
+            user.lastWorkDay = dateUtil.convertTimestampToDate(employee.lastWorkDay)
+        }
+        user.isResign = true
+        user.resignStatus = employee.status
+        user.preStatus = employee.preStatus
+        user.reasonMemo = employee.reasonMemo
+        user.voluntaryReason = JSON.stringify(employee.voluntaryReason)
+        user.passiveReason = JSON.stringify(employee.passiveReason)
+        user.handoverUserId = employee.handoverUserId
+        user.status = 0 // 停用
         if (employee.handoverUserId) {
             const tmpHandoverUsers = onJobEmployees.filter(user => user.userid === employee.handoverUserId)
             if (tmpHandoverUsers.length > 0) {
-                newEmployee.handoverUserName = tmpHandoverUsers[0].name
+                user.handoverUserName = tmpHandoverUsers[0].name
             }
         }
-        await userRepo.updateUserResignInfo(newEmployee)
+        await userRepo.updateUserResignInfo(user)
     }
     logger.info("同步完成：syncResignEmployeeInfo")
     console.log("同步完成")
@@ -234,7 +252,7 @@ const syncRunningProcess = async () => {
     await processTmpRepo.truncate()
     await processReviewTmpRepo.truncate()
     await processDetailsTmpRepo.truncate()
-
+    
     const todayRunningFlows = await redisRepo.getTodayRunningAndFinishedFlows()
     let count = 1
     for (const flow of todayRunningFlows) {
@@ -280,21 +298,21 @@ const tmallLinkAnomalyDetection = async () => {
         let quantity = await singleItemTaoBaoService.updateCustom(link.id, link.name);
         logger.info("天猫链接异常更新链接数据面板的属性排除项", link.name, link.id, "===>", quantity);
     }
-
+    
     //更新来自链接数据面板的属性 更新自动打标 [累计60天负利润]功能 以及 [累计60天负利润]功能 (时间是自动更新的 默认是昨天的链接数据) 1代表昨天
     await singleItemTaoBaoService.Calculateyesterdaysdataandtagtheprofitin60days()
-
+    
     const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(14)
     // 获得所有负责人的信息
-
-
+    
+    
     const productLineLeaders = result.productLineLeaders.reduce((acc, group) => {
         // 使用展开操作符将当前对象的第一个键对应的数组的所有元素添加到累加器数组中
         acc.push(...group[Object.keys(group)[0]]);
         return acc;
     }, []); // 初始值是一个空数组 []
     // logger.info("天猫链接异常同步进行中...来到了负责人这里")
-
+    
     const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
         productLineLeaders,
         null,
@@ -321,9 +339,9 @@ const tmallLinkAnomalyDetection = async () => {
 
 //将合并的字典转换为数组
     const xx = Object.values(merged);
-
+    
     const notStartedExceptions = {items: [], sum: 0};
-
+    
     data.error.items.forEach(item => {
         const xxItem = xx.find(xxItem => xxItem.name === item.name);
         if (xxItem) {
@@ -386,49 +404,49 @@ const tmallLinkAnomalyDetection = async () => {
             acc[key] = value;
             return acc;
         }, {});
-
-
+    
+    
     logger.info("天猫最终异常...", cleanedLinkIdMap)
-
-
+    
+    
     const formId = "FORM-51A6DCCF660B4C1680135461E762AC82JV53";
     const processCode = "TPROC--YAB66P61TJ4MHTIKCZN606A840IS3MVPXMLXL2";
-
-       const sendRequests = async () => {
-            for (const [key, value] of Object.entries(cleanedLinkIdMap)) {
-                //删除 value的name 是数组 有其它的异常 比如 name:['费比超过15%','老品利润率低于15%']   linkType的标签是新品30 或者新品60   删除掉  费比超过15% 这个数组中的费比超过15%
-                if (Array.isArray(value.name) && value.name.length > 1 && value.name.includes('费比超过15%') && (value.linkType === '新品30' || value.linkType === '新品60')) {
-                    value.name = value.name.filter(name => name !== '费比超过15%');
-                }
-
-                const userId = value.uuid;
-                const multiSelectField_lwufb7oy = value.name;
-                // const cascadeDateField_lloq9vjk = getNextWeekTimestamps();
-                const textField_liihs7kv = value.productName + key;
-                const textField_liihs7kw = key;
-                const employeeField_liihs7l0 = [userId];
-                //value.linkType === '新品30' 或者是value.linkType === '新品60' 都改成新品
-                value.linkType = value.linkType === '新品30' || value.linkType === '新品60' ? '新品' : value.linkType;
-                const formDataJsonStr = JSON.stringify({
-                    radioField_lxlncgm1: "天猫",
-                    textField_liihs7kv,
-                    textField_liihs7kw,
-                    employeeField_liihs7l0,
-                    selectField_liihs7kz: value.linkType.toString(),
-                    multiSelectField_lwufb7oy,
-                }, null, 2);
-
-                try {
-                    await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
-                    logger.info(`发起宜搭  运营优化流程 for linkId ${key}`);
-                } catch (e) {
-                    logger.error(`发起宜搭  运营优化流程 失败 for linkId ${key}`, e);
-                }
+    
+    const sendRequests = async () => {
+        for (const [key, value] of Object.entries(cleanedLinkIdMap)) {
+            //删除 value的name 是数组 有其它的异常 比如 name:['费比超过15%','老品利润率低于15%']   linkType的标签是新品30 或者新品60   删除掉  费比超过15% 这个数组中的费比超过15%
+            if (Array.isArray(value.name) && value.name.length > 1 && value.name.includes('费比超过15%') && (value.linkType === '新品30' || value.linkType === '新品60')) {
+                value.name = value.name.filter(name => name !== '费比超过15%');
             }
-        };
-        await sendRequests();
-
-
+            
+            const userId = value.uuid;
+            const multiSelectField_lwufb7oy = value.name;
+            // const cascadeDateField_lloq9vjk = getNextWeekTimestamps();
+            const textField_liihs7kv = value.productName + key;
+            const textField_liihs7kw = key;
+            const employeeField_liihs7l0 = [userId];
+            //value.linkType === '新品30' 或者是value.linkType === '新品60' 都改成新品
+            value.linkType = value.linkType === '新品30' || value.linkType === '新品60' ? '新品' : value.linkType;
+            const formDataJsonStr = JSON.stringify({
+                radioField_lxlncgm1: "天猫",
+                textField_liihs7kv,
+                textField_liihs7kw,
+                employeeField_liihs7l0,
+                selectField_liihs7kz: value.linkType.toString(),
+                multiSelectField_lwufb7oy,
+            }, null, 2);
+            
+            try {
+                await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
+                logger.info(`发起宜搭  运营优化流程 for linkId ${key}`);
+            } catch (e) {
+                logger.error(`发起宜搭  运营优化流程 失败 for linkId ${key}`, e);
+            }
+        }
+    };
+    await sendRequests();
+    
+    
     logger.info("同步完成：天猫链接异常检测")
 }
 
@@ -460,7 +478,7 @@ const syncHROaNotStockedProcess = async (processCodes) => {
             null)
         allNotStockedOaProcesses = allNotStockedOaProcesses.concat(notStockedOaProcesses)
     }
-
+    
     await redisUtil.set(redisKeys.Oa, JSON.stringify(allNotStockedOaProcesses))
 }
 
@@ -478,7 +496,7 @@ const getHROaDifferentStatusProcess = async (processCode, statuses, startTime) =
     const {access_token: token} = await redisRepo.getToken()
     const allUsers = await userRepo.getAllUsers({isResign: false})
     const userIds = allUsers.map(item => item.dingdingUserId)
-
+    
     const getPagingOAProcessIds = async (token, processCode, startTime, endTime, nextToken, userIds, statuses) => {
         let oaProcessIds = []
         const data = {
@@ -493,7 +511,7 @@ const getHROaDifferentStatusProcess = async (processCode, statuses, startTime) =
             statuses
         }
         const result = await oaReq.getOAProcessIds(token, data)
-
+        
         if (result.success) {
             const {list, nextToken} = result.result
             oaProcessIds = oaProcessIds.concat(list)
@@ -504,7 +522,7 @@ const getHROaDifferentStatusProcess = async (processCode, statuses, startTime) =
         }
         return oaProcessIds
     }
-
+    
     let oaProcessIds = []
     while (userIds.length > 0) {
         const _10UserIds = userIds.splice(0, Math.min(10, userIds.length))
@@ -518,7 +536,7 @@ const getHROaDifferentStatusProcess = async (processCode, statuses, startTime) =
             statuses)
         oaProcessIds = oaProcessIds.concat(tmpOaProcessIds)
     }
-
+    
     let oaProcesses = []
     for (const oaProcessId of oaProcessIds) {
         const details = await oaReq.getOAProcessDetails(token, oaProcessId)
