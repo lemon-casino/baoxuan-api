@@ -6,6 +6,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 router.get("/taobao/search-data", singleItemApi.getSearchDataTaoBaoSingleItem)
+router.get("/taobao/ids", singleItemApi.getidsSatisfiedSingleItems)
 router.get("/taobao/:state", singleItemApi.getTaoBaoSingleItemsWithStatistic)
 router.get("/taobao/:id", singleItemApi.getSingleItemDetails)
 router.get("/latest-date", singleItemApi.getLatest)
