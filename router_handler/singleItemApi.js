@@ -1,6 +1,7 @@
 const singleItemTaoBaoService = require('../service/singleItemTaoBaoService')
 const biResponse = require("../utils/biResponse")
 const joiUtil = require("../utils/joiUtil")
+const {object} = require("joi");
 
 
 const saveSingleItemTaoBao = async (req, res, next) => {
@@ -153,7 +154,33 @@ const updateSingleItemTaoBao = async (req, res, next) => {
     }
 }
 
+const getidsSatisfiedSingleItems = async (req, res, next) => {
+    try {
 
+        const {
+            ids,
+            pageIndex,
+            pageSize,
+
+        } = req.query
+        let ids_data=[];
+        console.log(pageIndex, pageSize, ids)
+        if (ids !== undefined) {
+
+        const idsArray = Object.values(ids)
+
+        console.log(pageIndex, pageSize, ids)
+
+        if (idsArray.length !== 0) {
+            console.log(idsArray)
+            ids_data = await singleItemTaoBaoService.getidsSatisfiedSingleItems(parseInt(pageIndex), parseInt(pageSize), idsArray)
+        }
+    }
+        return res.send(biResponse.success(ids_data))
+    } catch (e) {
+        next(e)
+    }
+}
 
 module.exports = {
     saveSingleItemTaoBao,
@@ -162,5 +189,6 @@ module.exports = {
     getSearchDataTaoBaoSingleItem,
     getSingleItemDetails,
     getLatest,
-    updateSingleItemTaoBao
+    updateSingleItemTaoBao,
+    getidsSatisfiedSingleItems
 }
