@@ -857,11 +857,18 @@ function filterItems(singleItems, values) {
 
 function applyExclude(singleItem, exclude, excludeResult) {
     const excludeValue = singleItem[exclude.field];
-    const excludeName = exclude.value;
+    let excludeName;
+    if (/^(\-|\+)?\d+(\.\d+)?$/.test(exclude.name)) {
+         excludeName = exclude.name;
+    }else {
+         excludeName = exclude.value;
+    }
+
     const excludeComparator = exclude.comparator;
 
     switch (excludeComparator) {
         case '!==':
+            console.log("这是exclude->",excludeResult,excludeValue, excludeName,(excludeValue !== excludeName))
             return excludeResult && (excludeValue !== excludeName);
         default:
             throw new Error(`Unsupported comparator: ${excludeComparator}`);
@@ -870,30 +877,30 @@ function applyExclude(singleItem, exclude, excludeResult) {
 
 function evaluateExpression(exp, singleItem, fieldValue, value) {
     let result = true;
-    let excludeResult;
+    let excludeResult= true;
     for (const exclude of exp.exclude) {
-        excludeResult = applyExclude(singleItem, exclude, excludeResult);
+        excludeResult = applyExclude(singleItem, exclude,excludeResult);
         if (!excludeResult) {
-            break;
+           break;
         }
     }
+    console.log(exp.name,excludeResult,fieldValue,exp.comparator,value)
     if (/^(\-|\+)?\d+(\.\d+)?$/.test(value)) {
         value = parseFloat(value);
         fieldValue = parseFloat(fieldValue);
-        // console.log(`${fieldValue} ${exp.comparator} ${value}`)
         result = eval(`${fieldValue}
         ${exp.comparator}
-        ${value}`) && excludeResult;
+        ${value}`)&& excludeResult;
     } else {
-        //    console.log(`"${fieldValue}" ${exp.comparator} "${value}"`)
+        console.log("没有人来到这把",fieldValue,exp.comparator,value)
         result = eval(`"${fieldValue}"
         ${exp.comparator}
         "${value}"`) && excludeResult;
     }
 
-    if (exp.min) {
+/*    if (exp.min) {
         result = result && (fieldValue >= parseFloat(exp.min));
-    }
+    }*/
 
     return result;
 }
