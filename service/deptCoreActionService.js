@@ -53,11 +53,19 @@ const getDeptCoreActionsRules = async (deptIds) => {
                 }
                 
                 const pureCoreActionFormDetailsRules = currCoreActionFormRuleDetailsRules.map(item => {
+                    
+                    let value = null
+                    try {
+                        value = JSON.parse(item.value)
+                    } catch (e) {
+                        value = item.value
+                    }
+                    
                     return {
                         fieldId: item.fieldId,
                         fieldName: item.fieldName,
                         opCode: item.opCode,
-                        value: item.value,
+                        value: value,
                         condition: item.condition,
                         conditionCode: item.conditionCode
                     }
@@ -69,7 +77,8 @@ const getDeptCoreActionsRules = async (deptIds) => {
                         activityId: item.activityId,
                         activityName: item.activityName,
                         status: item.status,
-                        owner: item.owner
+                        owner: item.owner,
+                        isOverdue: item.isOverdue
                     }
                 })
                 

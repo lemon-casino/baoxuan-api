@@ -38,12 +38,11 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
 const statForHasRulesNode = async (users, flows, coreConfig, userFlowDataStatFunc) => {
     for (let action of coreConfig) {
         if (action.rules && action.rules.length > 0) {
-            const statResult = await statFlowsByRules(users, action.rules, flows, userFlowDataStatFunc, action)
-            action = statResult
+            action = await statFlowsByRules(users, action.rules, flows, userFlowDataStatFunc, action)
         }
         
         if (action.children && action.children.length > 0) {
-            await statForHasRulesNode(users, flows, action.children, userFlowDataStatFunc)
+            coreConfig.children = await statForHasRulesNode(users, flows, action.children, userFlowDataStatFunc)
         }
     }
     return coreConfig
@@ -55,17 +54,17 @@ const statForHasRulesNode = async (users, flows, coreConfig, userFlowDataStatFun
  *
  * @param resultNode
  * @param rules
- * @param flows
+ * @param requiredFlows
  * @param userFlowDataStatFunc
  * @param users
  * @returns {Promise<*>}
  */
 const statFlowsByRules = async (users, rules, flows, userFlowDataStatFunc, resultNode) => {
     for (const rule of rules) {
-        flows = flows.filter((flow) => flow.formUuid === rule.formId)
-        flows = filterFlowsByFlowDetailsRules(flows, rule.flowDetailsRules)
+        let requiredFlows = _.cloneDeep(flows).filter((flow) => flow.formUuid === rule.formId)
+        requiredFlows = filterFlowsByFlowDetailsRules(requiredFlows, rule.flowDetailsRules)
         
-        if (flows.length === 0) {
+        if (requiredFlows.length === 0) {
             continue
         }
         
@@ -73,7 +72,7 @@ const statFlowsByRules = async (users, rules, flows, userFlowDataStatFunc, resul
             const {activityId, status, isOverdue, owner} = flowNodeRule
             
             // 根据节点配置对流程进行汇总
-            for (const flow of flows) {
+            for (const flow of requiredFlows) {
                 const processInstanceId = flow.processInstanceId
                 
                 const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
@@ -206,7 +205,7 @@ const getMatchedActivity = (activityId, status, isOverdue, activities) => {
     for (const activity of activities) {
         // 发起的节点id对应的表单流程id不一致
         activityId = activityIdMappingConst[activityId] || activityId
-        if (activity.activityId === activityId && status.includes(activity.type) && isOverdue === activity.isOverdue) {
+        if (activity.activityId === activityId && status.includes(activity.type) && isOverdue === activity.isOverDue) {
             return activity
         }
     }
@@ -344,9 +343,10 @@ const convertToUserActionResult = (users, userStatResult) => {
                         let ids = []
                         let userFlowsDataStat = []
                         const actionName = result.actionName
-                        const sameKeyTextStat = result.children.filter(item => item.nameCN.includes(currStatusKeyText))
+                        
+                        const sameKeyTextStat = result.children.filter(item => item.actionName.includes(currStatusKeyText))
                         for (const statusActionStat of sameKeyTextStat) {
-                            const overdueActionStat = statusActionStat.children.find(item => item.nameCN === l2Action)
+                            const overdueActionStat = statusActionStat.children.find(item => item.actionName === l2Action)
                             const userActionStat = overdueActionStat.children.filter(item => usernames.includes(item.userName))
                             if (userActionStat.length > 0) {
                                 for (const stat of userActionStat) {
