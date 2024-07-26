@@ -602,72 +602,90 @@ const statFlowsToActionByFormRule = (flows, formRule, actionName, statusResult) 
  * @param flows
  * @param actionName
  * @param coreActionSameKeyTextConfig
- * @param targetFormActivityIds
+ * @param visionTargetFormDoneActivityIds
  * @param statusResult
  * @returns {*}
  */
-const statFlowsToActionByTargetFormActivityIds = (flows, actionName, coreActionSameKeyTextConfig, targetFormActivityIds, statusResult) => {
+const statFlowsToActionByTargetFormActivityIds = (flows, actionName, coreActionSameKeyTextConfig, visionTargetFormDoneActivityIds, statusResult) => {
+    let index = 0
     for (const flow of flows) {
-        const targetForm = targetFormActivityIds.find(item => item.formId === flow.formUuid)
-        if (!targetForm) {
+        index = index + 1
+        console.log("----", actionName, index)
+        if (index === 109) {
+            console.log("===")
+        }
+        
+        const targetDoneForm = visionTargetFormDoneActivityIds.find(item => item.formId === flow.formUuid)
+        if (!targetDoneForm) {
             continue
         }
-        const requiredDoneActivities = flow.overallprocessflow.filter(item => targetForm.doneActivityIds.includes(item.activityId) && item.type === flowReviewTypeConst.HISTORY)
+        const requiredDoneActivities = flow.overallprocessflow.filter(item => targetDoneForm.doneActivityIds.includes(item.activityId) && item.type === flowReviewTypeConst.HISTORY)
         if (requiredDoneActivities.length === 0) {
             continue
         }
         
-        for (const statusConfig of coreActionSameKeyTextConfig) {
-            const {rules} = statusConfig
-            for (const formRule of rules) {
-                if (formRule.formId !== flow.formUuid) {
-                    continue
+        // 要将多个流程的多个工作项配置合并，用于算逾期，存在一个逾期计算逾期
+        const rules = _.cloneDeep(coreActionSameKeyTextConfig[0].rules)
+        for (let i = 1; i < coreActionSameKeyTextConfig.length; i++) {
+            const tmpRules = coreActionSameKeyTextConfig[i].rules
+            for (const tmpRule of tmpRules) {
+                const existRule = rules.find(item => item.formId === tmpRule.formId)
+                if (existRule) {
+                    existRule.flowNodeRules = existRule.flowNodeRules.concat(tmpRule.flowNodeRules)
+                } else {
+                    rules.push(tmpRule)
                 }
-                // 判断视觉属性是否相同
-                let hasSameVisionAttr = false
-                for (const detailsRule of formRule.flowDetailsRules || []) {
-                    hasSameVisionAttr = opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], [actionName])
-                    if (hasSameVisionAttr) {
-                        hasSameVisionAttr = true
-                        break
+            }
+        }
+        
+        for (const formRule of rules) {
+            if (formRule.formId !== flow.formUuid) {
+                continue
+            }
+            // 判断视觉属性是否相同
+            let hasSameVisionAttr = false
+            for (const detailsRule of formRule.flowDetailsRules || []) {
+                hasSameVisionAttr = opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], [actionName])
+                if (hasSameVisionAttr) {
+                    hasSameVisionAttr = true
+                    break
+                }
+            }
+            
+            if (hasSameVisionAttr) {
+                // 判断是否出现过逾期
+                let overdueActivity = null
+                // 审核节点逾期
+                if (requiredDoneActivities[0].isOverDue) {
+                    overdueActivity = requiredDoneActivities[0]
+                }
+                // 非审核节点逾期
+                else {
+                    for (const flowNodeRule of formRule.flowNodeRules) {
+                        const {overdue: overdueNode} = flowNodeRule
+                        overdueActivity = flow.overallprocessflow.find(item => item.activityId === overdueNode.id && item.isOverDue)
+                        if (overdueActivity) {
+                            break
+                        }
                     }
                 }
                 
-                if (hasSameVisionAttr) {
-                    // 判断是否出现过逾期
-                    let overdueActivity = null
-                    // 审核节点逾期
-                    if (requiredDoneActivities[0].isOverDue) {
-                        overdueActivity = requiredDoneActivities[0]
-                    }
-                    // 非审核节点逾期
-                    else {
-                        for (const flowNodeRule of formRule.flowNodeRules) {
-                            const {overdue: overdueNode} = flowNodeRule
-                            overdueActivity = flow.overallprocessflow.find(item => item.activityId === overdueNode.id && item.isOverDue)
-                            if (overdueActivity) {
-                                break
-                            }
-                        }
-                    }
-                    
-                    const tmpOverdueStatResult = statusResult.children.find(item => item.nameCN === (overdueActivity ? "逾期" : "未逾期"))
-                    // 对于完成的流程统计不用区分具体的动作，要不会重复的， 默认为”合计“
-                    const defaultActionName = "合计"
-                    if (tmpOverdueStatResult.children.length === 0) {
-                        tmpOverdueStatResult.children.push({
-                            nameCN: defaultActionName, ids: [flow.processInstanceId]
-                        })
-                    } else {
-                        if (!tmpOverdueStatResult.children[0].ids.includes(flow.processInstanceId)) {
-                            tmpOverdueStatResult.children[0].ids.push(flow.processInstanceId)
-                        }
+                const tmpOverdueStatResult = statusResult.children.find(item => item.nameCN === (overdueActivity ? "逾期" : "未逾期"))
+                // 对于完成的流程统计不用区分具体的动作，要不会重复的， 默认为”合计“
+                const defaultActionName = "合计"
+                if (tmpOverdueStatResult.children.length === 0) {
+                    tmpOverdueStatResult.children.push({
+                        nameCN: defaultActionName, ids: [flow.processInstanceId]
+                    })
+                } else {
+                    if (!tmpOverdueStatResult.children[0].ids.includes(flow.processInstanceId)) {
+                        tmpOverdueStatResult.children[0].ids.push(flow.processInstanceId)
                     }
                 }
             }
         }
-        return statusResult
     }
+    return statusResult
 }
 
 module.exports = {
