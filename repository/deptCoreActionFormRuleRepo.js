@@ -35,6 +35,10 @@ const getRulesByCoreActionIds = async (coreActionIds) => {
     return (await _getRules({deptCoreActionId: {$in: coreActionIds}}))
 }
 
+const getRuleByActionIdAndFormId = async (actionId, formId) => {
+    return (await _getRules({deptCoreActionId: actionId, formId}))
+}
+
 const _delRule = async (where, transaction) => {
     if (transaction) {
         return (await deptCoreActionFormRuleModel.destroy({where, transaction}))
@@ -62,6 +66,7 @@ module.exports = {
     getRulesById,
     getRulesByCoreActionIds,
     getRulesByDeptCoreActionId,
+    getRuleByActionIdAndFormId,
     deleteRuleById,
     deleteRuleByFormId,
     deleteRuleByFormRuleIds

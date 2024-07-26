@@ -1,7 +1,13 @@
 const deptCoreActionRuleConfigRepo = require("@/repository/deptCoreActionFormRuleRepo")
-const sequelizeUtil = require("@/utils/sequelizeUtil");
+const sequelizeUtil = require("@/utils/sequelizeUtil")
+const ForbiddenError = require("@/error/http/forbiddenError")
 
 const saveFormRule = async (model) => {
+    const {formId, deptCoreActionId} = model
+    const tmpRules = await deptCoreActionRuleConfigRepo.getRuleByActionIdAndFormId(deptCoreActionId, formId)
+    if (tmpRules.length > 0) {
+        throw new ForbiddenError("当前动作不能重复添加该表单规则！")
+    }
     const result = await deptCoreActionRuleConfigRepo.saveFormRule(model)
     return sequelizeUtil.extractDataValues(result)
 }
