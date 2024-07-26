@@ -1901,7 +1901,7 @@ const formatData = (originForms) => {
         }
         return {
             formId: form.form_id,
-            c_id: form.c_id,
+            versionId: form.c_id,
             modifiedTime: form.modifiedTime,
             reviewProcess: reviewProcess,
         };

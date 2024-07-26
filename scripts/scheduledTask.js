@@ -7,13 +7,17 @@ const taskService = require("@/service/taskService")
 let syncWorkingDayCron = "0 5 9 * * ?"
 let syncTodayRunningAndFinishedFlowsCron = "0 0/20 7-21 * * ?"
 let syncMissingCompletedFlowsCron = "0 30 23 * * ?"
-// todo：更新部门的频率可以完全手动代替
+
 let syncDepartmentCron = "0 0 5 * * ?"
-let syncDepartmentWithUserCron = "0 30 5 * * ?"
-let syncUserWithDepartmentCron = "0 0 6 * * ?"
+// 如果有新人入职一般也是上午
+let syncDepartmentWithUserCron = "0 30 8 * * ?"
+let syncUserWithDepartmentCron = "0 0 8 * * ?"
+
 let syncFormCron = "0 30 6 * * ?"
 let syncUserLoginCron = "0 0/5 * * * ?"
-let syncResignEmployeeCron = "0 0 7 * * ?"
+
+// 当天下班
+let syncResignEmployeeCron = "0 0 18 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
 let tmallLinkAnomalyDetection = "0 0 23 * * ?"
 let linshi = "50 15 * * *"
@@ -88,7 +92,7 @@ schedule.scheduleJob(syncDepartmentWithUserCron, async function () {
  * 注意：该数据依赖于Redis中的department数据：要保证更新department的定时任务优先执行完成
  */
 schedule.scheduleJob(syncUserWithDepartmentCron, async function () {
-    // await taskService.syncUserWithDepartment()
+    await taskService.syncUserWithDepartment()
 })
 
 /**
