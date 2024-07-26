@@ -18,6 +18,9 @@ const FlowFormReviewModel = sequelize.define("flowformsreview", {
         type: Sequelize.JSON,
         defaultValue: 1,
     },
+    version_id: {
+        type: Sequelize.STRING(30)
+    },
     update_time: {
         type: Sequelize.DATE,
         get() {
@@ -48,7 +51,7 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
                 form_id: item.formId,
                 modifiedTime: item.modifiedTime,
                 form_review: item.reviewProcess,
-                versionId: item.versionId
+                version_id: item.versionId
             }
             let flow = await FlowFormReviewModel.findOne({
                 where: {form_id: depsend.form_id},
@@ -58,7 +61,7 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
             // // 如果存在该记录
             if (flow) {
                 // 如果 modifiedTime 字段不一致，更新 form_review 数据
-                if (flow.modifiedTime != depsend.modifiedTime) {
+                if (flow.modifiedTime.toString() != depsend.modifiedTime.toString()) {
                     // 需要把以往相同节点已经添加时间的同步过来，形成新的节点
                     const oldFormReviews = flow.form_review
                     const newFormReviews = depsend.form_review

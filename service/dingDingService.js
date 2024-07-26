@@ -44,7 +44,7 @@ const getFlowsByStatusAndTimeRange = async (timesRange = ["2023-01-01 00:00:00",
     const toTimeGMT = timeAction ? timesRange[1] : null;
     // 2.分页去请求所有流程id
     const resLiuChengList = await yiDaReq.getFlowsOfStatusAndTimeRange(fromTimeGMT, toTimeGMT, timeAction, status, token, userId, formUuid, pageSize, pageNumber);
-
+    
     if (!resLiuChengList) {
         return []
     }
@@ -75,7 +75,7 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
             const formUuid = allForms[i].formUuid;
             console.log(`loop form process: ${i + 1}:${allForms.length}(${allForms[i].title.zhCN}:${formUuid})`)
             const result = await getFlowsByStatusAndTimeRange(timesRange, timeAction, status, ddAccessToken, userId, formUuid)
-
+            
             const replaceOperator = (activity, allUsers) => {
                 const hasResigned = activity.operatorName.includes("[已离职]")
                 if (hasResigned) {
@@ -89,7 +89,7 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
                         if (!user.handoverUserId) {
                             return
                         }
-
+                        
                         // 离职之前做的工作不用动，其他的相关的节点信息改为代理人
                         const undoAfterResign = !activity.operateTimeGMT
                         const doAfterResign = activity.operateTimeGMT &&
@@ -108,7 +108,7 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
                     }
                 }
             }
-
+            
             // 对离职的人员，将在离职之后地时间节点的operator更改为代理人
             for (const flow of result) {
                 for (const userActivity of flow.overallprocessflow) {
@@ -142,7 +142,7 @@ const getFlowsFromDingDing = async (status, timesRange, timeAction) => {
 const getDepartmentFromDingDing = async () => {
     const {access_token} = await getToken();
     const depList = await contactsReq.getSubDeptAll(access_token);
-
+    
     for (const item of depList.result) {
         const dep_chil = await contactsReq.getSubDeptAll(access_token, item.dept_id);
         item.dep_chil = dep_chil.result;
@@ -310,7 +310,7 @@ const getFinishedFlows = async (timeRange) => {
  * @returns {Promise<*>}
  */
 const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
-
+    
     const getLatestFormReview = async (formId) => {
         const flowFormReviews = await formReviewRepo.getFormReviewByFormId(formId)
         if (flowFormReviews.length === 0) {
@@ -319,7 +319,7 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
         }
         return flowFormReviews[0]
     }
-
+    
     const getReviewItemConfig = (id, dbReviewItems) => {
         for (const item of dbReviewItems) {
             if (item.id === id) {
@@ -334,7 +334,7 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
         }
         return null
     }
-
+    
     const fillReviewItemCost = async (reviewItem, reviewItems, reviewItemsConfig, formUuid) => {
         const {activityId} = reviewItem
         // 2. 获取其中的节点限时配置信息
@@ -350,7 +350,7 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
             logger.warn(`节点 ${activityId}的 lastTimingNodes 信息在数据库的配置中未找到`)
             return reviewItem
         }
-
+        
         // 3. 获取流程节点中的 lastTimingNodes
         const lastTimingNodes = itemConfig.lastTimingNodes
         // 宜搭流程首节点统一都把发起叫做申请，activityId=sid-restartevent
@@ -358,30 +358,30 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
         if (lastTimingNodes.includes(reviewItemsConfig[0].id)) {
             lastTimingNodes.push(reviewItemRootId)
         }
-
+        
         // // 4. 根据lastTimingNodes找到完成时间
         const orderedSatisfiedReviewItems = reviewItems.filter(item => {
             return item.operateTimeGMT && lastTimingNodes.includes(item.activityId)
         }).sort((a, b) => parseInt(b.operateTimeGMT) - parseInt(a.operateTimeGMT))
-
+        
         if (orderedSatisfiedReviewItems.length === 0) {
             logger.warn(`节点${activityId}的上一完成节点未找到`)
             return reviewItem
         }
-
+        
         const lastTimingReviewItem = orderedSatisfiedReviewItems[0]
         if (!lastTimingReviewItem.operateTimeGMT) {
             logger.warn(`节点${activityId}的上一完成节点${lastTimingReviewItem.id}未找到完成时间`)
             return reviewItem
         }
-
+        
         // 5. 计算时间
         const startDateTime = dateUtil.formatGMT2Str(lastTimingReviewItem.operateTimeGMT)
         let computeEndDate = dateUtil.format2Str(new Date())
         if (reviewItem.operateTimeGMT) {
             computeEndDate = dateUtil.formatGMT2Str(reviewItem.operateTimeGMT)
         }
-
+        
         let costAlready = 0
         // 获取该节点在流程中的完成时间
         // 运营执行流程的用时要特别计算
@@ -395,11 +395,11 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
         reviewItem["isOverDue"] = itemConfig.time > 0 && costAlready > itemConfig.time
         return reviewItem
     }
-
+    
     const reviewItemRootId = "sid-restartevent"
-
+    
     const flows = await getFlowsFromDingDing(status, timeRange, timeAction)
-
+    
     // 同步流程的操作节点耗时信息
     // 注意📢：如果已经保存到Redis中的流程中的reviewId需要继承，要不流程表单更新后节点id会变动
     const todayFlows = await globalGetter.getTodayFlows()
@@ -409,16 +409,16 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
         if (patchFlows.length > 0) {
             flow.data[patchFlows[0].missingFieldId] = patchFlows[0].fieldValue
         }
-
+        
         flow = patchUtil.patchOfflineTransmittedActivity(flow)
         flow = patchUtil.patchFlowData(flow)
-
+        
         const reviewItems = flow.overallprocessflow
         if (!reviewItems || reviewItems.length === 0) {
             logger.warn(`流程：${flow.processInstanceId}没有审核节点信息`)
             continue
         }
-
+        
         // 获取流程的表单流程的限时配置信息
         //     -- 如果在是新流程不在库中，需要获取最新的表单流程的限时配置信息
         //     -- 如果已经在库中了，需要根据保存的reviewId获取表单流程的限时配置信息
@@ -436,12 +436,12 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
             const tmpFormReview = await formReviewRepo.getDetailsById(oldFlow[0].reviewId)
             reviewItemsConfig = tmpFormReview.formReview
         }
-
+        
         if (!reviewItemsConfig) {
             logger.warn("没有在数据库中找到表单设计流程的信息")
             continue
         }
-
+        
         for (let reviewItem of reviewItems) {
             if (reviewItem.activityId === reviewItemRootId) {
                 continue
@@ -504,12 +504,12 @@ const isWorkingDay = async (date) => {
             throw new ForbiddenError("为保证对今天是否为工作日判断的准确性，9点前不允许调用")
         }
     }
-
+    
     const startDateTime = dateUtil.startOfDay(date)
     const endDateTime = dateUtil.endOfDay(date)
     // 设置50个小伙伴的userId（钉钉接口限制）
     const users = await globalGetter.getUsers()
-
+    
     const limit = 40
     const userIds = []
     for (let i = 0; i < users.length - 1; i++) {
@@ -517,7 +517,7 @@ const isWorkingDay = async (date) => {
             userIds.push(users[i].userid)
         }
     }
-
+    
     // 按天统计，没人最多会有4条记录, 测试钉钉接口 pageSize最大为50， 否则会保存
     const attendances = await getPagingAttendances(0, 50, startDateTime, endDateTime, userIds)
     const uniqueAttendances = {}
