@@ -1,6 +1,5 @@
 const Sequelize = require("sequelize")
 const sequelize = require('../model/init');
-const {DataTypes, where, col} = Sequelize;
 const getSingleItemTaoBaoModel = require("../model/singleItemTaobaoModel")
 const singleItemTaoBaoModel = getSingleItemTaoBaoModel(sequelize)
 const uuidUtil = require("../utils/uuidUtil")
@@ -12,7 +11,7 @@ const moment = require("moment");
 const getABnormal_tm = require("../model/ABbnormal_TM");
 const ABbnormal_TM = getABnormal_tm(sequelize);
 const getAItemInfo = require("../model/ItemInfoModel");
-const {QueryTypes, Op} = require("sequelize");
+const {QueryTypes, Op,col,fn} = require("sequelize");
 const ItemInfoModel = getAItemInfo(sequelize)
 /**
  * 保存淘宝的单品表数据
@@ -638,6 +637,133 @@ const getproductLineLeaders = async (productLineLeaders, timeRange) => {
     });
     return results.map(result => result.link_id);
 }
+
+const getidsSatisfiedSingleItems = async (pageIndex, pageSize, ids) => {
+    console.log("-----------------", ids);
+    try {
+        const idsPlaceholder = ids.map(id => `'${id}'`).join(',');
+        const offset = pageIndex * pageSize;
+        console.log(pageIndex, pageSize);
+
+        const xx = await singleItemTaoBaoModel.sequelize.query(
+            `SELECT sit.batch_id AS batchId,
+                sit.product_name AS productName,
+                sit.link_id AS linkId,
+                sit.operation_leader AS operationLeader,
+                sit.product_line_leader AS productLineLeader,
+                sit.purchase_leader AS purchaseLeader,
+                sit.shop_name AS shopName,
+                sit.link_type AS linkType,
+                sit.date,
+                sit.first_level_item AS firstLevelItem,
+                sit.pay_amount AS payAmount,
+                sit.shou_tao_visitors AS shouTaoVisitors,
+                sit.shou_tao_buyers AS shouTaoBuyers,
+                sit.shou_tao_really_conversion_rate AS shouTaoReallyConversionRate,
+                sit.profit_amount AS profitAmount,
+                sit.profit_rate AS profitRate,
+                sit.expense,
+                sit.visitors,
+                sit.paid_buyers AS paidBuyers,
+                sit.sum_shopping_cart AS sumShoppingCart,
+                sit.shopping_cart_click_amount AS shoppingCartClickAmount,
+                sit.shopping_cart_sum_click AS shoppingCartSumClick,
+                sit.shopping_cart_conversion AS shoppingCartConversion,
+                sit.shopping_cart_sum_amount AS shoppingCartSumAmount,
+                sit.shopping_cat_sum_roi AS shoppingCatSumRoi,
+                sit.pay_conversion_rate AS payConversionRate,
+                sit.really_deal_rate AS reallyDealRate,
+                sit.deduction_point AS deductionPoint,
+                sit.ju_bai_cost AS juBaiCost,
+                sit.click_farming_amount AS clickFarmingAmount,
+                sit.click_farming_count AS clickFarmingCount,
+                sit.really_paid_amount AS reallyPaidAmount,
+                sit.refund,
+                sit.really_shipment_amount AS reallyShipmentAmount,
+                sit.cost,
+                sit.freight,
+                sit.shou_tao_people_num_market_rate AS shouTaoPeopleNumMarketRate,
+                sit.sales_market_rate AS salesMarketRate,
+                sit.shou_tao_people_num_market_rate_circle_rate_day AS shouTaoPeopleNumMarketRateCircleRateDay,
+                sit.sales_market_rate_circle_rate_day AS salesMarketRateCircleRateDay,
+                sit.shou_tao_people_num_market_rate_circle_rate_7day AS shouTaoPeopleNumMarketRateCircleRate7Day,
+                sit.sales_market_rate_circle_rate_7day AS salesMarketRateCircleRate7Day,
+                sit.shou_tao_people_num_market_rate_circle_rate_30day AS shouTaoPeopleNumMarketRateCircleRate30Day,
+                sit.sales_market_rate_circle_rate_30day AS salesMarketRateCircleRate30Day,
+                sit.brand_first_buy_sum_amount AS brandFirstBuySumAmount,
+                sit.xiao_hong_shu_refund AS xiaoHongShuRefund,
+                sit.accurate_people_promotion_cost AS accuratePeoplePromotionCost,
+                sit.accurate_people_promotion_production_rate AS accuratePeoplePromotionProductionRate,
+                sit.wan_xiang_tai_cost AS wanXiangTaiCost,
+                sit.wan_xiang_tai_production_rate AS wanXiangTaiProductionRate,
+                sit.fee_rate AS feeRate,
+                sit.cart_sum_payment AS cartSumPayment,
+                sit.accurate_people_sum_payment AS accuratePeopleSumPayment,
+                sit.wan_xiang_tai_sum_payment AS wanXiangTaiSumPayment,
+                sit.create_time AS createTime,
+                sit.link_hierarchy AS linkHierarchy,
+                sit.user_def_1 AS userDef1,
+                sit.user_def_2 AS userDef2,
+                sit.user_def_3 AS userDef3,
+                sit.user_def_4 AS userDef4,
+                sit.user_def_5 AS userDef5,
+                sit.user_def_6 AS userDef6,
+                sit.user_def_7 AS userDef7,
+                sit.user_def_8 AS userDef8,
+                sit.user_def_9 AS userDef9,
+                sit.user_def_10 AS userDef10,
+                sit.user_def_11 AS userDef11,
+                sit.user_def_12 AS userDef12,
+                sit.user_def_13 AS userDef13,
+                sit.user_def_14 AS userDef14,
+                sit.user_def_15 AS userDef15,
+                sit.user_def_16 AS userDef16,
+                sit.user_def_17 AS userDef17,
+                sit.user_def_18 AS userDef18,
+                sit.user_def_19 AS userDef19,
+                sit.user_def_20 AS userDef20,
+                sit.dayprofit60
+            FROM single_item_taobao AS sit
+            JOIN (
+                SELECT link_id, MAX(date) AS max_date
+                FROM single_item_taobao
+                WHERE link_id IN (${idsPlaceholder})
+                GROUP BY link_id
+            ) AS max_dates
+            ON sit.link_id = max_dates.link_id AND sit.date = max_dates.max_date
+            WHERE sit.date IS NOT NULL
+            LIMIT :pageSize OFFSET :offset;`, {
+                replacements: { pageSize, offset },
+                type: QueryTypes.SELECT,
+                logging: true,
+                raw: true,
+            }
+        );
+
+        const countResult = await singleItemTaoBaoModel.sequelize.query(
+            `SELECT COUNT(*) AS count
+            FROM (
+                SELECT link_id, MAX(date) AS max_date
+                FROM single_item_taobao
+                WHERE link_id IN (${idsPlaceholder})
+                GROUP BY link_id
+            ) AS max_dates;`, {
+                type: QueryTypes.SELECT,
+                logging: false,
+                raw: true,
+            }
+        );
+
+        const totalCount = countResult[0].count;
+
+        return pagingUtil.paging(Math.ceil(totalCount / pageSize), totalCount, xx);
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        throw error;
+    }
+};
+
+
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
@@ -656,4 +782,5 @@ module.exports = {
     updateCustom,
     Calculateyesterdaysdataandtagtheprofitin60days,
     getproductLineLeaders,
+    getidsSatisfiedSingleItems
 }
