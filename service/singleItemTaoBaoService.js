@@ -1360,7 +1360,9 @@ async function fetchAndProcessErrorItems() {
 }
 
 
-
+const getidsSatisfiedSingleItems = async (pageIndex,pageSize,ids) => {
+    return await singleItemTaoBaoRepo.getidsSatisfiedSingleItems(pageIndex,pageSize,ids)
+}
 
 module.exports = {
     saveSingleItemTaoBao,
@@ -1384,5 +1386,6 @@ module.exports = {
     updateSingleItemTaoBao,
     getLinknewvaCount,
     updateCustom,
-    Calculateyesterdaysdataandtagtheprofitin60days
+    Calculateyesterdaysdataandtagtheprofitin60days,
+    getidsSatisfiedSingleItems
 }
