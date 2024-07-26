@@ -38,13 +38,20 @@ const getDeptCoreActionsRules = async (deptIds) => {
         if (currCoreActionFormRules.length > 0) {
             coreAction.rules = []
             for (const currCoreActionFormRule of currCoreActionFormRules) {
+                
+                const currCoreActionFormRuleDetailsRules = coreActionFormDetailsRules.filter(item => item.deptCoreActionFormRuleId === currCoreActionFormRule.id)
+                const currCoreActionFormRuleActivityRules = coreActionFormActivityRules.filter(item => item.deptCoreActionFormRuleId === currCoreActionFormRule.id)
+                if (currCoreActionFormRuleDetailsRules.length === 0 && currCoreActionFormRuleActivityRules.length === 0) {
+                    continue
+                }
+                
                 const formRule = {
                     formId: currCoreActionFormRule.formId,
                     formName: currCoreActionFormRule.formName,
                     flowDetailsRules: [],
                     flowNodeRules: []
                 }
-                const currCoreActionFormRuleDetailsRules = coreActionFormDetailsRules.filter(item => item.deptCoreActionFormRuleId === currCoreActionFormRule.id)
+                
                 const pureCoreActionFormDetailsRules = currCoreActionFormRuleDetailsRules.map(item => {
                     return {
                         fieldId: item.fieldId,
@@ -57,7 +64,6 @@ const getDeptCoreActionsRules = async (deptIds) => {
                 })
                 formRule.flowDetailsRules = pureCoreActionFormDetailsRules
                 
-                const currCoreActionFormRuleActivityRules = coreActionFormActivityRules.filter(item => item.deptCoreActionFormRuleId === currCoreActionFormRule.id)
                 const pureCoreActionFormActivityRules = currCoreActionFormRuleActivityRules.map(item => {
                     return {
                         activityId: item.activityId,
@@ -66,6 +72,8 @@ const getDeptCoreActionsRules = async (deptIds) => {
                         owner: item.owner
                     }
                 })
+                
+                
                 formRule.flowNodeRules = pureCoreActionFormActivityRules
                 coreAction.rules.push(formRule)
             }

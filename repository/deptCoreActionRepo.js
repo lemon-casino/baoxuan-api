@@ -124,6 +124,9 @@ const getDeptCoreActionForms = async (coreActionId) => {
         
         if (!ruledForm || (!ruledForm.formDetailsRulesCount && !ruledForm.formActivityRulesCount)) {
             form.weight = 0
+            if (ruledForm) {
+                form.formRuleId = ruledForm.id
+            }
         } else {
             form.formRuleId = ruledForm.id
             form.detailsRulesCount = ruledForm.formDetailsRulesCount || 0

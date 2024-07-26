@@ -36,10 +36,10 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
  * @returns {Promise<*>}
  */
 const statForHasRulesNode = async (users, flows, coreConfig, userFlowDataStatFunc) => {
-    for (const action of coreConfig) {
+    for (let action of coreConfig) {
         if (action.rules && action.rules.length > 0) {
             const statResult = await statFlowsByRules(users, action.rules, flows, userFlowDataStatFunc, action)
-            action.children = statResult
+            action = statResult
         }
         
         if (action.children && action.children.length > 0) {
@@ -173,24 +173,24 @@ const extractInnerAndOutSourcingFormsFromConfig = (coreActionConfig) => {
  * @returns {*}
  */
 const filterFlowsByFlowDetailsRules = (flows, flowDetailsRules) => {
-    let andFlows = _.cloneDeep(flows)
+    let result = _.cloneDeep(flows)
     
     if (flowDetailsRules) {
         for (const detailsRule of flowDetailsRules) {
             if (detailsRule.condition === conditionConst.condition.AND) {
-                andFlows = andFlows.filter(flow => {
+                result = result.filter(flow => {
                     return operatorConst.opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
                 })
             } else {
-                const orFlows = _.cloneDeep(flows)
-                const requiredOrFlows = orFlows.filter(flow => {
+                const orFlows = _.cloneDeep(flows).filter(flow => {
                     return operatorConst.opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
                 })
-                andFlows = andFlows.concat(requiredOrFlows)
+                result = result.concat(orFlows)
             }
         }
     }
-    return andFlows
+    
+    return algorithmUtil.removeJsonArrDuplicateItems(result, "processInstanceId")
 }
 
 /**
@@ -206,9 +206,7 @@ const getMatchedActivity = (activityId, status, isOverdue, activities) => {
     for (const activity of activities) {
         // 发起的节点id对应的表单流程id不一致
         activityId = activityIdMappingConst[activityId] || activityId
-        if (activity.activityId === activityId &&
-            status.includes(activity.type) &&
-            isOverdue === activity.isOverdue) {
+        if (activity.activityId === activityId && status.includes(activity.type) && isOverdue === activity.isOverdue) {
             return activity
         }
     }
@@ -256,7 +254,7 @@ const extendActivityWithOwnerNameAndTags = (activity, users, flow, ownerRule) =>
 const filterFlows = async (formIds, startDoneDate, endDoneDate) => {
     let combinedFlows = await flowCommonService.getCombinedFlowsOfHistoryAndToday(startDoneDate, endDoneDate, formIds)
     combinedFlows = flowCommonService.removeTargetStatusFlows(combinedFlows, flowStatusConst.TERMINATED)
-    combinedFlows = flowCommonService.removeDoneActivitiesNotInDoneDateRange(combinedFlows, startDoneDate, endDoneDate)
+    combinedFlows = flowCommonService.removeDoneActivitiesNotInDoneDateRangeExceptStartNode(combinedFlows, startDoneDate, endDoneDate, true)
     combinedFlows = flowCommonService.removeRedirectActivity(combinedFlows)
     return combinedFlows
 }
@@ -367,9 +365,7 @@ const convertToUserActionResult = (users, userStatResult) => {
         }
         if (!user.username.includes("离职")) {
             const userStatStructure = {
-                actionCode: "userActStat",
-                actionName: user.username,
-                children: getActionChildren(user.children)
+                actionCode: "userActStat", actionName: user.username, children: getActionChildren(user.children)
             }
             userStatArr.push(userStatStructure)
         }
@@ -449,15 +445,20 @@ const convertToFlowStatResult = (isStandardStat, flows, coreActionConfig, userSt
 }
 
 const initResultTemplate = (userStatResult) => {
-    const overdueConfigTemplate = [
-        {nameCN: "逾期", nameEN: "overdue", children: []},
-        {nameCN: "未逾期", nameEN: "notOverdue", children: []}
-    ]
-    const flowStatConfigTemplate = [
-        {nameCN: "待转入", nameEN: "TODO", children: _.cloneDeep(overdueConfigTemplate)},
-        {nameCN: "进行中", nameEN: "DOING", children: _.cloneDeep(overdueConfigTemplate)},
-        {nameCN: "已完成", nameEN: "DONE", children: _.cloneDeep(overdueConfigTemplate)}
-    ]
+    const overdueConfigTemplate = [{nameCN: "逾期", nameEN: "overdue", children: []}, {
+        nameCN: "未逾期",
+        nameEN: "notOverdue",
+        children: []
+    }]
+    const flowStatConfigTemplate = [{
+        nameCN: "待转入",
+        nameEN: "TODO",
+        children: _.cloneDeep(overdueConfigTemplate)
+    }, {nameCN: "进行中", nameEN: "DOING", children: _.cloneDeep(overdueConfigTemplate)}, {
+        nameCN: "已完成",
+        nameEN: "DONE",
+        children: _.cloneDeep(overdueConfigTemplate)
+    }]
     
     return getFlowSumStructure(_.cloneDeep(userStatResult), flowStatConfigTemplate)
 }
