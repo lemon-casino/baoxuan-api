@@ -2947,8 +2947,7 @@ exports.getOaAllProcess = async (req, res) => {
 // http://127.0.0.1:9999/user/flowpath/getprocessAuditing
 // 获取所有流程设计模版数据
 exports.getprocessAuditing = async (req, res) => {
-    // let {data} = req.body;
-    let data = require("@/logs/result.json");
+    let {data} = req.body;
     data = formatData(JSON.parse(JSON.stringify(data)));
 
     await FlowFormReviewModel.addFlowFormReview(data);
