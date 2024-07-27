@@ -2559,6 +2559,42 @@ module.exports = {
                                 name: "美编修图负责人",
                                 id: "employeeField_lyqkh2my"
                             }
+                        },
+                        {
+                            from: {
+                                id: "node_oclyqm9hmf1",
+                                name: "视觉总监确认拍摄方案",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclyqm9hmf1",
+                                name: "视觉总监确认拍摄方案",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "3D建模负责人",
+                                id: "employeeField_lz2ejnhq",
+                                defaultUserName: "王洪彬"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz2elklg2",
+                                name: "分配3D建模、美编负责人",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz2elklg2",
+                                name: "分配3D建模、美编负责人",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "3D建模负责人",
+                                id: "employeeField_lz2ejnhq",
+                                defaultUserName: "王洪彬"
+                            }
                         }
                     ]
                 },
@@ -4819,6 +4855,23 @@ module.exports = {
                                 name: "美编修图负责人",
                                 id: "employeeField_lyqkh2my"
                             }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz2elklgj",
+                                name: "3D建模",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz2elklgj",
+                                name: "3D建模",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "3D建模",
+                                id: "node_oclz2elklgj"
+                            }
                         }
                     ]
                 },
@@ -5376,7 +5429,7 @@ module.exports = {
                                 name: "精修美编完成任务",
                                 id: "node_oclw7dfsbp2"
                             }
-                        },
+                        }
                     ]
                 },
                 
@@ -6914,6 +6967,23 @@ module.exports = {
                     flowNodeRules: [
                         {
                             from: {
+                                id: "node_oclz2elklgj",
+                                name: "3D建模",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclz2elklgj",
+                                name: "3D建模",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "3D建模",
+                                id: "node_oclz2elklgj"
+                            }
+                        },
+                        {
+                            from: {
                                 id: "node_oclyqmivse6",
                                 name: "AI修图完成",
                                 status: ["HISTORY"]
@@ -7397,122 +7467,6 @@ module.exports = {
                     ]
                 }
             ]
-        },
-        
-        {
-            nameCN: "待做3D建模",
-            rules: [
-                {
-                    formName: "视觉拍摄流程（拍摄、修图）",
-                    formId: "FORM-955A09160AB34B4489E96B8929AFFA2AVE2R",
-                    flowDetailsRules: [
-                        {fieldId: "radioField_lypub2tw", opCode: opCodes.EqualAny, value: ["全套"]},
-                        {fieldId: "是否需3D建模", opCode: opCodes.Equal, value: "是"}
-                    ],
-                    flowNodeRules: [
-                        {
-                            from: {
-                                id: "node_oclyqm9hmf1",
-                                name: "视觉总监确认拍摄方案",
-                                status: ["TODO"]
-                            },
-                            to: {
-                                id: "node_oclyqm9hmf1",
-                                name: "视觉总监确认拍摄方案",
-                                status: ["TODO"]
-                            },
-                            ownerRule: {
-                                from: "form",
-                                name: "3D建模负责人",
-                                id: "employeeField_lz2ejnhq",
-                                defaultUserName: "王洪彬"
-                            }
-                        },
-                        {
-                            from: {
-                                id: "node_oclz2elklg2",
-                                name: "分配3D建模、美编负责人",
-                                status: ["TODO"]
-                            },
-                            to: {
-                                id: "node_oclz2elklg2",
-                                name: "分配3D建模、美编负责人",
-                                status: ["TODO"]
-                            },
-                            ownerRule: {
-                                from: "form",
-                                name: "3D建模负责人",
-                                id: "employeeField_lz2ejnhq",
-                                defaultUserName: "王洪彬"
-                            }
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            nameCN: "3D建模进行中",
-            rules: [
-                {
-                    formName: "视觉拍摄流程（拍摄、修图）",
-                    formId: "FORM-955A09160AB34B4489E96B8929AFFA2AVE2R",
-                    flowDetailsRules: [
-                        {fieldId: "radioField_lypub2tw", opCode: opCodes.EqualAny, value: ["全套"]},
-                        {fieldId: "是否需3D建模", opCode: opCodes.Equal, value: "是"}
-                    ],
-                    flowNodeRules: [
-                        {
-                            from: {
-                                id: "node_oclz2elklgj",
-                                name: "3D建模",
-                                status: ["TODO"]
-                            },
-                            to: {
-                                id: "node_oclz2elklgj",
-                                name: "3D建模",
-                                status: ["TODO"]
-                            },
-                            ownerRule: {
-                                from: "form",
-                                name: "3D建模",
-                                id: "node_oclz2elklgj"
-                            }
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            nameCN: "3D建模完成",
-            rules: [
-                {
-                    formName: "视觉拍摄流程（拍摄、修图）",
-                    formId: "FORM-955A09160AB34B4489E96B8929AFFA2AVE2R",
-                    flowDetailsRules: [
-                        {fieldId: "radioField_lypub2tw", opCode: opCodes.EqualAny, value: ["全套"]},
-                        {fieldId: "是否需3D建模", opCode: opCodes.Equal, value: "是"}
-                    ],
-                    flowNodeRules: [
-                        {
-                            from: {
-                                id: "node_oclz2elklgj",
-                                name: "3D建模",
-                                status: ["HISTORY"]
-                            },
-                            to: {
-                                id: "node_oclz2elklgj",
-                                name: "3D建模",
-                                status: ["HISTORY"]
-                            },
-                            ownerRule: {
-                                from: "form",
-                                name: "3D建模",
-                                id: "node_oclz2elklgj"
-                            }
-                        }
-                    ]
-                }
-            ]
-        },
+        }
     ]
 }
