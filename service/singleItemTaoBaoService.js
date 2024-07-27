@@ -870,9 +870,6 @@ function applyExclude(singleItem, exclude, excludeResult) {
         case '!==':
             console.log("这是exclude->",excludeResult,excludeValue, excludeName,(excludeValue !== excludeName))
             return excludeResult && (excludeValue !== excludeName);
-        case '<':
-            console.log("这是exclude->",excludeResult,excludeValue, excludeName,(excludeValue < excludeName))
-            return excludeResult && (excludeValue !== excludeName);
         default:
             throw new Error(`Unsupported comparator: ${excludeComparator}`);
     }
