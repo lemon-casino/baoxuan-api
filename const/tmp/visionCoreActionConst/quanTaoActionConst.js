@@ -328,7 +328,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "天猫链接上架流程",
                     formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
@@ -485,7 +485,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营新品流程",
                     formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
@@ -821,7 +821,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营视觉流程（拍摄+美编）",
                     formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
@@ -1114,7 +1114,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "外包拍摄视觉流程",
                     formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
@@ -1170,7 +1170,7 @@ module.exports = {
                         }
                     ]
                 },
-
+            
             ]
         },
         {
@@ -1271,7 +1271,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "天猫链接上架流程",
                     formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
@@ -1378,7 +1378,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营新品流程",
                     formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
@@ -1615,7 +1615,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "外包拍摄视觉流程",
                     formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
@@ -1667,7 +1667,7 @@ module.exports = {
                             status: ["HISTORY"]
                         },
                         to: {
-
+                            
                             id: "node_oclrolllmq2",
                             name: "拍摄完成",
                             status: ["HISTORY"]
@@ -1697,7 +1697,7 @@ module.exports = {
                             status: ["HISTORY"]
                         },
                         to: {
-
+                            
                             id: "node_oclrolllmq2",
                             name: "拍摄完成",
                             status: ["HISTORY"]
@@ -1727,7 +1727,7 @@ module.exports = {
                             status: ["HISTORY"]
                         },
                         to: {
-
+                            
                             id: "node_oclrolllmq2",
                             name: "拍摄完成",
                             status: ["HISTORY"]
@@ -1744,7 +1744,7 @@ module.exports = {
                         }
                     }]
                 },
-
+                
                 {
                     formName: "天猫链接上架流程",
                     formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
@@ -1805,7 +1805,7 @@ module.exports = {
                             }
                         }]
                 },
-
+                
                 {
                     formName: "运营新品流程",
                     formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
@@ -1877,7 +1877,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营视觉流程（拍摄+美编）",
                     formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
@@ -2035,7 +2035,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "外包拍摄视觉流程",
                     formId: "FORM-30500E23B9C44712A5EBBC5622D3D1C4TL18",
@@ -2069,7 +2069,7 @@ module.exports = {
                 }
             ]
         },
-
+        
         {
             nameCN: "待入美编",
             nameEN: mbActionTypes.WAIT_TO_PS,
@@ -2197,7 +2197,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营新品流程",
                     formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
@@ -2233,7 +2233,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "天猫链接上架流程",
                     formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
@@ -2342,7 +2342,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营视觉流程（拍摄+美编）",
                     formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
@@ -2484,8 +2484,9 @@ module.exports = {
                         },
                     ]
                 },
+                
                 {
-                    formName: "运营视觉流程（拍摄+美编）",
+                    formName: "视觉拍摄流程（拍摄、修图）",
                     formId: "FORM-955A09160AB34B4489E96B8929AFFA2AVE2R",
                     flowDetailsRules: [
                         {fieldId: "radioField_lypub2tw", opCode: opCodes.EqualAny, value: ["全套"]}
@@ -2561,7 +2562,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "美编修图任务",
                     formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYC",
@@ -2769,7 +2770,7 @@ module.exports = {
                         //         id: "node_oclvghx5li1"
                         //     }
                         // },
-
+                        
                         {
                             from: {
                                 id: "node_oclvt49cil2",
@@ -2836,7 +2837,7 @@ module.exports = {
                         //         id: "node_oclvt49cil4"
                         //     }
                         // },
-
+                        
                         {
                             from: {
                                 id: "node_oclw7dfsbp2",
@@ -2881,7 +2882,7 @@ module.exports = {
                         //         id: "node_oclw7dfsbp4"
                         //     }
                         // },
-
+                        
                         // {
                         //     from: {
                         //         id: "node_oclvgh4l0z2",
@@ -3616,7 +3617,7 @@ module.exports = {
                         // }
                     ]
                 },
-
+                
                 {
                     formName: "运营新品流程",
                     formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
@@ -3718,7 +3719,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "天猫链接上架流程",
                     formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
@@ -4267,7 +4268,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营视觉流程（拍摄+美编）",
                     formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
@@ -4821,7 +4822,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "美编修图任务",
                     formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYC",
@@ -5192,7 +5193,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营美编修图流程",
                     formId: "FORM-D2D43EACD2564C94AC549E40B67A9EEDQFEZ",
@@ -5378,7 +5379,7 @@ module.exports = {
                         },
                     ]
                 },
-
+                
                 // 注意：不要删掉，表单内容过滤内容不同  或的关系
                 {
                     formName: "运营拍摄流程",
@@ -5759,7 +5760,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营新品流程",
                     formId: "FORM-6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3",
@@ -5861,7 +5862,7 @@ module.exports = {
                         },
                     ]
                 },
-
+                
                 {
                     formName: "天猫链接上架流程",
                     formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
@@ -6410,7 +6411,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营视觉流程（拍摄+美编）",
                     formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
@@ -6964,7 +6965,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "美编修图任务",
                     formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYC",
@@ -7396,6 +7397,122 @@ module.exports = {
                     ]
                 }
             ]
-        }
+        },
+        
+        {
+            nameCN: "待做3D建模",
+            rules: [
+                {
+                    formName: "视觉拍摄流程（拍摄、修图）",
+                    formId: "FORM-955A09160AB34B4489E96B8929AFFA2AVE2R",
+                    flowDetailsRules: [
+                        {fieldId: "radioField_lypub2tw", opCode: opCodes.EqualAny, value: ["全套"]},
+                        {fieldId: "是否需3D建模", opCode: opCodes.Equal, value: "是"}
+                    ],
+                    flowNodeRules: [
+                        {
+                            from: {
+                                id: "node_oclyqm9hmf1",
+                                name: "视觉总监确认拍摄方案",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclyqm9hmf1",
+                                name: "视觉总监确认拍摄方案",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "3D建模负责人",
+                                id: "employeeField_lz2ejnhq",
+                                defaultUserName: "王洪彬"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz2elklg2",
+                                name: "分配3D建模、美编负责人",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz2elklg2",
+                                name: "分配3D建模、美编负责人",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "3D建模负责人",
+                                id: "employeeField_lz2ejnhq",
+                                defaultUserName: "王洪彬"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            nameCN: "3D建模进行中",
+            rules: [
+                {
+                    formName: "视觉拍摄流程（拍摄、修图）",
+                    formId: "FORM-955A09160AB34B4489E96B8929AFFA2AVE2R",
+                    flowDetailsRules: [
+                        {fieldId: "radioField_lypub2tw", opCode: opCodes.EqualAny, value: ["全套"]},
+                        {fieldId: "是否需3D建模", opCode: opCodes.Equal, value: "是"}
+                    ],
+                    flowNodeRules: [
+                        {
+                            from: {
+                                id: "node_oclz2elklgj",
+                                name: "3D建模",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz2elklgj",
+                                name: "3D建模",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "3D建模",
+                                id: "node_oclz2elklgj"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            nameCN: "3D建模完成",
+            rules: [
+                {
+                    formName: "视觉拍摄流程（拍摄、修图）",
+                    formId: "FORM-955A09160AB34B4489E96B8929AFFA2AVE2R",
+                    flowDetailsRules: [
+                        {fieldId: "radioField_lypub2tw", opCode: opCodes.EqualAny, value: ["全套"]},
+                        {fieldId: "是否需3D建模", opCode: opCodes.Equal, value: "是"}
+                    ],
+                    flowNodeRules: [
+                        {
+                            from: {
+                                id: "node_oclz2elklgj",
+                                name: "3D建模",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclz2elklgj",
+                                name: "3D建模",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "3D建模",
+                                id: "node_oclz2elklgj"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
     ]
 }
