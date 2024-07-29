@@ -48,7 +48,7 @@ const getUserSelfOrPartnersOfDepartment = async (ddUserId, deptId) => {
     // 判断该用户时候有访问权限： 仅有部门领导和管理员可以查看
     const usersWithDepartment = await globalGetter.getUsers()
     let userWithDepartment = usersWithDepartment.filter((user) => user.userid === ddUserId)
-
+    
     if (!userWithDepartment || userWithDepartment.length === 0) {
         throw new NotFoundError("没有找到您所在的部门信息")
     }
@@ -93,12 +93,12 @@ const getTaggedInnerGroupUsers = async (userId, deptIds, innerGroupTagPrefix, in
     const result = []
     let innerGroupTags = []
     let onJobUsers = []
-
+    
     const isLeader = await isDeptLeaderOfTheUser(userId, deptIds)
     if (isLeader) {
         innerGroupTags = await tagsRepo.getTags({tagCode: {$like: `%${innerGroupTagPrefix}%`}})
         onJobUsers = await userRepo.getDeptOnJobUsers(deptIds)
-
+        
         const hasInnerGroupUserIds = []
         for (const tmInnerGroupTag of innerGroupTags) {
             const tmpGroupResult = {groupCode: tmInnerGroupTag.tagCode, groupName: tmInnerGroupTag.tagName, members: []}
@@ -116,12 +116,13 @@ const getTaggedInnerGroupUsers = async (userId, deptIds, innerGroupTagPrefix, in
             }
             result.push(tmpGroupResult)
         }
-
+        
         // 未分组的用户
         const dontHasInnerGroupUsers = onJobUsers.filter(user => !hasInnerGroupUserIds.includes(user.dingdingUserId))
         const tmpGroupResult = {groupCode: "noGroup", groupName: "未分组", members: []}
         for (const user of dontHasInnerGroupUsers) {
-            tmpGroupResult.members.push({userName: user.nickname, userDDId: user.dingdingUserId, isLeader: false})
+            const isLeader = user.dingdingUserId === userId || whiteList.pepArr().includes(user.dingdingUserId)
+            tmpGroupResult.members.push({userName: user.nickname, userDDId: user.dingdingUserId, isLeader})
         }
         result.push(tmpGroupResult)
     }
@@ -135,7 +136,7 @@ const getTaggedInnerGroupUsers = async (userId, deptIds, innerGroupTagPrefix, in
                 groupName: userInnerGroupTag.tag.tagName,
                 members: []
             }
-
+            
             // 如果是内部组组长，要获取该组的其他组员
             const innerGroupLeader = !!user.tags.find(tag => tag.tagCode === innerGroupLeaderTagCode)
             if (innerGroupLeader) {
@@ -189,6 +190,10 @@ const getVisionInnerGroups = async (userId) => {
     return (await getTaggedInnerGroupUsers(userId, ["482162119", "933412643"], "hz:vision:", "hz:innerGroupLeader"))
 }
 
+const getTurnoverInnerGroups = async (userId) => {
+    return (await getTaggedInnerGroupUsers(userId, ["903009366"]))
+}
+
 const getInnerGroups = async (userId, deptIds) => {
     let isLeader = false
     let currentUser = []
@@ -200,14 +205,14 @@ const getInnerGroups = async (userId, deptIds) => {
         if (departments.length === 0) {
             throw new NotFoundError(`未找到用户：${userDDId}的部门信息`)
         }
-
+        
         for (const dept of departments) {
             if (deptIds.includes(dept.dep_detail.dept_id.toString()) && dept.leader) {
                 isLeader = true
                 break
             }
         }
-
+        
         if (!isLeader) {
             let userInDept = false
             for (const deptId of deptIds) {
@@ -223,7 +228,7 @@ const getInnerGroups = async (userId, deptIds) => {
             }
         }
     }
-
+    
     let innerGroup = []
     for (const groupKey of Object.keys(innerGroups)) {
         if (deptIds.includes(innerGroups[groupKey].deptId)) {
@@ -231,18 +236,18 @@ const getInnerGroups = async (userId, deptIds) => {
             break
         }
     }
-
+    
     let groupingResult = []
     for (const deptId of deptIds) {
         const tmpGroupingResult = await reGrouping(deptId, innerGroup)
         groupingResult = groupingResult.concat(tmpGroupingResult)
     }
-
+    
     // 部门主管和管理员返回所有分组信息
     if (isLeader) {
         return groupingResult
     }
-
+    
     for (const grouping of groupingResult) {
         for (const member of grouping.members) {
             if (currentUser.length > 0 && currentUser[0].name === member.userName) {
@@ -260,9 +265,9 @@ const getInnerGroups = async (userId, deptIds) => {
 }
 
 const reGrouping = async (deptId, selfDefinedInnerGroup) => {
-
+    
     const groupingResult = []
-
+    
     const department = await departmentService.getDepartmentWithUsers(deptId)
     const hasGroupedUsers = []
     const noGroupedUsers = []
@@ -278,7 +283,7 @@ const reGrouping = async (deptId, selfDefinedInnerGroup) => {
             members: currentGroupUsers
         })
     }
-
+    
     for (const user of department.dep_user) {
         if (hasGroupedUsers.includes(user.name)) {
             continue
@@ -286,7 +291,7 @@ const reGrouping = async (deptId, selfDefinedInnerGroup) => {
         noGroupedUsers.push({userName: user.name})
     }
     groupingResult.push({groupCode: "noGroup", groupName: "未分组", members: noGroupedUsers})
-
+    
     return groupingResult
 }
 
@@ -326,13 +331,13 @@ const syncUserToDB = async (usersInRedis) => {
 
 const getDingDingUserIdAndNickname = async () => {
     try {
-
+        
         return await UsersModel.findAll({
             attributes: ['dingding_user_id', 'nickname'],
             raw: true,
             logging: false
         });
-
+        
     } catch (error) {
         throw new Error('查询数据失败');
     }
@@ -346,6 +351,7 @@ module.exports = {
     getUserSelfOrPartnersOfDepartment,
     getTMInnerGroups,
     getVisionInnerGroups,
+    getTurnoverInnerGroups,
     getPagingUsers,
     getEnabledUsers,
     syncUserToDB,

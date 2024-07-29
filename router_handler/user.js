@@ -460,6 +460,15 @@ exports.getVisionInnerGroups = async (req, res, next) => {
     }
 }
 
+exports.getTurnoverInnerGroups = async (req, res, next) => {
+    try {
+        const tmInnerGroups = await userService.getTurnoverInnerGroups(req.user.userId)
+        res.send(biResponse.success(tmInnerGroups))
+    } catch (e) {
+        next(e)
+    }
+}
+
 exports.getUsersOfDepartment = async (req, res, next) => {
     try {
         const {deptId} = req.query

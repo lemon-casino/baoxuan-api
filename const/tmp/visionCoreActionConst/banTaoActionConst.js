@@ -639,6 +639,7 @@ module.exports = {
                 }
             ]
         },
+        
         {
             nameCN: "待入美编",
             nameEN: mbActionTypes.WAIT_TO_PS,
@@ -674,7 +675,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营视觉流程（拍摄+美编）",
                     formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
@@ -868,10 +869,46 @@ module.exports = {
                                 name: "美编修图负责人",
                                 id: "employeeField_lyqkh2my"
                             }
+                        },
+                        {
+                            from: {
+                                id: "node_oclyqm9hmf1",
+                                name: "视觉总监确认拍摄方案",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclyqm9hmf1",
+                                name: "视觉总监确认拍摄方案",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "3D建模负责人",
+                                id: "employeeField_lz2ejnhq",
+                                defaultUserName: "王洪彬"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz2elklg2",
+                                name: "分配3D建模、美编负责人",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz2elklg2",
+                                name: "分配3D建模、美编负责人",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "3D建模负责人",
+                                id: "employeeField_lz2ejnhq",
+                                defaultUserName: "王洪彬"
+                            }
                         }
                     ]
                 },
-
+                
                 {
                     formName: "美编修图任务",
                     formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYC",
@@ -1235,7 +1272,7 @@ module.exports = {
                         // },
                     ]
                 },
-
+                
                 {
                     formName: "运营视觉流程（拍摄+美编）",
                     formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
@@ -1808,10 +1845,27 @@ module.exports = {
                                 name: "美编修图负责人",
                                 id: "employeeField_lyqkh2my"
                             }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz2elklgj",
+                                name: "3D建模",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz2elklgj",
+                                name: "3D建模",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "3D建模",
+                                id: "node_oclz2elklgj"
+                            }
                         }
                     ]
                 },
-
+                
                 {
                     formName: "美编修图任务",
                     formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYC",
@@ -2116,7 +2170,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营美编修图流程",
                     formId: "FORM-D2D43EACD2564C94AC549E40B67A9EEDQFEZ",
@@ -2302,7 +2356,7 @@ module.exports = {
                         },
                     ]
                 },
-
+                
                 {
                     formName: "运营视觉流程（拍摄+美编）",
                     formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
@@ -2875,10 +2929,27 @@ module.exports = {
                                 name: "美编修图负责人",
                                 id: "employeeField_lyqkh2my"
                             }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz2elklgj",
+                                name: "3D建模",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclz2elklgj",
+                                name: "3D建模",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "form",
+                                name: "3D建模",
+                                id: "node_oclz2elklgj"
+                            }
                         }
                     ]
                 },
-
+                
                 {
                     formName: "美编修图任务",
                     formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYC",
@@ -3183,7 +3254,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营美编修图流程",
                     formId: "FORM-D2D43EACD2564C94AC549E40B67A9EEDQFEZ",

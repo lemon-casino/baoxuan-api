@@ -3,6 +3,7 @@ const BigNumber = require("bignumber.js")
 const flowService = require("@/service/flowService")
 const visionCoreActionService = require("@/service/core/visionCoreActionService")
 const tmCoreActionService = require("@/service/core/tmCoreActionService")
+const turnoverCoreActionService = require("@/service/core/turnoverCoreActionService")
 const flowFormService = require("@/service/flowFormService")
 const joiUtil = require("@/utils/joiUtil")
 const biResponse = require("@/utils/biResponse")
@@ -28,7 +29,7 @@ const getFlowsByIds = async (req, res, next) => {
     } catch (e) {
         next(e)
     }
-
+    
     return res.send(biResponse.serverError())
 }
 
@@ -68,12 +69,25 @@ const getTMCoreActionStat = async (req, res, next) => {
     }
 }
 
+const getTurnoverCoreActionStat= async (req, res, next) => {
+    try {
+        joiUtil.clarityValidate(flowSchema.getCoreActionsSchema, req.body)
+        const {statType, deptIds, startDate, endDate, userNames} = req.body
+        const userId = req.user.userId
+        const result = await turnoverCoreActionService.getCoreActionStat(statType, userId, deptIds, userNames, startDate, endDate)
+        res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+
 const getAllOverDueRunningFlows = async (req, res, next) => {
     try {
         const result = await flowService.getAllOverDueRunningFlows()
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('runningOverdueFlows');
-
+        
         worksheet.columns = [
             {header: '流程表单名', key: 'flowFromName', width: 30},
             {header: '流程名', key: 'processInstanceName', width: 100},
@@ -85,16 +99,16 @@ const getAllOverDueRunningFlows = async (req, res, next) => {
             {header: '规定时长', key: 'requiredCost', width: 10},
             {header: '已卡滞时长', key: 'overDueDuration', width: 10}
         ]
-
+        
         const flowFormMap = {}
         for (const flow of result) {
             let flowForm = flowFormMap[flow.formUuid]
-
+            
             if (!flowForm) {
                 flowForm = await flowFormService.getFlowForm(flow.formUuid)
                 flowFormMap[flow.formUuid] = flowForm
             }
-
+            
             for (const item of flow.overDueReviewItems) {
                 worksheet.addRow(
                     {
@@ -112,12 +126,12 @@ const getAllOverDueRunningFlows = async (req, res, next) => {
                 );
             }
         }
-
+        
         const buffer = await workbook.xlsx.writeBuffer();
-
+        
         res.setHeader('Content-Disposition', 'attachment; filename="overdueRunningFlows.xlsx"');
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-
+        
         return res.send(buffer)
     } catch (e) {
         next(e)
@@ -154,6 +168,7 @@ module.exports = {
     updateRunningFlowEmergency,
     getVisionCoreActionStat,
     getTMCoreActionStat,
+    getTurnoverCoreActionStat,
     getAllOverDueRunningFlows,
     getFormsFlowsActivitiesStat
 }

@@ -16,7 +16,7 @@ module.exports = {
     "/single-item": require("./singleItemRouter"),
     "/tmall/competitor": require("./tmallCompetitorRouter"),
     "/link-statistic": require("./linkStatisticRouter"),
-    "/task": require("./taskRouter"),
+    "/task/sync": require("./taskRouter"),
     "/user-logs": require("./userLogRouter"),
     "/market-data": require("./marketDataRouter"),
     "/download/:filename": require("./fileRouter"),

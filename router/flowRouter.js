@@ -26,6 +26,7 @@ router.put("/running", flowHandler.updateRunningFlowEmergency)
 
 router.post("/vision-core-action-stat", flowHandler.getVisionCoreActionStat)
 router.post("/tm-core-action-stat", flowHandler.getTMCoreActionStat)
+router.post("/turnover-core-action-stat", flowHandler.getTurnoverCoreActionStat)
 
 router.get("/all-overdue-running-flows", flowHandler.getAllOverDueRunningFlows)
 
