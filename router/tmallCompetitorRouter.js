@@ -10,10 +10,10 @@ const uploadFileName = '天猫竞品表.xlsx';
 // 设置存储位置和文件命名
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        if (!fs.existsSync(uploadDirectory)) {
-            fs.mkdirSync(uploadDirectory, { recursive: true });
+        if (!fs.existsSync(uploadDirectory+'/logs')) {
+            fs.mkdirSync(uploadDirectory+'/logs', { recursive: true });
         }
-        cb(null, uploadDirectory);
+        cb(null, uploadDirectory+'/logs');
     },
     filename: function (req, file, cb) {
         cb(null, Date.now() + path.extname(file.originalname)); // 在文件名后添加当前时间戳以避免文件名冲突

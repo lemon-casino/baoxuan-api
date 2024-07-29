@@ -16,7 +16,7 @@ const uploadSingleIteTaoBaoCompetitorTable = async (req, res, next) => {
         const workbook = XLSX.readFile(filePath);
 
         function excelDateToJSDate(excelDate) {
-            const date = new Date(1900, 0, excelDate - 1); // Excel date base is 1900-01-01
+            const date = new Date(1900, 0, excelDate ); // Excel date base is 1900-01-01
             return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
         }
         const keyMapping = {

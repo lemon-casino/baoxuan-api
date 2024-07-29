@@ -323,7 +323,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营视觉流程（拍摄+美编）",
                     formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
@@ -993,7 +993,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营视觉流程（拍摄+美编）",
                     formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
@@ -1125,7 +1125,7 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             to: {
-
+                                
                                 id: "node_oclrolllmq2",
                                 name: "拍摄完成",
                                 status: ["HISTORY"]
@@ -1157,7 +1157,7 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             to: {
-
+                                
                                 id: "node_oclrolllmq2",
                                 name: "拍摄完成",
                                 status: ["HISTORY"]
@@ -1189,7 +1189,7 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             to: {
-
+                                
                                 id: "node_oclrolllmq2",
                                 name: "拍摄完成",
                                 status: ["HISTORY"]
@@ -1207,7 +1207,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营视觉流程（拍摄+美编）",
                     formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
@@ -1296,6 +1296,7 @@ module.exports = {
                 }
             ]
         },
+        
         {
             nameCN: "待入剪辑",
             nameEN: mbActionTypes.WAIT_TO_CUT,
@@ -1467,7 +1468,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 //  注意： 不要少出重复的”运营拍摄流程“
                 {
                     formName: "运营拍摄流程",
@@ -1562,7 +1563,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "天猫链接上架流程",
                     formId: "FORM-0X966971LL0EI3OC9EJWUATDC84838H8V09ML1",
@@ -1813,7 +1814,7 @@ module.exports = {
                         // },
                     ]
                 },
-
+                
                 {
                     formName: "运营视觉流程（拍摄+美编）",
                     formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
@@ -2289,7 +2290,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营美编修图流程",
                     formId: "FORM-D2D43EACD2564C94AC549E40B67A9EEDQFEZ",
@@ -2447,7 +2448,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营视觉流程（拍摄+美编）",
                     formId: "FORM-8418BD7111594D2B82F818ADE042E48B3AM3",
@@ -2893,7 +2894,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营执行流程",
                     formId: "FORM-K5A66M718P8B40TK8PS1W45BHQK32TWJOGIILU",
@@ -2924,7 +2925,7 @@ module.exports = {
                         }
                     ]
                 },
-
+                
                 {
                     formName: "运营美编修图流程",
                     formId: "FORM-D2D43EACD2564C94AC549E40B67A9EEDQFEZ",
