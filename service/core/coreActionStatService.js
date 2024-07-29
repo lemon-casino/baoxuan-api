@@ -2,14 +2,13 @@ const _ = require("lodash")
 const {opFunctions} = require("@/const/ruleConst/operatorConst")
 const {activityIdMappingConst, flowStatusConst, flowReviewTypeConst} = require("@/const/flowConst")
 const flowUtil = require("@/utils/flowUtil")
-const flowRepo = require("@/repository/flowRepo");
 const flowCommonService = require("@/service/common/flowCommonService");
 const userRepo = require("@/repository/userRepo");
-const userCommonService = require("@/service/common/userCommonService");
 const outUsersRepo = require("@/repository/outUsersRepo");
 const algorithmUtil = require("@/utils/algorithmUtil");
 const visionConst = require("@/const/tmp/visionConst");
 const {visionFormDoneActivityIds} = require("@/const/tmp/coreActionsConst");
+const Bignumber = require("bignumber.js");
 
 const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
 
@@ -688,6 +687,172 @@ const statFlowsToActionByTargetFormActivityIds = (flows, actionName, coreActionS
     return statusResult
 }
 
+
+/**
+ * 将对人的统计汇总成工作量的统计(按照核心动作名对基于人的统计的汇总)
+ *
+ * @param userStatResult
+ * @returns {*[]}
+ */
+const sumUserActionStat = (userStatResult) => {
+    const activityStatResult = getActivityStatStructure(_.cloneDeep(userStatResult))
+    for (const actionStatResult of userStatResult) {
+        const coreActionName = actionStatResult.actionName
+        const subStatusActionsResult = actionStatResult.children
+        for (const subActionResult of subStatusActionsResult) {
+            const subOverdueActionsResult = subActionResult.children
+            for (const overdueResult of subOverdueActionsResult) {
+                // 获取逾期节点下所有人的汇总
+                const getOverdueIds = (overdueResult) => {
+                    let overdueIds = []
+                    for (const userStatResult of overdueResult.children) {
+                        overdueIds = overdueIds.concat(userStatResult.ids)
+                    }
+                    return overdueIds
+                }
+                const ids = getOverdueIds(overdueResult)
+                const findTargetActResult = (subActStatName, overDueName) => {
+                    const subActStatResult = activityStatResult.filter(item => item.nameCN === subActStatName)[0]
+                    if (subActStatResult) {
+                        const subActOverdueStatResult = subActStatResult.children.filter(item => item.nameCN === overDueName)[0]
+                        return subActOverdueStatResult
+                    }
+                    return null
+                }
+                
+                const targetActResult = findTargetActResult(subActionResult.nameCN, overdueResult.nameCN)
+                if (targetActResult) {
+                    targetActResult.children.push({actionName: coreActionName, ids: ids})
+                }
+            }
+        }
+    }
+    return activityStatResult
+}
+
+
+/**
+ * 获取结果的模板结构
+ *
+ * @param referenceStatResult
+ * @returns {*[]}
+ */
+const getActivityStatStructure = (referenceStatResult) => {
+    const structure = []
+    // todo：good idea： 没时间实现了
+    // 保留2层深度的结构信息, 将底层基于人的统计信息忽略
+    for (const actStat of referenceStatResult) {
+        for (const subActStat of actStat.children) {
+            const isExist = structure.filter(item => item.nameCN === subActStat.nameCN).length > 0
+            if (!isExist) {
+                for (const overDueStat of subActStat.children) {
+                    overDueStat.children = []
+                }
+                structure.push(subActStat)
+            }
+        }
+    }
+    return structure
+}
+
+
+/**
+ * 为节点增加表单中工作量的统计的node
+ *
+ * @param node
+ * @returns {Array}
+ */
+const createFlowDataStatNode = (node, title, tooltip) => {
+    const runningStatNode = node.children.filter(item => item.nameCN.includes("中"))
+    const completedStatNode = node.children.filter(item => item.nameCN.includes("完"))
+    const runningFlowDataStatNodes = findAllUserFlowsDataStatNode(runningStatNode)
+    const completedFlowDataStatNodes = findAllUserFlowsDataStatNode(completedStatNode)
+    const runningWorkload = sumSameNameWorkload(runningFlowDataStatNodes)
+    const completedWorkload = sumSameNameWorkload(completedFlowDataStatNodes)
+    
+    const newWorkloadStatNode = {
+        nameCN: title,
+        excludeUpSum: true,
+        sumAlone: true,
+        uniqueIds: true,
+        children: [{
+            nameCN: "进行中",
+            tooltip,
+            sumAlone: true,
+            uniqueIds: true,
+            children: runningWorkload,
+        }, {
+            nameCN: "已完成",
+            sumAlone: true,
+            uniqueIds: true,
+            children: completedWorkload
+        }]
+    }
+    
+    return flowUtil.statSumFromBottom(newWorkloadStatNode)
+}
+
+
+/**
+ * 找到节点下所有的 userFlowsDataStat 数据
+ *
+ * @param topNode
+ * @returns {*[]}
+ */
+const findAllUserFlowsDataStatNode = (topNode) => {
+    // 统一转成数组处理
+    if (!(_.isArray(topNode))) {
+        topNode = [topNode]
+    }
+    
+    let allUserFlowsDataStatNodes = []
+    
+    for (const node of topNode) {
+        if (node.userFlowsDataStat) {
+            allUserFlowsDataStatNodes = allUserFlowsDataStatNodes.concat(node.userFlowsDataStat)
+        }
+        
+        if (node.children && node.children.length > 0) {
+            const subResult = findAllUserFlowsDataStatNode(node.children)
+            allUserFlowsDataStatNodes = allUserFlowsDataStatNodes.concat(subResult)
+        }
+    }
+    
+    return allUserFlowsDataStatNodes
+}
+
+
+/**
+ * 将流程中对美编核心工作统计对同名的进行汇总
+ * statResultTemplateConst下的visionUserFlowDataStatResultTemplate
+ *
+ * @param flows
+ * @returns {*[]}
+ */
+const sumSameNameWorkload = (flows) => {
+    const result = []
+    for (const flow of flows) {
+        for (const details of flow.flowData) {
+            if (!details.workload || details.workload === "0") {
+                continue
+            }
+            const resultNode = result.find(item => item.nameCN === details.nameCN)
+            if (resultNode) {
+                if (!resultNode.ids.includes(flow.processInstanceId)) {
+                    resultNode.ids.push(flow.processInstanceId)
+                }
+                resultNode.sum = new Bignumber(resultNode.sum).plus(details.workload).toString()
+            } else {
+                result.push({
+                    nameCN: details.nameCN, sum: details.workload, ids: [flow.processInstanceId], sumAlone: true
+                })
+            }
+        }
+    }
+    return result
+}
+
+
 module.exports = {
     stat,
     filterFlows,
@@ -696,4 +861,6 @@ module.exports = {
     getFlowSumStructure,
     convertToFlowStatResult,
     convertToUserActionResult,
+    sumUserActionStat,
+    createFlowDataStatNode
 }
