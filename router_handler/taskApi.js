@@ -129,6 +129,15 @@ const syncForm = async (req, res, next) => {
     }
 }
 
+const syncResignEmployeeInfo = async (req, res, next) => {
+    try {
+        await taskService.syncResignEmployeeInfo()
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     syncWorkingDay,
     syncTodayRunningAndFinishedFlows,
@@ -137,5 +146,6 @@ module.exports = {
     syncDepartmentWithUser,
     syncUserWithDepartment,
     syncForm,
-    syncDingDingToken
+    syncDingDingToken,
+    syncResignEmployeeInfo
 }
