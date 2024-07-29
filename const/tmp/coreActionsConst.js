@@ -10,6 +10,16 @@ const hotSchemeActionConst = require("@/const/tmp/tmCoreActionsConst/hotSchemeAc
 const marketAnalyseActionConst = require("@/const/tmp/tmCoreActionsConst/marketAnalyseActionConst")
 const optimizeSchemaActionConst = require("@/const/tmp/tmCoreActionsConst/optimizeSchemaActionConst")
 
+const storageActionConst = require("@/const/tmp/turnoverActionConst/storageActionConst")
+const orderActionConst = require("@/const/tmp/turnoverActionConst/orderActionConst")
+const outOfStockActionConst = require("@/const/tmp/turnoverActionConst/outOfStockActionConst")
+const tuiCanChongDiZhangMuActionConst = require("@/const/tmp/turnoverActionConst/tuiCanChongDiZhangMuActionConst")
+
+const turnoverCoreActionsConfig = storageActionConst
+    .concat(orderActionConst)
+    .concat(tuiCanChongDiZhangMuActionConst)
+    .concat(outOfStockActionConst)
+
 const commonActionStatus = {TODO: "TODO", DOING: "DOING", DONE: "DONE"}
 
 const tmCoreActionsConfig = fiveDimensionalActionConst
@@ -906,7 +916,7 @@ const executionCoreActionsConfig = [
                     }
                 ]
             },
-
+            
             {
                 nameCN: "已做",
                 nameEN: commonActionStatus.DONE,
@@ -1707,5 +1717,6 @@ module.exports = {
     "903075138": tmCoreActionsConfig,
     "482162119": mbCoreActionsConfig,
     "902515853": executionCoreActionsConfig,
+    "903009366": turnoverCoreActionsConfig,
     visionFormDoneActivityIds
 }
