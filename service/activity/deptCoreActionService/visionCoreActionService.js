@@ -2,7 +2,7 @@ const _ = require("lodash")
 const Bignumber = require("bignumber.js")
 const userCommonService = require("@/service/common/userCommonService")
 const coreActionStatTypeConst = require("@/const/coreActionStatTypeConst")
-const coreActionStatService = require("@/service/core/coreActionStatService")
+const coreActionStatService = require("@/service/activity/coreActionStatService")
 const regexConst = require("@/const/regexConst")
 const visionConst = require("@/const/tmp/visionConst")
 const statResultTemplateConst = require("@/const/statResultTemplateConst")
@@ -12,6 +12,7 @@ const algorithmUtil = require("@/utils/algorithmUtil")
 const redisUtil = require("@/utils/redisUtil")
 const patchUtil = require("@/patch/patchUtil")
 const NotFoundError = require("@/error/http/notFoundError")
+const coreActionPostHandler = require("../coreActionPostHandler")
 
 /**
  *
@@ -43,45 +44,52 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
     const finalResult = isFromCoreActionMenu ? _.cloneDeep(actionStatBasedOnUserResult) : []
     
     for (const item of finalResult) {
-        const workloadNode = coreActionStatService.createFlowDataStatNode(item, "工作量", "该工作量会统计表单中预计的数据")
+        const workloadNode = coreActionPostHandler.createFlowDataStatNode(item, "工作量", "该工作量会统计表单中预计的数据")
         item.children.push(workloadNode)
     }
     
     // 核心动作统计不用标签区分
     if (isFromCoreActionMenu) {
-        const sumUserActionStatResult = coreActionStatService.sumUserActionStat(actionStatBasedOnUserResult)
-        finalResult.unshift({
-            actionName: "工作量汇总", actionCode: "sumActStat", children: sumUserActionStatResult
-        })
+        const sumUserActionStatResult = coreActionPostHandler.sumUserActionStat(actionStatBasedOnUserResult)
+        finalResult.unshift(coreActionPostHandler.generateNewActionResult("工作量汇总", "sumActStat", sumUserActionStatResult))
         
         if (isDeptLeader) {
             // 对内部的流程进行转化统计
             const innerFormIds = differentForms.inner.map(item => item.formId)
             const innerFlows = flows.filter(item => innerFormIds.includes(item.formUuid))
-            const innerStatusStatFlowResult = coreActionStatService.convertToFlowStatResult(false, innerFlows, coreActionConfig, actionStatBasedOnUserResult)
-            finalResult.unshift({
-                actionName: "流程汇总(内部)", actionCode: "sumFlowStat", children: innerStatusStatFlowResult
-            })
+            const innerStatusStatFlowResult = coreActionPostHandler.convertToFlowStatResult(
+                false,
+                innerFlows,
+                coreActionConfig,
+                actionStatBasedOnUserResult
+            )
+            finalResult.unshift(coreActionPostHandler.generateNewActionResult("流程汇总(内部)", "sumFlowStat", innerStatusStatFlowResult))
             
             // 对外包的流程进行转化统计
             const outSourcingFormIds = differentForms.outSourcing.map(item => item.formId)
             const outSourcingFlows = flows.filter(item => outSourcingFormIds.includes(item.formUuid))
-            const outSourcingStatusStatFlowResult = coreActionStatService.convertToFlowStatResult(false, outSourcingFlows, coreActionConfig, actionStatBasedOnUserResult)
-            finalResult.unshift({
-                actionName: "流程汇总(外包)", actionCode: "sumFlowStat", children: outSourcingStatusStatFlowResult
-            })
+            const outSourcingStatusStatFlowResult = coreActionPostHandler.convertToFlowStatResult(
+                false,
+                outSourcingFlows,
+                coreActionConfig,
+                actionStatBasedOnUserResult
+            )
+            finalResult.unshift(coreActionPostHandler.generateNewActionResult("流程汇总(外包)", "sumFlowStat", outSourcingStatusStatFlowResult))
             
-            const statusStatFlowResult = coreActionStatService.convertToFlowStatResult(false, flows, coreActionConfig, actionStatBasedOnUserResult)
-            finalResult.unshift({
-                actionName: "流程汇总", actionCode: "sumFlowStat", children: statusStatFlowResult
-            })
+            const statusStatFlowResult = coreActionPostHandler.convertToFlowStatResult(
+                false,
+                flows,
+                coreActionConfig,
+                actionStatBasedOnUserResult
+            )
+            finalResult.unshift(coreActionPostHandler.generateNewActionResult("流程汇总", "sumFlowStat", statusStatFlowResult))
         }
     }
     // 核心人的统计用标签区分
     else {
         const userStatArr = coreActionStatService.convertToUserActionResult(requiredUsers, actionStatBasedOnUserResult)
         for (const userStat of userStatArr) {
-            userStat.children.push(coreActionStatService.createFlowDataStatNode(userStat, "工作量", "该工作量会统计表单中预计的数据"))
+            userStat.children.push(coreActionPostHandler.createFlowDataStatNode(userStat, "工作量", "该工作量会统计表单中预计的数据"))
             finalResult.unshift(userStat)
         }
     }
@@ -155,7 +163,7 @@ const statVisionUserFlowData = async (resultNode, ownerActivity, flow) => {
     const {nameCN: actionName} = resultNode
     
     // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
-    if (!actionName.includes("中") && !actionName.includes("完")) {
+    if (!actionName || (!actionName.includes("中") && !actionName.includes("完"))) {
         return null
     }
     
@@ -318,42 +326,6 @@ const getResultNode = (fieldName, visionUserFlowDataStatResultTemplate) => {
     })
     return resultNode
 }
-
-/**
- * 从配置中获取外包和非外包表单流程分开进行汇总
- *
- * @param coreActionConfig
- * @returns {{outSourcing: *[], inner: *[]}}
- */
-// const extractInnerAndOutSourcingFormsFromConfig = (coreActionConfig) => {
-//     const forms = {"inner": [], "outSourcing": []}
-//     if (coreActionConfig instanceof Array) {
-//         for (const item of coreActionConfig) {
-//             // 找到有form的节点配置信息直接拿出来
-//             if (Object.keys(item).includes("formId")) {
-//                 const tmpForm = {formName: item.formName, formId: item.formId}
-//                 if (item.formName.includes("外包")) {
-//                     forms.outSourcing.push(tmpForm)
-//                 } else {
-//                     forms.inner.push(tmpForm)
-//                 }
-//                 continue
-//             }
-//             // 当前item不存在form先关的配置信息
-//             for (const key of Object.keys(item)) {
-//                 if (item[key] instanceof Array) {
-//                     const tmpForms = coreActionStatService.extractInnerAndOutSourcingFormsFromConfig(item[key])
-//                     forms.inner = forms.inner.concat(tmpForms.inner)
-//                     forms.outSourcing = forms.outSourcing.concat(tmpForms.outSourcing)
-//                 }
-//             }
-//         }
-//     }
-//     forms.inner = algorithmUtil.removeJsonArrDuplicateItems(forms.inner, "formId")
-//     forms.outSourcing = algorithmUtil.removeJsonArrDuplicateItems(forms.outSourcing, "formId")
-//     return forms
-// }
-
 
 module.exports = {
     getCoreActionStat

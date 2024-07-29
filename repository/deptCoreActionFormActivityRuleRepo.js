@@ -50,6 +50,10 @@ const getFormActivityRulesByWhere = async (where) => {
     return sequelizeUtil.extractDataValues(result)
 }
 
+const doesFormRuleHasActivity = async (formRuleId, activityId) => {
+    const formRuleActivity = await getFormActivityRulesByWhere({deptCoreActionFormRuleId: formRuleId, activityId})
+    return formRuleActivity.length > 0
+}
 
 module.exports = {
     getFormActivityRules,
@@ -58,5 +62,6 @@ module.exports = {
     bulkCreate,
     saveFormActivityRule,
     deleteFormActivityRule,
-    deleteFormActivityRuleByFormRuleIds
+    deleteFormActivityRuleByFormRuleIds,
+    doesFormRuleHasActivity
 }

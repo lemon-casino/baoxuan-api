@@ -1,7 +1,7 @@
 const biResponse = require("@/utils/biResponse")
 const joiUtil = require("@/utils/joiUtil")
 const {saveParamsSchema, updateParamsSchema} = require("@/schema/deptCoreActionFormDetailsRuleSchema")
-const deptCoreActionFormDetailsRuleService = require('@/service/deptCoreActionFormDetailsRuleService')
+const deptCoreActionFormDetailsRuleService = require('@/service/activity/actionConfig/deptCoreActionFormDetailsRuleService')
 const operatorConst = require("@/const/ruleConst/operatorConst");
 
 const getUnSettledFormFields = async (req, res, next) => {

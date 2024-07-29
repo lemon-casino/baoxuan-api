@@ -3,11 +3,8 @@ const dateUtil = require("@/utils/dateUtil")
 const ParameterError = require("@/error/parameterError")
 const flowRepo = require("@/repository/flowRepo")
 const flowFormDetailsRepo = require("@/repository/flowFormDetailsRepo")
-const deptCoreActionRepo = require("@/repository/deptCoreActionRepo")
 const globalGetter = require("@/global/getter")
 const flowFormReviewUtil = require("@/utils/flowFormReviewUtil")
-const sequelizeUtil = require("@/utils/sequelizeUtil");
-const algorithmUtil = require("@/utils/algorithmUtil");
 
 /**
  * 移除指定状态的流程

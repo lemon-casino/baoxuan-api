@@ -2,6 +2,7 @@ const deptCoreActionFormActivityRuleRepo = require("@/repository/deptCoreActionF
 const formReviewRepo = require("@/repository/formReviewRepo")
 const algorithmUtil = require("@/utils/algorithmUtil")
 const flowConst = require("@/const/flowConst")
+const ForbiddenError = require("@/error/http/forbiddenError")
 
 const getFormActivities = async (formId, formRuleId) => {
     const diffVersionsFormReviews = await formReviewRepo.getFormReviewByFormId(formId)
@@ -28,6 +29,11 @@ const getFormActivityRules = async (formRuleId) => {
 }
 
 const saveFormActivityRule = async (data) => {
+    const {deptCoreActionFormRuleId, activityId} = data
+    const hasSettled = await deptCoreActionFormActivityRuleRepo.doesFormRuleHasActivity(deptCoreActionFormRuleId, activityId)
+    if (hasSettled) {
+        throw new ForbiddenError("当前的表单的节点配置中已经添加了该节点")
+    }
     return (await deptCoreActionFormActivityRuleRepo.saveFormActivityRule(data))
 }
 

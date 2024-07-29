@@ -1,6 +1,6 @@
 const biResponse = require("@/utils/biResponse")
 const joiUtil = require("@/utils/joiUtil")
-const deptCoreActionService = require('@/service/deptCoreActionService')
+const deptCoreActionService = require('@/service/activity/actionConfig/deptCoreActionService')
 const deptCoreActionSchema = require("@/schema/deptCoreActionSchema")
 
 const getDeptCoreActions = async (req, res, next) => {
