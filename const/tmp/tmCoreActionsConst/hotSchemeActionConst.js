@@ -106,7 +106,7 @@ module.exports = [
                         ]
                     },
                     {
-                        formName: "爆爆款方案全平台流程",
+                        formName: "爆款方案全平台流程",
                         formId: "FORM-1BFAC105DDC9494B8081B6B515AC32F0453A",
                         flowDetailsRules: [
                             {fieldId: "radioField_lxkb9f8z", opCode: opCodes.Equal, value: "新品"}
@@ -115,17 +115,17 @@ module.exports = [
                             {
                                 from: {
                                     id: "node_oclxkbw8kwf",
-                                    name: "提交竞店ID",
+                                    name: "提交竞店ID与样品明细",
                                     status: ["TODO"]
                                 },
                                 to: {
                                     id: "node_oclxkbw8kwf",
-                                    name: "提交竞店ID",
+                                    name: "提交竞店ID与样品明细",
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "process",
-                                    name: "提交竞店ID",
+                                    name: "提交竞店ID与样品明细",
                                     id: "node_oclxkbw8kwf"
                                 }
                             },
@@ -142,46 +142,46 @@ module.exports = [
                                 },
                                 ownerRule: {
                                     from: "form",
-                                    name: "运营负责人",
+                                    name: "分配执行",
                                     id: "employeeField_lxkb9f9a"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclymct9k26",
+                                    id: "node_oclxkbw8kwg",
                                     name: "执行统计五维表",
                                     status: ["TODO"]
                                 },
                                 to: {
-                                    id: "node_oclymct9k26",
+                                    id: "node_oclxkbw8kwg",
                                     name: "执行统计五维表",
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
                                     from: "form",
-                                    name: "运营负责人",
+                                    name: "执行统计五维表",
                                     id: "employeeField_lxkb9f9a"
                                 }
                             },
                             {
                                 from: {
-                                    id: "node_oclymct9k27",
-                                    name: "审核执行统计五维统计表",
+                                    id: "node_oclxkbw8kwh",
+                                    name: "审核执行五维统计表",
                                     status: ["TODO"]
                                 },
                                 to: {
-                                    id: "node_oclymct9k27",
-                                    name: "审核执行统计五维统计表",
+                                    id: "node_oclxkbw8kwh",
+                                    name: "审核执行五维统计表",
                                     status: ["TODO"]
                                 },
                                 ownerRule: {
-                                    from: "form",
-                                    name: "运营负责人",
-                                    id: "employeeField_lxkb9f9a"
+                                    from: "process",
+                                    name: "审核执行五维统计表",
+                                    id: "node_oclxkbw8kwh"
                                 }
-                            }
+                            },
                         ]
-                    }
+                    },
                 ]
             },
             {
@@ -232,7 +232,7 @@ module.exports = [
                         ]
                     },
                     {
-                        formName: "爆爆款方案全平台流程",
+                        formName: "爆款方案全平台流程",
                         formId: "FORM-1BFAC105DDC9494B8081B6B515AC32F0453A",
                         flowDetailsRules: [
                             {fieldId: "radioField_lxkb9f8z", opCode: opCodes.Equal, value: "新品"}
@@ -254,9 +254,26 @@ module.exports = [
                                     name: "完成五维表分析与样品明细",
                                     id: "node_oclymct9k28"
                                 }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxkcjr639",
+                                    name: "完成五维表分析",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclxkcjr639",
+                                    name: "完成五维表分析",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "完成五维表分析",
+                                    id: "node_oclxkcjr639"
+                                }
                             }
                         ]
-                    }
+                    },
                 ]
             },
             {
@@ -311,6 +328,23 @@ module.exports = [
                                     from: "process",
                                     name: "完成五维表分析与样品明细",
                                     id: "node_oclymct9k28"
+                                }
+                            },
+                            {
+                                from: {
+                                    id: "node_oclxkcjr639",
+                                    name: "完成五维表分析",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclxkcjr639",
+                                    name: "完成五维表分析",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "process",
+                                    name: "完成五维表分析",
+                                    id: "node_oclxkcjr639"
                                 }
                             }
                         ]
