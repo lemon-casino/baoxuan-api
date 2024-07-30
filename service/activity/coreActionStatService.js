@@ -21,8 +21,7 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
  * @returns {Promise<*[]>}
  */
 const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
-    const result = await statForHasRulesNode(users, flows, coreConfig, userFlowDataStatFunc, "")
-    return result
+    return (await statForHasRulesNode(users, flows, coreConfig, userFlowDataStatFunc, ""))
 }
 
 /**
@@ -36,9 +35,11 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
  */
 const statForHasRulesNode = async (users, flows, coreConfigs, userFlowDataStatFunc, parentFullActionName) => {
     for (let actionConfig of coreConfigs) {
-        actionConfig.fullActionName = `${parentFullActionName}-${actionConfig.actionName}`
+        const useLinkCharacter = parentFullActionName ? "-" : ""
+        actionConfig.fullActionName = `${parentFullActionName}${useLinkCharacter}${actionConfig.actionName}`
         if (actionConfig.rules && actionConfig.rules.length > 0) {
             actionConfig = await statFlowsByRules(users, flows, userFlowDataStatFunc, actionConfig)
+            delete actionConfig["rules"]
         }
         
         if (actionConfig.children && actionConfig.children.length > 0) {
@@ -51,6 +52,7 @@ const statForHasRulesNode = async (users, flows, coreConfigs, userFlowDataStatFu
             )
         }
     }
+    
     return coreConfigs
 }
 

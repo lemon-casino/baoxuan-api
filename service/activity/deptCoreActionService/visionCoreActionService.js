@@ -28,31 +28,28 @@ const coreActionPreHandler = require("../coreActionPreHandler")
  */
 const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, startDoneDate, endDoneDate) => {
     const coreActionConfig = await getFirstExistDeptCoreActionsConfig(deptIds)
-    // const differentForms = coreActionStatService.extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
-    // const configuredFormIds = differentForms.inner.concat(differentForms.outSourcing).map(item => item.formId)
+    
     const flows = await coreActionPreHandler.getFlows(coreActionConfig, startDoneDate, endDoneDate)
     let requiredUsers = await coreActionPreHandler.getUsers(userId, deptIds, userNames)
     requiredUsers = filterUsersByTags(requiredUsers, tags)
-    
-    // const isDeptLeader = await userCommonService.isDeptLeaderOfTheUser(userId, deptIds)
-    //  requiredUsers = await coreActionStatService.getRequiredUsers(userNames, isDeptLeader, deptIds, (users) => {
-    //     return filterUsersByTags(users, tags)
-    // })
     
     // 基于人的汇总(最基本的明细统计)
     const actionStatBasedOnUserResult = await coreActionStatService.stat(requiredUsers, flows, coreActionConfig, statVisionUserFlowData)
     
     // 区分核心动作、核心人员统计
     const isFromCoreActionMenu = statType === coreActionStatTypeConst.StatAction
-    const finalResult = isFromCoreActionMenu ? _.cloneDeep(actionStatBasedOnUserResult) : []
     
-    for (const item of finalResult) {
-        const workloadNode = coreActionPostHandler.createFlowDataStatNode(item, "工作量", "该工作量会统计表单中预计的数据")
-        item.children.push(workloadNode)
-    }
-    
+    let finalResult = []
     // 核心动作统计不用标签区分
     if (isFromCoreActionMenu) {
+        finalResult = _.cloneDeep(actionStatBasedOnUserResult)
+        finalResult = algorithmUtil.removeTargetKey(finalResult, "children", "userFlowsDataStat")
+        
+        for (const item of finalResult) {
+            const workloadNode = coreActionPostHandler.createFlowDataStatNode(item, "工作量", "该工作量会统计表单中预计的数据")
+            item.children.push(workloadNode)
+        }
+        
         const sumUserActionStatResult = coreActionPostHandler.sumUserActionStat(actionStatBasedOnUserResult)
         finalResult.unshift(coreActionPostHandler.generateNewActionResult("工作量汇总", "sumActStat", sumUserActionStatResult))
         

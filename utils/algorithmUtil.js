@@ -17,7 +17,7 @@ const getJsonFromUnionFormattedJsonArr = (jsonArr, childKey, requiredKey, requir
         key: {value: requiredKey, schema: joiUtil.commonJoiSchemas.strRequired},
         value: {value: requiredValue, schema: joiUtil.commonJoiSchemas.required}
     })
-
+    
     let result = null
     for (const item of jsonArr) {
         if (item[requiredKey].toString() === requiredValue.toString()) {
@@ -79,7 +79,34 @@ const removeJsonArrDuplicateItems = (jsonArr, key) => {
     return uniqueArrJson
 }
 
+/**
+ * 删除json数组中指定的key
+ *
+ * @param jsonArr
+ * @param childKey
+ * @param removedKey
+ * @returns {*|null}
+ */
+const removeTargetKey = (jsonArr, childKey, removedKey) => {
+    joiUtil.validate({
+        jsonArr: {value: jsonArr, schema: joiUtil.commonJoiSchemas.arrayRequired},
+        childKey: {value: childKey, schema: joiUtil.commonJoiSchemas.strRequired},
+        removedKey: {value: removedKey, schema: joiUtil.commonJoiSchemas.strRequired}
+    })
+    
+    for (const item of jsonArr) {
+        if (Object.keys(item).includes(removedKey)) {
+            delete item[removedKey]
+        }
+        if (item[childKey] && item[childKey].length > 0) {
+            item[childKey] = removeTargetKey(item[childKey], childKey, removedKey)
+        }
+    }
+    return jsonArr
+}
+
 module.exports = {
+    removeTargetKey,
     getJsonFromUnionFormattedJsonArr,
     flatMatchedJsonArr,
     removeJsonArrDuplicateItems

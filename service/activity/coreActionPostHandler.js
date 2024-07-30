@@ -6,7 +6,7 @@ const {flowReviewTypeConst} = require("@/const/flowConst");
 const {opFunctions} = require("@/const/ruleConst/operatorConst");
 const operatorConst = require("@/const/ruleConst/operatorConst");
 
-const generateNewActionResult = async (actionName, actionCode, data) => {
+const generateNewActionResult = (actionName, actionCode, data) => {
     return {actionName, actionCode, children: data}
 }
 
