@@ -119,6 +119,24 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "搜索人数",
       field: "number_searches"
+    },
+    week_on_week: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "周环比",
+      field: "week_on_week"
+    },
+    month_on_month: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "月环比",
+      field: "month_on_month"
     }
   };
   const options = {

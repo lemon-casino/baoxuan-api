@@ -144,7 +144,8 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     timeRange,
                                     clickingAdditionalParams) => {
 
-    const fightingLinkIds = []
+    const fightingLinkIds =[ '541453195543', '728726292636', '704256113766' ]
+    console.log(linkStatus)
     if (linkStatus) {
         const runningFightingFlows = await flowService.getTodayFlowsByFormIdAndFlowStatus(tmFightingFlowFormId, flowStatusConst.RUNNING)
         for (const runningFightingFlow of runningFightingFlows) {

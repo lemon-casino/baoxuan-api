@@ -82,8 +82,8 @@ const searchSingleIteTaoBaoCompetitorTable = async (req, res, next) => {
                 delete req.query[key];
             }
         }
-
-        const  rest= await tmallCompetitorService.searchSingleIteTaoBaoCompetitorTable(req.query)
+        const { page = 1, pageSize = 10, ...searchParams } = req.query;
+        const  rest= await tmallCompetitorService.searchSingleIteTaoBaoCompetitorTable(searchParams, parseInt(page), parseInt(pageSize));
         return res.send(biResponse.success(rest))
     } catch (e) {
         next(e);
