@@ -8,7 +8,7 @@ const redisKeys = {
     "QRCodes": "qr_codes",
     "StatCountTodayDingDingApiInvoke": "stat:count:today_ding_ding_api_invoke",
     "OutSourcingUsers": "out",
-    "Oa": "oa"
+    "Oa": "oa",
 }
 
 module.exports = {

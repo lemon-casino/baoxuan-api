@@ -35,7 +35,13 @@ const tianmao__user_tableService = require("@/service/tianMaoUserTableService")
 const resignEmployeePatch = require("@/patch/resignEmployeePatch")
 const UserError = require("@/error/userError");
 const {errorCodes} = require("@/const/errorConst");
-
+const fs = require('fs');
+const util = require('util');
+const {join} = require("node:path");
+const {Sequelize} = require("sequelize");
+const {redisConfig} = require("@/config");
+const writeFile = util.promisify(fs.writeFile);
+const readFile = util.promisify(fs.readFile);
 const syncWorkingDay = async () => {
     console.log("同步进行中...")
     const date = dateUtil.format2Str(new Date(), "YYYY-MM-DD")
@@ -576,6 +582,29 @@ const syncVisionOutUsers = async () => {
     }
 }
 
+
+
+async function saveFlowsToLocalFile(filePath,flows) {
+    // 将 flows 写入本地文件
+    await writeFile(filePath, JSON.stringify(flows), 'utf8');
+}
+async function readFlowsFromLocalFile(filePath) {
+    // 从本地文件读取 flows
+    const data = await readFile(filePath, 'utf8');
+    return JSON.parse(data);
+}
+async function saveFlowsToRedisFromFile() {
+    const filePath = join(__dirname, '../logs/flows.json');
+    // 从本地文件读取 flows 内容
+    const fileContent = await readFlowsFromLocalFile(filePath);
+   // console.log(fileContent)
+    // 查看
+    console.log(redisConfig.url)
+    // 将内容设置到 Redis
+    await redisUtil.set(redisKeys.TodayRunningAndFinishedFlows, JSON.stringify(fileContent));
+}
+
+
 module.exports = {
     syncOaProcessTemplates,
     syncRunningProcess,
@@ -594,5 +623,6 @@ module.exports = {
     syncHROaFinishedProcess,
     syncAttendance,
     resetDingDingApiInvokeCount,
-    syncVisionOutUsers
+    syncVisionOutUsers,
+    saveFlowsToRedisFromFile
 }

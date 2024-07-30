@@ -144,10 +144,10 @@ const getTaoBaoSingleItems = async (pageIndex,
                                     timeRange,
                                     clickingAdditionalParams) => {
 
-    const fightingLinkIds =[ '541453195543', '728726292636', '704256113766' ]
-    console.log(linkStatus)
+    const fightingLinkIds =[]
+   // console.log(linkStatus)
     if (linkStatus) {
-        const runningFightingFlows = await flowService.getTodayFlowsByFormIdAndFlowStatus(tmFightingFlowFormId, flowStatusConst.RUNNING)
+        const runningFightingFlows = await flowService.getTodaySplitFlowsByFormIdAndFlowStatus(tmFightingFlowFormId, flowStatusConst.RUNNING,`flows:split:${tmFightingFlowFormId.replace("FORM-", "")}`)
         for (const runningFightingFlow of runningFightingFlows) {
             if (!runningFightingFlow.data) {
                 continue
@@ -226,7 +226,7 @@ const getTaoBaoSingleItemsWitPercentageTag = async (pageIndex,
  * @returns {[{field: string, value: *[], operator: string}]}
  */
 const getLinkErrorQueryFields = async (status) => {
-    const errorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, status)
+    const errorLinkIds = await flowService.getFlowSplitFormValues(errorLinkFormId, linkIdField, status)
     return {field: "linkId", operator: "$in", value: errorLinkIds}
 }
 
@@ -290,7 +290,7 @@ const getTaoBaoSingleItemsWithStatistic = async (pageIndex,
 
         if (problem === "true") {
             // 说明 在流程中
-            const runningErrorLinkIds = await flowService.getFlowFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING);
+            const runningErrorLinkIds = await flowService.getFlowSplitFormValues(errorLinkFormId, linkIdField, flowStatusConst.RUNNING);
 
             function processItems(items, errorLinkIds) {
                 return [...new Map(
@@ -486,9 +486,8 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
                                           clickingAdditionalParams) => {
 
     console.log("你怎么这么慢来到这楼里")
-    const fightingLinkIds = await flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
-    console.log("你怎么这么慢2")
-    console.log(fightingLinkIds)
+    const fightingLinkIds = await flowService.getFlowSplitFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
+    console.log("fightingLinkIds==>",fightingLinkIds)
     const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
         999999,
         productLineLeaders,
@@ -545,7 +544,7 @@ const getLinkOperationCount_OperationalData = async (satisfiedSingleItems, produ
 
     const selfDoSingleItemLinkOperationCountPromise = getSelfDoSingleItemLinkOperationCount(satisfiedSingleItems);
     const ToBeOnTheShelvesPromise = ToBeOnTheShelves(productLineLeaders);
-    const fightingFlowFormValuesPromise = flowService.getFlowFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING);
+    const fightingFlowFormValuesPromise = flowService.getFlowSplitFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING);
 
     // 等待 fightingFlowFormValuesPromise 完成后再调用 getSelfFightingSingleItemLinkOperationCount
     const fightingPromise = fightingFlowFormValuesPromise.then(flowFormValues =>
@@ -719,8 +718,8 @@ async function getLinkingCommon(productLineLeaders, singleItems, timeRange, incl
     };
     // 使用 Promise.all 并行执行多个异步任务
     const [runningErrorLinkIds, completeErrorLinkIds, errorResult, withinThreeDays] = await Promise.all([
-        flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.RUNNING),
-        flowService.getFlowFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.COMPLETE),
+        flowService.getFlowSplitFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.RUNNING),
+        flowService.getFlowSplitFormfieldKeyAndField(errorLinkFormId, linkIdField, selectField, flowStatusConst.COMPLETE),
         getLinkingCommonTO(productLineLeaders, singleItems, timeRange, includeRecord),
         theProcessIsCompletedInThreeDays()
     ]);
@@ -743,7 +742,7 @@ async function getLinkingCommon(productLineLeaders, singleItems, timeRange, incl
                     if (!resultMap[issue]) {
                         resultMap[issue] = {name: issue, sum: 0, ids: []};
                     }
-                    console.log("id", id)
+              //      console.log("id", id)
                     jisu.add(id)
                     resultMap[issue].sum++;
                     resultMap[issue].ids.push(id);
@@ -869,7 +868,7 @@ function applyExclude(singleItem, exclude, excludeResult) {
 
     switch (excludeComparator) {
         case '!==':
-            console.log("这是exclude->",excludeResult,excludeValue, excludeName,(excludeValue !== excludeName))
+            //console.log("这是exclude->",excludeResult,excludeValue, excludeName,(excludeValue !== excludeName))
             return excludeResult && (excludeValue !== excludeName);
         default:
             throw new Error(`Unsupported comparator: ${excludeComparator}`);
@@ -885,7 +884,7 @@ function evaluateExpression(exp, singleItem, fieldValue, value) {
            break;
         }
     }
-    console.log(exp.name,excludeResult,fieldValue,exp.comparator,value)
+  //  console.log(exp.name,excludeResult,fieldValue,exp.comparator,value)
     if (/^(\-|\+)?\d+(\.\d+)?$/.test(value)) {
         value = parseFloat(value);
         fieldValue = parseFloat(fieldValue);
@@ -893,7 +892,7 @@ function evaluateExpression(exp, singleItem, fieldValue, value) {
         ${exp.comparator}
         ${value}`)&& excludeResult;
     } else {
-        console.log("没有人来到这把",fieldValue,exp.comparator,value)
+       // console.log("没有人来到这把 ,有",fieldValue,exp.comparator,value)
         result = eval(`"${fieldValue}"
         ${exp.comparator}
         "${value}"`) && excludeResult;
