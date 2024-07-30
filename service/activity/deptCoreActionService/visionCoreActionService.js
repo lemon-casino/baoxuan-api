@@ -13,6 +13,7 @@ const redisUtil = require("@/utils/redisUtil")
 const patchUtil = require("@/patch/patchUtil")
 const NotFoundError = require("@/error/http/notFoundError")
 const coreActionPostHandler = require("../coreActionPostHandler")
+const coreActionPreHandler = require("../coreActionPreHandler")
 
 /**
  *
@@ -27,14 +28,16 @@ const coreActionPostHandler = require("../coreActionPostHandler")
  */
 const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, startDoneDate, endDoneDate) => {
     const coreActionConfig = await getFirstExistDeptCoreActionsConfig(deptIds)
-    const differentForms = coreActionStatService.extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
-    const configuredFormIds = differentForms.inner.concat(differentForms.outSourcing).map(item => item.formId)
-    const flows = await coreActionStatService.filterFlows(configuredFormIds, startDoneDate, endDoneDate)
+    // const differentForms = coreActionStatService.extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
+    // const configuredFormIds = differentForms.inner.concat(differentForms.outSourcing).map(item => item.formId)
+    const flows = await coreActionPreHandler.getFlows(coreActionConfig, startDoneDate, endDoneDate)
+    let requiredUsers = await coreActionPreHandler.getUsers(userId, deptIds, userNames)
+    requiredUsers = filterUsersByTags(requiredUsers, tags)
     
-    const isDeptLeader = await userCommonService.isDeptLeaderOfTheUser(userId, deptIds)
-    const requiredUsers = await coreActionStatService.getRequiredUsers(userNames, isDeptLeader, deptIds, (users) => {
-        return filterUsersByTags(users, tags)
-    })
+    // const isDeptLeader = await userCommonService.isDeptLeaderOfTheUser(userId, deptIds)
+    //  requiredUsers = await coreActionStatService.getRequiredUsers(userNames, isDeptLeader, deptIds, (users) => {
+    //     return filterUsersByTags(users, tags)
+    // })
     
     // 基于人的汇总(最基本的明细统计)
     const actionStatBasedOnUserResult = await coreActionStatService.stat(requiredUsers, flows, coreActionConfig, statVisionUserFlowData)
@@ -53,7 +56,9 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
         const sumUserActionStatResult = coreActionPostHandler.sumUserActionStat(actionStatBasedOnUserResult)
         finalResult.unshift(coreActionPostHandler.generateNewActionResult("工作量汇总", "sumActStat", sumUserActionStatResult))
         
+        const isDeptLeader = await userCommonService.isDeptLeaderOfTheUser(userId, deptIds)
         if (isDeptLeader) {
+            const differentForms = coreActionStatService.extractInnerAndOutSourcingFormsFromConfig(coreActionConfig)
             // 对内部的流程进行转化统计
             const innerFormIds = differentForms.inner.map(item => item.formId)
             const innerFlows = flows.filter(item => innerFormIds.includes(item.formUuid))

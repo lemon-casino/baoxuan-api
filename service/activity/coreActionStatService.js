@@ -21,7 +21,7 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
  * @returns {Promise<*[]>}
  */
 const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
-    const result = await statForHasRulesNode(users, flows, coreConfig, userFlowDataStatFunc)
+    const result = await statForHasRulesNode(users, flows, coreConfig, userFlowDataStatFunc, "")
     return result
 }
 
@@ -30,21 +30,26 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
  *
  * @param users
  * @param flows
- * @param coreConfig
+ * @param coreConfigs
  * @param userFlowDataStatFunc
  * @returns {Promise<*>}
  */
-const statForHasRulesNode = async (users, flows, coreConfig, userFlowDataStatFunc) => {
-    for (let action of coreConfig) {
-        if (action.rules && action.rules.length > 0) {
-            action = await statFlowsByRules(users, action.rules, flows, userFlowDataStatFunc, action)
+const statForHasRulesNode = async (users, flows, coreConfigs, userFlowDataStatFunc, parentActionName) => {
+    for (let actionConfig of coreConfigs) {
+        if (actionConfig.rules && actionConfig.rules.length > 0) {
+            actionConfig = await statFlowsByRules(users, actionConfig.rules, flows, userFlowDataStatFunc, actionConfig, `${parentActionName}-${actionConfig.actionName}`)
         }
         
-        if (action.children && action.children.length > 0) {
-            coreConfig.children = await statForHasRulesNode(users, flows, action.children, userFlowDataStatFunc)
+        if (actionConfig.children && actionConfig.children.length > 0) {
+            coreConfigs.children = await statForHasRulesNode(
+                users,
+                flows,
+                actionConfig.children,
+                userFlowDataStatFunc,
+                `${parentActionName}-${actionConfig.actionName}`)
         }
     }
-    return coreConfig
+    return coreConfigs
 }
 
 /**
@@ -58,7 +63,10 @@ const statForHasRulesNode = async (users, flows, coreConfig, userFlowDataStatFun
  * @param users
  * @returns {Promise<*>}
  */
-const statFlowsByRules = async (users, rules, flows, userFlowDataStatFunc, resultNode) => {
+const statFlowsByRules = async (users, rules, flows, userFlowDataStatFunc, resultNode, fullActionName) => {
+    
+    console.log(fullActionName)
+    
     for (const rule of rules) {
         let requiredFlows = _.cloneDeep(flows).filter((flow) => flow.formUuid === rule.formId)
         requiredFlows = filterFlowsByFlowDetailsRules(requiredFlows, rule.flowDetailsRules)
@@ -73,6 +81,10 @@ const statFlowsByRules = async (users, rules, flows, userFlowDataStatFunc, resul
             // 根据节点配置对流程进行汇总
             for (const flow of requiredFlows) {
                 const processInstanceId = flow.processInstanceId
+                
+                if (processInstanceId === "9f760052-bb4f-4444-a72f-6452f7e3b6ea") {
+                    console.log("-----")
+                }
                 
                 const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
                 const matchedActivity = getMatchedActivity(activityId, status, isOverdue, activities)
@@ -331,10 +343,10 @@ const convertToUserActionResult = (users, userStatResult) => {
             const result = []
             for (const l1Action of leve1Actions) {
                 const currStatusKeyText = statusKeyTexts.find(key => l1Action.includes(key))
-                const l1ActionStructure = {nameCN: l1Action, nameEN: "", children: []}
+                const l1ActionStructure = {actionName: l1Action, children: []}
                 for (const l2Action of leve2Actions) {
                     const l2ActionStructure = {
-                        nameCN: l2Action, nameEN: "", children: []
+                        actionName: l2Action, children: []
                     }
                     
                     // 找出所有key所对应的逾期所包含的children
