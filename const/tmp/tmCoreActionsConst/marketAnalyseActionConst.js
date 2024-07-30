@@ -19,12 +19,12 @@ module.exports = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: " node_oclvesclp04",
+                                    id: "node_oclvesclp04",
                                     name: "执行统计正推市场",
                                     status: ["TODO"]
                                 },
                                 to: {
-                                    id: " node_oclvesclp04",
+                                    id: "node_oclvesclp04",
                                     name: "执行统计正推市场",
                                     status: ["TODO"]
                                 },
@@ -141,12 +141,12 @@ module.exports = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: " node_oclyil049v7",
+                                    id: "node_oclyil049v7",
                                     name: "运营分析正推产品市场",
                                     status: ["TODO"]
                                 },
                                 to: {
-                                    id: " node_oclyil049v7",
+                                    id: "node_oclyil049v7",
                                     name: "运营分析正推产品市场",
                                     status: ["TODO"]
                                 },
@@ -158,12 +158,12 @@ module.exports = [
                             },
                             {
                                 from: {
-                                    id: " node_oclyil049v9",
+                                    id: "node_oclyil049v9",
                                     name: "运营完成市场分析",
                                     status: ["TODO"]
                                 },
                                 to: {
-                                    id: " node_oclyil049v9",
+                                    id: "node_oclyil049v9",
                                     name: "运营完成市场分析",
                                     status: ["TODO"]
                                 },
@@ -230,12 +230,12 @@ module.exports = [
                         flowNodeRules: [
                             {
                                 from: {
-                                    id: " node_oclyil049v7",
+                                    id: "node_oclyil049v7",
                                     name: "运营分析正推产品市场",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: " node_oclyil049v7",
+                                    id: "node_oclyil049v7",
                                     name: "运营分析正推产品市场",
                                     status: ["HISTORY"]
                                 },
@@ -247,12 +247,12 @@ module.exports = [
                             },
                             {
                                 from: {
-                                    id: " node_oclyil049v9",
+                                    id: "node_oclyil049v9",
                                     name: "运营完成市场分析",
                                     status: ["HISTORY"]
                                 },
                                 to: {
-                                    id: " node_oclyil049v9",
+                                    id: "node_oclyil049v9",
                                     name: "运营完成市场分析",
                                     status: ["HISTORY"]
                                 },
