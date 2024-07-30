@@ -2003,12 +2003,12 @@ module.exports = {
                             from: {
                                 id: "node_oclyqmp3fm2",
                                 name: "拍摄完成",
-                                status: ["TODO"]
+                                status: ["HISTORY"]
                             },
                             to: {
                                 id: "node_oclyqmp3fm2",
                                 name: "拍摄完成",
-                                status: ["TODO"]
+                                status: ["HISTORY"]
                             },
                             ownerRule: {
                                 from: "process",
