@@ -220,7 +220,7 @@ const getTaoBaoSingleItems = async (pageIndex,
                 having: sequelize.literal("SUM(singleItemTaobaoModel.profit_amount) < 0"),
                 offset: pageIndex * pageSize,
                 limit: pageSize,
-                logging: true,
+                logging: false,
             };
 // 执行查询
             let result = await singleItemTaoBaoModel.findAndCountAll(query)
@@ -344,7 +344,7 @@ const getTaoBaoSingleItems = async (pageIndex,
         limit: pageSize,
         where,
         order: [["linkId", "asc"], ["date", "asc"]],
-        logging: true,
+        logging: false,
         group: ['singleItemTaoBaoModel.date', 'singleItemTaoBaoModel.id', 'ABbnormal_TM.new_16_30', 'ABbnormal_TM.new_30_60', 'ABbnormal_TM.negative_profit_60', 'ABbnormal_TM.old'],
     })
     result.rows = result.rows.map(function (item) {
@@ -632,7 +632,7 @@ const getproductLineLeaders = async (productLineLeaders, timeRange) => {
             },
         },
         group: ['link_id'],
-        logging: true,
+        logging: false,
         raw: true,
     });
     return results.map(result => result.link_id);
@@ -735,7 +735,7 @@ const getidsSatisfiedSingleItems = async (pageIndex, pageSize, ids) => {
             LIMIT :pageSize OFFSET :offset;`, {
                 replacements: { pageSize, offset },
                 type: QueryTypes.SELECT,
-                logging: true,
+                logging: false,
                 raw: true,
             }
         );

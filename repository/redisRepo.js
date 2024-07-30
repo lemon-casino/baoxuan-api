@@ -93,6 +93,10 @@ const getOutSourcingUsers = async (deptId) => {
     return await redisUtil.sMembers(`${redisKeys.OutSourcingUsers}:${deptId}`)
 }
 
+const getSplitTodayRunningAndFinishedFlows = async (status) => {
+    const result = await redisUtil.get(status)
+    return JSON.parse(result)
+}
 module.exports = {
     setToken,
     getToken,
@@ -106,5 +110,6 @@ module.exports = {
     getAllWorkingDays,
     getAllUsersWithKeyFields,
     setOutSourcingUser,
-    getOutSourcingUsers
+    getOutSourcingUsers,
+    getSplitTodayRunningAndFinishedFlows
 }
