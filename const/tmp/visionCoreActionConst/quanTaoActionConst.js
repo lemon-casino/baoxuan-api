@@ -1574,9 +1574,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "摄影负责人",
-                                id: "employeeField_lyqkh2mw"
+                                from: "process",
+                                name: "AI拍摄完成",
+                                id: "node_oclyqmivse5"
                             }
                         },
                         {
@@ -1591,9 +1591,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "摄影负责人",
-                                id: "employeeField_lyqkh2mw"
+                                from: "process",
+                                name: "拍摄完成",
+                                id: "node_oclyqmp3fm2"
                             }
                         },
                         {
@@ -1608,9 +1608,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "外包拍摄负责人",
-                                id: "radioField_lyqkh2nw"
+                                from: "process",
+                                name: "确认拍摄完成",
+                                id: "node_oclyqllinbg"
                             }
                         }
                     ]
@@ -1994,9 +1994,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "摄影负责人",
-                                id: "employeeField_lyqkh2mw"
+                                from: "process",
+                                name: "AI拍摄完成",
+                                id: "node_oclyqmivse5"
                             }
                         },
                         {
@@ -2011,9 +2011,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
+                                from: "process",
                                 name: "摄影负责人",
-                                id: "employeeField_lyqkh2mw"
+                                id: "node_oclyqmp3fm2"
                             }
                         },
                         {
@@ -2784,29 +2784,6 @@ module.exports = {
                                 id: "node_oclvgffo396"
                             }
                         },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvghx5li1",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvghx5li1",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvghx5li1",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编任务",
-                        //         id: "node_oclvghx5li1"
-                        //     }
-                        // },
-                        
                         {
                             from: {
                                 id: "node_oclvt49cil2",
@@ -2851,29 +2828,6 @@ module.exports = {
                                 id: "node_oclvt49cil3"
                             }
                         },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvt49cil4",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvt49cil4",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvt49cil4",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编任务",
-                        //         id: "node_oclvt49cil4"
-                        //     }
-                        // },
-                        
                         {
                             from: {
                                 id: "node_oclw7dfsbp2",
@@ -2895,338 +2849,7 @@ module.exports = {
                                 name: "精修美编完成任务",
                                 id: "node_oclw7dfsbp2"
                             }
-                        },
-                        // {
-                        //     from: {
-                        //         id: "node_oclw7dfsbp4",
-                        //         name: " 审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclw7dfsbp4",
-                        //         name: " 审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclw7dfsbp4",
-                        //         name: " 审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编任务",
-                        //         id: "node_oclw7dfsbp4"
-                        //     }
-                        // },
-                        
-                        // {
-                        //     from: {
-                        //         id: "node_oclvgh4l0z2",
-                        //         name: " 重点精修美编完成任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvgh4l0z2",
-                        //         name: " 重点精修美编完成任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvgh4l0z2",
-                        //         name: " 重点精修美编完成任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "重点精修美编完成任务",
-                        //         id: "node_oclvgh4l0z2"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvgh4l0zb",
-                        //         name: "精修美编完成任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvgh4l0zb",
-                        //         name: "精修美编完成任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvgh4l0zb",
-                        //         name: "精修美编完成任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "精修美编完成任务",
-                        //         id: "node_oclvgh4l0zb"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclw7dfsbp6",
-                        //         name: "精修美编完成任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclw7dfsbp6",
-                        //         name: "精修美编完成任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclw7dfsbp6",
-                        //         name: "精修美编完成任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "精修美编完成任务",
-                        //         id: "node_oclw7dfsbp6"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvgh4l0zf",
-                        //         name: "简单任务完成",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvgh4l0zf",
-                        //         name: "简单任务完成",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvgh4l0zf",
-                        //         name: "简单任务完成",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "简单任务完成",
-                        //         id: "node_oclvgh4l0zf"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvghx5lia",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvghx5lia",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvghx5lia",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编任务",
-                        //         id: "node_oclvghx5lia"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclwhrd6j62",
-                        //         name: "建模美编完成任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclwhrd6j62",
-                        //         name: "建模美编完成任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclwhrd6j62",
-                        //         name: "建模美编完成任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "建模美编完成任务",
-                        //         id: "node_oclwhrd6j62"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvghx5lia",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvghx5lia",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvghx5lia",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编任务",
-                        //         id: "node_oclvghx5lia"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclwhrd6j63",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclwhrd6j63",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclwhrd6j63",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编任务",
-                        //         id: "node_oclwhrd6j63"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvghx5li1",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvghx5li1",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvghx5li1",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编任务",
-                        //         id: "node_oclvghx5li1"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvt49cil4",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvt49cil4",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvt49cil4",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编任务",
-                        //         id: "node_oclvt49cil4"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclw7dfsbp4",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclw7dfsbp4",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclw7dfsbp4",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编任务",
-                        //         id: "node_oclw7dfsbp4"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvghx5li7",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvghx5li7",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvghx5li7",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编任务",
-                        //         id: "node_oclvghx5li7"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvghx5li8",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvghx5li8",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvghx5li8",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编任务",
-                        //         id: "node_oclvghx5li8"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclw7dfsbp7",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclw7dfsbp7",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclw7dfsbp7",
-                        //         name: "审核美编任务",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编任务",
-                        //         id: "node_oclw7dfsbp7"
-                        //     }
-                        // },
+                        }
                     ]
                 },
                 // 注意：不要删掉，表单内容过滤内容不同  或的关系
@@ -3324,51 +2947,7 @@ module.exports = {
                                 name: "简单美编完成任务",
                                 id: "node_oclrj9wznyi"
                             }
-                        },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvkpzz4g3",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvkpzz4g3",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvkpzz4g3",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编工作",
-                        //         id: "node_oclvkpzz4g3"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvkpzz4g1",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvkpzz4g1",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvkpzz4g1",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编工作",
-                        //         id: "node_oclvkpzz4g1"
-                        //     }
-                        // }
+                        }
                     ]
                 },
                 {
@@ -3465,51 +3044,7 @@ module.exports = {
                                 name: "简单美编完成任务",
                                 id: "node_oclrj9wznyi"
                             }
-                        },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvkpzz4g3",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvkpzz4g3",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvkpzz4g3",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编工作",
-                        //         id: "node_oclvkpzz4g3"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvkpzz4g1",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvkpzz4g1",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvkpzz4g1",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编工作",
-                        //         id: "node_oclvkpzz4g1"
-                        //     }
-                        // }
+                        }
                     ]
                 },
                 {
@@ -3606,51 +3141,7 @@ module.exports = {
                                 name: "简单美编完成任务",
                                 id: "node_oclrj9wznyi"
                             }
-                        },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvkpzz4g3",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvkpzz4g3",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvkpzz4g3",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编工作",
-                        //         id: "node_oclvkpzz4g3"
-                        //     }
-                        // },
-                        // {
-                        //     from: {
-                        //         id: "node_oclvkpzz4g1",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     to: {
-                        //         id: "node_oclvkpzz4g1",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     overdue: {
-                        //         id: "node_oclvkpzz4g1",
-                        //         name: "审核美编工作",
-                        //         status: ["TODO"]
-                        //     },
-                        //     ownerRule: {
-                        //         from: "process",
-                        //         name: "审核美编工作",
-                        //         id: "node_oclvkpzz4g1"
-                        //     }
-                        // }
+                        }
                     ]
                 },
                 
@@ -4817,9 +4308,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lyqkh2my"
+                                from: "process",
+                                name: "AI修图完成",
+                                id: "node_oclyqmivse6"
                             }
                         },
                         {
@@ -4834,9 +4325,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lyqkh2my"
+                                from: "process",
+                                name: "美工修图",
+                                id: "node_oclyqmp3fm3"
                             }
                         },
                         {
@@ -4851,9 +4342,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lyqkh2my"
+                                from: "process",
+                                name: "美工修图",
+                                id: "node_oclyqllinbj"
                             }
                         },
                         {
@@ -4868,7 +4359,7 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
+                                from: "process",
                                 name: "3D建模",
                                 id: "node_oclz2elklgj"
                             }
@@ -5266,9 +4757,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lx41cnvv"
+                                from: "process",
+                                name: "修图师修图",
+                                id: "node_oclyqp11yp1"
                             }
                         },
                         {
@@ -5283,9 +4774,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "AI修图负责人",
-                                id: "employeeField_lyqolzyk"
+                                from: "procsss",
+                                name: "AI美编修图",
+                                id: "node_oclyqp11yp2"
                             }
                         },
                         {
@@ -5300,9 +4791,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "3D修图负责人",
-                                id: "employeeField_lyqolzyl"
+                                from: "process",
+                                name: "3D建模",
+                                id: "node_oclyqp11yp3"
                             }
                         },
                     ]
@@ -6977,7 +6468,7 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
+                                from: "process",
                                 name: "3D建模",
                                 id: "node_oclz2elklgj"
                             }
@@ -6994,9 +6485,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lyqkh2my"
+                                from: "process",
+                                name: "AI修图完成",
+                                id: "node_oclyqmivse6"
                             }
                         },
                         {
@@ -7011,9 +6502,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lyqkh2my"
+                                from: "process",
+                                name: "美工修图",
+                                id: "node_oclyqmp3fm3"
                             }
                         },
                         {
@@ -7028,9 +6519,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lyqkh2my"
+                                from: "process",
+                                name: "美工修图",
+                                id: "node_oclyqllinbj"
                             }
                         }
                     ]
@@ -7425,9 +6916,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lx41cnvv"
+                                from: "process",
+                                name: "修图师修图",
+                                id: "node_oclyqp11yp1"
                             }
                         },
                         {
@@ -7442,9 +6933,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
+                                from: "process",
                                 name: "AI修图负责人",
-                                id: "employeeField_lyqolzyk"
+                                id: "node_oclyqp11yp2"
                             }
                         },
                         {
@@ -7459,9 +6950,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "3D修图负责人",
-                                id: "employeeField_lyqolzyl"
+                                from: "process",
+                                name: "3D建模",
+                                id: "node_oclyqp11yp3"
                             }
                         },
                     ]

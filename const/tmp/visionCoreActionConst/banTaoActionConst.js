@@ -433,9 +433,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "摄影负责人",
-                                id: "employeeField_lyqkh2mw"
+                                from: "process",
+                                name: "AI拍摄完成",
+                                id: "node_oclyqmivse5"
                             }
                         },
                         {
@@ -450,9 +450,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "摄影负责人",
-                                id: "employeeField_lyqkh2mw"
+                                from: "process",
+                                name: "拍摄完成",
+                                id: "node_oclyqmp3fm2"
                             }
                         },
                         {
@@ -596,9 +596,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "摄影负责人",
-                                id: "employeeField_lyqkh2mw"
+                                from: "process",
+                                name: "AI拍摄完成",
+                                id: "node_oclyqmivse5"
                             }
                         },
                         {
@@ -613,9 +613,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "摄影负责人",
-                                id: "employeeField_lyqkh2mw"
+                                from: "process",
+                                name: "拍摄完成",
+                                id: "node_oclyqmp3fm2"
                             }
                         },
                         {
@@ -1807,9 +1807,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lyqkh2my"
+                                from: "process",
+                                name: "AI修图完成",
+                                id: "node_oclyqmivse6"
                             }
                         },
                         {
@@ -1824,9 +1824,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lyqkh2my"
+                                from: "process",
+                                name: "美工修图",
+                                id: "node_oclyqmp3fm3"
                             }
                         },
                         {
@@ -1841,9 +1841,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lyqkh2my"
+                                from: "process",
+                                name: "美工修图",
+                                id: "node_oclyqllinbj"
                             }
                         },
                         {
@@ -1858,7 +1858,7 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
+                                from: "process",
                                 name: "3D建模",
                                 id: "node_oclz2elklgj"
                             }
@@ -2190,9 +2190,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lx41cnvv"
+                                from: "process",
+                                name: "修图师修图",
+                                id: "node_oclyqp11yp1"
                             }
                         },
                         {
@@ -2207,9 +2207,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "AI修图负责人",
-                                id: "employeeField_lyqolzyk"
+                                from: "process",
+                                name: "AI美编修图",
+                                id: "node_oclyqp11yp2"
                             }
                         },
                         {
@@ -2224,9 +2224,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "3D修图负责人",
-                                id: "employeeField_lyqolzyl"
+                                from: "process",
+                                name: "3D建模",
+                                id: "node_oclyqp11yp3"
                             }
                         },
                     ]
@@ -2891,9 +2891,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lyqkh2my"
+                                from: "process",
+                                name: "AI修图完成",
+                                id: "node_oclyqmivse6"
                             }
                         },
                         {
@@ -2908,9 +2908,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lyqkh2my"
+                                from: "process",
+                                name: "美工修图",
+                                id: "node_oclyqmp3fm3"
                             }
                         },
                         {
@@ -2925,9 +2925,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lyqkh2my"
+                                from: "process",
+                                name: "美工修图",
+                                id: "node_oclyqllinbj"
                             }
                         },
                         {
@@ -2942,7 +2942,7 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
+                                from: "process",
                                 name: "3D建模",
                                 id: "node_oclz2elklgj"
                             }
@@ -3274,9 +3274,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "美编修图负责人",
-                                id: "employeeField_lx41cnvv"
+                                from: "process",
+                                name: "修图师修图",
+                                id: "node_oclyqp11yp1"
                             }
                         },
                         {
@@ -3291,9 +3291,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
+                                from: "process",
                                 name: "AI修图负责人",
-                                id: "employeeField_lyqolzyk"
+                                id: "node_oclyqp11yp2"
                             }
                         },
                         {
@@ -3308,9 +3308,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
-                                name: "3D修图负责人",
-                                id: "employeeField_lyqolzyl"
+                                from: "process",
+                                name: "3D建模",
+                                id: "node_oclyqp11yp3"
                             }
                         },
                     ]

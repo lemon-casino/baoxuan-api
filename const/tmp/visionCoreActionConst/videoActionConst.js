@@ -1839,9 +1839,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
+                                from: "process",
                                 name: "剪辑负责人",
-                                id: "employeeField_lwyq3iff"
+                                id: "node_oclx1ixqtj5"
                             }
                         },
                         {
@@ -1861,9 +1861,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
+                                from: "process",
                                 name: "剪辑负责人",
-                                id: "employeeField_lwyq3iff"
+                                id: "node_oclx1ixqtj3"
                             }
                         }
                     ]
@@ -2310,9 +2310,9 @@ module.exports = {
                                 status: ["TODO"]
                             },
                             ownerRule: {
-                                from: "form",
+                                from: "process",
                                 name: "剪辑负责人",
-                                id: "employeeField_lx41cnvz"
+                                id: "node_oclyqp11yp4"
                             }
                         }
                     ]
@@ -2473,9 +2473,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
+                                from: "process",
                                 name: "剪辑负责人",
-                                id: "employeeField_lwyq3iff"
+                                id: "node_oclx1ixqtj5"
                             }
                         },
                         {
@@ -2495,9 +2495,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
+                                from: "process",
                                 name: "剪辑负责人",
-                                id: "employeeField_lwyq3iff"
+                                id: "node_oclx1ixqtj3"
                             }
                         }
                     ]
@@ -2945,9 +2945,9 @@ module.exports = {
                                 status: ["HISTORY"]
                             },
                             ownerRule: {
-                                from: "form",
+                                from: "process",
                                 name: "剪辑负责人",
-                                id: "employeeField_lx41cnvz"
+                                id: "node_oclyqp11yp4"
                             }
                         }
                     ]
