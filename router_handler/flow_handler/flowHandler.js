@@ -69,7 +69,7 @@ const getTMCoreActionStat = async (req, res, next) => {
     }
 }
 
-const getTurnoverCoreActionStat= async (req, res, next) => {
+const getTurnoverCoreActionStat = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(flowSchema.getCoreActionsSchema, req.body)
         const {statType, deptIds, startDate, endDate, userNames} = req.body

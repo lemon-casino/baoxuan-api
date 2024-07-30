@@ -34,10 +34,11 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
  * @param userFlowDataStatFunc
  * @returns {Promise<*>}
  */
-const statForHasRulesNode = async (users, flows, coreConfigs, userFlowDataStatFunc, parentActionName) => {
+const statForHasRulesNode = async (users, flows, coreConfigs, userFlowDataStatFunc, parentFullActionName) => {
     for (let actionConfig of coreConfigs) {
+        actionConfig.fullActionName = `${parentFullActionName}-${actionConfig.actionName}`
         if (actionConfig.rules && actionConfig.rules.length > 0) {
-            actionConfig = await statFlowsByRules(users, actionConfig.rules, flows, userFlowDataStatFunc, actionConfig, `${parentActionName}-${actionConfig.actionName}`)
+            actionConfig = await statFlowsByRules(users, flows, userFlowDataStatFunc, actionConfig)
         }
         
         if (actionConfig.children && actionConfig.children.length > 0) {
@@ -46,7 +47,8 @@ const statForHasRulesNode = async (users, flows, coreConfigs, userFlowDataStatFu
                 flows,
                 actionConfig.children,
                 userFlowDataStatFunc,
-                `${parentActionName}-${actionConfig.actionName}`)
+                actionConfig.fullActionName
+            )
         }
     }
     return coreConfigs
@@ -63,11 +65,9 @@ const statForHasRulesNode = async (users, flows, coreConfigs, userFlowDataStatFu
  * @param users
  * @returns {Promise<*>}
  */
-const statFlowsByRules = async (users, rules, flows, userFlowDataStatFunc, resultNode, fullActionName) => {
+const statFlowsByRules = async (users, flows, userFlowDataStatFunc, resultNode) => {
     
-    console.log(fullActionName)
-    
-    for (const rule of rules) {
+    for (const rule of resultNode.rules) {
         let requiredFlows = _.cloneDeep(flows).filter((flow) => flow.formUuid === rule.formId)
         requiredFlows = filterFlowsByFlowDetailsRules(requiredFlows, rule.flowDetailsRules)
         
@@ -81,11 +81,6 @@ const statFlowsByRules = async (users, rules, flows, userFlowDataStatFunc, resul
             // 根据节点配置对流程进行汇总
             for (const flow of requiredFlows) {
                 const processInstanceId = flow.processInstanceId
-                
-                if (processInstanceId === "9f760052-bb4f-4444-a72f-6452f7e3b6ea") {
-                    console.log("-----")
-                }
-                
                 const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
                 const matchedActivity = getMatchedActivity(activityId, status, isOverdue, activities)
                 if (!matchedActivity) {
@@ -100,8 +95,17 @@ const statFlowsByRules = async (users, rules, flows, userFlowDataStatFunc, resul
                 
                 const userFlowDataStat = _.isFunction(userFlowDataStatFunc) && await userFlowDataStatFunc(resultNode, ownerActivity, flow)
                 
-                let resultStatNode = resultNode.children.filter(item => item.userName === ownerActivity.userName)
+                const haveMatchedData = userFlowDataStat && userFlowDataStat.length > 0
+                let wrappedUserFlowDataStat = null
                 
+                if (haveMatchedData) {
+                    wrappedUserFlowDataStat = {
+                        processInstanceId: flow.processInstanceId,
+                        flowData: userFlowDataStat
+                    }
+                }
+                
+                let resultStatNode = resultNode.children.filter(item => item.actionName === ownerActivity.actionName)
                 const userHasStat = resultStatNode.length > 0
                 if (userHasStat) {
                     const currResultStatNode = resultStatNode[0]
@@ -112,25 +116,25 @@ const statFlowsByRules = async (users, rules, flows, userFlowDataStatFunc, resul
                     }
                     
                     // 同一人流程中会出现多次干不同的活，将本人所有该流程中节点工作量的统计去重处理才能保证不漏
-                    if (userFlowDataStat && userFlowDataStat.flowData && userFlowDataStat.flowData.length > 0) {
+                    if (haveMatchedData) {
                         const currFlowStat = currResultStatNode.userFlowsDataStat.find(item => item.processInstanceId == processInstanceId)
                         if (currFlowStat) {
-                            const alreadyStatActivityNames = currFlowStat.flowData.map(item => item.nameCN)
+                            const alreadyStatActivityNames = currFlowStat.flowData.map(item => item.actionName)
                             for (const actStat of userFlowDataStat.flowData) {
-                                if (!alreadyStatActivityNames.includes(actStat.nameCN)) {
+                                if (!alreadyStatActivityNames.includes(actStat.actionName)) {
                                     currFlowStat.flowData.push(actStat)
                                 }
                             }
                         } else {
-                            currResultStatNode.userFlowsDataStat.push(userFlowDataStat)
+                            currResultStatNode.userFlowsDataStat.push(wrappedUserFlowDataStat)
                         }
                     }
                 } else {
                     resultStatNode = {
-                        userName: ownerActivity.userName,
+                        actionName: ownerActivity.actionName,
                         sum: 1,
                         ids: [processInstanceId],
-                        userFlowsDataStat: userFlowDataStat ? [userFlowDataStat] : []
+                        userFlowsDataStat: wrappedUserFlowDataStat ? [wrappedUserFlowDataStat] : []
                     }
                     resultNode.children.push(resultStatNode)
                 }
@@ -230,7 +234,7 @@ const getMatchedActivity = (activityId, status, isOverdue, activities) => {
  * @param users
  * @param flow
  * @param ownerRule
- * @returns {{activity, userName: string, tags: *}|null}
+ * @returns {{activity, actionName: string, tags: *}|null}
  */
 const extendActivityWithOwnerNameAndTags = (activity, users, flow, ownerRule) => {
     let ownerName = "未分配"
@@ -256,7 +260,7 @@ const extendActivityWithOwnerNameAndTags = (activity, users, flow, ownerRule) =>
     const user = users.find(user => user.nickname === ownerName || user.userName === ownerName)
     
     if (user) {
-        return {userName: ownerName, tags: user.tags, activity: activity}
+        return {actionName: ownerName, tags: user.tags, activity: activity}
     }
     return null
 }
@@ -358,7 +362,7 @@ const convertToUserActionResult = (users, userStatResult) => {
                         const sameKeyTextStat = result.children.filter(item => item.actionName.includes(currStatusKeyText))
                         for (const statusActionStat of sameKeyTextStat) {
                             const overdueActionStat = statusActionStat.children.find(item => item.actionName === l2Action)
-                            const userActionStat = overdueActionStat.children.filter(item => usernames.includes(item.userName))
+                            const userActionStat = overdueActionStat.children.filter(item => usernames.includes(item.actionName))
                             if (userActionStat.length > 0) {
                                 for (const stat of userActionStat) {
                                     ids = ids.concat(stat.ids)
@@ -366,7 +370,12 @@ const convertToUserActionResult = (users, userStatResult) => {
                                 }
                             }
                         }
-                        l2ActionStructure.children.push({userName: actionName, ids, sum: ids.length, userFlowsDataStat})
+                        l2ActionStructure.children.push({
+                            actionName: actionName,
+                            ids,
+                            sum: ids.length,
+                            userFlowsDataStat
+                        })
                     }
                     l1ActionStructure.children.push(l2ActionStructure)
                 }

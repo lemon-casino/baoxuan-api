@@ -165,10 +165,10 @@ const filterUsersByTags = (users, tags) => {
  * @returns {Promise<*|*[]>}
  */
 const statVisionUserFlowData = async (resultNode, ownerActivity, flow) => {
-    const {nameCN: actionName} = resultNode
+    const {fullActionName} = resultNode
     
     // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
-    if (!actionName || (!actionName.includes("中") && !actionName.includes("完"))) {
+    if (!fullActionName || (!fullActionName.includes("中") && !fullActionName.includes("完"))) {
         return null
     }
     
@@ -219,7 +219,7 @@ const statVisionUserFlowData = async (resultNode, ownerActivity, flow) => {
         return []
     }
     
-    flow = preHandleFlowData(actionName, flow)
+    flow = preHandleFlowData(fullActionName, flow)
     const userRequiredFieldIds = getUserRequiredFieldIdsByKWMapping(flow.dataKeyDetails, userTagsFormItemKeywordsMappings)
     
     const userRequiredFields = getNotEmptyUserRequiredFields(userRequiredFieldIds, flow.data, flow.dataKeyDetails)

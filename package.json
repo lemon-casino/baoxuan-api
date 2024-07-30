@@ -49,9 +49,13 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@babel/cli": "^7.24.8",
+    "@babel/core": "^7.24.9",
+    "@babel/preset-typescript": "^7.24.7",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "mocha": "^10.4.0",
+    "prettier": "^3.3.3",
     "typescript": "^5.5.2"
   }
 }

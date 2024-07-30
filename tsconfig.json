@@ -1,11 +1,17 @@
 {
   "compilerOptions": {
-    "outDir": "./",
+    "target": "es6",
+    "module": "commonjs",
     "allowJs": true,
-    "target": "es5"
+    "checkJs": false,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "include": [
-    "./**/*.ts"
+    "**/*.ts"
   ],
-  "exclude": []
+  "exclude": ["node_modules"]
 }

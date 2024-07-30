@@ -1,4 +1,5 @@
 const _ = require("lodash");
+const Bignumber = require("bignumber.js")
 const {visionFormDoneActivityIds} = require("@/const/tmp/coreActionsConst")
 const flowUtil = require("@/utils/flowUtil")
 const {flowReviewTypeConst} = require("@/const/flowConst");
@@ -343,7 +344,7 @@ const sumSameNameWorkload = (flows) => {
                 resultNode.sum = new Bignumber(resultNode.sum).plus(details.workload).toString()
             } else {
                 result.push({
-                    nameCN: details.nameCN, sum: details.workload, ids: [flow.processInstanceId], sumAlone: true
+                    actionName: details.actionName, sum: details.workload, ids: [flow.processInstanceId], sumAlone: true
                 })
             }
         }
@@ -375,15 +376,15 @@ const sumUserActionStat = (userStatResult) => {
                 }
                 const ids = getOverdueIds(overdueResult)
                 const findTargetActResult = (subActStatName, overDueName) => {
-                    const subActStatResult = activityStatResult.filter(item => item.nameCN === subActStatName)[0]
+                    const subActStatResult = activityStatResult.filter(item => item.actionName === subActStatName)[0]
                     if (subActStatResult) {
-                        const subActOverdueStatResult = subActStatResult.children.filter(item => item.nameCN === overDueName)[0]
+                        const subActOverdueStatResult = subActStatResult.children.filter(item => item.actionName === overDueName)[0]
                         return subActOverdueStatResult
                     }
                     return null
                 }
                 
-                const targetActResult = findTargetActResult(subActionResult.nameCN, overdueResult.nameCN)
+                const targetActResult = findTargetActResult(subActionResult.actionName, overdueResult.actionName)
                 if (targetActResult) {
                     targetActResult.children.push({actionName: coreActionName, ids: ids})
                 }
