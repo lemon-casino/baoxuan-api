@@ -19,7 +19,7 @@ let syncUserLoginCron = "0 0/5 * * * ?"
 // 当天下班
 let syncResignEmployeeCron = "0 0 18 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
-let linshi = "00 14 * * *"
+let linshi = "32 14 * * *"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
     syncTodayRunningAndFinishedFlowsCron = "0 10 12 * * ?"
@@ -30,7 +30,7 @@ if (process.env.NODE_ENV === "dev") {
     syncFormCron = "0 18 11 * * ?"
     syncUserLoginCron = "40 20 23 * * ?"
     syncResignEmployeeCron = "35 5 17 * * ?"
-    linshi = "25 15 * * *"
+    linshi = "43 14 * * *"
 }
 
 /**

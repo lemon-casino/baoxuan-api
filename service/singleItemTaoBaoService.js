@@ -147,7 +147,7 @@ const getTaoBaoSingleItems = async (pageIndex,
     const fightingLinkIds =[]
    // console.log(linkStatus)
     if (linkStatus) {
-        const runningFightingFlows = await flowService.getTodaySplitFlowsByFormIdAndFlowStatus(tmFightingFlowFormId, flowStatusConst.RUNNING,`flows:split:${tmFightingFlowFormId.replace("FORM-", "")}`)
+        const runningFightingFlows = await flowService.getTodaySplitFlowsByFormIdAndFlowStatus(tmFightingFlowFormId, flowStatusConst.RUNNING,`flows:today:form:${tmFightingFlowFormId.replace("FORM-", "")}`)
         for (const runningFightingFlow of runningFightingFlows) {
             if (!runningFightingFlow.data) {
                 continue

@@ -1228,7 +1228,7 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
 
 const getFlowSplitFormValues = async (formId, fieldKey, flowStatus) => {
     let fightingLinkIds = []
-    const flows = await getTodaySplitFlowsByFormIdAndFlowStatus(formId, flowStatus, `flows:split:${formId.replace("FORM-", "")}`);
+    const flows = await getTodaySplitFlowsByFormIdAndFlowStatus(formId, flowStatus, `flows:today:form:${formId.replace("FORM-", "")}`);
     for (const flow of flows) {
         if (!flow.data) {
             continue
@@ -1248,7 +1248,7 @@ const getFlowSplitFormValues = async (formId, fieldKey, flowStatus) => {
 const getFlowSplitFormfieldKeyAndField = async (formId, fieldKey, selectField, flowStatus) => {
     let fightingLinkIds = []
     console.log("formId",formId)
-    const flows = await getTodaySplitFlowsByFormIdAndFlowStatus(formId, flowStatus,`flows:split:${formId.replace("FORM-", "")}`)
+    const flows = await getTodaySplitFlowsByFormIdAndFlowStatus(formId, flowStatus,`flows:today:form:${formId.replace("FORM-", "")}`)
     for (const flow of flows) {
         if (!flow.data) {
             continue

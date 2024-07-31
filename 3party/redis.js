@@ -67,11 +67,11 @@ client.on("error", (err) => {
             const baoKeMengNewFlowFormId = objects.filter(obj => obj.formUuid === 'FORM-CC0B476071F24581B129A24835910B81AK56');
 
             // 存储符合条件的对象到新的键
-            await client.set('flows:split:495A1584CBE84928BB3B1E0D4AA4B56AYN1J', JSON.stringify(Cat_lLink));
-            await client.set('flows:split:51A6DCCF660B4C1680135461E762AC82JV53', JSON.stringify(linking_issues));
-            await client.set('flows:split:0X966971LL0EI3OC9EJWUATDC84838H8V09ML1', JSON.stringify(Cat_linkListing));
-            await client.set('flows:split:6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3', JSON.stringify(operationNewFlowFormId));
-            await client.set('flows:split:CC0B476071F24581B129A24835910B81AK56', JSON.stringify(baoKeMengNewFlowFormId));
+            await client.set('flows:today:form:495A1584CBE84928BB3B1E0D4AA4B56AYN1J', JSON.stringify(Cat_lLink));
+            await client.set('flows:today:form:51A6DCCF660B4C1680135461E762AC82JV53', JSON.stringify(linking_issues));
+            await client.set('flows:today:form:0X966971LL0EI3OC9EJWUATDC84838H8V09ML1', JSON.stringify(Cat_linkListing));
+            await client.set('flows:today:form:6L966171SX9B1OIODYR0ICISRNJ13A9F75IIL3', JSON.stringify(operationNewFlowFormId));
+            await client.set('flows:today:form:CC0B476071F24581B129A24835910B81AK56', JSON.stringify(baoKeMengNewFlowFormId));
             console.log('Data set successfully.');
         }
     });
