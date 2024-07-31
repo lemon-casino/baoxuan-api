@@ -2349,6 +2349,57 @@ module.exports = {
                                 id: "employeeField_lz2ejnhq",
                                 defaultUserName: "王洪彬"
                             }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz9a17y13",
+                                name: "视觉总监确认拍摄方案",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y13",
+                                name: "视觉总监确认拍摄方案",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                id: "node_oclz9a17y13",
+                                name: "视觉总监确认拍摄方案",
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz9a17y18",
+                                name: "分配美编负责人",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y18",
+                                name: "分配美编负责人",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                id: "node_oclz9a17y18",
+                                name: "分配美编负责人",
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz9a17y1a",
+                                name: "分配3D建模、美编负责人",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y1a",
+                                name: "分配3D建模、美编负责人",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                id: "node_oclz9a17y1a",
+                                name: "分配3D建模、美编负责人",
+                            }
                         }
                     ]
                 },
@@ -4021,7 +4072,7 @@ module.exports = {
                     ]
                 },
                 {
-                    formName: "运营视觉流程（拍摄+美编）",
+                    formName: "视觉拍摄流程（拍摄、修图）",
                     formId: "FORM-955A09160AB34B4489E96B8929AFFA2AVE2R",
                     flowDetailsRules: [
                         {fieldId: "radioField_lypub2tw", opCode: opCodes.EqualAny, value: ["散图"]}
@@ -4093,6 +4144,92 @@ module.exports = {
                                 from: "process",
                                 name: "3D建模",
                                 id: "node_oclz2elklgj"
+                            }
+                        },
+                        
+                        {
+                            from: {
+                                id: "node_oclz9a17y1i",
+                                name: "AI修图",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y1i",
+                                name: "AI修图",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "AI修图",
+                                id: "node_oclz9a17y1i"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz9a17y116",
+                                name: "美工修图",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y116",
+                                name: "美工修图",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "美工修图",
+                                id: "node_oclz9a17y116"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz9dmyy51",
+                                name: "美工修图",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz9dmyy51",
+                                name: "美工修图",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "美工修图",
+                                id: "node_oclz9dmyy51"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz9a17y11d",
+                                name: "3D建模",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y11d",
+                                name: "3D建模",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "3D建模",
+                                id: "node_oclz9a17y11d"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz9a17y11g",
+                                name: "美工修图",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y11g",
+                                name: "美工修图",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "美工修图",
+                                id: "node_oclz9a17y11g"
                             }
                         }
                     ]
@@ -6097,6 +6234,92 @@ module.exports = {
                                 from: "process",
                                 name: "3D建模",
                                 id: "node_oclz2elklgj"
+                            }
+                        },
+                        
+                        {
+                            from: {
+                                id: "node_oclz9a17y1i",
+                                name: "AI修图",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y1i",
+                                name: "AI修图",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "AI修图",
+                                id: "node_oclz9a17y1i"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz9a17y116",
+                                name: "美工修图",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y116",
+                                name: "美工修图",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "美工修图",
+                                id: "node_oclz9a17y116"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz9dmyy51",
+                                name: "美工修图",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclz9dmyy51",
+                                name: "美工修图",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "美工修图",
+                                id: "node_oclz9dmyy51"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz9a17y11d",
+                                name: "3D建模",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y11d",
+                                name: "3D建模",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "3D建模",
+                                id: "node_oclz9a17y11d"
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz9a17y11g",
+                                name: "美工修图",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y11g",
+                                name: "美工修图",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "美工修图",
+                                id: "node_oclz9a17y11g"
                             }
                         }
                     ]

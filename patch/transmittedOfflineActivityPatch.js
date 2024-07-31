@@ -1,5 +1,31 @@
 module.exports = [
     {
+        processInstanceId: "0340eb13-bc3d-47c4-b68f-a845b89abbb0",
+        title: "刘爽发起的内衣收纳盒运营视觉流程（拍摄+美编）",
+        targetActivityId: "node_oclx4bnhfb3",
+        replacedActivities: [
+            {
+                "processInstanceId": "0340eb13-bc3d-47c4-b68f-a845b89abbb0",
+                "operateTimeGMT": "2024-07-31T17:17Z",
+                "showName": "大美编修图",
+                "operateType": "EXECUTE_TASK_NORMAL",
+                "remark": "",
+                "taskHoldTimeGMT": 0,
+                "type": "",
+                "operatorName": "陈汝璐",
+                "actionExit": "submit",
+                "operatorUserId": "085924205737861403",
+                "activityId": "node_oclx4bnhfb3",
+                "size": 1,
+                "dataId": 30574454866,
+                "domainList": [],
+                "operatorDisplayName": "陈汝璐",
+                "action": "同意",
+                "taskId": "null"
+            }
+        ]
+    },
+    {
         processInstanceId: "bb1a449d-f041-4366-b686-54dea2881b35",
         title: "薛娜发起的滑梯鸡蛋盒运营视觉流程（拍摄+美编）",
         targetActivityId: "node_oclx4kc70w7",

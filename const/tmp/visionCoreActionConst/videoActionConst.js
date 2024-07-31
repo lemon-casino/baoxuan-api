@@ -1469,6 +1469,67 @@ module.exports = {
                     ]
                 },
                 
+                {
+                    formName: "运营视觉流程（拍摄+美编）",
+                    formId: "FORM-955A09160AB34B4489E96B8929AFFA2AVE2R",
+                    flowDetailsRules: [
+                        {fieldId: "radioField_lypub2tw", opCode: opCodes.EqualAny, value: ["视频"]}
+                    ],
+                    flowNodeRules: [
+                        {
+                            from: {
+                                id: "node_oclz9a17y13",
+                                name: "视觉总监确认拍摄方案",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y13",
+                                name: "视觉总监确认拍摄方案",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                id: "node_oclz9a17y13",
+                                name: "视觉总监确认拍摄方案",
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz9a17y18",
+                                name: "分配美编负责人",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y18",
+                                name: "分配美编负责人",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                id: "node_oclz9a17y18",
+                                name: "分配美编负责人",
+                            }
+                        },
+                        {
+                            from: {
+                                id: "node_oclz9a17y1a",
+                                name: "分配3D建模、美编负责人",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y1a",
+                                name: "分配3D建模、美编负责人",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                id: "node_oclz9a17y1a",
+                                name: "分配3D建模、美编负责人",
+                            }
+                        }
+                    ]
+                },
+                
                 //  注意： 不要少出重复的”运营拍摄流程“
                 {
                     formName: "运营拍摄流程",
@@ -1868,6 +1929,34 @@ module.exports = {
                         }
                     ]
                 },
+                
+                {
+                    formName: "视觉拍摄流程（拍摄、修图）",
+                    formId: "FORM-955A09160AB34B4489E96B8929AFFA2AVE2R",
+                    flowDetailsRules: [
+                        {fieldId: "radioField_lypub2tw", opCode: opCodes.EqualAny, value: ["全套", "视频"]}
+                    ],
+                    flowNodeRules: [
+                        {
+                            from: {
+                                id: "node_oclz9a17y118",
+                                name: "视频剪辑",
+                                status: ["TODO"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y118",
+                                name: "视频剪辑",
+                                status: ["TODO"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "视频剪辑",
+                                id: "node_oclz9a17y118"
+                            }
+                        },
+                    ]
+                },
+                
                 {
                     formName: "美编修图任务",
                     formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYC",
@@ -2502,6 +2591,34 @@ module.exports = {
                         }
                     ]
                 },
+                
+                {
+                    formName: "视觉拍摄流程（拍摄、修图）",
+                    formId: "FORM-955A09160AB34B4489E96B8929AFFA2AVE2R",
+                    flowDetailsRules: [
+                        {fieldId: "radioField_lypub2tw", opCode: opCodes.EqualAny, value: ["全套", "视频"]}
+                    ],
+                    flowNodeRules: [
+                        {
+                            from: {
+                                id: "node_oclz9a17y118",
+                                name: "视频剪辑",
+                                status: ["HISTORY"]
+                            },
+                            to: {
+                                id: "node_oclz9a17y118",
+                                name: "视频剪辑",
+                                status: ["HISTORY"]
+                            },
+                            ownerRule: {
+                                from: "process",
+                                name: "视频剪辑",
+                                id: "node_oclz9a17y118"
+                            }
+                        },
+                    ]
+                },
+                
                 {
                     formName: "美编修图任务",
                     formId: "FORM-009E1B0856894539A60F355C5CE859EDTQYC",

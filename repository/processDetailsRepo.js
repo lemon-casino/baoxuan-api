@@ -62,7 +62,7 @@ HAVING
     AND multiSelectField_value IS NOT NULL; `,
             {
                 raw: true,
-                logging: true,
+                logging: false,
                 type: QueryTypes.SELECT
 
             }

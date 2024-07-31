@@ -494,6 +494,21 @@ const getTodayFlowsByFormIdAndFlowStatus = async (formId, flowStatus) => {
 }
 
 /**
+ * 获得拆分出来的表单和流程状态
+ * @param formId  流程id
+ * @param flowStatus 流程状态
+ * @param status 状态
+ * @returns {Promise<T[]>}
+ */
+const getTodaySplitFlowsByFormIdAndFlowStatus = async (formId, flowStatus,status) => {
+    const todayFlows = await globalGetter.getSplitTodayFlows(status);
+    return todayFlows.filter((flow) => {
+        return flow.formUuid === formId && flow.instanceStatus === flowStatus
+    })
+}
+
+
+/**
  * 获取所有的流程数据
  * @returns {Promise<*>}
  */
@@ -580,6 +595,8 @@ const getFlowFormValues = async (formId, fieldKey, flowStatus) => {
     }
     return fightingLinkIds
 }
+
+
 
 const getFlowFormfieldKeyAndField = async (formId, fieldKey, selectField, flowStatus) => {
     let fightingLinkIds = []
@@ -1209,6 +1226,49 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
     return {activityStat: orderedActivityStatResult, deptStat: orderedDeptStatResult, users: pureUsersWithDepartment}
 }
 
+const getFlowSplitFormValues = async (formId, fieldKey, flowStatus) => {
+    let fightingLinkIds = []
+    const flows = await getTodaySplitFlowsByFormIdAndFlowStatus(formId, flowStatus, `flows:today:form:${formId.replace("FORM-", "")}`);
+    for (const flow of flows) {
+        if (!flow.data) {
+            continue
+        }
+        const runningLinkId = flow.data[fieldKey]
+        if (runningLinkId) {
+            if (runningLinkId.trim().includes(" ")) {
+                fightingLinkIds = fightingLinkIds.concat(runningLinkId.split(/\s+/))
+            } else {
+                fightingLinkIds.push(runningLinkId)
+            }
+        }
+    }
+    return fightingLinkIds
+}
+
+const getFlowSplitFormfieldKeyAndField = async (formId, fieldKey, selectField, flowStatus) => {
+    let fightingLinkIds = []
+    console.log("formId",formId)
+    const flows = await getTodaySplitFlowsByFormIdAndFlowStatus(formId, flowStatus,`flows:today:form:${formId.replace("FORM-", "")}`)
+    for (const flow of flows) {
+        if (!flow.data) {
+            continue
+        }
+        const runningLinkId = flow.data[fieldKey]
+        const selectFieldValue = flow.data[selectField]  // Ensure selectField is properly accessed here
+        if (runningLinkId) {
+            if (runningLinkId.trim().includes(" ")) {
+                const splitLinkIds = runningLinkId.split(/\s+/)
+                for (const id of splitLinkIds) {
+                    fightingLinkIds.push({[id]: selectFieldValue})
+                }
+            } else {
+                fightingLinkIds.push({[runningLinkId]: selectFieldValue})
+            }
+        }
+    }
+    return fightingLinkIds
+}
+
 module.exports = {
     filterFlowsByTimesRange,
     filterFlowsByImportanceCondition,
@@ -1239,5 +1299,9 @@ module.exports = {
     getCoreFormFlowConfig,
     getFormsFlowsActivitiesStat,
     getAllOverDueRunningFlows,
-    getFlowFormfieldKeyAndField
+    getFlowFormfieldKeyAndField,
+    getFlowSplitFormfieldKeyAndField,
+    getTodaySplitFlowsByFormIdAndFlowStatus,
+    getFlowSplitFormValues
+
 }
