@@ -298,8 +298,7 @@ const getFinishedFlows = async (timeRange) => {
     flows = flows.sort((curr, next) => dateUtil.formatGMT(curr.modifiedTimeGMT) - dateUtil.formatGMT(next.modifiedTimeGMT))
     // 对历史数据打补丁
     for (let flow of flows) {
-        flow = patchUtil.patchOfflineTransmittedActivity(flow)
-        flow = patchUtil.patchFlowData(flow)
+        flow = patchUtil.patchFlow(flow)
     }
     return flows
 }
@@ -410,8 +409,7 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
             flow.data[patchFlows[0].missingFieldId] = patchFlows[0].fieldValue
         }
         
-        flow = patchUtil.patchOfflineTransmittedActivity(flow)
-        flow = patchUtil.patchFlowData(flow)
+        flow = patchUtil.patchFlow(flow)
         
         const reviewItems = flow.overallprocessflow
         if (!reviewItems || reviewItems.length === 0) {
