@@ -500,7 +500,7 @@ const getTodayFlowsByFormIdAndFlowStatus = async (formId, flowStatus) => {
  * @param status 状态
  * @returns {Promise<T[]>}
  */
-const getTodaySplitFlowsByFormIdAndFlowStatus = async (formId, flowStatus,status) => {
+const getTodaySplitFlowsByFormIdAndFlowStatus = async (formId, flowStatus, status) => {
     const todayFlows = await globalGetter.getSplitTodayFlows(status);
     return todayFlows.filter((flow) => {
         return flow.formUuid === formId && flow.instanceStatus === flowStatus
@@ -548,8 +548,7 @@ const syncMissingCompletedFlows = async () => {
     let syncCount = 0
     for (let flow of finishedFlows) {
         // 对历史数据打补丁
-        flow = patchUtil.patchOfflineTransmittedActivity(flow)
-        flow = patchUtil.patchFlowData(flow)
+        flow = patchUtil.patchFlow(flow)
         
         // 同一天的完工流程可以存在失败的情况 已经入库
         if (dateUtil.formatGMT2Str(flow.modifiedTimeGMT, "YYYY-MM-DD") === pullTimeRange[0].toString()) {
@@ -595,7 +594,6 @@ const getFlowFormValues = async (formId, fieldKey, flowStatus) => {
     }
     return fightingLinkIds
 }
-
 
 
 const getFlowFormfieldKeyAndField = async (formId, fieldKey, selectField, flowStatus) => {
@@ -1247,8 +1245,8 @@ const getFlowSplitFormValues = async (formId, fieldKey, flowStatus) => {
 
 const getFlowSplitFormfieldKeyAndField = async (formId, fieldKey, selectField, flowStatus) => {
     let fightingLinkIds = []
-    console.log("formId",formId)
-    const flows = await getTodaySplitFlowsByFormIdAndFlowStatus(formId, flowStatus,`flows:today:form:${formId.replace("FORM-", "")}`)
+    console.log("formId", formId)
+    const flows = await getTodaySplitFlowsByFormIdAndFlowStatus(formId, flowStatus, `flows:today:form:${formId.replace("FORM-", "")}`)
     for (const flow of flows) {
         if (!flow.data) {
             continue
@@ -1303,5 +1301,5 @@ module.exports = {
     getFlowSplitFormfieldKeyAndField,
     getTodaySplitFlowsByFormIdAndFlowStatus,
     getFlowSplitFormValues
-
+    
 }

@@ -1,6 +1,7 @@
 const transmittedOfflineActivityPatch = require("./transmittedOfflineActivityPatch")
 const visionErrAllWorksInOnePatch = require("./visionErrAllWorksInOnePatch")
 const flowDataPatch = require("./flowDataPatch")
+const redundantFlowsActivities = require("./redundantFlowsActivities")
 
 const patchOfflineTransmittedActivity = (flow) => {
     const tmpRequirePatchedFlows = transmittedOfflineActivityPatch.filter(item => item.processInstanceId === flow.processInstanceId)
@@ -30,7 +31,7 @@ const getUserTmpTags = (userName, processInstanceId) => {
     if (!userPatch) {
         return []
     }
-
+    
     const errFlow = userPatch.errFormDataFlows.find(item => item.processInstanceId === processInstanceId)
     if (errFlow) {
         return errFlow.tmpTags
@@ -47,8 +48,26 @@ const patchFlowData = (flow) => {
     return flow
 }
 
+const removeRedundantFlowsActivities = (flow) => {
+    const targetFlow = redundantFlowsActivities.find(item => item.processInstanceId === flow.processInstanceId)
+    if (targetFlow) {
+        const redundantActivityIds = targetFlow.activityIds
+        for (const activityId of redundantActivityIds) {
+            delete flow.data[activityId]
+        }
+    }
+    
+    return flow
+}
+
+const patchFlow = (flow) => {
+    flow = patchOfflineTransmittedActivity(flow)
+    flow = patchFlowData(flow)
+    flow = removeRedundantFlowsActivities(flow)
+    return flow
+}
+
 module.exports = {
-    patchOfflineTransmittedActivity,
     getUserTmpTags,
-    patchFlowData
+    patchFlow
 }
