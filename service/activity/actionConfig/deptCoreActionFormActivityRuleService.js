@@ -29,10 +29,10 @@ const getFormActivityRules = async (formRuleId) => {
 }
 
 const saveFormActivityRule = async (data) => {
-    const {deptCoreActionFormRuleId, activityId} = data
-    const hasSettled = await deptCoreActionFormActivityRuleRepo.doesFormRuleHasActivity(deptCoreActionFormRuleId, activityId)
+    const {deptCoreActionFormRuleId, activityId, owner} = data
+    const hasSettled = await deptCoreActionFormActivityRuleRepo.doesFormRuleHasActivityAndOwnerId(deptCoreActionFormRuleId, activityId, owner.id)
     if (hasSettled) {
-        throw new ForbiddenError("当前的表单的节点配置中已经添加了该节点")
+        throw new ForbiddenError(`当前表单已经添加了节点:${activityId}和owner的id为${owner.id}的配置`)
     }
     return (await deptCoreActionFormActivityRuleRepo.saveFormActivityRule(data))
 }

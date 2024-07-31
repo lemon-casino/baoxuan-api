@@ -170,7 +170,7 @@ const statVisionUserFlowData = async (resultNode, ownerActivity, flow) => {
     }
     
     // 当前用户统计到的节点需要时正在干活的节点才要汇总表单信息
-    let {userName, tags: userTags, activity} = ownerActivity
+    let {actionName, tags: userTags, activity} = ownerActivity
     
     // 没有标签的用户直接返回空模板
     if (userTags.length === 0) {
@@ -179,7 +179,7 @@ const statVisionUserFlowData = async (resultNode, ownerActivity, flow) => {
     
     let userTagCodes = userTags.map(item => item.tagCode)
     
-    const userTmpTags = patchUtil.getUserTmpTags(userName, flow.processInstanceId)
+    const userTmpTags = patchUtil.getUserTmpTags(actionName, flow.processInstanceId)
     userTagCodes = userTagCodes.concat(userTmpTags)
     
     // 仅对内部美编人员的节点做判断

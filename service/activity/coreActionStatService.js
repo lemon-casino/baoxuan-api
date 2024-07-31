@@ -69,6 +69,8 @@ const statForHasRulesNode = async (users, flows, coreConfigs, userFlowDataStatFu
  */
 const statFlowsByRules = async (users, flows, userFlowDataStatFunc, resultNode) => {
     
+    console.log(resultNode.fullActionName)
+    
     for (const rule of resultNode.rules) {
         let requiredFlows = _.cloneDeep(flows).filter((flow) => flow.formUuid === rule.formId)
         requiredFlows = filterFlowsByFlowDetailsRules(requiredFlows, rule.flowDetailsRules)
@@ -83,6 +85,7 @@ const statFlowsByRules = async (users, flows, userFlowDataStatFunc, resultNode) 
             // 根据节点配置对流程进行汇总
             for (const flow of requiredFlows) {
                 const processInstanceId = flow.processInstanceId
+                
                 const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
                 const matchedActivity = getMatchedActivity(activityId, status, isOverdue, activities)
                 if (!matchedActivity) {
@@ -122,7 +125,7 @@ const statFlowsByRules = async (users, flows, userFlowDataStatFunc, resultNode) 
                         const currFlowStat = currResultStatNode.userFlowsDataStat.find(item => item.processInstanceId == processInstanceId)
                         if (currFlowStat) {
                             const alreadyStatActivityNames = currFlowStat.flowData.map(item => item.actionName)
-                            for (const actStat of userFlowDataStat.flowData) {
+                            for (const actStat of wrappedUserFlowDataStat.flowData) {
                                 if (!alreadyStatActivityNames.includes(actStat.actionName)) {
                                     currFlowStat.flowData.push(actStat)
                                 }
@@ -222,8 +225,17 @@ const getMatchedActivity = (activityId, status, isOverdue, activities) => {
     for (const activity of activities) {
         // 发起的节点id对应的表单流程id不一致
         activityId = activityIdMappingConst[activityId] || activityId
-        if (activity.activityId === activityId && status.includes(activity.type) && isOverdue === activity.isOverDue) {
-            return activity
+        
+        if (activity.activityId === activityId && status.includes(activity.type)) {
+            if (activity.isOverdue !== undefined) {
+                if (isOverdue === activity.isOverDue) {
+                    return activity
+                }
+            } else {
+                if (isOverdue === false) {
+                    return activity
+                }
+            }
         }
     }
     return null
