@@ -763,7 +763,20 @@ const getidsSatisfiedSingleItems = async (pageIndex, pageSize, ids) => {
     }
 };
 
-
+const getLinks = async (productLineLeaders) => {
+    const results = await singleItemTaoBaoModel.findAll({
+        attributes: ['link_id'],
+        where: {
+            productLineLeader: {
+                [Op.in]: productLineLeaders,
+            },
+        },
+        group: ['link_id'],
+        logging: false,
+        raw: true,
+    });
+    return results.map(result => result.link_id);
+}
 module.exports = {
     saveSingleItemTaoBao,
     deleteSingleIteTaoBaoByBatchIdAndLinkId,
@@ -782,5 +795,6 @@ module.exports = {
     updateCustom,
     Calculateyesterdaysdataandtagtheprofitin60days,
     getproductLineLeaders,
-    getidsSatisfiedSingleItems
+    getidsSatisfiedSingleItems,
+    getLinks
 }
