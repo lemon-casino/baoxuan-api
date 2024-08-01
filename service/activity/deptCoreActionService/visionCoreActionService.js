@@ -43,7 +43,7 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
     // 核心动作统计不用标签区分
     if (isFromCoreActionMenu) {
         finalResult = _.cloneDeep(actionStatBasedOnUserResult)
-        finalResult = algorithmUtil.removeTargetKey(finalResult, "children", "userFlowsDataStat")
+        // finalResult = algorithmUtil.removeTargetKey(finalResult, "children", "userFlowsDataStat")
         
         for (const item of finalResult) {
             const workloadNode = coreActionPostHandler.createFlowDataStatNode(item, "工作量", "该工作量会统计表单中预计的数据")

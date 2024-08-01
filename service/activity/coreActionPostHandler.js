@@ -2,9 +2,11 @@ const _ = require("lodash");
 const Bignumber = require("bignumber.js")
 const {visionFormDoneActivityIds} = require("@/const/tmp/coreActionsConst")
 const flowUtil = require("@/utils/flowUtil")
+const algorithmUtil = require("@/utils/algorithmUtil")
 const {flowReviewTypeConst} = require("@/const/flowConst");
 const {opFunctions} = require("@/const/ruleConst/operatorConst");
 const operatorConst = require("@/const/ruleConst/operatorConst");
+
 
 const generateNewActionResult = (actionName, actionCode, data) => {
     return {actionName, actionCode, children: data}
@@ -20,35 +22,50 @@ const generateNewActionResult = (actionName, actionCode, data) => {
  */
 const convertToFlowStatResult = (isStandardStat, flows, coreActionConfig, userStatResult) => {
     
-    const statusStatFlowResult = initResultTemplate(userStatResult)
+    const resultTemplate = initResultTemplate(userStatResult)
     
-    const statusKeyTexts = ["待", "中", "完"]
-    for (const actionResult of statusStatFlowResult) {
-        // 从配置 coreActionConfig 中找到类似‘全套-待xxx’中的rules
-        for (let i = 0; i < actionResult.children.length; i++) {
-            let statusResult = actionResult.children[i]
+    for (const level1ActionResult of resultTemplate) {
+        // 从配置 coreActionConfig 中找到类似‘全套-待xxx’中的节点
+        for (let level2ActionResult of level1ActionResult.children) {
+            const actionNameContainKey = getActionNameContainedKey(level2ActionResult.actionName)
+            if (!actionNameContainKey) {
+                continue
+            }
             
-            const statusKeyText = statusKeyTexts.filter(key => statusResult.actionName.includes(key))[0]
             // 找到同名的配置, 如：全套、半套、散图、视频
-            const targetCoreActionConfig = coreActionConfig.filter(item => item.actionName === actionResult.actionName)[0]
+            const targetCoreActionConfig = coreActionConfig.filter(item => item.actionName === level1ActionResult.actionName)[0]
             // 找到具有想匹配关键词的状态节点(s)：待拍视频、待入美编
-            const coreActionSameKeyTextConfig = targetCoreActionConfig.children.filter(item => item.actionName.includes(statusKeyText))
+            const hasSameKeyActionConfig = targetCoreActionConfig.children.filter(item => item.actionName.includes(actionNameContainKey))
             
             if (isStandardStat) {
-                statusResult = standardStat(flows, coreActionSameKeyTextConfig, statusResult)
+                level2ActionResult = standardStat(flows, hasSameKeyActionConfig, level2ActionResult)
             } else {
                 // 待转入和进行中流程的统计，根据配置符合一项计算匹配成功
-                if (statusKeyText !== "完") {
-                    statusResult = standardStat(flows, coreActionSameKeyTextConfig, statusResult)
+                if (actionNameContainKey !== "完") {
+                    level2ActionResult = standardStat(flows, hasSameKeyActionConfig, level2ActionResult)
                 } else {
                     // 已完成流程的统计，仅要看最后的审核节点是否完成即可，对于要统计到逾期和未逾期需要看全部的配置节点
                     // 还要附件上美编的审核节点（审核结束才算真正完成）
-                    statusResult = statFlowsToActionByTargetFormActivityIds(flows, actionResult.actionName, coreActionSameKeyTextConfig, visionFormDoneActivityIds, statusResult)
+                    level2ActionResult = statFlowsToActionByTargetFormActivityIds(
+                        flows,
+                        level1ActionResult.actionName,
+                        hasSameKeyActionConfig,
+                        level2ActionResult
+                    )
                 }
             }
         }
     }
-    return statusStatFlowResult
+    return resultTemplate
+}
+
+const getActionNameContainedKey = (actionName) => {
+    const statusKeys = ["待", "中", "完"]
+    const actionNameContainKeys = statusKeys.filter(key => actionName.includes(key))
+    if (actionNameContainKeys.length === 0) {
+        return null
+    }
+    return actionNameContainKeys[0]
 }
 
 const initResultTemplate = (userStatResult) => {
@@ -66,14 +83,14 @@ const initResultTemplate = (userStatResult) => {
 
 
 /**
- * 标准统计： 将流程按照statusConfigs的规则统计到statusResult中
+ * 标准统计： 将流程按照actionConfigs的规则统计到resultTemplate中
  *
  * @param flows
  * @param actionConfigs
- * @param statusResult
+ * @param resultTemplate
  * @returns {*}
  */
-const standardStat = (flows, actionConfigs, statusResult) => {
+const standardStat = (flows, actionConfigs, resultTemplate) => {
     for (const actionConfig of actionConfigs) {
         let {actionName, children: childActions} = actionConfig
         actionName = getPureActionName(actionName) || "合计"
@@ -82,13 +99,13 @@ const standardStat = (flows, actionConfigs, statusResult) => {
             if (!childAction.rules) {
                 continue
             }
-            let overdueResult = statusResult.children.find(item => item.actionName === childAction.actionName)
+            let overdueResult = resultTemplate.children.find(item => item.actionName === childAction.actionName)
             for (const formRule of childAction.rules) {
                 overdueResult = statFlowsToActionByFormRule(flows, formRule, actionName, overdueResult)
             }
         }
     }
-    return statusResult
+    return resultTemplate
 }
 
 
@@ -96,15 +113,15 @@ const standardStat = (flows, actionConfigs, statusResult) => {
  * 将包含特定节点的流程统计到statusResult中对应的actionName中
  *
  * @param flows
- * @param actionName
- * @param coreActionSameKeyTextConfig
+ * @param filterFlowFieldName
+ * @param hasSameKeyActionConfigs
  * @param visionTargetFormDoneActivityIds
- * @param statusResult
+ * @param resultTemplate
  * @returns {*}
  */
-const statFlowsToActionByTargetFormActivityIds = (flows, actionName, coreActionSameKeyTextConfig, visionTargetFormDoneActivityIds, statusResult) => {
+const statFlowsToActionByTargetFormActivityIds = (flows, filterFlowFieldName, hasSameKeyActionConfigs, resultTemplate) => {
     for (const flow of flows) {
-        const targetDoneForm = visionTargetFormDoneActivityIds.find(item => item.formId === flow.formUuid)
+        const targetDoneForm = visionFormDoneActivityIds.find(item => item.formId === flow.formUuid)
         if (!targetDoneForm) {
             continue
         }
@@ -112,75 +129,47 @@ const statFlowsToActionByTargetFormActivityIds = (flows, actionName, coreActionS
         if (requiredDoneActivities.length === 0) {
             continue
         }
+        // 有重复数据
+        const combinedRules = algorithmUtil.getAllRequiredKeyValues(hasSameKeyActionConfigs, "children", "rules")
         
-        if (!coreActionSameKeyTextConfig[0].rules) {
+        const flowFormRules = combinedRules.filter(rule => rule.formId === flow.formUuid)
+        if (flowFormRules.length === 0) {
             continue
         }
-        // 要将多个流程的多个工作项配置合并，用于算逾期，存在一个逾期计算逾期
-        const rules = _.cloneDeep(coreActionSameKeyTextConfig[0].rules)
-        for (let i = 1; i < coreActionSameKeyTextConfig.length; i++) {
-            const tmpRules = coreActionSameKeyTextConfig[i].rules
-            if (!tmpRules) {
-                continue
-            }
-            for (const tmpRule of tmpRules) {
-                const existRule = rules.find(item => item.formId === tmpRule.formId)
-                if (existRule) {
-                    existRule.flowNodeRules = existRule.flowNodeRules.concat(tmpRule.flowNodeRules)
-                } else {
-                    rules.push(tmpRule)
-                }
-            }
+        
+        let combinedFlowNodeRules = []
+        for (const flowFormRule of flowFormRules) {
+            combinedFlowNodeRules = combinedFlowNodeRules.concat(flowFormRule.flowNodeRules)
         }
         
-        for (const formRule of rules) {
-            if (formRule.formId !== flow.formUuid) {
-                continue
-            }
-            // 判断视觉属性是否相同
-            let hasSameVisionAttr = false
-            for (const detailsRule of formRule.flowDetailsRules || []) {
-                hasSameVisionAttr = opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], [actionName])
-                if (hasSameVisionAttr) {
-                    hasSameVisionAttr = true
-                    break
-                }
-            }
-            
-            if (hasSameVisionAttr) {
-                // 判断是否出现过逾期
-                let overdueActivity = null
-                // 审核节点逾期
-                if (requiredDoneActivities[0].isOverDue) {
-                    overdueActivity = requiredDoneActivities[0]
-                }
-                // 非审核节点逾期
-                else {
-                    for (const flowNodeRule of formRule.flowNodeRules) {
-                        const {overdue: overdueNode} = flowNodeRule
-                        overdueActivity = flow.overallprocessflow.find(item => item.activityId === overdueNode.id && item.isOverDue)
-                        if (overdueActivity) {
-                            break
-                        }
-                    }
-                }
-                
-                const tmpOverdueStatResult = statusResult.children.find(item => item.actionName === (overdueActivity ? "逾期" : "未逾期"))
-                // 对于完成的流程统计不用区分具体的动作，要不会重复的， 默认为”合计“
-                const defaultActionName = "合计"
-                if (tmpOverdueStatResult.children.length === 0) {
-                    tmpOverdueStatResult.children.push({
-                        actionName: defaultActionName, ids: [flow.processInstanceId]
-                    })
-                } else {
-                    if (!tmpOverdueStatResult.children[0].ids.includes(flow.processInstanceId)) {
-                        tmpOverdueStatResult.children[0].ids.push(flow.processInstanceId)
-                    }
-                }
+        // 流程满足完成的统计条件，将其放到对应的逾期或未逾期节点中
+        // 流程中跟该部门相关的所有节点，有一个逾期即算为逾期
+        // 判断是否出现过逾期
+        let overdueActivity = getOverdueActivity(flow.overallprocessflow, combinedFlowNodeRules)
+        const tmpOverdueStatResult = resultTemplate.children.find(item => item.actionName === (overdueActivity ? "逾期" : "未逾期"))
+        // 对于完成的流程统计不用区分具体的动作，要不会重复的， 默认为”合计“
+        const defaultActionName = "合计"
+        if (tmpOverdueStatResult.children.length === 0) {
+            tmpOverdueStatResult.children.push({
+                actionName: defaultActionName, ids: [flow.processInstanceId]
+            })
+        } else {
+            if (!tmpOverdueStatResult.children[0].ids.includes(flow.processInstanceId)) {
+                tmpOverdueStatResult.children[0].ids.push(flow.processInstanceId)
             }
         }
     }
-    return statusResult
+    return resultTemplate
+}
+
+const getOverdueActivity = (activities, flowNodeRules) => {
+    const flowNodeRulesIds = flowNodeRules.map(item => item.activityId)
+    for (const activity of activities) {
+        if (flowNodeRulesIds.includes(activity.activityId) && activity.isOverDue === true) {
+            return activity
+        }
+    }
+    return null
 }
 
 const getFlowSumStructure = (result, flowStatConfigTemplate) => {

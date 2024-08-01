@@ -39,7 +39,7 @@ const statForHasRulesNode = async (users, flows, coreConfigs, userFlowDataStatFu
         actionConfig.fullActionName = `${parentFullActionName}${useLinkCharacter}${actionConfig.actionName}`
         if (actionConfig.rules && actionConfig.rules.length > 0) {
             actionConfig = await statFlowsByRules(users, flows, userFlowDataStatFunc, actionConfig)
-            delete actionConfig["rules"]
+            // delete actionConfig["rules"]
         }
         
         if (actionConfig.children && actionConfig.children.length > 0) {

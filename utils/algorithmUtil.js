@@ -105,9 +105,44 @@ const removeTargetKey = (jsonArr, childKey, removedKey) => {
     return jsonArr
 }
 
+/**
+ * 从jsonArr中获取所有指定key的值
+ *
+ * @param jsonArr
+ * @param childKey
+ * @param requiredKey
+ * @returns {*|null}
+ */
+const getAllRequiredKeyValues = (jsonArr, childKey, requiredKey) => {
+    joiUtil.validate({
+        jsonArr: {value: jsonArr, schema: joiUtil.commonJoiSchemas.arrayRequired},
+        childKey: {value: childKey, schema: joiUtil.commonJoiSchemas.strRequired},
+        key: {value: requiredKey, schema: joiUtil.commonJoiSchemas.strRequired}
+    })
+    
+    let values = []
+    for (const item of jsonArr) {
+        const requiredKeyValue = item[requiredKey]
+        if (requiredKeyValue) {
+            if (_.isArray(requiredKeyValue)) {
+                values = values.concat(requiredKeyValue)
+            } else {
+                values.push(requiredKeyValue)
+            }
+        }
+        
+        if (item[childKey] && item[childKey].length > 0) {
+            const tmpChildRequiredValue = getAllRequiredKeyValues(item[childKey], childKey, requiredKey)
+            values = values.concat(tmpChildRequiredValue)
+        }
+    }
+    return values
+}
+
 module.exports = {
-    removeTargetKey,
+    getAllRequiredKeyValues,
     getJsonFromUnionFormattedJsonArr,
+    removeTargetKey,
     flatMatchedJsonArr,
     removeJsonArrDuplicateItems
 }
