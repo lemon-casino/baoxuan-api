@@ -252,7 +252,7 @@ const getMatchedActivity = (activityId, status, isOverdue, activities) => {
  */
 const extendActivityWithOwnerNameAndTags = (activity, users, flow, ownerRule) => {
     let ownerName = "未分配"
-    let {from, id, defaultUserName} = ownerRule
+    let {from, id, default: defaultUserName} = ownerRule
     // 外包的流程可能会存在未选择外包人的情况
     if (from.toUpperCase() === ownerFrom.FORM) {
         let tmpOwnerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id]
