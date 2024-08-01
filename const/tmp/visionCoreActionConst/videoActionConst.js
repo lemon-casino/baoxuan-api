@@ -2666,7 +2666,7 @@ module.exports = {
                             to: {
                                 id: "node_oclx48iwil1",
                                 name: "外包修图中",
-                                status: ["HISTORYHISTORY"]
+                                status: ["HISTORY"]
                             },
                             overdue: {
                                 id: "node_oclx48iwil1",
@@ -2688,7 +2688,7 @@ module.exports = {
                             to: {
                                 id: "node_oclx48iwil1",
                                 name: "外包修图中",
-                                status: ["HISTORYHISTORY"]
+                                status: ["HISTORY"]
                             },
                             overdue: {
                                 id: "node_oclx48iwil1",
