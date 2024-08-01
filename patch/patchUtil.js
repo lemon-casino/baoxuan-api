@@ -1,27 +1,58 @@
+const flowConst = require("@/const/flowConst")
 const transmittedOfflineActivityPatch = require("./transmittedOfflineActivityPatch")
 const visionErrAllWorksInOnePatch = require("./visionErrAllWorksInOnePatch")
 const flowDataPatch = require("./flowDataPatch")
-const redundantFlowsActivities = require("./redundantFlowsActivities")
+const redundantFlowsActivities = require("./redundantFlowsActivitiesPatch")
+const abnormalRedirectFlowsPatch = require("./abnormalRedirectFlowsPatch")
 
-const patchOfflineTransmittedActivity = (flow) => {
-    const tmpRequirePatchedFlows = transmittedOfflineActivityPatch.filter(item => item.processInstanceId === flow.processInstanceId)
-    if (tmpRequirePatchedFlows.length > 0) {
-        const {targetActivityId, replacedActivities} = tmpRequirePatchedFlows[0]
-        let newOverallProcessFlows = []
-        for (const item of flow.overallprocessflow) {
-            if (item.activityId === targetActivityId) {
-                for (const newAct of replacedActivities) {
-                    newAct.type = item.type
-                    newAct.operateTimeGMT = item.operateTimeGMT
-                    newAct.showName = item.showName
-                    newAct.action = item.action
+const usefulOriginKeys = ["showName", "operateTimeGMT", "remark", "dataId", "type", "taskHoldTimeGMT", "size"]
+
+const getNewActivity = (oldActivity, newActivityCnf) => {
+    const newActivity = {...newActivityCnf}
+    for (const usefulOriginKey of usefulOriginKeys) {
+        newActivity[usefulOriginKey] = oldActivity[usefulOriginKey]
+    }
+    return newActivity
+}
+
+const patchAbnormalRedirectFlow = (flow) => {
+    const targetFlow = abnormalRedirectFlowsPatch.find(item => item.processInstanceId === flow.processInstanceId)
+    if (targetFlow) {
+        const targetActivityId = targetFlow.targetActivityId
+        const newOverallProcessFlow = []
+        for (const activity of flow.overallprocessflow) {
+            if (activity.activityId === targetActivityId && activity.operateType === flowConst.operateTypeConst.REDIRECT_PROCESS) {
+                const replacedActivities = targetFlow.replacedActivities
+                for (const replacedActivity of replacedActivities) {
+                    const newActivity = getNewActivity(activity, replacedActivity)
+                    newOverallProcessFlow.push(newActivity)
                 }
-                newOverallProcessFlows = newOverallProcessFlows.concat(replacedActivities)
             } else {
-                newOverallProcessFlows.push(item)
+                newOverallProcessFlow.push(activity)
             }
         }
-        flow.overallprocessflow = newOverallProcessFlows
+        flow.overallprocessflow = newOverallProcessFlow
+    }
+    return flow
+}
+
+
+const patchOfflineTransmittedActivity = (flow) => {
+    const tmpRequirePatchedFlow = transmittedOfflineActivityPatch.find(item => item.processInstanceId === flow.processInstanceId)
+    if (tmpRequirePatchedFlow) {
+        const {targetActivityId, replacedActivities} = tmpRequirePatchedFlow
+        let newOverallProcessFlow = []
+        for (const activity of flow.overallprocessflow) {
+            if (activity.activityId === targetActivityId) {
+                for (const replacedActivity of replacedActivities) {
+                    const newActivity = getNewActivity(activity, replacedActivity)
+                    newOverallProcessFlow.push(newActivity)
+                }
+            } else {
+                newOverallProcessFlow.push(activity)
+            }
+        }
+        flow.overallprocessflow = newOverallProcessFlow
     }
     return flow
 }
@@ -49,12 +80,9 @@ const patchFlowData = (flow) => {
 }
 
 const removeRedundantFlowsActivities = (flow) => {
-    const targetFlow = redundantFlowsActivities.find(item => item.processInstanceId === flow.processInstanceId)
-    if (targetFlow) {
-        const redundantActivityIds = targetFlow.activityIds
-        for (const activityId of redundantActivityIds) {
-            delete flow.data[activityId]
-        }
+    const redundantFlow = redundantFlowsActivities.find(item => item.processInstanceId === flow.processInstanceId)
+    if (redundantFlow) {
+        flow.overallprocessflow = flow.overallprocessflow.filter(item => !redundantFlow.activityIds.includes(item.activityId))
     }
     
     return flow
@@ -64,6 +92,7 @@ const patchFlow = (flow) => {
     flow = patchOfflineTransmittedActivity(flow)
     flow = patchFlowData(flow)
     flow = removeRedundantFlowsActivities(flow)
+    flow = patchAbnormalRedirectFlow(flow)
     return flow
 }
 
