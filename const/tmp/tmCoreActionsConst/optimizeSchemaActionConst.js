@@ -119,6 +119,23 @@ module.exports = [
                         flowNodeRules: [
                             {
                                 from: {
+                                    id: "node_oclx30r79v2",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx30r79v2",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
+                            {
+                                from: {
                                     id: "node_oclx30wsnx1",
                                     name: "提交优化方案",
                                     status: ["TODO"]
@@ -409,6 +426,23 @@ module.exports = [
                         flowNodeRules: [
                             {
                                 from: {
+                                    id: "node_oclx30r79v2",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                to: {
+                                    id: "node_oclx30r79v2",
+                                    name: "提交优化方案",
+                                    status: ["TODO"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
+                            {
+                                from: {
                                     id: "node_oclx30wsnx1",
                                     name: "提交优化方案",
                                     status: ["TODO"]
@@ -507,6 +541,23 @@ module.exports = [
                             {fieldId: "selectField_lk0jfy7h", opCode: opCodes.Equal, value: "困难"}
                         ],
                         flowNodeRules: [
+                            {
+                                from: {
+                                    id: "node_oclx30r79v2",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                to: {
+                                    id: "node_oclx30r79v2",
+                                    name: "提交优化方案",
+                                    status: ["HISTORY"]
+                                },
+                                ownerRule: {
+                                    from: "form",
+                                    name: "运营负责人",
+                                    id: "employeeField_liihs7l0"
+                                }
+                            },
                             {
                                 from: {
                                     id: "node_oclx30wsnx1",
