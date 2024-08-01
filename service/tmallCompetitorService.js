@@ -4,7 +4,6 @@ const tmallCompetitorRepo = require("../repository/tmallCompetitorRepo")
 
 const uploadSingleIteTaoBaoCompetitorTable = async (item) => {
       let xx=(await tmallCompetitorRepo.searchSingleIteTaoBaoCompetitorTable(null, 1, 99999999))
-    console.log(xx.da)
     xx = xx.data.map(x => ({
         ...x,
         linkId: parseInt(x.linkId),
