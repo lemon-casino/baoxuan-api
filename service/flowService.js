@@ -970,7 +970,8 @@ const getFormsFlowsActivitiesStat = async (userId, startDoneDate, endDoneDate, f
     // 为空时，默认会抓取全部人员的数据（管理员）
     // 人员角色区分： 管理员（userNames为空，全部门全员工）、部门主管（部门下的全部员工含离职的）、普通员工（自己的）
     let userNames = ""
-    if (!isAdmin) {
+    // 非管理员和来自管理中台 都要获取根据leader获取部门人名或个人
+    if (!(isAdmin && deptIds.length === 0)) {
         if (isLeader) {
             for (const deptId of deptIds) {
                 const deptOnJobUsers = await userRepo.getDeptOnJobUsers([deptId])
