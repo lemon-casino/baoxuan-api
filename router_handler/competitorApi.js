@@ -36,11 +36,11 @@ const uploadSingleIteTaoBaoCompetitorTable = async (req, res, next) => {
             return Math.round(number * 100) / 100;
         }
         //循环读取每个sheet
-       let  translatedData=[]
+
         for (const sheetName of workbook.SheetNames) {
             const worksheet = workbook.Sheets[sheetName];
             const data = XLSX.utils.sheet_to_json(worksheet);
-             translatedData.push( data
+            const  translatedData= data
                 .filter(item => typeof item['链接ID'] === 'number' && !isNaN(item['链接ID'])) //  过滤掉链接ID不是数字的数据
                 .filter(item => item['搜索'] !== undefined && item['搜索'] !== '' && !isNaN(item['搜索']))  //过滤搜索为空的数据 或者没有搜索的数据
                 .map(item => {
@@ -60,15 +60,15 @@ const uploadSingleIteTaoBaoCompetitorTable = async (req, res, next) => {
                     }
                     translatedItem['headOfProductLine'] = sheetName;
                     return translatedItem;
-                }));
-
+                });
+            await tmallCompetitorService.uploadSingleIteTaoBaoCompetitorTable(translatedData).then(() => {
+                console.log(`Sheet uploaded successfully`);
+            }).catch((e) => {
+                return res.send(biResponse.canTFindIt('文件解析失败',e ))
+            } );
         }
 
-        await tmallCompetitorService.uploadSingleIteTaoBaoCompetitorTable(translatedData).then(() => {
-            console.log(`Sheet uploaded successfully`);
-        }).catch((e) => {
-            return res.send(biResponse.canTFindIt('文件解析失败',e ))
-        } );
+
         return res.send(biResponse.success({code:200,data:"文件上传并解析成功!"}))
     } catch (e) {
         next(e);
