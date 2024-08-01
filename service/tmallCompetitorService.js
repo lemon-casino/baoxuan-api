@@ -3,19 +3,13 @@ const tmallCompetitorRepo = require("../repository/tmallCompetitorRepo")
 
 
 const uploadSingleIteTaoBaoCompetitorTable = async (item) => {
-      let xx=await tmallCompetitorRepo.searchSingleIteTaoBaoCompetitorTable(null)
-    xx = xx.map(x => ({
+      let xx=(await tmallCompetitorRepo.searchSingleIteTaoBaoCompetitorTable(null, 1, 99999999))
+    xx = xx.data.map(x => ({
         ...x,
         linkId: parseInt(x.linkId),
         search: parseFloat(x.search)
     }));
-    item = item.filter(i => {
-        return !xx.some(x =>
-            x.linkId === i.linkId &&
-            x.date === i.date &&
-            x.headOfProductLine === i.headOfProductLine
-        );
-    });
+
     return await tmallCompetitorRepo.uploadSingleIteTaoBaoCompetitorTable(item);
 }
 const searchSingleIteTaoBaoCompetitorTable = async (searchParams, page, pageSize) => {

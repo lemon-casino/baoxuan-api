@@ -6,7 +6,7 @@ const tmallCompetitorModel = gettmallCompetitorModel(sequelize);
 const uploadSingleIteTaoBaoCompetitorTable = async (data) => {
     // 批量插入数据  忽略重复数据
     try {
-        const  install=await tmallCompetitorModel.bulkCreate(data );
+        const  install=await tmallCompetitorModel.bulkCreate(data);
         await updateWeeklyAndMonthlyMetrics();
         return install;
     } catch (e) {
@@ -112,6 +112,7 @@ const searchSingleIteTaoBaoCompetitorTable = async (searchParams, page, pageSize
     try {
         const offset = (page - 1) * pageSize;
         const { count, rows } = await tmallCompetitorModel.findAndCountAll({
+            attributes: {exclude: ["id"]},
             where: searchParams,
             offset: offset,
             limit: pageSize,
