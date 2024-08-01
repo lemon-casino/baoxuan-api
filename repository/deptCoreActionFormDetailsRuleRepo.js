@@ -53,7 +53,8 @@ const getFormDetailsRuleByFormRuleIds = async (formRuleIds) => {
 
 const getFormDetailsRuleByWhere = async (where) => {
     const result = await deptCoreActionFormDetailsRuleModel.findAll({
-        where
+        where,
+        order: [["index", "asc"]]
     })
     return sequelizeUtil.extractDataValues(result)
 }

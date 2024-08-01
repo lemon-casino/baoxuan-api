@@ -227,7 +227,7 @@ const getMatchedActivity = (activityId, status, isOverdue, activities) => {
         activityId = activityIdMappingConst[activityId] || activityId
         
         if (activity.activityId === activityId && status.includes(activity.type)) {
-            if (activity.isOverdue !== undefined) {
+            if (activity.isOverDue !== undefined) {
                 if (isOverdue === activity.isOverDue) {
                     return activity
                 }

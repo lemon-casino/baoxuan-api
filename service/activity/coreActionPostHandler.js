@@ -165,12 +165,12 @@ const statFlowsToActionByTargetFormActivityIds = (flows, actionName, coreActionS
                     }
                 }
                 
-                const tmpOverdueStatResult = statusResult.children.find(item => item.nameCN === (overdueActivity ? "逾期" : "未逾期"))
+                const tmpOverdueStatResult = statusResult.children.find(item => item.actionName === (overdueActivity ? "逾期" : "未逾期"))
                 // 对于完成的流程统计不用区分具体的动作，要不会重复的， 默认为”合计“
                 const defaultActionName = "合计"
                 if (tmpOverdueStatResult.children.length === 0) {
                     tmpOverdueStatResult.children.push({
-                        nameCN: defaultActionName, ids: [flow.processInstanceId]
+                        actionName: defaultActionName, ids: [flow.processInstanceId]
                     })
                 } else {
                     if (!tmpOverdueStatResult.children[0].ids.includes(flow.processInstanceId)) {
@@ -336,7 +336,7 @@ const sumSameNameWorkload = (flows) => {
             if (!details.workload || details.workload === "0") {
                 continue
             }
-            const resultNode = result.find(item => item.nameCN === details.nameCN)
+            const resultNode = result.find(item => item.actionName === details.actionName)
             if (resultNode) {
                 if (!resultNode.ids.includes(flow.processInstanceId)) {
                     resultNode.ids.push(flow.processInstanceId)
@@ -406,7 +406,7 @@ const getActivityStatStructure = (referenceStatResult) => {
     // 保留2层深度的结构信息, 将底层基于人的统计信息忽略
     for (const actStat of referenceStatResult) {
         for (const subActStat of actStat.children) {
-            const isExist = structure.filter(item => item.nameCN === subActStat.nameCN).length > 0
+            const isExist = structure.filter(item => item.actionName === subActStat.actionName).length > 0
             if (!isExist) {
                 for (const overDueStat of subActStat.children) {
                     overDueStat.children = []
