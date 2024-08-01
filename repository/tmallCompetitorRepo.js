@@ -6,7 +6,8 @@ const tmallCompetitorModel = gettmallCompetitorModel(sequelize);
 const uploadSingleIteTaoBaoCompetitorTable = async (data) => {
     // 批量插入数据  忽略重复数据
     try {
-        const  install=await tmallCompetitorModel.bulkCreate(data );
+
+        const  install=await tmallCompetitorModel.bulkCreate(data);
         await updateWeeklyAndMonthlyMetrics();
         return install;
     } catch (e) {
