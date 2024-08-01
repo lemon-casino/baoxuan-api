@@ -378,7 +378,8 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
         errorItems: await fetchAndProcessErrorItems(),
         linkTypes: [],
         linkHierarchies: [],
-        linkStatuses: taoBaoSingleItemStatuses
+        linkStatuses: taoBaoSingleItemStatuses,
+        scids:[]
     }
     // 判断用户是否是leader
     const userDDId = await userService.getDingDingUserId(userId)
@@ -417,7 +418,6 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
     // noGroupedUsers.push("无操作")
     groupingResult.push({"未分组": noGroupedUsers})
 
-
     if (isTMLeader) {
         result.productLineLeaders = groupingResult
     } else {
@@ -449,6 +449,17 @@ const getSearchDataTaoBaoSingleItem = async (userId) => {
     let linkHierarchies = await singleItemTaoBaoRepo.getLinkHierarchy()
     linkHierarchies = linkHierarchies.map(hierarchy => hierarchy.link_hierarchy)
     result.linkHierarchies = linkHierarchies.filter(hierarchy => hierarchy)
+
+    // 根据人员 得到一个链接id集合
+// Initialize an array to store all names
+    let allNames = [];
+    result.productLineLeaders.forEach(obj => {
+        Object.values(obj).forEach(namesArray => {
+            allNames = allNames.concat(namesArray);
+        });
+    });
+
+    result.scids = await singleItemTaoBaoRepo.getLinks(allNames)
     return result
 }
 
