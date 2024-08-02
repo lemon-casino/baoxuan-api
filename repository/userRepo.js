@@ -15,6 +15,7 @@ const pagingUtil = require("@/utils/pagingUtil")
 const innerGroupConst = require("@/const/tmp/innerGroupConst")
 const objectConvertUtil = require("@/utils/objectConvertUtil")
 const whiteList = require("@/config/whiteList")
+const UsersModel = require("@/model/users");
 
 usersModel.hasMany(usersTagsModel, {
     sourceKey: "dingdingUserId", foreignKey: "userId", as: "tags"
@@ -254,6 +255,13 @@ const getPagingUsers = async (deptIds, pageIndex, pageSize, nickname, status) =>
     return pagingUtil.defaultPaging(result, pageSize)
 }
 
+const getUsersByIds = async(userIds)=>{
+    const users = await UsersModel.findAll({
+        where: {dingding_user_id: {$in: userIds}}
+    })
+    return sequelizeUtil.extractDataValues(users)
+}
+
 module.exports = {
     getUsersByTagCodes,
     getUserWithTags,
@@ -268,5 +276,6 @@ module.exports = {
     getAllResignUsers,
     getDeptOnJobUsers,
     getDeptResignUsers,
-    getUsersWithTagsByUsernames
+    getUsersWithTagsByUsernames,
+    getUsersByIds
 }

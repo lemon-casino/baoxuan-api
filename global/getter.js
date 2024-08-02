@@ -37,23 +37,29 @@ const getUsersOfDepartments = async () => {
 const getSplitTodayFlows = async (status) => {
     let parsedStatus;
     try {
-        console.log("分流->",status)
+        console.log("分流->", status)
         parsedStatus = await redisRepo.getSplitTodayRunningAndFinishedFlows(status);
     } catch (error) {
         console.error("Failed to parse status:", status);
         throw new Error("Invalid JSON format for status");
     }
-
+    
     if (!Array.isArray(parsedStatus)) {
         console.error("Parsed status is not an array:", parsedStatus);
         throw new Error("Expected an array for todayFlows");
     }
     return _.cloneDeep(parsedStatus)
 }
+
+const getMaxDataAuthorityUsers = async () => {
+    const maxDataAuthorityUsers = global.maxDataAuthorityUsers
+    return _.cloneDeep(maxDataAuthorityUsers)
+}
 module.exports = {
     getTodayFlows,
     getUsers,
     getDepartments,
     getUsersOfDepartments,
-    getSplitTodayFlows
+    getSplitTodayFlows,
+    getMaxDataAuthorityUsers
 }

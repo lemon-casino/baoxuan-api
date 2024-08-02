@@ -30,7 +30,7 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
     const coreActionConfig = await getFirstExistDeptCoreActionsConfig(deptIds)
     
     const flows = await coreActionPreHandler.getFlows(coreActionConfig, startDoneDate, endDoneDate)
-    let requiredUsers = await coreActionPreHandler.getUsers(userId, deptIds, userNames)
+    let requiredUsers = await coreActionPreHandler.getUsersWithAdmin(userId, deptIds, userNames)
     requiredUsers = filterUsersByTags(requiredUsers, tags)
     
     // 基于人的汇总(最基本的明细统计)

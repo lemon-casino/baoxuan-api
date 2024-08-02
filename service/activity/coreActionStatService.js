@@ -417,5 +417,6 @@ module.exports = {
     getRequiredUsers,
     extractInnerAndOutSourcingFormsFromConfig,
     convertToUserActionResult,
-    filterFlowsByFlowDetailsRules
+    filterFlowsByFlowDetailsRules,
+    getMatchedActivity
 }

@@ -14,10 +14,14 @@ const setGlobalTodayRunningAndFinishedFlows = (todayRunningAndFinishedFlows) => 
     global.todayRunningAndFinishedFlows = todayRunningAndFinishedFlows
 }
 
+const setMaxDataAuthorityUsers = (users) => {
+    global.maxDataAuthorityUsers = users
+}
 
 module.exports = {
     setGlobalUsers,
     setGlobalDepartments,
     setGlobalUsersOfDepartments,
-    setGlobalTodayRunningAndFinishedFlows
+    setGlobalTodayRunningAndFinishedFlows,
+    setMaxDataAuthorityUsers
 }

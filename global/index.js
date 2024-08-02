@@ -1,16 +1,19 @@
 const redisRepo = require("@/repository/redisRepo")
+const userService = require("@/service/userService")
 const setter = require("./setter")
 
 global.users = []
 global.departments = []
 global.usersOfDepartments = []
 global.todayRunningAndFinishedFlows = []
+global.maxDataAuthorityUsers = []
 
 const initial = async () => {
     await initGlobalUsers();
     await initGlobalDepartments()
     await initGlobalUsersOfDepartments()
     await initGlobalTodayRunningAndFinishedFlows()
+    await initMaxDataAuthorityUsers()
 }
 
 const initGlobalTodayRunningAndFinishedFlows = async () => {
@@ -56,6 +59,11 @@ const clearFlowsDataOfUser = (dept) => {
         }
     }
     return dept
+}
+
+const initMaxDataAuthorityUsers = async () => {
+    const users = await userService.getMaxDataAuthorityUsers()
+    setter.setMaxDataAuthorityUsers(users)
 }
 
 module.exports = {

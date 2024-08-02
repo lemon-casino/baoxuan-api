@@ -3,9 +3,7 @@ const Bignumber = require("bignumber.js")
 const {visionFormDoneActivityIds} = require("@/const/tmp/coreActionsConst")
 const flowUtil = require("@/utils/flowUtil")
 const algorithmUtil = require("@/utils/algorithmUtil")
-const flowConst = require("@/const/flowConst");
-const {opFunctions} = require("@/const/ruleConst/operatorConst");
-const operatorConst = require("@/const/ruleConst/operatorConst");
+const flowConst = require("@/const/flowConst")
 const coreActionStatService = require("./coreActionStatService")
 
 
@@ -49,7 +47,6 @@ const convertToFlowStatResult = (isStandardStat, flows, coreActionConfig, userSt
                     // 还要附件上美编的审核节点（审核结束才算真正完成）
                     level2ActionResult = statFlowsToActionByTargetFormActivityIds(
                         flows,
-                        level1ActionResult.actionName,
                         hasSameKeyActionConfig,
                         level2ActionResult
                     )
@@ -120,7 +117,7 @@ const standardStat = (flows, actionConfigs, resultTemplate) => {
  * @param resultTemplate
  * @returns {*}
  */
-const statFlowsToActionByTargetFormActivityIds = (flows, filterFlowFieldName, hasSameKeyActionConfigs, resultTemplate) => {
+const statFlowsToActionByTargetFormActivityIds = (flows, hasSameKeyActionConfigs, resultTemplate) => {
     for (const flow of flows) {
         const targetDoneForm = visionFormDoneActivityIds.find(item => item.formId === flow.formUuid)
         if (!targetDoneForm) {
@@ -142,8 +139,20 @@ const statFlowsToActionByTargetFormActivityIds = (flows, filterFlowFieldName, ha
         }
         
         let combinedFlowNodeRules = []
+        
+        let flowSatisfyDetailsRules = null
         for (const flowFormRule of flowFormRules) {
             combinedFlowNodeRules = combinedFlowNodeRules.concat(flowFormRule.flowNodeRules)
+            if (!flowSatisfyDetailsRules) {
+                const tmpFlows = coreActionStatService.filterFlowsByFlowDetailsRules([flow], flowFormRule.flowDetailsRules)
+                if (tmpFlows.length > 0) {
+                    flowSatisfyDetailsRules = tmpFlows[0]
+                }
+            }
+        }
+        
+        if (!flowSatisfyDetailsRules) {
+            continue
         }
         
         // 流程满足完成的统计条件，将其放到对应的逾期或未逾期节点中
@@ -222,13 +231,9 @@ const statFlowsToActionByFormRule = (flows, formRule, actionName, statusResult) 
     // 将流程统计到对应结果状态中，包含逾期
     for (const flow of formFlows) {
         
-        // if (flow.processInstanceId === "54974634-3da2-47a2-90a2-5ca1903a976a") {
-        //     console.log("-----")
-        // }
-        // if (flow.processInstanceId === " 3709b091-3b8d-4b33-8081-6c8776bd1374") {
-        //     console.log("-----")
-        // }
-        //
+        if (flow.processInstanceId === "f59eec7b-1de7-4739-8706-f09913a8676e") {
+            console.log("-----")
+        }
         
         const activities = flow.overallprocessflow
         
@@ -238,9 +243,9 @@ const statFlowsToActionByFormRule = (flows, formRule, actionName, statusResult) 
             
             const {activityId, status, isOverdue} = flowNodeRule
             
-            const matchedActivities = activities.filter(item => item.activityId === activityId && status.includes(item.type) && item.isOverDue === isOverdue)
+            const matchedActivity = coreActionStatService.getMatchedActivity(activityId, status, isOverdue, activities)
             
-            if (matchedActivities.length === 0) {
+            if (!matchedActivity) {
                 continue
             }
             

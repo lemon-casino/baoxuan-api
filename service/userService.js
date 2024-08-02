@@ -343,6 +343,10 @@ const getDingDingUserIdAndNickname = async () => {
     }
 }
 
+const getMaxDataAuthorityUsers = async () => {
+    const userIds = whiteList.pepArr()
+    return (await userRepo.getUsersByIds(userIds))
+}
 
 module.exports = {
     getDingDingUserId,
@@ -355,5 +359,6 @@ module.exports = {
     getPagingUsers,
     getEnabledUsers,
     syncUserToDB,
-    getDingDingUserIdAndNickname
+    getDingDingUserIdAndNickname,
+    getMaxDataAuthorityUsers
 }
