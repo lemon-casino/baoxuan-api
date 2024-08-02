@@ -39,7 +39,6 @@ const statForHasRulesNode = async (users, flows, coreConfigs, userFlowDataStatFu
         actionConfig.fullActionName = `${parentFullActionName}${useLinkCharacter}${actionConfig.actionName}`
         if (actionConfig.rules && actionConfig.rules.length > 0) {
             actionConfig = await statFlowsByRules(users, flows, userFlowDataStatFunc, actionConfig)
-            // delete actionConfig["rules"]
         }
         
         if (actionConfig.children && actionConfig.children.length > 0) {
@@ -56,6 +55,22 @@ const statForHasRulesNode = async (users, flows, coreConfigs, userFlowDataStatFu
     return coreConfigs
 }
 
+const collectRulesNode = async (coreConfigs) => {
+    let rules = []
+    for (let actionConfig of coreConfigs) {
+        
+        if (actionConfig.rules && actionConfig.rules.length > 0) {
+            rules.push(actionConfig)
+        }
+        
+        if (actionConfig.children && actionConfig.children.length > 0) {
+            const tmpRules = await collectRulesNode(actionConfig.children)
+            rules = rules.concat(tmpRules)
+        }
+    }
+    return rules
+}
+
 /**
  * 根据 rule 统计流程数据
  * 将结果放到resultNode中返回
@@ -69,7 +84,7 @@ const statForHasRulesNode = async (users, flows, coreConfigs, userFlowDataStatFu
  */
 const statFlowsByRules = async (users, flows, userFlowDataStatFunc, resultNode) => {
     
-    console.log(resultNode.fullActionName)
+    // console.log(resultNode.fullActionName)
     
     for (const rule of resultNode.rules) {
         let requiredFlows = _.cloneDeep(flows).filter((flow) => flow.formUuid === rule.formId)
@@ -85,10 +100,6 @@ const statFlowsByRules = async (users, flows, userFlowDataStatFunc, resultNode) 
             // 根据节点配置对流程进行汇总
             for (const flow of requiredFlows) {
                 const processInstanceId = flow.processInstanceId
-                
-                if (processInstanceId === "bc947627-21d4-44a8-9329-fa736dcc3b43") {
-                    console.log("----")
-                }
                 
                 const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
                 const matchedActivity = getMatchedActivity(activityId, status, isOverdue, activities)
@@ -150,6 +161,7 @@ const statFlowsByRules = async (users, flows, userFlowDataStatFunc, resultNode) 
             }
         }
     }
+    
     return resultNode
 }
 

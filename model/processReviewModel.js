@@ -191,6 +191,15 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "是否逾期",
       field: "is_over_due"
+    },
+    operateType: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "操作类型;",
+      field: "operate_type"
     }
   };
   const options = {

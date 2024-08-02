@@ -108,7 +108,7 @@ const getCombinedFlowsOfHistoryAndToday = async (startDoneDate, endDoneDate, for
         }
         
         const processRelatedInfo = await Promise.all([
-            flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds), // 2.8s
+            flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds),
             flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds),
             flowFormDetailsRepo.getAllFormsDetails()
         ])

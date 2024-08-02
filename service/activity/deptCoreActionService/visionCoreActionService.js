@@ -30,6 +30,7 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
     const coreActionConfig = await getFirstExistDeptCoreActionsConfig(deptIds)
     
     const flows = await coreActionPreHandler.getFlows(coreActionConfig, startDoneDate, endDoneDate)
+    
     let requiredUsers = await coreActionPreHandler.getUsersWithAdmin(userId, deptIds, userNames)
     requiredUsers = filterUsersByTags(requiredUsers, tags)
     
@@ -140,6 +141,10 @@ const filterUsersByTags = (users, tags) => {
     // 根据标签对前面获取的所有用户进行筛选
     if (tags && tags.length > 0) {
         users = users.filter(user => {
+            if (!user.tags) {
+                return false
+            }
+            
             for (const tagCode of tags) {
                 const tmpUserTags = user.tags.filter(item => item.tagCode === tagCode)
                 if (tmpUserTags.length > 0) {
