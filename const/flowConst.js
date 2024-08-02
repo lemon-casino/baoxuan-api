@@ -35,18 +35,25 @@ const operateTypeConst = {
 }
 
 const actionExitConst = {
-    carbon: {name: "carbon", action: "抄送"},
-    submit: {name: "submit", action: "提交申请"},
-    doing: {name: "doing"},
-    next: {name: "next"},
-    agree: {name: "agree", action: "同意"},
-    disagree: {name: "disagree", action: "拒绝"},
-    restart: {name: "restart", action: "重定向流程实例"},
-    recall: {name: "recall", action: "重定向流程实例"},
-    redirect: {name: "redirect", action: "重定向流程实例"},
-    revoked: {name: "revoked", action: "终止流程实例"},
-    forward: {name: "forward", action: "转交"}
+    CARBON: {name: "carbon", action: "抄送"},
+    SUBMIT: {name: "submit", action: "提交申请"},
+    DOING: {name: "doing"},
+    NEXT: {name: "next"},
+    AGREE: {name: "agree", action: "同意"},
+    DISAGREE: {name: "disagree", action: "拒绝"},
+    RESTART: {name: "restart", action: "重定向流程实例"},
+    RECALL: {name: "recall", action: "重定向流程实例"},
+    REDIRECT: {name: "redirect", action: "重定向流程实例"},
+    REVOKED: {name: "revoked", action: "终止流程实例"},
+    FORWARD: {name: "forward", action: "转交"}
 }
+
+const meaninglessActionExitConst = [
+    actionExitConst.RECALL,
+    actionExitConst.REDIRECT,
+    actionExitConst.RESTART,
+    actionExitConst.FORWARD
+]
 
 const taskTypeConst = {
     COMMON_ALL_AT_ONCE: "COMMON_ALL_AT_ONCE",
@@ -70,5 +77,6 @@ module.exports = {
     operateTypeConst,
     actionExitConst,
     taskTypeConst,
-    oaApprovalStatus
+    oaApprovalStatus,
+    meaninglessActionExitConst
 }

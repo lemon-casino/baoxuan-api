@@ -123,13 +123,16 @@ const statFlowsToActionByTargetFormActivityIds = (flows, hasSameKeyActionConfigs
         if (!targetDoneForm) {
             continue
         }
+        
         const requiredDoneActivities = flow.overallprocessflow.filter(
             item => targetDoneForm.doneActivityIds.includes(item.activityId)
                 && item.type === flowConst.flowReviewTypeConst.HISTORY
-                && item.operateType === flowConst.operateTypeConst.EXECUTE_TASK_NORMAL)
+                && !flowConst.meaninglessActionExitConst.includes(item.actionExit))
+        
         if (requiredDoneActivities.length === 0) {
             continue
         }
+        
         // 有重复数据
         const combinedRules = algorithmUtil.getAllRequiredKeyValues(hasSameKeyActionConfigs, "children", "rules")
         

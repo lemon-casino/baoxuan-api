@@ -173,7 +173,7 @@ const statVisionUserFlowData = async (resultNode, ownerActivity, flow) => {
     let {actionName, tags: userTags, activity} = ownerActivity
     
     // 没有标签的用户直接返回空模板
-    if (userTags.length === 0) {
+    if (!userTags || userTags.length === 0) {
         return []
     }
     
