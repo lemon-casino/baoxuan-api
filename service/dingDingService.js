@@ -76,48 +76,16 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
             console.log(`loop form process: ${i + 1}:${allForms.length}(${allForms[i].title.zhCN}:${formUuid})`)
             const result = await getFlowsByStatusAndTimeRange(timesRange, timeAction, status, ddAccessToken, userId, formUuid)
             
-            const replaceOperator = (activity, allUsers) => {
-                const hasResigned = activity.operatorName.includes("[已离职]")
-                if (hasResigned) {
-                    // operator：domainList中的用户ID
-                    // operatorUserId：父节点中的用户ID
-                    const operatorId = activity.operatorUserId || activity.operator
-                    const dbUsers = allUsers.filter(user => user.dingdingUserId === operatorId)
-                    if (dbUsers.length > 0) {
-                        const user = dbUsers[0]
-                        // 不存在代理人直接返回
-                        if (!user.handoverUserId) {
-                            return
-                        }
-                        
-                        // 离职之前做的工作不用动，其他的相关的节点信息改为代理人
-                        const undoAfterResign = !activity.operateTimeGMT
-                        const doAfterResign = activity.operateTimeGMT &&
-                            dateUtil.duration(dateUtil.formatGMT2Str(activity.operateTimeGMT), dateUtil.format2Str(user.lastWorkDay)) > 0
-                        if (undoAfterResign || doAfterResign) {
-                            activity.operatorName = user.handoverUserName
-                            activity.operatorDisplayName = user.handoverUserName
-                            // domainList和父节点中的显示的用户字段不一样
-                            if (Object.keys(activity).includes("operatorUserId")) {
-                                activity.operatorUserId = user.handoverUserId
-                            }
-                            if (Object.keys(activity).includes("operator")) {
-                                activity.operator = user.handoverUserId
-                            }
-                        }
-                    }
-                }
-            }
-            
             // 对离职的人员，将在离职之后地时间节点的operator更改为代理人
+            // 如果代理人也离职了，则继续找代理人的代理人
             for (const flow of result) {
-                for (const userActivity of flow.overallprocessflow) {
+                for (let userActivity of flow.overallprocessflow) {
                     if (userActivity.domainList.length > 0) {
-                        for (const domain of userActivity.domainList) {
-                            replaceOperator(domain, allUsers)
+                        for (let domain of userActivity.domainList) {
+                            domain = replaceOperator(domain, allUsers)
                         }
                     }
-                    replaceOperator(userActivity, allUsers)
+                    userActivity = replaceOperator(userActivity, allUsers)
                 }
             }
             flows = flows.concat(result);
@@ -125,6 +93,62 @@ const getFlowsThroughFormFromYiDa = async (ddAccessToken, userId, status, timesR
     }
     return flows;
 };
+
+const replaceOperator = (activity, allUsers) => {
+    const hasResigned = activity.operatorName.includes("[已离职]")
+    
+    if (!hasResigned) {
+        return activity
+    }
+    
+    // operator：domainList中的用户ID
+    // operatorUserId：父节点中的用户ID
+    const operatorId = activity.operatorUserId || activity.operator
+    const user = allUsers.find(user => user.dingdingUserId === operatorId)
+    
+    // 不存在代理人直接返回
+    if (!user || !user.handoverUserId) {
+        return activity
+    }
+    
+    // 离职之前做的工作不用动，其他的相关的节点信息改为代理人
+    const undoAfterResign = !activity.operateTimeGMT
+    const doAfterResign = activity.operateTimeGMT &&
+        dateUtil.duration(dateUtil.formatGMT2Str(activity.operateTimeGMT), dateUtil.format2Str(user.lastWorkDay)) > 0
+    if (undoAfterResign || doAfterResign) {
+        const agent = getValidAgent(user.handoverUserId, allUsers)
+        if (!agent) {
+            return activity
+        }
+        let newOperateName = agent.nickname
+        // 代理人也离职了且没有指定代理人
+        if (agent.isResign) {
+            newOperateName = `${newOperateName}[已离职]`
+        }
+        
+        activity.operatorName = newOperateName
+        activity.operatorDisplayName = newOperateName
+        // domainList和父节点中的显示的用户字段不一样
+        if (Object.keys(activity).includes("operatorUserId")) {
+            activity.operatorUserId = agent.dingdingUserId
+        }
+        if (Object.keys(activity).includes("operator")) {
+            activity.operator = agent.dingdingUserId
+        }
+    }
+    return activity
+}
+
+const getValidAgent = (directAgentUserId, users) => {
+    let agent = users.find(user => user.dingdingUserId === directAgentUserId)
+    if (agent && !agent.handoverUserId) {
+        return agent
+    }
+    if (agent && agent.handoverUserId) {
+        agent = getValidAgent(agent.handoverUserId, users)
+    }
+    return agent
+}
 
 const getDingDingToken = async () => {
     const ddToken = await credentialsReq.getDingDingAccessToken()
