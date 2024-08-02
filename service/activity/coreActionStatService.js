@@ -86,6 +86,10 @@ const statFlowsByRules = async (users, flows, userFlowDataStatFunc, resultNode) 
             for (const flow of requiredFlows) {
                 const processInstanceId = flow.processInstanceId
                 
+                if (processInstanceId === "bc947627-21d4-44a8-9329-fa736dcc3b43") {
+                    console.log("----")
+                }
+                
                 const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
                 const matchedActivity = getMatchedActivity(activityId, status, isOverdue, activities)
                 if (!matchedActivity) {
@@ -412,5 +416,6 @@ module.exports = {
     filterFlows,
     getRequiredUsers,
     extractInnerAndOutSourcingFormsFromConfig,
-    convertToUserActionResult
+    convertToUserActionResult,
+    filterFlowsByFlowDetailsRules
 }

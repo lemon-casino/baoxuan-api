@@ -3,9 +3,10 @@ const Bignumber = require("bignumber.js")
 const {visionFormDoneActivityIds} = require("@/const/tmp/coreActionsConst")
 const flowUtil = require("@/utils/flowUtil")
 const algorithmUtil = require("@/utils/algorithmUtil")
-const {flowReviewTypeConst} = require("@/const/flowConst");
+const flowConst = require("@/const/flowConst");
 const {opFunctions} = require("@/const/ruleConst/operatorConst");
 const operatorConst = require("@/const/ruleConst/operatorConst");
+const coreActionStatService = require("./coreActionStatService")
 
 
 const generateNewActionResult = (actionName, actionCode, data) => {
@@ -125,7 +126,10 @@ const statFlowsToActionByTargetFormActivityIds = (flows, filterFlowFieldName, ha
         if (!targetDoneForm) {
             continue
         }
-        const requiredDoneActivities = flow.overallprocessflow.filter(item => targetDoneForm.doneActivityIds.includes(item.activityId) && item.type === flowReviewTypeConst.HISTORY)
+        const requiredDoneActivities = flow.overallprocessflow.filter(
+            item => targetDoneForm.doneActivityIds.includes(item.activityId)
+                && item.type === flowConst.flowReviewTypeConst.HISTORY
+                && item.operateType === flowConst.operateTypeConst.EXECUTE_TASK_NORMAL)
         if (requiredDoneActivities.length === 0) {
             continue
         }
@@ -213,19 +217,19 @@ const statFlowsToActionByFormRule = (flows, formRule, actionName, statusResult) 
         return statusResult
     }
     
-    if (formRule.flowDetailsRules) {
-        for (const detailsRule of formRule.flowDetailsRules) {
-            formFlows = formFlows.filter(flow => {
-                if (flow.data[detailsRule.fieldId]) {
-                    return operatorConst.opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
-                }
-                return false
-            })
-        }
-    }
+    formFlows = coreActionStatService.filterFlowsByFlowDetailsRules(formFlows, formRule.flowDetailsRules)
     
     // 将流程统计到对应结果状态中，包含逾期
     for (const flow of formFlows) {
+        
+        // if (flow.processInstanceId === "54974634-3da2-47a2-90a2-5ca1903a976a") {
+        //     console.log("-----")
+        // }
+        // if (flow.processInstanceId === " 3709b091-3b8d-4b33-8081-6c8776bd1374") {
+        //     console.log("-----")
+        // }
+        //
+        
         const activities = flow.overallprocessflow
         
         // 匹配到一项即算匹配成功
