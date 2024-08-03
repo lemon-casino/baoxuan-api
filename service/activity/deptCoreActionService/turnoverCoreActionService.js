@@ -32,7 +32,7 @@ const statTurnoverUserFlowData = async (userActivity, flow) => {
 }
 
 const getCoreActionStat = async (statType, userId, deptIds, userNames, startDoneDate, endDoneDate) => {
-    const requiredUsers = await coreActionPreHandler.getUsersWithAdmin(userId, deptIds, userNames)
+    const requiredUsers = await coreActionPreHandler.getUsers(userId, deptIds, userNames)
     const coreActionConfig = await flowRepo.getCoreActionsConfig(deptIds)
     const flows = await coreActionPreHandler.getFlows(coreActionConfig, startDoneDate, endDoneDate)
     

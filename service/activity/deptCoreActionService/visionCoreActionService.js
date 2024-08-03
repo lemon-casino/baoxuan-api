@@ -6,12 +6,8 @@ const coreActionStatService = require("@/service/activity/coreActionStatService"
 const regexConst = require("@/const/regexConst")
 const visionConst = require("@/const/tmp/visionConst")
 const statResultTemplateConst = require("@/const/statResultTemplateConst")
-const redisConst = require("@/const/redisConst")
 const flowUtil = require("@/utils/flowUtil")
-const algorithmUtil = require("@/utils/algorithmUtil")
-const redisUtil = require("@/utils/redisUtil")
 const patchUtil = require("@/patch/patchUtil")
-const NotFoundError = require("@/error/http/notFoundError")
 const coreActionPostHandler = require("../coreActionPostHandler")
 const coreActionPreHandler = require("../coreActionPreHandler")
 
@@ -27,12 +23,11 @@ const coreActionPreHandler = require("../coreActionPreHandler")
  * @returns {Promise<*>}
  */
 const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, startDoneDate, endDoneDate) => {
-    const coreActionConfig = await getFirstExistDeptCoreActionsConfig(deptIds)
+    const coreActionConfig = await coreActionPreHandler.getFirstExistDeptCoreActionsConfig(deptIds)
+    let requiredUsers = await coreActionPreHandler.getUsers(userId, deptIds, userNames, true)
+    requiredUsers = filterUsersByTags(requiredUsers, tags)
     
     const flows = await coreActionPreHandler.getFlows(coreActionConfig, startDoneDate, endDoneDate)
-    
-    let requiredUsers = await coreActionPreHandler.getUsersWithAdmin(userId, deptIds, userNames)
-    requiredUsers = filterUsersByTags(requiredUsers, tags)
     
     // 基于人的汇总(最基本的明细统计)
     const actionStatBasedOnUserResult = await coreActionStatService.stat(requiredUsers, flows, coreActionConfig, statVisionUserFlowData)
@@ -100,37 +95,6 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
 }
 
 /**
- * 获取和心动动作配置信息
- * 不存在，返回NotFoundError
- *
- * @param deptIds
- * @returns {Promise<any>}
- */
-const getFirstExistDeptCoreActionsConfig = async (deptIds) => {
-    
-    let coreActionConfigStr = null
-    for (const deptId of deptIds) {
-        coreActionConfigStr = await redisUtil.get(`${redisConst.redisKeys.CoreActionRules}:${deptId}`)
-        if (coreActionConfigStr) {
-            break
-        }
-    }
-    
-    if (!coreActionConfigStr) {
-        const departmentsStr = await redisUtil.get(redisConst.redisKeys.Departments)
-        const departments = JSON.parse(departmentsStr)
-        const deptNames = []
-        for (const deptId of deptIds) {
-            const dept = algorithmUtil.getJsonFromUnionFormattedJsonArr(departments, "dep_chil", "dept_id", deptId)
-            if (dept) {
-                deptNames.push(dept.name)
-            }
-        }
-        throw new NotFoundError(`部门${deptNames.join(",")}没找到核心动作配置信息`)
-    }
-    return JSON.parse(coreActionConfigStr)
-}
-/**
  * 根据tags过滤用户
  *
  * @param users
@@ -168,7 +132,7 @@ const filterUsersByTags = (users, tags) => {
  */
 const statVisionUserFlowData = async (resultNode, ownerActivity, flow) => {
     const {fullActionName} = resultNode
-  
+    
     // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
     if (!fullActionName || (!fullActionName.includes("中") && !fullActionName.includes("完"))) {
         return null
