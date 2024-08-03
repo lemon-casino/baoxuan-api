@@ -25,9 +25,22 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
     
     const rules = collectRulesNode(coreConfig, "")
     // const ruleTasks = []
-    for (let rule of rules) {
-        rule = statFlowsByRules(users, flows, userFlowDataStatFunc, rule)
-    }
+    let index = 0
+    // for (let rule of rules) {
+    //     console.time(index.toString())
+    //     rule = statFlowsByRules(users, flows, userFlowDataStatFunc, rule)
+    //     console.timeEnd(index.toString())
+    //     index = index + 1
+    // }
+    
+    const tasks = rules.map(rule => {
+        return () => {
+            statFlowsByRules(users, flows, userFlowDataStatFunc, rule)
+        }
+    })
+    console.time("hi")
+    await Promise.all(tasks.map(task => task()))
+    console.timeEnd("hi")
     return coreConfig
 }
 
