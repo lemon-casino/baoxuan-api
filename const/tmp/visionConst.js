@@ -112,14 +112,12 @@ const confusedActivityNameForStatFormData = [
  * @returns {({tagCode: string, excludeFormItemKws: string[], includeFormItemKws: string[]}|{tagCode: string, excludeFormItemKws: string[], includeFormItemKws: string[]}|{tagCode: string, excludeFormItemKws: *[], includeFormItemKws: string[]}|{tagCode: string, excludeFormItemKws: string[], includeFormItemKws: string[]}|{tagCode: string, excludeFormItemKws: string[], includeFormItemKws: string[]})[]}
  */
 const getCompletedTagsFormItemKeywordsMapping = (formId) => {
-
     const requiredNewArtEditorKWsMapping = newArtEditorTagsFormItemKeywordsMapping.formIds.includes(formId)
     if (requiredNewArtEditorKWsMapping) {
-        const result = newArtEditorTagsFormItemKeywordsMapping.tagsKWsMapping.concat(tagsFormItemKeywordsMapping)
-        return result
+       return newArtEditorTagsFormItemKeywordsMapping.tagsKWsMapping.concat(tagsFormItemKeywordsMapping)
+       
     }
-    const result = historyArtEditorTagsFormItemKeywordsMapping.concat(tagsFormItemKeywordsMapping)
-    return result
+    return historyArtEditorTagsFormItemKeywordsMapping.concat(tagsFormItemKeywordsMapping)
 }
 
 module.exports = {

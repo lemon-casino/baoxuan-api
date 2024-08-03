@@ -22,7 +22,6 @@ const getFlows = async (coreActionConfig, startDoneDate, endDoneDate) => {
     return (await coreActionStatService.filterFlows(configuredFormIds, startDoneDate, endDoneDate))
 }
 
-
 /**
  * 获取和心动动作配置信息
  * 不存在，返回NotFoundError
@@ -50,7 +49,7 @@ const getFirstExistDeptCoreActionsConfig = async (deptIds) => {
                 deptNames.push(dept.name)
             }
         }
-        throw new NotFoundError(`部门${deptNames.join(",")}没找到核心动作配置信息`)
+        throw new NotFoundError(`部门${deptNames.join(",")}没找到抓取动作的配置信息`)
     }
     return JSON.parse(coreActionConfigStr)
 }

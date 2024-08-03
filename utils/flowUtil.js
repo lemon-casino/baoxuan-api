@@ -21,7 +21,7 @@ const flatReviewItems = (flow) => {
             newReviewItems.push(item)
         }
     }
-
+    
     newFlow.overallprocessflow = newReviewItems
     return newFlow
 }
@@ -49,12 +49,12 @@ const isFinishedTodayFlow = (flow) => {
 const isUserHasFinishedTodayFlow = (userId, flow, reviewItems) => {
     let userTodayFinished = false
     const newFlow = flatReviewItems(flow)
-
+    
     for (const item of newFlow.overallprocessflow) {
         if (reviewItems && reviewItems.length > 0 && !reviewItems.includes(item.activityId)) {
             continue
         }
-
+        
         if (item.operatorUserId === userId) {
             if (item.type === flowReviewTypeConst.HISTORY) {
                 const doneDate = dateUtil.formatGMT2Str(item.operateTimeGMT, "YYYY-MM-DD")
@@ -120,7 +120,7 @@ const isUserTodoFlow = (userId, flow, reviewItems) => {
             }
         }
     }
-
+    
     return false
 }
 
@@ -157,7 +157,7 @@ const isUserDoingOverDueFlow = (userId, flow, reviewItems) => {
         if (reviewItems && reviewItems.length > 0 && !reviewItems.includes(item.activityId)) {
             continue
         }
-
+        
         if (item.operatorUserId === userId) {
             if (item.type === flowReviewTypeConst.TODO && item.isOverDue) {
                 return true
@@ -245,7 +245,7 @@ const statIdsAndSumFromBottom = (data) => {
             item.sum = sum
             item.ids = uniqueIds ? [...new Set(allIds)] : allIds
         }
-
+        
         if (!item.sumAlone) {
             if (item.ids) {
                 item.sum = item.ids.length
@@ -254,11 +254,11 @@ const statIdsAndSumFromBottom = (data) => {
                 item.ids = []
             }
         }
-
+        
         return item
     }
-
-
+    
+    
     if (data instanceof Array) {
         for (let item of data) {
             if (item.children) {
@@ -268,7 +268,7 @@ const statIdsAndSumFromBottom = (data) => {
     } else {
         data = handleItem(data)
     }
-
+    
     return data
 }
 
@@ -292,8 +292,8 @@ const statSumFromBottom = (data) => {
         item.sum = childSum
         return item
     }
-
-
+    
+    
     if (data instanceof Array) {
         for (let item of data) {
             if (item.children) {
@@ -303,7 +303,7 @@ const statSumFromBottom = (data) => {
     } else {
         data.sum = handleItem(data).sum
     }
-
+    
     return data
 }
 
@@ -318,11 +318,12 @@ const getLatestUniqueReviewItems = (reviewItems) => {
     const uniqueFieldIds = {}
     for (let i = reviewItems.length - 1; i >= 0; i--) {
         const activityId = reviewItems[i].activityId
-        if (!Object.keys(uniqueFieldIds).includes(activityId)) {
+        //llx:if (!Object.keys(uniqueFieldIds).includes(activityId)) {
+        if (!uniqueFieldIds[activityId]) {
             uniqueFieldIds[activityId] = reviewItems[i]
         }
     }
-
+    
     const newReviewItems = []
     const keys = Object.keys(uniqueFieldIds)
     for (let i = keys.length - 1; i >= 0; i--) {

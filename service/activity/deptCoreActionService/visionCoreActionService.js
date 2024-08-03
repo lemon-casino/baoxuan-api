@@ -39,7 +39,6 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
     // 核心动作统计不用标签区分
     if (isFromCoreActionMenu) {
         finalResult = _.cloneDeep(actionStatBasedOnUserResult)
-        // finalResult = algorithmUtil.removeTargetKey(finalResult, "children", "userFlowsDataStat")
         
         for (const item of finalResult) {
             const workloadNode = coreActionPostHandler.createFlowDataStatNode(item, "工作量", "该工作量会统计表单中预计的数据")
@@ -110,8 +109,8 @@ const filterUsersByTags = (users, tags) => {
             }
             
             for (const tagCode of tags) {
-                const tmpUserTags = user.tags.filter(item => item.tagCode === tagCode)
-                if (tmpUserTags.length > 0) {
+                const tmpUserTags = user.tags.find(uTag => uTag.tagCode === tagCode)
+                if (tmpUserTags) {
                     return true
                 }
             }
@@ -122,13 +121,11 @@ const filterUsersByTags = (users, tags) => {
 }
 
 /**
- *
- * 统计视觉部员工的流程表单数据
- *
- * @param userTags 用户标签
+ *  统计视觉部员工的流程表单数据
+ * @param resultNode
+ * @param ownerActivity
  * @param flow
- * @param rectifyDataParams 纠正数据的参数
- * @returns {Promise<*|*[]>}
+ * @returns {*|*[]|null}
  */
 const statVisionUserFlowData = (resultNode, ownerActivity, flow) => {
     const {fullActionName} = resultNode
@@ -178,7 +175,7 @@ const statVisionUserFlowData = (resultNode, ownerActivity, flow) => {
     
     const userTagsFormItemKeywordsMappings = visionConst.getCompletedTagsFormItemKeywordsMapping(flow.formUuid)
         .filter(item => {
-            return userTagCodes.filter(tagCode => tagCode === item.tagCode).length > 0
+            return !!userTagCodes.find(tagCode => tagCode === item.tagCode)
         })
     
     if (userTagsFormItemKeywordsMappings.length === 0) {
@@ -202,8 +199,7 @@ const statVisionUserFlowData = (resultNode, ownerActivity, flow) => {
     }
     
     const notEmptyFlowDataStat = visionUserFlowDataStatResultTemplate.filter(item => item.children.length > 0)
-    const result = removeFormFieldNameKWs(notEmptyFlowDataStat)
-    return result
+    return removeFormFieldNameKWs(notEmptyFlowDataStat)
 }
 
 
@@ -216,21 +212,21 @@ const statVisionUserFlowData = (resultNode, ownerActivity, flow) => {
  * @returns {unknown}
  */
 const preHandleFlowData = (actionName, flow) => {
-    const tmpFlow = _.cloneDeep(flow)
+    //llx:const tmpFlow = _.cloneDeep(flow)
     // 进行中的工作会统计表单中预计的数量 完成后需要排除掉预计的数量， 表单标识有【预计】字样
     if (actionName.includes("完")) {
         const containYuJiTagKeys = []
-        for (const key of Object.keys(tmpFlow.dataKeyDetails)) {
-            if (tmpFlow.dataKeyDetails[key].includes("预计") && tmpFlow.dataKeyDetails[key].includes("数量")) {
+        for (const key of Object.keys(flow.dataKeyDetails)) {
+            if (flow.dataKeyDetails[key].includes("预计") && flow.dataKeyDetails[key].includes("数量")) {
                 containYuJiTagKeys.push(key)
             }
         }
-        for (const containYuJiTagKey of containYuJiTagKeys) {
-            delete tmpFlow.dataKeyDetails[containYuJiTagKey]
-            delete tmpFlow.data[containYuJiTagKey]
+        for (const yuJiKey of containYuJiTagKeys) {
+            delete flow.dataKeyDetails[yuJiKey]
+            delete flow.data[yuJiKey]
         }
     }
-    return tmpFlow
+    return flow
 }
 
 

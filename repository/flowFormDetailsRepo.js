@@ -59,8 +59,12 @@ const getFormLatestDetailsByFormId = async (formId) => {
     return []
 }
 
-const getAllFormsDetails = async () => {
-    const result = await flowFormDetailsModel.findAll({})
+const getAllFormsDetails = async (formIds) => {
+    const where = {}
+    if (formIds) {
+        where.formId = {$in: formIds}
+    }
+    const result = await flowFormDetailsModel.findAll({where})
     return sequelizeUtil.extractDataValues(result)
 }
 

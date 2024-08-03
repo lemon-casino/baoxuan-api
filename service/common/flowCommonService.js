@@ -117,18 +117,16 @@ const getCombinedFlowsOfHistoryAndToday = async (startDoneDate, endDoneDate, for
     
     let historyFlows = []
     // 获取时间区间内的入库流程
-    // const processRelatedInfo = await Promise.all([
-    //     flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds),
-    //     flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds),
-    //     flowFormDetailsRepo.getAllFormsDetails()
-    // ])
-    
-    console.time("process")
-    const flowsData = await flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds)// processRelatedInfo[0]
-    historyFlows = await flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds)//processRelatedInfo[1]
-    const flowFormDetails = await flowFormDetailsRepo.getAllFormsDetails()// processRelatedInfo[2]
-    console.timeEnd("process")
-    
+    const processRelatedInfo = await Promise.all([
+        flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds),
+        flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds),
+        flowFormDetailsRepo.getAllFormsDetails()
+    ])
+  
+    const flowsData = processRelatedInfo[0]
+    historyFlows = processRelatedInfo[1]
+    const flowFormDetails = processRelatedInfo[2]
+   
     // 合并流程的data和审核流信息
     for (let i = 0; i < historyFlows.length; i++) {
         const currData = {}

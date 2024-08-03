@@ -360,32 +360,20 @@ const sumSameNameWorkload = (flows) => {
  * @returns {*[]}
  */
 const sumUserActionStat = (userStatResult) => {
-    const activityStatResult = getActivityStatStructure(_.cloneDeep(userStatResult))
+    //llx:_.cloneDeep(userStatResult)
+    const activityStatResult = getActivityStatStructure(userStatResult)
     for (const actionStatResult of userStatResult) {
         const coreActionName = actionStatResult.actionName
         const subStatusActionsResult = actionStatResult.children
         for (const subActionResult of subStatusActionsResult) {
             const subOverdueActionsResult = subActionResult.children
             for (const overdueResult of subOverdueActionsResult) {
-                // 获取逾期节点下所有人的汇总
-                const getOverdueIds = (overdueResult) => {
-                    let overdueIds = []
-                    for (const userStatResult of overdueResult.children) {
-                        overdueIds = overdueIds.concat(userStatResult.ids)
-                    }
-                    return overdueIds
-                }
                 const ids = getOverdueIds(overdueResult)
-                const findTargetActResult = (subActStatName, overDueName) => {
-                    const subActStatResult = activityStatResult.filter(item => item.actionName === subActStatName)[0]
-                    if (subActStatResult) {
-                        const subActOverdueStatResult = subActStatResult.children.filter(item => item.actionName === overDueName)[0]
-                        return subActOverdueStatResult
-                    }
-                    return null
-                }
+                const targetActResult = findTargetActResult(
+                    activityStatResult,
+                    subActionResult.actionName,
+                    overdueResult.actionName)
                 
-                const targetActResult = findTargetActResult(subActionResult.actionName, overdueResult.actionName)
                 if (targetActResult) {
                     targetActResult.children.push({actionName: coreActionName, ids: ids})
                 }
@@ -393,6 +381,23 @@ const sumUserActionStat = (userStatResult) => {
         }
     }
     return activityStatResult
+}
+
+// 获取逾期节点下所有人的汇总
+const getOverdueIds = (overdueResult) => {
+    let overdueIds = []
+    for (const userStatResult of overdueResult.children) {
+        overdueIds = overdueIds.concat(userStatResult.ids)
+    }
+    return overdueIds
+}
+
+const findTargetActResult = (activityStatResult, subActStatName, overDueName) => {
+    const subActStatResult = activityStatResult.find(item => item.actionName === subActStatName)
+    if (subActStatResult) {
+        return subActStatResult.children.find(item => item.actionName === overDueName)
+    }
+    return null
 }
 
 /**
@@ -403,11 +408,9 @@ const sumUserActionStat = (userStatResult) => {
  */
 const getActivityStatStructure = (referenceStatResult) => {
     const structure = []
-    // todo：good idea： 没时间实现了
-    // 保留2层深度的结构信息, 将底层基于人的统计信息忽略
     for (const actStat of referenceStatResult) {
         for (const subActStat of actStat.children) {
-            const isExist = structure.filter(item => item.actionName === subActStat.actionName).length > 0
+            const isExist = structure.find(item => item.actionName === subActStat.actionName)
             if (!isExist) {
                 for (const overDueStat of subActStat.children) {
                     overDueStat.children = []

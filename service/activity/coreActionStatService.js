@@ -24,23 +24,12 @@ const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
     // return (await statForHasRulesNode(users, flows, coreConfig, userFlowDataStatFunc, ""))
     
     const rules = collectRulesNode(coreConfig, "")
-    // const ruleTasks = []
-    let index = 0
-    // for (let rule of rules) {
-    //     console.time(index.toString())
-    //     rule = statFlowsByRules(users, flows, userFlowDataStatFunc, rule)
-    //     console.timeEnd(index.toString())
-    //     index = index + 1
-    // }
-    
     const tasks = rules.map(rule => {
         return () => {
             statFlowsByRules(users, flows, userFlowDataStatFunc, rule)
         }
     })
-    console.time("hi")
     await Promise.all(tasks.map(task => task()))
-    console.timeEnd("hi")
     return coreConfig
 }
 
@@ -104,9 +93,9 @@ const collectRulesNode = (coreConfigs, parentFullActionName) => {
  * @returns {Promise<*>}
  */
 const statFlowsByRules = (users, flows, userFlowDataStatFunc, resultNode) => {
-    
     for (const rule of resultNode.rules) {
-        let requiredFlows = _.cloneDeep(flows).filter((flow) => flow.formUuid === rule.formId)
+        // llx: _.cloneDeep(flows)
+        let requiredFlows = flows.filter((flow) => flow.formUuid === rule.formId)
         requiredFlows = filterFlowsByFlowDetailsRules(requiredFlows, rule.flowDetailsRules)
         
         if (requiredFlows.length === 0) {
@@ -132,7 +121,7 @@ const statFlowsByRules = (users, flows, userFlowDataStatFunc, resultNode) => {
                     continue
                 }
                 
-                const userFlowDataStat = _.isFunction(userFlowDataStatFunc) && userFlowDataStatFunc(resultNode, ownerActivity, flow)
+                const userFlowDataStat = userFlowDataStatFunc && userFlowDataStatFunc(resultNode, ownerActivity, flow)
                 
                 const haveMatchedData = userFlowDataStat && userFlowDataStat.length > 0
                 let wrappedUserFlowDataStat = null
@@ -180,7 +169,6 @@ const statFlowsByRules = (users, flows, userFlowDataStatFunc, resultNode) => {
             }
         }
     }
-    
     return resultNode
 }
 
@@ -227,7 +215,8 @@ const extractInnerAndOutSourcingFormsFromConfig = (coreActionConfig) => {
  * @returns {*}
  */
 const filterFlowsByFlowDetailsRules = (flows, flowDetailsRules) => {
-    let result = _.cloneDeep(flows)
+    //llx:_.cloneDeep(flows)
+    let result = flows
     
     if (flowDetailsRules) {
         for (const detailsRule of flowDetailsRules) {
@@ -236,7 +225,8 @@ const filterFlowsByFlowDetailsRules = (flows, flowDetailsRules) => {
                     return operatorConst.opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
                 })
             } else {
-                const orFlows = _.cloneDeep(flows).filter(flow => {
+                //llx:  _.cloneDeep(flows)
+                const orFlows = flows.filter(flow => {
                     return operatorConst.opFunctions[detailsRule.opCode](flow.data[detailsRule.fieldId], detailsRule.value)
                 })
                 result = result.concat(orFlows)
