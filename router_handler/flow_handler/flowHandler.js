@@ -2,7 +2,7 @@ const ExcelJS = require('exceljs')
 const BigNumber = require("bignumber.js")
 const flowService = require("@/service/flowService")
 const visionCoreActionService = require("@/service/activity/deptCoreActionService/visionCoreActionService")
-const tmCoreActionService = require("@/service/activity/deptCoreActionService/tmCoreActionService")
+const universalCoreActionService = require("@/service/activity/deptCoreActionService/universalCoreActionService")
 const turnoverCoreActionService = require("@/service/activity/deptCoreActionService/turnoverCoreActionService")
 const flowFormService = require("@/service/flowFormService")
 const joiUtil = require("@/utils/joiUtil")
@@ -57,12 +57,12 @@ const getVisionCoreActionStat = async (req, res, next) => {
     }
 }
 
-const getTMCoreActionStat = async (req, res, next) => {
+const getUniversalCoreActionStat = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(flowSchema.getCoreActionsSchema, req.body)
         const {statType, deptIds, startDate, endDate, userNames} = req.body
         const userId = req.user.userId
-        const result = await tmCoreActionService.getCoreActionStat(statType, userId, deptIds, userNames, startDate, endDate)
+        const result = await universalCoreActionService.getCoreActionStat(statType, userId, deptIds, userNames, startDate, endDate)
         res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -167,7 +167,7 @@ module.exports = {
     getFlowsByIds,
     updateRunningFlowEmergency,
     getVisionCoreActionStat,
-    getTMCoreActionStat,
+    getUniversalCoreActionStat,
     getTurnoverCoreActionStat,
     getAllOverDueRunningFlows,
     getFormsFlowsActivitiesStat

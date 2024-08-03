@@ -25,7 +25,7 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
  */
 const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
     // return (await statForHasRulesNode(users, flows, coreConfig, userFlowDataStatFunc, ""))
-   
+    
     const rules = collectRulesNode(coreConfig, "")
     const tasks = rules.map(rule => {
         return () => {
@@ -113,61 +113,63 @@ const statFlowsByRules = (users, flows, userFlowDataStatFunc, resultNode) => {
                 const processInstanceId = flow.processInstanceId
                 
                 const activities = flowUtil.getLatestUniqueReviewItems(flow.overallprocessflow)
-                const matchedActivity = getMatchedActivity(activityId, status, isOverdue, activities)
+                let matchedActivity = getMatchedActivity(activityId, status, isOverdue, activities)
                 if (!matchedActivity) {
                     continue
                 }
                 
-                const ownerActivity = extendActivityWithOwnerNameAndTags(matchedActivity, users, flow, owner)
+                const ownersActivity = extendActivityWithOwnerNameAndTags(matchedActivity, users, flow, owner)
                 
-                if (!ownerActivity) {
+                if (!ownersActivity) {
                     continue
                 }
                 
-                const userFlowDataStat = userFlowDataStatFunc && userFlowDataStatFunc(resultNode, ownerActivity, flow)
-                
-                const haveMatchedData = userFlowDataStat && userFlowDataStat.length > 0
-                let wrappedUserFlowDataStat = null
-                
-                if (haveMatchedData) {
-                    wrappedUserFlowDataStat = {
-                        processInstanceId: flow.processInstanceId,
-                        flowData: userFlowDataStat
-                    }
-                }
-                
-                let resultStatNode = resultNode.children.filter(item => item.actionName === ownerActivity.actionName)
-                const userHasStat = resultStatNode.length > 0
-                if (userHasStat) {
-                    const currResultStatNode = resultStatNode[0]
-                    // 避免一人在同一流程中干多个活重复计算
-                    if (!currResultStatNode.ids.includes(processInstanceId)) {
-                        currResultStatNode.ids.push(processInstanceId)
-                        currResultStatNode.sum = currResultStatNode.ids.length
-                    }
+                for (const ownerActivity of ownersActivity) {
+                    const userFlowDataStat = userFlowDataStatFunc && userFlowDataStatFunc(resultNode, ownerActivity, flow)
                     
-                    // 同一人流程中会出现多次干不同的活，将本人所有该流程中节点工作量的统计去重处理才能保证不漏
+                    const haveMatchedData = userFlowDataStat && userFlowDataStat.length > 0
+                    let wrappedUserFlowDataStat = null
+                    
                     if (haveMatchedData) {
-                        const currFlowStat = currResultStatNode.userFlowsDataStat.find(item => item.processInstanceId == processInstanceId)
-                        if (currFlowStat) {
-                            const alreadyStatActivityNames = currFlowStat.flowData.map(item => item.actionName)
-                            for (const actStat of wrappedUserFlowDataStat.flowData) {
-                                if (!alreadyStatActivityNames.includes(actStat.actionName)) {
-                                    currFlowStat.flowData.push(actStat)
-                                }
-                            }
-                        } else {
-                            currResultStatNode.userFlowsDataStat.push(wrappedUserFlowDataStat)
+                        wrappedUserFlowDataStat = {
+                            processInstanceId: flow.processInstanceId,
+                            flowData: userFlowDataStat
                         }
                     }
-                } else {
-                    resultStatNode = {
-                        actionName: ownerActivity.actionName,
-                        sum: 1,
-                        ids: [processInstanceId],
-                        userFlowsDataStat: wrappedUserFlowDataStat ? [wrappedUserFlowDataStat] : []
+                    
+                    let resultStatNode = resultNode.children.filter(item => item.actionName === ownerActivity.actionName)
+                    const userHasStat = resultStatNode.length > 0
+                    if (userHasStat) {
+                        const currResultStatNode = resultStatNode[0]
+                        // 避免一人在同一流程中干多个活重复计算
+                        if (!currResultStatNode.ids.includes(processInstanceId)) {
+                            currResultStatNode.ids.push(processInstanceId)
+                            currResultStatNode.sum = currResultStatNode.ids.length
+                        }
+                        
+                        // 同一人流程中会出现多次干不同的活，将本人所有该流程中节点工作量的统计去重处理才能保证不漏
+                        if (haveMatchedData) {
+                            const currFlowStat = currResultStatNode.userFlowsDataStat.find(item => item.processInstanceId == processInstanceId)
+                            if (currFlowStat) {
+                                const alreadyStatActivityNames = currFlowStat.flowData.map(item => item.actionName)
+                                for (const actStat of wrappedUserFlowDataStat.flowData) {
+                                    if (!alreadyStatActivityNames.includes(actStat.actionName)) {
+                                        currFlowStat.flowData.push(actStat)
+                                    }
+                                }
+                            } else {
+                                currResultStatNode.userFlowsDataStat.push(wrappedUserFlowDataStat)
+                            }
+                        }
+                    } else {
+                        resultStatNode = {
+                            actionName: ownerActivity.actionName,
+                            sum: 1,
+                            ids: [processInstanceId],
+                            userFlowsDataStat: wrappedUserFlowDataStat ? [wrappedUserFlowDataStat] : []
+                        }
+                        resultNode.children.push(resultStatNode)
                     }
-                    resultNode.children.push(resultStatNode)
                 }
             }
         }
@@ -276,11 +278,13 @@ const getMatchedActivity = (activityId, status, isOverdue, activities) => {
  * @param users
  * @param flow
  * @param ownerRule
- * @returns {{activity, actionName: string, tags: *}|null}
+ * @returns {*[]}
  */
 const extendActivityWithOwnerNameAndTags = (activity, users, flow, ownerRule) => {
     let ownerName = "未分配"
     let {from, id, default: defaultUserName} = ownerRule
+    
+    const operators = []
     // 外包的流程可能会存在未选择外包人的情况
     if (from.toUpperCase() === ownerFrom.FORM) {
         let tmpOwnerName = flow.data[id] && flow.data[id].length > 0 && flow.data[id]
@@ -293,18 +297,35 @@ const extendActivityWithOwnerNameAndTags = (activity, users, flow, ownerRule) =>
         } else if (defaultUserName) {
             ownerName = defaultUserName
         }
+        operators.push({operatorName: ownerName, activity})
     } else {
         const processReviewId = activityIdMappingConst[id] || id
-        const reviewItems = flow.overallprocessflow.filter(item => item.activityId === processReviewId)
-        ownerName = reviewItems.length > 0 ? reviewItems[0].operatorName : defaultUserName
+        const activity = flow.overallprocessflow.find(item => item.activityId === processReviewId)
+        if (!activity) {
+            return []
+        }
+        if (activity.domainList && activity.domainList.length > 0) {
+            for (const item of activity.domainList) {
+                operators.push({operatorName: item.operatorName, activity: item})
+            }
+        } else {
+            operators.push({operatorName: activity.operatorName, activity})
+        }
     }
     
-    const user = users.find(user => user.nickname === ownerName || user.userName === ownerName)
-    
-    if (user) {
-        return {actionName: ownerName, tags: user.tags, activity: activity}
+    const userActivities = []
+    for (const operator of operators) {
+        const user = users.find(user => user.nickname === operator.operatorName || user.userName === operator.operatorName)
+        if (user) {
+            userActivities.push({
+                actionName: operator.operatorName,
+                tags: user.tags,
+                activity: operator.activity
+            })
+        }
     }
-    return null
+    
+    return userActivities
 }
 
 const filterFlows = async (formIds, startDoneDate, endDoneDate) => {
