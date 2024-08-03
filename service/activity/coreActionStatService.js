@@ -21,7 +21,14 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
  * @returns {Promise<*[]>}
  */
 const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
-    return (await statForHasRulesNode(users, flows, coreConfig, userFlowDataStatFunc, ""))
+    // return (await statForHasRulesNode(users, flows, coreConfig, userFlowDataStatFunc, ""))
+    const rules = collectRulesNode(coreConfig, "")
+    const ruleTasks = []
+    for (const rule of rules) {
+        ruleTasks.push(statFlowsByRules(users, flows, userFlowDataStatFunc, rule))
+    }
+    await Promise.all(ruleTasks)
+    return coreConfig
 }
 
 /**
@@ -55,16 +62,17 @@ const statForHasRulesNode = async (users, flows, coreConfigs, userFlowDataStatFu
     return coreConfigs
 }
 
-const collectRulesNode = async (coreConfigs) => {
+const collectRulesNode = (coreConfigs, parentFullActionName) => {
     let rules = []
     for (let actionConfig of coreConfigs) {
-        
+        const useLinkCharacter = parentFullActionName ? "-" : ""
+        actionConfig.fullActionName = `${parentFullActionName}${useLinkCharacter}${actionConfig.actionName}`
         if (actionConfig.rules && actionConfig.rules.length > 0) {
             rules.push(actionConfig)
         }
         
         if (actionConfig.children && actionConfig.children.length > 0) {
-            const tmpRules = await collectRulesNode(actionConfig.children)
+            const tmpRules = collectRulesNode(actionConfig.children, actionConfig.fullActionName)
             rules = rules.concat(tmpRules)
         }
     }

@@ -168,7 +168,7 @@ const filterUsersByTags = (users, tags) => {
  */
 const statVisionUserFlowData = async (resultNode, ownerActivity, flow) => {
     const {fullActionName} = resultNode
-    
+  
     // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)
     if (!fullActionName || (!fullActionName.includes("中") && !fullActionName.includes("完"))) {
         return null
