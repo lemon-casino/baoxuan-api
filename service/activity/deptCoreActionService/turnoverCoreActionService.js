@@ -1,9 +1,7 @@
 const _ = require("lodash")
 const coreActionStatService = require("@/service/activity/coreActionStatService")
-const userCommonService = require("@/service/common/userCommonService")
 const coreActionPostHandler = require("../coreActionPostHandler")
 const coreActionStatTypeConst = require("@/const/coreActionStatTypeConst")
-const flowRepo = require("@/repository/flowRepo")
 const flowUtil = require("@/utils/flowUtil")
 const coreActionPreHandler = require("../coreActionPreHandler")
 
@@ -12,12 +10,12 @@ const flowIds = ["FORM-NO7665914UHBI1LH7C79CAD8H08D3FL35MPILA"]
 // 退残单金额字段
 const formItemId = "textField_lq3df47j"
 
-const statTurnoverUserFlowData = async (userActivity, flow) => {
+const statTurnoverUserFlowData = (resultNode, userActivity, flow) => {
     // 需要对退残冲抵账目动作统计退残单金额
     const result = []
-    if (flowIds.includes(flow.formUuid) && Object.keys(flow.data).includes(formItemId)) {
+    if (flowIds.includes(flow.formUuid) && flow.data[formItemId]) {
         result.push({
-            nameCN: "汇总",
+            actionName: "汇总",
             workload: flow.data["textField_lq3df47j"] || "0",
             children: [
                 {
@@ -33,7 +31,7 @@ const statTurnoverUserFlowData = async (userActivity, flow) => {
 
 const getCoreActionStat = async (statType, userId, deptIds, userNames, startDoneDate, endDoneDate) => {
     const requiredUsers = await coreActionPreHandler.getUsers(userId, deptIds, userNames)
-    const coreActionConfig = await flowRepo.getCoreActionsConfig(deptIds)
+    const coreActionConfig = await coreActionPreHandler.getFirstExistDeptCoreActionsConfig(deptIds)
     const flows = await coreActionPreHandler.getFlows(coreActionConfig, startDoneDate, endDoneDate)
     
     // 基于人的汇总(最基本的明细统计)

@@ -18,11 +18,14 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
  * @param currFlows
  * @param coreConfig
  * @param userFlowDataStatFunc
+ *        参数： const statVisionUserFlowData = (resultNode, ownerActivity, flow) => {
+ *     返回结果：[{ actionName: "", workload: "0", children: [ { fieldId: "", fieldName: "", value: "0" } ] } ]
+ *
  * @returns {Promise<*[]>}
  */
 const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
     // return (await statForHasRulesNode(users, flows, coreConfig, userFlowDataStatFunc, ""))
-    
+   
     const rules = collectRulesNode(coreConfig, "")
     const tasks = rules.map(rule => {
         return () => {
