@@ -130,7 +130,7 @@ const filterUsersByTags = (users, tags) => {
  * @param rectifyDataParams 纠正数据的参数
  * @returns {Promise<*|*[]>}
  */
-const statVisionUserFlowData = async (resultNode, ownerActivity, flow) => {
+const statVisionUserFlowData = (resultNode, ownerActivity, flow) => {
     const {fullActionName} = resultNode
     
     // 获取该人在该流程中当前表单的数据进行汇总(进行中、已完成)

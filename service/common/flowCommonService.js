@@ -1,3 +1,4 @@
+const _ = require("lodash")
 const {flowReviewTypeConst, operateTypeConst, startActivityId} = require("@/const/flowConst")
 const dateUtil = require("@/utils/dateUtil")
 const ParameterError = require("@/error/parameterError")
@@ -100,41 +101,8 @@ const getCombinedFlowsOfHistoryAndToday = async (startDoneDate, endDoneDate, for
         throw new ParameterError("时间区间不完整")
     }
     
-    let flows = []
-    // 获取时间区间内的入库流程
-    if (startDoneDate && endDoneDate) {
-        if (dateUtil.duration(endDoneDate, startDoneDate) < 0) {
-            throw new ParameterError("结束日期不能小于开始日期")
-        }
-        
-        const processRelatedInfo = await Promise.all([
-            flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds),
-            flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds),
-            flowFormDetailsRepo.getAllFormsDetails()
-        ])
-        
-        const flowsData = processRelatedInfo[0]
-        flows = processRelatedInfo[1]
-        const flowFormDetails = processRelatedInfo[2]
-        
-        // 合并流程的data和审核流信息
-        for (let i = 0; i < flows.length; i++) {
-            const currData = {}
-            for (const item of flowsData[i].data) {
-                const fieldValue = item.fieldValue
-                if (fieldValue.startsWith("[") && fieldValue.endsWith("]")) {
-                    currData[item.fieldId] = JSON.parse(fieldValue)
-                } else {
-                    currData[item.fieldId] = fieldValue
-                }
-            }
-            flows[i].data = currData
-            
-            const formDataKeys = flowFormDetails.filter(item => item.formId === flows[i].formUuid)
-            const dataKeyDetails = {}
-            formDataKeys.forEach(item => dataKeyDetails[item.fieldId] = item.fieldName)
-            flows[i].dataKeyDetails = dataKeyDetails
-        }
+    if (dateUtil.duration(endDoneDate, startDoneDate) < 0) {
+        throw new ParameterError("结束日期不能小于开始日期")
     }
     
     let todayFlows = await globalGetter.getTodayFlows()
@@ -142,12 +110,45 @@ const getCombinedFlowsOfHistoryAndToday = async (startDoneDate, endDoneDate, for
         todayFlows = todayFlows.filter(flow => formIds.includes(flow.formUuid))
     }
     
-    flows = flows.concat(todayFlows.map(flow => {
-        // 返回新的Flow, 防止修改内存中的数据结构
-        return {...flow}
-    }))
+    const isToday = startDoneDate === endDoneDate && endDoneDate === dateUtil.format2Str(new Date(), "YYYY-MM-DD")
+    if (isToday) {
+        return todayFlows
+    }
     
-    return flows
+    let historyFlows = []
+    // 获取时间区间内的入库流程
+    // const processRelatedInfo = await Promise.all([
+    //     flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds),
+    //     flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds),
+    //     flowFormDetailsRepo.getAllFormsDetails()
+    // ])
+    
+    console.time("process")
+    const flowsData = await flowRepo.getProcessDataByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds)// processRelatedInfo[0]
+    historyFlows = await flowRepo.getProcessWithReviewByReviewItemDoneTime(dateUtil.startOfDay(startDoneDate), dateUtil.endOfDay(endDoneDate), formIds)//processRelatedInfo[1]
+    const flowFormDetails = await flowFormDetailsRepo.getAllFormsDetails()// processRelatedInfo[2]
+    console.timeEnd("process")
+    
+    // 合并流程的data和审核流信息
+    for (let i = 0; i < historyFlows.length; i++) {
+        const currData = {}
+        for (const item of flowsData[i].data) {
+            const fieldValue = item.fieldValue
+            if (fieldValue.startsWith("[") && fieldValue.endsWith("]")) {
+                currData[item.fieldId] = JSON.parse(fieldValue)
+            } else {
+                currData[item.fieldId] = fieldValue
+            }
+        }
+        historyFlows[i].data = currData
+        
+        const formDataKeys = flowFormDetails.filter(item => item.formId === historyFlows[i].formUuid)
+        const dataKeyDetails = {}
+        formDataKeys.forEach(item => dataKeyDetails[item.fieldId] = item.fieldName)
+        historyFlows[i].dataKeyDetails = dataKeyDetails
+    }
+    
+    return historyFlows.concat(_.cloneDeep(todayFlows))
 }
 
 

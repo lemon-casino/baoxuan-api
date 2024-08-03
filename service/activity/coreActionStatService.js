@@ -22,12 +22,12 @@ const ownerFrom = {"FORM": "FORM", "PROCESS": "PROCESS"}
  */
 const stat = async (users, flows, coreConfig, userFlowDataStatFunc) => {
     // return (await statForHasRulesNode(users, flows, coreConfig, userFlowDataStatFunc, ""))
+    
     const rules = collectRulesNode(coreConfig, "")
-    const ruleTasks = []
-    for (const rule of rules) {
-        ruleTasks.push(statFlowsByRules(users, flows, userFlowDataStatFunc, rule))
+    // const ruleTasks = []
+    for (let rule of rules) {
+        rule = statFlowsByRules(users, flows, userFlowDataStatFunc, rule)
     }
-    await Promise.all(ruleTasks)
     return coreConfig
 }
 
@@ -90,9 +90,7 @@ const collectRulesNode = (coreConfigs, parentFullActionName) => {
  * @param users
  * @returns {Promise<*>}
  */
-const statFlowsByRules = async (users, flows, userFlowDataStatFunc, resultNode) => {
-    
-    // console.log(resultNode.fullActionName)
+const statFlowsByRules = (users, flows, userFlowDataStatFunc, resultNode) => {
     
     for (const rule of resultNode.rules) {
         let requiredFlows = _.cloneDeep(flows).filter((flow) => flow.formUuid === rule.formId)
@@ -121,7 +119,7 @@ const statFlowsByRules = async (users, flows, userFlowDataStatFunc, resultNode) 
                     continue
                 }
                 
-                const userFlowDataStat = _.isFunction(userFlowDataStatFunc) && await userFlowDataStatFunc(resultNode, ownerActivity, flow)
+                const userFlowDataStat = _.isFunction(userFlowDataStatFunc) && userFlowDataStatFunc(resultNode, ownerActivity, flow)
                 
                 const haveMatchedData = userFlowDataStat && userFlowDataStat.length > 0
                 let wrappedUserFlowDataStat = null
