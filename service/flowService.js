@@ -546,6 +546,8 @@ const syncMissingCompletedFlows = async () => {
     // 获取指定范围时间范围内的流程
     const finishedFlows = await dingDingService.getFinishedFlows(pullTimeRange)
     let syncCount = 0
+    
+    const uniqueFormIds = {}
     for (let flow of finishedFlows) {
         // 对历史数据打补丁
         flow = patchUtil.patchFlow(flow)
@@ -566,6 +568,11 @@ const syncMissingCompletedFlows = async () => {
             if (e.original.code !== "ER_DUP_ENTRY") {
                 throw e
             }
+        }
+        // 将流程中的processCode反推回flowForms中
+        if (!Object.keys(uniqueFormIds).includes(flow.formUuid)) {
+            await flowFormRepo.updateFlowForm({processCode: flow.processCode, flowFormId: flow.formUuid})
+            uniqueFormIds[flow.formUuid] = 1
         }
     }
 }
