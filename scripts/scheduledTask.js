@@ -130,7 +130,7 @@ schedule.scheduleJob(syncRunningFlowsCron, async function () {
 
 schedule.scheduleJob(linshi, async function () {
     console.log("执行了此方法")
-    await taskService.tmallLinkAnomalyDetection()
+    // await taskService.tmallLinkAnomalyDetection()
 })
 
 
