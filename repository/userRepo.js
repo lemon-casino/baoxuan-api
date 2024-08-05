@@ -35,7 +35,7 @@ const getUserDetails = async (where) => {
     const details = await usersModel.findAll({
         where
     })
-
+    
     const data = sequelizeUtil.extractDataValues(details)
     if (data && data.length > 0) {
         return data[0]
@@ -76,13 +76,13 @@ const getDepartmentUsers = async (userDDId, deptId) => {
     if (whiteList.pepArr().includes(userDDId.toString())) {
         return departmentUsers
     }
-
+    
     const users = await globalGetter.getUsers()
     const tmpUsers = users.filter(user => {
         return user.userid.toString() === userDDId.toString()
     })
     objectConvertUtil.map(tmpUsers, {"userid": "userDDId", "name": "userName"})
-
+    
     if (tmpUsers.length === 0) {
         throw new NotFoundError(`在Redis(base:users)中未找员工${userDDId}的信息`)
     }
@@ -91,7 +91,7 @@ const getDepartmentUsers = async (userDDId, deptId) => {
     if (!department) {
         throw new NotFoundError(`在Redis(base:departments)中未找部门${deptId}的信息`)
     }
-
+    
     const tmpUserDepartments = user.leader_in_dept.filter(dept => dept.dept_id.toString() === deptId.toString())
     if (tmpUserDepartments.length === 0) {
         throw new NotFoundError(`用户:${user.userName}不在${department.name}中`)
@@ -101,7 +101,7 @@ const getDepartmentUsers = async (userDDId, deptId) => {
     if (isLeader) {
         return departmentUsers
     }
-
+    
     let innerGroups = []
     for (const key of Object.keys(innerGroupConst)) {
         if (innerGroupConst[key].deptId === deptId) {
@@ -109,7 +109,7 @@ const getDepartmentUsers = async (userDDId, deptId) => {
             break
         }
     }
-
+    
     // 处理内部组的情况
     for (const innerGroup of innerGroups) {
         const innerGroupUser = innerGroup.members.filter(member => member.userDDId === userDDId)
@@ -120,7 +120,7 @@ const getDepartmentUsers = async (userDDId, deptId) => {
             return innerGroupUser
         }
     }
-
+    
     return [user]
 }
 
@@ -184,12 +184,12 @@ const getDeptOnJobUsers = async (deptIds) => {
 const getDeptUsers = async (deptIds, where) => {
     const deptUsers = await deptsUsersModel.findAll({where: {deptId: {$in: deptIds}}})
     const deptUserIds = deptUsers.map(item => item.userId)
-
+    
     const tmpWhere = {dingdingUserId: {$in: deptUserIds}, ...where}
     const deptResignUsers = await usersModel.findAll({
         attributes: {exclude: ["password"]}, where: tmpWhere, include: [{model: usersTagsModel, as: "tags"}]
     })
-
+    
     return sequelizeUtil.extractDataValues(deptResignUsers)
 }
 
@@ -225,16 +225,16 @@ const getUsersByTagCodes = async (tagCodes) => {
 }
 
 const getPagingUsers = async (deptIds, pageIndex, pageSize, nickname, status) => {
-
+    
     const depsUsers = await deptsUsersModel.findAll({
         where: {deptId: {$in: deptIds}}
     })
     const userIds = depsUsers.map(item => item.userId)
-
+    
     let where = {dingdingUserId: {$in: userIds}}
     if (nickname) where.nickname = {$like: `%${nickname}%`}
     if (status) where.status = {$eq: status}
-
+    
     const result = await usersModel.findAndCountAll({
         attributes: {exclude: ["password"]},
         include: [
@@ -255,11 +255,27 @@ const getPagingUsers = async (deptIds, pageIndex, pageSize, nickname, status) =>
     return pagingUtil.defaultPaging(result, pageSize)
 }
 
-const getUsersByIds = async(userIds)=>{
+const getUsersByIds = async (userIds) => {
     const users = await UsersModel.findAll({
         where: {dingding_user_id: {$in: userIds}}
     })
     return sequelizeUtil.extractDataValues(users)
+}
+
+const undoResign = async (userId) => {
+    await usersModel.update(
+        {
+            status: 1,
+            isResign: false,
+            preStatus: null,
+            handoverUserId: null,
+            handoverUserName: null,
+            resignStatus: null,
+            voluntaryReason: null,
+            lastWorkDay: null
+        },
+        {where: {dingdingUserId: userId}}
+    )
 }
 
 module.exports = {
@@ -277,5 +293,6 @@ module.exports = {
     getDeptOnJobUsers,
     getDeptResignUsers,
     getUsersWithTagsByUsernames,
-    getUsersByIds
+    getUsersByIds,
+    undoResign
 }

@@ -348,6 +348,10 @@ const getMaxDataAuthorityUsers = async () => {
     return (await userRepo.getUsersByIds(userIds))
 }
 
+const undoResign = async (userId) => {
+    return (await userRepo.undoResign(userId))
+}
+
 module.exports = {
     getDingDingUserId,
     getUsersOfDepartment,
@@ -360,5 +364,6 @@ module.exports = {
     getEnabledUsers,
     syncUserToDB,
     getDingDingUserIdAndNickname,
-    getMaxDataAuthorityUsers
+    getMaxDataAuthorityUsers,
+    undoResign
 }

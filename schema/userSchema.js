@@ -6,6 +6,11 @@ const getPagingUsersSchema = {
     pageSize: joiUtil.commonJoiSchemas.positiveIntegerRequired
 }
 
+const undoResignSchema = {
+    userId: joiUtil.commonJoiSchemas.strRequired
+}
+
 module.exports = {
-    getPagingUsersSchema
+    getPagingUsersSchema,
+    undoResignSchema
 }

@@ -49,7 +49,7 @@ const {redisKeys} = require("../const/redisConst");
  * 获取图形验证码
  */
 exports.getCheckCode = async (req, res, next) => {
-
+    
     try {
         // 生成验证码，获取catcha，有{data,text}两个属性，data为svg格式图片、text为验证码
         const captcha = svgCaptcha.create({
@@ -58,7 +58,7 @@ exports.getCheckCode = async (req, res, next) => {
         // 验证码键和缓存时间
         const uuid = Uuid.v4();
         const effectTime = 10 * 60;
-
+        
         // 存入redis
         const result = await redis.set(`${redisKeys.QRCodes}:${uuid}`, captcha.text.toLowerCase(), effectTime);
         if (result) {
@@ -83,14 +83,14 @@ exports.login = async (req, res, next) => {
         }
         // 验证验证码
         const {username, password} = value;
-
+        
         // todo: 先保留
         const user = {
             token: null, refreshToken: null, brief: null, permissions: null, departments: null
         }
-
+        
         const {token, refreshToken} = await getTokenAndRefreshToken(username, password)
-
+        
         // 用户基本信息
         const brief = await UsersModel.findOne({
             where: {username: username},
@@ -187,7 +187,7 @@ exports.login = async (req, res, next) => {
         //     }
         // }
         // user.departments = departmentsTemplate
-
+        
         return res.send(biResponse.success({token, refreshToken}));
     } catch (e) {
         next(e)
@@ -208,27 +208,27 @@ const getTokenAndRefreshToken = async (userName, password) => {
     const brief = await UsersModel.findOne({
         where: {username: userName},
     });
-
+    
     if (!brief) {
         throw new UserError("用户不存在")
     }
-
+    
     if (brief.status.toString() === "0") {
         throw new UserError("帐号已停用")
     }
-
+    
     const compareResult = bcrypt.compareSync(password, brief.password);
     if (!compareResult) {
         throw new UserError("密码错误")
     }
-
-
+    
+    
     const token = "Bearer " + generateToken({
         id: brief.user_id,
         userId: brief.dingding_user_id,
         username: brief.username
     }, tokenConfig.jwtSecretKey, tokenConfig.secretKeyExpire)
-
+    
     const refreshToken = generateToken({
         id: brief.user_id,
         userId: brief.dingding_user_id,
@@ -239,8 +239,8 @@ const getTokenAndRefreshToken = async (userName, password) => {
 
 const checkCode = async (req, res) => {
     const {username, password} = req.body
-
-
+    
+    
     return res.send(biResponse.success({token: user.token, refreshToken: user.refreshToken}));
 }
 /**
@@ -315,12 +315,12 @@ exports.refreshToken = (req, res) => {
 exports.getPagingUsers = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(userSchema.getPagingUsersSchema, req.body)
-
+        
         const {deptIds, page, pageSize, nickname, status} = req.body
-
+        
         const users = await userService.getPagingUsers(deptIds, page - 1, pageSize, nickname, status)
         return res.send(biResponse.success(users))
-
+        
     } catch (e) {
         next(e)
     }
@@ -483,6 +483,16 @@ exports.getAllUsers = async (req, res, next) => {
     try {
         const users = await userService.getEnabledUsers()
         res.send(biResponse.success(users))
+    } catch (e) {
+        next(e)
+    }
+}
+
+exports.undoResign = async (req, res, next) => {
+    try {
+        joiUtil.clarityValidate(userSchema.undoResignSchema, req.body)
+        await userService.undoResign(req.body.userId)
+        res.send(biResponse.success())
     } catch (e) {
         next(e)
     }
