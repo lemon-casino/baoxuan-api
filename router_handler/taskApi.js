@@ -1,5 +1,7 @@
 const taskService = require('@/service/taskService')
 const biResponse = require("@/utils/biResponse")
+const joiUtil = require("@/utils/joiUtil")
+const taskSchema = require("@/schema/taskSchema")
 
 /**
  * 同步工作日信息
@@ -138,6 +140,16 @@ const syncResignEmployeeInfo = async (req, res, next) => {
     }
 }
 
+const syncProcessVersions = async (req, res, next) => {
+    try {
+        joiUtil.clarityValidate(taskSchema.syncProcessVersionsSchema, req.body)
+        await taskService.syncProcessVersions(req.body.cookies)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     syncWorkingDay,
     syncTodayRunningAndFinishedFlows,
@@ -147,5 +159,6 @@ module.exports = {
     syncUserWithDepartment,
     syncForm,
     syncDingDingToken,
-    syncResignEmployeeInfo
+    syncResignEmployeeInfo,
+    syncProcessVersions
 }

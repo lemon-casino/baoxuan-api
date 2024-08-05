@@ -11,5 +11,6 @@ router.post('/departments-with-users', taskApi.syncDepartmentWithUser)
 router.post('/users-with-departments', taskApi.syncUserWithDepartment)
 router.post('/forms', taskApi.syncForm)
 router.post('/resign-employees', taskApi.syncResignEmployeeInfo)
+router.post('/process-versions', taskApi.syncProcessVersions)
 
 module.exports = router;

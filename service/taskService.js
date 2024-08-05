@@ -9,6 +9,8 @@ const departmentUsersRepo = require("@/repository/departmentUsersRepo")
 const oaProcessRepo = require("@/repository/oaProcessRepo")
 const attendanceRepo = require("@/repository/attendanceRepo")
 const outUsersRepo = require("@/repository/outUsersRepo")
+const flowFormRepo = require("@/repository/flowFormRepo")
+const flowFormProcessVersionRepo = require("@/repository/flowFormProcessVersionRepo")
 const globalSetter = require("@/global/setter")
 const dingDingService = require("@/service/dingDingService")
 const flowService = require("@/service/flowService")
@@ -40,6 +42,7 @@ const util = require('util');
 const {join} = require("node:path");
 const {Sequelize} = require("sequelize");
 const {redisConfig} = require("@/config");
+const axios = require("axios");
 const writeFile = util.promisify(fs.writeFile);
 const readFile = util.promisify(fs.readFile);
 const syncWorkingDay = async () => {
@@ -316,7 +319,7 @@ const tmallLinkAnomalyDetection = async () => {
         acc.push(...group[Object.keys(group)[0]]);
         return acc;
     }, []); // 初始值是一个空数组 []
-     logger.info("天猫链接异常同步进行中...来到了负责人这里",productLineLeaders)
+    logger.info("天猫链接异常同步进行中...来到了负责人这里", productLineLeaders)
     
     const singleItems = await singleItemTaoBaoService.getAllSatisfiedSingleItems(
         productLineLeaders,
@@ -416,14 +419,14 @@ const tmallLinkAnomalyDetection = async () => {
     
     const formId = "FORM-51A6DCCF660B4C1680135461E762AC82JV53";
     const processCode = "TPROC--YAB66P61TJ4MHTIKCZN606A840IS3MVPXMLXL2";
-
+    
     const sendRequests = async () => {
         for (const [key, value] of Object.entries(cleanedLinkIdMap)) {
             //删除 value的name 是数组 有其它的异常 比如 name:['费比超过15%','老品利润率低于15%']   linkType的标签是新品30 或者新品60   删除掉  费比超过15% 这个数组中的费比超过15%
             if (Array.isArray(value.name) && value.name.length > 1 && value.name.includes('费比超过15%') && (value.linkType === '新品30' || value.linkType === '新品60')) {
                 value.name = value.name.filter(name => name !== '费比超过15%');
             }
-
+            
             const userId = value.uuid;
             const multiSelectField_lwufb7oy = value.name;
             // const cascadeDateField_lloq9vjk = getNextWeekTimestamps();
@@ -440,7 +443,7 @@ const tmallLinkAnomalyDetection = async () => {
                 selectField_liihs7kz: value.linkType.toString(),
                 multiSelectField_lwufb7oy,
             }, null, 2);
-
+            
             try {
                 await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
                 logger.info(`发起宜搭  运营优化流程 for linkId ${key}`);
@@ -583,27 +586,66 @@ const syncVisionOutUsers = async () => {
 }
 
 
-
-async function saveFlowsToLocalFile(filePath,flows) {
+async function saveFlowsToLocalFile(filePath, flows) {
     // 将 flows 写入本地文件
     await writeFile(filePath, JSON.stringify(flows), 'utf8');
 }
+
 async function readFlowsFromLocalFile(filePath) {
     // 从本地文件读取 flows
     const data = await readFile(filePath, 'utf8');
     return JSON.parse(data);
 }
+
 async function saveFlowsToRedisFromFile() {
     const filePath = join(__dirname, '../logs/flows.json');
     // 从本地文件读取 flows 内容
     const fileContent = await readFlowsFromLocalFile(filePath);
-   // console.log(fileContent)
+    // console.log(fileContent)
     // 查看
     console.log(redisConfig.url)
     // 将内容设置到 Redis
     await redisUtil.set(redisKeys.TodayRunningAndFinishedFlows, JSON.stringify(fileContent));
 }
 
+const getProcessVersions = async (page, pageSize, processCode, cookies) => {
+    let processVersions = []
+    const result = await axios.get(`https://t8sk7d.aliwork.com/alibaba/web/APP_BXS79QCC8MY5ZV0EZZ07/query/process/pageProcessVersion.json?processCode=${processCode}&appType=APP_BXS79QCC8MY5ZV0EZZ07&status=&pageIndex=${page}&pageSize=${pageSize}&orderByCreateTime=desc`, {
+        "headers": {
+            "cookie": cookies,
+            "Referer": `https://t8sk7d.aliwork.com/dingtalk/web/APP_BXS79QCC8MY5ZV0EZZ07/design/newDesigner?processCode=${processCode}`,
+        }
+    })
+    
+    const pagingData = result.data.content
+    if ("data" in pagingData && "totalCount" in pagingData) {
+        const {data, totalCount} = pagingData
+        processVersions = processVersions.concat(data)
+        
+        const hasMore = totalCount > page * pageSize + data.length
+        if (hasMore) {
+            const currPageData = await getProcessVersions(page + 1, pageSize, processCode, cookies)
+            processVersions = processVersions.concat(currPageData)
+        }
+    }
+    return processVersions
+}
+
+const syncProcessVersions = async (cookies) => {
+    const forms = await flowFormRepo.getAllForms({})
+    let allProcessVersions = []
+    for (const form of forms) {
+        const processCode = form.processCode
+        if (!processCode) {
+            continue
+        }
+        cookies = "x-hng=lang=zh-CN; cna=CYHYHnrmpS4CAXLxWanIPjyt; corp_id=dingf5e887e4d232b1b835c2f4657eb6378f; login_type=514E440D8469FCA0F295D0E60E2491CD; tianshu_corp_id=dingf5e887e4d232b1b835c2f4657eb6378f; corp_industry_info=%7B%22hasIndustryAddressBook%22%3Afalse%2C%22industryType%22%3A%22INDUSTRY_GENERAL%22%7D; tianshu_user_identity=%7B%22inIndustry%22%3Afalse%2C%22innerCorp%22%3Atrue%2C%22userIdentitySet%22%3A%5B%22CORP_INNER%22%5D%7D; tianshu_corp_user=dingf5e887e4d232b1b835c2f4657eb6378f_156133016423090865; tianshu_csrf_token=598c404a-de03-4f9e-89eb-77dbd0de7a15; c_csrf=598c404a-de03-4f9e-89eb-77dbd0de7a15; xlly_s=1; yida_user_cookie=CB5431D466A6D58B2793047ADBA2564143EA429BE6C03153A28EB9B9B2C69823566FC0D0099E946D10CF82B46D6C9D21CCA447D1D2CB0BDCE9D5244E1B5ECE87049B16D873EF84079D471211BDBBEF4624E93F6936FC164BE6216400BF472F881C69A5731B50EC15A385FC27DFB95E1F13EDCFDB7A52CFAF0B255C2E340B58C4CEB161A17F9A974551DEBBE37570117D0AD2F220AED8696396E9D6DF60CA9CF4503C160AFE6EB3DDCB184EFBC0CFE96CA9BF49A167B98EF53C40AEE59E33D2BE04B28FCBAB1D666482E0FB232582C7BECF95ADB000609D6AA889F5B8804D7CD332240E8E9D3551528C8ABEA695B14F7430F339B3F90796A6AAFB9B60422AA70F3844C4764F105BB70D2CFADB0C6879D331B9BAB4A0FB7CF89DEAB7597923EEF8229E6A8E04710EEE01AFC7D61CB6761BCB064DECCCD81B6E3CD553BA9175EF5A8950A3F367E789163055AAED2F495E49D43E393A4372771A03789383CBD7E1D6; account=oauth_k1%3AuRO6WOx8Gt%2BnJam2zn7vEifsNjzMDn7Q4b5QMZl5vx51H%2FVQwZ8egTDSrrjSGrVkjK3IQ2yKV6fj%2Fe3JNOqUO6y%2BUlhfcaLmlheDyqjN7rM%3D; isg=BNvb6PHLOdJaSEVHLkLKII1bajlFsO-ykULSb80Yt1rxrPuOVYB_AvmvRgwijEeq; tfstk=fRknA6VQ1P_bs0jJ-A2Bwzx8JGROOwwSU4B8y8Uy_Pz1eazKJNruS42-v9eLaU4iPyFLLBotXfkRP96FTRUsUkPCAk556ckx9gaPLJozaqnxvXBLL1gsZA0uNHa8zz0-4XK9HKnIA8wrrEpvH56HpEH3zaezquzJ-ELvHddFb8YHkbe2JnygVPrU4yzyjRr8x85UT4za_orA88yrzc-g2u5FzTzF7OrSgmWzoYksQerekSOzOjkgxWRtYPWzfAq3troEKTWr0kV3uDzMki1T2703tAphlkcZmcEnPK6QL7crpRke7LyZcf3Uj48cZPlmdYVxKEfb8vaSSShHo90mRuou42vfmPknqAVI6iBmjSDZpJGMotUq10ku_DTcGlhrDvhoJF6zJjmZSSHOWteqGVDug-Sza154E_W7b3HGN_NUfl4fnYtRJBopp2KMjsOQTlZpkhxGNMFUfke9jhff4Wr_ACf..; tianshu_app_type=default_tianshu_app; due=BF67507217B92DE228242C2B7B8C9F5F5FC7EB63F26A7E3435F28D7D07E6A730; JSESSIONID=6E3E5EF5744F5C622B421031FC4E7C00"
+        const processVersions = await getProcessVersions(1, 99, processCode, cookies)
+        allProcessVersions = allProcessVersions.concat(processVersions)
+    }
+    await flowFormProcessVersionRepo.save(allProcessVersions)
+    return true
+}
 
 module.exports = {
     syncOaProcessTemplates,
@@ -624,5 +666,6 @@ module.exports = {
     syncAttendance,
     resetDingDingApiInvokeCount,
     syncVisionOutUsers,
-    saveFlowsToRedisFromFile
+    saveFlowsToRedisFromFile,
+    syncProcessVersions
 }
