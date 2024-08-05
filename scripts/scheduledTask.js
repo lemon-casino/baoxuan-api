@@ -30,35 +30,43 @@ if (process.env.NODE_ENV === "dev") {
     syncFormCron = "0 18 11 * * ?"
     syncUserLoginCron = "40 20 23 * * ?"
     syncResignEmployeeCron = "35 5 17 * * ?"
-    linshi = "43 14 * * *"
+    linshi = "43 1 * * *"
 }
 
 /**
  * 钉钉限制次数调用的接口每天凌晨置0
  */
 schedule.scheduleJob("0 0 0 * * ?", async function () {
-    await taskService.resetDingDingApiInvokeCount()
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.resetDingDingApiInvokeCount()
+    }
 })
 
 /**
  * 每天9:05确认当天是否是工作日并将日期入库
  */
 schedule.scheduleJob(syncWorkingDayCron, async function () {
-    await taskService.syncWorkingDay()
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.syncWorkingDay()
+    }
 })
 
 /** 0 0/15 * * * ?
  *  每15分钟更新正在进行中的流程和今天完成的流程（包含节点的工作情况）
  */
 schedule.scheduleJob(syncTodayRunningAndFinishedFlowsCron, async function () {
-    await taskService.syncTodayRunningAndFinishedFlows()
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.syncTodayRunningAndFinishedFlows()
+    }
 })
 
 /** 0 50 23 * * ?
  * 每天23：50 获取今天完成的流程并入库，状态包含：completed、 terminated、error
  */
 schedule.scheduleJob(syncMissingCompletedFlowsCron, async function () {
-    await taskService.syncMissingCompletedFlows()
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.syncMissingCompletedFlows()
+    }
 })
 
 /**
@@ -67,14 +75,18 @@ schedule.scheduleJob(syncMissingCompletedFlowsCron, async function () {
  * 注意：访问钉钉的接口都需要使用token，要保证token不能过期，默认2小时
  */
 schedule.scheduleJob("0 0 0/1 * * ?", async function () {
-    await taskService.syncDingDingToken()
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.syncDingDingToken()
+    }
 })
 
 /**
  * 从钉钉更新部门信息（按天更新）
  */
 schedule.scheduleJob(syncDepartmentCron, async function () {
-    await taskService.syncDepartment()
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.syncDepartment()
+    }
 })
 
 /**
@@ -83,7 +95,9 @@ schedule.scheduleJob(syncDepartmentCron, async function () {
  * 注意：该数据依赖于Redis中的department数据：要保证更新department的定时任务优先执行完成
  */
 schedule.scheduleJob(syncDepartmentWithUserCron, async function () {
-    await taskService.syncDepartmentWithUser()
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.syncDepartmentWithUser()
+    }
 });
 
 /**
@@ -92,21 +106,27 @@ schedule.scheduleJob(syncDepartmentWithUserCron, async function () {
  * 注意：该数据依赖于Redis中的department数据：要保证更新department的定时任务优先执行完成
  */
 schedule.scheduleJob(syncUserWithDepartmentCron, async function () {
-    await taskService.syncUserWithDepartment()
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.syncUserWithDepartment()
+    }
 })
 
 /**
  * 更新Form和Form的详细信息（按天更新）
  */
 schedule.scheduleJob(syncFormCron, async function () {
-    await taskService.syncForm()
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.syncForm()
+    }
 })
 
 /**
  * 同步用户的登录信息
  */
 schedule.scheduleJob(syncUserLoginCron, async function () {
-    await taskService.syncUserLogin()
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.syncUserLogin()
+    }
 })
 
 /**
@@ -114,23 +134,28 @@ schedule.scheduleJob(syncUserLoginCron, async function () {
  *
  */
 schedule.scheduleJob(syncResignEmployeeCron, async function () {
-    await taskService.syncResignEmployeeInfo()
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.syncResignEmployeeInfo()
+    }
 })
 
 /**
  * 同步进行中的流程到数据库
  */
 schedule.scheduleJob(syncRunningFlowsCron, async function () {
-    await taskService.syncRunningProcess()
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.syncRunningProcess()
+    }
 })
-
 
 /*
 * 每天处理异常链接是否存在tmallLinkAnomalyDetection*/
 
 schedule.scheduleJob(linshi, async function () {
     console.log("执行了此方法")
-    // await taskService.tmallLinkAnomalyDetection()
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.tmallLinkAnomalyDetection()
+    }
 })
 
 
