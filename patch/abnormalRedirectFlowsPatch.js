@@ -20,4 +20,23 @@ module.exports = [
             }
         ]
     },
+    {
+        processInstanceId: "09f288e2-3ddd-474c-8b88-acb8b775eec1",
+        title: "朱梦婷发起的儿童分格餐盒运营视觉流程",
+        targetActivityId: "node_oclx4bnhfb3",
+        replacedActivities: [
+            {
+                "processInstanceId": "09f288e2-3ddd-474c-8b88-acb8b775eec1",
+                "operateType": "EXECUTE_TASK_NORMAL",
+                "operatorName": "陈汝璐",
+                "actionExit": "submit",
+                "operatorUserId": "085924205737861403",
+                "activityId": "node_oclx4bnhfb3",
+                "domainList": [],
+                "operatorDisplayName": "陈汝璐",
+                "action": "同意",
+                "taskId": "null"
+            }
+        ]
+    }
 ]

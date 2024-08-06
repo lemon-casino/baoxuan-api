@@ -19,5 +19,12 @@ module.exports = [
         patchData: {
             "textField_lx1d4t4t": "16"
         }
+    },
+    {
+        // 陈汝露的执行异常，没法填上排版的工作量，bi修正
+        processInstanceId: "09f288e2-3ddd-474c-8b88-acb8b775eec1",
+        patchData: {
+            "textField_lx1d4t4t": "17"
+        }
     }
 ]
