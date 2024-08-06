@@ -1,6 +1,7 @@
 const {dingDingConfig} = require("@/config")
 const httpUtil = require("@/utils/httpUtil")
 const dingDingUtil = require("@/utils/dingDingUtil")
+const dingDingReqUtil = require("@/core/dingDingReq/dingDingReqUtil");
 
 // 宜搭配置
 const systemToken = dingDingConfig.systemToken;
@@ -51,7 +52,7 @@ const getAllFlowIds = async (
         appType: appType,
         userId: userId,
     }
-    return await httpUtil.post(url, data, token)
+    return await httpUtil.post(url, data, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
 }
 
 /**
@@ -70,7 +71,7 @@ const getFlowIdsByFormId = async (token, userId, formUuid) => {
         appType: appType,
         userId: userId,
     };
-    return await httpUtil.post(url, data, token)
+    return await httpUtil.post(url, data, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
 }
 
 /**
@@ -99,7 +100,7 @@ const getFlowsByFormId = async (
         pageSize,
         pageNumber,
     };
-    return await httpUtil.post(url, data, token)
+    return await httpUtil.post(url, data, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
 }
 
 /**
@@ -118,7 +119,7 @@ const getBatchFlowsByIds = async (token, userId, processInstanceIds) => {
         userId: userId,
         processInstanceIds: processInstanceIds
     }
-    return await httpUtil.get(url, params, token)
+    return await httpUtil.get(url, params, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
 }
 
 const getFlowsOfStatus = async (
@@ -142,7 +143,7 @@ const getFlowsOfStatus = async (
 
 const getPagingFlows = async (token, data, pageNumber, pageSize) => {
     const url = `https://api.dingtalk.com/v1.0/yida/processes/instances?pageNumber=${pageNumber}&pageSize=${pageSize}`
-    return await httpUtil.post(url, data, token)
+    return await httpUtil.post(url, data, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
 }
 
 /**
@@ -201,7 +202,7 @@ const getProcessRecord = async (
 ) => {
     const url = "https://api.dingtalk.com/v1.0/yida/processes/operationRecords"
     const params = {systemToken: systemToken, appType: appType, userId: userId, processInstanceId: process_instance_id}
-    return await httpUtil.get(url, params, access_token)
+    return await httpUtil.get(url, params, dingDingReqUtil.getDingTalkAccessTokenHeader(access_token))
 }
 
 /**
@@ -227,7 +228,7 @@ const getremarksAll = async (
         userId: userId,
         formInstanceIdList,
     };
-    return await httpUtil.post(url, data, access_token)
+    return await httpUtil.post(url, data, dingDingReqUtil.getDingTalkAccessTokenHeader(access_token))
 }
 
 /**
@@ -245,7 +246,7 @@ const getFormFields = async (formId, userId, token) => {
         formUuid: formId,
         userId: userId
     }
-    const result = await httpUtil.get(url, params, token)
+    const result = await httpUtil.get(url, params, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
     return result
 }
 
@@ -260,7 +261,7 @@ const getFormFields = async (formId, userId, token) => {
  */
 const createProcess = async (token, formId, userId, processCode, departmentId, formDataJsonStr) => {
     const url = "https://api.dingtalk.com/v1.0/yida/processes/instances/start"
-
+    
     const body = {
         "appType": appType,
         "systemToken": systemToken,
@@ -273,8 +274,8 @@ const createProcess = async (token, formId, userId, processCode, departmentId, f
     if (formDataJsonStr) {
         body.formDataJson = formDataJsonStr
     }
-
-    return await httpUtil.post(url, body, token)
+    
+    return await httpUtil.post(url, body, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
 }
 
 module.exports = {

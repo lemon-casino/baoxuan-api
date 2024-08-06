@@ -20,6 +20,7 @@ const userLogService = require("@/service/userLogService")
 const userService = require("@/service/userService")
 const redisUtil = require("@/utils/redisUtil")
 const dateUtil = require("@/utils/dateUtil")
+const httpUtil = require("@/utils/httpUtil")
 const {redisKeys} = require("@/const/redisConst")
 const onlineCheckConst = require("@/const/onlineCheckConst")
 const extensionsConst = require("@/const/tmp/extensionsConst")
@@ -610,7 +611,15 @@ async function saveFlowsToRedisFromFile() {
 
 const getProcessVersions = async (page, pageSize, processCode, cookies) => {
     let processVersions = []
-    const result = await axios.get(`https://t8sk7d.aliwork.com/alibaba/web/APP_BXS79QCC8MY5ZV0EZZ07/query/process/pageProcessVersion.json?processCode=${processCode}&appType=APP_BXS79QCC8MY5ZV0EZZ07&status=&pageIndex=${page}&pageSize=${pageSize}&orderByCreateTime=desc`, {
+    const params = {
+        processCode: processCode,
+        appType: "APP_BXS79QCC8MY5ZV0EZZ07",
+        status: "",
+        pageIndex: page,
+        pageSize: pageSize,
+        orderByCreateTime: "desc"
+    }
+    const result = await axios.get(`https://t8sk7d.aliwork.com/alibaba/web/APP_BXS79QCC8MY5ZV0EZZ07/query/process/pageProcessVersion.json`, {
         "headers": {
             "cookie": cookies,
             "Referer": `https://t8sk7d.aliwork.com/dingtalk/web/APP_BXS79QCC8MY5ZV0EZZ07/design/newDesigner?processCode=${processCode}`,

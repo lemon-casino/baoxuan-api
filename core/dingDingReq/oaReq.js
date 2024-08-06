@@ -1,5 +1,6 @@
 const httpUtil = require("@/utils/httpUtil")
 const requireInvokeLimit = require("./requireInvokeLimit")
+const dingDingReqUtil = require("@/core/dingDingReq/dingDingReqUtil");
 
 /**
  * 获取当前企业所有可管理的表单
@@ -10,10 +11,10 @@ const requireInvokeLimit = require("./requireInvokeLimit")
  */
 const getOAProcessTemplates = async (accessToken, userId) => {
     await requireInvokeLimit.count()
-
+    
     const url = "https://api.dingtalk.com/v1.0/workflow/processes/managements/templates"
     const params = {userId: userId}
-    return await httpUtil.get(url, params, accessToken)
+    return await httpUtil.get(url, params, dingDingReqUtil.getDingTalkAccessTokenHeader(accessToken))
 }
 
 /**
@@ -25,9 +26,9 @@ const getOAProcessTemplates = async (accessToken, userId) => {
  */
 const getOAProcessIds = async (accessToken, data) => {
     await requireInvokeLimit.count()
-
+    
     const url = "https://api.dingtalk.com/v1.0/workflow/processes/instanceIds/query"
-    return await httpUtil.post(url, data, accessToken)
+    return await httpUtil.post(url, data, dingDingReqUtil.getDingTalkAccessTokenHeader(accessToken))
 }
 
 /**
@@ -39,10 +40,10 @@ const getOAProcessIds = async (accessToken, data) => {
  */
 const getOAProcessDetails = async (accessToken, processInstanceId) => {
     await requireInvokeLimit.count()
-
+    
     const params = {processInstanceId}
     const url = "https://api.dingtalk.com/v1.0/workflow/processInstances"
-    return await httpUtil.get(url, params, accessToken)
+    return await httpUtil.get(url, params, dingDingReqUtil.getDingTalkAccessTokenHeader(accessToken))
 }
 
 

@@ -1,4 +1,5 @@
 const httpUtil = require("@/utils/httpUtil")
+const dingDingReqUtil = require("./dingDingReqUtil")
 
 /**
  * 根据unionid和企业内部应用token获取userId
@@ -129,8 +130,9 @@ const getDpInfo = async (access_token, dept_id) => {
  */
 const getUserInfoByToken = async (token) => {
     const url = "https://api.dingtalk.com/v1.0/contact/users/me"
-    return await httpUtil.get(url, null, token)
+    return await httpUtil.get(url, null, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
 }
+
 
 module.exports = {
     getDpInfo,

@@ -1,5 +1,6 @@
 const httpUtil = require("@/utils/httpUtil");
 const ParameterError = require("@/error/parameterError");
+const dingDingReqUtil = require("./dingDingReqUtil")
 
 /**
  * 获取离职的员工信息
@@ -11,7 +12,7 @@ const getPagingResignEmployees = async (token, nextToken = 0) => {
     const url = "https://api.dingtalk.com/v1.0/hrm/employees/dismissions"
     // 接口单次最大查询条数为50
     const params = {nextToken, maxResults: 30}
-    return await httpUtil.get(url, params, token)
+    return await httpUtil.get(url, params, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
 }
 
 /**
@@ -27,7 +28,7 @@ const getResignInfo = async (token, userIds) => {
     }
     const url = "https://api.dingtalk.com/v1.0/hrm/employees/dimissionInfos"
     const params = {userIdList: JSON.stringify(userIds)}
-    return await httpUtil.get(url, params, token)
+    return await httpUtil.get(url, params, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
 }
 
 const getResignEmployees = async (token) => {

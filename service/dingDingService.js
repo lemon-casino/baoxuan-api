@@ -2,7 +2,7 @@ const ExcelJS = require("exceljs")
 const yiDaReq = require("@/core/dingDingReq/yiDaReq")
 const credentialsReq = require("@/core/dingDingReq/credentialsReq")
 const contactsReq = require("@/core/dingDingReq/contactsReq")
-const dingDingReq = require("@/core/dingDingReq/attendanceReq")
+const attendanceReq = require("@/core/dingDingReq/attendanceReq")
 // 引入封装好的redis
 const redisUtil = require("@/utils/redisUtil.js");
 // 引入流程表单模型
@@ -506,7 +506,7 @@ const getTodayRunningAndFinishedFlows = async () => {
  */
 const getPagingAttendances = async (pageIndex, pageSize, workDateFrom, workDateTo, userIds) => {
     const {access_token: accessToken} = await redisRepo.getToken()
-    const result = await dingDingReq.getPagingAttendances(pageIndex, pageSize, workDateFrom, workDateTo, userIds, accessToken)
+    const result = await attendanceReq.getPagingAttendances(pageIndex, pageSize, workDateFrom, workDateTo, userIds, accessToken)
     if (result.errmsg !== "ok") {
         throw new RemoteError(result.errmsg)
     }

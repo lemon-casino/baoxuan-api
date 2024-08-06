@@ -5,7 +5,7 @@ const RemoteError = require("@/error/remoteError")
 // 状态码不一定准确，故使用关键词 [400, 403]
 const dingDingRateLimitErrorKeywords = ["过多", "频繁", "流控", "限制"]
 
-const get = async (url, params, token) => {
+const get = async (url, params, headers) => {
     logger.info(`${process.pid}:${url}`)
     let query = ""
     if (params) {
@@ -19,11 +19,11 @@ const get = async (url, params, token) => {
         }
     }
     const newUrl = `${url}${query}`
-    const config = {headers: {}}
-    if (token) {
-        config.headers["x-acs-dingtalk-access-token"] = token
+    const config = {}
+    if (headers) {
+        config.headers = headers
     }
-
+    
     try {
         const response = await axios.get(newUrl, config);
         return response.data;
@@ -42,7 +42,7 @@ const get = async (url, params, token) => {
             }
             if (isRateLimited) {
                 await dateUtil.delay(1000)
-                return await get(url, params, token)
+                return await get(url, params, headers)
             } else {
                 errorHandler(url, query, config, error)
             }
@@ -52,13 +52,13 @@ const get = async (url, params, token) => {
     }
 }
 
-const post = async (url, data, token) => {
+const post = async (url, data, headers) => {
     logger.info(`${process.pid}:${url}`)
-    let config = null
-    if (token) {
-        config = {headers: {"x-acs-dingtalk-access-token": token}}
+    let config = {}
+    if (headers) {
+        config = {headers}
     }
-
+    
     try {
         const response = await axios.post(url, data, config);
         return response.data;
@@ -77,7 +77,7 @@ const post = async (url, data, token) => {
             }
             if (isRateLimited) {
                 await dateUtil.delay(1000)
-                return await post(url, data, token)
+                return await post(url, data, headers)
             } else {
                 errorHandler(url, JSON.stringify(data), config, error)
             }
@@ -97,6 +97,7 @@ const errorHandler = (url, params, config, error) => {
     }
     throw new RemoteError(error.message, stack)
 }
+
 
 module.exports = {
     get,
