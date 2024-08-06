@@ -20,7 +20,6 @@ const userLogService = require("@/service/userLogService")
 const userService = require("@/service/userService")
 const redisUtil = require("@/utils/redisUtil")
 const dateUtil = require("@/utils/dateUtil")
-const httpUtil = require("@/utils/httpUtil")
 const {redisKeys} = require("@/const/redisConst")
 const onlineCheckConst = require("@/const/onlineCheckConst")
 const extensionsConst = require("@/const/tmp/extensionsConst")
@@ -30,6 +29,7 @@ const sequelizeErrorConst = require("@/const/sequelizeErrorConst")
 const oaReq = require("@/core/dingDingReq/oaReq")
 const intelligentHRReq = require("@/core/dingDingReq/intelligentHRReq")
 const attendanceReq = require("@/core/dingDingReq/attendanceReq")
+const crawlingPageReq = require("@/core/dingDingReq/crawlingPageReq")
 const singleItemTaoBaoService = require("./singleItemTaoBaoService")
 const {
     getLinknewvaCount
@@ -609,37 +609,6 @@ async function saveFlowsToRedisFromFile() {
     await redisUtil.set(redisKeys.TodayRunningAndFinishedFlows, JSON.stringify(fileContent));
 }
 
-const getProcessVersions = async (page, pageSize, processCode, cookies) => {
-    let processVersions = []
-    const params = {
-        processCode: processCode,
-        appType: "APP_BXS79QCC8MY5ZV0EZZ07",
-        status: "",
-        pageIndex: page,
-        pageSize: pageSize,
-        orderByCreateTime: "desc"
-    }
-    const result = await axios.get(`https://t8sk7d.aliwork.com/alibaba/web/APP_BXS79QCC8MY5ZV0EZZ07/query/process/pageProcessVersion.json`, {
-        "headers": {
-            "cookie": cookies,
-            "Referer": `https://t8sk7d.aliwork.com/dingtalk/web/APP_BXS79QCC8MY5ZV0EZZ07/design/newDesigner?processCode=${processCode}`,
-        }
-    })
-    
-    const pagingData = result.data.content
-    if ("data" in pagingData && "totalCount" in pagingData) {
-        const {data, totalCount} = pagingData
-        processVersions = processVersions.concat(data)
-        
-        const hasMore = totalCount > page * pageSize + data.length
-        if (hasMore) {
-            const currPageData = await getProcessVersions(page + 1, pageSize, processCode, cookies)
-            processVersions = processVersions.concat(currPageData)
-        }
-    }
-    return processVersions
-}
-
 const syncProcessVersions = async (cookies) => {
     const forms = await flowFormRepo.getAllForms({})
     let allProcessVersions = []
@@ -648,7 +617,7 @@ const syncProcessVersions = async (cookies) => {
         if (!processCode) {
             continue
         }
-        const processVersions = await getProcessVersions(1, 99, processCode, cookies)
+        const processVersions = await crawlingPageReq.getProcessVersions(processCode, cookies)
         allProcessVersions = allProcessVersions.concat(processVersions)
     }
     await flowFormProcessVersionRepo.save(allProcessVersions)
@@ -674,6 +643,5 @@ module.exports = {
     syncAttendance,
     resetDingDingApiInvokeCount,
     syncVisionOutUsers,
-    saveFlowsToRedisFromFile,
     syncProcessVersions
 }
