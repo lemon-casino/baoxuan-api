@@ -1,3 +1,5 @@
+// 需要把旧的引用init获取model的方式清理后才能删除该模块
+
 const Sequelize = require('sequelize')
 const dbConfig = require("../config/index").dbConfig
 const Op = Sequelize.Op;
