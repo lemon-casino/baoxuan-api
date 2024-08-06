@@ -60,7 +60,7 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
                 order: [["modifiedTime", "desc"]]
             });
             
-            // // 如果存在该记录
+            // 如果存在该记录
             if (flow) {
                 // 如果 modifiedTime 字段不一致，更新 form_review 数据
                 if (flow.modifiedTime.toString() != depsend.modifiedTime.toString()) {
@@ -109,11 +109,18 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
                     //     where: {form_id: depsend.form_id}
                     // });
                 }
+                
+                if (!flow.versionId) {
+                    await FlowFormReviewModel.update(
+                        {versionId: item.versionId},
+                        {where: {id: flow.id}}
+                    )
+                }
+                
                 // 如果不存在该记录，则新增
             } else {
                 flow = await FlowFormReviewModel.create(depsend);
             }
-            
             try {
                 await flowFormsModel.update(
                     {processCode: item.processCode},
