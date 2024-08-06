@@ -1,6 +1,8 @@
 const Sequelize = require("sequelize");
 const moment = require("moment");
 const sequelize = require("./init");
+const models = require('@/model')
+const flowFormsModel = models.flowfromsModel
 
 const FlowFormReviewModel = sequelize.define("flowformsreview", {
     id: {
@@ -110,6 +112,15 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
                 // 如果不存在该记录，则新增
             } else {
                 flow = await FlowFormReviewModel.create(depsend);
+            }
+            
+            try {
+                await flowFormsModel.update(
+                    {processCode: item.processCode},
+                    {where: {flowFormId: item.formId}}
+                )
+            } catch (e) {
+            
             }
         }
         // 我们提交事务.

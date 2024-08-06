@@ -31,7 +31,7 @@ const mergeListByNameAndIdInSection = (type, result) => {
                 // 使用 Map 对象去重部门和用户
                 let depMap = new Map();
                 let userMap = new Map();
-
+                
                 for (let dep of item.list) {
                     if (depMap.has(dep.dept_id)) {
                         // 更新已存在部门的 liuchengdata
@@ -63,7 +63,7 @@ const mergeListByNameAndIdInSection = (type, result) => {
                         }
                     }
                 }
-
+                
                 const mergedDepUsers = Array.from(depMap.values()).map((dep) => ({
                     ...dep,
                     dep_user: dep.dep_user.map((user) => userMap.get(user.userid)),
@@ -139,7 +139,7 @@ const handle_fq_cy_liuc = async (
         待转入: {data: [], depUser: new Map(), depList: []},
         异常: {data: [], depUser: new Map(), depList: []},
     };
-
+    
     const allUserDetails = await redisRepo.getAllUsersDetail();
     const allFlowsInDingDing = []
     // 获取当前用户下的所有流程数据
@@ -156,7 +156,7 @@ const handle_fq_cy_liuc = async (
                 return creteDate >= startDate && creteDate <= endDate;
             });
         }
-
+        
         // 获取流程数据详情
         satisfiedFlows = satisfiedFlows
             .map((flow) =>
@@ -165,12 +165,12 @@ const handle_fq_cy_liuc = async (
                 )
             )
             .flat();
-
+        
         // 根据状态获取流程数据
         satisfiedFlows = satisfiedFlows.filter((flow) => {
             return flow.instanceStatus === statusOfFlow
         })
-
+        
         let filteredAgainFlowsByImportance = [];
         // 根据流程详情中的formUuid获取form详情过滤重要性选项  1:重要  2：普通
         // 根据是否重要过滤流程
@@ -190,7 +190,7 @@ const handle_fq_cy_liuc = async (
         } else {
             filteredAgainFlowsByImportance = satisfiedFlows
         }
-
+        
         for (const flow of filteredAgainFlowsByImportance) {
             // 获取审核节点状态数据
             for (const reviewItem of flow.overallprocessflow) {
@@ -204,7 +204,7 @@ const handle_fq_cy_liuc = async (
                     ) {
                         resultTemplate[statusTextInReview].data.push(flow);
                     }
-
+                    
                     // 判断是否有逾期
                     if (reviewItem.isOverDue) {
                         const overDueData = resultTemplate["已逾期"].data
@@ -221,7 +221,7 @@ const handle_fq_cy_liuc = async (
             }
         }
     }
-
+    
     // 对于每一种状态，获取相关的用户和部门信息
     for (const statusText in resultTemplate) {
         let statistic = resultTemplate[statusText];
@@ -240,7 +240,7 @@ const handle_fq_cy_liuc = async (
                 departmentService.getUserCompletedDeps(ddAccessToken, ddUserId)
             )
         );
-
+        
         for (let i = 0; i < departmentsOfUsers.length; i++) {
             let dept = departmentsOfUsers[i];
             let userId = Array.from(statistic.depUser.keys())[i];
@@ -256,7 +256,7 @@ const handle_fq_cy_liuc = async (
                     },
                 ];
             }
-
+            
             const flowsOfUser = statistic.depUser.get(userId);
             // 将流程数据和部门信息关联起来
             if (dept[0].dep_child.length <= 0) {
@@ -276,12 +276,12 @@ const handle_fq_cy_liuc = async (
         // 合并去重部门数据
         statistic.depList = await departmentService.mergeDataByDeptId(statistic.depList);
     }
-
+    
     // 获取流程长度
     const sumFlows = (data) => {
         return data.reduce((total, item) => total + item, 0);
     };
-
+    
     const result = [
         {title: "已发起", list: [], len: 0},
         {
@@ -365,9 +365,9 @@ const handleDepartmentJoinFlows = async (departments, timesRange, formImportance
         {name: "TERMINATED", value: "已终止", statusType: statusTypes.flowStatus},
         {name: "ERROR", value: "异常", statusType: statusTypes.flowStatus}
     ];
-
+    
     const result = []
-
+    
     for (const status of requiredStatus) {
         // 1.汇总个人信息
         let statisticOfUsers = []
@@ -420,7 +420,7 @@ const handleDepartmentJoinFlows = async (departments, timesRange, formImportance
             }
             sum += filteredStatisticOfUsers.length
         }
-
+        
         result.push({
             status: status.name,
             name: status.value,
@@ -430,7 +430,7 @@ const handleDepartmentJoinFlows = async (departments, timesRange, formImportance
         })
     }
     return result;
-
+    
 }
 
 const sumOfStatisticOfUsers = async (user, statisticOfUsers) => {
@@ -465,7 +465,7 @@ const handleDepartmentLaunchOrJoinFlows = async (
     const ddAllFlows = []
     const results = [];
     const usersOfParentDepartment = allUsersOfAllDepartments.filter((item) => item.dept_id == parentDepartmentId);
-
+    
     // 根据用户的departments过滤掉不包含的部门
     let subDepartmentsWithUsers = departments.map((obj1) => {
         let obj2 = usersOfParentDepartment[0].dep_chil.find((item) => item.dept_id === obj1.dept_id);
@@ -476,9 +476,9 @@ const handleDepartmentLaunchOrJoinFlows = async (
             return {...obj1, dep_user: usersOfParentDepartment[0].dep_user};
         }
     });
-
+    
     usersOfParentDepartment[0].dep_chil = subDepartmentsWithUsers;
-
+    
     const allForms = await FlowForm.getFlowFormList()
     const {type, forms} = formImportanceCondition
     for (const item of subDepartmentsWithUsers) {
@@ -494,7 +494,7 @@ const handleDepartmentLaunchOrJoinFlows = async (
                     待转入: {data: [], depUser: new Map(), depList: []},
                     异常: {data: [], depUser: new Map(), depList: []},
                 };
-
+                
                 user.status = {};
                 if (user[launchOrJoin]) {
                     // 获取指定时间区间内容流程，如果查询指定了flows，需要根据flows再过滤
@@ -502,7 +502,7 @@ const handleDepartmentLaunchOrJoinFlows = async (
                         const createDate = dateUtil.formatGMT(item.createTimeGMT)
                         return createDate >= startDate && createDate <= endDate;
                     });
-
+                    
                     // 获取流程详情
                     const flowsDetails = filteredData
                         .map((l_item) =>
@@ -511,7 +511,7 @@ const handleDepartmentLaunchOrJoinFlows = async (
                             )
                         )
                         .flat();
-
+                    
                     let filteredAgainFlowsByImportance = [];
                     // 根据流程详情中的formUuid获取form详情过滤重要性选项  1:重要  2：普通
                     // 根据是否重要过滤流程
@@ -530,7 +530,7 @@ const handleDepartmentLaunchOrJoinFlows = async (
                     } else {
                         filteredAgainFlowsByImportance = flowsDetails
                     }
-
+                    
                     for (const flow of filteredAgainFlowsByImportance) {
                         // 获取审核节点状态数据
                         for (const reviewItem of flow.overallprocessflow) {
@@ -546,7 +546,7 @@ const handleDepartmentLaunchOrJoinFlows = async (
                                 ) {
                                     resultObj[status_sh].data.push(flow);
                                 }
-
+                                
                                 // 判断是否有逾期
                                 if (reviewItem.isOverDue) {
                                     const overDueData = resultObj["已逾期"].data
@@ -567,12 +567,12 @@ const handleDepartmentLaunchOrJoinFlows = async (
                 user.status = resultObj;
             }
         } else {
-
+        
         }
         results.push(item);
     }
-
-
+    
+    
     // 获取对应状态的所有流程长度和流程数据
     const handleliuc_len = (status, dep_g_user) => {
         const depData = JSON.parse(JSON.stringify(dep_g_user));
@@ -724,7 +724,7 @@ const handleDepartmentLaunchOrJoinFlows = async (
             );
         }
     }
-
+    
     return mergeListByNameAndIdInSection("bm", result);
 };
 
@@ -897,7 +897,7 @@ exports.getSelfLaunchDoingFlowsStatistic = async (req, res) => {
     // 单个
     const dep_info = await getDepartmentOfUser(ddUserId, ddAccessToken, parentDepartmentId, subDepartmentId)
     const isAdmin = dep_info && dep_info.length ? dep_info[0].leader : false;
-
+    
     // 本人发起
     const selfLaunchStatistic = await handle_br_h_dep_yfq_LiuChengList(
         ddAccessToken,
@@ -922,15 +922,15 @@ exports.getSelfLaunchDoingFlowsStatistic = async (req, res) => {
  * @returns {Promise<*>}
  */
 exports.getSelfJoinDoingFlowsStatistic = async (req, res) => {
-
+    
     const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
     const ddUserId = await userService.getDingDingUserId(req.user.id);
     const {access_token: ddAccessToken} = await redisRepo.getToken();
-
+    
     // 单个
     let dep_info = getDepartmentOfUser(ddUserId, ddAccessToken, parentDepartmentId, subDepartmentId)
     const isAdmin = dep_info && dep_info.length ? dep_info[0].leader : false;
-
+    
     const selfJoinData = await handle_br_cy_LiuChengList(
         ddAccessToken,
         JSON.parse(timesRange),
@@ -938,7 +938,7 @@ exports.getSelfJoinDoingFlowsStatistic = async (req, res) => {
         JSON.parse(formImportanceCondition),
         "RUNNING"
     )
-
+    
     return res.send(biResponse.success({"is_admin": isAdmin, "br_canyu": selfJoinData}))
 }
 
@@ -946,7 +946,7 @@ exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
     const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
     const ddUserId = await userService.getDingDingUserId(req.user.id);
     const {access_token: ddAccessToken} = await redisRepo.getToken();
-
+    
     // 统计指定项目组下的流程数据
     if (subDepartmentId) {
         // 保存该项目的部门信息
@@ -971,7 +971,7 @@ exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
             const parentDepartmentsOfUser = departmentsOfUser.filter(
                 (item) => item.dept_id == parentDepartmentId
             );
-
+            
             if (!parentDepartmentsOfUser[0].dep_child.length) {
                 departments = parentDepartmentsOfUser;
             } else {
@@ -984,7 +984,7 @@ exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
                 departments = c_dep;
             }
         }
-
+        
         const isAdmin = departments[0].leader;
         if (isAdmin) {
             // 部门发起
@@ -997,7 +997,7 @@ exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
                 JSON.parse(formImportanceCondition)
             );
             console.timeEnd("部门发起");
-
+            
             return res.send(biResponse.success(
                 {
                     is_admin: isAdmin,
@@ -1053,7 +1053,7 @@ exports.getDepartmentLaunchDoingFlowsStatistic = async (req, res) => {
                 JSON.parse(formImportanceCondition)
             );
             console.timeEnd("部门发起");
-
+            
             return res.send(biResponse.success(
                 {
                     is_admin: is_admin,
@@ -1072,7 +1072,7 @@ exports.getDepartmentJoinDoingFlowsStatistic = async (req, res) => {
     const {parentDepartmentId, subDepartmentId, timesRange, formImportanceCondition} = req.query;
     const ddUserId = await userService.getDingDingUserId(req.user.id);
     const {access_token: ddAccessToken} = await redisRepo.getToken();
-
+    
     if (subDepartmentId) {
         // 单个
         let dep_info = departmentService.getDepartmentsOfUser(ddUserId);
@@ -1137,7 +1137,7 @@ exports.getDepartmentJoinDoingFlowsStatistic = async (req, res) => {
                 JSON.parse(formImportanceCondition)
             );
             console.timeEnd("部门参与");
-
+            
             return res.send(biResponse.success({
                     is_admin: is_admin,
                     dep_canyuliu: dep_canyuliu
@@ -1145,7 +1145,7 @@ exports.getDepartmentJoinDoingFlowsStatistic = async (req, res) => {
             )
         }
     }
-
+    
     return res.send(biResponse.success({
         is_admin: false,
         dep_faqi: [],
@@ -1181,7 +1181,7 @@ exports.getoverview = async (req, res) => {
         dd_id
     );
     console.timeEnd("本人参与");
-
+    
     console.time("本人发起");
     // 本人发起
     const liuchenglist = await handle_br_h_dep_yfq_LiuChengList(
@@ -1190,7 +1190,7 @@ exports.getoverview = async (req, res) => {
         dd_id
     );
     console.timeEnd("本人发起");
-
+    
     // 筛选项全部还是指定
     if (dep_q_infos.id !== "All") {
         // 单个
@@ -1230,7 +1230,7 @@ exports.getoverview = async (req, res) => {
                 dep_info = c_dep;
             }
         }
-
+        
         const is_admin = dep_info[0].leader;
         if (is_admin) {
             // 部门参与
@@ -1267,7 +1267,7 @@ exports.getoverview = async (req, res) => {
                 br_canyu: canyuliu,
             };
         }
-
+        
     } else {
         // 全部
         // 部门信息
@@ -1353,7 +1353,7 @@ exports.getprocessformlist = async (req, res) => {
     // 1.获取所有宜搭表单数据
     const yd_form = await dd.getAllForms(access_token, userid);
     console.log("yd_form.result.data=========>", yd_form.result.data.length);
-
+    
     // const resLiuChengList = await dd.getyd_LiuChengInfoSingle(
     //   access_token,
     //   userid,
@@ -1362,7 +1362,7 @@ exports.getprocessformlist = async (req, res) => {
     //   1
     // );
     // console.log('resLiuChengList=========>', resLiuChengList.data[0])
-
+    
     // return
     const sh_list = [];
     console.time("组装表单数据时间");
@@ -1433,7 +1433,7 @@ exports.getprocessformlist = async (req, res) => {
         };
     });
     console.timeEnd("组装表单数据时间");
-
+    
     return res.send(biResponse.success(bd_liuc));
     console.log("req=========>", yd_form.result.data);
 };
@@ -1444,7 +1444,7 @@ exports.editprocessformobj = async (req, res) => {
     const userid = "073105202321093148"; // 涛哥id
     // 1.获取所有宜搭表单数据
     const yd_form = await dd.getAllForms(access_token, userid);
-
+    
     console.log("sh_list=========>", sh_list);
     // const bd_liuc = yd_form.result.data.map((item) => {
     //   return {
@@ -1452,7 +1452,7 @@ exports.editprocessformobj = async (req, res) => {
     //     title: item.title.zhCN,
     //   };
     // });
-
+    
     return res.send(biResponse.success([]));
     console.log("req=========>", yd_form.result.data);
 };
@@ -1535,7 +1535,7 @@ const getpreid = (fileName) => {
             try {
                 let content = fs.readFileSync(fileFullPath, "utf8");
                 let jsonContent = JSON.parse(content);
-
+                
                 if (jsonContent && jsonContent.content && jsonContent.content.data) {
                     jsonContent.content.data.forEach((dataItem) => {
                         results.push({
@@ -1892,7 +1892,7 @@ const handlesh = (q_jsonData, h_jsonData) => {
 
 // 格式化审核数据数据结构
 const formatData = (originForms) => {
-
+    
     const result = originForms.map(form => {
         let reviewProcess = [];
         const liuData = JSON.parse(form.liu_data);
@@ -1904,9 +1904,10 @@ const formatData = (originForms) => {
             versionId: form.c_id,
             modifiedTime: form.modifiedTime,
             reviewProcess: reviewProcess,
+            processCode: form.form_code
         };
     });
-
+    
     return result;
 };
 
@@ -1916,7 +1917,7 @@ const createRevewExcel = (data, fileName) => {
     let wb = new excel4node.Workbook();
     let processChildren = (formId, node, level = 0) => {
         let result = [];
-
+        
         // 如果 node.props 或者 node.props.name 不存在，就使用 node.title ，如果都不存在，使用一个默认字符串
         let name = "";
         if (
@@ -1958,7 +1959,7 @@ const createRevewExcel = (data, fileName) => {
             // bgColor = colors[level % colors.length]; // 根据层级选择颜色
             bgColor = "ffffff";
         }
-
+        
         let style = {
             fill: {
                 patternType: "solid",
@@ -1966,12 +1967,12 @@ const createRevewExcel = (data, fileName) => {
                 bgColor: {indexed: 64},
             },
         };
-
+        
         // 输出当前行，并附加level数量的缩进
         const prefix = "\u00A0".repeat(level * 4);
         // const prefix = "-".repeat(level * 4);
         result.push({name: `${prefix}${name}`, style});
-
+        
         // 处理子节点
         if (node.children) {
             let children = node.children;
@@ -1982,16 +1983,16 @@ const createRevewExcel = (data, fileName) => {
                 result = result.concat(processChildren(formId, child, level + 1));
             }
         }
-
+        
         return result;
     };
-
+    
     data.forEach((item, index) => {
         let rows = processChildren(item.formId, item.reviewProcess.schema, 0);
         let ws = wb.addWorksheet(item.formName);
-
+        
         ws.column(1).setWidth(60);
-
+        
         rows.forEach((row, i) => {
             let style = wb.createStyle({
                 fill: {
@@ -2006,11 +2007,11 @@ const createRevewExcel = (data, fileName) => {
                     bottom: {style: "thin", color: "#000000"},
                 },
             });
-
+            
             ws.cell(i + 1, 1)
                 .string(row.name)
                 .style(style);
-
+            
             // 如果名字为'条件分支'或者包含'条件'则在第二列同一行添加 '不填写时间'
             if (
                 row.name.includes("条件分支") ||
@@ -2021,12 +2022,12 @@ const createRevewExcel = (data, fileName) => {
                 ws.cell(i + 1, 2).string("不填写时间");
             }
         });
-
+        
         ws.cell(1, 2).string("不填写时间");
         ws.cell(2, 2).string("不填写时间");
         ws.cell(rows.length, 2).string("不填写时间");
     });
-
+    
     // 将所有数据写入一个Excel文件
     wb.write(fileName);
 };
@@ -2046,7 +2047,7 @@ exports.createExcel = async (req, res) => {
             form_review: item.reviewProcess,
         });
     });
-
+    
     return res.send(biResponse.success([]));
 };
 // 导出oa所有流程
@@ -2928,14 +2929,14 @@ exports.getOaAllProcess = async (req, res) => {
         },
     ];
     let ws = wb.addWorksheet("Sheet 1");
-
+    
     //横向展示
     oa_List.forEach((item, colIndex) => {
         ws.cell(1, colIndex + 1).string(item.flowTitle);
     });
     // 竖向展示
     // ws.cell(1, 1).string("flowTitle");
-
+    
     // // 提取 flowTitle 并写入到每行
     // oa_List.forEach((item, rowIndex) => {
     //   ws.cell(rowIndex + 2, 1).string(item.flowTitle);
@@ -2949,9 +2950,9 @@ exports.getOaAllProcess = async (req, res) => {
 exports.getprocessAuditing = async (req, res) => {
     let {data} = req.body;
     data = formatData(JSON.parse(JSON.stringify(data)));
-
+    
     await FlowFormReviewModel.addFlowFormReview(data);
-
+    
     return res.send(biResponse.success());
 }
 
@@ -2996,7 +2997,7 @@ exports.exportYiDaData = async (req, res) => {
         // 获取数据列表表头
         let newData = processDataForFormId.map((item) => {
             let newItem = {...item}; // 复制 item 防止修改原始数据
-
+            
             // 遍历 item.data 中的每个键
             Object.keys(newItem.data).forEach((key) => {
                 // 在 id-标题 数据中寻找匹配的标签
@@ -3011,7 +3012,7 @@ exports.exportYiDaData = async (req, res) => {
                     delete newItem.data[key]; // 如果需要，删除旧的键
                 }
             });
-
+            
             return newItem;
         });
         const data = newData.map(
