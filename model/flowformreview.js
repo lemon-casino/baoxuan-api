@@ -110,9 +110,9 @@ FlowFormReviewModel.addFlowFormReview = async function (data) {
                     // });
                 }
                 
-                if (!flow.versionId) {
+                if (!flow.version_id) {
                     await FlowFormReviewModel.update(
-                        {versionId: item.versionId},
+                        {version_id: item.versionId},
                         {where: {id: flow.id}}
                     )
                 }
