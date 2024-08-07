@@ -23,8 +23,8 @@ steps:
       script:
         - cd /docker/drone/bi-api
         - sudo cp -Rf /docker/drone/bi-api/src/* /data/prod/baoxuan-api-test
-#        - cd /data/prod/baoxuan-api
-#        - cnpm install
+        - cd /data/prod/baoxuan-api-test
+        - cnpm install
 #        - ./start.sh -m prod
 
   - name: notify
