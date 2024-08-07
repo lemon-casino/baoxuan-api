@@ -3,6 +3,14 @@ type: docker
 name: bi-api-deploy
 
 steps:
+  - name: mv-src
+    image: node:16.4.0
+    volumes:
+      - name: bi-api
+        path: /root/bi-api
+    commands:
+      - cp -Rf /drone/src /root/bi-api
+
   - name: ssh-deploy
     image: registry-intl.cn-shenzhen.aliyuncs.com/sztest/sz:ssh
     settings:
@@ -13,10 +21,11 @@ steps:
       username: root
       port: 22
       script:
-        - cd /data/prod/baoxuan-api
-        - git pull
-        - cnpm install
-        - ./start.sh -m prod
+        - cd /docker/drone/bi-api
+        - sudo cp -Rf /docker/drone/bi-api/src/* /data/prod/baoxuan-api-test
+#        - cd /data/prod/baoxuan-api
+#        - cnpm install
+#        - ./start.sh -m prod
 
   - name: notify
     image: drillster/drone-email
@@ -33,11 +42,13 @@ steps:
         - success
         - failure
 
+volumes:
+  - name: bi-api
+    host:
+      path: /docker/drone/bi-api
+
 trigger:
   ref:
     - refs/tags/*
 
-volumes:
-  - name: build
-    host:
-      path: /data/prod/baoxuan-api
+
