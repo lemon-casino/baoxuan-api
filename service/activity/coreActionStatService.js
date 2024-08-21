@@ -424,7 +424,7 @@ const convertToUserActionResult = (users, userStatResult) => {
                         
                         const sameKeyTextStat = result.children.filter(item => item.actionName.includes(currStatusKeyText))
                         for (const statusActionStat of sameKeyTextStat) {
-                            const overdueActionStat = statusActionStat.children.find(item => item.actionName === l2Action)
+                            const overdueActionStat = statusActionStat.children.find(item => item.actionName === l2Action) || {children: []}
                             const userActionStat = overdueActionStat.children.filter(item => usernames.includes(item.actionName))
                             if (userActionStat.length > 0) {
                                 for (const stat of userActionStat) {

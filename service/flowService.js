@@ -295,6 +295,24 @@ const getCompletedFlowsByIds = async (ids) => {
     return await flowRepo.getProcessByIds(ids);
 }
 
+const getFlowsByDeptIds = async (deptIds) => {
+    //获取流程表单
+    return flowFormRepo.getAllFlowFormsInfo(deptIds)
+}
+
+const getFlowsInfoById = async (id) => {
+    return flowFormRepo.getAllFlowFormsInfo(null, id)
+}
+
+const getFlowsProcessById = async (id, offset, limit) => {
+    const total = await flowRepo.getFlowsProcessCountById(id)
+    let data = []
+    if (total) {
+        data = await flowRepo.getFlowsProcessById(id, offset, limit)
+    }
+    return { data, total }
+}
+
 const getFlowsByIds = async (ids) => {
     const flowsOfRunningAndFinishedOfToday = await globalGetter.getTodayFlows()
     const satisfiedFlows = []
@@ -1291,7 +1309,10 @@ module.exports = {
     sumFlowsByDepartment,
     sumFlowsByDepartmentOfMultiType,
     getCompletedFlowsByIds,
+    getFlowsInfoById,
+    getFlowsByDeptIds,
     getFlowsByIds,
+    getFlowsProcessById,
     convertJonsToArr,
     convertSelfStatisticToDept,
     getDeptStatistic,
