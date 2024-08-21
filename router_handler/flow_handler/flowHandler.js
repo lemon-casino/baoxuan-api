@@ -9,6 +9,7 @@ const joiUtil = require("@/utils/joiUtil")
 const biResponse = require("@/utils/biResponse")
 const flowSchema = require("@/schema/flowSchema")
 const moment = require('moment')
+const coreActionStatTypeConst = require("@/const/coreActionStatTypeConst")
 
 const getCompletedFlowsByIds = async (req, res, next) => {
     try {
@@ -166,7 +167,9 @@ const getVisionUsersStat = async (req, res, next) => {
         joiUtil.clarityValidate(flowSchema.getCoreActionsSchema, req.body)
         const {statType, tags, deptIds, startDate, endDate, userNames} = req.body
         const userId = req.user.userId
-        const result = await visionCoreActionService.getUsersStat(tags, deptIds, userId, userNames, startDate, endDate)
+        const result = statType === coreActionStatTypeConst.StatAction ?
+            await visionCoreActionService.getCoreActionStat(statType, tags, userId, deptIds, userNames, startDate, endDate) : 
+            await visionCoreActionService.getUsersStat(tags, deptIds, userId, userNames, startDate, endDate)
         res.send(biResponse.success(result))
     } catch (e) {
         next(e)
