@@ -273,6 +273,9 @@ const getFormsFlowsActivitiesStat = async (req, res, next) => {
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired},
             deptIds: {value: deptIds, schema: joiUtil.commonJoiSchemas.arrayRequired}
         })
+        if (deptIds.includes("933412643")) {
+            deptIds.push("962724541", "962893128")
+        }
         const result = await flowService.getFormsFlowsActivitiesStat(userId, startDate, endDate, formIds, deptIds)
         return res.send(biResponse.success(result))
     } catch (e) {
