@@ -10,6 +10,7 @@ const flowUtil = require("@/utils/flowUtil")
 const patchUtil = require("@/patch/patchUtil")
 const coreActionPostHandler = require("../coreActionPostHandler")
 const coreActionPreHandler = require("../coreActionPreHandler")
+const newFormRepo = require('../../../repository/newFormsRepo')
 
 /**
  *
@@ -91,6 +92,18 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
         }
     }
     return flowUtil.statIdsAndSumFromBottom(finalResult)
+}
+
+const getUsersStat = async (tags, deptIds, userId, userNames, startDoneDate, endDoneDate) => {
+    let requiredUsers = await coreActionPreHandler.getUsers(userId, deptIds, userNames, true)
+    requiredUsers = filterUsersByTags(requiredUsers, tags)
+    let names = []
+    for (let i = 0; i < requiredUsers.length; i++) {
+        if (requiredUsers[i].nickname?.indexOf('已离职') == -1) names.push(requiredUsers[i].nickname)
+        else if (requiredUsers[i].userName) names.push(requiredUsers[i].userName)
+    }
+    const result = await newFormRepo.getProcessStat(names, tags[0], startDoneDate + ' 00:00:00', endDoneDate + ' 23:59:59')
+    return result
 }
 
 /**
@@ -295,5 +308,6 @@ const getResultNode = (fieldName, visionUserFlowDataStatResultTemplate) => {
 }
 
 module.exports = {
-    getCoreActionStat
+    getCoreActionStat,
+    getUsersStat
 }

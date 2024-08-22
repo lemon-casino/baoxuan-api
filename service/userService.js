@@ -187,7 +187,7 @@ const getTMInnerGroups = async (userId) => {
  * @returns {Promise<*[]|[*]|[{[p: string]: *}]|[]>}
  */
 const getVisionInnerGroups = async (userId) => {
-    return (await getTaggedInnerGroupUsers(userId, ["482162119", "933412643"], "hz:vision:", "hz:innerGroupLeader"))
+    return (await getTaggedInnerGroupUsers(userId, ["482162119", "933412643", "962724541", "962893128"], "hz:vision:", "hz:innerGroupLeader"))
 }
 
 const getTurnoverInnerGroups = async (userId) => {

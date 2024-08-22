@@ -28,6 +28,7 @@ const deptFlowFormConst = require("@/const/deptFlowFormConst")
 const patchUtil = require("@/patch/patchUtil")
 const userCommonService = require("@/service/common/userCommonService");
 const outUsersRepo = require("@/repository/outUsersRepo");
+const newFormsRepo = require('../repository/newFormsRepo')
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -1275,6 +1276,11 @@ const getFlowSplitFormfieldKeyAndField = async (formId, fieldKey, selectField, f
     return fightingLinkIds
 }
 
+const getFlows = async (params) => {
+    let result = await newFormsRepo.getFlowInstances(params)
+    return result
+}
+
 module.exports = {
     filterFlowsByTimesRange,
     filterFlowsByImportanceCondition,
@@ -1308,6 +1314,6 @@ module.exports = {
     getFlowFormfieldKeyAndField,
     getFlowSplitFormfieldKeyAndField,
     getTodaySplitFlowsByFormIdAndFlowStatus,
-    getFlowSplitFormValues
-    
+    getFlowSplitFormValues,
+    getFlows
 }

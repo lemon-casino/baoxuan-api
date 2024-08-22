@@ -24,11 +24,19 @@ router.post("/statistic/all-review-items", flowHandler.getFormsFlowsActivitiesSt
 
 router.put("/running", flowHandler.updateRunningFlowEmergency)
 
-router.post("/vision-core-action-stat", flowHandler.getVisionCoreActionStat)
+// router.post("/vision-core-action-stat", flowHandler.getVisionCoreActionStat)
+
+router.post("/vision-core-action-stat", flowHandler.getVisionUsersStat)
+
 router.post("/tm-core-action-stat", flowHandler.getUniversalCoreActionStat)
 router.post("/execution-core-action-stat", flowHandler.getUniversalCoreActionStat)
 router.post("/turnover-core-action-stat", flowHandler.getTurnoverCoreActionStat)
 
 router.get("/all-overdue-running-flows", flowHandler.getAllOverDueRunningFlows)
-
+/**
+ * 流程表单管理
+ */
+router.get('/forms', flowHandler.getFlows)
+router.get('/forms-process', flowHandler.getFlowsProcessByIds)
+router.post('/forms-process/export', flowHandler.exportFlowsProcess)
 module.exports = router;

@@ -169,7 +169,11 @@ const getDepartmentFromDingDing = async () => {
     
     for (const item of depList.result) {
         const dep_chil = await contactsReq.getSubDeptAll(access_token, item.dept_id);
-        item.dep_chil = dep_chil.result;
+        item.dep_chil = dep_chil.result
+        for (const index of item.dep_chil) {
+            const index_chil = await contactsReq.getSubDeptAll(access_token, index.dept_id)
+            index.dep_chil = index_chil.result
+        }
     }
     return depList
 };
@@ -199,9 +203,17 @@ const getUsersWithDepartmentFromDingDing = async () => {
     for (const item of departmentList) {
         if (item.dep_chil && item.dep_chil.length > 0) {
             for (const subItem of item.dep_chil) {
-                const res = await contactsReq.getDeptUserList(access_token, subItem.dept_id);
+                let res = await contactsReq.getDeptUserList(access_token, subItem.dept_id);
                 if (res.errmsg === "ok") {
                     allUsersFromDepartments.push(res.result.userid_list)
+                }
+                if (subItem.dep_chil && subItem.dep_chil.length > 0) {
+                    for (const thirdItem of subItem.dep_chil) {
+                        res = await contactsReq.getDeptUserList(access_token, thirdItem.dept_id);
+                        if (res.errmsg === "ok") {
+                            allUsersFromDepartments.push(res.result.userid_list)
+                        }
+                    }
                 }
             }
         }
