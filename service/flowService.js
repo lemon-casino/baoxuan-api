@@ -28,6 +28,7 @@ const deptFlowFormConst = require("@/const/deptFlowFormConst")
 const patchUtil = require("@/patch/patchUtil")
 const userCommonService = require("@/service/common/userCommonService");
 const outUsersRepo = require("@/repository/outUsersRepo");
+const newFormsRepo = require('../repository/newFormsRepo')
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -293,24 +294,6 @@ const sumFlowsByDepartmentOfMultiType = async (flowsOfMultiType) => {
 
 const getCompletedFlowsByIds = async (ids) => {
     return await flowRepo.getProcessByIds(ids);
-}
-
-const getFlowsByDeptIds = async (deptIds) => {
-    //获取流程表单
-    return flowFormRepo.getAllFlowFormsInfo(deptIds)
-}
-
-const getFlowsInfoById = async (id) => {
-    return flowFormRepo.getAllFlowFormsInfo(null, id)
-}
-
-const getFlowsProcessById = async (id, offset, limit) => {
-    const total = await flowRepo.getFlowsProcessCountById(id)
-    let data = []
-    if (total) {
-        data = await flowRepo.getFlowsProcessById(id, offset, limit)
-    }
-    return { data, total }
 }
 
 const getFlowsByIds = async (ids) => {
@@ -1293,6 +1276,11 @@ const getFlowSplitFormfieldKeyAndField = async (formId, fieldKey, selectField, f
     return fightingLinkIds
 }
 
+const getFlows = async (params) => {
+    let result = await newFormsRepo.getFlowInstances(params)
+    return result
+}
+
 module.exports = {
     filterFlowsByTimesRange,
     filterFlowsByImportanceCondition,
@@ -1309,10 +1297,7 @@ module.exports = {
     sumFlowsByDepartment,
     sumFlowsByDepartmentOfMultiType,
     getCompletedFlowsByIds,
-    getFlowsInfoById,
-    getFlowsByDeptIds,
     getFlowsByIds,
-    getFlowsProcessById,
     convertJonsToArr,
     convertSelfStatisticToDept,
     getDeptStatistic,
@@ -1329,6 +1314,6 @@ module.exports = {
     getFlowFormfieldKeyAndField,
     getFlowSplitFormfieldKeyAndField,
     getTodaySplitFlowsByFormIdAndFlowStatus,
-    getFlowSplitFormValues
-    
+    getFlowSplitFormValues,
+    getFlows
 }

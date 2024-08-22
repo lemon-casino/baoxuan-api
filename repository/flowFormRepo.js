@@ -1,6 +1,5 @@
 const models = require('@/model')
 const sequelizeUtil = require("@/utils/sequelizeUtil")
-const sequelize = require('sequelize')
 
 models.flowfromsModel.hasMany(
     models.flowformsreviewsModel,
@@ -107,54 +106,6 @@ const getAllFlowFormsWithReviews = async (formIds) => {
     return flowForms.map(item => item.get({plain: true}))
 }
 
-const getAllFlowFormsInfo = async (deptIds, id) => {
-    let flowFormDetails = [], flowForms = [], tmp = {}, j = 0
-    if (deptIds) {
-        flowFormDetails = await models.flowfromsModel.sequelize.query(`
-            SELECT ff.flow_form_name AS flowFormName, ff.flow_form_id AS flowFormId, 
-                ffd.field_name AS fieldName, ffd.field_id AS fieldId FROM flowfroms AS ff 
-                LEFT OUTER JOIN flow_form_details AS ffd ON ff.flow_form_id = ffd.form_id 
-                WHERE ff.dept_id IN (${deptIds.map(() => '?')}) GROUP BY flow_form_name, 
-                flow_form_id, field_id, field_name`, 
-                {
-                    replacements: deptIds,
-                    type: sequelize.QueryTypes.SELECT
-                })
-    } else if (id) {
-        flowFormDetails = await models.flowfromsModel.sequelize.query(`
-            SELECT ff.flow_form_name AS flowFormName, ff.flow_form_id AS flowFormId, 
-                ffd.field_name AS fieldName, ffd.field_id AS fieldId FROM flowfroms AS ff 
-                LEFT OUTER JOIN flow_form_details AS ffd ON ff.flow_form_id = ffd.form_id 
-                WHERE ff.flow_form_id = ? GROUP BY flow_form_name, flow_form_id, 
-                field_id, field_name`, 
-                {
-                    replacements: [id],
-                    type: sequelize.QueryTypes.SELECT
-                })
-    }
-
-    for (let i = 0; i < flowFormDetails.length; i++) {
-        if (tmp[flowFormDetails[i]['flowFormId']] != undefined) {
-            flowForms[tmp[flowFormDetails[i]['flowFormId']]]['flowFormDetails'].push({
-                fieldId: flowFormDetails[i]['fieldId'],
-                fieldName: flowFormDetails[i]['fieldName']
-            })
-        } else {
-            tmp[flowFormDetails[i]['flowFormId']] = j
-            flowForms.push({
-                flowFormId: flowFormDetails[i]['flowFormId'],
-                flowFormName: flowFormDetails[i]['flowFormName'],
-                flowFormDetails: [{
-                    fieldId: flowFormDetails[i]['fieldId'],
-                    fieldName: flowFormDetails[i]['fieldName']
-                }]
-            })
-            j++
-        }
-    }
-    return flowForms
-}
-
 const updateFlowForm = async (form) => {
     return await models.flowfromsModel.update(form, {
         where: {flowFormId: form.flowFormId}
@@ -166,7 +117,6 @@ module.exports = {
     getFormDetails,
     getAllForms,
     getAllFlowFormsWithReviews,
-    getAllFlowFormsInfo,
     updateFormAndAddDetails,
     saveFormAndDetails
 }
