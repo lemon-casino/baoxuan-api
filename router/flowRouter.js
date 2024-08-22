@@ -36,7 +36,7 @@ router.get("/all-overdue-running-flows", flowHandler.getAllOverDueRunningFlows)
 /**
  * 流程表单管理
  */
-router.get('/forms', flowHandler.getFlowsByDeptIds)
+router.get('/forms', flowHandler.getFlows)
 router.get('/forms-process', flowHandler.getFlowsProcessByIds)
 router.post('/forms-process/export', flowHandler.exportFlowsProcess)
 module.exports = router;

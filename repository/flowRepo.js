@@ -11,7 +11,6 @@ const coreFormFlowConst = require("@/const/tmp/coreFormFlowConst")
 const sequelizeUtil = require("@/utils/sequelizeUtil")
 const dateUtil = require("@/utils/dateUtil")
 const algorithmUtil = require("@/utils/algorithmUtil")
-const sequelize = require('sequelize')
 
 processModel.hasMany(processReviewModel,
     {
@@ -88,81 +87,6 @@ const getProcessByIds = async (ids) => {
         }
     }
     return processes
-}
-
-const getFlowsProcessById = async (id, offset, limit) => {
-    let sql = '', replacements = [id]
-    if (limit) {
-        sql = `SELECT p.*, d.field_id AS fieldId, d.field_name AS fieldName, 
-            d.field_value AS fieldValue FROM (
-                SELECT title, process_instance_id AS processInstanceId, (CASE instance_status 
-                    WHEN 'RUNNING' THEN '运行中' 
-                    WHEN 'TERMINATED' THEN '已终止' 
-                    WHEN 'COMPLETED' THEN '已完成' 
-                    ELSE '异常' END
-                ) AS instanceStatus, create_time AS createTime, 
-                stocked_time AS stockedTime, operate_time AS operateTime FROM process_tmp
-                WHERE form_uuid = ? ORDER BY create_time DESC LIMIT ?, ?
-            ) AS p LEFT JOIN process_details_tmp AS d ON 
-            p.processInstanceId = d.process_instance_id`
-        replacements.push(offset, limit)
-    } else {
-        sql = `SELECT p.title, p.process_instance_id AS processInstanceId, (CASE p.instance_status 
-                WHEN 'RUNNING' THEN '运行中' 
-                WHEN 'TERMINATED' THEN '已终止' 
-                WHEN 'COMPLETED' THEN '已完成' 
-                ELSE '异常' END
-            ) AS instanceStatus, p.create_time AS createTime, 
-            p.stocked_time AS stockedTime, p.operate_time AS operateTime, d.field_id AS fieldId, 
-            d.field_name AS fieldName, d.field_value as fieldValue FROM process_tmp p 
-            LEFT JOIN process_details_tmp AS d ON p.process_instance_id = d.process_instance_id
-            WHERE p.form_uuid = ? ORDER BY p.create_time DESC`
-    }
-    let processes = [], tmp = {}, j = 0
-    const process = await processModel.sequelize.query(sql, 
-        {
-            replacements,
-            type: sequelize.QueryTypes.SELECT
-        })
-
-    for (let i = 0; i < process.length; i++) {
-        if (tmp[process[i]['processInstanceId']] != undefined) {
-            processes[tmp[process[i]['processInstanceId']]]['data'].push({
-                fieldId: process[i]['fieldId'],
-                fieldName: process[i]['fieldName'],
-                fieldValue: process[i]['fieldValue']
-            })
-        } else {
-            tmp[process[i]['processInstanceId']] = j
-            processes.push({
-                title: process[i]['title'],
-                processInstanceId: process[i]['processInstanceId'],
-                instanceStatus: process[i]['instanceStatus'],
-                createTime: process[i]['createTime'],
-                stockedTime: process[i]['stockedTime'],
-                doneTime: process[i]['doneTime'],
-                data: [{
-                    fieldId: process[i]['fieldId'],
-                    fieldName: process[i]['fieldName'],
-                    fieldValue: process[i]['fieldValue']
-                }]
-            })
-            j++
-        }
-    }
-
-    return processes
-}
-
-const getFlowsProcessCountById = async (id) => {
-    const count = await processModel.sequelize.query(`
-        SELECT COUNT(process_instance_id) AS count FROM process_tmp WHERE form_uuid = ?`, 
-        {
-            replacements: [id],
-            type: sequelize.QueryTypes.SELECT
-        })
-
-    return count[0].count
 }
 
 const getAllProcesses = async () => {
@@ -283,8 +207,6 @@ const getAloneProcessByIds = async (ids) => {
 module.exports = {
     getAloneProcessByIds,
     getProcessByIds,
-    getFlowsProcessById,
-    getFlowsProcessCountById,
     getAllProcesses,
     updateProcess,
     getCoreActionsConfig,

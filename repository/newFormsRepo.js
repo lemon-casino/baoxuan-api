@@ -195,6 +195,13 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
     return result
 }
 
+const getFlowInstances = async function (params) {
+    let result = []
+    // let sql = `select `
+    return result
+}
+
 module.exports = {
-    getProcessStat
+    getProcessStat,
+    getFlowInstances,
 }
