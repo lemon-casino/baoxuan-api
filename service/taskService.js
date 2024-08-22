@@ -643,5 +643,6 @@ module.exports = {
     syncAttendance,
     resetDingDingApiInvokeCount,
     syncVisionOutUsers,
-    syncProcessVersions
+    syncProcessVersions,
+    saveFlowsToRedisFromFile
 }
