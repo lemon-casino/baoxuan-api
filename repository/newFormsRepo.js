@@ -6,8 +6,10 @@ const {
     actionItem2,
     deptAction,
     deptField,
-    deptPreField
+    deptPreField,
+    actionFilter
 } = require('../const/newFormConst')
+const moment = require('moment')
 
 // const getProcessStats = async function (userNames, tag, key, startDate, endDate) {
 //     let result = []
@@ -197,11 +199,84 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
 
 const getFlowInstances = async function (params) {
     let result = []
-    // let sql = `select `
+    //暂时只查询3d+拍摄+美编
+    let sql = `select id, title as flowFormName, form_uuid as flowFormId 
+        from forms where id = 119`
+    let row = await query(sql)
+    if (row?.length) {
+        for (let i = 0; i < row.length; i++) {
+            sql = `select id, parent_id, (case component when 'AssociationFormField' 
+                then concat(field_id, '_id') else field_id end) as fieldId, title 
+                as fieldName from form_fields where form_id = ?`
+            let row1 = await query(sql, [row[i].id])
+            row[i]['flowFormDetails'] = row1 || []
+        }
+        result.push(...row)
+    }
     return result
+}
+
+const getFlowProcessInstances = async function (params, offset, limit) {
+    let subsql = '', p1 = [], result = {
+        data: [],
+        total: 0
+    }
+    let sql = `select count(1) as count from process_instances pi join 
+        processes p on p.id = pi.process_id where p.form_id = ?`
+    p1.push(params.id)
+    if (params.operator) {
+        subsql = `${subsql} and exists(
+            select pir.id from process_instance_records pir where 
+            pi.id = pir.instance_id and pir.operator_name = ? and pir.show_name in 
+            ("${deptAction[params.tag].join('","')}")`
+        p1.push(params.operator)
+        if (params.startDate) {
+            subsql = `${subsql} and pir.operate_time >= ?`
+            p1.push(moment(params.startDate).format('YYYY-MM-DD'))
+        }
+        if (params.endDate) {
+            subsql = `${subsql} and pir.operate_time <= ?`
+            p1.push(moment(params.endDate).format('YYYY-MM-DD'))
+        }
+        if (params.action) {
+            subsql = `${subsql} and pir.action_exit in (
+                ${actionFilter[params.action].map(() => '?').join(',')})`
+            p1.push(...actionFilter[params.action])
+        }
+        subsql = `${subsql})`
+    }
+    sql = `${sql}${subsql}`
+    let row = await query(sql, p1)
+    if (row?.length && row[0].count) {
+        result.total = row[0].count
+        sql = `select pi.id, pi.instance_id as processInstanceId, pi.title, 
+            pi.status as instanceStatus, pi.create_time as createTime, 
+            pi.update_time as operateTime from process_instances pi join 
+            processes p on p.id = pi.process_id where p.form_id = ? ${subsql}
+            limit ${offset}, ${limit}`
+        row = await query(sql, p1)
+        if (row?.length) {
+            for (let i = 0; i < row.length; i++) {
+                sql = `select field_id as fieldId, \`value\` as fieldValue from 
+                    process_instance_values where instance_id = ?`
+                row[i]['data'] = await query(sql, [row[i].id]) || []
+            }
+            result.data = row
+        }
+    }
+    return result
+}
+
+const getFlowActions = async function (id) {
+    let sql = `select * from process_instance_records where instance_id = ? 
+        order by operate_time, task_id desc, id`
+    let row = await query(sql, [id])
+    return row || []
 }
 
 module.exports = {
     getProcessStat,
     getFlowInstances,
+    getFlowProcessInstances,
+    getFlowActions
 }

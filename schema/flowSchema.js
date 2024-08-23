@@ -20,8 +20,20 @@ const requiredIdsSchema = {
     ids: joiUtil.commonJoiSchemas.arrayRequired
 }
 
+const getFlowsProcessSchema = {
+    id: joiUtil.commonJoiSchemas.numberRequired,
+    pageSize: joiUtil.commonJoiSchemas.numberCheck,
+    currentPage: joiUtil.commonJoiSchemas.numberCheck
+}
+
+const getFlowsActionsSchema = {
+    id: joiUtil.commonJoiSchemas.numberRequired,
+}
+
 module.exports = {
     getCoreActionsSchema,
     updateRunningFlowEmergencySchema,
-    requiredIdsSchema
+    requiredIdsSchema,
+    getFlowsProcessSchema,
+    getFlowsActionsSchema
 }

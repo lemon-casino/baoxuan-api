@@ -1281,6 +1281,16 @@ const getFlows = async (params) => {
     return result
 }
 
+const getFlowsProcesses = async (params, offset, limit) => {
+    let result = await newFormsRepo.getFlowProcessInstances(params, offset, limit)
+    return result
+}
+
+const getFlowsActions = async (id) => {
+    let result = await newFormsRepo.getFlowActions(id)
+    return result
+}
+
 module.exports = {
     filterFlowsByTimesRange,
     filterFlowsByImportanceCondition,
@@ -1315,5 +1325,7 @@ module.exports = {
     getFlowSplitFormfieldKeyAndField,
     getTodaySplitFlowsByFormIdAndFlowStatus,
     getFlowSplitFormValues,
-    getFlows
+    getFlows,
+    getFlowsProcesses,
+    getFlowsActions
 }
