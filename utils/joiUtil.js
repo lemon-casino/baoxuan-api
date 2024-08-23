@@ -34,7 +34,8 @@ const commonJoiSchemas = {
     objectRequire: Joi.object().required(),
     booleanRequired: Joi.boolean().required(),
     validBoolStrValue: Joi.string().valid("true", "false"),
-    validOpCode: Joi.string().valid(...Object.keys(operatorConst.opCodes))
+    validOpCode: Joi.string().valid(...Object.keys(operatorConst.opCodes)),
+    numberCheck: Joi.number().min(0)
 }
 
 const commonArgsSchemas = {

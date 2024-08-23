@@ -38,5 +38,6 @@ router.get("/all-overdue-running-flows", flowHandler.getAllOverDueRunningFlows)
  */
 router.get('/forms', flowHandler.getFlows)
 router.get('/forms-process', flowHandler.getFlowsProcessByIds)
+router.get('/forms-process/actions', flowHandler.getFlowProcessActions)
 router.post('/forms-process/export', flowHandler.exportFlowsProcess)
 module.exports = router;

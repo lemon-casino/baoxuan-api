@@ -159,6 +159,13 @@ const item = {
     sum: 0
 }
 
+const actionFilter = {
+    '待转入': ['next'],
+    '进行中': ['doing'],
+    '已完成': ['agree'],
+    '工作量': ['next', 'doing', 'agree']
+}
+
 module.exports = {
     activities,
     deptAction,
@@ -167,5 +174,6 @@ module.exports = {
     action,
     actionItem,
     actionItem2,
-    item
+    item,
+    actionFilter
 }
