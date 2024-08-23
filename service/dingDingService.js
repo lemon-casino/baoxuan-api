@@ -273,32 +273,40 @@ const handleAsyncAllFinishedFlowsByTimeRange = async (startTime, endTime) => {
  * @returns {Promise<*>}
  */
 const getTodayRunningFlows = async () => {
-    const runningFlows = await getFlowsOfStatusAndTimeRange(flowStatusConst.RUNNING)
-    const todayFlows = await globalGetter.getTodayFlows()
-    // 需要将流程data中的信息标识出来
-    // 进行中的流程需要保存之前录入的紧急信息
-    for (let flow of runningFlows) {
-        flow.dataKeyDetails = await flowFormDetailsService.getDataKeyDetails(flow)
-        flow.emergencyKeys = await flowFormService.getFormEmergencyItems(flow.formUuid)
-        if (todayFlows && todayFlows.length > 0) {
-            const currentFlow = todayFlows.filter(tmp => tmp.processInstanceId === flow.processInstanceId)
-            if (currentFlow.length > 0 && currentFlow[0].emergency) {
-                flow.emergency = currentFlow[0].emergency
+    try {
+        const runningFlows = await getFlowsOfStatusAndTimeRange(flowStatusConst.RUNNING) || [];
+        const todayFlows = await globalGetter.getTodayFlows() || [];
+
+        for (let flow of runningFlows) {
+            flow.dataKeyDetails = await flowFormDetailsService.getDataKeyDetails(flow) || {};
+            flow.emergencyKeys = await flowFormService.getFormEmergencyItems(flow.formUuid) || [];
+
+            if (todayFlows.length > 0) {
+                const currentFlow = todayFlows.filter(tmp => tmp.processInstanceId === flow.processInstanceId);
+                if (currentFlow.length > 0 && currentFlow[0].emergency) {
+                    flow.emergency = currentFlow[0].emergency;
+                }
             }
+
+            flow.overallprocessflow = flow.overallprocessflow || [];
         }
-        flow.overallprocessflow = flow.overallprocessflow || []
+
+        const outVisionSourcingUsers = flowCommonService.getVisionOutSourcingNames(runningFlows) || [];
+        const currOutVisionSourcingUsersInRedis = await redisRepo.getOutSourcingUsers("482162119") || [];
+
+        const newOutVisionSourcingUsers = outVisionSourcingUsers.filter(item => !currOutVisionSourcingUsersInRedis.includes(item));
+        for (const newOutSourcingUser of newOutVisionSourcingUsers) {
+            await redisRepo.setOutSourcingUser("482162119", newOutSourcingUser);
+            await outUsersRepo.saveOutUser({ userName: newOutSourcingUser, deptId: "482162119", deptName: "视觉部" });
+        }
+
+        return runningFlows;
+    } catch (error) {
+        console.error("Error in getTodayRunningFlows:", error);
+        return []; // Return an empty array if an error occurs
     }
-    // 将视觉外包人的信息同步到Redis，便于后面转成部门统计
-    const outVisionSourcingUsers = flowCommonService.getVisionOutSourcingNames(runningFlows)
-    const currOutVisionSourcingUsersInRedis = await redisRepo.getOutSourcingUsers("482162119") || []
-    const newOutVisionSourcingUsers = outVisionSourcingUsers.filter(item => !currOutVisionSourcingUsersInRedis.includes(item))
-    for (const newOutSourcingUser of newOutVisionSourcingUsers) {
-        await redisRepo.setOutSourcingUser("482162119", newOutSourcingUser)
-        // 如果有新增的需要保存数据库
-        await outUsersRepo.saveOutUser({userName: newOutSourcingUser, deptId: "482162119", deptName: "视觉部"})
-    }
-    return runningFlows
-}
+};
+
 
 /**
  * 获取今天完成的流程
@@ -457,7 +465,7 @@ const getFlowsOfStatusAndTimeRange = async (status, timeRange, timeAction) => {
         //     -- 如果在是新流程不在库中，需要获取最新的表单流程的限时配置信息
         //     -- 如果已经在库中了，需要根据保存的reviewId获取表单流程的限时配置信息
         let reviewItemsConfig = null
-        const oldFlow = todayFlows.filter(item => item.processInstanceId === flow.processInstanceId)
+        const oldFlow = todayFlows ? todayFlows.filter(item => item.processInstanceId === flow.processInstanceId) : [];
         if (oldFlow.length === 0 || !oldFlow[0].reviewId) {
             const latestFormReview = await getLatestFormReview(flow.formUuid)
             if (!latestFormReview) {
