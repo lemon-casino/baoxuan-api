@@ -1,5 +1,7 @@
 const procurementSelectionEetingService = require('../service/procurementSelectionEetingService');
 
+const biResponse = require("@/utils/biResponse");
+
 
 const procurementSelection = async (procurement) => {
 
@@ -20,6 +22,20 @@ const procurementSelection = async (procurement) => {
 
 };
 
+// 查询条件返回的内容
+
+const returnsTheQueryConditionInformation = async (req, res, next) => {
+    try {
+
+        let reds={}
+        reds = await procurementSelectionEetingService.returnsTheQueryConditionInformation()
+        return res.send(biResponse.success(reds))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
-    procurementSelection
+    procurementSelection,
+    returnsTheQueryConditionInformation
 }

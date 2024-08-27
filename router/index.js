@@ -40,5 +40,7 @@ module.exports = {
     "/wechat": require("./wechatRouter"),
     "/supplier": require("./supplierRouter"),
     "/process": require("./processRouter"),
-    "/users-tags": require("./usersTagsRouter")
+    "/users-tags": require("./usersTagsRouter"),
+    "/development": require("./developmentRouter"),
+
 }

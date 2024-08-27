@@ -37,7 +37,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "选品属性",
-      field: "productName"
+      field: "selectionAttributes"
     },
     productName: {
       type: DataTypes.STRING(255),

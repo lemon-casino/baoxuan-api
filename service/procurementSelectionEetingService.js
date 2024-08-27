@@ -1,11 +1,9 @@
-
-
 const procurementSelectionEetingRepo = require("@/repository/procurementSelectionEetingRepo")
-
 
 
 const Create = async (procurement) => {
     // 当数据不存在的时候 批量创建
+    console.log(procurement)
     await procurementSelectionEetingRepo.bulkCreate(procurement);
 }
 const bulkUpdate = async (procurement) => {
@@ -20,8 +18,13 @@ const bulkUpdate = async (procurement) => {
 const getExistProcessInstanceId= async (processInstanceId) => {
     return await procurementSelectionEetingRepo.getExistProcessInstanceId(processInstanceId);
 }
+const returnsTheQueryConditionInformation= async () => {
+   const reds= await procurementSelectionEetingRepo.returnsTheQueryConditionInformation();
+    return  reds[0];
+}
 module.exports = {
     Create,
     bulkUpdate,
-    getExistProcessInstanceId
+    returnsTheQueryConditionInformation,
+
 }
