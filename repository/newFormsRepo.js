@@ -7,7 +7,8 @@ const {
     deptAction,
     deptField,
     deptPreField,
-    actionFilter
+    actionFilter,
+    artField
 } = require('../const/newFormConst')
 const moment = require('moment')
 
@@ -127,22 +128,32 @@ const moment = require('moment')
 
 const getProcessStat = async function (userNames, tag, startDate, endDate) {
     let result = []
-    let sql1 = `select ifnull(sum(fiv.value), 0) as total, 
-        ifnull(sum(if(fiv.value >= 20, 1, 0)), 0) as full,
-        ifnull(sum(if(fiv.value >= 10 and fiv.value < 20, 1, 0)), 0) as half, 
-        ifnull(sum(if(fiv.value >= 1 and fiv.value < 10, 1, 0)), 0) as little`
-    let sql2 = `select ifnull(sum(fiv.value), 0) as total`
+    let sql1 = `select ifnull(sum(piv.value), 0) as total, 
+        if(ifnull(sum(piv.value), 0) >= 20, 1, 0) as full,
+        if(ifnull(sum(piv.value), 0) >= 10 and ifnull(sum(piv.value), 0) < 20, 1, 0) as half, 
+        if(ifnull(sum(piv.value), 0) >= 1 and ifnull(sum(piv.value), 0) < 10, 1, 0) as little`
+    let sql2 = `select ifnull(sum(piv.value), 0) as total`
+    let sql3 = `select ifnull(sum(pis.value), 0) as total, 
+        if(ifnull(sum(pis.value), 0) >= 20, 1, 0) as full,
+        if(ifnull(sum(pis.value), 0) >= 10 and ifnull(sum(pis.value), 0) < 20, 1, 0) as half, 
+        if(ifnull(sum(pis.value), 0) >= 1 and ifnull(sum(pis.value), 0) < 10, 1, 0) as little`
+    let sql4 = `select ifnull(sum(pis.value), 0) as total`
     let sql = ` from process_instance_records pir
         join process_instances pi on pir.instance_id = pi.id
         join processes p on p.id = pi.process_id
-        left join form_instances fi on fi.form_id = p.form_id
-        and fi.instance_id = pi.instance_id
-        left join form_instance_values fiv on fiv.instance_id = fi.id
-        where p.form_id = 119 and pir.show_name in ` 
-    let subsql = ` and pir.action_exit = ? and fiv.field_id in `
+        left join process_instance_values piv on piv.instance_id = pi.id`
+    let subsql = ` where p.form_id = 119 and pir.show_name in ` 
+    let subsql1 = ` and pir.action_exit = ? and piv.field_id in `
+    let subsql2 = ` and pir.action_exit = ? and pis.field_id in `
     let finalsql = ` and pir.operate_time >= '${startDate}' 
         and pir.operate_time <= '${endDate}' 
-        and pir.operator_name = ?`
+        and pir.operator_name = ? group by pi.id`
+    let finalsql1 = ` and pir.operate_time >= '${startDate}' 
+        and pir.operate_time <= '${endDate}' 
+        and pis2.value = ? group by pi.id`
+    let searchsql = `select ifnull(sum(total), 0) as total, ifnull(sum(full), 0) as full, 
+        ifnull(sum(half), 0) as half, ifnull(sum(little), 0) as little`
+    let searchsql1 = `select ifnull(sum(total), 0) as total`
     for (let i = 0; i < userNames.length; i++) {
         let user = JSON.parse(JSON.stringify(item)), userItem = JSON.parse(JSON.stringify(actionItem))
         user.actionName = userNames[i]
@@ -153,11 +164,41 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
         userItem.actionName = action.complete.value
         user.children.push(JSON.parse(JSON.stringify(userItem)))
         user.children.push(JSON.parse(JSON.stringify(actionItem2)))
-        let search = `${sql1}, 0 as type ${sql}("${deptAction[tag].join('","')}")${subsql}("${deptPreField[tag].normal.join('","')}")${finalsql}`
+        let search = `${searchsql}, 0 as type from (
+            ${sql1}${sql}${subsql}("${deptAction[tag].join('","')}")${subsql1}("${deptPreField[tag].normal.join('","')}")
+            ${finalsql}) a`
         let params = [action.next.key, userNames[i]]
-        search = `${search} union all ${sql1}, 1 as type ${sql}("${deptAction[tag].join('","')}")${subsql}("${deptPreField[tag].normal.join('","')}")${finalsql}`
+        search = `${search} 
+            union all 
+            ${searchsql}, 1 as type from (
+            ${sql1}${sql}${subsql}("${deptAction[tag].join('","')}")${subsql1}("${deptPreField[tag].normal.join('","')}")
+            ${finalsql}) b`
         params.push(action.doing.key, userNames[i])
-        search = `${search} union all ${sql1}, 2 as type ${sql}("${deptAction[tag].join('","')}")${subsql}("${deptField[tag].normal.join('","')}")${finalsql}`
+        search = `${search} 
+            union all 
+            ${searchsql}, 2 as type from (
+            ${sql1}${sql}`
+        if (tag == 'insideArt') {
+            search = `${search} 
+                left join process_instance_values piv2 on piv2.instance_id = pi.id
+                ${subsql}("${deptAction[tag].join('","')}")${subsql1}("${deptField[tag].normal.join('","')}")
+                and piv2.field_id = '${artField.judge.key}' and piv2.value = '${artField.judge.neq}'
+                ${finalsql}
+                union all
+                ${sql3}${sql} 
+                left join process_instance_sub_values pis on pis.instance_id = pi.id
+                left join process_instance_sub_values pis2 on pis2.instance_id = pi.id and pis2.index = pis.index
+                ${subsql}("${deptAction[tag].join('","')}")${subsql2}("${artField.field.join('","')}")
+                and piv.field_id = '${artField.judge.key}' and piv.value = '${artField.judge.neq}'
+                ${finalsql1}`
+                params.push(action.complete.key, userNames[i])
+        } else {
+            search = `${search} 
+                ${subsql}("${deptAction[tag].join('","')}")${subsql1}("${deptField[tag].normal.join('","')}")
+                ${finalsql}`
+        }
+
+        search = `${search}) c`
         params.push(action.complete.key, userNames[i])
 
         let row = await query(search, params)
@@ -174,12 +215,24 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             }
         }
 
-        search = `${sql2}, 0 as type ${sql}("${deptAction[tag].join('","')}")${subsql}("${deptPreField[tag].video.join('","')}")${finalsql}`
+        search = `${searchsql1}, 0 as type from (
+            ${sql2}${sql}${subsql}("${deptAction[tag].join('","')}")${subsql1}("${deptPreField[tag].video.join('","')}")
+            ${finalsql}) a`
         params = [action.next.key, userNames[i]]
-        search = `${search} union all ${sql2}, 1 as type ${sql}("${deptAction[tag].join('","')}")${subsql}("${deptPreField[tag].video.join('","')}")${finalsql}`
+        search = `${search} 
+            union all 
+            ${searchsql1}, 1 as type from (
+                ${sql2}${sql}${subsql}("${deptAction[tag].join('","')}")${subsql1}("${deptPreField[tag].video.join('","')}")
+                ${finalsql}) b`
         params.push(action.doing.key, userNames[i])
-        search = `${search} union all ${sql2}, 2 as type ${sql}("${deptAction[tag].join('","')}")${subsql}("${deptField[tag].video.join('","')}")${finalsql}`
+        search = `${search} 
+            union all 
+            ${searchsql1}, 2 as type from (
+                ${sql2}${sql}${subsql}("${deptAction[tag].join('","')}")${subsql1}("${deptField[tag].normal.join('","')}")
+                ${finalsql}) c`
+                
         params.push(action.complete.key, userNames[i])
+
         row = await query(search, params)
         if (row?.length) {
             for (let j = 0; j < row.length; j++) {
@@ -232,11 +285,11 @@ const getFlowProcessInstances = async function (params, offset, limit) {
         p1.push(params.operator)
         if (params.startDate) {
             subsql = `${subsql} and pir.operate_time >= ?`
-            p1.push(moment(params.startDate).format('YYYY-MM-DD'))
+            p1.push(moment(params.startDate).format('YYYY-MM-DD') + ' 00:00:00')
         }
         if (params.endDate) {
             subsql = `${subsql} and pir.operate_time <= ?`
-            p1.push(moment(params.endDate).format('YYYY-MM-DD'))
+            p1.push(moment(params.endDate).format('YYYY-MM-DD') + ' 23:59:59')
         }
         if (params.action) {
             subsql = `${subsql} and pir.action_exit in (
