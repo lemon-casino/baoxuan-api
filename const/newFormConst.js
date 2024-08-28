@@ -8,7 +8,12 @@ const activities = {
 
 const deptAction = {
     insidePhoto: ['一般拍摄', 'AI拍摄'],
-    insideArt: ['美编修图'], //'AI修图', '3D渲染', '视频剪辑', 
+    insideArt: {
+        normal: ['美编修图'],
+        airetouch: ['AI修图'],
+        video: ['视频剪辑'],
+        render: ['3D渲染']
+    },
     outPhoto: ['美编主管确认拍摄完成'],
     outCompleteSet: ['美编主管确认拍摄完成'],
     outArt: ['美编主管确认拍摄完成']
@@ -32,11 +37,15 @@ const deptField = {
             'numberField_lzc1dw9c', //实际简单修图数量
             'numberField_lzc1dw9e', //实际开版修图数量
             'numberField_lzc1dw9g', //实际套版修图数量
-            // 'numberField_lzc1dw9q', //实际美编AI作图数
-            // 'numberField_lzciwm5n' //实际3D渲染数量
+        ],
+        airetouch: [
+            'numberField_lzc1dw9q' //实际美编AI作图数
         ],
         video: [
             'numberField_lzc1dw9i' //实际视频剪辑数量
+        ],
+        render: [
+            'numberField_lzciwm5n' //实际3D渲染数量
         ]
     },
     outPhoto: {
@@ -58,8 +67,8 @@ const deptField = {
             'numberField_lzc1dw9c', 
             'numberField_lzc1dw9e', 
             'numberField_lzc1dw9g', 
-            // 'numberField_lzc1dw9q', 
-            // 'numberField_lzciwm5n'
+            'numberField_lzc1dw9q', 
+            'numberField_lzciwm5n'
         ],
         video: [
             'numberField_lzc1dw8g', 
@@ -74,8 +83,8 @@ const deptField = {
             'numberField_lzc1dw9c', 
             'numberField_lzc1dw9e', 
             'numberField_lzc1dw9g', 
-            // 'numberField_lzc1dw9q', 
-            // 'numberField_lzciwm5n'
+            'numberField_lzc1dw9q', 
+            'numberField_lzciwm5n'
         ],
         video: [
             'numberField_lzc1dw9i'
@@ -101,11 +110,15 @@ const deptPreField = {
             'numberField_lzc1dw8y', //预计简单修图数量
             'numberField_lzc1dw90', //预计开版修图数量
             'numberField_lzc1dw92', //预计套版修图数量
-            // 'numberField_lzc1dw9o', //预计美编AI作图数
-            // 'numberField_lzciwm5l' //预计3D渲染数量
+        ],
+        airetouch: [
+            'numberField_lzc1dw9o', //预计美编AI作图数
         ],
         video: [
             'numberField_lzc1dw94' //预计视频剪辑数量
+        ],
+        render: [
+            'numberField_lzciwm5l' //预计3D渲染数量
         ]
     },
     outPhoto: {
@@ -127,8 +140,8 @@ const deptPreField = {
             'numberField_lzc1dw8y', 
             'numberField_lzc1dw90', 
             'numberField_lzc1dw92', 
-            // 'numberField_lzc1dw9o', 
-            // 'numberField_lzciwm5l'
+            'numberField_lzc1dw9o', 
+            'numberField_lzciwm5l'
         ],
         video: [
             'numberField_lzc1dw94', 
@@ -143,8 +156,8 @@ const deptPreField = {
             'numberField_lzc1dw8y', 
             'numberField_lzc1dw90', 
             'numberField_lzc1dw92', 
-            // 'numberField_lzc1dw9o', 
-            // 'numberField_lzciwm5l'
+            'numberField_lzc1dw9o', 
+            'numberField_lzciwm5l'
         ],
         video: [
             'numberField_lzc1dw94'
@@ -189,54 +202,35 @@ const actionItem = {
         actionName: '逾期',
         children: [{
             actionName: '全套',
-            ids: [],
             sum: 0,
-            userFlowsDataStat: []
         },{
             actionName: '半套',
-            ids: [],
             sum: 0,
-            userFlowsDataStat: []
         },{
             actionName: '散图',
-            ids: [],
             sum: 0,
-            userFlowsDataStat: []
         },{
             actionName: '视频',
-            ids: [],
             sum: 0,
-            userFlowsDataStat: []
         }],
-        ids: [],
         sum: 0
     },{
         actionName: '未逾期',
         children: [{
             actionName: '全套',
-            ids: [],
             sum: 0,
-            userFlowsDataStat: []
         },{
             actionName: '半套',
-            ids: [],
             sum: 0,
-            userFlowsDataStat: []
         },{
             actionName: '散图',
-            ids: [],
             sum: 0,
-            userFlowsDataStat: []
         },{
             actionName: '视频',
-            ids: [],
             sum: 0,
-            userFlowsDataStat: []
         }],
-        ids: [],
         sum: 0
     }],
-    ids: [],
     sum: 0
 }
 const actionItem2 = {
@@ -244,7 +238,6 @@ const actionItem2 = {
     children: [{
         actionName: '进行中',
         children: [],
-        ids: [],
         sum: 0,
         sumAlone: true,
         tooltip: '该工作量会统计表单中预计的数据',
@@ -252,19 +245,16 @@ const actionItem2 = {
     },{
         actionName: '已完成',
         children: [],
-        ids: [],
         sum: 0,
         sumAlone: true,
         uniqueIds: true
     }],
-    ids: [],
     sum: 0
 }
 const item = {
     actionCode: 'userActStat',
     actionName: '',
     children: [],
-    ids: [],
     sum: 0
 }
 

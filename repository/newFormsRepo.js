@@ -127,7 +127,8 @@ const moment = require('moment')
 // }
 
 const getProcessStat = async function (userNames, tag, startDate, endDate) {
-    let result = []
+    let result = [], realAction, realField, search, search1, params = []
+    
     let sql1 = `select ifnull(sum(piv.value), 0) as total, 
         if(ifnull(sum(piv.value), 0) >= 20, 1, 0) as full,
         if(ifnull(sum(piv.value), 0) >= 10 and ifnull(sum(piv.value), 0) < 20, 1, 0) as half, 
@@ -137,7 +138,6 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
         if(ifnull(sum(pis.value), 0) >= 20, 1, 0) as full,
         if(ifnull(sum(pis.value), 0) >= 10 and ifnull(sum(pis.value), 0) < 20, 1, 0) as half, 
         if(ifnull(sum(pis.value), 0) >= 1 and ifnull(sum(pis.value), 0) < 10, 1, 0) as little`
-    let sql4 = `select ifnull(sum(pis.value), 0) as total`
     let sql = ` from process_instance_records pir
         join process_instances pi on pir.instance_id = pi.id
         join processes p on p.id = pi.process_id
@@ -151,9 +151,77 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
     let finalsql1 = ` and pir.operate_time >= '${startDate}' 
         and pir.operate_time <= '${endDate}' 
         and pis2.value = ? group by pi.id`
-    let searchsql = `select ifnull(sum(total), 0) as total, ifnull(sum(full), 0) as full, 
-        ifnull(sum(half), 0) as half, ifnull(sum(little), 0) as little`
-    let searchsql1 = `select ifnull(sum(total), 0) as total`
+    let searchsql = `select ifnull(sum(total), 0) as total, 
+        ifnull(sum(full), 0) as full, 
+        ifnull(sum(half), 0) as half, 
+        ifnull(sum(little), 0) as little`
+
+    if (tag == 'insideArt') {
+        realAction = {
+            normal: deptAction[tag].normal.join('","'),
+            airetouch: deptAction[tag].airetouch.join('","'),
+            video: deptAction[tag].video.join('","'),
+            render: deptAction[tag].render.join('","')
+        }
+        realField = {
+            normal: deptField[tag].normal.join('","'),
+            airetouch: deptField[tag].airetouch.join('","'),
+            video: deptField[tag].video.join('","'),
+            render: deptField[tag].render.join('","'),
+            subretouch: artField.field.join('","')
+        }
+        search = `${searchsql}, 0 as type from (
+                ${sql1}${sql}${subsql}("${realAction.normal}")${subsql1}("${realField.normal}")${finalsql}
+                union all
+                ${sql1}${sql}${subsql}("${realAction.airetouch}")${subsql1}("${realField.airetouch}")${finalsql}
+                union all
+                ${sql1}${sql}${subsql}("${realAction.render}")${subsql1}("${realField.render}")${finalsql}) a
+            union all
+            ${searchsql}, 1 as type from (
+                ${sql1}${sql}${subsql}("${realAction.normal}")${subsql1}("${realField.normal}")${finalsql}
+                union all
+                ${sql1}${sql}${subsql}("${realAction.airetouch}")${subsql1}("${realField.airetouch}")${finalsql}
+                union all
+                ${sql1}${sql}${subsql}("${realAction.render}")${subsql1}("${realField.render}")${finalsql}) b
+            union all
+            ${searchsql}, 2 as type from (
+                ${sql1}${sql}
+                left join process_instance_values piv2 on piv2.instance_id = pi.id
+                ${subsql}("${realAction.normal}")${subsql1}("${realField.normal}")
+                and piv2.field_id = '${artField.judge.key}' and piv2.value = '${artField.judge.neq}'
+                ${finalsql}
+                union all
+                ${sql1}${sql}${subsql}("${realAction.airetouch}")${subsql1}("${realField.airetouch}")${finalsql}
+                union all
+                ${sql1}${sql}${subsql}("${realAction.render}")${subsql1}("${realField.render}")${finalsql}
+                union all
+                ${sql3}${sql}
+                left join process_instance_sub_values pis on pis.instance_id = pi.id
+                left join process_instance_sub_values pis2 on pis2.instance_id = pi.id 
+                and pis2.index = pis.index
+                ${subsql}("${realAction.normal}")${subsql2}("${realField.subretouch}")
+                and piv.field_id = '${artField.judge.key}' and piv.value = '${artField.judge.eq}'
+                ${finalsql1}) c`
+    } else {
+        realAction = deptAction[tag].join('","')
+        realField = {
+            normal: deptField[tag].normal.join('","'),
+            video: deptField[tag].video.join('","')
+        }
+        search = `${searchsql}, 0 as type from (
+                ${sql1}${sql}${subsql}("${realAction}")${subsql1}("${realField.normal}")${finalsql}) a
+            union all
+            ${searchsql}, 1 as type from (
+                ${sql1}${sql}${subsql}("${realAction}")${subsql1}("${realField.normal}")${finalsql}) b
+            union all
+            ${searchsql}, 2 as type from (
+                ${sql1}${sql}${subsql}("${realAction}")${subsql1}("${realField.normal}")${finalsql}) c`
+    }
+    search1 = `${sql2}, 0 as type${sql}${subsql}("${realAction}")${subsql1}("${realField.video}")${finalsql}
+            union all
+                ${sql2}, 1 as type${sql}${subsql}("${realAction}")${subsql1}("${realField.video}")${finalsql}
+            union all
+                ${sql2}, 2 as type${sql}${subsql}("${realAction}")${subsql1}("${realField.video}")${finalsql}`
     for (let i = 0; i < userNames.length; i++) {
         let user = JSON.parse(JSON.stringify(item)), userItem = JSON.parse(JSON.stringify(actionItem))
         user.actionName = userNames[i]
@@ -164,42 +232,38 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
         userItem.actionName = action.complete.value
         user.children.push(JSON.parse(JSON.stringify(userItem)))
         user.children.push(JSON.parse(JSON.stringify(actionItem2)))
-        let search = `${searchsql}, 0 as type from (
-            ${sql1}${sql}${subsql}("${deptAction[tag].join('","')}")${subsql1}("${deptPreField[tag].normal.join('","')}")
-            ${finalsql}) a`
-        let params = [action.next.key, userNames[i]]
-        search = `${search} 
-            union all 
-            ${searchsql}, 1 as type from (
-            ${sql1}${sql}${subsql}("${deptAction[tag].join('","')}")${subsql1}("${deptPreField[tag].normal.join('","')}")
-            ${finalsql}) b`
-        params.push(action.doing.key, userNames[i])
-        search = `${search} 
-            union all 
-            ${searchsql}, 2 as type from (
-            ${sql1}${sql}`
+        params = [
+            action.next.key, 
+            userNames[i], 
+            action.doing.key, 
+            userNames[i], 
+            action.complete.key, 
+            userNames[i]
+        ]
         if (tag == 'insideArt') {
-            search = `${search} 
-                left join process_instance_values piv2 on piv2.instance_id = pi.id
-                ${subsql}("${deptAction[tag].join('","')}")${subsql1}("${deptField[tag].normal.join('","')}")
-                and piv2.field_id = '${artField.judge.key}' and piv2.value = '${artField.judge.neq}'
-                ${finalsql}
-                union all
-                ${sql3}${sql} 
-                left join process_instance_sub_values pis on pis.instance_id = pi.id
-                left join process_instance_sub_values pis2 on pis2.instance_id = pi.id and pis2.index = pis.index
-                ${subsql}("${deptAction[tag].join('","')}")${subsql2}("${artField.field.join('","')}")
-                and piv.field_id = '${artField.judge.key}' and piv.value = '${artField.judge.neq}'
-                ${finalsql1}`
-                params.push(action.complete.key, userNames[i])
-        } else {
-            search = `${search} 
-                ${subsql}("${deptAction[tag].join('","')}")${subsql1}("${deptField[tag].normal.join('","')}")
-                ${finalsql}`
+            params = [
+                action.next.key, 
+                userNames[i], 
+                action.next.key, 
+                userNames[i], 
+                action.next.key, 
+                userNames[i], 
+                action.doing.key, 
+                userNames[i], 
+                action.doing.key, 
+                userNames[i], 
+                action.doing.key, 
+                userNames[i], 
+                action.complete.key, 
+                userNames[i],
+                action.complete.key, 
+                userNames[i],
+                action.complete.key, 
+                userNames[i], 
+                action.complete.key, 
+                userNames[i]
+            ]
         }
-
-        search = `${search}) c`
-        params.push(action.complete.key, userNames[i])
 
         let row = await query(search, params)
         if (row?.length) {
@@ -215,25 +279,15 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             }
         }
 
-        search = `${searchsql1}, 0 as type from (
-            ${sql2}${sql}${subsql}("${deptAction[tag].join('","')}")${subsql1}("${deptPreField[tag].video.join('","')}")
-            ${finalsql}) a`
-        params = [action.next.key, userNames[i]]
-        search = `${search} 
-            union all 
-            ${searchsql1}, 1 as type from (
-                ${sql2}${sql}${subsql}("${deptAction[tag].join('","')}")${subsql1}("${deptPreField[tag].video.join('","')}")
-                ${finalsql}) b`
-        params.push(action.doing.key, userNames[i])
-        search = `${search} 
-            union all 
-            ${searchsql1}, 2 as type from (
-                ${sql2}${sql}${subsql}("${deptAction[tag].join('","')}")${subsql1}("${deptField[tag].normal.join('","')}")
-                ${finalsql}) c`
-                
-        params.push(action.complete.key, userNames[i])
-
-        row = await query(search, params)
+        params = [
+            action.next.key, 
+            userNames[i], 
+            action.doing.key, 
+            userNames[i], 
+            action.complete.key, 
+            userNames[i]
+        ]
+        row = await query(search1, params)
         if (row?.length) {
             for (let j = 0; j < row.length; j++) {
                 user.children[row[j].type].children[1].children[3].sum += parseInt(row[j].total)
@@ -278,10 +332,25 @@ const getFlowProcessInstances = async function (params, offset, limit) {
         processes p on p.id = pi.process_id where p.form_id = ?`
     p1.push(params.id)
     if (params.operator) {
-        subsql = `${subsql} and exists(
-            select pir.id from process_instance_records pir where 
-            pi.id = pir.instance_id and pir.operator_name = ? and pir.show_name in 
-            ("${deptAction[params.tag].join('","')}")`
+        if (params.tag == 'insideArt') { 
+            subsql = `${subsql} and exists(
+                select pir.id from process_instance_records pir
+                left join process_instance_sub_values pis on pis.instance_id = pi.id
+                where pi.id = pir.instance_id and 
+                (pir.operator_name = ? or pis.value = ?)
+                and pir.show_name in 
+                ("${deptAction[params.tag].normal.join('","')}", 
+                "${deptAction[params.tag].airetouch.join('","')}", 
+                "${deptAction[params.tag].video.join('","')}", 
+                "${deptAction[params.tag].render.join('","')}")`
+            p1.push(params.operator)
+        } else {
+            subsql = `${subsql} and exists(
+                select pir.id from process_instance_records pir where 
+                pi.id = pir.instance_id and pir.operator_name = ? and pir.show_name in 
+                ("${deptAction[params.tag].join('","')}")`
+        }
+        
         p1.push(params.operator)
         if (params.startDate) {
             subsql = `${subsql} and pir.operate_time >= ?`
@@ -292,8 +361,8 @@ const getFlowProcessInstances = async function (params, offset, limit) {
             p1.push(moment(params.endDate).format('YYYY-MM-DD') + ' 23:59:59')
         }
         if (params.action) {
-            subsql = `${subsql} and pir.action_exit in (
-                ${actionFilter[params.action].map(() => '?').join(',')})`
+            subsql = `${subsql} and pir.action_exit in 
+            (${actionFilter[params.action].map(() => '?').join(',')})`
             p1.push(...actionFilter[params.action])
         }
         subsql = `${subsql})`
