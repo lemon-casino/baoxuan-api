@@ -233,6 +233,7 @@ const actionItem = {
     }],
     sum: 0
 }
+
 const actionItem2 = {
     actionName: '工作量',
     children: [{
@@ -265,6 +266,118 @@ const actionFilter = {
     '工作量': ['next', 'doing', 'agree']
 }
 
+const statItem = {
+    actionName: '',
+    actionCode: '',
+    children: [],
+    ids: [],
+    sum: 0
+}
+
+const statItem1 = [
+    {
+        name: '流程汇总',
+        code: 'sumFlowStat'
+    }, {
+        name: '流程汇总(外包)',
+        code: 'sumFlowStat'
+    }, {
+        name: '流程汇总(内部)',
+        code: 'sumFlowStat'
+    }
+]
+
+const statItem2 = [
+    {
+        name: '全套'
+    }, {
+        name: '半套'
+    }, {
+        name: '散图'
+    }, {
+        name: '视频'
+    }
+]
+
+const statItem3 = [
+    {
+        name: '待转入',
+        code: 'TODO'
+    }, {
+        name: '进行中',
+        code: 'DOING'
+    }, {
+        name: '已完成',
+        code: 'DONE'
+    }
+]
+
+const statItem4 = [
+    {
+        name: '逾期',
+        code: 'overdue'
+    }, {
+        name: '未逾期',
+        code: 'notOverdue'
+    }
+]
+const statItem5 = [
+    {
+        name: '摄影'
+    }, {
+        name: '美编'
+    }, {
+        name: '外包'
+    }
+]
+
+const totalName = '工作量汇总'
+const totalCode = 'sumActStat'
+
+const totalStat = [
+    {
+        name: '待拍摄影'
+    }, {
+        name: '摄影进行中'
+    }, {
+        name: '摄影完成'
+    }, {
+        name: '待入美编'
+    }, {
+        name: '美编进行中'
+    }, {
+        name: '美编已完成'
+    }, {
+        name: '待入剪辑'
+    }, {
+        name: '剪辑进行中'
+    }, {
+        name: '剪辑已完成'
+    }, {
+        name: '逾期'
+    }
+]
+
+const totalStat1 = [
+    {
+        name: '待拍摄影'
+    }, {
+        name: '摄影进行中'
+    }, {
+        name: '摄影完成'
+    }, {
+        name: '待入美编'
+    }, {
+        name: '美编进行中'
+    }, {
+        name: '美编已完成'
+    }, {
+        name: '工作量'
+    }, {
+        name: '逾期'
+    }
+]
+
 module.exports = {
     activities,
     deptAction,
@@ -275,5 +388,15 @@ module.exports = {
     actionItem2,
     item,
     actionFilter,
-    artField
+    artField,
+    statItem,
+    statItem1,
+    statItem2,
+    statItem3,
+    statItem4,
+    statItem5,
+    totalName,
+    totalCode,
+    totalStat,
+    totalStat1
 }
