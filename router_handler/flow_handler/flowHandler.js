@@ -179,7 +179,7 @@ const getVisionUsersStat = async (req, res, next) => {
         const {statType, tags, deptIds, startDate, endDate, userNames} = req.body
         const userId = req.user.userId
         const result = statType === coreActionStatTypeConst.StatAction ?
-            await visionCoreActionService.getCoreActionStat(statType, tags, userId, ["482162119", "933412643", "962724541", "962893128"], userNames, startDate, endDate) : 
+            await visionCoreActionService.getStat(startDate, endDate) : 
             await visionCoreActionService.getUsersStat(tags, ["482162119", "933412643", "962724541", "962893128"], userId, userNames, startDate, endDate)
         res.send(biResponse.success(result))
     } catch (e) {
