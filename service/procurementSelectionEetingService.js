@@ -22,9 +22,25 @@ const returnsTheQueryConditionInformation= async () => {
    const reds= await procurementSelectionEetingRepo.returnsTheQueryConditionInformation();
     return  reds[0];
 }
+const FilterEetingInformation = async (content) => {
+	return await procurementSelectionEetingRepo.FilterEetingInformation(
+        content
+	)
+}
+const theTimeOfTheLatestDay = async (content) => {
+    return await procurementSelectionEetingRepo.theTimeOfTheLatestDay()
+}
+
+
+const groupMemberInformation = async (content) => {
+    //从redis 中 返回组员信息
+
+}
 module.exports = {
     Create,
     bulkUpdate,
     returnsTheQueryConditionInformation,
-
+    FilterEetingInformation,
+    theTimeOfTheLatestDay,
+    groupMemberInformation
 }

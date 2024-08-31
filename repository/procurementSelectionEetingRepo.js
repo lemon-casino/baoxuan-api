@@ -54,10 +54,55 @@ const returnsTheQueryConditionInformation = async () => {
 
 }
 
+const FilterEetingInformation = async (content) => {
+    const {
+        pageIndex,
+        pageSize,
+        originator,
+        productName,
+        vendorName,
+        productAttributes,
+        selectionAttributes,
+        pushProductLine,
+        startTime,
+        endTime
+    } = content;
+
+    const where = {
+        creationTime: { $between: [startTime, endTime] }
+    };
+
+    if (originator) where.originator = { $in: Array.isArray(originator) ? originator : [originator] };
+    if (productName) where.productName = { $in: Array.isArray(productName) ? productName : [productName] };
+    if (vendorName) where.vendorName = { $in: Array.isArray(vendorName) ? vendorName : [vendorName] };
+    if (selectionAttributes) where.selectionAttributes = { $in: Array.isArray(selectionAttributes) ? selectionAttributes : [selectionAttributes] };
+    if (productAttributes) where.productAttributes = { $in: Array.isArray(productAttributes) ? productAttributes : [productAttributes] };
+    if (pushProductLine) where.pushProductLine = { $in: Array.isArray(pushProductLine) ? pushProductLine : [pushProductLine] };
+
+    console.log(where);
+
+    return procurementSelectionEeting.findAndCountAll({
+        where,
+        limit: parseInt(pageSize, 10),
+        offset: (parseInt(pageIndex, 10) - 1) * parseInt(pageSize, 10),
+        order: [['creationTime', 'DESC']],
+        raw: true,
+    });
+};
+// 返回表中最新一天的时间
+const theTimeOfTheLatestDay = async () => {
+    return procurementSelectionEeting.findOne({
+        attributes: ['creationTime'],
+        order: [['creationTime', 'DESC']],
+        raw: true,
+    });
+}
 
 module.exports = {
     bulkCreate,
     bulkUpdate,
     getExistProcessInstanceId,
-    returnsTheQueryConditionInformation
+    returnsTheQueryConditionInformation,
+    FilterEetingInformation,
+    theTimeOfTheLatestDay
 }
