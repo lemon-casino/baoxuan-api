@@ -64,8 +64,20 @@ const getFlowsProcessByIds = async (req, res, next) => {
         const limit = parseInt(req.query.pageSize)
         const page = parseInt(req.query.currentPage)
         const offset = (page - 1) * limit
-        const process = await flowService.getFlowsProcessById(req.query.id, offset, limit)
+        const process = await flowService.getFlowsProcesses(req.query, offset, limit)
         return res.send(biResponse.success(process))
+    } catch (e) {
+        next(e)
+    }
+
+    return res.send(biResponse.serverError)
+}
+
+const getFlowProcessActions = async (req, res, next) => {
+    try {
+        joiUtil.clarityValidate(flowSchema.getFlowsActionsSchema, req.query)
+        const actions = await flowService.getFlowsActions(req.query.id)
+        return res.send(biResponse.success(actions))
     } catch (e) {
         next(e)
     }
@@ -289,6 +301,7 @@ module.exports = {
     getFlows,
     getFlowsProcessByIds,
     exportFlowsProcess,
+    getFlowProcessActions,
     updateRunningFlowEmergency,
     getVisionCoreActionStat,
     getVisionUsersStat,
