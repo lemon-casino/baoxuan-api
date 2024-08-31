@@ -122,6 +122,8 @@ client.on("error", (err) => {
                 const updatedTime = flow.modifiedTimeGMT
                 const optimizationSuggestions=flow.data["textareaField_lutoemnz"]
                 const selectionAttributes =flow.data["radioField_lrhgr6i7"]
+                //设计款定义
+                const designDefinition =flow.data["checkboxField_lydscsls"]
 
                 const processInstanceId = flow.processInstanceId
                 procurement.push({
@@ -137,7 +139,8 @@ client.on("error", (err) => {
                     "updatedTime":updatedTime,
                     "optimizationSuggestions":optimizationSuggestions,
                     "processInstanceId":processInstanceId,
-                    "selectionAttributes":selectionAttributes
+                    "selectionAttributes":selectionAttributes,
+                    "designDefinition":designDefinition
                 });
             }
             await procurementSelection(procurement);
