@@ -1,5 +1,7 @@
 const procurementSelectionEetingService = require('../service/procurementSelectionEetingService');
 
+const biResponse = require("@/utils/biResponse");
+
 
 const procurementSelection = async (procurement) => {
 
@@ -20,6 +22,60 @@ const procurementSelection = async (procurement) => {
 
 };
 
+// 查询条件返回的内容
+
+const returnsTheQueryConditionInformation = async (req, res, next) => {
+    try {
+
+        let reds={}
+        reds = await procurementSelectionEetingService.returnsTheQueryConditionInformation()
+        return res.send(biResponse.success(reds))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const ReturnFilterEetingInformation = async (req, res, next) => {
+    try {
+
+
+
+        let reds={}
+
+        reds = await procurementSelectionEetingService.FilterEetingInformation(req.query)
+        return res.send(biResponse.success(reds))
+    } catch (e) {
+        next(e)
+    }
+}
+const theTimeOfTheLatestDay = async (req, res, next) => {
+    try {
+
+
+
+        let reds={}
+
+        reds = await procurementSelectionEetingService.theTimeOfTheLatestDay()
+        return res.send(biResponse.success(reds))
+    } catch (e) {
+        next(e)
+    }
+}
+const groupMemberInformation = async (req, res, next) => {
+    try {
+
+        let reds={}
+
+        reds = await procurementSelectionEetingService.groupMemberInformation()
+        return res.send(biResponse.success(reds))
+    } catch (e) {
+        next(e)
+    }
+}
 module.exports = {
-    procurementSelection
+    procurementSelection,
+    returnsTheQueryConditionInformation,
+    ReturnFilterEetingInformation,
+    theTimeOfTheLatestDay,
+    groupMemberInformation
 }

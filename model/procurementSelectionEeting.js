@@ -13,13 +13,13 @@ module.exports = sequelize => {
       field: "id"
     },
     processInstanceId: {
-        type: DataTypes.STRING(255),
-        allowNull: true,
-        defaultValue: null,
-        primaryKey: false,
-        autoIncrement: false,
-        comment: "流程实例id",
-        field: "processInstanceId"
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "实例化ID",
+      field: "processInstanceId"
     },
     originator: {
       type: DataTypes.STRING(255),
@@ -29,15 +29,6 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "发起人",
       field: "originator"
-    },
-    selectionAttributes:{
-      type: DataTypes.STRING(255),
-      allowNull: true,
-      defaultValue: null,
-      primaryKey: false,
-      autoIncrement: false,
-      comment: "选品属性",
-      field: "productName"
     },
     productName: {
       type: DataTypes.STRING(255),
@@ -56,6 +47,15 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "供应商名称",
       field: "vendorName"
+    },
+    selectionAttributes: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "选品属性",
+      field: "selectionAttributes"
     },
     duration: {
       type: DataTypes.STRING(255),
@@ -128,6 +128,15 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "完成-结束时间",
       field: "completionTime"
+    },
+    designDefinition: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "设计款定义",
+      field: "designDefinition"
     }
   };
   const options = {

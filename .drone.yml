@@ -36,7 +36,7 @@ steps:
       password:
         from_secret: qq_smtp_code
       from: 1875483499@qq.com
-      recipients: 1875483499@qq.com,1599456917@qq.com
+      recipients: 1599456917@qq.com
     when:
       status:
         - success
