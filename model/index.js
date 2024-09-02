@@ -54,7 +54,13 @@ const sequelize = new Sequelize(
         },
         timezone: '+08:00',
         operatorsAliases,
-        logging: dbConfig.logging
+        logging: dbConfig.logging,
+        pool: {
+            max: 20,      // 连接池中最大连接数量
+            min: 5,       // 连接池中最小连接数量
+            acquire: 60000, // 获取连接的最长等待时间 (毫秒)
+            idle: 10000   // 连接在断开前的最大空闲时间 (毫秒)
+        }
     },
 )
 const models = {}

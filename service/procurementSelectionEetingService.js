@@ -42,5 +42,6 @@ module.exports = {
     returnsTheQueryConditionInformation,
     FilterEetingInformation,
     theTimeOfTheLatestDay,
-    groupMemberInformation
+    groupMemberInformation,
+    getExistProcessInstanceId
 }
