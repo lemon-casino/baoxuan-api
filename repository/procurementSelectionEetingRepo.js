@@ -43,12 +43,12 @@ const returnsTheQueryConditionInformation = async () => {
 
         return rest.map(item => {
             return {
-                originator: item.originator.split(','),
-                productName: item.productName.split(','),
-                vendorName: item.vendorName.split(','),
-                selectionAttributes: item.selectionAttributes.split(','),
-                productAttributes: item.productAttributes.split(','),
-                pushProductLine: item.pushProductLine.split(',')
+                originator: item.originator ? item.originator.split(',') : [],
+                productName: item.productName ? item.productName.split(',') : [],
+                vendorName: item.vendorName ? item.vendorName.split(',') : [],
+                selectionAttributes: item.selectionAttributes ? item.selectionAttributes.split(',') : [],
+                productAttributes: item.productAttributes ? item.productAttributes.split(',') : [],
+                pushProductLine: item.pushProductLine ? item.pushProductLine.split(',') : []
             }
         })
 
