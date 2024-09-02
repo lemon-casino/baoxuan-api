@@ -51,7 +51,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             left join vision_out_field vof on vof.tag = vt.tag and vof.form_id = vt.form_id
             left join process_instance_values piv2 on piv2.instance_id = pi.id and piv2.field_id = vof.field_id
             left join process_instance_sub_values pis on pis.instance_id = pi.id and pis.field_id = va.sub_field
-            where vt.tag = '${tag}' 
+            where vt.tag = '${tag}' and pi.status in ('RUNNING', 'COMPLETED') 
             and (pir.operator_name = ? or piv2.value = ? or pis.value = ?) 
             and pir.operate_time >= '${startDate}' 
             and pir.operate_time <= '${endDate}'
@@ -61,7 +61,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             on vft.form_id = a.form_id 
             left join form_field_data ffd on ffd.id = vft.ffd_id 
             join form_fields ff2 on ff2.field_id = a.field_id and ffd.form_field_id = ff2.id
-            where a.type like concat('%', ffd.value, '%')
+            where a.type like concat('%', ffd.value, '%') 
             group by vft.type, a.action_exit`
             
     let sql1 = `select ifnull(sum(a.count), 0) as count, a.action_exit from (
@@ -87,7 +87,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             left join process_instance_values piv3 on piv3.instance_id = pi.id and piv3.field_id = vaf.field_id and vaf.is_sub = 0
             left join process_instance_sub_values pis2 on pis2.instance_id = pi.id and pis2.field_id = vaf.field_id and vaf.is_sub = 1
 
-            where vt.tag = '${tag}' 
+            where vt.tag = '${tag}' and pi.status in ('RUNNING', 'COMPLETED') 
             and (pir.operator_name = ? or piv2.value = ? or pis.value = ?) 
             and pir.operate_time >= '${startDate}' 
             and pir.operate_time <= '${endDate}'
@@ -227,7 +227,7 @@ const getStat = async function (startDate, endDate) {
             left join process_instance_records pir on pir.instance_id = pi.id and pir.action_exit in ('doing', 'next', 'agree')
             join vision_activity va on va.form_id = vt.form_id and va.tag = vt.tag
             and pir.activity_id = va.activity_id and pir.show_name = va.activity_name
-            where pir.operate_time >= '${startDate}' 
+            where pir.operate_time >= '${startDate}' and pi.status in ('RUNNING', 'COMPLETED')
             and pir.operate_time <= '${endDate}'
             group by pi.id, f.id, vt.tag, vt.field_id, pir.action_exit, 
             if(piv.value is not null, piv.value, riv.value)
@@ -354,7 +354,7 @@ const getFlowProcessInstances = async function (params, offset, limit) {
         subsql = `${subsql} and pir.action_exit in (${actionFilter[params.action].map(() => '?').join(',')})`
         p1.push(...actionFilter[params.action])
     }
-    subsql = `${subsql}
+    subsql = `${subsql} and pi.status in ('RUNNING', 'COMPLETED')
             group by pi.id, f.id, vt.field_id, if(piv.value is not null, piv.value, riv.value) 
         ) a left join vision_field_type vft 
             on vft.form_id = a.form_id 
