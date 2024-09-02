@@ -257,9 +257,9 @@ const getStat = async function (startDate, endDate) {
                         .sum += parseInt(row[i].count)
                     result[j].children[statItem2Type[row[i].type][k]]
                         .sum += parseInt(row[i].count)
-                    result[j].sum += parseInt(row[i].count)
                 }
-            }
+                result[j].sum += parseInt(row[i].count)
+            }            
         }
         for (let k = 0; k < statItem2Type[row[i].type].length; k++) {
             if (totalStatType[row[i].tag]) {
@@ -361,9 +361,11 @@ const getFlowProcessInstances = async function (params, offset, limit) {
             left join form_field_data ffd on ffd.id = vft.ffd_id 
             join form_fields ff2 on ff2.field_id = a.field_id and ffd.form_field_id = ff2.id`
     if (params.type) {
-        subsql = `${subsql} and vft.type in (${typeFilter[params.type].map(() => '?').join(',')})
-             and a.type like concat('%', ffd.value, '%')`
-        p1.push(...typeFilter[params.type])
+        if (typeFilter[params.type]) {
+            subsql = `${subsql} and vft.type in (${typeFilter[params.type].map(() => '?').join(',')})
+                and a.type like concat('%', ffd.value, '%')`
+            p1.push(...typeFilter[params.type])
+        }
     }
     subsql = `${subsql}
             group by a.id
