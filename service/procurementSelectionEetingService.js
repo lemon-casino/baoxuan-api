@@ -37,17 +37,18 @@ const groupMemberInformation = async (content) => {
 
 }
 
-function updatePopover(popover, data) {
+function updatePopover(popover, data, key) {
     popover.kind = data
-        .filter(item => item.pushProductLine !== '')
-        .map(({ pushProductLine, count }) => ({
-            name: pushProductLine,
-            value: parseInt(count, 10),
+        .filter(item => item[key] !== '')
+        .map(item => ({
+            name: item[key],
+            value: parseInt(item.count, 10),
         }))
         .sort((a, b) => b.value - a.value);
 
     popover.sum = popover.kind.reduce((acc, { value }) => acc + value, 0);
 }
+
 
 const keyNameMap = {
     whetherTmallIsSelected: '天猫运营',
@@ -114,13 +115,20 @@ async function typeStatistics(content) {
                 sum: 0,
                 kind: [],
             },
+            {
+                name: "平台",
+                sum: 0,
+                kind: [],
+            },
         ],
     };
 
     const pushData = async (direction) => {
         const categoryStats = await procurementSelectionEetingRepo.categoryStatistics(direction);
+        const platformStats = await procurementSelectionEetingRepo.platformStatistics(direction);
         const numberOfPushes = JSON.parse(JSON.stringify(numberOfPushesTemplate));
-        updatePopover(numberOfPushes.popover[0], categoryStats);
+        updatePopover(numberOfPushes.popover[0], categoryStats, 'pushProductLine');
+        updatePopover(numberOfPushes.popover[1], platformStats, 'platform');
         numberOfPushes.sum = numberOfPushes.popover.reduce((acc, curr) => acc + curr.sum, 0);
         return numberOfPushes;
     };

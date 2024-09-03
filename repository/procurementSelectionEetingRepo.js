@@ -190,6 +190,18 @@ const categoryStatistics = async (processInstanceId) => {
         raw: true,
     });
 }
+// 平台 统计
+const platformStatistics = async (processInstanceId) => {
+    return procurementSelectionEeting.findAll({
+        attributes: ['platform', [fn('SUM', literal(1)), 'count']], // 使用 literal(1) 作为值
+        where: {
+            reciprocaltype: processInstanceId
+        },
+        group: ['platform'],
+        logging:false,
+        raw: true,
+    });
+};
 
 module.exports = {
     bulkCreate,
@@ -200,5 +212,6 @@ module.exports = {
     theTimeOfTheLatestDay,
     forwardAndBackwardThrust,
     whetherForwardPushAndReversePushIsSelected,
-    categoryStatistics
+    categoryStatistics,
+    platformStatistics
 }
