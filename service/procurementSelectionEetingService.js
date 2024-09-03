@@ -37,19 +37,18 @@ const groupMemberInformation = async (content) => {
 
 }
 
-
 function updatePopover(popover, data) {
     popover.kind = data
-        .filter(item => item.pushProductLine !== '') // Filter out entries with empty pushProductLine
-        .map(item => ({
-            name: item.pushProductLine,
-            value: parseInt(item.count, 10),
-        }))  .sort((a, b) => b.value - a.value);
-    popover.sum = popover.kind.reduce((acc, curr) => acc + curr.value, 0);
+        .filter(item => item.pushProductLine !== '')
+        .map(({ pushProductLine, count }) => ({
+            name: pushProductLine,
+            value: parseInt(count, 10),
+        }))
+        .sort((a, b) => b.value - a.value);
+
+    popover.sum = popover.kind.reduce((acc, { value }) => acc + value, 0);
 }
 
-
-// 键名与中文名称的映射关系
 const keyNameMap = {
     whetherTmallIsSelected: '天猫运营',
     whetherJDIsSelected: '京东运营',
@@ -69,142 +68,99 @@ const keyNameMap = {
     tmallVerticalStore_littleRedBook: '天猫垂类店,小红书样品',
     coupang_OperationSample_IsSelected: 'Coupang样品',
     tikTok_whetherTheKuaishouOperationSampleIsSelected: '抖音,快手样品',
-    whetherOrNotToChooseAnOperationSa: '1688样品'
+    whetherOrNotToChooseAnOperationSa: '1688样品',
 };
-// 用于处理数据的通用函数
+
 function processData(data, target) {
-    target.popover = data.map(item => {
-        const key = Object.keys(item)[0]; // 获取当前对象的键
-        const sum = item[key]; // 获取当前对象的值
-        const name = keyNameMap[key]; // 从映射中获取中文名称
+    target.popover = data
+        .map(item => {
+            const key = Object.keys(item)[0];
+            const name = keyNameMap[key];
+            return name ? { name, sum: item[key] } : null;
+        })
+        .filter(Boolean)
+        .sort((a, b) => b.sum - a.sum);
 
-        return name ? { name, sum } : null; // 返回对象，如果没有名字则返回 null
-    }).filter(Boolean) .sort((a, b) => b.sum - a.sum);// 过滤掉 null 的值
-
-    // 计算总和
-    target.sum = target.popover.reduce((acc, curr) => acc + curr.sum, 0);
+    target.sum = target.popover.reduce((acc, { sum }) => acc + sum, 0);
 }
 
-
-// 处理数据并填充 rejectionStatistics 的通用函数
-const fillRejectionStatistics = async (reasons, direction) => {
+async function fillRejectionStatistics(reasons, direction) {
     const rejectionData = await procurementSelectionEetingRepo.forwardAndBackwardThrust(reasons, direction);
 
-    const processedData = rejectionData.map(item => ({
-        name: item.Reason,   // 将 Reason 映射为 name
-        sum: Number(item.Count) // 将 Count 映射为 sum，并转换为数字类型
-    })).sort((a, b) => b.sum - a.sum); // 根据 sum 字段进行降序排序
+    const processedData = rejectionData
+        .map(({ Reason, Count }) => ({
+            name: Reason,
+            sum: Number(Count),
+        }))
+        .sort((a, b) => b.sum - a.sum);
 
-    const totalSum = processedData.reduce((acc, curr) => acc + curr.sum, 0);
+    const totalSum = processedData.reduce((acc, { sum }) => acc + sum, 0);
 
     return { popover: processedData, sum: totalSum };
-};
-
-const typeStatistics = async (content) => {
-   // 模板返回
-    const reds={
-        pushForward:[
-        ],
-        pushBackward:[
-
-        ]
 }
 
+async function typeStatistics(content) {
+    const reds = {
+        pushForward: [],
+        pushBackward: [],
+    };
 
-    //推品数量
-    //
-
-    const  numberOfPushes=        {
-        title:"推品数量",
+    const numberOfPushesTemplate = {
+        title: "推品数量",
         sum: 0,
-        popover:[
+        popover: [
             {
                 name: "类目",
                 sum: 0,
-                kind: [
-                ],
+                kind: [],
             },
-        ]
-    }
-    //拷贝一份numberOfPushes
-    const numberOfPushesCopy = JSON.parse(JSON.stringify(numberOfPushes));
+        ],
+    };
 
+    const pushData = async (direction) => {
+        const categoryStats = await procurementSelectionEetingRepo.categoryStatistics(direction);
+        const numberOfPushes = JSON.parse(JSON.stringify(numberOfPushesTemplate));
+        updatePopover(numberOfPushes.popover[0], categoryStats);
+        numberOfPushes.sum = numberOfPushes.popover.reduce((acc, curr) => acc + curr.sum, 0);
+        return numberOfPushes;
+    };
 
-//正推的 类目
-     const xz=await procurementSelectionEetingRepo.categoryStatistics(1)
+    reds.pushForward.push(await pushData(1));
+    reds.pushBackward.push(await pushData(2));
 
-    updatePopover(numberOfPushes.popover[0], xz);
-     // 这里添加第二个popover  updatePopover(numberOfPushes.popover[0], xz);
-    numberOfPushes.sum = numberOfPushes.popover.reduce((acc, curr) => acc + curr.sum, 0);
-    reds.pushForward.push(numberOfPushes)
-
-
-//反推的类目
-    const xzl =await procurementSelectionEetingRepo.categoryStatistics(2)
-
-    updatePopover(numberOfPushesCopy.popover[0], xzl);
-    numberOfPushesCopy.sum = numberOfPushesCopy.popover.reduce((acc, curr) => acc + curr.sum, 0);
-    reds.pushBackward.push(numberOfPushesCopy)
-
-
-
-
-
-    //正推反推是否选中
-    const  whetherOrNotToCheck= {
-        title:"选中数量",
+    const selectionTemplate = {
+        title: "选中数量",
         sum: 0,
-        popover:[
-            {
-                name: "",
-                sum: 0,
-            },
-        ]
-    }
-    const whetherOrNotToCheckCopy = JSON.parse(JSON.stringify(whetherOrNotToCheck));
+        popover: [{ name: "", sum: 0 }],
+    };
 
+    const selectionData = async (direction) => {
+        const selectedData = await procurementSelectionEetingRepo.whetherForwardPushAndReversePushIsSelected(direction);
+        const selection = JSON.parse(JSON.stringify(selectionTemplate));
+        processData(selectedData, selection);
+        return selection;
+    };
 
+    reds.pushForward.push(await selectionData(1));
+    reds.pushBackward.push(await selectionData(2));
 
-    const  iAmPushingToSelect=await procurementSelectionEetingRepo.whetherForwardPushAndReversePushIsSelected(1)
-    processData(iAmPushingToSelect, whetherOrNotToCheckCopy);
-    reds.pushForward.push(whetherOrNotToCheckCopy)
+    const forwardRejection = await fillRejectionStatistics(["款式问题", "毛利问题", "竞争问题", "起订问题", "定制问题"], 1);
+    const backwardRejection = await fillRejectionStatistics(["款式问题", "毛利问题", "竞争问题", "起订问题", "定制问题"], 2);
 
-    const  reversePushSelected =await procurementSelectionEetingRepo.whetherForwardPushAndReversePushIsSelected(2)
-    processData(reversePushSelected, whetherOrNotToCheck);
-    reds.pushBackward.push(whetherOrNotToCheck)
-
-
-
-    const rejectionStatistics = {
+    const rejectionStatisticsTemplate = {
         title: "拒绝数量",
         sum: 0,
-        popover: []
+        popover: [],
     };
-// 正向推拒绝数量统计
-    const forwardReasons = ["款式问题", "毛利问题", "竞争问题", "起订问题", "定制问题"];
-    const forwardRejectionStatistics = await fillRejectionStatistics(forwardReasons, 1);
 
-// 反向推拒绝数量统计
-    const pushBackRejectionStatistics = await fillRejectionStatistics(forwardReasons, 2);
+    reds.pushForward.push({ ...rejectionStatisticsTemplate, ...forwardRejection });
+    reds.pushBackward.push({ ...rejectionStatisticsTemplate, ...backwardRejection });
 
-// 设置正向推拒绝统计结果
-    const rejectionStatisticsCopy = {
-        ...rejectionStatistics,
-        popover: forwardRejectionStatistics.popover,
-        sum: forwardRejectionStatistics.sum
-    };
-    reds.pushForward.push(rejectionStatisticsCopy)
-
-
-// 设置反向推拒绝统计结果
-    rejectionStatistics.popover = pushBackRejectionStatistics.popover;
-    rejectionStatistics.sum = pushBackRejectionStatistics.sum;
-    reds.pushBackward.push(rejectionStatistics)
-
-
-   return reds;
-
+    return reds;
 }
+
+
+
 module.exports = {
     Create,
     bulkUpdate,
