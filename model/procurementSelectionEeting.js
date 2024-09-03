@@ -587,6 +587,24 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "抖音、快手拒绝原因",
       field: "tmall_development_rejection"
+    },
+    developmentRejection: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "开发拒绝原因",
+      field: "developmentRejection"
+    },
+    reciprocaltype: {
+      type: DataTypes.CHAR(2),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "正推反推类型",
+      field: "reciprocaltype"
     }
   };
   const options = {
