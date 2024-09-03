@@ -72,10 +72,31 @@ const groupMemberInformation = async (req, res, next) => {
         next(e)
     }
 }
+
+
+// 根据类型 处理
+const  typeStatistics= async (req, res, next) => {
+    try {
+
+        const  {Type } =req.query
+        let reds={}
+
+        reds = await procurementSelectionEetingService.typeStatistics(Type)
+        return res.send(biResponse.success(reds))
+
+    }
+    catch (e) {
+        next(e)
+    }
+}
+
+
+
 module.exports = {
     procurementSelection,
     returnsTheQueryConditionInformation,
     ReturnFilterEetingInformation,
     theTimeOfTheLatestDay,
-    groupMemberInformation
+    groupMemberInformation,
+    typeStatistics
 }

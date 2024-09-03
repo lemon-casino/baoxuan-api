@@ -92,7 +92,7 @@ client.on("error", (err) => {
         const value = path.reduce((acc, val) => acc?.[val] ?? '', flow) || '';
         return Array.isArray(value) ? value.join(', ') : value;
     }
-    async function handleSubscription(key, mappings) {
+    async function handleSubscription(key, mappings,type) {
         const procurement = [];
 
         const data = await client.get(key);
@@ -118,6 +118,7 @@ client.on("error", (err) => {
                 processInstanceId: flow.processInstanceId,
                 creationTime: flow.createTimeGMT,
                 updatedTime: flow.modifiedTimeGMT,
+                reciprocaltype: type
             });
         }
 
@@ -140,7 +141,7 @@ client.on("error", (err) => {
                 optimizationSuggestions: ['data', 'textareaField_lutoemnz'],
                 selectionAttributes: ['data', 'radioField_lrhgr6i7'],
                 designDefinition: ['data', 'checkboxField_lydscsls'],
-            });
+            },1);
         }
     });
 
@@ -199,7 +200,7 @@ client.on("error", (err) => {
                 denied_1688: ['data', 'checkboxField_lxn4uinm'],
                 tmall_development_rejection: ['data', 'checkboxField_lxo324ao'],
                 developmentRejection: ['data', 'checkboxField_lzal1evd'],
-            });
+            },2);
         }
     });
 
