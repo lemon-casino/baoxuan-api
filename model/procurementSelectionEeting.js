@@ -19,7 +19,8 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "实例化ID",
-      field: "processInstanceId"
+      field: "processInstanceId",
+      unique: "processInstanceIdIndex"
     },
     originator: {
       type: DataTypes.STRING(255),
@@ -280,7 +281,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "得物、唯品会运营负责人",
-      field: "gain_headOfOperationsAtVipshop"
+      field: "gainHeadOfOperationsAtVipshop"
     },
     tmallVerticalStoreXiaohongshuOperationLeader: {
       type: DataTypes.STRING(255),
@@ -289,7 +290,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "天猫垂类店、小红书运营负责人",
-      field: "tmall_verticalStore_XiaohongshuOperationLeader"
+      field: "tmallVerticalStoreXiaohongshuOperationLeader"
     },
     headOfOperationsAtCoupang: {
       type: DataTypes.STRING(255),
@@ -307,7 +308,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "抖音、快手运营负责人",
-      field: "douyin_headOfKuaishouOperations"
+      field: "douyinHeadOfKuaishouOperations"
     },
     headOfOperationsOf1688: {
       type: DataTypes.STRING(255),
@@ -370,7 +371,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "淘工厂运营成本是否选中",
-      field: "dewu_vipshopWillBeSelected"
+      field: "dewuVipshopWillBeSelected"
     },
     tmallVerticalStoreXiaohongshuIsSelected: {
       type: DataTypes.STRING(255),
@@ -379,7 +380,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "天猫垂类店、小红书运营成本是否选中",
-      field: "tmall_verticalStore_XiaohongshuIsSelected"
+      field: "tmallVerticalStoreXiaohongshuIsSelected"
     },
     whetherOrNotCoupangIsSelected: {
       type: DataTypes.STRING(255),
@@ -397,16 +398,16 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "抖音、快手运营成本是否选中",
-      field: "douyin_kuaishouIsSelected"
+      field: "douyinKuaishouIsSelected"
     },
-    isUnchecked1688: {
+    uncheckedAlibaba: {
       type: DataTypes.STRING(255),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
       comment: "1688运营成本是否选中",
-      field: "IsUnchecked_1688"
+      field: "uncheckedAlibaba"
     },
     whetherToChooseTheJdOperationSample: {
       type: DataTypes.STRING(255),
@@ -442,7 +443,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "天猫超市运营样品是否选中",
-      field: "tmall_supermarket_operationSampleIsNotSelected"
+      field: "tmallSupermarketOperationSampleIsNotSelected"
     },
     taoFactorOperationSampleWhetherChoose: {
       type: DataTypes.STRING(255),
@@ -451,7 +452,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "淘工厂运营样品是否选中",
-      field: "Tao_factor_operation_sample_whether_choose"
+      field: "TaoFactorOperationSampleWhetherChoose"
     },
     gainsVipshopWhetherToChooseTheOperationSample: {
       type: DataTypes.STRING(255),
@@ -460,7 +461,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "得物、唯品会运营样品是否选中",
-      field: "gains_vipshop_WhetherToChooseTheOperationSample"
+      field: "gainsVipshopWhetherToChooseTheOperationSample"
     },
     tmallVerticalStoreLittleRedBook: {
       type: DataTypes.STRING(255),
@@ -469,7 +470,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "天猫垂类店、小红书运营样品是否选中",
-      field: "tmallVerticalStore_littleRedBook"
+      field: "tmallVerticalStoreLittleRedBook"
     },
     coupangOperationSampleIsSelected: {
       type: DataTypes.STRING(255),
@@ -478,7 +479,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "Coupang运营样品是否选中",
-      field: "coupang_OperationSample_IsSelected"
+      field: "coupangOperationSampleIsSelected"
     },
     tikTokWhetherTheKuaishouOperationSampleIsSelected: {
       type: DataTypes.STRING(255),
@@ -487,7 +488,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "抖音、快手运营样品是否选中",
-      field: "tikTok_whetherTheKuaishouOperationSampleIsSelected"
+      field: "tikTokWhetherTheKuaishouOperationSampleIsSelected"
     },
     whetherOrNotToChooseAnOperationSa: {
       type: DataTypes.STRING(255),
@@ -550,7 +551,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "得物、唯品会拒绝原因",
-      field: "dewu_VipshopWillRefuse"
+      field: "dewuVipshopWillRefuse"
     },
     tmallVerticalShopXiaohongshuRefuses: {
       type: DataTypes.STRING(255),
@@ -559,7 +560,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "天猫垂类店、小红书拒绝原因",
-      field: "tmallVerticalShop_XiaohongshuRefuses"
+      field: "tmallVerticalShopXiaohongshuRefuses"
     },
     coupangRefuse: {
       type: DataTypes.STRING(255),
@@ -570,14 +571,14 @@ module.exports = sequelize => {
       comment: "Coupang拒绝原因",
       field: "coupang_Refuse"
     },
-    denied1688: {
+    deniedAlibaba: {
       type: DataTypes.STRING(255),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
       comment: "1688拒绝原因",
-      field: "denied_1688"
+      field: "deniedAlibaba"
     },
     tmallDevelopmentRejection: {
       type: DataTypes.STRING(255),
@@ -586,7 +587,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "抖音、快手拒绝原因",
-      field: "tmall_development_rejection"
+      field: "tmallDevelopmentRejection"
     },
     developmentRejection: {
       type: DataTypes.STRING(255),
