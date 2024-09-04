@@ -316,55 +316,59 @@ const getStat = async function (startDate, endDate) {
         result[row[i].id].sum += parseInt(row[i].count)
     }
 
-    sql = `select count(1) as count, a.tag, vft.type, a.action_exit from (
-            select pi.id, vt.tag, f.id as form_id, vt.field_id, pir.action_exit, 
-            if(piv.value is not null, piv.value, riv.value) as type, count(1) as count 
-            from vision_type vt
-            join forms f on if(vt.type = 0, f.id = vt.form_id, f.id = vt.sub_form_id)
-            join processes p on vt.form_id = p.form_id
-            left join process_instances pi on pi.process_id = p.id
-            left join process_receipt pr on pr.process_id = pi.id
-            left join receipt_instance_values riv on pr.receipt_id = riv.instance_id and riv.field_id = vt.field_id
-            left join process_instance_values piv on piv.instance_id = pi.id and piv.field_id = vt.field_id
-            left join process_instance_records pir on pir.instance_id = pi.id and pir.action_exit in ('doing', 'next', 'agree')
-            join vision_activity va on va.form_id = vt.form_id and va.tag = vt.tag
-            and pir.activity_id = va.activity_id and pir.show_name = va.activity_name
-            where pir.operate_time >= '${startDate}' and pi.status in ('RUNNING', 'COMPLETED')
+    sql = `select vt.tag, vft.type, piv2.value, pir.action_exit from vision_type vt
+        join forms f on if(vt.type = 0, f.id = vt.form_id, f.id = vt.sub_form_id)
+        join processes p on vt.form_id = p.form_id
+        left join process_instances pi on pi.process_id = p.id
+        
+        left join process_instance_values piv on piv.instance_id = pi.id and piv.field_id = vt.field_id
+        left join process_receipt pr on pr.process_id = pi.id
+        left join receipt_instance_values riv on pr.receipt_id = riv.instance_id and riv.field_id = vt.field_id
+        
+        left join process_instance_records pir on pir.instance_id = pi.id and pir.action_exit in ('doing', 'next', 'agree')
+        join vision_activity va on va.form_id = vt.form_id
+            and va.tag = vt.tag
+            and pir.activity_id = va.activity_id 
+            and pir.show_name = va.activity_name
+        left join vision_activity_field vaf on vaf.activity_id = va.id
+        join process_instance_values piv2 on piv2.instance_id = pi.id and piv2.field_id = vaf.field_id
+        
+        left join vision_field_type vft on vft.form_id = f.id 
+        left join form_field_data ffd on ffd.id = vft.ffd_id 
+        join form_fields ff on ffd.form_field_id = ff.id and ff.form_id = f.id
+        where pir.operate_time >= '${startDate}' 
+            and pi.status in ('RUNNING', 'COMPLETED')
             and pir.operate_time <= '${endDate}'
-            group by pi.id, f.id, vt.tag, vt.field_id, pir.action_exit, 
-            if(piv.value is not null, piv.value, riv.value)
-        ) a left join vision_field_type vft 
-            on vft.form_id = a.form_id 
-            left join form_field_data ffd on ffd.id = vft.ffd_id 
-            join form_fields ff2 on ff2.field_id = a.field_id and ffd.form_field_id = ff2.id
-            where a.type like concat('%', ffd.value, '%')
-        group by a.tag, vft.type, a.action_exit`
+            and if(piv.value is null, riv.value, piv.value) like concat('%', ffd.value, '%')`
 
     row = await query(sql)
     for (let i = 0; i < row.length; i++) {
+        let value = row[i].value instanceof Number ? row[i].value : parseInt(row[i].value.replace(/"/g, ''))
+        if (!value) value = 0
+        
         for (let k = 0; k < statItem2Type[row[i].type].length; k++) {
             if (totalStatType[row[i].tag]) {
                 result[3].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .children[1]
                     .children[statItem2Type[row[i].type][k]]
-                    .sum += parseInt(row[i].count)
+                    .sum += value
                 result[3].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .children[1]
-                    .sum += parseInt(row[i].count)
+                    .sum += value
                 result[3].children[totalStatType[row[i].tag][row[i].action_exit]]
-                    .sum += parseInt(row[i].count)
+                    .sum += value
             }
         }
-        result[3].sum += parseInt(row[i].count)
+        result[3].sum += value
         for (let j = 4; j < 8; j++) {
             if (totalStatType[row[i].tag] && statItem2Type[row[i].type].includes(j - 4)) {
                 
                 result[j].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .children[1]
-                    .sum += parseInt(row[i].count)
+                    .sum += value
                 result[j].children[totalStatType[row[i].tag][row[i].action_exit]]
-                    .sum += parseInt(row[i].count)
-                result[j].sum += parseInt(row[i].count)
+                    .sum += value
+                result[j].sum += value
             }
         }
     }
