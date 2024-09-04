@@ -114,7 +114,6 @@ const statItem1 = [
 ]
 
 const statItem1Type = [
-    ['insidePhoto', 'insideArt', 'outPhoto', 'outArt'],
     ['outPhoto', 'outArt'],
     ['insidePhoto', 'insideArt']
 ]
@@ -201,14 +200,6 @@ const totalStat = [
         name: '美编进行中'
     }, {
         name: '美编已完成'
-    }, {
-        name: '待入剪辑'
-    }, {
-        name: '剪辑进行中'
-    }, {
-        name: '剪辑已完成'
-    }, {
-        name: '逾期'
     }
 ]
 
@@ -240,8 +231,6 @@ const totalStat1 = [
         name: '美编已完成'
     }, {
         name: '工作量'
-    }, {
-        name: '逾期'
     }
 ]
 
