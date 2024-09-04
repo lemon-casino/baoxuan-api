@@ -118,7 +118,7 @@ const forwardAndBackwardThrust = async (content, type) => {
              COALESCE(SUM(CASE WHEN theTaoFactoryRefused LIKE :likeClause THEN 1 ELSE 0 END), 0) +
              COALESCE(SUM(CASE WHEN dewuVipshopWillRefuse LIKE :likeClause THEN 1 ELSE 0 END), 0) +
              COALESCE(SUM(CASE WHEN tmallVerticalShopXiaohongshuRefuses LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN coupang_Refuse LIKE :likeClause THEN 1 ELSE 0 END), 0) +
+             COALESCE(SUM(CASE WHEN coupangRefuse LIKE :likeClause THEN 1 ELSE 0 END), 0) +
              COALESCE(SUM(CASE WHEN deniedAlibaba LIKE :likeClause THEN 1 ELSE 0 END), 0) +
              COALESCE(SUM(CASE WHEN tmallDevelopmentRejection LIKE :likeClause THEN 1 ELSE 0 END), 0) +
              COALESCE(SUM(CASE WHEN developmentRejection LIKE :likeClause THEN 1 ELSE 0 END), 0)

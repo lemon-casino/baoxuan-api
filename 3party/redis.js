@@ -164,8 +164,16 @@ client.on("error", (err) => {
                 TaoFactorOperationSampleWhetherChoose: ['data', 'radioField_ly6wgbgz'],
                 whetherOrNotToChooseAnOperationSa: ['data', 'radioField_ly6wgbh0'],
                 coupangOperationSampleIsSelected: ['data', 'radioField_lyrzy6xm'],
-
-
+                tmallRefused: ['data', 'radioField_lyi7loxq'],
+                jdComRefused: ['data', 'radioField_lyi7loxr'],
+                pinduoduoRefused: ['data', 'radioField_lyi7loxs'],
+                tmallSupermarketRefused: ['data', 'radioField_lyi7loxt'],
+                theTaoFactoryRefused: ['data', 'radioField_lyi7loxu'],
+                dewuVipshopWillRefuse: ['data', 'radioField_lyi7loxv'],
+                tmallDevelopmentRejection: ['data', 'radioField_lyi7loxw'],
+                deniedAlibaba: ['data', 'radioField_lyi7loxx'],
+                coupangRefuse: ['data', 'radioField_lyrzy6xn'],
+             /*   developmentRejection: ['data', 'checkboxField_lzal1evd'],*/
             },1);
         }
     });
@@ -221,7 +229,7 @@ client.on("error", (err) => {
                 theTaoFactoryRefused: ['data', 'checkboxField_lxn4uini'],
                 dewuVipshopWillRefuse: ['data', 'checkboxField_lxn4uinj'],
                 tmallVerticalShopXiaohongshuRefuses: ['data', 'checkboxField_lxn4uink'],
-                coupang_Refuse: ['data', 'checkboxField_lxn4uinl'],
+                coupangRefuse: ['data', 'checkboxField_lxn4uinl'],
                 deniedAlibaba: ['data', 'checkboxField_lxn4uinm'],
                 tmallDevelopmentRejection: ['data', 'checkboxField_lxo324ao'],
                 developmentRejection: ['data', 'checkboxField_lzal1evd'],
