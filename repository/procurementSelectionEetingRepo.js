@@ -6,7 +6,18 @@ const procurementSelectionEeting = getprocurementSelectionEeting(sequelize)
 //批量创建
 
 const bulkCreate = async (process) => {
-    await procurementSelectionEeting.bulkCreate(process);
+    await procurementSelectionEeting.bulkCreate(process)
+        .then(
+            ( ) => {
+                console.log("批量创建成功")
+                return true;
+            },
+        )
+        .catch(err => {
+        console.error("批量创建失败:", err);
+        return false;
+    }
+    );
 }
 // 批量更新
 const bulkUpdate = async (process) => {
@@ -105,11 +116,11 @@ const forwardAndBackwardThrust = async (content, type) => {
              COALESCE(SUM(CASE WHEN pinduoduoRefused LIKE :likeClause THEN 1 ELSE 0 END), 0) +
              COALESCE(SUM(CASE WHEN tmallSupermarketRefused LIKE :likeClause THEN 1 ELSE 0 END), 0) +
              COALESCE(SUM(CASE WHEN theTaoFactoryRefused LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN dewu_VipshopWillRefuse LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN tmallVerticalShop_XiaohongshuRefuses LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN coupang_Refuse LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN denied_1688 LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN tmall_development_rejection LIKE :likeClause THEN 1 ELSE 0 END), 0) +
+             COALESCE(SUM(CASE WHEN dewuVipshopWillRefuse LIKE :likeClause THEN 1 ELSE 0 END), 0) +
+             COALESCE(SUM(CASE WHEN tmallVerticalShopXiaohongshuRefuses LIKE :likeClause THEN 1 ELSE 0 END), 0) +
+             COALESCE(SUM(CASE WHEN coupangRefuse LIKE :likeClause THEN 1 ELSE 0 END), 0) +
+             COALESCE(SUM(CASE WHEN deniedAlibaba LIKE :likeClause THEN 1 ELSE 0 END), 0) +
+             COALESCE(SUM(CASE WHEN tmallDevelopmentRejection LIKE :likeClause THEN 1 ELSE 0 END), 0) +
              COALESCE(SUM(CASE WHEN developmentRejection LIKE :likeClause THEN 1 ELSE 0 END), 0)
             ) AS Count
         FROM procurement_selection_eeting 
@@ -137,37 +148,42 @@ const forwardAndBackwardThrust = async (content, type) => {
 };
 
 const whetherForwardPushAndReversePushIsSelected = async (type) => {
-
     const baseQuery = `
         SELECT
-            COUNT(CASE WHEN \`{{columnName}}\` = '选中' THEN 1 END) AS \`{{columnName}}\`
+            COUNT(CASE WHEN \`{{columnName}}\` = '{{selectedValue}}' THEN 1 END) AS \`{{columnName}}\`
         FROM procurement_selection_eeting 
         WHERE reciprocaltype = :type
     `;
 
     const columnNames = [
         'whetherTmallIsSelected', 'whetherJDIsSelected', 'pinduoduoIsSelected', 'whetherTmallSupermarketIsSelected',
-        'dewu_vipshopWillBeSelected', 'tmall_verticalStore_XiaohongshuIsSelected', 'whetherOrNotCoupangIsSelected',
-        'douyin_kuaishouIsSelected', 'IsUnchecked_1688', 'whetherToChooseTheJDOperationSample', 'whetherTheTmallOperationSampleIsSelected',
-        'whetherThePinduoduoOperationSampleIsSelected', 'tmall_supermarket_operationSampleIsNotSelected', 'Tao_factor_operation_sample_whether_choose',
-        'gains_vipshop_WhetherToChooseTheOperationSample', 'tmallVerticalStore_littleRedBook', 'coupang_OperationSample_IsSelected',
-        'tikTok_whetherTheKuaishouOperationSampleIsSelected', 'whetherOrNotToChooseAnOperationSa'
+        'dewuVipshopWillBeSelected', 'tmallVerticalStoreXiaohongshuIsSelected', 'whetherOrNotCoupangIsSelected',
+        'douyinKuaishouIsSelected', 'uncheckedAlibaba', 'whetherToChooseTheJDOperationSample', 'whetherTheTmallOperationSampleIsSelected',
+        'whetherThePinduoduoOperationSampleIsSelected', 'tmallSupermarketOperationSampleIsNotSelected', 'TaoFactorOperationSampleWhetherChoose',
+        'gainsVipshopWhetherToChooseTheOperationSample', 'tmallVerticalStoreLittleRedBook', 'coupangOperationSampleIsSelected',
+        'tikTokWhetherTheKuaishouOperationSampleIsSelected', 'whetherOrNotToChooseAnOperationSa'
     ];
 
     try {
+        const selectedValue = type === 1 ? '是' : '选中'; // 根据 type 设置条件值
+
         const unionQueries = columnNames.map(columnName => {
-            // Replace the placeholders with the actual column name
-            const query = baseQuery.replace(/{{columnName}}/g, columnName);
+            // Replace the placeholders with the actual column name and selected value
+            const query = baseQuery
+                .replace(/{{columnName}}/g, columnName)
+                .replace(/{{selectedValue}}/g, selectedValue);
+
             return procurementSelectionEeting.sequelize.query(query, {
                 replacements: {
                     type: type
                 },
+                logging: false,
                 type: QueryTypes.SELECT
             });
         });
 
         const results = await Promise.all(unionQueries);
-        return results.flat();// 将嵌套数组展平，返回一个完整的结果数组
+        return results.flat(); // 将嵌套数组展平，返回一个完整的结果数组
     } catch (error) {
         console.error('Error executing query:', error);
         throw error;
@@ -190,6 +206,18 @@ const categoryStatistics = async (processInstanceId) => {
         raw: true,
     });
 }
+// 平台 统计
+const platformStatistics = async (processInstanceId) => {
+    return procurementSelectionEeting.findAll({
+        attributes: ['platform', [fn('SUM', literal(1)), 'count']], // 使用 literal(1) 作为值
+        where: {
+            reciprocaltype: processInstanceId
+        },
+        group: ['platform'],
+        logging:false,
+        raw: true,
+    });
+};
 
 module.exports = {
     bulkCreate,
@@ -200,5 +228,6 @@ module.exports = {
     theTimeOfTheLatestDay,
     forwardAndBackwardThrust,
     whetherForwardPushAndReversePushIsSelected,
-    categoryStatistics
+    categoryStatistics,
+    platformStatistics
 }

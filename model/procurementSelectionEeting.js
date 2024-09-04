@@ -19,7 +19,8 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "实例化ID",
-      field: "processInstanceId"
+      field: "processInstanceId",
+      unique: "processInstanceIdIndex"
     },
     originator: {
       type: DataTypes.STRING(255),
@@ -280,7 +281,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "得物、唯品会运营负责人",
-      field: "gain_headOfOperationsAtVipshop"
+      field: "gainHeadOfOperationsAtVipshop"
     },
     tmallVerticalStoreXiaohongshuOperationLeader: {
       type: DataTypes.STRING(255),
@@ -289,7 +290,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "天猫垂类店、小红书运营负责人",
-      field: "tmall_verticalStore_XiaohongshuOperationLeader"
+      field: "tmallVerticalStoreXiaohongshuOperationLeader"
     },
     headOfOperationsAtCoupang: {
       type: DataTypes.STRING(255),
@@ -307,7 +308,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "抖音、快手运营负责人",
-      field: "douyin_headOfKuaishouOperations"
+      field: "douyinHeadOfKuaishouOperations"
     },
     headOfOperationsOf1688: {
       type: DataTypes.STRING(255),
@@ -328,7 +329,7 @@ module.exports = sequelize => {
       field: "whetherTmallIsSelected"
     },
     whetherJdIsSelected: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
@@ -337,7 +338,7 @@ module.exports = sequelize => {
       field: "whetherJDIsSelected"
     },
     pinduoduoIsSelected: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
@@ -346,156 +347,156 @@ module.exports = sequelize => {
       field: "pinduoduoIsSelected"
     },
     whetherTmallSupermarketIsSelected: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "天猫超市运营成本是否选中",
+      comment: "天猫运营成本是否选中 & 天猫产品审核",
       field: "whetherTmallSupermarketIsSelected"
     },
     whetherTheTaoFactoryIsSelected: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "radioField_lxn4uin0",
+      comment: "淘工厂运营成本是否选中 & 淘工厂产品审核",
       field: "whetherTheTaoFactoryIsSelected"
     },
     dewuVipshopWillBeSelected: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "淘工厂运营成本是否选中",
-      field: "dewu_vipshopWillBeSelected"
+      comment: "得物,唯品会运营运营成本是否选中 & 得物,唯品会得物产品审核",
+      field: "dewuVipshopWillBeSelected"
     },
     tmallVerticalStoreXiaohongshuIsSelected: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "天猫垂类店、小红书运营成本是否选中",
-      field: "tmall_verticalStore_XiaohongshuIsSelected"
+      comment: "天猫垂类店,小红书运营成本是否选中",
+      field: "tmallVerticalStoreXiaohongshuIsSelected"
     },
     whetherOrNotCoupangIsSelected: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "Coupang运营成本是否选中",
+      comment: "Coupang运营成本是否选中  & coupang产品审核",
       field: "whetherOrNotCoupangIsSelected"
     },
     douyinKuaishouIsSelected: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "抖音、快手运营成本是否选中",
-      field: "douyin_kuaishouIsSelected"
+      comment: "抖音, 快手运营成本是否选中 &  抖音,快手产品审核",
+      field: "douyinKuaishouIsSelected"
     },
-    isUnchecked1688: {
-      type: DataTypes.STRING(255),
+    uncheckedAlibaba: {
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "1688运营成本是否选中",
-      field: "IsUnchecked_1688"
+      comment: "1688运营成本是否选中 & 1688产品审核",
+      field: "uncheckedAlibaba"
     },
     whetherToChooseTheJdOperationSample: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "京东运营样品是否选中",
+      comment: "京东运营样品是否选中 & 京东市场",
       field: "whetherToChooseTheJDOperationSample"
     },
     whetherTheTmallOperationSampleIsSelected: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "天猫运营样品是否选中",
+      comment: "天猫运营样品是否选中 & 天猫市场",
       field: "whetherTheTmallOperationSampleIsSelected"
     },
     whetherThePinduoduoOperationSampleIsSelected: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "拼多多运营样品是否选中",
+      comment: "拼多多运营样品是否选中 & 拼多多市场",
       field: "whetherThePinduoduoOperationSampleIsSelected"
     },
     tmallSupermarketOperationSampleIsNotSelected: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "天猫超市运营样品是否选中",
-      field: "tmall_supermarket_operationSampleIsNotSelected"
+      comment: "天猫超市运营样品是否选中 &  天猫超市产品审核",
+      field: "tmallSupermarketOperationSampleIsNotSelected"
     },
     taoFactorOperationSampleWhetherChoose: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "淘工厂运营样品是否选中",
-      field: "Tao_factor_operation_sample_whether_choose"
+      comment: "淘工厂运营样品是否选中 & 淘工厂市场",
+      field: "TaoFactorOperationSampleWhetherChoose"
     },
     gainsVipshopWhetherToChooseTheOperationSample: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "得物、唯品会运营样品是否选中",
-      field: "gains_vipshop_WhetherToChooseTheOperationSample"
+      comment: "得物, 唯品会运营样品是否选中 &  得物,唯品会市场",
+      field: "gainsVipshopWhetherToChooseTheOperationSample"
     },
     tmallVerticalStoreLittleRedBook: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
       comment: "天猫垂类店、小红书运营样品是否选中",
-      field: "tmallVerticalStore_littleRedBook"
+      field: "tmallVerticalStoreLittleRedBook"
     },
     coupangOperationSampleIsSelected: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "Coupang运营样品是否选中",
-      field: "coupang_OperationSample_IsSelected"
+      comment: "Coupang运营样品是否选中 & coupang市场",
+      field: "coupangOperationSampleIsSelected"
     },
     tikTokWhetherTheKuaishouOperationSampleIsSelected: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "抖音、快手运营样品是否选中",
-      field: "tikTok_whetherTheKuaishouOperationSampleIsSelected"
+      comment: "抖音,快手运营样品是否选中 & 抖音,快手市场",
+      field: "tikTokWhetherTheKuaishouOperationSampleIsSelected"
     },
     whetherOrNotToChooseAnOperationSa: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.CHAR(7),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
-      comment: "1688运营样品是否选中",
+      comment: "1688运营样品是否选中 & 1688市场",
       field: "whetherOrNotToChooseAnOperationSa"
     },
     tmallRefused: {
@@ -550,7 +551,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "得物、唯品会拒绝原因",
-      field: "dewu_VipshopWillRefuse"
+      field: "dewuVipshopWillRefuse"
     },
     tmallVerticalShopXiaohongshuRefuses: {
       type: DataTypes.STRING(255),
@@ -559,7 +560,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "天猫垂类店、小红书拒绝原因",
-      field: "tmallVerticalShop_XiaohongshuRefuses"
+      field: "tmallVerticalShopXiaohongshuRefuses"
     },
     coupangRefuse: {
       type: DataTypes.STRING(255),
@@ -568,16 +569,16 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "Coupang拒绝原因",
-      field: "coupang_Refuse"
+      field: "coupangRefuse"
     },
-    denied1688: {
+    deniedAlibaba: {
       type: DataTypes.STRING(255),
       allowNull: true,
       defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
       comment: "1688拒绝原因",
-      field: "denied_1688"
+      field: "deniedAlibaba"
     },
     tmallDevelopmentRejection: {
       type: DataTypes.STRING(255),
@@ -586,7 +587,7 @@ module.exports = sequelize => {
       primaryKey: false,
       autoIncrement: false,
       comment: "抖音、快手拒绝原因",
-      field: "tmall_development_rejection"
+      field: "tmallDevelopmentRejection"
     },
     developmentRejection: {
       type: DataTypes.STRING(255),
