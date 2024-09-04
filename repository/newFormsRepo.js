@@ -7,20 +7,16 @@ const {
     actionFilter,
     statItem,
     statItem1,
-    statItem1Type,
     statItem2,
     statItem2Type,
     statItem3,
-    statItem3Type,
     statItem4,
-    statItem5,
-    statItem5Type,
     totalName,
     totalCode,
     totalStat,
     totalStatType,
-    totalStat1,
-    typeFilter
+    typeFilter,
+    fullActionFilter
 } = require('../const/newFormConst')
 const moment = require('moment')
 
@@ -35,7 +31,7 @@ const moment = require('moment')
 const getProcessStat = async function (userNames, tag, startDate, endDate) {
     let result = [], params = []
 
-    let sql = `select count(1) as count, vft.type, a.action_exit from (
+    let sql = `select a.id, vft.type, a.action_exit from (
             select pi.id, vt.field_id, f.id as form_id, pir.show_name, pir.action_exit, 
             if(piv.value is not null, piv.value, riv.value) as type 
             from vision_type vt
@@ -62,7 +58,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             left join form_field_data ffd on ffd.id = vft.ffd_id 
             join form_fields ff2 on ff2.field_id = a.field_id and ffd.form_field_id = ff2.id
             where a.type like concat('%', ffd.value, '%') 
-            group by vft.type, a.action_exit`
+            order by a.id, case a.action_exit when 'agree' then 2 when 'doing' then 1 else 0 end`
             
     let sql1 = `select ifnull(sum(a.count), 0) as count, a.action_exit from (
             select pi.id, vt.field_id, f.id as form_id, pir.show_name, pir.action_exit, 
@@ -121,13 +117,16 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
                     user.children[action[row[j].action_exit].type]
                         .children[1]
                         .children[statItem2Type[row[j].type][k]]
-                        .sum += parseInt(row[j].count)
+                        .sum += 1
                 }
-                user.children[action[row[j].action_exit].type]
-                    .children[1]
-                    .sum += parseInt(row[j].count)
-                user.children[action[row[j].action_exit].type]
-                    .sum += parseInt(row[j].count)
+                
+                if (j == 0 || (j > 0 && row[j - 1].id != row[j].id)) {
+                    user.children[action[row[j].action_exit].type]
+                        .children[1]
+                        .sum += 1
+                    user.children[action[row[j].action_exit].type]
+                        .sum += 1
+                }
             }
         }
 
@@ -404,9 +403,8 @@ const getFlowProcessInstances = async function (params, offset, limit) {
     }
     let presql = `select count(1) as count from (`
     let subsql = `select pi.id, pi.instance_id as processInstanceId, pi.title, 
-            case pi.status when 'RUNNING' then '运行中'
-                when 'COMPLETED' then '已完成' 
-                else '已终止' end as instanceStatus, pi.create_time as createTime, 
+            if(pi.status = 'COMPLETED', '已完成', '运行中') as instanceStatus, 
+            pi.create_time as createTime, 
             pi.update_time as operateTime 
         from process_instances pi left join processes p on pi.process_id = p.id
         left join vision_type vt on vt.form_id = p.form_id
@@ -452,6 +450,9 @@ const getFlowProcessInstances = async function (params, offset, limit) {
     if (params.action) {
         subsql = `${subsql} and pir.action_exit in (${actionFilter[params.action].map(() => '?').join(',')})`
         p1.push(...actionFilter[params.action])
+    }
+    if (params.fullAction) {
+        subsql = `${subsql} and vn.type = ${fullActionFilter[params.fullAction]}`
     }
     if (params.type) {
         if (typeFilter[params.type]) {

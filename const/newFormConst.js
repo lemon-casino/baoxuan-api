@@ -92,6 +92,12 @@ const actionFilter = {
     '美编已完成': ['agree'],
 }
 
+const fullActionFilter = {
+    '待转入': 0,
+    '进行中': 1,
+    '已完成': 2,
+}
+
 const statItem = {
     actionName: '',
     actionCode: '',
@@ -262,5 +268,6 @@ module.exports = {
     totalStat,
     totalStatType,
     totalStat1,
-    typeFilter
+    typeFilter,
+    fullActionFilter
 }
