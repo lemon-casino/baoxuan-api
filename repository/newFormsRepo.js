@@ -162,11 +162,6 @@ const getStat = async function (startDate, endDate) {
                     let chi = JSON.parse(JSON.stringify(statItem))
                     chi.actionName = statItem4[h].name
                     chi.actionCode = statItem4[h].code
-                    for (let n = 0; n < statItem5.length; n++) {
-                        let ch = JSON.parse(JSON.stringify(statItem))
-                        ch.actionName = statItem5[n].name
-                        chi.children.push(ch)
-                    }
                     chil.children.push(chi)
                 }
                 child.children.push(chil)
@@ -214,76 +209,166 @@ const getStat = async function (startDate, endDate) {
         result.push(child)
     }
 
-    let sql = `select count(1) as count, a.tag, vft.type, a.action_exit from (
-            select pi.id, vt.tag, f.id as form_id, vt.field_id, pir.action_exit, 
-            if(piv.value is not null, piv.value, riv.value) as type, count(1) as count 
-            from vision_type vt
-            join forms f on if(vt.type = 0, f.id = vt.form_id, f.id = vt.sub_form_id)
-            join processes p on vt.form_id = p.form_id
-            left join process_instances pi on pi.process_id = p.id
+    let sql =  `select count(1) as count, 0 as id, vft.type as vision_type, a.type from (
+            select pi.id, f.id as form_id, vt.field_id, vn.type, 
+                if(piv.value is null, riv.value, piv.value) as vision_type 
+            from vision_type vt left join vision_node vn on vt.form_id = vn.form_id
+            join forms f on if(vt.type = 0, vt.form_id = f.id, vt.sub_form_id = f.id)
+            join processes p on vn.form_id = p.form_id
+            left join process_instances pi on p.id = pi.process_id
+            join process_instance_records pir on pir.instance_id = pi.id 
+                and pir.activity_id = vn.activity_id 
+                and pir.show_name = vn.activity_name
+                and pir.action_exit = vn.action_exit
+            left join process_instance_values piv on vt.field_id = piv.field_id 
+                and piv.instance_id = pi.id
             left join process_receipt pr on pr.process_id = pi.id
-            left join receipt_instance_values riv on pr.receipt_id = riv.instance_id and riv.field_id = vt.field_id
-            left join process_instance_values piv on piv.instance_id = pi.id and piv.field_id = vt.field_id
-            left join process_instance_records pir on pir.instance_id = pi.id and pir.action_exit in ('doing', 'next', 'agree')
-            join vision_activity va on va.form_id = vt.form_id and va.tag = vt.tag
-            and pir.activity_id = va.activity_id and pir.show_name = va.activity_name
-            where pir.operate_time >= '${startDate}' and pi.status in ('RUNNING', 'COMPLETED')
-            and pir.operate_time <= '${endDate}'
-            group by pi.id, f.id, vt.tag, vt.field_id, pir.action_exit, 
-            if(piv.value is not null, piv.value, riv.value)
-        ) a left join vision_field_type vft 
-            on vft.form_id = a.form_id 
+            left join receipt_instance_values riv on vt.field_id = riv.field_id 
+                and riv.instance_id = pr.receipt_id
+            where vt.tag = 'total' and pir.operate_time >= '${startDate}'
+                and pir.operate_time <= '${endDate}'
+                and pi.status in ('RUNNING', 'COMPLETED')
+            group by pi.id, f.id, vt.field_id, vn.type, 
+                if(piv.value is null, riv.value, piv.value)
+        ) a left join vision_field_type vft on vft.form_id = a.form_id 
             left join form_field_data ffd on ffd.id = vft.ffd_id 
-            join form_fields ff2 on ff2.field_id = a.field_id and ffd.form_field_id = ff2.id
-            where a.type like concat('%', ffd.value, '%')
-        group by a.tag, vft.type, a.action_exit`
+            join form_fields ff2 on ff2.field_id = a.field_id 
+                and ffd.form_field_id = ff2.id
+            where a.vision_type like concat('%', ffd.value, '%')
+            group by vft.type, a.type
+        
+        union all 
+
+        select count(1) as count, 2 as id, vft.type as vision_type, a.type from (
+            select pi.id, f.id as form_id, vt.field_id, vn.type, 
+                if(piv.value is null, riv.value, piv.value) as vision_type 
+            from vision_type vt left join vision_node vn on vt.form_id = vn.form_id
+            join forms f on if(vt.type = 0, vt.form_id = f.id, vt.sub_form_id = f.id)
+            join processes p on vn.form_id = p.form_id
+            left join process_instances pi on p.id = pi.process_id
+            join process_instance_records pir on pir.instance_id = pi.id 
+                and pir.activity_id = vn.activity_id 
+                and pir.show_name = vn.activity_name
+                and pir.action_exit = vn.action_exit
+            left join process_instance_values piv on vt.field_id = piv.field_id 
+                and piv.instance_id = pi.id
+            left join process_receipt pr on pr.process_id = pi.id
+            left join receipt_instance_values riv on vt.field_id = riv.field_id 
+                and riv.instance_id = pr.receipt_id
+            where vt.tag = 'inside' and pir.operate_time >= '${startDate}'
+                and pir.operate_time <= '${endDate}'
+                and pi.status in ('RUNNING', 'COMPLETED')
+            group by pi.id, f.id, vt.field_id, vn.type, 
+                if(piv.value is null, riv.value, piv.value)
+        ) a left join vision_field_type vft on vft.form_id = a.form_id 
+            left join form_field_data ffd on ffd.id = vft.ffd_id 
+            join form_fields ff2 on ff2.field_id = a.field_id 
+                and ffd.form_field_id = ff2.id
+            where a.vision_type like concat('%', ffd.value, '%')
+            group by vft.type, a.type
+        
+        union all 
+            
+        select count(1) as count, 1 as id, vft.type as vision_type, a.type from (
+            select pi.id, f.id as form_id, vt.field_id, vn.type, 
+                if(piv.value is null, riv.value, piv.value) as vision_type 
+            from vision_type vt left join vision_node vn on vt.form_id = vn.form_id
+            join forms f on if(vt.type = 0, vt.form_id = f.id, vt.sub_form_id = f.id)
+            join processes p on vn.form_id = p.form_id
+            left join process_instances pi on p.id = pi.process_id
+            join process_instance_records pir on pir.instance_id = pi.id 
+                and pir.activity_id = vn.activity_id 
+                and pir.show_name = vn.activity_name
+                and pir.action_exit = vn.action_exit
+            left join process_instance_values piv on vt.field_id = piv.field_id 
+                and piv.instance_id = pi.id
+            left join process_receipt pr on pr.process_id = pi.id
+            left join receipt_instance_values riv on vt.field_id = riv.field_id 
+                and riv.instance_id = pr.receipt_id
+            where vt.tag = 'out' and pir.operate_time >= '${startDate}'
+                and pir.operate_time <= '${endDate}'
+                and pi.status in ('RUNNING', 'COMPLETED')
+            group by pi.id, f.id, vt.field_id, vn.type, 
+                if(piv.value is null, riv.value, piv.value)
+        ) a left join vision_field_type vft on vft.form_id = a.form_id 
+            left join form_field_data ffd on ffd.id = vft.ffd_id 
+            join form_fields ff2 on ff2.field_id = a.field_id 
+                and ffd.form_field_id = ff2.id
+            where a.vision_type like concat('%', ffd.value, '%')
+            group by vft.type, a.type
+        `
 
     let row = await query(sql)
     for (let i = 0; i < row.length; i++) {
-        for (let j = 0; j < statItem1Type.length; j++) {
-            if (statItem1Type[j].includes(row[i].tag)) {
-                for (let k = 0; k < statItem2Type[row[i].type].length; k++) {
-                    result[j].children[statItem2Type[row[i].type][k]]
-                        .children[statItem3Type[row[i].action_exit]]
-                        .children[1]
-                        .children[statItem5Type[row[i].tag]]
-                        .sum += parseInt(row[i].count)
-                    result[j].children[statItem2Type[row[i].type][k]]
-                        .children[statItem3Type[row[i].action_exit]]
-                        .children[1]
-                        .sum += parseInt(row[i].count)
-                    result[j].children[statItem2Type[row[i].type][k]]
-                        .children[statItem3Type[row[i].action_exit]]
-                        .sum += parseInt(row[i].count)
-                    result[j].children[statItem2Type[row[i].type][k]]
-                        .sum += parseInt(row[i].count)
-                }
-                result[j].sum += parseInt(row[i].count)
-            }            
+        if (statItem2Type[row[i].vision_type]) {
+            for (let j = 0; j < statItem2Type[row[i].vision_type].length; j++) {
+                result[row[i].id].children[statItem2Type[row[i].vision_type][j]]
+                    .children[row[i].type]
+                    .children[1]
+                    .sum += parseInt(row[i].count)
+                result[row[i].id].children[statItem2Type[row[i].vision_type][j]]
+                    .children[row[i].type]
+                    .sum += parseInt(row[i].count)
+                result[row[i].id].children[statItem2Type[row[i].vision_type][j]]
+                    .sum += parseInt(row[i].count)
+            }
         }
+        result[row[i].id].sum += parseInt(row[i].count)
+    }
+
+    sql = `select vt.tag, vft.type, piv2.value, pir.action_exit from vision_type vt
+        join forms f on if(vt.type = 0, f.id = vt.form_id, f.id = vt.sub_form_id)
+        join processes p on vt.form_id = p.form_id
+        left join process_instances pi on pi.process_id = p.id
+        
+        left join process_instance_values piv on piv.instance_id = pi.id and piv.field_id = vt.field_id
+        left join process_receipt pr on pr.process_id = pi.id
+        left join receipt_instance_values riv on pr.receipt_id = riv.instance_id and riv.field_id = vt.field_id
+        
+        left join process_instance_records pir on pir.instance_id = pi.id and pir.action_exit in ('doing', 'next', 'agree')
+        join vision_activity va on va.form_id = vt.form_id
+            and va.tag = vt.tag
+            and pir.activity_id = va.activity_id 
+            and pir.show_name = va.activity_name
+        left join vision_activity_field vaf on vaf.activity_id = va.id
+        join process_instance_values piv2 on piv2.instance_id = pi.id and piv2.field_id = vaf.field_id
+        
+        left join vision_field_type vft on vft.form_id = f.id 
+        left join form_field_data ffd on ffd.id = vft.ffd_id 
+        join form_fields ff on ffd.form_field_id = ff.id and ff.form_id = f.id
+        where pir.operate_time >= '${startDate}' 
+            and pi.status in ('RUNNING', 'COMPLETED')
+            and pir.operate_time <= '${endDate}'
+            and if(piv.value is null, riv.value, piv.value) like concat('%', ffd.value, '%')`
+
+    row = await query(sql)
+    for (let i = 0; i < row.length; i++) {
+        let value = row[i].value instanceof Number ? row[i].value : parseInt(row[i].value.replace(/"/g, ''))
+        if (!value) value = 0
+        
         for (let k = 0; k < statItem2Type[row[i].type].length; k++) {
             if (totalStatType[row[i].tag]) {
                 result[3].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .children[1]
                     .children[statItem2Type[row[i].type][k]]
-                    .sum += parseInt(row[i].count)
+                    .sum += value
                 result[3].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .children[1]
-                    .sum += parseInt(row[i].count)
+                    .sum += value
                 result[3].children[totalStatType[row[i].tag][row[i].action_exit]]
-                    .sum += parseInt(row[i].count)
+                    .sum += value
             }
         }
-        result[3].sum += parseInt(row[i].count)
+        result[3].sum += value
         for (let j = 4; j < 8; j++) {
             if (totalStatType[row[i].tag] && statItem2Type[row[i].type].includes(j - 4)) {
-                console.log(row[i].tag, row[i].action_exit, totalStatType[row[i].tag][row[i].action_exit], row[i].count)
+                
                 result[j].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .children[1]
-                    .sum += parseInt(row[i].count)
+                    .sum += value
                 result[j].children[totalStatType[row[i].tag][row[i].action_exit]]
-                    .sum += parseInt(row[i].count)
-                result[j].sum += parseInt(row[i].count)
+                    .sum += value
+                result[j].sum += value
             }
         }
     }
@@ -317,27 +402,41 @@ const getFlowProcessInstances = async function (params, offset, limit) {
         data: [],
         total: 0
     }
-    let sql = `select pi.id, f.id as form_id, vt.field_id, 
-            if(piv.value is not null, piv.value, riv.value) as type from process_instances pi 
-            join processes p on p.id = pi.process_id
-            join vision_type vt on vt.form_id = p.form_id 
-            join forms f on if(vt.type = 0, vt.form_id = f.id, vt.sub_form_id = f.id)           
-            left join process_receipt pr on pr.process_id = pi.id            
-            left join receipt_instance_values riv on pr.receipt_id = riv.instance_id and riv.field_id = vt.field_id
-            left join process_instance_values piv on piv.instance_id = pi.id and piv.field_id = vt.field_id            
-            left join process_instance_records pir on pir.instance_id = pi.id and pir.action_exit in ('doing', 'next', 'agree')
-            join vision_activity va on va.form_id = vt.form_id and va.tag = vt.tag
-            and pir.activity_id = va.activity_id and pir.show_name = va.activity_name
-            left join vision_out_field vof on vof.tag = vt.tag and vof.form_id = vt.form_id
-            left join process_instance_values piv2 on piv2.instance_id = pi.id and piv2.field_id = vof.field_id
-            left join process_instance_sub_values pis on pis.instance_id = pi.id and pis.field_id = va.sub_field`
-    let presql = `select count(1) as count from (select a.id from (`
-    let presql1 = `select p2.id, p2.instance_id as processInstanceId, p2.title, 
-            p2.status as instanceStatus, p2.create_time as createTime, 
-            p2.update_time as operateTime from (select a.id from (`
-    let subsql = ` where p.form_id = ?`
+    let presql = `select count(1) as count from (`
+    let subsql = `select pi.id, pi.instance_id as processInstanceId, pi.title, 
+            case pi.status when 'RUNNING' then '运行中'
+                when 'COMPLETED' then '已完成' 
+                else '已终止' end as instanceStatus, pi.create_time as createTime, 
+            pi.update_time as operateTime 
+        from process_instances pi left join processes p on pi.process_id = p.id
+        left join vision_type vt on vt.form_id = p.form_id
+        join forms f on if(vt.type = 0, vt.form_id = f.id, vt.sub_form_id = f.id)
+        left join process_instance_values piv on piv.field_id = vt.field_id and piv.instance_id = pi.id
+        left join process_receipt pr on pr.process_id = pi.id
+        left join receipt_instance_values riv on pr.receipt_id = riv.instance_id
+        left join vision_field_type vft on f.id = vft.form_id
+        join form_field_data ffd on ffd.id = vft.ffd_id
+        left join vision_activity va on va.form_id = vt.form_id and va.tag = vt.tag
+        left join vision_node vn on vn.form_id = vt.form_id
+        left join process_instance_records pir on pir.instance_id = pi.id 
+            and pir.action_exit in ('doing', 'next', 'agree') 
+            and if(va.id is null, 
+                pir.activity_id = vn.activity_id 
+                    and pir.show_name = vn.activity_name 
+                    and pir.action_exit = vn.action_exit, 
+                pir.activity_id = va.activity_id 
+                    and pir.show_name = va.activity_name) 
+        left join vision_out_field vof on vof.tag = vt.tag and vof.form_id = vt.form_id
+        left join process_instance_values piv2 on piv2.instance_id = pi.id 
+            and piv2.field_id = vof.field_id
+        left join process_instance_sub_values pis on pis.instance_id = pi.id 
+            and pis.field_id = va.sub_field
+        where p.form_id = ? and pi.status in ('RUNNING', 'COMPLETED')`
     p1.push(parseInt(params.id))
     if (params.tag) subsql = `${subsql} and vt.tag in ("${params.tag.join('","')}")`
+    if (params.visionTag) {
+        subsql = `${subsql} and vt.tag = '${params.visionTag}'`
+    }
     if (params.operator) {
         subsql = `${subsql} and (pir.operator_name = ? or piv2.value = ? or pis.value = ?)`
         p1.push(params.operator, params.operator, params.operator)
@@ -354,27 +453,20 @@ const getFlowProcessInstances = async function (params, offset, limit) {
         subsql = `${subsql} and pir.action_exit in (${actionFilter[params.action].map(() => '?').join(',')})`
         p1.push(...actionFilter[params.action])
     }
-    subsql = `${subsql} and pi.status in ('RUNNING', 'COMPLETED')
-            group by pi.id, f.id, vt.field_id, if(piv.value is not null, piv.value, riv.value) 
-        ) a left join vision_field_type vft 
-            on vft.form_id = a.form_id 
-            left join form_field_data ffd on ffd.id = vft.ffd_id 
-            join form_fields ff2 on ff2.field_id = a.field_id and ffd.form_field_id = ff2.id`
     if (params.type) {
         if (typeFilter[params.type]) {
             subsql = `${subsql} and vft.type in (${typeFilter[params.type].map(() => '?').join(',')})
-                and a.type like concat('%', ffd.value, '%')`
+                and if(piv.value is null, riv.value, piv.value) like concat('%', ffd.value, '%')`
             p1.push(...typeFilter[params.type])
         }
     }
     subsql = `${subsql}
-            group by a.id
-        ) b left join process_instances p2 on b.id = p2.id`
-    let search = `${presql}${sql}${subsql}`
+            group by pi.id, pi.instance_id, pi.title, pi.status, pi.create_time, pi.update_time`
+    let search = `${presql}${subsql}) a`
     let row = await query(search, p1)
     if (row?.length && row[0].count) {
         result.total = row[0].count
-        search = `${presql1}${sql}${subsql} limit ${offset}, ${limit}`
+        search = `select * from (${subsql}) a limit ${offset}, ${limit}`
         row = await query(search, p1)
         if (row?.length) {
             for (let i = 0; i < row.length; i++) {
