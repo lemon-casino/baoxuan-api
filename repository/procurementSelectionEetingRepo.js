@@ -1,6 +1,7 @@
 const getprocurementSelectionEeting = require("../model/procurementSelectionEeting");
 const sequelize = require("@/model/init");
 const { Sequelize, QueryTypes, col,fn,literal } = require("sequelize");
+const {log} = require("winston");
 const procurementSelectionEeting = getprocurementSelectionEeting(sequelize)
 
 //批量创建
@@ -65,10 +66,10 @@ const returnsTheQueryConditionInformation = async () => {
 
 }
 
-const FilterEetingInformation = async (content) => {
+
+
+function buildWhereClause(content) {
     const {
-        pageIndex,
-        pageSize,
         originator,
         productName,
         vendorName,
@@ -76,22 +77,42 @@ const FilterEetingInformation = async (content) => {
         selectionAttributes,
         pushProductLine,
         startTime,
-        endTime
+        endTime,
+        platform,
+        reciprocaltype,
     } = content;
 
-    const where = {
-        creationTime: { $between: [startTime, endTime] }
-    };
+    const where = {};
 
+    // 创建时间区间条件
+    if (startTime && endTime) {
+        where.creationTime = { $between: [startTime, endTime] };
+    }
+
+    // 添加其他条件
     if (originator) where.originator = { $in: Array.isArray(originator) ? originator : [originator] };
     if (productName) where.productName = { $in: Array.isArray(productName) ? productName : [productName] };
     if (vendorName) where.vendorName = { $in: Array.isArray(vendorName) ? vendorName : [vendorName] };
     if (selectionAttributes) where.selectionAttributes = { $in: Array.isArray(selectionAttributes) ? selectionAttributes : [selectionAttributes] };
     if (productAttributes) where.productAttributes = { $in: Array.isArray(productAttributes) ? productAttributes : [productAttributes] };
     if (pushProductLine) where.pushProductLine = { $in: Array.isArray(pushProductLine) ? pushProductLine : [pushProductLine] };
+    if (reciprocaltype !== undefined) where.reciprocaltype = { $eq: reciprocaltype };
+    if (platform) where.platform = { $eq: platform };
 
-    console.log(where);
+    return where;
+}
 
+
+
+
+
+const FilterEetingInformation = async (content) => {
+
+    const {
+        pageIndex,
+        pageSize,
+    } = content;
+    const where = buildWhereClause(content);
     return procurementSelectionEeting.findAndCountAll({
         where,
         limit: parseInt(pageSize, 10),
@@ -194,27 +215,32 @@ const whetherForwardPushAndReversePushIsSelected = async (type) => {
 
 
 
-const categoryStatistics = async (processInstanceId) => {
-    /*select  pushProductLine ,sum(1) from  procurement_selection_eeting  where reciprocaltype=1 group by pushProductLine*/
+const categoryStatistics = async (processInstanceId,content) => {
+
+    const  where=buildWhereClause(content)
+    where.reciprocaltype= { $eq:processInstanceId };
+
     return procurementSelectionEeting.findAll({
         attributes: ['pushProductLine', [fn('SUM', literal(1)), 'count']], // 使用 literal(1) 作为值
-        where: {
-            reciprocaltype: processInstanceId
-        },
+        where,
         group: ['pushProductLine'],
         logging:false,
         raw: true,
     });
 }
 // 平台 统计
-const platformStatistics = async (processInstanceId) => {
+const platformStatistics = async (processInstanceId,content) => {
+    const {startTime,endTime} =content
+    const  where=buildWhereClause(content)
+    where.reciprocaltype= { $eq:processInstanceId };
+
+     where.creationTime=
+         { $between: [startTime, endTime] };
     return procurementSelectionEeting.findAll({
         attributes: ['platform', [fn('SUM', literal(1)), 'count']], // 使用 literal(1) 作为值
-        where: {
-            reciprocaltype: processInstanceId
-        },
+        where,
         group: ['platform'],
-        logging:false,
+        logging:true,
         raw: true,
     });
 };
