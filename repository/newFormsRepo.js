@@ -62,39 +62,49 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             
     let sql1 = `select ifnull(sum(a.count), 0) as count, a.action_exit from (
             select pi.id, vt.field_id, f.id as form_id, pir.show_name, pir.action_exit, 
-            cast(ifnull(if(piv3.value is null, replace(pis2.value, '"', ''), replace(piv3.value, '"', '')), 0) as signed) as count, 
-            if(piv.value is not null, piv.value, riv.value) as type
-            from vision_type vt
-            join forms f on if(vt.type = 0, f.id = vt.form_id, f.id = vt.sub_form_id)
+                cast(ifnull(if(piv3.value is null, replace(pis2.value, '"', ''), replace(piv3.value, '"', '')), 0) as decimal) as count, 
+                if(piv.value is not null, piv.value, riv.value) as type
+            from vision_type vt join forms f 
+                on if(vt.type = 0, f.id = vt.form_id, f.id = vt.sub_form_id)
             join processes p on vt.form_id = p.form_id
             left join process_instances pi on pi.process_id = p.id
             left join process_receipt pr on pr.process_id = pi.id
-            left join receipt_instance_values riv on pr.receipt_id = riv.instance_id and riv.field_id = vt.field_id
-            left join process_instance_values piv on piv.instance_id = pi.id and piv.field_id = vt.field_id
-            left join process_instance_records pir on pir.instance_id = pi.id and pir.action_exit in ('doing', 'next', 'agree')
-            join vision_activity va on va.form_id = vt.form_id and va.tag = vt.tag
-            and pir.activity_id = va.activity_id and pir.show_name = va.activity_name
-            left join vision_out_field vof on vof.tag = vt.tag and vof.form_id = vt.form_id
-            left join process_instance_values piv2 on piv2.instance_id = pi.id and piv2.field_id = vof.field_id
-            left join process_instance_sub_values pis on pis.instance_id = pi.id and pis.field_id = va.sub_field
-
+            left join receipt_instance_values riv on pr.receipt_id = riv.instance_id 
+                and riv.field_id = vt.field_id
+            left join process_instance_values piv on piv.instance_id = pi.id 
+                and piv.field_id = vt.field_id
+            left join process_instance_records pir on pir.instance_id = pi.id 
+                and pir.action_exit in ('doing', 'next', 'agree')
+            join vision_activity va on va.form_id = vt.form_id 
+                and va.tag = vt.tag
+                and pir.activity_id = va.activity_id 
+                and pir.show_name = va.activity_name
+            left join vision_out_field vof on vof.tag = vt.tag 
+                and vof.form_id = vt.form_id
+            left join process_instance_values piv2 on piv2.instance_id = pi.id 
+                and piv2.field_id = vof.field_id
+            left join process_instance_sub_values pis on pis.instance_id = pi.id 
+                and pis.field_id = va.sub_field
             left join vision_activity_field vaf on vt.form_id = vaf.form_id
-            and vaf.activity_id = va.id
-            left join process_instance_values piv3 on piv3.instance_id = pi.id and piv3.field_id = vaf.field_id and vaf.is_sub = 0
-            left join process_instance_sub_values pis2 on pis2.instance_id = pi.id and pis2.field_id = vaf.field_id and vaf.is_sub = 1
+                and vaf.activity_id = va.id
+                and if(pir.action_exit = 'agree', vaf.type = 1, vaf.type = 0)
+            left join process_instance_values piv3 on piv3.instance_id = pi.id 
+                and piv3.field_id = vaf.field_id 
+                and vaf.is_sub = 0
+            left join process_instance_sub_values pis2 on pis2.instance_id = pi.id 
+                and pis2.field_id = vaf.field_id 
+                and vaf.is_sub = 1
 
             where vt.tag = '${tag}' and pi.status in ('RUNNING', 'COMPLETED') 
-            and (pir.operator_name = ? or piv2.value = ? or pis.value = ?) 
-            and pir.operate_time >= '${startDate}' 
-            and pir.operate_time <= '${endDate}'
+                and (pir.operator_name = ? or piv2.value = ? or pis.value = ?) 
+                and pir.operate_time >= '${startDate}' 
+                and pir.operate_time <= '${endDate}'
 
             group by pi.id, vt.field_id, f.id, pir.action_exit, pir.show_name, 
-            piv3.field_id, piv3.value, pis2.field_id, pis2.value, 
-            if(piv.value is not null, piv.value, riv.value)
-        ) a left join vision_field_type vft 
-            on vft.form_id = a.form_id 
+                piv3.field_id, piv3.value, pis2.field_id, pis2.value, 
+                if(piv.value is not null, piv.value, riv.value)
+        ) a left join vision_field_type vft on vft.form_id = a.form_id 
             left join form_field_data ffd on ffd.id = vft.ffd_id 
-            join form_fields ff2 on ff2.field_id = a.field_id and ffd.form_field_id = ff2.id
             where a.type like concat('%', ffd.value, '%')
         group by a.action_exit`
    
@@ -114,18 +124,17 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
         if (row?.length) {
             for (let j = 0; j < row.length; j++) {
                 for (let k = 0; k < statItem2Type[row[j].type].length; k++) {
-                    user.children[action[row[j].action_exit].type]
-                        .children[1]
-                        .children[statItem2Type[row[j].type][k]]
-                        .sum += 1
-                }
-                
-                if (j == 0 || (j > 0 && row[j - 1].id != row[j].id)) {
-                    user.children[action[row[j].action_exit].type]
-                        .children[1]
-                        .sum += 1
-                    user.children[action[row[j].action_exit].type]
-                        .sum += 1
+                    if (j == 0 || (j > 0 && row[j - 1].id != row[j].id)) {
+                        user.children[action[row[j].action_exit].type]
+                            .children[1]
+                            .children[statItem2Type[row[j].type][k]]
+                            .sum += 1
+                        user.children[action[row[j].action_exit].type]
+                            .children[1]
+                            .sum += 1
+                        user.children[action[row[j].action_exit].type]
+                            .sum += 1
+                    }
                 }
             }
         }
@@ -208,9 +217,8 @@ const getStat = async function (startDate, endDate) {
         result.push(child)
     }
 
-    let sql =  `select count(1) as count, 0 as id, vft.type as vision_type, a.type from (
-            select pi.id, f.id as form_id, vt.field_id, vn.type, 
-                if(piv.value is null, riv.value, piv.value) as vision_type 
+    let sql =  `select count(1) as count, 0 as id, a.vision_type, a.type from (
+            select vft.type as vision_type, vn.type 
             from vision_type vt left join vision_node vn on vt.form_id = vn.form_id
             join forms f on if(vt.type = 0, vt.form_id = f.id, vt.sub_form_id = f.id)
             join processes p on vn.form_id = p.form_id
@@ -224,23 +232,19 @@ const getStat = async function (startDate, endDate) {
             left join process_receipt pr on pr.process_id = pi.id
             left join receipt_instance_values riv on vt.field_id = riv.field_id 
                 and riv.instance_id = pr.receipt_id
+            left join vision_field_type vft on vft.form_id = f.id
+            left join form_field_data ffd on ffd.id = vft.ffd_id
             where vt.tag = 'total' and pir.operate_time >= '${startDate}'
                 and pir.operate_time <= '${endDate}'
                 and pi.status in ('RUNNING', 'COMPLETED')
-            group by pi.id, f.id, vt.field_id, vn.type, 
-                if(piv.value is null, riv.value, piv.value)
-        ) a left join vision_field_type vft on vft.form_id = a.form_id 
-            left join form_field_data ffd on ffd.id = vft.ffd_id 
-            join form_fields ff2 on ff2.field_id = a.field_id 
-                and ffd.form_field_id = ff2.id
-            where a.vision_type like concat('%', ffd.value, '%')
-            group by vft.type, a.type
+                and if(piv.value is null, riv.value, piv.value) like concat('%', ffd.value, '%')
+            group by pi.id, vn.type, vft.type
+        ) a group by a.vision_type, a.type
         
         union all 
 
-        select count(1) as count, 2 as id, vft.type as vision_type, a.type from (
-            select pi.id, f.id as form_id, vt.field_id, vn.type, 
-                if(piv.value is null, riv.value, piv.value) as vision_type 
+        select count(1) as count, 2 as id, a.vision_type, a.type from (
+            select vft.type as vision_type, vn.type 
             from vision_type vt left join vision_node vn on vt.form_id = vn.form_id
             join forms f on if(vt.type = 0, vt.form_id = f.id, vt.sub_form_id = f.id)
             join processes p on vn.form_id = p.form_id
@@ -254,23 +258,19 @@ const getStat = async function (startDate, endDate) {
             left join process_receipt pr on pr.process_id = pi.id
             left join receipt_instance_values riv on vt.field_id = riv.field_id 
                 and riv.instance_id = pr.receipt_id
+            left join vision_field_type vft on vft.form_id = f.id
+            left join form_field_data ffd on ffd.id = vft.ffd_id
             where vt.tag = 'inside' and pir.operate_time >= '${startDate}'
                 and pir.operate_time <= '${endDate}'
                 and pi.status in ('RUNNING', 'COMPLETED')
-            group by pi.id, f.id, vt.field_id, vn.type, 
-                if(piv.value is null, riv.value, piv.value)
-        ) a left join vision_field_type vft on vft.form_id = a.form_id 
-            left join form_field_data ffd on ffd.id = vft.ffd_id 
-            join form_fields ff2 on ff2.field_id = a.field_id 
-                and ffd.form_field_id = ff2.id
-            where a.vision_type like concat('%', ffd.value, '%')
-            group by vft.type, a.type
+                and if(piv.value is null, riv.value, piv.value) like concat('%', ffd.value, '%')
+            group by pi.id, vn.type, vft.type
+        ) a group by a.vision_type, a.type
         
         union all 
             
-        select count(1) as count, 1 as id, vft.type as vision_type, a.type from (
-            select pi.id, f.id as form_id, vt.field_id, vn.type, 
-                if(piv.value is null, riv.value, piv.value) as vision_type 
+        select count(1) as count, 1 as id, a.vision_type, a.type from (
+            select vft.type as vision_type, vn.type 
             from vision_type vt left join vision_node vn on vt.form_id = vn.form_id
             join forms f on if(vt.type = 0, vt.form_id = f.id, vt.sub_form_id = f.id)
             join processes p on vn.form_id = p.form_id
@@ -284,18 +284,14 @@ const getStat = async function (startDate, endDate) {
             left join process_receipt pr on pr.process_id = pi.id
             left join receipt_instance_values riv on vt.field_id = riv.field_id 
                 and riv.instance_id = pr.receipt_id
+            left join vision_field_type vft on vft.form_id = f.id
+            left join form_field_data ffd on ffd.id = vft.ffd_id
             where vt.tag = 'out' and pir.operate_time >= '${startDate}'
                 and pir.operate_time <= '${endDate}'
                 and pi.status in ('RUNNING', 'COMPLETED')
-            group by pi.id, f.id, vt.field_id, vn.type, 
-                if(piv.value is null, riv.value, piv.value)
-        ) a left join vision_field_type vft on vft.form_id = a.form_id 
-            left join form_field_data ffd on ffd.id = vft.ffd_id 
-            join form_fields ff2 on ff2.field_id = a.field_id 
-                and ffd.form_field_id = ff2.id
-            where a.vision_type like concat('%', ffd.value, '%')
-            group by vft.type, a.type
-        `
+                and if(piv.value is null, riv.value, piv.value) like concat('%', ffd.value, '%')
+            group by pi.id, vn.type, vft.type
+        ) a group by a.vision_type, a.type`
 
     let row = await query(sql)
     for (let i = 0; i < row.length; i++) {
@@ -318,23 +314,25 @@ const getStat = async function (startDate, endDate) {
     sql = `select vt.tag, vft.type, piv2.value, pir.action_exit from vision_type vt
         join forms f on if(vt.type = 0, f.id = vt.form_id, f.id = vt.sub_form_id)
         join processes p on vt.form_id = p.form_id
-        left join process_instances pi on pi.process_id = p.id
-        
-        left join process_instance_values piv on piv.instance_id = pi.id and piv.field_id = vt.field_id
+        left join process_instances pi on pi.process_id = p.id        
+        left join process_instance_values piv on piv.instance_id = pi.id 
+            and piv.field_id = vt.field_id
         left join process_receipt pr on pr.process_id = pi.id
-        left join receipt_instance_values riv on pr.receipt_id = riv.instance_id and riv.field_id = vt.field_id
-        
-        left join process_instance_records pir on pir.instance_id = pi.id and pir.action_exit in ('doing', 'next', 'agree')
+        left join receipt_instance_values riv on pr.receipt_id = riv.instance_id 
+            and riv.field_id = vt.field_id        
+        left join process_instance_records pir on pir.instance_id = pi.id 
+            and pir.action_exit in ('doing', 'next', 'agree')
         join vision_activity va on va.form_id = vt.form_id
             and va.tag = vt.tag
             and pir.activity_id = va.activity_id 
             and pir.show_name = va.activity_name
         left join vision_activity_field vaf on vaf.activity_id = va.id
-        join process_instance_values piv2 on piv2.instance_id = pi.id and piv2.field_id = vaf.field_id
-        
+        join process_instance_values piv2 on piv2.instance_id = pi.id 
+            and piv2.field_id = vaf.field_id        
         left join vision_field_type vft on vft.form_id = f.id 
         left join form_field_data ffd on ffd.id = vft.ffd_id 
-        join form_fields ff on ffd.form_field_id = ff.id and ff.form_id = f.id
+        join form_fields ff on ffd.form_field_id = ff.id 
+                and ff.form_id = f.id
         where pir.operate_time >= '${startDate}' 
             and pi.status in ('RUNNING', 'COMPLETED')
             and pir.operate_time <= '${endDate}'
