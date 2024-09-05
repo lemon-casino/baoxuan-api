@@ -91,9 +91,11 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             left join process_instance_values piv3 on piv3.instance_id = pi.id 
                 and piv3.field_id = vaf.field_id 
                 and vaf.is_sub = 0
+                and not exists(select pis3.id from process_instance_sub_values pis3 where pis3.instance_id = pi.id)
             left join process_instance_sub_values pis2 on pis2.instance_id = pi.id 
                 and pis2.field_id = vaf.field_id 
                 and vaf.is_sub = 1
+                and pis.index = pis2.index
 
             where vt.tag = '${tag}' and pi.status in ('RUNNING', 'COMPLETED') 
                 and (pir.operator_name = ? or piv2.value = ? or pis.value = ?) 
