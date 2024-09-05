@@ -23,6 +23,40 @@ const returnsTheQueryConditionInformation= async () => {
     return  reds[0];
 }
 const FilterEetingInformation = async (content) => {
+
+    // 处理逻辑
+    const {
+        titleName,
+        itemName,
+        typeTo
+    } = content;
+
+
+    switch (typeTo){
+        case 'pushForward':
+            content.reciprocaltype=1
+            break;
+        case 'pushBackward':
+            content.reciprocaltype=2
+            break;
+    }
+
+    switch (titleName){
+        case '类目':
+            content.pushProductLine= itemName
+            break;
+        case '平台':
+            content.platform= itemName
+            break;
+
+    }
+
+    // 从 content 中删除 typeTo  itemName titleName
+    delete content.typeTo;
+    delete content.itemName;
+    delete content.titleName;
+    console.log(content)
+
 	return await procurementSelectionEetingRepo.FilterEetingInformation(
         content
 	)

@@ -76,7 +76,9 @@ const FilterEetingInformation = async (content) => {
         selectionAttributes,
         pushProductLine,
         startTime,
-        endTime
+        endTime,
+        platform,
+        reciprocaltype,
     } = content;
 
     const where = {
@@ -89,7 +91,8 @@ const FilterEetingInformation = async (content) => {
     if (selectionAttributes) where.selectionAttributes = { $in: Array.isArray(selectionAttributes) ? selectionAttributes : [selectionAttributes] };
     if (productAttributes) where.productAttributes = { $in: Array.isArray(productAttributes) ? productAttributes : [productAttributes] };
     if (pushProductLine) where.pushProductLine = { $in: Array.isArray(pushProductLine) ? pushProductLine : [pushProductLine] };
-
+    if (reciprocaltype) where.reciprocaltype = { $eq: reciprocaltype };
+    if (platform) where.platform = { $eq: platform };
     console.log(where);
 
     return procurementSelectionEeting.findAndCountAll({
