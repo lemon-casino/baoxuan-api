@@ -22,41 +22,49 @@ const returnsTheQueryConditionInformation= async () => {
    const reds= await procurementSelectionEetingRepo.returnsTheQueryConditionInformation();
     return  reds[0];
 }
-const FilterEetingInformation = async (content) => {
-
-    // 处理逻辑
-    const {
-        titleName,
-        itemName,
-        typeTo
-    } = content;
 
 
-    switch (typeTo){
+
+
+
+function processContent(content) {
+    // 解构 content 中的属性
+    const { titleName, itemName, typeTo } = content;
+
+    // 根据 typeTo 设置 reciprocaltype
+    switch (typeTo) {
         case 'pushForward':
-            content.reciprocaltype=1
+            content.reciprocaltype = 1;
             break;
         case 'pushBackward':
-            content.reciprocaltype=2
+            content.reciprocaltype = 2;
             break;
     }
 
-    switch (titleName){
+    // 根据 titleName 进行不同的处理
+    switch (titleName) {
         case '类目':
-            content.pushProductLine= itemName
+            content.pushProductLine = itemName;
             break;
         case '平台':
-            content.platform= itemName
+            content.platform = itemName;
             break;
-
     }
 
-    // 从 content 中删除 typeTo  itemName titleName
+    // 删除不再需要的属性
     delete content.typeTo;
     delete content.itemName;
     delete content.titleName;
-    console.log(content)
 
+    return content;  // 返回处理后的 content 对象
+}
+
+
+
+const FilterEetingInformation = async (content) => {
+
+
+    content = processContent(content);
 	return await procurementSelectionEetingRepo.FilterEetingInformation(
         content
 	)
@@ -136,6 +144,9 @@ async function fillRejectionStatistics(reasons, direction) {
 }
 
 async function typeStatistics(content) {
+
+    content = processContent(content);
+    console.log(content)
     const reds = {
         pushForward: [],
         pushBackward: [],
@@ -158,9 +169,9 @@ async function typeStatistics(content) {
         ],
     };
 
-    const pushData = async (direction) => {
-        const categoryStats = await procurementSelectionEetingRepo.categoryStatistics(direction);
-        const platformStats = await procurementSelectionEetingRepo.platformStatistics(direction);
+    const pushData = async (direction,content) => {
+        const categoryStats = await procurementSelectionEetingRepo.categoryStatistics(direction,content);
+        const platformStats = await procurementSelectionEetingRepo.platformStatistics(direction,content);
         const numberOfPushes = JSON.parse(JSON.stringify(numberOfPushesTemplate));
         updatePopover(numberOfPushes.popover[0], categoryStats, 'pushProductLine');
         updatePopover(numberOfPushes.popover[1], platformStats, 'platform');
@@ -168,8 +179,8 @@ async function typeStatistics(content) {
         return numberOfPushes;
     };
 
-    reds.pushForward.push(await pushData(1));
-    reds.pushBackward.push(await pushData(2));
+    reds.pushForward.push(await pushData(1,content));
+    reds.pushBackward.push(await pushData(2,content));
 
     const selectionTemplate = {
         title: "选中数量",

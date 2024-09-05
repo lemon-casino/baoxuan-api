@@ -78,10 +78,10 @@ const groupMemberInformation = async (req, res, next) => {
 const  typeStatistics= async (req, res, next) => {
     try {
 
-        const  {Type } =req.query
+
         let reds={}
 
-        reds = await procurementSelectionEetingService.typeStatistics(Type)
+        reds = await procurementSelectionEetingService.typeStatistics(req.query)
         return res.send(biResponse.success(reds))
 
     }
