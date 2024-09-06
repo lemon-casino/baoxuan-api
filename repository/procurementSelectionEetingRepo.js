@@ -1,6 +1,6 @@
 const getprocurementSelectionEeting = require("../model/procurementSelectionEeting");
 const sequelize = require("@/model/init");
-const { Sequelize, QueryTypes, col,fn,literal } = require("sequelize");
+const { Sequelize, QueryTypes, col,fn,literal, Op} = require("sequelize");
 const {log} = require("winston");
 const procurementSelectionEeting = getprocurementSelectionEeting(sequelize)
 
@@ -100,7 +100,7 @@ function buildWhereClause(content) {
         coupangOperationSampleIsSelected,
         tikTokWhetherTheKuaishouOperationSampleIsSelected,
         whetherOrNotToChooseAnOperationSa,
-
+        reason
     } = content;
 
     const where = {};
@@ -139,6 +139,22 @@ function buildWhereClause(content) {
     if (tikTokWhetherTheKuaishouOperationSampleIsSelected) where.tikTokWhetherTheKuaishouOperationSampleIsSelected = { $eq: tikTokWhetherTheKuaishouOperationSampleIsSelected };
     if (whetherOrNotToChooseAnOperationSa) where.whetherOrNotToChooseAnOperationSa = { $eq: whetherOrNotToChooseAnOperationSa };
     if (platform) where.platform = { $eq: platform };
+    if (reason) {
+        const likeReason = { $eq: `${reason}` };
+        where[Op.or] = [
+            { tmallRefused: likeReason },
+            { jdComRefused: likeReason },
+            { pinduoduoRefused: likeReason },
+            { tmallSupermarketRefused: likeReason },
+            { theTaoFactoryRefused: likeReason },
+            { dewuVipshopWillRefuse: likeReason },
+            { tmallVerticalShopXiaohongshuRefuses: likeReason },
+            { coupangRefuse: likeReason },
+            { deniedAlibaba: likeReason },
+            { tmallDevelopmentRejection: likeReason },
+            { developmentRejection: likeReason }
+        ];
+    }
 
     return where;
 }
@@ -161,6 +177,7 @@ const FilterEetingInformation = async (content) => {
         limit: parseInt(pageSize, 10),
         offset: (parseInt(pageIndex, 10) - 1) * parseInt(pageSize, 10),
         order: [['creationTime', 'DESC']],
+        logging:true,
         raw: true,
     });
 };
@@ -195,19 +212,25 @@ const forwardAndBackwardThrust = async (reasons, type, content) => {
     // 如果有 WHERE 条件，添加到查询语句
     let baseQuery = `
         SELECT :reason AS Reason,
-            (COALESCE(SUM(CASE WHEN tmallRefused LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN jdComRefused LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN pinduoduoRefused LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN tmallSupermarketRefused LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN theTaoFactoryRefused LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN dewuVipshopWillRefuse LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN tmallVerticalShopXiaohongshuRefuses LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN coupangRefuse LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN deniedAlibaba LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN tmallDevelopmentRejection LIKE :likeClause THEN 1 ELSE 0 END), 0) +
-             COALESCE(SUM(CASE WHEN developmentRejection LIKE :likeClause THEN 1 ELSE 0 END), 0)
-            ) AS Count
-        FROM procurement_selection_eeting
+       SUM(
+           CASE
+               WHEN :likeClause IN (
+                   tmallRefused,
+                   jdComRefused,
+                   pinduoduoRefused,
+                   tmallSupermarketRefused,
+                   theTaoFactoryRefused,
+                   dewuVipshopWillRefuse,
+                   tmallVerticalShopXiaohongshuRefuses,
+                   coupangRefuse,
+                   deniedAlibaba,
+                   tmallDevelopmentRejection,
+                   developmentRejection
+               ) THEN 1
+               ELSE 0
+           END
+       ) AS Count
+FROM procurement_selection_eeting
     `;
 
     if (whereConditions) {
@@ -219,9 +242,10 @@ const forwardAndBackwardThrust = async (reasons, type, content) => {
         return procurementSelectionEeting.sequelize.query(baseQuery, {
             replacements: {
                 reason: reason,
-                likeClause: `%${reason}%`,
+                likeClause: `${reason}`,
                 type: type
             },
+            logging: false,
             type: QueryTypes.SELECT
         });
     });

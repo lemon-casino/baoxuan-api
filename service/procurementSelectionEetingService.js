@@ -86,8 +86,7 @@ function processContent(content) {
             }
             break;
         case '拒绝数量':
-            console.log(itemName)
-
+            content.reason = itemName;
             break;
     }
 
