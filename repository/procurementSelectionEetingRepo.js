@@ -80,6 +80,27 @@ function buildWhereClause(content) {
         endTime,
         platform,
         reciprocaltype,
+        whetherTmallIsSelected,
+        uncheckedAlibaba,
+        whetherTheTaoFactoryIsSelected,
+        whetherJDIsSelected,
+        pinduoduoIsSelected,
+        whetherTmallSupermarketIsSelected,
+        dewuVipshopWillBeSelected,
+        tmallVerticalStoreXiaohongshuIsSelected,
+        whetherOrNotCoupangIsSelected,
+        douyinKuaishouIsSelected,
+        whetherToChooseTheJDOperationSample,
+        whetherTheTmallOperationSampleIsSelected,
+        whetherThePinduoduoOperationSampleIsSelected,
+        tmallSupermarketOperationSampleIsNotSelected,
+        TaoFactorOperationSampleWhetherChoose,
+        gainsVipshopWhetherToChooseTheOperationSample,
+        tmallVerticalStoreLittleRedBook,
+        coupangOperationSampleIsSelected,
+        tikTokWhetherTheKuaishouOperationSampleIsSelected,
+        whetherOrNotToChooseAnOperationSa,
+
     } = content;
 
     const where = {};
@@ -97,6 +118,26 @@ function buildWhereClause(content) {
     if (productAttributes) where.productAttributes = { $in: Array.isArray(productAttributes) ? productAttributes : [productAttributes] };
     if (pushProductLine) where.pushProductLine = { $in: Array.isArray(pushProductLine) ? pushProductLine : [pushProductLine] };
     if (reciprocaltype !== undefined) where.reciprocaltype = { $eq: reciprocaltype };
+    if (whetherTmallIsSelected) where.whetherTmallIsSelected = { $eq: whetherTmallIsSelected };
+    if (whetherTheTaoFactoryIsSelected) where.whetherTheTaoFactoryIsSelected = { $eq: whetherTheTaoFactoryIsSelected };
+    if (whetherJDIsSelected) where.whetherJDIsSelected = { $eq: whetherJDIsSelected };
+    if (pinduoduoIsSelected) where.pinduoduoIsSelected = { $eq: pinduoduoIsSelected };
+    if (whetherTmallSupermarketIsSelected) where.whetherTmallSupermarketIsSelected = { $eq: whetherTmallSupermarketIsSelected };
+    if (dewuVipshopWillBeSelected) where.dewuVipshopWillBeSelected = { $eq: dewuVipshopWillBeSelected };
+    if (tmallVerticalStoreXiaohongshuIsSelected) where.tmallVerticalStoreXiaohongshuIsSelected = { $eq: tmallVerticalStoreXiaohongshuIsSelected };
+    if (whetherOrNotCoupangIsSelected) where.whetherOrNotCoupangIsSelected = { $eq: whetherOrNotCoupangIsSelected };
+    if (douyinKuaishouIsSelected) where.douyinKuaishouIsSelected = { $eq: douyinKuaishouIsSelected };
+    if (whetherToChooseTheJDOperationSample) where.whetherToChooseTheJDOperationSample = { $eq: whetherToChooseTheJDOperationSample };
+    if (whetherTheTmallOperationSampleIsSelected) where.whetherTheTmallOperationSampleIsSelected = { $eq: whetherTheTmallOperationSampleIsSelected };
+    if (whetherThePinduoduoOperationSampleIsSelected) where.whetherThePinduoduoOperationSampleIsSelected = { $eq: whetherThePinduoduoOperationSampleIsSelected };
+    if (tmallSupermarketOperationSampleIsNotSelected) where.tmallSupermarketOperationSampleIsNotSelected = { $eq: tmallSupermarketOperationSampleIsNotSelected };
+    if (TaoFactorOperationSampleWhetherChoose) where.TaoFactorOperationSampleWhetherChoose = { $eq: TaoFactorOperationSampleWhetherChoose };
+    if (gainsVipshopWhetherToChooseTheOperationSample) where.gainsVipshopWhetherToChooseTheOperationSample = { $eq: gainsVipshopWhetherToChooseTheOperationSample };
+    if (tmallVerticalStoreLittleRedBook) where.tmallVerticalStoreLittleRedBook = { $eq: tmallVerticalStoreLittleRedBook };
+    if (coupangOperationSampleIsSelected) where.coupangOperationSampleIsSelected = { $eq: coupangOperationSampleIsSelected };
+    if (uncheckedAlibaba) where.uncheckedAlibaba = { $eq: uncheckedAlibaba };
+    if (tikTokWhetherTheKuaishouOperationSampleIsSelected) where.tikTokWhetherTheKuaishouOperationSampleIsSelected = { $eq: tikTokWhetherTheKuaishouOperationSampleIsSelected };
+    if (whetherOrNotToChooseAnOperationSa) where.whetherOrNotToChooseAnOperationSa = { $eq: whetherOrNotToChooseAnOperationSa };
     if (platform) where.platform = { $eq: platform };
 
     return where;
@@ -113,6 +154,8 @@ const FilterEetingInformation = async (content) => {
         pageSize,
     } = content;
     const where = buildWhereClause(content);
+
+    console.log("筛选：",where)
     return procurementSelectionEeting.findAndCountAll({
         where,
         limit: parseInt(pageSize, 10),
@@ -168,13 +211,37 @@ const forwardAndBackwardThrust = async (content, type) => {
     }
 };
 
-const whetherForwardPushAndReversePushIsSelected = async (type) => {
-    const baseQuery = `
+const whetherForwardPushAndReversePushIsSelected = async (type, content) => {
+    // 构建 where 条件
+    const where = buildWhereClause(content);
+    if (type !== undefined) where.reciprocaltype = { $eq: type };
+
+    // 构建 baseQuery 的基础部分
+    let baseQuery = `
         SELECT
             COUNT(CASE WHEN \`{{columnName}}\` = '{{selectedValue}}' THEN 1 END) AS \`{{columnName}}\`
-        FROM procurement_selection_eeting 
-        WHERE reciprocaltype = :type
+        FROM procurement_selection_eeting
     `;
+
+    // 动态生成 WHERE 条件
+    const whereConditions = Object.entries(where)
+        .map(([key, value]) => {
+            if (value.$in) {
+                return `${key} IN (${value.$in.map(v => `'${v}'`).join(', ')})`;
+            } else if (value.$between) {
+                return `${key} BETWEEN '${value.$between[0]}' AND '${value.$between[1]}'`;
+            } else if (value.$eq !== undefined) {
+                return `${key} = '${value.$eq}'`;
+            }
+            return '';
+        })
+        .filter(Boolean)
+        .join(' AND ');
+
+    // 如果有条件则加入 WHERE 子句
+    if (whereConditions) {
+        baseQuery += ` WHERE ${whereConditions}`;
+    }
 
     const columnNames = [
         'whetherTmallIsSelected', 'whetherJDIsSelected', 'pinduoduoIsSelected', 'whetherTmallSupermarketIsSelected',
@@ -188,8 +255,8 @@ const whetherForwardPushAndReversePushIsSelected = async (type) => {
     try {
         const selectedValue = type === 1 ? '是' : '选中'; // 根据 type 设置条件值
 
+        // 构建每个列的查询语句，并替换占位符
         const unionQueries = columnNames.map(columnName => {
-            // Replace the placeholders with the actual column name and selected value
             const query = baseQuery
                 .replace(/{{columnName}}/g, columnName)
                 .replace(/{{selectedValue}}/g, selectedValue);
@@ -210,7 +277,6 @@ const whetherForwardPushAndReversePushIsSelected = async (type) => {
         throw error;
     }
 };
-
 
 
 
