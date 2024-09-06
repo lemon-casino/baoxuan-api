@@ -26,10 +26,36 @@ const returnsTheQueryConditionInformation= async () => {
 
 
 
+const keyNameMap = {
+    whetherTheTaoFactoryIsSelected:'淘工厂运营',
+    whetherTmallIsSelected: '天猫运营',
+    whetherJDIsSelected: '京东运营',
+    pinduoduoIsSelected: '拼多多运营',
+    whetherTmallSupermarketIsSelected: '天猫超市运营',
+    dewuVipshopWillBeSelected: '得物,唯品会运营',
+    tmallVerticalStoreXiaohongshuIsSelected: '天猫垂类店,小红书运营',
+    whetherOrNotCoupangIsSelected: 'Coupang运营',
+    douyinKuaishouIsSelected: '抖音,快手运营',
+    uncheckedAlibaba: '1688运营',
+    whetherToChooseTheJDOperationSample: '京东样品',
+    whetherTheTmallOperationSampleIsSelected: '天猫样品',
+    whetherThePinduoduoOperationSampleIsSelected: '拼多多样品',
+    tmallSupermarketOperationSampleIsNotSelected: '天猫超市样品',
+    TaoFactorOperationSampleWhetherChoose: '淘工厂样品',
+    gainsVipshopWhetherToChooseTheOperationSample: '得物,唯品会样品',
+    tmallVerticalStoreLittleRedBook: '天猫垂类店,小红书样品',
+    coupangOperationSampleIsSelected: 'Coupang样品',
+    tikTokWhetherTheKuaishouOperationSampleIsSelected: '抖音,快手样品',
+    whetherOrNotToChooseAnOperationSa: '1688样品',
+};
+
+
 
 function processContent(content) {
     // 解构 content 中的属性
     const { titleName, itemName, typeTo } = content;
+
+    let type ="是"
 
     // 根据 typeTo 设置 reciprocaltype
     switch (typeTo) {
@@ -38,6 +64,7 @@ function processContent(content) {
             break;
         case 'pushBackward':
             content.reciprocaltype = 2;
+            type="选中"
             break;
     }
 
@@ -49,13 +76,26 @@ function processContent(content) {
         case '平台':
             content.platform = itemName;
             break;
+        case '选中数量':
+            console.log(itemName)
+            for (const [key, value] of Object.entries(keyNameMap)) {
+                if (value === itemName) {
+                    content[key] = type;
+                    break;
+                }
+            }
+            break;
+        case '拒绝数量':
+            console.log(itemName)
+
+            break;
     }
 
     // 删除不再需要的属性
     delete content.typeTo;
     delete content.itemName;
     delete content.titleName;
-
+console.log(content)
     return content;  // 返回处理后的 content 对象
 }
 
@@ -92,28 +132,6 @@ function updatePopover(popover, data, key) {
 }
 
 
-const keyNameMap = {
-    whetherTheTaoFactoryIsSelected:'淘工厂运营',
-    whetherTmallIsSelected: '天猫运营',
-    whetherJDIsSelected: '京东运营',
-    pinduoduoIsSelected: '拼多多运营',
-    whetherTmallSupermarketIsSelected: '天猫超市运营',
-    dewuVipshopWillBeSelected: '得物,唯品会运营',
-    tmallVerticalStoreXiaohongshuIsSelected: '天猫垂类店,小红书运营',
-    whetherOrNotCoupangIsSelected: 'Coupang运营',
-    douyinKuaishouIsSelected: '抖音,快手运营',
-    uncheckedAlibaba: '1688运营',
-    whetherToChooseTheJDOperationSample: '京东样品',
-    whetherTheTmallOperationSampleIsSelected: '天猫样品',
-    whetherThePinduoduoOperationSampleIsSelected: '拼多多样品',
-    tmallSupermarketOperationSampleIsNotSelected: '天猫超市样品',
-    TaoFactorOperationSampleWhetherChoose: '淘工厂样品',
-    gainsVipshopWhetherToChooseTheOperationSample: '得物,唯品会样品',
-    tmallVerticalStoreLittleRedBook: '天猫垂类店,小红书样品',
-    coupangOperationSampleIsSelected: 'Coupang样品',
-    tikTokWhetherTheKuaishouOperationSampleIsSelected: '抖音,快手样品',
-    whetherOrNotToChooseAnOperationSa: '1688样品',
-};
 
 function processData(data, target) {
     target.popover = data
@@ -128,8 +146,8 @@ function processData(data, target) {
     target.sum = target.popover.reduce((acc, { sum }) => acc + sum, 0);
 }
 
-async function fillRejectionStatistics(reasons, direction) {
-    const rejectionData = await procurementSelectionEetingRepo.forwardAndBackwardThrust(reasons, direction);
+async function fillRejectionStatistics(reasons, direction,content) {
+    const rejectionData = await procurementSelectionEetingRepo.forwardAndBackwardThrust(reasons, direction,content);
 
     const processedData = rejectionData
         .map(({ Reason, Count }) => ({
@@ -169,7 +187,7 @@ async function typeStatistics(content) {
         ],
     };
 
-    const pushData = async (direction,content) => {
+    const pushData = async (direction) => {
         const categoryStats = await procurementSelectionEetingRepo.categoryStatistics(direction,content);
         const platformStats = await procurementSelectionEetingRepo.platformStatistics(direction,content);
         const numberOfPushes = JSON.parse(JSON.stringify(numberOfPushesTemplate));
@@ -179,8 +197,8 @@ async function typeStatistics(content) {
         return numberOfPushes;
     };
 
-    reds.pushForward.push(await pushData(1,content));
-    reds.pushBackward.push(await pushData(2,content));
+    reds.pushForward.push(await pushData(1));
+    reds.pushBackward.push(await pushData(2));
 
     const selectionTemplate = {
         title: "选中数量",
@@ -189,7 +207,7 @@ async function typeStatistics(content) {
     };
 
     const selectionData = async (direction) => {
-        const selectedData = await procurementSelectionEetingRepo.whetherForwardPushAndReversePushIsSelected(direction);
+        const selectedData = await procurementSelectionEetingRepo.whetherForwardPushAndReversePushIsSelected(direction,content);
         const selection = JSON.parse(JSON.stringify(selectionTemplate));
         processData(selectedData, selection);
         return selection;
@@ -198,8 +216,8 @@ async function typeStatistics(content) {
     reds.pushForward.push(await selectionData(1));
     reds.pushBackward.push(await selectionData(2));
 
-    const forwardRejection = await fillRejectionStatistics(["款式问题", "毛利问题", "竞争问题", "起订问题", "定制问题"], 1);
-    const backwardRejection = await fillRejectionStatistics(["款式问题", "毛利问题", "竞争问题", "起订问题", "定制问题"], 2);
+    const forwardRejection = await fillRejectionStatistics(["款式问题", "毛利问题", "竞争问题", "起订问题", "定制问题"], 1,content);
+    const backwardRejection = await fillRejectionStatistics(["款式问题", "毛利问题", "竞争问题", "起订问题", "定制问题"], 2,content);
 
     const rejectionStatisticsTemplate = {
         title: "拒绝数量",
