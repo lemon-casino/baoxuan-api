@@ -333,7 +333,8 @@ const getStat = async function (startDate, endDate) {
             and pir.show_name = va.activity_name
         left join vision_activity_field vaf on vaf.activity_id = va.id
         join process_instance_values piv2 on piv2.instance_id = pi.id 
-            and piv2.field_id = vaf.field_id        
+            and piv2.field_id = vaf.field_id
+            and if(pir.action_exit = 'agree', vaf.type = 1, vaf.type = 0)        
         left join vision_field_type vft on vft.form_id = f.id 
         left join form_field_data ffd on ffd.id = vft.ffd_id 
         join form_fields ff on ffd.form_field_id = ff.id 
