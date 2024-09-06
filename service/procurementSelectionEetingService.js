@@ -85,6 +85,10 @@ function processContent(content) {
                 }
             }
             break;
+        case '拒绝数量':
+            console.log(itemName)
+
+            break;
     }
 
     // 删除不再需要的属性
@@ -142,8 +146,8 @@ function processData(data, target) {
     target.sum = target.popover.reduce((acc, { sum }) => acc + sum, 0);
 }
 
-async function fillRejectionStatistics(reasons, direction) {
-    const rejectionData = await procurementSelectionEetingRepo.forwardAndBackwardThrust(reasons, direction);
+async function fillRejectionStatistics(reasons, direction,content) {
+    const rejectionData = await procurementSelectionEetingRepo.forwardAndBackwardThrust(reasons, direction,content);
 
     const processedData = rejectionData
         .map(({ Reason, Count }) => ({
@@ -183,7 +187,7 @@ async function typeStatistics(content) {
         ],
     };
 
-    const pushData = async (direction,content) => {
+    const pushData = async (direction) => {
         const categoryStats = await procurementSelectionEetingRepo.categoryStatistics(direction,content);
         const platformStats = await procurementSelectionEetingRepo.platformStatistics(direction,content);
         const numberOfPushes = JSON.parse(JSON.stringify(numberOfPushesTemplate));
@@ -193,8 +197,8 @@ async function typeStatistics(content) {
         return numberOfPushes;
     };
 
-    reds.pushForward.push(await pushData(1,content));
-    reds.pushBackward.push(await pushData(2,content));
+    reds.pushForward.push(await pushData(1));
+    reds.pushBackward.push(await pushData(2));
 
     const selectionTemplate = {
         title: "选中数量",
@@ -212,8 +216,8 @@ async function typeStatistics(content) {
     reds.pushForward.push(await selectionData(1));
     reds.pushBackward.push(await selectionData(2));
 
-    const forwardRejection = await fillRejectionStatistics(["款式问题", "毛利问题", "竞争问题", "起订问题", "定制问题"], 1);
-    const backwardRejection = await fillRejectionStatistics(["款式问题", "毛利问题", "竞争问题", "起订问题", "定制问题"], 2);
+    const forwardRejection = await fillRejectionStatistics(["款式问题", "毛利问题", "竞争问题", "起订问题", "定制问题"], 1,content);
+    const backwardRejection = await fillRejectionStatistics(["款式问题", "毛利问题", "竞争问题", "起订问题", "定制问题"], 2,content);
 
     const rejectionStatisticsTemplate = {
         title: "拒绝数量",

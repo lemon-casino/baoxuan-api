@@ -172,8 +172,28 @@ const theTimeOfTheLatestDay = async () => {
         raw: true,
     });
 }
-const forwardAndBackwardThrust = async (content, type) => {
-    const baseQuery = `
+const forwardAndBackwardThrust = async (reasons, type, content) => {
+    // 构建 where 条件
+    const where = buildWhereClause(content);
+    if (type !== undefined) where.reciprocaltype = { $eq: type };
+
+    // 动态生成 WHERE 条件
+    const whereConditions = Object.entries(where)
+        .map(([key, value]) => {
+            if (value.$in) {
+                return `${key} IN (${value.$in.map(v => `'${v}'`).join(', ')})`;
+            } else if (value.$between) {
+                return `${key} BETWEEN '${value.$between[0]}' AND '${value.$between[1]}'`;
+            } else if (value.$eq !== undefined) {
+                return `${key} = '${value.$eq}'`;
+            }
+            return '';
+        })
+        .filter(Boolean)
+        .join(' AND ');
+
+    // 如果有 WHERE 条件，添加到查询语句
+    let baseQuery = `
         SELECT :reason AS Reason,
             (COALESCE(SUM(CASE WHEN tmallRefused LIKE :likeClause THEN 1 ELSE 0 END), 0) +
              COALESCE(SUM(CASE WHEN jdComRefused LIKE :likeClause THEN 1 ELSE 0 END), 0) +
@@ -187,11 +207,15 @@ const forwardAndBackwardThrust = async (content, type) => {
              COALESCE(SUM(CASE WHEN tmallDevelopmentRejection LIKE :likeClause THEN 1 ELSE 0 END), 0) +
              COALESCE(SUM(CASE WHEN developmentRejection LIKE :likeClause THEN 1 ELSE 0 END), 0)
             ) AS Count
-        FROM procurement_selection_eeting 
-        WHERE reciprocaltype = :type
+        FROM procurement_selection_eeting
     `;
 
-    const unionQueries = content.map(reason => {
+    if (whereConditions) {
+        baseQuery += ` WHERE ${whereConditions}`;
+    }
+
+    // 执行 SQL 查询
+    const unionQueries = reasons.map(reason => {
         return procurementSelectionEeting.sequelize.query(baseQuery, {
             replacements: {
                 reason: reason,
