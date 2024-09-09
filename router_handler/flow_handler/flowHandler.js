@@ -95,9 +95,9 @@ const getFlowProcessActions = async (req, res, next) => {
 const exportFlowsProcess = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(flowSchema.requiredIdSchema, req.body)
-        const flows = await flowService.getFlowsInfoById(req.body.id)
+        const flows = await flowService.getFlows(req.body)
         if (!flows?.length) return res.send(biResponse.canTFindIt)
-        const data = await flowService.getFlowsProcessById(req.body.id)
+        const data = await flowService.getFlowsProcesses(req.body)
         const workbook = new ExcelJS.Workbook()
         const worksheet = workbook.addWorksheet(flows[0].flowFormName)
         let tmpDefault = {
@@ -110,8 +110,7 @@ const exportFlowsProcess = async (req, res, next) => {
             { header: '实例标题', key: 'title', isDefault: true },
             { header: '状态', key: 'instanceStatus', isDefault: true },
             { header: '创建时间', key: 'createTime', isDefault: true },
-            { header: '操作时间', key: 'operateTime', isDefault: true },
-            { header: '入库时间', key: 'stockedTime', isDefault: true }
+            { header: '操作时间', key: 'operateTime', isDefault: true }
         ]
         for (let i = 0; i < flows[0].flowFormDetails.length; i++) {
             columns.push({
@@ -131,7 +130,6 @@ const exportFlowsProcess = async (req, res, next) => {
             tmp['title'] = data.data[i].title,
             tmp['instanceStatus'] = data.data[i].instanceStatus
             tmp['createTime'] = data.data[i].createTime
-            tmp['stockedTime'] = data.data[i].stockedTime
             tmp['doneTime'] = data.data[i].doneTime
             for (let j = 0; j < data.data[i].data.length; j++) {
                 tmp[data.data[i].data[j].fieldId] = data.data[i].data[j].fieldValue

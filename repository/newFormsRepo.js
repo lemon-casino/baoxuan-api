@@ -381,11 +381,14 @@ const getStat = async function (startDate, endDate) {
 const getFlowInstances = async function (params) {
     let result = []
     let sql = `select f.id, f.title as flowFormName, f.form_uuid as flowFormId 
-        from vision_type vt join forms f on vt.form_id = f.id group by
-        f.id, f.title, f.form_uuid`
+        from vision_type vt join forms f on vt.form_id = f.id where 1=1`
     if (params.tag) {
         sql = `${sql} and vt.tag = '${params.tag}'`
     }
+    if (params.id) {
+        sql = `${sql} and f.id = ${params.id}`
+    }
+    sql = `${sql} group by f.id, f.title, f.form_uuid`
     let row = await query(sql)
     if (row?.length) {
         for (let i = 0; i < row.length; i++) {
@@ -471,7 +474,11 @@ const getFlowProcessInstances = async function (params, offset, limit) {
     let row = await query(search, p1)
     if (row?.length && row[0].count) {
         result.total = row[0].count
-        search = `select * from (${subsql}) a limit ${offset}, ${limit}`
+        if (limit) {
+            search = `select * from (${subsql}) a limit ${offset}, ${limit}`
+        } else {
+            search = `select * from (${subsql}) a`
+        }
         row = await query(search, p1)
         if (row?.length) {
             for (let i = 0; i < row.length; i++) {
@@ -487,9 +494,27 @@ const getFlowProcessInstances = async function (params, offset, limit) {
 
 const getFlowActions = async function (id) {
     let sql = `select * from process_instance_records where instance_id = ? 
-        order by operate_time, task_id desc, id`
-    let row = await query(sql, [id])
-    return row || []
+        order by if(action_exit in ('next', 'doing'), 1, 0), operate_time, id`
+    let row = await query(sql, [id]), ids = {}
+    let result = []
+    for (let i = 0; i < row.length; i++) {
+        let info = JSON.parse(JSON.stringify(row[i]))
+        info.children = []
+        if (row[i].parent_id == 0) {
+            result.push(info)
+            ids[row[i].id] = {
+                offset: i,
+                root: 0
+            }
+        } else {
+            result[ids[row[i].parent_id].offset].children.push(info)
+            ids[row[i].id] = {
+                offset: i,
+                root: row[i].parent_id
+            }
+        }
+    }
+    return result
 }
 
 module.exports = {
