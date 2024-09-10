@@ -388,7 +388,7 @@ const getFlowInstances = async function (params) {
     if (params.id) {
         sql = `${sql} and f.id = ${params.id}`
     }
-    sql = `${sql} group by f.id, f.title, f.form_uuid`
+    sql = `${sql} group by f.id, f.title, f.form_uuid order by f.id desc, f.title, f.form_uuid`
     let row = await query(sql)
     if (row?.length) {
         for (let i = 0; i < row.length; i++) {
@@ -485,6 +485,15 @@ const getFlowProcessInstances = async function (params, offset, limit) {
                 search = `select field_id as fieldId, \`value\` as fieldValue from 
                     process_instance_values where instance_id = ?`
                 row[i]['data'] = await query(search, [row[i].id]) || []
+                search = `select show_name, operator_name from process_instance_records 
+                    where instance_id = ? order by 
+                    if(action_exit is null, 2, if(action_exit in ('next', 'doing'), 0, 1)), 
+                    operate_time desc, id desc limit 1`
+                let row1 = await query(search, [row[i].id])
+                if (row1?.length) {
+                    row[i]['action'] = row1[0].show_name
+                    row[i]['operator'] = row1[0].operator_name
+                }
             }
             result.data = row
         }
@@ -493,23 +502,24 @@ const getFlowProcessInstances = async function (params, offset, limit) {
 }
 
 const getFlowActions = async function (id) {
-    let sql = `select * from process_instance_records where instance_id = ? 
-        order by if(action_exit in ('next', 'doing'), 1, 0), operate_time, id`
-    let row = await query(sql, [id]), ids = {}
-    let result = []
+    let sql = `select * from process_instance_records where instance_id = ? order by 
+        if(action_exit is null, 2, if(action_exit in ('next', 'doing'), 1, 0)), operate_time, id`
+    let row = await query(sql, [id])
+    let result = [], j = 0, ids = {}
     for (let i = 0; i < row.length; i++) {
         let info = JSON.parse(JSON.stringify(row[i]))
         info.children = []
         if (row[i].parent_id == 0) {
             result.push(info)
             ids[row[i].id] = {
-                offset: i,
+                offset: j,
                 root: 0
             }
+            j = j + 1
         } else {
             result[ids[row[i].parent_id].offset].children.push(info)
             ids[row[i].id] = {
-                offset: i,
+                offset: result[ids[row[i].parent_id].offset].children.length,
                 root: row[i].parent_id
             }
         }
