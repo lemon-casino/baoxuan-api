@@ -110,7 +110,9 @@ const exportFlowsProcess = async (req, res, next) => {
             { header: '实例标题', key: 'title', isDefault: true },
             { header: '状态', key: 'instanceStatus', isDefault: true },
             { header: '创建时间', key: 'createTime', isDefault: true },
-            { header: '操作时间', key: 'operateTime', isDefault: true }
+            { header: '操作时间', key: 'operateTime', isDefault: true },
+            { header: '最新节点', key: 'action', isDefault: true },
+            { header: '审批人', key: 'operator', isDefault: true },
         ]
         for (let i = 0; i < flows[0].flowFormDetails.length; i++) {
             columns.push({
@@ -130,7 +132,9 @@ const exportFlowsProcess = async (req, res, next) => {
             tmp['title'] = data.data[i].title,
             tmp['instanceStatus'] = data.data[i].instanceStatus
             tmp['createTime'] = data.data[i].createTime
-            tmp['doneTime'] = data.data[i].doneTime
+            tmp['operateTime'] = data.data[i].operateTime
+            tmp['action'] = data.data[i].action
+            tmp['operator'] = data.data[i].operator
             for (let j = 0; j < data.data[i].data.length; j++) {
                 tmp[data.data[i].data[j].fieldId] = data.data[i].data[j].fieldValue
             }
