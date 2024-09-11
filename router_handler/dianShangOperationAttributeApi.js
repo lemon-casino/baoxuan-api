@@ -92,9 +92,28 @@ const uploadTable = async (req, res, next) => {
         const workbook = XLSX.readFile(filePath);
 
         function excelDateToJSDate(excelDate) {
-            const date = new Date(1900, 0, excelDate);
-            return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+            // 检查如果日期已经是字符串格式（例如 "2023-10-28"），则直接返回
+            if (typeof excelDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(excelDate)) {
+                return excelDate; // 直接返回格式正确的日期字符串
+            }
+            // 检查是否为有效数字格式
+            if (typeof excelDate !== 'number' || isNaN(excelDate)) {
+                console.error(`Invalid excelDate value: ${excelDate}`);
+                return ''; // 返回空字符串
+            }
+            const excelEpochOffset = 25567; // Excel基准日期是1900年1月1日
+            const jsTimestamp = (excelDate - excelEpochOffset) * 86400 * 1000; // 将Excel日期转换为JS时间戳
+            const date = new Date(jsTimestamp);
+            // 检查生成的日期是否有效
+            if (isNaN(date.getTime())) {
+                console.error(`Invalid JS Date generated from excelDate: ${excelDate}`);
+                return ''; // 返回空字符串
+            }
+
+            return date.toISOString().split('T')[0]; // 返回YYYY-MM-DD格式
         }
+
+
 
         // Required fields mapping
         const requiredKeyMapping = {
@@ -131,7 +150,10 @@ const uploadTable = async (req, res, next) => {
         // 循环遍历每个工作表
         for (const sheetName of workbook.SheetNames) {
             const worksheet = workbook.Sheets[sheetName];
-
+            console.log(sheetName)
+    /*        if (sheetName !== '自营'){
+                return res.send(biResponse.canTFindIt(`目前只支持京东自营 `));
+            }*/
             // 使用sheet_to_json并可选择保留原始行号
             const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
@@ -152,7 +174,9 @@ const uploadTable = async (req, res, next) => {
                         // 如果缺少必填字段，则返回包含行和列信息的错误
                         return res.send(biResponse.canTFindIt(`缺少必填字段: ${key} 在第${rowIndex + 1}行, 第${columnIndex + 1}列`));
                     } else {
-                        if (key === '上架日期') {
+                        if (key === 'skuId') {
+                            translatedItem[value] = parseInt(row[columnIndex])
+                        }else if (key === '上架日期') {
                             translatedItem[value] = excelDateToJSDate(row[columnIndex]); // 将 Excel 日期转换为 JS 日期
                         } else {
                             translatedItem[value] = row[columnIndex];
