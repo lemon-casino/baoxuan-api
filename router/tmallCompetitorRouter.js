@@ -5,22 +5,12 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const biResponse = require("@/utils/biResponse");
+const {createUploader} = require("@/utils/uploadUtils");
 const uploadDirectory = 'file/excel/tianmao';
 const uploadFileName = '天猫竞品表.xlsx';
 // 设置存储位置和文件命名
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        if (!fs.existsSync(uploadDirectory+'/logs')) {
-            fs.mkdirSync(uploadDirectory+'/logs', { recursive: true });
-        }
-        cb(null, uploadDirectory+'/logs');
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname)); // 在文件名后添加当前时间戳以避免文件名冲突
-    },
-});
-
-const upload = multer({ storage: storage });
+// 使用公共模块创建上传实例
+const upload = createUploader(uploadDirectory);
 
 router.post("/upload", upload.single('file'),competitorApi.uploadSingleIteTaoBaoCompetitorTable)
 
