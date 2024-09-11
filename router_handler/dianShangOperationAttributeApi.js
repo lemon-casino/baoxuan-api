@@ -151,9 +151,9 @@ const uploadTable = async (req, res, next) => {
         for (const sheetName of workbook.SheetNames) {
             const worksheet = workbook.Sheets[sheetName];
             console.log(sheetName)
-    /*        if (sheetName !== '自营'){
-                return res.send(biResponse.canTFindIt(`目前只支持京东自营 `));
-            }*/
+            if (sheetName !== '自营'){
+                return res.send(biResponse.canTFindIt(`目前只支持京东自营 后续批量添加与新增 会在工作流审核处理后续 将关闭修改 ,删除 ,新增功能 `));
+            }
             // 使用sheet_to_json并可选择保留原始行号
             const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
 
