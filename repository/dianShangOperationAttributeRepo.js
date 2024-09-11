@@ -66,11 +66,38 @@ const deleteProductAttr = async (id) => {
     return true
 }
 
+
+const getAllProductAttrDetails = async () => {
+    // 只返回 skuId 列表  raw: true, sku_id is not null
+    return      dianShangOperationAttributeModel.findAll({
+        attributes: ['skuId'],
+        where: {
+            skuId: {$ne: null}
+        },
+        raw: true
+    }).then(res => {
+        // 返回转为数字
+        res.forEach(item => item.skuId = parseInt(item.skuId))
+        return res.map(item => item.skuId)
+    })
+
+}
+const updateskuIdAttrDetails = async (details) => {
+
+    return await dianShangOperationAttributeModel.update(details, {
+        where: {skuId: details.skuId},
+
+    }
+
+)
+}
 module.exports = {
     getProductAttrDetails,
     getOperateAttributes,
     saveProductAttr,
     updateProductAttrDetails,
-    deleteProductAttr
+    deleteProductAttr,
+    getAllProductAttrDetails,
+    updateskuIdAttrDetails
 }
 
