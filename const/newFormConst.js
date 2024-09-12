@@ -247,6 +247,11 @@ const typeFilter = {
     '视频': [4, 5]
 }
 
+const nameFilter = {
+    '候依雯': '侯依雯',
+    '李徐莹': '余颖'
+}
+
 module.exports = {
     action,
     actionItem,
@@ -269,5 +274,6 @@ module.exports = {
     totalStatType,
     totalStat1,
     typeFilter,
-    fullActionFilter
+    fullActionFilter, 
+    nameFilter
 }
