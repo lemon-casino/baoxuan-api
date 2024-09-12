@@ -91,31 +91,26 @@ const uploadTable = async (req, res, next) => {
         const filePath = req.file.path;
         const workbook = XLSX.readFile(filePath);
 
+        // Excel日期转换函数
         function excelDateToJSDate(excelDate) {
-            // 检查如果日期已经是字符串格式（例如 "2023-10-28"），则直接返回
             if (typeof excelDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(excelDate)) {
-                return excelDate; // 直接返回格式正确的日期字符串
+                return excelDate;
             }
-            // 检查是否为有效数字格式
             if (typeof excelDate !== 'number' || isNaN(excelDate)) {
                 console.error(`Invalid excelDate value: ${excelDate}`);
-                return ''; // 返回空字符串
+                return '';
             }
-            const excelEpochOffset = 25567; // Excel基准日期是1900年1月1日
-            const jsTimestamp = (excelDate - excelEpochOffset) * 86400 * 1000; // 将Excel日期转换为JS时间戳
+            const excelEpochOffset = 25567;
+            const jsTimestamp = (excelDate - excelEpochOffset) * 86400 * 1000;
             const date = new Date(jsTimestamp);
-            // 检查生成的日期是否有效
             if (isNaN(date.getTime())) {
                 console.error(`Invalid JS Date generated from excelDate: ${excelDate}`);
-                return ''; // 返回空字符串
+                return '';
             }
-
-            return date.toISOString().split('T')[0]; // 返回YYYY-MM-DD格式
+            return date.toISOString().split('T')[0];
         }
 
-
-
-        // Required fields mapping
+        // 必填字段映射
         const requiredKeyMapping = {
             '商品简称': 'briefName',
             'skuId': 'skuId',
@@ -133,7 +128,7 @@ const uploadTable = async (req, res, next) => {
             '三级类目': 'level3Category'
         };
 
-        // Optional fields mapping
+        // 可选字段映射
         const optionalKeyMapping = {
             '自定义1': 'userDef1',
             '自定义2': 'userDef2',
@@ -147,21 +142,23 @@ const uploadTable = async (req, res, next) => {
             '自定义10': 'userDef10'
         };
 
+        // 错误收集数组
+        let errorMessages = [];
+
         // 循环遍历每个工作表
         for (const sheetName of workbook.SheetNames) {
             const worksheet = workbook.Sheets[sheetName];
-            console.log(sheetName)
-            if (sheetName !== '自营'){
-                return res.send(biResponse.canTFindIt(`目前只支持京东自营 后续批量添加与新增 会在工作流审核处理后续 将关闭修改 ,删除 ,新增功能 `));
+
+            if (sheetName !== '自营') {
+                errorMessages.push(`目前只支持京东自营 后续批量添加与新增 会在工作流审核处理后续 将关闭修改 ,删除 ,新增功能`);
+                continue; // 继续处理下一个工作表
             }
-            // 使用sheet_to_json并可选择保留原始行号
+
             const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
-
-            // 数据提取标题（第一行）
-            const headers = data[0];
-
-            //循环遍历每行数据（从第二行开始）
+            const headers = data[0]; // 标题行
             const translatedData = [];
+
+            // 循环遍历每行数据（从第二行开始）
             for (let rowIndex = 1; rowIndex < data.length; rowIndex++) {
                 const row = data[rowIndex];
                 const translatedItem = {};
@@ -171,13 +168,13 @@ const uploadTable = async (req, res, next) => {
                     const columnIndex = headers.indexOf(key);
 
                     if (columnIndex === -1 || row[columnIndex] === '') {
-                        // 如果缺少必填字段，则返回包含行和列信息的错误
-                        return res.send(biResponse.canTFindIt(`缺少必填字段: ${key} 在第${rowIndex + 1}行, 第${columnIndex + 1}列`));
+                        errorMessages.push(`缺少必填字段: ${key} 在第${rowIndex + 1}行, 第${columnIndex + 1}列`);
+                        continue; // 继续处理下一行
                     } else {
                         if (key === 'skuId') {
-                            translatedItem[value] = parseInt(row[columnIndex])
-                        }else if (key === '上架日期') {
-                            translatedItem[value] = excelDateToJSDate(row[columnIndex]); // 将 Excel 日期转换为 JS 日期
+                            translatedItem[value] = parseInt(row[columnIndex]);
+                        } else if (key === '上架日期') {
+                            translatedItem[value] = excelDateToJSDate(row[columnIndex]);
                         } else {
                             translatedItem[value] = row[columnIndex];
                         }
@@ -192,22 +189,28 @@ const uploadTable = async (req, res, next) => {
                     }
                 }
 
-                //translatedItem['headOfProductLine'] = sheetName;
+                translatedItem['deptId'] = 902897720;
+                translatedItem['platform'] = sheetName;
                 translatedData.push(translatedItem);
             }
 
-            console.log(translatedData);
-
-             await dianShangOperationAttributeService.uploadBulkUploadsTable(translatedData)
-                 .then(() => {
-                     console.log(`Sheet ${sheetName} uploaded successfully`);
-                 })
-                 .catch((e) => {
-                     return res.send(biResponse.canTFindIt('文件解析失败', e));
-                 });
+            // 上传数据，使用 Promise.all 等待所有上传完成
+            try {
+                await dianShangOperationAttributeService.uploadBulkUploadsTable(translatedData);
+                console.log(`Sheet ${sheetName} uploaded successfully`);
+            } catch (e) {
+                errorMessages.push(`文件解析失败: ${e.message}`);
+            }
         }
 
+        // 如果有错误，返回错误信息
+        if (errorMessages.length > 0) {
+            return res.send(biResponse.canTFindIt(errorMessages.join('; ')));
+        }
+
+        // 所有操作成功后，返回成功响应
         return res.send(biResponse.success({ code: 200, data: "文件上传并解析成功!" }));
+
     } catch (e) {
         next(e);
     }
