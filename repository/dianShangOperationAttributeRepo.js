@@ -1,6 +1,8 @@
 const models = require('../model')
 const dianShangOperationAttributeModel = models.dianshangOperationAttributeModel
 const pagingUtil = require("../utils/pagingUtil")
+const sequelize = require('../model/init')
+const {Sequelize} = require("sequelize");
 
 const getOperateAttributes = async (deptId,
                                     pageIndex,
@@ -65,6 +67,7 @@ const saveProductAttr = async (details) => {
 const deleteProductAttr = async (id) => {
     await dianShangOperationAttributeModel.destroy({
         where: {id}
+
     })
     return true
 }
@@ -167,21 +170,23 @@ function transformRow(row) {
 
 // 批量更新方法
 const updateskuIdAttrDetails = async (updates) => {
-    const transformedData = updates.map(transformRow);
+    // 开启事务
+    const transaction = await sequelize.transaction();
+
     try {
-        await dianShangOperationAttributeModel.bulkCreate(transformedData, {
-            updateOnDuplicate: [
-                'goodsId', 'linkAttribute', 'importantAttribute', 'goodsName', 'briefName', 'lineDirector',
-                'operator', 'purchaseDirector', 'maintenanceLeader', 'targets', 'profitTarget', 'searchTarget',
-                'pitTarget', 'onsaleDate', 'firstCategory', 'secondCategory', 'goodsLine1', 'goodsLine2',
-                'createTime', 'updateTime', 'deptId', 'deptName', 'skuId', 'code', 'costPrice', 'supplyPrice',
-                'level3Category', 'shopName', 'platform', 'visitorTarget', 'exploitDirector', 'userDef1', 'userDef2',
-                'userDef3', 'userDef4', 'userDef5', 'userDef6', 'userDef7', 'userDef8', 'userDef9', 'userDef10'
-            ], // 更新时需要的字段
-        });
-        console.log('Batch update successful');
+        for (const details of updates) {
+            // 单条更新操作可以并入事务中进行
+            await dianShangOperationAttributeModel.update(details, {
+                where: { skuId: details.skuId },
+                transaction // 使用事务
+            });
+        }
+
+        // 提交事务
+        await transaction.commit();
     } catch (error) {
-        console.error('Batch update failed:', error);
+        // 如果有错误，回滚事务
+        await transaction.rollback();
         throw error;
     }
 };

@@ -58,11 +58,17 @@ const uploadBulkUploadsTable = async (translatedData) => {
     }
 
     // 执行更新操作
-    await dianShangOperationAttributeRepo.updateskuIdAttrDetails(updates);
 
+    if (updates.length > 0) {
+        await dianShangOperationAttributeRepo.updateskuIdAttrDetails(updates);
+    }
     // 执行插入操作
+    //如何inserts 不为空
+    if (inserts.length > 0) {
+        // 执行批量插入操作
+        await dianShangOperationAttributeRepo.bulkCreateTable(inserts);
+    }
 
-    await dianShangOperationAttributeRepo.bulkCreateTable(inserts);
 };
 
 module.exports = {
