@@ -58,14 +58,11 @@ const uploadBulkUploadsTable = async (translatedData) => {
     }
 
     // 执行更新操作
-    for (const obj of updates) {
-        await dianShangOperationAttributeRepo.updateskuIdAttrDetails(obj);
-    }
+    await dianShangOperationAttributeRepo.updateskuIdAttrDetails(updates);
 
     // 执行插入操作
-    for (const obj of inserts) {
-        await dianShangOperationAttributeRepo.saveProductAttr(obj);
-    }
+
+    await dianShangOperationAttributeRepo.bulkCreateTable(inserts);
 };
 
 module.exports = {
