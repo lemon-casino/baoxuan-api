@@ -34,8 +34,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
 
     let sql = `select a.id, vft.type, a.action_exit from (
             select id, field_id, form_id, show_name, action_exit, type 
-            from vision_personal where tag = '${tag}' 
-                and \`status\` in ('RUNNING', 'COMPLETED') 
+            from vision_personal where tag = '${tag}'
                 and (operator_name = ? or v1 = ? or v2 = ? ???) 
                 and operate_time >= '${startDate}' 
                 and operate_time <= '${endDate}'
@@ -61,8 +60,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             left join process_instance_values piv3 on piv3.instance_id = vp.id 
                 and piv3.field_id = vaf.field_id 
                 and vaf.is_sub = 0
-                and if(vp.is_sub = 1 and exists(
-					select pis3.id from process_instance_sub_values pis3 
+                and if(vp.is_sub = 1 and exists(select pis3.id from process_instance_sub_values pis3 
                     where pis3.instance_id = vp.id
                 ), false, true)
             left join process_instance_sub_values pis2 on pis2.instance_id = vp.id 
@@ -70,7 +68,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
                 and vaf.is_sub = 1
                 and vp.index = pis2.index
 
-            where vp.tag = '${tag}' and vp.status in ('RUNNING', 'COMPLETED') 
+            where vp.tag = '${tag}' 
                 and (((vp.operator_name = ? or vp.v1 = ? ????) and piv3.id is not null) 
                     or (vp.v2 = ? and pis2.id is not null ?????)) 
                 and vp.operate_time >= '${startDate}' 
@@ -82,8 +80,11 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             left join form_field_data ffd on ffd.id = vft.ffd_id 
             where a.type like concat('%', ffd.value, '%')
         group by a.action_exit`
+    let tmp, tmp1
    
     for (let i = 0; i < userNames.length; i++) {
+        tmp = `${sql}`
+        tmp1 = `${sql1}`
         let user = JSON.parse(JSON.stringify(item)), userItem = JSON.parse(JSON.stringify(actionItem))
         user.actionName = userNames[i]
         userItem.actionName = action.next.value
@@ -94,20 +95,21 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
         user.children.push(JSON.parse(JSON.stringify(userItem)))
         user.children.push(JSON.parse(JSON.stringify(actionItem2)))
         if (nameFilter.hasOwnProperty(userNames[i])) {
-            sql = sql.replace('???', 'or operator_name = ? or v1 = ? or v2 = ?')
-            sql1 = sql1.replace('????', 'or vp.operator_name = ? or vp.v1 = ?')
+            tmp = tmp.replace('???', 'or operator_name = ? or v1 = ? or v2 = ?')
+            tmp1 = tmp1.replace('????', 'or vp.operator_name = ? or vp.v1 = ?')
                 .replace('?????', 'or vp.v2 = ? and pis2.id is not null')
             params = [
-                userNames[i], userNames[i], userNames[i],
-                nameFilter[userNames[i]], nameFilter[userNames[i]], nameFilter[userNames[i]]
+                userNames[i], userNames[i],
+                nameFilter[userNames[i]], nameFilter[userNames[i]], 
+                userNames[i], nameFilter[userNames[i]]
             ]
         } else {
-            sql = sql.replace('???', '')
-            sql1 = sql1.replace('????', '').replace('?????', '')
+            tmp = tmp.replace('???', '')
+            tmp1 = tmp1.replace('????', '').replace('?????', '')
             params = [userNames[i], userNames[i], userNames[i]]
         }
 
-        let row = await query(sql, params)
+        let row = await query(tmp, params)
         if (row?.length) {
             for (let j = 0; j < row.length; j++) {
                 for (let k = 0; k < statItem2Type[row[j].type].length; k++) {
@@ -126,7 +128,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             }
         }
 
-        row = await query(sql1, params)
+        row = await query(tmp1, params)
         if (row?.length) {
             for (let j = 0; j < row.length; j++) {
                 user.children[3].children[row[j].action_exit == action.agree.key ? 1 : 0].sum += parseInt(row[j].count)
@@ -208,7 +210,6 @@ const getStat = async function (startDate, endDate) {
             select vision_type, type from vision_nodes
             where tag = 'total' and operate_time >= '${startDate}'
                 and operate_time <= '${endDate}'
-                and \`status\` in ('RUNNING', 'COMPLETED')
                 and if(v1 is null, v2, v1) like concat('%', v3, '%')
             group by id, type, vision_type
         ) a group by a.vision_type, a.type
@@ -219,7 +220,6 @@ const getStat = async function (startDate, endDate) {
             select vision_type, type from vision_nodes
             where tag = 'inside' and operate_time >= '${startDate}'
                 and operate_time <= '${endDate}'
-                and \`status\` in ('RUNNING', 'COMPLETED')
                 and if(v1 is null, v2, v1) like concat('%', v3, '%')
             group by id, type, vision_type
         ) a group by a.vision_type, a.type
@@ -230,7 +230,6 @@ const getStat = async function (startDate, endDate) {
             select vision_type, type from vision_nodes
             where tag = 'out' and operate_time >= '${startDate}'
                 and operate_time <= '${endDate}'
-                and \`status\` in ('RUNNING', 'COMPLETED')
                 and if(v1 is null, v2, v1) like concat('%', v3, '%')
             group by id, type, vision_type
         ) a group by a.vision_type, a.type`
@@ -255,7 +254,6 @@ const getStat = async function (startDate, endDate) {
 
     sql = `select tag, type, value, action_exit from vision_node_works
         where operate_time >= '${startDate}' 
-            and \`status\` in ('RUNNING', 'COMPLETED')
             and operate_time <= '${endDate}'
             and if(v1 is null, v2, v1) like concat('%', v3, '%')`
 
@@ -325,7 +323,7 @@ const getFlowProcessInstances = async function (params, offset, limit) {
     }
     let presql = `select count(1) as count from (`
     let subsql = `select id, processInstanceId, title, instanceStatus, createTime, operateTime 
-        from vision_process where form_id = ? and \`status\` in ('RUNNING', 'COMPLETED')`
+        from vision_process where form_id = ?`
     p1.push(parseInt(params.id))
     if (params.tag) subsql = `${subsql} and tag in ("${params.tag.join('","')}")`
     if (params.visionTag) {
