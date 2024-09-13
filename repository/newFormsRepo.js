@@ -325,13 +325,21 @@ const getFlowProcessInstances = async function (params, offset, limit) {
     let subsql = `select id, processInstanceId, title, instanceStatus, createTime, operateTime 
         from vision_process where form_id = ?`
     p1.push(parseInt(params.id))
-    if (params.tag) subsql = `${subsql} and tag in ("${params.tag.join('","')}")`
+    if (params.tag) subsql = `${subsql} and tag = "${params.tag}"`
     if (params.visionTag) {
         subsql = `${subsql} and tag = '${params.visionTag}'`
     }
     if (params.operator) {
-        subsql = `${subsql} and (operator_name = ? or v1 = ? or v2 = ?)`
-        p1.push(params.operator, params.operator, params.operator)
+        if (!nameFilter.hasOwnProperty(params.operator)) {
+            subsql = `${subsql} and (operator_name = ? or v1 = ? or v2 = ?)`
+            p1.push(params.operator, params.operator, params.operator)
+        } else {
+            subsql = `${subsql} and (operator_name = ? or v1 = ? or v2 = ? 
+                or operator_name = ? or v1 = ? or v2 = ?)`
+            p1.push(params.operator, params.operator, params.operator, 
+                nameFilter[params.operator], nameFilter[params.operator], nameFilter[params.operator]
+            )
+        }
     }
     if (params.startDate) {
         subsql = `${subsql} and operate_time >= ?`
