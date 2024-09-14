@@ -252,10 +252,11 @@ const getStat = async function (startDate, endDate) {
         result[row[i].id].sum += parseInt(row[i].count)
     }
 
-    sql = `select tag, type, value, action_exit from vision_node_works
-        where operate_time >= '${startDate}' 
+    sql = `select id, activity_id, field_id, tag, type, value, action_exit 
+        from vision_node_works where operate_time >= '${startDate}' 
             and operate_time <= '${endDate}'
-            and if(v1 is null, v2, v1) like concat('%', v3, '%')`
+            and if(v1 is null, v2, v1) like concat('%', v3, '%')
+        order by id`
 
     row = await query(sql)
     for (let i = 0; i < row.length; i++) {
@@ -263,7 +264,12 @@ const getStat = async function (startDate, endDate) {
         if (!value) value = 0
         
         for (let k = 0; k < statItem2Type[row[i].type].length; k++) {
-            if (totalStatType[row[i].tag]) {
+            if (totalStatType[row[i].tag] && (
+                i == 0 || 
+                !(row[i - 1].id == row[i].id && 
+                    row[i - 1].activity_id == row[i].activity_id &&
+                    row[i - 1].field_id == row[i].field_id)
+            )) {
                 result[3].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .children[1]
                     .children[statItem2Type[row[i].type][k]]
@@ -277,8 +283,13 @@ const getStat = async function (startDate, endDate) {
         }
         result[3].sum += value
         for (let j = 4; j < 8; j++) {
-            if (totalStatType[row[i].tag] && statItem2Type[row[i].type].includes(j - 4)) {
-                
+            if (totalStatType[row[i].tag] && 
+                statItem2Type[row[i].type].includes(j - 4) && (
+                    i == 0 || 
+                    !(row[i - 1].id == row[i].id && 
+                        row[i - 1].activity_id == row[i].activity_id &&
+                        row[i - 1].field_id == row[i].field_id)
+                )) {
                 result[j].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .children[1]
                     .sum += value
