@@ -75,9 +75,84 @@ HAVING
 };
 
 
+// 京东三天内完成的流程
+const theJDProcessIsCompletedInThreeDays = async () => {
+    try {
+        return await models.sequelize.query(
+            `SELECT
+    MAX(CASE WHEN field_id = 'textField_lma827oe' THEN field_value END) AS linkId,
+    MAX(CASE WHEN field_id = 'radioField_lma827og' THEN field_value END) AS questionType
+FROM
+    process_details
+WHERE
+    process_instance_id IN (
+        SELECT process_instance_id
+        FROM process
+        WHERE form_uuid = 'FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW'
+
+        AND instance_status = 'COMPLETED'
+    )
+    AND (field_id = 'textField_lma827oe' OR field_id = 'radioField_lma827og')
+GROUP BY
+    process_instance_id
+HAVING
+    linkId IS NOT NULL
+    AND questionType IS NOT NULL; `,
+            {
+                raw: true,
+                logging: false,
+                type: QueryTypes.SELECT
+
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
+const theJDProcessIsProblemLinkThreeDays = async () => {
+    try {
+        return await models.sequelize.query(
+            `SELECT
+    MAX(CASE WHEN field_id = 'textField_lma827oe' THEN field_value END) AS linkId,
+    MAX(CASE WHEN field_id = 'checkboxField_m11r277t' THEN field_value END) AS questionType
+FROM
+    process_details
+WHERE
+    process_instance_id IN (
+        SELECT process_instance_id
+        FROM process
+        WHERE form_uuid = 'FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW'
+        AND done_time > DATE_SUB(DATE(NOW()), INTERVAL 3 DAY)
+        AND instance_status = 'COMPLETED'
+    )
+    AND (field_id = 'textField_lma827oe' OR field_id = 'checkboxField_m11r277t')
+GROUP BY
+    process_instance_id
+HAVING
+    linkId IS NOT NULL
+    AND questionType IS NOT NULL; `,
+            {
+                raw: true,
+                logging: false,
+                type: QueryTypes.SELECT
+
+            }
+        );
+
+
+    } catch (error) {
+        throw new Error('查询数据失败');
+    }
+};
+
 module.exports = {
     saveProcessDetailsArr,
     saveProcessDetailsArrWithOutTrans,
     getProcessDetailsByProcessInstanceIds,
-    theProcessIsCompletedInThreeDays
+    theProcessIsCompletedInThreeDays,
+    theJDProcessIsCompletedInThreeDays,
+    theJDProcessIsProblemLinkThreeDays
 }

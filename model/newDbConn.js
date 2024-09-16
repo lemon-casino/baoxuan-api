@@ -3,7 +3,6 @@ const { dbConfig } = require('../config/index')
 
 const pool = mysql.createPool({
     connectionLimit: 100,
-    acquireTimeout: 10000,
     waitForConnections: true, 
     queueLimit: 0,
     host: dbConfig.host,

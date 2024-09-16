@@ -631,10 +631,15 @@ const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
     };
 
 // 获取今日所有流程
-    const todayFlows = await globalGetter.getTodayFlows();
-    const runningFlow = todayFlows.filter((flow) => flow.instanceStatus === flowStatusConst.RUNNING);
+
+    const operationNewFlow = await flowService.getTodaySplitFlowsByFormIdAndFlowStatus(operationNewFlowFormId, flowStatusConst.RUNNING,`flows:today:form:${operationNewFlowFormId.replace("FORM-", "")}`)
+    const tmLinkShelvesFlow = await flowService.getTodaySplitFlowsByFormIdAndFlowStatus(tmLinkShelvesFlowFormId, flowStatusConst.RUNNING,`flows:today:form:${tmLinkShelvesFlowFormId.replace("FORM-", "")}`)
+    const baoKeMengNewFlow = await flowService.getTodaySplitFlowsByFormIdAndFlowStatus(baoKeMengNewFlowFormId, flowStatusConst.RUNNING,`flows:today:form:${baoKeMengNewFlowFormId.replace("FORM-", "")}`)
+
+
+
 // 定义一个函数来处理流程并更新结果
-    const processFlows = (formUuid, itemIndex) => {
+    const processFlows = (formUuid, itemIndex, runningFlow) => {
         const item = result.items[itemIndex];
         // 初始化id数组和计数
         item.ids = [];
@@ -653,12 +658,12 @@ const getSelfWaitingOnSingleItemLinkOperationCount = async (userId) => {
 
 
 // 处理新品流程
-    processFlows(operationNewFlowFormId, 0);
+    processFlows(operationNewFlowFormId, 0,operationNewFlow);
     // console.log(result.items[0].ids)
 // 天猫链接上架流程
-    processFlows(tmLinkShelvesFlowFormId, 1);
+    processFlows(tmLinkShelvesFlowFormId, 1,tmLinkShelvesFlow);
 // 处理宝可梦新品流程
-    processFlows(baoKeMengNewFlowFormId, 2);
+    processFlows(baoKeMengNewFlowFormId, 2,baoKeMengNewFlow);
 
 
 // 返回最终结果

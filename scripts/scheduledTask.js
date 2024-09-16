@@ -19,7 +19,8 @@ let syncUserLoginCron = "0 0/5 * * * ?"
 // 当天下班
 let syncResignEmployeeCron = "0 0 18 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
-let linshi = "32 14 * * 1-6"
+let tmallLinkData = "32 14 * * 1-6"
+let jdLinkData  = "32 14 * * 1-6"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
     syncTodayRunningAndFinishedFlowsCron = "0 10 12 * * ?"
@@ -150,10 +151,17 @@ schedule.scheduleJob(syncRunningFlowsCron, async function () {
 /*
 * 每天处理异常链接是否存在tmallLinkAnomalyDetection*/
 
-schedule.scheduleJob(linshi, async function () {
+schedule.scheduleJob(tmallLinkData, async function () {
     console.log("执行了此方法")
     if (process.env.NODE_ENV === "prod") {
         await taskService.tmallLinkAnomalyDetection()
+    }
+})
+
+schedule.scheduleJob(jdLinkData, async function () {
+    console.log("执行了此方法")
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.jdLinkDataIsAutomaticallyInitiated()
     }
 })
 

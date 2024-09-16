@@ -69,12 +69,12 @@ client.on("error", (err) => {
 
 
 
-
             //采购选品会  procurementSelectionMeeting
             const procurementSelectionMeeting = objects.filter(obj => obj.formUuid === 'FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP');
             // 采购任务运营发布(全流程)
             const procurementTaskOperationRelease = objects.filter(obj => obj.formUuid === 'FORM-6A9E954714A64B8FA38BA44320CA928FDPBO');
-
+            // 京东链接问题异常上架流程
+            const jdLinkException = objects.filter(obj => obj.formUuid === 'FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW');
 
             // 存储符合条件的对象到新的键
             await client.set('flows:today:form:495A1584CBE84928BB3B1E0D4AA4B56AYN1J', JSON.stringify(Cat_lLink));
@@ -84,7 +84,7 @@ client.on("error", (err) => {
             await client.set('flows:today:form:CC0B476071F24581B129A24835910B81AK56', JSON.stringify(baoKeMengNewFlowFormId));
             await client.set('flows:today:form:33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP', JSON.stringify(procurementSelectionMeeting));
             await client.set('flows:today:form:6A9E954714A64B8FA38BA44320CA928FDPBO', JSON.stringify(procurementTaskOperationRelease));
-
+            await client.set('flows:today:form:KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', JSON.stringify(jdLinkException));
             console.log('Data set successfully.');
         }
     });

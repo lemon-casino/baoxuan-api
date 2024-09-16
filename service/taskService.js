@@ -44,6 +44,7 @@ const {join} = require("node:path");
 const {Sequelize} = require("sequelize");
 const {redisConfig} = require("@/config");
 const axios = require("axios");
+const {getInquiryTodayjdDailyReport} = require("@/service/JDDailyReportBaoService");
 const writeFile = util.promisify(fs.writeFile);
 const readFile = util.promisify(fs.readFile);
 const syncWorkingDay = async () => {
@@ -599,7 +600,9 @@ async function readFlowsFromLocalFile(filePath) {
 }
 
 async function saveFlowsToRedisFromFile() {
+
     const filePath = join(__dirname, '../logs/flows.json');
+    console.log(filePath)
     // 从本地文件读取 flows 内容
     const fileContent = await readFlowsFromLocalFile(filePath);
     // console.log(fileContent)
@@ -624,6 +627,56 @@ const syncProcessVersions = async (cookies) => {
     return true
 }
 
+
+
+const jdLinkDataIsAutomaticallyInitiated = async () => {
+    logger.info("京东同步进行中...")
+       await  getInquiryTodayjdDailyReport()
+
+
+
+
+
+
+/*    const sendRequests = async () => {
+        for (const [key, value] of Object.entries(cleanedLinkIdMap)) {
+            //删除 value的name 是数组 有其它的异常 比如 name:['费比超过15%','老品利润率低于15%']   linkType的标签是新品30 或者新品60   删除掉  费比超过15% 这个数组中的费比超过15%
+            if (Array.isArray(value.name) && value.name.length > 1 && value.name.includes('费比超过15%') && (value.linkType === '新品30' || value.linkType === '新品60')) {
+                value.name = value.name.filter(name => name !== '费比超过15%');
+            }
+
+            const userId = value.uuid;
+            const multiSelectField_lwufb7oy = value.name;
+            // const cascadeDateField_lloq9vjk = getNextWeekTimestamps();
+            const textField_liihs7kv = value.productName + key;
+            const textField_liihs7kw = key;
+            const employeeField_liihs7l0 = [userId];
+            //value.linkType === '新品30' 或者是value.linkType === '新品60' 都改成新品
+            value.linkType = value.linkType === '新品30' || value.linkType === '新品60' ? '新品' : value.linkType;
+            const formDataJsonStr = JSON.stringify({
+                radioField_lxlncgm1: "天猫",
+                textField_liihs7kv,
+                textField_liihs7kw,
+                employeeField_liihs7l0,
+                selectField_liihs7kz: value.linkType.toString(),
+                multiSelectField_lwufb7oy,
+            }, null, 2);
+
+            try {
+                await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
+                logger.info(`发起宜搭  运营优化流程 for linkId ${key}`);
+            } catch (e) {
+                logger.error(`发起宜搭  运营优化流程 失败 for linkId ${key}`, e);
+            }
+        }
+    };
+    await sendRequests();*/
+
+
+    logger.info("同步完成：京东异常发起")
+}
+
+
 module.exports = {
     syncOaProcessTemplates,
     syncRunningProcess,
@@ -644,5 +697,6 @@ module.exports = {
     resetDingDingApiInvokeCount,
     syncVisionOutUsers,
     syncProcessVersions,
+    jdLinkDataIsAutomaticallyInitiated,
     saveFlowsToRedisFromFile
 }
