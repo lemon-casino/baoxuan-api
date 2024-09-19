@@ -147,23 +147,28 @@ const importJDData = async (req, res, next) => {
                     if (row.getCell(1).value && row.getCell(1).value == '客服') break
                     else if (row.getCell(1).value && row.getCell(1).value != '店铺名') {
                         info.push(row.getCell(1).value ? row.getCell(1).value.trim(' ') : null)
-                        const date = row.getCell(2).value ? row.getCell(2).value : rows[i - 1].getCell(2).value
-                        start_time = moment(date.split('-')[0]).format('YYYY-MM-DD')
-                        end_time = date.split('-')[1] ? moment(date.split('-')[1]).format('YYYY-MM-DD') : start_time
+                        const date = row.getCell(2).value ? row.getCell(2).value : 
+                            (rows[i - 1].getCell(2).value ? rows[i - 1].getCell(2).value : rows[i - 2].getCell(2).value)
+                        if (date.toString().indexOf('-') != -1) {
+                            start_time = date.split('-')[0].replace('年', '-').replace('月', '-').replace('日', '-')
+                            end_time = date.split('-')[1] ? date.split('-')[1].replace('年', '-').replace('月', '-').replace('日', '-') : start_time
+                        }  else {
+                            start_time = end_time = moment(date).format('YYYY-MM-DD')
+                        }
                         info.push(start_time)
                         info.push(end_time)
                         info.push(row.getCell(3).value ? row.getCell(3).value.trim(' ') : null)
-                        info.push(row.getCell(4).value)
-                        info.push(row.getCell(5).value)
-                        info.push(row.getCell(6).value ? row.getCell(6).value * 100 : null)
-                        info.push(row.getCell(7).value)
-                        info.push(row.getCell(8).value ? row.getCell(8).value * 100 : null)
-                        info.push(row.getCell(9).value ? row.getCell(9).value * 100 : null)
-                        info.push(row.getCell(10).value)
+                        info.push(row.getCell(4).value instanceof Number ? row.getCell(4).value : null)
+                        info.push(row.getCell(5).value instanceof Number ? row.getCell(5).value : null)
+                        info.push(row.getCell(6).value instanceof Number ? row.getCell(6).value * 100 : null)
+                        info.push(row.getCell(7).value instanceof Number ? row.getCell(7).value : null)
+                        info.push(row.getCell(8).value instanceof Number ? row.getCell(8).value * 100 : null)
+                        info.push(row.getCell(9).value instanceof Number ? row.getCell(9).value * 100 : null)
+                        info.push(row.getCell(10).value instanceof Number ? row.getCell(10).value : null)
                         count = count + 1
                     }
                 }
-                await jdService.insertjd(count, info)
+                await jdService.insertJD(count, info)
                 const images = worksheet.getImages()
                 
                 images.forEach(medium => {

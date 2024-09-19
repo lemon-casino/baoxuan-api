@@ -46,19 +46,6 @@ jdRepo.insertJD = async (count, info) => {
     await query(sql, info)
 }
 
-jdRepo.updateJD = async (info) => {
-    let sql = `UPDATE cs_jd SET 
-            login_duration = ?,
-            reception_duration = ?,
-            reception_num = ?,
-            response_in_30_rate = ?,
-            satisfaction_rate = ?,
-            amount = ?,
-            transfer_rate = ? 
-        WHERE shopname = ? AND start_time = ? AND end_time = ? AND servicer = ?`
-    await query(sql, info)
-}
-
 jdRepo.insertJDImg = async (info) => {
     let sql = `INSERT INTO cs_img(img_url, start_time, end_time, type) VALUES(?,?,?,3)`
     await query(sql, info)

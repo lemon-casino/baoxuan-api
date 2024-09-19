@@ -131,7 +131,7 @@ const importTmallAsData = async (req, res, next) => {
                 const end_time = date[2] ? date[2] : date[1]
                 let info = []
                 let rows = worksheet.getRows(2, worksheet.rowCount - 1)
-                if (file.originalFilename.indexOf('无延迟') != -1) {
+                if (file.originalFilename.indexOf('有延迟') != -1) {
                     for (let i = 0; i < worksheet.rowCount - 1; i++) {
                         let row = rows[i]
                         info = []

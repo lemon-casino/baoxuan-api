@@ -35,7 +35,7 @@ dyRepo.insertDY = async (count, info) => {
             account,
             reception_num,
             session_num,
-            session_num,
+            cpd,
             dissatisfied_rate,
             session_in_3_rate,
             response_in_3_rate,

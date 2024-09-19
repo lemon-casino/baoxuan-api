@@ -20,12 +20,8 @@ jdService.insertJD = async (count, info) => {
     await jdRepo.insertJD(count, info)
 }
 
-jdService.updateJD = async (info) => {
-    await jdRepo.updateJD(info)
-}
-
 jdService.insertJDImg = async (info) => {
-    await jdRepo.insertJD(info)
+    await jdRepo.insertJDImg(info)
 }
 
 module.exports = jdService

@@ -178,17 +178,16 @@ const importDYData = async (req, res, next) => {
                         info.push(row.getCell(9).value ? row.getCell(9).value * 100 : null)
                         info.push(row.getCell(10).value)
                         info.push(row.getCell(11).value)
-                        info.push(row.getCell(12).value)
-                        info.push(row.getCell(13).value ? row.getCell(13).value * 100 : null)
+                        info.push(row.getCell(12).value ? row.getCell(12).value * 100 : null)
+                        info.push(row.getCell(13).value)
                         info.push(row.getCell(14).value)
                         info.push(row.getCell(15).value)
                         info.push(row.getCell(16).value)
-                        info.push(row.getCell(17).value)
-                        info.push(row.getCell(18).value ? row.getCell(18).value * 100 : null)
+                        info.push(row.getCell(17).value ? row.getCell(17).value * 100 : null)
+                        info.push(row.getCell(18).value)
                         info.push(row.getCell(19).value)
                         info.push(row.getCell(20).value)
                         info.push(row.getCell(21).value)
-                        info.push(row.getCell(22).value)
 
                         count = count + 1
                     }
