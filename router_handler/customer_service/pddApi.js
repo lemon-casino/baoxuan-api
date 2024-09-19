@@ -193,6 +193,7 @@ const importPddData = async (req, res, next) => {
                         info.push(row.getCell(8).value instanceof Number ? row.getCell(8).value * 100 : null)
                         info.push(row.getCell(9).value instanceof Number ? row.getCell(9).value * 100 : null)
                         info.push(row.getCell(10).value instanceof Number ? row.getCell(10).value : null)
+
                         count = count + 1
                     }
                 }
