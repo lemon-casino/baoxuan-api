@@ -106,6 +106,11 @@ const getUsersStat = async (tags, deptIds, userId, userNames, startDoneDate, end
     return result
 }
 
+const getStat = async (startDoneDate, endDoneDate) => {
+    const result = await newFormRepo.getStat(startDoneDate + ' 00:00:00', endDoneDate + ' 23:59:59')
+    return result
+}
+
 /**
  * 根据tags过滤用户
  *
@@ -309,5 +314,6 @@ const getResultNode = (fieldName, visionUserFlowDataStatResultTemplate) => {
 
 module.exports = {
     getCoreActionStat,
-    getUsersStat
+    getUsersStat,
+    getStat
 }
