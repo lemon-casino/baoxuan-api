@@ -631,46 +631,32 @@ const syncProcessVersions = async (cookies) => {
 
 const jdLinkDataIsAutomaticallyInitiated = async () => {
     logger.info("京东同步进行中...")
-       await  getInquiryTodayjdDailyReport()
+       const  runningFightingFlows =await  getInquiryTodayjdDailyReport()
+    const userlist = await userService.getDingDingUserIdAndNickname()
+    for (const runningFightingFlow of runningFightingFlows) {
+        console.log(runningFightingFlow)
+        const matchingUser = userlist.find((user) => user.nickname === runningFightingFlow.operationsLeader);
+        const uuid = matchingUser ? matchingUser.dingding_user_id : null;
 
+        const textField_lma827od = runningFightingFlow.code
+        const employeeField_lma827ok= uuid
+        const textField_lma827oe= runningFightingFlow.linkId
+        const listingInfo = runningFightingFlow.listingInfo;
+        const selectField_lma827of = (listingInfo === '新品30' || listingInfo === '新品60') ? '新品' : '老品';
+        const checkboxField_m11r277t = runningFightingFlow.questionType
+        const  radioField_locg3nxq= '简单'
 
+        const formDataJsonStr = JSON.stringify({
+            textField_lma827od,
+            employeeField_lma827ok,
+            textField_lma827oe,
+            selectField_lma827of,
+            checkboxField_m11r277t,
+            radioField_locg3nxq
+        }, null, 2);
+        await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
 
-
-
-
-/*    const sendRequests = async () => {
-        for (const [key, value] of Object.entries(cleanedLinkIdMap)) {
-            //删除 value的name 是数组 有其它的异常 比如 name:['费比超过15%','老品利润率低于15%']   linkType的标签是新品30 或者新品60   删除掉  费比超过15% 这个数组中的费比超过15%
-            if (Array.isArray(value.name) && value.name.length > 1 && value.name.includes('费比超过15%') && (value.linkType === '新品30' || value.linkType === '新品60')) {
-                value.name = value.name.filter(name => name !== '费比超过15%');
-            }
-
-            const userId = value.uuid;
-            const multiSelectField_lwufb7oy = value.name;
-            // const cascadeDateField_lloq9vjk = getNextWeekTimestamps();
-            const textField_liihs7kv = value.productName + key;
-            const textField_liihs7kw = key;
-            const employeeField_liihs7l0 = [userId];
-            //value.linkType === '新品30' 或者是value.linkType === '新品60' 都改成新品
-            value.linkType = value.linkType === '新品30' || value.linkType === '新品60' ? '新品' : value.linkType;
-            const formDataJsonStr = JSON.stringify({
-                radioField_lxlncgm1: "天猫",
-                textField_liihs7kv,
-                textField_liihs7kw,
-                employeeField_liihs7l0,
-                selectField_liihs7kz: value.linkType.toString(),
-                multiSelectField_lwufb7oy,
-            }, null, 2);
-
-            try {
-                await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
-                logger.info(`发起宜搭  运营优化流程 for linkId ${key}`);
-            } catch (e) {
-                logger.error(`发起宜搭  运营优化流程 失败 for linkId ${key}`, e);
-            }
-        }
-    };
-    await sendRequests();*/
+    }
 
 
     logger.info("同步完成：京东异常发起")

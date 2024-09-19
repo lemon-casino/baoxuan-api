@@ -8,9 +8,37 @@ const JDLinkExceptionFlowFormId = "FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW"
 // 查询今天的数据
 const getInquiryTodayjdDailyReport = async () => {
 
+    await JDDailyReportBaoRepo.updateFluxForYesterday()
     // 查询当天的数据
     const  data  =await JDDailyReportBaoRepo.inquiryTodayjdDailyReport();
 
+
+    const filteredResults = data
+        .map(item => {
+            const questionType = [];
+
+            if (item.profitMargin < 15 && item.listingInfo==="老品") {
+                questionType.push('利润率小于15%');
+            }
+
+            if (item.costRatio > 0.12 && item.listingInfo==="老品" ) {
+                questionType.push('推广费比大于12%');
+            }
+
+            if (item.flux > 20 && item.listingInfo==="老品" ) {
+                questionType.push('流量下降');
+            }
+           //如果 (item.listingInfo==="老品" 或者 item.listingInfo==="新品60" ) && item.flux < 20
+            if (item.profit < 0 && (item.listingInfo==="老品" || item.listingInfo==="新品60")) {
+                questionType.push('利润为负');
+            }
+
+
+
+
+            return questionType.length > 0 ? { linkId: item.sku, questionType,listingInfo: item.listingInfo,operationsLeader : item.operationsLeader,code: item.code} : null;
+        })
+        .filter(item => item !== null);
 
     // 京东问题链接 三天内 单选数据
     const  singleChoiceDataWithinThreeDays =await theJDProcessIsCompletedInThreeDays()
@@ -74,21 +102,61 @@ const getInquiryTodayjdDailyReport = async () => {
     const transformedSingleChoice = transformCompletedData(singleChoiceDataWithinThreeDays);
     const transformedJingdongProblem = transformCompletedData(jingdongProblemLinkThreeDays, true);
 
-// 合并并去重
+// 合并并去重 已经存在的数据
     const mergedResult = mergeDataSets(transformedSingleChoice, transformedJingdongProblem);
 
-
-
     // 三天内 已发起的异常
-
-
     //console.log(mergedResult);
 
     // 当天异常  - 三天内已发起的异常 - Redis  中存在的异常 = 要发起的流程
        // redis  中存在的异常
     const runningFightingFlows = await getTodaySplitFlowsByFormIdAndFlowStatus(JDLinkExceptionFlowFormId, flowStatusConst.RUNNING,`flows:today:form:${JDLinkExceptionFlowFormId.replace("FORM-", "")}`)
 
-    console.log(runningFightingFlows)
+    //链接id +
+
+    const  redisPresenceToday=[]
+
+    for (const runningFightingFlow of runningFightingFlows) {
+        //链接id textField_lma827oe
+        if (runningFightingFlow.data['checkboxField_m11r277t']!==undefined){
+            redisPresenceToday.push({linkId:runningFightingFlow.data["textField_lma827oe"], questionType:runningFightingFlow.data['checkboxField_m11r277t'] })
+        }
+    }
+
+
+// 创建一个Map方便快速查找mergedResult中的linkId
+    const mergedMap = new Map();
+    mergedResult.forEach(item => mergedMap.set(item.linkId, item));
+
+// 遍历redisPresenceToday
+    redisPresenceToday.forEach(redisItem => {
+        const existingMergedItem = mergedMap.get(redisItem.linkId);
+
+        if (existingMergedItem) {
+            // 如果linkId相同，合并questionType并去重
+            const mergedTypes = new Set([...existingMergedItem.questionType, ...redisItem.questionType]);
+            existingMergedItem.questionType = Array.from(mergedTypes);
+        } else {
+            // 如果mergedResult中没有此linkId，则直接添加
+            mergedResult.push(redisItem);
+        }
+    });
+    // 这是最终的 三天内+ 已发起的异常
+  //  console.log(mergedResult);
+     // 去掉questionType为空的项
+    return filteredResults.map(filteredItem => {
+        const mergedItem = mergedResult.find(mergedItem => mergedItem.linkId === filteredItem.linkId);
+
+        if (mergedItem) {
+            const newQuestionType = filteredItem.questionType.filter(q => !mergedItem.questionType.includes(q));
+            return {linkId: filteredItem.linkId, questionType: newQuestionType.length > 0 ? newQuestionType : null ,listingInfo: filteredItem.listingInfo,operationsLeader : filteredItem.operationsLeader,code: filteredItem.code};
+        }
+
+        return filteredItem; // 保留没有匹配的项
+    }).filter(item => item.questionType !== null);
+
+
+
 }
 
 

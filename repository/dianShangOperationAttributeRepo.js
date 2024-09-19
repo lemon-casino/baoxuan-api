@@ -38,6 +38,7 @@ const getOperateAttributes = async (deptId,
             $or: orGroup,
             $and: andGroup
         },
+        logging:true,
         offset: pageIndex * pageSize,
         limit: pageSize,
         order: [["createTime", "desc"]]

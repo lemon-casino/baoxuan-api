@@ -31,9 +31,9 @@ module.exports = sequelize => {
       field: "sku"
     },
     reportTime: {
-      type: DataTypes.DATE,
+      type: DataTypes.DATEONLY,
       allowNull: true,
-      defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
+      defaultValue: null,
       primaryKey: false,
       autoIncrement: false,
       comment: "时间",
@@ -255,6 +255,15 @@ module.exports = sequelize => {
       comment: "利润",
       field: "profit"
     },
+    flux: {
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: "0.00",
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "同比流量下降(%)",
+      field: "flux"
+    },
     profitMarginSupplyPrice: {
       type: DataTypes.DECIMAL,
       allowNull: true,
@@ -272,6 +281,15 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "利润率（GMV） (%)",
       field: "profit_margin_gmv"
+    },
+    profitMargin:{
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: "0.00",
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "利润率（GMV） (%)",
+      field: "profit_margins"
     },
     createdAt: {
       type: DataTypes.DATE,
