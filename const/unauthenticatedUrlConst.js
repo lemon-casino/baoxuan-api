@@ -13,5 +13,10 @@ module.exports = [
     "/user/flowpath/getoaallprocess",
     "/user/flowpath/getyidaprocess",
     "/flow/all-overdue-running-flows",
+    "/customer-service/tmall/as-import",
+    "/customer-service/tmall/ps-import",
+    "/customer-service/pdd/data-import",
+    "/customer-service/jd/data-import",
+    "/customer-service/dy/data-import",
     /^\/download\/.*/,
 ]

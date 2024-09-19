@@ -27,3 +27,5 @@ package.lock.json
 
 package-lock.json
 .htaccess
+
+public/*
