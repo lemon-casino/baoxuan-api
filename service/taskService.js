@@ -44,6 +44,7 @@ const {join} = require("node:path");
 const {Sequelize} = require("sequelize");
 const {redisConfig} = require("@/config");
 const axios = require("axios");
+const {getInquiryTodayjdDailyReport} = require("@/service/JDDailyReportBaoService");
 const writeFile = util.promisify(fs.writeFile);
 const readFile = util.promisify(fs.readFile);
 const syncWorkingDay = async () => {
@@ -599,7 +600,9 @@ async function readFlowsFromLocalFile(filePath) {
 }
 
 async function saveFlowsToRedisFromFile() {
+
     const filePath = join(__dirname, '../logs/flows.json');
+    console.log(filePath)
     // 从本地文件读取 flows 内容
     const fileContent = await readFlowsFromLocalFile(filePath);
     // console.log(fileContent)
@@ -624,6 +627,42 @@ const syncProcessVersions = async (cookies) => {
     return true
 }
 
+
+
+const jdLinkDataIsAutomaticallyInitiated = async () => {
+    logger.info("京东同步进行中...")
+       const  runningFightingFlows =await  getInquiryTodayjdDailyReport()
+    const userlist = await userService.getDingDingUserIdAndNickname()
+    for (const runningFightingFlow of runningFightingFlows) {
+        console.log(runningFightingFlow)
+        const matchingUser = userlist.find((user) => user.nickname === runningFightingFlow.operationsLeader);
+        const uuid = matchingUser ? matchingUser.dingding_user_id : null;
+
+        const textField_lma827od = runningFightingFlow.code
+        const employeeField_lma827ok= uuid
+        const textField_lma827oe= runningFightingFlow.linkId
+        const listingInfo = runningFightingFlow.listingInfo;
+        const selectField_lma827of = (listingInfo === '新品30' || listingInfo === '新品60') ? '新品' : '老品';
+        const checkboxField_m11r277t = runningFightingFlow.questionType
+        const  radioField_locg3nxq= '简单'
+
+        const formDataJsonStr = JSON.stringify({
+            textField_lma827od,
+            employeeField_lma827ok,
+            textField_lma827oe,
+            selectField_lma827of,
+            checkboxField_m11r277t,
+            radioField_locg3nxq
+        }, null, 2);
+        await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
+
+    }
+
+
+    logger.info("同步完成：京东异常发起")
+}
+
+
 module.exports = {
     syncOaProcessTemplates,
     syncRunningProcess,
@@ -644,5 +683,6 @@ module.exports = {
     resetDingDingApiInvokeCount,
     syncVisionOutUsers,
     syncProcessVersions,
+    jdLinkDataIsAutomaticallyInitiated,
     saveFlowsToRedisFromFile
 }

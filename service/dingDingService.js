@@ -39,10 +39,11 @@ const {
 
 // 分页获取表单所有的流程详情
 // todo: 待宜搭那边优化好后，pageSize可调到最大99
-const getFlowsByStatusAndTimeRange = async (timesRange = ["2023-01-01 00:00:00", dateUtil.endOfToday()], timeAction, status, token, userId, formUuid, pageNumber = 1, pageSize = 10) => {
+const getFlowsByStatusAndTimeRange = async (timesRange = ["2023-01-01 00:00:00", dateUtil.endOfToday()], timeAction, status, token, userId, formUuid, pageNumber = 1, pageSize = 99) => {
     const fromTimeGMT = timeAction ? timesRange[0] : null;
     const toTimeGMT = timeAction ? timesRange[1] : null;
     // 2.分页去请求所有流程id
+
     const resLiuChengList = await yiDaReq.getFlowsOfStatusAndTimeRange(fromTimeGMT, toTimeGMT, timeAction, status, token, userId, formUuid, pageSize, pageNumber);
     
     if (!resLiuChengList) {
@@ -54,6 +55,7 @@ const getFlowsByStatusAndTimeRange = async (timesRange = ["2023-01-01 00:00:00",
         // await dateUtil.delay()
         allData[i]["overallprocessflow"] = await getAllProcessFlow(token, userId, allData[i].processInstanceId);
         console.log(`(page: ${pageNumber})get flowReviewItems process：${i + 1}/${allData.length}`);
+        await dateUtil.delay(10); // 添加 500ms 的延迟
     }
     // 如果总数大于当前页数*每页数量，继续请求
     if (resLiuChengList.totalCount > pageNumber * pageSize) {
