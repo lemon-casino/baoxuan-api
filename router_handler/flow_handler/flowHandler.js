@@ -126,7 +126,7 @@ const exportFlowsProcess = async (req, res, next) => {
         worksheet.columns = columns
 
         for (let i = 0; i < data.data.length; i++) {
-            let tmp = {...tmpDefault}
+            let tmp = JSON.parse(JSON.stringify(tmpDefault))
             
             tmp['processInstanceId'] = data.data[i].processInstanceId,
             tmp['title'] = data.data[i].title,
