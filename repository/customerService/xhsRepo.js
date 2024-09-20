@@ -1,7 +1,7 @@
 const { query } = require('../../model/dbConn')
 const xhsRepo = {}
 
-xhsRepo.getXHSData = async (start, end) => {
+xhsRepo.getXHSData = async (servicer_id, start, end) => {
     let sql = `SELECT c1.servicer_id,
             c1.session_num,
             c1.transfer_amount,
@@ -9,9 +9,12 @@ xhsRepo.getXHSData = async (start, end) => {
             c1.response_in_3_rate 
         FROM cs_xhs c1 
         WHERE c1.start_time = ? AND c1.end_time = ?`
-    const result = await query(sql, [
-        start, end
-    ])
+    let params = [start, end]
+    if (servicer_id) {
+        sql = `${sql} AND c1.servicer_id = ?`
+        params.push(servicer_id)
+    }
+    const result = await query(sql, params)
     return result
 }
 

@@ -2,14 +2,14 @@ const moment = require('moment')
 const tmallRepo = require('../../repository/customerService/tmallRepo')
 const tmallService = {}
 
-tmallService.getTmallAsByDate = async (startDate, endDate) => {
+tmallService.getTmallAsByDate = async (startDate, endDate, servicer) => {
     let start = moment(startDate).format('YYYY-MM-DD')
     let end = moment(endDate).format('YYYY-MM-DD')
     let lastStart = moment(startDate).subtract(moment(startDate).weekday() + 6, 'day').format('YYYY-MM-DD')
     let lastEnd = moment(startDate).subtract(moment(startDate).weekday(), 'day').format('YYYY-MM-DD')
     let preStart = moment(lastStart).subtract(7, 'day').format('YYYY-MM-DD')
     let preEnd = moment(lastEnd).subtract(7, 'day').format('YYYY-MM-DD')
-    let data = await tmallRepo.getTmallAs(start, end, lastStart, lastEnd, preStart, preEnd)
+    let data = await tmallRepo.getTmallAs(servicer, start, end, lastStart, lastEnd, preStart, preEnd)
     for (let i = 0; i < data?.length; i++) {
         data[i].rank_1 = data[i].rank_1 ?? i + 1
         for (let j = i + 1; j < data.length; j++) {
@@ -47,14 +47,14 @@ tmallService.insertTmallAsImg = async (info) => {
     await tmallRepo.insertTmallAsImg(info)
 }
 
-tmallService.getTmallPsByDate = async (startDate, endDate) => {
+tmallService.getTmallPsByDate = async (startDate, endDate, servicer) => {
     let start = moment(startDate).format('YYYY-MM-DD')
     let end = moment(endDate).format('YYYY-MM-DD')
     let lastStart = moment(startDate).subtract(moment(startDate).weekday() + 7, 'day').format('YYYY-MM-DD')
     let lastEnd = moment(startDate).subtract(moment(startDate).weekday() + 1, 'day').format('YYYY-MM-DD')
     let preStart = moment(lastStart).subtract(7, 'day').format('YYYY-MM-DD')
     let preEnd = moment(lastEnd).subtract(7, 'day').format('YYYY-MM-DD')
-    let data = await tmallRepo.getTmallPs(start, end, lastStart, lastEnd, preStart, preEnd)
+    let data = await tmallRepo.getTmallPs(servicer, start, end, lastStart, lastEnd, preStart, preEnd)
     for (let i = 0; i < data?.length; i++) {
         data[i].rank_1 = data[i].rank_1 ?? i + 1
         for (let j = i + 1; j < data.length; j++) {

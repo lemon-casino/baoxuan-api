@@ -1,7 +1,7 @@
 const { query } = require('../../model/dbConn')
 const tmallRepo = {}
 
-tmallRepo.getTmallAs = async (start, end, lastStart, lastEnd, preStart, preEnd) => {
+tmallRepo.getTmallAs = async (servicer, start, end, lastStart, lastEnd, preStart, preEnd) => {
     let sql = `SELECT c1.servicer,
             c1.response_average AS response_average,
             c1.satisfaction_rate AS satisfaction_rate,
@@ -22,9 +22,13 @@ tmallRepo.getTmallAs = async (start, end, lastStart, lastEnd, preStart, preEnd) 
             AND c3.start_time = ? 
             AND c3.end_time = ?
         WHERE c1.start_time = ? AND c1.end_time = ?`
-    const result = await query(sql, [
+    let params = [
         lastStart, lastEnd, preStart, preEnd, start, end
-    ])
+    ]
+    if (servicer) {
+        sql = `${sql} AND c1.servicer LIKE '%${servicer}%'`
+    }
+    const result = await query(sql, params)
     return result
 }
 
@@ -86,7 +90,7 @@ tmallRepo.insertTmallAsImg = async (info) => {
     await query(sql, info)
 }
 
-tmallRepo.getTmallPs = async (start, end, lastStart, lastEnd, preStart, preEnd) => {
+tmallRepo.getTmallPs = async (servicer, start, end, lastStart, lastEnd, preStart, preEnd) => {
     let sql = `SELECT c1.servicer,
             c1.qa_rate AS qa_rate,
             c1.success_rate AS success_rate,
@@ -110,9 +114,11 @@ tmallRepo.getTmallPs = async (start, end, lastStart, lastEnd, preStart, preEnd) 
             AND c3.start_time = ? 
             AND c3.end_time = ?
         WHERE c1.start_time = ? AND c1.end_time = ?`
-    const result = await query(sql, [
-        lastStart, lastEnd, preStart, preEnd, start, end
-    ])
+    let params = [lastStart, lastEnd, preStart, preEnd, start, end]
+    if (servicer) {
+        sql = `${sql} AND c1.servicer LIKE '%${servicer}%'`
+    }
+    const result = await query(sql, params)
     return result
 }
 

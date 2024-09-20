@@ -10,7 +10,7 @@ const moment =  require('moment')
 const getXHSDataByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
-        const data = await xhsService.getXHSDataByDate(req.query.startDate, req.query.endDate)
+        const data = await xhsService.getXHSDataByDate(req.query.startDate, req.query.endDate, req.query.servicer_id)
         const columns = [
             { header: '小红书', key: 'servicer_id', isDefault: true },
             { header: '会话量', key: 'session_num', isDefault: true },

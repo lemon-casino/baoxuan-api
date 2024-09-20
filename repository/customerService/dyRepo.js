@@ -1,7 +1,7 @@
 const { query } = require('../../model/dbConn')
 const dyRepo = {}
 
-dyRepo.getDYData = async (start, end) => {
+dyRepo.getDYData = async (start, end, shopname, servicer) => {
     let sql = `SELECT c1.shopname,
             c1.servicer,
             c1.reception_num AS reception_num,
@@ -11,11 +11,16 @@ dyRepo.getDYData = async (start, end) => {
             c1.amount AS amount,
             c1.transfer_rate AS transfer_rate
         FROM cs_dy c1
-        WHERE c1.start_time = ? AND c1.end_time = ?
-        ORDER BY c1.shopname, c1.servicer`
-    const result = await query(sql, [
-        start, end
-    ])
+        WHERE c1.start_time = ? AND c1.end_time = ?`
+    let params = [start, end]
+    if (shopname) {
+        sql = `${sql} AND c1.shopname LIKE '%${shopname}%'`
+    }
+    if (servicer) {
+        sql = `${sql} AND c1.servicer LIKE '%${servicer}%'`
+    }
+    sql = `${sql} ORDER BY c1.shopname, c1.servicer`
+    const result = await query(sql, params)
     return result
 }
 

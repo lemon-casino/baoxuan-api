@@ -10,7 +10,7 @@ const moment =  require('moment')
 const getJDDataByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
-        const data = await jdService.getJDDataByDate(req.query.startDate, req.query.endDate)
+        const data = await jdService.getJDDataByDate(req.query.startDate, req.query.endDate, req.query.shopname, req.query.servicer)
         const img = await jdService.getJDImgByDate(req.query.startDate, req.query.endDate)
         const columns = [
             { header: '店铺名', key: 'shopname', isDefault: true },

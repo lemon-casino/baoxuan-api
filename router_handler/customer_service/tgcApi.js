@@ -10,7 +10,7 @@ const moment =  require('moment')
 const getTGCDataByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
-        const data = await tgcService.getTGCDataByDate(req.query.startDate, req.query.endDate)
+        const data = await tgcService.getTGCDataByDate(req.query.startDate, req.query.endDate, req.query.servicer_id)
         const columns = [
             { header: '淘工厂', key: 'servicer_id', isDefault: true },
             { header: '上周会话量', key: 'reception_num_1', isDefault: true },

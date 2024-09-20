@@ -10,7 +10,7 @@ const moment =  require('moment')
 const getVIPDataByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
-        const data = await vipService.getVIPDataByDate(req.query.startDate, req.query.endDate)
+        const data = await vipService.getVIPDataByDate(req.query.startDate, req.query.endDate, req.query.servicer_id)
         const columns = [
             { header: '唯品会', key: 'servicer_id', isDefault: true },
             { header: '接待人数', key: 'reception_num', isDefault: true },
