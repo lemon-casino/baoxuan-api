@@ -28,6 +28,7 @@ tmallRepo.getTmallAs = async (servicer, start, end, lastStart, lastEnd, preStart
     if (servicer) {
         sql = `${sql} AND c1.servicer LIKE '%${servicer}%'`
     }
+    sql = `${sql} ORDER BY c1.id`
     const result = await query(sql, params)
     return result
 }
@@ -118,6 +119,7 @@ tmallRepo.getTmallPs = async (servicer, start, end, lastStart, lastEnd, preStart
     if (servicer) {
         sql = `${sql} AND c1.servicer LIKE '%${servicer}%'`
     }
+    sql = `${sql} ORDER BY c1.id`
     const result = await query(sql, params)
     return result
 }

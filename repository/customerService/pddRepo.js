@@ -19,7 +19,7 @@ pddRepo.getPddData = async (start, end, shopname, servicer) => {
     if (servicer) {
         sql = `${sql} AND c1.servicer LIKE '%${servicer}%'`
     }
-    sql = `${sql} ORDER BY c1.shopname, c1.servicer`
+    sql = `${sql} ORDER BY c1.id`
     const result = await query(sql, params)
     return result
 }
