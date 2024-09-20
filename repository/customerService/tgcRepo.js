@@ -12,10 +12,10 @@ tgcRepo.getTGCData = async (servicer_id, start, end, lastStart, lastEnd, preStar
             c3.transfer_rate AS transfer_rate_2 
         FROM cs_tgc c1
         LEFT JOIN cs_tgc c2 ON c1.servicer_id = c2.servicer_id 
-            AND c2.start_time = ? AND c2.end_time = ? 
+            AND c2.start_time >= ? AND c2.start_time <= ? 
         LEFT JOIN cs_tgc c3 ON c1.servicer_id = c3.servicer_id
-            AND c3.start_time = ? AND c3.end_time = ? 
-        WHERE c1.start_time = ? AND c1.end_time = ?`
+            AND c3.start_time >= ? AND c3.start_time <= ? 
+        WHERE c1.start_time >= ? AND c1.start_time <= ?`
     let params = [
         lastStart, lastEnd, preStart, preEnd, start, end
     ]
