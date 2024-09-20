@@ -11,8 +11,18 @@ const getPddDataByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
         const data = await pddService.getPddDataByDate(req.query.startDate, req.query.endDate)
-        if (!data?.length) return res.send(biResponse.canTFindIt)
         const img = await pddService.getPddImgByDate(req.query.startDate, req.query.endDate)
+        const columns = [
+            { header: '店铺名', key: 'shopname', isDefault: true },
+            { header: '日期', key: 'date', isDefault: true },
+            { header: '客服账号', key: 'servicer', isDefault: true },
+            { header: '咨询人数', key: 'reception_num', isDefault: true },
+            { header: '询单转化率', key: 'reception_rate', isDefault: true },
+            { header: '客服销售额', key: 'amount', isDefault: true },
+            { header: '3分钟人工回复率(8-23点)', key: 'answer_in_3_rate', isDefault: true },
+            { header: '30秒应答率(8-23点)', key: 'response_in_30_rate', isDefault: true },
+            { header: '客服服务分', key: 'score', isDefault: true },
+        ]
         if (req.query.is_export) {
             const workbook = new ExcelJS.Workbook()
             const worksheet = workbook.addWorksheet('拼多多')
@@ -27,17 +37,6 @@ const getPddDataByDate = async (req, res, next) => {
                 response_in_30_rate: null,
                 score: null
             }
-            let columns = [
-                { header: '店铺名', key: 'shopname', isDefault: true },
-                { header: '日期', key: 'date', isDefault: true },
-                { header: '客服账号', key: 'servicer', isDefault: true },
-                { header: '咨询人数', key: 'reception_num', isDefault: true },
-                { header: '询单转化率', key: 'reception_rate', isDefault: true },
-                { header: '客服销售额', key: 'amount', isDefault: true },
-                { header: '3分钟人工回复率(8-23点)', key: 'answer_in_3_rate', isDefault: true },
-                { header: '30秒应答率(8-23点)', key: 'response_in_30_rate', isDefault: true },
-                { header: '客服服务分', key: 'score', isDefault: true },
-            ]
 
             worksheet.columns = columns
 
@@ -138,7 +137,7 @@ const getPddDataByDate = async (req, res, next) => {
             return res.send(buffer)
         } else {
             return res.send(biResponse.success({
-                data, img
+                columns, data, img
             }))
         }
     } catch (e) {
@@ -197,20 +196,22 @@ const importPddData = async (req, res, next) => {
                         count = count + 1
                     }
                 }
-                await pddService.insertPdd(count, info)
-                const images = worksheet.getImages()
-                
-                images.forEach(medium => {
-                    if (medium.type === 'image') {
-                        let image = workbook.getImage(medium.imageId)
-                        const dir = `./public/avatar/pdd`
-                        fs.mkdirSync(dir, { recursive: true })
-                        const imgPath = `${dir}/${moment().valueOf()}-${image.name}.${image.extension}`
-                        fs.writeFileSync(imgPath, image.buffer)
-                        pddService.insertPddImg([imgPath, start_time, end_time])
-                    }
-                })
-                fs.rmSync(newPath)
+                let row = await pddService.insertPdd(count, info)
+                if (row?.affectedRows) {
+                    const images = worksheet.getImages()
+                    
+                    images.forEach(medium => {
+                        if (medium.type === 'image') {
+                            let image = workbook.getImage(medium.imageId)
+                            const dir = `./public/avatar/pdd`
+                            fs.mkdirSync(dir, { recursive: true })
+                            const imgPath = `${dir}/${moment().valueOf()}-${image.name}.${image.extension}`
+                            fs.writeFileSync(imgPath, image.buffer)
+                            pddService.insertPddImg([imgPath, start_time, end_time])
+                        }
+                    })
+                    fs.rmSync(newPath)
+                } else res.send(biResponse.createFailed())
             }
             return res.send(biResponse.success())
         })

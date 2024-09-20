@@ -11,36 +11,36 @@ const getTGCDataByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
         const data = await tgcService.getTGCDataByDate(req.query.startDate, req.query.endDate)
-        if (!data?.length) return res.send(biResponse.canTFindIt)
+        const columns = [
+            { header: '淘工厂', key: 'servicer_id', isDefault: true },
+            { header: '上周会话量', key: 'reception_num_1', isDefault: true },
+            { header: '上上周会话量', key: 'reception_num_2', isDefault: true },
+            { header: '环比', key: 'chain_base_1', isDefault: true },
+            { header: '上周销售额', key: 'amount_1', isDefault: true },
+            { header: '上上周销售额', key: 'amount_2', isDefault: true },
+            { header: '环比', key: 'chain_base_2', isDefault: true },
+            { header: '上周转化率', key: 'transfer_rate_1', isDefault: true },
+            { header: '上上周转化率', key: 'transfer_rate_2', isDefault: true },
+            { header: '环比', key: 'chain_base_3', isDefault: true },
+            { header: '满意度', key: 'satisfaction_rate', isDefault: true },
+        ]
+        let img = []
         if (req.query.is_export) {
             const workbook = new ExcelJS.Workbook()
             const worksheet = workbook.addWorksheet('淘工厂')
             let tmpDefault = {
                 servicer_id: null,
-                session_num_1: null,
-                session_num_2: null,
+                reception_num_1: null,
+                reception_num_2: null,
                 chain_base_1: null,
-                transfer_amount_1: null,
-                transfer_amount_2: null,
+                amount_1: null,
+                amount_2: null,
                 chain_base_2: null,
                 transfer_rate_1: null,
                 transfer_rate_2: null,
                 chain_base_3: null,
-                servicer_satisfied_rate: null
+                satisfaction_rate: null
             }
-            let columns = [
-                { header: '淘工厂', key: 'servicer_id', isDefault: true },
-                { header: '上周会话量', key: 'session_num_1', isDefault: true },
-                { header: '上上周会话量', key: 'session_num_2', isDefault: true },
-                { header: '环比', key: 'chain_base_1', isDefault: true },
-                { header: '上周销售额', key: 'transfer_amount_1', isDefault: true },
-                { header: '上上周销售额', key: 'transfer_amount_2', isDefault: true },
-                { header: '环比', key: 'chain_base_2', isDefault: true },
-                { header: '上周转化率', key: 'transfer_rate_1', isDefault: true },
-                { header: '上上周转化率', key: 'transfer_rate_2', isDefault: true },
-                { header: '环比', key: 'chain_base_3', isDefault: true },
-                { header: '满意度', key: 'servicer_satisfied_rate', isDefault: true },
-            ]
 
             worksheet.columns = columns
 
@@ -48,16 +48,16 @@ const getTGCDataByDate = async (req, res, next) => {
                 let tmp = JSON.parse(JSON.stringify(tmpDefault))
                 
                 tmp['servicer_id'] = data[i].servicer_id
-                tmp['session_num_1'] = data[i].session_num_1
-                tmp['session_num_2'] = data[i].session_num_2
+                tmp['reception_num_1'] = data[i].reception_num_1
+                tmp['reception_num_2'] = data[i].reception_num_2
                 tmp['chain_base_1'] = data[i].chain_base_1
-                tmp['transfer_amount_1'] = data[i].transfer_amount_1
-                tmp['transfer_amount_2'] = data[i].transfer_amount_2
+                tmp['amount_1'] = data[i].amount_1
+                tmp['amount_2'] = data[i].amount_2
                 tmp['chain_base_2'] = data[i].chain_base_2
                 tmp['transfer_rate_1'] = data[i].transfer_rate_1
                 tmp['transfer_rate_2'] = data[i].transfer_rate_2
                 tmp['chain_base_3'] = data[i].chain_base_3               
-                tmp['servicer_satisfied_rate'] = data[i].servicer_satisfied_rate 
+                tmp['satisfaction_rate'] = data[i].satisfaction_rate 
 
                 worksheet.addRow(data[i])
             }
@@ -68,7 +68,7 @@ const getTGCDataByDate = async (req, res, next) => {
             return res.send(buffer)
         } else {
             return res.send(biResponse.success({
-                data, img
+                columns, data, img
             }))
         }
     } catch (e) {
@@ -107,18 +107,20 @@ const importTGCData = async (req, res, next) => {
                     if (row.getCell(1).value) {
                         info.push(start_time)
                         info.push(end_time)
-                        info.push(row.getCell(1).value)
-                        info.push(row.getCell(2).value)
+                        info.push(row.getCell(1).value ? row.getCell(1).value.trim(' ') : null)
+                        info.push(row.getCell(2).value ? row.getCell(2).value.trim(' ') : null)
                         info.push(row.getCell(3).value)
                         info.push(row.getCell(4).value)
-                        info.push(row.getCell(5).value ? row.getCell(5).value * 100 : null)
+                        info.push(row.getCell(5).value)
                         info.push(row.getCell(6).value ? row.getCell(6).value * 100 : null)
-                        info.push(row.getCell(7).value)
+                        info.push(row.getCell(7).value ? row.getCell(7).value * 100 : null)
+                        info.push(row.getCell(8).value)
                         count = count + 1
                     }
                 }
-                await tgcService.insertTGC(count, info)
-                fs.rmSync(newPath)
+                let row = await tgcService.insertTGC(count, info)
+                if (row?.affectedRows) fs.rmSync(newPath)
+                else res.send(biResponse.createFailed())
             }
             return res.send(biResponse.success())
         })

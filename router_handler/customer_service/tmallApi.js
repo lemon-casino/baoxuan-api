@@ -11,8 +11,26 @@ const getTmallAsByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
         const data = await tmallService.getTmallAsByDate(req.query.startDate, req.query.endDate)
-        if (!data?.length) return res.send(biResponse.canTFindIt)
         const img = await tmallService.getTmallAsImgByDate(req.query.startDate, req.query.endDate)
+        const columns = [
+            { header: '旺旺', key: 'servicer', isDefault: true },
+            { header: '上周平均响应', key: 'response_average_1', isDefault: true },
+            { header: '上周售后人数', key: 'service_num_1', isDefault: true },
+            { header: '上上周售后人数', key: 'service_num_2', isDefault: true },
+            { header: '环比', key: 'chain_base_1', isDefault: true },
+            { header: '上周满意率', key: 'satisfaction_rate_1', isDefault: true },
+            { header: '排名', key: 'rank_1', isDefault: true },
+            { header: '上上周满意率', key: 'satisfaction_rate_2', isDefault: true },
+            { header: '环比', key: 'chain_base_2', isDefault: true },
+            { header: '上周解决率', key: 'onetime_rate_1', isDefault: true },
+            { header: '上上周解决率', key: 'onetime_rate_2', isDefault: true },
+            { header: '环比', key: 'chain_base_3', isDefault: true },
+            { header: null, key: 'blank_1', isDefault: true },
+            { header: '平均响应(秒)', key: 'response_average', isDefault: true },
+            { header: '客户满意率', key: 'satisfaction_rate', isDefault: true },
+            { header: '接待售后人数', key: 'service_num', isDefault: true },
+            { header: '售后一次解决率', key: 'onetime_rate', isDefault: true },
+        ]
         if (req.query.is_export) {
             const workbook = new ExcelJS.Workbook()
             const worksheet = workbook.addWorksheet('天猫售后')
@@ -34,25 +52,6 @@ const getTmallAsByDate = async (req, res, next) => {
                 service_num: null,
                 onetime_rate: null
             }
-            let columns = [
-                { header: '旺旺', key: 'servicer', isDefault: true },
-                { header: '上周平均响应', key: 'response_average_1', isDefault: true },
-                { header: '上周售后人数', key: 'service_num_1', isDefault: true },
-                { header: '上上周售后人数', key: 'service_num_2', isDefault: true },
-                { header: '环比', key: 'chain_base_1', isDefault: true },
-                { header: '上周满意率', key: 'satisfaction_rate_1', isDefault: true },
-                { header: '排名', key: 'rank_1', isDefault: true },
-                { header: '上上周满意率', key: 'satisfaction_rate_2', isDefault: true },
-                { header: '环比', key: 'chain_base_2', isDefault: true },
-                { header: '上周解决率', key: 'onetime_rate_1', isDefault: true },
-                { header: '上上周解决率', key: 'onetime_rate_2', isDefault: true },
-                { header: '环比', key: 'chain_base_3', isDefault: true },
-                { header: null, key: 'blank_1', isDefault: true },
-                { header: '平均响应(秒)', key: 'response_average', isDefault: true },
-                { header: '客户满意率', key: 'satisfaction_rate', isDefault: true },
-                { header: '接待售后人数', key: 'service_num', isDefault: true },
-                { header: '售后一次解决率', key: 'onetime_rate', isDefault: true },
-            ]
 
             worksheet.columns = columns
 
@@ -98,7 +97,7 @@ const getTmallAsByDate = async (req, res, next) => {
             return res.send(buffer)
         } else {
             return res.send(biResponse.success({
-                data, img
+                columns, data, img
             }))
         }
     } catch (e) {
@@ -129,7 +128,7 @@ const importTmallAsData = async (req, res, next) => {
                 const date = file.originalFilename.split('.')[0].split('_')
                 const start_time = date[1]
                 const end_time = date[2] ? date[2] : date[1]
-                let info = []
+                let info = [], insertInfo
                 let rows = worksheet.getRows(2, worksheet.rowCount - 1)
                 if (file.originalFilename.indexOf('有延迟') != -1) {
                     for (let i = 0; i < worksheet.rowCount - 1; i++) {
@@ -154,7 +153,7 @@ const importTmallAsData = async (req, res, next) => {
                             info.push(end_time)
                             info.push(row.getCell(1).value ? row.getCell(1).value.trim(' ') : null)
                             
-                            await tmallService.updateTmallAs(info)
+                            insertInfo = await tmallService.updateTmallAs(info)
                         }
                     }
                 } else {
@@ -182,7 +181,7 @@ const importTmallAsData = async (req, res, next) => {
                             count = count + 1
                         }
                     }
-                    await tmallService.insertTmallAs(count, info)
+                    insertInfo = await tmallService.insertTmallAs(count, info)
                     const images = worksheet.getImages()
                     
                     images.forEach(medium => {
@@ -196,7 +195,8 @@ const importTmallAsData = async (req, res, next) => {
                         }
                     })
                 }
-                fs.rmSync(newPath)
+                if (insertInfo?.affectedRows) fs.rmSync(newPath)
+                else res.send(biResponse.createFailed())
             }
             return res.send(biResponse.success())
         })
@@ -209,7 +209,34 @@ const getTmallPsByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
         const data = await tmallService.getTmallPsByDate(req.query.startDate, req.query.endDate)
-        if (!data?.length) return res.send(biResponse.canTFindIt)
+        const columns = [
+            { header: '旺旺', key: 'servicer', isDefault: true },
+            { header: '上周销售额', key: 'amount_1', isDefault: true },
+            { header: '上上周销售额', key: 'amount_2', isDefault: true },
+            { header: '环比', key: 'chain_base_1', isDefault: true },
+            { header: '上周转化率', key: 'success_rate_1', isDefault: true },
+            { header: '上上周转化率', key: 'success_rate_2', isDefault: true },
+            { header: '环比', key: 'chain_base_2', isDefault: true },
+            { header: '上周接待', key: 'reception_num_1', isDefault: true },
+            { header: '上上周接待', key: 'reception_num_2', isDefault: true },
+            { header: '环比', key: 'chain_base_3', isDefault: true },
+            { header: '上周解决率', key: 'onetime_rate_1', isDefault: true },
+            { header: '上上周解决率', key: 'onetime_rate_2', isDefault: true },
+            { header: '环比', key: 'chain_base_4', isDefault: true },
+            { header: '上周满意率', key: 'satisfaction_rate_1', isDefault: true },
+            { header: '问答比', key: 'qa_rate', isDefault: true },
+            { header: null, key: 'blank_1', isDefault: true },
+            { header: '转化率', key: 'success_rate', isDefault: true },
+            { header: '排名', key: 'rank_1', isDefault: true },
+            { header: '客户满意率', key: 'satisfaction_rate', isDefault: true },
+            { header: '排名', key: 'rank_2', isDefault: true },
+            { header: '销售额', key: 'amount', isDefault: true },
+            { header: '排名', key: 'rank_3', isDefault: true },
+            { header: '接待人数', key: 'reception_num', isDefault: true },
+            { header: '上班天数', key: 'work_days', isDefault: true },
+            { header: '客单价', key: 'price', isDefault: true },
+        ]
+        let img = []
         if (req.query.is_export) {
             const workbook = new ExcelJS.Workbook()
             const worksheet = workbook.addWorksheet('天猫售前')
@@ -239,33 +266,6 @@ const getTmallPsByDate = async (req, res, next) => {
                 work_days: null,
                 price: null
             }
-            let columns = [
-                { header: '旺旺', key: 'servicer', isDefault: true },
-                { header: '上周销售额', key: 'amount_1', isDefault: true },
-                { header: '上上周销售额', key: 'amount_2', isDefault: true },
-                { header: '环比', key: 'chain_base_1', isDefault: true },
-                { header: '上周转化率', key: 'success_rate_1', isDefault: true },
-                { header: '上上周转化率', key: 'success_rate_2', isDefault: true },
-                { header: '环比', key: 'chain_base_2', isDefault: true },
-                { header: '上周接待', key: 'reception_num_1', isDefault: true },
-                { header: '上上周接待', key: 'reception_num_2', isDefault: true },
-                { header: '环比', key: 'chain_base_3', isDefault: true },
-                { header: '上周解决率', key: 'onetime_rate_1', isDefault: true },
-                { header: '上上周解决率', key: 'onetime_rate_2', isDefault: true },
-                { header: '环比', key: 'chain_base_4', isDefault: true },
-                { header: '上周满意率', key: 'satisfaction_rate_1', isDefault: true },
-                { header: '问答比', key: 'qa_rate', isDefault: true },
-                { header: null, key: 'blank_1', isDefault: true },
-                { header: '转化率', key: 'success_rate', isDefault: true },
-                { header: '排名', key: 'rank_1', isDefault: true },
-                { header: '客户满意率', key: 'satisfaction_rate', isDefault: true },
-                { header: '排名', key: 'rank_2', isDefault: true },
-                { header: '销售额', key: 'amount', isDefault: true },
-                { header: '排名', key: 'rank_3', isDefault: true },
-                { header: '接待人数', key: 'reception_num', isDefault: true },
-                { header: '上班天数', key: 'work_days', isDefault: true },
-                { header: '客单价', key: 'price', isDefault: true },
-            ]
 
             worksheet.columns = columns
 
@@ -306,7 +306,7 @@ const getTmallPsByDate = async (req, res, next) => {
             return res.send(buffer)
         } else {
             return res.send(biResponse.success({
-                data
+                columns, data, img
             }))
         }
     } catch (e) {
@@ -337,7 +337,7 @@ const importTmallPsData = async (req, res, next) => {
                 const date = file.originalFilename.split('.')[0].split('_')
                 const start_time = date[1]
                 const end_time = date[2] ? date[2] : date[1]
-                let info = []
+                let info = [], insertInfo
                 let rows = worksheet.getRows(2, worksheet.rowCount - 1)
                 if (file.originalFilename.indexOf('有未回复') != -1) {
                     for (let i = 0; i < worksheet.rowCount - 1; i++) {
@@ -364,7 +364,7 @@ const importTmallPsData = async (req, res, next) => {
                             info.push(end_time)
                             info.push(row.getCell(1).value ? row.getCell(1).value.trim(' ') : null)
                             
-                            await tmallService.updateTmallPs(info)
+                            insertInfo = await tmallService.updateTmallPs(info)
                         }
                     }
                 } else {
@@ -394,9 +394,10 @@ const importTmallPsData = async (req, res, next) => {
                             count = count + 1
                         }
                     }
-                    await tmallService.insertTmallPs(count, info)
+                    insertInfo = await tmallService.insertTmallPs(count, info)
                 }
-                fs.rmSync(newPath)
+                if (insertInfo?.affectedRows) fs.rmSync(newPath)
+                else res.send(biResponse.createFailed())
             }
             return res.send(biResponse.success())
         })

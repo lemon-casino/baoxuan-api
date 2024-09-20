@@ -8,8 +8,7 @@ jdRepo.getJDData = async (start, end) => {
             c1.response_in_30_rate AS response_in_30_rate,
             c1.amount AS amount,
             c1.transfer_rate AS transfer_rate,
-            c1.satisfaction_rate AS satisfaction_rate,
-            c1.score AS score
+            c1.satisfaction_rate AS satisfaction_rate 
         FROM cs_jd c1
         WHERE c1.start_time = ? AND c1.end_time = ?
         ORDER BY c1.shopname, c1.servicer`

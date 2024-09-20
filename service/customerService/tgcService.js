@@ -11,10 +11,10 @@ tgcService.getTGCDataByDate = async (startDate, endDate) => {
     let preEnd = moment(lastEnd).subtract(7, 'day').format('YYYY-MM-DD')
     let data = await tgcRepo.getTGCData(start, end, lastStart, lastEnd, preStart, preEnd)
     for (let i = 0; i < data?.length; i++) {
-        data[i].chain_base_1 = data[i].session_num_1 > 0 ? 
-            ((data[i].session_num_1 - data[i].session_num_2) / data[i].session_num_1 ?? 0).toFixed(2) : 0
-        data[i].chain_base_2 = data[i].transfer_amount_1 > 0 ? 
-            ((data[i].transfer_amount_1 - data[i].transfer_amount_2 ?? 0) / data[i].transfer_amount_1).toFixed(2) : 0
+        data[i].chain_base_1 = data[i].reception_num_1 > 0 ? 
+            ((data[i].reception_num_1 - data[i].reception_num_2) / data[i].reception_num_1 ?? 0).toFixed(2) : 0
+        data[i].chain_base_2 = data[i].amount_1 > 0 ? 
+            ((data[i].amount_1 - data[i].amount_2 ?? 0) / data[i].amount_1).toFixed(2) : 0
         data[i].chain_base_3 = data[i].transfer_rate_1 > 0 ? 
             ((data[i].transfer_rate_1 - data[i].transfer_rate_2 ?? 0) / data[i].transfer_rate_1).toFixed(2) : 0
     }

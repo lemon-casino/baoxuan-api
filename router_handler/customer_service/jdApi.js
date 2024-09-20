@@ -11,8 +11,17 @@ const getJDDataByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
         const data = await jdService.getJDDataByDate(req.query.startDate, req.query.endDate)
-        if (!data?.length) return res.send(biResponse.canTFindIt)
         const img = await jdService.getJDImgByDate(req.query.startDate, req.query.endDate)
+        const columns = [
+            { header: '店铺名', key: 'shopname', isDefault: true },
+            { header: '日期', key: 'date', isDefault: true },
+            { header: '客服', key: 'servicer', isDefault: true },
+            { header: '咨询量', key: 'reception_num', isDefault: true },
+            { header: '30s应答率', key: 'response_in_30_rate', isDefault: true },
+            { header: '满意率', key: 'satisfaction_rate', isDefault: true },
+            { header: '24小时下单金额', key: 'amount', isDefault: true },
+            { header: '24小时下单转化率', key: 'transfer_rate', isDefault: true },
+        ]
         if (req.query.is_export) {
             const workbook = new ExcelJS.Workbook()
             const worksheet = workbook.addWorksheet('拼多多')
@@ -26,16 +35,6 @@ const getJDDataByDate = async (req, res, next) => {
                 amount: null,
                 transfer_rate: null
             }
-            let columns = [
-                { header: '店铺名', key: 'shopname', isDefault: true },
-                { header: '日期', key: 'date', isDefault: true },
-                { header: '客服', key: 'servicer', isDefault: true },
-                { header: '咨询量', key: 'reception_num', isDefault: true },
-                { header: '30s应答率', key: 'response_in_30_rate', isDefault: true },
-                { header: '满意率', key: 'satisfaction_rate', isDefault: true },
-                { header: '24小时下单金额', key: 'amount', isDefault: true },
-                { header: '24小时下单转化率', key: 'transfer_rate', isDefault: true },
-            ]
 
             worksheet.columns = columns
 
@@ -110,7 +109,7 @@ const getJDDataByDate = async (req, res, next) => {
             return res.send(buffer)
         } else {
             return res.send(biResponse.success({
-                data, img
+                columns, data, img
             }))
         }
     } catch (e) {
@@ -168,20 +167,22 @@ const importJDData = async (req, res, next) => {
                         count = count + 1
                     }
                 }
-                await jdService.insertJD(count, info)
-                const images = worksheet.getImages()
-                
-                images.forEach(medium => {
-                    if (medium.type === 'image') {
-                        let image = workbook.getImage(medium.imageId)
-                        const dir = `./public/avatar/jd`
-                        fs.mkdirSync(dir, { recursive: true })
-                        const imgPath = `${dir}/${moment().valueOf()}-${image.name}.${image.extension}`
-                        fs.writeFileSync(imgPath, image.buffer)
-                        jdService.insertJDImg([imgPath, start_time, end_time])
-                    }
-                })
-                fs.rmSync(newPath)
+                let row = await jdService.insertJD(count, info)
+                if (row?.affectedRows) {
+                    const images = worksheet.getImages()
+                    
+                    images.forEach(medium => {
+                        if (medium.type === 'image') {
+                            let image = workbook.getImage(medium.imageId)
+                            const dir = `./public/avatar/jd`
+                            fs.mkdirSync(dir, { recursive: true })
+                            const imgPath = `${dir}/${moment().valueOf()}-${image.name}.${image.extension}`
+                            fs.writeFileSync(imgPath, image.buffer)
+                            jdService.insertJDImg([imgPath, start_time, end_time])
+                        }
+                    })
+                    fs.rmSync(newPath)
+                } else res.send(biResponse.createFailed())
             }
             return res.send(biResponse.success())
         })

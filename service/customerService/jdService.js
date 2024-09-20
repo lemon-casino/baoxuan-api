@@ -6,14 +6,14 @@ jdService.getJDDataByDate = async (startDate, endDate) => {
     let start = moment(startDate).format('YYYY-MM-DD')
     let end = moment(endDate).format('YYYY-MM-DD')
     let data = await jdRepo.getJDData(start, end)
-    return data
+    return data || []
 }
 
 jdService.getJDImgByDate = async (startDate, endDate) => {
     let start = moment(startDate).format('YYYY-MM-DD')
     let end = moment(endDate).format('YYYY-MM-DD')
     const result = await jdRepo.getJDDataImg(start, end)
-    return result
+    return result || []
 }
 
 jdService.insertJD = async (count, info) => {
