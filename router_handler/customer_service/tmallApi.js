@@ -10,7 +10,7 @@ const moment =  require('moment')
 const getTmallAsByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
-        const data = await tmallService.getTmallAsByDate(req.query.startDate, req.query.endDate)
+        const data = await tmallService.getTmallAsByDate(req.query.startDate, req.query.endDate, req.query.servicer)
         const img = await tmallService.getTmallAsImgByDate(req.query.startDate, req.query.endDate)
         const columns = [
             { header: '旺旺', key: 'servicer', isDefault: true },
@@ -208,7 +208,7 @@ const importTmallAsData = async (req, res, next) => {
 const getTmallPsByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
-        const data = await tmallService.getTmallPsByDate(req.query.startDate, req.query.endDate)
+        const data = await tmallService.getTmallPsByDate(req.query.startDate, req.query.endDate, req.query.servicer)
         const columns = [
             { header: '旺旺', key: 'servicer', isDefault: true },
             { header: '上周销售额', key: 'amount_1', isDefault: true },

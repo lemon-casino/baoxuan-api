@@ -1,7 +1,7 @@
 const { query } = require('../../model/dbConn')
 const vipRepo = {}
 
-vipRepo.getVIPData = async (start, end) => {
+vipRepo.getVIPData = async (servicer_id, start, end) => {
     let sql = `SELECT c1.servicer_id,
             c1.reception_num,
             c1.amount,
@@ -10,9 +10,12 @@ vipRepo.getVIPData = async (start, end) => {
             c1.ps_60_response_rate 
         FROM cs_vip c1
         WHERE c1.start_time = ? AND c1.end_time = ?`
-    const result = await query(sql, [
-        start, end
-    ])
+    let params = [start, end]
+    if (servicer_id) {
+        sql = `${sql} AND c1.servicer_id = ?`
+        params.push(servicer_id)
+    }
+    const result = await query(sql, params)
     return result
 }
 

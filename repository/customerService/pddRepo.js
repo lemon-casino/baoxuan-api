@@ -1,7 +1,7 @@
 const { query } = require('../../model/dbConn')
 const pddRepo = {}
 
-pddRepo.getPddData = async (start, end) => {
+pddRepo.getPddData = async (start, end, shopname, servicer) => {
     let sql = `SELECT c1.shopname,
             c1.servicer,
             c1.reception_num AS reception_num,
@@ -11,11 +11,16 @@ pddRepo.getPddData = async (start, end) => {
             c1.response_in_30_rate AS response_in_30_rate,
             c1.score AS score
         FROM cs_pdd c1
-        WHERE c1.start_time = ? AND c1.end_time = ?
-        ORDER BY c1.shopname, c1.servicer`
-    const result = await query(sql, [
-        start, end
-    ])
+        WHERE c1.start_time = ? AND c1.end_time = ?`
+    let params = [start, end]
+    if (shopname) {
+        sql = `${sql} AND c1.shopname LIKE '%${shopname}%'`
+    }
+    if (servicer) {
+        sql = `${sql} AND c1.servicer LIKE '%${servicer}%'`
+    }
+    sql = `${sql} ORDER BY c1.shopname, c1.servicer`
+    const result = await query(sql, params)
     return result
 }
 

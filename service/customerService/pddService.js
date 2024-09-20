@@ -2,10 +2,10 @@ const moment = require('moment')
 const pddRepo = require('../../repository/customerService/pddRepo')
 const pddService = {}
 
-pddService.getPddDataByDate = async (startDate, endDate) => {
+pddService.getPddDataByDate = async (startDate, endDate, shopname, servicer) => {
     let start = moment(startDate).format('YYYY-MM-DD')
     let end = moment(endDate).format('YYYY-MM-DD')
-    let data = await pddRepo.getPddData(start, end)
+    let data = await pddRepo.getPddData(start, end, shopname, servicer)
     return data || []
 }
 

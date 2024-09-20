@@ -1,7 +1,7 @@
 const { query } = require('../../model/dbConn')
 const tgcRepo = {}
 
-tgcRepo.getTGCData = async (start, end, lastStart, lastEnd, preStart, preEnd) => {
+tgcRepo.getTGCData = async (servicer_id, start, end, lastStart, lastEnd, preStart, preEnd) => {
     let sql = `SELECT c1.servicer_id,
             c1.satisfaction_rate,
             c2.reception_num AS reception_num_1,
@@ -16,9 +16,14 @@ tgcRepo.getTGCData = async (start, end, lastStart, lastEnd, preStart, preEnd) =>
         LEFT JOIN cs_tgc c3 ON c1.servicer_id = c3.servicer_id
             AND c3.start_time = ? AND c3.end_time = ? 
         WHERE c1.start_time = ? AND c1.end_time = ?`
-    const result = await query(sql, [
+    let params = [
         lastStart, lastEnd, preStart, preEnd, start, end
-    ])
+    ]
+    if (servicer_id) {
+        sql = `${sql} AND c1.servicer_id = ?`
+        params.push(servicer_id)
+    }
+    const result = await query(sql, params)
     return result
 }
 

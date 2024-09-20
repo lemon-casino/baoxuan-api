@@ -2,14 +2,14 @@ const moment = require('moment')
 const tgcRepo = require('../../repository/customerService/tgcRepo')
 const tgcService = {}
 
-tgcService.getTGCDataByDate = async (startDate, endDate) => {
+tgcService.getTGCDataByDate = async (startDate, endDate, servicer_id) => {
     let start = moment(startDate).format('YYYY-MM-DD')
     let end = moment(endDate).format('YYYY-MM-DD')
     let lastStart = moment(startDate).subtract(moment(startDate).weekday() + 6, 'day').format('YYYY-MM-DD')
     let lastEnd = moment(startDate).subtract(moment(startDate).weekday(), 'day').format('YYYY-MM-DD')
     let preStart = moment(lastStart).subtract(7, 'day').format('YYYY-MM-DD')
     let preEnd = moment(lastEnd).subtract(7, 'day').format('YYYY-MM-DD')
-    let data = await tgcRepo.getTGCData(start, end, lastStart, lastEnd, preStart, preEnd)
+    let data = await tgcRepo.getTGCData(servicer_id, start, end, lastStart, lastEnd, preStart, preEnd)
     for (let i = 0; i < data?.length; i++) {
         data[i].chain_base_1 = data[i].reception_num_1 > 0 ? 
             ((data[i].reception_num_1 - data[i].reception_num_2) / data[i].reception_num_1 ?? 0).toFixed(2) : 0

@@ -2,10 +2,10 @@ const moment = require('moment')
 const jdRepo = require('../../repository/customerService/jdRepo')
 const jdService = {}
 
-jdService.getJDDataByDate = async (startDate, endDate) => {
+jdService.getJDDataByDate = async (startDate, endDate, shopname, servicer) => {
     let start = moment(startDate).format('YYYY-MM-DD')
     let end = moment(endDate).format('YYYY-MM-DD')
-    let data = await jdRepo.getJDData(start, end)
+    let data = await jdRepo.getJDData(start, end, shopname, servicer)
     return data || []
 }
 

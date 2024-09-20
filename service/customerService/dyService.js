@@ -2,10 +2,10 @@ const moment = require('moment')
 const dyRepo = require('../../repository/customerService/dyRepo')
 const dyService = {}
 
-dyService.getDYDataByDate = async (startDate, endDate) => {
+dyService.getDYDataByDate = async (startDate, endDate, shopname, servicer) => {
     let start = moment(startDate).format('YYYY-MM-DD')
     let end = moment(endDate).format('YYYY-MM-DD')
-    let data = await dyRepo.getDYData(start, end)
+    let data = await dyRepo.getDYData(start, end, shopname, servicer)
     return data || []
 }
 
