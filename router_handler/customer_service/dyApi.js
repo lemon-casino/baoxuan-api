@@ -11,8 +11,16 @@ const getDYDataByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
         const data = await dyService.getDYDataByDate(req.query.startDate, req.query.endDate)
-        if (!data?.length) return res.send(biResponse.canTFindIt)
         const img = await dyService.getDYImgByDate(req.query.endDate, null)
+        const columns = [
+            { header: '账号名称', key: 'servicer', isDefault: true },
+            { header: '人工已接待人数', key: 'reception_num', isDefault: true },
+            { header: '3分钟人工回复率 (会话)', key: 'session_in_3_rate', isDefault: true },
+            { header: '新平均响应时长（秒）', key: 'ave_response_duration', isDefault: true },
+            { header: '满意率', key: 'satisfaction_rate', isDefault: true },
+            { header: '客服销售额', key: 'amount', isDefault: true },
+            { header: '询单转化率', key: 'transfer_rate', isDefault: true },
+        ]
         if (req.query.is_export) {
             const workbook = new ExcelJS.Workbook()
             const worksheet = workbook.addWorksheet('抖音')
@@ -25,15 +33,6 @@ const getDYDataByDate = async (req, res, next) => {
                 amount: null,
                 transfer_rate: null
             }
-            let columns = [
-                { header: '账号名称', key: 'servicer', isDefault: true },
-                { header: '人工已接待人数', key: 'reception_num', isDefault: true },
-                { header: '3分钟人工回复率 (会话)', key: 'session_in_3_rate', isDefault: true },
-                { header: '新平均响应时长（秒）', key: 'ave_response_duration', isDefault: true },
-                { header: '满意率', key: 'satisfaction_rate', isDefault: true },
-                { header: '客服销售额', key: 'amount', isDefault: true },
-                { header: '询单转化率', key: 'transfer_rate', isDefault: true },
-            ]
 
             worksheet.columns = columns
 
@@ -126,7 +125,7 @@ const getDYDataByDate = async (req, res, next) => {
             return res.send(buffer)
         } else {
             return res.send(biResponse.success({
-                data, img
+                columns, data, img
             }))
         }
     } catch (e) {
@@ -170,42 +169,44 @@ const importDYData = async (req, res, next) => {
                         info.push(end_time)
                         info.push(row.getCell(2).value ? row.getCell(2).value.trim(' ') : null)
                         info.push(row.getCell(3).value ? row.getCell(3).value.trim(' ') : null)
-                        info.push(row.getCell(4).value)
-                        info.push(row.getCell(5).value)
-                        info.push(row.getCell(6).value)
-                        info.push(row.getCell(7).value ? row.getCell(7).value * 100 : null)
-                        info.push(row.getCell(8).value ? row.getCell(8).value * 100 : null)
-                        info.push(row.getCell(9).value ? row.getCell(9).value * 100 : null)
-                        info.push(row.getCell(10).value)
-                        info.push(row.getCell(11).value)
-                        info.push(row.getCell(12).value ? row.getCell(12).value * 100 : null)
-                        info.push(row.getCell(13).value)
-                        info.push(row.getCell(14).value)
-                        info.push(row.getCell(15).value)
-                        info.push(row.getCell(16).value)
-                        info.push(row.getCell(17).value ? row.getCell(17).value * 100 : null)
-                        info.push(row.getCell(18).value)
-                        info.push(row.getCell(19).value)
-                        info.push(row.getCell(20).value)
-                        info.push(row.getCell(21).value)
+                        info.push(row.getCell(4).value != '-' ? row.getCell(4).value : null)
+                        info.push(row.getCell(5).value != '-' ? row.getCell(5).value : null)
+                        info.push(row.getCell(6).value != '-' ? row.getCell(6).value : null)
+                        info.push(row.getCell(7).value instanceof Number ? row.getCell(7).value * 100 : null)
+                        info.push(row.getCell(8).value instanceof Number ? row.getCell(8).value * 100 : null)
+                        info.push(row.getCell(9).value instanceof Number ? row.getCell(9).value * 100 : null)
+                        info.push(row.getCell(10).value != '-' ? row.getCell(10).value : null)
+                        info.push(row.getCell(11).value != '-' ? row.getCell(11).value : null)
+                        info.push(row.getCell(12).value instanceof Number ? row.getCell(12).value * 100 : null)
+                        info.push(row.getCell(13).value != '-' ? row.getCell(13).value : null)
+                        info.push(row.getCell(14).value != '-' ? row.getCell(14).value : null)
+                        info.push(row.getCell(15).value != '-' ? row.getCell(15).value : null)
+                        info.push(row.getCell(16).value != '-' ? row.getCell(16).value : null)
+                        info.push(row.getCell(17).value instanceof Number ? row.getCell(17).value * 100 : null)
+                        info.push(row.getCell(18).value != '-' ? row.getCell(18).value : null)
+                        info.push(row.getCell(19).value != '-' ? row.getCell(19).value : null)
+                        info.push(row.getCell(20).value != '-' ? row.getCell(20).value : null)
+                        info.push(row.getCell(21).value != '-' ? row.getCell(21).value : null)
 
                         count = count + 1
                     }
                 }
-                await dyService.insertDY(count, info)
-                const images = worksheet.getImages()
-                
-                images.forEach(medium => {
-                    if (medium.type === 'image') {
-                        let image = workbook.getImage(medium.imageId)
-                        const dir = `./public/avatar/dy`
-                        fs.mkdirSync(dir, { recursive: true })
-                        const imgPath = `${dir}/${moment().valueOf()}-${image.name}.${image.extension}`
-                        fs.writeFileSync(imgPath, image.buffer)
-                        dyService.insertDYImg([imgPath, start_time, end_time])
-                    }
-                })
-                fs.rmSync(newPath)
+                let row = await dyService.insertDY(count, info)
+                if (row?.affectedRows) {
+                    const images = worksheet.getImages()
+                    
+                    images.forEach(medium => {
+                        if (medium.type === 'image') {
+                            let image = workbook.getImage(medium.imageId)
+                            const dir = `./public/avatar/dy`
+                            fs.mkdirSync(dir, { recursive: true })
+                            const imgPath = `${dir}/${moment().valueOf()}-${image.name}.${image.extension}`
+                            fs.writeFileSync(imgPath, image.buffer)
+                            dyService.insertDYImg([imgPath, start_time, end_time])
+                        }
+                    })
+                    fs.rmSync(newPath)
+                } else res.send(biResponse.createFailed())
             }
             return res.send(biResponse.success())
         })

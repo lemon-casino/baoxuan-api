@@ -13,7 +13,7 @@ dyService.getDYImgByDate = async (startDate, endDate) => {
     let start = moment(startDate).format('YYYY-MM-DD')
     let end = moment(endDate).format('YYYY-MM-DD')
     const result = await dyRepo.getDYDataImg(start, end)
-    return result
+    return result || []
 }
 
 dyService.insertDY = async (count, info) => {

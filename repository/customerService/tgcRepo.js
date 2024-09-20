@@ -3,12 +3,12 @@ const tgcRepo = {}
 
 tgcRepo.getTGCData = async (start, end, lastStart, lastEnd, preStart, preEnd) => {
     let sql = `SELECT c1.servicer_id,
-            c1.servicer_satisfied_rate,
-            c2.session_num AS session_num_1,
-            c2.transfer_amount AS transfer_amount_1,
+            c1.satisfaction_rate,
+            c2.reception_num AS reception_num_1,
+            c2.amount AS amount_1,
             c2.transfer_rate AS transfer_rate_1,
-            c3.session_num AS session_num_2,
-            c3.transfer_amount AS transfer_amount_2,
+            c3.reception_num AS reception_num_2,
+            c3.amount AS amount_2,
             c3.transfer_rate AS transfer_rate_2 
         FROM cs_tgc c1
         LEFT JOIN cs_tgc c2 ON c1.servicer_id = c2.servicer_id 

@@ -32,7 +32,7 @@ tmallService.getTmallAsImgByDate = async (startDate, endDate) => {
     let start = moment(startDate).format('YYYY-MM-DD')
     let end = moment(endDate).format('YYYY-MM-DD')
     const result = await tmallRepo.getTmallAsImg(start, end)
-    return result
+    return result ||[]
 }
 
 tmallService.insertTmallAs = async (count, info) => {
@@ -84,7 +84,7 @@ tmallService.getTmallPsByDate = async (startDate, endDate) => {
         data[i].chain_base_3 = data[i].reception_num_1 > 0 ? 
             ((data[i].reception_num_1 - data[i].reception_num_2 ?? 0) / data[i].reception_num_1).toFixed(2) : 0            
     }
-    return data
+    return data || []
 }
 
 tmallService.insertTmallPs = async (count, info) => {

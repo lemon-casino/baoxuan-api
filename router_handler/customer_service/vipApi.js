@@ -11,7 +11,15 @@ const getVIPDataByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
         const data = await vipService.getVIPDataByDate(req.query.startDate, req.query.endDate)
-        if (!data?.length) return res.send(biResponse.canTFindIt)
+        const columns = [
+            { header: '唯品会', key: 'servicer_id', isDefault: true },
+            { header: '接待人数', key: 'reception_num', isDefault: true },
+            { header: '销售额', key: 'amount', isDefault: true },
+            { header: '满意率', key: 'satisfaction_rate', isDefault: true },
+            { header: '平均响应', key: 'ps_session_num', isDefault: true },
+            { header: '在线客服60s应答率', key: 'response_in_60_rate', isDefault: true },
+        ]
+        let img = []
         if (req.query.is_export) {
             const workbook = new ExcelJS.Workbook()
             const worksheet = workbook.addWorksheet('唯品会')
@@ -23,14 +31,6 @@ const getVIPDataByDate = async (req, res, next) => {
                 ps_session_num: null,
                 response_in_60_rate: null
             }
-            let columns = [
-                { header: '唯品会', key: 'servicer_id', isDefault: true },
-                { header: '接待人数', key: 'reception_num', isDefault: true },
-                { header: '销售额', key: 'amount', isDefault: true },
-                { header: '满意率', key: 'satisfaction_rate', isDefault: true },
-                { header: '平均响应', key: 'ps_session_num', isDefault: true },
-                { header: '在线客服60s应答率', key: 'response_in_60_rate', isDefault: true },
-            ]
 
             worksheet.columns = columns
 
@@ -53,7 +53,7 @@ const getVIPDataByDate = async (req, res, next) => {
             return res.send(buffer)
         } else {
             return res.send(biResponse.success({
-                data, img
+                columns, data, img
             }))
         }
     } catch (e) {
@@ -111,8 +111,9 @@ const importVIPData = async (req, res, next) => {
                         count = count + 1
                     }
                 }
-                await vipService.insertVIP(count, info)
-                fs.rmSync(newPath)
+                let row = await vipService.insertVIP(count, info)
+                if (row?.affectedRows) fs.rmSync(newPath)
+                else res.send(biResponse.createFailed())
             }
             return res.send(biResponse.success())
         })

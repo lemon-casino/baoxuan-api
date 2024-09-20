@@ -13,7 +13,7 @@ pddService.getPddImgByDate = async (startDate, endDate) => {
     let start = moment(startDate).format('YYYY-MM-DD')
     let end = moment(endDate).format('YYYY-MM-DD')
     const result = await pddRepo.getPddDataImg(start, end)
-    return result
+    return result || []
 }
 
 pddService.insertPdd = async (count, info) => {

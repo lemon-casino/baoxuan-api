@@ -11,7 +11,14 @@ const getXHSDataByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
         const data = await xhsService.getXHSDataByDate(req.query.startDate, req.query.endDate)
-        if (!data?.length) return res.send(biResponse.canTFindIt)
+        const columns = [
+            { header: '小红书', key: 'servicer_id', isDefault: true },
+            { header: '会话量', key: 'session_num', isDefault: true },
+            { header: '销售额', key: 'transfer_amount', isDefault: true },
+            { header: '转化率', key: 'transfer_rate', isDefault: true },
+            { header: '3分钟回复率', key: 'response_in_3_rate', isDefault: true },
+        ]
+        let img = []
         if (req.query.is_export) {
             const workbook = new ExcelJS.Workbook()
             const worksheet = workbook.addWorksheet('小红书')
@@ -22,13 +29,6 @@ const getXHSDataByDate = async (req, res, next) => {
                 transfer_rate: null,
                 response_in_3_rate: null
             }
-            let columns = [
-                { header: '小红书', key: 'servicer_id', isDefault: true },
-                { header: '会话量', key: 'session_num', isDefault: true },
-                { header: '销售额', key: 'transfer_amount', isDefault: true },
-                { header: '转化率', key: 'transfer_rate', isDefault: true },
-                { header: '3分钟回复率', key: 'response_in_3_rate', isDefault: true },
-            ]
 
             worksheet.columns = columns
 
@@ -50,7 +50,7 @@ const getXHSDataByDate = async (req, res, next) => {
             return res.send(buffer)
         } else {
             return res.send(biResponse.success({
-                data, img
+                columns, data, img
             }))
         }
     } catch (e) {
@@ -110,8 +110,9 @@ const importXHSData = async (req, res, next) => {
                         count = count + 1
                     }
                 }
-                await xhsService.insertXHS(count, info)
-                fs.rmSync(newPath)
+                let row = await xhsService.insertXHS(count, info)
+                if (row?.affectedRows) fs.rmSync(newPath)
+                else res.send(biResponse.createFailed())
             }
             return res.send(biResponse.success())
         })

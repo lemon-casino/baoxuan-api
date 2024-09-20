@@ -20,10 +20,15 @@ const canTFindIt = (message = errorMessages.common) => {
     return format(errorCodes.canTFindIt, message)
 }
 
+const createFailed = (message = errorMessages.createFailed) => {
+    return format(errorCodes.canTFindIt, message)
+}
+
 module.exports = {
     format,
     simpleSuccess,
     success,
     serverError,
-    canTFindIt
+    canTFindIt,
+    createFailed
 }

@@ -11,7 +11,7 @@ pddRepo.getPddData = async (start, end) => {
             c1.response_in_30_rate AS response_in_30_rate,
             c1.score AS score
         FROM cs_pdd c1
-        WHERE c1.date = ? AND c1.date = ?
+        WHERE c1.start_time = ? AND c1.end_time = ?
         ORDER BY c1.shopname, c1.servicer`
     const result = await query(sql, [
         start, end
