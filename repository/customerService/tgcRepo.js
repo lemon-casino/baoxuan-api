@@ -23,6 +23,7 @@ tgcRepo.getTGCData = async (servicer_id, start, end, lastStart, lastEnd, preStar
         sql = `${sql} AND c1.servicer_id = ?`
         params.push(servicer_id)
     }
+    sql = `${sql} ORDER BY c1.id`
     const result = await query(sql, params)
     return result
 }
