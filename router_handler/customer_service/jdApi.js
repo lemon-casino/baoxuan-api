@@ -153,18 +153,18 @@ const importJDData = async (req, res, next) => {
                             start_time = date.split('-')[0].replace('年', '-').replace('月', '-').replace('日', '-')
                             end_time = date.split('-')[1] ? date.split('-')[1].replace('年', '-').replace('月', '-').replace('日', '-') : start_time
                         }  else {
-                            start_time = end_time = moment(date).format('YYYY-MM-DD')
+                            start_time = end_time = moment('1900-01-01').add(date - 2, 'day').format('YYYY-MM-DD')
                         }
                         info.push(start_time)
                         info.push(end_time)
-                        info.push(row.getCell(3).value ? row.getCell(3).value.trim(' ') : null)
-                        info.push(row.getCell(4).value instanceof Number ? row.getCell(4).value : null)
-                        info.push(row.getCell(5).value instanceof Number ? row.getCell(5).value : null)
+                        info.push(row.getCell(3).value != ' ' ? row.getCell(3).value : null)
+                        info.push(row.getCell(4).value != ' ' ? row.getCell(4).value : null)
+                        info.push(row.getCell(5).value != ' ' ? row.getCell(5).value : null)
                         info.push(row.getCell(6).value instanceof Number ? row.getCell(6).value * 100 : null)
-                        info.push(row.getCell(7).value instanceof Number ? row.getCell(7).value : null)
+                        info.push(row.getCell(7).value != ' ' ? row.getCell(7).value : null)
                         info.push(row.getCell(8).value instanceof Number ? row.getCell(8).value * 100 : null)
                         info.push(row.getCell(9).value instanceof Number ? row.getCell(9).value * 100 : null)
-                        info.push(row.getCell(10).value instanceof Number ? row.getCell(10).value : null)
+                        info.push(row.getCell(10).value != ' ' ? row.getCell(10).value : null)
                         count = count + 1
                     }
                 }
