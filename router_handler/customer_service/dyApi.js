@@ -11,7 +11,7 @@ const getDYDataByDate = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
         const data = await dyService.getDYDataByDate(req.query.startDate, req.query.endDate, req.query.shopname, req.query.servicer)
-        const img = await dyService.getDYImgByDate(req.query.endDate, null)
+        const img = await dyService.getDYImgByDate(req.query.startDate, req.query.endDate)
         const columns = [
             { header: '账号名称', key: 'servicer', isDefault: true },
             { header: '人工已接待人数', key: 'reception_num', isDefault: true },
