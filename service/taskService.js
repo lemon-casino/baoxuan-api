@@ -633,17 +633,17 @@ const syncProcessVersions = async (cookies) => {
 const jdLinkDataIsAutomaticallyInitiated = async () => {
     logger.info("京东同步进行中...")
        const  runningFightingFlows =await  getInquiryTodayjdDailyReport()
-    const userlist = await userService.getDingDingUserIdAndNickname()
+    const userList = await userService.getDingDingUserIdAndNickname()
     for (const runningFightingFlow of runningFightingFlows) {
-        console.log(runningFightingFlow)
+
         const listingInfo = runningFightingFlow.listingInfo;
         const selectField_lma827of = (listingInfo === '新品30' || listingInfo === '新品60') ? '新品' : '老品';
 
         if (selectField_lma827of==='老品'){
-            runningFightingFlow.operationsLeader = await  getOperateAttributesMaintainer(runningFightingFlow.linkId)
-
+           const maintenance=await  getOperateAttributesMaintainer(runningFightingFlow.linkId)
+            runningFightingFlow.operationsLeader = maintenance.maintenanceLeader
         }
-        const matchingUser = userlist.find((user) => user.nickname === runningFightingFlow.operationsLeader);
+        const matchingUser = userList.find((user) => user.nickname === runningFightingFlow.operationsLeader);
 
         const uuid = matchingUser ? matchingUser.dingding_user_id : null;
 
@@ -663,7 +663,7 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
             checkboxField_m11r277t,
             radioField_locg3nxq
         }, null, 2);
-       // await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
+        await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
 
     }
 
