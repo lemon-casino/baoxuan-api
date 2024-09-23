@@ -664,10 +664,7 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
             radioField_locg3nxq
         }, null, 2);
         await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
-
     }
-
-
     logger.info("同步完成：京东异常发起")
 }
 
