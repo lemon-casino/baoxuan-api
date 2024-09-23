@@ -196,13 +196,33 @@ const updateskuIdAttrDetails = async (updates) => {
 const bulkCreateTable = async (data) => {
     const transformedData = data.map(transformRow);
     try {
-        await dianShangOperationAttributeModel.bulkCreate(transformedData, { validate: true });
-        console.log('Data uploaded successfully');
+		await dianShangOperationAttributeModel.bulkCreate(transformedData, {
+			validate: true,
+		})
+		console.log("Data uploaded successfully")
+	} catch (error) {
+		console.error("Error uploading data:", error)
+		throw error
+	}
+};
+// 查询京东自营 对应的维护人信息
+const getOperateAttributesMaintainer = async (skuId) => {
+    try {
+        return await dianShangOperationAttributeModel.findOne({
+            attributes: ['maintenanceLeader'],
+            where: {
+                skuId: skuId,
+                deptId: '902897720',
+                platform: '自营'
+            },
+            raw: true
+        });
     } catch (error) {
-        console.error('Error uploading data:', error);
+        console.error('Error fetching data:', error);
         throw error;
     }
 };
+
 
 module.exports = {
     getProductAttrDetails,
@@ -212,6 +232,7 @@ module.exports = {
     deleteProductAttr,
     getAllProductAttrDetails,
     updateskuIdAttrDetails,
-    bulkCreateTable
+    bulkCreateTable,
+    getOperateAttributesMaintainer
 }
 
