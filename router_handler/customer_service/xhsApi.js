@@ -112,7 +112,7 @@ const importXHSData = async (req, res, next) => {
                 }
                 let row = await xhsService.insertXHS(count, info)
                 if (row?.affectedRows) fs.rmSync(newPath)
-                else res.send(biResponse.createFailed())
+                else return res.send(biResponse.createFailed())
             }
             return res.send(biResponse.success())
         })

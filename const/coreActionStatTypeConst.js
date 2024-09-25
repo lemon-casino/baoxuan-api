@@ -1,4 +1,5 @@
 module.exports = {
     "StatUser": "statUser",
-    "StatAction": "statAction"
+    "StatAction": "statAction",
+    "StatLeader": 'statLeader',
 }

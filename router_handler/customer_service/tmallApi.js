@@ -196,7 +196,7 @@ const importTmallAsData = async (req, res, next) => {
                     })
                 }
                 if (insertInfo?.affectedRows) fs.rmSync(newPath)
-                else res.send(biResponse.createFailed())
+                else return res.send(biResponse.createFailed())
             }
             return res.send(biResponse.success())
         })
@@ -397,7 +397,7 @@ const importTmallPsData = async (req, res, next) => {
                     insertInfo = await tmallService.insertTmallPs(count, info)
                 }
                 if (insertInfo?.affectedRows) fs.rmSync(newPath)
-                else res.send(biResponse.createFailed())
+                else return res.send(biResponse.createFailed())
             }
             return res.send(biResponse.success())
         })

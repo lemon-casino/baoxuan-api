@@ -94,7 +94,7 @@ const getCoreActionStat = async (statType, tags, userId, deptIds, userNames, sta
     return flowUtil.statIdsAndSumFromBottom(finalResult)
 }
 
-const getUsersStat = async (tags, deptIds, userId, userNames, startDoneDate, endDoneDate) => {
+const getUsersStat = async (tags, deptIds, userId, userNames, start, end) => {
     let requiredUsers = await coreActionPreHandler.getUsers(userId, deptIds, userNames, true)
     requiredUsers = filterUsersByTags(requiredUsers, tags)
     let names = []
@@ -102,12 +102,17 @@ const getUsersStat = async (tags, deptIds, userId, userNames, startDoneDate, end
         if (requiredUsers[i].nickname?.indexOf('已离职') == -1) names.push(requiredUsers[i].nickname)
         else if (requiredUsers[i].userName) names.push(requiredUsers[i].userName)
     }
-    const result = await newFormRepo.getProcessStat(names, tags[0], startDoneDate + ' 00:00:00', endDoneDate + ' 23:59:59')
+    const result = await newFormRepo.getProcessStat(names, tags[0], start, end)
     return result
 }
 
-const getStat = async (startDoneDate, endDoneDate) => {
-    const result = await newFormRepo.getStat(startDoneDate + ' 00:00:00', endDoneDate + ' 23:59:59')
+const getStat = async (start, end) => {
+    const result = await newFormRepo.getStat(start, end)
+    return result
+}
+
+const getLeaderStat = async(tags, start, end) => {
+    const result = await newFormRepo.getLeaderStat(tags[0], start, end)
     return result
 }
 
@@ -315,5 +320,6 @@ const getResultNode = (fieldName, visionUserFlowDataStatResultTemplate) => {
 module.exports = {
     getCoreActionStat,
     getUsersStat,
+    getLeaderStat,
     getStat
 }

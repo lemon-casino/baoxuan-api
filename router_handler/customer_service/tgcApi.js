@@ -120,7 +120,7 @@ const importTGCData = async (req, res, next) => {
                 }
                 let row = await tgcService.insertTGC(count, info)
                 if (row?.affectedRows) fs.rmSync(newPath)
-                else res.send(biResponse.createFailed())
+                else return res.send(biResponse.createFailed())
             }
             return res.send(biResponse.success())
         })

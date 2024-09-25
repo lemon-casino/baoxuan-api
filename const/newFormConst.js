@@ -252,6 +252,95 @@ const nameFilter = {
     '李徐莹': '余颖'
 }
 
+const statLeaderItem = [
+    {
+        name: '视觉预审',
+        code: 'visionReview',
+        child: [0, 1, 2],
+        childMap: {
+            0: 0,
+            1: 1,
+            2: 2
+        },
+        childItem: {
+            2: [-1, 0, 1] //-1:视觉类型，0优先级，1链接级别，2样品，3外包, 4AI拍摄, 5一般拍摄，63D
+        }
+    }, {
+        name: '视觉方案',
+        code: 'visionPlan',
+        child: [0, 1, 2],
+        childMap: {
+            0: 0,
+            1: 1,
+            2: 2
+        },
+        childItem: {
+            0: [-1, 2, 3],
+            1: [-1, 2, 3],
+            2: [-1, 2, 3]
+        }
+    }, {
+        name: '视觉项目',
+        code: 'visionProject',
+        child: [1, 2],        
+        childMap: {
+            1: 0,
+            2: 1
+        },
+        childItem: {
+            1: [4, 5, 6],
+            2: [4, 5, 6]
+        }
+    }
+]
+//display: 0源数据显示，1映射, 2展示部分
+const leaderItemField = {
+    '-1': {
+        name: '视觉类型',
+        display: 1,
+        data: ['全套', '半套', '散图', '视频'],
+        map: statItem2Type
+    },
+    0: {
+        name: '优先级',
+        display: 0
+    }, 
+    1: {
+        name: '链接级别',
+        display: 0
+    },
+    2: {
+        name: '样品',
+        display: 2,
+        data: '需要',
+        map: 'equal'
+    },
+    3: {
+        name: '外包',
+        display: 2,
+        data: '自行',
+        map: 'like'
+    },
+    4: {
+        name: 'AI拍摄',
+        display: 2,
+        data: '是',
+        map: 'equal'
+    },
+    5: {
+        name: '一般拍摄',
+        display: 2,
+        data: '是',
+        map: 'equal',
+    },
+    6: {
+        name: '3D建模',
+        display: 2,
+        data: '是',
+        map: 'equal'
+    }
+}
+
 module.exports = {
     action,
     actionItem,
@@ -275,5 +364,7 @@ module.exports = {
     totalStat1,
     typeFilter,
     fullActionFilter, 
-    nameFilter
+    nameFilter,
+    statLeaderItem,
+    leaderItemField
 }

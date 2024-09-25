@@ -64,7 +64,12 @@ const getFlowsProcessByIds = async (req, res, next) => {
         const limit = parseInt(req.query.pageSize)
         const page = parseInt(req.query.currentPage)
         const offset = (page - 1) * limit
-        const process = await flowService.getFlowsProcesses(req.query, offset, limit)
+        let process = []
+        if (req.query?.tag == 'visionLeader') {
+            process = await flowService.getVisionProcesses(req.query, offset, limit)
+        } else {
+            process = await flowService.getFlowsProcesses(req.query, offset, limit)
+        }
         return res.send(biResponse.success(process))
     } catch (e) {
         next(e)
@@ -180,10 +185,24 @@ const getVisionUsersStat = async (req, res, next) => {
         joiUtil.clarityValidate(flowSchema.getCoreActionsSchema, req.body)
         const {statType, tags, deptIds, startDate, endDate, userNames} = req.body
         const userId = req.user.userId
-        const result = statType === coreActionStatTypeConst.StatAction ?
-            await visionCoreActionService.getStat(startDate, endDate) : 
-            await visionCoreActionService.getUsersStat(tags, ["482162119", "933412643", "962724541", "962893128"], userId, userNames, startDate, endDate)
-        res.send(biResponse.success(result))
+        
+        let start = moment(startDate).format('YYYY-MM-DD') + ' 00:00:00'
+        let end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
+        let result = []
+        switch (statType) {
+            case coreActionStatTypeConst.StatAction:
+                result = await visionCoreActionService.getStat(start, end)
+                break
+            case coreActionStatTypeConst.StatUser: 
+                result = await visionCoreActionService.getUsersStat(tags, 
+                    ["482162119", "933412643", "962724541", "962893128"], 
+                    userId, userNames, start, end)
+                break
+            case coreActionStatTypeConst.StatLeader:
+                result = await visionCoreActionService.getLeaderStat(tags, start, end)
+            default:
+        }
+        return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
     }
@@ -297,6 +316,24 @@ const getFormsFlowsActivitiesStat = async (req, res, next) => {
     }
 }
 
+const getVisionReview = async (req, res, next) => {
+    try {
+        const result = await flowService.getVisionReview()
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getVisionPlan = async (req, res, next) => {
+    try {
+        const result = await flowService.getVisionPlan()
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getCompletedFlowsByIds,
     getFlowsByIds,
@@ -310,5 +347,7 @@ module.exports = {
     getUniversalCoreActionStat,
     getTurnoverCoreActionStat,
     getAllOverDueRunningFlows,
-    getFormsFlowsActivitiesStat
+    getFormsFlowsActivitiesStat,
+    getVisionReview,
+    getVisionPlan
 }
