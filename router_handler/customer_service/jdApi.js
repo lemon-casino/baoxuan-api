@@ -182,7 +182,7 @@ const importJDData = async (req, res, next) => {
                         }
                     })
                     fs.rmSync(newPath)
-                } else res.send(biResponse.createFailed())
+                } else return res.send(biResponse.createFailed())
             }
             return res.send(biResponse.success())
         })

@@ -1286,8 +1286,23 @@ const getFlowsProcesses = async (params, offset, limit) => {
     return result
 }
 
+const getVisionProcesses = async (params, offset, limit) => {
+    let result = await newFormsRepo.getVisionProcessInstances(params, offset, limit)
+    return result
+}
+
 const getFlowsActions = async (id) => {
     let result = await newFormsRepo.getFlowActions(id)
+    return result
+}
+
+const getVisionReview = async () => {
+    let result = await newFormsRepo.getVisionInfo(0)
+    return result
+}
+
+const getVisionPlan = async () => {
+    let result = await newFormsRepo.getVisionInfo(1)
     return result
 }
 
@@ -1327,5 +1342,8 @@ module.exports = {
     getFlowSplitFormValues,
     getFlows,
     getFlowsProcesses,
-    getFlowsActions
+    getVisionProcesses,
+    getFlowsActions,
+    getVisionReview,
+    getVisionPlan,
 }
