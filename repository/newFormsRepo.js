@@ -484,6 +484,9 @@ const getVisionProcessInstances = async function (params, offset, limit) {
         } else if (leaderItemField[params.type].map == 'like') {
             subsql = `${subsql} and vlf.type = ? and piv.value like '%${params.fieldType}%'`
             p1.push(params.type)
+        } else if (leaderItemField[params.type].map == 'equal') {
+            subsql = `${subsql} and vlf.type = ? and piv.value = ?`
+            p1.push(params.type, `"${leaderItemField[params.type].data}"`)
         } else {
             subsql = `${subsql} and vlf.type = ? and piv.value = ?`
             p1.push(params.type, `"${params.fieldType}"`)
