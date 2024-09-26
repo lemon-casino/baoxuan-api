@@ -17,15 +17,15 @@ pddService.getPddImgByDate = async (startDate, endDate) => {
 }
 
 pddService.insertPdd = async (count, info) => {
-    await pddRepo.insertPdd(count, info)
+    return await pddRepo.insertPdd(count, info)
 }
 
 pddService.updatePdd = async (info) => {
-    await pddRepo.updatePdd(info)
+    return await pddRepo.updatePdd(info)
 }
 
 pddService.insertPddImg = async (info) => {
-    await pddRepo.insertPdd(info)
+    return await pddRepo.insertPdd(info)
 }
 
 module.exports = pddService

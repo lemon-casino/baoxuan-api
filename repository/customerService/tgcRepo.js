@@ -44,7 +44,8 @@ tgcRepo.insertTGC = async (count, info) => {
         sql = `${sql}(?,?,?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
-    await query(sql, info)
+    const result = await query(sql, info)
+    return result
 }
 
 module.exports = tgcRepo

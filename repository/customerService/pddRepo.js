@@ -48,7 +48,8 @@ pddRepo.insertPdd = async (count, info) => {
         sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
-    await query(sql, info)
+    const result = await query(sql, info)
+    return result
 }
 
 pddRepo.updatePdd = async (info) => {
@@ -61,12 +62,14 @@ pddRepo.updatePdd = async (info) => {
             response_in_30_rate = ?,
             score = ? 
         WHERE shopname = ? AND start_time = ? AND end_time = ? AND servicer = ?`
-    await query(sql, info)
+    const result = await query(sql, info)
+    return result
 }
 
 pddRepo.insertPddImg = async (info) => {
     let sql = `INSERT INTO cs_img(img_url, start_time, end_time, type) VALUES(?,?,?,2)`
-    await query(sql, info)
+    const result = await query(sql, info)
+    return result
 }
 
 module.exports = pddRepo

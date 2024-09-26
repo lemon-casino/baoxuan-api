@@ -36,15 +36,15 @@ tmallService.getTmallAsImgByDate = async (startDate, endDate) => {
 }
 
 tmallService.insertTmallAs = async (count, info) => {
-    await tmallRepo.insertTmallAs(count, info)
+    return await tmallRepo.insertTmallAs(count, info)
 }
 
 tmallService.updateTmallAs = async (info) => {
-    await tmallRepo.updateTmallAs(info)
+    return await tmallRepo.updateTmallAs(info)
 }
 
 tmallService.insertTmallAsImg = async (info) => {
-    await tmallRepo.insertTmallAsImg(info)
+    return await tmallRepo.insertTmallAsImg(info)
 }
 
 tmallService.getTmallPsByDate = async (startDate, endDate, servicer) => {
@@ -88,11 +88,11 @@ tmallService.getTmallPsByDate = async (startDate, endDate, servicer) => {
 }
 
 tmallService.insertTmallPs = async (count, info) => {
-    await tmallRepo.insertTmallPs(count, info)
+    return await tmallRepo.insertTmallPs(count, info)
 }
 
 tmallService.updateTmallPs = async (info) => {
-    await tmallRepo.updateTmallPs(info)
+    return await tmallRepo.updateTmallPs(info)
 }
 
 module.exports = tmallService

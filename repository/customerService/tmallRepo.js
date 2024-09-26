@@ -63,7 +63,8 @@ tmallRepo.insertTmallAs = async (count, info) => {
         sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
-    await query(sql, info)
+    const result = await query(sql, info)
+    return result
 }
 
 tmallRepo.updateTmallAs = async (info) => {
@@ -83,12 +84,14 @@ tmallRepo.updateTmallAs = async (info) => {
             very_dissatisfied_num = ?,
             work_days = ? 
         WHERE start_time = ? AND end_time = ? AND servicer = ?`
-    await query(sql, info)
+    const result = await query(sql, info)
+    return result
 }
 
 tmallRepo.insertTmallAsImg = async (info) => {
     let sql = `INSERT INTO cs_img(img_url, start_time, end_time, type) VALUES(?,?,?,1)`
-    await query(sql, info)
+    const result = await query(sql, info)
+    return result
 }
 
 tmallRepo.getTmallPs = async (servicer, start, end, lastStart, lastEnd, preStart, preEnd) => {
@@ -149,7 +152,8 @@ tmallRepo.insertTmallPs = async (count, info) => {
         sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
-    await query(sql, info)
+    const result = await query(sql, info)
+    return result
 }
 
 tmallRepo.updateTmallPs = async (info) => {
@@ -171,7 +175,8 @@ tmallRepo.updateTmallPs = async (info) => {
             score_rate = ?,
             slow_response_num = ? 
         WHERE start_time = ? AND end_time = ? AND servicer = ?`
-    await query(sql, info)
+    const result = await query(sql, info)
+    return result
 }
 
 module.exports = tmallRepo

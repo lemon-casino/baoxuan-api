@@ -17,11 +17,11 @@ dyService.getDYImgByDate = async (startDate, endDate) => {
 }
 
 dyService.insertDY = async (count, info) => {
-    await dyRepo.insertDY(count, info)
+    return await dyRepo.insertDY(count, info)
 }
 
 dyService.insertDYImg = async (info) => {
-    await dyRepo.insertDYImg(info)
+    return await dyRepo.insertDYImg(info)
 }
 
 module.exports = dyService
