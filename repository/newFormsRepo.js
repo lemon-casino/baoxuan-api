@@ -471,19 +471,22 @@ const getVisionProcessInstances = async function (params, offset, limit) {
         subsql = `${subsql} and vl.type = ?`
         p1.push(fullActionFilter[params.action])
     }
-    if (params.fieldType) {
-        if (params.type != undefined) {
+    if (params.fieldType && params.type != undefined) {
+        if (leaderItemField[params.type].display == 1) {
             subsql = `${subsql} and exists(
                     select vft.id from vision_field_type vft 
                     join form_field_data ffd on ffd.id = vft.ffd_id
-                    where vl.form_id = vft.form_id 
+                    where if (vt.type = 0, vt.form_id, vt.sub_form_id) = vft.form_id 
                         and if(piv1.value is null, riv.value, piv1.value) like concat('"', ffd.value, '"')
                         and vft.type in (${typeFilter[params.fieldType].map(() => '?')})
                 )`
             p1.push(...typeFilter[params.fieldType])
+        } else if (leaderItemField[params.type].map == 'like') {
+            subsql = `${subsql} and vlf.type = ? and piv.value like '%${params.fieldType}%'`
+            p1.push(params.type)
         } else {
-            subsql = `${subsql} and vlf.type = ?`
-            p1.push(params.fieldType)
+            subsql = `${subsql} and vlf.type = ? and piv.value = ?`
+            p1.push(params.type, `"${params.fieldType}"`)
         }
     }
     if (params.leaderType) {
