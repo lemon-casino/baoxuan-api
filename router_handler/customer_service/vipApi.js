@@ -111,9 +111,14 @@ const importVIPData = async (req, res, next) => {
                         count = count + 1
                     }
                 }
-                let row = await vipService.insertVIP(count, info)
-                if (row?.affectedRows) fs.rmSync(newPath)
-                else return res.send(biResponse.createFailed())
+                if (count > 0) {
+                    let row = await vipService.insertVIP(count, info)
+                    if (row?.affectedRows) fs.rmSync(newPath)
+                    else return res.send(biResponse.createFailed())
+                } else {
+                    fs.rmSync(newPath)
+                    return res.send(biResponse.createFailed())
+                }
             }
             return res.send(biResponse.success())
         })

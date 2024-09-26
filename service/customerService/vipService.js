@@ -10,7 +10,7 @@ vipService.getVIPDataByDate = async (startDate, endDate, servicer_id) => {
 }
 
 vipService.insertVIP = async (count, info) => {
-    await vipRepo.insertVIP(count, info)
+    return await vipRepo.insertVIP(count, info)
 }
 
 module.exports = vipService

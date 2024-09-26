@@ -181,19 +181,23 @@ const importTmallAsData = async (req, res, next) => {
                             count = count + 1
                         }
                     }
-                    insertInfo = await tmallService.insertTmallAs(count, info)
-                    const images = worksheet.getImages()
-                    
-                    images.forEach(medium => {
-                        if (medium.type === 'image') {
-                            let image = workbook.getImage(medium.imageId)
-                            const dir = `./public/avatar/tmall/as`
-                            fs.mkdirSync(dir, { recursive: true })
-                            const imgPath = `${dir}/${moment().valueOf()}-${image.name}.${image.extension}`
-                            fs.writeFileSync(imgPath, image.buffer)
-                            tmallService.insertTmallAsImg([imgPath, start_time, end_time])
-                        }
-                    })
+                    if (count > 0) {
+                        insertInfo = await tmallService.insertTmallAs(count, info)
+                        const images = worksheet.getImages()
+                        images.forEach(medium => {
+                            if (medium.type === 'image') {
+                                let image = workbook.getImage(medium.imageId)
+                                const dir = `./public/avatar/tmall/as`
+                                fs.mkdirSync(dir, { recursive: true })
+                                const imgPath = `${dir}/${moment().valueOf()}-${image.name}.${image.extension}`
+                                fs.writeFileSync(imgPath, image.buffer)
+                                tmallService.insertTmallAsImg([imgPath, start_time, end_time])
+                            }
+                        })
+                    } else {
+                        fs.rmSync(newPath)
+                        return res.send(biResponse.createFailed())
+                    }
                 }
                 if (insertInfo?.affectedRows) fs.rmSync(newPath)
                 else return res.send(biResponse.createFailed())
@@ -394,7 +398,12 @@ const importTmallPsData = async (req, res, next) => {
                             count = count + 1
                         }
                     }
-                    insertInfo = await tmallService.insertTmallPs(count, info)
+                    if (count > 0) {
+                        insertInfo = await tmallService.insertTmallPs(count, info)
+                    } else {
+                        fs.rmSync(newPath)
+                        return res.send(biResponse.createFailed())
+                    }
                 }
                 if (insertInfo?.affectedRows) fs.rmSync(newPath)
                 else return res.send(biResponse.createFailed())

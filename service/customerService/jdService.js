@@ -17,11 +17,11 @@ jdService.getJDImgByDate = async (startDate, endDate) => {
 }
 
 jdService.insertJD = async (count, info) => {
-    await jdRepo.insertJD(count, info)
+    return await jdRepo.insertJD(count, info)
 }
 
 jdService.insertJDImg = async (info) => {
-    await jdRepo.insertJDImg(info)
+    return await jdRepo.insertJDImg(info)
 }
 
 module.exports = jdService

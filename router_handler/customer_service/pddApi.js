@@ -185,33 +185,39 @@ const importPddData = async (req, res, next) => {
                         info.push(start_time)
                         info.push(end_time)
                         info.push(row.getCell(3).value ? row.getCell(3).value.trim(' ') : null)
-                        info.push(row.getCell(4).value)
-                        info.push(row.getCell(5).value)
+                        info.push(row.getCell(4).value != '--' ? row.getCell(4).value : null)
+                        info.push(row.getCell(5).value != '--' ? row.getCell(5).value : null)
                         info.push(row.getCell(6).value instanceof Number ? row.getCell(6).value * 100 : null)
-                        info.push(row.getCell(7).value)
+                        info.push(row.getCell(7).value != '--' ? row.getCell(7).value : null)
                         info.push(row.getCell(8).value instanceof Number ? row.getCell(8).value * 100 : null)
                         info.push(row.getCell(9).value instanceof Number ? row.getCell(9).value * 100 : null)
-                        info.push(row.getCell(10).value)
+                        info.push(row.getCell(10).value != '--' ? row.getCell(10).value : null)
 
                         count = count + 1
                     }
                 }
-                let row = await pddService.insertPdd(count, info)
-                if (row?.affectedRows) {
-                    const images = worksheet.getImages()
-                    
-                    images.forEach(medium => {
-                        if (medium.type === 'image') {
-                            let image = workbook.getImage(medium.imageId)
-                            const dir = `./public/avatar/pdd`
-                            fs.mkdirSync(dir, { recursive: true })
-                            const imgPath = `${dir}/${moment().valueOf()}-${image.name}.${image.extension}`
-                            fs.writeFileSync(imgPath, image.buffer)
-                            pddService.insertPddImg([imgPath, start_time, end_time])
-                        }
-                    })
+                if (count > 0) {
+                    let row = await pddService.insertPdd(count, info)
+                    if (row?.affectedRows) {
+                        const images = worksheet.getImages()                    
+                        images.forEach(medium => {
+                            if (medium.type === 'image') {
+                                let image = workbook.getImage(medium.imageId)
+                                const dir = `./public/avatar/pdd`
+                                fs.mkdirSync(dir, { recursive: true })
+                                const imgPath = `${dir}/${moment().valueOf()}-${image.name}.${image.extension}`
+                                fs.writeFileSync(imgPath, image.buffer)
+                                pddService.insertPddImg([imgPath, start_time, end_time])
+                            }
+                        })
+                        fs.rmSync(newPath)
+                    } else {
+                        return res.send(biResponse.createFailed())
+                    }
+                } else {
                     fs.rmSync(newPath)
-                } else return res.send(biResponse.createFailed())
+                    return res.send(biResponse.createFailed())
+                }
             }
             return res.send(biResponse.success())
         })

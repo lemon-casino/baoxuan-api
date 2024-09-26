@@ -22,7 +22,7 @@ tgcService.getTGCDataByDate = async (startDate, endDate, servicer_id) => {
 }
 
 tgcService.insertTGC = async (count, info) => {
-    await tgcRepo.insertTGC(count, info)
+    return await tgcRepo.insertTGC(count, info)
 }
 
 module.exports = tgcService

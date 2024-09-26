@@ -167,22 +167,28 @@ const importJDData = async (req, res, next) => {
                         count = count + 1
                     }
                 }
-                let row = await jdService.insertJD(count, info)
-                if (row?.affectedRows) {
-                    const images = worksheet.getImages()
-                    
-                    images.forEach(medium => {
-                        if (medium.type === 'image') {
-                            let image = workbook.getImage(medium.imageId)
-                            const dir = `./public/avatar/jd`
-                            fs.mkdirSync(dir, { recursive: true })
-                            const imgPath = `${dir}/${moment().valueOf()}-${image.name}.${image.extension}`
-                            fs.writeFileSync(imgPath, image.buffer)
-                            jdService.insertJDImg([imgPath, start_time, end_time])
-                        }
-                    })
+                if (count > 0) {
+                    let row = await jdService.insertJD(count, info)
+                    if (row?.affectedRows) {
+                        const images = worksheet.getImages()
+                        images.forEach(medium => {
+                            if (medium.type === 'image') {
+                                let image = workbook.getImage(medium.imageId)
+                                const dir = `./public/avatar/jd`
+                                fs.mkdirSync(dir, { recursive: true })
+                                const imgPath = `${dir}/${moment().valueOf()}-${image.name}.${image.extension}`
+                                fs.writeFileSync(imgPath, image.buffer)
+                                jdService.insertJDImg([imgPath, start_time, end_time])
+                            }
+                        })
+                        fs.rmSync(newPath)
+                    } else {
+                        return res.send(biResponse.createFailed())
+                    }
+                } else {
                     fs.rmSync(newPath)
-                } else return res.send(biResponse.createFailed())
+                    return res.send(biResponse.createFailed())
+                }
             }
             return res.send(biResponse.success())
         })

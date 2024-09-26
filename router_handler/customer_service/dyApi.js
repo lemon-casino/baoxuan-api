@@ -191,22 +191,28 @@ const importDYData = async (req, res, next) => {
                         count = count + 1
                     }
                 }
-                let row = await dyService.insertDY(count, info)
-                if (row?.affectedRows) {
-                    const images = worksheet.getImages()
-                    
-                    images.forEach(medium => {
-                        if (medium.type === 'image') {
-                            let image = workbook.getImage(medium.imageId)
-                            const dir = `./public/avatar/dy`
-                            fs.mkdirSync(dir, { recursive: true })
-                            const imgPath = `${dir}/${moment().valueOf()}-${image.name}.${image.extension}`
-                            fs.writeFileSync(imgPath, image.buffer)
-                            dyService.insertDYImg([imgPath, start_time, end_time])
-                        }
-                    })
+                if (count > 0) {
+                    let row = await dyService.insertDY(count, info)
+                    if (row?.affectedRows) {
+                        const images = worksheet.getImages()                        
+                        images.forEach(medium => {
+                            if (medium.type === 'image') {
+                                let image = workbook.getImage(medium.imageId)
+                                const dir = `./public/avatar/dy`
+                                fs.mkdirSync(dir, { recursive: true })
+                                const imgPath = `${dir}/${moment().valueOf()}-${image.name}.${image.extension}`
+                                fs.writeFileSync(imgPath, image.buffer)
+                                dyService.insertDYImg([imgPath, start_time, end_time])
+                            }
+                        })
+                        fs.rmSync(newPath)
+                    } else {
+                        return res.send(biResponse.createFailed())
+                    }
+                } else {
                     fs.rmSync(newPath)
-                } else return res.send(biResponse.createFailed())
+                    return res.send(biResponse.createFailed())
+                }
             }
             return res.send(biResponse.success())
         })

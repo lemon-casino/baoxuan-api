@@ -47,12 +47,14 @@ jdRepo.insertJD = async (count, info) => {
         sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
-    await query(sql, info)
+    const result = await query(sql, info)
+    return result
 }
 
 jdRepo.insertJDImg = async (info) => {
     let sql = `INSERT INTO cs_img(img_url, start_time, end_time, type) VALUES(?,?,?,3)`
-    await query(sql, info)
+    const result = await query(sql, info)
+    return result
 }
 
 module.exports = jdRepo

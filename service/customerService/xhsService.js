@@ -10,7 +10,7 @@ xhsService.getXHSDataByDate = async (startDate, endDate, servicer_id) => {
 }
 
 xhsService.insertXHS = async (count, info) => {
-    await xhsRepo.insertXHS(count, info)
+    return await xhsRepo.insertXHS(count, info)
 }
 
 module.exports = xhsService
