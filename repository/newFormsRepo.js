@@ -5,21 +5,15 @@ const {
     actionItem,
     actionItem2,
     actionFilter,
-    statItem,
-    statItem1,
-    statItem2,
     statItem2Type,
-    statItem3,
-    statItem4,
-    totalName,
-    totalCode,
-    totalStat,
     totalStatType,
     typeFilter,
     fullActionFilter,
     nameFilter,
     statLeaderItem,
-    leaderItemField
+    leaderItemField,
+    visionList,
+    visionFilter
 } = require('../const/newFormConst')
 const moment = require('moment')
 
@@ -144,70 +138,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
     return result
 }
 
-const getStat = async function (startDate, endDate) {
-    let result = []
-    for (let i = 0; i < statItem1.length; i++) {
-        let info = JSON.parse(JSON.stringify(statItem))
-        info.actionName = statItem1[i].name
-        info.actionCode = statItem1[i].code
-        for (let j = 0; j < statItem2.length; j++) {
-            let child = JSON.parse(JSON.stringify(statItem))
-            child.actionName = statItem2[j].name
-            for (let k = 0; k < statItem3.length; k++) {
-                let chil = JSON.parse(JSON.stringify(statItem))
-                chil.actionName = statItem3[k].name
-                chil.actionCode = statItem3[k].code
-                for (let h = 0; h < statItem4.length; h++) {
-                    let chi = JSON.parse(JSON.stringify(statItem))
-                    chi.actionName = statItem4[h].name
-                    chi.actionCode = statItem4[h].code
-                    chil.children.push(chi)
-                }
-                child.children.push(chil)
-            }
-            info.children.push(child)
-        }
-        result.push(info)
-    }
-
-    let info = JSON.parse(JSON.stringify(statItem))
-    info.actionCode = totalCode
-    info.actionName = totalName
-    for (let i = 0; i < totalStat.length; i++) {
-        let child = JSON.parse(JSON.stringify(statItem))
-        for (let j = 0; j < statItem4.length; j++) {
-            let chil = JSON.parse(JSON.stringify(statItem))
-            for (let k = 0; k < statItem2.length; k++) {
-                let chi = JSON.parse(JSON.stringify(statItem))
-                chi.actionName = statItem2[k].name
-                chil.children.push(chi)
-            }
-            chil.actionName = statItem4[j].name
-            chil.actionCode = statItem4[j].code
-            child.children.push(chil)
-        }
-        child.actionName = totalStat[i].name
-        info.children.push(child)
-    }
-    result.push(info)
-
-    for (let i = 0; i < statItem2.length; i++) {
-        let child = JSON.parse(JSON.stringify(statItem))
-        for (let j = 0; j < totalStat.length; j++) {
-            let chil = JSON.parse(JSON.stringify(statItem))
-            for (let k = 0; k < statItem4.length; k++) {
-                let chi = JSON.parse(JSON.stringify(statItem))
-                chi.actionName = statItem4[k].name
-                chi.actionCode = statItem4[k].code
-                chil.children.push(chi)
-            }
-            chil.actionName = totalStat[j].name
-            child.children.push(chil)
-        }
-        child.actionName = statItem2[i].name
-        result.push(child)
-    }
-
+const getStat = async function (result, startDate, endDate) {
     let sql =  `select count(1) as count, 0 as id, vision_type, type from vision_nodes
             where tag = 'total' and operate_time >= '${startDate}'
                 and operate_time <= '${endDate}'
@@ -346,11 +277,20 @@ const getFlowProcessInstances = async function (params, offset, limit) {
     }
     let presql = `select count(1) as count from (`
     let subsql = `select id, processInstanceId, title, instanceStatus, createTime, operateTime 
-        from vision_process where form_id = ?`
+        from vision_process vp where form_id = ?`
     p1.push(parseInt(params.id))
-    if (params.tag) subsql = `${subsql} and tag = "${params.tag}"`
-    if (params.visionTag) {
-        subsql = `${subsql} and tag = '${params.visionTag}'`
+    if (params.tag) {
+        subsql = `${subsql} and tag = "${params.tag}"`
+        if (visionList.includes(params.tag)) {
+            subsql = `${subsql} and exists(
+                select pir.id from process_instance_records pir 
+                join vision_activity va on pir.instance_id = vp.id
+                    and pir.activity_id = va.activity_id 
+                    and va.activity_name = pir.show_name
+                where va.form_id = vp.form_id
+                    and va.tag in ("${visionFilter[params.tag].join('","')}")
+            )`
+        }
     }
     if (params.operator) {
         if (!nameFilter.hasOwnProperty(params.operator)) {
@@ -471,6 +411,13 @@ const getVisionProcessInstances = async function (params, offset, limit) {
         subsql = `${subsql} and vl.type = ?`
         p1.push(fullActionFilter[params.action])
     }
+    if (params.userNames) {
+        subsql = `${subsql} and exists(
+            select pir2.id from process_instance_records pir2 
+            where pi.id = pir2.instance_id 
+                and pir2.operator_name in (${params.userNames.map(() => '?').join(',')}))`
+        p1.push(...params.userNames)
+    }
     if (params.fieldType && params.type != undefined) {
         if (leaderItemField[params.type].display == 1) {
             subsql = `${subsql} and exists(
@@ -532,90 +479,12 @@ const getVisionProcessInstances = async function (params, offset, limit) {
 const getFlowActions = async function (id) {
     let sql = `select * from process_instance_records where instance_id = ? order by 
         if(action_exit is null, 2, if(action_exit in ('next', 'doing'), 1, 0)), operate_time, id`
-    let row = await query(sql, [id])
-    let result = [], j = 0, ids = {}
-    for (let i = 0; i < row.length; i++) {
-        let info = JSON.parse(JSON.stringify(row[i]))
-        info.children = []
-        if (row[i].parent_id == 0) {
-            result.push(info)
-            ids[row[i].id] = {
-                offset: j,
-                root: 0
-            }
-            j = j + 1
-        } else {
-            result[ids[row[i].parent_id].offset].children.push(info)
-            ids[row[i].id] = {
-                offset: result[ids[row[i].parent_id].offset].children.length,
-                root: row[i].parent_id
-            }
-        }
-    }
-    return result
+    const result = await query(sql, [id])
+    
+    return result || []
 }
 
-const getLeaderStat = async function (tag, start, end) {
-    let result = []
-    for (let i = 0; i < statLeaderItem.length; i++) {
-        let info = JSON.parse(JSON.stringify(statItem))
-        info.actionName = statLeaderItem[i].name
-        info.actionCode = statLeaderItem[i].code
-        for (let j = 0; j < statLeaderItem[i].child.length; j++) {
-            let child = JSON.parse(JSON.stringify(statItem))
-            child.actionName = statItem3[statLeaderItem[i].child[j]].name
-            child.actionCode = statItem3[statLeaderItem[i].child[j]].code
-            let child_key = statLeaderItem[i].child[j]
-            for (let k = 0; k < statLeaderItem[i].childItem[child_key]?.length; k++) {
-                let field_key = statLeaderItem[i].childItem[child_key][k]
-                if (leaderItemField[field_key].display == 0) {
-                    let childInfo = await getVisionField(start, end, tag, child_key, i, field_key)
-                    for (let h = 0; h < childInfo.length; h++) {
-                        let cItem = JSON.parse(JSON.stringify(statItem))
-                        cItem.actionName = childInfo[h].value
-                        cItem.type = field_key
-                        cItem.sum = childInfo[h].count
-                        child.children.push(cItem)
-                    }
-                } else if (leaderItemField[field_key].display == 2) {
-                    let childInfo = await getVisionField(start, end, tag, child_key, i, field_key)
-                    let cItem = JSON.parse(JSON.stringify(statItem))
-                    cItem.actionName = leaderItemField[field_key].name                    
-                    cItem.type = field_key
-                    for (let h = 0; h < childInfo.length; h++) {
-                        if (leaderItemField[field_key].map == 'like') {
-                            if (childInfo[h].value.indexOf(leaderItemField[field_key].data) == -1)
-                                cItem.sum += childInfo[h].count
-                        } else {
-                            if (childInfo[h].value == leaderItemField[field_key].data)
-                                cItem.sum += childInfo[h].count
-                        }
-                    }
-                    child.children.push(cItem)
-                } else {
-                    let childInfo = await getVisionType(start, end, tag, child_key, i)
-                    let cInfo = []
-                    for (let h = 0; h < leaderItemField[field_key].data.length; h++) {
-                        let cItem = JSON.parse(JSON.stringify(statItem))
-                        cItem.actionName = leaderItemField[field_key].data[h]                        
-                        cItem.type = field_key
-                        cItem.field_type = h
-                        cInfo.push(cItem)
-                    }
-                    for (let h = 0; h < childInfo.length; h++) {
-                        for (let l = 0; l < leaderItemField[field_key].map[childInfo[h].vision_type].length; l++) {
-                            let iInfo = leaderItemField[field_key].map[childInfo[h].vision_type][l]
-                            cInfo[iInfo].sum += childInfo[h].count
-                        }
-                    }
-                    child.children.push(...cInfo)
-                }
-            }            
-            info.children.push(child)
-        }
-        result.push(info)
-    }
-
+const getLeaderStat = async function (result, start, end) {
     let sql = `select count(1) as count, type, leader_type from 
         (select type, leader_type from vision_leaders
             where if(type = 2 or leader_type > 0, if(v1 is null, v2, v1) like concat('%', v3, '%'), 1=1)
@@ -632,6 +501,283 @@ const getLeaderStat = async function (tag, start, end) {
     }
 
     return result
+}
+
+const getDesignerFlowStat = async function (userGroup, start, end) {
+    let result = []
+    let search = '', presql = `select count(1) as count, vl.type`, 
+    sql = `from vision_leader vl
+        join processes p on p.form_id = vl.form_id
+        join process_instances pi on p.id = pi.process_id
+            and pi.status in ('COMPLETED', 'RUNNING')
+        join process_instance_records pir on pi.id = pir.instance_id
+                and pir.activity_id = vl.activity_id
+                and pir.show_name = vl.activity_name
+                and pir.action_exit = vl.action_exit
+                and pir.id in (
+                    select max(p2.id) from process_instance_records p2
+                    where p2.instance_id = pi.id
+                    group by p2.instance_id, p2.show_name, p2.activity_id
+                )
+        where vl.vision_type = 2
+            and pir.operate_time >= ?
+            and pir.operate_time <= ? 
+            and exists (
+                select pir2.id from process_instance_records pir2 
+                where pi.id = pir2.instance_id 
+                    and pir2.operator_name in `,            
+    subsql = `) group by vl.type`, params = []
+    for (let group_id in userGroup) {
+        let usernames = JSON.parse(JSON.stringify(userGroup[group_id]))
+        for (let name in nameFilter) {
+            if (usernames.includes(name)) {
+                usernames.push(nameFilter[name])
+            }
+        }
+        search = `${search}${presql}, ${group_id} as group_id 
+            ${sql}(${usernames.map(() => '?').join(',')}) 
+            ${subsql} union all `
+        params.push(start, end, ...usernames)
+    }
+    search = search.substring(0, search.length - 10)
+    search = `${search} order by type`
+    result = await query(search, params)
+    return result || []
+}
+
+const getPhotographerFlowStat = async function (users, start, end) {
+    let result = []
+    let sql = `select count(1) as count, vl.type from vision_leader vl
+        join processes p on p.form_id = vl.form_id
+        join process_instances pi on p.id = pi.process_id
+            and pi.status in ('COMPLETED', 'RUNNING')
+        join process_instance_records pir on pi.id = pir.instance_id
+                and pir.activity_id = vl.activity_id
+                and pir.show_name = vl.activity_name
+                and pir.action_exit = vl.action_exit
+                and pir.id in (
+                    select max(p2.id) from process_instance_records p2
+                    where p2.instance_id = pi.id
+                    group by p2.instance_id, p2.show_name, p2.activity_id
+                )
+        where vl.vision_type = 2
+            and pir.operate_time >= ?
+            and pir.operate_time <= ? 
+            and exists (
+                select pir2.id from process_instance_records pir2 
+                where pi.id = pir2.instance_id 
+                    and pir2.operator_name in (${users.map(() => '?').join(',')})            
+            ) group by vl.type`, params = [start, end, ...users]
+    result = await query(sql, params)
+    return result || []
+}
+
+const getDesignerNodeStat = async function (userGroup, start, end) {
+    let result = []
+    let presql = `select count(1) as count, vl.type, vlf.type as vision_type`,
+    sql = `from vision_leader vl
+        join vision_leader_field vlf on vl.form_id = vl.form_id
+            and vlf.type in (4,5,6) 
+            and vlf.tag = 'visionLeader'
+        join processes p on p.form_id = vl.form_id
+        join process_instances pi on p.id = pi.process_id
+            and pi.status in ('COMPLETED', 'RUNNING')
+        join process_instance_records pir on pi.id = pir.instance_id
+                and pir.activity_id = vl.activity_id
+                and pir.show_name = vl.activity_name
+                and pir.action_exit = vl.action_exit
+                and pir.id in (
+                    select max(p2.id) from process_instance_records p2
+                    where p2.instance_id = pi.id
+                    group by p2.instance_id, p2.show_name, p2.activity_id
+                )
+        join process_instance_values piv on piv.instance_id = pi.id
+            and piv.field_id = vlf.field_id
+            and piv.value = '"是"'
+        where vl.vision_type = 2 and pir.operate_time >= ? 
+            and pir.operate_time <= ? 
+            and exists (
+                select pir2.id from process_instance_records pir2 
+                where pi.id = pir2.instance_id
+                    and pir2.operator_name in `,
+    subsql = `) group by vl.type, vlf.type`,
+    params = [], search = ''
+    for (let group_id in userGroup) {
+        let usernames = JSON.parse(JSON.stringify(userGroup[group_id]))
+        for (let name in nameFilter) {
+            if (usernames.includes(name)) {
+                usernames.push(nameFilter[name])
+            }
+        }
+        search = `${search}${presql}, ${group_id} as group_id 
+            ${sql}(${usernames.map(() => '?').join(',')}) 
+            ${subsql} union all `
+        params.push(start, end, ...usernames)
+    }
+    search = search.substring(0, search.length - 10)
+    result = await query(search, params)
+    return result
+}
+
+const getPhotographerNodeStat = async function (users, start, end) {
+    let result = []
+    let sql = `select count(1) as count, vl.type, vlf.type as vision_type from vision_leader vl
+        join vision_leader_field vlf on vl.form_id = vl.form_id
+            and vlf.type in (4,5,6) 
+            and vlf.tag = 'visionLeader'
+        join processes p on p.form_id = vl.form_id
+        join process_instances pi on p.id = pi.process_id
+            and pi.status in ('COMPLETED', 'RUNNING')
+        join process_instance_records pir on pi.id = pir.instance_id
+                and pir.activity_id = vl.activity_id
+                and pir.show_name = vl.activity_name
+                and pir.action_exit = vl.action_exit
+                and pir.id in (
+                    select max(p2.id) from process_instance_records p2
+                    where p2.instance_id = pi.id
+                    group by p2.instance_id, p2.show_name, p2.activity_id
+                )
+        join process_instance_values piv on piv.instance_id = pi.id
+            and piv.field_id = vlf.field_id
+            and piv.value = '"是"'
+        where vl.vision_type = 2 and pir.operate_time >= ? 
+            and pir.operate_time <= ? 
+            and exists (
+                select pir2.id from process_instance_records pir2 
+                where pi.id = pir2.instance_id
+                    and pir2.operator_name in (${users.map(() => '?').join(',')}) 
+            ) group by vl.type, vlf.type`, params = [start, end, ...users]
+    result = await query(sql, params)
+    return result || []
+}
+
+const getDesignerStat = async function (user, type, start, end) {
+    let usernames = [user]
+    for (let name in nameFilter) {
+        if (user == name) {
+            usernames.push(nameFilter[name])
+        }
+    }    
+    let sql = `select sum(a.count) as count, a.title from (
+            select ff.title, cast(ifnull(if(piv.value is null, 
+                    replace(pis.value, '"', ''), 
+                    replace(piv.value, '"', '')), 0) as decimal) as count 
+            from vision_leader vl
+            join vision_activity va on va.form_id = vl.form_id
+            join vision_activity_field vaf on vaf.activity_id = va.id
+            join processes p on p.form_id = vl.form_id
+            join process_instances pi on pi.process_id = p.id
+                and pi.status in ('RUNNING', 'COMPLETED')
+            join process_instance_records pir on pir.instance_id = pi.id
+                and vl.activity_id = pir.activity_id
+                and vl.activity_name = pir.show_name
+                and vl.action_exit = pir.action_exit
+                and pir.id in (
+                    select max(p2.id) from process_instance_records p2
+                    where p2.instance_id = pi.id
+                    group by p2.instance_id, p2.show_name, p2.activity_id
+                )
+            join process_instance_records p1 on p1.instance_id = pi.id
+                and va.activity_id = p1.activity_id
+                and va.activity_name = p1.show_name
+                and p1.action_exit in ('next', 'doing', 'agree')
+            left join process_instance_values piv on piv.instance_id = pi.id
+                and piv.field_id = vaf.field_id
+                and vaf.is_sub = 0
+                and if(va.is_sub = 1 and exists(
+                    select pis2.id from process_instance_sub_values pis2 
+                    where pis2.instance_id = pi.id
+                ), false, true)
+            left join process_instance_sub_values pis1 on pis1.instance_id = pi.id
+                and pis1.field_id = va.sub_field
+            left join process_instance_sub_values pis on pis.instance_id = pi.id
+                and pis.field_id = vaf.field_id
+                and vaf.is_sub = 1
+                and pis.index = pis1.index
+            join form_fields ff on ff.form_id = vl.form_id
+                and ff.field_id = if(pis.id is not null, pis.field_id, piv.field_id)
+            where vl.vision_type = 2 
+                and va.tag = 'insideArt'
+                and pir.operate_time >= ?
+                and pir.operate_time <= ?
+                and vl.type = ? 
+                and ((p1.operator_name in (${usernames.map(() => '?').join(',')}) 
+                    and pis1.id is null) or pis1.value in (${usernames.map(() => '?').join(',')}))
+                and vaf.type = 1
+            group by pi.id, piv.id, pis.id, ff.title, piv.value, pis.value
+        ) a group by a.title`, params = [start, end, type, ...usernames, ...usernames]
+    let result = []
+    let row = await query(sql, params)
+    if (row?.length) result = row
+    return result
+}
+
+const getPhotographerStat = async function (user, type, start, end) {
+    let sql = `select sum(a.count) as count, a.title from (
+            select ff.title, cast(ifnull(if(piv.value is null, 
+                    replace(pis.value, '"', ''), 
+                    replace(piv.value, '"', '')), 0) as decimal) as count 
+            from vision_leader vl
+            join vision_activity va on va.form_id = vl.form_id
+            join vision_activity_field vaf on vaf.activity_id = va.id
+            join processes p on p.form_id = vl.form_id
+            join process_instances pi on pi.process_id = p.id
+                and pi.status in ('RUNNING', 'COMPLETED')
+            join process_instance_records pir on pir.instance_id = pi.id
+                and vl.activity_id = pir.activity_id
+                and vl.activity_name = pir.show_name
+                and vl.action_exit = pir.action_exit
+                and pir.id in (
+                    select max(p2.id) from process_instance_records p2
+                    where p2.instance_id = pi.id
+                    group by p2.instance_id, p2.show_name, p2.activity_id
+                )
+            join process_instance_records p1 on p1.instance_id = pi.id
+                and va.activity_id = p1.activity_id
+                and va.activity_name = p1.show_name
+                and p1.action_exit in ('next', 'doing', 'agree')
+            left join process_instance_values piv on piv.instance_id = pi.id
+                and piv.field_id = vaf.field_id
+                and vaf.is_sub = 0
+                and if(va.is_sub = 1 and exists(
+                    select pis2.id from process_instance_sub_values pis2 
+                    where pis2.instance_id = pi.id
+                ), false, true)
+            left join process_instance_sub_values pis1 on pis1.instance_id = pi.id
+                and pis1.field_id = va.sub_field
+            left join process_instance_sub_values pis on pis.instance_id = pi.id
+                and pis.field_id = vaf.field_id
+                and vaf.is_sub = 1
+                and pis.index = pis1.index
+            join form_fields ff on ff.form_id = vl.form_id
+                and ff.field_id = if(pis.id is not null, pis.field_id, piv.field_id)
+            where vl.vision_type = 2 
+                and va.tag = 'insidePhoto'
+                and pir.operate_time >= ?
+                and pir.operate_time <= ?
+                and vl.type = ? 
+                and ((p1.operator_name = ? and pis1.id is null) or pis1.value = ?)
+                and vaf.type = 1
+            group by pi.id, piv.id, pis.id, ff.title, piv.value, pis.value
+        ) a group by a.title`, params = [start, end, type, user, user]
+    let result = []
+    let row = await query(sql, params)
+    if (row?.length) result = row
+    return result
+}
+
+const getVisionFieldName = async function (tag) {
+    let sql = `select ff.title from vision_leader vl
+        join vision_activity va on va.form_id = vl.form_id
+        join vision_activity_field vaf on vaf.activity_id = va.id
+        join form_fields ff on ff.form_id = vl.form_id
+            and ff.field_id = vaf.field_id
+        where vl.vision_type = 2
+            and vaf.type = 1
+            and va.tag = ?
+        group by ff.title`
+    let result = await query(sql, tag)
+    return result || []
 }
 
 const getVisionType = async function (start, end, tag, type, leader_type) {
@@ -744,5 +890,14 @@ module.exports = {
     getFlowActions,
     getStat,
     getLeaderStat,
-    getVisionInfo
+    getVisionInfo,
+    getDesignerFlowStat,
+    getPhotographerFlowStat,
+    getDesignerNodeStat,
+    getPhotographerNodeStat,
+    getDesignerStat,
+    getPhotographerStat,
+    getVisionFieldName,
+    getVisionType,
+    getVisionField
 }

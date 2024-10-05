@@ -1292,7 +1292,26 @@ const getVisionProcesses = async (params, offset, limit) => {
 }
 
 const getFlowsActions = async (id) => {
-    let result = await newFormsRepo.getFlowActions(id)
+    let res = await newFormsRepo.getFlowActions(id)
+    let result = [], j = 0, ids = {}
+    for (let i = 0; i < res.length; i++) {
+        let info = JSON.parse(JSON.stringify(res[i]))
+        info.children = []
+        if (res[i].parent_id == 0) {
+            result.push(info)
+            ids[res[i].id] = {
+                offset: j,
+                root: 0
+            }
+            j = j + 1
+        } else {
+            result[ids[res[i].parent_id].offset].children.push(info)
+            ids[res[i].id] = {
+                offset: result[ids[res[i].parent_id].offset].children.length,
+                root: res[i].parent_id
+            }
+        }
+    }
     return result
 }
 

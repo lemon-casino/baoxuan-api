@@ -290,6 +290,18 @@ const statLeaderItem = [
         childItem: {
             1: [4, 5, 6],
             2: [4, 5, 6]
+        },
+        childItemMap: {
+            1: {
+                4: 0,
+                5: 1,
+                6: 2
+            }, 
+            2: {
+                4: 0,
+                5: 1,
+                6: 2
+            }
         }
     }
 ]
@@ -341,6 +353,34 @@ const leaderItemField = {
     }
 }
 
+const designGroups = ['design-group-a', 'design-group-b']
+
+const designerTags = ['mainDesigner', 'designer', 'associateDesigner']
+const designerSort = {
+    'mainDesigner': 0,
+    'designer': 1,
+    'associateDesigner': 2
+}
+
+const photographerTags = ['photographyManager', 'photographer', 'associatePhotographer']
+const photographerSort = {
+    'photographyManager': 0, 
+    'photographer': 1, 
+    'associatePhotographer': 2
+}
+
+const memberItem = {
+    name: '',
+    position: '',
+    sort: 0,
+}
+
+const visionList = ['out', 'inside']
+const visionFilter = {
+    'out': ['outArt', 'outPhoto'],
+    'inside': ['insideArt', 'insidePhoto']
+}
+
 module.exports = {
     action,
     actionItem,
@@ -366,5 +406,13 @@ module.exports = {
     fullActionFilter, 
     nameFilter,
     statLeaderItem,
-    leaderItemField
+    leaderItemField,
+    designGroups,
+    designerTags,
+    designerSort,
+    photographerTags,
+    photographerSort,
+    memberItem,
+    visionList,
+    visionFilter
 }

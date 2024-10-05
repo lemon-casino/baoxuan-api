@@ -15,7 +15,8 @@ const pagingUtil = require("@/utils/pagingUtil")
 const innerGroupConst = require("@/const/tmp/innerGroupConst")
 const objectConvertUtil = require("@/utils/objectConvertUtil")
 const whiteList = require("@/config/whiteList")
-const UsersModel = require("@/model/users");
+const UsersModel = require("@/model/users")
+const { query } = require('../model/dbConn')
 
 usersModel.hasMany(usersTagsModel, {
     sourceKey: "dingdingUserId", foreignKey: "userId", as: "tags"
@@ -278,6 +279,18 @@ const undoResign = async (userId) => {
     )
 }
 
+const getUsersByTagCodesAndNickname = async (nicknames, tagCodes, orderById) => {
+    let sql = `SELECT u.user_id AS id, ut.user_id, t.tag_code, t.tag_name, u.nickname 
+        FROM users u JOIN users_tags ut ON u.dingding_user_id = ut.user_id
+        JOIN tags t ON ut.tag_code = t.tag_code
+        WHERE u.nickname IN (${nicknames.map(() => '?').join(',')}) 
+            AND t.tag_code IN (${tagCodes.map(() => '?').join(',')})`
+    if (orderById) sql = `${sql} ORDER BY u.user_id`
+    else sql = `${sql} ORDER BY t.tag_code`
+    const result = await query(sql, [...nicknames, ...tagCodes])
+    return result
+}
+
 module.exports = {
     getUsersByTagCodes,
     getUserWithTags,
@@ -294,5 +307,6 @@ module.exports = {
     getDeptResignUsers,
     getUsersWithTagsByUsernames,
     getUsersByIds,
-    undoResign
+    undoResign,
+    getUsersByTagCodesAndNickname
 }
