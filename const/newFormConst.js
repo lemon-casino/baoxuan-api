@@ -108,14 +108,17 @@ const statItem = {
 
 const statItem1 = [
     {
-        name: '流程汇总',
-        code: 'sumFlowStat'
+        name: '流程汇总(不包含修图流程)',
+        code: 'total'
     }, {
         name: '流程汇总(外包)',
-        code: 'sumFlowStat'
+        code: 'out'
     }, {
         name: '流程汇总(内部)',
-        code: 'sumFlowStat'
+        code: 'inside'
+    }, {
+        name: '修图流程',
+        code: 'retouch'
     }
 ]
 

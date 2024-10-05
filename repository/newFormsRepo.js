@@ -175,6 +175,14 @@ const getStat = async function (result, startDate, endDate) {
                         and va.tag in ('outArt', 'outPhoto')
                     where pir.instance_id = vn.id
                 )
+            group by type, vision_type 
+        
+        union all 
+        
+        select count(1) as count, 3 as id, vision_type, type from vision_nodes
+            where tag = 'retouch' and operate_time >= '${startDate}'
+                and operate_time <= '${endDate}'
+                and if(v1 is null, v2, v1) like concat('%', v3, '%')
             group by type, vision_type`
 
     let row = await query(sql)
@@ -213,19 +221,19 @@ const getStat = async function (result, startDate, endDate) {
                     row[i - 1].activity_id == row[i].activity_id &&
                     row[i - 1].field_id == row[i].field_id)
             )) {
-                result[3].children[totalStatType[row[i].tag][row[i].action_exit]]
+                result[4].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .children[1]
                     .children[statItem2Type[row[i].type][k]]
                     .sum += value
-                result[3].children[totalStatType[row[i].tag][row[i].action_exit]]
+                result[4].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .children[1]
                     .sum += value
-                result[3].children[totalStatType[row[i].tag][row[i].action_exit]]
+                result[4].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .sum += value
             }
         }
-        result[3].sum += value
-        for (let j = 4; j < 8; j++) {
+        result[4].sum += value
+        for (let j = 5; j < 9; j++) {
             if (totalStatType[row[i].tag] && 
                 statItem2Type[row[i].type].includes(j - 4) && (
                     i == 0 || 
