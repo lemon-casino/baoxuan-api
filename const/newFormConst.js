@@ -353,7 +353,7 @@ const leaderItemField = {
     }
 }
 
-const designGroups = ['design-group-a', 'design-group-b']
+const designGroups = ['design-group-a', 'design-group-b', 'design-group-c', 'design-group-d']
 
 const designerTags = ['mainDesigner', 'designer', 'associateDesigner']
 const designerSort = {

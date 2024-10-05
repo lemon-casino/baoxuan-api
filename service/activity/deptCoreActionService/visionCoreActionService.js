@@ -300,7 +300,7 @@ const getDesignerDetails = async (users, action, start, end) => {
         }
     }    
     let title = await newFormRepo.getVisionFieldName('insideArt')
-    title = [{ title: 'name'}, { title: 'position' }].concat(title)
+    title = [{ title: '姓名', value: 'name'}, { title: '岗位', value: 'position' }].concat(title)
     return { users, title }
 }
 
@@ -342,7 +342,7 @@ const getPhotographerDetails = async (users, action, start, end) => {
         }
     }    
     let title = await newFormRepo.getVisionFieldName('insidePhoto')
-    title = [{ title: 'name'}, { title: 'position' }].concat(title)
+    title = [{ title: '姓名', value: 'name'}, { title: '岗位', value: 'position' }].concat(title)
     return { users, title }
 }
 
