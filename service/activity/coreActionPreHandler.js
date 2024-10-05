@@ -68,16 +68,16 @@ const getFirstExistDeptCoreActionsConfig = async (deptIds) => {
 }
 
 const getDesignerGroup = async (userNames) => {
-    let groupInfo = await userRepo.getUsersByTagCodesAndNickname(userNames, designGroups, true)
+    let groupInfo = await userRepo.getUsersByTagCodesAndNickname(userNames, designGroups, false)
     if (groupInfo.length == 1) {
         let users = await userRepo.getUsersByTagCodes([groupInfo[0].tag_code])
         userNames = []
         for (let i = 0; i < users.length; i++) {
             userNames.push(users[i].nickname)
         }
-        groupInfo = await userRepo.getUsersByTagCodesAndNickname(userNames, [groupInfo[0].tag_code], true)
+        groupInfo = await userRepo.getUsersByTagCodesAndNickname(userNames, [groupInfo[0].tag_code], false)
     }
-    let designerInfo = await userRepo.getUsersByTagCodesAndNickname(userNames, designerTags, false)
+    let designerInfo = await userRepo.getUsersByTagCodesAndNickname(userNames, designerTags, true)
     let group = [], userGroup = {}
     let defaultInfo = JSON.parse(JSON.stringify(statItem))
     defaultInfo.member = []
