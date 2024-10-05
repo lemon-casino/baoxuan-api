@@ -200,6 +200,36 @@ const getVisionUsersStat = async (req, res, next) => {
                 break
             case coreActionStatTypeConst.StatLeader:
                 result = await visionCoreActionService.getLeaderStat(tags, start, end)
+                break
+            case coreActionStatTypeConst.StatDesigner:
+                result = await visionCoreActionService.getDesignerStat(userNames, start, end)
+                break
+            case coreActionStatTypeConst.StatPhotographer:
+                result = await visionCoreActionService.getPhotographerStat(userNames, start, end)
+                break
+            default:
+        }
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getVisionUsersDetails = async (req, res, next) => {
+    try {
+        joiUtil.clarityValidate(flowSchema.getCoreDetailsSchema, req.query)
+        const {statType, action, startDate, endDate, users} = req.query
+        
+        let start = moment(startDate).format('YYYY-MM-DD') + ' 00:00:00'
+        let end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
+        let result = []
+        switch (statType) {
+            case coreActionStatTypeConst.StatDesigner:
+                result = await visionCoreActionService.getDesignerDetails(JSON.parse(users), action, start, end)
+                break
+            case coreActionStatTypeConst.StatPhotographer:
+                result = await visionCoreActionService.getPhotographerDetails(JSON.parse(users), action, start, end)
+                break
             default:
         }
         return res.send(biResponse.success(result))
@@ -349,5 +379,6 @@ module.exports = {
     getAllOverDueRunningFlows,
     getFormsFlowsActivitiesStat,
     getVisionReview,
-    getVisionPlan
+    getVisionPlan,
+    getVisionUsersDetails
 }

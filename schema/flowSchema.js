@@ -1,12 +1,15 @@
 const joiUtil = require("@/utils/joiUtil")
 const Joi = require("joi")
-const coreActionStatTypeConst = require("@/const/coreActionStatTypeConst")
+const coreActionStatTypeConst = require("../const/coreActionStatTypeConst")
+const { statItem3 } = require('../const/newFormConst')
 
 const getCoreActionsSchema = {
     statType: Joi.string().valid(
         coreActionStatTypeConst.StatAction, 
         coreActionStatTypeConst.StatUser,
         coreActionStatTypeConst.StatLeader,
+        coreActionStatTypeConst.StatDesigner,
+        coreActionStatTypeConst.StatPhotographer,
     ),
     tags: joiUtil.commonJoiSchemas.arrayRequired,
     deptIds: joiUtil.commonJoiSchemas.arrayRequired,
@@ -34,8 +37,22 @@ const getFlowsActionsSchema = {
     id: joiUtil.commonJoiSchemas.numberRequired,
 }
 
+const getCoreDetailsSchema = {
+    statType: Joi.string().valid(
+        coreActionStatTypeConst.StatDesigner,
+        coreActionStatTypeConst.StatPhotographer,
+    ),
+    action: Joi.string().valid(
+        ...statItem3.map((item) => item.code),
+    ),
+    startDate: joiUtil.commonJoiSchemas.dateRequired,
+    endDate: joiUtil.commonJoiSchemas.dateRequired,
+    users: joiUtil.commonJoiSchemas.strRequired
+}
+
 module.exports = {
     getCoreActionsSchema,
+    getCoreDetailsSchema,
     updateRunningFlowEmergencySchema,
     requiredIdsSchema,
     getFlowsProcessSchema,

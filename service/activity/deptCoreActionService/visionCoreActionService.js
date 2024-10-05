@@ -11,6 +11,18 @@ const patchUtil = require("@/patch/patchUtil")
 const coreActionPostHandler = require("../coreActionPostHandler")
 const coreActionPreHandler = require("../coreActionPreHandler")
 const newFormRepo = require('../../../repository/newFormsRepo')
+const { 
+    statItem,
+    statItem1,
+    statItem2,
+    statItem3,
+    statItem4,
+    totalStat,
+    statLeaderItem,
+    leaderItemField,
+    totalCode,
+    totalName 
+} = require('../../../const/newFormConst')
 
 /**
  *
@@ -106,14 +118,232 @@ const getUsersStat = async (tags, deptIds, userId, userNames, start, end) => {
     return result
 }
 
+/**
+ * 获取核心动作数据
+ * @param {*} start 
+ * @param {*} end 
+ * @returns 
+ */
 const getStat = async (start, end) => {
-    const result = await newFormRepo.getStat(start, end)
+    let result = []
+    for (let i = 0; i < statItem1.length; i++) {
+        let info = JSON.parse(JSON.stringify(statItem))
+        info.actionName = statItem1[i].name
+        info.actionCode = statItem1[i].code
+        for (let j = 0; j < statItem2.length; j++) {
+            let child = JSON.parse(JSON.stringify(statItem))
+            child.actionName = statItem2[j].name
+            for (let k = 0; k < statItem3.length; k++) {
+                let chil = JSON.parse(JSON.stringify(statItem))
+                chil.actionName = statItem3[k].name
+                chil.actionCode = statItem3[k].code
+                for (let h = 0; h < statItem4.length; h++) {
+                    let chi = JSON.parse(JSON.stringify(statItem))
+                    chi.actionName = statItem4[h].name
+                    chi.actionCode = statItem4[h].code
+                    chil.children.push(chi)
+                }
+                child.children.push(chil)
+            }
+            info.children.push(child)
+        }
+        result.push(info)
+    }
+
+    let info = JSON.parse(JSON.stringify(statItem))
+    info.actionCode = totalCode
+    info.actionName = totalName
+    for (let i = 0; i < totalStat.length; i++) {
+        let child = JSON.parse(JSON.stringify(statItem))
+        for (let j = 0; j < statItem4.length; j++) {
+            let chil = JSON.parse(JSON.stringify(statItem))
+            for (let k = 0; k < statItem2.length; k++) {
+                let chi = JSON.parse(JSON.stringify(statItem))
+                chi.actionName = statItem2[k].name
+                chil.children.push(chi)
+            }
+            chil.actionName = statItem4[j].name
+            chil.actionCode = statItem4[j].code
+            child.children.push(chil)
+        }
+        child.actionName = totalStat[i].name
+        info.children.push(child)
+    }
+    result.push(info)
+
+    for (let i = 0; i < statItem2.length; i++) {
+        let child = JSON.parse(JSON.stringify(statItem))
+        for (let j = 0; j < totalStat.length; j++) {
+            let chil = JSON.parse(JSON.stringify(statItem))
+            for (let k = 0; k < statItem4.length; k++) {
+                let chi = JSON.parse(JSON.stringify(statItem))
+                chi.actionName = statItem4[k].name
+                chi.actionCode = statItem4[k].code
+                chil.children.push(chi)
+            }
+            chil.actionName = totalStat[j].name
+            child.children.push(chil)
+        }
+        child.actionName = statItem2[i].name
+        result.push(child)
+    }
+    result = await newFormRepo.getStat(result, start, end)
     return result
 }
 
-const getLeaderStat = async(tags, start, end) => {
-    const result = await newFormRepo.getLeaderStat(tags[0], start, end)
+/**
+ * 获取视觉总监面板数据
+ * @param {*} tags 
+ * @param {*} start 
+ * @param {*} end 
+ * @returns 
+ */
+const getLeaderStat = async (tags, start, end) => {
+    let result = []
+    for (let i = 0; i < statLeaderItem.length; i++) {
+        let info = JSON.parse(JSON.stringify(statItem))
+        info.actionName = statLeaderItem[i].name
+        info.actionCode = statLeaderItem[i].code
+        for (let j = 0; j < statLeaderItem[i].child.length; j++) {
+            let child = JSON.parse(JSON.stringify(statItem))
+            child.actionName = statItem3[statLeaderItem[i].child[j]].name
+            child.actionCode = statItem3[statLeaderItem[i].child[j]].code
+            let child_key = statLeaderItem[i].child[j]
+            for (let k = 0; k < statLeaderItem[i].childItem[child_key]?.length; k++) {
+                let field_key = statLeaderItem[i].childItem[child_key][k]
+                if (leaderItemField[field_key].display == 0) {
+                    let childInfo = await newFormRepo.getVisionField(start, end, tags[0], child_key, i, field_key)
+                    for (let h = 0; h < childInfo.length; h++) {
+                        let cItem = JSON.parse(JSON.stringify(statItem))
+                        cItem.actionName = childInfo[h].value
+                        cItem.type = field_key
+                        cItem.sum = childInfo[h].count
+                        child.children.push(cItem)
+                    }
+                } else if (leaderItemField[field_key].display == 2) {
+                    let childInfo = await newFormRepo.getVisionField(start, end, tags[0], child_key, i, field_key)
+                    let cItem = JSON.parse(JSON.stringify(statItem))
+                    cItem.actionName = leaderItemField[field_key].name                    
+                    cItem.type = field_key
+                    for (let h = 0; h < childInfo.length; h++) {
+                        if (leaderItemField[field_key].map == 'like') {
+                            if (childInfo[h].value.indexOf(leaderItemField[field_key].data) == -1)
+                                cItem.sum += childInfo[h].count
+                        } else {
+                            if (childInfo[h].value == leaderItemField[field_key].data)
+                                cItem.sum += childInfo[h].count
+                        }
+                    }
+                    child.children.push(cItem)
+                } else {
+                    let childInfo = await newFormRepo.getVisionType(start, end, tags[0], child_key, i)
+                    let cInfo = []
+                    for (let h = 0; h < leaderItemField[field_key].data.length; h++) {
+                        let cItem = JSON.parse(JSON.stringify(statItem))
+                        cItem.actionName = leaderItemField[field_key].data[h]                        
+                        cItem.type = field_key
+                        cItem.field_type = h
+                        cInfo.push(cItem)
+                    }
+                    for (let h = 0; h < childInfo.length; h++) {
+                        for (let l = 0; l < leaderItemField[field_key].map[childInfo[h].vision_type].length; l++) {
+                            let iInfo = leaderItemField[field_key].map[childInfo[h].vision_type][l]
+                            cInfo[iInfo].sum += childInfo[h].count
+                        }
+                    }
+                    child.children.push(...cInfo)
+                }
+            }            
+            info.children.push(child)
+        }
+        result.push(info)
+    }
+    result = await newFormRepo.getLeaderStat(result, start, end)
     return result
+}
+
+/**
+ * 获取主设面板数据
+ * @param {*} userNames 
+ * @param {*} start 
+ * @param {*} end 
+ * @returns 
+ */
+const getDesignerStat = async (userNames, start, end) => {
+    let { group, userGroup } = await coreActionPreHandler.getDesignerGroup(userNames)
+    let result = await newFormRepo.getDesignerFlowStat(userGroup, start, end)
+    for (let i = 0; i < result.length; i++) {
+        let child_key = statLeaderItem[2].childMap[result[i].type]
+        group[result[i].group_id].children[child_key].sum = result[i].count
+    }
+    result = await newFormRepo.getDesignerNodeStat(userGroup, start, end)
+    for (let i = 0; i < result.length; i++) {
+        let child_key = statLeaderItem[2].childMap[result[i].type]
+        let ch_key = statLeaderItem[2].childItemMap[result[i].type][result[i].vision_type]
+        group[result[i].group_id]
+            .children[child_key]
+            .children[ch_key]
+            .sum = result[i].count
+    }
+    return group
+}
+
+const getDesignerDetails = async (users, action, start, end) => {
+    let type
+    for (let i = 0; i < statItem3.length; i++) {
+        if (statItem3[i].code == action) type = i
+    }
+    for (let i = 0; i < users.length; i++) {
+        let details = await newFormRepo.getDesignerStat(users[i].name, type, start, end)
+        for (let j = 0; j < details.length; j++) {
+            users[i][details[j].title] = details[j].count
+        }
+    }    
+    let title = await newFormRepo.getVisionFieldName('insideArt')
+    title = [{ title: 'name'}, { title: 'position' }].concat(title)
+    return { users, title }
+}
+
+/**
+ * 获取拍摄主管面板
+ * @param {*} userNames 
+ * @param {*} start 
+ * @param {*} end 
+ * @returns 
+ */
+const getPhotographerStat = async (userNames, start, end) => {
+    let { group, users } = await coreActionPreHandler.getPhotographerGroup(userNames)
+    let result = await newFormRepo.getPhotographerFlowStat(users, start, end)
+    for (let i = 0; i < result.length; i++) {
+        let child_key = statLeaderItem[2].childMap[result[i].type]
+        group[0].children[child_key].sum = result[i].count
+    }
+    result = await newFormRepo.getPhotographerNodeStat(users, start, end)
+    for (let i = 0; i < result.length; i++) {
+        let child_key = statLeaderItem[2].childMap[result[i].type]
+        let ch_key = statLeaderItem[2].childItemMap[result[i].type][result[i].vision_type]
+        group[0]
+            .children[child_key]
+            .children[ch_key]
+            .sum = result[i].count
+    }
+    return group
+}
+
+const getPhotographerDetails = async (users, action, start, end) => {
+    let type
+    for (let i = 0; i < statItem3.length; i++) {
+        if (statItem3[i].code == action) type = i
+    }
+    for (let i = 0; i < users.length; i++) {
+        let details = await newFormRepo.getPhotographerStat(users[i].name, type, start, end)
+        for (let j = 0; j < details.length; j++) {
+            users[i][details[j].title] = details[j].count
+        }
+    }    
+    let title = await newFormRepo.getVisionFieldName('insidePhoto')
+    title = [{ title: 'name'}, { title: 'position' }].concat(title)
+    return { users, title }
 }
 
 /**
@@ -321,5 +551,9 @@ module.exports = {
     getCoreActionStat,
     getUsersStat,
     getLeaderStat,
+    getDesignerStat,
+    getDesignerDetails,
+    getPhotographerStat,
+    getPhotographerDetails,
     getStat
 }

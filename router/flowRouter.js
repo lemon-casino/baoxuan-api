@@ -48,5 +48,6 @@ router.get("/vision-review", flowHandler.getVisionReview)
  * 视觉方案
  */
 router.get("/vision-plan", flowHandler.getVisionPlan)
+router.get("/vision-action-details", flowHandler.getVisionUsersDetails)
 
 module.exports = router;
