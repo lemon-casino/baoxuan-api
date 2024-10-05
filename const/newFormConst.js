@@ -122,6 +122,18 @@ const statItem1 = [
     }
 ]
 
+const retouchList = [
+    {
+        name: '自主',
+        code: 'inside',
+        child: ['insidePhoto', 'insideArt']
+    }, {
+        name: '外包',
+        code: 'out',
+        child: ['outPhoto', 'outArt']
+    }
+]
+
 const statItem1Type = [
     ['outPhoto', 'outArt'],
     ['insidePhoto', 'insideArt']
@@ -417,5 +429,6 @@ module.exports = {
     photographerSort,
     memberItem,
     visionList,
-    visionFilter
+    visionFilter,
+    retouchList
 }

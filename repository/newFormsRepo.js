@@ -13,7 +13,8 @@ const {
     statLeaderItem,
     leaderItemField,
     visionList,
-    visionFilter
+    visionFilter,
+    retouchList
 } = require('../const/newFormConst')
 const moment = require('moment')
 
@@ -157,6 +158,7 @@ const getStat = async function (result, startDate, endDate) {
                         and va.activity_id = pir.activity_id
                         and va.activity_name = pir.show_name
                         and va.tag in ('insideArt', 'insidePhoto')
+                        and pir.action_exit in ('next', 'doing', 'agree')
                     where pir.instance_id = vn.id
                 )
             group by type, vision_type
@@ -173,6 +175,7 @@ const getStat = async function (result, startDate, endDate) {
                         and va.activity_id = pir.activity_id
                         and va.activity_name = pir.show_name
                         and va.tag in ('outArt', 'outPhoto')
+                        and pir.action_exit in ('next', 'doing', 'agree')
                     where pir.instance_id = vn.id
                 )
             group by type, vision_type 
@@ -201,6 +204,47 @@ const getStat = async function (result, startDate, endDate) {
             }
         }
         result[row[i].id].sum += parseInt(row[i].count)
+    }
+
+    sql = `select count(1) as count, 1 as id from (
+            select vn.id from vision_nodes vn
+            where tag = 'retouch' and operate_time >= '${startDate}'
+                and operate_time <= '${endDate}'
+                and if(v1 is null, v2, v1) like concat('%', v3, '%')
+                and exists (
+                    select pir.id from process_instance_records pir 
+                    join vision_activity va on va.form_id = vn.form_id
+                        and va.activity_id = pir.activity_id
+                        and va.activity_name = pir.show_name
+                        and va.tag in ('outArt', 'outPhoto')
+                        and pir.action_exit in ('next', 'doing', 'agree')
+                    where pir.instance_id = vn.id
+                )
+            group by vn.id
+        ) a 
+        
+        union all 
+        
+        select count(1) as count, 2 as id from (
+            select vn.id from vision_nodes vn
+            where tag = 'retouch' and operate_time >= '${startDate}'
+                and operate_time <= '${endDate}'
+                and if(v1 is null, v2, v1) like concat('%', v3, '%')
+                and exists (
+                    select pir.id from process_instance_records pir 
+                    join vision_activity va on va.form_id = vn.form_id
+                        and va.activity_id = pir.activity_id
+                        and va.activity_name = pir.show_name
+                        and va.tag in ('insideArt', 'insidePhoto')
+                        and pir.action_exit in ('next', 'doing', 'agree')
+                    where pir.instance_id = vn.id
+                )
+            group by vn.id
+        ) a`
+    row = await query(sql)
+    for (let i = 0; i < row.length; i++) {
+        let child_key = result[3].children.length - row[i].id
+        result[3].children[child_key].sum = row[i].count
     }
 
     sql = `select id, activity_id, field_id, tag, type, value, action_exit 
@@ -328,6 +372,22 @@ const getFlowProcessInstances = async function (params, offset, limit) {
         subsql = `${subsql} and vn_type = ${fullActionFilter[params.fullAction]}`
     }
     if (params.type) {
+        if (params.tag == 'retouch') {
+            for (let i = 0; i < retouchList.length; i++) {
+                if (params.type == retouchList[i].name) {                    
+                    subsql = `${subsql} and exists (
+                        select pir.id from process_instance_records pir 
+                        join vision_activity va on va.form_id = vp.form_id
+                            and va.activity_id = pir.activity_id
+                            and va.activity_name = pir.show_name
+                            and va.tag in ('${retouchList[i].child.join("','")}')
+                            and pir.action_exit in ('next', 'doing', 'agree')
+                        where pir.instance_id = vp.id
+                    )`
+                    break
+                }
+            }
+        }
         if (typeFilter[params.type]) {
             subsql = `${subsql} and vision_type in (${typeFilter[params.type].map(() => '?').join(',')})
                 and type like concat('%', value, '%')`

@@ -21,7 +21,8 @@ const {
     statLeaderItem,
     leaderItemField,
     totalCode,
-    totalName 
+    totalName,
+    retouchList 
 } = require('../../../const/newFormConst')
 
 /**
@@ -148,6 +149,13 @@ const getStat = async (start, end) => {
             info.children.push(child)
         }
         result.push(info)
+    }
+
+    for (let i = 0; i < retouchList.length; i++) {
+        let child = JSON.parse(JSON.stringify(statItem))
+        child.actionName = retouchList[i].name
+        child.actionCode = retouchList[i].code
+        result[3].children.push(child)
     }
 
     let info = JSON.parse(JSON.stringify(statItem))
