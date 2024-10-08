@@ -204,6 +204,9 @@ const getVisionUsersStat = async (req, res, next) => {
             case coreActionStatTypeConst.StatDesigner:
                 result = await visionCoreActionService.getDesignerStat(userNames, start, end)
                 break
+            case coreActionStatTypeConst.StatMainDesigner:
+                result = await visionCoreActionService.getMainDesignerStat(userNames, start, end)
+                break
             case coreActionStatTypeConst.StatPhotographer:
                 result = await visionCoreActionService.getPhotographerStat(userNames, start, end)
                 break
@@ -225,6 +228,7 @@ const getVisionUsersDetails = async (req, res, next) => {
         let result = []
         switch (statType) {
             case coreActionStatTypeConst.StatDesigner:
+                case coreActionStatTypeConst.StatMainDesigner:
                 result = await visionCoreActionService.getDesignerDetails(JSON.parse(users), action, start, end)
                 break
             case coreActionStatTypeConst.StatPhotographer:

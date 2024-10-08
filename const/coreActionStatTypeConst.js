@@ -3,5 +3,6 @@ module.exports = {
     "StatAction": "statAction",
     "StatLeader": "statLeader",
     "StatDesigner": "statDesigner",
+    "StatMainDesigner": "statMainDesigner",
     "StatPhotographer": "statPhotographer"
 }

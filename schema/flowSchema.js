@@ -9,6 +9,7 @@ const getCoreActionsSchema = {
         coreActionStatTypeConst.StatUser,
         coreActionStatTypeConst.StatLeader,
         coreActionStatTypeConst.StatDesigner,
+        coreActionStatTypeConst.StatMainDesigner,
         coreActionStatTypeConst.StatPhotographer,
     ),
     tags: joiUtil.commonJoiSchemas.arrayRequired,
@@ -40,6 +41,7 @@ const getFlowsActionsSchema = {
 const getCoreDetailsSchema = {
     statType: Joi.string().valid(
         coreActionStatTypeConst.StatDesigner,
+        coreActionStatTypeConst.StatMainDesigner,
         coreActionStatTypeConst.StatPhotographer,
     ),
     action: Joi.string().valid(

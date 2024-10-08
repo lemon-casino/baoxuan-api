@@ -291,6 +291,15 @@ const getUsersByTagCodesAndNickname = async (nicknames, tagCodes, orderById) => 
     return result
 }
 
+const getUsersWithTagsByTagCodes = async (tagCodes) => {
+    let sql = `SELECT u.user_id AS id, ut.user_id, t.tag_code, t.tag_name, u.nickname 
+        FROM users u JOIN users_tags ut ON u.dingding_user_id = ut.user_id
+        JOIN tags t ON ut.tag_code = t.tag_code
+        WHERE t.tag_code IN (${tagCodes.map(() => '?').join(',')})`
+    const result = await query(sql, tagCodes)
+    return result
+}
+
 module.exports = {
     getUsersByTagCodes,
     getUserWithTags,
@@ -308,5 +317,6 @@ module.exports = {
     getUsersWithTagsByUsernames,
     getUsersByIds,
     undoResign,
-    getUsersByTagCodesAndNickname
+    getUsersByTagCodesAndNickname,
+    getUsersWithTagsByTagCodes
 }
