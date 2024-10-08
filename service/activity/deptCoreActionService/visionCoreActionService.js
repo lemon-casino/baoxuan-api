@@ -384,7 +384,7 @@ const getDesignerDetails = async (users, action, start, end) => {
             userDelete[user_id] = 1
         }
     }
-    for (let i = 0, j = 0; i != users.length - 1; j++) {
+    for (let i = 0, j = 0; i != users.length; j++) {
         if (!userDelete[j]) users.splice(i, 1)
         else i = i + 1
     }
