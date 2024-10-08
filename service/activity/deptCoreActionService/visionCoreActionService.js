@@ -22,7 +22,8 @@ const {
     leaderItemField,
     totalCode,
     totalName,
-    retouchList 
+    retouchList, 
+    nameFilter
 } = require('../../../const/newFormConst')
 
 /**
@@ -277,14 +278,37 @@ const getLeaderStat = async (tags, start, end) => {
  * @param {*} end 
  * @returns 
  */
-const getDesignerStat = async (userNames, start, end) => {
-    let { group, userGroup } = await coreActionPreHandler.getDesignerGroup(userNames)
-    let result = await newFormRepo.getDesignerFlowStat(userGroup, start, end)
+const getMainDesignerStat = async (userNames, start, end) => {
+    userNames = await coreActionPreHandler.getMainDesigner(userNames)
+    let group = [], userGroup = {}
+    for (let i = 0; i < userNames.length; i++) {
+        let info = JSON.parse(JSON.stringify(statItem))
+        info.actionName = userNames[i]
+        for (let j = 0; j < statLeaderItem[2].child.length; j++) {
+            let child_key = statLeaderItem[2].child[j]
+            let child = JSON.parse(JSON.stringify(statItem))
+            child.actionName = statItem3[child_key].name
+            child.actionCode = statItem3[child_key].code
+            for (let k = 0; k < statLeaderItem[2].childItem[child_key].length; k++) {
+                const ch_key = statLeaderItem[2].childItem[child_key][k]
+                let ch = JSON.parse(JSON.stringify(statItem))
+                ch.actionName = leaderItemField[ch_key].name
+                ch.type = ch_key
+                child.children.push(ch)
+            }
+            info.children.push(child)
+        }
+        group.push(info)
+        if (nameFilter[userNames[i]]) userGroup[nameFilter[userNames[i]]] = i
+        userGroup[userNames[i]] = i
+    }
+    let result = await newFormRepo.getDesignerFlowStat(userNames, start, end)
     for (let i = 0; i < result.length; i++) {
         let child_key = statLeaderItem[2].childMap[result[i].type]
-        group[result[i].group_id].children[child_key].sum = result[i].count
+        let group_id = userGroup[result[i].operator_name]
+        group[group_id].children[child_key].sum += result[i].count
     }
-    result = await newFormRepo.getDesignerNodeStat(userGroup, start, end)
+    result = await newFormRepo.getDesignerNodeStat(group, start, end)
     for (let i = 0; i < result.length; i++) {
         let child_key = statLeaderItem[2].childMap[result[i].type]
         let ch_key = statLeaderItem[2].childItemMap[result[i].type][result[i].vision_type]
@@ -296,17 +320,75 @@ const getDesignerStat = async (userNames, start, end) => {
     return group
 }
 
+const getDesignerStat = async (userNames, start, end) => {
+    let group = []
+    let result = await newFormRepo.getDesignerFlowStat(userNames, start, end)
+    for (let i = 0; i < result.length; i++) {
+        if (i == 0 || (result[i].operator_name != result[i-1].operator_name)) {
+            let info = JSON.parse(JSON.stringify(statItem))
+            info.actionName = result[i].operator_name
+            for (let j = 0; j < statLeaderItem[2].child.length; j++) {
+                let child = JSON.parse(JSON.stringify(statItem))
+                child.actionName = statItem3[statLeaderItem[2].child[j]].name
+                child.actionCode = statItem3[statLeaderItem[2].child[j]].code
+                for (let k = 0; k < statLeaderItem[2].childItem[statLeaderItem[2].child[j]].length; k++) {
+                    let ch = JSON.parse(JSON.stringify(statItem))
+                    let ch_key = statLeaderItem[2].childItem[statLeaderItem[2].child[j]][k]
+                    ch.actionName = leaderItemField[ch_key].name
+                    ch.type = ch_key
+                    child.children.push(ch)
+                }
+                info.children.push(child)
+            }
+            group.push(info)
+        }
+        let child_key = statLeaderItem[2].childMap[result[i].type]
+        group[group.length - 1].children[child_key].sum = result[i].count
+    }
+    if (group.length) {
+        result = await newFormRepo.getDesignerNodeStat(group, start, end)
+        for (let i = 0; i < result.length; i++) {
+            let child_key = statLeaderItem[2].childMap[result[i].type]
+            let ch_key = statLeaderItem[2].childItemMap[result[i].type][result[i].vision_type]
+            group[result[i].group_id]
+                .children[child_key]
+                .children[ch_key]
+                .sum = result[i].count
+        }
+    }
+    return group
+}
+
 const getDesignerDetails = async (users, action, start, end) => {
     let type
     for (let i = 0; i < statItem3.length; i++) {
-        if (statItem3[i].code == action) type = i
-    }
-    for (let i = 0; i < users.length; i++) {
-        let details = await newFormRepo.getDesignerStat(users[i].name, type, start, end)
-        for (let j = 0; j < details.length; j++) {
-            users[i][details[j].title] = details[j].count
+        if (statItem3[i].code == action) {
+            type = i
+            break
         }
-    }    
+    }
+    let name = users[0].name
+    let userGroup = {}, userDelete = {}
+    users = await coreActionPreHandler.getDesigner()
+    for (let i = 0; i < users.length; i++) {
+        userGroup[users[i].name] = i
+        if (nameFilter[users[i].name]) userGroup[nameFilter[users[i].name]] = i
+    }
+    let details = await newFormRepo.getDesignerStat(name, type, start, end)
+    for (let j = 0; j < details.length; j++) {
+        let user_id = userGroup[details[j].operator_name]
+        if (user_id != undefined) {
+            users[user_id][details[j].title] = users[user_id][details[j].title] ? 
+                users[user_id][details[j].title] + parseInt(details[j].count) : 
+                parseInt(details[j].count)
+            userDelete[user_id] = 1
+        }
+    }
+    for (let i = 0, j = 0; i != users.length - 1; j++) {
+        if (!userDelete[j]) users.splice(i, 1)
+        else i = i + 1
+    }
+    users.sort((a, b) => a.sort - b.sort)
     let title = await newFormRepo.getVisionFieldName('insideArt')
     title = [{ title: '姓名', value: 'name'}, { title: '岗位', value: 'position' }].concat(title)
     return { users, title }
@@ -560,6 +642,7 @@ module.exports = {
     getUsersStat,
     getLeaderStat,
     getDesignerStat,
+    getMainDesignerStat,
     getDesignerDetails,
     getPhotographerStat,
     getPhotographerDetails,

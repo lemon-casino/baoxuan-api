@@ -368,8 +368,6 @@ const leaderItemField = {
     }
 }
 
-const designGroups = ['design-group-a', 'design-group-b', 'design-group-c', 'design-group-d']
-
 const designerTags = ['mainDesigner', 'designer', 'associateDesigner']
 const designerSort = {
     'mainDesigner': 0,
@@ -422,7 +420,6 @@ module.exports = {
     nameFilter,
     statLeaderItem,
     leaderItemField,
-    designGroups,
     designerTags,
     designerSort,
     photographerTags,
