@@ -1,8 +1,18 @@
 const models = require('@/model')
 const sequelizeUtil = require("@/utils/sequelizeUtil")
 
-models.flowfromsModel.hasMany(
-    models.flowformsreviewsModel,
+const sequelize = require("@/model/init");
+const getFlowFormReviewModel = require("@/model/flowFormReviewModel")
+const getFlowfromsModel = require("@/model/flowfromsModel")
+const getFlowFormDetailsModel = require("@/model/flowFormDetailsModel")
+const flowFormDetailsModel = getFlowFormDetailsModel(sequelize)
+const flowfromsModel = getFlowfromsModel(sequelize)
+const flowformsreviewsModel = getFlowFormReviewModel(sequelize)
+
+
+
+flowfromsModel.hasMany(
+    flowformsreviewsModel,
     {
         foreignKey: 'form_id',
         as: "flowFormReviews"
@@ -27,7 +37,7 @@ const getFormDetails = async (formId) => {
  * @returns {Promise<[]|*>}
  */
 const getAllForms = async (where) => {
-    const result = await models.flowfromsModel.findAll({
+    const result = await flowfromsModel.findAll({
         where,
         order: [["status", "asc"]]
     })
@@ -43,10 +53,10 @@ const getAllForms = async (where) => {
 const saveFormAndDetails = async (form, detailsArr) => {
     const transaction = await models.sequelize.transaction();
     try {
-        await models.flowfromsModel.create(form, {transaction})
+        await flowfromsModel.create(form, {transaction})
 
         for (const details of detailsArr) {
-            await models.flowFormDetailsModel.create(details, {transaction})
+            await flowFormDetailsModel.create(details, {transaction})
         }
         await transaction.commit()
         return true
@@ -65,24 +75,42 @@ const saveFormAndDetails = async (form, detailsArr) => {
 const updateFormAndAddDetails = async (form, detailsArr) => {
     const transaction = await models.sequelize.transaction();
     try {
-        await models.flowfromsModel.update({
+        // 更新 flowForm 的信息
+        await flowfromsModel.update({
             ...form
         }, {
             where: {
                 flowFormId: form.flowFormId
-            }
-        }, {transaction})
+            },
+            transaction  // 确保在同一个事务内执行
+        });
 
+        // 使用 upsert 方法避免重复插入或更新记录
         for (const details of detailsArr) {
-            await models.flowFormDetailsModel.create(details, {transaction})
+            await flowFormDetailsModel.upsert({
+                ...details
+            }, { transaction });
         }
-        await transaction.commit()
-        return true
+
+        // 使用 upsert 插入或更新 flowformsreviews 表中的记录
+        for (const review of form.reviews) {  // 假设 form 包含 reviews 信息
+            // 确保不传递 'id' 字段，避免手动设置主键，使用数据库的自动递增功能
+            const { id, ...reviewData } = review;
+            await flowformsreviewsModel.upsert({
+                ...reviewData  // 不传递 id 字段
+            }, { transaction });
+        }
+
+        // 提交事务
+        await transaction.commit();
+        return true;
     } catch (e) {
-        await transaction.rollback()
-        throw e
+        // 回滚事务
+        await transaction.rollback();
+        console.error("Transaction failed: ", e.message);
+        throw e;
     }
-}
+};
 
 /**
  * 获取流程表单和最新的审核流程
@@ -94,9 +122,9 @@ const getAllFlowFormsWithReviews = async (formIds) => {
     if (formIds && formIds.length > 0) {
         where.flowFormId = {$in: formIds}
     }
-    const flowForms = await models.flowfromsModel.findAll({
+    const flowForms = await flowfromsModel.findAll({
         include: [{
-            model: models.flowformsreviewsModel,
+            model: flowformsreviewsModel,
             as: "flowFormReviews",
             order: [["create_time", "desc"]],
             limit: 1
@@ -107,9 +135,9 @@ const getAllFlowFormsWithReviews = async (formIds) => {
 }
 
 const updateFlowForm = async (form) => {
-    return await models.flowfromsModel.update(form, {
+    return flowfromsModel.update(form, {
         where: {flowFormId: form.flowFormId}
-    })
+    });
 }
 
 module.exports = {
