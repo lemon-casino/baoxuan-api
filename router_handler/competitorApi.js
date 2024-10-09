@@ -62,7 +62,7 @@ const uploadSingleIteTaoBaoCompetitorTable = async (req, res, next) => {
                     return translatedItem;
                 });
             await tmallCompetitorService.uploadSingleIteTaoBaoCompetitorTable(translatedData).then(() => {
-                console.log(`Sheet uploaded successfully`);
+                console.log(`工作表已成功上传`);
             }).catch((e) => {
                 return res.send(biResponse.canTFindIt('文件解析失败',e ))
             } );
