@@ -16,6 +16,7 @@ exports.getFlowFormReviewList = async (req, res) => {
         where: {
             form_id: form_id,
         },
+        logging:true,
         order: [['id', 'DESC']]
     });
     if (reslut) {
