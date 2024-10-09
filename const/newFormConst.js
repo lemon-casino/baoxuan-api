@@ -303,19 +303,19 @@ const statLeaderItem = [
             2: 1
         },
         childItem: {
-            1: [4, 5, 6],
-            2: [4, 5, 6]
+            1: [7, 8, 9],
+            2: [7, 8, 9]
         },
         childItemMap: {
             1: {
-                4: 0,
-                5: 1,
-                6: 2
+                7: 0,
+                8: 1,
+                9: 2
             }, 
             2: {
-                4: 0,
-                5: 1,
-                6: 2
+                7: 0,
+                8: 1,
+                9: 2
             }
         }
     }
@@ -365,14 +365,33 @@ const leaderItemField = {
         display: 2,
         data: '是',
         map: 'equal'
+    }, 
+    7: {
+        name: '3D渲染',
+        display: 2,
+        data: 0,
+        map: 'more than'
+    },
+    8: {
+        name: 'AI修图',
+        display: 2,
+        data: 0,
+        map: 'more than'
+    },
+    9: {
+        name: '传统',
+        display: 2,
+        data: 0,
+        map: 'same'
     }
 }
 
-const designerTags = ['mainDesigner', 'designer', 'associateDesigner']
+const designerTags = ['mainDesigner', 'designer', 'associateDesigner', 'visionLeader']
 const designerSort = {
-    'mainDesigner': 0,
-    'designer': 1,
-    'associateDesigner': 2
+    'visionLeader': 0,
+    'mainDesigner': 1,
+    'designer': 2,
+    'associateDesigner': 3
 }
 
 const photographerTags = ['photographyManager', 'photographer', 'associatePhotographer']
@@ -384,7 +403,7 @@ const photographerSort = {
 
 const memberItem = {
     name: '',
-    position: '',
+    position: '-',
     sort: 0,
 }
 
@@ -392,6 +411,14 @@ const visionList = ['out', 'inside']
 const visionFilter = {
     'out': ['outArt', 'outPhoto'],
     'inside': ['insideArt', 'insidePhoto']
+}
+
+const photographerChild = {
+    item: [4,5],
+    map: {
+        4: 0,
+        5: 1
+    }
 }
 
 module.exports = {
@@ -427,5 +454,6 @@ module.exports = {
     memberItem,
     visionList,
     visionFilter,
-    retouchList
+    retouchList,
+    photographerChild
 }

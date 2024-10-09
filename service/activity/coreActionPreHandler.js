@@ -15,7 +15,8 @@ const {
     leaderItemField,
     memberItem,
     photographerTags,
-    designerSort
+    designerSort,
+    photographerChild
 } = require('../../const/newFormConst')
 
 const getUsers = async (userId, deptIds, userNames, containAdmins = false) => {
@@ -98,14 +99,13 @@ const getPhotographerGroup = async (userNames) => {
         let chil = JSON.parse(JSON.stringify(statItem))
         chil.actionName = statItem3[statLeaderItem[2].child[i]].name
         chil.actionCode = statItem3[statLeaderItem[2].child[i]].code
-        let child_key = statLeaderItem[2].child[i]
-        for (let k = 0; k < statLeaderItem[2].childItem[child_key].length; k++) {
-            let ch = JSON.parse(JSON.stringify(statItem))
-            let chil_key = statLeaderItem[2].childItem[child_key][k]
-            ch.actionName = leaderItemField[chil_key].name
-            ch.type = chil_key
-            chil.children.push(ch)
-        }
+        // for (let k = 0; k < photographerChild.item.length; k++) {
+        //     let ch = JSON.parse(JSON.stringify(statItem))
+        //     let chil_key = photographerChild.item[k]
+        //     ch.actionName = leaderItemField[chil_key].name
+        //     ch.type = chil_key
+        //     chil.children.push(ch)
+        // }
         defaultInfo.children.push(chil)
     }
     group.push(JSON.parse(JSON.stringify(defaultInfo)))
