@@ -22,7 +22,7 @@ const sendDingReportBao= async () => {
 
     for (const procureFightingFlow of procureFightingFlows) {
         for (const Flow of procureFightingFlow.overallprocessflow) {
-            if (Flow.showName === "各平台负责人填写订货量" && Flow.actionExit === "doing") {
+            if (Flow.showName === "各平台负责人填写订货量" && (Flow.actionExit === "doing" || Flow.actionExit === "agree") ) {
                 redisPresenceTodayPlatform.push({
                     formUuid:procureFightingFlow.formUuid,
                     title: procureFightingFlow.title,
@@ -38,7 +38,7 @@ const sendDingReportBao= async () => {
 // 各平台负责人
     for (const runningFightingFlow of runningFightingFlows) {
         for (const Flow of runningFightingFlow.overallprocessflow) {
-            if (Flow.showName === "审核产品" && Flow.actionExit === "doing") {
+            if (Flow.showName === "审核产品" && (Flow.actionExit === "doing" || Flow.actionExit === "agree")) {
 
                 redisPresenceToday.push({
                     formUuid:runningFightingFlow.formUuid,
@@ -48,7 +48,7 @@ const sendDingReportBao= async () => {
                     createTime: runningFightingFlow.createTimeGMT,
                     receiverUserIdList: Flow.domainList.map(item => item.operator)
                 });
-            } else if (Flow.showName === "各平台负责人填写订货量" && Flow.actionExit === "doing") {
+            } else if (Flow.showName === "各平台负责人填写订货量" && (Flow.actionExit === "doing" || Flow.actionExit === "agree")) {
                 redisPresenceTodayPlatform.push({
                     formUuid:runningFightingFlow.formUuid,
                     title: runningFightingFlow.title,
