@@ -35,11 +35,6 @@ const sendDingReportBao= async () => {
         }
     }
 
-
-
-
-
-
 // 各平台负责人
     for (const runningFightingFlow of runningFightingFlows) {
         for (const Flow of runningFightingFlow.overallprocessflow) {
@@ -79,10 +74,6 @@ const sendDingReportBao= async () => {
         const itemDate = new Date(item.createTime);
         return itemDate >= cutoffDate;
     });
-
-    //只保留filteredRedisPresenceToday 第一个
-
-
 // 通用的处理逻辑封装为一个函数
     async function processItem(item, token, isDeferred = false) {
         // 判断 receiverUserIdList 中是否有 '014668034529316173'，没有就追加
@@ -112,7 +103,6 @@ const sendDingReportBao= async () => {
 
     async function processItems(filteredItems, isDeferred = false) {
         const { access_token: token } = await getToken(); // 提前获取 token
-console.log(filteredItems)
         // 使用 Promise.all 来并行处理项目，加快执行速度
         await Promise.all(filteredItems.map(async (item, index) => {
             await new Promise(resolve => setTimeout(resolve, index * 1000)); // 延迟 1 秒，按序列加延迟
@@ -122,14 +112,9 @@ console.log(filteredItems)
 
 // 处理 filteredRedisPresenceToday 数据
     await processItems(filteredRedisPresenceToday);
-
 // 处理 filteredRedisPresenceTodayPlatform 数据（使用 isDeferred 参数）
     await processItems(filteredRedisPresenceTodayPlatform, true);
-
-
 }
-
-
 
 module.exports = {
     sendDingReportBao
