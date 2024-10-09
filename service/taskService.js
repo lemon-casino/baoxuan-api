@@ -46,6 +46,7 @@ const {redisConfig} = require("@/config");
 const axios = require("axios");
 const {getInquiryTodayjdDailyReport} = require("@/service/JDDailyReportBaoService");
 const {getOperateAttributesMaintainer} = require("@/repository/dianShangOperationAttributeRepo");
+const {sendDingReportBao} = require("@/service/dingReportBaoService");
 const writeFile = util.promisify(fs.writeFile);
 const readFile = util.promisify(fs.readFile);
 const syncWorkingDay = async () => {
@@ -266,6 +267,7 @@ const syncRunningProcess = async () => {
     await processDetailsTmpRepo.truncate()
     
     const todayRunningFlows = await redisRepo.getTodayRunningAndFinishedFlows()
+    console.log(todayRunningFlows[0])
     let count = 1
     for (const flow of todayRunningFlows) {
         console.log(`${count}/${todayRunningFlows.length}`)
@@ -601,12 +603,17 @@ async function readFlowsFromLocalFile(filePath) {
 }
 
 async function saveFlowsToRedisFromFile() {
-
+    console.log("来到这里")
     const filePath = join(__dirname, '../logs/flows.json');
+    const flowsto = join(__dirname, '../logs/flowsto.json');
     console.log(filePath)
     // 从本地文件读取 flows 内容
     const fileContent = await readFlowsFromLocalFile(filePath);
-    // console.log(fileContent)
+    const flowstoContent = fileContent.filter(obj => obj.formUuid === 'FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP');
+
+    await saveFlowsToLocalFile(flowsto, flowstoContent);
+
+
     // 查看
     console.log(redisConfig.url)
     // 将内容设置到 Redis
@@ -667,7 +674,11 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
     }
     logger.info("同步完成：京东异常发起")
 }
+const purchaseSelectionMeetingInitiated = async () => {
+    await  sendDingReportBao()
 
+
+}
 
 module.exports = {
     syncOaProcessTemplates,
@@ -690,5 +701,6 @@ module.exports = {
     syncVisionOutUsers,
     syncProcessVersions,
     jdLinkDataIsAutomaticallyInitiated,
+    purchaseSelectionMeetingInitiated,
     saveFlowsToRedisFromFile
 }
