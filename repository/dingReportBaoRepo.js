@@ -37,14 +37,15 @@ async function findOrCreateDingId(data) {
         return {code:existingDing.code,carryOut:false};
     } else {
         // 创建新记录时不指定 id
-
+console.log(data)
         const newDing = await dingDailyReport.create({
             //忽略主键id
             code: data.code,
             productAudits: data.productAudits,
             deferredDing: data.deferredDing,
             DingId: data.DingId,
-            formUuid:data.formUuid
+            formUuid:data.formUuid,
+            receiverUserIds:data.receiverUserIds
         }, {
             attributes: {exclude: ["id" ]},
             raw: true // 返回纯对象而不是模型实例

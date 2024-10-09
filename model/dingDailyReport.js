@@ -56,6 +56,15 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "formUuid",
       field: "formUuid"
+    },
+    receiverUserIds: {
+      type: DataTypes.STRING(510),
+      allowNull: false,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "receiverUserId",
+      field: "receiverUserIds"
     }
   };
   const options = {
