@@ -640,38 +640,61 @@ const syncProcessVersions = async (cookies) => {
 const jdLinkDataIsAutomaticallyInitiated = async () => {
     logger.info("京东同步进行中...")
        const  runningFightingFlows =await  getInquiryTodayjdDailyReport()
+    console.log(runningFightingFlows)
     const userList = await userService.getDingDingUserIdAndNickname()
-    for (const runningFightingFlow of runningFightingFlows) {
 
-        const listingInfo = runningFightingFlow.listingInfo;
-        const selectField_lma827of = (listingInfo === '新品30' || listingInfo === '新品60') ? '新品' : '老品';
+    const removeDuplicateLinkIds = async () => {
+        const runningFightingFlows = await getInquiryTodayjdDailyReport();
 
-        if (selectField_lma827of==='老品'){
-           const maintenance=await  getOperateAttributesMaintainer(runningFightingFlow.linkId)
-            runningFightingFlow.operationsLeader = maintenance.maintenanceLeader
+        // 使用 Set 存储已出现的 linkId
+        const seenLinkIds = new Set();
+        const uniqueFlows = runningFightingFlows.filter(item => {
+            if (!seenLinkIds.has(item.linkId)) {
+                seenLinkIds.add(item.linkId);
+                return true;
+            }
+            return false;
+        });
+
+        for (const runningFightingFlow of uniqueFlows) {
+            const listingInfo = runningFightingFlow.listingInfo;
+            const selectField_lma827of = (listingInfo === '新品30' || listingInfo === '新品60') ? '新品' : '老品';
+
+            if (selectField_lma827of==='老品'){
+                const maintenance=await  getOperateAttributesMaintainer(runningFightingFlow.linkId)
+                runningFightingFlow.operationsLeader = maintenance.maintenanceLeader
+            }
+            const matchingUser = userList.find((user) => user.nickname === runningFightingFlow.operationsLeader);
+
+            const uuid = matchingUser ? matchingUser.dingding_user_id : null;
+
+            const textField_lma827od = runningFightingFlow.code
+            const employeeField_lma827ok= uuid
+            const textField_lma827oe= runningFightingFlow.linkId
+
+
+            const checkboxField_m11r277t = runningFightingFlow.questionType
+            const  radioField_locg3nxq= '简单'
+
+            const formDataJsonStr = JSON.stringify({
+                textField_lma827od,
+                employeeField_lma827ok,
+                textField_lma827oe,
+                selectField_lma827of,
+                checkboxField_m11r277t,
+                radioField_locg3nxq
+            }, null, 2);
+               await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
         }
-        const matchingUser = userList.find((user) => user.nickname === runningFightingFlow.operationsLeader);
-
-        const uuid = matchingUser ? matchingUser.dingding_user_id : null;
-
-        const textField_lma827od = runningFightingFlow.code
-        const employeeField_lma827ok= uuid
-        const textField_lma827oe= runningFightingFlow.linkId
 
 
-        const checkboxField_m11r277t = runningFightingFlow.questionType
-        const  radioField_locg3nxq= '简单'
+    };
 
-        const formDataJsonStr = JSON.stringify({
-            textField_lma827od,
-            employeeField_lma827ok,
-            textField_lma827oe,
-            selectField_lma827of,
-            checkboxField_m11r277t,
-            radioField_locg3nxq
-        }, null, 2);
-        await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
-    }
+    await removeDuplicateLinkIds();
+
+
+
+
     logger.info("同步完成：京东异常发起")
 }
 const purchaseSelectionMeetingInitiated = async () => {
