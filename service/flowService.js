@@ -29,7 +29,7 @@ const patchUtil = require("@/patch/patchUtil")
 const userCommonService = require("@/service/common/userCommonService");
 const outUsersRepo = require("@/repository/outUsersRepo");
 const newFormsRepo = require('../repository/newFormsRepo')
-const { designerTags } = require("../const/newFormConst")
+const { designerTags, nameFilter } = require("../const/newFormConst")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -1292,6 +1292,12 @@ const getVisionProcesses = async (params, offset, limit) => {
         let users = await userRepo.getUsersByTagCodesAndNickname(params.userNames, designerTags)
         if (users.length) {
             params.is_designer = 1
+        }
+    }
+    if (params.userNames?.length) {
+        for (let i = 0; i < params.userNames.length; i++) {
+            if (nameFilter[params.userNames[i]])
+                params.userNames.push(nameFilter[params.userNames[i]])
         }
     }
     let result = await newFormsRepo.getVisionProcessInstances(params, offset, limit)

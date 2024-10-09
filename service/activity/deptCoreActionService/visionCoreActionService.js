@@ -23,7 +23,9 @@ const {
     totalCode,
     totalName,
     retouchList, 
-    nameFilter
+    nameFilter,
+    photographerChild,
+    memberItem
 } = require('../../../const/newFormConst')
 
 /**
@@ -230,17 +232,27 @@ const getLeaderStat = async (tags, start, end) => {
                         child.children.push(cItem)
                     }
                 } else if (leaderItemField[field_key].display == 2) {
-                    let childInfo = await newFormRepo.getVisionField(start, end, tags[0], child_key, i, field_key)
+                    
                     let cItem = JSON.parse(JSON.stringify(statItem))
                     cItem.actionName = leaderItemField[field_key].name                    
                     cItem.type = field_key
-                    for (let h = 0; h < childInfo.length; h++) {
-                        if (leaderItemField[field_key].map == 'like') {
-                            if (childInfo[h].value.indexOf(leaderItemField[field_key].data) == -1)
-                                cItem.sum += childInfo[h].count
-                        } else {
-                            if (childInfo[h].value == leaderItemField[field_key].data)
-                                cItem.sum += childInfo[h].count
+                    if (leaderItemField[field_key].map == 'same' || 
+                        leaderItemField[field_key].map == 'more than'
+                    ) {
+                        let childInfo = await newFormRepo.getVisionFieldValue(start, end, tags[0], child_key, i, field_key)
+                        for (let h = 0; h < childInfo.length; h++) {
+                            cItem.sum += childInfo[h].count
+                        }
+                    } else {
+                        let childInfo = await newFormRepo.getVisionField(start, end, tags[0], child_key, i, field_key)
+                        for (let h = 0; h < childInfo.length; h++) {
+                            if (leaderItemField[field_key].map == 'like') {
+                                if (childInfo[h].value.indexOf(leaderItemField[field_key].data) == -1)
+                                    cItem.sum += childInfo[h].count
+                            } else {
+                                if (childInfo[h].value == leaderItemField[field_key].data)
+                                    cItem.sum += childInfo[h].count
+                            }
                         }
                     }
                     child.children.push(cItem)
@@ -408,15 +420,15 @@ const getPhotographerStat = async (userNames, start, end) => {
         let child_key = statLeaderItem[2].childMap[result[i].type]
         group[0].children[child_key].sum = result[i].count
     }
-    result = await newFormRepo.getPhotographerNodeStat(users, start, end)
-    for (let i = 0; i < result.length; i++) {
-        let child_key = statLeaderItem[2].childMap[result[i].type]
-        let ch_key = statLeaderItem[2].childItemMap[result[i].type][result[i].vision_type]
-        group[0]
-            .children[child_key]
-            .children[ch_key]
-            .sum = result[i].count
-    }
+    // result = await newFormRepo.getPhotographerNodeStat(users, start, end)
+    // for (let i = 0; i < result.length; i++) {
+    //     let child_key = statLeaderItem[2].childMap[result[i].type]
+    //     let ch_key = photographerChild.map[result[i].vision_type]
+    //     group[0]
+    //         .children[child_key]
+    //         .children[ch_key]
+    //         .sum = result[i].count
+    // }
     return group
 }
 
@@ -425,12 +437,19 @@ const getPhotographerDetails = async (users, action, start, end) => {
     for (let i = 0; i < statItem3.length; i++) {
         if (statItem3[i].code == action) type = i
     }
+    let total = JSON.parse(JSON.stringify(memberItem))
+    total.name = '合计'
+    total.sort = users.length
     for (let i = 0; i < users.length; i++) {
         let details = await newFormRepo.getPhotographerStat(users[i].name, type, start, end)
         for (let j = 0; j < details.length; j++) {
-            users[i][details[j].title] = details[j].count
+            users[i][details[j].title] = parseInt(details[j].count)
+            if (total[details[j].title] == undefined) total[details[j].title] = 0
+            total[details[j].title] += parseInt(details[j].count)
         }
-    }    
+    }
+    users.push(total)
+    users.sort((a, b) => a.sort - b.sort)
     let title = await newFormRepo.getVisionFieldName('insidePhoto')
     title = [{ title: '姓名', value: 'name'}, { title: '岗位', value: 'position' }].concat(title)
     return { users, title }
