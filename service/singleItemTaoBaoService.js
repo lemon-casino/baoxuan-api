@@ -495,8 +495,6 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
                                           linkStatus,
                                           timeRange,
                                           clickingAdditionalParams) => {
-
-    console.log("你怎么这么慢来到这楼里")
     const fightingLinkIds = await flowService.getFlowSplitFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
     console.log("fightingLinkIds==>",fightingLinkIds)
     const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
@@ -511,8 +509,6 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
         fightingLinkIds,
         timeRange,
         clickingAdditionalParams)
-    console.log("你怎么这么慢3")
-
     return satisfiedSingleItems.data
 }
 

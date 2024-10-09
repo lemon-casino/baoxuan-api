@@ -140,7 +140,6 @@ exports.getLiuChengList = async (req, res) => {
 exports.getDpList = async (req, res) => {
     try {
         let user_id = req.body?.user_id;
-        console.log(user_id);
         let {access_token: accessToken} = await credentialsReq.getDingDingAccessToken()
         let dpData = await contactsReq.getDp(accessToken, 3203266220231269);
         return res.send(dpData);

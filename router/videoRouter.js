@@ -30,9 +30,7 @@ router.get('/duan', async (req, res) => {
 router.get('/zhibo', async (req, res) => {
     try {
         let { timeRange } = req.query;
-        console.log(req.user.id)
         timeRange = handleDateRange(timeRange);
-        console.log(timeRange);
         const videos = await videoService.getzhiboByDateRange(timeRange);
         return res.send(success(videos));
     } catch (error) {

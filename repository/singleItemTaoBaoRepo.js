@@ -295,11 +295,7 @@ const getTaoBaoSingleItems = async (pageIndex,
                 if (errorItem.field === "salesMarketRateCircleRateDay") {
                     where["shouTaoPeopleNumMarketRateCircleRateDay"] = {"$gt": errorItem.value}
                 }
-
                 where[errorItem.field] = {[errorItem.operator]: errorItem.value}
-
-                // console.log(abnormalWhere)
-
             }
         }
     }

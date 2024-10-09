@@ -172,7 +172,6 @@ const getidsSatisfiedSingleItems = async (req, res, next) => {
         console.log(pageIndex, pageSize, ids)
 
         if (idsArray.length !== 0) {
-            console.log(idsArray)
             ids_data = await singleItemTaoBaoService.getidsSatisfiedSingleItems(parseInt(pageIndex), parseInt(pageSize), idsArray)
         }
     }
