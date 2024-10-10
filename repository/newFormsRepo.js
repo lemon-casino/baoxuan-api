@@ -460,11 +460,11 @@ const getVisionProcessInstances = async function (params, offset, limit) {
             and pir.show_name = vl.activity_name
             and pir.activity_id = vl.activity_id
             and pir.action_exit = vl.action_exit
-            and pir.id in (
+            and pir.id = (
                 select max(p2.id) from process_instance_records p2
                 where p2.instance_id = pi.id
-                group by p2.instance_id, p2.show_name, p2.activity_id
-            )
+                    and p2.show_name = vl.activity_name
+                    and p2.activity_id = vl.activity_id)
         where vl.form_id = ?`
     p1.push(parseInt(params.id))
     if (params.startDate) {
@@ -492,10 +492,11 @@ const getVisionProcessInstances = async function (params, offset, limit) {
                     and pir2.activity_id = vl1.activity_id
                     and pir2.show_name = vl1.activity_name
                     and pir2.action_exit = vl1.action_exit
-                    and pir2.id in (
+                    and pir2.id = (
                         select max(p2.id) from process_instance_records p2
-                        where (p2.instance_id = pi.id)
-                        group by p2.instance_id, p2.show_name, p2.activity_id))`
+                        where p2.instance_id = pi.id
+                            and p2.activity_id = vl1.activity_id 
+                            and p2.show_name = vl1.activity_name))`
             p1.push(...params.userNames)
         } else {
             subsql = `${subsql} and exists(
@@ -504,7 +505,7 @@ const getVisionProcessInstances = async function (params, offset, limit) {
                     and pir2.operator_name in (${params.userNames.map(() => '?').join(',')})
                     and pir2.id in (
                         select max(p2.id) from process_instance_records p2
-                        where (p2.instance_id = pi.id)
+                        where p2.instance_id = pi.id
                         group by p2.instance_id, p2.show_name, p2.activity_id))`
             p1.push(...params.userNames)
         }
@@ -624,8 +625,8 @@ const getDesignerFlowStat = async function (users, start, end) {
             users.push(nameFilter[users[i]])
         }
     }
-    let sql = `select count(1) as count, pir2.operator_name, vl1.type from 
-            vision_leader vl1 
+    let sql = `select count(1) as count, operator_name, type from (
+        select pir2.operator_name, vl1.type from vision_leader vl1 
         join processes p on p.form_id = vl1.form_id
         join process_instances pi on p.id = pi.process_id
             and pi.status in ('RUNNING', 'COMPLETED')
@@ -638,31 +639,48 @@ const getDesignerFlowStat = async function (users, start, end) {
             and pir1.activity_id = vl1.activity_id
             and pir1.show_name = vl1.activity_name
             and pir1.action_exit = vl1.action_exit
-            and pir1.id in (
+            and pir1.id = (
                 select max(p2.id) from process_instance_records p2
-                where (p2.instance_id = pi.id)
-                group by p2.instance_id, p2.show_name, p2.activity_id)
+                where p2.instance_id = pi.id 
+                    and p2.activity_id = vl1.activity_id 
+                    and p2.show_name = vl1.activity_name)
         join process_instance_records pir2 on pir2.instance_id = pi.id
             and pir2.activity_id = vl2.activity_id
             and pir2.show_name = vl2.activity_name
             and pir2.action_exit = vl2.action_exit
-            and pir2.id in (
+            and pir2.id = (
                 select max(p2.id) from process_instance_records p2
-                where (p2.instance_id = pi.id)
-                group by p2.instance_id, p2.show_name, p2.activity_id)
+                where p2.instance_id = pi.id 
+                    and p2.activity_id = vl2.activity_id 
+                    and p2.show_name = vl2.activity_name)
+        join vision_type vt on vt.form_id = vl1.form_id 
+        left join process_instance_values piv1 on piv1.instance_id = pi.id
+            and piv1.field_id = vt.field_id
+            and vt.type = 0
+        left join process_receipt pr on pr.process_id = pi.id
+        left join receipt_instance_values riv on riv.field_id = vt.field_id
+            and riv.instance_id = pr.receipt_id
+        join form_fields ff on ff.form_id = if(vt.type = 0, vt.form_id, vt.sub_form_id)
+            and vt.field_id = ff.field_id
+        left join vision_field_type vft on vft.form_id = ff.form_id
+        left join form_field_data ffd on ffd.id = vft.ffd_id
         where pir1.operate_time >= ?
-            and pir1.operate_time <= ?
+            and pir1.operate_time <= ? 
+            and if(piv1.value is null, riv.value, piv1.value) like concat('%', ffd.value, '%')
+            and vft.type not in (0, 4) 
             and pir2.operator_name in (${users.map(() => '?').join(',')})      
-        group by pir2.operator_name, vl1.type 
-        order by pir2.operator_name, vl1.type`, 
-        params = [start, end, ...users]
+        group by pi.id, pir2.operator_name, vl1.type
+    ) a group by operator_name, type  
+    order by operator_name, type`, 
+    params = [start, end, ...users]
     result = await query(sql, params)
     return result || []
 }
 
 const getPhotographerFlowStat = async function (users, start, end) {
     let result = []
-    let sql = `select count(1) as count, vl.type from vision_leader vl
+    let sql = `select count(1) as count, type from (
+        select vl.type from vision_leader vl
         join processes p on p.form_id = vl.form_id
         join process_instances pi on p.id = pi.process_id
             and pi.status in ('COMPLETED', 'RUNNING')
@@ -670,19 +688,33 @@ const getPhotographerFlowStat = async function (users, start, end) {
                 and pir.activity_id = vl.activity_id
                 and pir.show_name = vl.activity_name
                 and pir.action_exit = vl.action_exit
-                and pir.id in (
+                and pir.id = (
                     select max(p2.id) from process_instance_records p2
-                    where p2.instance_id = pi.id
-                    group by p2.instance_id, p2.show_name, p2.activity_id
-                )
+                    where p2.instance_id = pi.id 
+                        and p2.activity_id = vl.activity_id 
+                        and p2.show_name = vl.activity_name)
+        join vision_type vt on vt.form_id = vl.form_id 
+        left join process_instance_values piv1 on piv1.instance_id = pi.id
+            and piv1.field_id = vt.field_id
+            and vt.type = 0
+        left join process_receipt pr on pr.process_id = pi.id
+        left join receipt_instance_values riv on riv.field_id = vt.field_id
+            and riv.instance_id = pr.receipt_id
+        join form_fields ff on ff.form_id = if(vt.type = 0, vt.form_id, vt.sub_form_id)
+            and vt.field_id = ff.field_id
+        left join vision_field_type vft on vft.form_id = ff.form_id
+        left join form_field_data ffd on ffd.id = vft.ffd_id
         where vl.vision_type = 2
             and pir.operate_time >= ?
             and pir.operate_time <= ? 
+            and if(piv1.value is null, riv.value, piv1.value) like concat('%', ffd.value, '%')
+            and vft.type not in (0, 4) 
             and exists (
                 select pir2.id from process_instance_records pir2 
                 where pi.id = pir2.instance_id 
                     and pir2.operator_name in (${users.map(() => '?').join(',')})            
-            ) group by vl.type`, params = [start, end, ...users]
+            ) group by pi.id, vl.type
+        ) a group by type`, params = [start, end, ...users]
     result = await query(sql, params)
     return result || []
 }
@@ -706,20 +738,35 @@ const getDesignerNodeStat = async function (group, start, end) {
             and pir1.activity_id = vl1.activity_id
             and pir1.show_name = vl1.activity_name
             and pir1.action_exit = vl1.action_exit
-            and pir1.id in (
+            and pir1.id = (
                 select max(p2.id) from process_instance_records p2
-                where (p2.instance_id = pi.id)
-                group by p2.instance_id, p2.show_name, p2.activity_id)
+                where p2.instance_id = pi.id 
+                    and p2.activity_id = vl1.activity_id 
+                    and p2.show_name = vl1.activity_name)
         join process_instance_records pir2 on pir2.instance_id = pi.id
             and pir2.activity_id = vl2.activity_id
             and pir2.show_name = vl2.activity_name
             and pir2.action_exit = vl2.action_exit
-            and pir2.id in (
+            and pir2.id = (
                 select max(p2.id) from process_instance_records p2
-                where (p2.instance_id = pi.id)
-                group by p2.instance_id, p2.show_name, p2.activity_id)
+                where p2.instance_id = pi.id 
+                    and p2.activity_id = vl2.activity_id 
+                    and p2.show_name = vl2.activity_name)
+        join vision_type vt on vt.form_id = vl1.form_id 
+        left join process_instance_values piv1 on piv1.instance_id = pi.id
+            and piv1.field_id = vt.field_id
+            and vt.type = 0
+        left join process_receipt pr on pr.process_id = pi.id
+        left join receipt_instance_values riv on riv.field_id = vt.field_id
+            and riv.instance_id = pr.receipt_id
+        join form_fields ff on ff.form_id = if(vt.type = 0, vt.form_id, vt.sub_form_id)
+            and vt.field_id = ff.field_id
+        left join vision_field_type vft on vft.form_id = ff.form_id
+        left join form_field_data ffd on ffd.id = vft.ffd_id
         where pir1.operate_time >= ? 
             and pir1.operate_time < ?
+            and if(piv1.value is null, riv.value, piv1.value) like concat('%', ffd.value, '%')
+            and vft.type not in (0, 4)
             and if(vlf.is_reverse = 0, 
                 exists(
                     select piv.id from process_instance_values piv 
@@ -762,7 +809,8 @@ const getDesignerNodeStat = async function (group, start, end) {
 
 const getPhotographerNodeStat = async function (users, start, end) {
     let result = []
-    let sql = `select count(1) as count, vl.type, vlf.type as vision_type from vision_leader vl
+    let sql = `select count(1) as count, type, vision_type from (
+        select vl.type, vlf.type as vision_type from vision_leader vl
         join vision_leader_field vlf on vl.form_id = vl.form_id
             and vlf.type in (4,5) 
             and vlf.tag = 'visionLeader'
@@ -773,21 +821,36 @@ const getPhotographerNodeStat = async function (users, start, end) {
                 and pir.activity_id = vl.activity_id
                 and pir.show_name = vl.activity_name
                 and pir.action_exit = vl.action_exit
-                and pir.id in (
+                and pir.id = (
                     select max(p2.id) from process_instance_records p2
-                    where p2.instance_id = pi.id
-                    group by p2.instance_id, p2.show_name, p2.activity_id
-                )
+                    where p2.instance_id = pi.id 
+                        and p2.activity_id = vl.activity_id 
+                        and p2.show_name = vl.activity_name)
         join process_instance_values piv on piv.instance_id = pi.id
             and piv.field_id = vlf.field_id
             and piv.value = '"是"'
-        where vl.vision_type = 2 and pir.operate_time >= ? 
+        join vision_type vt on vt.form_id = vl.form_id 
+        left join process_instance_values piv1 on piv1.instance_id = pi.id
+            and piv1.field_id = vt.field_id
+            and vt.type = 0
+        left join process_receipt pr on pr.process_id = pi.id
+        left join receipt_instance_values riv on riv.field_id = vt.field_id
+            and riv.instance_id = pr.receipt_id
+        join form_fields ff on ff.form_id = if(vt.type = 0, vt.form_id, vt.sub_form_id)
+            and vt.field_id = ff.field_id
+        left join vision_field_type vft on vft.form_id = ff.form_id
+        left join form_field_data ffd on ffd.id = vft.ffd_id
+        where vl.vision_type = 2 
+            and pir.operate_time >= ? 
             and pir.operate_time <= ? 
+            and if(piv1.value is null, riv.value, piv1.value) like concat('%', ffd.value, '%') 
+            and vft.type not in (0, 4) 
             and exists (
                 select pir2.id from process_instance_records pir2 
                 where pi.id = pir2.instance_id
                     and pir2.operator_name in (${users.map(() => '?').join(',')}) 
-            ) group by vl.type, vlf.type`, params = [start, end, ...users]
+            ) group by pi.id, vl.type, vlf.type
+        ) a group by type, vision_type`, params = [start, end, ...users]
     result = await query(sql, params)
     return result || []
 }
@@ -816,24 +879,32 @@ const getDesignerStat = async function (user, type, start, end) {
                 and pir1.activity_id = vl1.activity_id
                 and pir1.show_name = vl1.activity_name
                 and pir1.action_exit = vl1.action_exit
-                and pir1.id in (
+                and pir1.id = (
                     select max(p2.id) from process_instance_records p2
-                    where (p2.instance_id = pi.id)
-                    group by p2.instance_id, p2.show_name, p2.activity_id)
+                    where p2.instance_id = pi.id 
+                        and p2.activity_id = vl1.activity_id 
+                        and p2.show_name = vl1.activity_name)
             join process_instance_records pir2 on pir2.instance_id = pi.id
                 and pir2.activity_id = vl2.activity_id
                 and pir2.show_name = vl2.activity_name
                 and pir2.action_exit = vl2.action_exit
-                and pir2.id in (
+                and pir2.id = (
                     select max(p2.id) from process_instance_records p2
-                    where (p2.instance_id = pi.id)
-                    group by p2.instance_id, p2.show_name, p2.activity_id)
+                    where p2.instance_id = pi.id
+                        and p2.activity_id = vl2.activity_id
+                        and p2.show_name = vl2.activity_name)
             join vision_activity va on va.form_id = vl1.form_id
-            join vision_activity_field vaf on vaf.activity_id = va.id
+            join vision_activity_field vaf on vaf.activity_id = va.id 
+                and vaf.type = 1
             join process_instance_records p1 on p1.instance_id = pi.id
                     and va.activity_id = p1.activity_id
                     and va.activity_name = p1.show_name
-                    and p1.action_exit = 'agree'
+                    and p1.action_exit = 'agree' 
+                    and p1.id = (
+						select max(p2.id) from process_instance_records p2
+						where p2.instance_id = pi.id
+							and p2.activity_id = va.activity_id
+							and p2.show_name = va.activity_name)
             left join process_instance_values piv on piv.instance_id = pi.id
                 and piv.field_id = vaf.field_id
                 and vaf.is_sub = 0
@@ -843,18 +914,32 @@ const getDesignerStat = async function (user, type, start, end) {
                 ), false, true)
             left join process_instance_sub_values pis1 on pis1.instance_id = pi.id
                 and pis1.field_id = va.sub_field
+                and pis1.value = pir1.operator_name 
             left join process_instance_sub_values pis on pis.instance_id = pi.id
                 and pis.field_id = vaf.field_id
                 and vaf.is_sub = 1
                 and pis.index = pis1.index
             join form_fields ff on ff.form_id = vl1.form_id
                 and ff.field_id = if(pis.id is not null, pis.field_id, piv.field_id)
+            join vision_type vt on vt.form_id = vl1.form_id 
+                and vt.tag = va.tag
+            left join process_instance_values piv1 on piv1.instance_id = pi.id
+                and piv1.field_id = vt.field_id
+                and vt.type = 0
+            left join process_receipt pr on pr.process_id = pi.id
+            left join receipt_instance_values riv on riv.field_id = vt.field_id
+                and riv.instance_id = pr.receipt_id
+            join form_fields ff1 on ff1.form_id = if(vt.type = 0, vt.form_id, vt.sub_form_id)
+                and vt.field_id = ff1.field_id
+            left join vision_field_type vft on vft.form_id = ff1.form_id
+            left join form_field_data ffd on ffd.id = vft.ffd_id
             where pir1.operate_time >= ?
-                and pir1.operate_time <= ?
+                and pir1.operate_time <= ? 
+                and if(piv1.value is null, riv.value, piv1.value) like concat('%', ffd.value, '%') 
+                and vft.type not in (0, 4) 
                 and vl1.type = ?
                 and va.tag = 'insideArt'
                 and pir2.operator_name in (${usernames.map(() => '?').join(',')})      
-            group by p1.operator_name, pi.id, piv.id, pis.id, ff.title, piv.value, pis.value
         ) a group by a.operator_name, a.title`, params = [start, end, type, ...usernames]
     let result = []
     let row = await query(sql, params)
@@ -870,6 +955,7 @@ const getPhotographerStat = async function (user, type, start, end) {
             from vision_leader vl
             join vision_activity va on va.form_id = vl.form_id
             join vision_activity_field vaf on vaf.activity_id = va.id
+                and vaf.type = 1
             join processes p on p.form_id = vl.form_id
             join process_instances pi on pi.process_id = p.id
                 and pi.status in ('RUNNING', 'COMPLETED')
@@ -877,11 +963,11 @@ const getPhotographerStat = async function (user, type, start, end) {
                 and vl.activity_id = pir.activity_id
                 and vl.activity_name = pir.show_name
                 and vl.action_exit = pir.action_exit
-                and pir.id in (
+                and pir.id = (
                     select max(p2.id) from process_instance_records p2
-                    where p2.instance_id = pi.id
-                    group by p2.instance_id, p2.show_name, p2.activity_id
-                )
+                    where p2.instance_id = pi.id 
+                        and p2.activity_id = vl.activity_id 
+                        and p2.show_name = vl.activity_name)
             join process_instance_records p1 on p1.instance_id = pi.id
                 and va.activity_id = p1.activity_id
                 and va.activity_name = p1.show_name
@@ -895,6 +981,7 @@ const getPhotographerStat = async function (user, type, start, end) {
                 ), false, true)
             left join process_instance_sub_values pis1 on pis1.instance_id = pi.id
                 and pis1.field_id = va.sub_field
+                and pis1.value = p1.operator_name
             left join process_instance_sub_values pis on pis.instance_id = pi.id
                 and pis.field_id = vaf.field_id
                 and vaf.is_sub = 1
@@ -952,7 +1039,8 @@ const getVisionField = async function (start, end, tag, type, leader_type, field
             and piv.field_id = vlf.field_id
         where vl.tag = ? 
             and vl.type = ?
-            and vl.leader_type = ?`
+            and vl.leader_type = ?
+            and if(v1 is null, v2, v1) like concat('%', v3, '%')`
     let params = [tag, type, leader_type]
     if (field_type != null) {
         sql = `${sql} and vlf.type = ?`
@@ -976,10 +1064,11 @@ const getVisionFieldValue = async function (start, end, tag, type, leader_type, 
             and vl.type = ?
             and vl.leader_type = ? 
             and vlf.type = ? 
+            and if(v1 is null, v2, v1) like concat('%', v3, '%') 
             and if(vlf.is_reverse = 0, 
                 exists(select piv.id from process_instance_values piv 
-                    where piv.instance_id = vl.id
-					    and vlf.field_id = piv.field_id
+                    where piv.instance_id = vl.id 
+                        and vlf.field_id = piv.field_id
                         and piv.value > 0
                 ) and not exists(
                     select vlf1.id from vision_leader_field vlf1 
@@ -988,10 +1077,10 @@ const getVisionFieldValue = async function (start, end, tag, type, leader_type, 
                     where vlf1.type < vlf.type
                         and vlf1.type in (7,8)
                         and piv.value > 0), 
-                not exists(
-				    select piv.id from process_instance_values piv 
-                    where piv.instance_id = vl.id
-					    and vlf.field_id like concat('%', piv.field_id, '%')
+                not exists( 
+                    select piv.id from process_instance_values piv 
+                    where piv.instance_id = vl.id 
+                        and vlf.field_id like concat('%', piv.field_id, '%')
                         and piv.value > 0)) 
             and vl.operate_time >= ? 
             and vl.operate_time <= ? 
