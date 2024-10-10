@@ -17,6 +17,7 @@ const {
     retouchList
 } = require('../const/newFormConst')
 const moment = require('moment')
+const userRepo = require('./userRepo')
 
 /**
  * 计算个人的流程逻辑
@@ -328,7 +329,7 @@ const getFlowProcessInstances = async function (params, offset, limit) {
         total: 0
     }
     let presql = `select count(1) as count from (`
-    let subsql = `select id, processInstanceId, title, instanceStatus, createTime, operateTime 
+    let subsql = `select id, creator, processInstanceId, title, instanceStatus, createTime, operateTime 
         from vision_process vp where form_id = ?`
     p1.push(parseInt(params.id))
     if (params.tag) {
@@ -420,6 +421,10 @@ const getFlowProcessInstances = async function (params, offset, limit) {
                     row[i]['action'] = row1[0].show_name
                     row[i]['operator'] = row1[0].operator_name
                 }
+                let user = await userRepo.getUserByDingdingUserId(row[i].creator)
+                if (user?.length) {
+                    row[i]['creator'] = user[0].nickname
+                }
             }
             result.data = row
         }
@@ -438,7 +443,8 @@ const getVisionProcessInstances = async function (params, offset, limit) {
             pi.title,
             pi.status as instanceStatus,
             pi.create_time as createTime,
-            pi.update_time as operateTime
+            pi.update_time as operateTime, 
+            pi.creator 
         from processes p
         join vision_leader vl on p.form_id = vl.form_id
         join vision_type vt on vl.form_id = vt.form_id
@@ -465,7 +471,13 @@ const getVisionProcessInstances = async function (params, offset, limit) {
                 where p2.instance_id = pi.id
                     and p2.show_name = vl.activity_name
                     and p2.activity_id = vl.activity_id)
-        where vl.form_id = ?`
+        join form_fields ff on ff.form_id = if(vt.type = 0, vt.form_id, vt.sub_form_id)
+            and vt.field_id = ff.field_id
+        left join vision_field_type vft on vft.form_id = ff.form_id
+        left join form_field_data ffd on ffd.id = vft.ffd_id
+        where vl.form_id = ? 
+            and if(piv1.value is null, riv.value, piv1.value) like concat('%', ffd.value, '%')
+            and vft.type not in (0, 4) `
     p1.push(parseInt(params.id))
     if (params.startDate) {
         subsql = `${subsql} and pir.operate_time >= ?`
@@ -583,6 +595,10 @@ const getVisionProcessInstances = async function (params, offset, limit) {
                 if (row1?.length) {
                     row[i]['action'] = row1[0].show_name
                     row[i]['operator'] = row1[0].operator_name
+                }
+                let user = await userRepo.getUserByDingdingUserId(row[i].creator)
+                if (user?.length) {
+                    row[i]['creator'] = user[0].nickname
                 }
             }
             result.data = row

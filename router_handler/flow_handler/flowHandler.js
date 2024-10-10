@@ -112,6 +112,7 @@ const exportFlowsProcess = async (req, res, next) => {
         }
         let columns = [
             { header: '实例ID', key: 'processInstanceId', isDefault: true },
+            { header: '创建者', key: 'creator', isDefault: true }, 
             { header: '实例标题', key: 'title', isDefault: true },
             { header: '状态', key: 'instanceStatus', isDefault: true },
             { header: '创建时间', key: 'createTime', isDefault: true },
@@ -132,9 +133,9 @@ const exportFlowsProcess = async (req, res, next) => {
 
         for (let i = 0; i < data.data.length; i++) {
             let tmp = JSON.parse(JSON.stringify(tmpDefault))
-            
-            tmp['processInstanceId'] = data.data[i].processInstanceId,
-            tmp['title'] = data.data[i].title,
+            tmp['creator'] = data.data[i].creator
+            tmp['processInstanceId'] = data.data[i].processInstanceId
+            tmp['title'] = data.data[i].title
             tmp['instanceStatus'] = data.data[i].instanceStatus
             tmp['createTime'] = data.data[i].createTime
             tmp['operateTime'] = data.data[i].operateTime

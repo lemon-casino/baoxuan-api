@@ -284,7 +284,8 @@ const getUsersByTagCodesAndNickname = async (nicknames, tagCodes, orderById) => 
         FROM users u JOIN users_tags ut ON u.dingding_user_id = ut.user_id
         JOIN tags t ON ut.tag_code = t.tag_code
         WHERE u.nickname IN (${nicknames.map(() => '?').join(',')}) 
-            AND t.tag_code IN (${tagCodes.map(() => '?').join(',')})`
+            AND t.tag_code IN (${tagCodes.map(() => '?').join(',')})
+            AND u.status = 1`
     if (orderById) sql = `${sql} ORDER BY u.user_id`
     else sql = `${sql} ORDER BY t.tag_code`
     const result = await query(sql, [...nicknames, ...tagCodes])
@@ -295,8 +296,17 @@ const getUsersWithTagsByTagCodes = async (tagCodes) => {
     let sql = `SELECT u.user_id AS id, ut.user_id, t.tag_code, t.tag_name, u.nickname 
         FROM users u JOIN users_tags ut ON u.dingding_user_id = ut.user_id
         JOIN tags t ON ut.tag_code = t.tag_code
-        WHERE t.tag_code IN (${tagCodes.map(() => '?').join(',')})`
+        WHERE t.tag_code IN (${tagCodes.map(() => '?').join(',')})
+            AND u.status = 1`
     const result = await query(sql, tagCodes)
+    return result
+}
+
+const getUserByDingdingUserId = async (dingding_user_id) => {
+    let sql = `SELECT user_id AS id, nickname FROM users 
+        WHERE dingding_user_id = ?
+            AND status = 1`
+    const result = await query(sql, [dingding_user_id])
     return result
 }
 
@@ -318,5 +328,6 @@ module.exports = {
     getUsersByIds,
     undoResign,
     getUsersByTagCodesAndNickname,
-    getUsersWithTagsByTagCodes
+    getUsersWithTagsByTagCodes,
+    getUserByDingdingUserId
 }
