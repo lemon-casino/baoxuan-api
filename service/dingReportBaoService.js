@@ -32,13 +32,33 @@ const sendDingReportBao= async () => {
     for (const procureFightingFlow of procureFightingFlows) {
         for (const Flow of procureFightingFlow.overallprocessflow) {
 
-            if (Flow.showName === "各平台负责人填写订货量" && (Flow.actionExit === "doing" || Flow.actionExit === "agree") ) {
+            if (Flow.showName === "各平台负责人填写订货量" && Flow.actionExit === "doing" ) {
                 redisPresenceTodayPlatform.push({
                     formUuid:procureFightingFlow.formUuid,
                     title: procureFightingFlow.title,
                     showName: Flow.showName,
                     code: procureFightingFlow.processInstanceId,
                     createTime: procureFightingFlow.createTimeGMT,
+                    receiverUserIdList: Flow.domainList.map(item => item.operator)
+                });
+            }   else  if (Flow.showName === "运营成本是否选中" && (Flow.actionExit === "doing" || Flow.actionExit === "agree")) {
+                redisPresenceToday.push({
+                    formUuid:runningFightingFlow.formUuid,
+                    title: runningFightingFlow.title,
+                    showName: Flow.showName,
+                    code: runningFightingFlow.processInstanceId,
+                    createTime: runningFightingFlow.createTimeGMT,
+                    receiverUserIdList: receiverUserIdList
+                });
+            }
+            else if (Flow.showName === "运营确认样品是否选中" && (Flow.actionExit === "doing" || Flow.actionExit === "agree")) {
+
+                redisPresenceToday.push({
+                    formUuid:runningFightingFlow.formUuid,
+                    title: runningFightingFlow.title,
+                    showName: Flow.showName,
+                    code: runningFightingFlow.processInstanceId,
+                    createTime: runningFightingFlow.createTimeGMT,
                     receiverUserIdList: receiverUserIdList
                 });
             }
@@ -61,14 +81,14 @@ const sendDingReportBao= async () => {
                     createTime: runningFightingFlow.createTimeGMT,
                     receiverUserIdList: receiverUserIdList
                 });
-            } else if (Flow.showName === "各平台负责人填写订货量" && (Flow.actionExit === "doing" || Flow.actionExit === "agree")) {
+            } else if (Flow.showName === "各平台负责人填写订货量" && Flow.actionExit === "doing") {
                 redisPresenceTodayPlatform.push({
                     formUuid:runningFightingFlow.formUuid,
                     title: runningFightingFlow.title,
                     showName: Flow.showName,
                     code: runningFightingFlow.processInstanceId,
                     createTime: runningFightingFlow.createTimeGMT,
-                    receiverUserIdList: receiverUserIdList
+                    receiverUserIdList: Flow.domainList.map(item => item.operator)
                 });
             }
         }
