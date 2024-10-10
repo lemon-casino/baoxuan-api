@@ -476,8 +476,9 @@ const getVisionProcessInstances = async function (params, offset, limit) {
         left join vision_field_type vft on vft.form_id = ff.form_id
         left join form_field_data ffd on ffd.id = vft.ffd_id
         where vl.form_id = ? 
-            and if(piv1.value is null, riv.value, piv1.value) like concat('%', ffd.value, '%')
-            and vft.type not in (0, 4) `
+            and if(vl.type = 2 or vl.vision_type, 
+                if(piv1.value is null, riv.value, piv1.value) like concat('%', ffd.value, '%'), 1)
+                and vft.type not in (0, 4) `
     p1.push(parseInt(params.id))
     if (params.startDate) {
         subsql = `${subsql} and pir.operate_time >= ?`
