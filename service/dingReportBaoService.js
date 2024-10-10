@@ -107,13 +107,13 @@ const sendDingReportBao= async () => {
         const ding = await dingReportBaoRepo.findOrCreateDingId(dingParams);
         const url = `https://t8sk7d.aliwork.com/APP_BXS79QCC8MY5ZV0EZZ07/processDetail?formUuid=${item.formUuid}&procInsId=${item.code}&isAdmin=true&navConfig.layout=1180`;
 
-       if (ding.carryOut) {
+/*       if (ding.carryOut) {
             const dingid = await sendDing(token, "dingxv2iv4m4r2th5edi", 1, item.receiverUserIdList, `${item.title}的流程，请 ${item.showName} ${url}`);
             await dingReportBaoRepo.updateDingId({
                 'code': item.code,
                 'dingId': dingid
             });
-        }
+        }*/
     }
 
     async function processItems(filteredItems, isDeferred = false) {
