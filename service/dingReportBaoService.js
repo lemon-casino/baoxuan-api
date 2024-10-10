@@ -19,81 +19,63 @@ const sendDingReportBao= async () => {
     const redisPresenceTodayPlatform = [];
 
     let receiverUserIdList = [];
-    //获得Flow.showName是'项目负责人确认到货'的 .domainList.map(item => item.operator)
+// 获得Flow.showName是'项目负责人确认到货'的 .domainList.map(item => item.operator)
     for (const flow of procureFightingFlows[0].overallprocessflow) {
         if (flow.showName === "项目负责人确认到货") {
             receiverUserIdList = flow.domainList.map(item => item.operator);
             break; // 找到后退出内层循环
         }
     }
-//
 
+// 抽象出公共逻辑
+    function pushToRedisPresenceToday(flow, fightingFlow) {
+        return {
+            formUuid: fightingFlow.formUuid,
+            title: fightingFlow.title,
+            showName: flow.showName,
+            code: fightingFlow.processInstanceId,
+            createTime: fightingFlow.createTimeGMT,
+            receiverUserIdList: receiverUserIdList
+        };
+    }
 
+// 采购任务运营发布 全平台
     for (const procureFightingFlow of procureFightingFlows) {
-        for (const Flow of procureFightingFlow.overallprocessflow) {
-
-            if (Flow.showName === "各平台负责人填写订货量" && Flow.actionExit === "doing" ) {
+        for (const flow of procureFightingFlow.overallprocessflow) {
+            if (flow.showName === "各平台负责人填写订货量" && flow.actionExit === "doing") {
                 redisPresenceTodayPlatform.push({
-                    formUuid:procureFightingFlow.formUuid,
+                    formUuid: procureFightingFlow.formUuid,
                     title: procureFightingFlow.title,
-                    showName: Flow.showName,
+                    showName: flow.showName,
                     code: procureFightingFlow.processInstanceId,
                     createTime: procureFightingFlow.createTimeGMT,
-                    receiverUserIdList: Flow.domainList.map(item => item.operator)
+                    receiverUserIdList: flow.domainList.map(item => item.operator)
                 });
-            }   else  if (Flow.showName === "运营成本是否选中" && (Flow.actionExit === "doing" || Flow.actionExit === "agree")) {
-                redisPresenceToday.push({
-                    formUuid:runningFightingFlow.formUuid,
-                    title: runningFightingFlow.title,
-                    showName: Flow.showName,
-                    code: runningFightingFlow.processInstanceId,
-                    createTime: runningFightingFlow.createTimeGMT,
-                    receiverUserIdList: receiverUserIdList
-                });
-            }
-            else if (Flow.showName === "运营确认样品是否选中" && (Flow.actionExit === "doing" || Flow.actionExit === "agree")) {
-
-                redisPresenceToday.push({
-                    formUuid:runningFightingFlow.formUuid,
-                    title: runningFightingFlow.title,
-                    showName: Flow.showName,
-                    code: runningFightingFlow.processInstanceId,
-                    createTime: runningFightingFlow.createTimeGMT,
-                    receiverUserIdList: receiverUserIdList
-                });
+            } else if (["运营成本是否选中", "运营确认样品是否选中"].includes(flow.showName) && (flow.actionExit === "doing" || flow.actionExit === "agree")) {
+                redisPresenceToday.push(pushToRedisPresenceToday(flow, procureFightingFlow));
             }
         }
     }
 
-// 各平台负责人
+// 采购选品会
     for (const runningFightingFlow of runningFightingFlows) {
-
-        for (const Flow of runningFightingFlow.overallprocessflow) {
-            if (Flow.showName === "审核产品" && (Flow.actionExit === "doing" || Flow.actionExit === "agree")) {
-                //receiverUserIdLists数组 移除 286702661035552690元素
+        for (const flow of runningFightingFlow.overallprocessflow) {
+            if (flow.showName === "审核产品" && (flow.actionExit === "doing" || flow.actionExit === "agree")) {
+                // 移除特定元素
                 receiverUserIdList = receiverUserIdList.filter(item => item !== '014668034529316173');
-
-                redisPresenceToday.push({
-                    formUuid:runningFightingFlow.formUuid,
-                    title: runningFightingFlow.title,
-                    showName: Flow.showName,
-                    code: runningFightingFlow.processInstanceId,
-                    createTime: runningFightingFlow.createTimeGMT,
-                    receiverUserIdList: receiverUserIdList
-                });
-            } else if (Flow.showName === "各平台负责人填写订货量" && Flow.actionExit === "doing") {
+                redisPresenceToday.push(pushToRedisPresenceToday(flow, runningFightingFlow));
+            } else if (flow.showName === "各平台负责人填写订货量" && flow.actionExit === "doing") {
                 redisPresenceTodayPlatform.push({
-                    formUuid:runningFightingFlow.formUuid,
+                    formUuid: runningFightingFlow.formUuid,
                     title: runningFightingFlow.title,
-                    showName: Flow.showName,
+                    showName: flow.showName,
                     code: runningFightingFlow.processInstanceId,
                     createTime: runningFightingFlow.createTimeGMT,
-                    receiverUserIdList: Flow.domainList.map(item => item.operator)
+                    receiverUserIdList: flow.domainList.map(item => item.operator)
                 });
             }
         }
     }
-
 // 将截止日期定义为 2024-09-25
     const cutoffDate = new Date('2024-09-25T00:00:00Z');
 
