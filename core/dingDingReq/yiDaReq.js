@@ -288,7 +288,6 @@ const sendDing = async (token,robotCode,remindType,receiverUserIdList,content) =
         receiverUserIdList,
         content
     }
-    //console.log(body)
    const  xx =await httpUtil.post(url, body, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
     return xx.openDingId
 }

@@ -18,24 +18,35 @@ const sendDingReportBao= async () => {
     const redisPresenceToday = [];
     const redisPresenceTodayPlatform = [];
 
-    let receiverUserIdList = [];
 // 获得Flow.showName是'项目负责人确认到货'的 .domainList.map(item => item.operator)
-    for (const flow of procureFightingFlows[0].overallprocessflow) {
-        if (flow.showName === "项目负责人确认到货") {
-            receiverUserIdList = flow.domainList.map(item => item.operator);
-            break; // 找到后退出内层循环
+
+    function extractUserIdList(fightingFlows, targetShowName, userIdListVar) {
+        for (const fightingFlow of fightingFlows) {
+            for (const flow of fightingFlow.overallprocessflow) {
+                if (flow.showName === targetShowName && flow.domainList.length > 0) {
+                    userIdListVar = flow.domainList.map(item => item.operator);
+                    return; // 找到后退出整个函数
+                }
+            }
         }
     }
 
+// 使用该函数
+    let procureUserIdList = [];
+    let runningUserIdList = [];
+
+    extractUserIdList(procureFightingFlows, "项目负责人确认到货", procureUserIdList);
+    extractUserIdList(runningFightingFlows, "项目负责人确认到货", runningUserIdList);
+
 // 抽象出公共逻辑
-    function pushToRedisPresenceToday(flow, fightingFlow) {
+    function pushToRedisPresenceToday(flow, fightingFlow,i) {
         return {
             formUuid: fightingFlow.formUuid,
             title: fightingFlow.title,
             showName: flow.showName,
             code: fightingFlow.processInstanceId,
             createTime: fightingFlow.createTimeGMT,
-            receiverUserIdList: receiverUserIdList
+            receiverUserIdList: flow.domainList.length > 0 ? flow.domainList.map(item => item.operator) : (i===1) ? procureUserIdList : runningUserIdList.filter(item => item !== '014668034529316')
         };
     }
 
@@ -52,7 +63,7 @@ const sendDingReportBao= async () => {
                     receiverUserIdList: flow.domainList.map(item => item.operator)
                 });
             } else if (["运营成本是否选中", "运营确认样品是否选中"].includes(flow.showName) && (flow.actionExit === "doing" || flow.actionExit === "agree")) {
-                redisPresenceToday.push(pushToRedisPresenceToday(flow, procureFightingFlow));
+                redisPresenceToday.push(pushToRedisPresenceToday(flow, procureFightingFlow,1));
             }
         }
     }
@@ -62,8 +73,7 @@ const sendDingReportBao= async () => {
         for (const flow of runningFightingFlow.overallprocessflow) {
             if (flow.showName === "审核产品" && (flow.actionExit === "doing" || flow.actionExit === "agree")) {
                 // 移除特定元素
-                receiverUserIdList = receiverUserIdList.filter(item => item !== '014668034529316173');
-                redisPresenceToday.push(pushToRedisPresenceToday(flow, runningFightingFlow));
+                redisPresenceToday.push(pushToRedisPresenceToday(flow, runningFightingFlow,2));
             } else if (flow.showName === "各平台负责人填写订货量" && flow.actionExit === "doing") {
                 redisPresenceTodayPlatform.push({
                     formUuid: runningFightingFlow.formUuid,
