@@ -35,7 +35,6 @@ const getUsersOfDepartment = async (departmentId) => {
         }
     }
     if (departmentId.toString() === "902768824") {
-        console.log(11111)
         specialDepartment.push(
             {
                 "name": "许志伟",
@@ -57,7 +56,6 @@ const getUsersOfDepartment = async (departmentId) => {
         )
     }
     if (department) {
-        //如果departmentId.tostring() === "departmentId"  department.dep_user 追加 specialDepartment
         if (departmentId.toString() === "902768824"){
             department.dep_user = department.dep_user.concat(specialDepartment)
         }
