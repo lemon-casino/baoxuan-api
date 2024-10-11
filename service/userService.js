@@ -26,13 +26,41 @@ const getDingDingUserId = async (user_id) => {
 const getUsersOfDepartment = async (departmentId) => {
     const usersOfDepartments = await redisRepo.getUsersUnderDepartment()
     let department = null
+    let specialDepartment = []
+    //如果departmentId 是 902768824  在 department 902768824 的基础想 增加一个 循环的时候 增加 departmentId 是946921130
     for (const usersOfDepartment of usersOfDepartments) {
         department = departmentService.findMatchedDepartmentFromRoot(departmentId, usersOfDepartment)
         if (department) {
             break
         }
     }
+    if (departmentId.toString() === "902768824") {
+        console.log(11111)
+        specialDepartment.push(
+            {
+                "name": "许志伟",
+                "userid": "665308535235153888"
+            },
+            {
+                "name": "陈宏伟",
+                "userid": "01000020696737718456"
+            },
+            {
+                "name": "丛颜文",
+                "userid": "300517390820452294"
+            },
+            {
+                "name": "丁宗健",
+                "userid": "433458046919937647"
+            }
+
+        )
+    }
     if (department) {
+        //如果departmentId.tostring() === "departmentId"  department.dep_user 追加 specialDepartment
+        if (departmentId.toString() === "902768824"){
+            department.dep_user = department.dep_user.concat(specialDepartment)
+        }
         return department.dep_user
     }
     throw new NotFoundError(`未找到部门：${departmentId}的信息`)
