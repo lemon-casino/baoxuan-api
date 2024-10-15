@@ -130,7 +130,7 @@ const sendDingReportBao= async () => {
         const { access_token: token } = await getToken(); // 提前获取 token
         // 使用 Promise.all 来并行处理项目，加快执行速度
         await Promise.all(filteredItems.map(async (item, index) => {
-            await new Promise(resolve => setTimeout(resolve, index * 1000)); // 延迟 1 秒，按序列加延迟
+            await new Promise(resolve => setTimeout(resolve, index * 10000)); // 延迟 1 秒，按序列加延迟
             await processItem(item, token, isDeferred);
         }));
     }

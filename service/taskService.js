@@ -640,7 +640,6 @@ const syncProcessVersions = async (cookies) => {
 const jdLinkDataIsAutomaticallyInitiated = async () => {
     logger.info("京东同步进行中...")
        const  runningFightingFlows =await  getInquiryTodayjdDailyReport()
-    console.log(runningFightingFlows)
     const userList = await userService.getDingDingUserIdAndNickname()
 
     const removeDuplicateLinkIds = async () => {
@@ -684,7 +683,7 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
                 checkboxField_m11r277t,
                 radioField_locg3nxq
             }, null, 2);
-               await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
+              await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
         }
 
 
