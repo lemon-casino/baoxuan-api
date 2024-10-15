@@ -2,6 +2,7 @@ const JDDailyReportBaoRepo = require("../repository/JDDailyReportBaoRepo")
 const {theJDProcessIsCompletedInThreeDays, theJDProcessIsProblemLinkThreeDays} = require("@/repository/processDetailsRepo");
 const {getTodaySplitFlowsByFormIdAndFlowStatus} = require("@/service/flowService");
 const {flowStatusConst} = require("@/const/flowConst");
+const {link_properties} = require("@/repository/dianshangOperationAttribute");
 const JDLinkExceptionFlowFormId = "FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW"
 
 
@@ -144,7 +145,7 @@ const getInquiryTodayjdDailyReport = async () => {
     // 这是最终的 三天内+ 已发起的异常
   //  console.log(mergedResult);
      // 去掉questionType为空的项
-    return filteredResults.map(filteredItem => {
+    filteredResults.map(filteredItem => {
         const mergedItem = mergedResult.find(mergedItem => mergedItem.linkId === filteredItem.linkId);
 
         if (mergedItem) {
@@ -154,6 +155,39 @@ const getInquiryTodayjdDailyReport = async () => {
 
         return filteredItem; // 保留没有匹配的项
     }).filter(item => item.questionType !== null);
+
+    for (let i = filteredResults.length - 1; i >= 0; i--) {
+        const filteredResult = filteredResults[i];
+        const judgment = await link_properties(filteredResult.linkId);
+
+        if (judgment === '市场低利润') {
+            // Remove '利润率小于15%' if it exists
+            filteredResult.questionType = filteredResult.questionType.filter(type => type !== '利润率小于15%');
+        }
+        else if (judgment === '新品上攻' || judgment === '老品打仗') {
+            // Remove '利润率小于15%', '利润为负', and '推广费比大于12%'
+            filteredResult.questionType = filteredResult.questionType.filter(type =>
+                type !== '利润率小于15%' && type !== '利润为负' && type !== '推广费比大于12%'
+            );
+        }
+        else if (judgment === '销完下架') {
+            // Keep only '费比大于12%' or '利润为负', remove others
+            filteredResult.questionType = filteredResult.questionType.filter(type =>
+                type === '费比大于12%' || type === '利润为负'
+            );
+        }
+
+        // If the questionType array is empty, remove the filteredResult from filteredResults
+        if (filteredResult.questionType.length === 0) {
+            filteredResults.splice(i, 1);
+        }
+    }
+
+
+
+
+
+    return filteredResults
 
 
 
