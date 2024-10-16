@@ -18,5 +18,6 @@ module.exports = [
     "/customer-service/pdd/data-import",
     "/customer-service/jd/data-import",
     "/customer-service/dy/data-import",
+    '/workflows-service/purchase-workflow',
     /^\/download\/.*/,
 ]

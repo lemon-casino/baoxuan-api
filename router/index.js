@@ -43,4 +43,5 @@ module.exports = {
     "/users-tags": require("./usersTagsRouter"),
     "/development": require("./developmentRouter"),
     "/customer-service": require('./customerServiceRouter'),
+    "/workflows-service": require('./workflowServiceRouter'),
 }

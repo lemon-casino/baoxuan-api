@@ -654,7 +654,7 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
             }
             return false;
         });
-
+        console.log(runningFightingFlows)
         for (const runningFightingFlow of uniqueFlows) {
             const listingInfo = runningFightingFlow.listingInfo;
             const selectField_lma827of = (listingInfo === '新品30' || listingInfo === '新品60') ? '新品' : '老品';
