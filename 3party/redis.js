@@ -118,7 +118,7 @@ client.on("error", (err) => {
                 originator: flow.originator.name.nameInChinese,
                 processInstanceId: flow.processInstanceId,
                 creationTime: flow.createTimeGMT,
-                updatedTime: flow.modifiedTimeGMT,
+                updated: flow.modifiedTimeGMT,
                 reciprocaltype: type
             });
         }
@@ -129,11 +129,13 @@ client.on("error", (err) => {
 
 
 
+    //采购选品会
     await subscriber.subscribe('__keyspace@0__:flows:today:form:33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP', async (message) => {
         if (message === 'set') {
             await handleSubscription('flows:today:form:33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP',  {
+                //
                 productName: ['data', 'textField_lii9qtrm'],
-                vendorName: ['data', 'textField_lii9qtro'],
+                vendorName: ['data', 'textField_luxnuynv'],
                 duration: ['data', 'textField_lii9qtrx'],
                 productAttributes: ['data', 'radioField_lruf2zuu'],
                 patentOwnership: ['data', 'textareaField_lruf2zuw'],
@@ -176,6 +178,80 @@ client.on("error", (err) => {
                 coupangRefuse: ['data', 'radioField_lyrzy6xn'],
              /*   developmentRejection: ['data', 'checkboxField_lzal1evd'],*/
             },1);
+
+
+
+
+  /*          productName                                        '产品名称',
+                vendorName                                         '供应商名称',
+                selectionAttributes                                '选品属性',
+                duration                                           '工期',
+                productAttributes                                  '产品属性',
+                patentOwnership                                    '专利归属',
+                optimizationSuggestions                            '优化建议',
+                pushProductLine                                    '推品产品线',
+                creationTime                                       '创建时间', VVVV
+            updated                                            '更新时间',
+                completionTime                                     '完成-结束时间',
+                designDefinition                                   '设计款定义',
+                headOfOperations                                   '运营负责人',
+                headOfThePlatform                                  '平台负责人',
+                platform                                           '平台',
+                marketAnalysis                                     '市场分析',
+                selectionDataSource                                '选品数据来源',
+                costIsSelected                                     '成本选中',
+                estimatedSales                                     '预估销量',
+                reasonForRejection                                 '拒绝原因',
+                moq                                                '起订量',
+                preEncoded                                         '预编码',
+                headOfTmallOperations                              '天猫运营负责人',
+                counterElectTheHeadOfOperations                    '反选运营负责人',
+                headOfJDComOperations                              '京东运营负责人',
+                headOfTmallSupermarketOperations                   '天猫超市运营负责人',
+                headOfOperationsAtAmoyFactory                      '淘工厂运营负责人',
+                gainHeadOfOperationsAtVipshop                      '得物、唯品会运营负责人',
+                tmallVerticalStoreXiaohongshuOperationLeader       '天猫垂类店、小红书运营负责人',
+                headOfOperationsAtCoupang                          'Coupang运营负责人',
+                douyinHeadOfKuaishouOperations                     '抖音、快手运营负责人',
+                headOfOperationsOf1688                             '1688运营负责人',
+                whetherTmallIsSelected                             '天猫运营成本是否选中',
+                whetherJDIsSelected                               '京东运营成本是否选中',
+                pinduoduoIsSelected                               '拼多多运营成本是否选中',
+                whetherTmallSupermarketIsSelected                 '天猫运营成本是否选中 & 天猫产品审核',
+                whetherTheTaoFactoryIsSelected                    '淘工厂运营成本是否选中 & 淘工厂产品审核',
+                dewuVipshopWillBeSelected                         '得物,唯品会运营运营成本是否选中 & 得物,唯品会得物产品审核',
+                tmallVerticalStoreXiaohongshuIsSelected           '天猫垂类店,小红书运营成本是否选中',
+                whetherOrNotCoupangIsSelected                     'Coupang运营成本是否选中  & coupang产品审核',
+                douyinKuaishouIsSelected                          '抖音, 快手运营成本是否选中 &  抖音,快手产品审核',
+                uncheckedAlibaba                                  '1688运营成本是否选中 & 1688产品审核',
+                whetherToChooseTheJDOperationSample               '京东运营样品是否选中 & 京东市场',
+                whetherTheTmallOperationSampleIsSelected          '天猫运营样品是否选中 & 天猫市场',
+                whetherThePinduoduoOperationSampleIsSelected      '拼多多运营样品是否选中 & 拼多多市场',
+                tmallSupermarketOperationSampleIsNotSelected      '天猫超市运营样品是否选中 &  天猫超市产品审核',
+                TaoFactorOperationSampleWhetherChoose             '淘工厂运营样品是否选中 & 淘工厂市场',
+                gainsVipshopWhetherToChooseTheOperationSample     '得物, 唯品会运营样品是否选中 &  得物,唯品会市场',
+                tmallVerticalStoreLittleRedBook                   '天猫垂类店、小红书运营样品是否选中',
+                coupangOperationSampleIsSelected                  'Coupang运营样品是否选中 & coupang市场',
+                tikTokWhetherTheKuaishouOperationSampleIsSelected '抖音,快手运营样品是否选中 & 抖音,快手市场',
+                whetherOrNotToChooseAnOperationSa                 '1688运营样品是否选中 & 1688市场',
+                tmallRefused                                       '天猫拒绝原因',
+                jdComRefused                                       '京东拒绝原因',
+                pinduoduoRefused                                   '拼多多拒绝原因',
+                tmallSupermarketRefused                            '天猫超市拒绝原因',
+                theTaoFactoryRefused                               '淘工厂拒绝原因',
+                dewuVipshopWillRefuse                              '得物、唯品会拒绝原因',
+                tmallVerticalShopXiaohongshuRefuses                '天猫垂类店、小红书拒绝原因',
+                coupangRefuse                                      'Coupang拒绝原因',
+                deniedAlibaba                                      '1688拒绝原因',
+                tmallDevelopmentRejection                          '抖音、快手拒绝原因',
+                developmentRejection                               '开发拒绝原因',
+                reciprocaltype                                     '正推反推类型',   VVVV*/
+
+
+
+
+
+
         }
     });
 
