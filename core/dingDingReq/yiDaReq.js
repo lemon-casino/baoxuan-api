@@ -291,7 +291,27 @@ const sendDing = async (token,robotCode,remindType,receiverUserIdList,content) =
    const  xx =await httpUtil.post(url, body, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
     return xx.openDingId
 }
-
+/*
+*  headers x-acs-dingtalk-access-token
+* post json
+* {
+    "appType": "APP_BXS79QCC8MY5ZV0EZZ07",
+    "systemToken": "DR766X81LZ9BNGPSFBAFB4JD0FLH3D7VCZCIL8",
+    "userId": "073105202321093148",
+    "formUuid": "FORM-33666CB1FV8BQCCE9IWPV4DYQIEJ34M5Q9IILP",
+    "instanceStatus": "RUNNING"
+}*/
+const getFlowsByFormIdTo = async (token, formId, userId, status) => {
+    const url = "https://api.dingtalk.com/v1.0/yida/processes/instances"
+    const params = {
+        systemToken: systemToken,
+        appType: appType,
+        userId: userId,
+        formUuid: formId,
+        instanceStatus: status
+    }
+    return await httpUtil.post(url, params, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
+}
 
 module.exports = {
     getFormFields,
@@ -306,5 +326,6 @@ module.exports = {
     getAllFlowIds,
     getFlowIdsByFormId,
     createProcess,
-    sendDing
+    sendDing,
+    getFlowsByFormIdTo
 }
