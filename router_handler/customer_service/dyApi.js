@@ -13,12 +13,19 @@ const getDYDataByDate = async (req, res, next) => {
         const data = await dyService.getDYDataByDate(req.query.startDate, req.query.endDate, req.query.shopname, req.query.servicer)
         const img = await dyService.getDYImgByDate(req.query.startDate, req.query.endDate)
         const columns = [
+            { header: '店铺名称', key: 'shopname', isDefault: true },
             { header: '账号名称', key: 'servicer', isDefault: true },
             { header: '人工已接待人数', key: 'reception_num', isDefault: true },
+            { header: '上周人工已接待人数', key: 'reception_num1', isDefault: true },
+            { header: '上上周人工已接待人数', key: 'reception_num2', isDefault: true },
+            { header: '人工接待数环比', key: 'reception_numq', isDefault: true },
             { header: '3分钟人工回复率 (会话)', key: 'session_in_3_rate', isDefault: true },
             { header: '新平均响应时长（秒）', key: 'ave_response_duration', isDefault: true },
             { header: '满意率', key: 'satisfaction_rate', isDefault: true },
             { header: '客服销售额', key: 'amount', isDefault: true },
+            { header: '上周客服销售额', key: 'amount1', isDefault: true },
+            { header: '上上周客服销售额', key: 'amount2', isDefault: true },
+            { header: '客服销售额环比', key: 'amountq', isDefault: true },
             { header: '询单转化率', key: 'transfer_rate', isDefault: true },
         ]
         if (req.query.is_export) {
@@ -58,7 +65,7 @@ const getDYDataByDate = async (req, res, next) => {
                 br: { col: 12, row: 1 },
                 editAs: 'oneCell',
             })
-                
+
             tmp['servicer'] = data[i].servicer
             tmp['reception_num'] = data[i].reception_num
             tmp['session_in_3_rate'] = data[i].session_in_3_rate
