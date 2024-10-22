@@ -14,12 +14,18 @@ const getJDDataByDate = async (req, res, next) => {
         const img = await jdService.getJDImgByDate(req.query.startDate, req.query.endDate)
         const columns = [
             { header: '店铺名', key: 'shopname', isDefault: true },
-            { header: '日期', key: 'date', isDefault: true },
+            // { header: '日期', key: 'date', isDefault: true },
             { header: '客服', key: 'servicer', isDefault: true },
             { header: '咨询量', key: 'reception_num', isDefault: true },
+            { header: '上周咨询量', key: 'reception_num1', isDefault: true },
+            { header: '上上周咨询量', key: 'reception_num2', isDefault: true },
+            { header: '咨询量环比', key: 'reception_numq', isDefault: true },
             { header: '30s应答率', key: 'response_in_30_rate', isDefault: true },
             { header: '满意率', key: 'satisfaction_rate', isDefault: true },
-            { header: '24小时下单金额', key: 'amount', isDefault: true },
+            { header: '下单金额', key: 'amount', isDefault: true },
+            { header: '上周下单金额', key: 'amount1', isDefault: true },
+            { header: '上上周下单金额', key: 'amount2', isDefault: true },
+            { header: '下单金额环比', key: 'amountq', isDefault: true },
             { header: '24小时下单转化率', key: 'transfer_rate', isDefault: true },
         ]
         if (req.query.is_export) {

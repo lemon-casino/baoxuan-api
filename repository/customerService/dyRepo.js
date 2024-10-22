@@ -1,26 +1,109 @@
 const { query } = require('../../model/dbConn')
 const dyRepo = {}
 
-dyRepo.getDYData = async (start, end, shopname, servicer) => {
-    let sql = `SELECT c1.shopname,
-            c1.servicer,
-            c1.reception_num AS reception_num,
-            c1.session_num AS session_num,
-            c1.ave_response_duration AS ave_response_duration,
-            c1.satisfaction_rate AS satisfaction_rate,
-            c1.amount AS amount,
-            c1.transfer_rate AS transfer_rate
-        FROM cs_dy c1
-        WHERE c1.start_time = ? AND c1.end_time = ?`
-    let params = [start, end]
+dyRepo.getDYData = async ( start, end,lastStart, lastEnd, preStart, preEnd,shopname,servicer) => {
+    let sql=`SELECT c1.shopname,
+                    c1.servicer,
+                    c1.reception_num AS reception_num,
+                    c2.reception_num1 AS reception_num1,
+                    c3.reception_num2 AS reception_num2,
+                    concat(round((c2.reception_num1-c3.reception_num2)/c3.reception_num2,2)*100,'%') as reception_numq,
+                    c1.session_num AS session_num,
+                    c1.satisfaction_rate AS satisfaction_rate,
+                    c1.amount AS amount,
+                    c2.amount1 as amount1,
+                    c3.amount2 as amount2,
+                    concat(round((c2.amount1-c3.amount2)/c3.amount2,2)*100,'%') as amountq,
+                    c1.transfer_rate AS transfer_rate
+            FROM 
+            (
+                select '全部'as shopname
+                        ,servicer
+                        ,sum(amount) as amount
+                        ,sum(reception_num) as reception_num
+                        ,sum(session_num) as session_num 
+                        ,sum(ave_response_duration) as ave_response_duration
+                        ,sum(satisfaction_rate) as satisfaction_rate
+                        ,sum(transfer_rate) as transfer_rate 
+                from cs_dy  
+                where start_time=? and end_time=?
+                GROUP BY servicer
+            ) as c1
+            left join ( 
+            select ''as shopename
+                    ,servicer
+                    ,sum(amount) as amount1
+                    ,sum(reception_num) as reception_num1 
+            from cs_dy  
+            where start_time=? and end_time=?
+            GROUP BY servicer )as c2
+            on c1.servicer=c2.servicer 
+            left join(
+            select ''as shopename
+                    ,servicer
+                    ,sum(amount) as amount2
+                    ,sum(reception_num) as reception_num2 
+            from cs_dy  
+            where start_time=? and end_time=?
+            GROUP BY servicer ) as c3
+            on c1.servicer=c3.servicer `
+    let params = [start, end,lastStart, lastEnd, preStart, preEnd]
     if (shopname) {
-        sql = `${sql} AND c1.shopname LIKE '%${shopname}%'`
+        let sqls=`SELECT c1.shopname,
+			c1.servicer,
+			c1.reception_num AS reception_num,
+			c2.reception_num1 AS reception_num1,
+			c3.reception_num2 AS reception_num2,
+			concat(round((c2.reception_num1-c3.reception_num2)/c3.reception_num2,2)*100,'%') as reception_numq,
+			c1.session_num AS session_num,
+			c1.session_in_3_rate AS session_in_3_rate,
+			c1.ave_response_duration AS ave_response_duration,
+			c1.satisfaction_rate AS satisfaction_rate,
+			c1.amount AS amount,
+			c2.amount1 as amount1,
+			c3.amount2 as amount2,
+			concat(round((c2.amount1-c3.amount2)/c3.amount2,2)*100,'%') as amountq,
+			c1.transfer_rate AS transfer_rate
+            FROM 
+            (
+                select shopname
+                            ,servicer
+                            ,sum(amount) as amount
+                            ,sum(reception_num) as reception_num
+                            ,sum(session_num) as session_num 
+                            ,sum(session_in_3_rate) as session_in_3_rate
+                            ,sum(ave_response_duration) as ave_response_duration
+                            ,sum(satisfaction_rate) as satisfaction_rate
+                            ,sum(transfer_rate) as transfer_rate 
+                from cs_dy  
+                where start_time= ? and end_time= ?
+                GROUP BY servicer,shopname
+            ) as c1
+            left join ( 
+            select servicer
+                        ,shopname
+                        ,sum(amount) as amount1
+                        ,sum(reception_num) as reception_num1 
+            from cs_dy  
+            where start_time= ? and end_time= ?
+            GROUP BY servicer,shopname )as c2
+            on c1.servicer=c2.servicer and c1.shopname=c2.shopname
+            left join(
+            select servicer
+                        ,shopname
+                        ,sum(amount) as amount2
+                        ,sum(reception_num) as reception_num2 
+            from cs_dy  
+            where start_time= ? and end_time= ?
+            GROUP BY servicer,shopname) as c3
+            on c1.servicer=c3.servicer and c1.shopname=c3.shopname
+            `
+        sql = `${sqls} where c1.shopname LIKE '%${shopname}%'`
     }
     if (servicer) {
-        sql = `${sql} AND c1.servicer LIKE '%${servicer}%'`
+        sql = `${sql} where c1.servicer LIKE '%${servicer}%'`
     }
-    sql = `${sql} ORDER BY c1.id`
-    const result = await query(sql, params)
+    const result = await query(sql,params)
     return result
 }
 
