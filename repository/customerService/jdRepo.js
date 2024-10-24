@@ -21,11 +21,11 @@ jdRepo.getJDData = async (start, end,lastStart, lastEnd, preStart, preEnd, shopn
                         ,servicer
                         ,sum(amount) as amount
                         ,sum(reception_num) as reception_num
-                        ,concat(round(avg(response_in_30_rate)*100,2),'%') as response_in_30_rate
+                        ,concat(round(avg(response_in_30_rate),2),'%') as response_in_30_rate
                         ,sum(satisfaction_rate) as satisfaction_rate
-                        ,concat(round(avg(transfer_rate)*100,2),'%') as transfer_rate
+                        ,concat(round(avg(transfer_rate),2),'%') as transfer_rate
                     from cs_jd  
-                    where start_time= ? and end_time= ? and servicer not in ('均值','总值')
+                    where start_time= ? and end_time= ?
                     GROUP BY servicer
                 ) as c1
                 left join ( 
@@ -34,7 +34,7 @@ jdRepo.getJDData = async (start, end,lastStart, lastEnd, preStart, preEnd, shopn
                     ,sum(amount) as amount1
                     ,sum(reception_num) as reception_num1 
                 from cs_jd  
-                where start_time= ? and end_time= ? and servicer not in ('均值','总值')
+                where start_time= ? and end_time= ?
                 GROUP BY servicer)as c2
                 on c1.servicer=c2.servicer 
                 left join(
@@ -43,7 +43,7 @@ jdRepo.getJDData = async (start, end,lastStart, lastEnd, preStart, preEnd, shopn
                     ,sum(amount) as amount2
                     ,sum(reception_num) as reception_num2 
                 from cs_jd  
-                where start_time= ? and end_time= ? and servicer not in ('均值','总值')
+                where start_time= ? and end_time= ?
                 GROUP BY servicer) as c3
                 on c1.servicer=c3.servicer `
     let params = [start, end,lastStart, lastEnd, preStart, preEnd]
@@ -67,11 +67,11 @@ jdRepo.getJDData = async (start, end,lastStart, lastEnd, preStart, preEnd, shopn
                         ,servicer
                         ,sum(amount) as amount
                         ,sum(reception_num) as reception_num
-                        ,concat(max(response_in_30_rate)*100,'%') as response_in_30_rate
+                        ,concat(max(response_in_30_rate),'%') as response_in_30_rate
                         ,sum(satisfaction_rate) as satisfaction_rate
-                        ,concat(max(transfer_rate)*100,'%') as transfer_rate 
+                        ,concat(max(transfer_rate),'%') as transfer_rate 
                     from cs_jd  
-                    where start_time= ? and end_time= ? and servicer not in ('均值','总值')
+                    where start_time= ? and end_time= ?
                     GROUP BY servicer,shopname
                 ) as c1
                 left join ( 
@@ -80,7 +80,7 @@ jdRepo.getJDData = async (start, end,lastStart, lastEnd, preStart, preEnd, shopn
                     ,sum(amount) as amount1
                     ,sum(reception_num) as reception_num1 
                 from cs_jd  
-                where start_time= ? and end_time= ? and servicer not in ('均值','总值')
+                where start_time= ? and end_time= ?
                 GROUP BY servicer,shopname )as c2
                 on c1.servicer=c2.servicer and c1.shopname=c2.shopname
                 left join(
@@ -89,7 +89,7 @@ jdRepo.getJDData = async (start, end,lastStart, lastEnd, preStart, preEnd, shopn
                     ,sum(amount) as amount2
                     ,sum(reception_num) as reception_num2 
                 from cs_jd  
-                where start_time= ? and end_time= ? and servicer not in ('均值','总值')
+                where start_time= ? and end_time= ?
                 GROUP BY servicer,shopname) as c3
                 on c1.servicer=c3.servicer and c1.shopname=c3.shopname`
         sql = `${sqls} where c1.shopname LIKE '%${shopname}%' order by c1.servicer`

@@ -149,14 +149,14 @@ const importJDData = async (req, res, next) => {
                 let count = 0, start_time, end_time                   
                 for (let i = 0; i < worksheet.rowCount - 1; i++) {
                     let row = rows[i]
-                    if (row.getCell(1).value && row.getCell(1).value == '客服') break
-                    else if (row.getCell(1).value && row.getCell(1).value != '店铺名') {
+                    if ((row.getCell(1).value && row.getCell(1).value == '客服') ) break
+                    else if ((row.getCell(1).value && row.getCell(1).value != '店铺名')&&(row.getCell(3).value && row.getCell(3).value!='总值') && (row.getCell(3).value && row.getCell(3).value!='均值')) {
                         info.push(row.getCell(1).value ? row.getCell(1).value.trim(' ') : null)
                         const date = row.getCell(2).value ? row.getCell(2).value : 
                             (rows[i - 1].getCell(2).value ? rows[i - 1].getCell(2).value : rows[i - 2].getCell(2).value)
                         if (date.toString().indexOf('-') != -1) {
-                            start_time = date.split('-')[0].replace('年', '-').replace('月', '-').replace('日', '-')
-                            end_time = date.split('-')[1] ? date.split('-')[1].replace('年', '-').replace('月', '-').replace('日', '-') : start_time
+                            start_time = date.split('-')[0].replace('年', '-').replace('月', '-').replace('日', '')
+                            end_time = date.split('-')[1] ? date.split('-')[1].replace('年', '-').replace('月', '-').replace('日', '') : start_time
                         }  else {
                             start_time = end_time = moment('1900-01-01').add(date - 2, 'day').format('YYYY-MM-DD')
                         }
@@ -165,11 +165,11 @@ const importJDData = async (req, res, next) => {
                         info.push(row.getCell(3).value != ' ' ? row.getCell(3).value : null)
                         info.push(row.getCell(4).value != ' ' ? row.getCell(4).value : null)
                         info.push(row.getCell(5).value != ' ' ? row.getCell(5).value : null)
-                        info.push(row.getCell(6).value instanceof Number ? row.getCell(6).value * 100 : null)
-                        info.push(row.getCell(7).value != ' ' ? row.getCell(7).value : null)
-                        info.push(row.getCell(8).value instanceof Number ? row.getCell(8).value * 100 : null)
-                        info.push(row.getCell(9).value instanceof Number ? row.getCell(9).value * 100 : null)
-                        info.push(row.getCell(10).value != ' ' ? row.getCell(10).value : null)
+                        info.push(typeof(row.getCell(6).value) == "number" ? row.getCell(6).value: null)
+                        info.push(typeof(row.getCell(7).value) == "number" ? Number((row.getCell(7).value * 100).toFixed(2)) : null)
+                        info.push(typeof(row.getCell(8).value) == "number" ? Number((row.getCell(8).value * 100).toFixed(2)) : null)
+                        info.push(typeof(row.getCell(9).value) == "number" ? row.getCell(9).value: null)
+                        info.push(typeof(row.getCell(10).value) == "number" ? Number((row.getCell(10).value * 100).toFixed(2)): null)
                         count = count + 1
                     }
                 }
