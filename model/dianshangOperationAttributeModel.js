@@ -380,6 +380,78 @@ module.exports = sequelize => {
             autoIncrement: false,
             comment: ";",
             field: "userDef10"
+        },
+        briefProductLine: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "产品线简称",
+            field: "brief_product_line"
+        },
+        productDefinition: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "产品定义",
+            field: "product_definition"
+        },
+        stockStructure: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "库存结构",
+            field: "stock_structure"
+        },
+        productRank: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "产品等级",
+            field: "product_rank"
+        },
+        productDesignAttr: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "产品设计属性",
+            field: "product_design_attr"
+        },
+        seasons: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "季节",
+            field: "seasons"
+        },
+        brand: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "品牌",
+            field: "brand"
+        },
+        lineManager: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "产品线管理人",
+            field: "line_manager"
         }
     };
     const options = {

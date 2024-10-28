@@ -43,4 +43,6 @@ module.exports = {
     "/users-tags": require("./usersTagsRouter"),
     "/development": require("./developmentRouter"),
     "/customer-service": require('./customerServiceRouter'),
+    "/operation": require("./operationRouter"),
+    "/settlement": require("./settlementRouter"),
 }

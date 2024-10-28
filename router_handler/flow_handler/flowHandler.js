@@ -67,6 +67,8 @@ const getFlowsProcessByIds = async (req, res, next) => {
         let process = []
         if (req.query?.tag == 'visionLeader') {
             process = await flowService.getVisionProcesses(req.query, offset, limit)
+        } else if (req.query?.ids) {
+            process = await flowService.getOperationProcesses(req.user, req.query, offset, limit)
         } else {
             process = await flowService.getFlowsProcesses(req.query, offset, limit)
         }

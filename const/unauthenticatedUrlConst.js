@@ -18,5 +18,7 @@ module.exports = [
     "/customer-service/pdd/data-import",
     "/customer-service/jd/data-import",
     "/customer-service/dy/data-import",
+    "/operation/goods-sale-info/import",
+    "/settlement/data/import",
     /^\/download\/.*/,
 ]
