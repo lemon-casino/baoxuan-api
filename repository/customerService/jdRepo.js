@@ -1,24 +1,103 @@
 const { query } = require('../../model/dbConn')
 const jdRepo = {}
 
-jdRepo.getJDData = async (start, end, shopname, servicer) => {
+jdRepo.getJDData = async (start, end,lastStart, lastEnd, preStart, preEnd, shopname, servicer) => {
     let sql = `SELECT c1.shopname,
-            c1.servicer,
-            c1.reception_num AS reception_num,
-            c1.response_in_30_rate AS response_in_30_rate,
-            c1.amount AS amount,
-            c1.transfer_rate AS transfer_rate,
-            c1.satisfaction_rate AS satisfaction_rate 
-        FROM cs_jd c1
-        WHERE c1.start_time = ? AND c1.end_time = ?`
-    let params = [start, end]
+                    c1.servicer,
+                    c1.reception_num AS reception_num,
+                    c2.reception_num1 AS reception_num1,
+                    c3.reception_num2 AS reception_num2,
+                    concat(round((c2.reception_num1-c3.reception_num2)/c3.reception_num2,2)*100,'%') as reception_numq,
+                    c1.response_in_30_rate,
+                    c1.satisfaction_rate AS satisfaction_rate,
+                    c1.amount AS amount,
+                    c2.amount1 as amount1,
+                    c3.amount2 as amount2,
+                    concat(round((c2.amount1-c3.amount2)/c3.amount2,2)*100,'%') as amountq,
+                    c1.transfer_rate AS transfer_rate
+                FROM 
+                (
+                    select '全部' as shopname
+                        ,servicer
+                        ,sum(amount) as amount
+                        ,sum(reception_num) as reception_num
+                        ,concat(round(avg(response_in_30_rate),2),'%') as response_in_30_rate
+                        ,sum(satisfaction_rate) as satisfaction_rate
+                        ,concat(round(avg(transfer_rate),2),'%') as transfer_rate
+                    from cs_jd  
+                    where start_time= ? and end_time= ?
+                    GROUP BY servicer
+                ) as c1
+                left join ( 
+                select servicer
+                    ,'' as shopname
+                    ,sum(amount) as amount1
+                    ,sum(reception_num) as reception_num1 
+                from cs_jd  
+                where start_time= ? and end_time= ?
+                GROUP BY servicer)as c2
+                on c1.servicer=c2.servicer 
+                left join(
+                select servicer
+                    ,'' as shopname
+                    ,sum(amount) as amount2
+                    ,sum(reception_num) as reception_num2 
+                from cs_jd  
+                where start_time= ? and end_time= ?
+                GROUP BY servicer) as c3
+                on c1.servicer=c3.servicer `
+    let params = [start, end,lastStart, lastEnd, preStart, preEnd]
     if (shopname) {
-        sql = `${sql} AND c1.shopname LIKE '%${shopname}%'`
+        let sqls=`SELECT c1.shopname,
+                    c1.servicer,
+                    c1.reception_num AS reception_num,
+                    c2.reception_num1 AS reception_num1,
+                    c3.reception_num2 AS reception_num2,
+                    concat(round((c2.reception_num1-c3.reception_num2)/c3.reception_num2,2)*100,'%') as reception_numq,
+                    c1.response_in_30_rate,
+                    c1.satisfaction_rate AS satisfaction_rate,
+                    c1.amount AS amount,
+                    c2.amount1 as amount1,
+                    c3.amount2 as amount2,
+                    concat(round((c2.amount1-c3.amount2)/c3.amount2,2)*100,'%') as amountq,
+                    c1.transfer_rate AS transfer_rate
+                FROM 
+                (
+                    select shopname
+                        ,servicer
+                        ,sum(amount) as amount
+                        ,sum(reception_num) as reception_num
+                        ,concat(max(response_in_30_rate),'%') as response_in_30_rate
+                        ,sum(satisfaction_rate) as satisfaction_rate
+                        ,concat(max(transfer_rate),'%') as transfer_rate 
+                    from cs_jd  
+                    where start_time= ? and end_time= ?
+                    GROUP BY servicer,shopname
+                ) as c1
+                left join ( 
+                select servicer
+                    ,shopname
+                    ,sum(amount) as amount1
+                    ,sum(reception_num) as reception_num1 
+                from cs_jd  
+                where start_time= ? and end_time= ?
+                GROUP BY servicer,shopname )as c2
+                on c1.servicer=c2.servicer and c1.shopname=c2.shopname
+                left join(
+                select servicer
+                    ,shopname
+                    ,sum(amount) as amount2
+                    ,sum(reception_num) as reception_num2 
+                from cs_jd  
+                where start_time= ? and end_time= ?
+                GROUP BY servicer,shopname) as c3
+                on c1.servicer=c3.servicer and c1.shopname=c3.shopname`
+        sql = `${sqls} where c1.shopname LIKE '%${shopname}%' order by c1.servicer`
     }
     if (servicer) {
-        sql = `${sql} AND c1.servicer LIKE '%${servicer}%'`
+        sql = `${sql} where c1.servicer LIKE '%${servicer}%' `
     }
-    sql = `${sql} ORDER BY c1.id`
+    sql = `${sql} ORDER BY c1.servicer desc `
     const result = await query(sql, params)
     return result
 }

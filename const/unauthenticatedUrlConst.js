@@ -20,5 +20,6 @@ module.exports = [
     "/customer-service/dy/data-import",
     "/operation/goods-sale-info/import",
     "/settlement/data/import",
+    '/workflows-service/purchase-workflow',
     /^\/download\/.*/,
 ]

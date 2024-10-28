@@ -20,7 +20,7 @@ let syncUserLoginCron = "0 0/5 * * * ?"
 let syncResignEmployeeCron = "0 0 18 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
 let tmallLinkData = "32 14 * * 1-6"
-// let jdLinkData  = "10 10 * * 1-6"
+let jdLinkData  = "30 11 * * 1-6"
 let caigouLinkData  = "*/5 * * * 1-6"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
@@ -159,12 +159,12 @@ schedule.scheduleJob(tmallLinkData, async function () {
     }
 })
 
-/*schedule.scheduleJob(jdLinkData, async function () {
+schedule.scheduleJob(jdLinkData, async function () {
     console.log("执行了此方法")
     if (process.env.NODE_ENV === "prod") {
         await taskService.jdLinkDataIsAutomaticallyInitiated()
     }
-})*/
+})
 
 //
 schedule.scheduleJob(caigouLinkData, async function () {
