@@ -265,7 +265,7 @@ const getGoodsLineInfo = async (startDate, endDate, params, id) => {
             {title: '采购负责人', field_id: 'purchase_director'},
             {title: '产品线管理人', field_id: 'line_manager'},
             {title: '产品线运营人', field_id: 'line_director'},
-            {title: '上架时间', field_id: 'shelf_time'},
+            {title: '上架时间', field_id: 'onsale_date'},
         ],
         data: {}
     }
