@@ -24,7 +24,7 @@ const getpurchaseworkflow = async (req, res, next) => {
         const xxFightingFlows = xxxResult.data;
 
 // 优化的日期判断函数
-        const isTodayOrYesterday = (dateString) => {
+        const isTodayOrYesterday = (dateString,type) => {
             const date = new Date(dateString);
             const now = new Date();
 
@@ -33,23 +33,34 @@ const getpurchaseworkflow = async (req, res, next) => {
             const timeDiff = todayUTC - date;
 
             // 时间差在0到1天内就是今天或昨天
-            return timeDiff <= 24 * 60 * 60 * 1000 && timeDiff >= -24 * 60 * 60 * 1000;
+            if(type===0){
+                return timeDiff <= 24 * 60 * 60 * 1000 && timeDiff >= -24 * 60 * 60 * 1000;
+            }else {
+                //返回  从今天 到 之前的七天
+                return timeDiff <= 24 * 60 * 60 * 1000 * 7  && timeDiff >= -24 * 60 * 60 * 1000 ;
+            }
         };
 
 // 通用过滤器
-        const filterRunningFlows = (flows, type) => {
+        const filterRunningFlows = (flows, nameTo, type) => {
             return flows
-                .filter(item => item.instanceStatus === flowStatusConst.RUNNING && isTodayOrYesterday(item.createTimeGMT))
-                .map(item => ({ name: item.title, create: item.createTimeGMT, type }));
+                .filter(item => item.instanceStatus === flowStatusConst.RUNNING && isTodayOrYesterday(item.createTimeGMT, type))
+                .map(item => {
+                    const cost = type === 1 ? (item.data.textField_liiewljo ? 1 : 0) : undefined;
+                    return {
+                        name: item.title,
+                        create: item.createTimeGMT,
+                        nameTo,
+                        ...(cost !== undefined ? { cost } : {})
+                    };
+                });
         };
 
 // 过滤并组合流数据
         const list = [
-            ...filterRunningFlows(runningFightingFlows, '采购选品会'),
-            ...filterRunningFlows(xxFightingFlows, '采购任务运营发布（全平台）')
+            ...filterRunningFlows(runningFightingFlows, '采购选品会',0),
+            ...filterRunningFlows(xxFightingFlows, '采购任务运营发布（全平台）',1)
         ];
-
-
         return res.send(biResponse.success(list))
     } catch (e) {
         next(e)
@@ -57,6 +68,5 @@ const getpurchaseworkflow = async (req, res, next) => {
 }
 
 module.exports = {
-
     getpurchaseworkflow
 }
