@@ -13,11 +13,11 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
             doa.sku_id, doa.product_definition, doa.stock_structure, 
             doa.product_rank, doa.product_design_attr, doa.seasons, doa.brand, 
             doa.targets, doa.exploit_director, doa.purchase_director, 
-            doa.line_manager, doa.line_director, doa.shelf_time 
+            doa.line_manager, doa.line_director, doa.onsale_date 
         FROM dianshang_operation_attribute doa
         JOIN shop_info si ON si.shop_name = doa.shop_name 
         JOIN project_info pi ON pi.id = si.project_id
-        WHERE shelf_time >= ? AND shelf_time <= ?`
+        WHERE onsale_date >= ? AND onsale_date <= ?`
     if (params.goods_id) {
         sql = `${sql} 
             AND goods_id LIKE '%${params.goods_id}%'`
