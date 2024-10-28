@@ -674,8 +674,7 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
 
             const checkboxField_m11r277t = runningFightingFlow.questionType
             const  radioField_locg3nxq= '简单'
-            if (!checkboxField_m11r277t.includes('下柜')) {
-                //
+
                 const formDataJsonStr = JSON.stringify({
                     textField_lma827od,
                     employeeField_lma827ok,
@@ -686,12 +685,6 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
                 }, null, 2);
                 await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
             }
-
-
-
-
-        }
-
 
     };
 

@@ -175,6 +175,8 @@ const getInquiryTodayjdDailyReport = async () => {
             filteredResult.questionType = filteredResult.questionType.filter(type =>
                 type === '费比大于12%' || type === '利润为负'
             );
+        }else if (judgment==="下柜"){
+            filteredResult.questionType=filteredResult.questionType.filter(type=>type!=="利润为负")
         }
 
         // If the questionType array is empty, remove the filteredResult from filteredResults
