@@ -27,7 +27,8 @@ const newFormsRepo = require('../repository/newFormsRepo')
  */
 const getDataStats = async (id, start, end, params) => {
     let result = JSON.parse(JSON.stringify(operationDefaultItem))
-    let payment = 0, invoice = 0, oriType, type = '', except = false
+    let payment = 0, promotion_amount = 0, express_fee = 0, profit = 0, 
+        invoice = 0, oriType, type = '', except = false
     if (params.type) {
         // jump permission, high level => low level
         oriType = typeList[params.type].map[0]
@@ -89,12 +90,19 @@ const getDataStats = async (id, start, end, params) => {
     }
     for (let i = 0; i < result[type].data.length; i++) {
         payment += parseFloat(result[type].data[i].payment)
+        promotion_amount += parseFloat(result[type].data[i].promotion_amount)
+        express_fee += parseFloat(result[type].data[i].express_fee)
+        profit += parseFloat(result[type].data[i].profit)
         if (type == typeList.project.value && result[type].data[i].name == projectNameList.coupang) continue
         invoice += parseFloat(result[type].data[i].invoice)
     }
+    result.total.data[0].profit_rate = payment > 0 ? (profit / payment * 100).toFixed(2) : '0.00'
     result.total.column = JSON.parse(JSON.stringify(result[type].column))
     result.total.column[0].is_link = false
     result.total.data[0].payment = payment.toFixed(2)
+    result.total.data[0].promotion_amount = promotion_amount.toFixed(2)
+    result.total.data[0].express_fee = express_fee.toFixed(2)
+    result.total.data[0].profit = profit.toFixed(2)
     result.total.data[0].invoice = invoice.toFixed(2)
     return result
 }
@@ -134,7 +142,8 @@ const getQueryInfo = async (type, oriType, id, oriName) => {
 }
 
 const queryShopInfo = async (shops, result, type, start, end) => {
-    let payment = 0, invoice = 0, info
+    let payment = 0, invoice = 0, info, promotion_amount = 0, 
+        express_fee = 0, profit = 0, profit_rate = 0
     let shopName = [], j = -1, except = false
     if (typeList.division.value == type) except = true
     for (let i = 0; i < shops.length; i++) {
@@ -150,14 +159,24 @@ const queryShopInfo = async (shops, result, type, start, end) => {
     }
     for (let i = 0; i < shopName.length; i++) {
         info = await goodsSaleInfoRepo.getPaymentByShopNamesAndTime(shopName[i].shop_name, start, end)
-        if (info?.length) payment = parseFloat(info[0].amount || 0).toFixed(2)
+        if (info?.length) {
+            payment = parseFloat(info[0].sale_amount || 0).toFixed(2)
+            promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)
+            express_fee = parseFloat(info[0].express_fee || 0).toFixed(2)
+            profit = parseFloat(info[0].profit || 0).toFixed(2)
+            profit_rate = parseFloat(info[0].profit_rate || 0).toFixed(2)
+        }
         if (typeList[type].key < 3) {
             info = await settlementRepo.getAmount(start, end + ' 23:59:59', shopName[i].shop_name, except)
-            if (info?.length) invoice = parseFloat(info[0].amount || 0).toFixed(2)
+            if (info?.length) invoice = parseFloat(info[0].sale_amount || 0).toFixed(2)
         }
         result[type].data.push({
             name: shopName[i].name,
             payment,
+            promotion_amount,
+            express_fee,
+            profit,
+            profit_rate,
             invoice
         })           
     }
@@ -165,7 +184,8 @@ const queryShopInfo = async (shops, result, type, start, end) => {
 }
 
 const queryUserInfo = async (users, result, type, start, end) => {
-    let payment = 0, invoice = 0, info, links
+    let payment = 0, invoice = 0, info, links, promotion_amount = 0, 
+        express_fee = 0, profit = 0, profit_rate = 0
     let userName = [], j = -1
     for (let i = 0; i < users.length; i++) {
         if (i == 0 || users[i].name != users[i-1].name) {
@@ -182,10 +202,20 @@ const queryUserInfo = async (users, result, type, start, end) => {
         links = await userOperationRepo.getLinkIdsByUserNames(userName[i].nickname)
         let linkIds = links.map((item) => item.goods_id).join('","')
         info = await goodsSaleInfoRepo.getPaymentByLinkIdsAndTime(linkIds, start, end)
-        if (info?.length) payment = parseFloat(info[0].amount || 0).toFixed(2)
+        if (info?.length) {
+            payment = parseFloat(info[0].sale_amount || 0).toFixed(2)
+            promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)
+            express_fee = parseFloat(info[0].express_fee || 0).toFixed(2)
+            profit = parseFloat(info[0].profit || 0).toFixed(2)
+            profit_rate = parseFloat(info[0].profit_rate || 0).toFixed(2)
+        }
         result[type].data.push({
             name: userName[i].name,
             payment,
+            promotion_amount,
+            express_fee,
+            profit,
+            profit_rate,
             invoice
         })        
     }
@@ -195,12 +225,16 @@ const queryUserInfo = async (users, result, type, start, end) => {
 const getGoodsInfo = async (startDate, endDate, params, id) => {
     let result = {
         column: [
-            {title: '链接ID', field_id: 'link_id'},
+            {title: '链接ID', field_id: 'goods_id'},
             {title: '主销编码', field_id: 'sku_id'},
             {title: '店铺名称', field_id: 'shop_name'},
             {title: '店铺编码', field_id: 'shop_id'},
             {title: '商品名称', field_id: 'goods_name'},
-            {title: '发货金额', field_id: 'amount'},
+            {title: '发货金额', field_id: 'sale_amount'},
+            {title: '推广费', field_id: 'promotion_amount'},
+            {title: '运费', field_id: 'express_fee'},
+            {title: '利润', field_id: 'profit'},
+            {title: '利润率(%)', field_id: 'profit_rate'},
         ],
         data: {}
     }
@@ -239,8 +273,107 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
     return result
 }
 
-const importGoodsInfo = async (count, data) => {
-    let result = await goodsSaleInfoRepo.batchInsert(count, data)
+const importGoodsInfo = async (rows, time) => {
+    let count = 0, data = [], result = false
+    let columns = rows[0].values,
+        goods_id_row = null, 
+        sku_id_row = null, 
+        shop_name_row = null, 
+        shop_id_row = null, 
+        goods_name_row = null,
+        date = time, 
+        sale_amount_row = null, 
+        cost_amount_row = null, 
+        gross_profit_row = null, 
+        gross_profit_rate_row = null, 
+        profit_row = null, 
+        profit_rate_row = null, 
+        promotion_amount_row = null, 
+        express_fee_row = null;
+    for (let i = 1; i <= columns.length; i++) {
+        if (columns[i] == '店铺款式编码') {
+            goods_id_row = i
+            continue
+        }
+        if (columns[i] == '款式编码(参考)') {
+            sku_id_row = i
+            continue
+        }
+        if (columns[i] == '店铺名称') {
+            shop_name_row = i
+            continue
+        }
+        if (columns[i] == '店铺编码') {
+            shop_id_row = i
+            continue
+        }
+        if (columns[i] == '商品名称') {
+            goods_name_row = i
+            continue
+        }
+        if (columns[i] == '利润-销售金额(扣退)') {
+            sale_amount_row = i
+            continue
+        }
+        if (columns[i] == '利润-销售成本(扣退)') {
+            cost_amount_row = i
+            continue
+        }
+        if (columns[i] == '利润-毛利') {
+            gross_profit_row = i
+            continue
+        }
+        if (columns[i] == '利润-毛利率') {
+            gross_profit_rate_row = i
+            continue
+        }
+        if (columns[i] == '利润-利润') {
+            profit_row = i
+            continue
+        }
+        if (columns[i] == '利润-利润率') {
+            profit_rate_row = i
+            continue
+        }
+        if (columns[i] == '利润-其中：推广费') {
+            promotion_amount_row = i
+            continue
+        }
+        if (columns[i] == '订单费用-快递费（自动匹配）') {
+            express_fee_row = i
+            continue
+        }
+    }
+    for (let i = 1; i < rows.length - 1; i++) {
+        if (!rows[i].getCell(1).value) break
+        data.push(
+            typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
+                rows[i].getCell(goods_id_row).value.trim() : 
+                rows[i].getCell(goods_id_row).value,
+            typeof(rows[i].getCell(sku_id_row).value) == 'string' ? 
+                rows[i].getCell(sku_id_row).value.trim() : 
+                rows[i].getCell(sku_id_row).value,
+            typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
+                rows[i].getCell(shop_name_row).value.trim() : 
+                rows[i].getCell(shop_name_row).value,
+            rows[i].getCell(shop_id_row).value,
+            typeof(rows[i].getCell(goods_name_row).value) == 'string' ? 
+                rows[i].getCell(goods_name_row).value.trim() : 
+                rows[i].getCell(goods_name_row).value,
+            date,
+            rows[i].getCell(sale_amount_row).value,
+            rows[i].getCell(cost_amount_row).value,
+            rows[i].getCell(gross_profit_row).value,
+            rows[i].getCell(gross_profit_rate_row).value.replace(/%/g, ''),
+            rows[i].getCell(profit_row).value,
+            rows[i].getCell(profit_rate_row).value.replace(/%/g, ''),
+            rows[i].getCell(promotion_amount_row).value,
+            rows[i].getCell(express_fee_row).value,
+        )
+        count += 1
+    }
+    if (count > 0)
+        result = await goodsSaleInfoRepo.batchInsert(count, data)
     return result
 }
 
@@ -253,6 +386,11 @@ const getGoodsLineInfo = async (startDate, endDate, params, id) => {
             {title: '二级类目', field_id: 'second_category'},
             {title: '三级类目', field_id: 'level_3_category'},
             {title: '产品线简称', field_id: 'brief_product_line'},
+            {title: '发货金额', field_id: 'sale_amount'},
+            {title: '推广费', field_id: 'promotion_amount'},
+            {title: '运费', field_id: 'express_fee'},
+            {title: '利润', field_id: 'profit'},
+            {title: '利润率(%)', field_id: 'profit_rate'},
             {title: '主销编码', field_id: 'sku_id'},
             {title: '产品定义', field_id: 'product_definition'},
             {title: '库存结构', field_id: 'stock_structure'},
@@ -269,7 +407,7 @@ const getGoodsLineInfo = async (startDate, endDate, params, id) => {
         ],
         data: {}
     }
-    let userNames = null, shopNames = null, linkIds = null, shopInfo = [], userInfo = []
+    let userNames = null, shopNames = null, shopInfo = [], userInfo = []
     if (params.type) {
         const { shops, users } = await getQueryInfo(
             typeList[params.type].map[0],

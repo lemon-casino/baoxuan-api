@@ -3,7 +3,13 @@ const { query } = require('../../model/dbConn')
 const goodsSaleInfoRepo = {}
 
 goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) => {
-    const sql = `SELECT IFNULL(SUM(amount), 0) AS amount FROM goods_sale_info 
+    const sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(express_fee), 0) AS express_fee, 
+            IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
+            IFNULL(SUM(profit), 0) AS profit, 
+            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
+                IFNULL(SUM(profit), 0) / SUM(sale_amount) * 100, 
+                0), 2) AS profit_rate FROM goods_sale_info 
         WHERE shop_name IN ("${shopNames}") 
             AND \`date\` >= ?
             AND \`date\` <= ?`
@@ -12,8 +18,14 @@ goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) =
 }
 
 goodsSaleInfoRepo.getPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
-    const sql = `SELECT IFNULL(SUM(amount), 0) AS amount FROM goods_sale_info 
-        WHERE link_id IN ("${linkIds}") 
+    const sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(express_fee), 0) AS express_fee, 
+            IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
+            IFNULL(SUM(profit), 0) AS profit, 
+            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
+                IFNULL(SUM(profit), 0) / SUM(sale_amount) * 100, 
+                0), 2) AS profit_rate FROM goods_sale_info 
+        WHERE goods_id IN ("${linkIds}") 
             AND \`date\` >= ?
             AND \`date\` <= ?`
     const result = await query(sql, [start, end])
@@ -21,6 +33,9 @@ goodsSaleInfoRepo.getPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
 }
 
 goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
+    let page = parseInt(params.currentPage)
+    let size = parseInt(params.pageSize)
+    let offset = (page - 1) * size
     let result = {
         currentPage: params.currentPage,
         pageSize: params.pageSize,
@@ -28,15 +43,15 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         total: 0,
         sum: 0
     }
-    let sql = `SELECT SUM(amount) AS amount FROM goods_sale_info`
+    let sql = `SELECT SUM(sale_amount) AS sale_amount FROM goods_sale_info`
     subsql = ` WHERE \`date\` >= ? AND \`date\` <= ?`
     if (params.shop_name) {
         subsql = `${subsql} 
                 AND shop_name like "%${params.shop_name}%"`
     }
-    if (params.goods_name) {
+    if (params.goods_id) {
         subsql = `${subsql}
-                AND shop_name like "%${params.goods_name}%"`
+                AND goods_id like "%${params.goods_id}%"`
     }
     if (shopNames != null) {
         if (shopNames.length == 0) return result
@@ -46,19 +61,26 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
     if (linkIds != null) {
         if (linkIds.length == 0) return result
         subsql = `${subsql}
-                AND link_id IN ("${linkIds}")`
+                AND goods_id IN ("${linkIds}")`
     }
     subsql = `${subsql} 
-        GROUP BY link_id, sku_id, shop_name, shop_id, goods_name`
-    sql = `SELECT COUNT(1) AS count, SUM(amount) AS amount FROM (${sql}${subsql}) a`
+        GROUP BY goods_id, sku_id, shop_name, shop_id, goods_name`
+    sql = `SELECT COUNT(1) AS count, SUM(sale_amount) AS sale_amount 
+        FROM (${sql}${subsql}) a`
     let row = await query(sql, [start, end])
     if (row?.length && row[0].count) {
         result.total = row[0].count
-        result.sum = row[0].amount        
-        sql = `SELECT link_id, sku_id, shop_name, shop_id, goods_name, SUM(amount) AS amount 
-        FROM goods_sale_info`
-        let limit = (parseInt(params.currentPage) - 1) * parseInt(params.pageSize)
-        sql = `${sql}${subsql} LIMIT ${limit}, ${params.pageSize}`
+        result.sum = row[0].sale_amount        
+        sql = `SELECT goods_id, sku_id, shop_name, shop_id, goods_name, 
+            IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(express_fee), 0) AS express_fee, 
+            IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
+            IFNULL(SUM(profit), 0) AS profit, 
+            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
+                IFNULL(SUM(profit), 0) / SUM(sale_amount) * 100, 
+                0), 2) AS profit_rate 
+            FROM goods_sale_info`
+        sql = `${sql}${subsql} LIMIT ${offset}, ${size}`
         row = await query(sql, [start, end])
         if (row?.length) result.data = row
     }
@@ -66,10 +88,23 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
 }
 
 goodsSaleInfoRepo.batchInsert = async (count, data) => {
-    let sql = `INSERT INTO goods_sale_info(link_id, sku_id, shop_name, shop_id, 
-        goods_name, date, amount) VALUES`
+    let sql = `INSERT INTO goods_sale_info(
+            goods_id, 
+            sku_id, 
+            shop_name, 
+            shop_id, 
+            goods_name, 
+            \`date\`, 
+            sale_amount, 
+            cost_amount, 
+            gross_profit, 
+            gross_profit_rate, 
+            profit, 
+            profit_rate, 
+            promotion_amount, 
+            express_fee) VALUES`
     for (let i = 0; i < count; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, data)

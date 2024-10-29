@@ -44,7 +44,7 @@ const importGoodsInfo = async (req, res, next) => {
             
             const file = files.file
             const date = file.originalFilename.split('.')[0].split('_')
-            const time = date[1]
+            const time = date[2]
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
             fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
@@ -53,33 +53,11 @@ const importGoodsInfo = async (req, res, next) => {
             let readRes = await workbook.csv.readFile(newPath)
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
-                let info = []
-                let rows = worksheet.getRows(2, worksheet.rowCount - 1)
-                
-                let count = 0                   
-                for (let i = 0; i < worksheet.rowCount - 1; i++) {
-                    let row = rows[i]
-                    
-                    if (row.getCell(1).value) {
-                        info.push(row.getCell(1).value ?? '') 
-                        info.push(typeof(row.getCell(2).value) == 'string' ? row.getCell(2).value.trim() : '') 
-                        info.push(typeof(row.getCell(65).value) == 'string' ? row.getCell(65).value.trim() : '') 
-                        info.push(row.getCell(66).value ?? '') 
-                        info.push(typeof(row.getCell(3).value) == 'string' ? row.getCell(3).value.trim() : '')                        
-                        info.push(time)
-                        info.push(row.getCell(31).value ?? 0)
-                        count = count + 1
-                    }
-                }
-                if (count > 0) {
-                    let row = await operationService.importGoodsSalesInfo(count, info)
-                    if (row) {
-                        fs.rmSync(newPath)
-                    } else {
-                        return res.send(biResponse.createFailed())
-                    }
-                } else {
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsInfo(rows, time)
+                if (result) {
                     fs.rmSync(newPath)
+                } else {
                     return res.send(biResponse.createFailed())
                 }
             }

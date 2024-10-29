@@ -7,6 +7,10 @@ const typeList = {
         item: [
             {label: '', key: 'name', is_link: true}, 
             {label: '发货金额', key: 'payment'}, 
+            {label: '推广费', key: 'promotion_amount'}, 
+            {label: '运费', key: 'express_fee'}, 
+            {label: '利润', key: 'profit'}, 
+            {label: '利润率(%)', key: 'profit_rate'}, 
             {label: '账单金额', key: 'invoice'}
         ]
     },
@@ -18,6 +22,10 @@ const typeList = {
         item: [
             {label: '', key: 'name', is_link: true}, 
             {label: '发货金额', key: 'payment'}, 
+            {label: '推广费', key: 'promotion_amount'}, 
+            {label: '运费', key: 'express_fee'}, 
+            {label: '利润', key: 'profit'}, 
+            {label: '利润率(%)', key: 'profit_rate'}, 
             {label: '账单金额', key: 'invoice'}
         ]
     },
@@ -28,7 +36,11 @@ const typeList = {
         map: [5],
         item: [
             {label: '', key: 'name', is_link: true}, 
-            {label: '发货金额', key: 'payment'}
+            {label: '发货金额', key: 'payment'},
+            {label: '推广费', key: 'promotion_amount'}, 
+            {label: '运费', key: 'express_fee'}, 
+            {label: '利润', key: 'profit'}, 
+            {label: '利润率(%)', key: 'profit_rate'}, 
         ]
     },
     team: {
@@ -38,7 +50,11 @@ const typeList = {
         map: [5],
         item: [
             {label: '', key: 'name', is_link: true}, 
-            {label: '发货金额', key: 'payment'}
+            {label: '发货金额', key: 'payment'},
+            {label: '推广费', key: 'promotion_amount'}, 
+            {label: '运费', key: 'express_fee'}, 
+            {label: '利润', key: 'profit'}, 
+            {label: '利润率(%)', key: 'profit_rate'}, 
         ]
     },
     user: {
@@ -48,7 +64,11 @@ const typeList = {
         map: [],
         item: [
             {label: '', key: 'name'}, 
-            {label: '发货金额', key: 'payment'}
+            {label: '发货金额', key: 'payment'},
+            {label: '推广费', key: 'promotion_amount'}, 
+            {label: '运费', key: 'express_fee'}, 
+            {label: '利润', key: 'profit'}, 
+            {label: '利润率(%)', key: 'profit_rate'}, 
         ]
     }
 }
