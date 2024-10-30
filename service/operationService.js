@@ -364,9 +364,13 @@ const importGoodsInfo = async (rows, time) => {
             rows[i].getCell(sale_amount_row).value,
             rows[i].getCell(cost_amount_row).value,
             rows[i].getCell(gross_profit_row).value,
-            rows[i].getCell(gross_profit_rate_row).value.replace(/%/g, ''),
+            typeof(rows[i].getCell(gross_profit_rate_row).value) == 'string' ? 
+                rows[i].getCell(gross_profit_rate_row).value.replace(/%/g, '') : 
+                rows[i].getCell(gross_profit_rate_row).value,
             rows[i].getCell(profit_row).value,
-            rows[i].getCell(profit_rate_row).value.replace(/%/g, ''),
+            typeof(rows[i].getCell(profit_rate_row).value) == 'string' ? 
+                rows[i].getCell(profit_rate_row).value.replace(/%/g, '') : 
+                rows[i].getCell(profit_rate_row).value,
             rows[i].getCell(promotion_amount_row).value,
             rows[i].getCell(express_fee_row).value,
         )
