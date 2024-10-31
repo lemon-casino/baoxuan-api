@@ -360,8 +360,11 @@ const getDingDingUserIdAndNickname = async () => {
         
         return await UsersModel.findAll({
             attributes: ['dingding_user_id', 'nickname'],
+            where:{
+                status:'1'
+            },
             raw: true,
-            logging: false
+            logging: true
         });
         
     } catch (error) {
