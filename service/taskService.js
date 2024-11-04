@@ -663,8 +663,10 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
                 const maintenance=await  getOperateAttributesMaintainer(runningFightingFlow.linkId)
                 runningFightingFlow.operationsLeader = maintenance.maintenanceLeader
             }
+            console.log(runningFightingFlow.linkId,runningFightingFlow.operationsLeader,runningFightingFlow.questionType)
             const matchingUser = userList.find((user) => user.nickname === runningFightingFlow.operationsLeader);
-
+            console.log(matchingUser.dingding_user_id)
+            console.log("===============")
             const uuid = matchingUser ? matchingUser.dingding_user_id : null;
 
             const textField_lma827od = runningFightingFlow.code
