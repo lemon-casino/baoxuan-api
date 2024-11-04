@@ -170,9 +170,9 @@ schedule.scheduleJob(jdLinkData, async function () {
     isRunning = true;
     console.log("执行了此方法");
     try {
-        //if (process.env.NODE_ENV === "prod") {
+        if (process.env.NODE_ENV === "prod") {
             await taskService.jdLinkDataIsAutomaticallyInitiated();
-       // }
+        }
     } catch (error) {
         console.error("执行任务时出错:", error);
     } finally {
