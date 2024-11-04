@@ -168,7 +168,7 @@ const queryShopInfo = async (shops, result, type, start, end) => {
         }
         if (typeList[type].key < 3) {
             info = await settlementRepo.getAmount(start, end + ' 23:59:59', shopName[i].shop_name, except)
-            if (info?.length) invoice = parseFloat(info[0].sale_amount || 0).toFixed(2)
+            if (info?.length) invoice = parseFloat(info[0].amount || 0).toFixed(2)
         }
         result[type].data.push({
             name: shopName[i].name,

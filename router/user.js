@@ -31,6 +31,7 @@ router.get('/turnover-inner-groups', userHandler.getTurnoverInnerGroups);
 router.get('/all', userHandler.getAllUsers);
 router.get('/dept', userHandler.getUsersOfDepartment)
 router.post('/undo-resign', userHandler.undoResign)
+router.get('/search', userHandler.searchEnableUsers)
 
 // 将路由对象共享出去
 module.exports = router;

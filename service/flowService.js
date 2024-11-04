@@ -31,7 +31,9 @@ const outUsersRepo = require("@/repository/outUsersRepo");
 const newFormsRepo = require('../repository/newFormsRepo')
 const { designerTags, nameFilter } = require("../const/newFormConst")
 const userOperationRepo = require("../repository/operation/userOperationRepo")
-const { typeList } = require("../const/operationConst")
+const { typeList, operationSelectionFlow, operationSelectionFlowNode, analysisFieldMap, analysisFlowUUid, analysisLinkPrevious } = require("../const/operationConst")
+const moment = require('moment')
+const { createProcess } =  require('./dingDingService')
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -1353,6 +1355,152 @@ const getVisionPlan = async () => {
     return result
 }
 
+const getOperateSelection = async (params, userId) => {
+    let result = {
+        currentPage: parseInt(params.currentPage),
+        pageSize: parseInt(params.pageSize),
+        data: [],
+        total: 0
+    }, type = parseInt(params.type)
+    let start = null
+    if (params.startDate) start =moment(params.startDate).format('YYYY-MM-DD') + ' 00:00:00'
+    let end = null
+    if (params.endDate) end = moment(params.endDate).format('YYYY-MM-DD') + ' 23:59:59'
+    if (operationSelectionFlow.length <= type || 
+        type < 0 || 
+        type == undefined) 
+        return result
+    let {data, total} = await newFormsRepo.getOperateSelection(
+        start, 
+        end, 
+        params.title, 
+        parseInt(params.currentPage),
+        parseInt(params.pageSize),
+        operationSelectionFlow[params.type],
+        JSON.parse(params.search)
+    )
+    result.total = total
+    if (data.length) {
+        let dataMap = {}, j = 0
+        for (let i = 0; i < data.length; i++) {
+            if (dataMap[data[i].id] != undefined) {
+                if (data[i].value.indexOf('downloadUrl') != -1) {
+                    data[i].value = JSON.parse(data[i].value.replace(/\\/g, '\"'))
+                }
+                if (data[i].field_id.indexOf('tableField') != -1) {
+                    data[i].value = JSON.parse(
+                        data[i].value.replace(/{/g, '{"')
+                            .replace(/}/g, '"}')
+                            .replace(/:/g, '":"')
+                            .replace(/,/g, '","')
+                            .replace(/}","{/g, '},{')
+                    )
+                }
+                result.data[dataMap[data[i].id]][data[i].field_id] = data[i].value
+            } else {
+                dataMap[data[i].id] = j
+                let tmp = {
+                    instance_id: data[i].instance_id,
+                    title: data[i].title,
+                    create_time: data[i].create_time,
+                    selected: false
+                }
+                tmp.selected = await newFormsRepo.checkOperationNodes(
+                    data[i].id,
+                    operationSelectionFlowNode[params.type],
+                    userId
+                )
+                let analysis = await newFormsRepo.getOperationAnalysisStats(data[i].instance_id)
+                if (analysis?.length) {
+                    for (let j = 0; j < analysis.length; j++) {
+                        tmp[analysis[j].platform] = analysis[j].count
+                    }
+                }
+                if (data[i].value.indexOf('downloadUrl') != -1) {
+                    data[i].value = JSON.parse(data[i].value.replace(/\\/g, '\"'))
+                }
+                if (data[i].field_id.indexOf('tableField') != -1) {
+                    data[i].value = JSON.parse(
+                        data[i].value.replace(/{/g, '{"')
+                            .replace(/}/g, '"}')
+                            .replace(/:/g, '":"')
+                            .replace(/,/g, '","')
+                            .replace(/}","{/g, '},{')
+                    )
+                }
+                tmp[data[i].field_id] = data[i].value
+                result.data.push(tmp)
+                j += 1
+            }
+        }
+    }
+    return result
+}
+
+const getOperateSelectionHeader = async (type, id) => {
+    if (operationSelectionFlow.length <= type || 
+        type < 0 || 
+        type == undefined) 
+        return result
+    let result = [
+        {field_id: 'title', title: '流程名称', search: false, children: []},
+        {field_id: 'create_time', title: '创建时间', search: false, children: []},
+    ]
+    let columns = await newFormsRepo.getOperateSelectionHeader(
+        operationSelectionFlow[type]
+    )
+    if (columns.length) {        
+        let dataMap = {}, j = 2
+        for (let i = 0; i < columns.length; i++) {
+            if (dataMap[columns[i].id] != undefined) {
+                result[dataMap[columns[i].id]].value.push(columns[i].value)
+            } else {
+                dataMap[columns[i].id] = j
+                let tmp = {
+                    field_id: columns[i].field_id,
+                    title: columns[i].title,
+                    value: [],
+                    children: [],
+                    search: columns[i].field_id.indexOf('attachmentField') != -1 ? false:true
+                }
+                if (columns[i].field_id.indexOf('tableField') != -1) {
+                    tmp.children = await newFormsRepo.getOperateSubField(
+                        operationSelectionFlow[type],
+                        columns[i].field_id
+                    )
+                }
+                if (columns[i].value) {
+                    tmp.value.push(columns[i].value)
+                }
+                result.push(tmp)
+                j += 1
+            }
+        }
+    }
+    const permissions = await userOperationRepo.getPermission(id)
+    return {data: result, permit: permissions?.length && permissions[0].type < 4}
+}
+
+const createOperateAnalysis = async (platform, operator, instance_id, id) => {
+    const permissions = await userOperationRepo.getPermission(id)
+    if (!permissions?.length || permissions[0].type >= 4) return false
+    let userInfo = await userRepo.getUserDetails({userId: id})
+    let operatorInfo = await userRepo.getUserDetails({userId: operator})
+    let params = {}
+    params[analysisFieldMap.platform] = platform
+    params[analysisFieldMap.selected] = '是'
+    params[analysisFieldMap.instance_id] = instance_id
+    params[analysisFieldMap.link] = `${analysisLinkPrevious}${instance_id}`
+    params[analysisFieldMap.operator] = [operatorInfo.dingdingUserId]
+    let result = await createProcess(
+        analysisFlowUUid,
+        userInfo.dingdingUserId,
+        null,
+        JSON.stringify(params)
+    )
+    return result
+}
+
 module.exports = {
     filterFlowsByTimesRange,
     filterFlowsByImportanceCondition,
@@ -1394,4 +1542,7 @@ module.exports = {
     getFlowsActions,
     getVisionReview,
     getVisionPlan,
+    getOperateSelection,
+    getOperateSelectionHeader,
+    createOperateAnalysis
 }
