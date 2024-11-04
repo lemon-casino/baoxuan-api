@@ -20,7 +20,8 @@ let syncUserLoginCron = "0 0/5 * * * ?"
 let syncResignEmployeeCron = "0 0 18 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
 let tmallLinkData = "32 14 * * 1-6"
-let jdLinkData  = "10 14 * * 1-6"
+let jdLinkData  = "29 10 * * 1-6"
+
 let caigouLinkData  = "*/5 * * * 1-6"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
@@ -170,9 +171,9 @@ schedule.scheduleJob(jdLinkData, async function () {
     isRunning = true;
     console.log("执行了此方法");
     try {
-      //  if (process.env.NODE_ENV === "prod") {
+        if (process.env.NODE_ENV === "prod") {
             await taskService.jdLinkDataIsAutomaticallyInitiated();
-       // }
+        }
     } catch (error) {
         console.error("执行任务时出错:", error);
     } finally {

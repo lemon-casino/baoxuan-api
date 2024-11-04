@@ -582,11 +582,15 @@ const isWorkingDay = async (date) => {
  */
 const createProcess = async (formId, userId, processCode, formDataJsonStr) => {
     // 获取用户的部门id
-    const departments = await departmentService.getDepartmentOfUser(userId)
-    const departmentId = departments[departments.length - 1].dept_id
-    const {access_token: token} = await getToken();
-    return await yiDaReq.createProcess(token, formId, userId, processCode, departmentId, formDataJsonStr)
+    const departments = await departmentService.getDepartmentOfUser(userId);
+    let departmentId = '';
+    if (departments && departments.length > 0) {
+        departmentId = departments[departments.length - 1].dept_id;
+    }
+    const { access_token: token } = await getToken();
+    return await yiDaReq.createProcess(token, formId, userId, processCode, departmentId, formDataJsonStr);
 }
+
 
 module.exports = {
     getDingDingToken,
