@@ -364,7 +364,7 @@ const getDingDingUserIdAndNickname = async () => {
                 status:'1'
             },
             raw: true,
-            logging: true
+            logging: false
         });
         
     } catch (error) {
