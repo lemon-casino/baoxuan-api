@@ -21,6 +21,7 @@ let syncResignEmployeeCron = "0 0 18 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
 let tmallLinkData = "32 14 * * 1-6"
 let jdLinkData  = "29 10 * * 1-6"
+
 let caigouLinkData  = "*/5 * * * 1-6"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"

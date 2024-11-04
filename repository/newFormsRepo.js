@@ -30,54 +30,54 @@ const userRepo = require('./userRepo')
 const getProcessStat = async function (userNames, tag, startDate, endDate) {
     let result = [], params = []
 
-    let sql = `select a.id, vft.type, a.action_exit from (
-            select id, field_id, form_id, show_name, action_exit, type 
-            from vision_personal where tag = '${tag}'
-                and (operator_name = ? or v1 = ? or v2 = ? ???) 
-                and operate_time >= '${startDate}' 
-                and operate_time <= '${endDate}'
-            group by id, field_id, form_id, show_name, action_exit, type
-        ) a left join vision_field_type vft on vft.form_id = a.form_id 
-            left join form_field_data ffd on ffd.id = vft.ffd_id 
-            join form_fields ff2 on ff2.field_id = a.field_id 
-                and ffd.form_field_id = ff2.id
-            where a.type like concat('%', ffd.value, '%') 
-            order by a.id, 
-                case a.action_exit 
-                when 'agree' then 2 
-                when 'doing' then 1 
-                else 0 end`
+    let sql = `SELECT a.id, vft.type, a.action_exit FROM (
+            SELECT id, field_id, form_id, show_name, action_exit, type 
+            FROM vision_personal WHERE tag = '${tag}'
+                AND (operator_name = ? OR v1 = ? OR v2 = ? ???) 
+                AND operate_time >= '${startDate}' 
+                AND operate_time <= '${endDate}'
+            GROUP BY id, field_id, form_id, show_name, action_exit, type
+        ) a LEFT JOIN vision_field_type vft ON vft.form_id = a.form_id 
+            LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id 
+            JOIN form_fields ff2 ON ff2.field_id = a.field_id 
+                AND ffd.form_field_id = ff2.id
+            WHERE a.type LIKE CONCAT('%', ffd.value, '%') 
+            ORDER BY a.id, 
+                CASE a.action_exit 
+                WHEN 'agree' THEN 2 
+                WHEN 'doing' THEN 1 
+                ELSE 0 END`
             
-    let sql1 = `select ifnull(sum(a.count), 0) as count, a.action_exit from (
-            select vp.id, vp.field_id, vp.form_id, vp.show_name, vp.action_exit, 
-                cast(ifnull(if(piv3.value is null, replace(pis2.value, '"', ''), replace(piv3.value, '"', '')), 0) as decimal) as count, vp.type
-            from vision_personal vp 
-            left join vision_activity_field vaf on vp.vt_form_id = vaf.form_id
-                and vaf.activity_id = vp.va_id
-                and if(vp.action_exit = 'agree', vaf.type = 1, vaf.type = 0)
-            left join process_instance_values piv3 on piv3.instance_id = vp.id 
-                and piv3.field_id = vaf.field_id 
-                and vaf.is_sub = 0
-                and if(vp.is_sub = 1 and exists(select pis3.id from process_instance_sub_values pis3 
-                    where pis3.instance_id = vp.id
-                ), false, true)
-            left join process_instance_sub_values pis2 on pis2.instance_id = vp.id 
-                and pis2.field_id = vaf.field_id 
-                and vaf.is_sub = 1
-                and vp.index = pis2.index
+    let sql1 = `SELECT IFNULL(SUM(a.count), 0) AS count, a.action_exit FROM (
+            SELECT vp.id, vp.field_id, vp.form_id, vp.show_name, vp.action_exit, 
+                CAST(IFNULL(IF(piv3.value IS NULL, REPLACE(pis2.value, '"', ''), REPLACE(piv3.value, '"', '')), 0) AS DECIMAL) AS count, vp.type
+            FROM vision_personal vp 
+            LEFT JOIN vision_activity_field vaf ON vp.vt_form_id = vaf.form_id
+                AND vaf.activity_id = vp.va_id
+                AND IF(vp.action_exit = 'agree', vaf.type = 1, vaf.type = 0)
+            LEFT JOIN process_instance_values piv3 ON piv3.instance_id = vp.id 
+                AND piv3.field_id = vaf.field_id 
+                AND vaf.is_sub = 0
+                AND IF(vp.is_sub = 1 AND EXISTS(SELECT pis3.id FROM process_instance_sub_values pis3 
+                    WHERE pis3.instance_id = vp.id
+                ), FALSE, TRUE)
+            LEFT JOIN process_instance_sub_values pis2 ON pis2.instance_id = vp.id 
+                AND pis2.field_id = vaf.field_id 
+                AND vaf.is_sub = 1
+                AND vp.index = pis2.index
 
-            where vp.tag = '${tag}' 
-                and (((vp.operator_name = ? or vp.v1 = ? ????) and piv3.id is not null) 
-                    or (vp.v2 = ? and pis2.id is not null ?????)) 
-                and vp.operate_time >= '${startDate}' 
-                and vp.operate_time <= '${endDate}'
+            WHERE vp.tag = '${tag}' 
+                AND (((vp.operator_name = ? OR vp.v1 = ? ????) AND piv3.id IS NOT NULL) 
+                    OR (vp.v2 = ? AND pis2.id IS NOT NULL ?????)) 
+                AND vp.operate_time >= '${startDate}' 
+                AND vp.operate_time <= '${endDate}'
 
-            group by vp.id, vp.field_id, vp.form_id, vp.action_exit, vp.show_name, 
+            GROUP BY vp.id, vp.field_id, vp.form_id, vp.action_exit, vp.show_name, 
                 piv3.field_id, piv3.value, pis2.field_id, pis2.value, vp.type
-        ) a left join vision_field_type vft on vft.form_id = a.form_id 
-            left join form_field_data ffd on ffd.id = vft.ffd_id 
-            where a.type like concat('%', ffd.value, '%')
-        group by a.action_exit`
+        ) a LEFT JOIN vision_field_type vft ON vft.form_id = a.form_id 
+            LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id 
+            WHERE a.type LIKE CONCAT('%', ffd.value, '%')
+        GROUP BY a.action_exit`
     let tmp, tmp1
    
     for (let i = 0; i < userNames.length; i++) {
@@ -93,9 +93,9 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
         user.children.push(JSON.parse(JSON.stringify(userItem)))
         user.children.push(JSON.parse(JSON.stringify(actionItem2)))
         if (nameFilter.hasOwnProperty(userNames[i])) {
-            tmp = tmp.replace('???', 'or operator_name = ? or v1 = ? or v2 = ?')
-            tmp1 = tmp1.replace('????', 'or vp.operator_name = ? or vp.v1 = ?')
-                .replace('?????', 'or vp.v2 = ? and pis2.id is not null')
+            tmp = tmp.replace('???', 'OR operator_name = ? OR v1 = ? OR v2 = ?')
+            tmp1 = tmp1.replace('????', 'OR vp.operator_name = ? OR vp.v1 = ?')
+                .replace('?????', 'OR vp.v2 = ? AND pis2.id IS NOT NULL')
             params = [
                 userNames[i], userNames[i],
                 nameFilter[userNames[i]], nameFilter[userNames[i]], 
@@ -141,53 +141,53 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
 }
 
 const getStat = async function (result, startDate, endDate) {
-    let sql =  `select count(1) as count, 0 as id, vision_type, type from vision_nodes
-            where tag = 'total' and operate_time >= '${startDate}'
-                and operate_time <= '${endDate}'
-                and if(v1 is null, v2, v1) like concat('%', v3, '%')
-            group by type, vision_type
+    let sql =  `SELECT COUNT(1) AS count, 0 AS id, vision_type, type FROM vision_nodes
+            WHERE tag = 'total' AND operate_time >= '${startDate}'
+                AND operate_time <= '${endDate}'
+                AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+            GROUP BY type, vision_type
         
-        union all 
+        UNION ALL 
 
-        select count(1) as count, 2 as id, vision_type, type from vision_nodes vn
-            where tag = 'inside' and operate_time >= '${startDate}'
-                and operate_time <= '${endDate}'
-                and if(v1 is null, v2, v1) like concat('%', v3, '%')
-                and exists (
-                    select pir.id from process_instance_records pir 
-                    join vision_activity va on va.form_id = vn.form_id
-                        and va.activity_id = pir.activity_id
-                        and va.activity_name = pir.show_name
-                        and va.tag in ('insideArt', 'insidePhoto')
-                        and pir.action_exit in ('next', 'doing', 'agree')
-                    where pir.instance_id = vn.id
+        SELECT COUNT(1) AS count, 2 AS id, vision_type, type FROM vision_nodes vn
+            WHERE tag = 'inside' AND operate_time >= '${startDate}'
+                AND operate_time <= '${endDate}'
+                AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+                AND EXISTS (
+                    SELECT pir.id FROM process_instance_records pir 
+                    JOIN vision_activity va ON va.form_id = vn.form_id
+                        AND va.activity_id = pir.activity_id
+                        AND va.activity_name = pir.show_name
+                        AND va.tag IN ('insideArt', 'insidePhoto')
+                        AND pir.action_exit IN ('next', 'doing', 'agree')
+                    WHERE pir.instance_id = vn.id
                 )
-            group by type, vision_type
+            GROUP BY type, vision_type
         
-        union all 
+        UNION ALL 
             
-        select count(1) as count, 1 as id, vision_type, type from vision_nodes vn
-            where tag = 'out' and operate_time >= '${startDate}'
-                and operate_time <= '${endDate}'
-                and if(v1 is null, v2, v1) like concat('%', v3, '%')
-                and exists (
-                    select pir.id from process_instance_records pir 
-                    join vision_activity va on va.form_id = vn.form_id
-                        and va.activity_id = pir.activity_id
-                        and va.activity_name = pir.show_name
-                        and va.tag in ('outArt', 'outPhoto')
-                        and pir.action_exit in ('next', 'doing', 'agree')
-                    where pir.instance_id = vn.id
+        SELECT COUNT(1) AS count, 1 AS id, vision_type, type FROM vision_nodes vn
+            WHERE tag = 'out' AND operate_time >= '${startDate}'
+                AND operate_time <= '${endDate}'
+                AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+                AND EXISTS (
+                    SELECT pir.id FROM process_instance_records pir 
+                    JOIN vision_activity va ON va.form_id = vn.form_id
+                        AND va.activity_id = pir.activity_id
+                        AND va.activity_name = pir.show_name
+                        AND va.tag IN ('outArt', 'outPhoto')
+                        AND pir.action_exit IN ('next', 'doing', 'agree')
+                    WHERE pir.instance_id = vn.id
                 )
-            group by type, vision_type 
+            GROUP BY type, vision_type 
         
-        union all 
+        UNION ALL 
         
-        select count(1) as count, 3 as id, vision_type, type from vision_nodes
-            where tag = 'retouch' and operate_time >= '${startDate}'
-                and operate_time <= '${endDate}'
-                and if(v1 is null, v2, v1) like concat('%', v3, '%')
-            group by type, vision_type`
+        SELECT COUNT(1) AS count, 3 AS id, vision_type, type FROM vision_nodes
+            WHERE tag = 'retouch' AND operate_time >= '${startDate}'
+                AND operate_time <= '${endDate}'
+                AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+            GROUP BY type, vision_type`
 
     let row = await query(sql)
     for (let i = 0; i < row.length; i++) {
@@ -207,40 +207,40 @@ const getStat = async function (result, startDate, endDate) {
         result[row[i].id].sum += parseInt(row[i].count)
     }
 
-    sql = `select count(1) as count, 1 as id from (
-            select vn.id from vision_nodes vn
-            where tag = 'retouch' and operate_time >= '${startDate}'
-                and operate_time <= '${endDate}'
-                and if(v1 is null, v2, v1) like concat('%', v3, '%')
-                and exists (
-                    select pir.id from process_instance_records pir 
-                    join vision_activity va on va.form_id = vn.form_id
-                        and va.activity_id = pir.activity_id
-                        and va.activity_name = pir.show_name
-                        and va.tag in ('outArt', 'outPhoto')
-                        and pir.action_exit in ('next', 'doing', 'agree')
-                    where pir.instance_id = vn.id
+    sql = `SELECT COUNT(1) AS count, 1 AS id FROM (
+            SELECT vn.id FROM vision_nodes vn
+            WHERE tag = 'retouch' AND operate_time >= '${startDate}'
+                AND operate_time <= '${endDate}'
+                AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+                AND EXISTS (
+                    SELECT pir.id FROM process_instance_records pir 
+                    JOIN vision_activity va ON va.form_id = vn.form_id
+                        AND va.activity_id = pir.activity_id
+                        AND va.activity_name = pir.show_name
+                        AND va.tag IN ('outArt', 'outPhoto')
+                        AND pir.action_exit IN ('next', 'doing', 'agree')
+                    WHERE pir.instance_id = vn.id
                 )
-            group by vn.id
+            GROUP BY vn.id
         ) a 
         
-        union all 
+        UNION ALL
         
-        select count(1) as count, 2 as id from (
-            select vn.id from vision_nodes vn
-            where tag = 'retouch' and operate_time >= '${startDate}'
-                and operate_time <= '${endDate}'
-                and if(v1 is null, v2, v1) like concat('%', v3, '%')
-                and exists (
-                    select pir.id from process_instance_records pir 
-                    join vision_activity va on va.form_id = vn.form_id
-                        and va.activity_id = pir.activity_id
-                        and va.activity_name = pir.show_name
-                        and va.tag in ('insideArt', 'insidePhoto')
-                        and pir.action_exit in ('next', 'doing', 'agree')
-                    where pir.instance_id = vn.id
+        SELECT COUNT(1) AS count, 2 AS id FROM (
+            SELECT vn.id FROM vision_nodes vn
+            WHERE tag = 'retouch' AND operate_time >= '${startDate}'
+                AND operate_time <= '${endDate}'
+                AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+                AND EXISTS (
+                    SELECT pir.id FROM process_instance_records pir 
+                    JOIN vision_activity va ON va.form_id = vn.form_id
+                        AND va.activity_id = pir.activity_id
+                        AND va.activity_name = pir.show_name
+                        AND va.tag IN ('insideArt', 'insidePhoto')
+                        AND pir.action_exit IN ('next', 'doing', 'agree')
+                    WHERE pir.instance_id = vn.id
                 )
-            group by vn.id
+            GROUP BY vn.id
         ) a`
     row = await query(sql)
     for (let i = 0; i < row.length; i++) {
@@ -248,11 +248,11 @@ const getStat = async function (result, startDate, endDate) {
         result[3].children[child_key].sum = row[i].count
     }
 
-    sql = `select id, activity_id, field_id, tag, type, value, action_exit 
-        from vision_node_works where operate_time >= '${startDate}' 
-            and operate_time <= '${endDate}'
-            and if(v1 is null, v2, v1) like concat('%', v3, '%')
-        order by id`
+    sql = `SELECT id, activity_id, field_id, tag, type, value, action_exit 
+        FROM vision_node_works WHERE operate_time >= '${startDate}' 
+            AND operate_time <= '${endDate}'
+            AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+        ORDER BY id`
 
     row = await query(sql)
     for (let i = 0; i < row.length; i++) {
@@ -300,21 +300,43 @@ const getStat = async function (result, startDate, endDate) {
 
 const getFlowInstances = async function (params) {
     let result = []
-    let sql = `select f.id, f.title as flowFormName, f.form_uuid as flowFormId 
-        from vision_type vt join forms f on vt.form_id = f.id where 1=1`
+    let sql = `SELECT f.id, f.title AS flowFormName, f.form_uuid AS flowFormId 
+        FROM vision_type vt JOIN forms f ON vt.form_id = f.id WHERE 1=1`
     if (params.tag) {
-        sql = `${sql} and vt.tag = '${params.tag}'`
+        sql = `${sql} AND vt.tag = '${params.tag}'`
     }
     if (params.id) {
-        sql = `${sql} and f.id = ${params.id}`
+        sql = `${sql} AND f.id = ${params.id}`
     }
-    sql = `${sql} group by f.id, f.title, f.form_uuid order by f.id desc, f.title, f.form_uuid`
+    sql = `${sql} GROUP BY f.id, f.title, f.form_uuid ORDER BY f.id DESC, f.title, f.form_uuid`
     let row = await query(sql)
     if (row?.length) {
         for (let i = 0; i < row.length; i++) {
-            sql = `select id, parent_id, (case component when 'AssociationFormField' 
-                then concat(field_id, '_id') else field_id end) as fieldId, title 
-                as fieldName from form_fields where form_id = ?`
+            sql = `SELECT id, parent_id, (CASE component WHEN 'AssociationFormField' 
+                THEN CONCAT(field_id, '_id') ELSE field_id END) AS fieldId, title 
+                AS fieldName FROM form_fields WHERE form_id = ?`
+            let row1 = await query(sql, [row[i].id])
+            row[i]['flowFormDetails'] = row1 || []
+        }
+        result.push(...row)
+    }
+    return result
+}
+
+const getOperationFlowInstances = async function (params) {
+    let result = []
+    let sql = `SELECT f.id, f.title AS flowFormName, f.form_uuid AS flowFormId 
+        FROM operation_type ot JOIN forms f ON ot.form_id = f.id WHERE 1=1`
+    if (params.ids) {
+        sql = `${sql} AND f.id IN (${params.ids})`
+    }
+    sql = `${sql} GROUP BY f.id, f.title, f.form_uuid ORDER BY f.id DESC, f.title, f.form_uuid`
+    let row = await query(sql)
+    if (row?.length) {
+        for (let i = 0; i < row.length; i++) {
+            sql = `SELECT id, parent_id, (CASE component WHEN 'AssociationFormField' 
+                THEN CONCAT(field_id, '_id') ELSE field_id END) AS fieldId, title 
+                AS fieldName FROM form_fields WHERE form_id = ?`
             let row1 = await query(sql, [row[i].id])
             row[i]['flowFormDetails'] = row1 || []
         }
@@ -328,94 +350,185 @@ const getFlowProcessInstances = async function (params, offset, limit) {
         data: [],
         total: 0
     }
-    let presql = `select count(1) as count from (`
-    let subsql = `select id, creator, processInstanceId, title, instanceStatus, createTime, operateTime 
-        from vision_process vp where form_id = ?`
+    let presql = `SELECT COUNT(1) AS count FROM (`
+    let subsql = `SELECT id, creator, processInstanceId, title, instanceStatus, createTime, operateTime 
+        FROM vision_process vp WHERE form_id = ?`
     p1.push(parseInt(params.id))
     if (params.tag) {
-        subsql = `${subsql} and tag = "${params.tag}"`
+        subsql = `${subsql} AND tag = "${params.tag}"`
         if (visionList.includes(params.tag)) {
-            subsql = `${subsql} and exists(
-                select pir.id from process_instance_records pir 
-                join vision_activity va on pir.instance_id = vp.id
-                    and pir.activity_id = va.activity_id 
-                    and va.activity_name = pir.show_name
-                where va.form_id = vp.form_id
-                    and va.tag in ("${visionFilter[params.tag].join('","')}")
+            subsql = `${subsql} AND EXISTS(
+                SELECT pir.id FROM process_instance_records pir 
+                JOIN vision_activity va ON pir.instance_id = vp.id
+                    AND pir.activity_id = va.activity_id 
+                    AND va.activity_name = pir.show_name
+                WHERE va.form_id = vp.form_id
+                    AND va.tag IN ("${visionFilter[params.tag].join('","')}")
             )`
         }
     }
     if (params.operator) {
         if (!nameFilter.hasOwnProperty(params.operator)) {
-            subsql = `${subsql} and (operator_name = ? or v1 = ? or v2 = ?)`
+            subsql = `${subsql} AND (operator_name = ? OR v1 = ? OR v2 = ?)`
             p1.push(params.operator, params.operator, params.operator)
         } else {
-            subsql = `${subsql} and (operator_name = ? or v1 = ? or v2 = ? 
-                or operator_name = ? or v1 = ? or v2 = ?)`
+            subsql = `${subsql} AND (operator_name = ? OR v1 = ? OR v2 = ? 
+                OR operator_name = ? OR v1 = ? OR v2 = ?)`
             p1.push(params.operator, params.operator, params.operator, 
                 nameFilter[params.operator], nameFilter[params.operator], nameFilter[params.operator]
             )
         }
     }
     if (params.startDate) {
-        subsql = `${subsql} and operate_time >= ?`
+        subsql = `${subsql} AND operate_time >= ?`
         p1.push(moment(params.startDate).format('YYYY-MM-DD') + ' 00:00:00')
     }
     if (params.endDate) {
-        subsql = `${subsql} and operate_time <= ?`
+        subsql = `${subsql} AND operate_time <= ?`
         p1.push(moment(params.endDate).format('YYYY-MM-DD') + ' 23:59:59')
     }
     if (params.action) {
-        subsql = `${subsql} and action_exit in (${actionFilter[params.action].map(() => '?').join(',')})`
+        subsql = `${subsql} AND action_exit IN (${actionFilter[params.action].map(() => '?').join(',')})`
         p1.push(...actionFilter[params.action])
     }
     if (params.fullAction) {
-        subsql = `${subsql} and vn_type = ${fullActionFilter[params.fullAction]}`
+        subsql = `${subsql} AND vn_type = ${fullActionFilter[params.fullAction]}`
     }
     if (params.type) {
         if (params.tag == 'retouch') {
             for (let i = 0; i < retouchList.length; i++) {
                 if (params.type == retouchList[i].name) {                    
-                    subsql = `${subsql} and exists (
-                        select pir.id from process_instance_records pir 
-                        join vision_activity va on va.form_id = vp.form_id
-                            and va.activity_id = pir.activity_id
-                            and va.activity_name = pir.show_name
-                            and va.tag in ('${retouchList[i].child.join("','")}')
-                            and pir.action_exit in ('next', 'doing', 'agree')
-                        where pir.instance_id = vp.id
+                    subsql = `${subsql} AND EXISTS (
+                        SELECT pir.id FROM process_instance_records pir 
+                        JOIN vision_activity va ON va.form_id = vp.form_id
+                            AND va.activity_id = pir.activity_id
+                            AND va.activity_name = pir.show_name
+                            AND va.tag IN ('${retouchList[i].child.join("','")}')
+                            AND pir.action_exit IN ('next', 'doing', 'agree')
+                        WHERE pir.instance_id = vp.id
                     )`
                     break
                 }
             }
         }
         if (typeFilter[params.type]) {
-            subsql = `${subsql} and vision_type in (${typeFilter[params.type].map(() => '?').join(',')})
-                and type like concat('%', value, '%')`
+            subsql = `${subsql} AND vision_type IN (${typeFilter[params.type].map(() => '?').join(',')})
+                AND type LIKE CONCAT('%', value, '%')`
             p1.push(...typeFilter[params.type])
         }
     }
     subsql = `${subsql}
-            group by id, processInstanceId, title, \`status\`, createTime, operateTime`
+            GROUP BY id, processInstanceId, title, \`status\`, createTime, operateTime`
     let search = `${presql}${subsql}) a`
     let row = await query(search, p1)
     if (row?.length && row[0].count) {
         result.total = row[0].count
         if (limit) {
-            search = `select * from (${subsql}) a limit ${offset}, ${limit}`
+            search = `SELECT * FROM (${subsql}) a LIMIT ${offset}, ${limit}`
         } else {
-            search = `select * from (${subsql}) a`
+            search = `SELECT * FROM (${subsql}) a`
         }
         row = await query(search, p1)
         if (row?.length) {
             for (let i = 0; i < row.length; i++) {
-                search = `select field_id as fieldId, \`value\` as fieldValue from 
-                    process_instance_values where instance_id = ?`
+                search = `SELECT field_id AS fieldId, \`value\` AS fieldValue FROM 
+                    process_instance_values WHERE instance_id = ?`
                 row[i]['data'] = await query(search, [row[i].id]) || []
-                search = `select show_name, operator_name from process_instance_records 
-                    where instance_id = ? order by 
-                    if(action_exit is null, 2, if(action_exit in ('next', 'doing'), 0, 1)), 
-                    operate_time desc, id desc limit 1`
+                search = `SELECT show_name, operator_name FROM process_instance_records 
+                    WHERE instance_id = ? ORDER BY 
+                    IF(action_exit IS NULL, 2, IF(action_exit IN ('next', 'doing'), 0, 1)), 
+                    operate_time DESC, id DESC LIMIT 1`
+                let row1 = await query(search, [row[i].id])
+                if (row1?.length) {
+                    row[i]['action'] = row1[0].show_name
+                    row[i]['operator'] = row1[0].operator_name
+                }
+                let user = await userRepo.getUserByDingdingUserId(row[i].creator)
+                if (user?.length) {
+                    row[i]['creator'] = user[0].nickname
+                }
+            }
+            result.data = row
+        }
+    }
+    return result
+}
+
+const getOperationProcessInstances = async function (params, offset, limit) {
+    let p1 = [], result = {
+        data: [],
+        total: 0
+    }
+    let presql = `SELECT COUNT(1) AS count FROM (`
+    let subsql = `SELECT pi.id,
+            pi.instance_id AS processInstanceId,
+            pi.title,
+            pi.status AS instanceStatus,
+            pi.create_time AS createTime,
+            pi.update_time AS operateTime, 
+            pi.creator 
+        FROM processes p
+        JOIN operation_type ot ON p.form_id = ot.form_id
+        JOIN operation_type_activity ota ON ot.id = ota.type_id
+        JOIN process_instances pi ON pi.process_id = p.id
+        JOIN process_instance_records pir ON pi.id = pir.instance_id
+            AND pir.show_name = ota.activity_name
+            AND pir.activity_id = ota.activity_id
+            AND pir.action_exit = ota.action_exit
+            AND pir.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2
+                WHERE p2.instance_id = pi.id
+                    AND p2.show_name = ota.activity_name
+                    AND p2.activity_id = ota.activity_id
+            )
+        WHERE pi.status IN ('COMPLETED', 'RUNNING') 
+            AND ota.type = ? `
+    p1.push(params.type)
+    if (params.startDate) {
+        subsql = `${subsql} AND pir.operate_time >= ?`
+        p1.push(moment(params.startDate).format('YYYY-MM-DD') + ' 00:00:00')
+    }
+    if (params.endDate) {
+        subsql = `${subsql} AND pir.operate_time <= ?`
+        p1.push(moment(params.endDate).format('YYYY-MM-DD') + ' 23:59:59')
+    }
+    if (params.operateType) {
+        subsql = `${subsql} AND ot.operate_type = ?`
+        p1.push(params.operateType)
+    }
+    if (params.nickname) {
+        subsql = `${subsql} AND pir.operate_name = ?`
+        p1.push(params.nickname)
+    }
+    if (params.action) {
+        subsql = `${subsql} AND ot.type = ?`
+        p1.push(fullActionFilter[params.action])
+    }
+    if (params.id) {
+        subsql = `${subsql} AND p.form_id = ?`
+        p1.push(params.id)
+    }
+    subsql = `${subsql}
+        GROUP BY pi.id, pi.instance_id, pi.status, pi.title,  pi.create_time, pi.update_time`
+    let search = `${presql}${subsql}) a`
+    let row = await query(search, p1)
+    if (row?.length && row[0].count) {
+        result.total = row[0].count
+        if (limit) {
+            search = `SELECT * FROM (${subsql}) a LIMIT ${offset}, ${limit}`
+        } else {
+            search = `SELECT * FROM (${subsql}) a`
+        }
+        row = await query(search, p1)
+        if (row?.length) {
+            for (let i = 0; i < row.length; i++) {
+                search = `SELECT field_id AS fieldId, \`value\` AS fieldValue FROM 
+                    process_instance_values WHERE instance_id = ?`
+                row[i]['data'] = await query(search, [row[i].id]) || []
+                search = `SELECT show_name, operator_name FROM process_instance_records 
+                    WHERE instance_id = ? ORDER BY 
+                    IF(action_exit IS NULL, 2, IF(action_exit IN ('next', 'doing'), 0, 1)), 
+                    operate_time DESC, id DESC LIMIT 1`
                 let row1 = await query(search, [row[i].id])
                 if (row1?.length) {
                     row[i]['action'] = row1[0].show_name
@@ -437,161 +550,161 @@ const getVisionProcessInstances = async function (params, offset, limit) {
         data: [],
         total: 0
     }
-    let presql = `select count(1) as count from (`
-    let subsql = `select pi.id,
-            pi.instance_id as processInstanceId,
+    let presql = `SELECT COUNT(1) AS count FROM (`
+    let subsql = `SELECT pi.id,
+            pi.instance_id AS processInstanceId,
             pi.title,
-            pi.status as instanceStatus,
-            pi.create_time as createTime,
-            pi.update_time as operateTime, 
+            pi.status AS instanceStatus,
+            pi.create_time AS createTime,
+            pi.update_time AS operateTime, 
             pi.creator 
-        from processes p
-        join vision_leader vl on p.form_id = vl.form_id
-        join vision_type vt on vl.form_id = vt.form_id
-            and vt.tag = 'visionLeader'
-        left join vision_leader_field vlf on vlf.tag = vt.tag
-            and vlf.form_id = vl.form_id
-        join process_instances pi on pi.process_id = p.id
-            and pi.status in ('COMPLETED', 'RUNNING')
-        left join process_instance_values piv on piv.instance_id = pi.id
-            and vlf.field_id like concat('%', piv.field_id, '%') 
-        left join process_instance_values piv1 on piv1.instance_id = pi.id
-            and piv1.field_id = vt.field_id
-            and vt.type = 0
-        left join process_receipt pr on pr.process_id = pi.id
-        left join receipt_instance_values riv on riv.instance_id = pr.receipt_id
-            and riv.field_id = vt.field_id
-            and vt.type = 1
-        join process_instance_records pir on pir.instance_id = pi.id
-            and pir.show_name = vl.activity_name
-            and pir.activity_id = vl.activity_id
-            and pir.action_exit = vl.action_exit
-            and pir.id = (
-                select max(p2.id) from process_instance_records p2
-                where p2.instance_id = pi.id
-                    and p2.show_name = vl.activity_name
-                    and p2.activity_id = vl.activity_id)
-        join form_fields ff on ff.form_id = if(vt.type = 0, vt.form_id, vt.sub_form_id)
-            and vt.field_id = ff.field_id
-        left join vision_field_type vft on vft.form_id = ff.form_id
-        left join form_field_data ffd on ffd.id = vft.ffd_id
-        where vl.form_id = ? 
-            and if(vl.type = 2 or vl.vision_type, 
-                if(piv1.value is null, riv.value, piv1.value) like concat('%', ffd.value, '%'), 1)
-                and vft.type not in (0, 4) `
+        FROM processes p
+        JOIN vision_leader vl ON p.form_id = vl.form_id
+        JOIN vision_type vt ON vl.form_id = vt.form_id
+            AND vt.tag = 'visionLeader'
+        LEFT JOIN vision_leader_field vlf ON vlf.tag = vt.tag
+            AND vlf.form_id = vl.form_id
+        JOIN process_instances pi ON pi.process_id = p.id
+            AND pi.status IN ('COMPLETED', 'RUNNING')
+        LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id
+            AND vlf.field_id LIKE CONCAT('%', piv.field_id, '%') 
+        LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
+            AND piv1.field_id = vt.field_id
+            AND vt.type = 0
+        LEFT JOIN process_receipt pr ON pr.process_id = pi.id
+        LEFT JOIN receipt_instance_values riv ON riv.instance_id = pr.receipt_id
+            AND riv.field_id = vt.field_id
+            AND vt.type = 1
+        JOIN process_instance_records pir ON pir.instance_id = pi.id
+            AND pir.show_name = vl.activity_name
+            AND pir.activity_id = vl.activity_id
+            AND pir.action_exit = vl.action_exit
+            AND pir.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2
+                WHERE p2.instance_id = pi.id
+                    AND p2.show_name = vl.activity_name
+                    AND p2.activity_id = vl.activity_id)
+        JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
+            AND vt.field_id = ff.field_id
+        LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
+        LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
+        WHERE vl.form_id = ? 
+            AND IF(vl.type = 2 OR vl.vision_type, 
+                IF(piv1.value IS NULL, riv.value, piv1.value) LIKE CONCAT('%', ffd.value, '%'), 1)
+                AND vft.type NOT IN (0, 4) `
     p1.push(parseInt(params.id))
     if (params.startDate) {
-        subsql = `${subsql} and pir.operate_time >= ?`
+        subsql = `${subsql} AND pir.operate_time >= ?`
         p1.push(moment(params.startDate).format('YYYY-MM-DD') + ' 00:00:00')
     }
     if (params.endDate) {
-        subsql = `${subsql} and pir.operate_time <= ?`
+        subsql = `${subsql} AND pir.operate_time <= ?`
         p1.push(moment(params.endDate).format('YYYY-MM-DD') + ' 23:59:59')
     }
     if (params.action) {
-        subsql = `${subsql} and vl.type = ?`
+        subsql = `${subsql} AND vl.type = ?`
         p1.push(fullActionFilter[params.action])
     }
     if (params.userNames) {
         if (params.is_designer) {
-            subsql = `${subsql} and exists(
-                select pir2.id from process_instance_records pir2 
-                join vision_leader vl1 on vl1.form_id = vl.form_id
-                    and vl1.vision_type = 1
-                    and vl.vision_type = 2
-                    and vl.id > vl1.id
-                where pi.id = pir2.instance_id
-                    and pir2.operator_name in (${params.userNames.map(() => '?').join(',')})
-                    and pir2.activity_id = vl1.activity_id
-                    and pir2.show_name = vl1.activity_name
-                    and pir2.action_exit = vl1.action_exit
-                    and pir2.id = (
-                        select max(p2.id) from process_instance_records p2
-                        where p2.instance_id = pi.id
-                            and p2.activity_id = vl1.activity_id 
-                            and p2.show_name = vl1.activity_name))`
+            subsql = `${subsql} AND EXISTS(
+                SELECT pir2.id FROM process_instance_records pir2 
+                JOIN vision_leader vl1 ON vl1.form_id = vl.form_id
+                    AND vl1.vision_type = 1
+                    AND vl.vision_type = 2
+                    AND vl.id > vl1.id
+                WHERE pi.id = pir2.instance_id
+                    AND pir2.operator_name IN (${params.userNames.map(() => '?').join(',')})
+                    AND pir2.activity_id = vl1.activity_id
+                    AND pir2.show_name = vl1.activity_name
+                    AND pir2.action_exit = vl1.action_exit
+                    AND pir2.id = (
+                        SELECT MAX(p2.id) FROM process_instance_records p2
+                        WHERE p2.instance_id = pi.id
+                            AND p2.activity_id = vl1.activity_id 
+                            AND p2.show_name = vl1.activity_name))`
             p1.push(...params.userNames)
         } else {
-            subsql = `${subsql} and exists(
-                select pir2.id from process_instance_records pir2 
-                where pi.id = pir2.instance_id 
-                    and pir2.operator_name in (${params.userNames.map(() => '?').join(',')})
-                    and pir2.id in (
-                        select max(p2.id) from process_instance_records p2
-                        where p2.instance_id = pi.id
-                        group by p2.instance_id, p2.show_name, p2.activity_id))`
+            subsql = `${subsql} AND EXISTS(
+                SELECT pir2.id FROM process_instance_records pir2 
+                WHERE pi.id = pir2.instance_id 
+                    AND pir2.operator_name IN (${params.userNames.map(() => '?').join(',')})
+                    AND pir2.id IN (
+                        SELECT MAX(p2.id) FROM process_instance_records p2
+                        WHERE p2.instance_id = pi.id
+                        GROUP BY p2.instance_id, p2.show_name, p2.activity_id))`
             p1.push(...params.userNames)
         }
     }
     if (params.fieldType && params.type != undefined) {
         if (leaderItemField[params.type].display == 1) {
-            subsql = `${subsql} and exists(
-                    select vft.id from vision_field_type vft 
-                    join form_field_data ffd on ffd.id = vft.ffd_id
-                    where if (vt.type = 0, vt.form_id, vt.sub_form_id) = vft.form_id 
-                        and if(piv1.value is null, riv.value, piv1.value) like concat('"', ffd.value, '"')
-                        and vft.type in (${typeFilter[params.fieldType].map(() => '?')})
+            subsql = `${subsql} AND EXISTS(
+                    SELECT vft.id FROM vision_field_type vft 
+                    JOIN form_field_data ffd ON ffd.id = vft.ffd_id
+                    WHERE if (vt.type = 0, vt.form_id, vt.sub_form_id) = vft.form_id 
+                        AND IF(piv1.value IS NULL, riv.value, piv1.value) LIKE CONCAT('"', ffd.value, '"')
+                        AND vft.type IN (${typeFilter[params.fieldType].map(() => '?')})
                 )`
             p1.push(...typeFilter[params.fieldType])
         } else if (leaderItemField[params.type].map == 'like') {
-            subsql = `${subsql} and vlf.type = ? and piv.value like '%${params.fieldType}%'`
+            subsql = `${subsql} AND vlf.type = ? AND piv.value LIKE '%${params.fieldType}%'`
             p1.push(params.type)
         } else if (leaderItemField[params.type].map == 'equal') {
-            subsql = `${subsql} and vlf.type = ? and piv.value = ?`
+            subsql = `${subsql} AND vlf.type = ? AND piv.value = ?`
             p1.push(params.type, `"${leaderItemField[params.type].data}"`)
         } else if (leaderItemField[params.type].map == 'more than') {
-            subsql = `${subsql} and vlf.type = ? and piv.value > 0 
-                and not exists(
-                    select vlf1.id from vision_leader_field vlf1 
-                    join process_instance_values piv2 on vlf1.field_id = piv2.field_id 
-                        and piv2.instance_id = pi.id
-                    where piv2.value > 0 
-                        and vlf1.type < vlf.type
-                        and vlf1.form_id = vl.form_id
-                        and vlf1.type in (7,8)
+            subsql = `${subsql} AND vlf.type = ? AND piv.value > 0 
+                AND NOT EXISTS(
+                    SELECT vlf1.id FROM vision_leader_field vlf1 
+                    JOIN process_instance_values piv2 ON vlf1.field_id = piv2.field_id 
+                        AND piv2.instance_id = pi.id
+                    WHERE piv2.value > 0 
+                        AND vlf1.type < vlf.type
+                        AND vlf1.form_id = vl.form_id
+                        AND vlf1.type IN (7,8)
                 )`
             p1.push(params.type)
         } else if (leaderItemField[params.type].map == 'same') {
-            subsql = `${subsql} and vlf.type = ? and (piv.value = 0 or not exists(
-                    select piv2.id from process_instance_values piv2 where piv2.instance_id = pi.id
-                        and piv.field_id = piv2.field_id
-                )) and not exists(
-                    select piv2.id from process_instance_values piv2 where piv2.instance_id = pi.id
-                        and piv.field_id != piv2.field_id 
-                        and vlf.field_id like concat('%', piv2.field_id, '%')
-                        and piv2.value > 0
+            subsql = `${subsql} AND vlf.type = ? AND (piv.value = 0 OR NOT EXISTS(
+                    SELECT piv2.id FROM process_instance_values piv2 WHERE piv2.instance_id = pi.id
+                        AND piv.field_id = piv2.field_id
+                )) AND NOT EXISTS(
+                    SELECT piv2.id FROM process_instance_values piv2 WHERE piv2.instance_id = pi.id
+                        AND piv.field_id != piv2.field_id 
+                        AND vlf.field_id LIKE CONCAT('%', piv2.field_id, '%')
+                        AND piv2.value > 0
                 )`
             p1.push(params.type)
         } else {
-            subsql = `${subsql} and vlf.type = ? and piv.value = ?`
+            subsql = `${subsql} AND vlf.type = ? AND piv.value = ?`
             p1.push(params.type, `"${params.fieldType}"`)
         }
     }
     if (params.leaderType) {
-        subsql = `${subsql} and vl.vision_type = ?`
+        subsql = `${subsql} AND vl.vision_type = ?`
         p1.push(params.leaderType)
     }
     subsql = `${subsql}
-        group by pi.id, pi.instance_id, pi.status, pi.title,  pi.create_time, pi.update_time`
+        GROUP BY pi.id, pi.instance_id, pi.status, pi.title,  pi.create_time, pi.update_time`
     let search = `${presql}${subsql}) a`
     let row = await query(search, p1)
     if (row?.length && row[0].count) {
         result.total = row[0].count
         if (limit) {
-            search = `select * from (${subsql}) a limit ${offset}, ${limit}`
+            search = `SELECT * FROM (${subsql}) a LIMIT ${offset}, ${limit}`
         } else {
-            search = `select * from (${subsql}) a`
+            search = `SELECT * FROM (${subsql}) a`
         }
         row = await query(search, p1)
         if (row?.length) {
             for (let i = 0; i < row.length; i++) {
-                search = `select field_id as fieldId, \`value\` as fieldValue from 
-                    process_instance_values where instance_id = ?`
+                search = `SELECT field_id AS fieldId, \`value\` AS fieldValue FROM 
+                    process_instance_values WHERE instance_id = ?`
                 row[i]['data'] = await query(search, [row[i].id]) || []
-                search = `select show_name, operator_name from process_instance_records 
-                    where instance_id = ? order by 
-                    if(action_exit is null, 2, if(action_exit in ('next', 'doing'), 0, 1)), 
-                    operate_time desc, id desc limit 1`
+                search = `SELECT show_name, operator_name FROM process_instance_records 
+                    WHERE instance_id = ? ORDER BY 
+                    IF(action_exit IS NULL, 2, IF(action_exit IN ('next', 'doing'), 0, 1)), 
+                    operate_time DESC, id DESC LIMIT 1`
                 let row1 = await query(search, [row[i].id])
                 if (row1?.length) {
                     row[i]['action'] = row1[0].show_name
@@ -609,22 +722,22 @@ const getVisionProcessInstances = async function (params, offset, limit) {
 }
 
 const getFlowActions = async function (id) {
-    let sql = `select * from process_instance_records where instance_id = ? order by 
-        if(action_exit is null, 2, if(action_exit in ('next', 'doing'), 1, 0)), operate_time, id`
+    let sql = `SELECT * FROM process_instance_records WHERE instance_id = ? ORDER BY 
+        IF(action_exit IS NULL, 2, IF(action_exit IN ('next', 'doing'), 1, 0)), operate_time, id`
     const result = await query(sql, [id])
     
     return result || []
 }
 
 const getLeaderStat = async function (result, start, end) {
-    let sql = `select count(1) as count, type, leader_type from 
-        (select type, leader_type from vision_leaders
-            where if(type = 2 or leader_type > 0, if(v1 is null, v2, v1) like concat('%', v3, '%'), 1=1)
-                and operate_time >= ? 
-                and operate_time <= ?
-                and tag = 'visionLeader'
-            group by id, type, leader_type
-        ) a group by type, leader_type`
+    let sql = `SELECT COUNT(1) AS count, type, leader_type FROM 
+        (SELECT type, leader_type FROM vision_leaders
+            WHERE IF(type = 2 OR leader_type > 0, IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%'), 1=1)
+                AND operate_time >= ? 
+                AND operate_time <= ?
+                AND tag = 'visionLeader'
+            GROUP BY id, type, leader_type
+        ) a GROUP BY type, leader_type`
     let row = await query(sql, [start, end])
     for (let i = 0; i < row.length; i++) {
         let child_key = statLeaderItem[row[i].leader_type].childMap[row[i].type]
@@ -642,53 +755,53 @@ const getDesignerFlowStat = async function (users, start, end) {
             users.push(nameFilter[users[i]])
         }
     }
-    let sql = `select count(1) as count, operator_name, type from (
-        select pir2.operator_name, vl1.type from vision_leader vl1 
-        join processes p on p.form_id = vl1.form_id
-        join process_instances pi on p.id = pi.process_id
-            and pi.status in ('RUNNING', 'COMPLETED')
-        join vision_leader vl2 on vl1.form_id = vl2.form_id
-            and vl2.action_exit = 'agree'
-            and vl1.vision_type = 2
-            and vl2.vision_type = 1
-            and vl1.id > vl2.id
-        join process_instance_records pir1 on pir1.instance_id = pi.id
-            and pir1.activity_id = vl1.activity_id
-            and pir1.show_name = vl1.activity_name
-            and pir1.action_exit = vl1.action_exit
-            and pir1.id = (
-                select max(p2.id) from process_instance_records p2
-                where p2.instance_id = pi.id 
-                    and p2.activity_id = vl1.activity_id 
-                    and p2.show_name = vl1.activity_name)
-        join process_instance_records pir2 on pir2.instance_id = pi.id
-            and pir2.activity_id = vl2.activity_id
-            and pir2.show_name = vl2.activity_name
-            and pir2.action_exit = vl2.action_exit
-            and pir2.id = (
-                select max(p2.id) from process_instance_records p2
-                where p2.instance_id = pi.id 
-                    and p2.activity_id = vl2.activity_id 
-                    and p2.show_name = vl2.activity_name)
-        join vision_type vt on vt.form_id = vl1.form_id 
-        left join process_instance_values piv1 on piv1.instance_id = pi.id
-            and piv1.field_id = vt.field_id
-            and vt.type = 0
-        left join process_receipt pr on pr.process_id = pi.id
-        left join receipt_instance_values riv on riv.field_id = vt.field_id
-            and riv.instance_id = pr.receipt_id
-        join form_fields ff on ff.form_id = if(vt.type = 0, vt.form_id, vt.sub_form_id)
-            and vt.field_id = ff.field_id
-        left join vision_field_type vft on vft.form_id = ff.form_id
-        left join form_field_data ffd on ffd.id = vft.ffd_id
-        where pir1.operate_time >= ?
-            and pir1.operate_time <= ? 
-            and if(piv1.value is null, riv.value, piv1.value) like concat('%', ffd.value, '%')
-            and vft.type not in (0, 4) 
-            and pir2.operator_name in (${users.map(() => '?').join(',')})      
-        group by pi.id, pir2.operator_name, vl1.type
-    ) a group by operator_name, type  
-    order by operator_name, type`, 
+    let sql = `SELECT COUNT(1) AS count, operator_name, type FROM (
+        SELECT pir2.operator_name, vl1.type FROM vision_leader vl1 
+        JOIN processes p ON p.form_id = vl1.form_id
+        JOIN process_instances pi ON p.id = pi.process_id
+            AND pi.status IN ('RUNNING', 'COMPLETED')
+        JOIN vision_leader vl2 ON vl1.form_id = vl2.form_id
+            AND vl2.action_exit = 'agree'
+            AND vl1.vision_type = 2
+            AND vl2.vision_type = 1
+            AND vl1.id > vl2.id
+        JOIN process_instance_records pir1 ON pir1.instance_id = pi.id
+            AND pir1.activity_id = vl1.activity_id
+            AND pir1.show_name = vl1.activity_name
+            AND pir1.action_exit = vl1.action_exit
+            AND pir1.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2
+                WHERE p2.instance_id = pi.id 
+                    AND p2.activity_id = vl1.activity_id 
+                    AND p2.show_name = vl1.activity_name)
+        JOIN process_instance_records pir2 ON pir2.instance_id = pi.id
+            AND pir2.activity_id = vl2.activity_id
+            AND pir2.show_name = vl2.activity_name
+            AND pir2.action_exit = vl2.action_exit
+            AND pir2.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2
+                WHERE p2.instance_id = pi.id 
+                    AND p2.activity_id = vl2.activity_id 
+                    AND p2.show_name = vl2.activity_name)
+        JOIN vision_type vt ON vt.form_id = vl1.form_id 
+        LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
+            AND piv1.field_id = vt.field_id
+            AND vt.type = 0
+        LEFT JOIN process_receipt pr ON pr.process_id = pi.id
+        LEFT JOIN receipt_instance_values riv ON riv.field_id = vt.field_id
+            AND riv.instance_id = pr.receipt_id
+        JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
+            AND vt.field_id = ff.field_id
+        LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
+        LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
+        WHERE pir1.operate_time >= ?
+            AND pir1.operate_time <= ? 
+            AND IF(piv1.value IS NULL, riv.value, piv1.value) LIKE CONCAT('%', ffd.value, '%')
+            AND vft.type NOT IN (0, 4) 
+            AND pir2.operator_name IN (${users.map(() => '?').join(',')})      
+        GROUP BY pi.id, pir2.operator_name, vl1.type
+    ) a GROUP BY operator_name, type  
+    ORDER BY operator_name, type`, 
     params = [start, end, ...users]
     result = await query(sql, params)
     return result || []
@@ -696,114 +809,114 @@ const getDesignerFlowStat = async function (users, start, end) {
 
 const getPhotographerFlowStat = async function (users, start, end) {
     let result = []
-    let sql = `select count(1) as count, type from (
-        select vl.type from vision_leader vl
-        join processes p on p.form_id = vl.form_id
-        join process_instances pi on p.id = pi.process_id
-            and pi.status in ('COMPLETED', 'RUNNING')
-        join process_instance_records pir on pi.id = pir.instance_id
-                and pir.activity_id = vl.activity_id
-                and pir.show_name = vl.activity_name
-                and pir.action_exit = vl.action_exit
-                and pir.id = (
-                    select max(p2.id) from process_instance_records p2
-                    where p2.instance_id = pi.id 
-                        and p2.activity_id = vl.activity_id 
-                        and p2.show_name = vl.activity_name)
-        join vision_type vt on vt.form_id = vl.form_id 
-        left join process_instance_values piv1 on piv1.instance_id = pi.id
-            and piv1.field_id = vt.field_id
-            and vt.type = 0
-        left join process_receipt pr on pr.process_id = pi.id
-        left join receipt_instance_values riv on riv.field_id = vt.field_id
-            and riv.instance_id = pr.receipt_id
-        join form_fields ff on ff.form_id = if(vt.type = 0, vt.form_id, vt.sub_form_id)
-            and vt.field_id = ff.field_id
-        left join vision_field_type vft on vft.form_id = ff.form_id
-        left join form_field_data ffd on ffd.id = vft.ffd_id
-        where vl.vision_type = 2
-            and pir.operate_time >= ?
-            and pir.operate_time <= ? 
-            and if(piv1.value is null, riv.value, piv1.value) like concat('%', ffd.value, '%')
-            and vft.type not in (0, 4) 
-            and exists (
-                select pir2.id from process_instance_records pir2 
-                where pi.id = pir2.instance_id 
-                    and pir2.operator_name in (${users.map(() => '?').join(',')})            
-            ) group by pi.id, vl.type
-        ) a group by type`, params = [start, end, ...users]
+    let sql = `SELECT COUNT(1) AS count, type FROM (
+        SELECT vl.type FROM vision_leader vl
+        JOIN processes p ON p.form_id = vl.form_id
+        JOIN process_instances pi ON p.id = pi.process_id
+            AND pi.status IN ('COMPLETED', 'RUNNING')
+        JOIN process_instance_records pir ON pi.id = pir.instance_id
+                AND pir.activity_id = vl.activity_id
+                AND pir.show_name = vl.activity_name
+                AND pir.action_exit = vl.action_exit
+                AND pir.id = (
+                    SELECT MAX(p2.id) FROM process_instance_records p2
+                    WHERE p2.instance_id = pi.id 
+                        AND p2.activity_id = vl.activity_id 
+                        AND p2.show_name = vl.activity_name)
+        JOIN vision_type vt ON vt.form_id = vl.form_id 
+        LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
+            AND piv1.field_id = vt.field_id
+            AND vt.type = 0
+        LEFT JOIN process_receipt pr ON pr.process_id = pi.id
+        LEFT JOIN receipt_instance_values riv ON riv.field_id = vt.field_id
+            AND riv.instance_id = pr.receipt_id
+        JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
+            AND vt.field_id = ff.field_id
+        LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
+        LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
+        WHERE vl.vision_type = 2
+            AND pir.operate_time >= ?
+            AND pir.operate_time <= ? 
+            AND IF(piv1.value IS NULL, riv.value, piv1.value) LIKE CONCAT('%', ffd.value, '%')
+            AND vft.type NOT IN (0, 4) 
+            AND EXISTS (
+                SELECT pir2.id FROM process_instance_records pir2 
+                WHERE pi.id = pir2.instance_id 
+                    AND pir2.operator_name IN (${users.map(() => '?').join(',')})            
+            ) GROUP BY pi.id, vl.type
+        ) a GROUP BY type`, params = [start, end, ...users]
     result = await query(sql, params)
     return result || []
 }
 
 const getDesignerNodeStat = async function (group, start, end) {
     let result = []
-    let presql = `select count(1) as count, vision_type, type`, 
-    sql = `from (select min(vision_type) as vision_type, id, type from (
-	    select pi.id, vl1.type, vlf.type as vision_type from vision_leader vl1 
-        join vision_leader_field vlf on vlf.form_id = vl1.form_id
-            and vlf.type in (7,8,9)  
-            and vlf.tag = 'visionLeader'
-        join processes p on p.form_id = vl1.form_id
-        join process_instances pi on p.id = pi.process_id
-            and pi.status in ('RUNNING', 'COMPLETED')
-        join vision_leader vl2 on vl1.form_id = vl2.form_id
-            and vl1.vision_type = 2
-            and vl2.vision_type = 1
-            and vl1.id > vl2.id
-        join process_instance_records pir1 on pir1.instance_id = pi.id
-            and pir1.activity_id = vl1.activity_id
-            and pir1.show_name = vl1.activity_name
-            and pir1.action_exit = vl1.action_exit
-            and pir1.id = (
-                select max(p2.id) from process_instance_records p2
-                where p2.instance_id = pi.id 
-                    and p2.activity_id = vl1.activity_id 
-                    and p2.show_name = vl1.activity_name)
-        join process_instance_records pir2 on pir2.instance_id = pi.id
-            and pir2.activity_id = vl2.activity_id
-            and pir2.show_name = vl2.activity_name
-            and pir2.action_exit = vl2.action_exit
-            and pir2.id = (
-                select max(p2.id) from process_instance_records p2
-                where p2.instance_id = pi.id 
-                    and p2.activity_id = vl2.activity_id 
-                    and p2.show_name = vl2.activity_name)
-        join vision_type vt on vt.form_id = vl1.form_id 
-        left join process_instance_values piv1 on piv1.instance_id = pi.id
-            and piv1.field_id = vt.field_id
-            and vt.type = 0
-        left join process_receipt pr on pr.process_id = pi.id
-        left join receipt_instance_values riv on riv.field_id = vt.field_id
-            and riv.instance_id = pr.receipt_id
-        join form_fields ff on ff.form_id = if(vt.type = 0, vt.form_id, vt.sub_form_id)
-            and vt.field_id = ff.field_id
-        left join vision_field_type vft on vft.form_id = ff.form_id
-        left join form_field_data ffd on ffd.id = vft.ffd_id
-        where pir1.operate_time >= ? 
-            and pir1.operate_time < ?
-            and if(piv1.value is null, riv.value, piv1.value) like concat('%', ffd.value, '%')
-            and vft.type not in (0, 4)
-            and if(vlf.is_reverse = 0, 
-                exists(
-                    select piv.id from process_instance_values piv 
-                    where piv.instance_id = pi.id
-                        and vlf.field_id = piv.field_id
-                        and piv.value > 0
-                ) and not exists(
-                    select vlf1.id from vision_leader_field vlf1 
-                    join process_instance_values piv on piv.instance_id = pi.id 
-                        and vlf1.field_id = piv.field_id
-                    where vlf1.type < vlf.type
-                        and vlf1.type in (7,8)
-                        and piv.value > 0), 
-                not exists(
-                    select piv.id from process_instance_values piv 
-                    where piv.instance_id = pi.id
-                        and vlf.field_id like concat('%', piv.field_id, '%')
-                        and piv.value > 0))
-            and pir2.operator_name in `,
-    subsql = `order by group_id, type, vision_type`,
+    let presql = `SELECT COUNT(1) AS count, vision_type, type`, 
+    sql = `FROM (SELECT MIN(vision_type) AS vision_type, id, type FROM (
+	    SELECT pi.id, vl1.type, vlf.type AS vision_type FROM vision_leader vl1 
+        JOIN vision_leader_field vlf ON vlf.form_id = vl1.form_id
+            AND vlf.type IN (7,8,9)  
+            AND vlf.tag = 'visionLeader'
+        JOIN processes p ON p.form_id = vl1.form_id
+        JOIN process_instances pi ON p.id = pi.process_id
+            AND pi.status IN ('RUNNING', 'COMPLETED')
+        JOIN vision_leader vl2 ON vl1.form_id = vl2.form_id
+            AND vl1.vision_type = 2
+            AND vl2.vision_type = 1
+            AND vl1.id > vl2.id
+        JOIN process_instance_records pir1 ON pir1.instance_id = pi.id
+            AND pir1.activity_id = vl1.activity_id
+            AND pir1.show_name = vl1.activity_name
+            AND pir1.action_exit = vl1.action_exit
+            AND pir1.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2
+                WHERE p2.instance_id = pi.id 
+                    AND p2.activity_id = vl1.activity_id 
+                    AND p2.show_name = vl1.activity_name)
+        JOIN process_instance_records pir2 ON pir2.instance_id = pi.id
+            AND pir2.activity_id = vl2.activity_id
+            AND pir2.show_name = vl2.activity_name
+            AND pir2.action_exit = vl2.action_exit
+            AND pir2.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2
+                WHERE p2.instance_id = pi.id 
+                    AND p2.activity_id = vl2.activity_id 
+                    AND p2.show_name = vl2.activity_name)
+        JOIN vision_type vt ON vt.form_id = vl1.form_id 
+        LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
+            AND piv1.field_id = vt.field_id
+            AND vt.type = 0
+        LEFT JOIN process_receipt pr ON pr.process_id = pi.id
+        LEFT JOIN receipt_instance_values riv ON riv.field_id = vt.field_id
+            AND riv.instance_id = pr.receipt_id
+        JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
+            AND vt.field_id = ff.field_id
+        LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
+        LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
+        WHERE pir1.operate_time >= ? 
+            AND pir1.operate_time < ?
+            AND IF(piv1.value IS NULL, riv.value, piv1.value) LIKE CONCAT('%', ffd.value, '%')
+            AND vft.type NOT IN (0, 4)
+            AND IF(vlf.is_reverse = 0, 
+                EXISTS(
+                    SELECT piv.id FROM process_instance_values piv 
+                    WHERE piv.instance_id = pi.id
+                        AND vlf.field_id = piv.field_id
+                        AND piv.value > 0
+                ) AND NOT EXISTS(
+                    SELECT vlf1.id FROM vision_leader_field vlf1 
+                    JOIN process_instance_values piv ON piv.instance_id = pi.id 
+                        AND vlf1.field_id = piv.field_id
+                    WHERE vlf1.type < vlf.type
+                        AND vlf1.type IN (7,8)
+                        AND piv.value > 0), 
+                NOT EXISTS(
+                    SELECT piv.id FROM process_instance_values piv 
+                    WHERE piv.instance_id = pi.id
+                        AND vlf.field_id LIKE CONCAT('%', piv.field_id, '%')
+                        AND piv.value > 0))
+            AND pir2.operator_name IN `,
+    subsql = `ORDER BY group_id, type, vision_type`,
     params = [], search = ''
     for (let i = 0; i < group.length; i++) {
         let name = group[i].actionName
@@ -811,11 +924,11 @@ const getDesignerNodeStat = async function (group, start, end) {
         if (nameFilter[name]) {
             users.push(nameFilter[name])
         }
-        search = `${search}${presql}, ${i} as group_id ${sql}
+        search = `${search}${presql}, ${i} AS group_id ${sql}
                 (${users.map(() => '?').join(',')}) 
-                group by pi.id, vl1.type, vlf.type
-            ) a group by a.id, a.type
-            ) b group by b.type, b.vision_type union all `
+                GROUP BY pi.id, vl1.type, vlf.type
+            ) a GROUP BY a.id, a.type
+            ) b GROUP BY b.type, b.vision_type union all `
         params.push(start, end, ...users)
     }
     search = search.substring(0, search.length - 10)
@@ -826,48 +939,48 @@ const getDesignerNodeStat = async function (group, start, end) {
 
 const getPhotographerNodeStat = async function (users, start, end) {
     let result = []
-    let sql = `select count(1) as count, type, vision_type from (
-        select vl.type, vlf.type as vision_type from vision_leader vl
-        join vision_leader_field vlf on vl.form_id = vl.form_id
-            and vlf.type in (4,5) 
-            and vlf.tag = 'visionLeader'
-        join processes p on p.form_id = vl.form_id
-        join process_instances pi on p.id = pi.process_id
-            and pi.status in ('COMPLETED', 'RUNNING')
-        join process_instance_records pir on pi.id = pir.instance_id
-                and pir.activity_id = vl.activity_id
-                and pir.show_name = vl.activity_name
-                and pir.action_exit = vl.action_exit
-                and pir.id = (
-                    select max(p2.id) from process_instance_records p2
-                    where p2.instance_id = pi.id 
-                        and p2.activity_id = vl.activity_id 
-                        and p2.show_name = vl.activity_name)
-        join process_instance_values piv on piv.instance_id = pi.id
-            and piv.field_id = vlf.field_id
-            and piv.value = '"是"'
-        join vision_type vt on vt.form_id = vl.form_id 
-        left join process_instance_values piv1 on piv1.instance_id = pi.id
-            and piv1.field_id = vt.field_id
-            and vt.type = 0
-        left join process_receipt pr on pr.process_id = pi.id
-        left join receipt_instance_values riv on riv.field_id = vt.field_id
-            and riv.instance_id = pr.receipt_id
-        join form_fields ff on ff.form_id = if(vt.type = 0, vt.form_id, vt.sub_form_id)
-            and vt.field_id = ff.field_id
-        left join vision_field_type vft on vft.form_id = ff.form_id
-        left join form_field_data ffd on ffd.id = vft.ffd_id
-        where vl.vision_type = 2 
-            and pir.operate_time >= ? 
-            and pir.operate_time <= ? 
-            and if(piv1.value is null, riv.value, piv1.value) like concat('%', ffd.value, '%') 
-            and vft.type not in (0, 4) 
-            and exists (
-                select pir2.id from process_instance_records pir2 
-                where pi.id = pir2.instance_id
-                    and pir2.operator_name in (${users.map(() => '?').join(',')}) 
-            ) group by pi.id, vl.type, vlf.type
-        ) a group by type, vision_type`, params = [start, end, ...users]
+    let sql = `SELECT COUNT(1) AS count, type, vision_type FROM (
+        SELECT vl.type, vlf.type AS vision_type FROM vision_leader vl
+        JOIN vision_leader_field vlf ON vl.form_id = vl.form_id
+            AND vlf.type IN (4,5) 
+            AND vlf.tag = 'visionLeader'
+        JOIN processes p ON p.form_id = vl.form_id
+        JOIN process_instances pi ON p.id = pi.process_id
+            AND pi.status IN ('COMPLETED', 'RUNNING')
+        JOIN process_instance_records pir ON pi.id = pir.instance_id
+                AND pir.activity_id = vl.activity_id
+                AND pir.show_name = vl.activity_name
+                AND pir.action_exit = vl.action_exit
+                AND pir.id = (
+                    SELECT MAX(p2.id) FROM process_instance_records p2
+                    WHERE p2.instance_id = pi.id 
+                        AND p2.activity_id = vl.activity_id 
+                        AND p2.show_name = vl.activity_name)
+        JOIN process_instance_values piv ON piv.instance_id = pi.id
+            AND piv.field_id = vlf.field_id
+            AND piv.value = '"是"'
+        JOIN vision_type vt ON vt.form_id = vl.form_id 
+        LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
+            AND piv1.field_id = vt.field_id
+            AND vt.type = 0
+        LEFT JOIN process_receipt pr ON pr.process_id = pi.id
+        LEFT JOIN receipt_instance_values riv ON riv.field_id = vt.field_id
+            AND riv.instance_id = pr.receipt_id
+        JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
+            AND vt.field_id = ff.field_id
+        LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
+        LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
+        WHERE vl.vision_type = 2 
+            AND pir.operate_time >= ? 
+            AND pir.operate_time <= ? 
+            AND IF(piv1.value IS NULL, riv.value, piv1.value) LIKE CONCAT('%', ffd.value, '%') 
+            AND vft.type NOT IN (0, 4) 
+            AND EXISTS (
+                SELECT pir2.id FROM process_instance_records pir2 
+                WHERE pi.id = pir2.instance_id
+                    AND pir2.operator_name IN (${users.map(() => '?').join(',')}) 
+            ) GROUP BY pi.id, vl.type, vlf.type
+        ) a GROUP BY type, vision_type`, params = [start, end, ...users]
     result = await query(sql, params)
     return result || []
 }
@@ -879,85 +992,85 @@ const getDesignerStat = async function (user, type, start, end) {
             usernames.push(nameFilter[name])
         }
     }    
-    let sql = `select sum(a.count) as count, a.operator_name, a.title from (
-            select p1.operator_name, ff.title, cast(ifnull(if(piv.value is null, 
-                replace(pis.value, '"', ''), 
-                replace(piv.value, '"', '')), 0) as decimal) as count from 
+    let sql = `SELECT SUM(a.count) AS count, a.operator_name, a.title FROM (
+            SELECT p1.operator_name, ff.title, CAST(IFNULL(IF(piv.value IS NULL, 
+                REPLACE(pis.value, '"', ''), 
+                REPLACE(piv.value, '"', '')), 0) AS DECIMAL) AS count FROM 
             vision_leader vl1 
-            join processes p on p.form_id = vl1.form_id
-            join process_instances pi on p.id = pi.process_id
-                and pi.status in ('RUNNING', 'COMPLETED')
-            join vision_leader vl2 on vl1.form_id = vl2.form_id
-                and vl2.action_exit = 'agree'
-                and vl1.vision_type = 2
-                and vl2.vision_type = 1
-                and vl1.id > vl2.id
-            join process_instance_records pir1 on pir1.instance_id = pi.id
-                and pir1.activity_id = vl1.activity_id
-                and pir1.show_name = vl1.activity_name
-                and pir1.action_exit = vl1.action_exit
-                and pir1.id = (
-                    select max(p2.id) from process_instance_records p2
-                    where p2.instance_id = pi.id 
-                        and p2.activity_id = vl1.activity_id 
-                        and p2.show_name = vl1.activity_name)
-            join process_instance_records pir2 on pir2.instance_id = pi.id
-                and pir2.activity_id = vl2.activity_id
-                and pir2.show_name = vl2.activity_name
-                and pir2.action_exit = vl2.action_exit
-                and pir2.id = (
-                    select max(p2.id) from process_instance_records p2
-                    where p2.instance_id = pi.id
-                        and p2.activity_id = vl2.activity_id
-                        and p2.show_name = vl2.activity_name)
-            join vision_activity va on va.form_id = vl1.form_id
-            join vision_activity_field vaf on vaf.activity_id = va.id 
-                and vaf.type = 1
-            join process_instance_records p1 on p1.instance_id = pi.id
-                    and va.activity_id = p1.activity_id
-                    and va.activity_name = p1.show_name
-                    and p1.action_exit = 'agree' 
-                    and p1.id = (
-						select max(p2.id) from process_instance_records p2
-						where p2.instance_id = pi.id
-							and p2.activity_id = va.activity_id
-							and p2.show_name = va.activity_name)
-            left join process_instance_values piv on piv.instance_id = pi.id
-                and piv.field_id = vaf.field_id
-                and vaf.is_sub = 0
-                and if(va.is_sub = 1 and exists(
-                    select pis2.id from process_instance_sub_values pis2 
-                    where pis2.instance_id = pi.id
-                ), false, true)
-            left join process_instance_sub_values pis1 on pis1.instance_id = pi.id
-                and pis1.field_id = va.sub_field
-                and pis1.value = pir1.operator_name 
-            left join process_instance_sub_values pis on pis.instance_id = pi.id
-                and pis.field_id = vaf.field_id
-                and vaf.is_sub = 1
-                and pis.index = pis1.index
-            join form_fields ff on ff.form_id = vl1.form_id
-                and ff.field_id = if(pis.id is not null, pis.field_id, piv.field_id)
-            join vision_type vt on vt.form_id = vl1.form_id 
-                and vt.tag = va.tag
-            left join process_instance_values piv1 on piv1.instance_id = pi.id
-                and piv1.field_id = vt.field_id
-                and vt.type = 0
-            left join process_receipt pr on pr.process_id = pi.id
-            left join receipt_instance_values riv on riv.field_id = vt.field_id
-                and riv.instance_id = pr.receipt_id
-            join form_fields ff1 on ff1.form_id = if(vt.type = 0, vt.form_id, vt.sub_form_id)
-                and vt.field_id = ff1.field_id
-            left join vision_field_type vft on vft.form_id = ff1.form_id
-            left join form_field_data ffd on ffd.id = vft.ffd_id
-            where pir1.operate_time >= ?
-                and pir1.operate_time <= ? 
-                and if(piv1.value is null, riv.value, piv1.value) like concat('%', ffd.value, '%') 
-                and vft.type not in (0, 4) 
-                and vl1.type = ?
-                and va.tag = 'insideArt'
-                and pir2.operator_name in (${usernames.map(() => '?').join(',')})      
-        ) a group by a.operator_name, a.title`, params = [start, end, type, ...usernames]
+            JOIN processes p ON p.form_id = vl1.form_id
+            JOIN process_instances pi ON p.id = pi.process_id
+                AND pi.status IN ('RUNNING', 'COMPLETED')
+            JOIN vision_leader vl2 ON vl1.form_id = vl2.form_id
+                AND vl2.action_exit = 'agree'
+                AND vl1.vision_type = 2
+                AND vl2.vision_type = 1
+                AND vl1.id > vl2.id
+            JOIN process_instance_records pir1 ON pir1.instance_id = pi.id
+                AND pir1.activity_id = vl1.activity_id
+                AND pir1.show_name = vl1.activity_name
+                AND pir1.action_exit = vl1.action_exit
+                AND pir1.id = (
+                    SELECT MAX(p2.id) FROM process_instance_records p2
+                    WHERE p2.instance_id = pi.id 
+                        AND p2.activity_id = vl1.activity_id 
+                        AND p2.show_name = vl1.activity_name)
+            JOIN process_instance_records pir2 ON pir2.instance_id = pi.id
+                AND pir2.activity_id = vl2.activity_id
+                AND pir2.show_name = vl2.activity_name
+                AND pir2.action_exit = vl2.action_exit
+                AND pir2.id = (
+                    SELECT MAX(p2.id) FROM process_instance_records p2
+                    WHERE p2.instance_id = pi.id
+                        AND p2.activity_id = vl2.activity_id
+                        AND p2.show_name = vl2.activity_name)
+            JOIN vision_activity va ON va.form_id = vl1.form_id
+            JOIN vision_activity_field vaf ON vaf.activity_id = va.id 
+                AND vaf.type = 1
+            JOIN process_instance_records p1 ON p1.instance_id = pi.id
+                    AND va.activity_id = p1.activity_id
+                    AND va.activity_name = p1.show_name
+                    AND p1.action_exit = 'agree' 
+                    AND p1.id = (
+						SELECT MAX(p2.id) FROM process_instance_records p2
+						WHERE p2.instance_id = pi.id
+							AND p2.activity_id = va.activity_id
+							AND p2.show_name = va.activity_name)
+            LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id
+                AND piv.field_id = vaf.field_id
+                AND vaf.is_sub = 0
+                AND IF(va.is_sub = 1 AND EXISTS(
+                    SELECT pis2.id FROM process_instance_sub_values pis2 
+                    WHERE pis2.instance_id = pi.id
+                ), FALSE, TRUE)
+            LEFT JOIN process_instance_sub_values pis1 ON pis1.instance_id = pi.id
+                AND pis1.field_id = va.sub_field
+                AND pis1.value = pir1.operator_name 
+            LEFT JOIN process_instance_sub_values pis ON pis.instance_id = pi.id
+                AND pis.field_id = vaf.field_id
+                AND vaf.is_sub = 1
+                AND pis.index = pis1.index
+            JOIN form_fields ff ON ff.form_id = vl1.form_id
+                AND ff.field_id = IF(pis.id IS NOT NULL, pis.field_id, piv.field_id)
+            JOIN vision_type vt ON vt.form_id = vl1.form_id 
+                AND vt.tag = va.tag
+            LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
+                AND piv1.field_id = vt.field_id
+                AND vt.type = 0
+            LEFT JOIN process_receipt pr ON pr.process_id = pi.id
+            LEFT JOIN receipt_instance_values riv ON riv.field_id = vt.field_id
+                AND riv.instance_id = pr.receipt_id
+            JOIN form_fields ff1 ON ff1.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
+                AND vt.field_id = ff1.field_id
+            LEFT JOIN vision_field_type vft ON vft.form_id = ff1.form_id
+            LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
+            WHERE pir1.operate_time >= ?
+                AND pir1.operate_time <= ? 
+                AND IF(piv1.value IS NULL, riv.value, piv1.value) LIKE CONCAT('%', ffd.value, '%') 
+                AND vft.type NOT IN (0, 4) 
+                AND vl1.type = ?
+                AND va.tag = 'insideArt'
+                AND pir2.operator_name IN (${usernames.map(() => '?').join(',')})      
+        ) a GROUP BY a.operator_name, a.title`, params = [start, end, type, ...usernames]
     let result = []
     let row = await query(sql, params)
     if (row?.length) result = row
@@ -965,55 +1078,55 @@ const getDesignerStat = async function (user, type, start, end) {
 }
 
 const getPhotographerStat = async function (user, type, start, end) {
-    let sql = `select sum(a.count) as count, a.title from (
-            select ff.title, cast(ifnull(if(piv.value is null, 
-                    replace(pis.value, '"', ''), 
-                    replace(piv.value, '"', '')), 0) as decimal) as count 
-            from vision_leader vl
-            join vision_activity va on va.form_id = vl.form_id
-            join vision_activity_field vaf on vaf.activity_id = va.id
-                and vaf.type = 1
-            join processes p on p.form_id = vl.form_id
-            join process_instances pi on pi.process_id = p.id
-                and pi.status in ('RUNNING', 'COMPLETED')
-            join process_instance_records pir on pir.instance_id = pi.id
-                and vl.activity_id = pir.activity_id
-                and vl.activity_name = pir.show_name
-                and vl.action_exit = pir.action_exit
-                and pir.id = (
-                    select max(p2.id) from process_instance_records p2
-                    where p2.instance_id = pi.id 
-                        and p2.activity_id = vl.activity_id 
-                        and p2.show_name = vl.activity_name)
-            join process_instance_records p1 on p1.instance_id = pi.id
-                and va.activity_id = p1.activity_id
-                and va.activity_name = p1.show_name
-                and p1.action_exit in ('next', 'doing', 'agree')
-            left join process_instance_values piv on piv.instance_id = pi.id
-                and piv.field_id = vaf.field_id
-                and vaf.is_sub = 0
-                and if(va.is_sub = 1 and exists(
-                    select pis2.id from process_instance_sub_values pis2 
-                    where pis2.instance_id = pi.id
-                ), false, true)
-            left join process_instance_sub_values pis1 on pis1.instance_id = pi.id
-                and pis1.field_id = va.sub_field
-                and pis1.value = p1.operator_name
-            left join process_instance_sub_values pis on pis.instance_id = pi.id
-                and pis.field_id = vaf.field_id
-                and vaf.is_sub = 1
-                and pis.index = pis1.index
-            join form_fields ff on ff.form_id = vl.form_id
-                and ff.field_id = if(pis.id is not null, pis.field_id, piv.field_id)
-            where vl.vision_type = 2 
-                and va.tag = 'insidePhoto'
-                and pir.operate_time >= ?
-                and pir.operate_time <= ?
-                and vl.type = ? 
-                and ((p1.operator_name = ? and pis1.id is null) or pis1.value = ?)
-                and vaf.type = 1
-            group by pi.id, piv.id, pis.id, ff.title, piv.value, pis.value
-        ) a group by a.title`, params = [start, end, type, user, user]
+    let sql = `SELECT SUM(a.count) AS count, a.title FROM (
+            SELECT ff.title, CAST(IFNULL(IF(piv.value IS NULL, 
+                    REPLACE(pis.value, '"', ''), 
+                    REPLACE(piv.value, '"', '')), 0) AS DECIMAL) AS count 
+            FROM vision_leader vl
+            JOIN vision_activity va ON va.form_id = vl.form_id
+            JOIN vision_activity_field vaf ON vaf.activity_id = va.id
+                AND vaf.type = 1
+            JOIN processes p ON p.form_id = vl.form_id
+            JOIN process_instances pi ON pi.process_id = p.id
+                AND pi.status IN ('RUNNING', 'COMPLETED')
+            JOIN process_instance_records pir ON pir.instance_id = pi.id
+                AND vl.activity_id = pir.activity_id
+                AND vl.activity_name = pir.show_name
+                AND vl.action_exit = pir.action_exit
+                AND pir.id = (
+                    SELECT MAX(p2.id) FROM process_instance_records p2
+                    WHERE p2.instance_id = pi.id 
+                        AND p2.activity_id = vl.activity_id 
+                        AND p2.show_name = vl.activity_name)
+            JOIN process_instance_records p1 ON p1.instance_id = pi.id
+                AND va.activity_id = p1.activity_id
+                AND va.activity_name = p1.show_name
+                AND p1.action_exit IN ('next', 'doing', 'agree')
+            LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id
+                AND piv.field_id = vaf.field_id
+                AND vaf.is_sub = 0
+                AND IF(va.is_sub = 1 AND EXISTS(
+                    SELECT pis2.id FROM process_instance_sub_values pis2 
+                    WHERE pis2.instance_id = pi.id
+                ), FALSE, TRUE)
+            LEFT JOIN process_instance_sub_values pis1 ON pis1.instance_id = pi.id
+                AND pis1.field_id = va.sub_field
+                AND pis1.value = p1.operator_name
+            LEFT JOIN process_instance_sub_values pis ON pis.instance_id = pi.id
+                AND pis.field_id = vaf.field_id
+                AND vaf.is_sub = 1
+                AND pis.index = pis1.index
+            JOIN form_fields ff ON ff.form_id = vl.form_id
+                AND ff.field_id = IF(pis.id IS NOT NULL, pis.field_id, piv.field_id)
+            WHERE vl.vision_type = 2 
+                AND va.tag = 'insidePhoto'
+                AND pir.operate_time >= ?
+                AND pir.operate_time <= ?
+                AND vl.type = ? 
+                AND ((p1.operator_name = ? AND pis1.id IS NULL) OR pis1.value = ?)
+                AND vaf.type = 1
+            GROUP BY pi.id, piv.id, pis.id, ff.title, piv.value, pis.value
+        ) a GROUP BY a.title`, params = [start, end, type, user, user]
     let result = []
     let row = await query(sql, params)
     if (row?.length) result = row
@@ -1021,87 +1134,87 @@ const getPhotographerStat = async function (user, type, start, end) {
 }
 
 const getVisionFieldName = async function (tag) {
-    let sql = `select ff.title from vision_leader vl
-        join vision_activity va on va.form_id = vl.form_id
-        join vision_activity_field vaf on vaf.activity_id = va.id
-        join form_fields ff on ff.form_id = vl.form_id
-            and ff.field_id = vaf.field_id
-        where vl.vision_type = 2
-            and vaf.type = 1
-            and va.tag = ?
-        group by ff.title`
+    let sql = `SELECT ff.title FROM vision_leader vl
+        JOIN vision_activity va ON va.form_id = vl.form_id
+        JOIN vision_activity_field vaf ON vaf.activity_id = va.id
+        JOIN form_fields ff ON ff.form_id = vl.form_id
+            AND ff.field_id = vaf.field_id
+        WHERE vl.vision_type = 2
+            AND vaf.type = 1
+            AND va.tag = ?
+        GROUP BY ff.title`
     let result = await query(sql, tag)
     return result || []
 }
 
 const getVisionType = async function (start, end, tag, type, leader_type) {
-    let sql = `select count(1) as count, vision_type from vision_leaders
-        where if(v1 is null, v2, v1) like concat('%', v3, '%')
-            and tag = ? 
-            and type = ? 
-            and leader_type = ?
-            and operate_time >= ? 
-            and operate_time <= ?
-        group by vision_type`
+    let sql = `SELECT COUNT(1) AS count, vision_type FROM vision_leaders
+        WHERE IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+            AND tag = ? 
+            AND type = ? 
+            AND leader_type = ?
+            AND operate_time >= ? 
+            AND operate_time <= ?
+        GROUP BY vision_type`
     let row = await query(sql, [tag, type, leader_type, start, end])
     return row || []
 }
 
 const getVisionField = async function (start, end, tag, type, leader_type, field_type) {
-    let sql = `select replace(a.value, '"', '') as value, count(1) as count from (
-        select vl.id, piv.value from vision_leaders vl
-        join vision_leader_field vlf on vl.form_id = vlf.form_id
-            and vl.tag = vlf.tag
-        join process_instance_values piv on piv.instance_id = vl.id
-            and piv.field_id = vlf.field_id
-        where vl.tag = ? 
-            and vl.type = ?
-            and vl.leader_type = ?
-            and if(v1 is null, v2, v1) like concat('%', v3, '%')`
+    let sql = `SELECT REPLACE(a.value, '"', '') AS value, COUNT(1) AS count FROM (
+        SELECT vl.id, piv.value FROM vision_leaders vl
+        JOIN vision_leader_field vlf ON vl.form_id = vlf.form_id
+            AND vl.tag = vlf.tag
+        JOIN process_instance_values piv ON piv.instance_id = vl.id
+            AND piv.field_id = vlf.field_id
+        WHERE vl.tag = ? 
+            AND vl.type = ?
+            AND vl.leader_type = ?
+            AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')`
     let params = [tag, type, leader_type]
     if (field_type != null) {
-        sql = `${sql} and vlf.type = ?`
+        sql = `${sql} AND vlf.type = ?`
         params.push(field_type)
     }     
-    sql = `${sql} and vl.operate_time >= ? 
-                and vl.operate_time <= ? 
-            group by pi.id, piv.value
-        ) a group by a.value`
+    sql = `${sql} AND vl.operate_time >= ? 
+                AND vl.operate_time <= ? 
+            GROUP BY pi.id, piv.value
+        ) a GROUP BY a.value`
     params.push(start, end)
     let row = await query(sql, params)
     return row || []
 }
 
 const getVisionFieldValue = async function (start, end, tag, type, leader_type, field_type) {
-    let sql = `select count(1) as count from (
-        select vl.id, min(vlf.type) as type from vision_leaders vl
-        join vision_leader_field vlf on vl.form_id = vlf.form_id
-            and vl.tag = vlf.tag
-        where vl.tag = ? 
-            and vl.type = ?
-            and vl.leader_type = ? 
-            and vlf.type = ? 
-            and if(v1 is null, v2, v1) like concat('%', v3, '%') 
-            and if(vlf.is_reverse = 0, 
-                exists(select piv.id from process_instance_values piv 
-                    where piv.instance_id = vl.id 
-                        and vlf.field_id = piv.field_id
-                        and piv.value > 0
-                ) and not exists(
-                    select vlf1.id from vision_leader_field vlf1 
-                    join process_instance_values piv on piv.instance_id = vl.id 
-                        and vlf1.field_id = piv.field_id
-                    where vlf1.type < vlf.type
-                        and vlf1.type in (7,8)
-                        and piv.value > 0), 
-                not exists( 
-                    select piv.id from process_instance_values piv 
-                    where piv.instance_id = vl.id 
-                        and vlf.field_id like concat('%', piv.field_id, '%')
-                        and piv.value > 0)) 
-            and vl.operate_time >= ? 
-            and vl.operate_time <= ? 
-            group by vl.id
+    let sql = `SELECT COUNT(1) AS count FROM (
+        SELECT vl.id, MIN(vlf.type) AS type FROM vision_leaders vl
+        JOIN vision_leader_field vlf ON vl.form_id = vlf.form_id
+            AND vl.tag = vlf.tag
+        WHERE vl.tag = ? 
+            AND vl.type = ?
+            AND vl.leader_type = ? 
+            AND vlf.type = ? 
+            AND IF(v1 IS null, v2, v1) LIKE CONCAT('%', v3, '%') 
+            AND IF(vlf.is_reverse = 0, 
+                EXISTS(SELECT piv.id FROM process_instance_values piv 
+                    WHERE piv.instance_id = vl.id 
+                        AND vlf.field_id = piv.field_id
+                        AND piv.value > 0
+                ) AND NOT EXISTS(
+                    SELECT vlf1.id FROM vision_leader_field vlf1 
+                    JOIN process_instance_values piv ON piv.instance_id = vl.id 
+                        AND vlf1.field_id = piv.field_id
+                    WHERE vlf1.type < vlf.type
+                        AND vlf1.type IN (7,8)
+                        AND piv.value > 0), 
+                NOT EXISTS( 
+                    SELECT piv.id FROM process_instance_values piv 
+                    WHERE piv.instance_id = vl.id 
+                        AND vlf.field_id LIKE CONCAT('%', piv.field_id, '%')
+                        AND piv.value > 0)) 
+            AND vl.operate_time >= ? 
+            AND vl.operate_time <= ? 
+            GROUP BY vl.id
         ) a`
     let params = [tag, type, leader_type, field_type, start, end]
     let row = await query(sql, params)
@@ -1121,33 +1234,33 @@ const getVisionInfo = async function (type) {
         ],
         data: []
     }
-    let sql = `select ff.id, ff.field_id, ff.title from vision_leader vl
-        join vision_pannel vp on vp.form_id = vl.form_id
-            and vl.vision_type = vp.type
-        join form_fields ff on ff.form_id = vp.form_id
-            and vp.field_id = ff.field_id
-        where vl.vision_type = ${type}
-        group by ff.id, ff.field_id, ff.title order by ff.id`
+    let sql = `SELECT ff.id, ff.field_id, ff.title FROM vision_leader vl
+        JOIN vision_pannel vp ON vp.form_id = vl.form_id
+            AND vl.vision_type = vp.type
+        JOIN form_fields ff ON ff.form_id = vp.form_id
+            AND vp.field_id = ff.field_id
+        WHERE vl.vision_type = ${type}
+        GROUP BY ff.id, ff.field_id, ff.title ORDER BY ff.id`
     let row = await query(sql)
     if (row?.length) result.columns = result.columns.concat(row)
-    sql = `select pi.instance_id, pi.title, ff.field_id, pi.id, 
-        (case vl.type when 0 then '待转入' else '进行中' end) as type, 
-        replace(piv.value, '"', '') as value from vision_leader vl
-        join processes p on p.form_id = vl.form_id
-        left join process_instances pi on pi.process_id = p.id
-            and pi.status in ('COMPLETED', 'RUNNING')
-        join vision_pannel vp on vp.form_id = vl.form_id 
-            and vp.type = vl.vision_type
-		join process_instance_records pir on pir.instance_id = pi.id
-			and pir.show_name = vl.activity_name 
-			and pir.activity_id = vl.activity_id
-			and pir.action_exit = vl.action_exit
-        left join process_instance_values piv on piv.instance_id = pi.id
-            and piv.field_id = vp.field_id
-        join form_fields ff on ff.form_id = vl.form_id 
-            and ff.field_id = vp.field_id
-        where vl.type in (0, 1) and vl.vision_type = ${type}
-        order by pi.id, vl.type, ff.field_id`
+    sql = `SELECT pi.instance_id, pi.title, ff.field_id, pi.id, 
+        (CASE vl.type WHEN 0 THEN '待转入' ELSE '进行中' END) AS type, 
+        REPLACE(piv.value, '"', '') AS value FROM vision_leader vl
+        JOIN processes p ON p.form_id = vl.form_id
+        LEFT JOIN process_instances pi ON pi.process_id = p.id
+            AND pi.status IN ('COMPLETED', 'RUNNING')
+        JOIN vision_pannel vp ON vp.form_id = vl.form_id 
+            AND vp.type = vl.vision_type
+		join process_instance_records pir ON pir.instance_id = pi.id
+			AND pir.show_name = vl.activity_name 
+			AND pir.activity_id = vl.activity_id
+			AND pir.action_exit = vl.action_exit
+        LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id
+            AND piv.field_id = vp.field_id
+        JOIN form_fields ff ON ff.form_id = vl.form_id 
+            AND ff.field_id = vp.field_id
+        WHERE vl.type IN (0, 1) AND vl.vision_type = ${type}
+        ORDER BY pi.id, vl.type, ff.field_id`
     row = await query(sql)
     if (row?.length) {
         let info = {}
@@ -1173,10 +1286,81 @@ const getVisionInfo = async function (type) {
     return result
 }
 
+const getOperationWork = async function (start, end, params) {
+    let sql = `SELECT COUNT(1) AS count, (
+            SELECT title FROM forms WHERE id = form_id
+        ) AS title, form_id, type, operate_type FROM (
+        SELECT p.form_id, pi.id, ot.operate_type, MIN(ot.type) AS type 
+        FROM operation_type ot
+        JOIN operation_type_activity ota ON ot.id = ota.type_id
+        JOIN processes p ON p.form_id = ot.form_id
+        JOIN process_instances pi ON p.id = pi.process_id
+        JOIN process_instance_records pir ON pi.id = pir.instance_id
+            AND pir.show_name = ota.activity_name
+            AND pir.activity_id = ota.activity_id
+            AND pir.action_exit = ota.action_exit
+            AND pir.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2
+                WHERE p2.instance_id = pi.id
+                    AND p2.show_name = ota.activity_name
+                    AND p2.activity_id = ota.activity_id
+            )
+        WHERE pi.status IN ('COMPLETED', 'RUNNING')
+            AND pir.operate_time >= ?
+            AND pir.operate_time <= ?
+            AND ota.type = ?`
+    let p = [start, end, params.type]
+    if (params.nickname) {
+        sql = `${sql}
+                AND pir.operate_name = ?`
+        p.push(params.nickname)
+    }
+    sql = `${sql}
+            GROUP BY p.form_id, pi.id, ot.type, ot.operate_type
+        ) a GROUP BY form_id, type, operate_type`
+    let result = await query(sql, p)
+    return result || []
+}
+
+const getOperationWorkField = async function (start, end, params) {
+    let sql = `SELECT COUNT(1) AS count, type, operate_type FROM (
+        SELECT pi.id, ot.operate_type, MIN(ot.type) AS type FROM operation_type ot
+        JOIN operation_type_activity ota ON ot.id = ota.type_id
+        JOIN processes p ON p.form_id = ot.form_id
+        JOIN process_instances pi ON p.id = pi.process_id
+        JOIN process_instance_records pir ON pi.id = pir.instance_id
+            AND pir.show_name = ota.activity_name
+            AND pir.activity_id = ota.activity_id
+            AND pir.action_exit = ota.action_exit
+            AND pir.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2
+                WHERE p2.instance_id = pi.id
+                    AND p2.show_name = ota.activity_name
+                    AND p2.activity_id = ota.activity_id
+            )
+        WHERE pi.status IN ('COMPLETED', 'RUNNING')
+            AND pir.operate_time >= ?
+            AND pir.operate_time <= ?
+            AND ota.type = ?`
+    let p = [start, end, params.type]
+    if (params.nickname) {
+        sql = `${sql}
+                AND pir.operate_name = ?`
+        p.push(params.nickname)
+    }
+    sql = `${sql}
+            GROUP BY pi.id, ot.type, ot.operate_type
+        ) a GROUP BY type, operate_type`
+    let result = await query(sql, p)
+    return result || []
+}
+
 module.exports = {
     getProcessStat,
     getFlowInstances,
+    getOperationFlowInstances,
     getFlowProcessInstances,
+    getOperationProcessInstances,
     getVisionProcessInstances,
     getFlowActions,
     getStat,
@@ -1191,5 +1375,6 @@ module.exports = {
     getVisionFieldName,
     getVisionType,
     getVisionField,
-    getVisionFieldValue
+    getVisionFieldValue,
+    getOperationWork
 }

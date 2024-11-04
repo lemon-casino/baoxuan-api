@@ -30,6 +30,8 @@ const userCommonService = require("@/service/common/userCommonService");
 const outUsersRepo = require("@/repository/outUsersRepo");
 const newFormsRepo = require('../repository/newFormsRepo')
 const { designerTags, nameFilter } = require("../const/newFormConst")
+const userOperationRepo = require("../repository/operation/userOperationRepo")
+const { typeList } = require("../const/operationConst")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -1278,12 +1280,25 @@ const getFlowSplitFormfieldKeyAndField = async (formId, fieldKey, selectField, f
 }
 
 const getFlows = async (params) => {
-    let result = await newFormsRepo.getFlowInstances(params)
+    let result
+    if (params.tag) result = await newFormsRepo.getFlowInstances(params)
+    else result = await newFormsRepo.getOperationFlowInstances(params)
     return result
 }
 
 const getFlowsProcesses = async (params, offset, limit) => {
     let result = await newFormsRepo.getFlowProcessInstances(params, offset, limit)
+    return result
+}
+
+const getOperationProcesses = async (user, params, offset, limit) => {
+    let permissions = await userOperationRepo.getPermission(user.id)
+    params.type = 0
+    if (permissions[0].type != typeList.division.key) {
+        params.type = 1
+        params.nickname = params.nickname
+    }
+    let result = await newFormsRepo.getOperationProcessInstances(params, offset, limit)
     return result
 }
 
@@ -1374,6 +1389,7 @@ module.exports = {
     getFlowSplitFormValues,
     getFlows,
     getFlowsProcesses,
+    getOperationProcesses,
     getVisionProcesses,
     getFlowsActions,
     getVisionReview,

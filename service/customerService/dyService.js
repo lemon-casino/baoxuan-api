@@ -5,7 +5,11 @@ const dyService = {}
 dyService.getDYDataByDate = async (startDate, endDate, shopname, servicer) => {
     let start = moment(startDate).format('YYYY-MM-DD')
     let end = moment(endDate).format('YYYY-MM-DD')
-    let data = await dyRepo.getDYData(start, end, shopname, servicer)
+    let lastStart = moment(startDate).subtract(moment(startDate).weekday() + 6, 'day').format('YYYY-MM-DD')
+    let lastEnd = moment(startDate).subtract(moment(startDate).weekday(), 'day').format('YYYY-MM-DD')
+    let preStart = moment(lastStart).subtract(7, 'day').format('YYYY-MM-DD')
+    let preEnd = moment(lastEnd).subtract(7, 'day').format('YYYY-MM-DD')
+    let data = await dyRepo.getDYData(start, end,lastStart, lastEnd, preStart, preEnd, shopname, servicer)
     return data || []
 }
 

@@ -1,34 +1,51 @@
 #!/bin/bash
 
-# 检查是否提供了模式参数
+# Check if the mode parameter is supplied
 if [ -z "$1" ]; then
-  echo "Usage: $0 [prod|start]"
-  exit 1
+    echo "Usage: $0 [prod|start]"
+    exit 1
 fi
 
-# 获取运行模式（prod 或 start）
+# Get the run mode (prod or start)
 MODE=$1
 
-# 指定端口号
+# Specify the port number
 PORT=9999
 
-# 查找占用指定端口的进程ID
+# Find the ID of the process occupying the specified port
 PIDS=$(lsof -t -i :$PORT)
 
-# 检查是否找到任何进程
+# Check if any processes are found
 if [ -z "$PIDS" ]; then
-  echo "No process is using port $PORT."
+    echo "No process is using port $PORT."
 else
-  echo "Terminating processes using port $PORT: $PIDS"
-  # 终止进程
-  kill -9 $PIDS
-  echo "Processes terminated."
+    echo "Terminating processes using port $PORT: $PIDS"
+    # Terminate processes
+    kill -9 $PIDS
+    echo "Processes terminated."
 fi
 
-# 确保 logs 目录存在
+# Make sure the logs directory exists
 mkdir -p logs
 
-# 根据模式选择启动命令
+# Backup previous nohup.out files
+if [ -f logs/nohup.out ]; then
+    # Find the highest suffix number
+    for file in logs/nohup*.out; do
+        if [[ $file =~ nohup([0-9]+)\.out ]]; then
+            num=${BASH_REMATCH[1]}
+            if (( num >= max )); then
+                max=$num
+            fi
+        fi
+    done
+    # Increment the max number for the new backup
+    new_num=$((max + 1))
+    mv logs/nohup.out logs/nohup$new_num.out
+    echo "Backup created: logs/nohup$new_num.out"
+fi
+
+# Select the startup command based on mode
 if [ "$MODE" = "prod" ]; then
     echo "Starting in production mode..."
     nohup npm run prod > logs/nohup.out 2>&1 &
