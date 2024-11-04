@@ -159,12 +159,26 @@ schedule.scheduleJob(tmallLinkData, async function () {
     }
 })
 
+let isRunning = false;
+
 schedule.scheduleJob(jdLinkData, async function () {
-    console.log("执行了此方法")
-    if (process.env.NODE_ENV === "prod") {
-        await taskService.jdLinkDataIsAutomaticallyInitiated()
+    if (isRunning) {
+        logger.info("任务正在执行，跳过本次调用")
+        return;
     }
-})
+
+    isRunning = true;
+    console.log("执行了此方法");
+    try {
+        if (process.env.NODE_ENV === "prod") {
+            await taskService.jdLinkDataIsAutomaticallyInitiated();
+        }
+    } catch (error) {
+        console.error("执行任务时出错:", error);
+    } finally {
+        isRunning = false;
+    }
+});
 
 //
 schedule.scheduleJob(caigouLinkData, async function () {
