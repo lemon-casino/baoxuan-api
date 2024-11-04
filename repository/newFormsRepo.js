@@ -1251,7 +1251,7 @@ const getVisionInfo = async function (type) {
             AND pi.status IN ('COMPLETED', 'RUNNING')
         JOIN vision_pannel vp ON vp.form_id = vl.form_id 
             AND vp.type = vl.vision_type
-		join process_instance_records pir ON pir.instance_id = pi.id
+		JOIN process_instance_records pir ON pir.instance_id = pi.id
 			AND pir.show_name = vl.activity_name 
 			AND pir.activity_id = vl.activity_id
 			AND pir.action_exit = vl.action_exit
@@ -1284,6 +1284,100 @@ const getVisionInfo = async function (type) {
         }
     }
     return result
+}
+
+const getOperateSelection = async function (start, end, title, page, size, form_id, p) {
+    let params = [], search = '', total = 0, data = []
+    let presql = `SELECT COUNT(1) AS count FROM (`
+    let sql = `SELECT pi.id, pi.instance_id, pi.title, pi.create_time, ot.form_id 
+        FROM operation_type ot 
+        JOIN operation_type_activity ota ON ota.type_id = ot.id 
+        JOIN processes p ON p.form_id = ot.form_id
+        JOIN process_instances pi ON pi.process_id = p.id
+            AND pi.status IN ('COMPLETED', 'RUNNING')
+		JOIN process_instance_records pir ON pir.instance_id = pi.id
+			AND pir.show_name = ota.activity_name 
+			AND pir.activity_id = ota.activity_id
+			AND pir.action_exit = ota.action_exit
+        WHERE ot.form_id = ${form_id} 
+            AND ot.operate_type = 1`
+    if (start) {
+        sql = `${sql} 
+            AND pi.create_time >= ?`
+        params.push(start)
+    }
+    if (end) {
+        sql = `${sql} 
+            AND pi.create_time <= ?`
+        params.push(end)
+    }
+    if (title) {
+        sql = `${sql} 
+            AND pi.title like '%${title}%'`
+    }
+    if (p) {
+        let sql1 = `SELECT id FROM form_fields WHERE form_id = ${form_id} AND field_id = ?`
+        for(let index in p) {
+            let find = await query(sql1, index)
+            if (!find?.length) return {data, total}
+            sql = `${sql}
+                AND EXISTS(
+                    SELECT piv1.id FROM process_instance_values piv1
+                    WHERE piv1.instance_id = pi.id
+                        AND piv1.field_id = "${index}" 
+                        AND piv1.value LIKE '%${p[index]}%')`
+        }
+    }
+    sql = `${sql}
+            GROUP BY pi.id, pi.instance_id, pi.title, pi.create_time, ot.form_id`
+    search = `${presql}
+        ${sql}) a`
+    let row = await query(search, params)
+    if (row?.length && row[0].count) {
+        total = row[0].count
+        search = `SELECT a.id, a.instance_id, a.title, ff.field_id, 
+            REPLACE(piv.value, '"', '') AS value, 
+            DATE_FORMAT(a.create_time, '%Y-%m-%d') AS create_time FROM (
+                ${sql}
+                LIMIT ${(page - 1) * size}, ${size}) a            
+            JOIN operation_pannel op ON a.form_id = op.form_id 
+                AND op.type = 1 
+            JOIN process_instance_values piv ON piv.instance_id = a.id
+                AND piv.field_id = op.field_id
+            JOIN form_fields ff ON ff.form_id = a.form_id 
+                AND ff.field_id = op.field_id 
+            GROUP BY a.id, a.instance_id, a.title, a.create_time, ff.field_id, piv.value 
+            ORDER BY a.id`
+        row = await query(search, params)
+        if (row?.length) data = row
+    }
+    return {data, total}
+}
+
+const getOperateSubField = async function (form_id, field_id) {
+    let sql = `SELECT ff.id, ff.field_id, ff.title FROM form_fields ff
+        JOIN form_fields ff1 ON ff.parent_id = ff1.id 
+        WHERE ff1.form_id = ${form_id} 
+            AND ff1.field_id = ?
+        ORDER BY ff.id DESC`
+    let row = await query(sql, [field_id])
+    return row || []
+}
+
+const getOperateSelectionHeader = async function (form_id) {
+    let columns = []
+    let sql = `SELECT ff.id, ff.field_id, ff.title, ffd.value FROM operation_type ot
+        JOIN operation_pannel op ON ot.form_id = op.form_id 
+        JOIN form_fields ff ON ff.form_id = op.form_id 
+            AND ff.field_id = op.field_id 
+        LEFT JOIN form_field_data ffd ON ff.id = ffd.form_field_id
+        WHERE ot.form_id = ${form_id}
+            AND ot.operate_type = 1 
+        GROUP BY ff.id, ff.field_id, ff.title, ffd.value 
+        ORDER BY ff.id`
+    let row = await query(sql)
+    if (row?.length) columns = row
+    return columns
 }
 
 const getOperationWork = async function (start, end, params) {
@@ -1322,37 +1416,39 @@ const getOperationWork = async function (start, end, params) {
     return result || []
 }
 
-const getOperationWorkField = async function (start, end, params) {
-    let sql = `SELECT COUNT(1) AS count, type, operate_type FROM (
-        SELECT pi.id, ot.operate_type, MIN(ot.type) AS type FROM operation_type ot
-        JOIN operation_type_activity ota ON ot.id = ota.type_id
-        JOIN processes p ON p.form_id = ot.form_id
-        JOIN process_instances pi ON p.id = pi.process_id
-        JOIN process_instance_records pir ON pi.id = pir.instance_id
-            AND pir.show_name = ota.activity_name
-            AND pir.activity_id = ota.activity_id
-            AND pir.action_exit = ota.action_exit
-            AND pir.id = (
-                SELECT MAX(p2.id) FROM process_instance_records p2
-                WHERE p2.instance_id = pi.id
-                    AND p2.show_name = ota.activity_name
-                    AND p2.activity_id = ota.activity_id
-            )
-        WHERE pi.status IN ('COMPLETED', 'RUNNING')
-            AND pir.operate_time >= ?
-            AND pir.operate_time <= ?
-            AND ota.type = ?`
-    let p = [start, end, params.type]
-    if (params.nickname) {
-        sql = `${sql}
-                AND pir.operate_name = ?`
-        p.push(params.nickname)
-    }
-    sql = `${sql}
-            GROUP BY pi.id, ot.type, ot.operate_type
-        ) a GROUP BY type, operate_type`
-    let result = await query(sql, p)
-    return result || []
+const getOperationAnalysisStats = async function (instance_id) {
+    let sql = `SELECT COUNT(1) AS count, replace(piv1.value, '"', '') AS platform 
+        FROM process_instances pi JOIN processes p ON p.id = pi.process_id 
+        JOIN process_instance_values piv ON piv.instance_id = pi.id 
+            AND piv.field_id = 'textField_m2pxi0qq'
+        JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
+            AND piv1.field_id = 'radioField_m1g24ev1'
+        WHERE p.form_id = 355 
+            AND pi.status IN ('RUNNING', 'COMPLETED') 
+            AND piv.value = ?
+        GROUP BY piv1.value`
+    let row = await query(sql, [`"${instance_id}"`])
+    return row
+}
+
+const checkOperationNodes = async function (instance_id, activity, userId) {
+    let sql = `SELECT * FROM process_instance_records pir 
+        JOIN process_instance_records pir1 ON pir.instance_id = pir1.instance_id
+            AND pir.activity_id = pir1.activity_id
+            AND pir.show_name = pir1.show_name
+        WHERE pir.instance_id = ? 
+            AND pir.show_name = ? 
+            AND pir.activity_id = ? 
+            AND pir.action_exit = 'doing' 
+            AND pir1.operator = ?
+            AND (pir1.action_exit = 'doing' OR pir1.action_exit IS NULL)`
+    let row = await query(sql, [
+        instance_id, 
+        activity.activity_name,
+        activity.activity_id,
+        userId
+    ])
+    return row?.length ? true : false
 }
 
 module.exports = {
@@ -1376,5 +1472,10 @@ module.exports = {
     getVisionType,
     getVisionField,
     getVisionFieldValue,
-    getOperationWork
+    getOperationWork,
+    getOperateSelection,
+    getOperateSubField,
+    getOperateSelectionHeader,
+    getOperationAnalysisStats,
+    checkOperationNodes
 }
