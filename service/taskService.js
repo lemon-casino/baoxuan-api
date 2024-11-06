@@ -313,11 +313,11 @@ const tmallLinkAnomalyDetection = async () => {
     }
     
     //更新来自链接数据面板的属性 更新自动打标 [累计60天负利润]功能 以及 [累计60天负利润]功能 (时间是自动更新的 默认是昨天的链接数据) 1代表昨天
-    await singleItemTaoBaoService.Calculateyesterdaysdataandtagtheprofitin60days()
+    //await singleItemTaoBaoService.Calculateyesterdaysdataandtagtheprofitin60days()
     
     const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(14)
     // 获得所有负责人的信息
-    
+
     
     const productLineLeaders = result.productLineLeaders.reduce((acc, group) => {
         // 使用展开操作符将当前对象的第一个键对应的数组的所有元素添加到累加器数组中
@@ -451,7 +451,7 @@ const tmallLinkAnomalyDetection = async () => {
             
             try {
                 await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
-                logger.info(`发起宜搭  运营优化流程 for linkId ${key}`);
+                logger.info(`发起宜搭  运营优化流程 for linkId ${key} formDataJsonStr ${formDataJsonStr}`);
             } catch (e) {
                 logger.error(`发起宜搭  运营优化流程 失败 for linkId ${key}`, e);
             }

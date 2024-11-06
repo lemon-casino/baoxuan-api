@@ -21,7 +21,7 @@ let syncUserLoginCron = "0 0/5 * * * ?"
 let syncResignEmployeeCron = "0 0 18 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
 let tmallLinkData = "32 14 * * 1-6"
-let jdLinkData  = "12 12 * * 1-6"
+let jdLinkData  = "31 13 * * 1-6"
 let caigouLinkData  = "*/5 * * * 1-6"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
@@ -161,26 +161,34 @@ schedule.scheduleJob(tmallLinkData, async function () {
 })
 
 let isRunning = false;
-schedule.scheduleJob(jdLinkData, async function () {
-    console.log(isRunning)
-    if (isRunning) {
-        logger.info("任务正在执行，跳过本次调用");
-    } else {
-        isRunning = true;
-        console.log("执行了此方法");
-        try {
-            if (process.env.NODE_ENV === "prod") {
-                await taskService.jdLinkDataIsAutomaticallyInitiated();
+let lastRunTime = null; // 记录上次任务的结束时间
+const taskInterval = 1000 * 60 * 60 * 10; // 设置任务最小执行间隔为 10 小时
 
-            }
-        } catch (error) {
-            console.error("执行任务时出错:", error);
-        } finally {
-            global.isRunning = false;
+schedule.scheduleJob(jdLinkData, async function () {
+    const currentTime = new Date().getTime();
+
+    // 如果任务正在执行或者距离上次任务结束的时间不够长，则跳过本次任务
+    if (isRunning || (lastRunTime && (currentTime - lastRunTime) < taskInterval)) {
+        logger.info("任务正在执行或未到执行间隔，跳过本次调用");
+        return; // 跳过本次执行
+    }
+
+    isRunning = true; // 设置任务正在执行
+    console.log("任务开始执行");
+
+    try {
+        if (process.env.NODE_ENV === "prod") {
+            await taskService.jdLinkDataIsAutomaticallyInitiated();
         }
+    } catch (error) {
+        console.error("执行任务时出错:", error);
+    } finally {
+        // 任务执行完毕，更新 lastRunTime 为当前时间
+        lastRunTime = new Date().getTime();
+        isRunning = false; // 重置任务状态为未执行
+        console.log("任务执行完毕");
     }
 });
-
 //
 schedule.scheduleJob(caigouLinkData, async function () {
     if (process.env.NODE_ENV === "prod") {
