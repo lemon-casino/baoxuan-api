@@ -1,5 +1,6 @@
 const schedule = require("node-schedule")
 const taskService = require("@/service/taskService")
+const dateUtil = require("@/utils/dateUtil");
 
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20(貌似不准确)，涉及的宜搭接口暂时没有qps和总调用量的限制
 // 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况
@@ -20,8 +21,7 @@ let syncUserLoginCron = "0 0/5 * * * ?"
 let syncResignEmployeeCron = "0 0 18 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
 let tmallLinkData = "32 14 * * 1-6"
-let jdLinkData  = "29 10 * * 1-6"
-
+let jdLinkData  = "33 11 * * 1-6"
 let caigouLinkData  = "*/5 * * * 1-6"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
@@ -161,23 +161,23 @@ schedule.scheduleJob(tmallLinkData, async function () {
 })
 
 let isRunning = false;
-
 schedule.scheduleJob(jdLinkData, async function () {
+    console.log(isRunning)
     if (isRunning) {
-        logger.info("任务正在执行，跳过本次调用")
-        return;
-    }
+        logger.info("任务正在执行，跳过本次调用");
+    } else {
+        isRunning = true;
+        console.log("执行了此方法");
+        try {
+            if (process.env.NODE_ENV === "prod") {
+                await taskService.jdLinkDataIsAutomaticallyInitiated();
 
-    isRunning = true;
-    console.log("执行了此方法");
-    try {
-        if (process.env.NODE_ENV === "prod") {
-            await taskService.jdLinkDataIsAutomaticallyInitiated();
+            }
+        } catch (error) {
+            console.error("执行任务时出错:", error);
+        } finally {
+            global.isRunning = false;
         }
-    } catch (error) {
-        console.error("执行任务时出错:", error);
-    } finally {
-        isRunning = false;
     }
 });
 
