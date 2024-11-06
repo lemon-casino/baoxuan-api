@@ -24,7 +24,7 @@ const inquiryTodayjdDailyReport = async () => {
 
 
 async function updateFluxForYesterday() {
-    const batchSize = 1000; // 每批次更新的条数
+    const batchSize = 100; // 每批次更新的条数
     let offset = 0;         // 偏移量
     const maxRetries = 3;   // 设置最大重试次数
     let attempt = 0;        // 当前重试次数
