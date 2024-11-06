@@ -663,19 +663,23 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
                 const maintenance=await  getOperateAttributesMaintainer(runningFightingFlow.linkId)
                 runningFightingFlow.operationsLeader = maintenance.maintenanceLeader
             }
-            console.log(runningFightingFlow.linkId,runningFightingFlow.operationsLeader,runningFightingFlow.questionType)
-            const matchingUser = userList.find((user) => user.nickname === runningFightingFlow.operationsLeader);
-            console.log(matchingUser.dingding_user_id)
-            console.log("===============")
-            const uuid = matchingUser ? matchingUser.dingding_user_id : null;
+            console.log()
 
-            const textField_lma827od = runningFightingFlow.code
-            const employeeField_lma827ok= uuid
-            const textField_lma827oe= runningFightingFlow.linkId
+            if(runningFightingFlow.operationsLeader==="无操作"){
+                logger.info(" 发送通知 ?--->..."+runningFightingFlow.linkId,runningFightingFlow.operationsLeader,runningFightingFlow.questionType)
+            }else {
+                const matchingUser = userList.find((user) => user.nickname === runningFightingFlow.operationsLeader);
+                console.log(matchingUser.dingding_user_id)
+                console.log("===============")
+                const uuid = matchingUser ? matchingUser.dingding_user_id : null;
+
+                const textField_lma827od = runningFightingFlow.code
+                const employeeField_lma827ok= uuid
+                const textField_lma827oe= runningFightingFlow.linkId
 
 
-            const checkboxField_m11r277t = runningFightingFlow.questionType
-            const  radioField_locg3nxq= '简单'
+                const checkboxField_m11r277t = runningFightingFlow.questionType
+                const  radioField_locg3nxq= '简单'
 
                 const formDataJsonStr = JSON.stringify({
                     textField_lma827od,
@@ -685,18 +689,14 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
                     checkboxField_m11r277t,
                     radioField_locg3nxq
                 }, null, 2);
-                await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
+                // await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
             }
-
+            }
+            }
+            await removeDuplicateLinkIds();
+    logger.info("同步完成：京东异常发起")
     };
 
-    await removeDuplicateLinkIds();
-
-
-
-
-    logger.info("同步完成：京东异常发起")
-}
 const purchaseSelectionMeetingInitiated = async () => {
     await  sendDingReportBao()
 
