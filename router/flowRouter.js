@@ -49,5 +49,11 @@ router.get("/vision-review", flowHandler.getVisionReview)
  */
 router.get("/vision-plan", flowHandler.getVisionPlan)
 router.get("/vision-action-details", flowHandler.getVisionUsersDetails)
+/**
+ * 运营选品池
+ */
+router.get("/operate-selection", flowHandler.getOperateSelection)
+router.get("/operate-selection-header", flowHandler.getOperateSelectionHeader)
+router.post("/operate-analysis/create", flowHandler.createOperateAnalysis)
 
 module.exports = router;

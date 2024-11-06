@@ -133,6 +133,26 @@ const workItemMap = {
 }
 
 const workTypeList = ['待转入', '进行中', '已完成']
+const operationSelectionFlow = [11, 106]
+const operationSelectionFlowNode = [
+    {
+        activity_id: 'node_oclwzzaj997',
+        activity_name: '审核产品'
+    },{
+        activity_id: 'node_ocm1ag8ewd3',
+        activity_name: '运营成本是否选中'
+    }
+]
+
+const analysisFlowUUid = 'FORM-FEAF99D22148431E91EB2E8297FBB45DCS9Z'
+const analysisLinkPrevious = 'https://t8sk7d.aliwork.com/APP_BXS79QCC8MY5ZV0EZZ07/processDetail?formInstId='
+const analysisFieldMap = {
+    platform: 'radioField_m1g24ev1',
+    selected: 'radioField_m1hjo1ka',
+    instance_id: 'textField_m2pxi0qq',
+    link: 'textField_m2py5hjz',
+    operator: 'employeeField_lii9qts2'
+}
 
 module.exports = {
     typeList,
@@ -141,5 +161,10 @@ module.exports = {
     statItem,
     workItemList,
     workItemMap,
-    workTypeList
+    workTypeList,
+    operationSelectionFlow,
+    operationSelectionFlowNode,
+    analysisFieldMap,
+    analysisFlowUUid,
+    analysisLinkPrevious
 }

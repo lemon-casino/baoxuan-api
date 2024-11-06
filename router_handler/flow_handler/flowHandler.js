@@ -371,6 +371,49 @@ const getVisionPlan = async (req, res, next) => {
     }
 }
 
+const getOperateSelection = async (req, res, next) => {
+    try {
+        const {currentPage, pageSize, type} = req.query
+        joiUtil.validate({
+            currentPage: {value: currentPage, schema: joiUtil.commonJoiSchemas.strRequired},
+            pageSize: {value: pageSize, schema: joiUtil.commonJoiSchemas.strRequired},
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const result = await flowService.getOperateSelection(req.query, req.user.userId)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getOperateSelectionHeader = async (req, res, next) => {
+    try {
+        const {type} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const result = await flowService.getOperateSelectionHeader(parseInt(type), req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const createOperateAnalysis = async (req, res, next) => {
+    try {
+        const {platform, operator, instance_id} = req.body
+        joiUtil.validate({
+            platform: {value: platform, schema: joiUtil.commonJoiSchemas.strRequired},
+            operator: {value: operator, schema: joiUtil.commonJoiSchemas.positiveIntegerRequired},
+            instance_id: {value: instance_id, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        const result = await flowService.createOperateAnalysis(platform, operator, instance_id, req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getCompletedFlowsByIds,
     getFlowsByIds,
@@ -387,5 +430,8 @@ module.exports = {
     getFormsFlowsActivitiesStat,
     getVisionReview,
     getVisionPlan,
-    getVisionUsersDetails
+    getVisionUsersDetails,
+    getOperateSelection,
+    getOperateSelectionHeader,
+    createOperateAnalysis
 }
