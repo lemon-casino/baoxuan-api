@@ -345,7 +345,7 @@ const importGoodsInfo = async (rows, time) => {
         }
     }
     for (let i = 1; i < rows.length - 1; i++) {
-        if (!rows[i].getCell(1).value) break
+        if (!rows[i].getCell(1).value) continue
         data.push(
             typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
                 rows[i].getCell(goods_id_row).value.trim() : 
@@ -376,8 +376,10 @@ const importGoodsInfo = async (rows, time) => {
         )
         count += 1
     }
-    if (count > 0)
+    if (count > 0) {
+        await goodsSaleInfoRepo.deleteByDate(time)
         result = await goodsSaleInfoRepo.batchInsert(count, data)
+    }
     return result
 }
 
