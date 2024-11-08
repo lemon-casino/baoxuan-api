@@ -313,12 +313,9 @@ const tmallLinkAnomalyDetection = async () => {
     }
     
     //更新来自链接数据面板的属性 更新自动打标 [累计60天负利润]功能 以及 [累计60天负利润]功能 (时间是自动更新的 默认是昨天的链接数据) 1代表昨天
-    //await singleItemTaoBaoService.Calculateyesterdaysdataandtagtheprofitin60days()
-    
+    await singleItemTaoBaoService.Calculateyesterdaysdataandtagtheprofitin60days()
     const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(14)
     // 获得所有负责人的信息
-
-    
     const productLineLeaders = result.productLineLeaders.reduce((acc, group) => {
         // 使用展开操作符将当前对象的第一个键对应的数组的所有元素添加到累加器数组中
         acc.push(...group[Object.keys(group)[0]]);
@@ -689,7 +686,8 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
                     checkboxField_m11r277t,
                     radioField_locg3nxq
                 }, null, 2);
-                // await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
+                console.log(formDataJsonStr)
+                 await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
             }
             }
             }

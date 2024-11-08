@@ -565,55 +565,80 @@ const Calculateyesterdaysdataandtagtheprofitin60days = async () => {
     const sixtyDaysAgo = new Date();
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
-    // 第一个子查询: 获取昨天的链接ID
-    const yesterdayLinks = await singleItemTaoBaoModel.findAll({
-        attributes: ['link_id'],
-        where: {
-            date: yesterday,
-        },
-        raw: true,
-    }).then(results => results.map(result => result.link_id));
+    const pageSize = 10;  // 每次查询和更新10条记录
+    let page = 0;
+    let continueProcessing = true;
 
-    if (yesterdayLinks.length === 0) {
-        console.log('No links found for yesterday.');
-        return;
+    while (continueProcessing) {
+        // 分页查询昨天的链接ID（每次查询 10 条）
+        const yesterdayLinks = await singleItemTaoBaoModel.findAll({
+            attributes: ['link_id'],
+            where: {
+                date: yesterday,
+            },
+            offset: page * pageSize,
+            limit: pageSize,
+            raw: true,
+        });
+
+        // 如果没有更多数据，停止分页
+        if (yesterdayLinks.length === 0) {
+            continueProcessing = false;
+            break;
+        }
+
+        const linkIds = yesterdayLinks.map(result => result.link_id);
+
+        // 计算这些链接在过去60天的总利润
+        const sixtyDaysProfit = await singleItemTaoBaoModel.findAll({
+            attributes: [
+                'link_id',
+                [Sequelize.fn('SUM', Sequelize.col('profit_amount')), 'total_profit'],
+            ],
+            where: {
+                link_id: {
+                    [Op.in]: linkIds,
+                },
+                date: {
+                    [Op.between]: [sixtyDaysAgo, yesterday],
+                },
+            },
+            group: ['link_id'],
+            raw: true,
+        });
+
+        // 批量更新：每次更新 10 条记录
+        const updatePromises = [];
+        for (let i = 0; i < sixtyDaysProfit.length; i++) {
+            const profit = sixtyDaysProfit[i];
+
+            updatePromises.push(
+                singleItemTaoBaoModel.update(
+                    { dayprofit60: profit.total_profit },
+                    {
+                        where: {
+                            link_id: profit.link_id,
+                            date: yesterday,
+                        },
+                    }
+                )
+            );
+
+            // 如果达到批量处理的大小（例如10条），就执行一次批量更新
+            if (updatePromises.length >= 10 || i === sixtyDaysProfit.length - 1) {
+                // 等待批量更新完成后再继续
+                await Promise.all(updatePromises);
+                updatePromises.length = 0; // 清空当前批次的更新
+            }
+        }
+
+        // 进入下一页
+        page++;
     }
 
-    // 第二个子查询: 计算过去60天的总利润
-    const sixtyDaysProfit = await singleItemTaoBaoModel.findAll({
-        attributes: [
-            'link_id',
-            [Sequelize.fn('SUM', Sequelize.col('profit_amount')), 'total_profit'],
-        ],
-        where: {
-            link_id: {
-                [Op.in]: yesterdayLinks,
-            },
-            date: {
-                [Op.between]: [sixtyDaysAgo, yesterday],
-            },
-        },
-        group: ['link_id'],
-        raw: true,
-    });
-
-    // 更新 Cumulative 字段
-    const updatePromises = sixtyDaysProfit.map(async (profit) => {
-        return singleItemTaoBaoModel.update(
-            {dayprofit60: profit.total_profit},
-            {
-                where: {
-                    link_id: profit.link_id,
-                    date: yesterday,
-                },
-            }
-        );
-    });
-
-    await Promise.all(updatePromises);
-
     console.log('Dayprofit60 updated successfully.');
-}
+};
+
 
 
 const getproductLineLeaders = async (productLineLeaders, timeRange) => {
