@@ -312,11 +312,54 @@ const getFlowInstances = async function (params) {
     let row = await query(sql)
     if (row?.length) {
         for (let i = 0; i < row.length; i++) {
-            sql = `SELECT id, parent_id, (CASE component WHEN 'AssociationFormField' 
-                THEN CONCAT(field_id, '_id') ELSE field_id END) AS fieldId, title 
-                AS fieldName FROM form_fields WHERE form_id = ?`
+            sql = `SELECT ff.id, ff.component, ffd.value, (
+                    CASE ff.component 
+                        WHEN 'AssociationFormField' 
+                        THEN CONCAT(ff.field_id, '_id') 
+                        ELSE ff.field_id END
+                    ) AS fieldId, ff.title AS fieldName 
+                FROM form_fields ff 
+                LEFT JOIN form_field_data ffd ON ffd.form_field_id = ff.id 
+                WHERE ff.form_id = ? 
+                    AND ff.parent_id = 0 
+                ORDER BY ff.id`
             let row1 = await query(sql, [row[i].id])
-            row[i]['flowFormDetails'] = row1 || []
+            row[i]['flowFormDetails'] = []
+            for (let j = 0; j < row1.length; j++) {
+                if (j == 0 || row1[j].id != row1[j - 1].id) {
+                    let tmp = {
+                        fieldId: row1[j].fieldId,
+                        fieldName: row1[j].fieldName,
+                        component: row1[j].component,
+                        search: true,
+                        value: [],
+                        children: []
+                    }
+                    if (row1[j].value) tmp.value.push(row1[j].value)
+                    if (['NumberField', 'ImageField', 'AttachmentField', 'AssociationFormField']
+                        .includes(row1[j].component)) 
+                        tmp.search = false
+                    else if ('TableField' == row1[j].component) {
+                        tmp.search = false                        
+                        sql = `SELECT ff.id, ff.component, ffd.value, (
+                            CASE ff.component 
+                                WHEN 'AssociationFormField' 
+                                THEN CONCAT(ff.field_id, '_id') 
+                                ELSE ff.field_id END
+                            ) AS fieldId, ff.title AS fieldName 
+                        FROM form_fields ff 
+                        LEFT JOIN form_field_data ffd ON ffd.form_field_id = ff.id 
+                        WHERE ff.form_id = ? 
+                            AND ff.parent_id = ? 
+                        ORDER BY ff.id`
+                        tmp.children = await query(sql, [row[i].id, row1[j].id]) || []
+                    }
+                    row[i]['flowFormDetails'].push(tmp)
+                } else {
+                    row[i]['flowFormDetails'][row[i]['flowFormDetails'].length - 1].value
+                        .push(row1[j].value)
+                }
+            }
         }
         result.push(...row)
     }
@@ -417,6 +460,41 @@ const getFlowProcessInstances = async function (params, offset, limit) {
             p1.push(...typeFilter[params.type])
         }
     }
+    if (params.title) {
+        subsql = `${subsql} AND title like '%${params.title}%'`
+    }
+    if (params.creator) {
+        subsql = `${subsql} AND creator = ?`
+        p1.push(params.creator)
+    }
+    if (params.search) {
+        let p = JSON.parse(params.search)
+        for (let index in p) {
+            if (index)
+                subsql = `${subsql} AND EXISTS(
+                        SELECT piv.id FROM process_instance_values piv 
+                        WHERE AND piv.instance_id = vp.id 
+                            AND piv.field_id = "${index}"
+                            AND piv.value like '%${p[index]}%'
+                    )`
+        }
+    }
+    if (params.sampleComplete) {
+        let act = "'agree'"
+        if (params.sampleComplete == '否') act = "'next', 'doing'"
+        subsql = `${subsql} AND EXISTS(
+            SELECT pir.id FROM process_instance_records pir
+            WHERE pir.instance_id = vp.id 
+                AND pir.activity_id IN ('node_ocm0n6oqik4', 'node_ocm0nitc3f7') 
+                AND pir.action_exit IN (${act}) 
+                AND pir.id = (
+                    SELECT MAX(p2.id) FROM process_instance_records p2
+                    WHERE pir.instance_id = p2.instance_id
+                        AND pir.activity_id = p2.activity_id
+                        AND pir.show_name = p2.show_name
+                )
+        )`
+    }
     subsql = `${subsql}
             GROUP BY id, processInstanceId, title, \`status\`, createTime, operateTime`
     let search = `${presql}${subsql}) a`
@@ -447,8 +525,195 @@ const getFlowProcessInstances = async function (params, offset, limit) {
                 if (user?.length) {
                     row[i]['creator'] = user[0].nickname
                 }
+                let extraData = await getFlowProcessInstancesExtra(row[i].id, params.id)
+                for (let index in extraData) {
+                    row[i]['data'].push({
+                        fieldId: index,
+                        fieldValue: extraData[index]
+                    })
+                }
             }
             result.data = row
+        }
+    }
+    return result
+}
+
+const getFlowProcessInstancesExtra = async function (id, form_id) {
+    let result = {}
+    if (form_id == 119) {
+        let search = `select pir.operate_time, case piv.field_id 
+                when 'radioField_lzc1dw70' then '一般拍摄' 
+                when 'radioField_lzcfqrgx' then 'AI拍摄' 
+                when 'radioField_lzc1dw7s' then '3D' 
+                when 'radioField_lzc1dw7m' then '外包' 
+                else null end as field_id 
+            from process_instance_records pir 
+            left join process_instance_values piv on pir.instance_id = piv.instance_id
+                and ((piv.field_id = 'radioField_lzc1dw7m' 
+                        and piv.value like '%德化%'
+                ) or (piv.field_id in (
+                    'radioField_lzc1dw7s', 'radioField_lzc1dw70', 'radioField_lzcfqrgx')
+                    and piv.value = '"是"')) 
+            where pir.instance_id = ${id}
+                and pir.activity_id = 'node_ockpz6phx73'
+                and pir.action_exit = 'agree' 
+                and pir.id = (
+                    select max(p2.id) from process_instance_records p2
+                    where pir.instance_id = p2.instance_id
+                        and pir.activity_id = p2.activity_id
+                        and pir.show_name = p2.show_name
+                )`
+        let row = await query(search)
+        result['planComplete'] = '否'
+        result['planType'] = ''
+        if (row?.length) {
+            result['planComplete'] = '是'
+            result['planCompleteTime'] = row[0].operate_time
+            for (let i = 0; i < row.length; i++) {
+                if (row[i].field_id) result['planType'] = `${result['planType']}${row[i].field_id} + `
+            }
+            result['planType'] = `${result['planType']}修图`
+        }
+        search = `select min(operate_time) as operate_time from process_instance_records pir
+            where instance_id = ${id} 
+                and activity_id in ('node_oclzj9z1clx', 'node_oclzj9z1clo', 'node_oclzj9z1cl14') 
+                and action_exit = 'agree' 
+                and id = (
+                    select max(p2.id) from process_instance_records p2
+                    where pir.instance_id = p2.instance_id
+                        and pir.activity_id = p2.activity_id
+                        and pir.show_name = p2.show_name
+                ) group by action_exit`
+        row = await query(search)
+        if (row?.length == 1) result['photographyStartTime'] = row[0].operate_time
+
+        search = `select max(operate_time) as operate_time from process_instance_records pir
+            where instance_id = ${id} 
+                and activity_id in ('node_oclzj9z1clv', 'node_oclzj9z1cl15', 'node_oclzj9z1cl10') 
+                and action_exit = 'agree' 
+                and id = (
+                    select max(p2.id) from process_instance_records p2
+                    where pir.instance_id = p2.instance_id
+                        and pir.activity_id = p2.activity_id
+                        and pir.show_name = p2.show_name
+                ) group by action_exit`
+        row = await query(search)
+        if (row?.length == 1) result['photographyEndTime'] = row[0].operate_time
+        if (result['photographyEndTime']) result['photographyStatus'] = '已完成'
+        else if (result['photographyStartTime']) result['photographyStatus'] = '进行中'
+
+        search = `select action_exit, operate_time from process_instance_records pir
+            where instance_id = ${id} 
+                and activity_id = 'node_oclzj9z1cl1c' 
+                and id = (
+                    select max(p2.id) from process_instance_records p2
+                    where pir.instance_id = p2.instance_id
+                        and pir.activity_id = p2.activity_id
+                        and pir.show_name = p2.show_name
+                )`
+        row = await query(search)
+        result['visionProgress'] = '进行中'
+        if (row?.length) {
+            if (row[0].action_exit == 'agree') {
+                result['visionProgress'] = '已完成'
+                result['completeTime'] = row[0].operate_time
+                result['photoStatus'] = '上传完成'
+            }
+        }
+    } else if (form_id = 197) {
+        let search = `select pir.operate_time, case piv.field_id 
+                when 'radioField_m0n7i20w' then '一般拍摄' 
+                when 'radioField_m0n7i20v' then 'AI拍摄' 
+                when 'radioField_m0n7i20x' then '3D' 
+                when 'radioField_lyptiaxd' then '外包' 
+                else null end as field_id 
+            from process_instance_records pir 
+            left join process_instance_values piv on pir.instance_id = piv.instance_id
+                and ((piv.field_id = 'radioField_lyptiaxd' 
+                        and piv.value like '%德化%'
+                ) or (piv.field_id in (
+                    'radioField_m0n7i20v', 'radioField_m0n7i20w', 'radioField_m0n7i20x')
+                    and piv.value = '"是"')) 
+            where pir.instance_id = ${id}
+                and pir.activity_id in ('node_ocm0nieqby2', 'node_ocm0nitc3f8')
+                and pir.action_exit = 'agree'
+                and pir.id = (
+                    select max(p2.id) from process_instance_records p2
+                    where pir.instance_id = p2.instance_id
+                        and pir.activity_id = p2.activity_id
+                        and pir.show_name = p2.show_name
+                )`
+        let row = await query(search)
+        result['planComplete'] = '否'
+        result['planType'] = ''
+        if (row?.length) {
+            result['planComplete'] = '是'
+            result['planCompleteTime'] = row[0].operate_time
+            for (let i = 0; i < row.length; i++) {
+                if (row[i].field_id) result['planType'] = `${result['planType']}${row[i].field_id} + `
+            }
+            result['planType'] = `${result['planType']}修图`
+        }
+        search = `select min(operate_time) as operate_time from process_instance_records pir
+            where instance_id = ${id} 
+                and activity_id in ('node_ocm0nitc3fi', 'node_ocm0nitc3fr', 'node_ocm0nitc3f8') 
+                and action_exit = 'agree' 
+                and id = (
+                    select max(p2.id) from process_instance_records p2
+                    where pir.instance_id = p2.instance_id
+                        and pir.activity_id = p2.activity_id
+                        and pir.show_name = p2.show_name
+                ) group by action_exit`
+        row = await query(search)
+        if (row?.length == 1) result['photographyStartTime'] = row[0].operate_time
+
+        search = `select max(operate_time) as operate_time from process_instance_records pir
+            where instance_id = ${id} 
+                and activity_id in ('node_ocm0nitc3fq', 'node_ocm0nitc3fu', 'node_ocm0nitc3f9') 
+                and action_exit = 'agree' 
+                and id = (
+                    select max(p2.id) from process_instance_records p2
+                    where pir.instance_id = p2.instance_id
+                        and pir.activity_id = p2.activity_id
+                        and pir.show_name = p2.show_name
+                ) group by action_exit`
+        row = await query(search)
+        if (row?.length == 1) result['photographyEndTime'] = row[0].operate_time
+        if (result['photographyEndTime']) result['photographyStatus'] = '已完成'
+        else if (result['photographyStartTime']) result['photographyStatus'] = '进行中'
+
+        search = `select action_exit, operate_time from process_instance_records pir
+            where instance_id = ${id} 
+                and activity_id = 'node_ocm0nitc3f1p' 
+                and id = (
+                    select max(p2.id) from process_instance_records p2
+                    where pir.instance_id = p2.instance_id
+                        and pir.activity_id = p2.activity_id
+                        and pir.show_name = p2.show_name
+                )`
+        row = await query(search)
+        result['visionProgress'] = '进行中'
+        if (row?.length) {
+            if (row[0].action_exit == 'agree') {
+                result['visionProgress'] = '已完成'
+                result['completeTime'] = row[0].operate_time
+                result['photoStatus'] = '上传完成'
+            }
+        }
+        search = `select action_exit from process_instance_records pir
+            where instance_id = ${id} 
+                and activity_id in ('node_ocm0n6oqik4', 'node_ocm0nitc3f7') 
+                and id = (
+                    select max(p2.id) from process_instance_records p2
+                    where pir.instance_id = p2.instance_id
+                        and pir.activity_id = p2.activity_id
+                        and pir.show_name = p2.show_name
+                )`
+        row = await query(search)
+        if (row?.length) {
+            if (row[0].action_exit == 'agree') result['sampleComplete'] = '是'
+            else result['sampleComplete'] = '否'
         }
     }
     return result
@@ -537,6 +802,13 @@ const getOperationProcessInstances = async function (params, offset, limit) {
                 let user = await userRepo.getUserByDingdingUserId(row[i].creator)
                 if (user?.length) {
                     row[i]['creator'] = user[0].nickname
+                }
+                let extraData = await getFlowProcessInstancesExtra(row[i].id, params.id)
+                for (let index in extraData) {
+                    row[i]['data'].push({
+                        fieldId: index,
+                        fieldValue: extraData[index]
+                    })
                 }
             }
             result.data = row
@@ -684,6 +956,25 @@ const getVisionProcessInstances = async function (params, offset, limit) {
         subsql = `${subsql} AND vl.vision_type = ?`
         p1.push(params.leaderType)
     }
+    if (params.title) {
+        subsql = `${subsql} AND pi.title like '%${params.title}%'`
+    }
+    if (params.creator) {
+        subsql = `${subsql} AND pi.creator = ?`
+        p1.push(params.creator)
+    }
+    if (params.search) {
+        let p = JSON.parse(params.search)
+        for (let index  in p) {
+            if (index)
+                subsql = `${subsql} AND EXISTS(
+                        SELECT piv.id FROM process_instance_values piv 
+                        WHERE piv.instance_id = pi.id 
+                            AND piv.field_id = '${index}'
+                            AND piv.value like '%${p[index]}%'
+                    )`
+        }
+    }
     subsql = `${subsql}
         GROUP BY pi.id, pi.instance_id, pi.status, pi.title,  pi.create_time, pi.update_time`
     let search = `${presql}${subsql}) a`
@@ -713,6 +1004,13 @@ const getVisionProcessInstances = async function (params, offset, limit) {
                 let user = await userRepo.getUserByDingdingUserId(row[i].creator)
                 if (user?.length) {
                     row[i]['creator'] = user[0].nickname
+                }
+                let extraData = await getFlowProcessInstancesExtra(row[i].id, params.id)
+                for (let index in extraData) {
+                    row[i]['data'].push({
+                        fieldId: index,
+                        fieldValue: extraData[index]
+                    })
                 }
             }
             result.data = row
@@ -993,10 +1291,10 @@ const getDesignerStat = async function (user, type, start, end) {
         }
     }    
     let sql = `SELECT SUM(a.count) AS count, a.operator_name, a.title FROM (
-            SELECT p1.operator_name, ff.title, CAST(IFNULL(IF(piv.value IS NULL, 
-                REPLACE(pis.value, '"', ''), 
-                REPLACE(piv.value, '"', '')), 0) AS DECIMAL) AS count FROM 
-            vision_leader vl1 
+            SELECT COALESCE(pis1.value, p1.operator_name) AS operator_name, ff.title, 
+                CAST(IFNULL(IF(piv.value IS NULL, REPLACE(pis.value, '"', ''), 
+                    REPLACE(piv.value, '"', '')), 0) AS DECIMAL) AS count 
+            FROM vision_leader vl1 
             JOIN processes p ON p.form_id = vl1.form_id
             JOIN process_instances pi ON p.id = pi.process_id
                 AND pi.status IN ('RUNNING', 'COMPLETED')
@@ -1023,7 +1321,8 @@ const getDesignerStat = async function (user, type, start, end) {
                     WHERE p2.instance_id = pi.id
                         AND p2.activity_id = vl2.activity_id
                         AND p2.show_name = vl2.activity_name)
-            JOIN vision_activity va ON va.form_id = vl1.form_id
+            JOIN vision_activity va ON va.form_id = vl1.form_id 
+                AND va.tag = 'insideArt' 
             JOIN vision_activity_field vaf ON vaf.activity_id = va.id 
                 AND vaf.type = 1
             JOIN process_instance_records p1 ON p1.instance_id = pi.id
@@ -1043,8 +1342,7 @@ const getDesignerStat = async function (user, type, start, end) {
                     WHERE pis2.instance_id = pi.id
                 ), FALSE, TRUE)
             LEFT JOIN process_instance_sub_values pis1 ON pis1.instance_id = pi.id
-                AND pis1.field_id = va.sub_field
-                AND pis1.value = pir1.operator_name 
+                AND pis1.field_id = va.sub_field 
             LEFT JOIN process_instance_sub_values pis ON pis.instance_id = pi.id
                 AND pis.field_id = vaf.field_id
                 AND vaf.is_sub = 1
@@ -1067,8 +1365,7 @@ const getDesignerStat = async function (user, type, start, end) {
                 AND pir1.operate_time <= ? 
                 AND IF(piv1.value IS NULL, riv.value, piv1.value) LIKE CONCAT('%', ffd.value, '%') 
                 AND vft.type NOT IN (0, 4) 
-                AND vl1.type = ?
-                AND va.tag = 'insideArt'
+                AND vl1.type = ? 
                 AND pir2.operator_name IN (${usernames.map(() => '?').join(',')})      
         ) a GROUP BY a.operator_name, a.title`, params = [start, end, type, ...usernames]
     let result = []
@@ -1083,7 +1380,8 @@ const getPhotographerStat = async function (user, type, start, end) {
                     REPLACE(pis.value, '"', ''), 
                     REPLACE(piv.value, '"', '')), 0) AS DECIMAL) AS count 
             FROM vision_leader vl
-            JOIN vision_activity va ON va.form_id = vl.form_id
+            JOIN vision_activity va ON va.form_id = vl.form_id 
+                AND va.tag = 'insidePhoto' 
             JOIN vision_activity_field vaf ON vaf.activity_id = va.id
                 AND vaf.type = 1
             JOIN processes p ON p.form_id = vl.form_id
@@ -1119,7 +1417,6 @@ const getPhotographerStat = async function (user, type, start, end) {
             JOIN form_fields ff ON ff.form_id = vl.form_id
                 AND ff.field_id = IF(pis.id IS NOT NULL, pis.field_id, piv.field_id)
             WHERE vl.vision_type = 2 
-                AND va.tag = 'insidePhoto'
                 AND pir.operate_time >= ?
                 AND pir.operate_time <= ?
                 AND vl.type = ? 
@@ -1329,7 +1626,8 @@ const getOperateSelection = async function (start, end, title, page, size, form_
         }
     }
     sql = `${sql}
-            GROUP BY pi.id, pi.instance_id, pi.title, pi.create_time, ot.form_id`
+            GROUP BY pi.id, pi.instance_id, pi.title, pi.create_time, ot.form_id
+            ORDER BY pi.id DESC`
     search = `${presql}
         ${sql}) a`
     let row = await query(search, params)
@@ -1347,7 +1645,7 @@ const getOperateSelection = async function (start, end, title, page, size, form_
             JOIN form_fields ff ON ff.form_id = a.form_id 
                 AND ff.field_id = op.field_id 
             GROUP BY a.id, a.instance_id, a.title, a.create_time, ff.field_id, piv.value 
-            ORDER BY a.id`
+            ORDER BY a.id DESC`
         row = await query(search, params)
         if (row?.length) data = row
     }

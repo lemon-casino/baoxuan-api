@@ -44,12 +44,25 @@ const getFlowsByIds = async (req, res, next) => {
  */
 const getFlows = async (req, res, next) => {
     try {
-        const flows = await flowService.getFlows(req.query)
+        const flows = await flowService.getFlows(req.query, req.user.id)
         return res.send(biResponse.success(flows))
     } catch (e) {
         next(e)
     }
-    return res.send(biResponse.serverError())
+}
+
+const setFlowsHeader = async (req, res, next) => {
+    try {
+        const {form_id, setting} = req.body
+        joiUtil.validate({
+            setting: {value: setting, schema: joiUtil.commonJoiSchemas.arrayRequired},
+            form_id: {value: form_id, schema: joiUtil.commonJoiSchemas.positiveIntegerRequired},
+        })
+        const result = await flowService.setFlowHeader(req.user.id, form_id, setting)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
 }
 /**
  * 获取流程表单详细的工单数据
@@ -76,8 +89,6 @@ const getFlowsProcessByIds = async (req, res, next) => {
     } catch (e) {
         next(e)
     }
-
-    return res.send(biResponse.serverError)
 }
 
 const getFlowProcessActions = async (req, res, next) => {
@@ -88,8 +99,6 @@ const getFlowProcessActions = async (req, res, next) => {
     } catch (e) {
         next(e)
     }
-
-    return res.send(biResponse.serverError)
 }
 
 /**
@@ -408,7 +417,8 @@ const createOperateAnalysis = async (req, res, next) => {
             instance_id: {value: instance_id, schema: joiUtil.commonJoiSchemas.strRequired},
         })
         const result = await flowService.createOperateAnalysis(platform, operator, instance_id, req.user.id)
-        return res.send(biResponse.success(result))
+        if (!result) return res.send(biResponse.createFailed('保存失败'))
+        return res.send(biResponse.success('保存成功'))
     } catch (e) {
         next(e)
     }
@@ -418,6 +428,7 @@ module.exports = {
     getCompletedFlowsByIds,
     getFlowsByIds,
     getFlows,
+    setFlowsHeader,
     getFlowsProcessByIds,
     exportFlowsProcess,
     getFlowProcessActions,
