@@ -111,4 +111,10 @@ goodsSaleInfoRepo.batchInsert = async (count, data) => {
     return result?.affectedRows ? true : false
 }
 
+goodsSaleInfoRepo.deleteByDate = async (date) => {
+    let sql = `DELETE FROM goods_sale_info WHERE \`date\` = ?`
+    const result = await query(sql, date)
+    return result?.affectedRows ? true : false
+}
+
 module.exports = goodsSaleInfoRepo
