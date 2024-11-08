@@ -421,6 +421,88 @@ const photographerChild = {
     }
 }
 
+const tableHeaderExtra = {
+    119: [{
+        fieldId: "planComplete",
+        fieldName: "是否过方案",
+        search: false,
+    }, {
+        fieldId: "planCompleteTime",
+        fieldName: "过方案时间",
+        search: false,
+    }, {
+        fieldId: "planType",
+        fieldName: "方案类型",
+        search: false,
+    }, {
+        fieldId: "photographyStartTime",
+        fieldName: "开始拍摄时间",
+        search: false,
+    }, {
+        fieldId: "photographyEndTime",
+        fieldName: "结束拍摄时间",
+        search: false,
+    }, {
+        fieldId: "photographyStatus",
+        fieldName: "摄影当前状态",
+        search: false,
+    }, {
+        fieldId: "visionProgress",
+        fieldName: "视觉进度",
+        search: false,
+    }, {
+        fieldId: "completeTime",
+        fieldName: "完成时间",
+        search: false,
+    }, {
+        fieldId: "photoStatus",
+        fieldName: "上传链图云",
+        search: false,
+    }],
+    197: [{
+        fieldId: "sampleComplete",
+        fieldName: "样品是否齐全",
+        search: true,
+        value: ['是', '否']
+    }, {
+        fieldId: "planComplete",
+        fieldName: "是否过方案",
+        search: false,
+    }, {
+        fieldId: "planCompleteTime",
+        fieldName: "过方案时间",
+        search: false,
+    }, {
+        fieldId: "planType",
+        fieldName: "方案类型",
+        search: false,
+    }, {
+        fieldId: "photographyStartTime",
+        fieldName: "开始拍摄时间",
+        search: false,
+    }, {
+        fieldId: "photographyEndTime",
+        fieldName: "结束拍摄时间",
+        search: false,
+    }, {
+        fieldId: "photographyStatus",
+        fieldName: "摄影当前状态",
+        search: false,
+    }, {
+        fieldId: "visionProgress",
+        fieldName: "视觉进度",
+        search: false,
+    }, {
+        fieldId: "completeTime",
+        fieldName: "完成时间",
+        search: false,
+    }, {
+        fieldId: "photoStatus",
+        fieldName: "上传链图云",
+        search: false,
+    }]
+}
+
 module.exports = {
     action,
     actionItem,
@@ -455,5 +537,6 @@ module.exports = {
     visionList,
     visionFilter,
     retouchList,
-    photographerChild
+    photographerChild,
+    tableHeaderExtra
 }

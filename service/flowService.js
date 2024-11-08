@@ -29,8 +29,9 @@ const patchUtil = require("@/patch/patchUtil")
 const userCommonService = require("@/service/common/userCommonService");
 const outUsersRepo = require("@/repository/outUsersRepo");
 const newFormsRepo = require('../repository/newFormsRepo')
-const { designerTags, nameFilter } = require("../const/newFormConst")
+const { designerTags, nameFilter, tableHeaderExtra } = require("../const/newFormConst")
 const userOperationRepo = require("../repository/operation/userOperationRepo")
+const userFlowSettingRepo = require("../repository/userFlowSettingRepo")
 const { typeList, operationSelectionFlow, operationSelectionFlowNode, analysisFieldMap, analysisFlowUUid, analysisLinkPrevious } = require("../const/operationConst")
 const moment = require('moment')
 const { createProcess } =  require('./dingDingService')
@@ -1281,14 +1282,72 @@ const getFlowSplitFormfieldKeyAndField = async (formId, fieldKey, selectField, f
     return fightingLinkIds
 }
 
-const getFlows = async (params) => {
-    let result
+const getFlows = async (params, id) => {
+    let result, setting = []
     if (params.tag) result = await newFormsRepo.getFlowInstances(params)
     else result = await newFormsRepo.getOperationFlowInstances(params)
+    if (result?.length) {
+        for (let index = 0; index < result.length; index++) {
+            result[index]['flowFormDetails'].push({
+				fieldId: "processInstanceId",
+				fieldName: "实例ID",
+				search: false,
+			}, {
+				fieldId: "creator",
+				fieldName: "创建者",
+				search: false
+			}, {
+				fieldId: "title",
+				fieldName: "流程名称",
+				search: false
+			})
+            if (tableHeaderExtra[result[index].id]?.length > 0) {
+                result[index]['flowFormDetails'] = result[index]['flowFormDetails']
+                    .concat(tableHeaderExtra[result[index].id])
+            }
+            setting = await userFlowSettingRepo.getSetting(id, result[index].id)
+            result[index]['setting'] = []
+            for (let i = 0; i < result[index]['flowFormDetails'].length; i++) {
+                let isFind = false
+                for (let j = 0; j < setting.length; j++) {
+                    if (setting[j].fieldId == result[index]['flowFormDetails'][i].fieldId) {
+                        isFind = true
+                        result[index]['setting'].push(setting[j])
+                        setting.splice(j, 1)
+                        break
+                    }
+                }
+                if (!isFind) {
+                    result[index]['setting'].push({
+                        fieldId: result[index]['flowFormDetails'][i].fieldId,
+                        fieldName: result[index]['flowFormDetails'][i].fieldName,
+                        sort: 0,
+                        visible: true
+                    })
+                }
+            }
+            result[index]['setting'].sort((a, b) => a.sort - b.sort)
+        }
+    }
+    return result
+}
+
+const setFlowHeader = async (user_id, form_id, setting) => {
+    let result
+    let tableSet = await userFlowSettingRepo.getSetting(user_id, form_id)
+    if (tableSet?.length) {
+        result = await userFlowSettingRepo.updateSetting(user_id, form_id, JSON.stringify(setting))
+    } else {
+        result = await userFlowSettingRepo.insertSetting(user_id, form_id, JSON.stringify(setting))
+    }
     return result
 }
 
 const getFlowsProcesses = async (params, offset, limit) => {
+    if (params.creator) {
+        let userInfo = await userRepo.getUserDetails({ userId: params.creator })
+        if (userInfo) params.creator = userInfo.dingdingUserId
+    }
     let result = await newFormsRepo.getFlowProcessInstances(params, offset, limit)
     return result
 }
@@ -1316,6 +1375,10 @@ const getVisionProcesses = async (params, offset, limit) => {
             if (nameFilter[params.userNames[i]])
                 params.userNames.push(nameFilter[params.userNames[i]])
         }
+    }
+    if (params.creator) {
+        let userInfo = await userRepo.getUserDetails({ userId: params.creator })
+        if (userInfo) params.creator = userInfo.dingdingUserId
     }
     let result = await newFormsRepo.getVisionProcessInstances(params, offset, limit)
     return result
@@ -1536,6 +1599,7 @@ module.exports = {
     getTodaySplitFlowsByFormIdAndFlowStatus,
     getFlowSplitFormValues,
     getFlows,
+    setFlowHeader,
     getFlowsProcesses,
     getOperationProcesses,
     getVisionProcesses,
