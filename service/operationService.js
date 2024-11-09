@@ -225,16 +225,16 @@ const queryUserInfo = async (users, result, type, start, end) => {
 const getGoodsInfo = async (startDate, endDate, params, id) => {
     let result = {
         column: [
-            {title: '链接ID', field_id: 'goods_id'},
-            {title: '主销编码', field_id: 'sku_id'},
-            {title: '店铺名称', field_id: 'shop_name'},
-            {title: '店铺编码', field_id: 'shop_id'},
-            {title: '商品名称', field_id: 'goods_name'},
-            {title: '发货金额', field_id: 'sale_amount'},
-            {title: '推广费', field_id: 'promotion_amount'},
-            {title: '运费', field_id: 'express_fee'},
-            {title: '利润', field_id: 'profit'},
-            {title: '利润率(%)', field_id: 'profit_rate'},
+            {title: '链接ID', field_id: 'goods_id', search: true, type: 'input'},
+            {title: '主销编码', field_id: 'sku_id', search: true, type: 'input'},
+            {title: '店铺名称', field_id: 'shop_name', search: false},
+            {title: '店铺编码', field_id: 'shop_id', search: true, type: 'input'},
+            {title: '商品名称', field_id: 'goods_name', search: true, type: 'input'},
+            {title: '发货金额', field_id: 'sale_amount', search: false},
+            {title: '推广费', field_id: 'promotion_amount', search: false},
+            {title: '运费', field_id: 'express_fee', search: false},
+            {title: '利润', field_id: 'profit', search: false},
+            {title: '利润率(%)', field_id: 'profit_rate', search: false},
         ],
         data: {}
     }
@@ -268,7 +268,8 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
         userNames = userInfo.map((item) => item.nickname).join('","')
         let links = await userOperationRepo.getLinkIdsByUserNames(userNames)
         linkIds = links.map((item) => item.goods_id).join('","')
-    }
+    }    
+    params.search = JSON.parse(params.search)
     result.data = await goodsSaleInfoRepo.getData(startDate, endDate, params, shopNames, linkIds)
     return result
 }
@@ -344,7 +345,7 @@ const importGoodsInfo = async (rows, time) => {
             continue
         }
     }
-    for (let i = 1; i < rows.length - 1; i++) {
+    for (let i = 1; i < rows.length; i++) {
         if (!rows[i].getCell(1).value) continue
         data.push(
             typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
@@ -386,30 +387,30 @@ const importGoodsInfo = async (rows, time) => {
 const getGoodsLineInfo = async (startDate, endDate, params, id) => {
     let result = {
         column: [
-            {title: '链接ID', field_id: 'goods_id'},
-            {title: '项目', field_id: 'project_name'},
-            {title: '一级类目', field_id: 'first_category'},
-            {title: '二级类目', field_id: 'second_category'},
-            {title: '三级类目', field_id: 'level_3_category'},
-            {title: '产品线简称', field_id: 'brief_product_line'},
-            {title: '发货金额', field_id: 'sale_amount'},
-            {title: '推广费', field_id: 'promotion_amount'},
-            {title: '运费', field_id: 'express_fee'},
-            {title: '利润', field_id: 'profit'},
-            {title: '利润率(%)', field_id: 'profit_rate'},
-            {title: '主销编码', field_id: 'sku_id'},
-            {title: '产品定义', field_id: 'product_definition'},
-            {title: '库存结构', field_id: 'stock_structure'},
-            {title: '产品等级', field_id: 'product_rank'},
-            {title: '产品设计属性', field_id: 'product_design_attr'},
-            {title: '季节', field_id: 'seasons'},
-            {title: '品牌', field_id: 'brand'},
-            {title: '销售目标', field_id: 'targets'},
-            {title: '开发负责人', field_id: 'exploit_director'},
-            {title: '采购负责人', field_id: 'purchase_director'},
-            {title: '产品线管理人', field_id: 'line_manager'},
-            {title: '产品线运营人', field_id: 'line_director'},
-            {title: '上架时间', field_id: 'onsale_date'},
+            {title: '链接ID', field_id: 'goods_id', search: true, type: 'input'},
+            {title: '项目', field_id: 'project_name', search: true, type: 'input'},
+            {title: '一级类目', field_id: 'first_category', search: true, type: 'input'},
+            {title: '二级类目', field_id: 'second_category', search: true, type: 'input'},
+            {title: '三级类目', field_id: 'level_3_category', search: true, type: 'input'},
+            {title: '产品线简称', field_id: 'brief_product_line', search: true, type: 'input'},
+            {title: '发货金额', field_id: 'sale_amount', search: false},
+            {title: '推广费', field_id: 'promotion_amount', search: false},
+            {title: '运费', field_id: 'express_fee', search: false},
+            {title: '利润', field_id: 'profit', search: false},
+            {title: '利润率(%)', field_id: 'profit_rate', search: false},
+            {title: '主销编码', field_id: 'sku_id', search: true, type: 'input'},
+            {title: '产品定义', field_id: 'product_definition', search: true, type: 'input'},
+            {title: '库存结构', field_id: 'stock_structure', search: true, type: 'input'},
+            {title: '产品等级', field_id: 'product_rank', search: true, type: 'input'},
+            {title: '产品设计属性', field_id: 'product_design_attr', search: true, type: 'input'},
+            {title: '季节', field_id: 'seasons', search: true, type: 'input'},
+            {title: '品牌', field_id: 'brand', search: true, type: 'input'},
+            {title: '销售目标', field_id: 'targets', search: false},
+            {title: '开发负责人', field_id: 'exploit_director', search: true, type: 'input'},
+            {title: '采购负责人', field_id: 'purchase_director', search: true, type: 'input'},
+            {title: '产品线管理人', field_id: 'line_manager', search: true, type: 'input'},
+            {title: '产品线运营人', field_id: 'line_director', search: true, type: 'input'},
+            {title: '上架时间', field_id: 'onsale_date', search: true, type: 'date'},
         ],
         data: {}
     }
@@ -440,6 +441,8 @@ const getGoodsLineInfo = async (startDate, endDate, params, id) => {
     }
     if (shopInfo?.length) shopNames = shopInfo.map((item) => item.shop_name).join('","')
     if (userInfo?.length) userNames = userInfo.map((item) => item.nickname).join('","')
+        
+    params.search = JSON.parse(params.search)
     result.data = await userOperationRepo.getGoodsLine(startDate, endDate, params, shopNames, userNames)
     return result
 }
