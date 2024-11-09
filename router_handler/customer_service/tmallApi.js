@@ -134,7 +134,24 @@ const importTmallAsData = async (req, res, next) => {
                     for (let i = 0; i < worksheet.rowCount - 1; i++) {
                         let row = rows[i]
                         info = []
-                        if (row.getCell(1).value) {           
+                        if (row.getCell(1).value) {
+                            console.log(typeof(row.getCell('旺旺').value),row.getCell('旺旺').value)
+                            console.log(typeof(row.getCell(1).value),row.getCell(1).value)
+                            console.log(typeof(row.getCell(2).value),row.getCell(2).value)
+                            console.log(typeof(row.getCell(3).value),row.getCell(3).value)
+                            console.log(typeof(row.getCell(4).value),row.getCell(4).value)
+                            console.log(typeof(row.getCell(5).value),row.getCell(5).value)
+                            console.log(typeof(row.getCell(6).value),row.getCell(6).value)
+                            console.log(typeof(row.getCell(7).value),row.getCell(7).value)
+                            console.log(typeof(row.getCell(8).value),row.getCell(8).value)
+                            console.log(typeof(row.getCell(9).value),row.getCell(9).value)
+                            console.log(typeof(row.getCell(0).value),row.getCell(10).value)
+                            console.log(typeof(row.getCell(11).value),row.getCell(11).value)      
+                            console.log(typeof(row.getCell(12).value),row.getCell(12).value)
+                            console.log(typeof(row.getCell(13).value),row.getCell(13).value)
+                            console.log(typeof(row.getCell(14).value),row.getCell(14).value)
+                            console.log(typeof(row.getCell(15).value),row.getCell(15).value)
+                            console.log("....................................................")
                             info.push(row.getCell(2).value ? row.getCell(2).value * 100 : null)
                             info.push(row.getCell(3).value)
                             info.push(row.getCell(4).value ? row.getCell(4).value * 100 : null)
@@ -163,6 +180,24 @@ const importTmallAsData = async (req, res, next) => {
                         if (row.getCell(1).value) {
                             info.push(start_time)
                             info.push(end_time)
+                            console.log(typeof(row.getCell('旺旺').value),row.getCell('旺旺').value)
+                            console.log(typeof(row.getCell(1).value),row.getCell(1).value)
+                            console.log(typeof(row.getCell(2).value),row.getCell(2).value)
+                            console.log(typeof(row.getCell(3).value),row.getCell(3).value)
+                            console.log(typeof(row.getCell(4).value),row.getCell(4).value)
+                            console.log(typeof(row.getCell(5).value),row.getCell(5).value)
+                            console.log(typeof(row.getCell(6).value),row.getCell(6).value)
+                            console.log(typeof(row.getCell(7).value),row.getCell(7).value)
+                            console.log(typeof(row.getCell(8).value),row.getCell(8).value)
+                            console.log(typeof(row.getCell(9).value),row.getCell(9).value)
+                            console.log(typeof(row.getCell(10).value),row.getCell(10).value)
+                            console.log(typeof(row.getCell(11).value),row.getCell(11).value)      
+                            console.log(typeof(row.getCell(12).value),row.getCell(12).value)
+                            console.log(typeof(row.getCell(13).value),row.getCell(13).value)
+                            console.log(typeof(row.getCell(14).value),row.getCell(14).value)
+                            console.log(typeof(row.getCell(15).value),row.getCell(15).value)
+
+                            console.log("....................................................")
                             info.push(row.getCell(1).value ? row.getCell(1).value.trim(' ') : null)
                             info.push(row.getCell(2).value ? row.getCell(2).value * 100 : null)
                             info.push(row.getCell(3).value)
@@ -183,6 +218,7 @@ const importTmallAsData = async (req, res, next) => {
                     }
                     if (count > 0) {
                         insertInfo = await tmallService.insertTmallAs(count, info)
+                        console.log(count,info)
                         const images = worksheet.getImages()
                         images.forEach(medium => {
                             if (medium.type === 'image') {
@@ -347,13 +383,32 @@ const importTmallPsData = async (req, res, next) => {
                     for (let i = 0; i < worksheet.rowCount - 1; i++) {
                         let row = rows[i]
                         info = []
-                        if (row.getCell(1).value) {           
+                        if (row.getCell(1).value) {
+                            console.log(typeof(row.getCell('旺旺').value),row.getCell('旺旺').value)
+                            console.log(typeof(row.getCell(1).value),row.getCell(1).value)
+                            console.log(typeof(row.getCell(2).value),row.getCell(2).value)
+                            console.log(typeof(row.getCell(3).value),row.getCell(3).value)
+                            console.log(typeof(row.getCell(4).value),row.getCell(4).value)
+                            console.log(typeof(row.getCell(5).value),row.getCell(5).value)
+                            console.log(typeof(row.getCell(6).value),row.getCell(6).value)
+                            console.log(typeof(row.getCell(7).value),row.getCell(7).value)
+                            console.log(typeof(row.getCell(8).value),row.getCell(8).value)
+                            console.log(typeof(row.getCell(9).value),row.getCell(9).value)
+                            console.log(typeof(row.getCell(0).value),row.getCell(10).value)
+                            console.log(typeof(row.getCell(11).value),row.getCell(11).value)      
+                            console.log(typeof(row.getCell(12).value),row.getCell(12).value)
+                            console.log(typeof(row.getCell(13).value),row.getCell(13).value)
+                            console.log(typeof(row.getCell(14).value),row.getCell(14).value)
+                            console.log(typeof(row.getCell(15).value),row.getCell(15).value)
+                            console.log(typeof(row.getCell(16).value),row.getCell(15).value)
+                            console.log(typeof(row.getCell(17).value),row.getCell(15).value)
+                            console.log("....................................................")
+                            info.push(row.getCell(7).value ? row.getCell(7).value * 100 : null)    
                             info.push(row.getCell(2).value)
                             info.push(row.getCell(3).value ? row.getCell(3).value * 100 : null)
                             info.push(row.getCell(4).value ? row.getCell(4).value * 100 : null)
                             info.push(row.getCell(5).value)
                             info.push(row.getCell(6).value)
-                            info.push(row.getCell(7).value ? row.getCell(7).value * 100 : null)
                             info.push(row.getCell(8).value)
                             info.push(row.getCell(9).value)
                             info.push(row.getCell(10).value)
@@ -367,7 +422,7 @@ const importTmallPsData = async (req, res, next) => {
                             info.push(start_time)
                             info.push(end_time)
                             info.push(row.getCell(1).value ? row.getCell(1).value.trim(' ') : null)
-                            
+                            console.log(info)
                             insertInfo = await tmallService.updateTmallPs(info)
                         }
                     }
@@ -376,6 +431,24 @@ const importTmallPsData = async (req, res, next) => {
                     for (let i = 0; i < worksheet.rowCount - 1; i++) {
                         let row = rows[i]
                         if (row.getCell(1).value) {
+                            console.log(typeof(row.getCell('旺旺').value),row.getCell('旺旺').value)
+                            console.log(typeof(row.getCell(2).value),row.getCell(2).value)
+                            console.log(typeof(row.getCell(3).value),row.getCell(3).value)
+                            console.log(typeof(row.getCell(4).value),row.getCell(4).value)
+                            console.log(typeof(row.getCell(5).value),row.getCell(5).value)
+                            console.log(typeof(row.getCell(6).value),row.getCell(6).value)
+                            console.log(typeof(row.getCell(7).value),row.getCell(7).value)
+                            console.log(typeof(row.getCell(8).value),row.getCell(8).value)
+                            console.log(typeof(row.getCell(9).value),row.getCell(9).value)
+                            console.log(typeof(row.getCell(0).value),row.getCell(10).value)
+                            console.log(typeof(row.getCell(11).value),row.getCell(11).value)      
+                            console.log(typeof(row.getCell(12).value),row.getCell(12).value)
+                            console.log(typeof(row.getCell(13).value),row.getCell(13).value)
+                            console.log(typeof(row.getCell(14).value),row.getCell(14).value)
+                            console.log(typeof(row.getCell(15).value),row.getCell(15).value)
+                            console.log(typeof(row.getCell(16).value),row.getCell(15).value)
+                            console.log(typeof(row.getCell(17).value),row.getCell(15).value)
+                            console.log("....................................................")
                             info.push(start_time)
                             info.push(end_time)
                             info.push(row.getCell(1).value ? row.getCell(1).value.trim(' ') : null)
@@ -400,6 +473,7 @@ const importTmallPsData = async (req, res, next) => {
                     }
                     if (count > 0) {
                         insertInfo = await tmallService.insertTmallPs(count, info)
+                        console.log(count,info)
                     } else {
                         fs.rmSync(newPath)
                         return res.send(biResponse.createFailed())
