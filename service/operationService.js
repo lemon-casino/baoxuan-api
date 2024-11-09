@@ -345,7 +345,9 @@ const importGoodsInfo = async (rows, time) => {
             continue
         }
     }
+    let amount = 0, saveAmount = 0
     for (let i = 1; i < rows.length; i++) {
+        amount += rows[i].getCell(sale_amount_row).value
         if (!rows[i].getCell(1).value) continue
         data.push(
             typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
@@ -376,7 +378,9 @@ const importGoodsInfo = async (rows, time) => {
             rows[i].getCell(express_fee_row).value,
         )
         count += 1
+        saveAmount += rows[i].getCell(sale_amount_row).value
     }
+    logger.info(`[发货数据导入]：时间:${time}, 总计金额:${amount}, 存储金额:${saveAmount}`)
     if (count > 0) {
         await goodsSaleInfoRepo.deleteByDate(time)
         result = await goodsSaleInfoRepo.batchInsert(count, data)
