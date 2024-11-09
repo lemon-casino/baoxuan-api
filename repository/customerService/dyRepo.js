@@ -106,6 +106,64 @@ dyRepo.getDYData = async ( start, end,lastStart, lastEnd, preStart, preEnd,shopn
     const result = await query(sql,params)
     return result
 }
+dyRepo.getDYKFData =async (start,end,servicer) =>{
+    let sql =`SELECT c1.servicer
+                    ,ROUND(SUM(c1.reception_num),0) AS reception_num
+                    ,ROUND(SUM(c1.session_num),0) AS session_num
+                    ,CONCAT(ROUND(AVG(c1.dissatisfied_rate),2),'%') AS dissatisfied_rate
+                    ,CONCAT(ROUND(AVG(c1.session_in_3_rate),2),'%') AS session_in_3_rate
+                    ,CONCAT(ROUND(AVG(c1.response_in_3_rate),2),'%') AS response_in_3_rate
+                    ,ROUND(AVG(c1.response_duration),2) AS response_duration
+                    ,ROUND(AVG(c1.ave_response_duration),2) AS ave_response_duration
+                    ,CONCAT(ROUND(AVG(c1.satisfaction_rate),2),'%') AS satisfaction_rate
+                    ,ROUND(SUM(c1.amount),2) AS amount
+                    ,ROUND(SUM(c1.contact_num),0) AS contact_num
+                    ,ROUND(SUM(c1.order_num),0) AS order_num
+                    ,ROUND(SUM(c1.pay_num),0) AS pay_num
+                    ,CONCAT(ROUND(AVG(c1.transfer_rate),2),'%') AS transfer_rate
+                    ,ROUND(SUM(c1.warn_num),0) AS warn_num
+                FROM cs_dy AS c1
+                WHERE start_time=end_time 
+                AND start_time BETWEEN "${start}" AND "${end}" 
+                AND end_time BETWEEN "${start}" AND "${end}" 
+                `
+    if(servicer){
+        sql=`${sql} AND c1.servicer='${servicer}'`
+    }
+    sql=`${sql} GROUP BY c1.servicer `
+    const result = await query(sql)
+    return result
+
+}
+
+dyRepo.getDYDPData =async (start,end,shopname) =>{
+    let sql =`SELECT c1.shopname
+                    ,ROUND(SUM(c1.reception_num),0) AS reception_num
+                    ,ROUND(SUM(c1.session_num),0) AS session_num
+                    ,CONCAT(ROUND(AVG(c1.dissatisfied_rate),2),'%') AS dissatisfied_rate
+                    ,CONCAT(ROUND(AVG(c1.session_in_3_rate),2),'%') AS session_in_3_rate
+                    ,CONCAT(ROUND(AVG(c1.response_in_3_rate),2),'%') AS response_in_3_rate
+                    ,ROUND(AVG(c1.response_duration),2) AS response_duration
+                    ,ROUND(AVG(c1.ave_response_duration),2) AS ave_response_duration
+                    ,CONCAT(ROUND(AVG(c1.satisfaction_rate),2),'%') AS satisfaction_rate
+                    ,ROUND(SUM(c1.amount),2) AS amount
+                    ,ROUND(SUM(c1.contact_num),0) AS contact_num
+                    ,ROUND(SUM(c1.order_num),0) AS order_num
+                    ,ROUND(SUM(c1.pay_num),0) AS pay_num
+                    ,CONCAT(ROUND(AVG(c1.transfer_rate),2),'%') AS transfer_rate
+                    ,ROUND(SUM(c1.warn_num),0) AS warn_num
+                FROM cs_dy AS c1
+                WHERE start_time=end_time 
+                AND start_time BETWEEN "${start}" AND "${end}" 
+                AND end_time BETWEEN "${start}" AND "${end}" 
+                `
+    if(shopname){
+        sql=`${sql} AND c1.shopname='${shopname}'`
+    }
+    sql=`${sql} GROUP BY c1.shopname `
+    const result = await query(sql)
+    return result
+}
 
 dyRepo.getDYDataImg = async (start, end) => {
     let sql = `SELECT * FROM cs_img WHERE start_time = ? AND end_time = ? 
@@ -150,6 +208,24 @@ dyRepo.insertDY = async (count, info) => {
 dyRepo.insertDYImg = async (info) => {
     let sql = `INSERT INTO cs_img(img_url, start_time, end_time, type) VALUES(?,?,?,4)`
     const result = await query(sql, info)
+    return result
+}
+dyRepo.getShopName =async(start, end)=>{
+    let sql = `SELECT DISTINCT shopname 
+            FROM cs_dy
+            WHERE start_time=end_time 
+            AND start_time BETWEEN "${start}" AND "${end}" 
+            AND end_time BETWEEN "${start}" AND "${end}" `
+    const result = await query(sql)
+    return result
+}
+dyRepo.getServicer =async(start, end)=>{
+    let sql = `SELECT DISTINCT servicer 
+            FROM cs_dy 
+            WHERE start_time=end_time 
+            AND start_time BETWEEN "${start}" AND "${end}" 
+            AND end_time BETWEEN "${start}" AND "${end}"`
+    const result = await query(sql)
     return result
 }
 

@@ -6,6 +6,7 @@ const customerServiceSchema = require("../../schema/customerServiceSchema")
 const formidable = require("formidable")
 const fs = require('fs')
 const moment =  require('moment')
+const { get } = require('lodash')
 
 const getDYDataByDate = async (req, res, next) => {
     try {
@@ -140,6 +141,260 @@ const getDYDataByDate = async (req, res, next) => {
     }
 }
 
+const getDYKFDataByDate = async (req, res, next) => {
+    try {
+        joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
+        const data = await dyService.getDYKFDataByDate(req.query.startDate, req.query.endDate, req.query.servicer)
+        const img = await dyService.getDYImgByDate(req.query.startDate, req.query.endDate)
+        const options_servicer=await dyService.getServicer(req.query.startDate, req.query.endDate)
+        const columns = [
+            { header: '账号名称', key: 'servicer', isDefault: true },
+            { header: '人工已接待人数', key: 'reception_num', isDefault: true },
+            { header: '3分钟人工回复率 (会话)', key: 'session_in_3_rate', isDefault: true },
+            { header: '新平均响应时长（秒）', key: 'ave_response_duration', isDefault: true },
+            { header: '满意率', key: 'satisfaction_rate', isDefault: true },
+            { header: '客服销售额', key: 'amount', isDefault: true },
+            { header: '询单转化率', key: 'transfer_rate', isDefault: true },
+        ]
+        if (req.query.is_export) {
+            const workbook = new ExcelJS.Workbook()
+            const worksheet = workbook.addWorksheet('抖音')
+            let tmpDefault = {
+                servicer: null,
+                reception_num: null,
+                session_in_3_rate: null,
+                ave_response_duration: null,
+                satisfaction_rate: null,
+                amount: null,
+                transfer_rate: null
+            }
+
+            worksheet.columns = columns
+
+            let tmp = JSON.parse(JSON.stringify(tmpDefault))
+            let j = 0
+            let imageBuffer = fs.readFileSync(img[j].img_url)
+            let image = await workbook.addImage({
+                buffer: imageBuffer,
+                extension: img[j].img_url.split('.')[1]
+            })
+            worksheet.addImage(image, {
+                tl: { col: 9, row: 0 },
+                br: { col: 10, row: 1 },
+                editAs: 'oneCell',
+            })
+            imageBuffer = fs.readFileSync(img[j + 1].img_url)
+            image = await workbook.addImage({
+                buffer: imageBuffer,
+                extension: img[j + 1].img_url.split('.')[1]
+            })
+            worksheet.addImage(image, {
+                tl: { col: 11, row: 0 },
+                br: { col: 12, row: 1 },
+                editAs: 'oneCell',
+            })
+
+            tmp['servicer'] = data[i].servicer
+            tmp['reception_num'] = data[i].reception_num
+            tmp['session_in_3_rate'] = data[i].session_in_3_rate
+            tmp['ave_response_duration'] = data[i].ave_response_duration
+            tmp['satisfaction_rate'] = data[i].satisfaction_rate
+            tmp['amount'] = data[i].amount
+            tmp['transfer_rate'] = data[i].transfer_rate
+
+            worksheet.addRow(data[i])
+
+            for (let i = 1; i < data.length; i++) {
+                tmp = JSON.parse(JSON.stringify(tmpDefault))
+
+                if (data[i].shop_name != data[i - 1].shop_name) {
+                    j = j + 2
+                    worksheet.addRow(JSON.parse(JSON.stringify(tmpDefault)))
+                    worksheet.addRow({
+                        servicer: '账号名称',
+                        reception_num: '人工已接待人数',
+                        session_in_3_rate: '3分钟人工回复率 (会话)',
+                        ave_response_duration: '新平均响应时长（秒）',
+                        satisfaction_rate: '满意率',
+                        amount: '客服销售额',
+                        transfer_rate: '询单转化率'
+                    })
+
+                    imageBuffer = fs.readFileSync(img[j].img_url)
+                    image = await workbook.addImage({
+                        buffer: imageBuffer,
+                        extension: img[j].img_url.split('.')[1]
+                    })
+                    worksheet.addImage(image, {
+                        tl: { col: 9, row: i },
+                        br: { col: 10, row: i + 1 },
+                        editAs: 'oneCell',
+                    })
+
+                    imageBuffer = fs.readFileSync(img[j + 1].img_url)
+                    image = await workbook.addImage({
+                        buffer: imageBuffer,
+                        extension: img[j + 1].img_url.split('.')[1]
+                    })
+                    worksheet.addImage(image, {
+                        tl: { col: 11, row: i },
+                        br: { col: 12, row: i + 1 },
+                        editAs: 'oneCell',
+                    })
+                }
+                
+                tmp['servicer'] = data[i].
+                tmp['reception_num'] = data[i].reception_num
+                tmp['session_in_3_rate'] = data[i].session_in_3_rate
+                tmp['ave_response_duration'] = data[i].ave_response_duration
+                tmp['satisfaction_rate'] = data[i].satisfaction_rate
+                tmp['amount'] = data[i].amount
+                tmp['transfer_rate'] = data[i].transfer_rate
+
+                worksheet.addRow(data[i])
+            }
+
+            const buffer = await workbook.xlsx.writeBuffer()
+            res.setHeader('Content-Disposition', `attachment; filename="dy-${req.query.startDate}-${req.query.endDate}.xlsx"`)
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')        
+            return res.send(buffer)
+        } else {
+            return res.send(biResponse.success({
+                columns, data, img,options_servicer
+            }))
+        }
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getDYDPDataByDate = async (req, res, next) => {
+    try {
+        joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
+        const data = await dyService.getDYDPDataByDate(req.query.startDate, req.query.endDate, req.query.shopname, req.query.servicer)
+        const img = await dyService.getDYImgByDate(req.query.startDate, req.query.endDate)
+        const options_shopname=await dyService.getShopName(req.query.startDate, req.query.endDate)
+        const columns = [
+            { header: '店铺名称', key: 'shopname', isDefault: true },
+            { header: '账号名称', key: 'servicer', isDefault: true },
+            { header: '3分钟人工回复率 (会话)', key: 'session_in_3_rate', isDefault: true },
+            { header: '新平均响应时长（秒）', key: 'ave_response_duration', isDefault: true },
+            { header: '满意率', key: 'satisfaction_rate', isDefault: true },
+            { header: '客服销售额', key: 'amount', isDefault: true },
+            { header: '询单转化率', key: 'transfer_rate', isDefault: true },
+        ]
+        if (req.query.is_export) {
+            const workbook = new ExcelJS.Workbook()
+            const worksheet = workbook.addWorksheet('抖音')
+            let tmpDefault = {
+                servicer: null,
+                reception_num: null,
+                session_in_3_rate: null,
+                ave_response_duration: null,
+                satisfaction_rate: null,
+                amount: null,
+                transfer_rate: null
+            }
+
+            worksheet.columns = columns
+
+            let tmp = JSON.parse(JSON.stringify(tmpDefault))
+            let j = 0
+            let imageBuffer = fs.readFileSync(img[j].img_url)
+            let image = await workbook.addImage({
+                buffer: imageBuffer,
+                extension: img[j].img_url.split('.')[1]
+            })
+            worksheet.addImage(image, {
+                tl: { col: 9, row: 0 },
+                br: { col: 10, row: 1 },
+                editAs: 'oneCell',
+            })
+            imageBuffer = fs.readFileSync(img[j + 1].img_url)
+            image = await workbook.addImage({
+                buffer: imageBuffer,
+                extension: img[j + 1].img_url.split('.')[1]
+            })
+            worksheet.addImage(image, {
+                tl: { col: 11, row: 0 },
+                br: { col: 12, row: 1 },
+                editAs: 'oneCell',
+            })
+
+            tmp['servicer'] = data[i].servicer
+            tmp['reception_num'] = data[i].reception_num
+            tmp['session_in_3_rate'] = data[i].session_in_3_rate
+            tmp['ave_response_duration'] = data[i].ave_response_duration
+            tmp['satisfaction_rate'] = data[i].satisfaction_rate
+            tmp['amount'] = data[i].amount
+            tmp['transfer_rate'] = data[i].transfer_rate
+
+            worksheet.addRow(data[i])
+
+            for (let i = 1; i < data.length; i++) {
+                tmp = JSON.parse(JSON.stringify(tmpDefault))
+
+                if (data[i].shop_name != data[i - 1].shop_name) {
+                    j = j + 2
+                    worksheet.addRow(JSON.parse(JSON.stringify(tmpDefault)))
+                    worksheet.addRow({
+                        servicer: '账号名称',
+                        reception_num: '人工已接待人数',
+                        session_in_3_rate: '3分钟人工回复率 (会话)',
+                        ave_response_duration: '新平均响应时长（秒）',
+                        satisfaction_rate: '满意率',
+                        amount: '客服销售额',
+                        transfer_rate: '询单转化率'
+                    })
+
+                    imageBuffer = fs.readFileSync(img[j].img_url)
+                    image = await workbook.addImage({
+                        buffer: imageBuffer,
+                        extension: img[j].img_url.split('.')[1]
+                    })
+                    worksheet.addImage(image, {
+                        tl: { col: 9, row: i },
+                        br: { col: 10, row: i + 1 },
+                        editAs: 'oneCell',
+                    })
+
+                    imageBuffer = fs.readFileSync(img[j + 1].img_url)
+                    image = await workbook.addImage({
+                        buffer: imageBuffer,
+                        extension: img[j + 1].img_url.split('.')[1]
+                    })
+                    worksheet.addImage(image, {
+                        tl: { col: 11, row: i },
+                        br: { col: 12, row: i + 1 },
+                        editAs: 'oneCell',
+                    })
+                }
+                
+                tmp['servicer'] = data[i].
+                tmp['reception_num'] = data[i].reception_num
+                tmp['session_in_3_rate'] = data[i].session_in_3_rate
+                tmp['ave_response_duration'] = data[i].ave_response_duration
+                tmp['satisfaction_rate'] = data[i].satisfaction_rate
+                tmp['amount'] = data[i].amount
+                tmp['transfer_rate'] = data[i].transfer_rate
+
+                worksheet.addRow(data[i])
+            }
+
+            const buffer = await workbook.xlsx.writeBuffer()
+            res.setHeader('Content-Disposition', `attachment; filename="dy-${req.query.startDate}-${req.query.endDate}.xlsx"`)
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')        
+            return res.send(buffer)
+        } else {
+            return res.send(biResponse.success({
+                columns, data, img,options_shopname
+            }))
+        }
+    } catch (e) {
+        next(e)
+    }
+}
+
 const importDYData = async (req, res, next) => {
     try {
         let form = new formidable.IncomingForm()
@@ -179,17 +434,17 @@ const importDYData = async (req, res, next) => {
                         info.push(row.getCell(4).value != '-' ? row.getCell(4).value : null)
                         info.push(row.getCell(5).value != '-' ? row.getCell(5).value : null)
                         info.push(row.getCell(6).value != '-' ? row.getCell(6).value : null)
-                        info.push(row.getCell(7).value instanceof Number ? row.getCell(7).value * 100 : null)
-                        info.push(row.getCell(8).value instanceof Number ? row.getCell(8).value * 100 : null)
-                        info.push(row.getCell(9).value instanceof Number ? row.getCell(9).value * 100 : null)
+                        info.push(typeof(row.getCell(7).value) == 'number' ? row.getCell(7).value * 100 : null)
+                        info.push(typeof(row.getCell(8).value) == 'number' ? row.getCell(8).value * 100 : null)
+                        info.push(typeof(row.getCell(9).value) == 'number' ? row.getCell(9).value * 100 : null)
                         info.push(row.getCell(10).value != '-' ? row.getCell(10).value : null)
                         info.push(row.getCell(11).value != '-' ? row.getCell(11).value : null)
-                        info.push(row.getCell(12).value instanceof Number ? row.getCell(12).value * 100 : null)
+                        info.push(typeof(row.getCell(12).value) == 'number' ? row.getCell(12).value * 100 : null)
                         info.push(row.getCell(13).value != '-' ? row.getCell(13).value : null)
                         info.push(row.getCell(14).value != '-' ? row.getCell(14).value : null)
                         info.push(row.getCell(15).value != '-' ? row.getCell(15).value : null)
                         info.push(row.getCell(16).value != '-' ? row.getCell(16).value : null)
-                        info.push(row.getCell(17).value instanceof Number ? row.getCell(17).value * 100 : null)
+                        info.push(typeof(row.getCell(17).value) == 'number' ? row.getCell(17).value * 100 : null)
                         info.push(row.getCell(18).value != '-' ? row.getCell(18).value : null)
                         info.push(row.getCell(19).value != '-' ? row.getCell(19).value : null)
                         info.push(row.getCell(20).value != '-' ? row.getCell(20).value : null)
@@ -230,5 +485,7 @@ const importDYData = async (req, res, next) => {
 
 module.exports = {
     getDYDataByDate,
+    getDYDPDataByDate,
+    getDYKFDataByDate,
     importDYData
 }
