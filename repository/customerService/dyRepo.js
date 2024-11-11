@@ -138,6 +138,7 @@ dyRepo.getDYKFData =async (start,end,servicer) =>{
 
 dyRepo.getDYDPData =async (start,end,shopname) =>{
     let sql =`SELECT c1.shopname
+                    ,MAX(c1.id) AS id
                     ,ROUND(SUM(c1.reception_num),0) AS reception_num
                     ,ROUND(SUM(c1.session_num),0) AS session_num
                     ,CONCAT(ROUND(AVG(c1.dissatisfied_rate),2),'%') AS dissatisfied_rate
@@ -158,9 +159,9 @@ dyRepo.getDYDPData =async (start,end,shopname) =>{
                 AND end_time BETWEEN "${start}" AND "${end}" 
                 `
     if(shopname){
-        sql=`${sql} AND c1.shopname='${shopname}'`
+        sql=`${sql} AND c1.shopname='${shopname}' `
     }
-    sql=`${sql} GROUP BY c1.shopname `
+    sql=`${sql} GROUP BY c1.shopname  ORDER BY id`
     const result = await query(sql)
     return result
 }
@@ -211,11 +212,7 @@ dyRepo.insertDYImg = async (info) => {
     return result
 }
 dyRepo.getShopName =async(start, end)=>{
-    let sql = `SELECT DISTINCT shopname 
-            FROM cs_dy
-            WHERE start_time=end_time 
-            AND start_time BETWEEN "${start}" AND "${end}" 
-            AND end_time BETWEEN "${start}" AND "${end}" `
+    let sql = `SELECT DISTINCT shopname FROM cs_dy `
     const result = await query(sql)
     return result
 }

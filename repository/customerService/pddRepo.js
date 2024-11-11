@@ -19,13 +19,14 @@ pddRepo.getPddData = async (start, end, shopname, servicer) => {
     if (servicer) {
         sql = `${sql} AND c1.servicer LIKE '%${servicer}%'`
     }
-    sql = `${sql} ORDER BY c1.id`
+    sql = `${sql} ORDER BY id`
     const result = await query(sql, params)
     return result
 }
 
 pddRepo.getPddDPData = async (start, end, shopname) => {
     let sql = `SELECT c1.shopname
+                    ,MAX(c1.id) AS id
                     ,ROUND(SUM(c1.reception_num),0) AS reception_num
                     ,ROUND(SUM(c1.lost_num),0) AS lost_num
                     ,CONCAT(ROUND(SUM(c1.reception_rate),2),'%') AS reception_rate
@@ -41,7 +42,7 @@ pddRepo.getPddDPData = async (start, end, shopname) => {
     if (shopname) {
         sql = `${sql} AND c1.shopname = '${shopname}'`
     }
-    sql = `${sql} GROUP BY c1.shopname`
+    sql = `${sql} GROUP BY c1.shopname ORDER BY id`
     const result = await query(sql)
     return result
 }
@@ -63,7 +64,7 @@ pddRepo.getPddKFData = async (start, end, servicer) => {
     if (servicer) {
         sql = `${sql} AND c1.servicer = '${servicer}'`
     }
-    sql = `${sql} GROUP BY c1.servicer`
+    sql = `${sql} GROUP BY c1.servicer `
     const result = await query(sql)
     console.log(sql)
     console.log(result)
@@ -120,9 +121,7 @@ pddRepo.insertPddImg = async (info) => {
 pddRepo.getShopName =async(start,end)=>{
     let sql = `SELECT DISTINCT shopname 
             FROM cs_pdd 
-            WHERE start_time=end_time 
-            AND start_time BETWEEN "${start}" AND "${end}" 
-            AND end_time BETWEEN "${start}" AND "${end}" `
+            WHERE start_time=end_time  `
     const result = await query(sql)
     return result
 }
