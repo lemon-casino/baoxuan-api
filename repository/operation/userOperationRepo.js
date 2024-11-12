@@ -40,7 +40,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
     }
     if (userNames) {
         subsql = `${subsql} 
-            AND doa.line_director IN ("${userNames}")`
+            AND doa.operator IN ("${userNames}")`
     }
     let size = parseInt(params.pageSize)
     let page = parseInt(params.currentPage)
@@ -62,7 +62,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
             doa1.sku_id, doa1.product_definition, doa1.stock_structure, 
             doa1.product_rank, doa1.product_design_attr, doa1.seasons, doa1.brand, 
             doa1.targets, doa1.exploit_director, doa1.purchase_director, 
-            doa1.line_manager, doa1.line_director, doa1.onsale_date FROM  
+            doa1.line_manager, doa1.operator, doa1.onsale_date FROM  
             (${presql1}${sql}${subsql} GROUP BY doa.goods_id LIMIT ${offset}, ${size}) a
             JOIN dianshang_operation_attribute doa1 ON a.goods_id = doa1.goods_id 
             JOIN shop_info si ON si.shop_name = doa1.shop_name 
@@ -74,23 +74,23 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
 }
 
 userOperationRepo.getUsersByShopName = async (shopName) => {
-    const sql = `SELECT doa.line_director AS nickname, doa.line_director AS name 
+    const sql = `SELECT doa.operator AS nickname, doa.operator AS name 
         FROM dianshang_operation_attribute doa 
         JOIN goods_sale_info gsi ON doa.goods_id = gsi.goods_id 
         WHERE gsi.shop_name = ? 
-            GROUP BY doa.line_director`
+            GROUP BY doa.operator`
         const result = await query(sql, shopName)
     return result || []
 }
 
 userOperationRepo.getUsersByProjectName = async (projectName) => {
-    const sql = `SELECT doa.line_director AS nickname, doa.line_director AS name 
+    const sql = `SELECT doa.operator AS nickname, doa.operator AS name 
         FROM dianshang_operation_attribute doa 
         JOIN goods_sale_info gsi ON doa.goods_id = gsi.goods_id 
         JOIN shop_info si ON si.shop_name = gsi.shop_name 
         JOIN project_info pi ON pi.id = si.project_id
         WHERE pi.project_name = ? 
-            GROUP BY doa.line_director`
+            GROUP BY doa.operator`
         const result = await query(sql, projectName)
     return result || []
 }
@@ -110,7 +110,7 @@ userOperationRepo.getPermissionLimit = async (user_id) => {
 
 userOperationRepo.getLinkIdsByUserNames = async (userNames) => {
     const sql = `SELECT goods_id FROM dianshang_operation_attribute 
-        WHERE line_director IN ("${userNames}")`
+        WHERE operator IN ("${userNames}")`
     const result = await query(sql)
     return result || []
 }
