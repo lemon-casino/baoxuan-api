@@ -46,4 +46,5 @@ module.exports = {
     "/operation": require("./operationRouter"),
     "/settlement": require("./settlementRouter"),
     "/workflows-service": require('./workflowServiceRouter'),
+    "/confirmation-notice": require('./confirmationNoticeRouter'),
 }

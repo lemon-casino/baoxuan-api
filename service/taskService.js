@@ -47,6 +47,7 @@ const axios = require("axios");
 const {getInquiryTodayjdDailyReport} = require("@/service/JDDailyReportBaoService");
 const {getOperateAttributesMaintainer} = require("@/repository/dianShangOperationAttributeRepo");
 const {sendDingReportBao} = require("@/service/dingReportBaoService");
+const {timingSynchronization} = require("@/service/notice/confirmationNoticeService");
 const writeFile = util.promisify(fs.writeFile);
 const readFile = util.promisify(fs.readFile);
 const syncWorkingDay = async () => {
@@ -697,8 +698,10 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
 
 const purchaseSelectionMeetingInitiated = async () => {
     await  sendDingReportBao()
-
-
+}
+// 转正通知
+const confirmationNotice = async () => {
+await  timingSynchronization()
 }
 
 module.exports = {
@@ -723,5 +726,6 @@ module.exports = {
     syncProcessVersions,
     jdLinkDataIsAutomaticallyInitiated,
     purchaseSelectionMeetingInitiated,
-    saveFlowsToRedisFromFile
+    saveFlowsToRedisFromFile,
+    confirmationNotice
 }

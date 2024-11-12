@@ -312,7 +312,19 @@ const getFlowsByFormIdTo = async (token, formId, userId, status) => {
     }
     return await httpUtil.post(url, params, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
 }
-
+//获取花名册中的 人员信息 getStaffInfo
+const getStaffInfo = async (access_token,agentid,userid_list,field_filter_list) => {
+    const url = "https://oapi.dingtalk.com/topapi/smartwork/hrm/employee/v2/list"
+    const body = {
+        agentid,
+        userid_list,
+        field_filter_list
+    }
+    const params = {
+        access_token
+    }
+    return await  httpUtil.post_params(url, params,body )
+}
 module.exports = {
     getFormFields,
     getremarksAll,
@@ -327,5 +339,6 @@ module.exports = {
     getFlowIdsByFormId,
     createProcess,
     sendDing,
-    getFlowsByFormIdTo
+    getFlowsByFormIdTo,
+    getStaffInfo
 }
