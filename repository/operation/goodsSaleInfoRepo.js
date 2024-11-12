@@ -45,13 +45,11 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
     }
     let sql = `SELECT SUM(sale_amount) AS sale_amount FROM goods_sale_info`
     subsql = ` WHERE \`date\` >= ? AND \`date\` <= ?`
-    if (params.shop_name) {
-        subsql = `${subsql} 
-                AND shop_name like "%${params.shop_name}%"`
-    }
-    if (params.goods_id) {
-        subsql = `${subsql}
-                AND goods_id like "%${params.goods_id}%"`
+    for (let index in params.search) {
+        if (index) {
+            subsql = `${subsql} 
+                AND ${index} LIKE "%${params.search[index]}%"`
+        }
     }
     if (shopNames != null) {
         if (shopNames.length == 0) return result
@@ -108,6 +106,12 @@ goodsSaleInfoRepo.batchInsert = async (count, data) => {
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, data)
+    return result?.affectedRows ? true : false
+}
+
+goodsSaleInfoRepo.deleteByDate = async (date) => {
+    let sql = `DELETE FROM goods_sale_info WHERE \`date\` = ?`
+    const result = await query(sql, date)
     return result?.affectedRows ? true : false
 }
 

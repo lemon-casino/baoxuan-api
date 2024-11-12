@@ -38,7 +38,7 @@ const get_user_table = async (req, res) => {
             }
 
             return newItem;
-        });
+        }).sort((a, b) => b.sort - a.sort)
 
         // 怎加一个字段  用来判断是否是固定列
         return res.send(success(cleanedTable));

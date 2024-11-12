@@ -13,6 +13,19 @@ jdService.getJDDataByDate = async (startDate, endDate, shopname, servicer) => {
     return data || []
 }
 
+jdService.getJDKFDataByDate = async (startDate, endDate, servicer) => {
+    let start = moment(startDate).format('YYYY-MM-DD')
+    let end = moment(endDate).format('YYYY-MM-DD')
+    let data = await jdRepo.getJDKFData(start, end,servicer)
+    console.log(start,end)
+    return data || []
+}
+jdService.getJDDPDataByDate = async (startDate,endDate,shopname) =>{
+    let start = moment(startDate).format('YYYY-MM-DD')
+    let end = moment(endDate).format('YYYY-MM-DD')
+    let data = await jdRepo.getJDDPData(start, end,shopname)
+    return data || []
+}
 jdService.getJDImgByDate = async (startDate, endDate) => {
     let start = moment(startDate).format('YYYY-MM-DD')
     let end = moment(endDate).format('YYYY-MM-DD')
@@ -27,5 +40,14 @@ jdService.insertJD = async (count, info) => {
 jdService.insertJDImg = async (info) => {
     return await jdRepo.insertJDImg(info)
 }
-
+jdService.getShopName = async(startDate,endDate)=>{
+    let start = moment(startDate).format('YYYY-MM-DD')
+    let end = moment(endDate).format('YYYY-MM-DD')
+    return await jdRepo.getShopName(start,end)
+}
+jdService.getServicer = async(startDate,endDate)=>{
+    let start = moment(startDate).format('YYYY-MM-DD')
+    let end = moment(endDate).format('YYYY-MM-DD')
+    return await jdRepo.getServicer(start,end)
+}
 module.exports = jdService
