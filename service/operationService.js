@@ -413,7 +413,7 @@ const getGoodsLineInfo = async (startDate, endDate, params, id) => {
             {title: '开发负责人', field_id: 'exploit_director', search: true, type: 'input'},
             {title: '采购负责人', field_id: 'purchase_director', search: true, type: 'input'},
             {title: '产品线管理人', field_id: 'line_manager', search: true, type: 'input'},
-            {title: '产品线运营人', field_id: 'line_director', search: true, type: 'input'},
+            {title: '产品线运营人', field_id: 'operator', search: true, type: 'input'},
             {title: '上架时间', field_id: 'onsale_date', search: true, type: 'date'},
         ],
         data: {}
