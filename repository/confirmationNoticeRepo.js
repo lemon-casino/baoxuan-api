@@ -123,18 +123,20 @@ const syncUsersToConfirmationNotice = async () => {
 //查询 confirmationnoticeModel 的 conversion_date 与今天 对比 是不是    第七天   第14天 和今天 相等的数据
 const getConfirmationNotice = async () => {
     const today = new Date()
+    const threeDays = new Date(today)
+    threeDays.setDate(today.getDate() + 3)
     const sevenDays = new Date(today)
     sevenDays.setDate(today.getDate() + 7)
-    console.log(sevenDays)
     const fourteenDays = new Date(today)
     fourteenDays.setDate(today.getDate() + 14)
+
     const ListConfirmationNotice = await confirmationnoticeModel.findAll({
         attributes:{
             exclude:['createdAt','updatedAt']
         },
         where: {
             conversionDate: {
-                [Sequelize.Op.or]: [today, sevenDays, fourteenDays]
+                [Sequelize.Op.or]: [today,threeDays, sevenDays, fourteenDays]
             },
             whether: 1,
             supervisors :
@@ -150,10 +152,13 @@ const getConfirmationNotice = async () => {
       }else {
           listConfirmationNoticeKey.probationcontexe = `您好，您的转正日期为${listConfirmationNoticeKey.conversionDate}，距离转正时间还有 ${ numberOfDays } 天，请您提前做好准备。`
       }
-      console.log(listConfirmationNoticeKey,listConfirmationNoticeKey.supervisors)
         listConfirmationNoticeKey.supervisorid = await  getDingdingUserId(listConfirmationNoticeKey.supervisors)
         listConfirmationNoticeKey.name=  await getusername(listConfirmationNoticeKey.userid)
         listConfirmationNoticeKey.supervisorscontexe = `您好，您的下属${listConfirmationNoticeKey.name}将于${listConfirmationNoticeKey.conversionDate}转正， 距离转正时间还有 ${ numberOfDays } 天 。`
+
+        // 抄送人事
+        listConfirmationNoticeKey.hrcontexe = `您好，${listConfirmationNoticeKey.name}将于${listConfirmationNoticeKey.conversionDate}转正， 距离转正时间还有 ${ numberOfDays } 天 。`
+
     }
 
     return ListConfirmationNotice
@@ -176,6 +181,16 @@ const NotSupervisorsAndConversionDate = async () => {
     })
     for (const item of list) {
         item.name= await getusername(item.userid)
+        let xy=''
+        let zg=''
+        if (item.conversionDate === null) {
+            xy = "无计划转正日期"
+        }
+        if (item.supervisors === null) {
+            zg = "无上级主管"
+        }
+        item.hrcontexe = `${item.name} ${xy} ${zg} 。`
+
     }
     return  list;
 }
@@ -205,8 +220,11 @@ const getusername = async (username) => {
     })
     return dingding.nickname
 }
+
+
+
 module.exports = {
     syncUsersToConfirmationNotice,
     getConfirmationNotice,
-    NotSupervisorsAndConversionDate
+    NotSupervisorsAndConversionDate,
 }
