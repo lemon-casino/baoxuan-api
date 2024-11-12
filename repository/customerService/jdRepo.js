@@ -119,17 +119,16 @@ jdRepo.getJDKFData =async(start,end,servicer)=>{
     if(servicer){
         sql=`${sql} AND c1.servicer="${servicer}" `
     }
-    sql=`${sql} GROUP BY c1.servicer`
+    sql=`${sql} GROUP BY c1.servicer `
    
     const result = await query(sql)
-    console.log(sql)
-    console.log(result)
     return result
     
 }
 
 jdRepo.getJDDPData = async(start,end,shopname)=>{
     let sql=`SELECT c1.shopname
+                ,MAX(c1.id) AS id
                 ,SUM(c1.login_duration) AS login_duration
                 ,SUM(c1.reception_duration) AS reception_duration
                 ,ROUND(SUM(c1.reception_num),0) AS reception_num
@@ -143,9 +142,9 @@ jdRepo.getJDDPData = async(start,end,shopname)=>{
             AND c1.end_time BETWEEN "${start}" AND "${end}"
             `
     if(shopname){
-        sql=`${sql} AND shopname="${shopname}" `
+        sql=`${sql} AND c1.shopname="${shopname}" `
     }
-    sql=`${sql} GROUP BY shopname`
+    sql=`${sql} GROUP BY c1.shopname ORDER BY id `
    
     const result = await query(sql)
     return result
@@ -185,11 +184,7 @@ jdRepo.insertJDImg = async (info) => {
     return result
 }
 jdRepo.getShopName =async(start,end)=>{
-    let sql = `SELECT DISTINCT shopname 
-            FROM cs_jd 
-            WHERE start_time=end_time 
-            AND start_time BETWEEN "${start}" AND "${end}" 
-            AND end_time BETWEEN "${start}" AND "${end}"   `
+    let sql = `SELECT DISTINCT shopname FROM cs_jd `
     const result = await query(sql)
     return result
 }
