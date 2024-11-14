@@ -1,5 +1,4 @@
 const confirmationNoticeRepo = require("@/repository/confirmationNoticeRepo")
-const {getUsersWithDepartmentFromDingDing} = require("@/service/dingDingService");
 const redisUtil = require("@/utils/redisUtil");
 const {redisKeys} = require("@/const/redisConst");
 

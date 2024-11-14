@@ -156,39 +156,20 @@ schedule.scheduleJob(syncRunningFlowsCron, async function () {
 * 每天处理异常链接是否存在tmallLinkAnomalyDetection*/
 
 schedule.scheduleJob(tmallLinkData, async function () {
-    console.log("执行了此方法")
     if (process.env.NODE_ENV === "prod") {
-        await taskService.tmallLinkAnomalyDetection()
+        await taskService.executeTask("tianmao")
     }
 })
 
-let isRunning = false;
-let lastRunTime = null; // 记录上次任务的结束时间
-const taskInterval = 1000 * 60 * 60 * 10; // 设置任务最小执行间隔为 10 小时
-
 schedule.scheduleJob(jdLinkData, async function () {
-    const currentTime = new Date().getTime();
-
-    // 如果任务正在执行或者距离上次任务结束的时间不够长，则跳过本次任务
-    if (isRunning || (lastRunTime && (currentTime - lastRunTime) < taskInterval)) {
-        logger.info("任务正在执行或未到执行间隔，跳过本次调用");
-        return; // 跳过本次执行
-    }
-
-    isRunning = true; // 设置任务正在执行
-    console.log("任务开始执行");
-
     try {
         if (process.env.NODE_ENV === "prod") {
-            await taskService.jdLinkDataIsAutomaticallyInitiated();
+            await taskService.executeTask("jingdong");
         }
     } catch (error) {
         console.error("执行任务时出错:", error);
     } finally {
-        // 任务执行完毕，更新 lastRunTime 为当前时间
-        lastRunTime = new Date().getTime();
-        isRunning = false; // 重置任务状态为未执行
-        console.log("任务执行完毕");
+
     }
 });
 //
