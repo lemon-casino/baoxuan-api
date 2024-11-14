@@ -448,7 +448,7 @@ const tmallLinkAnomalyDetection = async () => {
             }, null, 2);
             
             try {
-                await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
+                 await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
                 logger.info(`发起宜搭  运营优化流程 for linkId ${key} formDataJsonStr ${formDataJsonStr}`);
             } catch (e) {
                 logger.error(`发起宜搭  运营优化流程 失败 for linkId ${key}`, e);
@@ -704,6 +704,78 @@ const confirmationNotice = async () => {
 await  timingSynchronization()
 }
 
+
+
+async function executeTask(type) {
+    // 获取当前任务状态，若没有则初始化状态
+    const taskStatus = JSON.parse(await redisUtil.get(redisKeys.synchronizedState)) || {
+        isRunningTianMao: false,
+        isRunningJD: false,
+        tianMaoRunTime: null,
+        JDRunTime: null,
+        taskInterval: 1000 * 60 * 60 * 10 // 任务间隔：默认 10 小时
+    };
+
+    const currentTime = new Date().getTime();
+
+    // 任务类型映射
+    const taskTypeMap = {
+        tianmao: {
+            isRunningKey: 'isRunningTianMao',
+            lastRunTimeKey: 'tianMaoRunTime',
+            taskFunction: tmallLinkAnomalyDetection
+        },
+        jingdong: {
+            isRunningKey: 'isRunningJD',
+            lastRunTimeKey: 'JDRunTime',
+            taskFunction: jdLinkDataIsAutomaticallyInitiated
+        }
+    };
+
+    // 检查任务类型是否有效
+    if (!taskTypeMap[type]) {
+        console.log(`无效的任务类型: ${type}`);
+        return;
+    }
+
+    const { isRunningKey, lastRunTimeKey, taskFunction } = taskTypeMap[type];
+
+    try {
+        // 判断任务是否正在执行，或者距离上次执行不满足间隔
+        if (taskStatus[isRunningKey] ||
+            (taskStatus[lastRunTimeKey] && currentTime - taskStatus[lastRunTimeKey] < taskStatus.taskInterval)) {
+            console.log(`${type} 任务正在执行或未到执行间隔，跳过本次调用`);
+            return; // 跳过本次执行
+        }
+
+        // 标记任务正在执行
+        taskStatus[isRunningKey] = true;
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+
+        // 执行任务
+        console.log(`${type} 任务开始执行`);
+        await taskFunction();
+        console.log(`${type} 任务执行完成`);
+
+    } catch (error) {
+        console.error(`${type} 执行任务时出错:`, error);
+    } finally {
+        // 更新任务执行状态
+        taskStatus[isRunningKey] = false; // 任务执行完毕，标记为未执行
+        taskStatus[lastRunTimeKey] = currentTime; // 更新最后执行时间
+
+        // 更新任务状态到 Redis
+        try {
+            await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+            console.log(`${type} 任务状态更新成功`);
+        } catch (error) {
+            console.error(`${type} 更新任务状态时出错:`, error);
+        }
+    }
+}
+
+
+
 module.exports = {
     syncOaProcessTemplates,
     syncRunningProcess,
@@ -727,5 +799,6 @@ module.exports = {
     jdLinkDataIsAutomaticallyInitiated,
     purchaseSelectionMeetingInitiated,
     saveFlowsToRedisFromFile,
-    confirmationNotice
+    confirmationNotice,
+    executeTask
 }
