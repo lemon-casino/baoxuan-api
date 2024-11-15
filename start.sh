@@ -1,36 +1,36 @@
 #!/bin/bash
 
-# Check if the mode parameter is supplied
+# 检查是否传入了模式参数
 if [ -z "$1" ]; then
-    echo "Usage: $0 [prod|start]"
+    echo "用法: $0 [prod|start]"
     exit 1
 fi
 
-# Get the run mode (prod or start)
+# 获取运行模式（prod 或 start）
 MODE=$1
 
-# Specify the port number
+# 指定端口号
 PORT=9999
 
-# Find the ID of the process occupying the specified port
+# 查找占用指定端口的进程ID
 PIDS=$(lsof -t -i :$PORT)
 
-# Check if any processes are found
+# 检查是否有进程占用该端口
 if [ -z "$PIDS" ]; then
-    echo "No process is using port $PORT."
+    echo "没有进程占用端口 $PORT。"
 else
-    echo "Terminating processes using port $PORT: $PIDS"
-    # Terminate processes
+    echo "正在终止占用端口 $PORT 的进程: $PIDS"
+    # 终止进程
     kill -9 $PIDS
-    echo "Processes terminated."
+    echo "进程已终止。"
 fi
 
-# Make sure the logs directory exists
+# 确保日志目录存在
 mkdir -p logs
 
-# Backup previous nohup.out files
+# 备份之前的 nohup.out 文件
 if [ -f logs/nohup.out ]; then
-    # Find the highest suffix number
+    # 查找最大的编号后缀
     for file in logs/nohup*.out; do
         if [[ $file =~ nohup([0-9]+)\.out ]]; then
             num=${BASH_REMATCH[1]}
@@ -39,19 +39,26 @@ if [ -f logs/nohup.out ]; then
             fi
         fi
     done
-    # Increment the max number for the new backup
+    # 增加最大编号并备份
     new_num=$((max + 1))
     mv logs/nohup.out logs/nohup$new_num.out
-    echo "Backup created: logs/nohup$new_num.out"
+    echo "备份已创建: logs/nohup$new_num.out"
 fi
 
-# Select the startup command based on mode
+# 检查端口是否已经有进程在运行
+RUNNING_PID=$(lsof -t -i :$PORT)
+if [ ! -z "$RUNNING_PID" ]; then
+    echo "端口 $PORT 上已经有进程在运行 (PID: $RUNNING_PID)，请先停止它。"
+    exit 1
+fi
+
+# 根据模式选择启动命令
 if [ "$MODE" = "prod" ]; then
-    echo "Starting in production mode..."
+    echo "正在以生产模式启动..."
     nohup npm run prod > logs/nohup.out 2>&1 &
 else
-    echo "Starting in development mode..."
+    echo "正在以开发模式启动..."
     nohup npm run start > logs/nohup.out 2>&1 &
 fi
 
-echo "Process started with nohup. Check logs/nohup.out for output."
+echo "进程已启动，查看 logs/nohup.out 获取输出日志。"
