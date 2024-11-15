@@ -21,5 +21,7 @@ module.exports = [
     "/operation/goods-info/import",
     "/settlement/data/import",
     '/workflows-service/purchase-workflow',
+    '/stock/get-week-stats',
+    '/stock/sync-order',
     /^\/download\/.*/,
 ]

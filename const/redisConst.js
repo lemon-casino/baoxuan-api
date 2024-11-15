@@ -9,7 +9,9 @@ const redisKeys = {
     "StatCountTodayDingDingApiInvoke": "stat:count:today_ding_ding_api_invoke",
     "OutSourcingUsers": "out",
     "Oa": "oa",
-    "CoreActionRules": "rules:core_action"
+    "CoreActionRules": "rules:core_action",
+    "jstToken": "bases:jst_token",
+    "jstRefreshToken": "bases:refresh_token"
 }
 
 module.exports = {
