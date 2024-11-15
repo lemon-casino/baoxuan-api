@@ -375,7 +375,7 @@ const tmallLinkAnomalyDetection = async () => {
     const userlist = await userService.getDingDingUserIdAndNickname()
     const linkIdMap = notStartedExceptions.items.reduce((acc, item) => {
         item.recordTheLinkID.forEach((record) => {
-            const matchingUser = userlist.find((user) => user.nickname === record.productLineLeader);
+            const matchingUser = userlist.find((user) => user.nickname === record.operationLeader);
             const uuid = matchingUser ? matchingUser.dingding_user_id : null;
             //不记录undefined 的数据
             if (acc[record.linkId]) {
@@ -385,7 +385,7 @@ const tmallLinkAnomalyDetection = async () => {
                 } else {
                     acc[record.linkId].name = [acc[record.linkId].name, item.name];
                 }
-                acc[record.linkId].productLineLeader = record.productLineLeader;
+                acc[record.linkId].operationLeader = record.operationLeader;
                 acc[record.linkId].linkType = record.linkType;
                 acc[record.linkId].uuid = uuid;
                 //产品名称
@@ -394,7 +394,7 @@ const tmallLinkAnomalyDetection = async () => {
                 acc[record.linkId] = {
                     productName: record.name,
                     name: [item.name],
-                    productLineLeader: record.productLineLeader,
+                    operationLeader: record.operationLeader,
                     linkType: record.linkType,
                     uuid: uuid,
                 };
@@ -448,7 +448,7 @@ const tmallLinkAnomalyDetection = async () => {
             }, null, 2);
             
             try {
-                 await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
+                 //await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
                 logger.info(`发起宜搭  运营优化流程 for linkId ${key} formDataJsonStr ${formDataJsonStr}`);
             } catch (e) {
                 logger.error(`发起宜搭  运营优化流程 失败 for linkId ${key}`, e);
@@ -710,6 +710,7 @@ async function executeTask(type) {
     //增加延迟时间，防止数据未及时更新
     //随机延迟 1分钟 2分钟 3分钟
     let random = Math.floor(Math.random() * 3 + 1)
+    console.log(random)
     await dateUtil.delay(1000 * 60 * random)
     // 获取当前任务状态，若没有则初始化状态
     const taskStatus = JSON.parse(await redisUtil.get(redisKeys.synchronizedState)) || {
