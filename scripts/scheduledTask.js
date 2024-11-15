@@ -157,6 +157,10 @@ schedule.scheduleJob(syncRunningFlowsCron, async function () {
 
 schedule.scheduleJob(tmallLinkData, async function () {
     if (process.env.NODE_ENV === "prod") {
+        //增加延迟时间，防止数据未及时更新
+        //随机延迟 1分钟 2分钟 3分钟
+        let random = Math.floor(Math.random() * 3 + 1)
+        await dateUtil.delay(1000 * 60 * random)
         await taskService.executeTask("tianmao")
     }
 })
@@ -164,6 +168,8 @@ schedule.scheduleJob(tmallLinkData, async function () {
 schedule.scheduleJob(jdLinkData, async function () {
     try {
         if (process.env.NODE_ENV === "prod") {
+            let random = Math.floor(Math.random() * 3 + 1)
+            await dateUtil.delay(1000 * 60 * random)
             await taskService.executeTask("jingdong");
         }
     } catch (error) {

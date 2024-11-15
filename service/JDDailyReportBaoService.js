@@ -12,8 +12,6 @@ const getInquiryTodayjdDailyReport = async () => {
     await JDDailyReportBaoRepo.updateFluxForYesterday()
     // 查询当天的数据
     const  data  =await JDDailyReportBaoRepo.inquiryTodayjdDailyReport();
-
-
     const filteredResults = data
         .map(item => {
             const questionType = [];
