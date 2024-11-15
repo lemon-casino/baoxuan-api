@@ -8,7 +8,7 @@ const {redisKeys} = require("@/const/redisConst");
 // 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况
 
 let syncWorkingDayCron = "0 5 9 * * ?"
-let syncTodayRunningAndFinishedFlowsCron = "0 0/1 7-21 * * ?"
+let syncTodayRunningAndFinishedFlowsCron = "0 0/20 7-21 * * ?"
 let syncMissingCompletedFlowsCron = "0 30 23 * * ?"
 
 let syncDepartmentCron = "0 0 5 * * ?"
@@ -29,7 +29,7 @@ let caigouLinkData  = "*/5 * * * 1-6"
 let confirmationNotice = "0 30 9 * * 1-6"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
-    syncTodayRunningAndFinishedFlowsCron = "0 0/1 7-21 * * ?"
+    syncTodayRunningAndFinishedFlowsCron = "0 10 12 * * ?"
     syncMissingCompletedFlowsCron = "0 0 22 * * ?"
     syncDepartmentCron = "0 10 5 * * ?"
     syncDepartmentWithUserCron = "0 0 7 * * ?"
@@ -61,7 +61,7 @@ schedule.scheduleJob(syncWorkingDayCron, async function () {
  *  每15分钟更新正在进行中的流程和今天完成的流程（包含节点的工作情况）
  */
 schedule.scheduleJob(syncTodayRunningAndFinishedFlowsCron, async function () {
-    // if (process.env.NODE_ENV !== "prod") return;
+     if (process.env.NODE_ENV !== "prod") return;
 
     let taskStatus;
     try {
