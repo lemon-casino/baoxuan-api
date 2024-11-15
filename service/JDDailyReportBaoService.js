@@ -18,9 +18,9 @@ const getInquiryTodayjdDailyReport = async () => {
         .map(item => {
             const questionType = [];
 
- /*           if (item.profitMargin < 15 && item.listingInfo==="老品") {
-                questionType.push('利润率小于15%');
-            }*/
+            if (item.profitMargin < 10 && item.listingInfo==="老品") {
+                questionType.push('利润率小于10%');
+            }
 
             if (item.costRatio > 0.12 && item.listingInfo==="老品" ) {
                 questionType.push('推广费比大于12%');
