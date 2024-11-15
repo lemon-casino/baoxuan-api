@@ -8,7 +8,7 @@ const {redisKeys} = require("@/const/redisConst");
 // 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况
 
 let syncWorkingDayCron = "0 5 9 * * ?"
-let syncTodayRunningAndFinishedFlowsCron = "0 0/20 7-21 * * ?"
+let syncTodayRunningAndFinishedFlowsCron = "0 0/1 7-21 * * ?"
 let syncMissingCompletedFlowsCron = "0 30 23 * * ?"
 
 let syncDepartmentCron = "0 0 5 * * ?"
@@ -29,7 +29,7 @@ let caigouLinkData  = "*/5 * * * 1-6"
 let confirmationNotice = "0 30 9 * * 1-6"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
-    syncTodayRunningAndFinishedFlowsCron = "0 10 12 * * ?"
+    syncTodayRunningAndFinishedFlowsCron = "0 0/1 7-21 * * ?"
     syncMissingCompletedFlowsCron = "0 0 22 * * ?"
     syncDepartmentCron = "0 10 5 * * ?"
     syncDepartmentWithUserCron = "0 0 7 * * ?"
@@ -61,27 +61,31 @@ schedule.scheduleJob(syncWorkingDayCron, async function () {
  *  每15分钟更新正在进行中的流程和今天完成的流程（包含节点的工作情况）
  */
 schedule.scheduleJob(syncTodayRunningAndFinishedFlowsCron, async function () {
-    if (process.env.NODE_ENV === "prod") {
-        const taskStatus = JSON.parse(await redisUtil.get(redisKeys.synchronizedState))
+    // if (process.env.NODE_ENV !== "prod") return;
+
+    let taskStatus;
     try {
-        // 判断任务是否正在执行，或者距离上次执行不满足间隔
+        taskStatus = JSON.parse(await redisUtil.get(redisKeys.synchronizedState));
         if (taskStatus.syncTodayRunning) {
             console.log(`同步任务正在执行跳过本次调用`);
-            return; // 跳过本次执行
+            return;
         }
-        taskStatus.syncTodayRunning=true
+        taskStatus.syncTodayRunning = true;
         await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
-        await taskService.syncTodayRunningAndFinishedFlows()
-        taskStatus.syncTodayRunning=false
-        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        await taskService.syncTodayRunningAndFinishedFlows();
     } catch (error) {
-        taskStatus.syncTodayRunning=false
-        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
-        logger.error(`同步任务正在执行 执行任务时出错:`, error);
+        if (taskStatus) {
+            taskStatus.syncTodayRunning = false;
+            await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        }
+        logger.error(`同步任务执行时出错:`, error);
+    } finally {
+        if (taskStatus) {
+            await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        }
     }
-    //不能使用finally，否则会导致任务一直处于执行状态
- }
-})
+});
+
 
 /** 0 50 23 * * ?
  * 每天23：50 获取今天完成的流程并入库，状态包含：completed、 terminated、error

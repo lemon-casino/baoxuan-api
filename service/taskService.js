@@ -760,11 +760,8 @@ async function executeTask(type) {
         console.log(`${type} 任务开始执行`);
         await taskFunction();
         console.log(`${type} 任务执行完成`);
-
         // 更新任务执行状态
         taskStatus[isRunningKey] = false; // 任务执行完毕，标记为未执行
-        taskStatus[lastRunTimeKey] = currentTime; // 更新最后执行时间
-        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
         console.log(`${type} 任务状态更新成功`);
     } catch (error) {
         // 更新任务执行状态
@@ -772,6 +769,11 @@ async function executeTask(type) {
         taskStatus[lastRunTimeKey] = currentTime; // 更新最后执行时间
         await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
         logger.error(`${type} 执行任务时出错:`, error);
+    }
+    finally {
+        taskStatus[lastRunTimeKey] = currentTime; // 更新最后执行时间
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
     }
 }
 
