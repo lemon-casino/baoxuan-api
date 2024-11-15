@@ -1,6 +1,8 @@
 const schedule = require("node-schedule")
 const taskService = require("@/service/taskService")
 const dateUtil = require("@/utils/dateUtil");
+const redisUtil = require("@/utils/redisUtil");
+const {redisKeys} = require("@/const/redisConst");
 
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20(貌似不准确)，涉及的宜搭接口暂时没有qps和总调用量的限制
 // 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况
@@ -60,8 +62,25 @@ schedule.scheduleJob(syncWorkingDayCron, async function () {
  */
 schedule.scheduleJob(syncTodayRunningAndFinishedFlowsCron, async function () {
     if (process.env.NODE_ENV === "prod") {
+        const taskStatus = JSON.parse(await redisUtil.get(redisKeys.synchronizedState))
+    try {
+        // 判断任务是否正在执行，或者距离上次执行不满足间隔
+        if (taskStatus.syncTodayRunning) {
+            console.log(`同步任务正在执行跳过本次调用`);
+            return; // 跳过本次执行
+        }
+        taskStatus.syncTodayRunning=true
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
         await taskService.syncTodayRunningAndFinishedFlows()
+        taskStatus.syncTodayRunning=false
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+    } catch (error) {
+        taskStatus.syncTodayRunning=false
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        logger.error(`同步任务正在执行 执行任务时出错:`, error);
     }
+    //不能使用finally，否则会导致任务一直处于执行状态
+ }
 })
 
 /** 0 50 23 * * ?
@@ -157,11 +176,6 @@ schedule.scheduleJob(syncRunningFlowsCron, async function () {
 
 schedule.scheduleJob(tmallLinkData, async function () {
     if (process.env.NODE_ENV === "prod") {
-        //增加延迟时间，防止数据未及时更新
-        //随机延迟 1分钟 2分钟 3分钟
-        let random = Math.floor(Math.random() * 3 + 1)
-        console.log("天猫延迟时间:", random)
-        await dateUtil.delay(1000 * 60 * random)
         await taskService.executeTask("tianmao")
     }
 })
@@ -169,9 +183,6 @@ schedule.scheduleJob(tmallLinkData, async function () {
 schedule.scheduleJob(jdLinkData, async function () {
     try {
         if (process.env.NODE_ENV === "prod") {
-            let random = Math.floor(Math.random() * 3 + 1)
-            console.log("京东延迟时间:", random)
-            await dateUtil.delay(1000 * 60 * random)
             await taskService.executeTask("jingdong");
         }
     } catch (error) {

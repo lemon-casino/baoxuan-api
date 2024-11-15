@@ -707,6 +707,10 @@ await  timingSynchronization()
 
 
 async function executeTask(type) {
+    //增加延迟时间，防止数据未及时更新
+    //随机延迟 1分钟 2分钟 3分钟
+    let random = Math.floor(Math.random() * 3 + 1)
+    await dateUtil.delay(1000 * 60 * random)
     // 获取当前任务状态，若没有则初始化状态
     const taskStatus = JSON.parse(await redisUtil.get(redisKeys.synchronizedState)) || {
         isRunningTianMao: false,
@@ -757,20 +761,17 @@ async function executeTask(type) {
         await taskFunction();
         console.log(`${type} 任务执行完成`);
 
-    } catch (error) {
-        console.error(`${type} 执行任务时出错:`, error);
-    } finally {
         // 更新任务执行状态
         taskStatus[isRunningKey] = false; // 任务执行完毕，标记为未执行
         taskStatus[lastRunTimeKey] = currentTime; // 更新最后执行时间
-
-        // 更新任务状态到 Redis
-        try {
-            await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
-            console.log(`${type} 任务状态更新成功`);
-        } catch (error) {
-            console.error(`${type} 更新任务状态时出错:`, error);
-        }
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        console.log(`${type} 任务状态更新成功`);
+    } catch (error) {
+        // 更新任务执行状态
+        taskStatus[isRunningKey] = false; // 任务执行完毕，标记为未执行
+        taskStatus[lastRunTimeKey] = currentTime; // 更新最后执行时间
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        logger.error(`${type} 执行任务时出错:`, error);
     }
 }
 
