@@ -22,7 +22,7 @@ let syncUserLoginCron = "0 0/5 * * * ?"
 // 当天下班
 let syncResignEmployeeCron = "0 0 18 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
-let tmallLinkData = "30 18 * * 1-6"
+let tmallLinkData = "45 13 * * 1-6"
 let jdLinkData  = "00 13 * * 1-6"
 let caigouLinkData  = "*/5 * * * 1-6"
 //转正通知 周一到周六  每天9点半触发流程
