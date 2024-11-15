@@ -73,6 +73,7 @@ schedule.scheduleJob(syncTodayRunningAndFinishedFlowsCron, async function () {
         taskStatus.syncTodayRunning = true;
         await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
         await taskService.syncTodayRunningAndFinishedFlows();
+        taskStatus.syncTodayRunning = false;
     } catch (error) {
         if (taskStatus) {
             taskStatus.syncTodayRunning = false;
