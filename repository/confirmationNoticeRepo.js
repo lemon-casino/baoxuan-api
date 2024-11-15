@@ -125,6 +125,8 @@ const getConfirmationNotice = async () => {
     const today = new Date()
     const threeDays = new Date(today)
     threeDays.setDate(today.getDate() + 3)
+    const oneDays = new Date(today)
+    oneDays.setDate(today.getDate() + 1)
     const sevenDays = new Date(today)
     sevenDays.setDate(today.getDate() + 7)
     const fourteenDays = new Date(today)
@@ -136,7 +138,7 @@ const getConfirmationNotice = async () => {
         },
         where: {
             conversionDate: {
-                [Sequelize.Op.or]: [today,threeDays, sevenDays, fourteenDays]
+                [Sequelize.Op.or]: [oneDays,today,threeDays, sevenDays, fourteenDays]
             },
             whether: 1,
             supervisors :

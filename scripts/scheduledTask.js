@@ -1,6 +1,8 @@
 const schedule = require("node-schedule")
 const taskService = require("@/service/taskService")
 const dateUtil = require("@/utils/dateUtil");
+const redisUtil = require("@/utils/redisUtil");
+const {redisKeys} = require("@/const/redisConst");
 
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20(貌似不准确)，涉及的宜搭接口暂时没有qps和总调用量的限制
 // 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况
@@ -20,8 +22,8 @@ let syncUserLoginCron = "0 0/5 * * * ?"
 // 当天下班
 let syncResignEmployeeCron = "0 0 18 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
-let tmallLinkData = "52 14 * * 1-6"
-let jdLinkData  = "30 14 * * 1-6"
+let tmallLinkData = "05 18 * * 1-6"
+let jdLinkData  = "30 13 * * 1-6"
 let caigouLinkData  = "*/5 * * * 1-6"
 //转正通知 周一到周六  每天9点半触发流程
 let confirmationNotice = "0 30 9 * * 1-6"
@@ -59,10 +61,31 @@ schedule.scheduleJob(syncWorkingDayCron, async function () {
  *  每15分钟更新正在进行中的流程和今天完成的流程（包含节点的工作情况）
  */
 schedule.scheduleJob(syncTodayRunningAndFinishedFlowsCron, async function () {
-    if (process.env.NODE_ENV === "prod") {
-        await taskService.syncTodayRunningAndFinishedFlows()
+     if (process.env.NODE_ENV !== "prod") return;
+
+    let taskStatus;
+    try {
+        taskStatus = JSON.parse(await redisUtil.get(redisKeys.synchronizedState));
+        if (taskStatus.syncTodayRunning) {
+            console.log(`同步任务正在执行跳过本次调用`);
+            return;
+        }
+        taskStatus.syncTodayRunning = true;
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        await taskService.syncTodayRunningAndFinishedFlows();
+    } catch (error) {
+        if (taskStatus) {
+            taskStatus.syncTodayRunning = false;
+            await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        }
+        logger.error(`同步任务执行时出错:`, error);
+    } finally {
+        if (taskStatus) {
+            await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        }
     }
-})
+});
+
 
 /** 0 50 23 * * ?
  * 每天23：50 获取今天完成的流程并入库，状态包含：completed、 terminated、error
@@ -157,11 +180,6 @@ schedule.scheduleJob(syncRunningFlowsCron, async function () {
 
 schedule.scheduleJob(tmallLinkData, async function () {
     if (process.env.NODE_ENV === "prod") {
-        //增加延迟时间，防止数据未及时更新
-        //随机延迟 1分钟 2分钟 3分钟
-        let random = Math.floor(Math.random() * 3 + 1)
-        console.log("天猫延迟时间:", random)
-        await dateUtil.delay(1000 * 60 * random)
         await taskService.executeTask("tianmao")
     }
 })
@@ -169,9 +187,6 @@ schedule.scheduleJob(tmallLinkData, async function () {
 schedule.scheduleJob(jdLinkData, async function () {
     try {
         if (process.env.NODE_ENV === "prod") {
-            let random = Math.floor(Math.random() * 3 + 1)
-            console.log("京东延迟时间:", random)
-            await dateUtil.delay(1000 * 60 * random)
             await taskService.executeTask("jingdong");
         }
     } catch (error) {
