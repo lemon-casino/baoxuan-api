@@ -20,8 +20,8 @@ let syncUserLoginCron = "0 0/5 * * * ?"
 // 当天下班
 let syncResignEmployeeCron = "0 0 18 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
-let tmallLinkData = "32 14 * * 1-6"
-let jdLinkData  = "17 14 * * 1-6"
+let tmallLinkData = "12 14 * * 1-6"
+let jdLinkData  = "30 14 * * 1-6"
 let caigouLinkData  = "*/5 * * * 1-6"
 //转正通知 周一到周六  每天9点半触发流程
 let confirmationNotice = "0 30 9 * * 1-6"
@@ -160,6 +160,7 @@ schedule.scheduleJob(tmallLinkData, async function () {
         //增加延迟时间，防止数据未及时更新
         //随机延迟 1分钟 2分钟 3分钟
         let random = Math.floor(Math.random() * 3 + 1)
+        console.log("天猫延迟时间:", random)
         await dateUtil.delay(1000 * 60 * random)
         await taskService.executeTask("tianmao")
     }
@@ -169,6 +170,7 @@ schedule.scheduleJob(jdLinkData, async function () {
     try {
         if (process.env.NODE_ENV === "prod") {
             let random = Math.floor(Math.random() * 3 + 1)
+            console.log("京东延迟时间:", random)
             await dateUtil.delay(1000 * 60 * random)
             await taskService.executeTask("jingdong");
         }
