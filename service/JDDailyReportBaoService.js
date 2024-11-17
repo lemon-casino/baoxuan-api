@@ -160,12 +160,12 @@ const getInquiryTodayjdDailyReport = async () => {
 
         if (judgment === '市场低利润') {
             // Remove '利润率小于15%' if it exists
-            filteredResult.questionType = filteredResult.questionType.filter(type => type !== '利润率小于15%');
+            filteredResult.questionType = filteredResult.questionType.filter(type => type !== '利润率小于10%');
         }
         else if (judgment === '新品上攻' || judgment === '老品打仗') {
             // Remove '利润率小于15%', '利润为负', and '推广费比大于12%'
             filteredResult.questionType = filteredResult.questionType.filter(type =>
-                type !== '利润率小于15%' && type !== '利润为负' && type !== '推广费比大于12%'
+                type !== '利润率小于10%' && type !== '利润为负' && type !== '推广费比大于12%'
             );
         }
         else if (judgment === '销完下架') {
