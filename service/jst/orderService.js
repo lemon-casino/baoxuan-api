@@ -10,10 +10,12 @@ const syncOrder = async (start, end) => {
     if (start) start_time = start
     let end_time = moment().weekday(0).format('YYYY-MM-DD') + ' 00:00:00'
     if (end) end_time = end
-    let order_data = [], order_count = 0,  sub_order_data = [], sub_order_count = 0
+    let order_data = [], order_count = 0, sub_order_data = [], sub_order_count = 0
     for (let i = 0; i < shops.length; i++) {
         order_data = [] 
         order_count = 0 
+        sub_order_data = [] 
+        sub_order_count = 0
         if (shops[i].shop_id) orders = await getOrderByShopId(shops[i].shop_id, start_time, end_time, 1)
         for (let j = 0; j < orders.length; j++) {
             order_count += 1
