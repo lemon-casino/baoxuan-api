@@ -12,6 +12,8 @@ const syncOrder = async (start, end) => {
     if (end) end_time = end
     let order_data = [], order_count = 0,  sub_order_data = [], sub_order_count = 0
     for (let i = 0; i < shops.length; i++) {
+        order_data = [] 
+        order_count = 0 
         if (shops[i].shop_id) orders = await getOrderByShopId(shops[i].shop_id, start_time, end_time, 1)
         for (let j = 0; j < orders.length; j++) {
             order_count += 1
@@ -99,73 +101,73 @@ const syncOrder = async (start, end) => {
             if (result?.affectedRows) logger.info(`sync jst out sub order shop_id: ${shops[i].shop_id} rows: ${result.affectedRows}`)
         }
         orders = []
-        if (shops[i].shop_id) orders = await getOrderByShopId(shops[i].shop_id, start_time, end_time)
-        for (let j = 0; j < orders.length; j++) {
-            result =  await outOrderRepo.updateByIdAndShopId([
-                orders[j].modified, 
-                orders[j].status, 
-                orders[j].invoice_title, 
-                orders[j].shop_buyer_id, 
-                orders[j].open_id, 
-                orders[j].receiver_country, 
-                orders[j].receiver_state, 
-                orders[j].receiver_city, 
-                orders[j].receiver_district, 
-                orders[j].receiver_town, 
-                orders[j].receiver_address, 
-                orders[j].receiver_name, 
-                orders[j].receiver_phone, 
-                orders[j].receiver_mobile, 
-                orders[j].buyer_message, 
-                orders[j].remark, 
-                orders[j].l_id, 
-                orders[j].io_date, 
-                orders[j].lc_id, 
-                orders[j].stock_enabled, 
-                orders[j].drp_co_id_from, 
-                orders[j].labels, 
-                orders[j].weight, 
-                orders[j].f_weight, 
-                orders[j].merge_so_id, 
-                orders[j].business_staff,
-                orders[j].logistics_company, 
-                orders[j].wave_id, 
-                orders[j].seller_flag, 
-                orders[j].order_staff_id, 
-                orders[j].order_staff_name, 
-                orders[j].node,
-                orders[j].io_id, 
-                orders[j].shop_id, 
-            ])
-            if (result) logger.info(`sync jst out order: ${orders[j].io_id} ${orders[j].shop_id}`)
-            for (let k = 0; k < orders[j]['items'].length; k++) {
-                result =  await outSubOrderRepo.updateByIdAndShopId([
-                    orders[j]['items'][k].ioi_id,
-                    orders[j]['items'][k].pic, 
-                    orders[j]['items'][k].sku_id, 
-                    orders[j]['items'][k].qty, 
-                    orders[j]['items'][k].name, 
-                    orders[j]['items'][k].properties_value, 
-                    orders[j]['items'][k].sale_price, 
-                    orders[j]['items'][k].oi_id, 
-                    orders[j]['items'][k].sale_amount, 
-                    orders[j]['items'][k].i_id, 
-                    orders[j]['items'][k].unit, 
-                    orders[j]['items'][k].sale_base_price, 
-                    orders[j]['items'][k].combine_sku_id, 
-                    orders[j]['items'][k].is_gift, 
-                    orders[j]['items'][k].raw_so_id, 
-                    orders[j]['items'][k].batch_id, 
-                    orders[j]['items'][k].product_date, 
-                    orders[j]['items'][k].supplier_id, 
-                    orders[j]['items'][k].expiration_date,
-                    orders[j]['items'][k].outer_oi_id,
-                    orders[j].shop_id,
-                ])
-                if (result) logger.info(`sync jst out sub order: ${orders[j]['items'][k].outer_oi_id}`)
-            }
-        }
-        orders = []
+        // if (shops[i].shop_id) orders = await getOrderByShopId(shops[i].shop_id, start_time, end_time)
+        // for (let j = 0; j < orders.length; j++) {
+        //     result =  await outOrderRepo.updateByIdAndShopId([
+        //         orders[j].modified, 
+        //         orders[j].status, 
+        //         orders[j].invoice_title, 
+        //         orders[j].shop_buyer_id, 
+        //         orders[j].open_id, 
+        //         orders[j].receiver_country, 
+        //         orders[j].receiver_state, 
+        //         orders[j].receiver_city, 
+        //         orders[j].receiver_district, 
+        //         orders[j].receiver_town, 
+        //         orders[j].receiver_address, 
+        //         orders[j].receiver_name, 
+        //         orders[j].receiver_phone, 
+        //         orders[j].receiver_mobile, 
+        //         orders[j].buyer_message, 
+        //         orders[j].remark, 
+        //         orders[j].l_id, 
+        //         orders[j].io_date, 
+        //         orders[j].lc_id, 
+        //         orders[j].stock_enabled, 
+        //         orders[j].drp_co_id_from, 
+        //         orders[j].labels, 
+        //         orders[j].weight, 
+        //         orders[j].f_weight, 
+        //         orders[j].merge_so_id, 
+        //         orders[j].business_staff,
+        //         orders[j].logistics_company, 
+        //         orders[j].wave_id, 
+        //         orders[j].seller_flag, 
+        //         orders[j].order_staff_id, 
+        //         orders[j].order_staff_name, 
+        //         orders[j].node,
+        //         orders[j].io_id, 
+        //         orders[j].shop_id, 
+        //     ])
+        //     if (result) logger.info(`sync jst out order: ${orders[j].io_id} ${orders[j].shop_id}`)
+        //     for (let k = 0; k < orders[j]['items'].length; k++) {
+        //         result =  await outSubOrderRepo.updateByIdAndShopId([
+        //             orders[j]['items'][k].ioi_id,
+        //             orders[j]['items'][k].pic, 
+        //             orders[j]['items'][k].sku_id, 
+        //             orders[j]['items'][k].qty, 
+        //             orders[j]['items'][k].name, 
+        //             orders[j]['items'][k].properties_value, 
+        //             orders[j]['items'][k].sale_price, 
+        //             orders[j]['items'][k].oi_id, 
+        //             orders[j]['items'][k].sale_amount, 
+        //             orders[j]['items'][k].i_id, 
+        //             orders[j]['items'][k].unit, 
+        //             orders[j]['items'][k].sale_base_price, 
+        //             orders[j]['items'][k].combine_sku_id, 
+        //             orders[j]['items'][k].is_gift, 
+        //             orders[j]['items'][k].raw_so_id, 
+        //             orders[j]['items'][k].batch_id, 
+        //             orders[j]['items'][k].product_date, 
+        //             orders[j]['items'][k].supplier_id, 
+        //             orders[j]['items'][k].expiration_date,
+        //             orders[j]['items'][k].outer_oi_id,
+        //             orders[j].shop_id,
+        //         ])
+        //         if (result) logger.info(`sync jst out sub order: ${orders[j]['items'][k].outer_oi_id}`)
+        //     }
+        // }
+        // orders = []
     }
 }
 
