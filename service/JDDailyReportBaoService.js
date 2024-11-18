@@ -12,7 +12,7 @@ const getInquiryTodayjdDailyReport = async () => {
     await JDDailyReportBaoRepo.updateFluxForYesterday()
     // 查询当天的数据
     const  data  =await JDDailyReportBaoRepo.inquiryTodayjdDailyReport();
-    const filteredResults = data
+    let filteredResults = data
         .map(item => {
             const questionType = [];
 
@@ -140,19 +140,38 @@ const getInquiryTodayjdDailyReport = async () => {
             mergedResult.push(redisItem);
         }
     });
-    // 这是最终的 三天内+ 已发起的异常
+    // 这是最终的 filteredResults -mergedResult（三天内+ 已发起的异常 + Redis  中存在的异常） = 要发起的流程
   //  console.log(mergedResult);
      // 去掉questionType为空的项
-    filteredResults.map(filteredItem => {
-        const mergedItem = mergedResult.find(mergedItem => mergedItem.linkId === filteredItem.linkId);
-
-        if (mergedItem) {
-            const newQuestionType = filteredItem.questionType.filter(q => !mergedItem.questionType.includes(q));
-            return {linkId: filteredItem.linkId, questionType: newQuestionType.length > 0 ? newQuestionType : null ,listingInfo: filteredItem.listingInfo,operationsLeader : filteredItem.operationsLeader,code: filteredItem.code};
-        }
-
-        return filteredItem; // 保留没有匹配的项
-    }).filter(item => item.questionType !== null);
+    filteredResults = filteredResults
+        .map(filteredItem => {
+            // 查找 mergedResult 中是否有相同的 linkId
+            const mergedItem = mergedResult.find(mergedItem => mergedItem.linkId === filteredItem.linkId);
+            if (mergedItem) {
+                // 如果找到了 mergedItem，过滤掉 filteredItem 中与 mergedItem 相同的 questionType
+                const newQuestionType = filteredItem.questionType.filter(q => !mergedItem.questionType.includes(q));
+                if (newQuestionType.length > 0) {
+                    return {
+                        linkId: filteredItem.linkId,
+                        questionType: newQuestionType.length > 0 ? newQuestionType : null,
+                        listingInfo: filteredItem.listingInfo,
+                        operationsLeader: filteredItem.operationsLeader,
+                        code: filteredItem.code
+                    };
+                }
+                return null; // 如果没有新的 questionType，排除该 filteredItem
+            } else {
+                // 如果没有找到相同的 mergedItem，直接返回 filteredItem
+                return {
+                    linkId: filteredItem.linkId,
+                    questionType: filteredItem.questionType,
+                    listingInfo: filteredItem.listingInfo,
+                    operationsLeader: filteredItem.operationsLeader,
+                    code: filteredItem.code
+                };
+            }
+        })
+        .filter(item => item !== null && item.questionType !== null); // 过滤掉 questionType 为空或为 null 的项
 
     for (let i = filteredResults.length - 1; i >= 0; i--) {
         const filteredResult = filteredResults[i];
@@ -176,21 +195,12 @@ const getInquiryTodayjdDailyReport = async () => {
         }else if (judgment==="下柜"){
             filteredResult.questionType=filteredResult.questionType.filter(type=>type==="利润为负")
         }
-
         // If the questionType array is empty, remove the filteredResult from filteredResults
         if (filteredResult.questionType.length === 0) {
             filteredResults.splice(i, 1);
         }
     }
-
-
-
-
-
     return filteredResults
-
-
-
 }
 
 
