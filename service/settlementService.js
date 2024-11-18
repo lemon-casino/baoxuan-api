@@ -1,5 +1,6 @@
 const settlementRepo = require('../repository/settlementRepo')
 const { projectNameList } = require('../const/operationConst')
+const moment = require('moment')
 
 const batchInsert = async (sheet, projectName, shopName, time, extra) => {
     let result = false
@@ -82,7 +83,8 @@ const getTGCInfo = async (params) => {
     let columns = params.sheet[0].getRow(1).values
     let settle_time_row = null, order_id_row = null, sub_order_id_row = null, 
     settle_order_id_row = null, amount_row = 0, type_row = null, goods_id_row = null, 
-    sku_id_row = null, update_time = false, minus = false
+    sku_id_row = null, update_time = false, minus = false, 
+    min_settle_time = moment().format('YYYY-MM-DD HH:mm:ss')
     for (let i = 1; i <= columns.length; i++) {
         if (['扣款时间', '结算时间'].includes(columns[i])) {
             settle_time_row = i
@@ -98,8 +100,6 @@ const getTGCInfo = async (params) => {
         } else if (['结算金额(元)', '推广费用'].includes(columns[i])) {
             amount_row = i
             minus = true
-        } else if (columns[i] == '确认收货时间') {
-            minus = false
         } else if (columns[i] == '总结算金额') {
             amount_row = i
         } else if (['营销推广套餐名称', '业务名称', '类型'].includes(columns[i])) {
@@ -135,6 +135,8 @@ const getTGCInfo = async (params) => {
             sku_id = row.getCell(sku_id_row).value != '-' ? row.getCell(sku_id_row).value : null
         if (amount == 0) continue
         count += 1
+        if (moment(settle_time).valueOf() < moment(min_settle_time).valueOf())
+            min_settle_time = settle_time
         data.push(
             settle_time,
             order_id,
@@ -147,6 +149,7 @@ const getTGCInfo = async (params) => {
             sku_id
         )
     }
+    await settlementRepo.delete(params.shopName, min_settle_time)
     return {count, data}
 }
 //tm-mart

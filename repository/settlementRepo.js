@@ -48,4 +48,10 @@ settlementRepo.batchInsert = async (count, info) => {
     return result?.affectedRows ? true : false
 }
 
+settlementRepo.delete = async (shop_name, settle_time) => {
+    let sql = `DELETE FROM settlement WHERE shop_name = ? AND settle_time >= ?`
+    const result = await query(sql, [shop_name,  settle_time])
+    return result?.affectedRows ? true : false
+}
+
 module.exports = settlementRepo
