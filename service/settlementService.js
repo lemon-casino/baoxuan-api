@@ -82,9 +82,10 @@ const getTGCInfo = async (params) => {
     let count = 0, data = []
     let columns = params.sheet[0].getRow(1).values
     let settle_time_row = null, order_id_row = null, sub_order_id_row = null, 
-    settle_order_id_row = null, amount_row = 0, type_row = null, goods_id_row = null, 
-    sku_id_row = null, update_time = false, minus = false, 
-    min_settle_time = moment().format('YYYY-MM-DD HH:mm:ss')
+        settle_order_id_row = null, amount_row = 0, goods_id_row = null, 
+        sku_id_row = null, update_time = false, minus = false, 
+        min_settle_time = moment().format('YYYY-MM-DD HH:mm:ss'), type = params.extra, 
+        shop_name = params.shopName
     for (let i = 1; i <= columns.length; i++) {
         if (['扣款时间', '结算时间'].includes(columns[i])) {
             settle_time_row = i
@@ -102,8 +103,6 @@ const getTGCInfo = async (params) => {
             minus = true
         } else if (columns[i] == '总结算金额') {
             amount_row = i
-        } else if (['营销推广套餐名称', '业务名称', '类型'].includes(columns[i])) {
-            type_row = i
         } else if (columns[i] == '商品id') {
             goods_id_row = i
         } else if (['skuid', 'skuId'].includes(columns[i])) {
@@ -115,8 +114,7 @@ const getTGCInfo = async (params) => {
         let row = rows[i]
         if (!row.getCell(1).value) break
         let settle_time = null, order_id = null, sub_order_id = null, 
-        settle_order_id = null, amount = 0, type = params.extra, 
-        shop_name = params.shopName, goods_id = null, sku_id = null
+        settle_order_id = null, amount = 0, goods_id = null, sku_id = null
         if (update_time && settle_time_row) {
             let time = row.getCell(settle_time_row).value
             settle_time = `${time.substring(0, 4)}-${time.substring(4, 6)}-${time.substring(6, 8)}`
@@ -128,8 +126,6 @@ const getTGCInfo = async (params) => {
             amount = row.getCell(amount_row).value
             if (minus) amount = - amount
         }
-        if (type_row) 
-            type = row.getCell(type_row).value != '-' ? row.getCell(type_row).value : type
         if (goods_id_row) goods_id = row.getCell(goods_id_row).value
         if (sku_id_row) 
             sku_id = row.getCell(sku_id_row).value != '-' ? row.getCell(sku_id_row).value : null
@@ -149,7 +145,7 @@ const getTGCInfo = async (params) => {
             sku_id
         )
     }
-    await settlementRepo.delete(params.shopName, min_settle_time)
+    await settlementRepo.delete(params.shopName, type, min_settle_time)
     return {count, data}
 }
 //tm-mart
