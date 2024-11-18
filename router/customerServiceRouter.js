@@ -16,14 +16,20 @@ router.post("/tmall/ps-import", tmallApi.importTmallPsData)
 
 //拼多多
 router.get("/pdd/data", pddApi.getPddDataByDate)
+router.get("/pdd/kf/data", pddApi.getPddKFDataByDate)
+router.get("/pdd/dp/data", pddApi.getPddDPDataByDate)
 router.post("/pdd/data-import", pddApi.importPddData)
 
 //京东
 router.get("/jd/data", jdApi.getJDDataByDate)
+router.get("/jd/kf/data", jdApi.getJDKFDataByDate)
+router.get("/jd/dp/data", jdApi.getJDDPDataByDate)
 router.post("/jd/data-import", jdApi.importJDData)
 
 //抖音
 router.get("/dy/data", dyApi.getDYDataByDate)
+router.get("/dy/kf/data", dyApi.getDYKFDataByDate)
+router.get("/dy/dp/data", dyApi.getDYDPDataByDate)
 router.post("/dy/data-import", dyApi.importDYData)
 
 //小红书

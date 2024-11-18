@@ -12,14 +12,12 @@ const getInquiryTodayjdDailyReport = async () => {
     await JDDailyReportBaoRepo.updateFluxForYesterday()
     // 查询当天的数据
     const  data  =await JDDailyReportBaoRepo.inquiryTodayjdDailyReport();
-
-
     const filteredResults = data
         .map(item => {
             const questionType = [];
 
-            if (item.profitMargin < 15 && item.listingInfo==="老品") {
-                questionType.push('利润率小于15%');
+            if (item.profitMargin < 10 && item.listingInfo==="老品") {
+                questionType.push('利润率小于10%');
             }
 
             if (item.costRatio > 0.12 && item.listingInfo==="老品" ) {
@@ -162,12 +160,12 @@ const getInquiryTodayjdDailyReport = async () => {
 
         if (judgment === '市场低利润') {
             // Remove '利润率小于15%' if it exists
-            filteredResult.questionType = filteredResult.questionType.filter(type => type !== '利润率小于15%');
+            filteredResult.questionType = filteredResult.questionType.filter(type => type !== '利润率小于10%');
         }
         else if (judgment === '新品上攻' || judgment === '老品打仗') {
             // Remove '利润率小于15%', '利润为负', and '推广费比大于12%'
             filteredResult.questionType = filteredResult.questionType.filter(type =>
-                type !== '利润率小于15%' && type !== '利润为负' && type !== '推广费比大于12%'
+                type !== '利润率小于10%' && type !== '利润为负' && type !== '推广费比大于12%'
             );
         }
         else if (judgment === '销完下架') {
@@ -175,6 +173,8 @@ const getInquiryTodayjdDailyReport = async () => {
             filteredResult.questionType = filteredResult.questionType.filter(type =>
                 type === '费比大于12%' || type === '利润为负'
             );
+        }else if (judgment==="下柜"){
+            filteredResult.questionType=filteredResult.questionType.filter(type=>type==="利润为负")
         }
 
         // If the questionType array is empty, remove the filteredResult from filteredResults

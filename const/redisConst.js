@@ -11,7 +11,8 @@ const redisKeys = {
     "Oa": "oa",
     "CoreActionRules": "rules:core_action",
     "jstToken": "bases:jst_token",
-    "jstRefreshToken": "bases:refresh_token"
+    "jstRefreshToken": "bases:refresh_token",
+    "synchronizedState": "flows:today:synchronizedState",
 }
 
 module.exports = {

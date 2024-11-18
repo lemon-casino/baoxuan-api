@@ -7,45 +7,45 @@ jdRepo.getJDData = async (start, end,lastStart, lastEnd, preStart, preEnd, shopn
                     c1.reception_num AS reception_num,
                     c2.reception_num1 AS reception_num1,
                     c3.reception_num2 AS reception_num2,
-                    concat(round((c2.reception_num1-c3.reception_num2)/c3.reception_num2,2)*100,'%') as reception_numq,
+                    CONCAT(ROUND((c2.reception_num1-c3.reception_num2)/c3.reception_num2,2)*100,'%') AS reception_numq,
                     c1.response_in_30_rate,
                     c1.satisfaction_rate AS satisfaction_rate,
                     c1.amount AS amount,
-                    c2.amount1 as amount1,
-                    c3.amount2 as amount2,
-                    concat(round((c2.amount1-c3.amount2)/c3.amount2,2)*100,'%') as amountq,
+                    c2.amount1 AS amount1,
+                    c3.amount2 AS amount2,
+                    CONCAT(ROUND((c2.amount1-c3.amount2)/c3.amount2,2)*100,'%') AS amountq,
                     c1.transfer_rate AS transfer_rate
                 FROM 
                 (
-                    select '全部' as shopname
+                    SELECT '全部' AS shopname
                         ,servicer
-                        ,sum(amount) as amount
-                        ,sum(reception_num) as reception_num
-                        ,concat(round(avg(response_in_30_rate),2),'%') as response_in_30_rate
-                        ,sum(satisfaction_rate) as satisfaction_rate
-                        ,concat(round(avg(transfer_rate),2),'%') as transfer_rate
-                    from cs_jd  
-                    where start_time= ? and end_time= ?
+                        ,SUM(amount) AS amount
+                        ,SUM(reception_num) AS reception_num
+                        ,CONCAT(ROUND(AVG(response_in_30_rate),2),'%') AS response_in_30_rate
+                        ,SUM(satisfaction_rate) AS satisfaction_rate
+                        ,CONCAT(ROUND(AVG(transfer_rate),2),'%') AS transfer_rate
+                    FROM cs_jd  
+                    WHERE start_time= ? and end_time= ?
                     GROUP BY servicer
-                ) as c1
-                left join ( 
-                select servicer
-                    ,'' as shopname
-                    ,sum(amount) as amount1
-                    ,sum(reception_num) as reception_num1 
-                from cs_jd  
-                where start_time= ? and end_time= ?
-                GROUP BY servicer)as c2
-                on c1.servicer=c2.servicer 
-                left join(
-                select servicer
-                    ,'' as shopname
-                    ,sum(amount) as amount2
-                    ,sum(reception_num) as reception_num2 
-                from cs_jd  
-                where start_time= ? and end_time= ?
-                GROUP BY servicer) as c3
-                on c1.servicer=c3.servicer `
+                ) AS c1
+                LEFT JOIN ( 
+                SELECT servicer
+                    ,'' AS shopname
+                    ,SUM(amount) AS amount1
+                    ,SUM(reception_num) AS reception_num1 
+                FROM cs_jd  
+                WHERE start_time= ? and end_time= ?
+                GROUP BY servicer)AS c2
+                ON c1.servicer=c2.servicer 
+                LEFT JOIN(
+                SELECT servicer
+                    ,'' AS shopname
+                    ,SUM(amount) AS amount2
+                    ,SUM(reception_num) AS reception_num2 
+                FROM cs_jd  
+                WHERE start_time= ? and end_time= ?
+                GROUP BY servicer) AS c3
+                ON c1.servicer=c3.servicer `
     let params = [start, end,lastStart, lastEnd, preStart, preEnd]
     if (shopname) {
         let sqls=`SELECT c1.shopname,
@@ -53,52 +53,100 @@ jdRepo.getJDData = async (start, end,lastStart, lastEnd, preStart, preEnd, shopn
                     c1.reception_num AS reception_num,
                     c2.reception_num1 AS reception_num1,
                     c3.reception_num2 AS reception_num2,
-                    concat(round((c2.reception_num1-c3.reception_num2)/c3.reception_num2,2)*100,'%') as reception_numq,
+                    CONCAT(ROUND((c2.reception_num1-c3.reception_num2)/c3.reception_num2,2)*100,'%') AS reception_numq,
                     c1.response_in_30_rate,
                     c1.satisfaction_rate AS satisfaction_rate,
                     c1.amount AS amount,
-                    c2.amount1 as amount1,
-                    c3.amount2 as amount2,
-                    concat(round((c2.amount1-c3.amount2)/c3.amount2,2)*100,'%') as amountq,
+                    c2.amount1 AS amount1,
+                    c3.amount2 AS amount2,
+                    CONCAT(ROUND((c2.amount1-c3.amount2)/c3.amount2,2)*100,'%') AS amountq,
                     c1.transfer_rate AS transfer_rate
                 FROM 
                 (
-                    select shopname
+                    SELECT shopname
                         ,servicer
-                        ,sum(amount) as amount
-                        ,sum(reception_num) as reception_num
-                        ,concat(max(response_in_30_rate),'%') as response_in_30_rate
-                        ,sum(satisfaction_rate) as satisfaction_rate
-                        ,concat(max(transfer_rate),'%') as transfer_rate 
-                    from cs_jd  
-                    where start_time= ? and end_time= ?
+                        ,SUM(amount) AS amount
+                        ,SUM(reception_num) AS reception_num
+                        ,CONCAT(max(response_in_30_rate),'%') AS response_in_30_rate
+                        ,SUM(satisfaction_rate) AS satisfaction_rate
+                        ,CONCAT(max(transfer_rate),'%') AS transfer_rate 
+                    FROM cs_jd  
+                    WHERE start_time= ? AND end_time= ?
                     GROUP BY servicer,shopname
-                ) as c1
-                left join ( 
-                select servicer
+                ) AS c1
+                LEFT JOIN ( 
+                SELECT servicer
                     ,shopname
-                    ,sum(amount) as amount1
-                    ,sum(reception_num) as reception_num1 
-                from cs_jd  
-                where start_time= ? and end_time= ?
-                GROUP BY servicer,shopname )as c2
-                on c1.servicer=c2.servicer and c1.shopname=c2.shopname
-                left join(
-                select servicer
+                    ,SUM(amount) AS amount1
+                    ,SUM(reception_num) AS reception_num1 
+                FROM cs_jd  
+                WHERE start_time= ? AND end_time= ?
+                GROUP BY servicer,shopname )AS c2
+                ON c1.servicer=c2.servicer AND c1.shopname=c2.shopname
+                LEFT JOIN(
+                SELECT servicer
                     ,shopname
-                    ,sum(amount) as amount2
-                    ,sum(reception_num) as reception_num2 
-                from cs_jd  
-                where start_time= ? and end_time= ?
-                GROUP BY servicer,shopname) as c3
-                on c1.servicer=c3.servicer and c1.shopname=c3.shopname`
-        sql = `${sqls} where c1.shopname LIKE '%${shopname}%' order by c1.servicer`
+                    ,SUM(amount) AS amount2
+                    ,SUM(reception_num) AS reception_num2 
+                FROM cs_jd  
+                WHERE start_time= ? AND end_time= ?
+                GROUP BY servicer,shopname) AS c3
+                ON c1.servicer=c3.servicer AND c1.shopname=c3.shopname`
+        sql = `${sqls} WHERE c1.shopname LIKE '%${shopname}%'`
     }
     if (servicer) {
-        sql = `${sql} where c1.servicer LIKE '%${servicer}%' `
+        sql = `${sql} WHERE c1.servicer LIKE '%${servicer}%' `
     }
     sql = `${sql} ORDER BY c1.servicer desc `
     const result = await query(sql, params)
+    return result
+}
+
+jdRepo.getJDKFData =async(start,end,servicer)=>{
+    let sql=`SELECT c1.servicer
+                ,SUM(c1.login_duration) AS login_duration
+                ,SUM(c1.reception_duration) AS reception_duration
+                ,ROUND(SUM(c1.reception_num),0) AS reception_num
+                ,CONCAT(ROUND(AVG(c1.response_in_30_rate),2),'%') AS response_in_30_rate
+                ,CONCAT(ROUND(AVG(c1.satisfaction_rate),2),'%') AS satisfaction_rate
+                ,SUM(c1.amount) AS amount
+                ,CONCAT(ROUND(AVG(c1.transfer_rate),2),'%') AS transfer_rate
+            FROM cs_jd AS C1
+            WHERE c1.start_time=c1.end_time 
+            AND c1.start_time BETWEEN "${start}" AND "${end}" 
+            AND c1.end_time BETWEEN "${start}" AND "${end}"
+            `
+    if(servicer){
+        sql=`${sql} AND c1.servicer="${servicer}" `
+    }
+    sql=`${sql} GROUP BY c1.servicer `
+   
+    const result = await query(sql)
+    return result
+    
+}
+
+jdRepo.getJDDPData = async(start,end,shopname)=>{
+    let sql=`SELECT c1.shopname
+                ,MAX(c1.id) AS id
+                ,SUM(c1.login_duration) AS login_duration
+                ,SUM(c1.reception_duration) AS reception_duration
+                ,ROUND(SUM(c1.reception_num),0) AS reception_num
+                ,CONCAT(ROUND(AVG(c1.response_in_30_rate),2),'%') AS response_in_30_rate
+                ,CONCAT(ROUND(AVG(c1.satisfaction_rate),2),'%') AS satisfaction_rate
+                ,SUM(c1.amount) AS amount
+                ,CONCAT(ROUND(AVG(c1.transfer_rate),2),'%') AS transfer_rate
+            FROM cs_jd AS c1
+            WHERE c1.start_time=end_time 
+            AND c1.start_time BETWEEN "${start}" AND "${end}" 
+            AND c1.end_time BETWEEN "${start}" AND "${end}"
+            `
+    if(shopname){
+        sql=`${sql} AND c1.shopname="${shopname}" `
+    }
+    sql=`${sql} GROUP BY c1.shopname ORDER BY id `
+   
+    const result = await query(sql)
     return result
 }
 
@@ -135,5 +183,18 @@ jdRepo.insertJDImg = async (info) => {
     const result = await query(sql, info)
     return result
 }
-
+jdRepo.getShopName =async(start,end)=>{
+    let sql = `SELECT DISTINCT shopname FROM cs_jd `
+    const result = await query(sql)
+    return result
+}
+jdRepo.getServicer =async(start,end)=>{
+    let sql = `SELECT DISTINCT servicer 
+            FROM cs_jd 
+            WHERE start_time=end_time 
+            AND start_time BETWEEN "${start}" AND "${end}" 
+            AND end_time BETWEEN "${start}" AND "${end}"`
+    const result = await query(sql)
+    return result
+}
 module.exports = jdRepo

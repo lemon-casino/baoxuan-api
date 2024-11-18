@@ -23,5 +23,6 @@ module.exports = [
     '/workflows-service/purchase-workflow',
     '/stock/get-week-stats',
     '/stock/sync-order',
+    '/confirmation-notice/confirmNotice',
     /^\/download\/.*/,
 ]

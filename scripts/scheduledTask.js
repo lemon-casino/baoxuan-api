@@ -1,5 +1,8 @@
 const schedule = require("node-schedule")
 const taskService = require("@/service/taskService")
+const dateUtil = require("@/utils/dateUtil");
+const redisUtil = require("@/utils/redisUtil");
+const {redisKeys} = require("@/const/redisConst");
 
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20(貌似不准确)，涉及的宜搭接口暂时没有qps和总调用量的限制
 // 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况
@@ -19,9 +22,11 @@ let syncUserLoginCron = "0 0/5 * * * ?"
 // 当天下班
 let syncResignEmployeeCron = "0 0 18 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
-let tmallLinkData = "32 14 * * 1-6"
-let jdLinkData  = "30 11 * * 1-6"
+let tmallLinkData = "45 13 * * 1-6"
+let jdLinkData  = "00 13 * * 1-6"
 let caigouLinkData  = "*/5 * * * 1-6"
+//转正通知 周一到周六  每天9点半触发流程
+let confirmationNotice = "0 30 9 * * 1-6"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
     syncTodayRunningAndFinishedFlowsCron = "0 10 12 * * ?"
@@ -56,10 +61,32 @@ schedule.scheduleJob(syncWorkingDayCron, async function () {
  *  每15分钟更新正在进行中的流程和今天完成的流程（包含节点的工作情况）
  */
 schedule.scheduleJob(syncTodayRunningAndFinishedFlowsCron, async function () {
-    if (process.env.NODE_ENV === "prod") {
-        await taskService.syncTodayRunningAndFinishedFlows()
+     if (process.env.NODE_ENV !== "prod") return;
+
+    let taskStatus;
+    try {
+        taskStatus = JSON.parse(await redisUtil.get(redisKeys.synchronizedState));
+        if (taskStatus.syncTodayRunning) {
+            console.log(`同步任务正在执行跳过本次调用`);
+            return;
+        }
+        taskStatus.syncTodayRunning = true;
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        await taskService.syncTodayRunningAndFinishedFlows();
+        taskStatus.syncTodayRunning = false;
+    } catch (error) {
+        if (taskStatus) {
+            taskStatus.syncTodayRunning = false;
+            await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        }
+        logger.error(`同步任务执行时出错:`, error);
+    } finally {
+        if (taskStatus) {
+            await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        }
     }
-})
+});
+
 
 /** 0 50 23 * * ?
  * 每天23：50 获取今天完成的流程并入库，状态包含：completed、 terminated、error
@@ -153,23 +180,32 @@ schedule.scheduleJob(syncRunningFlowsCron, async function () {
 * 每天处理异常链接是否存在tmallLinkAnomalyDetection*/
 
 schedule.scheduleJob(tmallLinkData, async function () {
-    console.log("执行了此方法")
     if (process.env.NODE_ENV === "prod") {
-        await taskService.tmallLinkAnomalyDetection()
+        await taskService.executeTask("tianmao")
     }
 })
 
 schedule.scheduleJob(jdLinkData, async function () {
-    console.log("执行了此方法")
-    if (process.env.NODE_ENV === "prod") {
-        await taskService.jdLinkDataIsAutomaticallyInitiated()
-    }
-})
+    try {
+        if (process.env.NODE_ENV === "prod") {
+            await taskService.executeTask("jingdong");
+        }
+    } catch (error) {
+        console.error("执行任务时出错:", error);
+    } finally {
 
+    }
+});
 //
 schedule.scheduleJob(caigouLinkData, async function () {
     if (process.env.NODE_ENV === "prod") {
         await taskService.purchaseSelectionMeetingInitiated()
+    }
+})
+// 转正通知 触发流程
+schedule.scheduleJob(confirmationNotice, async function () {
+    if (process.env.NODE_ENV === "prod") {
+        await taskService.confirmationNotice()
     }
 })
 

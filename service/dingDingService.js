@@ -55,7 +55,7 @@ const getFlowsByStatusAndTimeRange = async (timesRange = ["2023-01-01 00:00:00",
         // await dateUtil.delay()
         allData[i]["overallprocessflow"] = await getAllProcessFlow(token, userId, allData[i].processInstanceId);
         console.log(`(page: ${pageNumber})get flowReviewItems process：${i + 1}/${allData.length}`);
-        await dateUtil.delay(10); // 添加 500ms 的延迟
+        await dateUtil.delay(100);
     }
     // 如果总数大于当前页数*每页数量，继续请求
     if (resLiuChengList.totalCount > pageNumber * pageSize) {
@@ -582,11 +582,15 @@ const isWorkingDay = async (date) => {
  */
 const createProcess = async (formId, userId, processCode, formDataJsonStr) => {
     // 获取用户的部门id
-    const departments = await departmentService.getDepartmentOfUser(userId)
-    const departmentId = departments[departments.length - 1].dept_id
-    const {access_token: token} = await getToken();
-    return await yiDaReq.createProcess(token, formId, userId, processCode, departmentId, formDataJsonStr)
+    const departments = await departmentService.getDepartmentOfUser(userId);
+    let departmentId = '';
+    if (departments && departments.length > 0) {
+        departmentId = departments[departments.length - 1].dept_id;
+    }
+    const { access_token: token } = await getToken();
+    return await yiDaReq.createProcess(token, formId, userId, processCode, departmentId, formDataJsonStr);
 }
+
 
 module.exports = {
     getDingDingToken,

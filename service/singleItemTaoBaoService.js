@@ -496,7 +496,6 @@ const getAllSatisfiedSingleItems = async (productLineLeaders,
                                           timeRange,
                                           clickingAdditionalParams) => {
     const fightingLinkIds = await flowService.getFlowSplitFormValues(tmFightingFlowFormId, linkIdKeyInTmFightingFlowForm, flowStatusConst.RUNNING)
-    console.log("fightingLinkIds==>",fightingLinkIds)
     const satisfiedSingleItems = await singleItemTaoBaoRepo.getTaoBaoSingleItems(0,
         999999,
         productLineLeaders,
@@ -744,7 +743,6 @@ async function getLinkingCommon(productLineLeaders, singleItems, timeRange, incl
         //清空jisu 的数据
         jisu.clear()
         const resultMap = {};
-        //   console.log(data)
         //查询 天猫连接数据中 用户存在的linkid
         data.forEach(entry => {
             const id = Object.keys(entry)[0];
@@ -754,7 +752,6 @@ async function getLinkingCommon(productLineLeaders, singleItems, timeRange, incl
                     if (!resultMap[issue]) {
                         resultMap[issue] = {name: issue, sum: 0, ids: []};
                     }
-              //      console.log("id", id)
                     jisu.add(id)
                     resultMap[issue].sum++;
                     resultMap[issue].ids.push(id);
@@ -896,7 +893,6 @@ function evaluateExpression(exp, singleItem, fieldValue, value) {
            break;
         }
     }
-  //  console.log(exp.name,excludeResult,fieldValue,exp.comparator,value)
     if (/^(\-|\+)?\d+(\.\d+)?$/.test(value)) {
         value = parseFloat(value);
         fieldValue = parseFloat(fieldValue);
@@ -923,12 +919,12 @@ function processItems(items, errorLinkIds) {
             .map(item => [item.linkId, item])
     ).values()].filter(item => errorLinkIds.includes(item.linkId));
 }
-
+//TOTO  2024-11-15 产品线负责人 转为运营负责人
 function getRecordLinkID(items) {
     return items.map(item => ({
         name: item.productName,
         linkId: item.linkId,
-        productLineLeader: item.productLineLeader,
+        operationLeader: item.operationLeader,
         linkType: item.linkType
     }));
 }

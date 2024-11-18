@@ -19,8 +19,55 @@ pddRepo.getPddData = async (start, end, shopname, servicer) => {
     if (servicer) {
         sql = `${sql} AND c1.servicer LIKE '%${servicer}%'`
     }
-    sql = `${sql} ORDER BY c1.id`
+    sql = `${sql} ORDER BY id`
     const result = await query(sql, params)
+    return result
+}
+
+pddRepo.getPddDPData = async (start, end, shopname) => {
+    let sql = `SELECT c1.shopname
+                    ,MAX(c1.id) AS id
+                    ,ROUND(SUM(c1.reception_num),0) AS reception_num
+                    ,ROUND(SUM(c1.lost_num),0) AS lost_num
+                    ,CONCAT(ROUND(SUM(c1.reception_rate),2),'%') AS reception_rate
+                    ,ROUND(SUM(c1.amount),2) AS amount
+                    ,CONCAT(ROUND(AVG(c1.answer_in_3_rate),2),'%') AS answer_in_3_rate
+                    ,CONCAT(ROUND(AVG(c1.response_in_30_rate),2),'%') AS response_in_30_rate
+                    ,ROUND(AVG(c1.score),2) AS score
+                FROM cs_pdd AS c1
+                WHERE c1.start_time=c1.end_time 
+                AND c1.start_time BETWEEN "${start}" AND "${end}" 
+                AND c1.end_time BETWEEN "${start}" AND "${end}"
+                `
+    if (shopname) {
+        sql = `${sql} AND c1.shopname = '${shopname}'`
+    }
+    sql = `${sql} GROUP BY c1.shopname ORDER BY id`
+    const result = await query(sql)
+    return result
+}
+
+pddRepo.getPddKFData = async (start, end, servicer) => {
+    let sql = `SELECT c1.servicer
+                    ,ROUND(SUM(c1.reception_num),0) AS reception_num
+                    ,ROUND(SUM(c1.lost_num),0) AS lost_num
+                    ,CONCAT(ROUND(SUM(c1.reception_rate),2),'%') AS reception_rate
+                    ,ROUND(SUM(c1.amount),2) AS amount
+                    ,CONCAT(ROUND(AVG(c1.answer_in_3_rate),2),'%') AS answer_in_3_rate
+                    ,CONCAT(ROUND(AVG(c1.response_in_30_rate),2),'%') AS response_in_30_rate
+                    ,ROUND(AVG(c1.score),2) AS score
+                FROM cs_pdd AS c1
+                WHERE c1.start_time=c1.end_time 
+                AND c1.start_time BETWEEN "${start}" AND "${end}" 
+                AND c1.end_time BETWEEN "${start}" AND "${end}"
+                `
+    if (servicer) {
+        sql = `${sql} AND c1.servicer = '${servicer}'`
+    }
+    sql = `${sql} GROUP BY c1.servicer `
+    const result = await query(sql)
+    console.log(sql)
+    console.log(result)
     return result
 }
 
@@ -69,6 +116,22 @@ pddRepo.updatePdd = async (info) => {
 pddRepo.insertPddImg = async (info) => {
     let sql = `INSERT INTO cs_img(img_url, start_time, end_time, type) VALUES(?,?,?,2)`
     const result = await query(sql, info)
+    return result
+}
+pddRepo.getShopName =async(start,end)=>{
+    let sql = `SELECT DISTINCT shopname 
+            FROM cs_pdd 
+            WHERE start_time=end_time  `
+    const result = await query(sql)
+    return result
+}
+pddRepo.getServicer =async(start,end)=>{
+    let sql = `SELECT DISTINCT servicer 
+            FROM cs_pdd 
+            WHERE start_time=end_time 
+            AND start_time BETWEEN "${start}" AND "${end}" 
+            AND end_time BETWEEN "${start}" AND "${end}" `
+    const result = await query(sql)
     return result
 }
 

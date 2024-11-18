@@ -47,6 +47,7 @@ const axios = require("axios");
 const {getInquiryTodayjdDailyReport} = require("@/service/JDDailyReportBaoService");
 const {getOperateAttributesMaintainer} = require("@/repository/dianShangOperationAttributeRepo");
 const {sendDingReportBao} = require("@/service/dingReportBaoService");
+const {timingSynchronization} = require("@/service/notice/confirmationNoticeService");
 const writeFile = util.promisify(fs.writeFile);
 const readFile = util.promisify(fs.readFile);
 const syncWorkingDay = async () => {
@@ -267,7 +268,6 @@ const syncRunningProcess = async () => {
     await processDetailsTmpRepo.truncate()
     
     const todayRunningFlows = await redisRepo.getTodayRunningAndFinishedFlows()
-    console.log(todayRunningFlows[0])
     let count = 1
     for (const flow of todayRunningFlows) {
         console.log(`${count}/${todayRunningFlows.length}`)
@@ -314,11 +314,9 @@ const tmallLinkAnomalyDetection = async () => {
     
     //更新来自链接数据面板的属性 更新自动打标 [累计60天负利润]功能 以及 [累计60天负利润]功能 (时间是自动更新的 默认是昨天的链接数据) 1代表昨天
     await singleItemTaoBaoService.Calculateyesterdaysdataandtagtheprofitin60days()
-    
     const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(14)
+
     // 获得所有负责人的信息
-    
-    
     const productLineLeaders = result.productLineLeaders.reduce((acc, group) => {
         // 使用展开操作符将当前对象的第一个键对应的数组的所有元素添加到累加器数组中
         acc.push(...group[Object.keys(group)[0]]);
@@ -377,7 +375,7 @@ const tmallLinkAnomalyDetection = async () => {
     const userlist = await userService.getDingDingUserIdAndNickname()
     const linkIdMap = notStartedExceptions.items.reduce((acc, item) => {
         item.recordTheLinkID.forEach((record) => {
-            const matchingUser = userlist.find((user) => user.nickname === record.productLineLeader);
+            const matchingUser = userlist.find((user) => user.nickname === record.operationLeader);
             const uuid = matchingUser ? matchingUser.dingding_user_id : null;
             //不记录undefined 的数据
             if (acc[record.linkId]) {
@@ -387,7 +385,7 @@ const tmallLinkAnomalyDetection = async () => {
                 } else {
                     acc[record.linkId].name = [acc[record.linkId].name, item.name];
                 }
-                acc[record.linkId].productLineLeader = record.productLineLeader;
+                acc[record.linkId].operationLeader = record.operationLeader;
                 acc[record.linkId].linkType = record.linkType;
                 acc[record.linkId].uuid = uuid;
                 //产品名称
@@ -396,7 +394,7 @@ const tmallLinkAnomalyDetection = async () => {
                 acc[record.linkId] = {
                     productName: record.name,
                     name: [item.name],
-                    productLineLeader: record.productLineLeader,
+                    operationLeader: record.operationLeader,
                     linkType: record.linkType,
                     uuid: uuid,
                 };
@@ -450,8 +448,8 @@ const tmallLinkAnomalyDetection = async () => {
             }, null, 2);
             
             try {
-                await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
-                logger.info(`发起宜搭  运营优化流程 for linkId ${key}`);
+                 await dingDingService.createProcess(formId, "02353062153726101260", processCode, formDataJsonStr);
+                logger.info(`发起宜搭  运营优化流程 for linkId ${key} formDataJsonStr ${formDataJsonStr}`);
             } catch (e) {
                 logger.error(`发起宜搭  运营优化流程 失败 for linkId ${key}`, e);
             }
@@ -654,7 +652,6 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
             }
             return false;
         });
-        console.log(runningFightingFlows)
         for (const runningFightingFlow of uniqueFlows) {
             const listingInfo = runningFightingFlow.listingInfo;
             const selectField_lma827of = (listingInfo === '新品30' || listingInfo === '新品60') ? '新品' : '老品';
@@ -663,19 +660,21 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
                 const maintenance=await  getOperateAttributesMaintainer(runningFightingFlow.linkId)
                 runningFightingFlow.operationsLeader = maintenance.maintenanceLeader
             }
-            const matchingUser = userList.find((user) => user.nickname === runningFightingFlow.operationsLeader);
 
-            const uuid = matchingUser ? matchingUser.dingding_user_id : null;
+            if(runningFightingFlow.operationsLeader==="无操作"){
+                logger.info(" 发送通知 ?--->..."+runningFightingFlow.linkId,runningFightingFlow.operationsLeader,runningFightingFlow.questionType)
+            }else {
+                const matchingUser = userList.find((user) => user.nickname === runningFightingFlow.operationsLeader);
+                const uuid = matchingUser ? matchingUser.dingding_user_id : null;
 
-            const textField_lma827od = runningFightingFlow.code
-            const employeeField_lma827ok= uuid
-            const textField_lma827oe= runningFightingFlow.linkId
+                const textField_lma827od = runningFightingFlow.code
+                const employeeField_lma827ok= uuid
+                const textField_lma827oe= runningFightingFlow.linkId
 
 
-            const checkboxField_m11r277t = runningFightingFlow.questionType
-            const  radioField_locg3nxq= '简单'
-            if (!checkboxField_m11r277t.includes('下柜')) {
-                //
+                const checkboxField_m11r277t = runningFightingFlow.questionType
+                const  radioField_locg3nxq= '简单'
+
                 const formDataJsonStr = JSON.stringify({
                     textField_lma827od,
                     employeeField_lma827ok,
@@ -684,29 +683,97 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
                     checkboxField_m11r277t,
                     radioField_locg3nxq
                 }, null, 2);
-                await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
+                 await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
             }
-
-
-
-
-        }
-
-
+            }
+            }
+            await removeDuplicateLinkIds();
+    logger.info("同步完成：京东异常发起")
     };
 
-    await removeDuplicateLinkIds();
-
-
-
-
-    logger.info("同步完成：京东异常发起")
-}
 const purchaseSelectionMeetingInitiated = async () => {
     await  sendDingReportBao()
-
-
 }
+// 转正通知
+const confirmationNotice = async () => {
+await  timingSynchronization()
+}
+
+
+
+async function executeTask(type) {
+    //增加延迟时间，防止数据未及时更新
+    //随机延迟 1分钟 2分钟 3分钟
+    let random = Math.floor(Math.random() * 3 + 1)
+    console.log(random)
+    await dateUtil.delay(1000 * 60 * random)
+    // 获取当前任务状态，若没有则初始化状态
+    const taskStatus = JSON.parse(await redisUtil.get(redisKeys.synchronizedState)) || {
+        isRunningTianMao: false,
+        isRunningJD: false,
+        tianMaoRunTime: null,
+        JDRunTime: null,
+        taskInterval: 1000 * 60 * 60 * 10 // 任务间隔：默认 10 小时
+    };
+
+    const currentTime = new Date().getTime();
+
+    // 任务类型映射
+    const taskTypeMap = {
+        tianmao: {
+            isRunningKey: 'isRunningTianMao',
+            lastRunTimeKey: 'tianMaoRunTime',
+            taskFunction: tmallLinkAnomalyDetection
+        },
+        jingdong: {
+            isRunningKey: 'isRunningJD',
+            lastRunTimeKey: 'JDRunTime',
+            taskFunction: jdLinkDataIsAutomaticallyInitiated
+        }
+    };
+
+    // 检查任务类型是否有效
+    if (!taskTypeMap[type]) {
+        console.log(`无效的任务类型: ${type}`);
+        return;
+    }
+
+    const { isRunningKey, lastRunTimeKey, taskFunction } = taskTypeMap[type];
+
+    try {
+        // 判断任务是否正在执行，或者距离上次执行不满足间隔
+        if (taskStatus[isRunningKey] ||
+            (taskStatus[lastRunTimeKey] && currentTime - taskStatus[lastRunTimeKey] < taskStatus.taskInterval)) {
+            console.log(`${type} 任务正在执行或未到执行间隔，跳过本次调用`);
+            return; // 跳过本次执行
+        }
+
+        // 标记任务正在执行
+        taskStatus[isRunningKey] = true;
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+
+        // 执行任务
+        console.log(`${type} 任务开始执行`);
+        await taskFunction();
+        console.log(`${type} 任务执行完成`);
+        // 更新任务执行状态
+        taskStatus[isRunningKey] = false; // 任务执行完毕，标记为未执行
+        console.log(`${type} 任务状态更新成功`);
+    } catch (error) {
+        // 更新任务执行状态
+        taskStatus[isRunningKey] = false; // 任务执行完毕，标记为未执行
+        taskStatus[lastRunTimeKey] = currentTime; // 更新最后执行时间
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        logger.error(`${type} 执行任务时出错:`, error);
+    }
+    finally {
+        taskStatus[lastRunTimeKey] = currentTime; // 更新最后执行时间
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+    }
+}
+
+
 
 module.exports = {
     syncOaProcessTemplates,
@@ -730,5 +797,7 @@ module.exports = {
     syncProcessVersions,
     jdLinkDataIsAutomaticallyInitiated,
     purchaseSelectionMeetingInitiated,
-    saveFlowsToRedisFromFile
+    saveFlowsToRedisFromFile,
+    confirmationNotice,
+    executeTask
 }
