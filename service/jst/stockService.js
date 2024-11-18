@@ -1,7 +1,7 @@
 const stockRepo = require('../../repository/jst/stockRepo')
 const { getStockBySkuIds } = require('../../core/jstReq/stockReq')
 const skuRepo = require('../../repository/jst/skuRepo')
-const { syncOrder } = require('./orderService')
+// const { syncOrder } = require('./orderService')
 const { syncGoods } = require('./goodsService')
 
 const syncStock = async () => {
@@ -53,7 +53,7 @@ const syncStock = async () => {
 const getStockStats = async () => {
     let data = []
     await syncGoods()
-    await syncOrder()
+    // await syncOrder()
     await syncStock()
     let info = await stockRepo.getStockSales()
     if (info?.length) data = info
