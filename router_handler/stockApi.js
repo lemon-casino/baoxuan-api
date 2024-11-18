@@ -61,10 +61,10 @@ const getWeekStats = async (req, res, next) => {
             let sale_day = week_sale_ave ? Math.ceil(data[i].qty / week_sale_ave) : 0
             let sale_day_rank
             if (data[i].qty == 0) sale_day_rank = '无库存'
-            else if (data[i].week_sale_ave == 0) sale_day_rank = '无销售'
-            else if (data[i].sale_day <= 30) sale_day_rank = '0-30天'
-            else if (data[i].sale_day <= 60) sale_day_rank = '31-60天'
-            else if (data[i].sale_day <= 90) sale_day_rank = '61-90天'
+            else if (week_sale_ave == 0) sale_day_rank = '无销售'
+            else if (sale_day <= 30) sale_day_rank = '0-30天'
+            else if (sale_day <= 60) sale_day_rank = '31-60天'
+            else if (sale_day <= 90) sale_day_rank = '61-90天'
             else sale_day_rank = '90天+'
             let row = {
                 name: data[i].name,
