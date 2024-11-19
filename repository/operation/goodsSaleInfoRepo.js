@@ -3,65 +3,69 @@ const { query } = require('../../model/dbConn')
 const goodsSaleInfoRepo = {}
 
 goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) => {
-    const sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
-            IFNULL(SUM(express_fee), 0) AS express_fee, 
-            IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
-            IFNULL(SUM(operation_amount), 0) AS operation_amount, 
-            IFNULL(SUM(words_market_vol), 0) AS words_market_vol, 
-            IFNULL(SUM(words_vol), 0) AS words_vol, 
-            IFNULL(SUM(real_sale_qty), 0) AS real_sale_qty, 
-            IFNULL(SUM(refund_qty), 0) AS refund_qty, 
-            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
-                IFNULL(SUM(operation_amount), 0) / SUM(sale_amount) * 100, 
+    const sql = `SELECT IFNULL(SUM(A1.sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
+            IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
+            IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
+            IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
+            IFNULL(SUM(a2.words_vol), 0) AS words_vol, 
+            IFNULL(SUM(a1.real_sale_qty), 0) AS real_sale_qty, 
+            IFNULL(SUM(a1.refund_qty), 0) AS refund_qty, 
+            FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
+                IFNULL(SUM(a1.operation_amount), 0) / SUM(a1.sale_amount) * 100, 
                 0), 2) AS operation_rate, 
-            FORMAT(IF(IFNULL(SUM(promotion_amount), 0) > 0, 
-                IFNULL(SUM(sale_amount), 0) / SUM(promotion_amount), 
+            FORMAT(IF(IFNULL(SUM(a1.promotion_amount), 0) > 0, 
+                IFNULL(SUM(a1.sale_amount), 0) / SUM(a1.promotion_amount), 
                 0), 2) AS roi, 
-            FORMAT(IF(IFNULL(SUM(words_market_vol), 0) > 0, 
-                IFNULL(SUM(words_vol), 0) / SUM(words_market_vol), 
+            FORMAT(IF(IFNULL(SUM(a2.words_market_vol), 0) > 0, 
+                IFNULL(SUM(a2.words_vol), 0) / SUM(a2.words_market_vol), 
                 0), 2) AS market_rate, 
-            FORMAT(IF(IFNULL(SUM(real_sale_qty), 0) > 0, 
-                IFNULL(SUM(refund_qty), 0) / SUM(real_sale_qty), 
+            FORMAT(IF(IFNULL(SUM(a1.real_sale_qty), 0) > 0, 
+                IFNULL(SUM(a1.refund_qty), 0) / SUM(a1.real_sale_qty), 
                 0), 2) AS refund_rate, 
-            IFNULL(SUM(profit), 0) AS profit, 
-            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
-                IFNULL(SUM(profit), 0) / SUM(sale_amount) * 100, 
-                0), 2) AS profit_rate FROM goods_sale_info 
-        WHERE shop_name IN ("${shopNames}") 
-            AND \`date\` >= ?
-            AND \`date\` <= ?`
+            IFNULL(SUM(a1.profit), 0) AS profit, 
+            FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
+                IFNULL(SUM(a1.profit), 0) / SUM(a1.sale_amount) * 100, 
+                0), 2) AS profit_rate FROM goods_sale_info a1
+        LEFT JOIN goods_other_info a2 ON a1.goods_id = a2.goods_id
+            AND a1.date = a2.date
+        WHERE a1.shop_name IN ("${shopNames}") 
+            AND a1.date >= ?
+            AND a1.date <= ?`
     const result = await query(sql, [start, end])
     return result || []
 }
 
 goodsSaleInfoRepo.getPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
-    const sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
-            IFNULL(SUM(express_fee), 0) AS express_fee, 
-            IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
-            IFNULL(SUM(operation_amount), 0) AS operation_amount, 
-            IFNULL(SUM(words_market_vol), 0) AS words_market_vol, 
-            IFNULL(SUM(words_vol), 0) AS words_vol, 
-            IFNULL(SUM(real_sale_qty), 0) AS real_sale_qty, 
-            IFNULL(SUM(refund_qty), 0) AS refund_qty, 
-            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
-                IFNULL(SUM(operation_amount), 0) / SUM(sale_amount) * 100, 
+    const sql = `SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
+            IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
+            IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
+            IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
+            IFNULL(SUM(a2.words_vol), 0) AS words_vol, 
+            IFNULL(SUM(a1.real_sale_qty), 0) AS real_sale_qty, 
+            IFNULL(SUM(a1.refund_qty), 0) AS refund_qty, 
+            FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
+                IFNULL(SUM(a1.operation_amount), 0) / SUM(a1.sale_amount) * 100, 
                 0), 2) AS operation_rate, 
-            FORMAT(IF(IFNULL(SUM(promotion_amount), 0) > 0, 
-                IFNULL(SUM(sale_amount), 0) / SUM(promotion_amount), 
+            FORMAT(IF(IFNULL(SUM(a1.promotion_amount), 0) > 0, 
+                IFNULL(SUM(a1.sale_amount), 0) / SUM(a1.promotion_amount), 
                 0), 2) AS roi, 
-            FORMAT(IF(IFNULL(SUM(words_market_vol), 0) > 0, 
-                IFNULL(SUM(words_vol), 0) / SUM(words_market_vol), 
+            FORMAT(IF(IFNULL(SUM(a2.words_market_vol), 0) > 0, 
+                IFNULL(SUM(a2.words_vol), 0) / SUM(a2.words_market_vol), 
                 0), 2) AS market_rate, 
-            FORMAT(IF(IFNULL(SUM(real_sale_qty), 0) > 0, 
-                IFNULL(SUM(refund_qty), 0) / SUM(real_sale_qty), 
+            FORMAT(IF(IFNULL(SUM(a1.real_sale_qty), 0) > 0, 
+                IFNULL(SUM(a1.refund_qty), 0) / SUM(a1.real_sale_qty), 
                 0), 2) AS refund_rate, 
-            IFNULL(SUM(profit), 0) AS profit, 
-            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
-                IFNULL(SUM(profit), 0) / SUM(sale_amount) * 100, 
-                0), 2) AS profit_rate FROM goods_sale_info 
-        WHERE goods_id IN ("${linkIds}") 
-            AND \`date\` >= ?
-            AND \`date\` <= ?`
+            IFNULL(SUM(a1.profit), 0) AS profit, 
+            FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
+                IFNULL(SUM(a1.profit), 0) / SUM(a1.sale_amount) * 100, 
+                0), 2) AS profit_rate FROM goods_sale_info a1 
+        LEFT JOIN goods_other_info a2 ON a1.goods_id = a2.goods_id
+            AND a1.date = a2.date
+        WHERE a1.goods_id IN ("${linkIds}") 
+            AND a1.date >= ?
+            AND a1.date <= ?`
     const result = await query(sql, [start, end])
     return result || []
 }
@@ -171,8 +175,8 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
-            IFNULL(SUM(a3.words_market_vol), 0) AS words_market_vol, 
-            IFNULL(SUM(a3.words_vol), 0) AS words_vol, 
+            IFNULL(SUM(a4.words_market_vol), 0) AS words_market_vol, 
+            IFNULL(SUM(a4.words_vol), 0) AS words_vol, 
             IFNULL(SUM(a1.real_sale_qty), 0) AS real_sale_qty, 
             IFNULL(SUM(a1.refund_qty), 0) AS refund_qty, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
@@ -181,8 +185,8 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             FORMAT(IF(IFNULL(SUM(a1.promotion_amount), 0) > 0, 
                 IFNULL(SUM(a1.sale_amount), 0) / SUM(a1.promotion_amount), 
                 0), 2) AS roi, 
-            FORMAT(IF(IFNULL(SUM(a1.words_market_vol), 0) > 0, 
-                IFNULL(SUM(a1.words_vol), 0) / SUM(a1.words_market_vol), 
+            FORMAT(IF(IFNULL(SUM(a4.words_market_vol), 0) > 0, 
+                IFNULL(SUM(a4.words_vol), 0) / SUM(a4.words_market_vol), 
                 0), 2) AS market_rate, 
             FORMAT(IF(IFNULL(SUM(a1.real_sale_qty), 0) > 0, 
                 IFNULL(SUM(a1.refund_qty), 0) / SUM(a1.real_sale_qty), 
