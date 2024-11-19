@@ -15,6 +15,7 @@ const {
 } = require('../const/operationConst')
 const settlementRepo = require('../repository/settlementRepo')
 const newFormsRepo = require('../repository/newFormsRepo')
+const goodsOtherInfoRepo = require('../repository/operation/goodsOtherInfoRepo')
 
 /**
  * get operation data pannel data stats
@@ -28,7 +29,8 @@ const newFormsRepo = require('../repository/newFormsRepo')
 const getDataStats = async (id, start, end, params) => {
     let result = JSON.parse(JSON.stringify(operationDefaultItem))
     let payment = 0, promotion_amount = 0, express_fee = 0, profit = 0, 
-        invoice = 0, oriType, type = '', except = false
+        invoice = 0, oriType, type = '', except = false, operation_amount = 0, 
+        words_market_vol = 0, words_vol = 0, real_sale_qty = 0, refund_qty = 0
     if (params.type) {
         // jump permission, high level => low level
         oriType = typeList[params.type].map[0]
@@ -91,12 +93,21 @@ const getDataStats = async (id, start, end, params) => {
     for (let i = 0; i < result[type].data.length; i++) {
         payment += parseFloat(result[type].data[i].payment)
         promotion_amount += parseFloat(result[type].data[i].promotion_amount)
+        operation_amount += parseFloat(result[type].data[i].operation_amount)
+        words_market_vol += parseFloat(result[type].data[i].words_market_vol)
+        words_vol += parseFloat(result[type].data[i].words_vol)
+        real_sale_qty += parseFloat(result[type].data[i].real_sale_qty)
+        refund_qty += parseFloat(result[type].data[i].refund_qty)
         express_fee += parseFloat(result[type].data[i].express_fee)
         profit += parseFloat(result[type].data[i].profit)
         if (type == typeList.project.value && result[type].data[i].name == projectNameList.coupang) continue
         invoice += parseFloat(result[type].data[i].invoice)
     }
     result.total.data[0].profit_rate = payment > 0 ? (profit / payment * 100).toFixed(2) : '0.00'
+    result.total.data[0].operation_rate = payment > 0 ? (operation_amount / payment * 100).toFixed(2) : '0.00'
+    result.total.data[0].roi = promotion_amount > 0 ? (payment / promotion_amount).toFixed(2) : '0.00'
+    result.total.data[0].market_rate = words_market_vol > 0 ? (words_vol / words_market_vol * 100).toFixed(2) : '0.00'
+    result.total.data[0].refund_rate = real_sale_qty > 0 ? (refund_qty / real_sale_qty * 100).toFixed(2) : '0.00'
     result.total.column = JSON.parse(JSON.stringify(result[type].column))
     result.total.column[0].is_link = false
     result.total.data[0].payment = payment.toFixed(2)
@@ -143,7 +154,9 @@ const getQueryInfo = async (type, oriType, id, oriName) => {
 
 const queryShopInfo = async (shops, result, type, start, end) => {
     let payment = 0, invoice = 0, info, promotion_amount = 0, 
-        express_fee = 0, profit = 0, profit_rate = 0
+        express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
+        roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
+        real_sale_qty = 0, refund_qty = 0, words_market_vol = 0, words_vol = 0
     let shopName = [], j = -1, except = false
     if (typeList.division.value == type) except = true
     for (let i = 0; i < shops.length; i++) {
@@ -162,9 +175,18 @@ const queryShopInfo = async (shops, result, type, start, end) => {
         if (info?.length) {
             payment = parseFloat(info[0].sale_amount || 0).toFixed(2)
             promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)
+            operation_rate = parseFloat(info[0].operation_rate || 0).toFixed(2)
+            roi = parseFloat(info[0].roi || 0).toFixed(2)
+            market_rate = parseFloat(info[0].market_rate || 0).toFixed(2)
+            refund_rate = parseFloat(info[0].refund_rate || 0).toFixed(2)
             express_fee = parseFloat(info[0].express_fee || 0).toFixed(2)
             profit = parseFloat(info[0].profit || 0).toFixed(2)
             profit_rate = parseFloat(info[0].profit_rate || 0).toFixed(2)
+            operation_amount = parseFloat(info[0].operation_amount || 0).toFixed(2)
+            real_sale_qty = parseFloat(info[0].real_sale_qty || 0).toFixed(2)
+            refund_qty = parseFloat(info[0].refund_qty || 0).toFixed(2)
+            words_market_vol = parseFloat(info[0].words_market_vol || 0).toFixed(2)
+            words_vol = parseFloat(info[0].words_vol || 0).toFixed(2)
         }
         if (typeList[type].key < 3) {
             info = await settlementRepo.getAmount(start, end + ' 23:59:59', shopName[i].shop_name, except)
@@ -174,10 +196,19 @@ const queryShopInfo = async (shops, result, type, start, end) => {
             name: shopName[i].name,
             payment,
             promotion_amount,
+            operation_rate,
+            roi,
+            market_rate,
+            refund_rate,
             express_fee,
             profit,
             profit_rate,
-            invoice
+            invoice,
+            operation_amount,
+            real_sale_qty,
+            refund_qty,
+            words_market_vol,
+            words_vol
         })           
     }
     return result
@@ -185,7 +216,9 @@ const queryShopInfo = async (shops, result, type, start, end) => {
 
 const queryUserInfo = async (users, result, type, start, end) => {
     let payment = 0, invoice = 0, info, links, promotion_amount = 0, 
-        express_fee = 0, profit = 0, profit_rate = 0
+        express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
+        roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
+        real_sale_qty = 0, refund_qty = 0, words_market_vol = 0, words_vol = 0
     let userName = [], j = -1
     for (let i = 0; i < users.length; i++) {
         if (i == 0 || users[i].name != users[i-1].name) {
@@ -204,19 +237,37 @@ const queryUserInfo = async (users, result, type, start, end) => {
         info = await goodsSaleInfoRepo.getPaymentByLinkIdsAndTime(linkIds, start, end)
         if (info?.length) {
             payment = parseFloat(info[0].sale_amount || 0).toFixed(2)
-            promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)
+            promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)            
+            operation_rate = parseFloat(info[0].operation_rate || 0).toFixed(2)
+            roi = parseFloat(info[0].roi || 0).toFixed(2)
+            market_rate = parseFloat(info[0].market_rate || 0).toFixed(2)
+            refund_rate = parseFloat(info[0].refund_rate || 0).toFixed(2)
             express_fee = parseFloat(info[0].express_fee || 0).toFixed(2)
             profit = parseFloat(info[0].profit || 0).toFixed(2)
             profit_rate = parseFloat(info[0].profit_rate || 0).toFixed(2)
+            operation_amount = parseFloat(info[0].operation_amount || 0).toFixed(2)
+            real_sale_qty = parseFloat(info[0].real_sale_qty || 0).toFixed(2)
+            refund_qty = parseFloat(info[0].refund_qty || 0).toFixed(2)
+            words_market_vol = parseFloat(info[0].words_market_vol || 0).toFixed(2)
+            words_vol = parseFloat(info[0].words_vol || 0).toFixed(2)
         }
         result[type].data.push({
             name: userName[i].name,
             payment,
             promotion_amount,
+            operation_rate,
+            roi,
+            market_rate,
+            refund_rate,
             express_fee,
             profit,
             profit_rate,
-            invoice
+            invoice,
+            operation_amount,
+            real_sale_qty,
+            refund_qty,
+            words_market_vol,
+            words_vol
         })        
     }
     return result
@@ -225,16 +276,21 @@ const queryUserInfo = async (users, result, type, start, end) => {
 const getGoodsInfo = async (startDate, endDate, params, id) => {
     let result = {
         column: [
-            {title: '链接ID', field_id: 'goods_id', search: true, type: 'input'},
-            {title: '主销编码', field_id: 'sku_id', search: true, type: 'input'},
-            {title: '店铺名称', field_id: 'shop_name', search: false},
-            {title: '店铺编码', field_id: 'shop_id', search: true, type: 'input'},
-            {title: '商品名称', field_id: 'goods_name', search: true, type: 'input'},
-            {title: '发货金额', field_id: 'sale_amount', search: false},
-            {title: '推广费', field_id: 'promotion_amount', search: false},
-            {title: '运费', field_id: 'express_fee', search: false},
-            {title: '利润', field_id: 'profit', search: false},
-            {title: '利润率(%)', field_id: 'profit_rate', search: false},
+            {title: '链接ID', field_id: 'goods_id'},
+            {title: '主销编码', field_id: 'sku_id'},
+            {title: '店铺名称', field_id: 'shop_name'},
+            {title: '店铺编码', field_id: 'shop_id'},
+            {title: '商品名称', field_id: 'goods_name'},
+            {title: '发货金额', field_id: 'sale_amount'},
+            {title: '推广费', field_id: 'promotion_amount'},
+            {title: '费比(%)', field_id: 'operation_rate'},
+            {title: 'ROI', field_id: 'roi'},
+            {title: '市占率(%)', field_id: 'market_rate'},
+            {title: '退货率(%)', field_id: 'refund_rate'},
+            {title: 'DSR评分', field_id: 'dsr'},
+            {title: '运费', field_id: 'express_fee'},
+            {title: '利润', field_id: 'profit'},
+            {title: '利润率(%)', field_id: 'profit_rate'},
         ],
         data: {}
     }
@@ -290,7 +346,10 @@ const importGoodsInfo = async (rows, time) => {
         profit_row = null, 
         profit_rate_row = null, 
         promotion_amount_row = null, 
-        express_fee_row = null;
+        express_fee_row = null,
+        operation_amount_row = null,
+        real_sale_qty_row = null,
+        refund_qty_row = null;
     for (let i = 1; i <= columns.length; i++) {
         if (columns[i] == '店铺款式编码') {
             goods_id_row = i
@@ -344,6 +403,18 @@ const importGoodsInfo = async (rows, time) => {
             express_fee_row = i
             continue
         }
+        if (columns[i] == '利润-费用') {
+            operation_amount_row = i
+            continue
+        }
+        if (columns[i] == '商品数据-商品数量') {
+            real_sale_qty_row = i
+            continue
+        }
+        if (columns[i] == '退款合计-退款数量合计') {
+            refund_qty_row = i
+            continue
+        }
     }
     let amount = 0, saveAmount = 0
     for (let i = 1; i < rows.length; i++) {
@@ -376,6 +447,9 @@ const importGoodsInfo = async (rows, time) => {
                 rows[i].getCell(profit_rate_row).value,
             rows[i].getCell(promotion_amount_row).value,
             rows[i].getCell(express_fee_row).value,
+            rows[i].getCell(operation_amount_row).value,
+            rows[i].getCell(real_sale_qty_row).value,
+            rows[i].getCell(refund_qty_row).value,
         )
         count += 1
         saveAmount += rows[i].getCell(sale_amount_row).value
@@ -388,33 +462,157 @@ const importGoodsInfo = async (rows, time) => {
     return result
 }
 
+const importGoodsKeyWords = async (rows, time) => {
+    let count = 0, data = [], result = false
+    let goods_id = typeof(rows[1].getCell(1).value) == 'string' ? 
+        rows[1].getCell(1).value.trim() : 
+        rows[1].getCell(1).value
+    let info = await goodsOtherInfoRepo.search(goods_id, time)
+    if (info?.length) {
+        for (let i = 1; i < rows.length; i++) {
+            if (!rows[i].getCell(1).value) continue
+            goods_id = typeof(rows[i].getCell(1).value) == 'string' ? 
+                rows[i].getCell(1).value.trim() : 
+                rows[i].getCell(1).value
+            let j = 0, words = '', total = 0, base = 0
+            while(rows[i].getCell(j * 4 + 2).value) {
+                words = `${words}${rows[i].getCell(j * 4 + 2).value},`
+                let info = rows[i].getCell(j * 4 + 3).value
+                if (typeof(info) == 'string' && info.indexOf('万') != -1) {
+                    info = info.replace('万', '')
+                    info = parseInt(info) * 10000
+                } else info = parseInt(info)
+                let prt = typeof(rows[i].getCell(j * 4 + 4).value) == 'number' ?
+                    rows[i].getCell(j * 4 + 4).value : 0
+                prt = prt + 1
+                total += parseInt(info * prt)
+                base += parseInt(rows[i].getCell(j * 4 + 5).value)
+                j++
+            }
+            await goodsOtherInfoRepo.updateKeyWords([total, base, words, goods_id, time])
+        }
+        result = true
+    } else {
+        for (let i = 1; i < rows.length; i++) {
+            if (!rows[i].getCell(1).value) continue
+            goods_id = typeof(rows[i].getCell(1).value) == 'string' ? 
+                rows[i].getCell(1).value.trim() : 
+                rows[i].getCell(1).value
+            let j = 0, words = '', total = 0, base = 0
+            while(rows[i].getCell(j * 4 + 2).value) {
+                words = `${words}${rows[i].getCell(j * 4 + 2).value},`
+                let info = rows[i].getCell(j * 4 + 3).value
+                if (typeof(info) == 'string' && info.indexOf('万') != -1) {
+                    info = info.replace('万', '')
+                    info = parseInt(info) * 10000
+                } else info = parseInt(info)
+                let prt = typeof(rows[i].getCell(j * 4 + 4).value) == 'number' ?
+                    rows[i].getCell(j * 4 + 4).value : 0
+                prt = prt + 1
+                total += parseInt(info * prt)
+                base += parseInt(rows[i].getCell(j * 4 + 5).value)
+                j++
+            }
+            data.push(
+                goods_id,
+                null,
+                total,
+                base,
+                words,
+                time
+            )
+            count += 1
+        }
+        if (count > 0) {
+            result = await goodsOtherInfoRepo.batchInsert(count, data)
+        }
+    }
+    return result
+}
+
+const importGoodsDSR = async (rows, time) => {
+    let count = 0, data = [], result = false
+    let goods_id = typeof(rows[1].getCell(2).value) == 'string' ? 
+        rows[1].getCell(2).value.trim() : 
+        rows[1].getCell(2).value
+    let info = await goodsOtherInfoRepo.search(goods_id, time)
+    if (info?.length) {
+        for (let i = 1; i < rows.length; i++) {
+            if (!rows[i].getCell(1).value) continue
+            goods_id = typeof(rows[i].getCell(2).value) == 'string' ? 
+                rows[i].getCell(2).value.trim() : 
+                rows[i].getCell(2).value
+            let dsr = rows[i].getCell(6).value
+            if (typeof(dsr) == 'string' && dsr.indexOf('分') != -1) {
+                dsr = dsr.replace('分', '')
+            } else if (typeof(dsr) == 'string' && dsr.indexOf('未诊断') != -1) {
+                dsr = 0
+            }
+            dsr = parseInt(dsr)
+            await goodsOtherInfoRepo.updateDSR([dsr, goods_id, time])
+        }
+        result = true
+    } else {
+        for (let i = 1; i < rows.length; i++) {
+            if (!rows[i].getCell(1).value) continue
+            goods_id = typeof(rows[i].getCell(2).value) == 'string' ? 
+                rows[i].getCell(2).value.trim() : 
+                rows[i].getCell(2).value
+            let dsr = rows[i].getCell(6).value
+            if (typeof(dsr) == 'string' && dsr.indexOf('分') != -1) {
+                dsr = parseInt(dsr.replace('分', ''))
+            } else if (typeof(dsr) == 'string' && dsr.indexOf('未诊断') != -1) {
+                dsr = 0
+            }
+            data.push(
+                goods_id,
+                dsr,
+                null,
+                null,
+                null,
+                time
+            )
+            count += 1
+        }
+        if (count > 0) {
+            result = await goodsOtherInfoRepo.batchInsert(count, data)
+        }
+    }
+    return result
+}
+
 const getGoodsLineInfo = async (startDate, endDate, params, id) => {
     let result = {
         column: [
-            {title: '链接ID', field_id: 'goods_id', search: true, type: 'input'},
-            {title: '项目', field_id: 'project_name', search: true, type: 'input'},
-            {title: '一级类目', field_id: 'first_category', search: true, type: 'input'},
-            {title: '二级类目', field_id: 'second_category', search: true, type: 'input'},
-            {title: '三级类目', field_id: 'level_3_category', search: true, type: 'input'},
-            {title: '产品线简称', field_id: 'brief_product_line', search: true, type: 'input'},
-            {title: '发货金额', field_id: 'sale_amount', search: false},
-            {title: '推广费', field_id: 'promotion_amount', search: false},
-            {title: '运费', field_id: 'express_fee', search: false},
-            {title: '利润', field_id: 'profit', search: false},
-            {title: '利润率(%)', field_id: 'profit_rate', search: false},
-            {title: '主销编码', field_id: 'sku_id', search: true, type: 'input'},
-            {title: '产品定义', field_id: 'product_definition', search: true, type: 'input'},
-            {title: '库存结构', field_id: 'stock_structure', search: true, type: 'input'},
-            {title: '产品等级', field_id: 'product_rank', search: true, type: 'input'},
-            {title: '产品设计属性', field_id: 'product_design_attr', search: true, type: 'input'},
-            {title: '季节', field_id: 'seasons', search: true, type: 'input'},
-            {title: '品牌', field_id: 'brand', search: true, type: 'input'},
-            {title: '销售目标', field_id: 'targets', search: false},
-            {title: '开发负责人', field_id: 'exploit_director', search: true, type: 'input'},
-            {title: '采购负责人', field_id: 'purchase_director', search: true, type: 'input'},
-            {title: '产品线管理人', field_id: 'line_manager', search: true, type: 'input'},
-            {title: '产品线运营人', field_id: 'operator', search: true, type: 'input'},
-            {title: '上架时间', field_id: 'onsale_date', search: true, type: 'date'},
+            {title: '链接ID', field_id: 'goods_id'},
+            {title: '项目', field_id: 'project_name'},
+            {title: '一级类目', field_id: 'first_category'},
+            {title: '二级类目', field_id: 'second_category'},
+            {title: '三级类目', field_id: 'level_3_category'},
+            {title: '产品线简称', field_id: 'brief_product_line'},
+            {title: '发货金额', field_id: 'sale_amount'},
+            {title: '推广费', field_id: 'promotion_amount'},
+            {title: '费比(%)', field_id: 'operation_rate'},
+            {title: 'ROI', field_id: 'roi'},
+            {title: '市占率(%)', field_id: 'market_rate'},
+            {title: '退货率(%)', field_id: 'refund_rate'},
+            {title: 'DSR评分', field_id: 'dsr'},
+            {title: '运费', field_id: 'express_fee'},
+            {title: '利润', field_id: 'profit'},
+            {title: '利润率(%)', field_id: 'profit_rate'},
+            {title: '主销编码', field_id: 'sku_id'},
+            {title: '产品定义', field_id: 'product_definition'},
+            {title: '库存结构', field_id: 'stock_structure'},
+            {title: '产品等级', field_id: 'product_rank'},
+            {title: '产品设计属性', field_id: 'product_design_attr'},
+            {title: '季节', field_id: 'seasons'},
+            {title: '品牌', field_id: 'brand'},
+            {title: '销售目标', field_id: 'targets'},
+            {title: '开发负责人', field_id: 'exploit_director'},
+            {title: '采购负责人', field_id: 'purchase_director'},
+            {title: '产品线管理人', field_id: 'line_manager'},
+            {title: '产品线运营人', field_id: 'operator'},
+            {title: '上架时间', field_id: 'onsale_date'},
         ],
         data: {}
     }
@@ -494,6 +692,8 @@ module.exports = {
     getDataStats,
     getGoodsInfo,
     importGoodsInfo,
+    importGoodsKeyWords,
+    importGoodsDSR,
     getGoodsLineInfo,
     getWorkStats
 }
