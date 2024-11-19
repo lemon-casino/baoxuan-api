@@ -6,6 +6,23 @@ goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) =
     const sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(express_fee), 0) AS express_fee, 
             IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
+            IFNULL(SUM(operation_amount), 0) AS operation_amount, 
+            IFNULL(SUM(words_market_vol), 0) AS words_market_vol, 
+            IFNULL(SUM(words_vol), 0) AS words_vol, 
+            IFNULL(SUM(real_sale_qty), 0) AS real_sale_qty, 
+            IFNULL(SUM(refund_qty), 0) AS refund_qty, 
+            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
+                IFNULL(SUM(operation_amount), 0) / SUM(sale_amount) * 100, 
+                0), 2) AS operation_rate, 
+            FORMAT(IF(IFNULL(SUM(promotion_amount), 0) > 0, 
+                IFNULL(SUM(sale_amount), 0) / SUM(promotion_amount), 
+                0), 2) AS roi, 
+            FORMAT(IF(IFNULL(SUM(words_market_vol), 0) > 0, 
+                IFNULL(SUM(words_vol), 0) / SUM(words_market_vol), 
+                0), 2) AS market_rate, 
+            FORMAT(IF(IFNULL(SUM(real_sale_qty), 0) > 0, 
+                IFNULL(SUM(refund_qty), 0) / SUM(real_sale_qty), 
+                0), 2) AS refund_rate, 
             IFNULL(SUM(profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
                 IFNULL(SUM(profit), 0) / SUM(sale_amount) * 100, 
@@ -21,6 +38,23 @@ goodsSaleInfoRepo.getPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
     const sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(express_fee), 0) AS express_fee, 
             IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
+            IFNULL(SUM(operation_amount), 0) AS operation_amount, 
+            IFNULL(SUM(words_market_vol), 0) AS words_market_vol, 
+            IFNULL(SUM(words_vol), 0) AS words_vol, 
+            IFNULL(SUM(real_sale_qty), 0) AS real_sale_qty, 
+            IFNULL(SUM(refund_qty), 0) AS refund_qty, 
+            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
+                IFNULL(SUM(operation_amount), 0) / SUM(sale_amount) * 100, 
+                0), 2) AS operation_rate, 
+            FORMAT(IF(IFNULL(SUM(promotion_amount), 0) > 0, 
+                IFNULL(SUM(sale_amount), 0) / SUM(promotion_amount), 
+                0), 2) AS roi, 
+            FORMAT(IF(IFNULL(SUM(words_market_vol), 0) > 0, 
+                IFNULL(SUM(words_vol), 0) / SUM(words_market_vol), 
+                0), 2) AS market_rate, 
+            FORMAT(IF(IFNULL(SUM(real_sale_qty), 0) > 0, 
+                IFNULL(SUM(refund_qty), 0) / SUM(real_sale_qty), 
+                0), 2) AS refund_rate, 
             IFNULL(SUM(profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
                 IFNULL(SUM(profit), 0) / SUM(sale_amount) * 100, 
@@ -36,51 +70,143 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
     let page = parseInt(params.currentPage)
     let size = parseInt(params.pageSize)
     let offset = (page - 1) * size
-    let result = {
+    let p = [], result = {
         currentPage: params.currentPage,
         pageSize: params.pageSize,
         data: [],
         total: 0,
         sum: 0
     }
-    let sql = `SELECT SUM(sale_amount) AS sale_amount FROM goods_sale_info`
-    subsql = ` WHERE \`date\` >= ? AND \`date\` <= ?`
-    for (let index in params.search) {
-        if (index) {
-            subsql = `${subsql} 
-                AND ${index} LIKE "%${params.search[index]}%"`
+    let sql = `SELECT SUM(a1.sale_amount) AS sale_amount, a1.goods_id, a1.shop_name, 
+            a1.shop_id, a1.goods_name FROM goods_sale_info a1`
+    subsql = ` WHERE a1.date >= ? AND a1.date <= ?`
+    p.push(start, end)
+    for (let i =0; i < params.search.length; i++) {
+        if (params.search[i].key == 'operation_rate') {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT IFNULL(SUM(a2.operation_amount), 0) AS operation_amount, 
+                            IFNULL(SUM(a2.sale_amount), 0) AS sale_amount FROM goods_sale_info a2
+                        WHERE a2.date >= ? AND a2.date <= ? 
+                            AND a1.goods_id = a2.goods_id 
+                    ) b WHERE b.operation_amount * 100 >= ${params.search[i].min} * b.sale_amount
+                        AND b.operation_amount * 100 <= ${params.search[i].max} * b.sale_amount
+                )`
+            p.push(start, end)
+        } else if (params.search[i].key == 'roi') {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT IFNULL(SUM(a2.promotion_amount), 0) AS promotion_amount, 
+                            IFNULL(SUM(a2.sale_amount), 0) AS sale_amount FROM goods_sale_info a2 
+                        WHERE a2.date >= ? AND a2.date <= ? 
+                            AND a1.goods_id = a2.goods_id 
+                    ) b WHERE b.sale_amount >= ${params.search[i].min} * b.promotion_amount 
+                        AND b.sale_amount <= ${params.search[i].max} * b.promotion_amount 
+                )`
+            p.push(start, end)
+        } else if (params.search[i].key == 'market_rate') {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT IFNULL(SUM(a3.words_market_vol), 0) AS words_market_vol, 
+                            IFNULL(SUM(a3.words_vol), 0) AS words_vol FROM goods_sale_info a3 
+                        WHERE a3.date >= ? AND a3.date <= ? 
+                            AND a1.goods_id = a3.goods_id 
+                    ) b WHERE b.words_vol * 100 >= ${params.search[i].min} * b.words_market_vol
+                        AND b.words_vol * 100 <= ${params.search[i].max} * b.words_market_vol
+                )`
+            p.push(start, end)
+        } else if (params.search[i].key == 'refund_rate') {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT IFNULL(SUM(a2.real_sale_qty), 0) AS real_sale_qty, 
+                            IFNULL(SUM(a2.refund_qty), 0) AS refund_qty FROM goods_sale_info a2 
+                        WHERE a2.date >= ? AND a2.date <= ? 
+                            AND a1.goods_id = a2.goods_id 
+                    ) b WHERE b.refund_qty * 100 >= ${params.search[i].min} * b.real_sale_qty
+                        AND b.refund_qty * 100 <= ${params.search[i].max} * b.real_sale_qty
+                )`
+            p.push(start, end)
+        } else if (params.search[i].key == 'profit_rate') {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT IFNULL(SUM(a2.profit), 0) AS profit, 
+                            IFNULL(SUM(a2.sale_amount), 0) AS sale_amount FROM goods_sale_info a2 
+                        WHERE a2.date >= ? AND a2.date <= ? 
+                            AND a1.goods_id = a2.goods_id 
+                    ) b WHERE b.profit * 100 >= ${params.search[i].min} * b.sale_amount
+                        AND b.profit * 100 <= ${params.search[i].max} * b.sale_amount
+                )`
+            p.push(start, end)
+        } else {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT IFNULL(SUM(a2.${params.search[i].key}), 0) AS val FROM 
+                        goods_sale_info a2 WHERE a2.date >= ? AND a2.date <= ? 
+                            AND a1.goods_id = a2.goods_id 
+                    ) b WHERE b.val >= ${params.search[i].min} 
+                        AND b.val <= ${params.search[i].max}
+                )`
+            p.push(start, end)
         }
     }
     if (shopNames != null) {
         if (shopNames.length == 0) return result
         subsql = `${subsql}
-                AND shop_name IN ("${shopNames}")`
+                AND a1.shop_name IN ("${shopNames}")`
     }
     if (linkIds != null) {
         if (linkIds.length == 0) return result
         subsql = `${subsql}
-                AND goods_id IN ("${linkIds}")`
+                AND a1.goods_id IN ("${linkIds}")`
     }
-    subsql = `${subsql} 
-        GROUP BY goods_id, sku_id, shop_name, shop_id, goods_name`
+    let sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id, a1.goods_name`
     sql = `SELECT COUNT(1) AS count, SUM(sale_amount) AS sale_amount 
-        FROM (${sql}${subsql}) a`
-    let row = await query(sql, [start, end])
+        FROM (${sql}${subsql}${sql1}) a`
+    let row = await query(sql, p)
     if (row?.length && row[0].count) {
         result.total = row[0].count
         result.sum = row[0].sale_amount        
-        sql = `SELECT goods_id, sku_id, shop_name, shop_id, goods_name, 
-            IFNULL(SUM(sale_amount), 0) AS sale_amount, 
-            IFNULL(SUM(express_fee), 0) AS express_fee, 
-            IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
-            IFNULL(SUM(profit), 0) AS profit, 
-            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
-                IFNULL(SUM(profit), 0) / SUM(sale_amount) * 100, 
+        sql = `SELECT a1.goods_id, a1.shop_name, a1.shop_id, a1.goods_name, 
+            IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
+            IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
+            IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
+            IFNULL(SUM(a3.words_market_vol), 0) AS words_market_vol, 
+            IFNULL(SUM(a3.words_vol), 0) AS words_vol, 
+            IFNULL(SUM(a1.real_sale_qty), 0) AS real_sale_qty, 
+            IFNULL(SUM(a1.refund_qty), 0) AS refund_qty, 
+            FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
+                IFNULL(SUM(a1.operation_amount), 0) / SUM(a1.sale_amount) * 100, 
+                0), 2) AS operation_rate, 
+            FORMAT(IF(IFNULL(SUM(a1.promotion_amount), 0) > 0, 
+                IFNULL(SUM(a1.sale_amount), 0) / SUM(a1.promotion_amount), 
+                0), 2) AS roi, 
+            FORMAT(IF(IFNULL(SUM(a1.words_market_vol), 0) > 0, 
+                IFNULL(SUM(a1.words_vol), 0) / SUM(a1.words_market_vol), 
+                0), 2) AS market_rate, 
+            FORMAT(IF(IFNULL(SUM(a1.real_sale_qty), 0) > 0, 
+                IFNULL(SUM(a1.refund_qty), 0) / SUM(a1.real_sale_qty), 
+                0), 2) AS refund_rate, 
+            IFNULL(SUM(a1.profit), 0) AS profit, 
+            FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
+                IFNULL(SUM(a1.profit), 0) / SUM(a1.sale_amount) * 100, 
                 0), 2) AS profit_rate 
-            FROM goods_sale_info`
-        sql = `${sql}${subsql} LIMIT ${offset}, ${size}`
-        row = await query(sql, [start, end])
-        if (row?.length) result.data = row
+            FROM goods_sale_info a1 LEFT JOIN goods_other_info a4 
+                ON a4.goods_id = a1.goods_id 
+                    AND a4.date = a1.date`
+        sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id, a1.goods_name`
+        sql = `SELECT * FROM (${sql}${subsql}${sql1}) aa LIMIT ${offset}, ${size}`
+        row = await query(sql, p)
+        if (row?.length) {
+            for (let i = 0; i < row.length; i++) {
+                sql = `SELECT sku_id FROM goods_sale_info WHERE goods_id = ? 
+                    GROUP BY sku_id ORDER BY SUM(sale_amount) DESC LIMIT 1`
+                let row1 = await query(sql, [row[i].goods_id])
+                row[i].sku_id = row1[0].sku_id
+                
+            }
+            result.data = row
+        }
     }
     return result
 }
@@ -100,9 +226,12 @@ goodsSaleInfoRepo.batchInsert = async (count, data) => {
             profit, 
             profit_rate, 
             promotion_amount, 
-            express_fee) VALUES`
+            express_fee,
+            operation_amount,
+            real_sale_qty,
+            refund_qty) VALUES`
     for (let i = 0; i < count; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, data)

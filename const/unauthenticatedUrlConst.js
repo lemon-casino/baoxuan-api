@@ -24,5 +24,7 @@ module.exports = [
     '/stock/get-week-stats',
     '/stock/sync-order',
     '/confirmation-notice/confirmNotice',
+    '/operation/goods-key-words/import',
+    '/operation/goods-dsr/import',
     /^\/download\/.*/,
 ]
