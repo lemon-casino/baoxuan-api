@@ -14,8 +14,8 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
             IFNULL(SUM(gsi.promotion_amount), 0) AS promotion_amount, 
             IFNULL(SUM(gsi.express_fee), 0) AS express_fee, 
             IFNULL(SUM(gsi.operation_amount), 0) AS operation_amount, 
-            IFNULL(SUM(gsi.words_market_vol), 0) AS words_market_vol, 
-            IFNULL(SUM(gsi.words_vol), 0) AS words_vol, 
+            IFNULL(SUM(goi.words_market_vol), 0) AS words_market_vol, 
+            IFNULL(SUM(goi.words_vol), 0) AS words_vol, 
             IFNULL(SUM(gsi.real_sale_qty), 0) AS real_sale_qty, 
             IFNULL(SUM(gsi.refund_qty), 0) AS refund_qty, 
             FORMAT(IF(IFNULL(SUM(gsi.sale_amount), 0) > 0, 
@@ -24,8 +24,8 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
             FORMAT(IF(IFNULL(SUM(gsi.promotion_amount), 0) > 0, 
                 IFNULL(SUM(gsi.sale_amount), 0) / SUM(gsi.promotion_amount), 
                 0), 2) AS roi, 
-            FORMAT(IF(IFNULL(SUM(gsi.words_market_vol), 0) > 0, 
-                IFNULL(SUM(gsi.words_vol), 0) / SUM(gsi.words_market_vol), 
+            FORMAT(IF(IFNULL(SUM(goi.words_market_vol), 0) > 0, 
+                IFNULL(SUM(goi.words_vol), 0) / SUM(goi.words_market_vol), 
                 0), 2) AS market_rate, 
             FORMAT(IF(IFNULL(SUM(gsi.real_sale_qty), 0) > 0, 
                 IFNULL(SUM(gsi.refund_qty), 0) / SUM(gsi.real_sale_qty), 
@@ -35,7 +35,9 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
                 FORMAT(IFNULL(SUM(gsi.profit), 0) / SUM(gsi.sale_amount), 2), 
             0) * 100 AS profit_rate`
     let sql = ` FROM dianshang_operation_attribute doa
-        JOIN goods_sale_info gsi ON gsi.goods_id = doa.goods_id` 
+        JOIN goods_sale_info gsi ON gsi.goods_id = doa.goods_id 
+        LEFT JOIN goods_other_info goi ON gsi.goods_id = goi.goods_id 
+            AND gsi.date = goi.date` 
     let subsql = ` WHERE gsi.date >= ? AND gsi.date <= ?`, p = [start, end]
     for (let i = 0; i < params.search.length; i++) {
         if (params.search[i].key == 'operation_rate') {
