@@ -30,7 +30,8 @@ const getDataStats = async (id, start, end, params) => {
     let result = JSON.parse(JSON.stringify(operationDefaultItem))
     let payment = 0, promotion_amount = 0, express_fee = 0, profit = 0, 
         invoice = 0, oriType, type = '', except = false, operation_amount = 0, 
-        words_market_vol = 0, words_vol = 0, real_sale_qty = 0, refund_qty = 0
+        words_market_vol = 0, words_vol = 0, real_sale_qty = 0, refund_qty = 0,
+        children = []
     if (params.type) {
         // jump permission, high level => low level
         oriType = typeList[params.type].map[0]
@@ -102,7 +103,28 @@ const getDataStats = async (id, start, end, params) => {
         profit += parseFloat(result[type].data[i].profit)
         if (type == typeList.project.value && result[type].data[i].name == projectNameList.coupang) continue
         invoice += parseFloat(result[type].data[i].invoice)
+        for (let j = 0; j < result[type].data[i].children.length; j++) {
+            if (!children[j]) {
+                let tmp = JSON.parse(JSON.stringify(result[type].data[i].children[j]))
+                tmp.id = 11 + j
+                tmp.closed = true
+                children.push(tmp)
+            } else {
+                for (let k in children[j]) {
+                    if (!['id', 'name', 'closed'].includes(k))
+                        children[j][k] = parseFloat(children[j][k]) + 
+                            parseFloat(result[type].data[i].children[j][k])
+                }
+            }
+        }
     }
+    for (let j = 0; j < children.length; j++) {
+        for (let k in children[j]) {
+            if (!['id', 'name', 'closed'].includes(k))
+                children[j][k] = parseFloat(children[j][k]).toFixed(2)
+        }
+    }
+    result.total.data[0].id = 10
     result.total.data[0].profit_rate = payment > 0 ? (profit / payment * 100).toFixed(2) : '0.00'
     result.total.data[0].operation_rate = payment > 0 ? (operation_amount / payment * 100).toFixed(2) : '0.00'
     result.total.data[0].roi = promotion_amount > 0 ? (payment / promotion_amount).toFixed(2) : '0.00'
@@ -115,6 +137,7 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].express_fee = express_fee.toFixed(2)
     result.total.data[0].profit = profit.toFixed(2)
     result.total.data[0].invoice = invoice.toFixed(2)
+    result.total.data[0].children = children
     return result
 }
 
@@ -172,6 +195,7 @@ const queryShopInfo = async (shops, result, type, start, end) => {
     }
     for (let i = 0; i < shopName.length; i++) {
         info = await goodsSaleInfoRepo.getPaymentByShopNamesAndTime(shopName[i].shop_name, start, end)
+        let children = await goodsSaleInfoRepo.getChildPaymentByShopNamesAndTime(shopName[i].shop_name, start, end)
         if (info?.length) {
             payment = parseFloat(info[0].sale_amount || 0).toFixed(2)
             promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)
@@ -188,11 +212,19 @@ const queryShopInfo = async (shops, result, type, start, end) => {
             words_market_vol = parseFloat(info[0].words_market_vol || 0).toFixed(2)
             words_vol = parseFloat(info[0].words_vol || 0).toFixed(2)
         }
+        for (let j = 0; j < children.length; j++) {
+            children[j].id = (typeList[type].key + i) * 20 + 1 + j
+            children[j].closed = true
+            if (children[j].type == 0) children[j].name = '无操作'
+            else if (children[j].type == 1) children[j].name = '新品'
+            else children[j].name = '老品'
+        }
         if (typeList[type].key < 3) {
             info = await settlementRepo.getAmount(start, end + ' 23:59:59', shopName[i].shop_name, except)
             if (info?.length) invoice = parseFloat(info[0].amount || 0).toFixed(2)
         }
         result[type].data.push({
+            id: (typeList[type].key + i) * 20,
             name: shopName[i].name,
             payment,
             promotion_amount,
@@ -208,7 +240,8 @@ const queryShopInfo = async (shops, result, type, start, end) => {
             real_sale_qty,
             refund_qty,
             words_market_vol,
-            words_vol
+            words_vol,
+            children
         })           
     }
     return result
@@ -249,6 +282,7 @@ const queryUserInfo = async (users, result, type, start, end) => {
         links = await userOperationRepo.getLinkIdsByUserNames(userName[i].nickname, userName[i].shopNames)
         let linkIds = links.map((item) => item.goods_id).join('","')
         info = await goodsSaleInfoRepo.getPaymentByLinkIdsAndTime(linkIds, start, end)
+        let children = await goodsSaleInfoRepo.getChildPaymentByLinkIdsAndTime(linkIds, start, end)
         if (info?.length) {
             payment = parseFloat(info[0].sale_amount || 0).toFixed(2)
             promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)            
@@ -265,7 +299,15 @@ const queryUserInfo = async (users, result, type, start, end) => {
             words_market_vol = parseFloat(info[0].words_market_vol || 0).toFixed(2)
             words_vol = parseFloat(info[0].words_vol || 0).toFixed(2)
         }
+        for (let j = 0; j < children.length; j++) {
+            children[j].id = (typeList[type].key + i) * 20 + 1 + j
+            children[j].closed = true
+            if (children[j].type == 0) children[j].name = '无操作'
+            else if (children[j].type == 1) children[j].name = '新品'
+            else children[j].name = '老品'
+        }
         result[type].data.push({
+            id: (typeList[type].key + i) * 20,
             name: userName[i].name,
             payment,
             promotion_amount,
@@ -281,7 +323,8 @@ const queryUserInfo = async (users, result, type, start, end) => {
             real_sale_qty,
             refund_qty,
             words_market_vol,
-            words_vol
+            words_vol,
+            children
         })        
     }
     return result
