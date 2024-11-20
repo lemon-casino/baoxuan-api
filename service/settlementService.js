@@ -569,7 +569,7 @@ const getTMInfo = async (params) => {
     let columns = params.sheet[0].getRow(1).values
     let settle_time_row = null, order_id_row = null, sub_order_id_row = null, 
     settle_order_id_row = null, amount_row = 0, type_row = null, goods_id_row = null, 
-    sku_id_row = null, minus = false, payment_row = null, refund_row = null
+    sku_id_row = null, minus = false, refund_row = null
     for (let i = 1; i <= columns.length; i++) {
         if (columns[i] == '扣费日期') {
             settle_time_row = i
@@ -591,8 +591,6 @@ const getTMInfo = async (params) => {
             goods_id_row = i
         } else if (columns[i] == 'sku') {
             sku_id_row = i
-        } else if (columns[i] == '收/付渠道') {
-            payment_row = i
         } else if (columns[i] == '退款金额（元）') {
             refund_row = i
         }
@@ -612,13 +610,15 @@ const getTMInfo = async (params) => {
             amount = row.getCell(amount_row).value
             if (minus) amount = - amount
         }
-        if (type_row) row.getCell(type_row).value
-        if (goods_id_row) goods_id = row.getCell(goods_id_row).value
-        if (sku_id_row) sku_id = row.getCell(sku_id_row).value
-        if (payment_row) {
-            if (row.getCell(payment_row).value == '商家保证金') 
+        if (type_row) {
+            if (typeof(row.getCell(type_row).value) == 'string' && 
+            row.getCell(type_row).value.trim() == '交易货款' &&
+            row.getCell(refund_row).value && 
+            row.getCell(refund_row).value > 0)
                 amount = - row.getCell(refund_row).value
         }
+        if (goods_id_row) goods_id = row.getCell(goods_id_row).value
+        if (sku_id_row) sku_id = row.getCell(sku_id_row).value
         if (amount == 0) continue
         count += 1
         data.push(
