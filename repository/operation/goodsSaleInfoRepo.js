@@ -61,7 +61,8 @@ goodsSaleInfoRepo.getChildPaymentByShopNamesAndTime = async (shopNames, start, e
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
                 IFNULL(SUM(a1.profit), 0) / SUM(a1.sale_amount) * 100, 
                 0), 2) AS profit_rate FROM goods_sale_info a1
-        LEFT JOIN goods_other_info a2 ON a1.goods_id = a2.goods_id
+        LEFT JOIN goods_other_info a2 ON a1.goods_id = a2.goods_id 
+        LEFT JOIN dianshang_operation_attribute doa ON doa.goods_id = a1.goods_id
             AND a1.date = a2.date
         WHERE a1.shop_name IN ("${shopNames}") 
             AND a1.date >= ?
@@ -215,6 +216,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(a4.words_market_vol), 0) AS words_market_vol, 
             IFNULL(SUM(a4.words_vol), 0) AS words_vol, 
+            FORMAT(IFNULL(SUM(a4.dsr), 0) / COUNT(1), 2) AS dsr, 
             IFNULL(SUM(a1.real_sale_qty), 0) AS real_sale_qty, 
             IFNULL(SUM(a1.refund_qty), 0) AS refund_qty, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
