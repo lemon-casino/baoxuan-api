@@ -224,15 +224,29 @@ const queryUserInfo = async (users, result, type, start, end) => {
         if (i == 0 || users[i].name != users[i-1].name) {
             userName.push({
                 nickname: users[i].nickname,
-                name: users[i].name
+                name: users[i].name,
+                shops: users[i].shop_name ? [...users[i].shop_name.split(',')] : []
             })
             j = j+1
         } else {
             userName[j].nickname = `${userName[j].nickname}","${users[i].nickname}`
+            userName[j].shops = users[i].shop_name ? 
+                userName[j].shops.push(...users[i].shop_name.split(',')) :
+                userName[j].shops
         }
     }
     for (let i = 0; i < userName.length; i++) {
-        links = await userOperationRepo.getLinkIdsByUserNames(userName[i].nickname)
+        if (userName[i].shops.length) {
+            let shops = [], exists = {}
+            userName[i].shops.forEach(item => {
+                if (!exists[item] && item != '') {
+                    exists[item] = true
+                    shops.push(item)
+                }
+            })
+            userName[i].shopNames = shops.join('","')
+        }
+        links = await userOperationRepo.getLinkIdsByUserNames(userName[i].nickname, userName[i].shopNames)
         let linkIds = links.map((item) => item.goods_id).join('","')
         info = await goodsSaleInfoRepo.getPaymentByLinkIdsAndTime(linkIds, start, end)
         if (info?.length) {
@@ -319,10 +333,13 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             userInfo.push(...users)
         }
     }
+    if (params.type == typeList.shop.value) {
+        shopInfo.push({shop_name: params.name})
+    }
     if (shopInfo?.length) shopNames = shopInfo.map((item) => item.shop_name).join('","')
     if (userInfo?.length) {
         userNames = userInfo.map((item) => item.nickname).join('","')
-        let links = await userOperationRepo.getLinkIdsByUserNames(userNames)
+        let links = await userOperationRepo.getLinkIdsByUserNames(userNames, shopNames)
         linkIds = links.map((item) => item.goods_id).join('","')
     }    
     params.search = JSON.parse(params.search)
@@ -611,7 +628,8 @@ const getGoodsLineInfo = async (startDate, endDate, params, id) => {
             {title: '开发负责人', field_id: 'exploit_director'},
             {title: '采购负责人', field_id: 'purchase_director'},
             {title: '产品线管理人', field_id: 'line_manager'},
-            {title: '产品线运营人', field_id: 'operator'},
+            {title: '运营负责人', field_id: 'operator'},
+            {title: '产品线负责人', field_id: 'line_director'},
             {title: '上架时间', field_id: 'onsale_date'},
         ],
         data: {}
@@ -640,6 +658,9 @@ const getGoodsLineInfo = async (startDate, endDate, params, id) => {
             shopInfo.push(...shops)
             userInfo.push(...users)
         }
+    }
+    if (params.type == typeList.shop.value) {
+        shopInfo.push({shop_name: params.name})
     }
     if (shopInfo?.length) shopNames = shopInfo.map((item) => item.shop_name).join('","')
     if (userInfo?.length) userNames = userInfo.map((item) => item.nickname).join('","')

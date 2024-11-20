@@ -115,10 +115,19 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
         subsql = `${subsql} 
             AND doa.operator IN ("${userNames}")`
     }
+    if (params.goods_id) {
+        subsql = `${subsql} 
+            AND gsi.goods_id LIKE '%${params.goods_id}%'`
+    }
+    if (params.line_director) {
+        subsql = `${subsql} 
+            AND doa.line_director LIKE '%${params.line_director}%'`
+    }
     let size = parseInt(params.pageSize)
     let page = parseInt(params.currentPage)
     let offset = (page - 1) * size
-    let search = `${presql}${sql}${subsql} GROUP BY doa.goods_id`, result = {
+    let search = `${presql} FROM (
+            SELECT doa.goods_id${sql}${subsql} GROUP BY doa.goods_id) a`, result = {
         total: 0,
         data: [],
         sum: 0
@@ -135,7 +144,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
             doa1.sku_id, doa1.product_definition, doa1.stock_structure, 
             doa1.product_rank, doa1.product_design_attr, doa1.seasons, doa1.brand, 
             doa1.targets, doa1.exploit_director, doa1.purchase_director, 
-            doa1.line_manager, doa1.operator, doa1.onsale_date FROM  
+            doa1.line_manager, doa1.operator, doa1.line_director, doa1.onsale_date FROM  
             (${presql1}${sql}${subsql} GROUP BY doa.goods_id LIMIT ${offset}, ${size}) a
             JOIN dianshang_operation_attribute doa1 ON a.goods_id = doa1.goods_id 
             JOIN shop_info si ON si.shop_name = doa1.shop_name 
@@ -147,7 +156,8 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
 }
 
 userOperationRepo.getUsersByShopName = async (shopName) => {
-    const sql = `SELECT doa.operator AS nickname, doa.operator AS name 
+    const sql = `SELECT doa.operator AS nickname, doa.operator AS name, 
+            GROUP_CONCAT(doa.shop_name) AS shop_name 
         FROM dianshang_operation_attribute doa 
         JOIN goods_sale_info gsi ON doa.goods_id = gsi.goods_id 
         WHERE gsi.shop_name = ? 
@@ -157,7 +167,8 @@ userOperationRepo.getUsersByShopName = async (shopName) => {
 }
 
 userOperationRepo.getUsersByProjectName = async (projectName) => {
-    const sql = `SELECT doa.operator AS nickname, doa.operator AS name 
+    const sql = `SELECT doa.operator AS nickname, doa.operator AS name, 
+            GROUP_CONCAT(doa.shop_name) AS shop_name 
         FROM dianshang_operation_attribute doa 
         JOIN goods_sale_info gsi ON doa.goods_id = gsi.goods_id 
         JOIN shop_info si ON si.shop_name = gsi.shop_name 
@@ -181,9 +192,10 @@ userOperationRepo.getPermissionLimit = async (user_id) => {
     return result || []
 }
 
-userOperationRepo.getLinkIdsByUserNames = async (userNames) => {
-    const sql = `SELECT goods_id FROM dianshang_operation_attribute 
+userOperationRepo.getLinkIdsByUserNames = async (userNames, shopNames) => {
+    let sql = `SELECT goods_id FROM dianshang_operation_attribute 
         WHERE operator IN ("${userNames}")`
+    if (shopNames?.length) sql = `${sql} AND shop_name IN ("${shopNames}")`
     const result = await query(sql)
     return result || []
 }
