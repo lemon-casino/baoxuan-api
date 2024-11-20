@@ -37,7 +37,7 @@ goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) =
 }
 
 goodsSaleInfoRepo.getChildPaymentByShopNamesAndTime = async (shopNames, start, end) => {
-    const sql = `SELECT IFNULL(SUM(A1.sale_amount), 0) AS sale_amount, 
+    const sql = `SELECT IFNULL(SUM(A1.sale_amount), 0) AS payment, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
@@ -60,13 +60,21 @@ goodsSaleInfoRepo.getChildPaymentByShopNamesAndTime = async (shopNames, start, e
             IFNULL(SUM(a1.profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
                 IFNULL(SUM(a1.profit), 0) / SUM(a1.sale_amount) * 100, 
-                0), 2) AS profit_rate FROM goods_sale_info a1
-        LEFT JOIN goods_other_info a2 ON a1.goods_id = a2.goods_id 
+                0), 2) AS profit_rate, 
+            (CASE WHEN doa.onsale_date IS NULL OR 
+					doa.operator IN ('无操作', '非操作') THEN 0
+				WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= doa.onsale_date THEN 1
+				ELSE 2 END) AS type FROM goods_sale_info a1
         LEFT JOIN dianshang_operation_attribute doa ON doa.goods_id = a1.goods_id
+        LEFT JOIN goods_other_info a2 ON a1.goods_id = a2.goods_id 
             AND a1.date = a2.date
         WHERE a1.shop_name IN ("${shopNames}") 
             AND a1.date >= ?
-            AND a1.date <= ?`
+            AND a1.date <= ?
+        GROUP BY (CASE WHEN doa.onsale_date IS NULL OR 
+					doa.operator IN ('无操作', '非操作') THEN 0
+				WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= doa.onsale_date THEN 1
+				ELSE 2 END)`
     const result = await query(sql, [start, end])
     return result || []
 }
@@ -101,6 +109,49 @@ goodsSaleInfoRepo.getPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
         WHERE a1.goods_id IN ("${linkIds}") 
             AND a1.date >= ?
             AND a1.date <= ?`
+    const result = await query(sql, [start, end])
+    return result || []
+}
+
+goodsSaleInfoRepo.getChildPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
+    const sql = `SELECT IFNULL(SUM(a1.sale_amount), 0) AS payment, 
+            IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
+            IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
+            IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
+            IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
+            IFNULL(SUM(a2.words_vol), 0) AS words_vol, 
+            IFNULL(SUM(a1.real_sale_qty), 0) AS real_sale_qty, 
+            IFNULL(SUM(a1.refund_qty), 0) AS refund_qty, 
+            FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
+                IFNULL(SUM(a1.operation_amount), 0) / SUM(a1.sale_amount) * 100, 
+                0), 2) AS operation_rate, 
+            FORMAT(IF(IFNULL(SUM(a1.promotion_amount), 0) > 0, 
+                IFNULL(SUM(a1.sale_amount), 0) / SUM(a1.promotion_amount), 
+                0), 2) AS roi, 
+            FORMAT(IF(IFNULL(SUM(a2.words_market_vol), 0) > 0, 
+                IFNULL(SUM(a2.words_vol), 0) / SUM(a2.words_market_vol) * 100, 
+                0), 2) AS market_rate, 
+            FORMAT(IF(IFNULL(SUM(a1.real_sale_qty), 0) > 0, 
+                IFNULL(SUM(a1.refund_qty), 0) / SUM(a1.real_sale_qty) * 100, 
+                0), 2) AS refund_rate, 
+            IFNULL(SUM(a1.profit), 0) AS profit, 
+            FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
+                IFNULL(SUM(a1.profit), 0) / SUM(a1.sale_amount) * 100, 
+                0), 2) AS profit_rate, 
+            (CASE WHEN doa.onsale_date IS NULL OR 
+					doa.operator IN ('无操作', '非操作') THEN 0
+				WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= doa.onsale_date THEN 1
+				ELSE 2 END) AS type FROM goods_sale_info a1 
+        LEFT JOIN dianshang_operation_attribute doa ON doa.goods_id = a1.goods_id
+        LEFT JOIN goods_other_info a2 ON a1.goods_id = a2.goods_id
+            AND a1.date = a2.date
+        WHERE a1.goods_id IN ("${linkIds}") 
+            AND a1.date >= ?
+            AND a1.date <= ?
+        GROUP BY (CASE WHEN doa.onsale_date IS NULL OR 
+                doa.operator IN ('无操作', '非操作') THEN 0
+            WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= doa.onsale_date THEN 1
+            ELSE 2 END)`
     const result = await query(sql, [start, end])
     return result || []
 }
