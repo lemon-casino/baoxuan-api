@@ -197,6 +197,10 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         subsql = `${subsql}
                 AND a1.goods_id IN ("${linkIds}")`
     }
+    if (params.goods_id) {
+        subsql = `${subsql}
+                AND a1.goods_id LIKE "%${params.goods_id}%"`
+    }
     let sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id, a1.goods_name`
     sql = `SELECT COUNT(1) AS count, SUM(sale_amount) AS sale_amount 
         FROM (${sql}${subsql}${sql1}) a`
