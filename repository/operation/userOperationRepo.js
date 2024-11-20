@@ -16,6 +16,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
             IFNULL(SUM(gsi.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(goi.words_market_vol), 0) AS words_market_vol, 
             IFNULL(SUM(goi.words_vol), 0) AS words_vol, 
+            FORMAT(IFNULL(SUM(goi.dsr), 0) / COUNT(1), 2) AS dsr, 
             IFNULL(SUM(gsi.real_sale_qty), 0) AS real_sale_qty, 
             IFNULL(SUM(gsi.refund_qty), 0) AS refund_qty, 
             FORMAT(IF(IFNULL(SUM(gsi.sale_amount), 0) > 0, 
@@ -150,7 +151,16 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
             JOIN shop_info si ON si.shop_name = doa1.shop_name 
             JOIN project_info pi ON pi.id = si.project_id`
         info = await query(search, p)
-        if (info?.length) result.data = info
+        if (info?.length) {
+            for (let i = 0; i < info.length; i++) {
+                sql = `SELECT sku_id FROM goods_sale_info WHERE goods_id = ? 
+                    GROUP BY sku_id ORDER BY SUM(sale_amount) DESC LIMIT 1`
+                let row1 = await query(sql, [info[i].goods_id])
+                info[i].sku_id = row1[0].sku_id
+                
+            }
+            result.data = info
+        }
     }
     return result
 }
