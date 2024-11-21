@@ -347,7 +347,7 @@ goodsSaleInfoRepo.getDataDetailByTime = async(column, goods_id, start, end) => {
     return result || []
 }
 
-goodsSaleInfoRepo.getDataRateByTime = async(col1, col2, column, start, end, percent) => {
+goodsSaleInfoRepo.getDataRateByTime = async(col1, col2, column, goods_id, start, end, percent) => {
     const sql = `SELECT FORMAT(IF(IFNULL(SUM(${col1}), 0) > 0, 
             IFNULL(SUM(${col2}), 0) / SUM(${col1}), 0) * ${percent}, 2) AS ${column}, 
             \`date\` FROM goods_sale_info WHERE \`date\` >= ? AND \`date\` <= ? 
