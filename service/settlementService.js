@@ -572,10 +572,7 @@ const getTMInfo = async (params) => {
     sku_id_row = null, minus = false, refund_row = null
     for (let i = 1; i <= columns.length; i++) {
         if (columns[i] == '扣费日期') {
-            settle_time_row = i
             minus = true
-        } else if (columns[i] == '打款时间') {
-            settle_time_row = i
         } else if (['订单号', '交易主订单号'].includes(columns[i])) {
             order_id_row = i
         } else if (['子订单号', '交易子订单号'].includes(columns[i])) {
