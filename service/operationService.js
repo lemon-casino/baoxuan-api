@@ -104,15 +104,15 @@ const getDataStats = async (id, start, end, params) => {
         if (type == typeList.project.value && result[type].data[i].name == projectNameList.coupang) continue
         invoice += parseFloat(result[type].data[i].invoice)
         for (let j = 0; j < result[type].data[i].children.length; j++) {
-            if (!children[j]) {
+            if (!children[result[type].data[i].children[j].type]) {
                 let tmp = JSON.parse(JSON.stringify(result[type].data[i].children[j]))
                 tmp.id = 11 + j
                 tmp.closed = true
-                children.push(tmp)
+                children[result[type].data[i].children[j].type] = tmp
             } else {
                 for (let k in children[j]) {
                     if (!['id', 'name', 'closed'].includes(k))
-                        children[j][k] = parseFloat(children[j][k]) + 
+                        children[result[type].data[i].children[j].type][k] = parseFloat(children[result[type].data[i].children[j].type][k]) + 
                             parseFloat(result[type].data[i].children[j][k])
                 }
             }
@@ -338,16 +338,16 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             {title: '店铺名称', field_id: 'shop_name'},
             {title: '店铺编码', field_id: 'shop_id'},
             {title: '商品名称', field_id: 'goods_name'},
-            {title: '发货金额', field_id: 'sale_amount'},
-            {title: '推广费', field_id: 'promotion_amount'},
-            {title: '费比(%)', field_id: 'operation_rate'},
-            {title: 'ROI', field_id: 'roi'},
-            {title: '市占率(%)', field_id: 'market_rate'},
-            {title: '退货率(%)', field_id: 'refund_rate'},
-            {title: 'DSR评分', field_id: 'dsr'},
-            {title: '运费', field_id: 'express_fee'},
-            {title: '利润', field_id: 'profit'},
-            {title: '利润率(%)', field_id: 'profit_rate'},
+            {title: '发货金额', field_id: 'sale_amount', show: true},
+            {title: '推广费', field_id: 'promotion_amount', show: true},
+            {title: '费比(%)', field_id: 'operation_rate', show: true},
+            {title: 'ROI', field_id: 'roi', show: true},
+            {title: '市占率(%)', field_id: 'market_rate', show: true},
+            {title: '退货率(%)', field_id: 'refund_rate', show: true},
+            {title: 'DSR评分', field_id: 'dsr', show: true},
+            {title: '运费', field_id: 'express_fee', show: true},
+            {title: '利润', field_id: 'profit', show: true},
+            {title: '利润率(%)', field_id: 'profit_rate', show: true},
         ],
         data: {}
     }
@@ -387,6 +387,25 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
     }    
     params.search = JSON.parse(params.search)
     result.data = await goodsSaleInfoRepo.getData(startDate, endDate, params, shopNames, linkIds)
+    return result
+}
+
+const getGoodsInfoDetail = async (column, goods_id, start, end) => {
+    let result = []
+    if (['sale_amount', 'promotion_amount', 'express_fee', 'profit'].includes(column))
+        result = await goodsSaleInfoRepo.getDataDetailByTime(column, goods_id, start, end)
+    else if (column == 'operation_rate')
+        result = await goodsSaleInfoRepo.getDataRateByTime('sale_amount', 'promotion_amount', column, goods_id, start, end, 100)
+    else if (column == 'roi')
+        result = await goodsSaleInfoRepo.getDataRateByTime('promotion_amount', 'sale_amount', column, goods_id, start, end, 1)
+    else if (column == 'refund_rate')
+        result = await goodsSaleInfoRepo.getDataRateByTime('real_sale_qty', 'refund_qty', column, goods_id, start, end, 100)
+    else if (column == 'profit_rate')
+        result = await goodsSaleInfoRepo.getDataRateByTime('profit', 'sale_amount', column, goods_id, start, end, 100)
+    else if (column == 'dsr')
+        result = await goodsOtherInfoRepo.getDataDetailByTime(column, goods_id, start, end)
+    else if (column == 'market_rate')
+        result = await goodsOtherInfoRepo.getDataRateByTime('words_market_vol', 'words_vol', column, goods_id, start, end, 100)
     return result
 }
 
@@ -650,16 +669,16 @@ const getGoodsLineInfo = async (startDate, endDate, params, id) => {
             {title: '二级类目', field_id: 'second_category'},
             {title: '三级类目', field_id: 'level_3_category'},
             {title: '产品线简称', field_id: 'brief_product_line'},
-            {title: '发货金额', field_id: 'sale_amount'},
-            {title: '推广费', field_id: 'promotion_amount'},
-            {title: '费比(%)', field_id: 'operation_rate'},
-            {title: 'ROI', field_id: 'roi'},
-            {title: '市占率(%)', field_id: 'market_rate'},
-            {title: '退货率(%)', field_id: 'refund_rate'},
-            {title: 'DSR评分', field_id: 'dsr'},
-            {title: '运费', field_id: 'express_fee'},
-            {title: '利润', field_id: 'profit'},
-            {title: '利润率(%)', field_id: 'profit_rate'},
+            {title: '发货金额', field_id: 'sale_amount', show: true},
+            {title: '推广费', field_id: 'promotion_amount', show: true},
+            {title: '费比(%)', field_id: 'operation_rate', show: true},
+            {title: 'ROI', field_id: 'roi', show: true},
+            {title: '市占率(%)', field_id: 'market_rate', show: true},
+            {title: '退货率(%)', field_id: 'refund_rate', show: true},
+            {title: 'DSR评分', field_id: 'dsr', show: true},
+            {title: '运费', field_id: 'express_fee', show: true},
+            {title: '利润', field_id: 'profit', show: true},
+            {title: '利润率(%)', field_id: 'profit_rate', show: true},
             {title: '主销编码', field_id: 'sku_id'},
             {title: '产品定义', field_id: 'product_definition'},
             {title: '库存结构', field_id: 'stock_structure'},
@@ -759,5 +778,6 @@ module.exports = {
     importGoodsKeyWords,
     importGoodsDSR,
     getGoodsLineInfo,
+    getGoodsInfoDetail,
     getWorkStats
 }

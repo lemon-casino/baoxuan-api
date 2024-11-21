@@ -39,4 +39,22 @@ goodsOtherInfoRepo.updateDSR = async (info) => {
     return result?.affectedRows ? true : false
 }
 
+goodsOtherInfoRepo.getDataDetailByTime = async(column, goods_id, start, end) => {
+    const sql = `SELECT IFNULL(SUM(${column}), 0) AS ${column}, \`date\` 
+        FROM goods_other_info WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
+        GROUP BY \`date\``
+    const result = await query(sql, [start, end, goods_id])
+    return result || []
+}
+
+goodsOtherInfoRepo.getDataRateByTime = async(col1, col2, column, goods_id, start, end, percent) => {
+    const sql = `SELECT FORMAT(IF(IFNULL(SUM(${col1}), 0) > 0, 
+                IFNULL(SUM(${col2}), 0) / SUM(${col1}), 0) * ${percent}, 2) AS ${column}, 
+            \`date\` FROM goods_other_info WHERE \`date\` >= ? AND \`date\` <= ? 
+            AND goods_id = ?
+        GROUP BY \`date\``
+    const result = await query(sql, [start, end, goods_id])
+    return result || []
+}
+
 module.exports = goodsOtherInfoRepo

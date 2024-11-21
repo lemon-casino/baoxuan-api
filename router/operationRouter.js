@@ -10,6 +10,7 @@ router.get('/goods-line-info', operationApi.getGoodsLineInfo)
 router.post('/goods-info/import', operationApi.importGoodsInfo)
 router.post('/goods-key-words/import', operationApi.importGoodsKeyWords)
 router.post('/goods-dsr/import', operationApi.importGoodsDSR)
+router.get('/goods-info-detail/:column', operationApi.getGoodsInfoDetail)
 // 工作面板
 router.get('/work-pannel', operationApi.getWorkStats)
 
