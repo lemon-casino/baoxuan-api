@@ -6,8 +6,6 @@ const JDDailyReport = getJDDailyReport(sequelize)
 
 
 
-
-
 const inquiryTodayjdDailyReport = async () => {
 
     return  JDDailyReport.findAll({
@@ -111,9 +109,112 @@ async function isUpdateComplete(offset, batchSize) {
     return result[0]['COUNT(*)'] < batchSize; // 如果返回的记录数少于批量大小，说明更新完成
 }
 
+const  updateWeeklyTrafficChange = async () => {
+    const getDateString = (daysAgo) => new Date(new Date().setDate(new Date().getDate() - daysAgo)).toISOString().slice(0, 10);
+
+    const seven = getDateString(7);
+    const one = getDateString(1);
+    const fourteen = getDateString(14);
+    const eight = getDateString(8);
+
+    const query = `
+    SELECT
+        weekly_data.code,
+        weekly_data.last_week_visitors,
+        weekly_data.current_week_visitors,
+        ROUND(
+            IF(
+                weekly_data.last_week_visitors = 0,
+                0,
+                (weekly_data.current_week_visitors - weekly_data.last_week_visitors) / NULLIF(weekly_data.last_week_visitors, 0)*100
+            ),
+            2
+        ) AS traffic_change_percentage
+    FROM (
+        SELECT
+            current_monday.code,
+            SUM(IF(current_monday.report_time BETWEEN  `+"'"+fourteen+"'"+`  AND  `+"'"+eight +"'"+`, current_monday.visitors, 0)) AS last_week_visitors,
+            SUM(IF(current_monday.report_time BETWEEN `+"'"+seven+"'"+` AND `+"'"+one+"'"+`, current_monday.visitors, 0)) AS current_week_visitors
+        FROM
+            jd_daily_report AS current_monday
+        GROUP BY
+            current_monday.code
+    ) AS weekly_data;
+    `;
+
+    return JDDailyReport.sequelize.query(query, {
+        type: QueryTypes.SELECT,
+        logging:false
+    });
+}
+
+const updateWeeklyTraffic = async (weeklist) => {
+    console.log(weeklist)
+    for (const item of weeklist) {
+        await JDDailyReport.update(
+            { weeklyTraffic: item.traffic_change_percentage },
+            {
+                where: {
+                    code: item.code,
+                    createdAt: new Date()
+                }
+            }
+        );
+    }
+
+}
+
+// 更新周利润 周利润率
+ const updateWeeklyProfit = async () => {
+    // 查看上周的数据 利润综合
+    const getDateString = (daysAgo) => new Date(new Date().setDate(new Date().getDate() - daysAgo)).toISOString().slice(0, 10);
+    const seven = getDateString(7);
+    const one = getDateString(1);
+
+   const  list =await  JDDailyReport.findAll(
+        {
+            attributes: ['code', [fn('SUM', col('profit')), 'weeklyProfit'], [fn('SUM', col('transaction_amount')), 'transactionAmount']],
+            where: {
+                reportTime: {
+                    [Op.between]: [seven, one]
+                }
+            },
+            group: ['code'],
+            logging:true,
+            raw:true
+        }
+    )
+     for (const listElement of list) {
+       await JDDailyReport.update(
+             {weeklyProfit: listElement.weeklyProfit},
+             {
+                 where: {
+                     code: listElement.code,
+                     reportTime: one
+                 },
+                 logging:true
+             }
+         );
+         // 更新周利润率
+         await JDDailyReport.update(
+             {weeklyProfitMargin: listElement.transactionAmount === 0 ? 0 : listElement.weeklyProfit / listElement.transactionAmount},
+             {
+                 where: {
+                     code: listElement.code,
+                     reportTime: one
+                 },
+                 logging:true
+             }
+         );
+     }
+    
+}
 
 
 module.exports = {
     inquiryTodayjdDailyReport,
-    updateFluxForYesterday
+    updateFluxForYesterday,
+    updateWeeklyTrafficChange,
+    updateWeeklyTraffic,
+    updateWeeklyProfit
 }
