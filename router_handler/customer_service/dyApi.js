@@ -276,7 +276,7 @@ const getDYDPDataByDate = async (req, res, next) => {
         const options_shopname=await dyService.getShopName(req.query.startDate, req.query.endDate)
         const columns = [
             { header: '店铺名称', key: 'shopname', isDefault: true },
-            { header: '账号名称', key: 'servicer', isDefault: true },
+            // { header: '账号名称', key: 'servicer', isDefault: true },
             { header: '3分钟人工回复率 (会话)', key: 'session_in_3_rate', isDefault: true },
             { header: '新平均响应时长（秒）', key: 'ave_response_duration', isDefault: true },
             { header: '满意率', key: 'satisfaction_rate', isDefault: true },
