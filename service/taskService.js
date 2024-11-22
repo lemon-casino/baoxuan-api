@@ -637,9 +637,7 @@ const syncProcessVersions = async (cookies) => {
 
 const jdLinkDataIsAutomaticallyInitiated = async () => {
     logger.info("京东同步进行中...")
-       const  runningFightingFlows =await  getInquiryTodayjdDailyReport()
     const userList = await userService.getDingDingUserIdAndNickname()
-
     const removeDuplicateLinkIds = async () => {
         const runningFightingFlows = await getInquiryTodayjdDailyReport();
 

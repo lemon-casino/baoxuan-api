@@ -291,6 +291,15 @@ module.exports = sequelize => {
       comment: "利润率（GMV） (%)",
       field: "profit_margins"
     },
+    weeklyTraffic:{
+      type: DataTypes.DECIMAL,
+      allowNull: true,
+      defaultValue: "0.00",
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "周流量下降(%)",
+      field: "weekly_traffic"
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: true,
@@ -299,6 +308,25 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: "创建时间",
       field: "created_at"
+    },
+    // 周利润
+    weeklyProfit:{
+        type: DataTypes.DECIMAL,
+        allowNull: true,
+        defaultValue: "0.00",
+        primaryKey: false,
+        autoIncrement: false,
+        comment: "周利润",
+        field: "weekly_profit"
+    },// 周利润率
+    weeklyProfitMargin:{
+        type: DataTypes.DECIMAL,
+        allowNull: true,
+        defaultValue: "0.00",
+        primaryKey: false,
+        autoIncrement: false,
+        comment: "周利润率",
+        field: "weekly_profit_margin"
     }
   };
   const options = {
