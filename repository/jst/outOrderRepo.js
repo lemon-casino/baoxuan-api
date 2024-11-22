@@ -47,4 +47,10 @@ outOrderRepo.getSalesByTime = async (start, end) => {
     return result || []
 }
 
+outOrderRepo.getByIoId = async (io_id) => {
+    let sql = `SELECT io_id FROM jst_out_order_info WHERE io_id = ?`
+    let result = await query(sql, [io_id])
+    return result
+}
+
 module.exports = outOrderRepo

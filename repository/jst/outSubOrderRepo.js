@@ -23,4 +23,12 @@ outSubOrderRepo.updateByIdAndShopId = async (data) => {
     const result = await query(sql, data)
     return result?.affectedRows ? true : false
 }
+
+outSubOrderRepo.getByIoIdAndIoiId = async (io_id, ioi_id) => {
+    let sql = `SELECT ioi_id FROM jst_out_sub_order_info WHERE io_id = ? 
+        AND ioi_id = ?`
+    let result = await query(sql, [io_id, ioi_id])
+    return result
+}
+
 module.exports = outSubOrderRepo
