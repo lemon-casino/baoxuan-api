@@ -175,29 +175,39 @@ const getInquiryTodayjdDailyReport = async () => {
     for (let i = filteredResults.length - 1; i >= 0; i--) {
         const filteredResult = filteredResults[i];
         const judgment = await link_properties(filteredResult.linkId);
-
-        if (judgment === '市场低利润') {
-            // Remove '利润率小于15%' if it exists
-            filteredResult.questionType = filteredResult.questionType.filter(type => type !== '利润率小于10%');
+        switch (judgment) {
+            case '市场低利润':
+                filteredResult.questionType = filteredResult.questionType.filter(type => type !== '利润率小于10%');
+                break;
+            case '新品上攻':
+            case '老品打仗':
+                // Remove '利润率小于10%', '利润为负', and '推广费比大于12%'
+                filteredResult.questionType = filteredResult.questionType.filter(type =>
+                    type !== '利润率小于10%' && type !== '利润为负' && type !== '推广费比大于12%'
+                );
+                break;
+            case '销完下架':
+                if (firstDayOfTheWeek) {
+                    filteredResult.questionType = filteredResult.questionType.filter(type =>
+                        type === '流量下降20%' || type === '利润为负'
+                    );
+                } else {
+                    filteredResult.questionType = [];
+                }
+                break;
+            case '动销':
+                if (firstDayOfTheWeek) {
+                    filteredResult.questionType = filteredResult.questionType.filter(type =>
+                        type === '流量下降20%' || type === '利润率小于10%' || type === '利润为负'
+                    );
+                } else {
+                    filteredResult.questionType = [];
+                }
+                break;
+            case '下柜':
+                filteredResult.questionType = filteredResult.questionType.filter(type => type === '利润为负');
+                break;
         }
-        else if (judgment === '新品上攻' || judgment === '老品打仗') {
-            // Remove '利润率小于15%', '利润为负', and '推广费比大于12%'
-            filteredResult.questionType = filteredResult.questionType.filter(type =>
-                type !== '利润率小于10%' && type !== '利润为负' && type !== '推广费比大于12%'
-            );
-        }
-        else if (judgment === '销完下架' && firstDayOfTheWeek) {
-            filteredResult.questionType = filteredResult.questionType.filter(type =>
-                type === '流量下降20%' || type === '利润为负'
-            );
-        }
-        else if (judgment==="动销"&& firstDayOfTheWeek){
-            filteredResult.questionType=filteredResult.questionType.filter(type=>type==="流量下降20%"|| type==='利润率小于10%' || type==='利润为负')
-        }
-        else if (judgment==="下柜"){
-            filteredResult.questionType=filteredResult.questionType.filter(type=>type==="利润为负")
-        }
-        // If the questionType array is empty, remove the filteredResult from filteredResults
         if (filteredResult.questionType.length === 0) {
             filteredResults.splice(i, 1);
         }
