@@ -5,6 +5,7 @@ const operationApi = require('../router_handler/operationApi')
 
 // 数据面板
 router.get('/data-pannel', operationApi.getDataStats)
+router.get('/data-pannel-detail/:column', operationApi.getDataStatsDetail)
 router.get('/goods-info', operationApi.getGoodsInfo)
 router.get('/goods-line-info', operationApi.getGoodsLineInfo)
 router.post('/goods-info/import', operationApi.importGoodsInfo)

@@ -36,8 +36,26 @@ goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) =
     return result || []
 }
 
+goodsSaleInfoRepo.getDetailByShopNamesAndTme = async (shopNames, column, start, end) => {
+    let sql = `SELECT IFNULL(SUM(${column}), 0) AS ${column}, \`date\` FROM goods_sale_info 
+        WHERE \`date\` >= ? AND \`date\` <= ? AND shop_name IN ("${shopNames}") 
+        GROUP BY \`date\``
+    let result = await query(sql, [start, end])
+    return  result || []
+}
+
+goodsSaleInfoRepo.getRateByShopNamesAndTme = async (shopNames, col1, col2, column, start, end, percent) => {
+    let sql = `SELECT FORMAT(IF(IFNULL(SUM(${col1}), 0) > 0, 
+                IFNULL(SUM(${col2}), 0) / SUM(${col1}) * ${percent}, 0), 2) AS ${column}, \`date\` 
+        FROM goods_sale_info 
+        WHERE \`date\` >= ? AND \`date\` <= ? AND shop_name IN ("${shopNames}") 
+        GROUP BY \`date\``
+    let result = await query(sql, [start, end])
+    return  result || []
+}
+
 goodsSaleInfoRepo.getChildPaymentByShopNamesAndTime = async (shopNames, start, end) => {
-    const sql = `SELECT IFNULL(SUM(A1.sale_amount), 0) AS payment, 
+    const sql = `SELECT IFNULL(SUM(A1.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
@@ -113,8 +131,26 @@ goodsSaleInfoRepo.getPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
     return result || []
 }
 
+goodsSaleInfoRepo.getDetailByLinkIdsAndTme = async (linkIds, column, start, end) => {
+    let sql = `SELECT IFNULL(SUM(${column}), 0) AS ${column}, \`date\` FROM goods_sale_info 
+        WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id IN ("${linkIds}") 
+        GROUP BY \`date\``
+    let result = await query(sql, [start, end])
+    return  result || []
+}
+
+goodsSaleInfoRepo.getRateByLinkIdsAndTme = async (linkIds, col1, col2, column, start, end, percent) => {
+    let sql = `SELECT FORMAT(IF(IFNULL(SUM(${col1}), 0) > 0, 
+                IFNULL(SUM(${col2}), 0) / SUM(${col1}) * ${percent}, 0), 2) AS ${column}, \`date\` 
+        FROM goods_sale_info 
+        WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id IN ("${linkIds}") 
+        GROUP BY \`date\``
+    let result = await query(sql, [start, end])
+    return  result || []
+}
+
 goodsSaleInfoRepo.getChildPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
-    const sql = `SELECT IFNULL(SUM(a1.sale_amount), 0) AS payment, 
+    const sql = `SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
@@ -294,10 +330,12 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         row = await query(sql, p)
         if (row?.length) {
             for (let i = 0; i < row.length; i++) {
-                sql = `SELECT sku_id FROM goods_sale_info WHERE goods_id = ? 
-                    GROUP BY sku_id ORDER BY SUM(sale_amount) DESC LIMIT 1`
-                let row1 = await query(sql, [row[i].goods_id])
-                row[i].sku_id = row1[0].sku_id
+                if (row[i].goods_id) {
+                    sql = `SELECT sku_id FROM goods_sale_info WHERE goods_id = ? 
+                        GROUP BY sku_id ORDER BY SUM(sale_amount) DESC LIMIT 1`
+                    let row1 = await query(sql, [row[i].goods_id])
+                    row[i].sku_id = row1[0].sku_id
+                }
                 
             }
             result.data = row
@@ -310,6 +348,8 @@ goodsSaleInfoRepo.batchInsert = async (count, data) => {
     let sql = `INSERT INTO goods_sale_info(
             goods_id, 
             sku_id, 
+            goods_code, 
+            sku_code, 
             shop_name, 
             shop_id, 
             goods_name, 
@@ -326,15 +366,16 @@ goodsSaleInfoRepo.batchInsert = async (count, data) => {
             real_sale_qty,
             refund_qty) VALUES`
     for (let i = 0; i < count; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, data)
     return result?.affectedRows ? true : false
 }
 
-goodsSaleInfoRepo.deleteByDate = async (date) => {
-    let sql = `DELETE FROM goods_sale_info WHERE \`date\` = ?`
+goodsSaleInfoRepo.deleteByDate = async (date, column) => {
+    let sql = `DELETE FROM goods_sale_info WHERE \`date\` = ? 
+        AND ${column} IS NULL`
     const result = await query(sql, date)
     return result?.affectedRows ? true : false
 }

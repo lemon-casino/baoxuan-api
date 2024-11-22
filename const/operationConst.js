@@ -6,7 +6,7 @@ const typeList = {
         map: [2],
         item: [
             {label: '', key: 'name', is_link: true}, 
-            {label: '发货金额', key: 'payment'}, 
+            {label: '发货金额', key: 'sale_amount'}, 
             {label: '推广费', key: 'promotion_amount'}, 
             {label: '费比(%)', key: 'operation_rate'}, 
             {label: 'ROI', key: 'roi'}, 
@@ -25,7 +25,7 @@ const typeList = {
         map: [3, 4, 5],
         item: [
             {label: '', key: 'name', is_link: true}, 
-            {label: '发货金额', key: 'payment'}, 
+            {label: '发货金额', key: 'sale_amount'}, 
             {label: '推广费', key: 'promotion_amount'}, 
             {label: '费比(%)', key: 'operation_rate'}, 
             {label: 'ROI', key: 'roi'}, 
@@ -44,7 +44,7 @@ const typeList = {
         map: [5],
         item: [
             {label: '', key: 'name', is_link: true}, 
-            {label: '发货金额', key: 'payment'},
+            {label: '发货金额', key: 'sale_amount'},
             {label: '推广费', key: 'promotion_amount'},
             {label: '费比(%)', key: 'operation_rate'}, 
             {label: 'ROI', key: 'roi'}, 
@@ -62,7 +62,7 @@ const typeList = {
         map: [5],
         item: [
             {label: '', key: 'name', is_link: true}, 
-            {label: '发货金额', key: 'payment'},
+            {label: '发货金额', key: 'sale_amount'},
             {label: '推广费', key: 'promotion_amount'},
             {label: '费比(%)', key: 'operation_rate'}, 
             {label: 'ROI', key: 'roi'}, 
@@ -77,10 +77,10 @@ const typeList = {
         key: 5,
         value: 'user',
         column: 'link_id',
-        map: [],
+        map: [5],
         item: [
-            {label: '', key: 'name'}, 
-            {label: '发货金额', key: 'payment'},
+            {label: '', key: 'name', is_link: true}, 
+            {label: '发货金额', key: 'sale_amount'},
             {label: '推广费', key: 'promotion_amount'},
             {label: '费比(%)', key: 'operation_rate'}, 
             {label: 'ROI', key: 'roi'}, 
@@ -95,7 +95,7 @@ const typeList = {
 const operationDefaultItem = {
     total: {
         column: [],
-        data: [{name: '汇总', payment: 0, invoice: 0}]
+        data: [{name: '汇总', sale_amount: 0, invoice: 0}]
     },
     division: {
         column: [],

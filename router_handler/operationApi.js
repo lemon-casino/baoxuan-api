@@ -19,6 +19,25 @@ const getDataStats = async (req, res, next) => {
     }
 }
 
+const getDataStatsDetail = async (req, res, next) => {
+    try {
+        const {type, name, startDate, endDate} = req.query
+        joiUtil.validate({
+            column: {value: req.params.column, schema: joiUtil.commonJoiSchemas.strRequired},
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
+            name: {value: name, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const start = moment(req.query.startDate).format('YYYY-MM-DD')
+        const end = moment(req.query.endDate).format('YYYY-MM-DD')
+        const result = await operationService.getDataStatsDetail(type, name, req.params.column, start, end)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const getGoodsInfo = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(operationSchema.requiredDataSchema, req.query)
@@ -186,6 +205,7 @@ const getWorkStats = async (req, res, next) => {
 
 module.exports = {
     getDataStats,
+    getDataStatsDetail,
     getGoodsInfo,
     getGoodsLineInfo,
     importGoodsInfo,
