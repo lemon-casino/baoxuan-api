@@ -57,4 +57,24 @@ goodsOtherInfoRepo.getDataRateByTime = async(col1, col2, column, goods_id, start
     return result || []
 }
 
+goodsOtherInfoRepo.getRateByShopNamesAndTme = async (shopNames, col1, col2, column, start, end, percent) => {
+    let sql = `SELECT FORMAT(IF(IFNULL(SUM(${col1}), 0) > 0, 
+                IFNULL(SUM(${col2}), 0) / SUM(${col1}) * ${percent}, 0), 2) AS ${column}, \`date\` 
+        FROM goods_other_info 
+        WHERE \`date\` >= ? AND \`date\` <= ? AND shop_name IN ("${shopNames}") 
+        GROUP BY \`date\``
+    let result = await query(sql, [start, end])
+    return  result || []
+}
+
+goodsOtherInfoRepo.getRateByLinkIdsAndTme = async (linkIds, col1, col2, column, start, end, percent) => {
+    let sql = `SELECT FORMAT(IF(IFNULL(SUM(${col1}), 0) > 0, 
+                IFNULL(SUM(${col2}), 0) / SUM(${col1}) * ${percent}, 0), 2) AS ${column}, \`date\` 
+        FROM goods_other_info 
+        WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id IN ("${linkIds}") 
+        GROUP BY \`date\``
+    let result = await query(sql, [start, end])
+    return  result || []
+}
+
 module.exports = goodsOtherInfoRepo
