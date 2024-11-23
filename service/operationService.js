@@ -127,6 +127,11 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].id = 10
     result.total.data[0].profit_rate = sale_amount > 0 ? (profit / sale_amount * 100).toFixed(2) : '0.00'
     result.total.data[0].operation_rate = sale_amount > 0 ? (operation_amount / sale_amount * 100).toFixed(2) : '0.00'
+    result.total.data[0].operation_amount = operation_amount.toFixed(2)
+    result.total.data[0].words_market_vol = words_market_vol.toFixed(2)
+    result.total.data[0].words_vol = words_vol.toFixed(2)
+    result.total.data[0].real_sale_qty = real_sale_qty.toFixed(2)
+    result.total.data[0].refund_qty = refund_qty.toFixed(2)
     result.total.data[0].roi = promotion_amount > 0 ? (sale_amount / promotion_amount).toFixed(2) : '0.00'
     result.total.data[0].market_rate = words_market_vol > 0 ? (words_vol / words_market_vol * 100).toFixed(2) : '0.00'
     result.total.data[0].refund_rate = real_sale_qty > 0 ? (refund_qty / real_sale_qty * 100).toFixed(2) : '0.00'
@@ -137,7 +142,7 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].express_fee = express_fee.toFixed(2)
     result.total.data[0].profit = profit.toFixed(2)
     result.total.data[0].invoice = invoice.toFixed(2)
-    result.total.data[0].children = children.values()
+    result.total.data[0].children = children.filter(item => item.id)
     return result
 }
 
@@ -161,7 +166,7 @@ const getDataStatsDetail = async (type, name, column, start, end) => {
             shopNames = `${shopNames}${shops[i].shop_name}","`
         }
         shopNames = shopNames.substring(0, shopNames.length - 3)
-        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit'].includes(column))
+        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'real_sale_qty', 'refund'].includes(column))
             result = await goodsSaleInfoRepo.getDetailByShopNamesAndTme(shopNames, column, start, end)
         else if (column == 'operation_rate')
             result = await goodsSaleInfoRepo.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'promotion_amount', column, start, end, 100)
@@ -171,6 +176,8 @@ const getDataStatsDetail = async (type, name, column, start, end) => {
             result = await goodsSaleInfoRepo.getRateByShopNamesAndTme(shopNames, 'real_sale_qty', 'refund_qty', column, start, end, 100)
         else if (column == 'profit_rate')
             result = await goodsSaleInfoRepo.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'profit', column, start, end, 100)
+        else if (['words_vol', 'words_market_vol'].includes(column))
+            result = await goodsOtherInfoRepo.getDetailByShopNamesAndTme(shopNames, column, start, end)
         else if (column == 'market_rate')
             result = await goodsOtherInfoRepo.getRateByShopNamesAndTme(shopNames, 'words_market_vol', 'words_vol', column, start, end, 100)
         else if (column == 'invoice')
@@ -186,18 +193,20 @@ const getDataStatsDetail = async (type, name, column, start, end) => {
         userNames = userNames.substring(0, userNames.length - 3)
         let links = await userOperationRepo.getLinkIdsByUserNames(userNames, shopNames)
         let linkIds = links.map((item) => item.goods_id).join('","')
-        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit'].includes(column))
+        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'real_sale_qty', 'refund'].includes(column))
             result = await goodsSaleInfoRepo.getDetailByLinkIdsAndTme(linkIds, column, start, end)
         else if (column == 'operation_rate')
-            result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(shopNames, 'sale_amount', 'promotion_amount', column, start, end, 100)
+            result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(linkIds, 'sale_amount', 'promotion_amount', column, start, end, 100)
         else if (column == 'roi')
-            result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(shopNames, 'promotion_amount', 'sale_amount', column, start, end, 1)
+            result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(linkIds, 'promotion_amount', 'sale_amount', column, start, end, 1)
         else if (column == 'refund_rate')
-            result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(shopNames, 'real_sale_qty', 'refund_qty', column, start, end, 100)
+            result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(linkIds, 'real_sale_qty', 'refund_qty', column, start, end, 100)
         else if (column == 'profit_rate')
-            result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(shopNames, 'sale_amount', 'profit', column, start, end, 100)
+            result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(linkIds, 'sale_amount', 'profit', column, start, end, 100)
+        else if (['words_vol', 'words_market_vol'].includes(column))
+            result = await goodsOtherInfoRepo.getDetailByLinkIdsAndTme(linkIds, column, start, end)
         else if (column == 'market_rate')
-            result = await goodsOtherInfoRepo.getRateByLinkIdsAndTme(shopNames, 'words_market_vol', 'words_vol', column, start, end, 100)
+            result = await goodsOtherInfoRepo.getRateByLinkIdsAndTme(linkIds, 'words_market_vol', 'words_vol', column, start, end, 100)
     }
     return result || []
 }
