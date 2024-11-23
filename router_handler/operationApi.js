@@ -6,6 +6,7 @@ const moment = require('moment')
 const ExcelJS = require('exceljs')
 const formidable = require("formidable")
 const fs = require('fs')
+const iconv = require("iconv-lite")
 
 const getDataStats = async (req, res, next) => {
     try {
@@ -203,6 +204,117 @@ const getWorkStats = async (req, res, next) => {
     }
 }
 
+const importGoodsPromotionInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[2]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.csv.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsPromotionInfo(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importJDZYInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importJDZYInfo(rows)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importJDZYPromotionInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.csv.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let name = file.originalFilename.split('.')
+                let result = await operationService.importJDZYPromotionInfo(rows, name[0])
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -212,5 +324,8 @@ module.exports = {
     importGoodsKeyWords,
     importGoodsDSR,
     getGoodsInfoDetail,
-    getWorkStats
+    getWorkStats,
+    importGoodsPromotionInfo,
+    importJDZYInfo,
+    importJDZYPromotionInfo
 }

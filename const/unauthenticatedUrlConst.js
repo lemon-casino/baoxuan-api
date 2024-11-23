@@ -26,5 +26,8 @@ module.exports = [
     '/confirmation-notice/confirmNotice',
     '/operation/goods-key-words/import',
     '/operation/goods-dsr/import',
+    '/operation/goods-promotion-info/import',
+    '/operation/jdzz-info/import',
+    '/operation/jdzz-promotion-info/import',
     /^\/download\/.*/,
 ]

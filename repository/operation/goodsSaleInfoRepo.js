@@ -373,9 +373,11 @@ goodsSaleInfoRepo.batchInsert = async (count, data) => {
     return result?.affectedRows ? true : false
 }
 
-goodsSaleInfoRepo.deleteByDate = async (date, column) => {
+goodsSaleInfoRepo.deleteByDate = async (date, column, except) => {
     let sql = `DELETE FROM goods_sale_info WHERE \`date\` = ? 
         AND ${column} IS NULL`
+    if (except) sql = `${sql} AND shop_name = '京东自营旗舰店'`
+    else sql = `${sql} AND shop_name != '京东自营旗舰店'`
     const result = await query(sql, date)
     return result?.affectedRows ? true : false
 }
@@ -396,6 +398,22 @@ goodsSaleInfoRepo.getDataRateByTime = async(col1, col2, column, goods_id, start,
         GROUP BY \`date\``
     const result = await query(sql, [start, end, goods_id])
     return result || []
+}
+
+goodsSaleInfoRepo.updateFee = async(goods_id, sku_id, promotion_amount) => {
+    const sql = `UPDATE goods_sale_info SET promotion_amount = promotion_amount + ?, 
+        operation_amount = operation_amount + ?, profit = profit - ?, 
+        profit_rate = IF(sale_amount, (profit - ?) / sale_amount, 0) WHERE goods_id = ? 
+            AND sku_id = ?`
+    const result = await query(sql, [
+        promotion_amount, 
+        promotion_amount, 
+        promotion_amount, 
+        promotion_amount,
+        goods_id,
+        sku_id
+    ])
+    return result?.affectedRows ? true : false
 }
 
 module.exports = goodsSaleInfoRepo
