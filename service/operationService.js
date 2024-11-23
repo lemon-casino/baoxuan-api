@@ -166,7 +166,7 @@ const getDataStatsDetail = async (type, name, column, start, end) => {
             shopNames = `${shopNames}${shops[i].shop_name}","`
         }
         shopNames = shopNames.substring(0, shopNames.length - 3)
-        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'real_sale_qty', 'refund'].includes(column))
+        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'real_sale_qty', 'refund_qty'].includes(column))
             result = await goodsSaleInfoRepo.getDetailByShopNamesAndTme(shopNames, column, start, end)
         else if (column == 'operation_rate')
             result = await goodsSaleInfoRepo.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'promotion_amount', column, start, end, 100)
@@ -193,7 +193,7 @@ const getDataStatsDetail = async (type, name, column, start, end) => {
         userNames = userNames.substring(0, userNames.length - 3)
         let links = await userOperationRepo.getLinkIdsByUserNames(userNames, shopNames)
         let linkIds = links.map((item) => item.goods_id).join('","')
-        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'real_sale_qty', 'refund'].includes(column))
+        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'real_sale_qty', 'refund_qty'].includes(column))
             result = await goodsSaleInfoRepo.getDetailByLinkIdsAndTme(linkIds, column, start, end)
         else if (column == 'operation_rate')
             result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(linkIds, 'sale_amount', 'promotion_amount', column, start, end, 100)
@@ -580,6 +580,10 @@ const importGoodsInfo = async (rows, time) => {
     for (let i = 1; i < rows.length; i++) {
         amount += rows[i].getCell(sale_amount_row).value
         if (!rows[i].getCell(1).value) continue
+        let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
+            rows[i].getCell(shop_name_row).value.trim() : 
+            rows[i].getCell(shop_name_row).value
+        if (shop_name == '京东自营旗舰店') continue
         data.push(
             goods_id_row ? (typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
                 rows[i].getCell(goods_id_row).value.trim() : 
@@ -593,9 +597,7 @@ const importGoodsInfo = async (rows, time) => {
             sku_code_row ? (typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
                 rows[i].getCell(sku_code_row).value.trim() : 
                 rows[i].getCell(sku_code_row).value) : null,
-            typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
-                rows[i].getCell(shop_name_row).value.trim() : 
-                rows[i].getCell(shop_name_row).value,
+            shop_name,
             rows[i].getCell(shop_id_row).value,
             typeof(rows[i].getCell(goods_name_row).value) == 'string' ? 
                 rows[i].getCell(goods_name_row).value.trim() : 
