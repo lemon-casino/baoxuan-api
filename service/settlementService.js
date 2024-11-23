@@ -590,6 +590,8 @@ const getTMInfo = async (params) => {
             sku_id_row = i
         } else if (columns[i] == '退款金额（元）') {
             refund_row = i
+        } else if (columns[i] == '打款时间') {
+            settle_order_id_row = i
         }
     }
     let rows = params.sheet[0].getRows(2, params.sheet[0].rowCount - 1)
