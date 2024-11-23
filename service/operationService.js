@@ -16,6 +16,8 @@ const {
 const settlementRepo = require('../repository/settlementRepo')
 const newFormsRepo = require('../repository/newFormsRepo')
 const goodsOtherInfoRepo = require('../repository/operation/goodsOtherInfoRepo')
+const goodsPromotionRepo = require('../repository/operation/goodsPromotionRepo')
+const moment = require('moment')
 
 /**
  * get operation data pannel data stats
@@ -861,6 +863,215 @@ const getWorkStats = async (user, start, end, params) => {
     return result
 }
 
+const importGoodsPromotionInfo = async (rows, time) => {
+    let count = 0, data = [], result = false
+    let columns = rows[0].values,
+        goods_id_row = null, 
+        sku_id_row = null, 
+        shop_name_row = null,
+        date = time
+        promotion_row_array = [];
+    for (let i = 1; i < columns.length; i++) {
+        if (columns[i] == '店铺款式编码') {
+            goods_id_row = i
+            continue
+        }
+        if (columns[i] == '款式编码(参考)') {
+            sku_id_row = i
+            continue
+        }
+        if (columns[i] == '店铺名称') {
+            shop_name_row = i
+            continue
+        }
+        if (columns[i].indexOf('600') != -1) {
+            promotion_row_array.push(i)
+        }
+    }
+    for (let i = 1; i < rows.length; i++) {
+        if (!rows[i].getCell(1).value) continue
+        for (let j = 0; j < promotion_row_array.length; j++) {
+            let amount = rows[i].getCell(promotion_row_array[j]).value
+            if (!amount) continue
+            data.push(
+                goods_id_row ? (typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
+                    rows[i].getCell(goods_id_row).value.trim() : 
+                    rows[i].getCell(goods_id_row).value) : null,
+                sku_id_row ? (typeof(rows[i].getCell(sku_id_row).value) == 'string' ? 
+                    rows[i].getCell(sku_id_row).value.trim() : 
+                    rows[i].getCell(sku_id_row).value) : null,
+                typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
+                    rows[i].getCell(shop_name_row).value.trim() : 
+                    rows[i].getCell(shop_name_row).value,
+                typeof(columns[promotion_row_array[j]]) == 'string' ? 
+                    columns[promotion_row_array[j]].trim() : 
+                    columns[promotion_row_array[j]],
+                amount,
+                date,
+            )
+            count += 1                        
+        }
+    }
+    logger.info(`[推广数据导入]：时间:${time}, 总计数量:${count}`)
+    if (count > 0) {
+        await goodsPromotionRepo.deleteByDate(time)
+        result = await goodsPromotionRepo.batchInsert(count, data)
+    }
+    return result
+}
+
+const importJDZYInfo = async (rows) => {
+    let count = 0, data = [], result = false
+    let columns = rows[0].values,
+        shop_name = '京东自营旗舰店',
+        shop_id = '16314655',
+        sku_id_row = null, 
+        goods_name_row = null,
+        date = moment().format('YYYY-MM-DD'),
+        real_sale_qty_row = null,
+        sale_amount_row = null,
+        cost_amount_row = null,
+        gross_profit_row = null
+    for (let i = 1; i < columns.length; i++) {
+        if (columns[i] == '商品编号') {
+            sku_id_row = i
+            continue
+        }
+        if (columns[i] == '商品名称') {
+            goods_name_row = i
+            continue
+        }
+        if (columns[i] == '财务销量') {
+            real_sale_qty_row = i
+            continue
+        }
+        if (columns[i] == '收入') {
+            sale_amount_row = i
+            continue
+        }
+        if (columns[i] == '成本') {
+            cost_amount_row = i
+            continue
+        }
+        if (columns[i] == '毛利') {
+            gross_profit_row = i
+            continue
+        }
+    }
+    let amount = 0, saveAmount = 0
+    for (let i = 1; i < rows.length; i++) {
+        amount += rows[i].getCell(sale_amount_row).value
+        if (!rows[i].getCell(1).value) continue
+        let sku_id = sku_id_row ? (typeof(rows[i].getCell(sku_id_row).value) == 'string' ? 
+            rows[i].getCell(sku_id_row).value.trim() : 
+            rows[i].getCell(sku_id_row).value) : null, goods_id = null
+        if (sku_id) {
+            let info = await userOperationRepo.getDetailBySkuId(sku_id)
+            if (info?.length) goods_id = info[0].brief_name
+        }
+        data.push(
+            goods_id,
+            sku_id,
+            null,
+            null,
+            shop_name,
+            shop_id,
+            typeof(rows[i].getCell(goods_name_row).value) == 'string' ? 
+                rows[i].getCell(goods_name_row).value.trim() : 
+                rows[i].getCell(goods_name_row).value,
+            date,
+            rows[i].getCell(sale_amount_row).value,
+            rows[i].getCell(cost_amount_row).value,
+            rows[i].getCell(gross_profit_row).value,
+            rows[i].getCell(sale_amount_row).value ? (rows[i].getCell(gross_profit_row).value / 
+                rows[i].getCell(sale_amount_row).value) : 0,
+            rows[i].getCell(gross_profit_row).value,
+            rows[i].getCell(sale_amount_row).value ? (rows[i].getCell(gross_profit_row).value / 
+                rows[i].getCell(sale_amount_row).value) : 0,
+            0,
+            null,
+            0,
+            rows[i].getCell(real_sale_qty_row).value,
+            null,
+        )
+        count += 1
+        saveAmount += rows[i].getCell(sale_amount_row).value
+    }
+    logger.info(`[京东自营发货数据导入]：时间:${date}, 总计金额:${amount}, 存储金额:${saveAmount}`)
+    if (count > 0) {
+        await goodsSaleInfoRepo.deleteByDate(date, 'goods_code', 1)
+        result = await goodsSaleInfoRepo.batchInsert(count, data)
+    }
+    return result
+}
+
+const importJDZYPromotionInfo = async (rows, name) => {
+    let count = 0, data = [], result = false
+    let columns = rows[0].values,
+        sku_id_row = null, 
+        amount_row = null, 
+        shop_name = '京东自营旗舰店',
+        date = moment().format('YYYY-MM-DD'),
+        promotion_name = '';
+    switch (name) {
+        case '宝选_快车':
+            promotion_name = '京东快车1'
+            break
+        case '快车单日计划':
+            promotion_name = '京东快车2'
+            break
+        case '茶具_快车':
+            promotion_name = '京东快车3'
+            break
+        case '场景单日计划':
+            promotion_name = '日常推广'
+            break
+        case '海投单日计划':
+            promotion_name = '场景推广'
+            break
+        default:
+    }
+    for (let i = 1; i < columns.length; i++) {
+        if (columns[i] == 'SKUID' || columns[i] == '商品SKU') {
+            sku_id_row = i
+            continue
+        }
+        if (columns[i] == '花费') {
+            amount_row = i
+            continue
+        }
+    }
+    for (let i = 1; i < rows.length; i++) {
+        if (!rows[i].getCell(1).value) continue
+        let sku_id = sku_id_row ? (typeof(rows[i].getCell(sku_id_row).value) == 'string' ? 
+            rows[i].getCell(sku_id_row).value.trim() : 
+            rows[i].getCell(sku_id_row).value) : null, goods_id = null
+        if (sku_id) {
+            let info = await userOperationRepo.getDetailBySkuId(sku_id)
+            if (info?.length) goods_id = info[0].brief_name
+        }
+        let amount = rows[i].getCell(amount_row).value
+        let search = await goodsPromotionRepo.getByPromotionName(date, promotion_name, goods_id, sku_id)
+        data.push(
+            goods_id,
+            sku_id,
+            shop_name,
+            promotion_name,
+            amount,
+            date
+        )
+        if (!search?.length) await goodsSaleInfoRepo.updateFee(goods_id, sku_id, amount)
+        else await goodsSaleInfoRepo.updateFee(goods_id, sku_id, amount - search[0].amount)
+        count += 1
+    }
+    logger.info(`[京东自营推广数据导入]：时间:${date}, 总计数量:${count}`)
+    if (count > 0) {
+        await goodsPromotionRepo.deleteByDate(date, promotion_name)
+        result = await goodsPromotionRepo.batchInsert(count, data)
+    }
+    return result
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -870,5 +1081,8 @@ module.exports = {
     importGoodsDSR,
     getGoodsLineInfo,
     getGoodsInfoDetail,
-    getWorkStats
+    getWorkStats,
+    importGoodsPromotionInfo,
+    importJDZYInfo,
+    importJDZYPromotionInfo
 }

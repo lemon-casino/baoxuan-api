@@ -210,4 +210,10 @@ userOperationRepo.getLinkIdsByUserNames = async (userNames, shopNames) => {
     return result || []
 }
 
+userOperationRepo.getDetailBySkuId = async (sku_id) => {
+    let sql = `SELECT * FROM dianshang_operation_attribute WHERE sku_id = ?`
+    const result = await query(sql, [sku_id])
+    return result || []
+}
+
 module.exports = userOperationRepo
