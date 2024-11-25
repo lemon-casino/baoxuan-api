@@ -78,7 +78,7 @@ function  ToHr(TO, reply) {
 
 const confirmNotice = async () => {
     const  DingTO=await confirmationNoticeRepo.getConfirmationNotice()
-	const reply = await redisUtil.get(redisKeys.Users);
+	const reply = await redisUtil.get(redisKeys.DepartmentsUsers);
 	const sult = extracted(DingTO, reply)
 	ToHr(DingTO,sult)
 	const Not = await confirmationNoticeRepo.NotSupervisorsAndConversionDate()
