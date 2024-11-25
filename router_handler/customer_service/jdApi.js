@@ -268,9 +268,9 @@ const getJDDPDataByDate = async (req, res, next) => {
             }
 
             worksheet.columns = columns
-
             let tmp = JSON.parse(JSON.stringify(tmpDefault))
             let j = 0
+            let i = 0
             let imageBuffer = fs.readFileSync(img[j].img_url)
             let image = await workbook.addImage({
                 buffer: imageBuffer,
