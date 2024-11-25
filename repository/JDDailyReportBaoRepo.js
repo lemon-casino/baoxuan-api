@@ -197,7 +197,7 @@ const updateWeeklyTraffic = async (weeklist) => {
          );
          // 更新周利润率
          await JDDailyReport.update(
-             {weeklyProfitMargin: listElement.transactionAmount === 0 ? 0 : listElement.weeklyProfit / listElement.transactionAmount},
+             {weeklyProfitMargin: listElement.transactionAmount === 0 ? 0 : (listElement.weeklyProfit / listElement.transactionAmount) * 100},
              {
                  where: {
                      code: listElement.code,
