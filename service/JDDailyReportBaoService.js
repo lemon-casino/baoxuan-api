@@ -38,13 +38,13 @@ const getInquiryTodayjdDailyReport = async () => {
                 questionType.push('利润为负');
             }
             if (item.weeklyTraffic !== null && item.weeklyTraffic > 20) {
-                questionType.push('流量下降20%');
+                questionType.push('周流量下降20%');
             }
             if (item.weeklyProfitMargin !== null && item.weeklyProfitMargin < 10) {
-                questionType.push('利润率小于10%');
+                questionType.push('周利润率小于10%');
             }
             if (item.weeklyProfit !== null && item.weeklyProfit  < 0) {
-                questionType.push('利润为负');
+                questionType.push('周利润为负');
             }
 
 
@@ -189,8 +189,9 @@ const getInquiryTodayjdDailyReport = async () => {
             case '销完下架':
                 if (firstDayOfTheWeek) {
                     filteredResult.questionType = filteredResult.questionType.filter(type =>
-                        type === '流量下降20%' || type === '利润为负'
+                        type === '周流量下降20%' || type === ' 周利润为负'
                     );
+                    filteredResult.questionType = Array.from(new Set(filteredResult.questionType.map(type => type.replace('周', ''))));
                 } else {
                     filteredResult.questionType = [];
                 }
@@ -198,8 +199,9 @@ const getInquiryTodayjdDailyReport = async () => {
             case '动销':
                 if (firstDayOfTheWeek) {
                     filteredResult.questionType = filteredResult.questionType.filter(type =>
-                        type === '流量下降20%' || type === '利润率小于10%' || type === '利润为负'
+                        type === '周流量下降20%' || type === '周利润率小于10%' || type === '周利润为负'
                     );
+                    filteredResult.questionType = Array.from(new Set(filteredResult.questionType.map(type => type.replace('周', ''))));
                 } else {
                     filteredResult.questionType = [];
                 }
@@ -208,6 +210,7 @@ const getInquiryTodayjdDailyReport = async () => {
                 filteredResult.questionType = filteredResult.questionType.filter(type => type === '利润为负');
                 break;
         }
+        filteredResult.questionType = filteredResult.questionType.filter(type => !type.startsWith('周'));
         if (filteredResult.questionType.length === 0) {
             filteredResults.splice(i, 1);
         }

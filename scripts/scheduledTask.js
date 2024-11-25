@@ -208,4 +208,15 @@ schedule.scheduleJob(confirmationNotice, async function () {
         await taskService.confirmationNotice()
     }
 })
+// 每天晚上 12点 重置redis中的synchronizedState 中的 syncTodayRunning 为false 防止同步任务出错 第二天不同步
+schedule.scheduleJob("0 0 0 * * ?", async function () {
+    if (process.env.NODE_ENV === "prod") {
+        let taskStatus = JSON.parse(await redisUtil.get(redisKeys.synchronizedState));
+        taskStatus.syncTodayRunning = false;
+        taskStatus.isRunningTianMao = false;
+        taskStatus.isRunningJD = false;
+        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+    }
+})
+
 
