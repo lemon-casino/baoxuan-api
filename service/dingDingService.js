@@ -166,18 +166,22 @@ const getFlowsFromDingDing = async (status, timesRange, timeAction) => {
 
 
 const getDepartmentFromDingDing = async () => {
-    const {access_token} = await getToken();
+    const { access_token } = await getToken();
     const depList = await contactsReq.getSubDeptAll(access_token);
-    
-    for (const item of depList.result) {
-        const dep_chil = await contactsReq.getSubDeptAll(access_token, item.dept_id);
-        item.dep_chil = dep_chil.result
-        for (const index of item.dep_chil) {
-            const index_chil = await contactsReq.getSubDeptAll(access_token, index.dept_id)
-            index.dep_chil = index_chil.result
+//todo: 递归获取部门下的所有子部门 修改成循环操作 之前的只循环了两层 现在循环所有层级
+    const fetchSubDepartments = async (departments) => {
+        for (const department of departments) {
+            const subDepartments = await contactsReq.getSubDeptAll(access_token, department.dept_id);
+            department.dep_chil = subDepartments.result;
+
+            if (department.dep_chil && department.dep_chil.length > 0) {
+                await fetchSubDepartments(department.dep_chil);
+            }
         }
-    }
-    return depList
+    };
+
+    await fetchSubDepartments(depList.result);
+    return depList;
 };
 
 
