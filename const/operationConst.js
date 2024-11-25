@@ -151,6 +151,7 @@ const projectNameList = {
     'coupang': 'COUPANG',
     'jd': '京东',
     'jdss': '京东自营',
+    'jdssp': '京东自营推广',
     'dy': '抖音',
     'wxvideo': '视频号',
     'vip': '唯品会',
