@@ -400,18 +400,19 @@ goodsSaleInfoRepo.getDataRateByTime = async(col1, col2, column, goods_id, start,
     return result || []
 }
 
-goodsSaleInfoRepo.updateFee = async(goods_id, sku_id, promotion_amount) => {
+goodsSaleInfoRepo.updateFee = async(sku_id, promotion_amount, date) => {
     const sql = `UPDATE goods_sale_info SET promotion_amount = promotion_amount + ?, 
         operation_amount = operation_amount + ?, profit = profit - ?, 
-        profit_rate = IF(sale_amount, (profit - ?) / sale_amount, 0) WHERE goods_id = ? 
-            AND sku_id = ?`
+        profit_rate = IF(sale_amount, (profit - ?) / sale_amount, 0) WHERE sku_id = ?
+            AND shop_name = '京东自营旗舰店' 
+            AND \`date\` = ?`
     const result = await query(sql, [
         promotion_amount, 
         promotion_amount, 
         promotion_amount, 
         promotion_amount,
-        goods_id,
-        sku_id
+        sku_id,
+        date
     ])
     return result?.affectedRows ? true : false
 }

@@ -189,7 +189,7 @@ const getDataStatsDetail = async (type, name, column, start, end) => {
         let userNames = '', shopNames = ''
         for (let i = 0; i < users.length; i++) {
             userNames = `${userNames}${users[i].nickname}","`
-            if (users[i].shop_name) shopNames = `${shopNames}${users[i].shop_name}","`
+            if (users[i].shop_name) shopNames = `${shopNames}${users[i].shop_name.split(',').join('","')}","`
         }
         if (shopNames?.length) shopNames = shopNames.substring(0, shopNames.length - 3)
         userNames = userNames.substring(0, userNames.length - 3)
@@ -876,7 +876,7 @@ const importGoodsPromotionInfo = async (rows, time) => {
             goods_id_row = i
             continue
         }
-        if (columns[i] == '款式编码(参考)') {
+        if (columns[i] == '商品编码') {
             sku_id_row = i
             continue
         }
@@ -925,20 +925,15 @@ const importJDZYInfo = async (rows) => {
     let columns = rows[0].values,
         shop_name = '京东自营旗舰店',
         shop_id = '16314655',
-        sku_id_row = null, 
-        goods_name_row = null,
-        date = moment().format('YYYY-MM-DD'),
+        sku_id_row = null,
+        date = moment().subtract(1, 'day').format('YYYY-MM-DD'),
         real_sale_qty_row = null,
+        supplier_amount_row = null,
         sale_amount_row = null,
-        cost_amount_row = null,
         gross_profit_row = null
     for (let i = 1; i < columns.length; i++) {
         if (columns[i] == '商品编号') {
             sku_id_row = i
-            continue
-        }
-        if (columns[i] == '商品名称') {
-            goods_name_row = i
             continue
         }
         if (columns[i] == '财务销量') {
@@ -946,11 +941,11 @@ const importJDZYInfo = async (rows) => {
             continue
         }
         if (columns[i] == '收入') {
-            sale_amount_row = i
+            supplier_amount_row = i
             continue
         }
         if (columns[i] == '成本') {
-            cost_amount_row = i
+            sale_amount_row = i
             continue
         }
         if (columns[i] == '毛利') {
@@ -964,11 +959,29 @@ const importJDZYInfo = async (rows) => {
         if (!rows[i].getCell(1).value) continue
         let sku_id = sku_id_row ? (typeof(rows[i].getCell(sku_id_row).value) == 'string' ? 
             rows[i].getCell(sku_id_row).value.trim() : 
-            rows[i].getCell(sku_id_row).value) : null, goods_id = null
+            rows[i].getCell(sku_id_row).value) : null, goods_id = null, cost_price = 0
         if (sku_id) {
             let info = await userOperationRepo.getDetailBySkuId(sku_id)
-            if (info?.length) goods_id = info[0].brief_name
+            if (info?.length) {
+                goods_id = info[0].brief_name
+                cost_price = parseInt(info[0].cost_price)
+            }
         }
+        //供货金额
+        let sale_amount = parseFloat(rows[i].getCell(sale_amount_row).value || 0)
+        let qty = parseInt(rows[i].getCell(real_sale_qty_row).value || 0)
+        let cost_amount = (cost_price + 0.8 + 1.4) * qty
+        //京东销售额
+        let supplier_amount = parseFloat(rows[i].getCell(supplier_amount_row).value || 0)
+        let tax = sale_amount * 0.07
+        //综毛标准
+        let jd_gross_profit_std = supplier_amount * 0.28
+        //实际棕毛
+        let real_jd_gross_profit = parseFloat(rows[i].getCell(gross_profit_row).value || 0)
+        //需补综毛
+        let other_cost = real_jd_gross_profit >= jd_gross_profit_std ? 0 :
+            jd_gross_profit_std - real_jd_gross_profit
+        let profit = sale_amount - cost_amount - tax - other_cost
         data.push(
             goods_id,
             sku_id,
@@ -976,22 +989,18 @@ const importJDZYInfo = async (rows) => {
             null,
             shop_name,
             shop_id,
-            typeof(rows[i].getCell(goods_name_row).value) == 'string' ? 
-                rows[i].getCell(goods_name_row).value.trim() : 
-                rows[i].getCell(goods_name_row).value,
+            null,
             date,
-            rows[i].getCell(sale_amount_row).value,
-            rows[i].getCell(cost_amount_row).value,
-            rows[i].getCell(gross_profit_row).value,
-            rows[i].getCell(sale_amount_row).value ? (rows[i].getCell(gross_profit_row).value / 
-                rows[i].getCell(sale_amount_row).value) : 0,
-            rows[i].getCell(gross_profit_row).value,
-            rows[i].getCell(sale_amount_row).value ? (rows[i].getCell(gross_profit_row).value / 
-                rows[i].getCell(sale_amount_row).value) : 0,
+            sale_amount,
+            cost_amount,
+            sale_amount - cost_amount,
+            sale_amount ? (sale_amount - cost_amount) / sale_amount : 0,
+            profit,
+            sale_amount ? profit / sale_amount : 0,
             0,
             null,
-            0,
-            rows[i].getCell(real_sale_qty_row).value,
+            tax + other_cost,
+            qty,
             null,
         )
         count += 1
@@ -1011,25 +1020,18 @@ const importJDZYPromotionInfo = async (rows, name) => {
         sku_id_row = null, 
         amount_row = null, 
         shop_name = '京东自营旗舰店',
-        date = moment().format('YYYY-MM-DD'),
+        date = moment().subtract(1, 'day').format('YYYY-MM-DD'),
         promotion_name = '';
-    switch (name) {
-        case '宝选_快车':
-            promotion_name = '京东快车1'
-            break
-        case '快车单日计划':
-            promotion_name = '京东快车2'
-            break
-        case '茶具_快车':
-            promotion_name = '京东快车3'
-            break
-        case '场景单日计划':
-            promotion_name = '日常推广'
-            break
-        case '海投单日计划':
-            promotion_name = '场景推广'
-            break
-        default:
+    if (name.indexOf('宝选_快车') != -1) {
+        promotion_name = '京东快车1'
+    } else if(name.indexOf('快车单日计划') != -1) {
+        promotion_name = '京东快车2'
+    } else if(name.indexOf('茶具_快车') != -1) {
+        promotion_name = '京东快车3'
+    } else if(name.indexOf('场景单日计划') != -1) {
+        promotion_name = '日常推广'
+    } else if(name.indexOf('海投单日计划') != -1) {
+        promotion_name = '场景推广'
     }
     for (let i = 1; i < columns.length; i++) {
         if (columns[i] == 'SKUID' || columns[i] == '商品SKU') {
@@ -1050,8 +1052,8 @@ const importJDZYPromotionInfo = async (rows, name) => {
             let info = await userOperationRepo.getDetailBySkuId(sku_id)
             if (info?.length) goods_id = info[0].brief_name
         }
-        let amount = rows[i].getCell(amount_row).value
-        let search = await goodsPromotionRepo.getByPromotionName(date, promotion_name, goods_id, sku_id)
+        let amount = parseFloat(rows[i].getCell(amount_row).value || 0)
+        if (amount == 0) continue
         data.push(
             goods_id,
             sku_id,
@@ -1060,8 +1062,7 @@ const importJDZYPromotionInfo = async (rows, name) => {
             amount,
             date
         )
-        if (!search?.length) await goodsSaleInfoRepo.updateFee(goods_id, sku_id, amount)
-        else await goodsSaleInfoRepo.updateFee(goods_id, sku_id, amount - search[0].amount)
+        await goodsSaleInfoRepo.updateFee(sku_id, amount, date)
         count += 1
     }
     logger.info(`[京东自营推广数据导入]：时间:${date}, 总计数量:${count}`)
