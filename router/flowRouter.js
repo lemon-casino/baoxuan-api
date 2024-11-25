@@ -37,6 +37,7 @@ router.get("/all-overdue-running-flows", flowHandler.getAllOverDueRunningFlows)
  * 流程表单管理
  */
 router.get('/forms', flowHandler.getFlows)
+router.post('/forms-setting', flowHandler.setFlowsHeader)
 router.get('/forms-process', flowHandler.getFlowsProcessByIds)
 router.get('/forms-process/actions', flowHandler.getFlowProcessActions)
 router.post('/forms-process/export', flowHandler.exportFlowsProcess)
@@ -49,5 +50,11 @@ router.get("/vision-review", flowHandler.getVisionReview)
  */
 router.get("/vision-plan", flowHandler.getVisionPlan)
 router.get("/vision-action-details", flowHandler.getVisionUsersDetails)
+/**
+ * 运营选品池
+ */
+router.get("/operate-selection", flowHandler.getOperateSelection)
+router.get("/operate-selection-header", flowHandler.getOperateSelectionHeader)
+router.post("/operate-analysis/create", flowHandler.createOperateAnalysis)
 
 module.exports = router;

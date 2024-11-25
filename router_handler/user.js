@@ -497,3 +497,18 @@ exports.undoResign = async (req, res, next) => {
         next(e)
     }
 }
+
+exports.searchEnableUsers = async (req, res, next) => {
+    try {
+        joiUtil.validate({
+            nickname: {value: req.query.nickname, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        await userService.getUserDetails({
+            status: 1,
+            nickname: {$like: `%${req.query.nickname}%`}
+        })
+        res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}

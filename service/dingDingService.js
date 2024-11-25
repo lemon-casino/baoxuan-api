@@ -55,7 +55,7 @@ const getFlowsByStatusAndTimeRange = async (timesRange = ["2023-01-01 00:00:00",
         // await dateUtil.delay()
         allData[i]["overallprocessflow"] = await getAllProcessFlow(token, userId, allData[i].processInstanceId);
         console.log(`(page: ${pageNumber})get flowReviewItems process：${i + 1}/${allData.length}`);
-        await dateUtil.delay(10); // 添加 500ms 的延迟
+        await dateUtil.delay(100);
     }
     // 如果总数大于当前页数*每页数量，继续请求
     if (resLiuChengList.totalCount > pageNumber * pageSize) {
@@ -166,18 +166,22 @@ const getFlowsFromDingDing = async (status, timesRange, timeAction) => {
 
 
 const getDepartmentFromDingDing = async () => {
-    const {access_token} = await getToken();
+    const { access_token } = await getToken();
     const depList = await contactsReq.getSubDeptAll(access_token);
-    
-    for (const item of depList.result) {
-        const dep_chil = await contactsReq.getSubDeptAll(access_token, item.dept_id);
-        item.dep_chil = dep_chil.result
-        for (const index of item.dep_chil) {
-            const index_chil = await contactsReq.getSubDeptAll(access_token, index.dept_id)
-            index.dep_chil = index_chil.result
+//todo: 递归获取部门下的所有子部门 修改成循环操作 之前的只循环了两层 现在循环所有层级
+    const fetchSubDepartments = async (departments) => {
+        for (const department of departments) {
+            const subDepartments = await contactsReq.getSubDeptAll(access_token, department.dept_id);
+            department.dep_chil = subDepartments.result;
+
+            if (department.dep_chil && department.dep_chil.length > 0) {
+                await fetchSubDepartments(department.dep_chil);
+            }
         }
-    }
-    return depList
+    };
+
+    await fetchSubDepartments(depList.result);
+    return depList;
 };
 
 
@@ -582,11 +586,15 @@ const isWorkingDay = async (date) => {
  */
 const createProcess = async (formId, userId, processCode, formDataJsonStr) => {
     // 获取用户的部门id
-    const departments = await departmentService.getDepartmentOfUser(userId)
-    const departmentId = departments[departments.length - 1].dept_id
-    const {access_token: token} = await getToken();
-    return await yiDaReq.createProcess(token, formId, userId, processCode, departmentId, formDataJsonStr)
+    const departments = await departmentService.getDepartmentOfUser(userId);
+    let departmentId = '';
+    if (departments && departments.length > 0) {
+        departmentId = departments[departments.length - 1].dept_id;
+    }
+    const { access_token: token } = await getToken();
+    return await yiDaReq.createProcess(token, formId, userId, processCode, departmentId, formDataJsonStr);
 }
+
 
 module.exports = {
     getDingDingToken,

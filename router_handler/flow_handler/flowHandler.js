@@ -44,12 +44,25 @@ const getFlowsByIds = async (req, res, next) => {
  */
 const getFlows = async (req, res, next) => {
     try {
-        const flows = await flowService.getFlows(req.query)
+        const flows = await flowService.getFlows(req.query, req.user.id)
         return res.send(biResponse.success(flows))
     } catch (e) {
         next(e)
     }
-    return res.send(biResponse.serverError())
+}
+
+const setFlowsHeader = async (req, res, next) => {
+    try {
+        const {form_id, setting} = req.body
+        joiUtil.validate({
+            setting: {value: setting, schema: joiUtil.commonJoiSchemas.arrayRequired},
+            form_id: {value: form_id, schema: joiUtil.commonJoiSchemas.positiveIntegerRequired},
+        })
+        const result = await flowService.setFlowHeader(req.user.id, form_id, setting)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
 }
 /**
  * 获取流程表单详细的工单数据
@@ -67,6 +80,8 @@ const getFlowsProcessByIds = async (req, res, next) => {
         let process = []
         if (req.query?.tag == 'visionLeader') {
             process = await flowService.getVisionProcesses(req.query, offset, limit)
+        } else if (req.query?.ids) {
+            process = await flowService.getOperationProcesses(req.user, req.query, offset, limit)
         } else {
             process = await flowService.getFlowsProcesses(req.query, offset, limit)
         }
@@ -74,8 +89,6 @@ const getFlowsProcessByIds = async (req, res, next) => {
     } catch (e) {
         next(e)
     }
-
-    return res.send(biResponse.serverError)
 }
 
 const getFlowProcessActions = async (req, res, next) => {
@@ -86,8 +99,6 @@ const getFlowProcessActions = async (req, res, next) => {
     } catch (e) {
         next(e)
     }
-
-    return res.send(biResponse.serverError)
 }
 
 /**
@@ -369,10 +380,55 @@ const getVisionPlan = async (req, res, next) => {
     }
 }
 
+const getOperateSelection = async (req, res, next) => {
+    try {
+        const {currentPage, pageSize, type} = req.query
+        joiUtil.validate({
+            currentPage: {value: currentPage, schema: joiUtil.commonJoiSchemas.strRequired},
+            pageSize: {value: pageSize, schema: joiUtil.commonJoiSchemas.strRequired},
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const result = await flowService.getOperateSelection(req.query, req.user.userId)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getOperateSelectionHeader = async (req, res, next) => {
+    try {
+        const {type} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const result = await flowService.getOperateSelectionHeader(parseInt(type), req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const createOperateAnalysis = async (req, res, next) => {
+    try {
+        const {platform, operator, instance_id} = req.body
+        joiUtil.validate({
+            platform: {value: platform, schema: joiUtil.commonJoiSchemas.strRequired},
+            operator: {value: operator, schema: joiUtil.commonJoiSchemas.positiveIntegerRequired},
+            instance_id: {value: instance_id, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        const result = await flowService.createOperateAnalysis(platform, operator, instance_id, req.user.id)
+        if (!result) return res.send(biResponse.createFailed('保存失败'))
+        return res.send(biResponse.success('保存成功'))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getCompletedFlowsByIds,
     getFlowsByIds,
     getFlows,
+    setFlowsHeader,
     getFlowsProcessByIds,
     exportFlowsProcess,
     getFlowProcessActions,
@@ -385,5 +441,8 @@ module.exports = {
     getFormsFlowsActivitiesStat,
     getVisionReview,
     getVisionPlan,
-    getVisionUsersDetails
+    getVisionUsersDetails,
+    getOperateSelection,
+    getOperateSelectionHeader,
+    createOperateAnalysis
 }

@@ -128,6 +128,15 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: null,
       field: "slots"
+    },
+    sort: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: "排序",
+      field: "sort"
     }
   };
   const options = {
