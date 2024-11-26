@@ -1021,6 +1021,7 @@ const importJDZYPromotionInfo = async (rows, name) => {
         amount_row = null, 
         shop_name = '京东自营旗舰店',
         date = moment().subtract(1, 'day').format('YYYY-MM-DD'),
+        way_row = null,
         promotion_name = '';
     if (name.indexOf('宝选_快车') != -1) {
         promotion_name = '京东快车1'
@@ -1042,9 +1043,14 @@ const importJDZYPromotionInfo = async (rows, name) => {
             amount_row = i
             continue
         }
+        if (columns[i] == '定向方式') {
+            way_row = i
+            continue
+        }
     }
     for (let i = 1; i < rows.length; i++) {
         if (!rows[i].getCell(1).value) continue
+        if (way_row && rows[i].getCell(way_row).value.indexOf('汇总') == -1) continue
         let sku_id = sku_id_row ? (typeof(rows[i].getCell(sku_id_row).value) == 'string' ? 
             rows[i].getCell(sku_id_row).value.trim() : 
             rows[i].getCell(sku_id_row).value) : null, goods_id = null
