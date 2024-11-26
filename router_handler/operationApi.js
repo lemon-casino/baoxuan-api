@@ -253,6 +253,8 @@ const importJDZYInfo = async (req, res, next) => {
             }
             
             const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[1]
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
             fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
@@ -265,7 +267,7 @@ const importJDZYInfo = async (req, res, next) => {
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
-                let result = await operationService.importJDZYInfo(rows)
+                let result = await operationService.importJDZYInfo(rows, time)
                 if (result) {
                     fs.rmSync(newPath)
                 } else {
@@ -291,6 +293,9 @@ const importJDZYPromotionInfo = async (req, res, next) => {
             }
             
             const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const name = date[0]
+            const time = date[1]
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
             fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
@@ -300,8 +305,7 @@ const importJDZYPromotionInfo = async (req, res, next) => {
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
-                let name = file.originalFilename.split('.')
-                let result = await operationService.importJDZYPromotionInfo(rows, name[0])
+                let result = await operationService.importJDZYPromotionInfo(rows, name, time)
                 if (result) {
                     fs.rmSync(newPath)
                 } else {
