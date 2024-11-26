@@ -411,7 +411,7 @@ goodsSaleInfoRepo.updateFee = async(sku_id, promotion_amount, date) => {
         promotion_amount, 
         promotion_amount, 
         promotion_amount,
-        sku_id,
+        sku_id.toString(),
         date
     ])
     return result?.affectedRows ? true : false
