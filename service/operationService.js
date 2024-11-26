@@ -920,13 +920,13 @@ const importGoodsPromotionInfo = async (rows, time) => {
     return result
 }
 
-const importJDZYInfo = async (rows) => {
+const importJDZYInfo = async (rows, time) => {
     let count = 0, data = [], result = false
     let columns = rows[0].values,
         shop_name = '京东自营旗舰店',
         shop_id = '16314655',
         sku_id_row = null,
-        date = moment().subtract(1, 'day').format('YYYY-MM-DD'),
+        date = time,
         real_sale_qty_row = null,
         supplier_amount_row = null,
         sale_amount_row = null,
@@ -1014,20 +1014,20 @@ const importJDZYInfo = async (rows) => {
     return result
 }
 
-const importJDZYPromotionInfo = async (rows, name) => {
+const importJDZYPromotionInfo = async (rows, name, time) => {
     let count = 0, data = [], result = false
     let columns = rows[0].values,
         sku_id_row = null, 
         amount_row = null, 
         shop_name = '京东自营旗舰店',
-        date = moment().subtract(1, 'day').format('YYYY-MM-DD'),
+        date = time,
         way_row = null,
         promotion_name = '';
-    if (name.indexOf('宝选_快车') != -1) {
+    if (name.indexOf('宝选快车') != -1) {
         promotion_name = '京东快车1'
     } else if(name.indexOf('快车单日计划') != -1) {
         promotion_name = '京东快车2'
-    } else if(name.indexOf('茶具_快车') != -1) {
+    } else if(name.indexOf('茶具快车') != -1) {
         promotion_name = '京东快车3'
     } else if(name.indexOf('场景单日计划') != -1) {
         promotion_name = '日常推广'
