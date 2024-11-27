@@ -1,7 +1,7 @@
 const { query } = require('../model/dbConn')
 const settlementRepo = {}
 
-settlementRepo.getAmount = async (start, end, shopNames, except) => {
+settlementRepo.getAmount = async (start, end, shopNames, linkIds, except) => {
     let sql = `SELECT IFNULL(SUM(amount), 0) AS amount FROM settlement WHERE 1=1 `
     let params = []
     if (start) {
@@ -16,28 +16,43 @@ settlementRepo.getAmount = async (start, end, shopNames, except) => {
     }
     if (shopNames) {
         sql = `${sql}
-            AND shop_name in ("${shopNames}")`
-        if (except) {
-            sql = `${sql}
-                AND NOT EXISTS (
-                    SELECT si.id FROM shop_info si WHERE si.project_id = 4 
-                        AND si.shop_name = settlement.shop_name
-                )`
-        }
+            AND shop_name IN ("${shopNames}")`
+    }
+    if (linkIds) {
+        sql = `${sql}
+            AND goods_id IN ("${linkIds}")`
+    }
+    if (except) {
+        sql = `${sql}
+            AND NOT EXISTS (
+                SELECT si.id FROM shop_info si WHERE si.project_id = 4 
+                    AND si.shop_name = settlement.shop_name
+            )`
     }
     let result = await query(sql, params)
     return result || []
 }
 
-settlementRepo.getAmountDetailByShopNames = async (start, end, shopNames) => {
+settlementRepo.getAmountDetail = async (start, end, shopNames, linkIds, except) => {
     let sql = `SELECT IFNULL(SUM(amount), 0) AS invoice, 
             DATE_FORMAT(settle_time, '%Y-%m-%d') AS \`date\` FROM settlement 
-        WHERE settle_time >= ? AND settle_time <= ? 
-            AND shop_name IN ("${shopNames}")
+        WHERE settle_time >= ? AND settle_time <= ?`
+    if (shopNames) {
+        sql = `${sql}
+            AND shop_name IN ("${shopNames}")`
+    }
+    if (linkIds) {
+        sql = `${sql}
+            AND goods_id IN ("${linkIds}")`
+    }
+    if (except) {
+        sql = `${sql}
             AND NOT EXISTS (
                 SELECT si.id FROM shop_info si WHERE si.project_id = 4 
                     AND si.shop_name = settlement.shop_name
-            )
+            )`
+    }
+    sql = `${sql}
         GROUP BY DATE_FORMAT(settle_time, '%Y-%m-%d')`
     let result = await query(sql, [start, end])
     return result || []

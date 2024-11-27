@@ -11,7 +11,8 @@ const {
     workItemList, 
     workItemMap, 
     projectNameList, 
-    workTypeList 
+    workTypeList,
+    columnList 
 } = require('../const/operationConst')
 const settlementRepo = require('../repository/settlementRepo')
 const newFormsRepo = require('../repository/newFormsRepo')
@@ -50,7 +51,7 @@ const getDataStats = async (id, start, end, params) => {
             if (users.length) {
                 result = await queryUserInfo(users, result, typeValue, start, end)
             }
-            result[typeValue].column = typeList[typeValue].item
+            result[typeValue].column = columnList
         }
     } else {
         // user permission
@@ -71,7 +72,7 @@ const getDataStats = async (id, start, end, params) => {
             if (users.length) {
                 result = await queryUserInfo(users, result, typeValue, start, end)
             }
-            result[typeValue].column = typeList[typeValue].item
+            result[typeValue].column = columnList
         }
     }
     // get total stats calc level
@@ -149,10 +150,12 @@ const getDataStats = async (id, start, end, params) => {
 }
 
 const getDataStatsDetail = async (type, name, column, start, end) => {
-    let result = [], shops = [], users = []
+    let result = [], shops = [], users = [], except = false
     if (type == 'total') {
         shops = await shopInfoRepo.getInfo()
+        except = true
     } else {
+        if (typeList[type].map[0] < 3) except = true 
         let res = await getQueryInfo(
             typeList[type].map[0], 
             typeList[type].key, 
@@ -183,7 +186,7 @@ const getDataStatsDetail = async (type, name, column, start, end) => {
         else if (column == 'market_rate')
             result = await goodsOtherInfoRepo.getRateByShopNamesAndTme(shopNames, 'words_market_vol', 'words_vol', column, start, end, 100)
         else if (column == 'invoice')
-            result = await settlementRepo.getAmountDetailByShopNames(start, end + ' 23:59:59', shopNames)
+            result = await settlementRepo.getAmountDetail(start, end + ' 23:59:59', shopNames, null, except)
     }
     if (users?.length) {
         let userNames = '', shopNames = ''
@@ -209,6 +212,8 @@ const getDataStatsDetail = async (type, name, column, start, end) => {
             result = await goodsOtherInfoRepo.getDetailByLinkIdsAndTme(linkIds, column, start, end)
         else if (column == 'market_rate')
             result = await goodsOtherInfoRepo.getRateByLinkIdsAndTme(linkIds, 'words_market_vol', 'words_vol', column, start, end, 100)
+        else if (column == 'invoice')
+            result = await settlementRepo.getAmountDetail(start, end + ' 23:59:59', null, linkIds, except)
     }
     return result || []
 }
@@ -254,7 +259,7 @@ const queryShopInfo = async (shops, result, type, start, end) => {
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
         real_sale_qty = 0, refund_qty = 0, words_market_vol = 0, words_vol = 0
     let shopName = [], j = -1, except = false
-    if (typeList.division.value == type) except = true
+    if (typeList[type].key < 3) except = true
     for (let i = 0; i < shops.length; i++) {
         if (i == 0 || shops[i].name != shops[i-1].name) {
             shopName.push({
@@ -292,10 +297,8 @@ const queryShopInfo = async (shops, result, type, start, end) => {
             else if (children[j].type == 1) children[j].name = '新品'
             else children[j].name = '老品'
         }
-        if (typeList[type].key < 3) {
-            info = await settlementRepo.getAmount(start, end + ' 23:59:59', shopName[i].shop_name, except)
-            if (info?.length) invoice = parseFloat(info[0].amount || 0).toFixed(2)
-        }
+        info = await settlementRepo.getAmount(start, end + ' 23:59:59', shopName[i].shop_name, null, except)
+        if (info?.length) invoice = parseFloat(info[0].amount || 0).toFixed(2)
         result[type].data.push({
             id: (typeList[type].key + i) * 20,
             name: shopName[i].name,
@@ -325,7 +328,8 @@ const queryUserInfo = async (users, result, type, start, end) => {
         express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
         real_sale_qty = 0, refund_qty = 0, words_market_vol = 0, words_vol = 0
-    let userName = [], j = -1
+    let userName = [], j = -1, except = false
+    if (typeList[type].key < 3) except = true
     for (let i = 0; i < users.length; i++) {
         if (i == 0 || users[i].name != users[i-1].name) {
             userName.push({
@@ -379,6 +383,8 @@ const queryUserInfo = async (users, result, type, start, end) => {
             else if (children[j].type == 1) children[j].name = '新品'
             else children[j].name = '老品'
         }
+        info = await settlementRepo.getAmount(start, end + ' 23:59:59', null, linkIds, except)
+        if (info?.length) invoice = parseFloat(info[0].amount || 0).toFixed(2)
         result[type].data.push({
             id: (typeList[type].key + i) * 20,
             name: userName[i].name,
@@ -407,13 +413,30 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
     let result = {
         column: [
             {title: '链接ID', field_id: 'goods_id'},
+            // {title: '订价毛利', field_id: '', sub: [
+            //     {title: '定价毛利', field_id: 'gross_profit', children: []},
+            //     {title: '主销编码', field_id: 'sku_id'},
+            //     {title: '次销编码', field_id: 'sku_sid'}
+            // ]},
             {title: '主销编码', field_id: 'sku_id'},
             {title: '店铺名称', field_id: 'shop_name'},
             {title: '店铺编码', field_id: 'shop_id'},
             {title: '商品名称', field_id: 'goods_name'},
+            // {title: '运营负责人', field_id: 'operator'},
+            // {title: '产品线负责人', field_id: 'line_director'},
+            // {title: '采购负责人', field_id: 'purchase_director'},
+            // {title: '链接属性', field_id: 'link_type'},
+            // {title: '一级类目', field_id: 'first_category'},
             {title: '发货金额', field_id: 'sale_amount', show: true},
             {title: '推广费', field_id: 'promotion_amount', show: true},
+            // {title: '支付金额', field_id: 'payment_amount', show: true},
+            // {title: '搜索', field_id: '', sub: []},
+            // {title: '费用', field_id: 'operation_amount', show: true},
             {title: '费比(%)', field_id: 'operation_rate', show: true},
+            // {title: '利润', field_id: 'profit', show: true},
+            // {title: '利润率(%)', field_id: 'profit_rate', show: true},
+            // {title: '推广费', field_id: 'promotion_amount', show: true},
+            // {title: '推广明细', field_id: '', sub: []}, 
             {title: 'ROI', field_id: 'roi', show: true},
             {title: '市占率(%)', field_id: 'market_rate', show: true},
             {title: '退货率(%)', field_id: 'refund_rate', show: true},
@@ -459,6 +482,7 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
         linkIds = links.map((item) => item.goods_id).join('","')
     }    
     params.search = JSON.parse(params.search)
+    
     result.data = await goodsSaleInfoRepo.getData(startDate, endDate, params, shopNames, linkIds)
     return result
 }
@@ -870,7 +894,8 @@ const importGoodsPromotionInfo = async (rows, time) => {
         sku_id_row = null, 
         shop_name_row = null,
         date = time
-        promotion_row_array = [];
+        promotion_row_array = [],
+        payment_row_array = []
     for (let i = 1; i < columns.length; i++) {
         if (columns[i] == '店铺款式编码') {
             goods_id_row = i
@@ -884,8 +909,13 @@ const importGoodsPromotionInfo = async (rows, time) => {
             shop_name_row = i
             continue
         }
-        if (columns[i].indexOf('600') != -1) {
+        if (columns[i].indexOf('6003') == 0 && columns[i].indexOf('6003012') == -1) {
             promotion_row_array.push(i)
+            continue
+        }
+        if (columns[i].indexOf('6001') == 0 || columns[i].indexOf('6003012') == 0) {
+            promotion_row_array.push(i)
+            continue
         }
     }
     for (let i = 1; i < rows.length; i++) {
@@ -1030,9 +1060,9 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
     } else if(name.indexOf('茶具快车') != -1) {
         promotion_name = '京东快车3'
     } else if(name.indexOf('场景单日计划') != -1) {
-        promotion_name = '日常推广'
-    } else if(name.indexOf('海投单日计划') != -1) {
         promotion_name = '场景推广'
+    } else if(name.indexOf('海投单日计划') != -1) {
+        promotion_name = '日常推广'
     }
     for (let i = 1; i < columns.length; i++) {
         if (columns[i] == 'SKUID' || columns[i] == '商品SKU') {
