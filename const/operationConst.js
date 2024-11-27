@@ -4,119 +4,52 @@ const typeList = {
         value: 'division',
         column: 'shop_name',
         map: [2],
-        item: [
-            {label: '', key: 'name', is_link: true}, 
-            {label: '发货金额', key: 'sale_amount'}, 
-            {label: '推广费', key: 'promotion_amount'}, 
-            {label: '费用', key: 'operation_amount'},  
-            {label: '费比(%)', key: 'operation_rate'}, 
-            {label: 'ROI', key: 'roi'}, 
-            {label: '访问量', key: 'words_vol'},
-            {label: '市场流量', key: 'words_market_vol'},
-            {label: '市占率(%)', key: 'market_rate'}, 
-            {label: '退货量', key: 'refund_qty'},
-            {label: '商品销量', key: 'real_sale_qty'},
-            {label: '退货率(%)', key: 'refund_rate'}, 
-            {label: '运费', key: 'express_fee'}, 
-            {label: '利润', key: 'profit'}, 
-            {label: '利润率(%)', key: 'profit_rate'}, 
-            {label: '账单金额', key: 'invoice'}
-        ]
     },
     project: {
         key: 2,
         value: 'project',
         column: 'shop_name',
         map: [3, 4, 5],
-        item: [
-            {label: '', key: 'name', is_link: true}, 
-            {label: '发货金额', key: 'sale_amount'}, 
-            {label: '推广费', key: 'promotion_amount'}, 
-            {label: '费用', key: 'operation_amount'},  
-            {label: '费比(%)', key: 'operation_rate'}, 
-            {label: 'ROI', key: 'roi'}, 
-            {label: '访问量', key: 'words_vol'},
-            {label: '市场流量', key: 'words_market_vol'},
-            {label: '市占率(%)', key: 'market_rate'}, 
-            {label: '退货量', key: 'refund_qty'},
-            {label: '商品销量', key: 'real_sale_qty'},
-            {label: '退货率(%)', key: 'refund_rate'}, 
-            {label: '运费', key: 'express_fee'}, 
-            {label: '利润', key: 'profit'}, 
-            {label: '利润率(%)', key: 'profit_rate'}, 
-            {label: '账单金额', key: 'invoice'}
-        ]
     },
     shop: {
         key: 3,
         value: 'shop',
         column: 'shop_name',
         map: [5],
-        item: [
-            {label: '', key: 'name', is_link: true}, 
-            {label: '发货金额', key: 'sale_amount'},
-            {label: '推广费', key: 'promotion_amount'},
-            {label: '费用', key: 'operation_amount'},  
-            {label: '费比(%)', key: 'operation_rate'}, 
-            {label: 'ROI', key: 'roi'}, 
-            {label: '访问量', key: 'words_vol'},
-            {label: '市场流量', key: 'words_market_vol'},
-            {label: '市占率(%)', key: 'market_rate'}, 
-            {label: '退货量', key: 'refund_qty'},
-            {label: '商品销量', key: 'real_sale_qty'},
-            {label: '退货率(%)', key: 'refund_rate'}, 
-            {label: '运费', key: 'express_fee'}, 
-            {label: '利润', key: 'profit'}, 
-            {label: '利润率(%)', key: 'profit_rate'}, 
-        ]
     },
     team: {
         key: 4,
         value: 'team',
         column: 'link_id',
         map: [5],
-        item: [
-            {label: '', key: 'name', is_link: true}, 
-            {label: '发货金额', key: 'sale_amount'},
-            {label: '推广费', key: 'promotion_amount'},
-            {label: '费用', key: 'operation_amount'},  
-            {label: '费比(%)', key: 'operation_rate'}, 
-            {label: 'ROI', key: 'roi'}, 
-            {label: '访问量', key: 'words_vol'},
-            {label: '市场流量', key: 'words_market_vol'},
-            {label: '市占率(%)', key: 'market_rate'}, 
-            {label: '退货量', key: 'refund_qty'},
-            {label: '商品销量', key: 'real_sale_qty'},
-            {label: '退货率(%)', key: 'refund_rate'}, 
-            {label: '运费', key: 'express_fee'}, 
-            {label: '利润', key: 'profit'}, 
-            {label: '利润率(%)', key: 'profit_rate'}, 
-        ]
     },
     user: {
         key: 5,
         value: 'user',
         column: 'link_id',
         map: [5],
-        item: [
-            {label: '', key: 'name', is_link: true}, 
-            {label: '发货金额', key: 'sale_amount'},
-            {label: '推广费', key: 'promotion_amount'},
-            {label: '费用', key: 'operation_amount'},  
-            {label: '费比(%)', key: 'operation_rate'}, 
-            {label: 'ROI', key: 'roi'}, 
-            {label: '访问量', key: 'words_vol'},
-            {label: '市场流量', key: 'words_market_vol'},
-            {label: '市占率(%)', key: 'market_rate'}, 
-            {label: '退货量', key: 'refund_qty'},
-            {label: '商品销量', key: 'real_sale_qty'},
-            {label: '退货率(%)', key: 'refund_rate'}, 
-            {label: '运费', key: 'express_fee'}, 
-            {label: '利润', key: 'profit'}, 
-            {label: '利润率(%)', key: 'profit_rate'}, 
-        ]
     }
 }
+
+const columnList = [
+    {label: '', key: 'name', is_link: true}, 
+    {label: '发货金额', key: 'sale_amount'}, 
+    {label: '推广费', key: 'promotion_amount'}, 
+    {label: '费用', key: 'operation_amount'},  
+    {label: '费比(%)', key: 'operation_rate'}, 
+    {label: 'ROI', key: 'roi'}, 
+    {label: '访问量', key: 'words_vol'},
+    {label: '市场流量', key: 'words_market_vol'},
+    {label: '市占率(%)', key: 'market_rate'}, 
+    {label: '退货量', key: 'refund_qty'},
+    {label: '商品销量', key: 'real_sale_qty'},
+    {label: '退货率(%)', key: 'refund_rate'}, 
+    {label: '运费', key: 'express_fee'}, 
+    {label: '利润', key: 'profit'}, 
+    {label: '利润率(%)', key: 'profit_rate'}, 
+    {label: '账单金额', key: 'invoice'}
+]
+
 const operationDefaultItem = {
     total: {
         column: [],
@@ -212,5 +145,6 @@ module.exports = {
     operationSelectionFlowNode,
     analysisFieldMap,
     analysisFlowUUid,
-    analysisLinkPrevious
+    analysisLinkPrevious,
+    columnList
 }

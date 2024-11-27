@@ -204,7 +204,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         sum: 0
     }
     let sql = `SELECT SUM(a1.sale_amount) AS sale_amount, a1.goods_id, a1.shop_name, 
-            a1.shop_id, a1.goods_name FROM goods_sale_info a1`
+            a1.shop_id FROM goods_sale_info a1`
     subsql = ` WHERE a1.date >= ? AND a1.date <= ?`
     p.push(start, end)
     for (let i =0; i < params.search.length; i++) {
@@ -289,14 +289,14 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         subsql = `${subsql}
                 AND a1.goods_id LIKE "%${params.goods_id}%"`
     }
-    let sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id, a1.goods_name`
+    let sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id`
     sql = `SELECT COUNT(1) AS count, SUM(sale_amount) AS sale_amount 
         FROM (${sql}${subsql}${sql1}) a`
     let row = await query(sql, p)
     if (row?.length && row[0].count) {
         result.total = row[0].count
         result.sum = row[0].sale_amount        
-        sql = `SELECT a1.goods_id, a1.shop_name, a1.shop_id, a1.goods_name, 
+        sql = `SELECT a1.goods_id, a1.shop_name, a1.shop_id, 
             IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
@@ -325,16 +325,21 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             FROM goods_sale_info a1 LEFT JOIN goods_other_info a4 
                 ON a4.goods_id = a1.goods_id 
                     AND a4.date = a1.date`
-        sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id, a1.goods_name`
+        sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id`
         sql = `SELECT * FROM (${sql}${subsql}${sql1}) aa LIMIT ${offset}, ${size}`
         row = await query(sql, p)
         if (row?.length) {
             for (let i = 0; i < row.length; i++) {
+                row[i].sku_id = ''
+                row[i].sku_sid = ''
                 if (row[i].goods_id) {
                     sql = `SELECT sku_id FROM goods_sale_info WHERE goods_id = ? 
-                        GROUP BY sku_id ORDER BY SUM(sale_amount) DESC LIMIT 1`
+                            AND \`date\` < DATE_FORMAT(NOW(), '%Y-%m-%d')
+                            AND \`date\` >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 7 DAY), '%Y-%m-%d')
+                        GROUP BY sku_id ORDER BY IFNULL(SUM(sale_amount), 0) DESC LIMIT 2`
                     let row1 = await query(sql, [row[i].goods_id])
-                    row[i].sku_id = row1[0].sku_id
+                    if (row1?.length) row[i].sku_id = row1[0].sku_id
+                    if (row1?.length > 1) row[i].sku_sid = row1[1].sku_id
                 }
                 
             }
