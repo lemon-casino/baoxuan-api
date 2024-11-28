@@ -994,7 +994,7 @@ const importJDZYInfo = async (rows, time) => {
             let info = await userOperationRepo.getDetailBySkuId(sku_id)
             if (info?.length) {
                 goods_id = info[0].brief_name
-                cost_price = parseInt(info[0].cost_price)
+                cost_price = parseFloat(info[0].cost_price)
             }
         }
         //供货金额
