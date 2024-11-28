@@ -1008,6 +1008,7 @@ const importJDZYInfo = async (rows, time) => {
         let jd_gross_profit_std = supplier_amount * 0.28
         //实际棕毛
         let real_jd_gross_profit = parseFloat(rows[i].getCell(gross_profit_row).value || 0)
+        real_jd_gross_profit = real_jd_gross_profit < 0 ? 0 : real_jd_gross_profit
         //需补综毛
         let other_cost = real_jd_gross_profit >= jd_gross_profit_std ? 0 :
             jd_gross_profit_std - real_jd_gross_profit
