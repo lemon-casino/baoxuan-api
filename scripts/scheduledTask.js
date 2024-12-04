@@ -26,7 +26,7 @@ let tmallLinkData = "45 13 * * 1-6"
 let jdLinkData  = "00 13 * * 1-6"
 let caigouLinkData  = "*/5 * * * 1-6"
 //转正通知 周一到周六  每天9点半触发流程
-let confirmationNotice = "0 30 9 * * 1-6"
+let confirmationNotice = "0 30 8 * * 1-6"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
     syncTodayRunningAndFinishedFlowsCron = "0 10 12 * * ?"
