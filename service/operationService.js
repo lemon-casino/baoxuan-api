@@ -306,7 +306,8 @@ const queryShopInfo = async (shops, result, type, start, end) => {
         }
         info = await settlementRepo.getAmount(start, end + ' 23:59:59', shopName[i].shop_name, null, except)
         if (info?.length) invoice = parseFloat(info[0].amount || 0).toFixed(2)
-        let warning = await goodsSaleInfoRepo.getNullPromotionByTime(shopName[i].shop_name, start, end)
+        let warning = 0
+        if (shopName[i].has_promotion) warning = await goodsSaleInfoRepo.getNullPromotionByTime(shopName[i].shop_name, start, end)
         result[type].data.push({
             id: (typeList[type].key + i) * 20,
             name: shopName[i].name,
