@@ -37,9 +37,12 @@ goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) =
 }
 
 goodsSaleInfoRepo.getNullPromotionByTime = async (shopNames, start, end) => {
-    let sql = `SELECT shop_name FROM goods_sale_info 
-        WHERE shop_name IN ("${shopNames}") AND \`date\` >= ? AND \`date\` <= ? 
-        GROUP BY shop_name HAVING SUM(promotion_amount) = 0`
+    let sql = `SELECT a1.shop_name FROM goods_sale_info a1 LEFT JOIN shop_info si
+            ON a1.shop_name = si.shop_name
+        WHERE a1.shop_name IN ("${shopNames}") AND a1.date >= ? 
+            AND a1.date <= ? 
+            AND si.has_promotion = 1 
+        GROUP BY a1.shop_name HAVING SUM(a1.promotion_amount) = 0`
     let result = await query(sql, [start, end])
     return result?.length ? true:false
 }
@@ -274,10 +277,12 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         } else if (params.search[i].field_id == 'gross_profit') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
-                        SELECT SUM(IFNULL(a1.sale_amount, 0) - IFNULL(a1.cost_amount, 0) 
-                            - IFNULL(a1.bill_amount, 0) 
-                            - IFNULL(a1.express_fee, 0) 
-                            - IFNULL(a1.packing_fee, 0)) AS val FROM goods_sale_info a2 
+                        SELECT FORMAT(IF(IFNULL(SUM(a2.sale_amount), 0) > 0, 
+                            (IFNULL(SUM(a2.sale_amount), 0) - IFNULL(SUM(a2.cost_amount), 0) 
+                            - IFNULL(SUM(a2.bill_amount), 0) 
+                            - IFNULL(SUM(a2.express_fee), 0) 
+                            - IFNULL(SUM(a2.packing_fee), 0)) / 
+                            SUM(a2.sale_amount), 0) * 100, 2) AS val FROM goods_sale_info a2 
                         WHERE a2.date >= ? AND a2.date <= ? 
                             AND a1.goods_id = a2.goods_id 
                     ) b WHERE b.val >= ${params.search[i].min} 
@@ -422,10 +427,12 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             AS real_pay_amount, IFNULL(SUM(a3.bill), 0) AS bill,
             IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(a1.cost_amount), 0) AS cost_amount, 
-            (IFNULL(SUM(a1.sale_amount), 0) - IFNULL(SUM(a1.cost_amount), 0) 
-                - IFNULL(SUM(a1.bill_amount), 0) 
-                - IFNULL(SUM(a1.express_fee), 0) 
-                - IFNULL(SUM(a1.packing_fee), 0)) AS gross_profit, 
+            FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
+                (IFNULL(SUM(a1.sale_amount), 0) - IFNULL(SUM(a1.cost_amount), 0) 
+                    - IFNULL(SUM(a1.bill_amount), 0) 
+                    - IFNULL(SUM(a1.express_fee), 0) 
+                    - IFNULL(SUM(a1.packing_fee), 0)
+                ) / SUM(a1.sale_amount), 0) * 100, 2) AS gross_profit, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
             FORMAT(IF(IFNULL(SUM(a8.promotion_amount), 0) > 0, 
@@ -559,10 +566,12 @@ goodsSaleInfoRepo.getDataRateByTime = async(col1, col2, column, goods_id, start,
 }
 
 goodsSaleInfoRepo.getDataGrossProfitByTime = async(goods_id, start, end) => {
-    const sql = `SELECT (IFNULL(SUM(sale_amount), 0) - IFNULL(SUM(cost_amount), 0) 
-            - IFNULL(SUM(bill_amount), 0) 
-            - IFNULL(SUM(express_fee), 0) 
-            - IFNULL(SUM(packing_fee), 0)) AS gross_profit, \`date\` 
+    const sql = `SELECT FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
+                (IFNULL(SUM(sale_amount), 0) - IFNULL(SUM(cost_amount), 0) 
+                    - IFNULL(SUM(bill_amount), 0) 
+                    - IFNULL(SUM(express_fee), 0) 
+                    - IFNULL(SUM(packing_fee), 0)) / SUM(sale_amount), 0) * 100, 2) 
+                AS gross_profit, \`date\` 
         FROM goods_sale_info WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
         GROUP BY \`date\``
     const result = await query(sql, [start, end, goods_id])
@@ -583,10 +592,12 @@ goodsSaleInfoRepo.getDataPromotionQOQByTime = async(goods_id, start, end) => {
 }
 
 goodsSaleInfoRepo.getDataGrossProfitDetailByTime = async(goods_id, start, end) => {
-    const sql = `SELECT (IFNULL(SUM(sale_amount), 0) - IFNULL(SUM(cost_amount), 0) 
-            - IFNULL(SUM(bill_amount), 0) 
-            - IFNULL(SUM(express_fee), 0) 
-            - IFNULL(SUM(packing_fee), 0)) AS gross_profit, sku_code 
+    const sql = `SELECT FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
+                (IFNULL(SUM(sale_amount), 0) - IFNULL(SUM(cost_amount), 0) 
+                    - IFNULL(SUM(bill_amount), 0) 
+                    - IFNULL(SUM(express_fee), 0) 
+                    - IFNULL(SUM(packing_fee), 0)) / SUM(sale_amount), 0) * 100, 2) 
+                    AS gross_profit, sku_code 
         FROM goods_sale_info WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
         GROUP BY sku_code`
     const result = await query(sql, [start, end, goods_id])
