@@ -36,6 +36,14 @@ goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) =
     return result || []
 }
 
+goodsSaleInfoRepo.getNullPromotionByTime = async (shopNames, start, end) => {
+    let sql = `SELECT shop_name FROM goods_sale_info 
+        WHERE shop_name IN ("${shopNames}") AND \`date\` >= ? AND \`date\` <= ? 
+        GROUP BY shop_name HAVING SUM(promotion_amount) = 0`
+    let result = await query(sql, [start, end])
+    return result?.length ? true:false
+}
+
 goodsSaleInfoRepo.getDetailByShopNamesAndTme = async (shopNames, column, start, end) => {
     let sql = `SELECT IFNULL(SUM(${column}), 0) AS ${column}, \`date\` FROM goods_sale_info 
         WHERE \`date\` >= ? AND \`date\` <= ? AND shop_name IN ("${shopNames}") 
@@ -208,7 +216,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
     subsql = ` WHERE a1.date >= ? AND a1.date <= ?`
     p.push(start, end)
     for (let i =0; i < params.search.length; i++) {
-        if (params.search[i].key == 'operation_rate') {
+        if (params.search[i].field_id == 'operation_rate') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.operation_amount), 0) AS operation_amount, 
@@ -219,7 +227,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         AND b.operation_amount * 100 <= ${params.search[i].max} * b.sale_amount
                 )`
             p.push(start, end)
-        } else if (params.search[i].key == 'roi') {
+        } else if (params.search[i].field_id == 'roi') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.promotion_amount), 0) AS promotion_amount, 
@@ -230,7 +238,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         AND b.sale_amount <= ${params.search[i].max} * b.promotion_amount 
                 )`
             p.push(start, end)
-        } else if (params.search[i].key == 'market_rate') {
+        } else if (params.search[i].field_id == 'market_rate') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a3.words_market_vol), 0) AS words_market_vol, 
@@ -241,7 +249,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         AND b.words_vol * 100 <= ${params.search[i].max} * b.words_market_vol
                 )`
             p.push(start, end)
-        } else if (params.search[i].key == 'refund_rate') {
+        } else if (params.search[i].field_id == 'refund_rate') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.real_sale_qty), 0) AS real_sale_qty, 
@@ -252,7 +260,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         AND b.refund_qty * 100 <= ${params.search[i].max} * b.real_sale_qty
                 )`
             p.push(start, end)
-        } else if (params.search[i].key == 'profit_rate') {
+        } else if (params.search[i].field_id == 'profit_rate') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.profit), 0) AS profit, 
@@ -263,14 +271,126 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         AND b.profit * 100 <= ${params.search[i].max} * b.sale_amount
                 )`
             p.push(start, end)
-        } else {
+        } else if (params.search[i].field_id == 'gross_profit') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
-                        SELECT IFNULL(SUM(a2.${params.search[i].key}), 0) AS val FROM 
+                        SELECT SUM(IFNULL(a1.sale_amount, 0) - IFNULL(a1.cost_amount, 0) 
+                            - IFNULL(a1.bill_amount, 0) 
+                            - IFNULL(a1.express_fee, 0) 
+                            - IFNULL(a1.packing_fee, 0)) AS val FROM goods_sale_info a2 
+                        WHERE a2.date >= ? AND a2.date <= ? 
+                            AND a1.goods_id = a2.goods_id 
+                    ) b WHERE b.val >= ${params.search[i].min} 
+                        AND b.val <= ${params.search[i].max} 
+                )`
+            p.push(start, end)
+        } else if (['pay_amount', 'brushing_amount', 'brushing_qty', 'refund_amount', 'bill'].includes(params.search[i].field_id)) {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT IFNULL(SUM(a2.${params.search[i].field_id}), 0) AS val FROM 
+                        goods_pay_info a2 WHERE a2.date >= ? AND a2.date <= ? 
+                            AND a1.goods_id = a2.goods_id 
+                    ) b WHERE b.val >= ${params.search[i].min} 
+                        AND b.val <= ${params.search[i].max} 
+                )`
+            p.push(start, end)
+        } else if (params.search[i].field_id == 'pay_express_fee') {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT IFNULL(SUM(a2.express_fee), 0) AS val FROM 
+                        goods_pay_info a2 WHERE a2.date >= ? AND a2.date <= ? 
+                            AND a1.goods_id = a2.goods_id 
+                    ) b WHERE b.val >= ${params.search[i].min} 
+                        AND b.val <= ${params.search[i].max} 
+                )`
+            p.push(start, end)
+        } else if (params.search[i].field_id == 'real_pay_amount') {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT IFNULL(SUM(a2.pay_amount), 0) - IFNULL(SUM(a2.brushing_amount), 0) 
+                        AS val FROM goods_pay_info a2 WHERE a2.date >= ? AND a2.date <= ? 
+                            AND a1.goods_id = a2.goods_id 
+                    ) b WHERE b.val >= ${params.search[i].min} 
+                        AND b.val <= ${params.search[i].max} 
+                )`
+            p.push(start, end)
+        } else if (['words_market_vol', 'words_vol'].includes(params.search[i].field_id)) {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT IFNULL(SUM(a2.${params.search[i].field_id}), 0) AS val 
+                        FROM goods_other_info a2 WHERE a2.date >= ? AND a2.date <= ? 
+                            AND a1.goods_id = a2.goods_id 
+                    ) b WHERE b.val >= ${params.search[i].min} 
+                        AND b.val <= ${params.search[i].max} 
+                )`
+            p.push(start, end)
+        } else if (params.search[i].field_id == 'dsr') {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT FORMAT(IFNULL(SUM(a2.dsr), 0) / COUNT(1), 2) AS val 
+                        FROM goods_other_info a2 WHERE a2.date >= ? AND a2.date <= ? 
+                            AND a1.goods_id = a2.goods_id 
+                    ) b WHERE b.val >= ${params.search[i].min} 
+                        AND b.val <= ${params.search[i].max} 
+                )`
+            p.push(start, end)
+        } else if (params.search[i].field_id == 'promotion_amount_qoq') {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT FORMAT(IF(IFNULL(SUM(a2.promotion_amount), 0) > 0, 
+                            (IFNULL(SUM(a1.promotion_amount), 0) - SUM(a2.promotion_amount)) /
+                            SUM(a2.promotion_amount) * 100, 0 
+                        ), 2) AS val FROM goods_sale_info a2 WHERE 
+                            a2.date >= DATE_SUB(?, INTERVAL 1 DAY) 
+                            AND a2.date <= DATE_SUB(?, INTERVAL 1 DAY)
+                            AND a1.goods_id = a2.goods_id 
+                    ) b WHERE b.val >= ${params.search[i].min} 
+                        AND b.val <= ${params.search[i].max} 
+                )`
+            p.push(start, end)
+        } else if (params.search[i].field_id == 'is_goods_id') {
+            if (params.search[i].value == 0)
+                subsql = `${subsql} AND a1.goods_id IS NULL`
+            else subsql = `${subsql} AND a1.goods_id IS NOT NULL`
+        } else if (params.search[i].field_id == 'onsale_info') {
+            if (params.search[i].value != 'old')
+                subsql = `${subsql} AND EXISTS(
+                        SELECT a2.goods_id FROM goods_sale_info a2 WHERE 
+                            a2.onsale_date >= DATE_SUB(NOW(), INTERVAL ${params.search[i].value} DAY) 
+                            AND a1.goods_id = a2.goods_id
+                    )`
+            else
+                subsql = `${subsql} AND EXISTS(
+                    SELECT a2.goods_id FROM goods_sale_info a2 WHERE 
+                        (a2.onsale_date < DATE_SUB(NOW(), INTERVAL 90 DAY) OR 
+                            a2.onsale_date IS NULL
+                        ) AND a1.goods_id = a2.goods_id
+                )`
+        } else if (params.search[i].field_id == 'goods_id') {
+            subsql = `${subsql} AND a1.goods_id LIKE '%${params.search[i].value}%'`
+        } else if (params.search[i].type == 'number') {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT IFNULL(SUM(a2.${params.search[i].field_id}), 0) AS val FROM 
                         goods_sale_info a2 WHERE a2.date >= ? AND a2.date <= ? 
                             AND a1.goods_id = a2.goods_id 
                     ) b WHERE b.val >= ${params.search[i].min} 
                         AND b.val <= ${params.search[i].max}
+                )`
+            p.push(start, end)
+        } else if (params.search[i].type == 'date' && params.search[i].time) {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT a2.goods_id AS val FROM dianshang_operation_attribute a2 
+                    WHERE a1.goods_id = a2.goods_id 
+                        AND a2.${params.search[i].field_id} >= '${params.search[i].time[0]}'
+                        AND a2.${params.search[i].field_id} <= '${params.search[i].time[1]}'
+                )`
+            p.push(start, end)
+        } else if (params.search[i].type == 'input' && params.search[i].value) {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT a2.goods_id AS val FROM dianshang_operation_attribute a2 
+                    WHERE a1.goods_id = a2.goods_id 
+                        AND a2.${params.search[i].field_id} LIKE '%${params.search[i].value}%'
                 )`
             p.push(start, end)
         }
@@ -285,10 +405,6 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         subsql = `${subsql}
                 AND a1.goods_id IN ("${linkIds}")`
     }
-    if (params.goods_id) {
-        subsql = `${subsql}
-                AND a1.goods_id LIKE "%${params.goods_id}%"`
-    }
     let sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id`
     sql = `SELECT COUNT(1) AS count, SUM(sale_amount) AS sale_amount 
         FROM (${sql}${subsql}${sql1}) a`
@@ -297,9 +413,25 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         result.total = row[0].count
         result.sum = row[0].sale_amount        
         sql = `SELECT a1.goods_id, a1.shop_name, a1.shop_id, 
+            IFNULL(SUM(a3.pay_amount), 0) AS pay_amount, 
+            IFNULL(SUM(a3.brushing_amount), 0) AS brushing_amount, 
+            IFNULL(SUM(a3.brushing_qty), 0) AS brushing_qty, 
+            IFNULL(SUM(a3.refund_amount), 0) AS refund_amount, 
+            IFNULL(SUM(a3.express_fee), 0) AS pay_express_fee, 
+            IFNULL(SUM(a3.pay_amount), 0) - IFNULL(SUM(a3.brushing_amount), 0) 
+            AS real_pay_amount, IFNULL(SUM(a3.bill), 0) AS bill,
             IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(a1.cost_amount), 0) AS cost_amount, 
+            (IFNULL(SUM(a1.sale_amount), 0) - IFNULL(SUM(a1.cost_amount), 0) 
+                - IFNULL(SUM(a1.bill_amount), 0) 
+                - IFNULL(SUM(a1.express_fee), 0) 
+                - IFNULL(SUM(a1.packing_fee), 0)) AS gross_profit, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
+            FORMAT(IF(IFNULL(SUM(a8.promotion_amount), 0) > 0, 
+                (IFNULL(SUM(a1.promotion_amount), 0) - SUM(a8.promotion_amount)) /
+                SUM(a8.promotion_amount) * 100, 0 
+            ), 2) AS promotion_amount_qoq,
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(a4.words_market_vol), 0) AS words_market_vol, 
             IFNULL(SUM(a4.words_vol), 0) AS words_vol, 
@@ -324,24 +456,41 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                 0), 2) AS profit_rate 
             FROM goods_sale_info a1 LEFT JOIN goods_other_info a4 
                 ON a4.goods_id = a1.goods_id 
-                    AND a4.date = a1.date`
+                    AND a4.date = a1.date
+            LEFT JOIN goods_pay_info a3 ON a1.goods_id = a3.goods_id
+                AND a1.sku_code = a3.sku_code
+                AND a1.date = a3.date
+            LEFT JOIN goods_sale_info a8 ON a8.goods_id = a1.goods_id 
+                AND a1.sku_code = a8.sku_code 
+                AND a8.date >= DATE_SUB("${start}", INTERVAL 1 DAY)
+                AND a8.date <= DATE_SUB("${end}", INTERVAL 1 DAY)`
         sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id`
-        sql = `SELECT * FROM (${sql}${subsql}${sql1}) aa LIMIT ${offset}, ${size}`
+        sql = `SELECT aa.*, d.goods_name, d.brief_name, d.operator, d.brief_product_line, 
+                d.line_director, d.purchase_director, d.onsale_date, d.link_attribute, 
+                d.important_attribute, d.first_category, d.second_category, 
+                d.pit_target,  (CASE WHEN
+                    DATE_SUB(NOW(), INTERVAL 30 DAY) <= d.onsale_date THEN '新品30' 
+                    WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= d.onsale_date THEN '新品60' 
+                    WHEN DATE_SUB(NOW(), INTERVAL 90 DAY) <= d.onsale_date THEN '新品90' 
+                    ELSE '老品' END) AS onsale_info
+            FROM (${sql}${subsql}${sql1}) aa
+            LEFT JOIN dianshang_operation_attribute d ON aa.goods_id = d.goods_id`
+        if (params.sort) sql = `${sql} ORDER BY aa.${params.sort}`
+        sql = `${sql}
+            LIMIT ${offset}, ${size}`
         row = await query(sql, p)
         if (row?.length) {
             for (let i = 0; i < row.length; i++) {
                 row[i].sku_id = ''
                 row[i].sku_sid = ''
                 if (row[i].goods_id) {
-                    sql = `SELECT sku_id FROM goods_sale_info WHERE goods_id = ? 
-                            AND \`date\` < DATE_FORMAT(NOW(), '%Y-%m-%d')
-                            AND \`date\` >= DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 7 DAY), '%Y-%m-%d')
-                        GROUP BY sku_id ORDER BY IFNULL(SUM(sale_amount), 0) DESC LIMIT 2`
-                    let row1 = await query(sql, [row[i].goods_id])
-                    if (row1?.length) row[i].sku_id = row1[0].sku_id
-                    if (row1?.length > 1) row[i].sku_sid = row1[1].sku_id
+                    sql = `SELECT sku_code FROM goods_sale_info WHERE goods_id = ? 
+                            AND \`date\` >= ? AND \`date\` <= ?
+                        GROUP BY sku_code ORDER BY IFNULL(SUM(sale_amount), 0) DESC LIMIT 2`
+                    let row1 = await query(sql, [row[i].goods_id, start, end])
+                    if (row1?.length) row[i].sku_id = row1[0].sku_code
+                    if (row1?.length > 1) row[i].sku_sid = row1[1].sku_code
                 }
-                
             }
             result.data = row
         }
@@ -369,9 +518,13 @@ goodsSaleInfoRepo.batchInsert = async (count, data) => {
             express_fee,
             operation_amount,
             real_sale_qty,
-            refund_qty) VALUES`
+            refund_qty,
+            real_sale_amount,
+            packing_fee,
+            bill_amount,
+            real_gross_profit) VALUES`
     for (let i = 0; i < count; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, data)
@@ -383,7 +536,7 @@ goodsSaleInfoRepo.deleteByDate = async (date, column, except) => {
         AND ${column} IS NULL`
     if (except) sql = `${sql} AND shop_name = '京东自营旗舰店'`
     else sql = `${sql} AND shop_name != '京东自营旗舰店'`
-    const result = await query(sql, date)
+    const result = await query(sql, [date])
     return result?.affectedRows ? true : false
 }
 
@@ -401,6 +554,41 @@ goodsSaleInfoRepo.getDataRateByTime = async(col1, col2, column, goods_id, start,
             \`date\` FROM goods_sale_info WHERE \`date\` >= ? AND \`date\` <= ? 
             AND goods_id = ?
         GROUP BY \`date\``
+    const result = await query(sql, [start, end, goods_id])
+    return result || []
+}
+
+goodsSaleInfoRepo.getDataGrossProfitByTime = async(goods_id, start, end) => {
+    const sql = `SELECT (IFNULL(SUM(sale_amount), 0) - IFNULL(SUM(cost_amount), 0) 
+            - IFNULL(SUM(bill_amount), 0) 
+            - IFNULL(SUM(express_fee), 0) 
+            - IFNULL(SUM(packing_fee), 0)) AS gross_profit, \`date\` 
+        FROM goods_sale_info WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
+        GROUP BY \`date\``
+    const result = await query(sql, [start, end, goods_id])
+    return result || []
+}
+
+goodsSaleInfoRepo.getDataPromotionQOQByTime = async(goods_id, start, end) => {
+    const sql = `SELECT FORMAT(IF(IFNULL(SUM(a2.promotion_amount), 0) > 0, 
+                (IFNULL(SUM(a1.promotion_amount), 0) - SUM(a2.promotion_amount)) / 
+                SUM(a2.promotion_amount), 0), 2) AS promotion_amount_qoq, a1.date 
+        FROM goods_sale_info a1 LEFT JOIN goods_sale_info a2 ON a1.goods_id = a2.goods_id
+            AND a1.sku_code = a2.sku_code 
+            AND a1.date = DATE_ADD(a2.date, INTERVAL 1 DAY)
+        WHERE a1.date >= ? AND a1.date <= ? AND a1.goods_id = ?
+        GROUP BY a1.date`
+    const result = await query(sql, [start, end, goods_id])
+    return result || []
+}
+
+goodsSaleInfoRepo.getDataGrossProfitDetailByTime = async(goods_id, start, end) => {
+    const sql = `SELECT (IFNULL(SUM(sale_amount), 0) - IFNULL(SUM(cost_amount), 0) 
+            - IFNULL(SUM(bill_amount), 0) 
+            - IFNULL(SUM(express_fee), 0) 
+            - IFNULL(SUM(packing_fee), 0)) AS gross_profit, sku_code 
+        FROM goods_sale_info WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
+        GROUP BY sku_code`
     const result = await query(sql, [start, end, goods_id])
     return result || []
 }

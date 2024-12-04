@@ -253,7 +253,7 @@ const getJDInfo = async (params) => {
 const getJDSSInfo = async (params) => {
     let count = 0, data = []
     let rows = params.sheet[0].getRows(2, params.sheet[0].rowCount - 1)
-    let total = 0
+    let total = 0, max_settle_time
     for (let i = 0; i < params.sheet[0].rowCount - 1; i++) {
         let row = rows[i]
         if (!row.getCell(1).value) break
@@ -279,6 +279,24 @@ const getJDSSInfo = async (params) => {
             shop_name,
             goods_id,
             sku_id
+        )
+        total += amount
+        if (!settle_time || 
+            moment(max_settle_time).valueOf() < moment(settle_time).valueOf())
+            max_settle_time = settle_time
+    }
+    if (total > 0) {
+        count += 1
+        data.push(
+            settle_time,
+            null,
+            null,
+            null,
+            total * 0.07,
+            '税点',
+            params.shopName,
+            null,
+            null
         )
     }
     return {count, data}
