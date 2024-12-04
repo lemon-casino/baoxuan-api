@@ -1363,11 +1363,13 @@ const getDesignerStat = async function (user, type, start, end) {
             LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
             WHERE pir1.operate_time >= ?
                 AND pir1.operate_time <= ? 
+                AND pir2.operate_time >= ? 
+                AND pir2.operate_time <= ? 
                 AND IF(piv1.value IS NULL, riv.value, piv1.value) LIKE CONCAT('%', ffd.value, '%') 
                 AND vft.type NOT IN (0, 4) 
                 AND vl1.type = ? 
                 AND pir2.operator_name IN (${usernames.map(() => '?').join(',')})      
-        ) a GROUP BY a.operator_name, a.title`, params = [start, end, type, ...usernames]
+        ) a GROUP BY a.operator_name, a.title`, params = [start, end, start, end, type, ...usernames]
     let result = []
     let row = await query(sql, params)
     if (row?.length) result = row
