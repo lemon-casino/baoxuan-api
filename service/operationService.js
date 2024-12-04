@@ -507,12 +507,6 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             }, {
                 title: '发货运费', field_id: 'express_fee', type: 'number', 
                 min: 0, max: 100, show: true
-            }, {
-                title: '坑产占比', field_id: 'qoq2', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '坑市场占比环比（30天）', field_id: 'qoq30', type: 'number', 
-                min: 0, max: 100, show: true
             }
         ],
         data: {}
@@ -589,11 +583,6 @@ const getGoodsInfoDetail = async (column, goods_id, start, end) => {
         result = await goodsBillRepo.getDataDetailByTime(goods_id, start, end)
     else if (column == 'promotion_amount_qoq')
         result = await goodsSaleInfoRepo.getDataPromotionQOQByTime(goods_id, start, end)
-    else if (column == 'qoq2')
-        result = await goodsPayInfoRepo.getQOQ2ByTime(goods_id, start, end)
-    else if (column == 'qoq30') 
-        result = await goodsPayInfoRepo.getQOQ30ByTime(goods_id, start, end)
-    return result
 }
 
 const getGoodsInfoSubDetail = async (goods_id, start, end) => {

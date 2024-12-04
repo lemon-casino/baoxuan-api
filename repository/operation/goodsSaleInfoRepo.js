@@ -334,6 +334,20 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         AND b.val <= ${params.search[i].max} 
                 )`
             p.push(start, end)
+        } else if (params.search[i].field_id == 'promotion_amount_qoq') {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT FORMAT(IF(IFNULL(SUM(a2.promotion_amount), 0) > 0, 
+                            (IFNULL(SUM(a1.promotion_amount), 0) - SUM(a2.promotion_amount)) /
+                            SUM(a2.promotion_amount) * 100, 0 
+                        ), 2) AS val FROM goods_sale_info a2 WHERE 
+                            a2.date >= DATE_SUB(?, INTERVAL 1 DAY) 
+                            AND a2.date <= DATE_SUB(?, INTERVAL 1 DAY)
+                            AND a1.goods_id = a2.goods_id 
+                    ) b WHERE b.val >= ${params.search[i].min} 
+                        AND b.val <= ${params.search[i].max} 
+                )`
+            p.push(start, end)
         } else if (params.search[i].field_id == 'is_goods_id') {
             if (params.search[i].value == 0)
                 subsql = `${subsql} AND a1.goods_id IS NULL`
@@ -439,15 +453,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             IFNULL(SUM(a1.profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
                 IFNULL(SUM(a1.profit), 0) / SUM(a1.sale_amount) * 100, 
-                0), 2) AS profit_rate,
-            FORMAT(IF(IFNULL(SUM(a5.pay_amount), 0) > 0, 
-                (IFNULL(SUM(a3.pay_amount), 0) - SUM(a5.pay_amount)) /
-                SUM(a5.pay_amount) * 100, 0 
-            ), 2) AS qoq2,
-            FORMAT(IF(IFNULL(SUM(a7.pay_amount), 0) > 0, 
-                (IFNULL(SUM(a6.pay_amount), 0) - SUM(a7.pay_amount)) /
-                SUM(a7.pay_amount) * 100, 0 
-            ), 2) AS qoq30
+                0), 2) AS profit_rate 
             FROM goods_sale_info a1 LEFT JOIN goods_other_info a4 
                 ON a4.goods_id = a1.goods_id 
                     AND a4.date = a1.date
@@ -457,23 +463,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             LEFT JOIN goods_sale_info a8 ON a8.goods_id = a1.goods_id 
                 AND a1.sku_code = a8.sku_code 
                 AND a8.date >= DATE_SUB("${start}", INTERVAL 1 DAY)
-                AND a8.date <= DATE_SUB("${end}", INTERVAL 1 DAY)
-            LEFT JOIN goods_pay_info a5 ON a5.goods_id = a1.goods_id 
-                AND a1.sku_code = a5.sku_code 
-                AND a5.date >= DATE_SUB("${start}", INTERVAL 2 DAY)
-                AND a5.date <= DATE_SUB("${end}", INTERVAL 2 DAY)
-            LEFT JOIN (
-                SELECT SUM(pay_amount) AS pay_amount, goods_id, sku_code FROM goods_pay_info
-                WHERE \`date\` <= DATE_SUB("${start}", INTERVAL 30 DAY) 
-                    AND \`date\` >= DATE_SUB("${end}", INTERVAL 1 DAY) 
-                GROUP BY goods_id, sku_code 
-            ) a6 ON a6.goods_id = a1.goods_id AND a6.sku_code = a1.sku_code
-            LEFT JOIN (
-                SELECT SUM(pay_amount) AS pay_amount, goods_id, sku_code FROM goods_pay_info
-                WHERE \`date\` <= DATE_SUB("${start}", INTERVAL 60 DAY) 
-                    AND \`date\` >= DATE_SUB("${end}", INTERVAL 31 DAY) 
-                GROUP BY goods_id, sku_code 
-            ) a7 ON a7.goods_id = a1.goods_id AND a7.sku_code = a1.sku_code`
+                AND a8.date <= DATE_SUB("${end}", INTERVAL 1 DAY)`
         sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id`
         sql = `SELECT aa.*, d.goods_name, d.brief_name, d.operator, d.brief_product_line, 
                 d.line_director, d.purchase_director, d.onsale_date, d.link_attribute, 
