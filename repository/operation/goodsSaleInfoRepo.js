@@ -42,7 +42,7 @@ goodsSaleInfoRepo.getNullPromotionByTime = async (shopNames, start, end) => {
         WHERE a1.shop_name IN ("${shopNames}") AND a1.date >= ? 
             AND a1.date <= ? 
             AND si.has_promotion = 1 
-        GROUP BY a1.shop_name HAVING SUM(a1.promotion_amount) = 0`
+        GROUP BY a1.shop_name, a1.date HAVING SUM(a1.promotion_amount) = 0`
     let result = await query(sql, [start, end])
     return result?.length ? true:false
 }
