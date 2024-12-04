@@ -153,10 +153,11 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
         info = await query(search, p)
         if (info?.length) {
             for (let i = 0; i < info.length; i++) {
-                sql = `SELECT sku_id FROM goods_sale_info WHERE goods_id = ? 
-                    GROUP BY sku_id ORDER BY SUM(sale_amount) DESC LIMIT 1`
-                let row1 = await query(sql, [info[i].goods_id])
-                info[i].sku_id = row1[0].sku_id
+                sql = `SELECT sku_code FROM goods_sale_info WHERE goods_id = ? 
+                        AND \`date\` >= ? AND \`date\` <= ?
+                    GROUP BY sku_code ORDER BY SUM(sale_amount) DESC LIMIT 1`
+                let row1 = await query(sql, [info[i].goods_id, start, end])
+                info[i].sku_id = row1[0].sku_code
                 
             }
             result.data = info
@@ -213,6 +214,12 @@ userOperationRepo.getLinkIdsByUserNames = async (userNames, shopNames) => {
 userOperationRepo.getDetailBySkuId = async (sku_id) => {
     let sql = `SELECT * FROM dianshang_operation_attribute WHERE sku_id = ?`
     const result = await query(sql, [sku_id])
+    return result || []
+}
+
+userOperationRepo.getDetailByGoodsId = async (goods_id) => {
+    let sql = `SELECT * FROM dianshang_operation_attribute WHERE goods_id = ?`
+    const result = await query(sql, [goods_id])
     return result || []
 }
 
