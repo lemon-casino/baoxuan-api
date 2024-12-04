@@ -584,6 +584,7 @@ const getGoodsInfoDetail = async (column, goods_id, start, end) => {
         result = await goodsBillRepo.getDataDetailByTime(goods_id, start, end)
     else if (column == 'promotion_amount_qoq')
         result = await goodsSaleInfoRepo.getDataPromotionQOQByTime(goods_id, start, end)
+    return result
 }
 
 const getGoodsInfoSubDetail = async (goods_id, start, end) => {
