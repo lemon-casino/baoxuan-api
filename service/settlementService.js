@@ -232,7 +232,7 @@ const getJDInfo = async (params) => {
         if (row.getCell(12).value) amount = row.getCell(12).value
         if (row.getCell(11).value) type = row.getCell(11).value
         if (row.getCell(4).value) 
-            goods_id = row.getCell(4).value.replace(/"/g,'').replace(/=/, '')
+            sku_id = row.getCell(4).value.replace(/"/g,'').replace(/=/, '')
         if (amount == 0) continue
         count += 1
         data.push(
@@ -501,7 +501,7 @@ const getDWInfo = async (params) => {
                 amount_row = j
             }
         }
-        for (let j = start; j < params.sheet[i].rowCount - start && start > 0; j++) {
+        for (let j = start; j < params.sheet[i].rowCount && start > 0; j++) {
             let row = rows[j]
             if (['订单号', '费用类型', '账单编号'].includes(row.getCell(1).value)) continue
             let settle_time = params.time, order_id = '', 
@@ -589,7 +589,7 @@ const getXHSInfo = async (params) => {
             }
         }
         
-        for (let j = start; j < params.sheet[i].rowCount - start && start > 0; j++) {
+        for (let j = start; j < params.sheet[i].rowCount && start > 0; j++) {
             let row = rows[j]
             if (['结算时间', '时间'].includes(row.getCell(1).value)) continue
             let settle_time = '', order_id = '', 
