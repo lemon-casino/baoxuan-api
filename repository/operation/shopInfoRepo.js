@@ -8,7 +8,7 @@ shopInfoRepo.getInfo = async () => {
 }
 
 shopInfoRepo.getShopNameById = async (id) => {
-    const sql = `SELECT shop_name, shop_name AS name, si.has_promotion 
+    const sql = `SELECT shop_name, shop_name AS name, has_promotion 
         FROM shop_info WHERE id = ?`
     const result = await query(sql, id)
     return result || []
