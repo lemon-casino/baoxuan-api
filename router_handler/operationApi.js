@@ -519,6 +519,61 @@ const importGoodsPDDInfo = async (req, res, next) => {
     }
 }
 
+const importGoodsOrderInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[1]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.csv.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsOrderInfo(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const setPannelSetting = async (req, res, next) => {
+    try {
+        const {type, attribute} = req.body
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.numberRequired},
+            attribute: {value: attribute, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const result = await operationService.setPannelSetting(req.user.id, type, attribute)
+        if (result) return res.send(biResponse.success())
+        return res.send(biResponse.createFailed())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -537,5 +592,7 @@ module.exports = {
     importGoodsBrushingInfo,
     importJDZYInfo,
     importJDZYPromotionInfo,
-    importGoodsPDDInfo
+    importGoodsPDDInfo,
+    importGoodsOrderInfo,
+    setPannelSetting
 }
