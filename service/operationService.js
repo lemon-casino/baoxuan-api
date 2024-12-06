@@ -11,12 +11,16 @@ const {
     workItemList, 
     workItemMap, 
     projectNameList, 
-    workTypeList 
+    workTypeList,
+    columnList 
 } = require('../const/operationConst')
 const settlementRepo = require('../repository/settlementRepo')
 const newFormsRepo = require('../repository/newFormsRepo')
 const goodsOtherInfoRepo = require('../repository/operation/goodsOtherInfoRepo')
+const goodsPayInfoRepo = require('../repository/operation/goodsPayInfoRepo')
 const goodsPromotionRepo = require('../repository/operation/goodsPromotionRepo')
+const goodsBillRepo = require('../repository/operation/goodsBillRepo')
+const goodsCompositeRepo = require('../repository/operation/goodsCompositeRepo')
 const moment = require('moment')
 
 /**
@@ -33,7 +37,7 @@ const getDataStats = async (id, start, end, params) => {
     let sale_amount = 0, promotion_amount = 0, express_fee = 0, profit = 0, 
         invoice = 0, oriType, type = '', except = false, operation_amount = 0, 
         words_market_vol = 0, words_vol = 0, real_sale_qty = 0, refund_qty = 0,
-        children = []
+        children = [], warning = 0
     if (params.type) {
         // jump permission, high level => low level
         oriType = typeList[params.type].map[0]
@@ -50,7 +54,7 @@ const getDataStats = async (id, start, end, params) => {
             if (users.length) {
                 result = await queryUserInfo(users, result, typeValue, start, end)
             }
-            result[typeValue].column = typeList[typeValue].item
+            result[typeValue].column = columnList
         }
     } else {
         // user permission
@@ -71,7 +75,7 @@ const getDataStats = async (id, start, end, params) => {
             if (users.length) {
                 result = await queryUserInfo(users, result, typeValue, start, end)
             }
-            result[typeValue].column = typeList[typeValue].item
+            result[typeValue].column = columnList
         }
     }
     // get total stats calc level
@@ -119,6 +123,7 @@ const getDataStats = async (id, start, end, params) => {
                 }
             }
         }
+        if (result[type].data[i].warning) warning = 1
     }
     for (let j = 0; j < children.length; j++) {
         for (let k in children[j]) {
@@ -145,14 +150,17 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].profit = profit.toFixed(2)
     result.total.data[0].invoice = invoice.toFixed(2)
     result.total.data[0].children = children.filter(item => item.id)
+    result.total.data[0].warning = warning
     return result
 }
 
 const getDataStatsDetail = async (type, name, column, start, end) => {
-    let result = [], shops = [], users = []
+    let result = [], shops = [], users = [], except = false
     if (type == 'total') {
         shops = await shopInfoRepo.getInfo()
+        except = true
     } else {
+        if (typeList[type].map[0] < 3) except = true 
         let res = await getQueryInfo(
             typeList[type].map[0], 
             typeList[type].key, 
@@ -183,13 +191,13 @@ const getDataStatsDetail = async (type, name, column, start, end) => {
         else if (column == 'market_rate')
             result = await goodsOtherInfoRepo.getRateByShopNamesAndTme(shopNames, 'words_market_vol', 'words_vol', column, start, end, 100)
         else if (column == 'invoice')
-            result = await settlementRepo.getAmountDetailByShopNames(start, end + ' 23:59:59', shopNames)
+            result = await settlementRepo.getAmountDetail(start, end + ' 23:59:59', shopNames, null, except)
     }
     if (users?.length) {
         let userNames = '', shopNames = ''
         for (let i = 0; i < users.length; i++) {
             userNames = `${userNames}${users[i].nickname}","`
-            if (users[i].shop_name) shopNames = `${shopNames}${users[i].shop_name}","`
+            if (users[i].shop_name) shopNames = `${shopNames}${users[i].shop_name.split(',').join('","')}","`
         }
         if (shopNames?.length) shopNames = shopNames.substring(0, shopNames.length - 3)
         userNames = userNames.substring(0, userNames.length - 3)
@@ -209,6 +217,8 @@ const getDataStatsDetail = async (type, name, column, start, end) => {
             result = await goodsOtherInfoRepo.getDetailByLinkIdsAndTme(linkIds, column, start, end)
         else if (column == 'market_rate')
             result = await goodsOtherInfoRepo.getRateByLinkIdsAndTme(linkIds, 'words_market_vol', 'words_vol', column, start, end, 100)
+        else if (column == 'invoice')
+            result = await settlementRepo.getAmountDetail(start, end + ' 23:59:59', null, linkIds, except)
     }
     return result || []
 }
@@ -254,16 +264,18 @@ const queryShopInfo = async (shops, result, type, start, end) => {
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
         real_sale_qty = 0, refund_qty = 0, words_market_vol = 0, words_vol = 0
     let shopName = [], j = -1, except = false
-    if (typeList.division.value == type) except = true
+    if (typeList[type].key < 3) except = true
     for (let i = 0; i < shops.length; i++) {
         if (i == 0 || shops[i].name != shops[i-1].name) {
             shopName.push({
                 shop_name: shops[i].shop_name,
-                name: shops[i].name
+                name: shops[i].name, 
+                has_promotion: shops[i].has_promotion
             })
             j = j+1
         } else {
             shopName[j].shop_name = `${shopName[j].shop_name}","${shops[i].shop_name}`
+            if (shops[i].has_promotion) shopName[j].has_promotion = 1
         }
     }
     for (let i = 0; i < shopName.length; i++) {
@@ -292,10 +304,10 @@ const queryShopInfo = async (shops, result, type, start, end) => {
             else if (children[j].type == 1) children[j].name = '新品'
             else children[j].name = '老品'
         }
-        if (typeList[type].key < 3) {
-            info = await settlementRepo.getAmount(start, end + ' 23:59:59', shopName[i].shop_name, except)
-            if (info?.length) invoice = parseFloat(info[0].amount || 0).toFixed(2)
-        }
+        info = await settlementRepo.getAmount(start, end + ' 23:59:59', shopName[i].shop_name, null, except)
+        if (info?.length) invoice = parseFloat(info[0].amount || 0).toFixed(2)
+        let warning = 0
+        if (shopName[i].has_promotion) warning = await goodsSaleInfoRepo.getNullPromotionByTime(shopName[i].shop_name, start, end)
         result[type].data.push({
             id: (typeList[type].key + i) * 20,
             name: shopName[i].name,
@@ -314,7 +326,8 @@ const queryShopInfo = async (shops, result, type, start, end) => {
             refund_qty,
             words_market_vol,
             words_vol,
-            children
+            children,
+            warning
         })           
     }
     return result
@@ -325,7 +338,8 @@ const queryUserInfo = async (users, result, type, start, end) => {
         express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
         real_sale_qty = 0, refund_qty = 0, words_market_vol = 0, words_vol = 0
-    let userName = [], j = -1
+    let userName = [], j = -1, except = false
+    if (typeList[type].key < 3) except = true
     for (let i = 0; i < users.length; i++) {
         if (i == 0 || users[i].name != users[i-1].name) {
             userName.push({
@@ -379,6 +393,8 @@ const queryUserInfo = async (users, result, type, start, end) => {
             else if (children[j].type == 1) children[j].name = '新品'
             else children[j].name = '老品'
         }
+        info = await settlementRepo.getAmount(start, end + ' 23:59:59', null, linkIds, except)
+        if (info?.length) invoice = parseFloat(info[0].amount || 0).toFixed(2)
         result[type].data.push({
             id: (typeList[type].key + i) * 20,
             name: userName[i].name,
@@ -406,21 +422,93 @@ const queryUserInfo = async (users, result, type, start, end) => {
 const getGoodsInfo = async (startDate, endDate, params, id) => {
     let result = {
         column: [
-            {title: '链接ID', field_id: 'goods_id'},
-            {title: '主销编码', field_id: 'sku_id'},
-            {title: '店铺名称', field_id: 'shop_name'},
-            {title: '店铺编码', field_id: 'shop_id'},
-            {title: '商品名称', field_id: 'goods_name'},
-            {title: '发货金额', field_id: 'sale_amount', show: true},
-            {title: '推广费', field_id: 'promotion_amount', show: true},
-            {title: '费比(%)', field_id: 'operation_rate', show: true},
-            {title: 'ROI', field_id: 'roi', show: true},
-            {title: '市占率(%)', field_id: 'market_rate', show: true},
-            {title: '退货率(%)', field_id: 'refund_rate', show: true},
-            {title: 'DSR评分', field_id: 'dsr', show: true},
-            {title: '运费', field_id: 'express_fee', show: true},
-            {title: '利润', field_id: 'profit', show: true},
-            {title: '利润率(%)', field_id: 'profit_rate', show: true},
+            {title: '链接ID', field_id: 'goods_id', type: 'input', show: true},
+            {title: '订价毛利', field_id: '', sub: [
+                {
+                    title: '定价毛利', field_id: 'gross_profit', show: true, 
+                    hasChild: true, type: 'number', min: 0, max: 100
+                },
+                {title: '主销编码', field_id: 'sku_id', type: 'input', show: true},
+                {title: '次销编码', field_id: 'sku_sid', type: 'input', show: true}
+            ]},
+            {title: '店铺名称', field_id: 'shop_name', type: 'input', show: true},
+            {title: '店铺编码', field_id: 'shop_id', type: 'input', show: true},
+            {title: '商品名称', field_id: 'goods_name', type: 'input', show: true},
+            {title: '商品简称', field_id: 'brief_name', type: 'input', show: true},
+            {title: '运营负责人', field_id: 'operator', type: 'input', show: true},
+            {title: '产品线简称', field_id: 'brief_product_line', type: 'input', show: true},
+            {title: '产品线负责人', field_id: 'line_director', type: 'input', show: true},
+            {title: '采购负责人', field_id: 'purchase_director', type: 'input', show: true},
+            {title: '上架日期', field_id: 'onsale_date', type: 'date', show: true},
+            {title: '上架信息', field_id: 'onsale_info', type: 'select', select: [
+                {key: '30', value: '新品30'},
+                {key: '60', value: '新品60'},
+                {key: '90', value: '新品90'},
+                {key: 'old', value: '老品'}
+            ], show: true},
+            {title: '链接属性', field_id: 'link_attribute', type: 'input', show: true},
+            {title: '链接属性2', field_id: 'important_attribute', type: 'input', show: true},
+            {title: '一级类目', field_id: 'first_category', type: 'input', show: true},
+            {title: '二级类目', field_id: 'second_category', type: 'input', show: true},
+            {title: '坑产目标', field_id: 'pit_target', type: 'input', show: true},
+            {
+                title: '发货金额', field_id: 'sale_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '支付金额', field_id: 'pay_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '刷单金额', field_id: 'brushing_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '刷单笔数', field_id: 'brushing_qty', type: 'number', 
+                min: 0, max: 10, show: true
+            }, {
+                title: '实际支付金额', field_id: 'real_pay_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '支付运费', field_id: 'pay_express_fee', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '费用', field_id: 'operation_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '费比(%)', field_id: 'operation_rate', type: 'number', 
+                min: 80, max: 100, show: true
+            }, {
+                title: '利润', field_id: 'profit', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '利润率(%)', field_id: 'profit_rate', type: 'number', 
+                min: 0, max: 15, show: true
+            }, {
+                title: '扣点(账单费用)', field_id: 'bill', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '成本', field_id: 'cost_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '推广费', field_id: 'promotion_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '推广费环比', field_id: 'promotion_amount_qoq', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: 'ROI', field_id: 'roi', type: 'number', 
+                min: 1, max: 3, show: true
+            }, {
+                title: '市占率(%)', field_id: 'market_rate', type: 'number', 
+                min: 0, max: 10, show: true
+            }, {
+                title: '退货率(%)', field_id: 'refund_rate', type: 'number', 
+                min: 10, max: 30, show: true
+            }, {
+                title: 'DSR评分', field_id: 'dsr', type: 'number', 
+                min: 0, max: 90, show: true
+            }, {
+                title: '发货运费', field_id: 'express_fee', type: 'number', 
+                min: 0, max: 100, show: true
+            }
         ],
         data: {}
     }
@@ -459,16 +547,17 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
         linkIds = links.map((item) => item.goods_id).join('","')
     }    
     params.search = JSON.parse(params.search)
+    
     result.data = await goodsSaleInfoRepo.getData(startDate, endDate, params, shopNames, linkIds)
     return result
 }
 
 const getGoodsInfoDetail = async (column, goods_id, start, end) => {
     let result = []
-    if (['sale_amount', 'promotion_amount', 'express_fee', 'profit'].includes(column))
+    if (['sale_amount', 'cost_amount', 'operation_amount', 'promotion_amount', 'express_fee', 'profit'].includes(column))
         result = await goodsSaleInfoRepo.getDataDetailByTime(column, goods_id, start, end)
     else if (column == 'operation_rate')
-        result = await goodsSaleInfoRepo.getDataRateByTime('sale_amount', 'promotion_amount', column, goods_id, start, end, 100)
+        result = await goodsSaleInfoRepo.getDataRateByTime('sale_amount', 'operation_amount', column, goods_id, start, end, 100)
     else if (column == 'roi')
         result = await goodsSaleInfoRepo.getDataRateByTime('promotion_amount', 'sale_amount', column, goods_id, start, end, 1)
     else if (column == 'refund_rate')
@@ -479,6 +568,27 @@ const getGoodsInfoDetail = async (column, goods_id, start, end) => {
         result = await goodsOtherInfoRepo.getDataDetailByTime(column, goods_id, start, end)
     else if (column == 'market_rate')
         result = await goodsOtherInfoRepo.getDataRateByTime('words_market_vol', 'words_vol', column, goods_id, start, end, 100)
+    else if (column == 'gross_profit')
+        result = await goodsSaleInfoRepo.getDataGrossProfitByTime(goods_id, start, end)
+    else if (['pay_amount', 'brushing_amount', 'brushing_qty', 'refund_amount', 'bill'].includes(column))
+        result = await goodsPayInfoRepo.getDataDetailByTime(column, goods_id, start, end)
+    else if (column == 'pay_express_fee')
+        result = await goodsPayInfoRepo.getExpressFeeByTime(goods_id, start, end)
+    else if (column == 'real_pay_amount')
+        result = await goodsPayInfoRepo.getRealPayAmountByTime(goods_id, start, end)
+    else if (column == 'composite_info')
+        result = await goodsCompositeRepo.getDataDetailByTime(goods_id, start, end)
+    else if (column == 'promotion_info')
+        result = await goodsPromotionRepo.getDataDetailByTime(goods_id, start, end)
+    else if (column == 'bill_info')
+        result = await goodsBillRepo.getDataDetailByTime(goods_id, start, end)
+    else if (column == 'promotion_amount_qoq')
+        result = await goodsSaleInfoRepo.getDataPromotionQOQByTime(goods_id, start, end)
+    return result
+}
+
+const getGoodsInfoSubDetail = async (goods_id, start, end) => {
+    let result = await goodsSaleInfoRepo.getDataGrossProfitDetailByTime(goods_id, start, end)
     return result
 }
 
@@ -494,6 +604,7 @@ const importGoodsInfo = async (rows, time) => {
         goods_name_row = null,
         date = time, 
         sale_amount_row = null, 
+        real_sale_amount_row = null,
         cost_amount_row = null, 
         gross_profit_row = null, 
         gross_profit_rate_row = null, 
@@ -503,80 +614,31 @@ const importGoodsInfo = async (rows, time) => {
         express_fee_row = null,
         operation_amount_row = null,
         real_sale_qty_row = null,
-        refund_qty_row = null;
+        refund_qty_row = null,
+        packing_fee_row = null,
+        bill_amount_row = null
     for (let i = 1; i <= columns.length; i++) {
-        if (columns[i] == '店铺款式编码') {
-            goods_id_row = i
-            continue
-        }
-        if (columns[i] == '款式编码(参考)') {
-            sku_id_row = i
-            continue
-        }
-        if (columns[i] == '商品款号') {
-            goods_code_row = i
-            continue
-        }
-        if (columns[i] == '商品编码') {
-            sku_code_row = i
-            continue
-        }
-        if (columns[i] == '店铺名称') {
-            shop_name_row = i
-            continue
-        }
-        if (columns[i] == '店铺编码') {
-            shop_id_row = i
-            continue
-        }
-        if (columns[i] == '商品名称') {
-            goods_name_row = i
-            continue
-        }
-        if (columns[i] == '利润-销售金额(扣退)') {
-            sale_amount_row = i
-            continue
-        }
-        if (columns[i] == '利润-销售成本(扣退)') {
-            cost_amount_row = i
-            continue
-        }
-        if (columns[i] == '利润-毛利') {
-            gross_profit_row = i
-            continue
-        }
-        if (columns[i] == '利润-毛利率') {
-            gross_profit_rate_row = i
-            continue
-        }
-        if (columns[i] == '利润-利润') {
-            profit_row = i
-            continue
-        }
-        if (columns[i] == '利润-利润率') {
-            profit_rate_row = i
-            continue
-        }
-        if (columns[i] == '利润-其中：推广费') {
-            promotion_amount_row = i
-            continue
-        }
-        if (columns[i] == '订单费用-快递费（自动匹配）') {
-            express_fee_row = i
-            continue
-        }
-        if (columns[i] == '利润-费用') {
-            operation_amount_row = i
-            continue
-        }
-        if (columns[i] == '商品数据-商品数量') {
-            real_sale_qty_row = i
-            continue
-        }
-        if (columns[i] == '退款合计-退款数量合计') {
-            refund_qty_row = i
-            continue
-        }
+        if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
+        if (columns[i] == '款式编码(参考)') {sku_id_row = i; continue}
+        if (columns[i] == '商品款号') {goods_code_row = i; continue}
+        if (columns[i] == '商品编码') {sku_code_row = i; continue}
+        if (columns[i] == '店铺名称') {shop_name_row = i; continue}
+        if (columns[i] == '店铺编码') {shop_id_row = i; continue}
+        if (columns[i] == '商品名称') {goods_name_row = i; continue}
+        if (columns[i] == '利润-销售金额(扣退)') {sale_amount_row = i; continue}
+        if (columns[i] == '利润-销售成本(扣退)') {cost_amount_row = i; continue}
+        if (columns[i] == '利润-毛利') {gross_profit_row = i; continue}
+        if (columns[i] == '利润-毛利率') {gross_profit_rate_row = i; continue}
+        if (columns[i] == '利润-利润') {profit_row = i; continue}
+        if (columns[i] == '利润-利润率') {profit_rate_row = i; continue}
+        if (columns[i] == '利润-其中：推广费') {promotion_amount_row = i; continue}
+        if (columns[i] == '订单费用-快递费（自动匹配）') {express_fee_row = i; continue}
+        if (columns[i] == '利润-费用') {operation_amount_row = i; continue}
+        if (columns[i] == '商品数据-商品数量') {real_sale_qty_row = i; continue}
+        if (columns[i] == '退款合计-退款数量合计') {refund_qty_row = i; continue}
+        if (columns[i] == '商品数据-实发金额') {real_sale_amount_row = i; continue}
+        if (columns[i] == '订单费用-包材费（自动匹配）') {packing_fee_row = i; continue}
+        if (columns[i] == '订单费用-账单费用（自动匹配）') {bill_amount_row = i; continue}
     }
     let amount = 0, saveAmount = 0
     for (let i = 1; i < rows.length; i++) {
@@ -620,6 +682,10 @@ const importGoodsInfo = async (rows, time) => {
             rows[i].getCell(operation_amount_row).value,
             rows[i].getCell(real_sale_qty_row).value,
             rows[i].getCell(refund_qty_row).value,
+            rows[i].getCell(real_sale_amount_row).value,
+            rows[i].getCell(packing_fee_row).value,
+            rows[i].getCell(bill_amount_row).value,
+            null,
         )
         count += 1
         saveAmount += rows[i].getCell(sale_amount_row).value
@@ -755,36 +821,57 @@ const importGoodsDSR = async (rows, time) => {
 const getGoodsLineInfo = async (startDate, endDate, params, id) => {
     let result = {
         column: [
-            {title: '链接ID', field_id: 'goods_id'},
-            {title: '项目', field_id: 'project_name'},
-            {title: '一级类目', field_id: 'first_category'},
-            {title: '二级类目', field_id: 'second_category'},
-            {title: '三级类目', field_id: 'level_3_category'},
-            {title: '产品线简称', field_id: 'brief_product_line'},
-            {title: '发货金额', field_id: 'sale_amount', show: true},
-            {title: '推广费', field_id: 'promotion_amount', show: true},
-            {title: '费比(%)', field_id: 'operation_rate', show: true},
-            {title: 'ROI', field_id: 'roi', show: true},
-            {title: '市占率(%)', field_id: 'market_rate', show: true},
-            {title: '退货率(%)', field_id: 'refund_rate', show: true},
-            {title: 'DSR评分', field_id: 'dsr', show: true},
-            {title: '运费', field_id: 'express_fee', show: true},
-            {title: '利润', field_id: 'profit', show: true},
-            {title: '利润率(%)', field_id: 'profit_rate', show: true},
-            {title: '主销编码', field_id: 'sku_id'},
-            {title: '产品定义', field_id: 'product_definition'},
-            {title: '库存结构', field_id: 'stock_structure'},
-            {title: '产品等级', field_id: 'product_rank'},
-            {title: '产品设计属性', field_id: 'product_design_attr'},
-            {title: '季节', field_id: 'seasons'},
-            {title: '品牌', field_id: 'brand'},
-            {title: '销售目标', field_id: 'targets'},
-            {title: '开发负责人', field_id: 'exploit_director'},
-            {title: '采购负责人', field_id: 'purchase_director'},
-            {title: '产品线管理人', field_id: 'line_manager'},
-            {title: '运营负责人', field_id: 'operator'},
-            {title: '产品线负责人', field_id: 'line_director'},
-            {title: '上架时间', field_id: 'onsale_date'},
+            {title: '链接ID', field_id: 'goods_id', type: 'input', show: true},
+            {title: '项目', field_id: 'project_name', type: 'input', show: true},
+            {title: '一级类目', field_id: 'first_category', type: 'input', show: true},
+            {title: '二级类目', field_id: 'second_category', type: 'input', show: true},
+            {title: '三级类目', field_id: 'level_3_category', type: 'input', show: true},
+            {title: '产品线简称', field_id: 'brief_product_line', type: 'input', show: true},
+            {
+                title: '发货金额', field_id: 'sale_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '推广费', field_id: 'promotion_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '费比(%)', field_id: 'operation_rate', type: 'number', 
+                min: 80, max: 100, show: true
+            }, {
+                title: 'ROI', field_id: 'roi', type: 'number', 
+                min: 1, max: 3, show: true
+            }, {
+                title: '市占率(%)', field_id: 'market_rate', type: 'number', 
+                min: 0, max: 10, show: true
+            }, {
+                title: '退货率(%)', field_id: 'refund_rate', type: 'number', 
+                min: 10, max: 30, show: true
+            }, {
+                title: 'DSR评分', field_id: 'dsr', type: 'number', 
+                min: 0, max: 90, show: true
+            }, {
+                title: '运费', field_id: 'express_fee', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '利润', field_id: 'profit', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '利润率(%)', field_id: 'profit_rate', type: 'number', 
+                min: 0, max: 15, show: true
+            },
+            {title: '主销编码', field_id: 'sku_id', type: 'input', show: true},
+            {title: '产品定义', field_id: 'product_definition', type: 'input', show: true},
+            {title: '库存结构', field_id: 'stock_structure', type: 'input', show: true},
+            {title: '产品等级', field_id: 'product_rank', type: 'input', show: true},
+            {title: '产品设计属性', field_id: 'product_design_attr', type: 'input', show: true},
+            {title: '季节', field_id: 'seasons', type: 'input', show: true},
+            {title: '品牌', field_id: 'brand', type: 'input', show: true},
+            {title: '销售目标', field_id: 'targets', type: 'input', show: true},
+            {title: '开发负责人', field_id: 'exploit_director', type: 'input', show: true},
+            {title: '采购负责人', field_id: 'purchase_director', type: 'input', show: true},
+            {title: '产品线管理人', field_id: 'line_manager', type: 'input', show: true},
+            {title: '运营负责人', field_id: 'operator', type: 'input', show: true},
+            {title: '产品线负责人', field_id: 'line_director', type: 'input', show: true},
+            {title: '上架时间', field_id: 'onsale_date', type: 'input', show: true},
         ],
         data: {}
     }
@@ -863,14 +950,23 @@ const getWorkStats = async (user, start, end, params) => {
     return result
 }
 
-const importGoodsPromotionInfo = async (rows, time) => {
-    let count = 0, data = [], result = false
+const importGoodsPayInfo = async (rows, time) => {
+    let count = 0, count1 = 0, count2 = 0, 
+        data = [], data1 = [], data2 = [], result = false
     let columns = rows[0].values,
         goods_id_row = null, 
         sku_id_row = null, 
+        sku_code_row = null, 
         shop_name_row = null,
+        shop_id_row = null,
         date = time
-        promotion_row_array = [];
+        promotion_row_array = [],
+        bill_row_array = [],
+        pay_amount_row = null,
+        brushing_amount_row = null,
+        refund_amount_row = null,
+        express_fee_row = null,
+        bill_row = null
     for (let i = 1; i < columns.length; i++) {
         if (columns[i] == '店铺款式编码') {
             goods_id_row = i
@@ -880,65 +976,220 @@ const importGoodsPromotionInfo = async (rows, time) => {
             sku_id_row = i
             continue
         }
+        if (columns[i] == '商品编码') {
+            sku_code_row = i
+            continue
+        }
         if (columns[i] == '店铺名称') {
             shop_name_row = i
             continue
         }
-        if (columns[i].indexOf('600') != -1) {
+        if (columns[i] == '店铺编码') {
+            shop_id_row = i
+            continue
+        }
+        if (columns[i] == '商品数据-付款金额') {
+            pay_amount_row = i
+            continue
+        }
+        if (columns[i] == '商品销售数据(其中分类单)-分类单销售金额(扣退)') {
+            brushing_amount_row = i
+            continue
+        }
+        if (columns[i] == '退款合计-退款金额合计') {
+            refund_amount_row = i
+            continue
+        }
+        if (columns[i] == '订单费用-快递费（自动匹配）') {
+            express_fee_row = i
+            continue
+        }
+        if (columns[i] == '订单费用-账单费用（自动匹配）') {
+            bill_row = i
+            continue
+        }
+        if ((columns[i].indexOf('6003') == 0 && 
+                columns[i].indexOf('6003012') == -1) || 
+            columns[i].indexOf('6008') == 0) {
             promotion_row_array.push(i)
+            continue
+        }
+        if (columns[i].indexOf('6001') == 0 || 
+            columns[i].indexOf('6003012') == 0) {
+            bill_row_array.push(i)
+            continue
         }
     }
     for (let i = 1; i < rows.length; i++) {
         if (!rows[i].getCell(1).value) continue
+        let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
+            rows[i].getCell(shop_name_row).value.trim() : 
+            rows[i].getCell(shop_name_row).value
+        if (shop_name == '京东自营旗舰店') continue
+        let goods_id = goods_id_row ? (typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
+                rows[i].getCell(goods_id_row).value.trim() : 
+                rows[i].getCell(goods_id_row).value) : null
+        let sku_id = sku_id_row ? (typeof(rows[i].getCell(sku_id_row).value) == 'string' ? 
+            rows[i].getCell(sku_id_row).value.trim() : 
+            rows[i].getCell(sku_id_row).value) : null
+        let sku_code = sku_code_row ? (typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
+            rows[i].getCell(sku_code_row).value.trim() : 
+            rows[i].getCell(sku_code_row).value) : null
+        let shop_id = typeof(rows[i].getCell(shop_id_row).value) == 'string' ? 
+            rows[i].getCell(shop_id_row).value.trim() : 
+            rows[i].getCell(shop_id_row).value
+        let pay_amount = rows[i].getCell(pay_amount_row).value
+        let brushing_amount = rows[i].getCell(brushing_amount_row).value
+        let refund_amount = rows[i].getCell(refund_amount_row).value
+        let express_fee = rows[i].getCell(express_fee_row).value
+        let bill = rows[i].getCell(bill_row).value
         for (let j = 0; j < promotion_row_array.length; j++) {
             let amount = rows[i].getCell(promotion_row_array[j]).value
             if (!amount) continue
-            data.push(
-                goods_id_row ? (typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
-                    rows[i].getCell(goods_id_row).value.trim() : 
-                    rows[i].getCell(goods_id_row).value) : null,
-                sku_id_row ? (typeof(rows[i].getCell(sku_id_row).value) == 'string' ? 
-                    rows[i].getCell(sku_id_row).value.trim() : 
-                    rows[i].getCell(sku_id_row).value) : null,
-                typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
-                    rows[i].getCell(shop_name_row).value.trim() : 
-                    rows[i].getCell(shop_name_row).value,
-                typeof(columns[promotion_row_array[j]]) == 'string' ? 
-                    columns[promotion_row_array[j]].trim() : 
-                    columns[promotion_row_array[j]],
+            let promotion_name = typeof(columns[promotion_row_array[j]]) == 'string' ? 
+                columns[promotion_row_array[j]].trim() : 
+                columns[promotion_row_array[j]]
+            data1.push(
+                goods_id,
+                sku_id,
+                shop_name,
+                promotion_name,
+                amount,
+                date,
+            )   
+            count1 += 1                    
+        }
+        for (let j = 0; j < bill_row_array.length; j++) {
+            let amount = rows[i].getCell(bill_row_array[j]).value
+            if (!amount) continue
+            let bill_name = typeof(columns[bill_row_array[j]]) == 'string' ? 
+                columns[bill_row_array[j]].trim() : 
+                columns[bill_row_array[j]]
+            data2.push(
+                goods_id,
+                sku_id,
+                shop_name,
+                bill_name,
                 amount,
                 date,
             )
-            count += 1                        
+            count2 += 1                    
         }
+        count += 1   
+        data.push(
+            goods_id,
+            sku_id,
+            sku_code,
+            shop_name,
+            shop_id,
+            date,
+            pay_amount,
+            brushing_amount,
+            refund_amount,
+            express_fee,
+            bill
+        )
     }
-    logger.info(`[推广数据导入]：时间:${time}, 总计数量:${count}`)
+    logger.info(`[支付数据导入]：时间:${date}, 总计数量:${count}, 推广数据:${count1}, 账单数据:${count2}`)
     if (count > 0) {
-        await goodsPromotionRepo.deleteByDate(time)
-        result = await goodsPromotionRepo.batchInsert(count, data)
+        await goodsPayInfoRepo.deleteByDate(date)
+        result = await goodsPayInfoRepo.batchInsert(count, data)
+        if (count1 > 0) {
+            await goodsPromotionRepo.deleteByDate(date)
+            await goodsPromotionRepo.batchInsert(count1, data1)
+        }
+        if (count2 > 0) {
+            await goodsBillRepo.deleteByDate(date)
+            await goodsBillRepo.batchInsert(count2, data2)
+        }
     }
     return result
 }
 
-const importJDZYInfo = async (rows) => {
+const importGoodsCompositeInfo = async (rows, time) => {
     let count = 0, data = [], result = false
+    let columns = rows[1].values,
+        header = rows[0].values,
+        goods_id_row = null, 
+        shop_name_row = null, 
+        date = time, 
+        composite_row = {}
+    for (let i = 1; i < header.length; i++) {
+        if (header[i]?.indexOf('广告-') == 0 && composite_row[header[i]] == undefined) {
+            composite_row[header[i]] = {}
+        }
+    }
+    for (let i = 1; i < columns.length; i++) {
+        if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
+        if (columns[i] == '店铺') {shop_name_row = i; continue}
+        if (columns[i] == '曝光量') {composite_row[header[i]][1] = i; continue}
+        if (columns[i] == '点击量') {composite_row[header[i]][2] = i; continue}
+        if (columns[i] == '点击率') {composite_row[header[i]][3] = i; continue}
+        if (columns[i] == '投入产出比（ROI）') {composite_row[header[i]][4] = i; continue}
+        if (columns[i] == '花费') {composite_row[header[i]][5] = i; continue}
+        if (columns[i] == '交易额') {composite_row[header[i]][6] = i; continue}
+        if (columns[i] == '直接交易额') {composite_row[header[i]][7] = i; continue}
+        if (columns[i] == '间接交易额') {composite_row[header[i]][8] = i; continue}
+        if (columns[i] == '成交笔数') {composite_row[header[i]][9] = i; continue}
+        if (columns[i] == '直接成交笔数') {composite_row[header[i]][10] = i; continue}
+        if (columns[i] == '间接成交笔数') {composite_row[header[i]][11] = i; continue}
+        if (columns[i] == '每笔成交花费') {composite_row[header[i]][12] = i; continue}
+        if (columns[i] == '每笔成交金额') {composite_row[header[i]][13] = i; continue}
+        if (columns[i] == '每笔直接成交金额') {composite_row[header[i]][14] = i; continue}
+        if (columns[i] == '每笔间接成交金额') {composite_row[header[i]][15] = i; continue}
+        if (columns[i] == '推广费占比') {composite_row[header[i]][16] = i; continue}
+        if (columns[i] == '点击转化率') {composite_row[header[i]][17] = i; continue}
+    }
+    for (let i = 2; i < rows.length; i++) {
+        if (!rows[i].getCell(1).value) continue
+        let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
+            rows[i].getCell(shop_name_row).value.trim() : 
+            rows[i].getCell(shop_name_row).value
+        if (shop_name == '京东自营旗舰店') continue
+        let goods_id = typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
+            rows[i].getCell(goods_id_row).value.trim() : 
+            rows[i].getCell(goods_id_row).value
+        for (let name in composite_row) {
+            let flag = 0
+            let item = [goods_id, shop_name, date, name]
+            for (let j = 1; j <= 17; j++) {
+                if (composite_row[name][j] != undefined) {
+                    let info = rows[i].getCell(composite_row[name][j]).value
+                    if (info) {
+                        info = typeof(info) == 'string' ? info.replace('%', '') : info
+                        item.push(info)
+                        flag = 1
+                    } else item.push(null)
+                } else item.push(null)
+            }
+            if (flag) {
+                data.push(...item)
+                count += 1
+            }
+        }
+    }
+    logger.info(`[综合数据导入]：时间:${date}, 总计数量:${count}`)
+    if (count > 0) {
+        await goodsCompositeRepo.deleteByDate(date, '聚水潭-商品综合')
+        result = goodsCompositeRepo.batchInsertDefault(count, data)
+    }
+    return result
+}
+
+const importJDZYInfo = async (rows, time) => {
+    let count = 0, data = [], data2 = [], result = false
     let columns = rows[0].values,
         shop_name = '京东自营旗舰店',
         shop_id = '16314655',
-        sku_id_row = null, 
-        goods_name_row = null,
-        date = moment().format('YYYY-MM-DD'),
+        sku_id_row = null,
+        date = time,
         real_sale_qty_row = null,
+        supplier_amount_row = null,
         sale_amount_row = null,
-        cost_amount_row = null,
         gross_profit_row = null
     for (let i = 1; i < columns.length; i++) {
         if (columns[i] == '商品编号') {
             sku_id_row = i
-            continue
-        }
-        if (columns[i] == '商品名称') {
-            goods_name_row = i
             continue
         }
         if (columns[i] == '财务销量') {
@@ -946,11 +1197,11 @@ const importJDZYInfo = async (rows) => {
             continue
         }
         if (columns[i] == '收入') {
-            sale_amount_row = i
+            supplier_amount_row = i
             continue
         }
         if (columns[i] == '成本') {
-            cost_amount_row = i
+            sale_amount_row = i
             continue
         }
         if (columns[i] == '毛利') {
@@ -964,11 +1215,30 @@ const importJDZYInfo = async (rows) => {
         if (!rows[i].getCell(1).value) continue
         let sku_id = sku_id_row ? (typeof(rows[i].getCell(sku_id_row).value) == 'string' ? 
             rows[i].getCell(sku_id_row).value.trim() : 
-            rows[i].getCell(sku_id_row).value) : null, goods_id = null
+            rows[i].getCell(sku_id_row).value) : null, goods_id = null, cost_price = 0
         if (sku_id) {
             let info = await userOperationRepo.getDetailBySkuId(sku_id)
-            if (info?.length) goods_id = info[0].brief_name
+            if (info?.length) {
+                goods_id = info[0].brief_name
+                cost_price = parseFloat(info[0].cost_price)
+            }
         }
+        //供货金额
+        let sale_amount = parseFloat(rows[i].getCell(sale_amount_row).value || 0)
+        let qty = parseInt(rows[i].getCell(real_sale_qty_row).value || 0)
+        let cost_amount = (cost_price + 0.8 + 1.4) * qty
+        //京东销售额
+        let supplier_amount = parseFloat(rows[i].getCell(supplier_amount_row).value || 0)
+        let tax = sale_amount * 0.07
+        //综毛标准
+        let jd_gross_profit_std = supplier_amount * 0.28
+        //实际棕毛
+        let real_gross_profit = parseFloat(rows[i].getCell(gross_profit_row).value || 0)
+        real_jd_gross_profit = real_gross_profit < 0 ? 0 : real_gross_profit
+        //需补综毛
+        let other_cost = real_jd_gross_profit >= jd_gross_profit_std ? 0 :
+            jd_gross_profit_std - real_jd_gross_profit
+        let profit = sale_amount - cost_amount - tax - other_cost
         data.push(
             goods_id,
             sku_id,
@@ -976,23 +1246,31 @@ const importJDZYInfo = async (rows) => {
             null,
             shop_name,
             shop_id,
-            typeof(rows[i].getCell(goods_name_row).value) == 'string' ? 
-                rows[i].getCell(goods_name_row).value.trim() : 
-                rows[i].getCell(goods_name_row).value,
+            null,
             date,
-            rows[i].getCell(sale_amount_row).value,
-            rows[i].getCell(cost_amount_row).value,
-            rows[i].getCell(gross_profit_row).value,
-            rows[i].getCell(sale_amount_row).value ? (rows[i].getCell(gross_profit_row).value / 
-                rows[i].getCell(sale_amount_row).value) : 0,
-            rows[i].getCell(gross_profit_row).value,
-            rows[i].getCell(sale_amount_row).value ? (rows[i].getCell(gross_profit_row).value / 
-                rows[i].getCell(sale_amount_row).value) : 0,
+            sale_amount,
+            cost_amount,
+            sale_amount - cost_amount,
+            sale_amount ? (sale_amount - cost_amount) / sale_amount : 0,
+            profit,
+            sale_amount ? profit / sale_amount : 0,
             0,
             null,
-            0,
-            rows[i].getCell(real_sale_qty_row).value,
+            tax + other_cost,
+            qty,
             null,
+            supplier_amount,
+            null,
+            null,
+            real_gross_profit
+        )
+        data2.push(
+            goods_id,
+            sku_id,
+            shop_name,
+            '扣点',
+            tax,
+            date
         )
         count += 1
         saveAmount += rows[i].getCell(sale_amount_row).value
@@ -1001,35 +1279,31 @@ const importJDZYInfo = async (rows) => {
     if (count > 0) {
         await goodsSaleInfoRepo.deleteByDate(date, 'goods_code', 1)
         result = await goodsSaleInfoRepo.batchInsert(count, data)
+        await goodsBillRepo.deleteByDate2(date)
+        await goodsBillRepo.batchInsert(count, data2)
     }
     return result
 }
 
-const importJDZYPromotionInfo = async (rows, name) => {
+const importJDZYPromotionInfo = async (rows, name, time) => {
     let count = 0, data = [], result = false
     let columns = rows[0].values,
         sku_id_row = null, 
         amount_row = null, 
         shop_name = '京东自营旗舰店',
-        date = moment().format('YYYY-MM-DD'),
+        date = time,
+        way_row = null,
         promotion_name = '';
-    switch (name) {
-        case '宝选_快车':
-            promotion_name = '京东快车1'
-            break
-        case '快车单日计划':
-            promotion_name = '京东快车2'
-            break
-        case '茶具_快车':
-            promotion_name = '京东快车3'
-            break
-        case '场景单日计划':
-            promotion_name = '日常推广'
-            break
-        case '海投单日计划':
-            promotion_name = '场景推广'
-            break
-        default:
+    if (name.indexOf('宝选快车') != -1) {
+        promotion_name = '京东快车1'
+    } else if(name.indexOf('快车单日计划') != -1) {
+        promotion_name = '京东快车2'
+    } else if(name.indexOf('茶具快车') != -1) {
+        promotion_name = '京东快车3'
+    } else if(name.indexOf('场景单日计划') != -1) {
+        promotion_name = '场景推广'
+    } else if(name.indexOf('海投单日计划') != -1) {
+        promotion_name = '日常推广'
     }
     for (let i = 1; i < columns.length; i++) {
         if (columns[i] == 'SKUID' || columns[i] == '商品SKU') {
@@ -1040,9 +1314,14 @@ const importJDZYPromotionInfo = async (rows, name) => {
             amount_row = i
             continue
         }
+        if (columns[i] == '定向方式') {
+            way_row = i
+            continue
+        }
     }
     for (let i = 1; i < rows.length; i++) {
         if (!rows[i].getCell(1).value) continue
+        if (way_row && rows[i].getCell(way_row).value.indexOf('汇总') == -1) continue
         let sku_id = sku_id_row ? (typeof(rows[i].getCell(sku_id_row).value) == 'string' ? 
             rows[i].getCell(sku_id_row).value.trim() : 
             rows[i].getCell(sku_id_row).value) : null, goods_id = null
@@ -1050,8 +1329,8 @@ const importJDZYPromotionInfo = async (rows, name) => {
             let info = await userOperationRepo.getDetailBySkuId(sku_id)
             if (info?.length) goods_id = info[0].brief_name
         }
-        let amount = rows[i].getCell(amount_row).value
-        let search = await goodsPromotionRepo.getByPromotionName(date, promotion_name, goods_id, sku_id)
+        let amount = parseFloat(rows[i].getCell(amount_row).value || 0)
+        if (amount == 0) continue
         data.push(
             goods_id,
             sku_id,
@@ -1060,8 +1339,7 @@ const importJDZYPromotionInfo = async (rows, name) => {
             amount,
             date
         )
-        if (!search?.length) await goodsSaleInfoRepo.updateFee(goods_id, sku_id, amount)
-        else await goodsSaleInfoRepo.updateFee(goods_id, sku_id, amount - search[0].amount)
+        await goodsSaleInfoRepo.updateFee(sku_id, amount, date)
         count += 1
     }
     logger.info(`[京东自营推广数据导入]：时间:${date}, 总计数量:${count}`)
@@ -1069,6 +1347,186 @@ const importJDZYPromotionInfo = async (rows, name) => {
         await goodsPromotionRepo.deleteByDate(date, promotion_name)
         result = await goodsPromotionRepo.batchInsert(count, data)
     }
+    return result
+}
+
+const importGoodsSYCMInfo = async (rows, time) => {
+    let count = 0, data = [], result = false
+    let columns = rows[1],
+        goods_id_row = null,
+        date = time,
+        total_users_num_row = null,
+        total_click_num_row = null,
+        total_cart_num_row = null,
+        total_trans_users_num_row = null,
+        trans_amount_row = null,
+        refund_amount_row = null,
+        users_num_row = null,
+        trans_users_num_row = null
+    for (let i in columns) {
+        if (columns[i] == '商品ID') {goods_id_row = i;  continue}
+        if (columns[i] == '商品访客数') {total_users_num_row = i; continue}
+        if (columns[i] == '商品浏览量') {total_click_num_row = i; continue}
+        if (columns[i] == '商品加购件数') {total_cart_num_row = i; continue}
+        if (columns[i] == '支付买家数') {total_trans_users_num_row = i; continue}
+        if (columns[i] == '支付金额') {trans_amount_row = i; continue}
+        if (columns[i] == '成功退款金额') {refund_amount_row = i; continue}
+        if (columns[i] == '搜索引导访客数') {users_num_row = i; continue}
+        if (columns[i] == '搜索引导支付买家数') {trans_users_num_row = i; continue}
+    }
+    for (let i = 2; i < rows.length; i++) {
+        let goods_id = goods_id_row ? (typeof(rows[i][goods_id_row]) == 'string' ? 
+            rows[i][goods_id_row].trim() : 
+            rows[i][goods_id_row]) : null, shop_name = null
+        if (goods_id) {
+            let info = await userOperationRepo.getDetailByGoodsId(goods_id)
+            if (info?.length) {
+                shop_name = info[0].shop_name
+            }
+        }
+        data.push(
+            goods_id,
+            shop_name,
+            date,
+            rows[i][total_users_num_row].replace(',', ''),
+            rows[i][total_click_num_row].replace(',', ''),
+            rows[i][total_cart_num_row].replace(',', ''),
+            rows[i][total_trans_users_num_row].replace(',', ''),
+            rows[i][trans_amount_row].replace(',', ''),
+            rows[i][refund_amount_row].replace(',', ''),
+            rows[i][users_num_row].replace(',', ''),
+            rows[i][trans_users_num_row].replace(',', '')
+        )
+        count += 1
+    }
+    logger.info(`[生意参谋数据导入]：时间:${date}, 总计数量:${count}`)
+    if (count > 0) {
+        await goodsCompositeRepo.deleteByDate(date, '生意参谋')
+        result = await goodsCompositeRepo.batchInsertSYCM(count, data)
+    }
+    return result
+}
+
+const importGoodsXHSInfo = async (rows, time) => {
+    let count = 0, data = [], result = false
+    let columns = rows[0].values,
+        goods_id_row = null,
+        shop_name_row = null,
+        date = time,
+        amount_row = null
+    for (let i = 1; i < columns.length; i++) {
+        if (columns[i] == '商品信息') {goods_id_row = i;  continue}
+        if (columns[i] == '店铺名称') {shop_name_row = i; continue}
+        if (columns[i] == '打款金额') {amount_row = i; continue}
+    }
+    for (let i = 1; i < rows.length; i++) {
+        if (!rows[i].getCell(1).value) continue
+        let goods_id = goods_id_row ? (typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
+            rows[i].getCell(goods_id_row).value.trim() : 
+            rows[i].getCell(goods_id_row).value) : null
+        let shop_name = shop_name_row ? (typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
+            rows[i].getCell(shop_name_row).value.trim() : 
+            rows[i].getCell(shop_name_row).value) : null
+        data.push(
+            goods_id,
+            null,
+            shop_name,
+            '小红书返款',
+            rows[i].getCell(amount_row).value,
+            date
+        )
+        count += 1
+    }
+    logger.info(`[小红书刷单数据导入]：时间:${date}, 总计数量:${count}`)
+    if (count > 0) {
+        await goodsBillRepo.deleteByDate(date)
+        result = await goodsBillRepo.batchInsert(count, data)
+    }
+    return result
+}
+
+const importGoodsBrushingInfo = async (rows, time) => {
+    let result = false, count = 0
+    let columns = rows[0].values,
+        goods_id_row = null,
+        order_row = null,
+        date = time,
+        goods_id_info = {},
+        order_id_info = {}
+    for (let i = 1; i < columns.length; i++) {
+        if (columns[i] == '店铺款式编码') {goods_id_row = i;  continue}
+        if (columns[i] == '线上订单号') {order_row = i; continue}
+    }
+    await goodsPayInfoRepo.resetBrushingQty(date)
+    for (let i = 1; i < rows.length; i++) {
+        if (!rows[i].getCell(1).value) continue
+        let goods_id = goods_id_row ? (typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
+            rows[i].getCell(goods_id_row).value.trim() : 
+            rows[i].getCell(goods_id_row).value) : null
+        let order = order_row ? (typeof(rows[i].getCell(order_row).value) == 'string' ? 
+            rows[i].getCell(order_row).value.trim() : 
+            rows[i].getCell(order_row).value) : null
+        if (!order_id_info[order]) {
+            if (!goods_id_info[goods_id]) goods_id_info[goods_id] = 1
+            else goods_id_info[goods_id] += 1
+        }
+    }
+    for (let index in goods_id_info) {
+        result = await goodsPayInfoRepo.updateBrushingQty(index, goods_id_info[index], date)
+        count += 1
+    }
+    logger.info(`[刷单数据导入]：时间:${date}, 总计数量:${count}`)
+    return result
+}
+
+const importGoodsPDDInfo = async (rows, time) => {
+    let result = false, count = 0, data = []
+    let columns = rows[0].values,
+        goods_id_row = null,
+        shop_name_row = null,
+        date = time,
+        user_num_row = null,
+        click_num_row = null,
+        trans_qty_row = null,
+        trans_users_num_row = null,
+        trans_num_row = null,
+        trans_amount_row = null,
+        pay_rate_row = null
+    for (let i = 1; i < columns.length; i++) {
+        if (columns[i] == '商品ID') {goods_id_row = i;  continue}
+        if (columns[i] == '店铺') {shop_name_row = i; continue}
+        if (columns[i] == '商品访客数') {user_num_row = i; continue}
+        if (columns[i] == '商品浏览量') {click_num_row = i; continue}
+        if (columns[i] == '支付件数') {trans_qty_row = i; continue}
+        if (columns[i] == '支付买家数') {trans_users_num_row = i; continue}
+        if (columns[i] == '支付订单数') {trans_num_row = i; continue}
+        if (columns[i] == '成交额(元)') {trans_amount_row = i; continue}
+        if (columns[i] == '支付转化率') {pay_rate_row = i; continue}
+    }
+    for (let i = 1; i < rows.length; i++) {
+        if (!rows[i].getCell(1).value) continue
+        data.push(
+            typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
+                rows[i].getCell(goods_id_row).value.trim() : 
+                rows[i].getCell(goods_id_row).value,
+            typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
+                rows[i].getCell(shop_name_row).value.trim() : 
+                rows[i].getCell(shop_name_row).value,
+            date,
+            rows[i].getCell(user_num_row).value,
+            rows[i].getCell(user_num_row).value,
+            rows[i].getCell(click_num_row).value,
+            rows[i].getCell(trans_qty_row).value,
+            rows[i].getCell(trans_users_num_row).value,
+            rows[i].getCell(trans_users_num_row).value,
+            rows[i].getCell(trans_num_row).value,
+            rows[i].getCell(trans_amount_row).value,
+            (rows[i].getCell(pay_rate_row).value ? rows[i].getCell(pay_rate_row).value * 100 : 0)
+        )
+        count += 1
+    }
+    result = await goodsCompositeRepo.batchInsertPDD(count, data)
+    logger.info(`[拼多多商品明细导入]：时间:${date}, 总计数量:${count}`)
     return result
 }
 
@@ -1081,8 +1539,14 @@ module.exports = {
     importGoodsDSR,
     getGoodsLineInfo,
     getGoodsInfoDetail,
+    getGoodsInfoSubDetail,
     getWorkStats,
-    importGoodsPromotionInfo,
+    importGoodsPayInfo,
+    importGoodsCompositeInfo,
+    importGoodsSYCMInfo,
+    importGoodsXHSInfo,
+    importGoodsBrushingInfo,
     importJDZYInfo,
-    importJDZYPromotionInfo
+    importJDZYPromotionInfo,
+    importGoodsPDDInfo
 }

@@ -25,6 +25,8 @@ const getFuncByProjectName = (name) => {
             return getJDInfo
         case projectNameList.jdss:
             return getJDSSInfo
+        case projectNameList.jdssp:
+            return getJDSSPInfo
         case projectNameList.dy:
             return getDYInfo
         case projectNameList.wxvideo:
@@ -230,7 +232,7 @@ const getJDInfo = async (params) => {
         if (row.getCell(12).value) amount = row.getCell(12).value
         if (row.getCell(11).value) type = row.getCell(11).value
         if (row.getCell(4).value) 
-            goods_id = row.getCell(4).value.replace(/"/g,'').replace(/=/, '')
+            sku_id = row.getCell(4).value.replace(/"/g,'').replace(/=/, '')
         if (amount == 0) continue
         count += 1
         data.push(
@@ -251,6 +253,7 @@ const getJDInfo = async (params) => {
 const getJDSSInfo = async (params) => {
     let count = 0, data = []
     let rows = params.sheet[0].getRows(2, params.sheet[0].rowCount - 1)
+    let total = 0, max_settle_time
     for (let i = 0; i < params.sheet[0].rowCount - 1; i++) {
         let row = rows[i]
         if (!row.getCell(1).value) break
@@ -277,7 +280,59 @@ const getJDSSInfo = async (params) => {
             goods_id,
             sku_id
         )
+        total += amount
+        if (!settle_time || 
+            moment(max_settle_time).valueOf() < moment(settle_time).valueOf())
+            max_settle_time = settle_time
     }
+    if (total > 0) {
+        count += 1
+        data.push(
+            settle_time,
+            null,
+            null,
+            null,
+            total * 0.07,
+            '税点',
+            params.shopName,
+            null,
+            null
+        )
+    }
+    return {count, data}
+}
+//jd-ss-p
+const getJDSSPInfo = async (params) => {
+    let count = 0, data = []
+    // let rows = params.sheet[0].getRows(2, params.sheet[0].rowCount - 1)
+    // let total = 0
+    // for (let i = 0; i < params.sheet[0].rowCount - 1; i++) {
+    //     let row = rows[i]
+    //     if (!row.getCell(1).value) break
+    //     let settle_time = '', order_id = '', sub_order_id = '', 
+    //     settle_order_id = row.getCell(1).value, amount = 0, type = '', 
+    //     shop_name = params.shopName, goods_id = '', sku_id = ''
+    //     if (row.getCell(6).value) settle_order_id = `${settle_order_id}-${row.getCell(6).value}`
+    //     if (row.getCell(8).value) settle_time = row.getCell(8).value
+    //     if (row.getCell(17).value) order_id = row.getCell(17).value
+    //     if (row.getCell(16).value) amount = row.getCell(16).value
+    //     if (row.getCell(5).value) type = row.getCell(5).value
+    //     if (row.getCell(12).value) goods_id = row.getCell(12).value
+    //     if (row.getCell(13).value) sku_id = row.getCell(13).value
+    //     if (amount == 0) continue
+    //     count += 1
+    //     data.push(
+    //         settle_time,
+    //         order_id,
+    //         sub_order_id,
+    //         settle_order_id,
+    //         amount,
+    //         type,
+    //         shop_name,
+    //         goods_id,
+    //         sku_id
+    //     )
+    // }
     return {count, data}
 }
 //dy
@@ -446,7 +501,7 @@ const getDWInfo = async (params) => {
                 amount_row = j
             }
         }
-        for (let j = start; j < params.sheet[i].rowCount - start && start > 0; j++) {
+        for (let j = start; j < params.sheet[i].rowCount && start > 0; j++) {
             let row = rows[j]
             if (['订单号', '费用类型', '账单编号'].includes(row.getCell(1).value)) continue
             let settle_time = params.time, order_id = '', 
@@ -534,7 +589,7 @@ const getXHSInfo = async (params) => {
             }
         }
         
-        for (let j = start; j < params.sheet[i].rowCount - start && start > 0; j++) {
+        for (let j = start; j < params.sheet[i].rowCount && start > 0; j++) {
             let row = rows[j]
             if (['结算时间', '时间'].includes(row.getCell(1).value)) continue
             let settle_time = '', order_id = '', 

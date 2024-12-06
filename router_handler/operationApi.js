@@ -4,6 +4,7 @@ const operationService = require("../service/operationService")
 const operationSchema = require("../schema/operationSchema")
 const moment = require('moment')
 const ExcelJS = require('exceljs')
+const XLSX = require('xlsx')
 const formidable = require("formidable")
 const fs = require('fs')
 const iconv = require("iconv-lite")
@@ -192,6 +193,23 @@ const getGoodsInfoDetail = async (req, res, next) => {
     }
 }
 
+const getGoodsInfoSubDetail = async (req, res, next) => {
+    try {
+        const {goods_id, startDate, endDate} = req.query
+        joiUtil.validate({
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const start = moment(req.query.startDate).format('YYYY-MM-DD')
+        const end = moment(req.query.endDate).format('YYYY-MM-DD')
+        const result = await operationService.getGoodsInfoSubDetail(goods_id, start, end)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const getWorkStats = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(operationSchema.requiredDateSchema, req.query)
@@ -204,7 +222,7 @@ const getWorkStats = async (req, res, next) => {
     }
 }
 
-const importGoodsPromotionInfo = async (req, res, next) => {
+const importGoodsPayInfo = async (req, res, next) => {
     try {
         let form = new formidable.IncomingForm()
         form.uploadDir = "./public/excel"
@@ -227,7 +245,152 @@ const importGoodsPromotionInfo = async (req, res, next) => {
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
-                let result = await operationService.importGoodsPromotionInfo(rows, time)
+                let result = await operationService.importGoodsPayInfo(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsCompositeInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[1]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.xlsx.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsCompositeInfo(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsSYCMInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[date.length - 1]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new XLSX.readFile(newPath)
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+            let data = XLSX.utils.sheet_to_json(worksheet)
+            let result = await operationService.importGoodsSYCMInfo(data, time)
+            if (result) {
+                fs.rmSync(newPath)
+            } else {
+                return res.send(biResponse.createFailed())
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsXHSInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[date.length - 1]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.xlsx.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsXHSInfo(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsBrushingInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[date.length - 1]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.csv.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsBrushingInfo(rows, time)
                 if (result) {
                     fs.rmSync(newPath)
                 } else {
@@ -253,6 +416,8 @@ const importJDZYInfo = async (req, res, next) => {
             }
             
             const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[1]
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
             fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
@@ -265,7 +430,7 @@ const importJDZYInfo = async (req, res, next) => {
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
-                let result = await operationService.importJDZYInfo(rows)
+                let result = await operationService.importJDZYInfo(rows, time)
                 if (result) {
                     fs.rmSync(newPath)
                 } else {
@@ -291,6 +456,9 @@ const importJDZYPromotionInfo = async (req, res, next) => {
             }
             
             const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const name = date[0]
+            const time = date[1]
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
             fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
@@ -300,8 +468,44 @@ const importJDZYPromotionInfo = async (req, res, next) => {
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
-                let name = file.originalFilename.split('.')
-                let result = await operationService.importJDZYPromotionInfo(rows, name[0])
+                let result = await operationService.importJDZYPromotionInfo(rows, name, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsPDDInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[1]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.xlsx.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsPDDInfo(rows, time)
                 if (result) {
                     fs.rmSync(newPath)
                 } else {
@@ -324,8 +528,14 @@ module.exports = {
     importGoodsKeyWords,
     importGoodsDSR,
     getGoodsInfoDetail,
+    getGoodsInfoSubDetail,
     getWorkStats,
-    importGoodsPromotionInfo,
+    importGoodsPayInfo,
+    importGoodsCompositeInfo,
+    importGoodsSYCMInfo,
+    importGoodsXHSInfo,
+    importGoodsBrushingInfo,
     importJDZYInfo,
-    importJDZYPromotionInfo
+    importJDZYPromotionInfo,
+    importGoodsPDDInfo
 }
