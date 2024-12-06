@@ -32,6 +32,7 @@ module.exports = [
     '/operation/goods-xhs-info/import',
     '/operation/goods-brushing-info/import',
     '/operation/goods-pdd-info/import',
+    '/operation/goods-orders/import',
     '/operation/jdzz-info/import',
     '/operation/jdzz-promotion-info/import',
     /^\/download\/.*/,

@@ -46,4 +46,13 @@ goodsBillRepo.getDataDetailByTime = async (goods_id, start, end) => {
     return result || []
 }
 
+goodsBillRepo.getAmountByGoodsAndTime = async (goods_id, start, end) => {
+    const sql = `SELECT SUM(amount) AS amount FROM goods_bill_info 
+        WHERE goods_id = ?
+            AND date >= ?
+            AND date <= ?`
+    const result = await query(sql, [goods_id, start, end])
+    return result
+}
+
 module.exports = goodsBillRepo

@@ -68,9 +68,10 @@ settlementRepo.batchInsert = async (count, info) => {
         type,
         shop_name,
         goods_id,
-        sku_id) VALUES`
+        sku_id,
+        sku_id2) VALUES`
     for (let i = 0; i < count; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, info)
