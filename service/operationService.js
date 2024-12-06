@@ -1644,7 +1644,7 @@ const insertGrossProfit = async (date) => {
 const setPannelSetting = async (user_id, type, attribute) => {
     let setting = await userSettingRepo.getByType(user_id, type), result = false
     if (setting?.length) {
-        result = await userSettingRepo.updateByUserIdAndType(attribute, user_id, type)
+        result = await userSettingRepo.updateByUserIdAndType(user_id, type, attribute)
     } else result = await userSettingRepo.insert(user_id, type, attribute)
     return result
 }
