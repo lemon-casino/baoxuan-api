@@ -88,8 +88,8 @@ const getTGCInfo = async (params) => {
     let settle_time_row = null, order_id_row = null, sub_order_id_row = null, 
         settle_order_id_row = null, amount_row = 0, goods_id_row = null, 
         sku_id_row = null, update_time = false, minus = false, 
-        min_settle_time = moment().format('YYYY-MM-DD HH:mm:ss'), type = params.extra, 
-        shop_name = params.shopName
+        min_settle_time = null, max_settle_time = null, 
+        type = params.extra, shop_name = params.shopName
     for (let i = 1; i <= columns.length; i++) {
         if (['扣款时间', '结算时间'].includes(columns[i])) {
             settle_time_row = i
@@ -135,8 +135,12 @@ const getTGCInfo = async (params) => {
             sku_id = row.getCell(sku_id_row).value != '-' ? row.getCell(sku_id_row).value : ''
         if (amount == 0) continue
         count += 1
-        if (moment(settle_time).valueOf() < moment(min_settle_time).valueOf())
+        if (!min_settle_time) min_settle_time = settle_time
+        else if (moment(settle_time).valueOf() < moment(min_settle_time).valueOf())
             min_settle_time = settle_time
+        if (!max_settle_time) max_settle_time = settle_time
+        else if (moment(settle_time).valueOf() > moment(max_settle_time).valueOf())
+            max_settle_time = settle_time
         let sku_id2 = sku_id ? sku_id.split('|')[0] : null
         data.push(
             settle_time,
@@ -151,7 +155,7 @@ const getTGCInfo = async (params) => {
             sku_id2
         )
     }
-    await settlementRepo.delete(params.shopName, type, min_settle_time)
+    await settlementRepo.delete(params.shopName, type, min_settle_time, max_settle_time)
     return {count, data}
 }
 //tm-mart
