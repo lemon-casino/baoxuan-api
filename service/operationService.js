@@ -510,7 +510,8 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             }, {
                 title: '发货运费', field_id: 'express_fee', type: 'number', 
                 min: 0, max: 100, show: true
-            }
+            }, 
+            {title: '操作', field_id: 'operate', show: true}
         ],
         data: {}
     }
@@ -551,7 +552,7 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
     params.search = JSON.parse(params.search)
     result.setting = []
     let setting = await userSettingRepo.getByType(id, 1)
-    if (setting?.length) result.setting = setting[0]
+    if (setting?.length) result.setting = JSON.parse(setting[0].attributes)
     result.data = await goodsSaleInfoRepo.getData(startDate, endDate, params, shopNames, linkIds)
     return result
 }
