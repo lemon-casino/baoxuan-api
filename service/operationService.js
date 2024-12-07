@@ -1443,7 +1443,7 @@ const importGoodsXHSInfo = async (rows, time) => {
     }
     logger.info(`[小红书刷单数据导入]：时间:${date}, 总计数量:${count}`)
     if (count > 0) {
-        await goodsBillRepo.deleteByDate(date)
+        await goodsBillRepo.deleteByDate3(date)
         result = await goodsBillRepo.batchInsert(count, data)
     }
     return result
