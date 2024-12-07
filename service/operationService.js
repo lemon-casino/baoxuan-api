@@ -1473,6 +1473,7 @@ const importGoodsBrushingInfo = async (rows, time) => {
         if (!order_id_info[order]) {
             if (!goods_id_info[goods_id]) goods_id_info[goods_id] = 1
             else goods_id_info[goods_id] += 1
+            order_id_info[order]
         }
     }
     for (let index in goods_id_info) {
