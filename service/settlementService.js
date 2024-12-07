@@ -425,10 +425,10 @@ const getVIPInfo = async (params) => {
     for (let i = 0; i < params.sheet[0].rowCount - 1; i++) {
         let row = rows[i]
         if (!row.getCell(1).value) break
-        let settle_time = '', order_id = '', sub_order_id = '', 
+        let settle_time = params.time, order_id = '', sub_order_id = '', 
         settle_order_id = row.getCell(1).value, amount = 0, type = '', 
         shop_name = params.shopName, goods_id = '', sku_id = ''
-        if (row.getCell(4).value) settle_time = row.getCell(4).value
+        // if (row.getCell(4).value) settle_time = row.getCell(4).value
         if (row.getCell(9).value) order_id = row.getCell(9).value
         if (row.getCell(27).value) amount = row.getCell(27).value
         if (row.getCell(5).value) type = row.getCell(5).value
