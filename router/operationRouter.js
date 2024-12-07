@@ -19,6 +19,7 @@ router.post('/goods-sycm-info/import', operationApi.importGoodsSYCMInfo)
 router.post('/goods-xhs-info/import', operationApi.importGoodsXHSInfo)
 router.post('/goods-brushing-info/import', operationApi.importGoodsBrushingInfo)
 router.post('/goods-pdd-info/import', operationApi.importGoodsPDDInfo)
+router.post('/goods-orders/import', operationApi.importGoodsOrderInfo)
 /**
  * 京东自营
  */
@@ -27,5 +28,8 @@ router.post('/jdzz-promotion-info/import', operationApi.importJDZYPromotionInfo)
 
 // 工作面板
 router.get('/work-pannel', operationApi.getWorkStats)
+
+//表单配置
+router.post('/pannel-setting', operationApi.setPannelSetting)
 
 module.exports = router

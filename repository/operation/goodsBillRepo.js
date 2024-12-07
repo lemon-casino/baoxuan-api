@@ -3,6 +3,7 @@ const goodsBillRepo = {}
 
 goodsBillRepo.deleteByDate = async (date) => {
     let sql = `DELETE FROM goods_bill_info WHERE \`date\` = ? 
+        AND bill_name != '小红书返款'
         AND shop_name != '京东自营旗舰店'`
     const result = await query(sql, [date])
     return result?.affectedRows ? true : false
@@ -11,6 +12,15 @@ goodsBillRepo.deleteByDate = async (date) => {
 goodsBillRepo.deleteByDate2 = async (date) => {
     let sql = `DELETE FROM goods_bill_info WHERE \`date\` = ? 
         AND shop_name = '京东自营旗舰店'`
+    const result = await query(sql, [date])
+    return result?.affectedRows ? true : false
+}
+
+
+goodsBillRepo.deleteByDate3 = async (date) => {
+    let sql = `DELETE FROM goods_bill_info WHERE \`date\` = ? 
+        AND bill_name = '小红书返款'
+        AND shop_name != '京东自营旗舰店'`
     const result = await query(sql, [date])
     return result?.affectedRows ? true : false
 }
@@ -44,6 +54,15 @@ goodsBillRepo.getDataDetailByTime = async (goods_id, start, end) => {
             AND \`date\` >= ? AND \`date\` <= ?`
     const result = await query(sql, [goods_id, start, end, goods_id, start, end])
     return result || []
+}
+
+goodsBillRepo.getAmountByGoodsAndTime = async (goods_id, start, end) => {
+    const sql = `SELECT SUM(amount) AS amount FROM goods_bill_info 
+        WHERE goods_id = ?
+            AND date >= ?
+            AND date <= ?`
+    const result = await query(sql, [goods_id, start, end])
+    return result
 }
 
 module.exports = goodsBillRepo

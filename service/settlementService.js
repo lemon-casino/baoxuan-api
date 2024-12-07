@@ -65,6 +65,7 @@ const getPDDInfo = async (params) => {
         if (row.getCell(5).value) type = row.getCell(5).value
         if (amount == 0) continue
         count += 1
+        let sku_id2 = sku_id ? sku_id.split('|')[0] : null
         data.push(
             settle_time,
             order_id,
@@ -74,7 +75,8 @@ const getPDDInfo = async (params) => {
             type,
             shop_name,
             goods_id,
-            sku_id
+            sku_id,
+            sku_id2
         )
     }
     return {count, data}
@@ -86,8 +88,8 @@ const getTGCInfo = async (params) => {
     let settle_time_row = null, order_id_row = null, sub_order_id_row = null, 
         settle_order_id_row = null, amount_row = 0, goods_id_row = null, 
         sku_id_row = null, update_time = false, minus = false, 
-        min_settle_time = moment().format('YYYY-MM-DD HH:mm:ss'), type = params.extra, 
-        shop_name = params.shopName
+        min_settle_time = null, max_settle_time = null, 
+        type = params.extra, shop_name = params.shopName
     for (let i = 1; i <= columns.length; i++) {
         if (['扣款时间', '结算时间'].includes(columns[i])) {
             settle_time_row = i
@@ -133,8 +135,13 @@ const getTGCInfo = async (params) => {
             sku_id = row.getCell(sku_id_row).value != '-' ? row.getCell(sku_id_row).value : ''
         if (amount == 0) continue
         count += 1
-        if (moment(settle_time).valueOf() < moment(min_settle_time).valueOf())
+        if (!min_settle_time) min_settle_time = settle_time
+        else if (moment(settle_time).valueOf() < moment(min_settle_time).valueOf())
             min_settle_time = settle_time
+        if (!max_settle_time) max_settle_time = settle_time
+        else if (moment(settle_time).valueOf() > moment(max_settle_time).valueOf())
+            max_settle_time = settle_time
+        let sku_id2 = sku_id ? sku_id.split('|')[0] : null
         data.push(
             settle_time,
             order_id,
@@ -144,10 +151,11 @@ const getTGCInfo = async (params) => {
             type,
             shop_name,
             goods_id,
-            sku_id
+            sku_id,
+            sku_id2
         )
     }
-    await settlementRepo.delete(params.shopName, type, min_settle_time)
+    await settlementRepo.delete(params.shopName, type, min_settle_time, max_settle_time)
     return {count, data}
 }
 //tm-mart
@@ -169,6 +177,7 @@ const getTMMartInfo = async (params) => {
         if (row.getCell(19).value) goods_id = row.getCell(19).value
         if (amount == 0) continue
         count += 1
+        let sku_id2 = sku_id ? sku_id.split('|')[0] : null
         data.push(
             settle_time,
             order_id,
@@ -178,7 +187,8 @@ const getTMMartInfo = async (params) => {
             type,
             shop_name,
             goods_id,
-            sku_id
+            sku_id,
+            sku_id2
         )
     }
     return {count, data}
@@ -200,6 +210,7 @@ const getCoupangInfo = async (params) => {
         if (row.getCell(5).value) sku_id = row.getCell(5).value
         if (amount == 0) continue
         count += 1
+        let sku_id2 = sku_id ? sku_id.split('|')[0] : null
         data.push(
             settle_time,
             order_id,
@@ -209,7 +220,8 @@ const getCoupangInfo = async (params) => {
             type,
             shop_name,
             goods_id,
-            sku_id
+            sku_id,
+            sku_id2
         )
     }
     return {count, data}
@@ -235,6 +247,7 @@ const getJDInfo = async (params) => {
             sku_id = row.getCell(4).value.replace(/"/g,'').replace(/=/, '')
         if (amount == 0) continue
         count += 1
+        let sku_id2 = sku_id ? sku_id.split('|')[0] : null
         data.push(
             settle_time,
             order_id,
@@ -244,7 +257,8 @@ const getJDInfo = async (params) => {
             type,
             shop_name,
             goods_id,
-            sku_id
+            sku_id,
+            sku_id2
         )
     }
     return {count, data}
@@ -269,6 +283,7 @@ const getJDSSInfo = async (params) => {
         if (row.getCell(13).value) sku_id = row.getCell(13).value
         if (amount == 0) continue
         count += 1
+        let sku_id2 = sku_id ? sku_id.split('|')[0] : null
         data.push(
             settle_time,
             order_id,
@@ -278,7 +293,8 @@ const getJDSSInfo = async (params) => {
             type,
             shop_name,
             goods_id,
-            sku_id
+            sku_id,
+            sku_id2
         )
         total += amount
         if (!settle_time || 
@@ -295,6 +311,7 @@ const getJDSSInfo = async (params) => {
             total * 0.07,
             '税点',
             params.shopName,
+            null,
             null,
             null
         )
@@ -355,6 +372,7 @@ const getDYInfo = async (params) => {
         if (row.getCell(12).value) goods_id = row.getCell(12).value.replace(/'/g,'')
         if (amount == 0) continue
         count += 1
+        let sku_id2 = sku_id ? sku_id.split('|')[0] : null
         data.push(
             settle_time,
             order_id,
@@ -364,7 +382,8 @@ const getDYInfo = async (params) => {
             type,
             shop_name,
             goods_id,
-            sku_id
+            sku_id,
+            sku_id2
         )
     }
     return {count, data}
@@ -387,6 +406,7 @@ const getWXVideoInfo = async (params) => {
         if (row.getCell(3).value) type = row.getCell(3).value
         if (amount == 0) continue
         count += 1
+        let sku_id2 = sku_id ? sku_id.split('|')[0] : null
         data.push(
             settle_time,
             order_id,
@@ -396,7 +416,8 @@ const getWXVideoInfo = async (params) => {
             type,
             shop_name,
             goods_id,
-            sku_id
+            sku_id,
+            sku_id2
         )
     }
     return {count, data}
@@ -408,16 +429,17 @@ const getVIPInfo = async (params) => {
     for (let i = 0; i < params.sheet[0].rowCount - 1; i++) {
         let row = rows[i]
         if (!row.getCell(1).value) break
-        let settle_time = '', order_id = '', sub_order_id = '', 
+        let settle_time = params.time, order_id = '', sub_order_id = '', 
         settle_order_id = row.getCell(1).value, amount = 0, type = '', 
         shop_name = params.shopName, goods_id = '', sku_id = ''
-        if (row.getCell(4).value) settle_time = row.getCell(4).value
+        // if (row.getCell(4).value) settle_time = row.getCell(4).value
         if (row.getCell(9).value) order_id = row.getCell(9).value
         if (row.getCell(27).value) amount = row.getCell(27).value
         if (row.getCell(5).value) type = row.getCell(5).value
         if (row.getCell(10).value) sku_id = row.getCell(10).value
         if (amount == 0) continue
         count += 1
+        let sku_id2 = sku_id ? sku_id.split('|')[0] : null
         data.push(
             settle_time,
             order_id,
@@ -427,7 +449,8 @@ const getVIPInfo = async (params) => {
             type,
             shop_name,
             goods_id,
-            sku_id
+            sku_id,
+            sku_id2
         )
     }
     return {count, data}
@@ -447,6 +470,7 @@ const get1688Info = async (params) => {
         if (row.getCell(10).value) type = row.getCell(10).value
         if (amount == 0) continue
         count += 1
+        let sku_id2 = sku_id ? sku_id.split('|')[0] : null
         data.push(
             settle_time,
             order_id,
@@ -456,7 +480,8 @@ const get1688Info = async (params) => {
             type,
             shop_name,
             goods_id,
-            sku_id
+            sku_id,
+            sku_id2
         )
     }
     return {count, data}
@@ -513,6 +538,7 @@ const getDWInfo = async (params) => {
             if (amount_row) amount = row.getCell(amount_row).value
             if (amount == 0) continue
             count += 1
+            let sku_id2 = sku_id ? sku_id.split('|')[0] : null
             data.push(
                 settle_time,
                 order_id,
@@ -522,7 +548,8 @@ const getDWInfo = async (params) => {
                 type,
                 shop_name,
                 goods_id,
-                sku_id
+                sku_id,
+                sku_id2
             )
         }
     }
@@ -545,6 +572,7 @@ const getKSInfo = async (params) => {
         if (row.getCell(3).value) goods_id = row.getCell(3).value
         if (amount == 0) continue
         count += 1
+        let sku_id2 = sku_id ? sku_id.split('|')[0] : null
         data.push(
             settle_time,
             order_id,
@@ -554,7 +582,8 @@ const getKSInfo = async (params) => {
             type,
             shop_name,
             goods_id,
-            sku_id
+            sku_id,
+            sku_id2
         )
     }
     return {count, data}
@@ -603,6 +632,7 @@ const getXHSInfo = async (params) => {
             if (amount_row) amount = row.getCell(amount_row).value
             if (amount == 0) continue
             count += 1
+            let sku_id2 = sku_id ? sku_id.split('|')[0] : null
             data.push(
                 settle_time,
                 order_id,
@@ -612,7 +642,8 @@ const getXHSInfo = async (params) => {
                 type,
                 shop_name,
                 goods_id,
-                sku_id
+                sku_id,
+                sku_id2
             )
         }
     }
@@ -675,6 +706,7 @@ const getTMInfo = async (params) => {
         if (sku_id_row) sku_id = row.getCell(sku_id_row).value
         if (amount == 0) continue
         count += 1
+        let sku_id2 = sku_id ? sku_id.split('|')[0] : null
         data.push(
             settle_time,
             order_id,
@@ -684,7 +716,8 @@ const getTMInfo = async (params) => {
             type,
             shop_name,
             goods_id,
-            sku_id
+            sku_id,
+            sku_id2
         )
     }
     return {count, data}

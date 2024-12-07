@@ -21,7 +21,9 @@ const goodsPayInfoRepo = require('../repository/operation/goodsPayInfoRepo')
 const goodsPromotionRepo = require('../repository/operation/goodsPromotionRepo')
 const goodsBillRepo = require('../repository/operation/goodsBillRepo')
 const goodsCompositeRepo = require('../repository/operation/goodsCompositeRepo')
-const moment = require('moment')
+const goodsOrdersRepo = require('../repository/operation/goodsOrdersRepo')
+const userSettingRepo = require('../repository/userSettingRepo')
+const goodsGrossProfit = require('../repository/operation/goodsGrossProfit')
 
 /**
  * get operation data pannel data stats
@@ -423,7 +425,7 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
     let result = {
         column: [
             {title: '链接ID', field_id: 'goods_id', type: 'input', show: true},
-            {title: '订价毛利', field_id: '', sub: [
+            {title: '订价毛利', field_id: '', show: true, sub: [
                 {
                     title: '定价毛利', field_id: 'gross_profit', show: true, 
                     hasChild: true, type: 'number', min: 0, max: 100
@@ -547,7 +549,9 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
         linkIds = links.map((item) => item.goods_id).join('","')
     }    
     params.search = JSON.parse(params.search)
-    
+    result.setting = []
+    let setting = await userSettingRepo.getByType(id, 1)
+    if (setting?.length) result.setting = setting[0]
     result.data = await goodsSaleInfoRepo.getData(startDate, endDate, params, shopNames, linkIds)
     return result
 }
@@ -1439,7 +1443,7 @@ const importGoodsXHSInfo = async (rows, time) => {
     }
     logger.info(`[小红书刷单数据导入]：时间:${date}, 总计数量:${count}`)
     if (count > 0) {
-        await goodsBillRepo.deleteByDate(date)
+        await goodsBillRepo.deleteByDate3(date)
         result = await goodsBillRepo.batchInsert(count, data)
     }
     return result
@@ -1469,6 +1473,7 @@ const importGoodsBrushingInfo = async (rows, time) => {
         if (!order_id_info[order]) {
             if (!goods_id_info[goods_id]) goods_id_info[goods_id] = 1
             else goods_id_info[goods_id] += 1
+            order_id_info[order]
         }
     }
     for (let index in goods_id_info) {
@@ -1530,6 +1535,121 @@ const importGoodsPDDInfo = async (rows, time) => {
     return result
 }
 
+const importGoodsOrderInfo = async (rows, time) => {
+    let result = false, count = 0, data = [], tmp = {}, real_data = []
+    let columns = rows[0].values,
+        goods_id_row = null,
+        sku_id_row = null,
+        shop_name_row = null,
+        sku_code_row = null,
+        cost_amount_row = null,
+        qty_row = null,
+        sale_amount_row = null,
+        express_fee_row = null,
+        date = time
+    for (let i = 1; i < columns.length; i++) {
+        if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
+        if (columns[i] == '店铺商品编码') {sku_id_row = i; continue}
+        if (columns[i] == '店铺名称') {shop_name_row = i; continue}
+        if (columns[i] == '商品编码') {sku_code_row = i; continue}
+        if (columns[i] == '实发金额') {sale_amount_row = i; continue}
+        if (columns[i] == '成交成本') {cost_amount_row = i; continue}
+        if (columns[i] == '实发数量') {qty_row = i; continue}
+        if (columns[i] == '商家运费') {express_fee_row = i; continue}
+    }
+    for (let i = 1; i < rows.length; i++) {
+        if (!rows[i].getCell(1).value) continue
+        let goods_id = typeof(rows[i].getCell(goods_id_row).value) == 'string' ?
+            rows[i].getCell(goods_id_row).value.trim() :
+            rows[i].getCell(goods_id_row).value
+        if (!goods_id) continue
+        let sku_id = typeof(rows[i].getCell(sku_id_row).value) == 'string' ?
+            rows[i].getCell(sku_id_row).value.trim() :
+            rows[i].getCell(sku_id_row).value
+        if (!sku_id) continue     
+        let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ?
+            rows[i].getCell(shop_name_row).value.trim() :
+            rows[i].getCell(shop_name_row).value
+        let sku_code = typeof(rows[i].getCell(sku_code_row).value) == 'string' ?
+            rows[i].getCell(sku_code_row).value.trim() :
+            rows[i].getCell(sku_code_row).value
+        let cost_amount = rows[i].getCell(cost_amount_row).value
+        let qty = rows[i].getCell(qty_row).value
+        let sale_amount = rows[i].getCell(sale_amount_row).value
+        let express_fee = (rows[i].getCell(express_fee_row).value || 2.9) + 1
+        if (!sale_amount) continue
+        if (qty != 1) continue
+        if (!tmp[goods_id]) tmp[goods_id] = {}
+        if (!tmp[goods_id][sku_code]) {
+            tmp[goods_id][sku_code] = data.length
+            data.push({
+                sku_id, 
+                shop_name,
+                cost_amount,
+                qty,
+                sale_amount,
+                express_fee
+            })
+        } else {
+            data[tmp[goods_id][sku_code]].cost_amount += cost_amount
+            data[tmp[goods_id][sku_code]].qty += qty
+            data[tmp[goods_id][sku_code]].sale_amount += sale_amount
+            data[tmp[goods_id][sku_code]].express_fee += express_fee
+        }
+    }
+    for (let id in tmp) {
+        for (let code in tmp[id]) {
+            real_data.push(
+                id,
+                data[tmp[id][code]].sku_id,
+                data[tmp[id][code]].shop_name,
+                code,
+                data[tmp[id][code]].sale_amount,
+                data[tmp[id][code]].cost_amount,
+                data[tmp[id][code]].express_fee,
+                data[tmp[id][code]].qty,
+                date
+            )
+            count += 1
+        }
+    }
+    if (count > 0) {
+        // let delete_time = moment(date).subtract(7, 'day').format('YYYY-MM-DD')
+        await goodsOrdersRepo.deleteByDate(date)
+        result = await goodsOrdersRepo.batchInsert(count, real_data)
+        insertGrossProfit(date)
+        logger.info(`[商品订单数据导入]：总计数量:${count}`)
+    }
+    return result
+}
+
+const insertGrossProfit = async (date) => {
+    await goodsGrossProfit.deleteByDate(date)
+    let info = await goodsOrdersRepo.getByTime(date), data = []
+    for (let i = 0; i < info.length; i++) {
+        data.push(
+            info[i].goods_id,
+            info[i].sku_code,
+            info[i].sale_amount,
+            info[i].sale_qty,
+            info[i].cost_amount,
+            info[i].express_fee,
+            info[i].settle_amount,
+            info[i].bill_amount,
+            info[i].order_time
+        )
+    }
+    if (info?.length) await goodsGrossProfit.batchInsert(info.length, data)
+}
+
+const setPannelSetting = async (user_id, type, attribute) => {
+    let setting = await userSettingRepo.getByType(user_id, type), result = false
+    if (setting?.length) {
+        result = await userSettingRepo.updateByUserIdAndType(user_id, type, attribute)
+    } else result = await userSettingRepo.insert(user_id, type, attribute)
+    return result
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -1548,5 +1668,7 @@ module.exports = {
     importGoodsBrushingInfo,
     importJDZYInfo,
     importJDZYPromotionInfo,
-    importGoodsPDDInfo
+    importGoodsPDDInfo,
+    importGoodsOrderInfo,
+    setPannelSetting
 }
