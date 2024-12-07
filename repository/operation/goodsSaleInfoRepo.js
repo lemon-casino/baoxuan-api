@@ -276,7 +276,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         AND IFNULL(SUM(a2.settle_amount), 0) > 0, 
                             FORMAT((1 - IFNULL(SUM(a2.bill_amount), 0) / SUM(a2.settle_amount) 
                                 - (IFNULL(SUM(a2.express_fee), 0) + IFNULL(SUM(a2.cost_amount), 0)) /
-                                    IFNULL(SUM(a2.sale_amount), 0) / IFNULL(SUM(a2.sale_qty), 0)
+                                    IFNULL(SUM(a2.sale_amount), 0) 
                         ) * 100, 2), 0) AS val FROM goods_gross_rate a2 
                         WHERE a2.goods_id = a1.goods_id AND a2.order_time BETWEEN ? AND ? 
                     ) b WHERE b.val >= ${params.search[i].min} 
@@ -502,7 +502,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         AND IFNULL(SUM(settle_amount), 0) > 0, 
                             FORMAT((1 - IFNULL(SUM(bill_amount), 0) / SUM(settle_amount) 
                                 - (IFNULL(SUM(express_fee), 0) + IFNULL(SUM(cost_amount), 0)) /
-                                    IFNULL(SUM(sale_amount), 0) / IFNULL(SUM(sale_qty), 0)
+                                    IFNULL(SUM(sale_amount), 0) 
                         ) * 100, 2), 0) AS gross_profit FROM goods_gross_rate 
                         WHERE goods_id = ? AND order_time BETWEEN ? AND ?`
                     row1 = await query(sql, [row[i].goods_id, lastStart, lastEnd])
@@ -581,7 +581,7 @@ goodsSaleInfoRepo.getDataGrossProfitByTime = async(goods_id, start, end) => {
                 AND IFNULL(SUM(settle_amount), 0) > 0, 
                     FORMAT((1 - IFNULL(SUM(bill_amount), 0) / SUM(settle_amount) 
                         - (IFNULL(SUM(express_fee), 0) + IFNULL(SUM(cost_amount), 0)) /
-                            IFNULL(SUM(sale_amount), 0) / IFNULL(SUM(sale_qty), 0)
+                            IFNULL(SUM(sale_amount), 0) 
                 ) * 100, 2), 0) AS gross_profit, ? AS \`date\`
         FROM goods_gross_profit WHERE order_time >= DATE_SUB(?, INTERVAL WEEKDAY(?) + 7 DAY) 
             AND order_time <= DATE_SUB(?, INTERVAL WEEKDAY(?) + 1 DAY) 
@@ -623,7 +623,7 @@ goodsSaleInfoRepo.getDataGrossProfitDetailByTime = async(goods_id, start, end) =
             AND IFNULL(SUM(settle_amount), 0) > 0, 
                 FORMAT((1 - IFNULL(SUM(bill_amount), 0) / SUM(settle_amount) 
                     - (IFNULL(SUM(express_fee), 0) + IFNULL(SUM(cost_amount), 0)) /
-                        IFNULL(SUM(sale_amount), 0) / IFNULL(SUM(sale_qty), 0)
+                        IFNULL(SUM(sale_amount), 0) 
             ) * 100, 2), 0) AS gross_profit, sku_code FROM goods_gross_profit WHERE 
             order_time >= DATE_SUB(?, INTERVAL WEEKDAY(?) + 7 DAY) 
             AND order_time <= DATE_SUB(?, INTERVAL WEEKDAY(?) + 1 DAY)
