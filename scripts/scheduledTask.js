@@ -13,7 +13,7 @@ let syncWorkingDayCron = "0 5 9 * * ?"
 let syncTodayRunningAndFinishedFlowsCron = "0 0/20 7-21 * * ?"
 let syncMissingCompletedFlowsCron = "0 30 23 * * ?"
 
-let syncDepartmentCron = "0 0 5 * * ?"
+let syncDepartmentCron = "0 20 8 * * ?"
 // 如果有新人入职一般也是上午
 let syncDepartmentWithUserCron = "0 30 8 * * ?"
 let syncUserWithDepartmentCron = "0 0 8 * * ?"
