@@ -41,7 +41,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
             AND gsi.date = goi.date` 
     let subsql = ` WHERE gsi.date >= ? AND gsi.date <= ?`, p = [start, end]
     for (let i = 0; i < params.search.length; i++) {
-        if (params.search[i].key == 'operation_rate') {
+        if (params.search[i].field_id == 'operation_rate') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.operation_amount), 0) AS operation_amount, 
@@ -52,7 +52,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
                         AND b.operation_amount * 100 <= ${params.search[i].max} * b.sale_amount
                 )`
             p.push(start, end)
-        } else if (params.search[i].key == 'roi') {
+        } else if (params.search[i].field_id == 'roi') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.promotion_amount), 0) AS promotion_amount, 
@@ -63,7 +63,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
                         AND b.sale_amount <= ${params.search[i].max} * b.promotion_amount 
                 )`
             p.push(start, end)
-        } else if (params.search[i].key == 'market_rate') {
+        } else if (params.search[i].field_id == 'market_rate') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
@@ -74,7 +74,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
                         AND b.words_vol * 100 <= ${params.search[i].max} * b.words_market_vol
                 )`
             p.push(start, end)
-        } else if (params.search[i].key == 'refund_rate') {
+        } else if (params.search[i].field_id == 'refund_rate') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.real_sale_qty), 0) AS real_sale_qty, 
@@ -85,7 +85,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
                         AND b.refund_qty * 100 <= ${params.search[i].max} * b.real_sale_qty
                 )`
             p.push(start, end)
-        } else if (params.search[i].key == 'profit_rate') {
+        } else if (params.search[i].field_id == 'profit_rate') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.profit), 0) AS profit, 
@@ -96,15 +96,45 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
                         AND b.profit * 100 <= ${params.search[i].max} * b.sale_amount
                 )`
             p.push(start, end)
-        } else {
+        } else if (['first_category', 'second_category', 'level_3_category', 'brief_product_line', 
+                'product_definition', 'stock_structure', 'product_rank', 'product_design_attr', 
+                'seasons', 'brand', 'targets', 'exploit_director', 'purchase_director', 
+                'line_manager', 'operator', 'line_director', 'onsale_date'
+            ].includes(params.search[i].field_id)) {
+            subsql = `${subsql} AND doa.${params.search[i].field_id} LIKE '%${params.search[i].value}%'`
+        } else if (params.search[i].field_id == 'sku_id') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
-                        SELECT IFNULL(SUM(a2.${params.search[i].key}), 0) AS val FROM 
+                        SELECT a2.sku_code FROM goods_sale_info a2 WHERE 
+                            a2.goods_id = gsi.goods_id AND a2.date BETWEEN ? AND ? 
+                        GROUP BY a2.sku_code 
+                        ORDER BY IFNULL(SUM(a2.sale_amount), 0) DESC LIMIT 1 
+                    ) a3 WHERE a3.sku_code LIKE '%${params.search[i].value}%')`
+            p.push(start, end)
+        } else if (params.search[i].field_id == 'project_name') {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT pi.project_name FROM project_info pi LEFT JOIN shop_info si 
+                    ON pi.id = si.project_id WHERE si.shop_name = doa.shop_name 
+                        AND pi.project_name LIKE '%${params.search[i].value}%')`
+        } else if (['sale_amount', 'promotion_amount', 'express_fee', 'profit'].includes(params.search[i].field_id)) {
+            subsql = `${subsql} AND EXISTS(
+                    SELECT * FROM (
+                        SELECT IFNULL(SUM(a2.${params.search[i].field_id}), 0) AS val FROM 
                         goods_sale_info a2 WHERE a2.date >= ? AND a2.date <= ? 
                             AND gsi.goods_id = a2.goods_id 
                     ) b WHERE b.val >= ${params.search[i].min} 
                         AND b.val <= ${params.search[i].max}
                 )`
+            p.push(start, end)
+        } else {
+            subsql = `${subsql} AND EXISTS(
+                SELECT * FROM (
+                    SELECT IFNULL(SUM(a2.${params.search[i].field_id}), 0) AS val FROM 
+                    goods_other_info a2 WHERE a2.date >= ? AND a2.date <= ? 
+                        AND gsi.goods_id = a2.goods_id 
+                ) b WHERE b.val >= ${params.search[i].min} 
+                    AND b.val <= ${params.search[i].max}
+            )`
             p.push(start, end)
         }
     }
@@ -115,14 +145,6 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
     if (userNames) {
         subsql = `${subsql} 
             AND doa.operator IN ("${userNames}")`
-    }
-    if (params.goods_id) {
-        subsql = `${subsql} 
-            AND gsi.goods_id LIKE '%${params.goods_id}%'`
-    }
-    if (params.line_director) {
-        subsql = `${subsql} 
-            AND doa.line_director LIKE '%${params.line_director}%'`
     }
     let size = parseInt(params.pageSize)
     let page = parseInt(params.currentPage)
