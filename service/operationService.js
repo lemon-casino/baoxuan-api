@@ -648,7 +648,6 @@ const importGoodsInfo = async (rows, time) => {
     let amount = 0, saveAmount = 0
     for (let i = 1; i < rows.length; i++) {
         amount += rows[i].getCell(sale_amount_row).value
-        if (!rows[i].getCell(1).value) continue
         let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
             rows[i].getCell(shop_name_row).value.trim() : 
             rows[i].getCell(shop_name_row).value
