@@ -342,7 +342,7 @@ const importTmallPsData = async (req, res, next) => {
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()
-            let readRes = xlsx.readFile(newPath)
+            let readRes = workbook.xlsx.readFile(newPath)
             const workbook1 = xlsx.readFile(newPath)
             if (readRes) {
                 const sheet_name_list = workbook1.SheetNames;
