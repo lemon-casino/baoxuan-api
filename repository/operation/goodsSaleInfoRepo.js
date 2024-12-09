@@ -217,9 +217,9 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
     }
     let preStart = moment(start).subtract(1, 'day').format('YYYY-MM-DD')
     let preEnd = moment(end).subtract(1, 'day').format('YYYY-MM-DD')    
-    let lastStart = moment(start).weekday(0).subtract(7, 'day').format('YYYY-MM-DD')
-    let lastEnd = moment(start).weekday(0).subtract(1, 'day').format('YYYY-MM-DD')
-    let sql = `SELECT SUM(a1.sale_amount) AS sale_amount, COUNT(1) AS count FROM goods_sales a1`
+    let lastStart = moment(start).subtract(8, 'day').format('YYYY-MM-DD')
+    let lastEnd = moment(start).subtract(2, 'day').format('YYYY-MM-DD')
+    let sql = `SELECT SUM(a1.sale_amount) AS sale_amount, a1.goods_id FROM goods_sales a1`
     subsql = ` WHERE a1.date BETWEEN ? AND ?`
     p.push(start, end)
     for (let i =0; i < params.search.length; i++) {
@@ -401,7 +401,8 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                 AND a1.goods_id IN ("${linkIds}")`
     }
     let sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id`
-    sql = `${sql}${subsql}`
+    sql = `SELECT COUNT(1) AS count, SUM(sale_amount) AS sale_amount FROM(
+        ${sql}${subsql} GROUP BY a1.goods_id) aa`
     let row = await query(sql, p)
     if (row?.length && row[0].count) {
         result.total = row[0].count
@@ -450,8 +451,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             LEFT JOIN goods_payments a3 ON a1.goods_id = a3.goods_id 
                 AND a1.date = a3.date
             LEFT JOIN goods_sales a8 ON a8.goods_id = a1.goods_id 
-                AND a8.date BETWEEN ? AND ?`
-        p.push(preStart, preEnd)
+                AND a8.date = DATE_SUB(a1.date, INTERVAL 1 DAY)`
         sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id`
         sql = `SELECT aa.* FROM (${sql}${subsql}${sql1}) aa`
         if (params.sort) sql = `${sql} ORDER BY aa.${params.sort}`
@@ -583,20 +583,18 @@ goodsSaleInfoRepo.getDataGrossProfitByTime = async(goods_id, start, end) => {
                         - (IFNULL(SUM(express_fee), 0) + IFNULL(SUM(cost_amount), 0)) /
                             IFNULL(SUM(sale_amount), 0) 
                 ) * 100, 2), 0) AS gross_profit, ? AS \`date\`
-        FROM goods_gross_profit WHERE order_time >= DATE_SUB(?, INTERVAL WEEKDAY(?) + 7 DAY) 
-            AND order_time <= DATE_SUB(?, INTERVAL WEEKDAY(?) + 1 DAY) 
-            AND goods_id = ? 
+        FROM goods_gross_profit WHERE order_time BETWEEN ? AND ? AND goods_id = ? 
         UNION ALL `
     let search = ''
     for (let i = days; i >= 0; i--) {
         search = `${search}${sql}`
         let time = moment(end).subtract(i, 'day').format('YYYY-MM-DD')
+        let tstart = moment(end).subtract(i + 8, 'day').format('YYYY-MM-DD')
+        let tend = moment(end).subtract(i + 2, 'day').format('YYYY-MM-DD')
         params.push(
             time,
-            time,
-            time,
-            time,
-            time,
+            tstart,
+            tend,
             goods_id
         )
     }
@@ -625,10 +623,10 @@ goodsSaleInfoRepo.getDataGrossProfitDetailByTime = async(goods_id, start, end) =
                     - (IFNULL(SUM(express_fee), 0) + IFNULL(SUM(cost_amount), 0)) /
                         IFNULL(SUM(sale_amount), 0) 
             ) * 100, 2), 0) AS gross_profit, sku_code FROM goods_gross_profit WHERE 
-            order_time >= DATE_SUB(?, INTERVAL WEEKDAY(?) + 7 DAY) 
-            AND order_time <= DATE_SUB(?, INTERVAL WEEKDAY(?) + 1 DAY)
-            AND goods_id = ? GROUP BY sku_code`
-    const result = await query(sql, [start, start, start, start, goods_id])
+            order_time BETWEEN ? AND ? AND goods_id = ? GROUP BY sku_code`
+    let tstart = moment(start).subtract(8, 'day').format('YYYY-MM-DD')
+    let tend = moment(start).subtract(2, 'day').format('YYYY-MM-DD')
+    const result = await query(sql, [tstart, tend, goods_id])
     return result || []
 }
 

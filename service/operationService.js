@@ -1547,16 +1547,18 @@ const importGoodsOrderInfo = async (rows, time) => {
         qty_row = null,
         sale_amount_row = null,
         express_fee_row = null,
+        wms_row = null,
         date = time
     for (let i = 1; i < columns.length; i++) {
-        if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
-        if (columns[i] == '店铺商品编码') {sku_id_row = i; continue}
+        if (columns[i] == '实发数量') {qty_row = i; continue}
         if (columns[i] == '店铺名称') {shop_name_row = i; continue}
         if (columns[i] == '商品编码') {sku_code_row = i; continue}
+        if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
+        if (columns[i] == '店铺商品编码') {sku_id_row = i; continue}
+        if (columns[i] == '商家运费') {express_fee_row = i; continue}
         if (columns[i] == '实发金额') {sale_amount_row = i; continue}
         if (columns[i] == '成交成本') {cost_amount_row = i; continue}
-        if (columns[i] == '实发数量') {qty_row = i; continue}
-        if (columns[i] == '商家运费') {express_fee_row = i; continue}
+        if (columns[i] == '发货仓库') {wms_row = i; continue}
     }
     for (let i = 1; i < rows.length; i++) {
         if (!rows[i].getCell(1).value) continue
@@ -1577,7 +1579,11 @@ const importGoodsOrderInfo = async (rows, time) => {
         let cost_amount = rows[i].getCell(cost_amount_row).value
         let qty = rows[i].getCell(qty_row).value
         let sale_amount = rows[i].getCell(sale_amount_row).value
-        let express_fee = (rows[i].getCell(express_fee_row).value || 2.9) + 1
+        let wms = typeof(rows[i].getCell(wms_row).value) == 'string' ? 
+            rows[i].getCell(wms_row).value.trim() :
+            rows[i].getCell(wms_row).value
+        let express_fee = (wms == '北京超速树懒科技有限公司') ?  
+            (rows[i].getCell(express_fee_row).value || 2.9) + 1 : 0
         if (!sale_amount) continue
         if (qty != 1) continue
         if (!tmp[goods_id]) tmp[goods_id] = {}
