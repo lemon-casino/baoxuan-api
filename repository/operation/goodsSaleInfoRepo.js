@@ -352,19 +352,19 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         } else if (params.search[i].field_id == 'sku_id') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
-                        SELECT a2.sku_code FROM goods_sales a2 WHERE 
+                        SELECT a2.sku_code FROM goods_sale_info a2 WHERE 
                             a2.goods_id = a1.goods_id AND a2.date BETWEEN ? AND ? 
                         GROUP BY a2.sku_code 
-                        ORDER BY IFNULL(SUM(a2.sale_amount), 0) LIMIT 1 
+                        ORDER BY IFNULL(SUM(a2.sale_amount), 0) DESC LIMIT 1 
                     ) a3 WHERE a3.sku_code LIKE '%${params.search[i].value}%')`
             p.push(start, end)
         } else if (params.search[i].field_id == 'sku_sid') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (SELECT * FROM (
                         SELECT a2.sku_code, IFNULL(SUM(a2.sale_amount), 0) AS amount 
-                        FROM goods_sales a2 WHERE a2.goods_id = a1.goods_id 
+                        FROM goods_sale_info a2 WHERE a2.goods_id = a1.goods_id 
                             AND a2.date BETWEEN ? AND ? GROUP BY a2.sku_code 
-                        ORDER BY IFNULL(SUM(a2.sale_amount), 0) LIMIT 2 
+                        ORDER BY IFNULL(SUM(a2.sale_amount), 0) DESC LIMIT 2 
                     ) a3 ORDER BY amount LIMIT 1) a4 
                     WHERE a4.sku_code LIKE '%${params.search[i].value}%')`
             p.push(start, end)
