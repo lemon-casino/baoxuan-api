@@ -1356,8 +1356,11 @@ const getOperationProcesses = async (user, params, offset, limit) => {
     let permissions = await userOperationRepo.getPermission(user.id)
     params.type = 0
     if (permissions[0].type != typeList.division.key) {
-        params.type = 1
-        params.nickname = params.nickname
+        let userInfo = await userOperationRepo.getUserById(user.id)
+        if (userInfo?.length) {
+            params.nickname = userInfo[0].nickname
+            params.type = 1
+        }
     }
     let result = await newFormsRepo.getOperationProcessInstances(params, offset, limit)
     return result
