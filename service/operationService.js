@@ -931,8 +931,11 @@ const getWorkStats = async (user, start, end, params) => {
     const permissions = await userOperationRepo.getPermissionLimit(user.id)
     if (permissions.length == 0) return result
     if (permissions[0].type != typeList.division.key) {
-        params.name = user.nickname
-        params.type = 1
+        let userInfo = await userOperationRepo.getUserById(user.id)
+        if (userInfo?.length) {
+            params.nickname = userInfo[0].nickname
+            params.type = 1
+        }
     }
     let info = await newFormsRepo.getOperationWork(start, end, params)
     for (let i = 0; i < info.length; i++) {

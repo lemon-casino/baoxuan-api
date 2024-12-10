@@ -762,7 +762,7 @@ const getOperationProcessInstances = async function (params, offset, limit) {
         p1.push(params.operateType)
     }
     if (params.nickname) {
-        subsql = `${subsql} AND pir.operate_name = ?`
+        subsql = `${subsql} AND pir.operator_name = ?`
         p1.push(params.nickname)
     }
     if (params.action) {
@@ -1704,7 +1704,7 @@ const getOperationWork = async function (start, end, params) {
     let p = [start, end, params.type]
     if (params.nickname) {
         sql = `${sql}
-                AND pir.operate_name = ?`
+                AND pir.operator_name = ?`
         p.push(params.nickname)
     }
     sql = `${sql}
