@@ -6,6 +6,14 @@ const formidable = require("formidable")
 const fs = require('fs')
 const iconv = require("iconv-lite")
 
+const newMap = function(datum) {
+    if (datum === '') {
+        return null;
+    }
+    datum = datum.trim()
+    return datum;
+}
+
 const importData = async (req, res, next) => {
     try {
         let form = new formidable.IncomingForm()
@@ -42,8 +50,11 @@ const importData = async (req, res, next) => {
                 datainfo = iconv.decode(datainfo, 'GBK')
             fs.writeFileSync(newPath, datainfo)
             let readRes = null
-            if (ext == 'csv') readRes = await workbook.csv.readFile(newPath)
-            else readRes = await workbook.xlsx.readFile(newPath)
+            if (ext == 'csv') {
+                if (projectName == '天猫') 
+                    readRes = await workbook.csv.readFile(newPath, {map: newMap})
+                readRes = await workbook.csv.readFile(newPath)
+            } else readRes = await workbook.xlsx.readFile(newPath)
             if (readRes) {
                 let worksheet = []
                 workbook.eachSheet(function(sheet) {
