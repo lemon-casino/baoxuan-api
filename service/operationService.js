@@ -156,21 +156,70 @@ const getDataStats = async (id, start, end, params) => {
     return result
 }
 
-const getDataStatsDetail = async (type, name, column, start, end) => {
+const getDataStatsDetail = async (type, name, column, start, end, user) => {
     let result = [], shops = [], users = [], except = false
-    if (type == 'total') {
-        shops = await shopInfoRepo.getInfo()
-        except = true
-    } else {
-        if (typeList[type].map[0] < 3) except = true 
-        let res = await getQueryInfo(
-            typeList[type].map[0], 
-            typeList[type].key, 
-            0, 
-            name, 
-        )
-        shops = res.shops
-        users = res.users
+    switch(type) {
+        case 'total':
+            const permissions = await userOperationRepo.getPermission(user.id)
+            if (!(permissions?.length)) break
+            switch(permissions[0].type) {
+                case 1:
+                    for (let i = 0; i < permissions.length; i++) {
+                        if (permissions[i].type > 1) break
+                        let tmp = await divisionInfoRepo.getShopNameById(permissions[i].detail_id)
+                        if (tmp?.length) shops = shops.concat(tmp)
+                    }
+                    except = true
+                    break
+                case 2:
+                    for (let i = 0; i < permissions.length; i++) {
+                        if (permissions[i].type > 2) break
+                        let tmp = await projectInfoRepo.getShopNameById(permissions[i].detail_id)
+                        if (tmp?.length) shops = shops.concat(tmp)
+                    }
+                    except = true
+                    break
+                case 3:
+                    for (let i = 0; i < permissions.length; i++) {
+                        if (permissions[i].type > 3) break
+                        let tmp = await shopInfoRepo.getShopNameById(permissions[i].detail_id)
+                        if (tmp?.length) shops = shops.concat(tmp)
+                    }
+                    break
+                case 4:
+                    for (let i = 0; i < permissions.length; i++) {
+                        if (permissions[i].type > 4) break
+                        let tmp = await teamInfoRepo.getUserNameByTeamId(permissions[i].detail_id)
+                        if (tmp?.length) users = users.concat(tmp)
+                    }
+                    break                
+                case 5:
+                    for (let i = 0; i < permissions.length; i++) {
+                        let tmp = await userOperationRepo.getUserById(permissions[i].detail_id)
+                        if (tmp?.length) users = users.concat(tmp)
+                    }
+                    break
+                default:
+            }
+            break
+        case 'division':
+            shops = await divisionInfoRepo.getShopNameByName(name)
+            except = true
+            break
+        case 'project':
+            shops = await projectInfoRepo.getShopNameByName(name)
+            except = true
+            break
+        case 'shop':
+            shops = await shopInfoRepo.getShopNameByName(name)
+            break
+        case 'team':
+            users = await teamInfoRepo.getUserNameByTeamName(name)
+            break
+        case 'user':
+            users = [{nickname: name, name}]
+            break
+        default:
     }
     if (shops?.length) {
         let shopNames = ''

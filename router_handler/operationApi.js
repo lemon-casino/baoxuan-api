@@ -33,7 +33,7 @@ const getDataStatsDetail = async (req, res, next) => {
         })
         const start = moment(req.query.startDate).format('YYYY-MM-DD')
         const end = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getDataStatsDetail(type, name, req.params.column, start, end)
+        const result = await operationService.getDataStatsDetail(type, name, req.params.column, start, end, req.user)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
