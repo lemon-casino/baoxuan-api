@@ -1749,6 +1749,242 @@ const checkOperationNodes = async function (instance_id, activity, userId) {
     return row?.length ? true : false
 }
 
+const getDevelopmentType = async function (start, end) {
+    let sql = `SELECT * FROM development_type ORDER BY type, status`
+    let type = await query(sql), search = '', result = []
+    for (let i = 0; i < type?.length; i++) {  
+        sql = `SELECT * FROM development_type_field WHERE type_id = ${type[i].id}`
+        let field = await query(sql)
+        sql = `SELECT * FROM development_type_activity WHERE type_id = ${type[i].id}`
+        let activity = await query(sql)
+        sql = `SELECT count(1) AS count, ${type[i].type} AS type, ${type[i].status} AS status 
+            FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id ` 
+        let subsql = `WHERE p.form_id = ${type[i].form_id} `
+        for (let j = 0; j < field?.length; j++) {
+            sql = `${sql}
+                LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
+                    AND piv${j}.field_id = "${field[j].field_id}" `
+            if (field[j].status) {
+                subsql = `${subsql}
+                    AND (piv${j}.value = '${field[j].value}' OR piv${j}.value IS NULL) `
+            } else if (field[j].field_id.indexOf('numberField') != -1) {
+                if (field[j].value == 0)
+                    subsql = `${subsql}
+                        AND (piv${j}.value = 0 OR piv${j}.value IS NULL) `
+                else
+                    subsql = `${subsql}
+                        AND piv${j}.value > 0 `
+            } else {
+                subsql = `${subsql}
+                        AND piv${j}.value = '${field[j].value}' `
+            }
+        }
+        for (let j = 0; j < activity?.length; j++) {
+            sql = `${sql}
+                LEFT JOIN process_instance_records pir${j} ON pir${j}.instance_id = pi.id 
+                    AND pir${j}.show_name = "${activity[j].activity_name}" 
+                    AND pir${j}.activity_id IN (${activity[j].activity_id}) 
+                    AND pir${j}.action_exit IN (${activity[j].action_exit}) 
+                    AND pir${j}.id = (
+                        SELECT MAX(p2.id) FROM process_instance_records p2 
+                        WHERE p2.instance_id = pi.id
+                            AND p2.show_name = pir${j}.show_name
+                            AND p2.activity_id = pir${j}.activity_id 
+                    )`
+            if (activity[j].status) 
+                subsql = `${subsql} 
+                    AND (pir${j}.id IS NOT NULL OR pir${j}.id IS NULL)`
+            else subsql = `${subsql} 
+                    AND (pir${j}.id IS NOT NULL)`
+        }
+        if (activity?.length) 
+            subsql = `${subsql}
+                AND pir${activity.length - 1}.operate_time BETWEEN "${start}" AND "${end}"`
+        search = `${search}${sql}${subsql} 
+            UNION ALL `
+    }
+    if (search?.length) {
+        search = search.substring(0, search.length - 10)
+        search = `SELECT SUM(aa.count) AS count, aa.type, aa.status FROM(
+            ${search}
+            ) aa GROUP BY aa.type, aa.status ORDER BY aa.status, aa.type`
+        result = await query(search)
+    }
+    return result || []
+}
+
+const getDevepmentWork = async function (userNames, userIds, start, end) {
+    let sql = `SELECT COUNT(1) AS count, pir.operator_name AS name, '' AS id, 1 AS type 
+        FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
+        JOIN process_instance_records pir ON pir.instance_id = pi.id 
+            AND pir.action_exit = 'agree' 
+            AND pir.operator_name IN (${userNames}) 
+            AND pir.operate_time BETWEEN "${start}" AND "${end}" 
+            AND pir.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2 
+                WHERE p2.instance_id = pi.id 
+                    AND p2.activity_id = pir.activity_id 
+                    AND p2.show_name = pir.show_name 
+            )
+        WHERE p.form_id = 63 GROUP BY pir.operator_name 
+        UNION ALL 
+        SELECT COUNT(1) AS count, "" AS name, pi.creator AS id, 2 AS type 
+        FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
+        WHERE p.form_id = 49 AND pi.status = 'COMPLETED' 
+            AND pi.creator IN (${userIds}) 
+            AND pi.update_time BETWEEN "${start}" AND "${end}" 
+        GROUP BY pi.creator 
+        UNION ALL 
+        SELECT SUM(aa.count) AS count, aa.name, aa.id, 3 AS type FROM (
+            SELECT COUNT(1) AS count, '' AS name, pi.creator AS id  
+            FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
+            WHERE p.form_id = 6408 AND pi.creator IN (${userIds}) 
+                AND pi.create_time BETWEEN "${start}" AND "${end}" 
+            GROUP BY pi.creator 
+            UNION ALL 
+            SELECT COUNT(1) AS count, pir.operator_name AS name, '' AS id 
+            FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
+            JOIN process_instance_records pir ON pir.instance_id = pi.id 
+                AND pir.action_exit = 'agree' 
+                AND pir.show_name = '开发上传分析报告'
+                AND pir.activity_id = 'node_ocm4kwmzor4'
+                AND pir.operator_name IN (${userNames}) 
+                AND pir.operate_time BETWEEN "${start}" AND "${end}" 
+                AND pir.id = (
+                    SELECT MAX(p2.id) FROM process_instance_records p2 
+                    WHERE p2.instance_id = pi.id 
+                        AND p2.activity_id = pir.activity_id 
+                        AND p2.show_name = pir.show_name 
+                )
+            WHERE p.form_id = 11 GROUP BY pir.operator_name 
+        ) aa GROUP BY aa.name, aa.id
+        UNION ALL 
+        SELECT COUNT(1) AS count, pir.operator_name AS name, '' AS id, 4 AS type 
+        FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
+        JOIN process_instance_records pir ON pir.instance_id = pi.id 
+            AND pir.action_exit = 'agree' 
+            AND pir.operator_name IN (${userNames}) 
+            AND pir.operate_time BETWEEN "${start}" AND "${end}" 
+            AND pir.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2 
+                WHERE p2.instance_id = pi.id 
+                    AND p2.activity_id = pir.activity_id 
+                    AND p2.show_name = pir.show_name 
+            )
+        WHERE p.form_id = 34 GROUP BY pir.operator_name 
+        UNION ALL 
+        SELECT COUNT(1) AS count, '' AS name, pi.creator AS id, 5 AS type 
+        FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
+        JOIN process_instance_values piv ON piv.instance_id = pi.id 
+            AND piv.field_id IN ('radioField_m1hhyk7e', 'textareaField_lruf2zuw') 
+            AND piv.value LIKE '%公司%' 
+        WHERE p.form_id = 11 AND pi.status = 'COMPLETED' 
+            AND pi.creator IN (${userIds}) 
+            AND pi.update_time BETWEEN "${start}" AND "${end}" GROUP BY pi.creator 
+        UNION ALL 
+        SELECT COUNT(1) AS count, pir.operator_name AS name, '' AS id, 6 AS type 
+        FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
+        JOIN process_instance_values piv ON piv.instance_id = pi.id 
+            AND piv.field_id = 'radioField_m1hhyk7g' 
+            AND piv.value = '"是"'
+        JOIN process_instance_records pir ON pir.instance_id = pi.id 
+            AND pir.action_exit = 'agree' 
+            AND pir.show_name = '各平台负责人填写订货量' 
+            AND pir.activity_id = 'node_ocm1g34e5k1' 
+            AND pir.operator_name IN (${userNames}) 
+            AND pir.operate_time BETWEEN "${start}" AND "${end}" 
+            AND pir.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2 
+                WHERE p2.instance_id = pi.id 
+                    AND p2.activity_id = pir.activity_id 
+                    AND p2.show_name = pir.show_name 
+            )
+        WHERE p.form_id = 11 GROUP BY pir.operator_name `
+    let result = await query(sql)
+    return result || []
+}
+
+const getDevelopmentProblem = async function (userNames, userIds, start, end) {
+    let sql = `SELECT COUNT(1) AS count, pir.operator_name AS name, '' AS id, 1 AS type 
+        FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
+        JOIN process_instance_records pir ON pir.instance_id = pi.id 
+            AND pir.action_exit = 'doing' 
+            AND pir.operator_name IN (${userNames}) 
+            AND pir.operate_time BETWEEN "${start}" AND "${end}" 
+            AND pir.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2 
+                WHERE p2.instance_id = pi.id 
+                    AND p2.activity_id = pir.activity_id 
+                    AND p2.show_name = pir.show_name 
+            )
+        WHERE p.form_id IN (11,34,49,63.106,6408,6409) GROUP BY pir.operator_name 
+        UNION ALL 
+        SELECT COUNT(1) AS count, pir.operator_name AS name, '' AS id, 2 AS type 
+        FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
+        JOIN process_instance_records pir ON pir.instance_id = pi.id 
+            AND pir.operator_name IN (${userNames}) 
+            AND pir.operate_time BETWEEN "${start}" AND "${end}" 
+            AND pir.id != (
+                SELECT MAX(p2.id) FROM process_instance_records p2 
+                WHERE p2.instance_id = pi.id 
+                    AND p2.activity_id = pir.activity_id 
+                    AND p2.show_name = pir.show_name 
+                    AND p2.operator_name = pir.operator_name 
+            )
+        WHERE p.form_id IN (11,34,49,63.106,6408,6409) GROUP BY pir.operator_name 
+        UNION ALL 
+        SELECT COUNT(1) AS count, pir.operator_name AS name, '' AS id, 3 AS type 
+        FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
+        JOIN process_instance_records pir ON pir.instance_id = pi.id 
+            AND pir.action_exit = 'forward' 
+            AND pir.operator_name IN (${userNames}) 
+            AND pir.operate_time BETWEEN "${start}" AND "${end}" 
+        WHERE p.form_id IN (11,34,49,63.106,6408,6409) GROUP BY pir.operator_name 
+        UNION ALL 
+        SELECT COUNT(1) AS count, '' AS name, pi.creator AS id, 4 AS type 
+        FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
+        WHERE p.form_id IN (11,6408) AND pi.status = 'TERMINATED' 
+            AND pi.update_time BETWEEN "${start}" AND "${end}" 
+            AND pi.creator IN (${userIds}) GROUP BY pi.creator `
+    let result = await query(sql)
+    return result || []
+}
+
+const getPlanStats = async (userIds, months) => {
+    let sql = `SELECT SUM(aa.count) AS count, aa.id, aa.categories, aa.month FROM (
+        SELECT COUNT(1) AS count, pi.creator AS id, REPLACE(piv.value, '"', '') AS categories, 
+            DATE_FORMAT(pi.create_time, '%Y-%m') as month 
+        FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
+        LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id 
+            AND piv.field_id IN (
+                'cascadeSelectField_m4mf17qn', 
+                'radioField_m1hhyk7c', 
+                'radioField_ly8fkgfp',
+                'selectField_ly8fgd3l') 
+        WHERE p.form_id = 11 AND pi.status IN ('RUNNING', 'COMPLETED') 
+            AND DATE_FORMAT(pi.create_time, '%Y-%m') IN (${months}) 
+            AND pi.creator IN (${userIds}) 
+            GROUP BY pi.creator, REPLACE(piv.value, '"', ''), 
+                DATE_FORMAT(pi.create_time, '%Y-%m') 
+        UNION ALL 
+        SELECT COUNT(1) AS count, pi.creator AS id, REPLACE(piv.value, '"', '') AS categories, 
+            DATE_FORMAT(pi.create_time, '%Y-%m') as month  
+        FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
+        LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id 
+            AND piv.field_id IN (
+                'cascadeSelectField_m4mf17qn', 
+                'radioField_ly8fkgfp', 
+                'radioField_m3qwe1tl') 
+        WHERE p.form_id = 6408 AND pi.status IN ('RUNNING', 'COMPLETED') 
+            AND DATE_FORMAT(pi.create_time, '%Y-%m') IN (${months}) 
+            AND pi.creator IN (${userIds}) 
+            GROUP BY pi.creator, REPLACE(piv.value, '"', ''), 
+                DATE_FORMAT(pi.create_time, '%Y-%m') 
+    ) aa GROUP BY aa.id, aa.categories, aa.month ORDER BY aa.id`
+    let result = await query(sql)
+    return result || []
+}
+
 module.exports = {
     getProcessStat,
     getFlowInstances,
@@ -1775,5 +2011,9 @@ module.exports = {
     getOperateSubField,
     getOperateSelectionHeader,
     getOperationAnalysisStats,
-    checkOperationNodes
+    checkOperationNodes,
+    getDevelopmentType,
+    getDevepmentWork,
+    getDevelopmentProblem,
+    getPlanStats
 }
