@@ -76,7 +76,7 @@ const deleteProductAttr = async (id) => {
 
 const getAllProductAttrDetails = async () => {
     // 只返回 skuId 列表  raw: true, sku_id is not null
-    return      dianShangOperationAttributeModel.findAll({
+    return dianShangOperationAttributeModel.findAll({
         attributes: ['skuId'],
         where: {
             skuId: {$ne: null}
@@ -86,6 +86,23 @@ const getAllProductAttrDetails = async () => {
         // 返回转为数字
         res.forEach(item => item.skuId = parseInt(item.skuId))
         return res.map(item => item.skuId)
+    })
+
+}
+
+const getAllGoodsAttrDetails = async () => {
+    // 只返回 goods_id 列表  raw: true, sku_id is not null
+    return dianShangOperationAttributeModel.findAll({
+        attributes: ['goodsId'],
+        where: {
+            goodsId: {$ne: null},
+            platform:'天猫部'
+        },
+        raw: true
+    }).then(res => {
+        // 返回转为数字
+        res.forEach(item => item.goodsId = String(item.goodsId))
+        return res.map(item => item.goodsId)
     })
 
 }
@@ -115,6 +132,9 @@ function transformRow(row) {
         importantAttribute: row.importantAttribute ? String(row.importantAttribute).slice(0, 255) : null,
         goodsName: row.goodsName ? String(row.goodsName).slice(0, 255) : null,
         briefName: row.briefName ? String(row.briefName).slice(0, 64) : null,
+        briefProductLine: row.briefProductLine ? String(row.briefProductLine).slice(0, 64) : null,
+        productDefinition: row.productDefinition ? String(row.productDefinition).slice(0, 64) : null,
+        productRank: row.productRank ? String(row.productRank).slice(0, 64) : null,
         lineDirector: row.lineDirector ? String(row.lineDirector).slice(0, 32) : null,
         operator: row.operator ? String(row.operator).slice(0, 32) : null,
         purchaseDirector: row.purchaseDirector ? String(row.purchaseDirector).slice(0, 32) : null,
@@ -123,6 +143,7 @@ function transformRow(row) {
         profitTarget: row.profitTarget ? String(row.profitTarget).slice(0, 255) : null,
         searchTarget: row.searchTarget ? String(row.searchTarget).slice(0, 255) : null,
         pitTarget: row.pitTarget ? String(row.pitTarget).slice(0, 255) : null,
+        seasons: row.seasons ? String(row.seasons).slice(0, 255) : null,
 
         // 日期字段转换
         onsaleDate: row.onsaleDate ? excelDateToJSDate(row.onsaleDate) : null,
@@ -205,6 +226,29 @@ const bulkCreateTable = async (data) => {
 		throw error
 	}
 };
+
+const updategoodsIdAttrDetails = async (updates) => {
+    // 开启事务
+    const transaction = await sequelize.transaction();
+
+    try {
+        for (const details of updates) {
+            // 单条更新操作可以并入事务中进行
+            await dianShangOperationAttributeModel.update(details, {
+                where: { goodsId: details.goodsId },
+                transaction // 使用事务
+            });
+        }
+
+        // 提交事务
+        await transaction.commit();
+    } catch (error) {
+        // 如果有错误，回滚事务
+        await transaction.rollback();
+        throw error;
+    }
+};
+
 // 查询京东自营 对应的维护人信息
 const getOperateAttributesMaintainer = async (skuId) => {
     try {
@@ -229,8 +273,10 @@ module.exports = {
     getOperateAttributes,
     saveProductAttr,
     updateProductAttrDetails,
+    updategoodsIdAttrDetails,
     deleteProductAttr,
     getAllProductAttrDetails,
+    getAllGoodsAttrDetails,
     updateskuIdAttrDetails,
     bulkCreateTable,
     getOperateAttributesMaintainer

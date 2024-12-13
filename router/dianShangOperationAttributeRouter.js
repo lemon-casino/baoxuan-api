@@ -18,6 +18,7 @@ const uploadFileName = '商品属性维护.xlsx';
 const upload = createUploader(uploadDirectory);
 
 router.post("/upload", upload.single('file'),dianShangOperationAttributeApi.uploadTable)
+router.post("/upload-tm", upload.single('file'),dianShangOperationAttributeApi.uploadtmTable)
 
 router.get('/download', (req, res) => {
     const filePath = path.join(uploadDirectory, 'template', uploadFileName);
