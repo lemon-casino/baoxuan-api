@@ -310,6 +310,15 @@ const getUserByDingdingUserId = async (dingding_user_id) => {
     return result
 }
 
+const getUserByDeptName = async (dept_name) => {
+    const sql = `SELECT u.user_id, u.nickname, u.dingding_user_id FROM users u 
+        LEFT JOIN depts_users du ON du.user_id = u.dingding_user_id 
+        LEFT JOIN depts d ON d.dept_id = du.dept_id
+        WHERE d.dept_name = ? AND u.is_resign = 0 AND u.status = 1`
+    const result = await query(sql, [dept_name])
+    return result
+}
+
 module.exports = {
     getUsersByTagCodes,
     getUserWithTags,
@@ -329,5 +338,6 @@ module.exports = {
     undoResign,
     getUsersByTagCodesAndNickname,
     getUsersWithTagsByTagCodes,
-    getUserByDingdingUserId
+    getUserByDingdingUserId,
+    getUserByDeptName
 }

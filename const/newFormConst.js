@@ -503,6 +503,29 @@ const tableHeaderExtra = {
     }]
 }
 
+const developmentType = {
+    1: 'supplier_num',
+    2: 're_num',
+    3: 'self_num',
+    4: 'ip_num',
+    5: 'create_num'
+}
+const developmentWorkType = {
+    1: 'cost_optimize',
+    2: 'imperfect',
+    3: 'analyse',
+    4: 'quality_control',
+    5: 'property',
+    6: 'valid_supplier'
+}
+
+const developmentWorkProblem = {
+    1: 'nexts',
+    2: 'rollback',
+    3: 'transfer',
+    4: 'reject',
+}
+
 module.exports = {
     action,
     actionItem,
@@ -538,5 +561,8 @@ module.exports = {
     visionFilter,
     retouchList,
     photographerChild,
-    tableHeaderExtra
+    tableHeaderExtra,
+    developmentType,
+    developmentWorkType,
+    developmentWorkProblem
 }
