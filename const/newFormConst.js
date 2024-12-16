@@ -510,6 +510,20 @@ const developmentType = {
     4: 'ip_num',
     5: 'create_num'
 }
+const developmentTypeMap = {
+    supplier_num: 1,
+    re_num: 2,
+    self_num: 3,
+    ip_num: 4,
+    create_num: 5
+}
+const developmentStatusMap = {
+    '待转入': 0,
+    '进行中': 1,
+    '已完成': 2,
+    '选中': 3,
+    '未选中': 4
+}
 const developmentWorkType = {
     1: 'cost_optimize',
     2: 'imperfect',
@@ -563,6 +577,8 @@ module.exports = {
     photographerChild,
     tableHeaderExtra,
     developmentType,
+    developmentTypeMap,
+    developmentStatusMap,
     developmentWorkType,
     developmentWorkProblem
 }
