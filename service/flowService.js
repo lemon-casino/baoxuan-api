@@ -1285,6 +1285,7 @@ const getFlowSplitFormfieldKeyAndField = async (formId, fieldKey, selectField, f
 const getFlows = async (params, id) => {
     let result, setting = []
     if (params.tag) result = await newFormsRepo.getFlowInstances(params)
+    if (params.dept) result = await newFormsRepo.getDevelopmentFlowInstances(params)
     else result = await newFormsRepo.getOperationFlowInstances(params)
     if (result?.length) {
         for (let index = 0; index < result.length; index++) {
@@ -1363,6 +1364,19 @@ const getOperationProcesses = async (user, params, offset, limit) => {
         }
     }
     let result = await newFormsRepo.getOperationProcessInstances(params, offset, limit)
+    return result
+}
+
+const getDevelopmentProcesses = async (params, offset, limit) => {
+    let users = await userRepo.getUserByDeptName('产品开发部')
+    let userNames = ''
+    for (let i = 0; i < users.length; i++) {
+        if (users[i].nickname != '崔竹') {
+            userNames = `${userNames}"${users[i].nickname}",`
+        }
+    }
+    if (userNames?.length) userNames = userNames.substring(0, userNames.length - 1)
+    let result = await newFormsRepo.getDevelopmentProcessInstances(userNames, params, offset, limit)
     return result
 }
 
@@ -1605,6 +1619,7 @@ module.exports = {
     setFlowHeader,
     getFlowsProcesses,
     getOperationProcesses,
+    getDevelopmentProcesses,
     getVisionProcesses,
     getFlowsActions,
     getVisionReview,
