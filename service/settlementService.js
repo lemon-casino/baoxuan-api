@@ -628,7 +628,7 @@ const getXHSInfo = async (params) => {
             if (order_id_row) {
                 settle_order_id = order_id = row.getCell(order_id_row).value
             }
-            if (sub_order_id_row) sub_order_id = row.getCell(sub_order_id).value
+            if (sub_order_id_row) sub_order_id = row.getCell(sub_order_id_row).value
             if (amount_row) amount = row.getCell(amount_row).value
             if (amount == 0) continue
             count += 1
