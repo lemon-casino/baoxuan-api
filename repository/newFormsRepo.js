@@ -1121,12 +1121,14 @@ const getDevelopmentProcessInstances = async function (userNames, params, offset
                     JOIN process_instance_records pir ON pir.instance_id = pi.id 
                         AND pir.operator_name = '${params.name}' 
                         AND pir.operate_time BETWEEN "${start}" AND "${end}" 
+                        AND pir.parent_id = 0 
                         AND pir.id != (
                             SELECT MAX(p2.id) FROM process_instance_records p2 
                             WHERE p2.instance_id = pi.id 
                                 AND p2.activity_id = pir.activity_id 
                                 AND p2.show_name = pir.show_name 
                                 AND p2.operator_name = pir.operator_name 
+                                AND p2.parent_id = 0 
                         )
                     WHERE p.form_id = ${params.id}
                     GROUP BY pi.id, pi.instance_id, pi.status, pi.title, pi.create_time, 
@@ -2322,12 +2324,14 @@ const getDevelopmentProblem = async function (userNames, userIds, start, end) {
         JOIN process_instance_records pir ON pir.instance_id = pi.id 
             AND pir.operator_name IN (${userNames}) 
             AND pir.operate_time BETWEEN "${start}" AND "${end}" 
+            AND pir.parent_id = 0 
             AND pir.id != (
                 SELECT MAX(p2.id) FROM process_instance_records p2 
                 WHERE p2.instance_id = pi.id 
                     AND p2.activity_id = pir.activity_id 
                     AND p2.show_name = pir.show_name 
                     AND p2.operator_name = pir.operator_name 
+                    AND p2.parent_id = 0 
             )
         WHERE p.form_id IN (11,34,49,63,106,6408,6409) GROUP BY pir.operator_name 
         UNION ALL 
