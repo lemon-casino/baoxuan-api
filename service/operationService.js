@@ -24,7 +24,10 @@ const goodsCompositeRepo = require('../repository/operation/goodsCompositeRepo')
 const goodsOrdersRepo = require('../repository/operation/goodsOrdersRepo')
 const userSettingRepo = require('../repository/userSettingRepo')
 const goodsGrossProfit = require('../repository/operation/goodsGrossProfit')
-const { forIn } = require('lodash')
+const redisRepo = require("../repository/redisRepo")
+const { redisKeys } = require('../const/redisConst')
+const redisUtil = require("../utils/redisUtil")
+const crypto = require('crypto')
 
 /**
  * get operation data pannel data stats
@@ -36,7 +39,13 @@ const { forIn } = require('lodash')
  * @returns 
  */
 const getDataStats = async (id, start, end, params) => {
-    let result = JSON.parse(JSON.stringify(operationDefaultItem))
+    let result = {}
+    let info = `${id}-${start}-${end}-${JSON.stringify(params)}`
+    let key = crypto.createHash('md5').update(info).digest('hex')
+    key = `${redisKeys.operation}:${key}`
+    result = await redisUtil.get(key)
+    if (result) return JSON.parse(result)
+    result = JSON.parse(JSON.stringify(operationDefaultItem))
     let sale_amount = 0, promotion_amount = 0, express_fee = 0, profit = 0, 
         invoice = 0, oriType, type = '', except = false, operation_amount = 0, 
         words_market_vol = 0, words_vol = 0, order_num = 0, refund_num = 0,
@@ -154,6 +163,7 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].invoice = invoice.toFixed(2)
     result.total.data[0].children = children.filter(item => item.id)
     result.total.data[0].warning = warning
+    redisUtil.set(key, JSON.stringify(result), 3600)
     return result
 }
 
@@ -750,6 +760,7 @@ const importGoodsInfo = async (rows, time) => {
         else await goodsSaleInfoRepo.deleteByDate(time, 'goods_id')
         result = await goodsSaleInfoRepo.batchInsert(count, data)
     }
+    if (result) redisRepo.batchDelete(`${redisKeys.operation}:*`)
     return result
 }
 
@@ -805,6 +816,7 @@ const importGoodsOrderStat = async (rows, time) => {
         result = await goodsSaleInfoRepo.updateOrder({
             date, goods_id: null, sku_code: code, ...dataMap2[code]})
     }
+    if (result) redisRepo.batchDelete(`${redisKeys.operation}:*`)
     return result
 }
 
@@ -873,6 +885,7 @@ const importGoodsKeyWords = async (rows, time) => {
             result = await goodsOtherInfoRepo.batchInsert(count, data)
         }
     }
+    if (result) redisRepo.batchDelete(`${redisKeys.operation}:*`)
     return result
 }
 
