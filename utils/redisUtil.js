@@ -84,6 +84,10 @@ const sMembers = async (key) => {
     return await redis.sMembers(key)
 }
 
+const del = async (key) => {
+    return await redis.del(key)
+}
+
 module.exports = {
     set,
     get,
@@ -92,5 +96,6 @@ module.exports = {
     lAll,
     lRange,
     sAdd,
-    sMembers
+    sMembers,
+    del
 };

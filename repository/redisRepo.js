@@ -97,6 +97,13 @@ const getSplitTodayRunningAndFinishedFlows = async (status) => {
     const result = await redisUtil.get(status)
     return JSON.parse(result)
 }
+
+const batchDelete = async (pattern) => {
+    let keys = await redisUtil.getKeys(pattern)
+    for (let i = 0; i < keys.length; i++) {
+        await redisUtil.del(keys[i])
+    }
+}
 module.exports = {
     setToken,
     getToken,
@@ -111,5 +118,6 @@ module.exports = {
     getAllUsersWithKeyFields,
     setOutSourcingUser,
     getOutSourcingUsers,
-    getSplitTodayRunningAndFinishedFlows
+    getSplitTodayRunningAndFinishedFlows,
+    batchDelete
 }

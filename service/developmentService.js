@@ -1,12 +1,20 @@
 const newFormsRepo = require('../repository/newFormsRepo')
 const userRepo = require('../repository/userRepo')
 const producerPlanRepo = require('../repository/producerPlanRepo')
+const { redisKeys } = require('../const/redisConst')
+const redisUtil = require("../utils/redisUtil")
+const crypto = require('crypto')
 const { statItem3, developmentType, developmentWorkType, developmentWorkProblem } = require('../const/newFormConst')
 const moment = require('moment')
 const developmentService = {}
 
 developmentService.getDataStats = async (type, start, end, month) => {
     let result = []
+    let info = `${type}-${start}-${end}-${month}`
+    let key = crypto.createHash('md5').update(info).digest('hex')
+    key = `${redisKeys.development}:${key}`
+    result = await redisUtil.get(key)
+    if (result) return JSON.parse(result)
     switch(type) {
         case '1':
             result = await developmentService.getFlows(start, end)
@@ -23,6 +31,7 @@ developmentService.getDataStats = async (type, start, end, month) => {
         default:
 
     }
+    redisUtil.set(key, JSON.stringify(result), 3600)
     return result
 }
 
@@ -136,11 +145,19 @@ developmentService.getPlans = async (month) => {
     }
     months = months.substring(0, months.length - 1)
     let users = await userRepo.getUserByDeptName('产品开发部')
-    let userIds = '', userMap = {}, result = []
+    let userIds = '', userMap = {}, result = [], resultMap = {}
     for (let i = 0; i < users.length; i++) {
         if (users[i].nickname != '崔竹') {
             userIds = `${userIds}"${users[i].dingding_user_id}",`
             userMap[users[i].dingding_user_id] = users[i].nickname
+            resultMap[users[i].nickname] = result.length
+            result.push({
+                nickname: users[i].nickname,
+                months: months.replace(/\"/g, ''),
+                plan: 0,
+                value: 0,
+                children: []
+            })
         }
     }
     if (userIds?.length) userIds = userIds.substring(0, userIds.length - 1)
@@ -148,29 +165,44 @@ developmentService.getPlans = async (month) => {
     let plans = await producerPlanRepo.getByMonth(months)
     let data = await newFormsRepo.getPlanStats(userIds, months)
     for (let i = 0; i < plans.length; i++) {
-        let tmp = JSON.parse(JSON.stringify(plans[i]))
-        tmp['value'] = 0
-        tmp['plan'] = `${tmp.plan_min}-${tmp.plan_max}`
-        result.push(tmp)
+        result[resultMap[plans[i].nickname]].plan += parseInt(plans[i].plan_max)
+        let flag = 1
         for (let j = 0; j < data.length; j++) {
             if (data[j].categories == plans[i].categories &&
                 userMap[data[j].id] == plans[i].nickname &&
                 data[j].month == plans[i].months
             ) {
-                result[i].value = data[j].count
-                data.splice(j, 1)
+                result[resultMap[plans[i].nickname]].value += parseInt(data[j].count)
+                result[resultMap[plans[i].nickname]].children.push({
+                    months: data[j].month,
+                    categories: data[j].categories,
+                    plan: plans[i].plan_max,
+                    value: data[j].count
+                })
+                flag = 0
                 break
             }
         }
+        if (flag) {
+            result[resultMap[plans[i].nickname]].children.push({
+                months: plans[i].months,
+                categories: plans[i].categories,
+                plan: plans[i].plan_max,
+                value: 0
+            })
+        }
     }
     for (let i = 0; i < data.length; i++) {
-        result.push({
-            nickname: userMap[data[i].id],
-            categories: data[i].categories,
+        result[resultMap[userMap[data[i].id]]].value += parseInt(data[i].count)
+        result[resultMap[userMap[data[i].id]]].children.push({
             months: data[i].month,
+            categories: data[i].categories,
             plan: 0,
             value: data[i].count
         })
+    }
+    for (let i = 0; i < result.length; i++) {
+        result[i].children.sort((a, b) => moment(b.months).valueOf() - moment(a.months).valueOf())
     }
     return result
 }

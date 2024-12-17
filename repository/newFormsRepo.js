@@ -2364,7 +2364,7 @@ const getDevelopmentProblem = async function (userNames, userIds, start, end) {
                     AND p2.activity_id = pir.activity_id 
                     AND p2.show_name = pir.show_name 
             )
-        WHERE p.form_id IN (11,34,49,63.106,6408,6409)) aa 
+        WHERE p.form_id IN (11,34,49,63,106,6408,6409)) aa 
         GROUP BY aa.title, aa.name, aa.show_name 
         ORDER BY aa.title, aa.name, aa.show_name`
     let children = await query(sql)
