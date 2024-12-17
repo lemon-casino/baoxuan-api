@@ -89,6 +89,46 @@ const importGoodsInfo = async (req, res, next) => {
     }
 }
 
+const importGoodsOrderStat = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[2]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsOrderStat(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
 const importGoodsKeyWords = async (req, res, next) => {
     try {
         let form = new formidable.IncomingForm()
@@ -580,6 +620,7 @@ module.exports = {
     getGoodsInfo,
     getGoodsLineInfo,
     importGoodsInfo,
+    importGoodsOrderStat,
     importGoodsKeyWords,
     importGoodsDSR,
     getGoodsInfoDetail,
