@@ -24,6 +24,7 @@ const goodsCompositeRepo = require('../repository/operation/goodsCompositeRepo')
 const goodsOrdersRepo = require('../repository/operation/goodsOrdersRepo')
 const userSettingRepo = require('../repository/userSettingRepo')
 const goodsGrossProfit = require('../repository/operation/goodsGrossProfit')
+const { forIn } = require('lodash')
 
 /**
  * get operation data pannel data stats
@@ -38,7 +39,7 @@ const getDataStats = async (id, start, end, params) => {
     let result = JSON.parse(JSON.stringify(operationDefaultItem))
     let sale_amount = 0, promotion_amount = 0, express_fee = 0, profit = 0, 
         invoice = 0, oriType, type = '', except = false, operation_amount = 0, 
-        words_market_vol = 0, words_vol = 0, real_sale_qty = 0, refund_qty = 0,
+        words_market_vol = 0, words_vol = 0, order_num = 0, refund_num = 0,
         children = [], warning = 0
     if (params.type) {
         // jump permission, high level => low level
@@ -105,8 +106,8 @@ const getDataStats = async (id, start, end, params) => {
         operation_amount += parseFloat(result[type].data[i].operation_amount)
         words_market_vol += parseFloat(result[type].data[i].words_market_vol)
         words_vol += parseFloat(result[type].data[i].words_vol)
-        real_sale_qty += parseFloat(result[type].data[i].real_sale_qty)
-        refund_qty += parseFloat(result[type].data[i].refund_qty)
+        order_num += parseFloat(result[type].data[i].order_num)
+        refund_num += parseFloat(result[type].data[i].refund_num)
         express_fee += parseFloat(result[type].data[i].express_fee)
         profit += parseFloat(result[type].data[i].profit)
         if (type == typeList.project.value && result[type].data[i].name == projectNameList.coupang) continue
@@ -139,11 +140,11 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].operation_amount = operation_amount.toFixed(2)
     result.total.data[0].words_market_vol = words_market_vol.toFixed(2)
     result.total.data[0].words_vol = words_vol.toFixed(2)
-    result.total.data[0].real_sale_qty = real_sale_qty.toFixed(2)
-    result.total.data[0].refund_qty = refund_qty.toFixed(2)
+    result.total.data[0].order_num = order_num.toFixed(2)
+    result.total.data[0].refund_num = refund_num.toFixed(2)
     result.total.data[0].roi = promotion_amount > 0 ? (sale_amount / promotion_amount).toFixed(2) : '0.00'
     result.total.data[0].market_rate = words_market_vol > 0 ? (words_vol / words_market_vol * 100).toFixed(2) : '0.00'
-    result.total.data[0].refund_rate = real_sale_qty > 0 ? (refund_qty / real_sale_qty * 100).toFixed(2) : '0.00'
+    result.total.data[0].refund_rate = order_num > 0 ? (refund_num / order_num * 100).toFixed(2) : '0.00'
     result.total.column = JSON.parse(JSON.stringify(result[type].column))
     result.total.column[0].is_link = false
     result.total.data[0].sale_amount = sale_amount.toFixed(2)
@@ -227,14 +228,14 @@ const getDataStatsDetail = async (type, name, column, start, end, user) => {
             shopNames = `${shopNames}${shops[i].shop_name}","`
         }
         shopNames = shopNames.substring(0, shopNames.length - 3)
-        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'real_sale_qty', 'refund_qty'].includes(column))
+        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'order_num', 'refund_num'].includes(column))
             result = await goodsSaleInfoRepo.getDetailByShopNamesAndTme(shopNames, column, start, end)
         else if (column == 'operation_rate')
             result = await goodsSaleInfoRepo.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'promotion_amount', column, start, end, 100)
         else if (column == 'roi')
             result = await goodsSaleInfoRepo.getRateByShopNamesAndTme(shopNames, 'promotion_amount', 'sale_amount', column, start, end, 1)
         else if (column == 'refund_rate')
-            result = await goodsSaleInfoRepo.getRateByShopNamesAndTme(shopNames, 'real_sale_qty', 'refund_qty', column, start, end, 100)
+            result = await goodsSaleInfoRepo.getRateByShopNamesAndTme(shopNames, 'order_num', 'refund_num', column, start, end, 100)
         else if (column == 'profit_rate')
             result = await goodsSaleInfoRepo.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'profit', column, start, end, 100)
         else if (['words_vol', 'words_market_vol'].includes(column))
@@ -254,14 +255,14 @@ const getDataStatsDetail = async (type, name, column, start, end, user) => {
         userNames = userNames.substring(0, userNames.length - 3)
         let links = await userOperationRepo.getLinkIdsByUserNames(userNames, shopNames)
         let linkIds = links.map((item) => item.goods_id).join('","')
-        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'real_sale_qty', 'refund_qty'].includes(column))
+        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'order_num', 'refund_num'].includes(column))
             result = await goodsSaleInfoRepo.getDetailByLinkIdsAndTme(linkIds, column, start, end)
         else if (column == 'operation_rate')
             result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(linkIds, 'sale_amount', 'promotion_amount', column, start, end, 100)
         else if (column == 'roi')
             result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(linkIds, 'promotion_amount', 'sale_amount', column, start, end, 1)
         else if (column == 'refund_rate')
-            result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(linkIds, 'real_sale_qty', 'refund_qty', column, start, end, 100)
+            result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(linkIds, 'order_num', 'refund_num', column, start, end, 100)
         else if (column == 'profit_rate')
             result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(linkIds, 'sale_amount', 'profit', column, start, end, 100)
         else if (['words_vol', 'words_market_vol'].includes(column))
@@ -313,7 +314,7 @@ const queryShopInfo = async (shops, result, type, start, end) => {
     let sale_amount = 0, invoice = 0, info, promotion_amount = 0, 
         express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
-        real_sale_qty = 0, refund_qty = 0, words_market_vol = 0, words_vol = 0
+        order_num = 0, refund_num = 0, words_market_vol = 0, words_vol = 0
     let shopName = [], j = -1, except = false
     if (typeList[type].key < 3) except = true
     for (let i = 0; i < shops.length; i++) {
@@ -343,8 +344,8 @@ const queryShopInfo = async (shops, result, type, start, end) => {
             profit = parseFloat(info[0].profit || 0).toFixed(2)
             profit_rate = parseFloat(info[0].profit_rate || 0).toFixed(2)
             operation_amount = parseFloat(info[0].operation_amount || 0).toFixed(2)
-            real_sale_qty = parseFloat(info[0].real_sale_qty || 0).toFixed(2)
-            refund_qty = parseFloat(info[0].refund_qty || 0).toFixed(2)
+            order_num = parseFloat(info[0].order_num || 0).toFixed(2)
+            refund_num = parseFloat(info[0].refund_num || 0).toFixed(2)
             words_market_vol = parseFloat(info[0].words_market_vol || 0).toFixed(2)
             words_vol = parseFloat(info[0].words_vol || 0).toFixed(2)
         }
@@ -373,8 +374,8 @@ const queryShopInfo = async (shops, result, type, start, end) => {
             profit_rate,
             invoice,
             operation_amount,
-            real_sale_qty,
-            refund_qty,
+            order_num,
+            refund_num,
             words_market_vol,
             words_vol,
             children,
@@ -388,7 +389,7 @@ const queryUserInfo = async (users, result, type, start, end) => {
     let sale_amount = 0, invoice = 0, info, links, promotion_amount = 0, 
         express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
-        real_sale_qty = 0, refund_qty = 0, words_market_vol = 0, words_vol = 0
+        order_num = 0, refund_num = 0, words_market_vol = 0, words_vol = 0
     let userName = [], j = -1, except = false
     if (typeList[type].key < 3) except = true
     for (let i = 0; i < users.length; i++) {
@@ -432,8 +433,8 @@ const queryUserInfo = async (users, result, type, start, end) => {
             profit = parseFloat(info[0].profit || 0).toFixed(2)
             profit_rate = parseFloat(info[0].profit_rate || 0).toFixed(2)
             operation_amount = parseFloat(info[0].operation_amount || 0).toFixed(2)
-            real_sale_qty = parseFloat(info[0].real_sale_qty || 0).toFixed(2)
-            refund_qty = parseFloat(info[0].refund_qty || 0).toFixed(2)
+            order_num = parseFloat(info[0].order_num || 0).toFixed(2)
+            refund_num = parseFloat(info[0].refund_num || 0).toFixed(2)
             words_market_vol = parseFloat(info[0].words_market_vol || 0).toFixed(2)
             words_vol = parseFloat(info[0].words_vol || 0).toFixed(2)
         }
@@ -460,8 +461,8 @@ const queryUserInfo = async (users, result, type, start, end) => {
             profit_rate,
             invoice,
             operation_amount,
-            real_sale_qty,
-            refund_qty,
+            order_num,
+            refund_num,
             words_market_vol,
             words_vol,
             children
@@ -542,7 +543,7 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: '推广费', field_id: 'promotion_amount', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '推广费环比', field_id: 'promotion_amount_qoq', type: 'number', 
+                title: '推广费环比(%)', field_id: 'promotion_amount_qoq', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: 'ROI', field_id: 'roi', type: 'number', 
@@ -615,7 +616,7 @@ const getGoodsInfoDetail = async (column, goods_id, start, end) => {
     else if (column == 'roi')
         result = await goodsSaleInfoRepo.getDataRateByTime('promotion_amount', 'sale_amount', column, goods_id, start, end, 1)
     else if (column == 'refund_rate')
-        result = await goodsSaleInfoRepo.getDataRateByTime('real_sale_qty', 'refund_qty', column, goods_id, start, end, 100)
+        result = await goodsSaleInfoRepo.getDataRateByTime('order_num', 'refund_num', column, goods_id, start, end, 100)
     else if (column == 'profit_rate')
         result = await goodsSaleInfoRepo.getDataRateByTime('sale_amount', 'profit', column, goods_id, start, end, 100)
     else if (column == 'dsr')
@@ -748,6 +749,61 @@ const importGoodsInfo = async (rows, time) => {
         if (goods_id_row) await goodsSaleInfoRepo.deleteByDate(time, 'goods_code')
         else await goodsSaleInfoRepo.deleteByDate(time, 'goods_id')
         result = await goodsSaleInfoRepo.batchInsert(count, data)
+    }
+    return result
+}
+
+const importGoodsOrderStat = async (rows, time) => {
+    let dataMap = {}, dataMap2 = {}, result = false
+    let columns = rows[0].values,
+        goods_id_row = null, 
+        sku_code_row = null,
+        shop_name_row = null, 
+        refund_order_row = null, 
+        date = time
+    for (let i = 1; i <= columns.length; i++) {
+        if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
+        if (columns[i] == '商品编码') {sku_code_row = i; continue}
+        if (columns[i] == '售后单号') {refund_order_row = i; continue}
+        if (columns[i] == '店铺名称') {shop_name_row = i; continue}
+    }
+    for (let i = 1; i < rows.length; i++) {
+        let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
+            rows[i].getCell(shop_name_row).value.trim() : 
+            rows[i].getCell(shop_name_row).value
+        if (shop_name == '京东自营旗舰店') continue
+        let goods_id = typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
+            rows[i].getCell(goods_id_row).value.trim() : 
+            rows[i].getCell(goods_id_row).value
+        let sku_code = typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
+            rows[i].getCell(sku_code_row).value.trim() : 
+            rows[i].getCell(sku_code_row).value
+        let refund_order = typeof(rows[i].getCell(refund_order_row).value) == 'string' ? 
+            rows[i].getCell(refund_order_row).value.trim() : 
+            rows[i].getCell(refund_order_row).value
+        if (!goods_id) {
+            if (dataMap2[sku_code] == undefined) 
+                dataMap2[sku_code] = {shop_name, order_num: 0, refund_num: 0}
+            if (!refund_order) dataMap2[sku_code].order_num += 1
+            else dataMap2[sku_code].refund_num += 1
+        } else if (dataMap[goods_id] == undefined) {
+            dataMap[goods_id] = {}
+            if (dataMap[goods_id][sku_code] == undefined) 
+                dataMap[goods_id][sku_code] = {shop_name, order_num: 0, refund_num: 0}
+            if (!refund_order) dataMap[goods_id][sku_code].order_num += 1
+            else dataMap[goods_id][sku_code].refund_num += 1
+        }
+    }
+    logger.info(`[发货订单数据导入]：时间:${time}`)
+    for(let id in dataMap) {
+        for(let code in dataMap[id]) {
+            result = await goodsSaleInfoRepo.updateOrder({
+                date, goods_id: id, sku_code: code, ...dataMap[id][code]})
+        }
+    }
+    for (let code in dataMap2) {
+        result = await goodsSaleInfoRepo.updateOrder({
+            date, goods_id: null, sku_code: code, ...dataMap2[code]})
     }
     return result
 }
@@ -1714,6 +1770,7 @@ module.exports = {
     getDataStatsDetail,
     getGoodsInfo,
     importGoodsInfo,
+    importGoodsOrderStat,
     importGoodsKeyWords,
     importGoodsDSR,
     getGoodsLineInfo,

@@ -192,6 +192,7 @@ userOperationRepo.getUsersByShopName = async (shopName) => {
     const sql = `SELECT doa.operator AS nickname, doa.operator AS name, 
             GROUP_CONCAT(doa.shop_name) AS shop_name 
         FROM dianshang_operation_attribute doa 
+        JOIN users u ON u.nickname = doa.operator AND u.is_resign = 0 
         JOIN goods_sale_info gsi ON doa.goods_id = gsi.goods_id 
         WHERE gsi.shop_name = ? 
             GROUP BY doa.operator`
@@ -203,6 +204,7 @@ userOperationRepo.getUsersByProjectName = async (projectName) => {
     const sql = `SELECT doa.operator AS nickname, doa.operator AS name, 
             GROUP_CONCAT(doa.shop_name) AS shop_name 
         FROM dianshang_operation_attribute doa 
+        JOIN users u ON u.nickname = doa.operator AND u.is_resign = 0 
         JOIN goods_sale_info gsi ON doa.goods_id = gsi.goods_id 
         JOIN shop_info si ON si.shop_name = gsi.shop_name 
         JOIN project_info pi ON pi.id = si.project_id
@@ -214,7 +216,7 @@ userOperationRepo.getUsersByProjectName = async (projectName) => {
 
 userOperationRepo.getUserById = async (id) => {
     const sql = `SELECT nickname AS nickname, nickname AS name 
-        FROM users WHERE user_id = ?`
+        FROM users WHERE user_id = ? AND is_resign = 0`
         const result = await query(sql, id)
     return result || []
 }

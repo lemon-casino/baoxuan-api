@@ -10,8 +10,8 @@ goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) =
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
             IFNULL(SUM(a2.words_vol), 0) AS words_vol, 
-            IFNULL(SUM(a1.real_sale_qty), 0) AS real_sale_qty, 
-            IFNULL(SUM(a1.refund_qty), 0) AS refund_qty, 
+            IFNULL(SUM(a1.order_num), 0) AS order_num, 
+            IFNULL(SUM(a1.refund_num), 0) AS refund_num, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
                 IFNULL(SUM(a1.operation_amount), 0) / SUM(a1.sale_amount) * 100, 
                 0), 2) AS operation_rate, 
@@ -21,8 +21,8 @@ goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) =
             FORMAT(IF(IFNULL(SUM(a2.words_market_vol), 0) > 0, 
                 IFNULL(SUM(a2.words_vol), 0) / SUM(a2.words_market_vol) * 100, 
                 0), 2) AS market_rate, 
-            FORMAT(IF(IFNULL(SUM(a1.real_sale_qty), 0) > 0, 
-                IFNULL(SUM(a1.refund_qty), 0) / SUM(a1.real_sale_qty) * 100, 
+            FORMAT(IF(IFNULL(SUM(a1.order_num), 0) > 0, 
+                IFNULL(SUM(a1.refund_num), 0) / SUM(a1.order_num) * 100, 
                 0), 2) AS refund_rate, 
             IFNULL(SUM(a1.profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
@@ -73,8 +73,8 @@ goodsSaleInfoRepo.getChildPaymentByShopNamesAndTime = async (shopNames, start, e
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
             IFNULL(SUM(a2.words_vol), 0) AS words_vol, 
-            IFNULL(SUM(a1.real_sale_qty), 0) AS real_sale_qty, 
-            IFNULL(SUM(a1.refund_qty), 0) AS refund_qty, 
+            IFNULL(SUM(a1.order_num), 0) AS order_num, 
+            IFNULL(SUM(a1.refund_num), 0) AS refund_num, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
                 IFNULL(SUM(a1.operation_amount), 0) / SUM(a1.sale_amount) * 100, 
                 0), 2) AS operation_rate, 
@@ -84,8 +84,8 @@ goodsSaleInfoRepo.getChildPaymentByShopNamesAndTime = async (shopNames, start, e
             FORMAT(IF(IFNULL(SUM(a2.words_market_vol), 0) > 0, 
                 IFNULL(SUM(a2.words_vol), 0) / SUM(a2.words_market_vol), 
                 0), 2) AS market_rate, 
-            FORMAT(IF(IFNULL(SUM(a1.real_sale_qty), 0) > 0, 
-                IFNULL(SUM(a1.refund_qty), 0) / SUM(a1.real_sale_qty), 
+            FORMAT(IF(IFNULL(SUM(a1.order_num), 0) > 0, 
+                IFNULL(SUM(a1.refund_num), 0) / SUM(a1.order_num), 
                 0), 2) AS refund_rate, 
             IFNULL(SUM(a1.profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
@@ -116,8 +116,8 @@ goodsSaleInfoRepo.getPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
             IFNULL(SUM(a2.words_vol), 0) AS words_vol, 
-            IFNULL(SUM(a1.real_sale_qty), 0) AS real_sale_qty, 
-            IFNULL(SUM(a1.refund_qty), 0) AS refund_qty, 
+            IFNULL(SUM(a1.order_num), 0) AS order_num, 
+            IFNULL(SUM(a1.refund_num), 0) AS refund_num, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
                 IFNULL(SUM(a1.operation_amount), 0) / SUM(a1.sale_amount) * 100, 
                 0), 2) AS operation_rate, 
@@ -127,8 +127,8 @@ goodsSaleInfoRepo.getPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
             FORMAT(IF(IFNULL(SUM(a2.words_market_vol), 0) > 0, 
                 IFNULL(SUM(a2.words_vol), 0) / SUM(a2.words_market_vol) * 100, 
                 0), 2) AS market_rate, 
-            FORMAT(IF(IFNULL(SUM(a1.real_sale_qty), 0) > 0, 
-                IFNULL(SUM(a1.refund_qty), 0) / SUM(a1.real_sale_qty) * 100, 
+            FORMAT(IF(IFNULL(SUM(a1.order_num), 0) > 0, 
+                IFNULL(SUM(a1.refund_num), 0) / SUM(a1.order_num) * 100, 
                 0), 2) AS refund_rate, 
             IFNULL(SUM(a1.profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
@@ -168,8 +168,8 @@ goodsSaleInfoRepo.getChildPaymentByLinkIdsAndTime = async (linkIds, start, end) 
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
             IFNULL(SUM(a2.words_vol), 0) AS words_vol, 
-            IFNULL(SUM(a1.real_sale_qty), 0) AS real_sale_qty, 
-            IFNULL(SUM(a1.refund_qty), 0) AS refund_qty, 
+            IFNULL(SUM(a1.order_num), 0) AS order_num, 
+            IFNULL(SUM(a1.refund_num), 0) AS refund_num, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
                 IFNULL(SUM(a1.operation_amount), 0) / SUM(a1.sale_amount) * 100, 
                 0), 2) AS operation_rate, 
@@ -179,8 +179,8 @@ goodsSaleInfoRepo.getChildPaymentByLinkIdsAndTime = async (linkIds, start, end) 
             FORMAT(IF(IFNULL(SUM(a2.words_market_vol), 0) > 0, 
                 IFNULL(SUM(a2.words_vol), 0) / SUM(a2.words_market_vol) * 100, 
                 0), 2) AS market_rate, 
-            FORMAT(IF(IFNULL(SUM(a1.real_sale_qty), 0) > 0, 
-                IFNULL(SUM(a1.refund_qty), 0) / SUM(a1.real_sale_qty) * 100, 
+            FORMAT(IF(IFNULL(SUM(a1.order_num), 0) > 0, 
+                IFNULL(SUM(a1.refund_num), 0) / SUM(a1.order_num) * 100, 
                 0), 2) AS refund_rate, 
             IFNULL(SUM(a1.profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
@@ -253,11 +253,11 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         } else if (params.search[i].field_id == 'refund_rate') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
-                        SELECT IFNULL(SUM(a2.real_sale_qty), 0) AS real_sale_qty, 
-                            IFNULL(SUM(a2.refund_qty), 0) AS refund_qty FROM goods_sales a2 
+                        SELECT IFNULL(SUM(a2.order_num), 0) AS order_num, 
+                            IFNULL(SUM(a2.refund_num), 0) AS refund_num FROM goods_sales a2 
                         WHERE a2.date BETWEEN ? AND ? AND a1.goods_id = a2.goods_id 
-                    ) b WHERE b.refund_qty * 100 >= ${params.search[i].min} * b.real_sale_qty
-                        AND b.refund_qty * 100 <= ${params.search[i].max} * b.real_sale_qty)`
+                    ) b WHERE b.refund_num * 100 >= ${params.search[i].min} * b.order_num
+                        AND b.refund_num * 100 <= ${params.search[i].max} * b.order_num)`
             p.push(start, end)
         } else if (params.search[i].field_id == 'profit_rate') {
             subsql = `${subsql} AND EXISTS(
@@ -427,8 +427,8 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             IFNULL(SUM(a4.words_market_vol), 0) AS words_market_vol, 
             IFNULL(SUM(a4.words_vol), 0) AS words_vol, 
             FORMAT(IFNULL(SUM(a4.dsr), 0) / COUNT(1), 2) AS dsr, 
-            IFNULL(SUM(a1.real_sale_qty), 0) AS real_sale_qty, 
-            IFNULL(SUM(a1.refund_qty), 0) AS refund_qty, 
+            IFNULL(SUM(a1.order_num), 0) AS order_num, 
+            IFNULL(SUM(a1.refund_num), 0) AS refund_num, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
                 IFNULL(SUM(a1.operation_amount), 0) / SUM(a1.sale_amount) * 100, 
                 0), 2) AS operation_rate, 
@@ -438,8 +438,8 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             FORMAT(IF(IFNULL(SUM(a4.words_market_vol), 0) > 0, 
                 IFNULL(SUM(a4.words_vol), 0) / SUM(a4.words_market_vol) * 100, 
                 0), 2) AS market_rate, 
-            FORMAT(IF(IFNULL(SUM(a1.real_sale_qty), 0) > 0, 
-                IFNULL(SUM(a1.refund_qty), 0) / SUM(a1.real_sale_qty) * 100, 
+            FORMAT(IF(IFNULL(SUM(a1.order_num), 0) > 0, 
+                IFNULL(SUM(a1.refund_num), 0) / SUM(a1.order_num) * 100, 
                 0), 2) AS refund_rate, 
             IFNULL(SUM(a1.profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
@@ -545,6 +545,21 @@ goodsSaleInfoRepo.batchInsert = async (count, data) => {
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, data)
+    return result?.affectedRows ? true : false
+}
+
+goodsSaleInfoRepo.updateOrder = async ({
+    date, goods_id, sku_code, shop_name, order_num, refund_num
+}) => {
+    let sql = `UPDATE goods_sale_info SET order_num = ?, refund_num = ? 
+        WHERE \`date\` = ? AND sku_code = ? AND shop_name = ?`
+    let params = [order_num, refund_num, date, sku_code, shop_name]
+    if (!goods_id) sql = `${sql} AND goods_id IS NULL`
+    else {
+        sql = `${sql} AND goods_id = ?`
+        params.push(goods_id)
+    }
+    const result = await query(sql, params)
     return result?.affectedRows ? true : false
 }
 
