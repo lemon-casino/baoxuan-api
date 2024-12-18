@@ -1134,13 +1134,13 @@ const importGoodsPayInfo = async (rows, time) => {
             continue
         }
         if ((columns[i].indexOf('6003') == 0 && 
-                columns[i].indexOf('6003012') == -1) || 
-            columns[i].indexOf('6008') == 0) {
+                columns[i].indexOf('6003012') == -1)) {
             promotion_row_array.push(i)
             continue
         }
         if (columns[i].indexOf('6001') == 0 || 
-            columns[i].indexOf('6003012') == 0) {
+            columns[i].indexOf('6003012') == 0 || 
+            columns[i].indexOf('6008') == 0) {
             bill_row_array.push(i)
             continue
         }
