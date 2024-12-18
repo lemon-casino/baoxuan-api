@@ -85,7 +85,7 @@ goodsSaleInfoRepo.getChildPaymentByShopNamesAndTime = async (shopNames, start, e
                 IFNULL(SUM(a2.words_vol), 0) / SUM(a2.words_market_vol), 
                 0), 2) AS market_rate, 
             FORMAT(IF(IFNULL(SUM(a1.order_num), 0) > 0, 
-                IFNULL(SUM(a1.refund_num), 0) / SUM(a1.order_num), 
+                IFNULL(SUM(a1.refund_num), 0) / SUM(a1.order_num) * 100, 
                 0), 2) AS refund_rate, 
             IFNULL(SUM(a1.profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
@@ -294,7 +294,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         } else if (params.search[i].field_id == 'real_pay_amount') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
-                        SELECT IFNULL(SUM(a2.pay_amount), 0) - IFNULL(SUM(a2.brushing_amount), 0) 
+                        SELECT IFNULL(SUM(a2.pay_amount), 0) - IFNULL(SUM(a2.brushing_amount), 0) - IFNULL(SUM(a2.refund_amount), 0) 
                         AS val FROM goods_payments a2 WHERE a2.date BETWEEN ? AND ? 
                             AND a1.goods_id = a2.goods_id 
                     ) b WHERE b.val >= ${params.search[i].min} 
@@ -414,7 +414,8 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             IFNULL(SUM(a3.refund_amount), 0) AS refund_amount, 
             IFNULL(SUM(a3.pay_express_fee), 0) AS pay_express_fee, 
             IFNULL(SUM(a3.pay_amount), 0) - IFNULL(SUM(a3.brushing_amount), 0) 
-            AS real_pay_amount, IFNULL(SUM(a3.bill), 0) AS bill,
+                - IFNULL(SUM(a3.refund_amount), 0) AS real_pay_amount, 
+            IFNULL(SUM(a3.bill), 0) AS bill,
             IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(a1.cost_amount), 0) AS cost_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
