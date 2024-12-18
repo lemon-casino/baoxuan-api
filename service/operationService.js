@@ -792,13 +792,18 @@ const importGoodsOrderStat = async (rows, time) => {
         let refund_order = typeof(rows[i].getCell(refund_order_row).value) == 'string' ? 
             rows[i].getCell(refund_order_row).value.trim() : 
             rows[i].getCell(refund_order_row).value
-        if (!goods_id) {
+        if (!goods_id || (typeof(goods_id) == 'string' && goods_id.length == 0)) {
             if (dataMap2[sku_code] == undefined) 
                 dataMap2[sku_code] = {shop_name, order_num: 0, refund_num: 0}
             if (!refund_order) dataMap2[sku_code].order_num += 1
             else dataMap2[sku_code].refund_num += 1
         } else if (dataMap[goods_id] == undefined) {
             dataMap[goods_id] = {}
+            if (dataMap[goods_id][sku_code] == undefined) 
+                dataMap[goods_id][sku_code] = {shop_name, order_num: 0, refund_num: 0}
+            if (!refund_order) dataMap[goods_id][sku_code].order_num += 1
+            else dataMap[goods_id][sku_code].refund_num += 1
+        } else {
             if (dataMap[goods_id][sku_code] == undefined) 
                 dataMap[goods_id][sku_code] = {shop_name, order_num: 0, refund_num: 0}
             if (!refund_order) dataMap[goods_id][sku_code].order_num += 1
