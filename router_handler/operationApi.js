@@ -614,6 +614,56 @@ const setPannelSetting = async (req, res, next) => {
     }
 }
 
+const getNewOnSaleInfo = async (req, res, next) => {
+    try {
+        const {currentPage, pageSize} = req.query
+        joiUtil.validate({
+            currentPage: {value: currentPage, schema: joiUtil.commonJoiSchemas.strRequired},
+            pageSize: {value: pageSize, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const sale_date = moment().subtract(59, 'day').format('YYYY-MM-DD')
+        const start = moment().subtract(61, 'day').format('YYYY-MM-DD')
+        const end = moment().subtract(2, 'day').format('YYYY-MM-DD')
+        let limit = parseInt(pageSize)
+        let offset = (currentPage - 1) * pageSize
+        if (limit <= 0 || offset < 0) return res.send(biResponse.canTFindIt())
+        const result = await operationService.getNewOnSaleInfo(sale_date, start, end, limit, offset)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getOptimizeInfo = async (req, res, next) => {
+    try {
+        const {currentPage, pageSize, startDate, endDate} = req.query
+        joiUtil.validate({
+            currentPage: {value: currentPage, schema: joiUtil.commonJoiSchemas.strRequired},
+            pageSize: {value: pageSize, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        let limit = parseInt(pageSize)
+        let offset = (currentPage - 1) * pageSize
+        if (limit <= 0 || offset < 0) return res.send(biResponse.canTFindIt())
+        let start = moment(startDate).format('YYYY-MM-DD')
+        let end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
+        const result = await operationService.getOptimizeInfo(start, end, limit, offset)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const checkOperationOptimize = async (req, res, next) => {
+    try {
+        const result = await operationService.checkOperationOptimize()
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -635,5 +685,8 @@ module.exports = {
     importJDZYPromotionInfo,
     importGoodsPDDInfo,
     importGoodsOrderInfo,
-    setPannelSetting
+    setPannelSetting,
+    getNewOnSaleInfo,
+    getOptimizeInfo,
+    checkOperationOptimize
 }
