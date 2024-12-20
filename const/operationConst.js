@@ -103,12 +103,14 @@ const statItem = {
     children: [],
 }
 
-const workItemList = ['选品', '视觉', '上架', '优化']
+const workItemList = ['选品', '市场分析', '爆款方案', '视觉', '上架', '优化']
 const workItemMap = {
     1: 0,
-    2: 1,
-    3: 2,
-    4: 3
+    2: 3,
+    3: 4,
+    4: 5,
+    5: 1,
+    6: 2
 }
 
 const workTypeList = ['待转入', '进行中', '已完成']
@@ -133,6 +135,22 @@ const analysisFieldMap = {
     operator: 'employeeField_lii9qts2'
 }
 
+const optimizeFlowUUid = 'FORM-51A6DCCF660B4C1680135461E762AC82JV53'
+const platformMap = {
+    '天猫部': '天猫',
+    'fcs+pop': '京东',
+    '拼多多部': '拼多多',
+    '淘工厂部': '淘工厂'
+}
+const optimizeFieldMap = {
+    name: 'textField_liihs7kv',
+    operator: 'employeeField_liihs7l0',
+    goods_id: 'textField_liihs7kw',
+    platform: 'radioField_lxlncgm1',
+    type: 'selectField_lk7qoefv',
+    content: 'multiSelectField_lwufb7oy'
+}
+
 module.exports = {
     typeList,
     operationDefaultItem,
@@ -146,5 +164,8 @@ module.exports = {
     analysisFieldMap,
     analysisFlowUUid,
     analysisLinkPrevious,
-    columnList
+    columnList,
+    optimizeFlowUUid,
+    platformMap,
+    optimizeFieldMap
 }

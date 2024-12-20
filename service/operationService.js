@@ -12,7 +12,10 @@ const {
     workItemMap, 
     projectNameList, 
     workTypeList,
-    columnList 
+    columnList,
+    optimizeFlowUUid,
+    platformMap,
+    optimizeFieldMap
 } = require('../const/operationConst')
 const settlementRepo = require('../repository/settlementRepo')
 const newFormsRepo = require('../repository/newFormsRepo')
@@ -28,6 +31,10 @@ const redisRepo = require("../repository/redisRepo")
 const { redisKeys } = require('../const/redisConst')
 const redisUtil = require("../utils/redisUtil")
 const crypto = require('crypto')
+const goodsOptimizeSetting = require('../repository/operation/goodsOptimizeSetting')
+const { createProcess } =  require('./dingDingService')
+const fs = require('fs')
+const { platform } = require('os')
 
 /**
  * get operation data pannel data stats
@@ -1050,16 +1057,36 @@ const getWorkStats = async (user, start, end, params) => {
         }
         result.push(item)
     }
-    params.type = 0
+    params.type = 1
     const permissions = await userOperationRepo.getPermissionLimit(user.id)
     if (permissions.length == 0) return result
-    if (permissions[0].type != typeList.division.key) {
-        let userInfo = await userOperationRepo.getUserById(user.id)
-        if (userInfo?.length) {
-            params.nickname = userInfo[0].nickname
-            params.type = 1
+    let users = [] 
+    for (let i = 0; i < permissions.length; i++) {
+        if (i > 0 && permissions[i].type != permissions[i-1].type) break
+        let userList = []
+        switch (permissions[i].type) {
+            case typeList.division.key:
+                userList = await divisionInfoRepo.getUsersById(permissions[i].detail_id)
+                break
+            case typeList.project.key:
+                userList = await projectInfoRepo.getUsersById(permissions[i].detail_id) 
+                break
+            case typeList.team.key:
+                userList = await teamInfoRepo.getUsersById(permissions[i].detail_id)
+                break
+            case typeList.user.key:
+                userList = await userOperationRepo.getUserById(permissions[i].detail_id)
+                break
+            default:
         }
+        if (userList?.length) users = users.concat(userList)
     }
+    params.userNames = ''
+    for (let i = 0; i < users.length; i++) {
+        params.userNames = `${params.userNames}"${users[i].nickname}",`
+    }
+    if (params.userNames?.length > 0) 
+        params.userNames = params.userNames.substring(0, params.userNames.length - 1)
     let info = await newFormsRepo.getOperationWork(start, end, params)
     for (let i = 0; i < info.length; i++) {
         result[workItemMap[info[i].operate_type]].children[info[i].type].sum += info[i].count
@@ -1783,6 +1810,74 @@ const setPannelSetting = async (user_id, type, attribute) => {
     return result
 }
 
+const getNewOnSaleInfo = async (sale_date, start, end, limit, offset) => {
+    const result = await goodsSaleInfoRepo.getNewOnSaleInfo(sale_date, start, end, limit, offset)
+    return result
+}
+
+const getOptimizeInfo = async (start, end, limit, offset) => {
+    let result = await newFormsRepo.getOperationOptimizeInfo(start, end, limit, offset)
+    for (let i = 0; i < result.data.length; i++) {
+        result.data[i].goods_id = result.data[i].goods_id.replace(/\"/g, '')
+        let optimize_info = result.data[i].optimize_info.replace(/[\[\]]/g, '')
+        result.data[i].optimize_info = result.data[i].optimize_info.replace(/[\[\]\"]/g, '')
+        let optimize = await goodsOptimizeSetting.getByTitle(optimize_info)
+        result.data[i].success_rate = 0
+        let total = result.data[i].children.length, failed = 0
+        if (optimize?.length)
+            for (let j = 0; j < result.data[i].children.length; j++) {
+                if (j == 0 || 
+                    result.data[i].children[j].time != result.data[i].children[j-1].time) {
+                    let info = await goodsSaleInfoRepo.getOptimizeResult(
+                        result.data[i].goods_id,
+                        result.data[i].children[j].time,
+                        optimize
+                    )
+                    if (info?.length) {
+                        failed += info[0].count
+                    }
+                }
+            }
+        if (total > 0) result.data[i].success_rate = ((total - failed) / total * 100).toFixed(2)
+    }
+    return result
+}
+
+const checkOperationOptimize = async () => {
+    let optimize = await goodsOptimizeSetting.getInfo()
+    let goods_info = await userOperationRepo.getLinkIds()
+    for (let i = 0; i < goods_info.length; i++) {
+        for (let j = 0; j < optimize.length; j++) {
+            let info = await goodsSaleInfoRepo.getOptimizeResult(
+                goods_info[i].goods_id,
+                null,
+                [optimize[j]]
+            )
+            if (info?.length && info[0].count) {
+                info = await newFormsRepo.checkOptimize(goods_info[i].goods_id, optimize[j].title)
+                if (!info?.length) {
+                    let params = {}
+                    params[optimizeFieldMap.name] = goods_info[i].brief_name
+                    params[optimizeFieldMap.operator] = [goods_info[i].dingding_user_id]
+                    params[optimizeFieldMap.goods_id] = goods_info[i].goods_id
+                    params[optimizeFieldMap.platform] = platformMap[goods_info[i].platform]
+                    params[optimizeFieldMap.type] = optimize[j].optimize_type
+                    params[optimizeFieldMap.content] = [optimize[j].title]
+                    // console.log(JSON.stringify(params))
+                    fs.writeFileSync('./public/info.json', JSON.stringify(params) + '\n', {flag: 'a'})
+                    // let result = await createProcess(
+                    //     optimizeFlowUUid,
+                    //     goods_info[i].dingding_user_id,
+                    //     null,
+                    //     JSON.stringify(params)
+                    // )
+                }
+            }
+        }
+    }
+    return true
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -1804,5 +1899,8 @@ module.exports = {
     importJDZYPromotionInfo,
     importGoodsPDDInfo,
     importGoodsOrderInfo,
-    setPannelSetting
+    setPannelSetting,
+    getNewOnSaleInfo,
+    getOptimizeInfo,
+    checkOperationOptimize
 }

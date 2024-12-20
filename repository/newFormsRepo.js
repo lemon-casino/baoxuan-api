@@ -830,9 +830,8 @@ const getOperationProcessInstances = async function (params, offset, limit) {
         subsql = `${subsql} AND ot.operate_type = ?`
         p1.push(params.operateType)
     }
-    if (params.nickname) {
-        subsql = `${subsql} AND pir.operator_name = ?`
-        p1.push(params.nickname)
+    if (params.userNames) {
+        subsql = `${subsql} AND pir.operator_name IN (${params.userNames})`
     }
     if (params.action) {
         subsql = `${subsql} AND ot.type = ?`
@@ -2093,10 +2092,9 @@ const getOperationWork = async function (start, end, params) {
             AND pir.operate_time <= ?
             AND ota.type = ?`
     let p = [start, end, params.type]
-    if (params.nickname) {
+    if (params.userNames) {
         sql = `${sql}
-                AND pir.operator_name = ?`
-        p.push(params.nickname)
+                AND pir.operator_name IN (${params.userNames})`
     }
     sql = `${sql}
             GROUP BY p.form_id, pi.id, ot.type, ot.operate_type
@@ -2138,6 +2136,75 @@ const checkOperationNodes = async function (instance_id, activity, userId) {
         userId
     ])
     return row?.length ? true : false
+}
+
+const getOperationOptimizeInfo = async function (start, end, limit, offset) {
+    let result = {
+        data: [],
+        total: 0
+    }
+    let presql = `SELECT COUNT(1) AS count FROM(SELECT piv1.value AS a1, piv.value `
+    let sql = `FROM processes p JOIN process_instances pi ON p.id = pi.process_id 
+        LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id 
+            AND piv.field_id = 'multiSelectField_lwufb7oy' 
+        LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
+            AND piv1.field_id = 'textField_liihs7kw'
+        WHERE p.form_id = 105 AND pi.update_time BETWEEN '${start}' AND '${end}'
+            AND pi.status = 'COMPLETED'
+            AND NOT EXISTS(
+                SELECT pir.id FROM process_instance_records pir WHERE pir.instance_id = pi.id 
+                    AND pir.action_exit = 'disagree')
+        GROUP BY piv.value, piv1.value`
+    let search = `${presql}${sql}) aa`
+    let rows = await query(search)
+    if (rows?.length && rows[0].count) {
+        result.total = rows[0].count
+        presql = `SELECT COUNT(1) AS count, piv1.value AS goods_id, piv.value AS optimize_info `
+        search = `${presql}${sql} LIMIT ${offset}, ${limit}`
+        rows = await query(search)
+        if (rows?.length) {
+            result.data = rows
+            for (let i = 0; i < result.data.length; i++) {
+                result.data[i].children = []
+                sql = `SELECT pi.instance_id, DATE_FORMAT(pi.update_time, '%Y-%m-%d') AS time  
+                    FROM processes p JOIN process_instances pi ON p.id = pi.process_id 
+                    JOIN process_instance_values piv ON piv.instance_id = pi.id 
+                        AND piv.field_id = 'multiSelectField_lwufb7oy' 
+                    JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
+                        AND piv1.field_id = 'textField_liihs7kw' 
+                    WHERE p.form_id = 105 AND pi.update_time BETWEEN '${start}' AND '${end}'
+                        AND pi.status = 'COMPLETED'
+                        AND piv.value = '${result.data[i].optimize_info}'
+                        AND piv1.value = '${result.data[i].goods_id}'
+                        AND NOT EXISTS(
+                            SELECT pir.id FROM process_instance_records pir 
+                            WHERE pir.instance_id = pi.id 
+                                AND pir.action_exit = 'disagree')
+                    ORDER BY pi.update_time`
+                rows = await query(sql)
+                if (rows?.length) result.data[i].children = rows                
+            }
+        }
+    }
+    return result
+}
+
+const checkOptimize = async (goods_id, title) => {
+    const sql = `SELECT pi.id FROM processes p 
+        JOIN process_instances pi ON p.id = pi.process_id 
+        JOIN process_instance_values piv ON piv.instance_id = pi.id 
+            AND piv.field_id = 'multiSelectField_lwufb7oy' 
+        JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
+            AND piv1.field_id = 'textField_liihs7kw' 
+        WHERE p.form_id = 105 
+            AND (pi.status = 'RUNNING' OR (pi.status = 'COMPLETED' AND NOT EXISTS(
+                SELECT pir.id FROM process_instance_records pir 
+                WHERE pir.instance_id = pi.id AND pir.action_exit = 'disagree'
+            )))
+            AND piv.value = '["${title}"]'
+            AND piv1.value = '${goods_id}' LIMIT 1`
+    const result = await query(sql)
+    return result || []
 }
 
 const getDevelopmentType = async function (start, end) {
@@ -2438,5 +2505,7 @@ module.exports = {
     getDevelopmentType,
     getDevepmentWork,
     getDevelopmentProblem,
-    getPlanStats
+    getPlanStats,
+    getOperationOptimizeInfo,
+    checkOptimize
 }

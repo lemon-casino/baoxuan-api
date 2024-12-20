@@ -29,8 +29,13 @@ router.post('/jdzz-promotion-info/import', operationApi.importJDZYPromotionInfo)
 
 // 工作面板
 router.get('/work-pannel', operationApi.getWorkStats)
+router.get('/new-on-sale', operationApi.getNewOnSaleInfo)
+router.get('/optimize', operationApi.getOptimizeInfo)
 
 //表单配置
 router.post('/pannel-setting', operationApi.setPannelSetting)
+
+//测试优化
+router.post('/check-optimize', operationApi.checkOperationOptimize)
 
 module.exports = router

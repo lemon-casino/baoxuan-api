@@ -222,7 +222,8 @@ userOperationRepo.getUserById = async (id) => {
 }
 
 userOperationRepo.getPermissionLimit = async (user_id) => {
-    const sql = `SELECT * FROM user_operation WHERE user_id = ? ORDER BY type LIMIT 1`
+    const sql = `SELECT * FROM user_operation WHERE user_id = ? 
+        AND type != 3 ORDER BY type`
     const result = await query(sql, user_id)
     return result || []
 }
@@ -244,6 +245,17 @@ userOperationRepo.getDetailBySkuId = async (sku_id) => {
 userOperationRepo.getDetailByGoodsId = async (goods_id) => {
     let sql = `SELECT * FROM dianshang_operation_attribute WHERE goods_id = ?`
     const result = await query(sql, [goods_id])
+    return result || []
+}
+
+userOperationRepo.getLinkIds = async () => {
+    let sql = `SELECT doa.*, u.dingding_user_id FROM dianshang_operation_attribute doa 
+        JOIN users u ON u.nickname = doa.operator WHERE u.is_resign = 0 
+            AND doa.operator != '无操作' 
+            AND doa.operator != '非操作' 
+            AND doa.platform != '自营' 
+            AND doa.platform IS NOT NULL`
+    const result = await query(sql)
     return result || []
 }
 
