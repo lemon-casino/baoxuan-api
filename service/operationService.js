@@ -34,7 +34,6 @@ const crypto = require('crypto')
 const goodsOptimizeSetting = require('../repository/operation/goodsOptimizeSetting')
 const { createProcess } =  require('./dingDingService')
 const fs = require('fs')
-const { platform } = require('os')
 
 /**
  * get operation data pannel data stats
@@ -1632,6 +1631,13 @@ const importGoodsBrushingInfo = async (rows, time) => {
     }
     for (let index in goods_id_info) {
         result = await goodsPayInfoRepo.updateBrushingQty(index, goods_id_info[index], date)
+        if (!result) {
+            result = await goodsPayInfoRepo.insertBrushingInfo([
+                index,
+                date,
+                goods_id_info[index]
+            ])
+        }
         count += 1
     }
     logger.info(`[刷单数据导入]：时间:${date}, 总计数量:${count}`)
@@ -1863,14 +1869,13 @@ const checkOperationOptimize = async () => {
                     params[optimizeFieldMap.platform] = platformMap[goods_info[i].platform]
                     params[optimizeFieldMap.type] = optimize[j].optimize_type
                     params[optimizeFieldMap.content] = [optimize[j].title]
-                    // console.log(JSON.stringify(params))
-                    fs.writeFileSync('./public/info.json', JSON.stringify(params) + '\n', {flag: 'a'})
-                    // let result = await createProcess(
-                    //     optimizeFlowUUid,
-                    //     goods_info[i].dingding_user_id,
-                    //     null,
-                    //     JSON.stringify(params)
-                    // )
+                    // fs.writeFileSync('./public/info.json', JSON.stringify(params) + '\n', {flag: 'a'})
+                    await createProcess(
+                        optimizeFlowUUid,
+                        goods_info[i].dingding_user_id,
+                        null,
+                        JSON.stringify(params)
+                    )
                 }
             }
         }

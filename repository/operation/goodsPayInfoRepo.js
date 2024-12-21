@@ -24,6 +24,15 @@ goodsPayInfoRepo.batchInsert = async (count, data) => {
     return result?.affectedRows ? true : false
 }
 
+goodsPayInfoRepo.insertBrushingInfo = async (data) => {
+    let sql = `INSERT INTO goods_pay_info(
+        goods_id, 
+        \`date\`, 
+        brushing_qty) VALUES(?,?,?)`
+    const result = await query(sql, data)
+    return result?.affectedRows ? true : false
+}
+
 goodsPayInfoRepo.deleteByDate = async (date) => {
     let sql = `DELETE FROM goods_pay_info WHERE \`date\` = ?`
     const result = await query(sql, [date])
