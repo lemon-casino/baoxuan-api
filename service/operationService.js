@@ -1860,7 +1860,7 @@ const checkOperationOptimize = async () => {
                 [optimize[j]]
             )
             if (info?.length && info[0].count) {
-                info = await newFormsRepo.checkOptimize(goods_info[i].goods_id, optimize[j].title)
+                info = await newFormsRepo.checkOptimize(goods_info[i].goods_id, optimize[j].title, optimize[j].days)
                 if (!info?.length) {
                     let params = {}
                     params[optimizeFieldMap.name] = goods_info[i].brief_name
