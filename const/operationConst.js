@@ -136,6 +136,7 @@ const analysisFieldMap = {
 }
 
 const optimizeFlowUUid = 'FORM-51A6DCCF660B4C1680135461E762AC82JV53'
+const optimizeUser = '02353062153726101260'
 const platformMap = {
     '天猫部': '天猫',
     'fcs+pop': '京东',
@@ -167,5 +168,6 @@ module.exports = {
     columnList,
     optimizeFlowUUid,
     platformMap,
-    optimizeFieldMap
+    optimizeFieldMap,
+    optimizeUser
 }

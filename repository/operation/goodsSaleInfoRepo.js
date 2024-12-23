@@ -705,20 +705,10 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                 sql = `${sql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
-                            IFNULL(SUM(a1.profit), 0) AS profit 
-                        FROM goods_sale_info a1 LEFT JOIN dianshang_operation_attribute doa 
-                        ON a1.goods_id = doa.goods_id WHERE a1.goods_id = "${goods_id}" 
+                            IFNULL(SUM(a1.profit), 0) AS profit FROM goods_sale_info a1 
+                        WHERE a1.goods_id = "${goods_id}" 
                             AND a1.date BETWEEN "${start}" AND "${end}"`
-                if (optimize[i].start_sale) {
-                    onsale_date = moment().subtract(optimize[i].start_sale, 'day').format('YYYY-MM-DD')
-                    sql = `${sql} 
-                        AND doa.onsale_date >= "${onsale_date}"`
-                }
-                if (optimize[i].end_sale) {
-                    onsale_date = moment().subtract(optimize[i].end_sale, 'day').format('YYYY-MM-DD')
-                    sql = `${sql} 
-                        AND doa.onsale_date < "${onsale_date}"`
-                }
+                
                 sql = `${sql}) aa WHERE IF(sale_amount > 0, IF(profit / sale_amount * 100`
                 if (optimize[i].min != null && optimize[i].max != null) {
                     sql = `${sql} >= ${optimize[i].min} 
@@ -728,7 +718,28 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                 } else if (optimize[i].max != null) {
                     sql = `${sql} < ${optimize[i].max}`
                 }
-                sql = `${sql}, 1, 0), 0))`
+                sql = `${sql}, 1, 0), 1))`
+                if (optimize[i].start_sale) {
+                    onsale_date = moment().subtract(optimize[i].start_sale, 'day').format('YYYY-MM-DD')
+                    sql = `${sql} 
+                        AND a.onsale_date >= "${onsale_date}"`
+                }
+                if (optimize[i].end_sale) {
+                    onsale_date = moment().subtract(optimize[i].end_sale, 'day').format('YYYY-MM-DD')
+                    sql = `${sql} 
+                        AND a.onsale_date < "${onsale_date}"`
+                }
+                if (optimize[i].children?.length) {
+                    for (let j = 0; j < optimize[i].children.length; j++) {
+                        if (optimize[i].children[j].type == 3) {
+                            let values = optimize[i].children[j].value.split(',')
+                            for (let k = 0; k < values.length; k++) {
+                                sql = `${sql}
+                                    AND IF(a.${optimize[i].children[j].column} IS NOT NULL, a.${optimize[i].children[j].column} NOT LIKE '%${values[k]}%', 1=1)`
+                            }
+                        }
+                    }
+                }
                 break
             case 'operation_rate':
                 sql = `${sql} AND EXISTS(
@@ -746,35 +757,46 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                 } else if (optimize[i].max != null) {
                     sql = `${sql} < ${optimize[i].max}`
                 }
-                sql = `${sql}, 1, 0), 0)`
+                sql = `${sql}, 1, 0), 1)`
                 if (optimize[i].children?.length) {
                     start = moment(start).subtract(2, 'day').format('YYYY-MM-DD')
                     end = moment(start).subtract(6, 'day').format('YYYY-MM-DD')
                     for (let j = 0; j < optimize[i].children.length; j++) {
-                        sql = `${sql} AND EXISTS(
-                            SELECT  * FROM (SELECT IFNULL(SUM(a2.sale_amount), 0) AS sale_amount, 
-                                IFNULL(SUM(a2.sale_qty), 0) AS sale_qty, 
-                                IFNULL(SUM(a2.settle_amount), 0) AS settle_amount, 
-                                IFNULL(SUM(a2.bill_amount), 0) AS bill_amount, 
-                                IFNULL(SUM(a2.express_fee), 0) AS express_fee, 
-                                IFNULL(SUM(a2.cost_amount), 0) AS cost_amount, 
-                                a2.goods_id FROM goods_gross_profit a2 
-                            WHERE a2.goods_id = "${goods_id}" 
-                                AND a2.order_time BETWEEN "${start}" AND "${end}") aa WHERE 
-                                IF(sale_amount > 0 AND sale_qty > 0 AND settle_amount > 0, 
-                                    IF((1 - bill_amount / settle_amount - 
-                                        (express_fee + cost_amount) / sale_amount) * 100`
-                        if (optimize[i].children[j].min != null && optimize[i].children[j].max != null) {
-                            sql = `${sql} >= ${optimize[i].children[j].min} 
-                                    AND (1 - bill_amount / settle_amount - 
-                                        (express_fee + cost_amount) / sale_amount) * 100 < 
-                                        ${optimize[i].children[j].max}`
-                        } else if (optimize[i].children[j].min != null) {
-                            sql = `${sql} >= ${optimize[i].children[j].min}`
-                        } else if (optimize[i].children[j].max != null) {
-                            sql = `${sql} < ${optimize[i].children[j].max}`
+                        if (optimize[i].children[j].type == 3) {
+                            let values = optimize[i].children[j].value.split(',')
+                            for (let k = 0; k < values.length; k++) {
+                                sql = `${sql}
+                                    AND NOT EXISTS(
+                                        SELECT doa.goods_id FROM dianshang_operation_attribute doa 
+                                        WHERE doa.goods_id = "${goods_id}" AND
+                                            IF(doa.${optimize[i].children[j].column} IS NOT NULL, doa.${optimize[i].children[j].column} NOT LIKE '%${values[k]}%', 1=1))`
+                            }              } else if (optimize[i].children[j].type == 1) {
+                            sql = `${sql} AND EXISTS(
+                                SELECT  * FROM (SELECT IFNULL(SUM(a2.sale_amount), 0) AS sale_amount, 
+                                    IFNULL(SUM(a2.sale_qty), 0) AS sale_qty, 
+                                    IFNULL(SUM(a2.settle_amount), 0) AS settle_amount, 
+                                    IFNULL(SUM(a2.bill_amount), 0) AS bill_amount, 
+                                    IFNULL(SUM(a2.express_fee), 0) AS express_fee, 
+                                    IFNULL(SUM(a2.cost_amount), 0) AS cost_amount, 
+                                    a2.goods_id FROM goods_gross_profit a2 
+                                WHERE a2.goods_id = "${goods_id}" 
+                                    AND a2.order_time BETWEEN "${start}" AND "${end}") aa WHERE 
+                                    goods_id IS NOT NULL AND 
+                                    IF(sale_amount > 0 AND sale_qty > 0 AND settle_amount > 0, 
+                                        IF((1 - bill_amount / settle_amount - 
+                                            (express_fee + cost_amount) / sale_amount) * 100`
+                            if (optimize[i].children[j].min != null && optimize[i].children[j].max != null) {
+                                sql = `${sql} >= ${optimize[i].children[j].min} 
+                                        AND (1 - bill_amount / settle_amount - 
+                                            (express_fee + cost_amount) / sale_amount) * 100 < 
+                                            ${optimize[i].children[j].max}`
+                            } else if (optimize[i].children[j].min != null) {
+                                sql = `${sql} >= ${optimize[i].children[j].min}`
+                            } else if (optimize[i].children[j].max != null) {
+                                sql = `${sql} < ${optimize[i].children[j].max}`
+                            }
+                            sql = `${sql}, 1, 0), 1))`
                         }
-                        sql = `${sql}, 1, 0), 0))`
                     }
                 }
                 sql = `${sql})`
@@ -818,5 +840,6 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
     let result = await query(sql)
     return result|| []
 }
+
 
 module.exports = goodsSaleInfoRepo

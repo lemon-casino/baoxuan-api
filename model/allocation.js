@@ -101,6 +101,15 @@ module.exports = sequelize => {
       autoIncrement: false,
       comment: null,
       field: "min"
+    },
+    status: {
+      type: DataTypes.TINYINT(1),
+      allowNull: true,
+      defaultValue: null,
+      primaryKey: false,
+      autoIncrement: false,
+      comment: null,
+      field: "status"
     }
   };
   const options = {

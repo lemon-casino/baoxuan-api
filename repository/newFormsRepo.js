@@ -2189,7 +2189,7 @@ const getOperationOptimizeInfo = async function (start, end, limit, offset) {
     return result
 }
 
-const checkOptimize = async (goods_id, title) => {
+const checkOptimize = async (goods_id, title, days) => {
     const sql = `SELECT pi.id FROM processes p 
         JOIN process_instances pi ON p.id = pi.process_id 
         JOIN process_instance_values piv ON piv.instance_id = pi.id 
@@ -2200,7 +2200,7 @@ const checkOptimize = async (goods_id, title) => {
             AND (pi.status = 'RUNNING' OR (pi.status = 'COMPLETED' AND NOT EXISTS(
                 SELECT pir.id FROM process_instance_records pir 
                 WHERE pir.instance_id = pi.id AND pir.action_exit = 'disagree'
-            )))
+            ) AND DATE_SUB(NOW(), INTERVAL ${days} DAY) < pi.update_time))
             AND piv.value = '["${title}"]'
             AND piv1.value = '${goods_id}' LIMIT 1`
     const result = await query(sql)
