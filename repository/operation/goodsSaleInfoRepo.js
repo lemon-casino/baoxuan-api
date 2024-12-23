@@ -759,8 +759,8 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                 }
                 sql = `${sql}, 1, 0), 1)`
                 if (optimize[i].children?.length) {
-                    start = moment(start).subtract(2, 'day').format('YYYY-MM-DD')
-                    end = moment(start).subtract(6, 'day').format('YYYY-MM-DD')
+                    start = moment(start).subtract(6, 'day').format('YYYY-MM-DD')
+                    end = moment(start).subtract(2, 'day').format('YYYY-MM-DD')
                     for (let j = 0; j < optimize[i].children.length; j++) {
                         if (optimize[i].children[j].type == 3) {
                             let values = optimize[i].children[j].value.split(',')
