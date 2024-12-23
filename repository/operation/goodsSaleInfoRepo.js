@@ -456,8 +456,9 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id`
         sql = `SELECT aa.* FROM (${sql}${subsql}${sql1}) aa`
         if (params.sort) sql = `${sql} ORDER BY aa.${params.sort}`
-        sql = `${sql}
-            LIMIT ${offset}, ${size}`
+        if (!params.export)
+            sql = `${sql}
+                LIMIT ${offset}, ${size}`
         row = await query(sql, p)
         if (row?.length) {
             for (let i = 0; i < row.length; i++) {

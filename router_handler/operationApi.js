@@ -1,6 +1,7 @@
 const joiUtil = require("../utils/joiUtil")
 const biResponse = require("../utils/biResponse")
 const operationService = require("../service/operationService")
+const downloadInfoService = require('../service/downloadInfoService')
 const operationSchema = require("../schema/operationSchema")
 const moment = require('moment')
 const ExcelJS = require('exceljs')
@@ -8,6 +9,7 @@ const XLSX = require('xlsx')
 const formidable = require("formidable")
 const fs = require('fs')
 const iconv = require("iconv-lite")
+const crypto = require('crypto')
 
 const getDataStats = async (req, res, next) => {
     try {
@@ -45,7 +47,49 @@ const getGoodsInfo = async (req, res, next) => {
         joiUtil.clarityValidate(operationSchema.requiredDataSchema, req.query)
         const startDate = moment(req.query.startDate).format('YYYY-MM-DD')
         const endDate = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id)
+        let result
+        if (req.query.export) {            
+            const uploadDir = `./public/excel/${req.user.id}`
+            fs.mkdirSync(uploadDir, { recursive: true })
+            let info = `${JSON.stringify(req.query)}`
+            let key = crypto.createHash('md5').update(info).digest('hex')
+            const name = `${startDate}_${endDate}_${key}`
+            const path = `${uploadDir}/${name}.xlsx`
+            await downloadInfoService.insert(req.user.id, name, path, req.query)
+            new Promise(async (resolve, reject) => {
+                const workbook = new ExcelJS.Workbook('Sheet1')
+                const worksheet = workbook.addWorksheet()
+                logger.info(`user: ${req.user.id}, file: ${path} start`)
+                result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id)
+                let columns = []
+                for (let i = 0; i < result.column.length; i++) {
+                    if (result.column[i].sub?.length) {
+                        for (let j = 0; j < result.column[i].sub.length; j++) {
+                            columns.push({
+                                header: result.column[i].sub[j].title,
+                                key: result.column[i].sub[j].field_id,
+                            })
+                        }
+                    } else if (result.column[i].field_id != 'operate')
+                        columns.push({
+                            header: result.column[i].title,
+                            key: result.column[i].field_id,
+                        })
+                }
+                worksheet.columns = columns
+                for (let i = 0; i < result.data.data.length; i++) {                           
+                    worksheet.addRow(result.data.data[i])
+                }
+                const buffer = await workbook.xlsx.writeBuffer()
+                fs.writeFileSync(path, buffer)
+                await downloadInfoService.update(req.user.id, name, 1)
+                logger.info(`user: ${req.user.id}, file: ${path} end`)
+                resolve(true)
+            })     
+            return res.send(biResponse.success())
+        } else {
+            result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id)
+        }
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
