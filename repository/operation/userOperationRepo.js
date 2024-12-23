@@ -253,8 +253,7 @@ userOperationRepo.getLinkIds = async () => {
         JOIN users u ON u.nickname = doa.operator WHERE u.is_resign = 0 
             AND doa.operator != '无操作' 
             AND doa.operator != '非操作' 
-            AND doa.platform != '自营' 
-            AND doa.platform IS NOT NULL`
+            AND doa.platform = '天猫部'`
     const result = await query(sql)
     return result || []
 }
