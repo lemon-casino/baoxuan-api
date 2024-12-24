@@ -1853,7 +1853,6 @@ const getOptimizeInfo = async (start, end, limit, offset) => {
 const checkOperationOptimize = async () => {
     let optimize = await goodsOptimizeSetting.getInfo()
     let goods_info = await userOperationRepo.getLinkIds()
-    // let goods_info = [{goods_id: '844832886941', brief_name: '', dingding_user_id: '', platform: '天猫'}]
     for (let i = 0; i < goods_info.length; i++) {
         for (let j = 0; j < optimize.length; j++) {
             let info = await goodsSaleInfoRepo.getOptimizeResult(
