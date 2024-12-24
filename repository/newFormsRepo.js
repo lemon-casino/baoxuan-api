@@ -2199,10 +2199,10 @@ const checkOptimize = async (goods_id, title, days) => {
         WHERE p.form_id = 105 
             AND (pi.status = 'RUNNING' OR (pi.status = 'COMPLETED' AND NOT EXISTS(
                 SELECT pir.id FROM process_instance_records pir 
-                WHERE pir.instance_id = pi.id AND pir.action_exit = 'disagree'
-            ) AND DATE_SUB(NOW(), INTERVAL ${days} DAY) < pi.update_time))
+                WHERE pir.instance_id = pi.id AND pir.action_exit = 'disagree')))
+            AND DATE_SUB(NOW(), INTERVAL ${days} DAY) < pi.update_time
             AND piv.value = '["${title}"]'
-            AND piv1.value = '${goods_id}' LIMIT 1`
+            AND piv1.value = '"${goods_id}"' LIMIT 1`
     const result = await query(sql)
     return result || []
 }
