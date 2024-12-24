@@ -707,9 +707,8 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                         SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
                             IFNULL(SUM(a1.profit), 0) AS profit FROM goods_sale_info a1 
                         WHERE a1.goods_id = "${goods_id}" 
-                            AND a1.date BETWEEN "${start}" AND "${end}"`
-                
-                sql = `${sql}) aa WHERE IF(sale_amount > 0, IF(profit / sale_amount * 100`
+                            AND a1.date BETWEEN "${start}" AND "${end}") aa 
+                    WHERE IF(sale_amount > 0, profit / sale_amount * 100`
                 if (optimize[i].min != null && optimize[i].max != null) {
                     sql = `${sql} >= ${optimize[i].min} 
                             AND profit / sale_amount * 100 < ${optimize[i].max}`
@@ -718,7 +717,7 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                 } else if (optimize[i].max != null) {
                     sql = `${sql} < ${optimize[i].max}`
                 }
-                sql = `${sql}, 1, 0), 1))`
+                sql = `${sql}, 1))`
                 if (optimize[i].start_sale) {
                     onsale_date = moment().subtract(optimize[i].start_sale, 'day').format('YYYY-MM-DD')
                     sql = `${sql} 
@@ -747,8 +746,7 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                         SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
                             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount 
                         FROM goods_sale_info a1 WHERE a1.goods_id = "${goods_id}" 
-                            AND a1.date BETWEEN "${start}" AND "${end}") aa WHERE IF(sale_amount > 0, IF(
-                                operation_amount / sale_amount * 100`
+                            AND a1.date BETWEEN "${start}" AND "${end}") aa WHERE IF(sale_amount > 0, operation_amount / sale_amount * 100`
                 if (optimize[i].min != null && optimize[i].max != null) {
                     sql = `${sql} >= ${optimize[i].min} 
                             AND operation_amount / sale_amount * 100 < ${optimize[i].max}`
@@ -757,10 +755,10 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                 } else if (optimize[i].max != null) {
                     sql = `${sql} < ${optimize[i].max}`
                 }
-                sql = `${sql}, 1, 0), 1)`
+                sql = `${sql}, 1))`
                 if (optimize[i].children?.length) {
-                    start = moment(start).subtract(6, 'day').format('YYYY-MM-DD')
-                    end = moment(start).subtract(2, 'day').format('YYYY-MM-DD')
+                    let start1 = moment(start).subtract(8, 'day').format('YYYY-MM-DD')
+                    let end1 = moment(start).subtract(2, 'day').format('YYYY-MM-DD')
                     for (let j = 0; j < optimize[i].children.length; j++) {
                         if (optimize[i].children[j].type == 3) {
                             let values = optimize[i].children[j].value.split(',')
@@ -780,10 +778,10 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                                     IFNULL(SUM(a2.cost_amount), 0) AS cost_amount, 
                                     a2.goods_id FROM goods_gross_profit a2 
                                 WHERE a2.goods_id = "${goods_id}" 
-                                    AND a2.order_time BETWEEN "${start}" AND "${end}") aa WHERE 
+                                    AND a2.order_time BETWEEN "${start1}" AND "${end1}") aa WHERE 
                                     goods_id IS NOT NULL AND 
                                     IF(sale_amount > 0 AND sale_qty > 0 AND settle_amount > 0, 
-                                        IF((1 - bill_amount / settle_amount - 
+                                        (1 - bill_amount / settle_amount - 
                                             (express_fee + cost_amount) / sale_amount) * 100`
                             if (optimize[i].children[j].min != null && optimize[i].children[j].max != null) {
                                 sql = `${sql} >= ${optimize[i].children[j].min} 
@@ -795,11 +793,10 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                             } else if (optimize[i].children[j].max != null) {
                                 sql = `${sql} < ${optimize[i].children[j].max}`
                             }
-                            sql = `${sql}, 1, 0), 1))`
+                            sql = `${sql}, 1))`
                         }
                     }
                 }
-                sql = `${sql})`
                 break
             case 'roi':
                 sql = `${sql} AND EXISTS(
@@ -808,7 +805,7 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount 
                         FROM goods_sale_info a1 WHERE a1.goods_id = "${goods_id}" 
                             AND a1.date BETWEEN "${start}" AND "${end}") aa WHERE 
-                            IF(promotion_amount > 0, IF(sale_amount / promotion_amount`
+                            IF(promotion_amount > 0, sale_amount / promotion_amount`
                 if (optimize[i].min != null && optimize[i].max != null) {
                     sql = `${sql} >= ${optimize[i].min} 
                             AND sale_amount / promotion_amount < ${optimize[i].max}`
@@ -817,7 +814,7 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                 } else if (optimize[i].max != null) {
                     sql = `${sql} < ${optimize[i].max}`
                 }
-                sql = `${sql}, 1, 0), 0))`
+                sql = `${sql}, 0))`
                 break
             case 'dsr':
                 sql = `${sql} AND EXISTS(
