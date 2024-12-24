@@ -691,7 +691,7 @@ goodsSaleInfoRepo.getNewOnSaleInfo = async (sale_date, start, end, limit, offset
 
 goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
     let sql = `SELECT COUNT(1) AS count FROM dianshang_operation_attribute a 
-        WHERE a.goods_id = "${goods_id}"`, start, end, onsale_date
+        WHERE a.goods_id = "${goods_id}"`, start, end
     for (let i = 0; i < optimize.length; i++) {
         if (!time) {
             end = moment().subtract(1, 'day').format('YYYY-MM-DD')
@@ -719,14 +719,12 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                 }
                 sql = `${sql}, 1))`
                 if (optimize[i].start_sale) {
-                    onsale_date = moment().subtract(optimize[i].start_sale, 'day').format('YYYY-MM-DD')
                     sql = `${sql} 
-                        AND a.onsale_date >= "${onsale_date}"`
+                        AND DATE_ADD(a.onsale_date, INTERVAL ${optimize[i].start_sale} DAY) < NOW()`
                 }
                 if (optimize[i].end_sale) {
-                    onsale_date = moment().subtract(optimize[i].end_sale, 'day').format('YYYY-MM-DD')
                     sql = `${sql} 
-                        AND a.onsale_date < "${onsale_date}"`
+                        AND DATE_ADD(a.onsale_date, INTERVAL ${optimize[i].end_sale} DAY) >= NOW()`
                 }
                 if (optimize[i].children?.length) {
                     for (let j = 0; j < optimize[i].children.length; j++) {
