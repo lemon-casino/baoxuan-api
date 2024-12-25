@@ -817,7 +817,7 @@ const getOperationProcessInstances = async function (params, offset, limit) {
             )
         WHERE pi.status IN ('COMPLETED', 'RUNNING') 
             AND ota.type = ? `
-    p1.push(params.type)
+    p1.push(params.user_type)
     if (params.startDate) {
         subsql = `${subsql} AND pir.operate_time >= ?`
         p1.push(moment(params.startDate).format('YYYY-MM-DD') + ' 00:00:00')
@@ -2069,9 +2069,10 @@ const getOperateSelectionHeader = async function (form_id) {
 }
 
 const getOperationWork = async function (start, end, params) {
-    let sql = `SELECT COUNT(1) AS count, (
+    let presql = `SELECT COUNT(1) AS count, (
             SELECT title FROM forms WHERE id = form_id
-        ) AS title, form_id, type, operate_type FROM (
+        ) AS title, form_id, type, operate_type`
+    let sql = `FROM (
         SELECT p.form_id, pi.id, ot.operate_type, MIN(ot.type) AS type 
         FROM operation_type ot
         JOIN operation_type_activity ota ON ot.id = ota.type_id
@@ -2091,15 +2092,17 @@ const getOperationWork = async function (start, end, params) {
             AND pir.operate_time >= ?
             AND pir.operate_time <= ?
             AND ota.type = ?`
-    let p = [start, end, params.type]
-    if (params.userNames) {
-        sql = `${sql}
-                AND pir.operator_name IN (${params.userNames})`
-    }
-    sql = `${sql}
+    let p = [], search = ''
+    for (let i = 0; i < params.userNames.length; i++) {
+        search = `${search}${presql}, ${[i]} AS user_type ${sql}
+            AND pir.operator_name IN (${params.userNames[i]})
             GROUP BY p.form_id, pi.id, ot.type, ot.operate_type
-        ) a GROUP BY form_id, type, operate_type`
-    let result = await query(sql, p)
+        ) a GROUP BY form_id, type, operate_type
+        UNION ALL `
+        p.push(start, end, params.user_type)
+    }
+    search = search.substring(0, search.length - 10)
+    let result = await query(search, p)
     return result || []
 }
 

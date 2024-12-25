@@ -1046,21 +1046,32 @@ const getGoodsLineInfo = async (startDate, endDate, params, id) => {
 }
 
 const getWorkStats = async (user, start, end, params) => {
-    let result = []
-    for (let i = 0; i < workItemList.length; i++) {
-        let item = JSON.parse(JSON.stringify(statItem))
-        item.actionName = workItemList[i].name
-        for (let j = 0; j < workTypeList.length; j++) {
-            let child = JSON.parse(JSON.stringify(statItem))
-            child.actionName = workTypeList[j]
-            item.children.push(child)
+    let result = [], childInfo = []
+    params.user_type = 1
+    let permissions = [] 
+    params.userNames = []
+    if (params.type) {
+        switch (parseInt(params.type)) {
+            case typeList.division.key:
+                permissions = await divisionInfoRepo.getProjectByDivisionName(params.name)
+                break
+            case typeList.project.key:
+                permissions = await projectInfoRepo.getTeamByProjectName(params.name)
+                if (!permissions?.length)
+                    permissions = await projectInfoRepo.getUserByProjectName(params.name)
+                break
+            case typeList.team.key:
+                permissions = await teamInfoRepo.getUserByTeamName(params.name)
+                break
+            case typeList.user.key:
+                permissions = await userOperationRepo.getUserByName(params.name)
+                break
+            default:
         }
-        result.push(item)
+    } else {
+        permissions = await userOperationRepo.getPermissionLimit(user.id)
     }
-    params.type = 1
-    const permissions = await userOperationRepo.getPermissionLimit(user.id)
     if (permissions.length == 0) return result
-    let users = [] 
     for (let i = 0; i < permissions.length; i++) {
         if (i > 0 && permissions[i].type != permissions[i-1].type) break
         let userList = []
@@ -1079,20 +1090,42 @@ const getWorkStats = async (user, start, end, params) => {
                 break
             default:
         }
-        if (userList?.length) users = users.concat(userList)
+        if (userList?.length) {
+            let userNames = ''
+            for (let j = 0; j < userList.length; j++) {
+                userNames = `${userNames}"${userList[j].nickname}",`
+            }
+            userNames = userNames.substring(0, userNames.length - 1)
+            params.userNames.push(userNames)
+            let item = JSON.parse(JSON.stringify(statItem))
+            item.actionCode = permissions[i].type
+            item.actionName = permissions[i].name
+            for (let j = 0; j < workTypeList.length; j++) {
+                let child = JSON.parse(JSON.stringify(statItem))
+                child.actionName = workTypeList[j]
+                item.children.push(child)
+            }
+            childInfo.push(item)
+        }
     }
-    params.userNames = ''
-    for (let i = 0; i < users.length; i++) {
-        params.userNames = `${params.userNames}"${users[i].nickname}",`
+    if (params.userNames.length == 0) return result
+    for (let i = 0; i < workItemList.length; i++) {
+        let tmp = JSON.parse(JSON.stringify(statItem))
+        tmp.children = JSON.parse(JSON.stringify(childInfo))
+        result.push(tmp)
     }
-    if (params.userNames?.length > 0) 
-        params.userNames = params.userNames.substring(0, params.userNames.length - 1)
     let info = await newFormsRepo.getOperationWork(start, end, params)
     for (let i = 0; i < info.length; i++) {
-        result[workItemMap[info[i].operate_type]].children[info[i].type].sum += info[i].count
         result[workItemMap[info[i].operate_type]]
+            .children[info[i].user_type].sum += info[i].count
+        result[workItemMap[info[i].operate_type]]
+            .children[info[i].user_type]
+            .children[info[i].type].sum += info[i].count
+        result[workItemMap[info[i].operate_type]]
+            .children[info[i].user_type]
             .children[info[i].type]
             .actionCode = `${result[workItemMap[info[i].operate_type]]
+                .children[info[i].user_type]
                 .children[info[i].type]
                 .actionCode
             }${info[i].form_id},`
@@ -1101,6 +1134,7 @@ const getWorkStats = async (user, start, end, params) => {
         item.actionCode = info[i].form_id
         item.sum = info[i].count
         result[workItemMap[info[i].operate_type]]
+            .children[info[i].user_type]
             .children[info[i].type]
             .children.push(item)
     }
