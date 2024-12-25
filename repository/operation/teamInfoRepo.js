@@ -48,9 +48,17 @@ teamInfoRepo.getUserNameByProjectName = async (name) => {
 teamInfoRepo.getUsersById = async (id) => {
     const sql = `SELECT u.nickname, u.user_id, u.dingding_user_id FROM team_info ti 
         JOIN team_member tm ON tm.team_id = ti.id
-        JOIN users u ON u.user_id = tm.user_id WHERE ti.id = ? 
+        JOIN users u ON u.user_id = tm.user_id WHERE ti.id = ? AND u.is_resign = 0 
         GROUP BY nickname, user_id, dingding_user_id`
-    const result = await query(sql, [id, id])
+    const result = await query(sql, [id])
+    return result || []
+}
+
+teamInfoRepo.getUserByTeamName = async (name) => {
+    const sql = `SELECT u.nickname AS name, 5 AS type, u.user_id AS detail_id 
+        FROM team_info ti JOIN team_member tm ON tm.team_id = ti.id
+        JOIN users u ON u.user_id = tm.user_id WHERE ti.team_name = ?`
+    const result = await query(sql, [name])
     return result || []
 }
 

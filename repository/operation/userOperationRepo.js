@@ -222,8 +222,16 @@ userOperationRepo.getUserById = async (id) => {
 }
 
 userOperationRepo.getPermissionLimit = async (user_id) => {
-    const sql = `SELECT * FROM user_operation WHERE user_id = ? 
-        AND type != 3 ORDER BY type`
+    const sql = `SELECT uo.type, uo.detail_id, (CASE uo.type WHEN 1 THEN 
+            (SELECT di.division_name FROM division_info di 
+            WHERE di.id = uo.detail_id) WHEN 2 THEN 
+            (SELECT pi.project_name FROM project_info pi 
+            WHERE pi.id = uo.detail_id) WHEN 4 THEN 
+            (SELECT ti.team_name FROM team_info ti 
+            WHERE ti.id = uo.detail_id) ELSE 
+            (SELECT u.nickname FROM users u 
+            WHERE u.user_id = uo.detail_id) END) AS name FROM user_operation uo 
+        WHERE uo.user_id = ? AND uo.type != 3 ORDER BY uo.type`
     const result = await query(sql, user_id)
     return result || []
 }
@@ -255,6 +263,13 @@ userOperationRepo.getLinkIds = async () => {
             AND doa.operator != '非操作' 
             AND doa.platform = '天猫部'`
     const result = await query(sql)
+    return result || []
+}
+
+userOperationRepo.getUserByName = async (name) => {
+    let sql = `SELECT nickname AS name, 5 AS type, user_id AS detail_id 
+        FROM users WHERE nickname = ?`
+    const result = await query(sql, [name])
     return result || []
 }
 

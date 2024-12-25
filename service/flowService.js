@@ -1357,8 +1357,29 @@ const getFlowsProcesses = async (params, offset, limit) => {
 }
 
 const getOperationProcesses = async (user, params, offset, limit) => {
-    params.type = 1
-    const permissions = await userOperationRepo.getPermissionLimit(user.id)
+    params.user_type = 1
+    let permissions = []
+    if (params.type) {
+        switch (parseInt(params.type)) {
+            case typeList.division.key:
+                permissions = await divisionInfoRepo.getProjectByDivisionName(params.name)
+                break
+            case typeList.project.key:
+                permissions = await projectInfoRepo.getTeamByProjectName(params.name)
+                if (!permissions?.length)
+                    permissions = await projectInfoRepo.getUserByProjectName(params.name)
+                break
+            case typeList.team.key:
+                permissions = await teamInfoRepo.getUserByTeamName(params.name)
+                break
+            case typeList.user.key:
+                permissions = await userOperationRepo.getUserByName(params.name)
+                break
+            default:
+        }
+    } else {
+        permissions = await userOperationRepo.getPermissionLimit(user.id)
+    }
     if (permissions.length == 0) return result
     let users = [] 
     for (let i = 0; i < permissions.length; i++) {
