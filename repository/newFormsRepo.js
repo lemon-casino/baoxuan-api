@@ -1921,6 +1921,10 @@ const getVisionInfo = async function (type) {
         ],
         data: []
     }
+    if (type) result.columns.push({
+        field_id: 'sample_complete',
+        title: '样品是否齐全'
+    })
     let sql = `SELECT ff.id, ff.field_id, ff.title FROM vision_leader vl
         JOIN vision_pannel vp ON vp.form_id = vl.form_id
             AND vl.vision_type = vp.type
@@ -1932,7 +1936,7 @@ const getVisionInfo = async function (type) {
     if (row?.length) result.columns = result.columns.concat(row)
     sql = `SELECT pi.instance_id, pi.title, ff.field_id, pi.id, 
         (CASE vl.type WHEN 0 THEN '待转入' ELSE '进行中' END) AS type, 
-        REPLACE(piv.value, '"', '') AS value FROM vision_leader vl
+        REPLACE(piv.value, '"', '') AS value, p.form_id FROM vision_leader vl
         JOIN processes p ON p.form_id = vl.form_id
         LEFT JOIN process_instances pi ON pi.process_id = p.id
             AND pi.status IN ('COMPLETED', 'RUNNING')
@@ -1958,15 +1962,32 @@ const getVisionInfo = async function (type) {
                     info[row[i].instance_id] = {
                         title: row[i].title,
                         instance_id: row[i].instance_id,
-                        type: row[i].type
+                        type: row[i].type,
+                        form_id: row[i].form_id,
+                        id: row[i].id
                     }
                     info[row[i].instance_id][row[i].field_id] = row[i].value
+                    
                 } else {
                     info[row[i].instance_id][row[i].field_id] = row[i].value
                 }
             }
         }
         for (let index in info) {
+            if (info[index].form_id == 197 && info[index]['radioField_m0me4veo'] == '有') {
+                sql = `SELECT pir.id FROM process_instance_records pir
+                    WHERE pir.instance_id = ${info[index].id} 
+                        AND pir.activity_id IN ('node_ocm0n6oqik4', 'node_ocm0nitc3f7') 
+                        AND pir.action_exit = 'agree' 
+                        AND pir.id = (
+                            SELECT MAX(p2.id) FROM process_instance_records p2
+                            WHERE pir.instance_id = p2.instance_id
+                                AND pir.activity_id = p2.activity_id
+                                AND pir.show_name = p2.show_name)`
+                row = await query(sql)
+                if (row?.length) info[index]['sample_complete'] = '是'
+                else info[index]['sample_complete'] = '否'
+            }
             result.data.push(info[index])
         }
     }
