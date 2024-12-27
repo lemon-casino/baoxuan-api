@@ -1309,7 +1309,7 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
         promotion_name = '日常推广'
     } else if(name.indexOf('全站推广') != -1) {
         promotion_name = '全站营销'
-    }else if(name.indexOf('新品全站推广') != -1) {
+    }else if(name.indexOf('新品全站营销') != -1) {
         promotion_name = '新品全站营销'
     }
     for (let i = 1; i < columns.length; i++) {
