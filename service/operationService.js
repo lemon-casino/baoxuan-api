@@ -59,6 +59,8 @@ const getDataStats = async (id, start, end, params) => {
         oriType, type = '', except = false, operation_amount = 0, 
         words_market_vol = 0, words_vol = 0, order_num = 0, refund_num = 0,
         children = [], warning = 0
+    let columnInfo = JSON.parse(JSON.stringify(columnList))
+    if (params.stats == 'verified') columnInfo[1].label = '核销金额'
     if (params.type) {
         // jump permission, high level => low level
         oriType = typeList[params.type].map[0]
@@ -75,7 +77,7 @@ const getDataStats = async (id, start, end, params) => {
             if (users.length) {
                 result = await queryUserInfo(users, result, typeValue, start, end, func)
             }
-            result[typeValue].column = columnList
+            result[typeValue].column = columnInfo
         }
     } else {
         // user permission
@@ -96,10 +98,9 @@ const getDataStats = async (id, start, end, params) => {
             if (users.length) {
                 result = await queryUserInfo(users, result, typeValue, start, end, func)
             }
-            result[typeValue].column = columnList
+            result[typeValue].column = columnInfo
         }
     }
-    if (params.stats == 'verified') columnList[1].label = '核销金额'
     // get total stats calc level
     switch(oriType) {
         case typeList.division.key:
