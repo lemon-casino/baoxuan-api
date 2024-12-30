@@ -62,4 +62,11 @@ teamInfoRepo.getUserByTeamName = async (name) => {
     return result || []
 }
 
+teamInfoRepo.getProjectById = async (id) => {
+    const sql = `SELECT pi.project_name FROM team_info ti 
+        JOIN project_info pi ON pi.id = ti.project_id WHERE ti.id = ?`
+    const result = await query(sql, [id])
+    return result || []
+}
+
 module.exports = teamInfoRepo
