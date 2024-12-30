@@ -25,17 +25,17 @@ const getDataStats = async (req, res, next) => {
 
 const getDataStatsDetail = async (req, res, next) => {
     try {
-        const {type, name, startDate, endDate} = req.query
+        const {type, name, startDate, endDate, stats} = req.query
         joiUtil.validate({
             column: {value: req.params.column, schema: joiUtil.commonJoiSchemas.strRequired},
             type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
             name: {value: name, schema: joiUtil.commonJoiSchemas.strRequired},
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
-            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired},
         })
         const start = moment(req.query.startDate).format('YYYY-MM-DD')
         const end = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getDataStatsDetail(type, name, req.params.column, start, end, req.user)
+        const result = await operationService.getDataStatsDetail(type, name, req.params.column, start, end, stats, req.user)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -261,7 +261,7 @@ const getGoodsLineInfo = async (req, res, next) => {
 
 const getGoodsInfoDetail = async (req, res, next) => {
     try {
-        const {goods_id, startDate, endDate} = req.query
+        const {goods_id, startDate, endDate, stats} = req.query
         joiUtil.validate({
             column: {value: req.params.column, schema: joiUtil.commonJoiSchemas.strRequired},
             goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
@@ -270,7 +270,7 @@ const getGoodsInfoDetail = async (req, res, next) => {
         })
         const start = moment(req.query.startDate).format('YYYY-MM-DD')
         const end = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getGoodsInfoDetail(req.params.column, goods_id, start, end)
+        const result = await operationService.getGoodsInfoDetail(req.params.column, goods_id, start, end, stats)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -279,7 +279,7 @@ const getGoodsInfoDetail = async (req, res, next) => {
 
 const getGoodsInfoSubDetail = async (req, res, next) => {
     try {
-        const {goods_id, startDate, endDate} = req.query
+        const {goods_id, startDate, endDate, stats} = req.query
         joiUtil.validate({
             goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
@@ -287,7 +287,7 @@ const getGoodsInfoSubDetail = async (req, res, next) => {
         })
         const start = moment(req.query.startDate).format('YYYY-MM-DD')
         const end = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getGoodsInfoSubDetail(goods_id, start, end)
+        const result = await operationService.getGoodsInfoSubDetail(goods_id, start, end, stats)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -708,6 +708,83 @@ const checkOperationOptimize = async (req, res, next) => {
     }
 }
 
+const importGoodsVerified = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[2]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.csv.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsVerified(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsOrderVerifiedStat = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[2]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsOrderVerifiedStat(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -732,5 +809,7 @@ module.exports = {
     setPannelSetting,
     getNewOnSaleInfo,
     getOptimizeInfo,
-    checkOperationOptimize
+    checkOperationOptimize,
+    importGoodsVerified,
+    importGoodsOrderVerifiedStat
 }

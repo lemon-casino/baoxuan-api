@@ -8,7 +8,8 @@ userOperationRepo.getPermission = async (user_id) => {
     return result || []
 }
 
-userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames) => {
+userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames, stats) => {
+    let table = stats == 'verified' ? 'goods_sale_verified' : 'goods_sale_info'
     let presql = `SELECT COUNT(1) AS count`
     let presql1 = `SELECT doa.goods_id, IFNULL(SUM(gsi.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(gsi.promotion_amount), 0) AS promotion_amount, 
@@ -36,7 +37,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
                 FORMAT(IFNULL(SUM(gsi.profit), 0) / SUM(gsi.sale_amount), 2), 
             0) * 100 AS profit_rate`
     let sql = ` FROM dianshang_operation_attribute doa
-        JOIN goods_sale_info gsi ON gsi.goods_id = doa.goods_id 
+        JOIN ${table} gsi ON gsi.goods_id = doa.goods_id 
         LEFT JOIN goods_other_info goi ON gsi.goods_id = goi.goods_id 
             AND gsi.date = goi.date` 
     let subsql = ` WHERE gsi.date >= ? AND gsi.date <= ?`, p = [start, end]
@@ -45,7 +46,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.operation_amount), 0) AS operation_amount, 
-                            IFNULL(SUM(a2.sale_amount), 0) AS sale_amount FROM goods_sale_info a2
+                            IFNULL(SUM(a2.sale_amount), 0) AS sale_amount FROM ${table} a2
                         WHERE a2.date >= ? AND a2.date <= ? 
                             AND gsi.goods_id = a2.goods_id 
                     ) b WHERE b.operation_amount * 100 >= ${params.search[i].min} * b.sale_amount
@@ -56,7 +57,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.promotion_amount), 0) AS promotion_amount, 
-                            IFNULL(SUM(a2.sale_amount), 0) AS sale_amount FROM goods_sale_info a2 
+                            IFNULL(SUM(a2.sale_amount), 0) AS sale_amount FROM ${table} a2 
                         WHERE a2.date >= ? AND a2.date <= ? 
                             AND gsi.goods_id = a2.goods_id 
                     ) b WHERE b.sale_amount >= ${params.search[i].min} * b.promotion_amount 
@@ -67,7 +68,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
-                            IFNULL(SUM(a2.words_vol), 0) AS words_vol FROM goods_sale_info a2 
+                            IFNULL(SUM(a2.words_vol), 0) AS words_vol FROM ${table} a2 
                         WHERE a2.date >= ? AND a2.date <= ? 
                             AND gsi.goods_id = a2.goods_id 
                     ) b WHERE b.words_vol * 100 >= ${params.search[i].min} * b.words_market_vol
@@ -78,7 +79,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.real_sale_qty), 0) AS real_sale_qty, 
-                            IFNULL(SUM(a2.refund_qty), 0) AS refund_qty FROM goods_sale_info a2 
+                            IFNULL(SUM(a2.refund_qty), 0) AS refund_qty FROM ${table} a2 
                         WHERE a2.date >= ? AND a2.date <= ? 
                             AND gsi.goods_id = a2.goods_id 
                     ) b WHERE b.refund_qty * 100 >= ${params.search[i].min} * b.real_sale_qty
@@ -89,7 +90,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.profit), 0) AS profit, 
-                            IFNULL(SUM(a2.sale_amount), 0) AS sale_amount FROM goods_sale_info a2 
+                            IFNULL(SUM(a2.sale_amount), 0) AS sale_amount FROM ${table} a2 
                         WHERE a2.date >= ? AND a2.date <= ? 
                             AND gsi.goods_id = a2.goods_id 
                     ) b WHERE b.profit * 100 >= ${params.search[i].min} * b.sale_amount
@@ -105,7 +106,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
         } else if (params.search[i].field_id == 'sku_id') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
-                        SELECT a2.sku_code FROM goods_sale_info a2 WHERE 
+                        SELECT a2.sku_code FROM ${table} a2 WHERE 
                             a2.goods_id = gsi.goods_id AND a2.date BETWEEN ? AND ? 
                         GROUP BY a2.sku_code 
                         ORDER BY IFNULL(SUM(a2.sale_amount), 0) DESC LIMIT 1 
@@ -120,7 +121,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a2.${params.search[i].field_id}), 0) AS val FROM 
-                        goods_sale_info a2 WHERE a2.date >= ? AND a2.date <= ? 
+                        ${table} a2 WHERE a2.date >= ? AND a2.date <= ? 
                             AND gsi.goods_id = a2.goods_id 
                     ) b WHERE b.val >= ${params.search[i].min} 
                         AND b.val <= ${params.search[i].max}
@@ -175,7 +176,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
         info = await query(search, p)
         if (info?.length) {
             for (let i = 0; i < info.length; i++) {
-                sql = `SELECT sku_code FROM goods_sale_info WHERE goods_id = ? 
+                sql = `SELECT sku_code FROM ${table} WHERE goods_id = ? 
                         AND \`date\` >= ? AND \`date\` <= ?
                     GROUP BY sku_code ORDER BY SUM(sale_amount) DESC LIMIT 1`
                 let row1 = await query(sql, [info[i].goods_id, start, end])
@@ -270,6 +271,18 @@ userOperationRepo.getUserByName = async (name) => {
     let sql = `SELECT nickname AS name, 5 AS type, user_id AS detail_id 
         FROM users WHERE nickname = ?`
     const result = await query(sql, [name])
+    return result || []
+}
+
+userOperationRepo.getProjectById = async (id) => {
+    let sql = `SELECT pi.project_name FROM team_info ti 
+        JOIN team_member tm ON tm.team_id = ti.id
+        JOIN project_info pi ON pi.id = ti.project_id WHERE tm.user_id = ? 
+        UNION ALL
+        SELECT pi.project_name FROM user_operation uo JOIN shop_info si 
+        ON uo.detail_id = si.id AND uo.type = 3 
+        JOIN project_info pi ON pi.id = si.project_id WHERE uo.user_id = ?`
+    const result = await query(sql, [id, id])
     return result || []
 }
 
