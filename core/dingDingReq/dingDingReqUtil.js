@@ -1,6 +1,5 @@
 const crypto = require('crypto')
 const { dingDingConfig } = require('../../config/default')
-const moment = require('moment')
 const { corpAccessToken, getJsapiTickets } = require('./credentialsReq')
 
 const getDingTalkAccessTokenHeader = (token) => {
@@ -51,17 +50,28 @@ function decodeUrl(urlString) {
     }
 }
 
+const getRandomStr = (count) => {
+    const base = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < count; i++) {
+        const randomIndex = Math.floor(Math.random() * base.length);
+        result += base[randomIndex];
+    }
+    return result;
+}
+
 const config = async (url) => {
-    let time = moment().valueOf()
+    let time = Date.now()
+    let nonceStr = getRandomStr(16)
     let { accessToken } = await corpAccessToken()
     let jsapiTicket = await getJsapiTickets(accessToken)
-    let signature = sign(jsapiTicket, time, time + '', url)
+    let signature = sign(jsapiTicket, nonceStr, time, url)
     return {
         agentId: dingDingConfig.agentId,
         clientId: dingDingConfig.appKey,
         corpId: dingDingConfig.corpId,
         timeStamp: time,
-        nonceStr: time + '',
+        nonceStr: nonceStr,
         signature
     }
 }
