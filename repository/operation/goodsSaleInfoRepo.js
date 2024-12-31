@@ -870,4 +870,9 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
     let result = await query(sql)
     return result|| []
 }
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> master
 module.exports = goodsSaleInfoRepo
