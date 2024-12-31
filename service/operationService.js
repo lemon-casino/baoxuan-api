@@ -12,7 +12,11 @@ const {
     workItemMap, 
     projectNameList, 
     workTypeList,
-    columnList 
+    columnList,
+    optimizeFlowUUid,
+    optimizeUser,
+    platformMap,
+    optimizeFieldMap
 } = require('../const/operationConst')
 const settlementRepo = require('../repository/settlementRepo')
 const newFormsRepo = require('../repository/newFormsRepo')
@@ -24,6 +28,14 @@ const goodsCompositeRepo = require('../repository/operation/goodsCompositeRepo')
 const goodsOrdersRepo = require('../repository/operation/goodsOrdersRepo')
 const userSettingRepo = require('../repository/userSettingRepo')
 const goodsGrossProfit = require('../repository/operation/goodsGrossProfit')
+const redisRepo = require("../repository/redisRepo")
+const { redisKeys } = require('../const/redisConst')
+const redisUtil = require("../utils/redisUtil")
+const crypto = require('crypto')
+const goodsOptimizeSetting = require('../repository/operation/goodsOptimizeSetting')
+const { createProcess } =  require('./dingDingService')
+const fs = require('fs')
+const goodsSaleVerifiedRepo = require('../repository/operation/goodsSaleVerifiedRepo')
 
 /**
  * get operation data pannel data stats
@@ -35,11 +47,20 @@ const goodsGrossProfit = require('../repository/operation/goodsGrossProfit')
  * @returns 
  */
 const getDataStats = async (id, start, end, params) => {
-    let result = JSON.parse(JSON.stringify(operationDefaultItem))
+    let result = {}
+    let info = `${id}-${start}-${end}-${JSON.stringify(params)}`
+    let key = crypto.createHash('md5').update(info).digest('hex')
+    key = `${redisKeys.operation}:${params.stats}:${key}`
+    result = await redisUtil.get(key)
+    if (result) return JSON.parse(result)
+    result = JSON.parse(JSON.stringify(operationDefaultItem))
+    let func = params.stats == 'verified' ? goodsSaleVerifiedRepo : goodsSaleInfoRepo
     let sale_amount = 0, promotion_amount = 0, express_fee = 0, profit = 0, 
-        invoice = 0, oriType, type = '', except = false, operation_amount = 0, 
-        words_market_vol = 0, words_vol = 0, real_sale_qty = 0, refund_qty = 0,
+        oriType, type = '', except = false, operation_amount = 0, 
+        words_market_vol = 0, words_vol = 0, order_num = 0, refund_num = 0,
         children = [], warning = 0
+    let columnInfo = JSON.parse(JSON.stringify(columnList))
+    if (params.stats == 'verified') columnInfo[1].label = '核销金额'
     if (params.type) {
         // jump permission, high level => low level
         oriType = typeList[params.type].map[0]
@@ -51,12 +72,12 @@ const getDataStats = async (id, start, end, params) => {
                 params.name, 
             )
             if (shops.length) {
-                result = await queryShopInfo(shops, result, typeValue, start, end)
+                result = await queryShopInfo(shops, result, typeValue, start, end, func)
             }
             if (users.length) {
-                result = await queryUserInfo(users, result, typeValue, start, end)
+                result = await queryUserInfo(users, result, typeValue, start, end, func)
             }
-            result[typeValue].column = columnList
+            result[typeValue].column = columnInfo
         }
     } else {
         // user permission
@@ -72,12 +93,12 @@ const getDataStats = async (id, start, end, params) => {
                 null,
             )
             if (shops.length) {
-                result = await queryShopInfo(shops, result, typeValue, start, end)
+                result = await queryShopInfo(shops, result, typeValue, start, end, func)
             }
             if (users.length) {
-                result = await queryUserInfo(users, result, typeValue, start, end)
+                result = await queryUserInfo(users, result, typeValue, start, end, func)
             }
-            result[typeValue].column = columnList
+            result[typeValue].column = columnInfo
         }
     }
     // get total stats calc level
@@ -105,12 +126,11 @@ const getDataStats = async (id, start, end, params) => {
         operation_amount += parseFloat(result[type].data[i].operation_amount)
         words_market_vol += parseFloat(result[type].data[i].words_market_vol)
         words_vol += parseFloat(result[type].data[i].words_vol)
-        real_sale_qty += parseFloat(result[type].data[i].real_sale_qty)
-        refund_qty += parseFloat(result[type].data[i].refund_qty)
+        order_num += parseFloat(result[type].data[i].order_num)
+        refund_num += parseFloat(result[type].data[i].refund_num)
         express_fee += parseFloat(result[type].data[i].express_fee)
         profit += parseFloat(result[type].data[i].profit)
         if (type == typeList.project.value && result[type].data[i].name == projectNameList.coupang) continue
-        invoice += parseFloat(result[type].data[i].invoice)
         for (let j = 0; j < result[type].data[i].children.length; j++) {
             if (!children[result[type].data[i].children[j].type]) {
                 let tmp = JSON.parse(JSON.stringify(result[type].data[i].children[j]))
@@ -139,61 +159,109 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].operation_amount = operation_amount.toFixed(2)
     result.total.data[0].words_market_vol = words_market_vol.toFixed(2)
     result.total.data[0].words_vol = words_vol.toFixed(2)
-    result.total.data[0].real_sale_qty = real_sale_qty.toFixed(2)
-    result.total.data[0].refund_qty = refund_qty.toFixed(2)
+    result.total.data[0].order_num = order_num.toFixed(2)
+    result.total.data[0].refund_num = refund_num.toFixed(2)
     result.total.data[0].roi = promotion_amount > 0 ? (sale_amount / promotion_amount).toFixed(2) : '0.00'
     result.total.data[0].market_rate = words_market_vol > 0 ? (words_vol / words_market_vol * 100).toFixed(2) : '0.00'
-    result.total.data[0].refund_rate = real_sale_qty > 0 ? (refund_qty / real_sale_qty * 100).toFixed(2) : '0.00'
+    result.total.data[0].refund_rate = order_num > 0 ? (refund_num / order_num * 100).toFixed(2) : '0.00'
     result.total.column = JSON.parse(JSON.stringify(result[type].column))
     result.total.column[0].is_link = false
     result.total.data[0].sale_amount = sale_amount.toFixed(2)
     result.total.data[0].promotion_amount = promotion_amount.toFixed(2)
     result.total.data[0].express_fee = express_fee.toFixed(2)
     result.total.data[0].profit = profit.toFixed(2)
-    result.total.data[0].invoice = invoice.toFixed(2)
     result.total.data[0].children = children.filter(item => item.id)
     result.total.data[0].warning = warning
+    redisUtil.set(key, JSON.stringify(result), 3600)
     return result
 }
 
-const getDataStatsDetail = async (type, name, column, start, end) => {
-    let result = [], shops = [], users = [], except = false
-    if (type == 'total') {
-        shops = await shopInfoRepo.getInfo()
-        except = true
-    } else {
-        if (typeList[type].map[0] < 3) except = true 
-        let res = await getQueryInfo(
-            typeList[type].map[0], 
-            typeList[type].key, 
-            0, 
-            name, 
-        )
-        shops = res.shops
-        users = res.users
+const getDataStatsDetail = async (type, name, column, start, end, stats, user) => {
+    let result = [], shops = [], users = []
+    switch(type) {
+        case 'total':
+            const permissions = await userOperationRepo.getPermission(user.id)
+            if (!(permissions?.length)) break
+            switch(permissions[0].type) {
+                case 1:
+                    for (let i = 0; i < permissions.length; i++) {
+                        if (permissions[i].type > 1) break
+                        let tmp = await divisionInfoRepo.getShopNameById(permissions[i].detail_id)
+                        if (tmp?.length) shops = shops.concat(tmp)
+                    }
+                    except = true
+                    break
+                case 2:
+                    for (let i = 0; i < permissions.length; i++) {
+                        if (permissions[i].type > 2) break
+                        let tmp = await projectInfoRepo.getShopNameById(permissions[i].detail_id)
+                        if (tmp?.length) shops = shops.concat(tmp)
+                    }
+                    except = true
+                    break
+                case 3:
+                    for (let i = 0; i < permissions.length; i++) {
+                        if (permissions[i].type > 3) break
+                        let tmp = await shopInfoRepo.getShopNameById(permissions[i].detail_id)
+                        if (tmp?.length) shops = shops.concat(tmp)
+                    }
+                    break
+                case 4:
+                    for (let i = 0; i < permissions.length; i++) {
+                        if (permissions[i].type > 4) break
+                        let tmp = await teamInfoRepo.getUserNameByTeamId(permissions[i].detail_id)
+                        if (tmp?.length) users = users.concat(tmp)
+                    }
+                    break                
+                case 5:
+                    for (let i = 0; i < permissions.length; i++) {
+                        let tmp = await userOperationRepo.getUserById(permissions[i].detail_id)
+                        if (tmp?.length) users = users.concat(tmp)
+                    }
+                    break
+                default:
+            }
+            break
+        case 'division':
+            shops = await divisionInfoRepo.getShopNameByName(name)
+            except = true
+            break
+        case 'project':
+            shops = await projectInfoRepo.getShopNameByName(name)
+            except = true
+            break
+        case 'shop':
+            shops = await shopInfoRepo.getShopNameByName(name)
+            break
+        case 'team':
+            users = await teamInfoRepo.getUserNameByTeamName(name)
+            break
+        case 'user':
+            users = [{nickname: name, name}]
+            break
+        default:
     }
+    let func = stats == 'verified' ? goodsSaleVerifiedRepo : goodsSaleInfoRepo
     if (shops?.length) {
         let shopNames = ''
         for (let i = 0; i < shops.length; i++) {
             shopNames = `${shopNames}${shops[i].shop_name}","`
         }
         shopNames = shopNames.substring(0, shopNames.length - 3)
-        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'real_sale_qty', 'refund_qty'].includes(column))
-            result = await goodsSaleInfoRepo.getDetailByShopNamesAndTme(shopNames, column, start, end)
+        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'order_num', 'refund_num'].includes(column))
+            result = await func.getDetailByShopNamesAndTme(shopNames, column, start, end)
         else if (column == 'operation_rate')
-            result = await goodsSaleInfoRepo.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'promotion_amount', column, start, end, 100)
+            result = await func.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'promotion_amount', column, start, end, 100)
         else if (column == 'roi')
-            result = await goodsSaleInfoRepo.getRateByShopNamesAndTme(shopNames, 'promotion_amount', 'sale_amount', column, start, end, 1)
+            result = await func.getRateByShopNamesAndTme(shopNames, 'promotion_amount', 'sale_amount', column, start, end, 1)
         else if (column == 'refund_rate')
-            result = await goodsSaleInfoRepo.getRateByShopNamesAndTme(shopNames, 'real_sale_qty', 'refund_qty', column, start, end, 100)
+            result = await func.getRateByShopNamesAndTme(shopNames, 'order_num', 'refund_num', column, start, end, 100)
         else if (column == 'profit_rate')
-            result = await goodsSaleInfoRepo.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'profit', column, start, end, 100)
+            result = await func.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'profit', column, start, end, 100)
         else if (['words_vol', 'words_market_vol'].includes(column))
             result = await goodsOtherInfoRepo.getDetailByShopNamesAndTme(shopNames, column, start, end)
         else if (column == 'market_rate')
             result = await goodsOtherInfoRepo.getRateByShopNamesAndTme(shopNames, 'words_market_vol', 'words_vol', column, start, end, 100)
-        else if (column == 'invoice')
-            result = await settlementRepo.getAmountDetail(start, end + ' 23:59:59', shopNames, null, except)
     }
     if (users?.length) {
         let userNames = '', shopNames = ''
@@ -205,22 +273,20 @@ const getDataStatsDetail = async (type, name, column, start, end) => {
         userNames = userNames.substring(0, userNames.length - 3)
         let links = await userOperationRepo.getLinkIdsByUserNames(userNames, shopNames)
         let linkIds = links.map((item) => item.goods_id).join('","')
-        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'real_sale_qty', 'refund_qty'].includes(column))
-            result = await goodsSaleInfoRepo.getDetailByLinkIdsAndTme(linkIds, column, start, end)
+        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'order_num', 'refund_num'].includes(column))
+            result = await func.getDetailByLinkIdsAndTme(linkIds, column, start, end)
         else if (column == 'operation_rate')
-            result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(linkIds, 'sale_amount', 'promotion_amount', column, start, end, 100)
+            result = await func.getRateByLinkIdsAndTme(linkIds, 'sale_amount', 'promotion_amount', column, start, end, 100)
         else if (column == 'roi')
-            result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(linkIds, 'promotion_amount', 'sale_amount', column, start, end, 1)
+            result = await func.getRateByLinkIdsAndTme(linkIds, 'promotion_amount', 'sale_amount', column, start, end, 1)
         else if (column == 'refund_rate')
-            result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(linkIds, 'real_sale_qty', 'refund_qty', column, start, end, 100)
+            result = await func.getRateByLinkIdsAndTme(linkIds, 'order_num', 'refund_num', column, start, end, 100)
         else if (column == 'profit_rate')
-            result = await goodsSaleInfoRepo.getRateByLinkIdsAndTme(linkIds, 'sale_amount', 'profit', column, start, end, 100)
+            result = await func.getRateByLinkIdsAndTme(linkIds, 'sale_amount', 'profit', column, start, end, 100)
         else if (['words_vol', 'words_market_vol'].includes(column))
             result = await goodsOtherInfoRepo.getDetailByLinkIdsAndTme(linkIds, column, start, end)
         else if (column == 'market_rate')
             result = await goodsOtherInfoRepo.getRateByLinkIdsAndTme(linkIds, 'words_market_vol', 'words_vol', column, start, end, 100)
-        else if (column == 'invoice')
-            result = await settlementRepo.getAmountDetail(start, end + ' 23:59:59', null, linkIds, except)
     }
     return result || []
 }
@@ -260,11 +326,11 @@ const getQueryInfo = async (type, oriType, id, oriName) => {
     return {users, shops, typeValue}
 }
 
-const queryShopInfo = async (shops, result, type, start, end) => {
-    let sale_amount = 0, invoice = 0, info, promotion_amount = 0, 
+const queryShopInfo = async (shops, result, type, start, end, func) => {
+    let sale_amount = 0, info, promotion_amount = 0, 
         express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
-        real_sale_qty = 0, refund_qty = 0, words_market_vol = 0, words_vol = 0
+        order_num = 0, refund_num = 0, words_market_vol = 0, words_vol = 0
     let shopName = [], j = -1, except = false
     if (typeList[type].key < 3) except = true
     for (let i = 0; i < shops.length; i++) {
@@ -281,8 +347,8 @@ const queryShopInfo = async (shops, result, type, start, end) => {
         }
     }
     for (let i = 0; i < shopName.length; i++) {
-        info = await goodsSaleInfoRepo.getPaymentByShopNamesAndTime(shopName[i].shop_name, start, end)
-        let children = await goodsSaleInfoRepo.getChildPaymentByShopNamesAndTime(shopName[i].shop_name, start, end)
+        info = await func.getPaymentByShopNamesAndTime(shopName[i].shop_name, start, end)
+        let children = await func.getChildPaymentByShopNamesAndTime(shopName[i].shop_name, start, end)
         if (info?.length) {
             sale_amount = parseFloat(info[0].sale_amount || 0).toFixed(2)
             promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)
@@ -294,8 +360,8 @@ const queryShopInfo = async (shops, result, type, start, end) => {
             profit = parseFloat(info[0].profit || 0).toFixed(2)
             profit_rate = parseFloat(info[0].profit_rate || 0).toFixed(2)
             operation_amount = parseFloat(info[0].operation_amount || 0).toFixed(2)
-            real_sale_qty = parseFloat(info[0].real_sale_qty || 0).toFixed(2)
-            refund_qty = parseFloat(info[0].refund_qty || 0).toFixed(2)
+            order_num = parseFloat(info[0].order_num || 0).toFixed(2)
+            refund_num = parseFloat(info[0].refund_num || 0).toFixed(2)
             words_market_vol = parseFloat(info[0].words_market_vol || 0).toFixed(2)
             words_vol = parseFloat(info[0].words_vol || 0).toFixed(2)
         }
@@ -306,10 +372,8 @@ const queryShopInfo = async (shops, result, type, start, end) => {
             else if (children[j].type == 1) children[j].name = '新品'
             else children[j].name = '老品'
         }
-        info = await settlementRepo.getAmount(start, end + ' 23:59:59', shopName[i].shop_name, null, except)
-        if (info?.length) invoice = parseFloat(info[0].amount || 0).toFixed(2)
         let warning = 0
-        if (shopName[i].has_promotion) warning = await goodsSaleInfoRepo.getNullPromotionByTime(shopName[i].shop_name, start, end)
+        if (shopName[i].has_promotion) warning = await func.getNullPromotionByTime(shopName[i].shop_name, start, end)
         result[type].data.push({
             id: (typeList[type].key + i) * 20,
             name: shopName[i].name,
@@ -322,10 +386,9 @@ const queryShopInfo = async (shops, result, type, start, end) => {
             express_fee,
             profit,
             profit_rate,
-            invoice,
             operation_amount,
-            real_sale_qty,
-            refund_qty,
+            order_num,
+            refund_num,
             words_market_vol,
             words_vol,
             children,
@@ -335,11 +398,11 @@ const queryShopInfo = async (shops, result, type, start, end) => {
     return result
 }
 
-const queryUserInfo = async (users, result, type, start, end) => {
-    let sale_amount = 0, invoice = 0, info, links, promotion_amount = 0, 
+const queryUserInfo = async (users, result, type, start, end, func) => {
+    let sale_amount = 0, info, links, promotion_amount = 0, 
         express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
-        real_sale_qty = 0, refund_qty = 0, words_market_vol = 0, words_vol = 0
+        order_num = 0, refund_num = 0, words_market_vol = 0, words_vol = 0
     let userName = [], j = -1, except = false
     if (typeList[type].key < 3) except = true
     for (let i = 0; i < users.length; i++) {
@@ -370,8 +433,8 @@ const queryUserInfo = async (users, result, type, start, end) => {
         }
         links = await userOperationRepo.getLinkIdsByUserNames(userName[i].nickname, userName[i].shopNames)
         let linkIds = links.map((item) => item.goods_id).join('","')
-        info = await goodsSaleInfoRepo.getPaymentByLinkIdsAndTime(linkIds, start, end)
-        let children = await goodsSaleInfoRepo.getChildPaymentByLinkIdsAndTime(linkIds, start, end)
+        info = await func.getPaymentByLinkIdsAndTime(linkIds, start, end)
+        let children = await func.getChildPaymentByLinkIdsAndTime(linkIds, start, end)
         if (info?.length) {
             sale_amount = parseFloat(info[0].sale_amount || 0).toFixed(2)
             promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)            
@@ -383,8 +446,8 @@ const queryUserInfo = async (users, result, type, start, end) => {
             profit = parseFloat(info[0].profit || 0).toFixed(2)
             profit_rate = parseFloat(info[0].profit_rate || 0).toFixed(2)
             operation_amount = parseFloat(info[0].operation_amount || 0).toFixed(2)
-            real_sale_qty = parseFloat(info[0].real_sale_qty || 0).toFixed(2)
-            refund_qty = parseFloat(info[0].refund_qty || 0).toFixed(2)
+            order_num = parseFloat(info[0].order_num || 0).toFixed(2)
+            refund_num = parseFloat(info[0].refund_num || 0).toFixed(2)
             words_market_vol = parseFloat(info[0].words_market_vol || 0).toFixed(2)
             words_vol = parseFloat(info[0].words_vol || 0).toFixed(2)
         }
@@ -395,8 +458,6 @@ const queryUserInfo = async (users, result, type, start, end) => {
             else if (children[j].type == 1) children[j].name = '新品'
             else children[j].name = '老品'
         }
-        info = await settlementRepo.getAmount(start, end + ' 23:59:59', null, linkIds, except)
-        if (info?.length) invoice = parseFloat(info[0].amount || 0).toFixed(2)
         result[type].data.push({
             id: (typeList[type].key + i) * 20,
             name: userName[i].name,
@@ -409,10 +470,9 @@ const queryUserInfo = async (users, result, type, start, end) => {
             express_fee,
             profit,
             profit_rate,
-            invoice,
             operation_amount,
-            real_sale_qty,
-            refund_qty,
+            order_num,
+            refund_num,
             words_market_vol,
             words_vol,
             children
@@ -454,8 +514,8 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             {title: '二级类目', field_id: 'second_category', type: 'input', show: true},
             {title: '坑产目标', field_id: 'pit_target', type: 'input', show: true},
             {
-                title: '发货金额', field_id: 'sale_amount', type: 'number', 
-                min: 0, max: 100, show: true
+                title: params.stats == 'verified' ? '核销金额' : '发货金额', 
+                field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
             }, {
                 title: '支付金额', field_id: 'pay_amount', type: 'number', 
                 min: 0, max: 100, show: true
@@ -493,7 +553,7 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: '推广费', field_id: 'promotion_amount', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '推广费环比', field_id: 'promotion_amount_qoq', type: 'number', 
+                title: '推广费环比(%)', field_id: 'promotion_amount_qoq', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: 'ROI', field_id: 'roi', type: 'number', 
@@ -508,9 +568,10 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: 'DSR评分', field_id: 'dsr', type: 'number', 
                 min: 0, max: 90, show: true
             }, {
-                title: '发货运费', field_id: 'express_fee', type: 'number', 
+                title: '运费', field_id: 'express_fee', type: 'number', 
                 min: 0, max: 100, show: true
-            }
+            }, 
+            {title: '操作', field_id: 'operate', show: true}
         ],
         data: {}
     }
@@ -551,29 +612,31 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
     params.search = JSON.parse(params.search)
     result.setting = []
     let setting = await userSettingRepo.getByType(id, 1)
-    if (setting?.length) result.setting = setting[0]
-    result.data = await goodsSaleInfoRepo.getData(startDate, endDate, params, shopNames, linkIds)
+    if (setting?.length) result.setting = JSON.parse(setting[0].attributes)
+    let func = params.stats == 'verified' ? goodsSaleVerifiedRepo : goodsSaleInfoRepo
+    result.data = await func.getData(startDate, endDate, params, shopNames, linkIds)
     return result
 }
 
-const getGoodsInfoDetail = async (column, goods_id, start, end) => {
+const getGoodsInfoDetail = async (column, goods_id, start, end, stats) => {
     let result = []
+    let func = stats == 'verified' ? goodsSaleVerifiedRepo : goodsSaleInfoRepo
     if (['sale_amount', 'cost_amount', 'operation_amount', 'promotion_amount', 'express_fee', 'profit'].includes(column))
-        result = await goodsSaleInfoRepo.getDataDetailByTime(column, goods_id, start, end)
+        result = await func.getDataDetailByTime(column, goods_id, start, end)
     else if (column == 'operation_rate')
-        result = await goodsSaleInfoRepo.getDataRateByTime('sale_amount', 'operation_amount', column, goods_id, start, end, 100)
+        result = await func.getDataRateByTime('sale_amount', 'operation_amount', column, goods_id, start, end, 100)
     else if (column == 'roi')
-        result = await goodsSaleInfoRepo.getDataRateByTime('promotion_amount', 'sale_amount', column, goods_id, start, end, 1)
+        result = await func.getDataRateByTime('promotion_amount', 'sale_amount', column, goods_id, start, end, 1)
     else if (column == 'refund_rate')
-        result = await goodsSaleInfoRepo.getDataRateByTime('real_sale_qty', 'refund_qty', column, goods_id, start, end, 100)
+        result = await func.getDataRateByTime('order_num', 'refund_num', column, goods_id, start, end, 100)
     else if (column == 'profit_rate')
-        result = await goodsSaleInfoRepo.getDataRateByTime('sale_amount', 'profit', column, goods_id, start, end, 100)
+        result = await func.getDataRateByTime('sale_amount', 'profit', column, goods_id, start, end, 100)
     else if (column == 'dsr')
         result = await goodsOtherInfoRepo.getDataDetailByTime(column, goods_id, start, end)
     else if (column == 'market_rate')
         result = await goodsOtherInfoRepo.getDataRateByTime('words_market_vol', 'words_vol', column, goods_id, start, end, 100)
     else if (column == 'gross_profit')
-        result = await goodsSaleInfoRepo.getDataGrossProfitByTime(goods_id, start, end)
+        result = await func.getDataGrossProfitByTime(goods_id, start, end)
     else if (['pay_amount', 'brushing_amount', 'brushing_qty', 'refund_amount', 'bill'].includes(column))
         result = await goodsPayInfoRepo.getDataDetailByTime(column, goods_id, start, end)
     else if (column == 'pay_express_fee')
@@ -587,12 +650,13 @@ const getGoodsInfoDetail = async (column, goods_id, start, end) => {
     else if (column == 'bill_info')
         result = await goodsBillRepo.getDataDetailByTime(goods_id, start, end)
     else if (column == 'promotion_amount_qoq')
-        result = await goodsSaleInfoRepo.getDataPromotionQOQByTime(goods_id, start, end)
+        result = await func.getDataPromotionQOQByTime(goods_id, start, end)
     return result
 }
 
-const getGoodsInfoSubDetail = async (goods_id, start, end) => {
-    let result = await goodsSaleInfoRepo.getDataGrossProfitDetailByTime(goods_id, start, end)
+const getGoodsInfoSubDetail = async (goods_id, start, end, stats) => {
+    let func = stats == 'verified' ? goodsSaleVerifiedRepo : goodsSaleInfoRepo
+    let result = await func.getDataGrossProfitDetailByTime(goods_id, start, end)
     return result
 }
 
@@ -647,7 +711,6 @@ const importGoodsInfo = async (rows, time) => {
     let amount = 0, saveAmount = 0
     for (let i = 1; i < rows.length; i++) {
         amount += rows[i].getCell(sale_amount_row).value
-        if (!rows[i].getCell(1).value) continue
         let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
             rows[i].getCell(shop_name_row).value.trim() : 
             rows[i].getCell(shop_name_row).value
@@ -700,6 +763,68 @@ const importGoodsInfo = async (rows, time) => {
         else await goodsSaleInfoRepo.deleteByDate(time, 'goods_id')
         result = await goodsSaleInfoRepo.batchInsert(count, data)
     }
+    if (result) redisRepo.batchDelete(`${redisKeys.operation}:info:*`)
+    return result
+}
+
+const importGoodsOrderStat = async (rows, time) => {
+    let dataMap = {}, dataMap2 = {}, result = false
+    let columns = rows[0].values,
+        goods_id_row = null, 
+        sku_code_row = null,
+        shop_name_row = null, 
+        refund_order_row = null, 
+        date = time
+    for (let i = 1; i <= columns.length; i++) {
+        if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
+        if (columns[i] == '商品编码') {sku_code_row = i; continue}
+        if (columns[i] == '售后单号') {refund_order_row = i; continue}
+        if (columns[i] == '店铺名称') {shop_name_row = i; continue}
+    }
+    for (let i = 1; i < rows.length; i++) {
+        let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
+            rows[i].getCell(shop_name_row).value.trim() : 
+            rows[i].getCell(shop_name_row).value
+        if (shop_name == '京东自营旗舰店') continue
+        let goods_id = typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
+            rows[i].getCell(goods_id_row).value.trim() : 
+            rows[i].getCell(goods_id_row).value
+        let sku_code = typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
+            rows[i].getCell(sku_code_row).value.trim() : 
+            rows[i].getCell(sku_code_row).value
+        let refund_order = typeof(rows[i].getCell(refund_order_row).value) == 'string' ? 
+            rows[i].getCell(refund_order_row).value.trim() : 
+            rows[i].getCell(refund_order_row).value
+        if (!goods_id || (typeof(goods_id) == 'string' && goods_id.length == 0)) {
+            if (dataMap2[sku_code] == undefined) 
+                dataMap2[sku_code] = {shop_name, order_num: 0, refund_num: 0}
+            if (!refund_order) dataMap2[sku_code].order_num += 1
+            else dataMap2[sku_code].refund_num += 1
+        } else if (dataMap[goods_id] == undefined) {
+            dataMap[goods_id] = {}
+            if (dataMap[goods_id][sku_code] == undefined) 
+                dataMap[goods_id][sku_code] = {shop_name, order_num: 0, refund_num: 0}
+            if (!refund_order) dataMap[goods_id][sku_code].order_num += 1
+            else dataMap[goods_id][sku_code].refund_num += 1
+        } else {
+            if (dataMap[goods_id][sku_code] == undefined) 
+                dataMap[goods_id][sku_code] = {shop_name, order_num: 0, refund_num: 0}
+            if (!refund_order) dataMap[goods_id][sku_code].order_num += 1
+            else dataMap[goods_id][sku_code].refund_num += 1
+        }
+    }
+    logger.info(`[发货订单数据导入]：时间:${time}`)
+    for(let id in dataMap) {
+        for(let code in dataMap[id]) {
+            result = await goodsSaleInfoRepo.updateOrder({
+                date, goods_id: id, sku_code: code, ...dataMap[id][code]})
+        }
+    }
+    for (let code in dataMap2) {
+        result = await goodsSaleInfoRepo.updateOrder({
+            date, goods_id: null, sku_code: code, ...dataMap2[code]})
+    }
+    if (result) redisRepo.batchDelete(`${redisKeys.operation}:info:*`)
     return result
 }
 
@@ -768,6 +893,7 @@ const importGoodsKeyWords = async (rows, time) => {
             result = await goodsOtherInfoRepo.batchInsert(count, data)
         }
     }
+    if (result) redisRepo.batchDelete(`${redisKeys.operation}:*`)
     return result
 }
 
@@ -819,6 +945,7 @@ const importGoodsDSR = async (rows, time) => {
             result = await goodsOtherInfoRepo.batchInsert(count, data)
         }
     }
+    if (result) redisRepo.batchDelete(`${redisKeys.operation}:*`)
     return result
 }
 
@@ -832,8 +959,8 @@ const getGoodsLineInfo = async (startDate, endDate, params, id) => {
             {title: '三级类目', field_id: 'level_3_category', type: 'input', show: true},
             {title: '产品线简称', field_id: 'brief_product_line', type: 'input', show: true},
             {
-                title: '发货金额', field_id: 'sale_amount', type: 'number', 
-                min: 0, max: 100, show: true
+                title: params.stats == 'verified' ? '核销金额' : '发货金额', 
+                field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
             }, {
                 title: '推广费', field_id: 'promotion_amount', type: 'number', 
                 min: 0, max: 100, show: true
@@ -911,35 +1038,96 @@ const getGoodsLineInfo = async (startDate, endDate, params, id) => {
     if (userInfo?.length) userNames = userInfo.map((item) => item.nickname).join('","')
         
     params.search = JSON.parse(params.search)
-    result.data = await userOperationRepo.getGoodsLine(startDate, endDate, params, shopNames, userNames)
+    result.data = await userOperationRepo.getGoodsLine(startDate, endDate, params, shopNames, userNames, params.stats)
     return result
 }
 
 const getWorkStats = async (user, start, end, params) => {
-    let result = []
-    for (let i = 0; i < workItemList.length; i++) {
-        let item = JSON.parse(JSON.stringify(statItem))
-        item.actionName = workItemList[i].name
-        for (let j = 0; j < workTypeList.length; j++) {
-            let child = JSON.parse(JSON.stringify(statItem))
-            child.actionName = workTypeList[j]
-            item.children.push(child)
+    let result = [], childInfo = []
+    params.user_type = 1
+    let permissions = [], project_name = '', project_info
+    params.userNames = []
+    if (params.type) {
+        switch (parseInt(params.type)) {
+            case typeList.division.key:
+                permissions = await divisionInfoRepo.getProjectByDivisionName(params.name)
+                break
+            case typeList.project.key:
+                permissions = await projectInfoRepo.getTeamByProjectName(params.name)
+                if (!permissions?.length)
+                    permissions = await projectInfoRepo.getUserByProjectName(params.name)
+                break
+            case typeList.team.key:
+                permissions = await teamInfoRepo.getUserByTeamName(params.name)
+                break
+            case typeList.user.key:
+                permissions = await userOperationRepo.getUserByName(params.name)
+                break
+            default:
         }
-        result.push(item)
+    } else {
+        permissions = await userOperationRepo.getPermissionLimit(user.id)
     }
-    params.type = 0
-    const permissions = await userOperationRepo.getPermissionLimit(user.id)
     if (permissions.length == 0) return result
-    if (permissions[0].type != typeList.division.key) {
-        params.name = user.nickname
-        params.type = 1
+    for (let i = 0; i < permissions.length; i++) {
+        if (i > 0 && permissions[i].type != permissions[i-1].type) break
+        let userList = []
+        switch (permissions[i].type) {
+            case typeList.division.key:
+                userList = await divisionInfoRepo.getUsersById(permissions[i].detail_id)
+                break
+            case typeList.project.key:
+                userList = await projectInfoRepo.getUsersById(permissions[i].detail_id) 
+                project_name = params.name
+                break
+            case typeList.team.key:
+                userList = await teamInfoRepo.getUsersById(permissions[i].detail_id)
+                project_info = await teamInfoRepo.getProjectById(permissions[i].detail_id)
+                if (project_info?.length) project_name = project_info[0].project_name
+                break
+            case typeList.user.key:
+                userList = await userOperationRepo.getUserById(permissions[i].detail_id)
+                project_info = await userOperationRepo.getProjectById(permissions[i].detail_id)
+                if (project_info?.length) project_name = project_info[0].project_name
+                break
+            default:
+        }
+        if (userList?.length) {
+            let userNames = ''
+            for (let j = 0; j < userList.length; j++) {
+                userNames = `${userNames}"${userList[j].nickname}",`
+            }
+            userNames = userNames.substring(0, userNames.length - 1)
+            params.userNames.push(userNames)
+            let item = JSON.parse(JSON.stringify(statItem))
+            item.actionCode = permissions[i].type
+            item.actionName = permissions[i].name
+            for (let j = 0; j < workTypeList.length; j++) {
+                let child = JSON.parse(JSON.stringify(statItem))
+                child.actionName = workTypeList[j]
+                item.children.push(child)
+            }
+            childInfo.push(item)
+        }
+    }
+    if (params.userNames.length == 0) return result
+    for (let i = 0; i < workItemList.length; i++) {
+        let tmp = JSON.parse(JSON.stringify(statItem))
+        tmp.children = JSON.parse(JSON.stringify(childInfo))
+        result.push(tmp)
     }
     let info = await newFormsRepo.getOperationWork(start, end, params)
     for (let i = 0; i < info.length; i++) {
-        result[workItemMap[info[i].operate_type]].children[info[i].type].sum += info[i].count
         result[workItemMap[info[i].operate_type]]
+            .children[info[i].user_type].sum += info[i].count
+        result[workItemMap[info[i].operate_type]]
+            .children[info[i].user_type]
+            .children[info[i].type].sum += info[i].count
+        result[workItemMap[info[i].operate_type]]
+            .children[info[i].user_type]
             .children[info[i].type]
             .actionCode = `${result[workItemMap[info[i].operate_type]]
+                .children[info[i].user_type]
                 .children[info[i].type]
                 .actionCode
             }${info[i].form_id},`
@@ -948,6 +1136,7 @@ const getWorkStats = async (user, start, end, params) => {
         item.actionCode = info[i].form_id
         item.sum = info[i].count
         result[workItemMap[info[i].operate_type]]
+            .children[info[i].user_type]
             .children[info[i].type]
             .children.push(item)
     }
@@ -1013,13 +1202,13 @@ const importGoodsPayInfo = async (rows, time) => {
             continue
         }
         if ((columns[i].indexOf('6003') == 0 && 
-                columns[i].indexOf('6003012') == -1) || 
-            columns[i].indexOf('6008') == 0) {
+                columns[i].indexOf('6003012') == -1)) {
             promotion_row_array.push(i)
             continue
         }
         if (columns[i].indexOf('6001') == 0 || 
-            columns[i].indexOf('6003012') == 0) {
+            columns[i].indexOf('6003012') == 0 || 
+            columns[i].indexOf('6008') == 0) {
             bill_row_array.push(i)
             continue
         }
@@ -1494,6 +1683,13 @@ const importGoodsBrushingInfo = async (rows, time) => {
     }
     for (let index in goods_id_info) {
         result = await goodsPayInfoRepo.updateBrushingQty(index, goods_id_info[index], date)
+        if (!result) {
+            result = await goodsPayInfoRepo.insertBrushingInfo([
+                index,
+                date,
+                goods_id_info[index]
+            ])
+        }
         count += 1
     }
     logger.info(`[刷单数据导入]：时间:${date}, 总计数量:${count}`)
@@ -1562,16 +1758,18 @@ const importGoodsOrderInfo = async (rows, time) => {
         qty_row = null,
         sale_amount_row = null,
         express_fee_row = null,
+        wms_row = null,
         date = time
     for (let i = 1; i < columns.length; i++) {
-        if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
-        if (columns[i] == '店铺商品编码') {sku_id_row = i; continue}
+        if (columns[i] == '实发数量') {qty_row = i; continue}
         if (columns[i] == '店铺名称') {shop_name_row = i; continue}
         if (columns[i] == '商品编码') {sku_code_row = i; continue}
+        if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
+        if (columns[i] == '店铺商品编码') {sku_id_row = i; continue}
+        if (columns[i] == '商家运费') {express_fee_row = i; continue}
         if (columns[i] == '实发金额') {sale_amount_row = i; continue}
         if (columns[i] == '成交成本') {cost_amount_row = i; continue}
-        if (columns[i] == '实发数量') {qty_row = i; continue}
-        if (columns[i] == '商家运费') {express_fee_row = i; continue}
+        if (columns[i] == '发货仓库') {wms_row = i; continue}
     }
     for (let i = 1; i < rows.length; i++) {
         if (!rows[i].getCell(1).value) continue
@@ -1592,7 +1790,11 @@ const importGoodsOrderInfo = async (rows, time) => {
         let cost_amount = rows[i].getCell(cost_amount_row).value
         let qty = rows[i].getCell(qty_row).value
         let sale_amount = rows[i].getCell(sale_amount_row).value
-        let express_fee = (rows[i].getCell(express_fee_row).value || 2.9) + 1
+        let wms = typeof(rows[i].getCell(wms_row).value) == 'string' ? 
+            rows[i].getCell(wms_row).value.trim() :
+            rows[i].getCell(wms_row).value
+        let express_fee = (wms == '北京超速树懒科技有限公司') ?  
+            (rows[i].getCell(express_fee_row).value || 2.9) + 1 : 0
         if (!sale_amount) continue
         if (qty != 1) continue
         if (!tmp[goods_id]) tmp[goods_id] = {}
@@ -1666,11 +1868,215 @@ const setPannelSetting = async (user_id, type, attribute) => {
     return result
 }
 
+const getNewOnSaleInfo = async (sale_date, start, end, limit, offset) => {
+    const result = await goodsSaleInfoRepo.getNewOnSaleInfo(sale_date, start, end, limit, offset)
+    return result
+}
+
+const getOptimizeInfo = async (start, end, limit, offset) => {
+    let result = await newFormsRepo.getOperationOptimizeInfo(start, end, limit, offset)
+    for (let i = 0; i < result.data.length; i++) {
+        result.data[i].goods_id = result.data[i].goods_id.replace(/\"/g, '')
+        let optimize_info = result.data[i].optimize_info.replace(/[\[\]]/g, '')
+        result.data[i].optimize_info = result.data[i].optimize_info.replace(/[\[\]\"]/g, '')
+        let optimize = await goodsOptimizeSetting.getByTitle(optimize_info)
+        result.data[i].success_rate = 0
+        let total = result.data[i].children.length, failed = 0
+        if (optimize?.length)
+            for (let j = 0; j < result.data[i].children.length; j++) {
+                if (j == 0 || 
+                    result.data[i].children[j].time != result.data[i].children[j-1].time) {
+                    let info = await goodsSaleInfoRepo.getOptimizeResult(
+                        result.data[i].goods_id,
+                        result.data[i].children[j].time,
+                        optimize
+                    )
+                    if (info?.length) {
+                        failed += info[0].count
+                    }
+                }
+            }
+        if (total > 0) result.data[i].success_rate = ((total - failed) / total * 100).toFixed(2)
+    }
+    return result
+}
+
+const checkOperationOptimize = async () => {
+    let optimize = await goodsOptimizeSetting.getInfo()
+    let goods_info = await userOperationRepo.getLinkIds()
+    for (let i = 0; i < goods_info.length; i++) {
+        for (let j = 0; j < optimize.length; j++) {
+            let info = await goodsSaleInfoRepo.getOptimizeResult(
+                goods_info[i].goods_id,
+                null,
+                [optimize[j]]
+            )
+            if (info?.length && info[0].count) {
+                info = await newFormsRepo.checkOptimize(goods_info[i].goods_id, optimize[j].title, optimize[j].days)
+                if (!info?.length) {
+                    let params = {}
+                    params[optimizeFieldMap.name] = goods_info[i].brief_name
+                    params[optimizeFieldMap.operator] = [goods_info[i].dingding_user_id]
+                    params[optimizeFieldMap.goods_id] = goods_info[i].goods_id
+                    params[optimizeFieldMap.platform] = platformMap[goods_info[i].platform]
+                    params[optimizeFieldMap.type] = optimize[j].optimize_type
+                    params[optimizeFieldMap.content] = [optimize[j].title]
+                    // fs.writeFileSync('./public/info.json', JSON.stringify(params) + '\n', {flag: 'a'})
+                    await createProcess(
+                        optimizeFlowUUid,
+                        optimizeUser,
+                        null,
+                        JSON.stringify(params)
+                    )
+                }
+            }
+        }
+    }
+    return true
+}
+
+const importGoodsVerified = async (rows, time) => {
+    let count = 0, data = [], result = false
+    let columns = rows[0].values,
+        goods_id_row = null, 
+        sku_code_row = null,
+        shop_name_row = null, 
+        date = time, 
+        sale_amount_row = null, 
+        real_sale_amount_row = null,
+        cost_amount_row = null, 
+        gross_profit_row = null, 
+        profit_row = null, 
+        promotion_amount_row = null, 
+        express_fee_row = null,
+        operation_amount_row = null,
+        real_sale_qty_row = null,
+        refund_qty_row = null,
+        packing_fee_row = null,
+        bill_amount_row = null
+    for (let i = 1; i <= columns.length; i++) {
+        if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
+        if (columns[i] == '商品编码') {sku_code_row = i; continue}
+        if (columns[i] == '店铺名称') {shop_name_row = i; continue}
+        if (columns[i] == '利润-销售金额(扣退)') {sale_amount_row = i; continue}
+        if (columns[i] == '利润-销售成本(扣退)') {cost_amount_row = i; continue}
+        if (columns[i] == '利润-毛利') {gross_profit_row = i; continue}
+        if (columns[i] == '利润-利润') {profit_row = i; continue}
+        if (columns[i] == '利润-其中：推广费') {promotion_amount_row = i; continue}
+        if (columns[i] == '订单费用-快递费（自动匹配）') {express_fee_row = i; continue}
+        if (columns[i] == '利润-费用') {operation_amount_row = i; continue}
+        if (columns[i] == '商品数据-商品数量') {real_sale_qty_row = i; continue}
+        if (columns[i] == '退款合计-退款数量合计') {refund_qty_row = i; continue}
+        if (columns[i] == '商品数据-实发金额') {real_sale_amount_row = i; continue}
+        if (columns[i] == '订单费用-包材费（自动匹配）') {packing_fee_row = i; continue}
+        if (columns[i] == '订单费用-账单费用（自动匹配）') {bill_amount_row = i; continue}
+    }
+    let amount = 0, saveAmount = 0
+    for (let i = 1; i < rows.length; i++) {
+        amount += rows[i].getCell(sale_amount_row).value
+        let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
+            rows[i].getCell(shop_name_row).value.trim() : 
+            rows[i].getCell(shop_name_row).value
+        data.push(
+            goods_id_row ? (typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
+                rows[i].getCell(goods_id_row).value.trim() : 
+                rows[i].getCell(goods_id_row).value) : null,
+            sku_code_row ? (typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
+                rows[i].getCell(sku_code_row).value.trim() : 
+                rows[i].getCell(sku_code_row).value) : null,
+            shop_name,
+            date,
+            rows[i].getCell(sale_amount_row).value,
+            rows[i].getCell(cost_amount_row).value,
+            rows[i].getCell(gross_profit_row).value,
+            rows[i].getCell(profit_row).value,
+            rows[i].getCell(promotion_amount_row).value,
+            rows[i].getCell(express_fee_row).value,
+            rows[i].getCell(operation_amount_row).value,
+            rows[i].getCell(real_sale_qty_row).value,
+            rows[i].getCell(refund_qty_row).value,
+            rows[i].getCell(real_sale_amount_row).value,
+            rows[i].getCell(packing_fee_row).value,
+            rows[i].getCell(bill_amount_row).value
+        )
+        count += 1
+        saveAmount += rows[i].getCell(sale_amount_row).value
+    }
+    logger.info(`[核销数据导入]：时间:${time}, 总计金额:${amount}, 存储金额:${saveAmount}`)
+    if (count > 0) {
+        await goodsSaleVerifiedRepo.deleteByDate(time)
+        result = await goodsSaleVerifiedRepo.batchInsert(count, data)
+    }
+    if (result) redisRepo.batchDelete(`${redisKeys.operation}:verified:*`)
+    return result
+}
+
+const importGoodsOrderVerifiedStat = async (rows, time) => {
+    let dataMap = {}, dataMap2 = {}, result = false
+    let columns = rows[0].values,
+        goods_id_row = null, 
+        sku_code_row = null,
+        shop_name_row = null, 
+        refund_order_row = null, 
+        date = time
+    for (let i = 1; i <= columns.length; i++) {
+        if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
+        if (columns[i] == '商品编码') {sku_code_row = i; continue}
+        if (columns[i] == '售后单号') {refund_order_row = i; continue}
+        if (columns[i] == '店铺名称') {shop_name_row = i; continue}
+    }
+    for (let i = 1; i < rows.length; i++) {
+        let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
+            rows[i].getCell(shop_name_row).value.trim() : 
+            rows[i].getCell(shop_name_row).value
+        let goods_id = typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
+            rows[i].getCell(goods_id_row).value.trim() : 
+            rows[i].getCell(goods_id_row).value
+        let sku_code = typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
+            rows[i].getCell(sku_code_row).value.trim() : 
+            rows[i].getCell(sku_code_row).value
+        let refund_order = typeof(rows[i].getCell(refund_order_row).value) == 'string' ? 
+            rows[i].getCell(refund_order_row).value.trim() : 
+            rows[i].getCell(refund_order_row).value
+        if (!goods_id || (typeof(goods_id) == 'string' && goods_id.length == 0)) {
+            if (dataMap2[sku_code] == undefined) 
+                dataMap2[sku_code] = {shop_name, order_num: 0, refund_num: 0}
+            if (!refund_order) dataMap2[sku_code].order_num += 1
+            else dataMap2[sku_code].refund_num += 1
+        } else if (dataMap[goods_id] == undefined) {
+            dataMap[goods_id] = {}
+            if (dataMap[goods_id][sku_code] == undefined) 
+                dataMap[goods_id][sku_code] = {shop_name, order_num: 0, refund_num: 0}
+            if (!refund_order) dataMap[goods_id][sku_code].order_num += 1
+            else dataMap[goods_id][sku_code].refund_num += 1
+        } else {
+            if (dataMap[goods_id][sku_code] == undefined) 
+                dataMap[goods_id][sku_code] = {shop_name, order_num: 0, refund_num: 0}
+            if (!refund_order) dataMap[goods_id][sku_code].order_num += 1
+            else dataMap[goods_id][sku_code].refund_num += 1
+        }
+    }
+    logger.info(`[核销订单数据导入]：时间:${time}`)
+    for(let id in dataMap) {
+        for(let code in dataMap[id]) {
+            result = await goodsSaleVerifiedRepo.updateOrder({
+                date, goods_id: id, sku_code: code, ...dataMap[id][code]})
+        }
+    }
+    for (let code in dataMap2) {
+        result = await goodsSaleVerifiedRepo.updateOrder({
+            date, goods_id: null, sku_code: code, ...dataMap2[code]})
+    }
+    if (result) redisRepo.batchDelete(`${redisKeys.operation}:verified:*`)
+    return result
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
     getGoodsInfo,
     importGoodsInfo,
+    importGoodsOrderStat,
     importGoodsKeyWords,
     importGoodsDSR,
     getGoodsLineInfo,
@@ -1686,5 +2092,10 @@ module.exports = {
     importJDZYPromotionInfo,
     importGoodsPDDInfo,
     importGoodsOrderInfo,
-    setPannelSetting
+    setPannelSetting,
+    getNewOnSaleInfo,
+    getOptimizeInfo,
+    checkOperationOptimize,
+    importGoodsVerified,
+    importGoodsOrderVerifiedStat
 }
