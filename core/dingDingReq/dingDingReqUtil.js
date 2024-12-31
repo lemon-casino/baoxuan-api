@@ -61,7 +61,7 @@ const config = async (url) => {
         clientId: dingDingConfig.appKey,
         corpId: dingDingConfig.corpId,
         timeStamp: time,
-        nonceStr: time,
+        nonceStr: time + '',
         signature
     }
 }
