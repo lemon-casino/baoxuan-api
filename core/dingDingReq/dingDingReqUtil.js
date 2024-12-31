@@ -65,7 +65,7 @@ const config = async (url) => {
     let nonceStr = getRandomStr(16)
     let { accessToken } = await corpAccessToken()
     let jsapiTicket = await getJsapiTickets(accessToken)
-    let signature = sign(jsapiTicket, nonceStr, time, url)
+    let signature = sign(jsapiTicket.jsapiTicket, nonceStr, time, url)
     return {
         agentId: dingDingConfig.agentId,
         clientId: dingDingConfig.appKey,
