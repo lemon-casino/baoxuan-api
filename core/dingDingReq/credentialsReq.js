@@ -37,6 +37,17 @@ const corpAccessToken = async () => {
 }
 
 /**
+ * 钉钉内部登录-jsapi-ticket
+ */
+const getJsapiTickets = async (access_token) => {
+    const url = "https://api.dingtalk.com/v1.0/oauth2/jsapiTickets"
+    const headers = {
+        'x-acs-dingtalk-access-token': access_token,
+    }
+    return await httpUtil.post(url, {}, headers)
+}
+
+/**
  * 获取企业内部应用的 access_token，用于访问应用中开通的接口
  *
  * @param appKey
@@ -55,6 +66,7 @@ const getDingDingAccessToken = async () => {
 module.exports = {
     corpAccessToken,
     getDingDingAccessToken,
-    getUserDingDingAccessToken
+    getUserDingDingAccessToken,
+    getJsapiTickets
 }
 

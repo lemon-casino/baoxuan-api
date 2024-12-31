@@ -4,6 +4,7 @@ const UsersModel = require("../model/users");
 const {generateToken} = require("../utils/token");
 const tokenConfig = require("../config/index").tokenConfig;
 const biResponse = require("../utils/biResponse")
+const { config: dingdingConfig } = require('../core/dingDingReq/dingDingReqUtil')
 
 exports.getddUserList = async (req, res) => {
     // 钉钉授权流程
@@ -157,3 +158,13 @@ exports.getDpInfo = async (req, res) => {
         console.log(e);
     }
 };
+
+
+exports.getDDConfig = async (req, res) => {
+    try {
+        let conf = await dingdingConfig(req.query.url);
+        return res.send(conf);
+    } catch (e) {
+        console.log(e);
+    }
+}
