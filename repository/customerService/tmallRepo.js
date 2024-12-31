@@ -168,7 +168,7 @@ tmallRepo.updateTmallPs = async (info) => {
             score_rate = ?,
             slow_response_num = ? 
         WHERE start_time = ? AND end_time = ? AND servicer = ?`
-    const result = await query(sql, info) 
+    const result = await query(sql, info)
     return result
 }
 

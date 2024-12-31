@@ -137,7 +137,6 @@ const importTmallAsData = async (req, res, next) => {
                 const jsonData = xlsx.utils.sheet_to_json(worksheet)
                 if (file.originalFilename.indexOf('有延迟') != -1) {
                     for (const row of jsonData){
-                        console.log(jsonData)
                         if(row['旺旺']!='汇总'&&row['旺旺']!='均值'){
                             const response_rate=row['回复率'] != null ? Number((row['回复率']*100).toFixed(2)) : null
                             const response_average=row['平均响应(秒)'] != null ? Number(row['平均响应(秒)']) : null
@@ -158,7 +157,6 @@ const importTmallAsData = async (req, res, next) => {
                             const servicer=row['旺旺']
                             const info=[response_rate,response_average,onetime_rate,transfer_num,reception_num,satisfaction_rate,score
                                 ,service_num,score_rate,display_rate,score_num,dissatisfied_num,very_dissatisfied_num,work_days,start_time1,end_time1,servicer]
-                            console.log(info)
                             insertInfo = await tmallService.updateTmallAs(info)
                         }
                     }
@@ -341,10 +339,10 @@ const importTmallPsData = async (req, res, next) => {
             fs.rename(file.filepath, newPath, (err) => {  
                 if (err) throw err
             })
-            const workbook = new ExcelJS.Workbook()
-            let readRes = workbook.xlsx.readFile(newPath)
+            // const workbook = new ExcelJS.Workbook()
+            // let readRes = await workbook.xlsx.readFile(newPath)
             const workbook1 = xlsx.readFile(newPath)
-            if (readRes) {
+            if (workbook1) {
                 const sheet_name_list = workbook1.SheetNames;
                 const worksheet = workbook1.Sheets[sheet_name_list[0]]
                 const date = file.originalFilename.split('.')[0].split('_')
@@ -379,7 +377,6 @@ const importTmallPsData = async (req, res, next) => {
                             const info=[response_average,success_rate,satisfaction_rate,amount,reception_num,qa_rate,
                                 work_days,price,out_num,unresponse_num,ave_satisfied_num,dissatisfied_num,very_dissatisfied_num,servicer_group,
                                 score_rate,slow_response_num,start_time1,end_time1,servicer]
-                            console.log(info)
                             insertInfo = await tmallService.updateTmallPs(info)
                         }
                         
