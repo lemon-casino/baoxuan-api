@@ -4,6 +4,7 @@ const dateUtil = require("@/utils/dateUtil");
 const redisUtil = require("@/utils/redisUtil");
 const {redisKeys} = require("@/const/redisConst");
 const orderService = require("../service/jst/orderService")
+const operationService = require("../service/operationService")
 const moment = require('moment')
 
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20(貌似不准确)，涉及的宜搭接口暂时没有qps和总调用量的限制
@@ -13,7 +14,7 @@ let syncWorkingDayCron = "0 5 9 * * ?"
 let syncTodayRunningAndFinishedFlowsCron = "0 0/20 7-21 * * ?"
 let syncMissingCompletedFlowsCron = "0 30 23 * * ?"
 
-let syncDepartmentCron = "0 0 5 * * ?"
+let syncDepartmentCron = "0 20 8 * * ?"
 // 如果有新人入职一般也是上午
 let syncDepartmentWithUserCron = "0 30 8 * * ?"
 let syncUserWithDepartmentCron = "0 0 8 * * ?"
@@ -40,14 +41,21 @@ if (process.env.NODE_ENV === "dev") {
     syncUserLoginCron = "40 20 23 * * ?"
     syncResignEmployeeCron = "35 5 17 * * ?"
 }
+let jstOrderCron = "0 0 7 * * ?"
 
 //拉取聚水潭订单数据
-let jstOrderCron = "0 0 7 * * ?"
 schedule.scheduleJob(jstOrderCron, async function () {
     if (process.env.NODE_ENV === "prod") {
         let start = moment().subtract(1, 'day').format("YYYY-MM-DD")
         let end = moment().format("YYYY-MM-DD")
         await orderService.syncOrder(start, end)
+    }
+})
+
+//检查运营链接优化
+schedule.scheduleJob(tmallLinkData, async function () {
+    if (process.env.NODE_ENV === "prod") {
+        await operationService.checkOperationOptimize()
     }
 })
 

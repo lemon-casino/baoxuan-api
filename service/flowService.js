@@ -33,6 +33,9 @@ const { designerTags, nameFilter, tableHeaderExtra } = require("../const/newForm
 const userOperationRepo = require("../repository/operation/userOperationRepo")
 const userFlowSettingRepo = require("../repository/userFlowSettingRepo")
 const { typeList, operationSelectionFlow, operationSelectionFlowNode, analysisFieldMap, analysisFlowUUid, analysisLinkPrevious } = require("../const/operationConst")
+const divisionInfoRepo = require('../repository/operation/divisionInfoRepo')
+const projectInfoRepo = require('../repository/operation/projectInfoRepo')
+const teamInfoRepo = require('../repository/operation/teamInfoRepo')
 const moment = require('moment')
 const { createProcess } =  require('./dingDingService')
 
@@ -1285,6 +1288,7 @@ const getFlowSplitFormfieldKeyAndField = async (formId, fieldKey, selectField, f
 const getFlows = async (params, id) => {
     let result, setting = []
     if (params.tag) result = await newFormsRepo.getFlowInstances(params)
+    if (params.dept) result = await newFormsRepo.getDevelopmentFlowInstances(params)
     else result = await newFormsRepo.getOperationFlowInstances(params)
     if (result?.length) {
         for (let index = 0; index < result.length; index++) {
@@ -1353,13 +1357,71 @@ const getFlowsProcesses = async (params, offset, limit) => {
 }
 
 const getOperationProcesses = async (user, params, offset, limit) => {
-    let permissions = await userOperationRepo.getPermission(user.id)
-    params.type = 0
-    if (permissions[0].type != typeList.division.key) {
-        params.type = 1
-        params.nickname = params.nickname
+    params.user_type = 1
+    let permissions = []
+    if (params.type) {
+        switch (parseInt(params.type)) {
+            case typeList.division.key:
+                permissions = await divisionInfoRepo.getProjectByDivisionName(params.name)
+                break
+            case typeList.project.key:
+                permissions = await projectInfoRepo.getTeamByProjectName(params.name)
+                if (!permissions?.length)
+                    permissions = await projectInfoRepo.getUserByProjectName(params.name)
+                break
+            case typeList.team.key:
+                permissions = await teamInfoRepo.getUserByTeamName(params.name)
+                break
+            case typeList.user.key:
+                permissions = await userOperationRepo.getUserByName(params.name)
+                break
+            default:
+        }
+    } else {
+        permissions = await userOperationRepo.getPermissionLimit(user.id)
     }
+    if (permissions.length == 0) return result
+    let users = [] 
+    for (let i = 0; i < permissions.length; i++) {
+        if (i > 0 && permissions[i].type != permissions[i-1].type) break
+        let userList = []
+        switch (permissions[i].type) {
+            case typeList.division.key:
+                userList = await divisionInfoRepo.getUsersById(permissions[i].detail_id)
+                break
+            case typeList.project.key:
+                userList = await projectInfoRepo.getUsersById(permissions[i].detail_id) 
+                break
+            case typeList.team.key:
+                userList = await teamInfoRepo.getUsersById(permissions[i].detail_id)
+                break
+            case typeList.user.key:
+                userList = await userOperationRepo.getUserById(permissions[i].detail_id)
+                break
+            default:
+        }
+        if (userList?.length) users = users.concat(userList)
+    }
+    params.userNames = ''
+    for (let i = 0; i < users.length; i++) {
+        params.userNames = `${params.userNames}"${users[i].nickname}",`
+    }
+    if (params.userNames?.length > 0) 
+        params.userNames = params.userNames.substring(0, params.userNames.length - 1)
     let result = await newFormsRepo.getOperationProcessInstances(params, offset, limit)
+    return result
+}
+
+const getDevelopmentProcesses = async (params, offset, limit) => {
+    let users = await userRepo.getUserByDeptName('产品开发部')
+    let userNames = ''
+    for (let i = 0; i < users.length; i++) {
+        if (users[i].nickname != '崔竹') {
+            userNames = `${userNames}"${users[i].nickname}",`
+        }
+    }
+    if (userNames?.length) userNames = userNames.substring(0, userNames.length - 1)
+    let result = await newFormsRepo.getDevelopmentProcessInstances(userNames, params, offset, limit)
     return result
 }
 
@@ -1602,6 +1664,7 @@ module.exports = {
     setFlowHeader,
     getFlowsProcesses,
     getOperationProcesses,
+    getDevelopmentProcesses,
     getVisionProcesses,
     getFlowsActions,
     getVisionReview,

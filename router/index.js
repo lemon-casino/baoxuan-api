@@ -48,4 +48,5 @@ module.exports = {
     "/workflows-service": require('./workflowServiceRouter'),
     "/stock": require('./stockRouter'),    
     "/confirmation-notice": require('./confirmationNoticeRouter'),
+    "/file-async": require('./downloadInfoRouter'),
 }

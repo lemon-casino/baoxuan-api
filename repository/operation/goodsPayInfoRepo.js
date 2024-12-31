@@ -24,6 +24,15 @@ goodsPayInfoRepo.batchInsert = async (count, data) => {
     return result?.affectedRows ? true : false
 }
 
+goodsPayInfoRepo.insertBrushingInfo = async (data) => {
+    let sql = `INSERT INTO goods_pay_info(
+        goods_id, 
+        \`date\`, 
+        brushing_qty) VALUES(?,?,?)`
+    const result = await query(sql, data)
+    return result?.affectedRows ? true : false
+}
+
 goodsPayInfoRepo.deleteByDate = async (date) => {
     let sql = `DELETE FROM goods_pay_info WHERE \`date\` = ?`
     const result = await query(sql, [date])
@@ -61,7 +70,7 @@ goodsPayInfoRepo.getExpressFeeByTime = async (goods_id, start, end) => {
 
 goodsPayInfoRepo.getRealPayAmountByTime = async (goods_id, start, end) => {
     const sql = `SELECT IFNULL(SUM(pay_amount), 0) - IFNULL(SUM(brushing_amount), 0) 
-            AS real_pay_amount, \`date\` FROM goods_pay_info 
+            - IFNULL(SUM(refund_amount), 0) AS real_pay_amount, \`date\` FROM goods_pay_info 
         WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
         GROUP BY \`date\``
     const result = await query(sql, [start, end, goods_id])

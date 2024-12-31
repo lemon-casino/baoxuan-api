@@ -1,6 +1,7 @@
 const joiUtil = require("../utils/joiUtil")
 const biResponse = require("../utils/biResponse")
 const operationService = require("../service/operationService")
+const downloadInfoService = require('../service/downloadInfoService')
 const operationSchema = require("../schema/operationSchema")
 const moment = require('moment')
 const ExcelJS = require('exceljs')
@@ -8,6 +9,7 @@ const XLSX = require('xlsx')
 const formidable = require("formidable")
 const fs = require('fs')
 const iconv = require("iconv-lite")
+const crypto = require('crypto')
 
 const getDataStats = async (req, res, next) => {
     try {
@@ -23,17 +25,17 @@ const getDataStats = async (req, res, next) => {
 
 const getDataStatsDetail = async (req, res, next) => {
     try {
-        const {type, name, startDate, endDate} = req.query
+        const {type, name, startDate, endDate, stats} = req.query
         joiUtil.validate({
             column: {value: req.params.column, schema: joiUtil.commonJoiSchemas.strRequired},
             type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
             name: {value: name, schema: joiUtil.commonJoiSchemas.strRequired},
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
-            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired},
         })
         const start = moment(req.query.startDate).format('YYYY-MM-DD')
         const end = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getDataStatsDetail(type, name, req.params.column, start, end)
+        const result = await operationService.getDataStatsDetail(type, name, req.params.column, start, end, stats, req.user)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -45,7 +47,49 @@ const getGoodsInfo = async (req, res, next) => {
         joiUtil.clarityValidate(operationSchema.requiredDataSchema, req.query)
         const startDate = moment(req.query.startDate).format('YYYY-MM-DD')
         const endDate = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id)
+        let result
+        if (req.query.export) {            
+            const uploadDir = `./public/excel/${req.user.id}`
+            fs.mkdirSync(uploadDir, { recursive: true })
+            let info = `${JSON.stringify(req.query)}`
+            let key = crypto.createHash('md5').update(info).digest('hex')
+            const name = `${startDate}_${endDate}_${key}`
+            const path = `${uploadDir}/${name}.xlsx`
+            await downloadInfoService.insert(req.user.id, name, path, req.query)
+            new Promise(async (resolve, reject) => {
+                const workbook = new ExcelJS.Workbook('Sheet1')
+                const worksheet = workbook.addWorksheet()
+                logger.info(`user: ${req.user.id}, file: ${path} start`)
+                result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id)
+                let columns = []
+                for (let i = 0; i < result.column.length; i++) {
+                    if (result.column[i].sub?.length) {
+                        for (let j = 0; j < result.column[i].sub.length; j++) {
+                            columns.push({
+                                header: result.column[i].sub[j].title,
+                                key: result.column[i].sub[j].field_id,
+                            })
+                        }
+                    } else if (result.column[i].field_id != 'operate')
+                        columns.push({
+                            header: result.column[i].title,
+                            key: result.column[i].field_id,
+                        })
+                }
+                worksheet.columns = columns
+                for (let i = 0; i < result.data.data.length; i++) {                           
+                    worksheet.addRow(result.data.data[i])
+                }
+                const buffer = await workbook.xlsx.writeBuffer()
+                fs.writeFileSync(path, buffer)
+                await downloadInfoService.update(req.user.id, name, 1)
+                logger.info(`user: ${req.user.id}, file: ${path} end`)
+                resolve(true)
+            })     
+            return res.send(biResponse.success())
+        } else {
+            result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id)
+        }
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -76,6 +120,46 @@ const importGoodsInfo = async (req, res, next) => {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
                 let result = await operationService.importGoodsInfo(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsOrderStat = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[2]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsOrderStat(rows, time)
                 if (result) {
                     fs.rmSync(newPath)
                 } else {
@@ -177,7 +261,7 @@ const getGoodsLineInfo = async (req, res, next) => {
 
 const getGoodsInfoDetail = async (req, res, next) => {
     try {
-        const {goods_id, startDate, endDate} = req.query
+        const {goods_id, startDate, endDate, stats} = req.query
         joiUtil.validate({
             column: {value: req.params.column, schema: joiUtil.commonJoiSchemas.strRequired},
             goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
@@ -186,7 +270,7 @@ const getGoodsInfoDetail = async (req, res, next) => {
         })
         const start = moment(req.query.startDate).format('YYYY-MM-DD')
         const end = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getGoodsInfoDetail(req.params.column, goods_id, start, end)
+        const result = await operationService.getGoodsInfoDetail(req.params.column, goods_id, start, end, stats)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -195,7 +279,7 @@ const getGoodsInfoDetail = async (req, res, next) => {
 
 const getGoodsInfoSubDetail = async (req, res, next) => {
     try {
-        const {goods_id, startDate, endDate} = req.query
+        const {goods_id, startDate, endDate, stats} = req.query
         joiUtil.validate({
             goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
@@ -203,7 +287,7 @@ const getGoodsInfoSubDetail = async (req, res, next) => {
         })
         const start = moment(req.query.startDate).format('YYYY-MM-DD')
         const end = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getGoodsInfoSubDetail(goods_id, start, end)
+        const result = await operationService.getGoodsInfoSubDetail(goods_id, start, end, stats)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -574,12 +658,140 @@ const setPannelSetting = async (req, res, next) => {
     }
 }
 
+const getNewOnSaleInfo = async (req, res, next) => {
+    try {
+        const {currentPage, pageSize} = req.query
+        joiUtil.validate({
+            currentPage: {value: currentPage, schema: joiUtil.commonJoiSchemas.strRequired},
+            pageSize: {value: pageSize, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const sale_date = moment().subtract(59, 'day').format('YYYY-MM-DD')
+        const start = moment().subtract(61, 'day').format('YYYY-MM-DD')
+        const end = moment().subtract(2, 'day').format('YYYY-MM-DD')
+        let limit = parseInt(pageSize)
+        let offset = (currentPage - 1) * pageSize
+        if (limit <= 0 || offset < 0) return res.send(biResponse.canTFindIt())
+        const result = await operationService.getNewOnSaleInfo(sale_date, start, end, limit, offset)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getOptimizeInfo = async (req, res, next) => {
+    try {
+        const {currentPage, pageSize, startDate, endDate} = req.query
+        joiUtil.validate({
+            currentPage: {value: currentPage, schema: joiUtil.commonJoiSchemas.strRequired},
+            pageSize: {value: pageSize, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        let limit = parseInt(pageSize)
+        let offset = (currentPage - 1) * pageSize
+        if (limit <= 0 || offset < 0) return res.send(biResponse.canTFindIt())
+        let start = moment(startDate).format('YYYY-MM-DD')
+        let end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
+        const result = await operationService.getOptimizeInfo(start, end, limit, offset)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const checkOperationOptimize = async (req, res, next) => {
+    try {
+        const result = await operationService.checkOperationOptimize()
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsVerified = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[2]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.csv.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsVerified(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsOrderVerifiedStat = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[2]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsOrderVerifiedStat(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
     getGoodsInfo,
     getGoodsLineInfo,
     importGoodsInfo,
+    importGoodsOrderStat,
     importGoodsKeyWords,
     importGoodsDSR,
     getGoodsInfoDetail,
@@ -594,5 +806,10 @@ module.exports = {
     importJDZYPromotionInfo,
     importGoodsPDDInfo,
     importGoodsOrderInfo,
-    setPannelSetting
+    setPannelSetting,
+    getNewOnSaleInfo,
+    getOptimizeInfo,
+    checkOperationOptimize,
+    importGoodsVerified,
+    importGoodsOrderVerifiedStat
 }

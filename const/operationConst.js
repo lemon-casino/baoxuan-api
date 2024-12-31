@@ -41,13 +41,12 @@ const columnList = [
     {label: '访问量', key: 'words_vol'},
     {label: '市场流量', key: 'words_market_vol'},
     {label: '市占率(%)', key: 'market_rate'}, 
-    {label: '退货量', key: 'refund_qty'},
-    {label: '商品销量', key: 'real_sale_qty'},
+    {label: '退单量', key: 'refund_num'},
+    {label: '订单量', key: 'order_num'},
     {label: '退货率(%)', key: 'refund_rate'}, 
     {label: '运费', key: 'express_fee'}, 
     {label: '利润', key: 'profit'}, 
-    {label: '利润率(%)', key: 'profit_rate'}, 
-    {label: '账单金额', key: 'invoice'}
+    {label: '利润率(%)', key: 'profit_rate'}
 ]
 
 const operationDefaultItem = {
@@ -103,12 +102,14 @@ const statItem = {
     children: [],
 }
 
-const workItemList = ['选品', '视觉', '上架', '优化']
+const workItemList = ['选品', '市场分析', '爆款方案', '视觉', '上架', '优化']
 const workItemMap = {
     1: 0,
-    2: 1,
-    3: 2,
-    4: 3
+    2: 3,
+    3: 4,
+    4: 5,
+    5: 1,
+    6: 2
 }
 
 const workTypeList = ['待转入', '进行中', '已完成']
@@ -133,6 +134,23 @@ const analysisFieldMap = {
     operator: 'employeeField_lii9qts2'
 }
 
+const optimizeFlowUUid = 'FORM-51A6DCCF660B4C1680135461E762AC82JV53'
+const optimizeUser = '02353062153726101260'
+const platformMap = {
+    '天猫部': '天猫',
+    'fcs+pop': '京东',
+    '拼多多部': '拼多多',
+    '淘工厂部': '淘工厂'
+}
+const optimizeFieldMap = {
+    name: 'textField_liihs7kv',
+    operator: 'employeeField_liihs7l0',
+    goods_id: 'textField_liihs7kw',
+    platform: 'radioField_lxlncgm1',
+    type: 'selectField_lk7qoefv',
+    content: 'multiSelectField_lwufb7oy'
+}
+
 module.exports = {
     typeList,
     operationDefaultItem,
@@ -146,5 +164,9 @@ module.exports = {
     analysisFieldMap,
     analysisFlowUUid,
     analysisLinkPrevious,
-    columnList
+    columnList,
+    optimizeFlowUUid,
+    platformMap,
+    optimizeFieldMap,
+    optimizeUser
 }

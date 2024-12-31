@@ -5,7 +5,7 @@ const AllocationeModel = getAllocationeModel(sequelize);
 const exceptionLinks = async (type) => {
     try {
         return await AllocationeModel.findAll({
-            where: {type},
+            where: {type, status: 1},
             raw: true
         });
     } catch (error) {

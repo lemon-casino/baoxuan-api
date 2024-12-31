@@ -628,7 +628,7 @@ const getXHSInfo = async (params) => {
             if (order_id_row) {
                 settle_order_id = order_id = row.getCell(order_id_row).value
             }
-            if (sub_order_id_row) sub_order_id = row.getCell(sub_order_id).value
+            if (sub_order_id_row) sub_order_id = row.getCell(sub_order_id_row).value
             if (amount_row) amount = row.getCell(amount_row).value
             if (amount == 0) continue
             count += 1
@@ -676,9 +676,7 @@ const getTMInfo = async (params) => {
             sku_id_row = i
         } else if (columns[i] == '退款金额（元）') {
             refund_row = i
-        } else if (columns[i] == '打款时间') {
-            settle_order_id_row = i
-        }
+        } 
     }
     let rows = params.sheet[0].getRows(2, params.sheet[0].rowCount - 1)
     for (let i = 0; i < params.sheet[0].rowCount - 1; i++) {

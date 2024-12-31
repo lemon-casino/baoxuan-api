@@ -1,0 +1,210 @@
+const newFormsRepo = require('../repository/newFormsRepo')
+const userRepo = require('../repository/userRepo')
+const producerPlanRepo = require('../repository/producerPlanRepo')
+const { redisKeys } = require('../const/redisConst')
+const redisUtil = require("../utils/redisUtil")
+const crypto = require('crypto')
+const { statItem3, developmentType, developmentWorkType, developmentWorkProblem } = require('../const/newFormConst')
+const moment = require('moment')
+const developmentService = {}
+
+developmentService.getDataStats = async (type, start, end, month) => {
+    let result = []
+    let info = `${type}-${start}-${end}-${month}`
+    let key = crypto.createHash('md5').update(info).digest('hex')
+    key = `${redisKeys.development}:${key}`
+    result = await redisUtil.get(key)
+    if (result) return JSON.parse(result)
+    switch(type) {
+        case '1':
+            result = await developmentService.getFlows(start, end)
+            break
+        case '2':
+            result = await developmentService.getWorks(start, end)
+            break
+        case '3':
+            result = await developmentService.getProblems(start, end)
+            break
+        case '4':
+            result = await developmentService.getPlans(month)
+            break
+        default:
+
+    }
+    redisUtil.set(key, JSON.stringify(result), 3600)
+    return result
+}
+
+developmentService.getFlows = async (start, end) => {
+    let result = [], data = []
+    data = await newFormsRepo.getDevelopmentType(start, end)
+    if (data?.length) {
+        let defaultTmp = {status: '', children: {}}
+        for (let i in developmentType) {
+            defaultTmp.children[developmentType[i]] = []
+            defaultTmp[developmentType[i]] = 0
+        }
+        for (let i = 0; i < data.length; i++) {
+            if (i == 0 || (data[i].status != data[i-1].status && data[i].status < 3)) {
+                let tmp = JSON.parse(JSON.stringify(defaultTmp))
+                tmp.status = statItem3[data[i].status].name
+                tmp[developmentType[data[i].type]] = data[i].count
+                result.push(tmp)
+            } else if (data[i].status < 3) {
+                result[result.length - 1][developmentType[data[i].type]] = data[i].count
+            } else if (data[i].status == 3 && data[i].count > 0) {
+                result[result.length - 1].children[developmentType[data[i].type]].push({
+                    selected: data[i].count,
+                    rejected: 0
+                })
+            } else if (data[i].count > 0) {
+                if (result[result.length - 1].children[developmentType[data[i].type]]?.length)
+                    result[result.length - 1]
+                        .children[developmentType[data[i].type]][0]['rejected'] = data[i].count
+                else
+                    result[result.length - 1].children[developmentType[data[i].type]].push({
+                        rejected: data[i].count,
+                        selected: 0
+                    })
+            }
+        }
+    }
+    return result
+}
+
+developmentService.getWorks = async (start, end) => {
+    let users = await userRepo.getUserByDeptName('产品开发部')
+    let userNames = '', userIds = '', userInfo = {}, userMap = {}, result = []
+    for (let i = 0; i < users.length; i++) {
+        if (users[i].nickname != '崔竹') {
+            userNames = `${userNames}"${users[i].nickname}",`
+            userIds = `${userIds}"${users[i].dingding_user_id}",`
+            userInfo[users[i].dingding_user_id] = users[i].nickname
+            let tmp = {name: users[i].nickname}
+            for (let item in developmentWorkType) {
+                tmp[developmentWorkType[item]] = 0
+            }
+            userMap[users[i].nickname] = result.length
+            result.push(tmp)
+        }
+    }
+    if (userNames?.length) userNames = userNames.substring(0, userNames.length - 1)
+    else return result
+    userIds = userIds.substring(0, userIds.length - 1)
+    let data = await newFormsRepo.getDevepmentWork(userNames, userIds, start, end)
+    for (let i = 0; i < data.length; i++) {
+        let name = data[i].name == '' ? userInfo[data[i].id] : data[i].name
+        result[userMap[name]][developmentWorkType[data[i].type]] = parseInt(data[i].count)
+    }
+    return result
+}
+
+developmentService.getProblems = async (start, end) => {
+    let users = await userRepo.getUserByDeptName('产品开发部')
+    let userNames = '', userIds = '', userInfo = {}, userMap = {}, result = []
+    for (let i = 0; i < users.length; i++) {
+        if (users[i].nickname != '崔竹') {
+            userNames = `${userNames}"${users[i].nickname}",`
+            userIds = `${userIds}"${users[i].dingding_user_id}",`
+            userInfo[users[i].dingding_user_id] = users[i].nickname
+            let tmp = {name: users[i].nickname, children: {}}
+            for (let item in developmentWorkProblem) {
+                tmp[developmentWorkProblem[item]] = 0
+                tmp.children[[developmentWorkProblem[item]]] = []
+            }
+            userMap[users[i].nickname] = result.length
+            result.push(tmp)
+        }
+    }
+    if (userNames?.length) userNames = userNames.substring(0, userNames.length - 1)
+    else return result
+    userIds = userIds.substring(0, userIds.length - 1)
+    let {data, children} = await newFormsRepo.getDevelopmentProblem(userNames, userIds, start, end)
+    for (let i = 0; i < data.length; i++) {
+        let name = data[i].name == '' ? userInfo[data[i].id] : data[i].name
+        result[userMap[name]][developmentWorkProblem[data[i].type]] = parseInt(data[i].count)
+        for (let j = 0; j < children?.length; j++) {
+            if (data[i].type == 1 && data[i].name == children[j].name) {
+                result[userMap[name]].children['nexts'].push({
+                    title: children[j].title,
+                    name: children[j].show_name,
+                    count: children[j].count,
+                    time: children[j].hours
+                })
+            }            
+        }
+    }
+    return result
+}
+
+developmentService.getPlans = async (month) => {
+    let months = ''
+    for (let i = 0; i < month.length; i++) {
+        let time = moment(month[i]).format('YYYY-MM')
+        months = `${months}"${time}",`
+    }
+    months = months.substring(0, months.length - 1)
+    let users = await userRepo.getUserByDeptName('产品开发部')
+    let userIds = '', userMap = {}, result = [], resultMap = {}
+    for (let i = 0; i < users.length; i++) {
+        if (users[i].nickname != '崔竹') {
+            userIds = `${userIds}"${users[i].dingding_user_id}",`
+            userMap[users[i].dingding_user_id] = users[i].nickname
+            resultMap[users[i].nickname] = result.length
+            result.push({
+                nickname: users[i].nickname,
+                months: months.replace(/\"/g, ''),
+                plan: 0,
+                value: 0,
+                children: []
+            })
+        }
+    }
+    if (userIds?.length) userIds = userIds.substring(0, userIds.length - 1)
+    else return result
+    let plans = await producerPlanRepo.getByMonth(months)
+    let data = await newFormsRepo.getPlanStats(userIds, months)
+    for (let i = 0; i < plans.length; i++) {
+        result[resultMap[plans[i].nickname]].plan += parseInt(plans[i].plan_max)
+        let flag = 1
+        for (let j = 0; j < data.length; j++) {
+            if (data[j].categories == plans[i].categories &&
+                userMap[data[j].id] == plans[i].nickname &&
+                data[j].month == plans[i].months
+            ) {
+                result[resultMap[plans[i].nickname]].value += parseInt(data[j].count)
+                result[resultMap[plans[i].nickname]].children.push({
+                    months: data[j].month,
+                    categories: data[j].categories,
+                    plan: plans[i].plan_max,
+                    value: data[j].count
+                })
+                flag = 0
+                break
+            }
+        }
+        if (flag) {
+            result[resultMap[plans[i].nickname]].children.push({
+                months: plans[i].months,
+                categories: plans[i].categories,
+                plan: plans[i].plan_max,
+                value: 0
+            })
+        }
+    }
+    for (let i = 0; i < data.length; i++) {
+        result[resultMap[userMap[data[i].id]]].value += parseInt(data[i].count)
+        result[resultMap[userMap[data[i].id]]].children.push({
+            months: data[i].month,
+            categories: data[i].categories,
+            plan: 0,
+            value: data[i].count
+        })
+    }
+    for (let i = 0; i < result.length; i++) {
+        result[i].children.sort((a, b) => moment(b.months).valueOf() - moment(a.months).valueOf())
+    }
+    return result
+}
+
+module.exports = developmentService

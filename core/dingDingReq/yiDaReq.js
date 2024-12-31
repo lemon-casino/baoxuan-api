@@ -280,7 +280,6 @@ const createProcess = async (token, formId, userId, processCode, departmentId, f
 
 // 发送ding 功能
 const sendDing = async (token,robotCode,remindType,receiverUserIdList,content) => {
-    receiverUserIdList.push("223851243926081600")
     const url = "https://api.dingtalk.com/v1.0/robot/ding/send"
     const body = {
         robotCode,
