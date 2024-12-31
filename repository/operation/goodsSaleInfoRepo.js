@@ -663,6 +663,41 @@ goodsSaleInfoRepo.updateFee = async(sku_id, promotion_amount, date) => {
     ])
     return result?.affectedRows ? true : false
 }
+goodsSaleInfoRepo.selectFee = async(sku_id, date, goods_id) => {
+    const sql = `SELECT * FROM goods_sale_info WHERE shop_name='京东自营旗舰店' AND sku_id=? AND \`date\`= ?`
+    const result = await query(sql, [sku_id, date])
+    if (result.length==0){
+        const sql=`INSERT INTO goods_sale_info(
+            goods_id, 
+            sku_id, 
+            goods_code, 
+            sku_code, 
+            shop_name, 
+            shop_id, 
+            goods_name, 
+            date, 
+            sale_amount, 
+            cost_amount, 
+            gross_profit, 
+            gross_profit_rate, 
+            profit, 
+            profit_rate, 
+            promotion_amount, 
+            express_fee,
+            operation_amount,
+            real_sale_qty,
+            refund_qty,
+            real_sale_amount,
+            packing_fee,
+            bill_amount,
+            real_gross_profit)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        const insertResult = await query(sql, [goods_id,
+            sku_id,null,null,'京东自营旗舰店','16314655',null
+            ,date,0,0,0,0,0,0,0,null,0,0,null,0,null,null,0])
+    }
+    return result
+}
 
 goodsSaleInfoRepo.getNewOnSaleInfo = async (sale_date, start, end, limit, offset) => {
     let result = {
@@ -835,6 +870,9 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
     let result = await query(sql)
     return result|| []
 }
+<<<<<<< HEAD
+=======
 
 
+>>>>>>> master
 module.exports = goodsSaleInfoRepo

@@ -1502,9 +1502,21 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
         promotion_name = '新品全站营销'
     }
     for (let i = 1; i < columns.length; i++) {
-        if (columns[i] == 'SKUID' || columns[i] == '商品SKU' || columns[i] =='ID') {
-            sku_id_row = i
-            continue
+        if (promotion_name=='场景推广' || promotion_name=='日常推广'){
+            if (columns[i] == 'SKUID') {
+                sku_id_row = i
+                continue
+            }
+        } else if(promotion_name=='京东快车1' || promotion_name=='京东快车2' || promotion_name=='京东快车3' ){
+            if (columns[i] == '商品SKU') {
+                sku_id_row = i
+                continue
+            }
+        } else if(promotion_name=='全站营销' || promotion_name=='新品全站营销' ){
+            if (columns[i] == 'ID') {
+                sku_id_row = i
+                continue
+            }
         }
         if (columns[i] == '花费') {
             amount_row = i
@@ -1535,6 +1547,7 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
             amount,
             date
         )
+        await goodsSaleInfoRepo.selectFee(sku_id, date, goods_id)
         await goodsSaleInfoRepo.updateFee(sku_id, amount, date)
         count += 1
     }
