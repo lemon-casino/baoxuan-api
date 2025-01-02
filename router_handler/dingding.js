@@ -167,3 +167,44 @@ exports.getDDConfig = async (req, res) => {
         console.log(e);
     }
 }
+
+exports.getUserInfo = async (req, res) => {
+    let token = await credentialsReq.getDingDingAccessToken()
+    if (!token) return res.send(biResponse.canTFindIt())
+    const info = await contactsReq.getDingDingUserInfo(token.access_token, req.query.code)
+    if (!info?.result?.userid) return res.send(biResponse.canTFindIt())
+    // 查询用户详情
+    const userInfo = await contactsReq.getUserInfoByUserIdAndToken(token.access_token, info.result.userid)
+    if (userInfo.errmsg === "ok") {
+        const is_userId = await UsersModel.findOne({
+            where: {dingding_user_id: info.result.userid},
+        })
+        if (is_userId) {
+            const token = "Bearer " +
+                generateToken(
+                    {
+                        id: is_userId.user_id,
+                        userId: is_userId.dingding_user_id,
+                        username: is_userId.username
+                    },
+                    tokenConfig.jwtSecretKey,
+                    tokenConfig.secretKeyExpire
+                )
+            const refreshToken = generateToken(
+                {
+                    id: is_userId.user_id,
+                    userId: is_userId.dingding_user_id,
+                    username: is_userId.username
+                },
+                tokenConfig.jwtRefrechSecretKey,
+                tokenConfig.refreshSerectKeyExpire
+            )
+            return res.send(biResponse.success({
+                is_userId: true,
+                token,
+                refreshToken,
+            }))
+        }
+    }
+    return res.send(biResponse.canTFindIt())
+}
