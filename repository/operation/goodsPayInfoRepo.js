@@ -60,6 +60,22 @@ goodsPayInfoRepo.getDataDetailByTime = async (column, goods_id, start, end) => {
     return result || []
 }
 
+goodsPayInfoRepo.getDataDetailTotalByTime = async (goods_id, start, end) => {
+    const sql = `SELECT IFNULL(SUM(pay_amount), 0) AS pay_amount, 
+            IFNULL(SUM(brushing_amount), 0) AS brushing_amount, 
+            IFNULL(SUM(brushing_qty), 0) AS brushing_qty, 
+            IFNULL(SUM(refund_amount), 0) AS refund_amount, 
+            IFNULL(SUM(bill), 0) AS bill, 
+            IFNULL(SUM(express_fee), 0) AS pay_express_fee, 
+            IFNULL(SUM(pay_amount), 0) - IFNULL(SUM(brushing_amount), 0) 
+            - IFNULL(SUM(refund_amount), 0) AS real_pay_amount, 
+            DATE_FORMAT(\`date\`, '%Y-%m-%d') as \`date\` 
+        FROM goods_pay_info WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
+        GROUP BY \`date\``
+    const result = await query(sql, [start, end, goods_id])
+    return result || []
+}
+
 goodsPayInfoRepo.getExpressFeeByTime = async (goods_id, start, end) => {
     const sql = `SELECT IFNULL(SUM(express_fee), 0) AS pay_express_fee, \`date\` 
         FROM goods_pay_info WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
@@ -73,6 +89,23 @@ goodsPayInfoRepo.getRealPayAmountByTime = async (goods_id, start, end) => {
             - IFNULL(SUM(refund_amount), 0) AS real_pay_amount, \`date\` FROM goods_pay_info 
         WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
         GROUP BY \`date\``
+    const result = await query(sql, [start, end, goods_id])
+    return result || []
+}
+
+goodsPayInfoRepo.getRealPayAmountQOQByTime = async (goods_id, start, end) => {
+    const sql = `SELECT IF(IFNULL(SUM(a2.pay_amount), 0) - IFNULL(SUM(a2.brushing_amount), 0) 
+            - IFNULL(SUM(a2.refund_amount), 0) > 0, 
+            FORMAT((IFNULL(SUM(a1.pay_amount), 0) - IFNULL(SUM(a1.brushing_amount), 0) 
+            - IFNULL(SUM(a1.refund_amount), 0) - IFNULL(SUM(a2.pay_amount), 0) 
+            + IFNULL(SUM(a2.brushing_amount), 0) + IFNULL(SUM(a2.refund_amount), 0)) * 100 / 
+            (IFNULL(SUM(a2.pay_amount), 0) - IFNULL(SUM(a2.brushing_amount), 0) 
+                - IFNULL(SUM(a2.refund_amount), 0)), 2), 0) AS real_pay_amount_qoq, a1.date 
+            FROM goods_payments a1 
+            LEFT JOIN goods_payments a2 ON a1.goods_id = a2.goods_id 
+                AND a2.date = DATE_SUB(a1.date, INTERVAL 1 DAY) 
+        WHERE a1.date >= ? AND a1.date <= ? AND a1.goods_id = ?
+        GROUP BY a1.date`
     const result = await query(sql, [start, end, goods_id])
     return result || []
 }
