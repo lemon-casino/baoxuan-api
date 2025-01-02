@@ -277,6 +277,23 @@ const getGoodsInfoDetail = async (req, res, next) => {
     }
 }
 
+const getGoodsInfoDetailTotal = async (req, res, next) => {
+    try {
+        const {goods_id, startDate, endDate, stats} = req.query
+        joiUtil.validate({
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const start = moment(req.query.startDate).format('YYYY-MM-DD')
+        const end = moment(req.query.endDate).format('YYYY-MM-DD')
+        const result = await operationService.getGoodsInfoDetailTotal(goods_id, start, end, stats)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const getGoodsInfoSubDetail = async (req, res, next) => {
     try {
         const {goods_id, startDate, endDate, stats} = req.query
@@ -795,6 +812,7 @@ module.exports = {
     importGoodsKeyWords,
     importGoodsDSR,
     getGoodsInfoDetail,
+    getGoodsInfoDetailTotal,
     getGoodsInfoSubDetail,
     getWorkStats,
     importGoodsPayInfo,

@@ -222,6 +222,7 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
     let sql = `SELECT SUM(a1.sale_amount) AS sale_amount, a1.goods_id FROM goods_verifieds a1`
     subsql = ` WHERE a1.date BETWEEN ? AND ?`
     p.push(start, end)
+    let hasChild = start == end ? false : true
     for (let i =0; i < params.search.length; i++) {
         if (params.search[i].field_id == 'operation_rate') {
             subsql = `${subsql} AND EXISTS(
@@ -463,7 +464,10 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
         if (row?.length) {
             for (let i = 0; i < row.length; i++) {
                 row[i].sku_id = ''
-                row[i].sku_sid = ''
+                row[i].sku_sid = ''                
+                row[i].hasChild = hasChild
+                row[i].id = row[i].goods_id
+                row[i].parent_id = null
                 if (row[i].goods_id) {
                     sql = `SELECT goods_name, brief_name, operator, brief_product_line, 
                             line_director, purchase_director, onsale_date, link_attribute, 
@@ -572,6 +576,31 @@ goodsSaleVerifiedRepo.getDataDetailByTime = async(column, goods_id, start, end) 
     return result || []
 }
 
+goodsSaleVerifiedRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
+    const sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(cost_amount), 0) AS cost_amount, 
+            IFNULL(SUM(operation_amount), 0) AS operation_amount, 
+            IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
+            IFNULL(SUM(express_fee), 0) AS express_fee, 
+            IFNULL(SUM(profit), 0) AS profit, 
+            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
+                IFNULL(SUM(operation_amount), 0) / SUM(sale_amount), 0) * 100, 
+            2) AS operation_rate, 
+            FORMAT(IF(IFNULL(SUM(promotion_amount), 0) > 0, 
+                IFNULL(SUM(sale_amount), 0) / SUM(promotion_amount), 0),  
+            2) AS roi, 
+            FORMAT(IF(IFNULL(SUM(order_num), 0) > 0, 
+                IFNULL(SUM(refund_num), 0) / SUM(order_num), 0) * 100,  
+            2) AS refund_rate, 
+            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, 
+                IFNULL(SUM(profit), 0) / SUM(sale_amount), 0) * 100,  
+            2) AS profit_rate, DATE_FORMAT(\`date\`, '%Y-%m-%d') as \`date\` 
+        FROM goods_sale_verified WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
+        GROUP BY \`date\``
+    const result = await query(sql, [start, end, goods_id])
+    return result || []
+}
+
 goodsSaleVerifiedRepo.getDataRateByTime = async(col1, col2, column, goods_id, start, end, percent) => {
     const sql = `SELECT FORMAT(IF(IFNULL(SUM(${col1}), 0) > 0, 
             IFNULL(SUM(${col2}), 0) / SUM(${col1}), 0) * ${percent}, 2) AS ${column}, 
@@ -613,7 +642,8 @@ goodsSaleVerifiedRepo.getDataGrossProfitByTime = async(goods_id, start, end) => 
 goodsSaleVerifiedRepo.getDataPromotionQOQByTime = async(goods_id, start, end) => {
     const sql = `SELECT FORMAT(IF(IFNULL(SUM(a2.promotion_amount), 0) > 0, 
                 (IFNULL(SUM(a1.promotion_amount), 0) - SUM(a2.promotion_amount)) / 
-                SUM(a2.promotion_amount), 0), 2) AS promotion_amount_qoq, a1.date 
+                SUM(a2.promotion_amount), 0), 2) AS promotion_amount_qoq, 
+            DATE_FORMAT(a1.date, '%Y-%m-%d') as \`date\` 
         FROM goods_sale_verified a1 LEFT JOIN goods_sale_verified a2 ON a1.goods_id = a2.goods_id
             AND a1.sku_code = a2.sku_code 
             AND a1.date = DATE_ADD(a2.date, INTERVAL 1 DAY)

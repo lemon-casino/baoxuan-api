@@ -529,6 +529,9 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: '实际支付金额', field_id: 'real_pay_amount', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
+                title: '实际支付金额环比(%)', field_id: 'real_pay_amount_qoq', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
                 title: '支付运费', field_id: 'pay_express_fee', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
@@ -643,6 +646,8 @@ const getGoodsInfoDetail = async (column, goods_id, start, end, stats) => {
         result = await goodsPayInfoRepo.getExpressFeeByTime(goods_id, start, end)
     else if (column == 'real_pay_amount')
         result = await goodsPayInfoRepo.getRealPayAmountByTime(goods_id, start, end)
+    else if (column == 'real_pay_amount_qoq')
+        result = await goodsPayInfoRepo.getRealPayAmountQOQByTime(goods_id, start, end)
     else if (column == 'composite_info')
         result = await goodsCompositeRepo.getDataDetailByTime(goods_id, start, end)
     else if (column == 'promotion_info')
@@ -651,6 +656,64 @@ const getGoodsInfoDetail = async (column, goods_id, start, end, stats) => {
         result = await goodsBillRepo.getDataDetailByTime(goods_id, start, end)
     else if (column == 'promotion_amount_qoq')
         result = await func.getDataPromotionQOQByTime(goods_id, start, end)
+    return result
+}
+
+const getGoodsInfoDetailTotal = async (goods_id, start, end, stats) => {
+    let result = [], info = []
+    let func = stats == 'verified' ? goodsSaleVerifiedRepo : goodsSaleInfoRepo
+    info = await func.getDataDetailTotalByTime(goods_id, start, end)
+    let dateMap = {}
+    for (let i = 0; i < info.length; i++) {
+        result.push({
+            id: `${goods_id}${i}`,
+            goods_id: info[i].date,
+            parent_id: goods_id,
+            sale_amount: info[i].sale_amount,
+            cost_amount: info[i].cost_amount,
+            operation_amount: info[i].operation_amount,
+            promotion_amount: info[i].promotion_amount,
+            express_fee: info[i].express_fee,
+            profit: info[i].profit,
+            operation_rate: info[i].operation_rate,
+            roi: info[i].roi,
+            refund_rate: info[i].refund_rate,
+            profit_rate: info[i].profit_rate,
+            hasChild: false
+        })
+        dateMap[info[i].date] = i
+    }
+    info = []
+    info = await func.getDataGrossProfitByTime(goods_id, start, end)
+    for (let i = 0; i < info.length; i++) {
+        if (!result[dateMap[info[i].date]]) result[dateMap[info[i].date]] = {}
+        result[dateMap[info[i].date]]['gross_profit'] = info[i].gross_profit
+    }
+    info = []
+    info = await func.getDataPromotionQOQByTime(goods_id, start, end)
+    for (let i = 0; i < info.length; i++) {
+        if (!result[dateMap[info[i].date]]) result[dateMap[info[i].date]] = {}
+        result[dateMap[info[i].date]]['promotion_amount_qoq'] = info[i].promotion_amount_qoq
+    }
+    info = []
+    info = await goodsOtherInfoRepo.getDataDetailTotalByTime(goods_id, start, end)
+    for (let i = 0; i < info.length; i++) {
+        if (!result[dateMap[info[i].date]]) result[dateMap[info[i].date]] = {}
+        result[dateMap[info[i].date]]['dsr'] = info[i].dsr
+        result[dateMap[info[i].date]]['market_rate'] = info[i].market_rate
+    }
+    info = []
+    info = await goodsPayInfoRepo.getDataDetailTotalByTime(goods_id, start, end)
+    for (let i = 0; i < info.length; i++) {
+        if (!result[dateMap[info[i].date]]) result[dateMap[info[i].date]] = {}
+        result[dateMap[info[i].date]]['pay_amount'] = info[i].pay_amount
+        result[dateMap[info[i].date]]['brushing_amount'] = info[i].brushing_amount
+        result[dateMap[info[i].date]]['brushing_qty'] = info[i].brushing_qty
+        result[dateMap[info[i].date]]['refund_amount'] = info[i].refund_amount
+        result[dateMap[info[i].date]]['bill'] = info[i].bill
+        result[dateMap[info[i].date]]['pay_express_fee'] = info[i].pay_express_fee
+        result[dateMap[info[i].date]]['real_pay_amount'] = info[i].real_pay_amount
+    }
     return result
 }
 
@@ -2066,6 +2129,7 @@ module.exports = {
     importGoodsDSR,
     getGoodsLineInfo,
     getGoodsInfoDetail,
+    getGoodsInfoDetailTotal,
     getGoodsInfoSubDetail,
     getWorkStats,
     importGoodsPayInfo,

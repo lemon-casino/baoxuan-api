@@ -47,6 +47,17 @@ goodsOtherInfoRepo.getDataDetailByTime = async(column, goods_id, start, end) => 
     return result || []
 }
 
+goodsOtherInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
+    const sql = `SELECT IFNULL(SUM(dsr), 0) AS dsr, 
+            FORMAT(IF(IFNULL(SUM(words_market_vol), 0) > 0, 
+                IFNULL(SUM(words_vol), 0) / SUM(words_market_vol), 0) * 100, 
+            2) AS market_rate, DATE_FORMAT(\`date\`, '%Y-%m-%d') as \`date\` 
+        FROM goods_other_info WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
+        GROUP BY \`date\``
+    const result = await query(sql, [start, end, goods_id])
+    return result || []
+}
+
 goodsOtherInfoRepo.getDataRateByTime = async(col1, col2, column, goods_id, start, end, percent) => {
     const sql = `SELECT FORMAT(IF(IFNULL(SUM(${col1}), 0) > 0, 
                 IFNULL(SUM(${col2}), 0) / SUM(${col1}), 0) * ${percent}, 2) AS ${column}, 
