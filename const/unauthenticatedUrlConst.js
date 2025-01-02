@@ -39,5 +39,6 @@ module.exports = [
     '/operation/goods-verified/import',
     '/operation/goods-order-verified-stat/import',
     '/util/dingding-config',
+    '/util/getUserInfo',
     /^\/download\/.*/,
 ]

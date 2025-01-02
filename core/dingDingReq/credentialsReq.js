@@ -38,6 +38,8 @@ const corpAccessToken = async () => {
 
 /**
  * 钉钉内部登录-jsapi-ticket
+ * @param {*} access_token 
+ * @returns 
  */
 const getJsapiTickets = async (access_token) => {
     const url = "https://api.dingtalk.com/v1.0/oauth2/jsapiTickets"
