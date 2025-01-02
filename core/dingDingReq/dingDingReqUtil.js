@@ -8,7 +8,7 @@ const getDingTalkAccessTokenHeader = (token) => {
 
 function sign(jsticket, nonceStr, timeStamp, url) {
     try {
-        const plain = `jsapi_ticket=${jsticket}&noncestr=${nonceStr}&timestamp=${timeStamp}&url=${decodeUrl(url)}`;
+        const plain = `jsapi_ticket=${jsticket}&noncestr=${nonceStr}&timestamp=${timeStamp}&url=${url}`;
         const sha1 = crypto.createHash('sha256');
         sha1.update(plain, 'utf8');
         return byteToHex(sha1.digest());

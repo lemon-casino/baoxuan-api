@@ -159,7 +159,6 @@ exports.getDpInfo = async (req, res) => {
     }
 };
 
-
 exports.getDDConfig = async (req, res) => {
     try {
         let conf = await dingdingConfig(req.query.url);
