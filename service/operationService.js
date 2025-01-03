@@ -1735,12 +1735,14 @@ const importGoodsBrushingInfo = async (rows, time) => {
     let result = false, count = 0
     let columns = rows[0].values,
         goods_id_row = null,
+        sku_code_row = null,
         order_row = null,
         date = time,
         goods_id_info = {},
         order_id_info = {}
     for (let i = 1; i < columns.length; i++) {
         if (columns[i] == '店铺款式编码') {goods_id_row = i;  continue}
+        if (columns[i] == '商品编码') {sku_code_row = i;  continue}
         if (columns[i] == '线上订单号') {order_row = i; continue}
     }
     await goodsPayInfoRepo.resetBrushingQty(date)
@@ -1749,20 +1751,27 @@ const importGoodsBrushingInfo = async (rows, time) => {
         let goods_id = goods_id_row ? (typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
             rows[i].getCell(goods_id_row).value.trim() : 
             rows[i].getCell(goods_id_row).value) : null
+        let sku_code = sku_code_row ? (typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
+            rows[i].getCell(sku_code_row).value.trim() : 
+            rows[i].getCell(sku_code_row).value) : null 
         let order = order_row ? (typeof(rows[i].getCell(order_row).value) == 'string' ? 
             rows[i].getCell(order_row).value.trim() : 
             rows[i].getCell(order_row).value) : null
+        let info = goods_id.concat('_',sku_code)
         if (!order_id_info[order]) {
-            if (!goods_id_info[goods_id]) goods_id_info[goods_id] = 1
-            else goods_id_info[goods_id] += 1
-            order_id_info[order]
+            if (!goods_id_info[info]) goods_id_info[info] = 1
+            else goods_id_info[info] += 1
+            order_id_info[order] = true
         }
     }
     for (let index in goods_id_info) {
-        result = await goodsPayInfoRepo.updateBrushingQty(index, goods_id_info[index], date)
+        goods_id = index.split('_')[0]
+        sku_code = index.split('_')[1]
+        result = await goodsPayInfoRepo.updateBrushingQty(goods_id, sku_code, goods_id_info[index], date)
         if (!result) {
             result = await goodsPayInfoRepo.insertBrushingInfo([
-                index,
+                goods_id,
+                sku_code,
                 date,
                 goods_id_info[index]
             ])

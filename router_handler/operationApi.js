@@ -11,6 +11,14 @@ const fs = require('fs')
 const iconv = require("iconv-lite")
 const crypto = require('crypto')
 
+const newMap = function(datum) {
+    if (datum === '') {
+        return null;
+    }
+    datum = datum.trim()
+    return datum;
+}
+
 const getDataStats = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(operationSchema.requiredDateSchema, req.query)
@@ -487,7 +495,7 @@ const importGoodsBrushingInfo = async (req, res, next) => {
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()
-            let readRes = await workbook.csv.readFile(newPath)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
