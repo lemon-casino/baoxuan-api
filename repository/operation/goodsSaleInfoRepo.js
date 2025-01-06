@@ -39,10 +39,15 @@ goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) =
 
 goodsSaleInfoRepo.getNullPromotionByTime = async (shopNames, start, end) => {
     let sql = `SELECT a1.shop_name FROM goods_sale_info a1 LEFT JOIN shop_info si
-            ON a1.shop_name = si.shop_name
+            ON a1.shop_name = si.shop_name 
         WHERE a1.shop_name IN ("${shopNames}") AND a1.date >= ? 
             AND a1.date <= ? 
             AND si.has_promotion = 1 
+            AND a1.date > '2024-12-31' 
+            AND NOT EXISTS (
+                SELECT s.id FROM shop_promotion_log s WHERE s.shop_name = a1.shop_name 
+                    AND a1.date = s.date
+            )
         GROUP BY a1.shop_name, a1.date HAVING SUM(a1.promotion_amount) = 0`
     let result = await query(sql, [start, end])
     return result?.length ? true:false

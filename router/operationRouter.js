@@ -24,6 +24,7 @@ router.post('/goods-pdd-info/import', operationApi.importGoodsPDDInfo)
 router.post('/goods-orders/import', operationApi.importGoodsOrderInfo)
 router.post('/goods-verified/import', operationApi.importGoodsVerified)
 router.post('/goods-order-verified-stat/import', operationApi.importGoodsOrderVerifiedStat)
+router.post('/shop-promotion-log', operationApi.createShopPromotionLog)
 /**
  * 京东自营
  */
