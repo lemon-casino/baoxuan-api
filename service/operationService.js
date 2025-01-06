@@ -18,7 +18,6 @@ const {
     platformMap,
     optimizeFieldMap
 } = require('../const/operationConst')
-const settlementRepo = require('../repository/settlementRepo')
 const newFormsRepo = require('../repository/newFormsRepo')
 const goodsOtherInfoRepo = require('../repository/operation/goodsOtherInfoRepo')
 const goodsPayInfoRepo = require('../repository/operation/goodsPayInfoRepo')
@@ -36,6 +35,7 @@ const goodsOptimizeSetting = require('../repository/operation/goodsOptimizeSetti
 const { createProcess } =  require('./dingDingService')
 const fs = require('fs')
 const goodsSaleVerifiedRepo = require('../repository/operation/goodsSaleVerifiedRepo')
+const shopPromotionLog = require('../repository/operation/shopPromotionLog')
 
 /**
  * get operation data pannel data stats
@@ -2133,6 +2133,11 @@ const importGoodsOrderVerifiedStat = async (rows, time) => {
     return result
 }
 
+const createShopPromotionLog = async (date, shop_name) => {
+    const result = await shopPromotionLog.create(date, shop_name)
+    return result
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -2160,5 +2165,6 @@ module.exports = {
     getOptimizeInfo,
     checkOperationOptimize,
     importGoodsVerified,
-    importGoodsOrderVerifiedStat
+    importGoodsOrderVerifiedStat,
+    createShopPromotionLog
 }

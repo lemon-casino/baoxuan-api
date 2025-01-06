@@ -802,6 +802,21 @@ const importGoodsOrderVerifiedStat = async (req, res, next) => {
     }
 }
 
+const createShopPromotionLog = async (req, res, next) => {
+    try {
+        const {date, shop_name} = req.body
+        joiUtil.validate({
+            date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
+            shop_name: {value: shop_name, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const result = await operationService.createShopPromotionLog(date, shop_name)
+        if (result) return res.send(biResponse.success())
+        return res.send(biResponse.canTFindIt())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -829,5 +844,6 @@ module.exports = {
     getOptimizeInfo,
     checkOperationOptimize,
     importGoodsVerified,
-    importGoodsOrderVerifiedStat
+    importGoodsOrderVerifiedStat,
+    createShopPromotionLog
 }
