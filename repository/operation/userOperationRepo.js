@@ -181,7 +181,9 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
                     GROUP BY sku_code ORDER BY SUM(sale_amount) DESC LIMIT 1`
                 let row1 = await query(sql, [info[i].goods_id, start, end])
                 info[i].sku_id = row1[0].sku_code
-                
+                info[i].hasChild = false
+                info[i].id = info[i].goods_id
+                info[i].parent_id = null
             }
             result.data = info
         }
