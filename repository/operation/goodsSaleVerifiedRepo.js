@@ -466,7 +466,7 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                 row[i].sku_id = ''
                 row[i].sku_sid = ''                
                 row[i].hasChild = hasChild
-                row[i].id = row[i].goods_id
+                row[i].id = row[i].goods_id || row[i].sku_code
                 row[i].parent_id = null
                 if (row[i].goods_id) {
                     sql = `SELECT goods_name, brief_name, operator, brief_product_line, 
