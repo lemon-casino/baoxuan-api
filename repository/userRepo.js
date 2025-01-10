@@ -228,7 +228,7 @@ const getUsersByTagCodes = async (tagCodes) => {
 const getPagingUsers = async (deptIds, pageIndex, pageSize, nickname, status) => {
     
     const depsUsers = await deptsUsersModel.findAll({
-        where: {deptId: {$in: deptIds}}
+        // where: {deptId: {$in: deptIds}}
     })
     const userIds = depsUsers.map(item => item.userId)
     
