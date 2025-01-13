@@ -39,6 +39,17 @@ const getPagingOperateAttributes = async (req, res, next) => {
     }
 }
 
+const getShopNameAttrDetails = async (req, res, next) => {
+    try {
+        const {id} = req.query
+        joiUtil.validate({id})
+        const result = await dianShangOperationAttributeService.getShopNameAttrDetails(id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const getProductAttrDetails = async (req, res, next) => {
     try {
         const {id} = req.query
@@ -372,6 +383,7 @@ const uploadtmTable = async (req, res, next) => {
 module.exports = {
     getPagingOperateAttributes,
     getProductAttrDetails,
+    getShopNameAttrDetails,
     saveProductAttrDetails,
     updateProductAttrDetails,
     deleteProductAttr,

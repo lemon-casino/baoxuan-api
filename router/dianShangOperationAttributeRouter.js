@@ -10,7 +10,7 @@ router.get("/", dianShangOperationAttributeApi.getPagingOperateAttributes)
 router.post("/", dianShangOperationAttributeApi.saveProductAttrDetails)
 router.put("/", dianShangOperationAttributeApi.updateProductAttrDetails)
 router.delete("/", dianShangOperationAttributeApi.deleteProductAttr)
-
+router.get("/shopname", dianShangOperationAttributeApi.getShopNameAttrDetails)
 const uploadDirectory = 'file/excel/causality';
 const uploadFileName = '商品属性维护.xlsx';
 // 设置存储位置和文件命名
