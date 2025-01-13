@@ -3,7 +3,8 @@ const dianShangOperationAttributeModel = models.dianshangOperationAttributeModel
 const pagingUtil = require("../utils/pagingUtil")
 const sequelize = require('../model/init')
 const {Sequelize} = require("sequelize");
-
+const { query } = require('../model/dbConn')
+const moment = require('moment')
 const getOperateAttributes = async (deptId,
                                     pageIndex,
                                     pageSize,
@@ -52,6 +53,14 @@ const getProductAttrDetails = async (id) => {
         where: {id}
     })
     return details.get({plain: true})
+}
+
+const getShopNameAttrDetails = async (id) => {
+    const sql=`SELECT shop_name AS value,shop_name AS label FROM  shop_info WHERE project_id IN (
+    SELECT id FROM project_info WHERE dept_id =?)`
+    let result = await query(sql,id)
+    console.log(result)
+    return  result || []
 }
 
 const updateProductAttrDetails = async (details, id) => {
@@ -270,6 +279,7 @@ const getOperateAttributesMaintainer = async (skuId) => {
 
 module.exports = {
     getProductAttrDetails,
+    getShopNameAttrDetails,
     getOperateAttributes,
     saveProductAttr,
     updateProductAttrDetails,

@@ -27,6 +27,10 @@ const getProductAttrDetails = async (id) => {
     return await dianShangOperationAttributeRepo.getProductAttrDetails(id)
 }
 
+const getShopNameAttrDetails = async (id) => {
+    return await dianShangOperationAttributeRepo.getShopNameAttrDetails(id)
+}
+
 const updateProductAttrDetails = async (details) => {
     return await dianShangOperationAttributeRepo.updateProductAttrDetails(details, details.id)
 }
@@ -107,6 +111,7 @@ const uploadtmBulkUploadsTable = async (translatedData) => {
 module.exports = {
     getPagingOperateAttributes,
     getProductAttrDetails,
+    getShopNameAttrDetails,
     updateProductAttrDetails,
     saveProductAttr,
     deleteProductAttr,
