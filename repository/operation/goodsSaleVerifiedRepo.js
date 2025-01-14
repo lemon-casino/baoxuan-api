@@ -219,6 +219,7 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
     let preEnd = moment(end).subtract(1, 'day').format('YYYY-MM-DD')    
     let lastStart = moment(start).subtract(8, 'day').format('YYYY-MM-DD')
     let lastEnd = moment(start).subtract(2, 'day').format('YYYY-MM-DD')
+    let targettime = moment(end).startOf('month').format('YYYY-MM-DD')
     let sql = `SELECT SUM(a1.sale_amount) AS sale_amount, a1.goods_id FROM goods_verifieds a1`
     subsql = ` WHERE a1.date BETWEEN ? AND ?`
     p.push(start, end)
@@ -440,7 +441,8 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
             IFNULL(SUM(a3.pay_amount), 0) - IFNULL(SUM(a3.brushing_amount), 0) 
                 - IFNULL(SUM(a3.refund_amount), 0) AS real_pay_amount, 
             IFNULL(SUM(a3.bill), 0) AS bill,
-            IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(a1.sale_amount), 0) AS sale_amount,
+            IFNULL(MAX(a9.target), 0) AS sale_amount_target,
             IFNULL(SUM(a1.cost_amount), 0) AS cost_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
@@ -476,7 +478,23 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
             LEFT JOIN goods_payments a3 ON a1.goods_id = a3.goods_id 
                 AND a1.date = a3.date
             LEFT JOIN goods_verifieds a8 ON a8.goods_id = a1.goods_id 
-                AND a8.date = DATE_SUB(a1.date, INTERVAL 1 DAY)`
+                AND a8.date = DATE_SUB(a1.date, INTERVAL 1 DAY)
+                LEFT JOIN(SELECT a.goods_id,CONCAT(ROUND(b.num/a.target*100,2),'%') AS target  FROM (
+                SELECT goods_id,(
+                CASE 
+                        WHEN product_definition='三级:10万' THEN 100000
+                        WHEN product_definition='二级:30万' THEN 300000
+                        WHEN product_definition='一级:50万' THEN 500000
+                END
+                ) AS target
+                FROM dianshang_operatiON_attribute 
+                WHERE product_definition IS NOT NULL) AS a
+                LEFT JOIN(
+                    SELECT goods_id AS id,SUM(sale_amount) AS num FROM goods_sale_info 
+                    WHERE date BETWEEN '${targettime}' AND '${end}'  GROUP BY goods_id
+                    ) AS b
+                ON a.goods_id = b.id)AS a9
+                ON a1.goods_id=a9.goods_id`
         sql1 = `GROUP BY a1.goods_id, a1.shop_name`
         sql = `SELECT aa.* FROM (${sql}${subsql}${sql1}) aa`
         if (params.sort) sql = `${sql} ORDER BY aa.${params.sort}`

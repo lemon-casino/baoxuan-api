@@ -1,6 +1,5 @@
 const { query } = require('../../model/dbConn')
 const moment = require('moment')
-
 const goodsSaleInfoRepo = {}
 
 goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) => {
@@ -224,6 +223,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
     let preEnd = moment(end).subtract(1, 'day').format('YYYY-MM-DD')    
     let lastStart = moment(start).subtract(8, 'day').format('YYYY-MM-DD')
     let lastEnd = moment(start).subtract(2, 'day').format('YYYY-MM-DD')
+    let targettime = moment(end).startOf('month').format('YYYY-MM-DD')
     let sql = `SELECT SUM(a1.sale_amount) AS sale_amount, a1.goods_id FROM goods_sales a1`
     subsql = ` WHERE a1.date BETWEEN ? AND ?`
     let hasChild = start == end ? false:true
@@ -456,6 +456,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             ) * 100, 2), 0) AS real_pay_amount_qoq, 
             IFNULL(SUM(a3.bill), 0) AS bill,
             IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
+            IFNULL(MAX(a9.target), 0) AS sale_amount_target,
             IFNULL(SUM(a1.cost_amount), 0) AS cost_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
@@ -493,7 +494,24 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             LEFT JOIN goods_payments a5 ON a1.goods_id = a5.goods_id 
                 AND a5.date = DATE_SUB(a3.date, INTERVAL 1 DAY) 
             LEFT JOIN goods_sales a8 ON a8.goods_id = a1.goods_id 
-                AND a8.date = DATE_SUB(a1.date, INTERVAL 1 DAY)`
+                AND a8.date = DATE_SUB(a1.date, INTERVAL 1 DAY)
+            LEFT JOIN(SELECT a.goods_id,CONCAT(ROUND(b.num/a.target*100,2),'%') AS target  FROM (
+                SELECT goods_id,(
+                CASE 
+                        WHEN product_definition='三级:10万' THEN 100000
+                        WHEN product_definition='二级:30万' THEN 300000
+                        WHEN product_definition='一级:50万' THEN 500000
+                END
+                ) AS target
+                FROM dianshang_operatiON_attribute 
+                WHERE product_definition IS NOT NULL) AS a
+                LEFT JOIN(
+                    SELECT goods_id AS id,SUM(sale_amount) AS num FROM goods_sale_info 
+                    WHERE date BETWEEN '${targettime}' AND '${end}'  GROUP BY goods_id
+                    ) AS b
+                ON a.goods_id = b.id)AS a9
+                ON a1.goods_id=a9.goods_id
+                `
         sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id`
         sql = `SELECT aa.* FROM (${sql}${subsql}${sql1}) aa`
         if (params.sort) sql = `${sql} ORDER BY aa.${params.sort}`
@@ -625,7 +643,22 @@ goodsSaleInfoRepo.getDataDetailByTime = async(column, goods_id, start, end) => {
     const result = await query(sql, [start, end, goods_id])
     return result || []
 }
-
+goodsSaleInfoRepo.gettarget = async (column,goods_id, start, end) =>{
+    const sql=`SELECT CONCAT(ROUND(b.num/a.target*100,2),'%') AS ${column}  FROM (
+        SELECT goods_id,(
+        CASE 
+            WHEN product_definitiON='三级:10万' THEN 100000
+            WHEN product_definitiON='二级:30万' THEN 300000
+            WHEN product_definitiON='一级:50万' THEN 500000
+        END
+        ) AS target
+        FROM dianshang_operatiON_attribute WHERE goods_id= ?) AS a
+        LEFT JOIN(
+        SELECT goods_id AS id,SUM(sale_amount) AS num FROM goods_sale_info WHERE \`date\` BETWEEN ? AND ? AND  goods_id= ? )AS b
+        ON a.goods_id = b.id`
+    const result = await query(sql, [goods_id ,start, end, goods_id])
+    return result || []
+}
 goodsSaleInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
     const sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(cost_amount), 0) AS cost_amount, 
