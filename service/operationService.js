@@ -516,6 +516,9 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             {
                 title: params.stats == 'verified' ? '核销金额' : '发货金额', 
                 field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
+            },{
+                title: '目标达成率(%)', field_id: 'sale_amount_target', type: 'number', 
+                min: 0, max: 100, show: true
             }, {
                 title: '支付金额', field_id: 'pay_amount', type: 'number', 
                 min: 0, max: 100, show: true
@@ -859,7 +862,7 @@ const importGoodsOrderStat = async (rows, time) => {
         if (columns[i] == '店铺名称') {shop_name_row = i; continue}
     }
     for (let i = 1; i < rows.length; i++) {
-        let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
+        let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ?
             rows[i].getCell(shop_name_row).value.trim() : 
             rows[i].getCell(shop_name_row).value
         if (shop_name == '京东自营旗舰店') continue
