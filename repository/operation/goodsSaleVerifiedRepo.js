@@ -1,6 +1,5 @@
 const { query } = require('../../model/dbConn')
 const moment = require('moment')
-
 const goodsSaleVerifiedRepo = {}
 
 goodsSaleVerifiedRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) => {
@@ -219,7 +218,9 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
     let preEnd = moment(end).subtract(1, 'day').format('YYYY-MM-DD')    
     let lastStart = moment(start).subtract(8, 'day').format('YYYY-MM-DD')
     let lastEnd = moment(start).subtract(2, 'day').format('YYYY-MM-DD')
-    let targettime = moment(end).startOf('month').format('YYYY-MM-DD')
+    // let targettime = moment(end).startOf('month').format('YYYY-MM-DD')
+    let targettime = moment(preEnd).diff(moment(preStart), 'days')+1
+    let days = moment().daysInMonth()
     let sql = `SELECT SUM(a1.sale_amount) AS sale_amount, a1.goods_id FROM goods_verifieds a1`
     subsql = ` WHERE a1.date BETWEEN ? AND ?`
     p.push(start, end)
@@ -317,6 +318,40 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                      ((b.val1 - b.val2) * 100 >= ${params.search[i].min} * b.val2 AND b.val2 > 0)) 
                         AND ((b.val2 = 0 AND 0 <= ${params.search[i].max}) OR 
                         ((b.val1 - b.val2) * 100 <= ${params.search[i].max} * b.val2 AND b.val2 > 0)))`
+            p.push(start, end)
+        }else if (params.search[i].field_id == 'sale_amount_profit_day') {
+            subsql = `${subsql} AND a1.goods_id IS NOT NULL AND EXISTS(
+                    SELECT val FROM (
+                    SELECT a2.goods_id,ROUND(IFNULL(sale_amount,0)/(pit_target*${targettime})*100,2) AS val FROM (
+                    SELECT goods_id,SUM(sale_amount)AS sale_amount 
+                    FROM goods_verifieds WHERE date BETWEEN ? AND ?
+                    GROUP BY goods_id
+                    )AS a2
+                    left join (
+                    SELECT goods_id,IFNULL(pit_target,0)AS pit_target
+                    FROM dianshang_operatiON_attribute 
+                    WHERE product_definition IS NOT NULL 
+                    )AS a3
+                    on a2.goods_id=a3.goods_id
+                    )AS b where b.val >= ${params.search[i].min} 
+                    AND b.val <= ${params.search[i].max} and a1.goods_id=b.goods_id)`
+            p.push(start, end)
+        }else if (params.search[i].field_id == 'sale_amount_profit_month') {
+            subsql = `${subsql} AND a1.goods_id IS NOT NULL AND EXISTS(
+                SELECT val FROM (
+                SELECT a2.goods_id,ROUND(IFNULL(sale_amount,0)/(pit_target*${days})*100,2) AS val FROM (
+                SELECT goods_id,SUM(sale_amount)AS sale_amount 
+                FROM goods_verifieds where date BETWEEN ? AND ?
+                GROUP BY goods_id
+                )AS a2
+                left join (
+                SELECT goods_id,IFNULL(pit_target,0)AS pit_target
+                FROM dianshang_operatiON_attribute 
+                WHERE product_definition IS NOT NULL
+                )AS a3
+                on a2.goods_id=a3.goods_id
+                )AS b where b.val >= ${params.search[i].min} 
+                AND b.val <= ${params.search[i].max} and a1.goods_id=b.goods_id)`
             p.push(start, end)
         } else if (['words_market_vol', 'words_vol'].includes(params.search[i].field_id)) {
             subsql = `${subsql} AND a1.goods_id IS NOT NULL AND EXISTS(
@@ -442,7 +477,6 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                 - IFNULL(SUM(a3.refund_amount), 0) AS real_pay_amount, 
             IFNULL(SUM(a3.bill), 0) AS bill,
             IFNULL(SUM(a1.sale_amount), 0) AS sale_amount,
-            IFNULL(MAX(a9.target), 0) AS sale_amount_target,
             IFNULL(SUM(a1.cost_amount), 0) AS cost_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
@@ -478,23 +512,7 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
             LEFT JOIN goods_payments a3 ON a1.goods_id = a3.goods_id 
                 AND a1.date = a3.date
             LEFT JOIN goods_verifieds a8 ON a8.goods_id = a1.goods_id 
-                AND a8.date = DATE_SUB(a1.date, INTERVAL 1 DAY)
-                LEFT JOIN(SELECT a.goods_id,CONCAT(ROUND(b.num/a.target*100,2),'%') AS target  FROM (
-                SELECT goods_id,(
-                CASE 
-                        WHEN product_definition='三级:10万' THEN 100000
-                        WHEN product_definition='二级:30万' THEN 300000
-                        WHEN product_definition='一级:50万' THEN 500000
-                END
-                ) AS target
-                FROM dianshang_operatiON_attribute 
-                WHERE product_definition IS NOT NULL) AS a
-                LEFT JOIN(
-                    SELECT goods_id AS id,SUM(sale_amount) AS num FROM goods_sale_info 
-                    WHERE date BETWEEN '${targettime}' AND '${end}'  GROUP BY goods_id
-                    ) AS b
-                ON a.goods_id = b.id)AS a9
-                ON a1.goods_id=a9.goods_id`
+                AND a8.date = DATE_SUB(a1.date, INTERVAL 1 DAY)`
         sql1 = `GROUP BY a1.goods_id, a1.shop_name`
         sql = `SELECT aa.* FROM (${sql}${subsql}${sql1}) aa`
         if (params.sort) sql = `${sql} ORDER BY aa.${params.sort}`
@@ -536,6 +554,8 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                         row[i].second_category = row1[0].second_category
                         row[i].pit_target = row1[0].pit_target
                         row[i].onsale_info = row1[0].onsale_info
+                        row[i].sale_amount_profit_day=(row[i].sale_amount/(row1[0].pit_target*targettime)*100).toFixed(2) + '%'
+                        row[i].sale_amount_profit_month=(row[i].sale_amount/(row1[0].pit_target*days)*100).toFixed(2) + '%'
                     }
                     sql = `SELECT sku_code FROM goods_sale_verified WHERE goods_id = ? 
                             AND \`date\` >= ? AND \`date\` <= ?

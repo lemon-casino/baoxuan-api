@@ -517,7 +517,10 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: params.stats == 'verified' ? '核销金额' : '发货金额', 
                 field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
             },{
-                title: '目标达成率(%)', field_id: 'sale_amount_target', type: 'number', 
+                title: '日销目标达成率(%)', field_id: 'sale_amount_profit_day', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '月销目标达成率(%)', field_id: 'sale_amount_profit_month', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: '支付金额', field_id: 'pay_amount', type: 'number', 
