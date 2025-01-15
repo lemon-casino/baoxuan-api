@@ -115,7 +115,16 @@ const exportFlowsProcess = async (req, res, next) => {
         joiUtil.clarityValidate(flowSchema.requiredIdSchema, req.body)
         const flows = await flowService.getFlows(req.body)
         if (!flows?.length) return res.send(biResponse.canTFindIt)
-        const data = await flowService.getFlowsProcesses(req.body)
+        let data = []
+        if (req.body?.tag == 'visionLeader') {
+            data = await flowService.getVisionProcesses(req.body)
+        } else if (req.body.dept == 'development') {
+            data = await flowService.getDevelopmentProcesses(req.body)
+        } else if (req.body?.ids) {
+            data = await flowService.getOperationProcesses(req.user, req.body)
+        } else {
+            data = await flowService.getFlowsProcesses(req.body)
+        }
         const workbook = new ExcelJS.Workbook()
         const worksheet = workbook.addWorksheet(flows[0].flowFormName)
         let tmpDefault = {
@@ -155,7 +164,8 @@ const exportFlowsProcess = async (req, res, next) => {
             tmp['action'] = data.data[i].action
             tmp['operator'] = data.data[i].operator
             for (let j = 0; j < data.data[i].data.length; j++) {
-                tmp[data.data[i].data[j].fieldId] = data.data[i].data[j].fieldValue
+                tmp[data.data[i].data[j].fieldId] = data.data[i].data[j].fieldValue.length ? 
+                    data.data[i].data[j].fieldValue.replace(/"/g, '') : null
             }
 
             worksheet.addRow(tmp)
