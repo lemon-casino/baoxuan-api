@@ -36,6 +36,9 @@ const { createProcess } =  require('./dingDingService')
 const fs = require('fs')
 const goodsSaleVerifiedRepo = require('../repository/operation/goodsSaleVerifiedRepo')
 const shopPromotionLog = require('../repository/operation/shopPromotionLog')
+const ordersGoodsRepo = require('../repository/operation/ordersGoodsRepo')
+const goodsSalesStats = require('@/repository/operation/goodsSalesStats')
+const goodsVerifiedsStats = require('@/repository/operation/goodsVerifiedsStats')
 
 /**
  * get operation data pannel data stats
@@ -58,7 +61,7 @@ const getDataStats = async (id, start, end, params) => {
     let sale_amount = 0, promotion_amount = 0, express_fee = 0, profit = 0, 
         oriType, type = '', except = false, operation_amount = 0, 
         words_market_vol = 0, words_vol = 0, order_num = 0, refund_num = 0,
-        children = [], warning = 0
+        children = [], warning = 0, packing_fee = 0
     let columnInfo = JSON.parse(JSON.stringify(columnList))
     if (params.stats == 'verified') columnInfo[1].label = '核销金额'
     if (params.type) {
@@ -129,6 +132,7 @@ const getDataStats = async (id, start, end, params) => {
         order_num += parseFloat(result[type].data[i].order_num)
         refund_num += parseFloat(result[type].data[i].refund_num)
         express_fee += parseFloat(result[type].data[i].express_fee)
+        packing_fee += parseFloat(result[type].data[i].packing_fee)
         profit += parseFloat(result[type].data[i].profit)
         if (type == typeList.project.value && result[type].data[i].name == projectNameList.coupang) continue
         for (let j = 0; j < result[type].data[i].children.length; j++) {
@@ -169,6 +173,7 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].sale_amount = sale_amount.toFixed(2)
     result.total.data[0].promotion_amount = promotion_amount.toFixed(2)
     result.total.data[0].express_fee = express_fee.toFixed(2)
+    result.total.data[0].packing_fee = packing_fee.toFixed(2)
     result.total.data[0].profit = profit.toFixed(2)
     result.total.data[0].children = children.filter(item => item.id)
     result.total.data[0].warning = warning
@@ -248,7 +253,7 @@ const getDataStatsDetail = async (type, name, column, start, end, stats, user) =
             shopNames = `${shopNames}${shops[i].shop_name}","`
         }
         shopNames = shopNames.substring(0, shopNames.length - 3)
-        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'order_num', 'refund_num'].includes(column))
+        if (['sale_amount', 'promotion_amount', 'express_fee', 'packing_fee', 'profit', 'operation_amount', 'order_num', 'refund_num'].includes(column))
             result = await func.getDetailByShopNamesAndTme(shopNames, column, start, end)
         else if (column == 'operation_rate')
             result = await func.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'promotion_amount', column, start, end, 100)
@@ -273,7 +278,7 @@ const getDataStatsDetail = async (type, name, column, start, end, stats, user) =
         userNames = userNames.substring(0, userNames.length - 3)
         let links = await userOperationRepo.getLinkIdsByUserNames(userNames, shopNames)
         let linkIds = links.map((item) => item.goods_id).join('","')
-        if (['sale_amount', 'promotion_amount', 'express_fee', 'profit', 'operation_amount', 'order_num', 'refund_num'].includes(column))
+        if (['sale_amount', 'promotion_amount', 'express_fee', 'packing_fee', 'profit', 'operation_amount', 'order_num', 'refund_num'].includes(column))
             result = await func.getDetailByLinkIdsAndTme(linkIds, column, start, end)
         else if (column == 'operation_rate')
             result = await func.getRateByLinkIdsAndTme(linkIds, 'sale_amount', 'promotion_amount', column, start, end, 100)
@@ -327,7 +332,7 @@ const getQueryInfo = async (type, oriType, id, oriName) => {
 }
 
 const queryShopInfo = async (shops, result, type, start, end, func) => {
-    let sale_amount = 0, info, promotion_amount = 0, 
+    let sale_amount = 0, info, promotion_amount = 0, packing_fee = 0, 
         express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
         order_num = 0, refund_num = 0, words_market_vol = 0, words_vol = 0
@@ -357,6 +362,7 @@ const queryShopInfo = async (shops, result, type, start, end, func) => {
             market_rate = parseFloat(info[0].market_rate || 0).toFixed(2)
             refund_rate = parseFloat(info[0].refund_rate || 0).toFixed(2)
             express_fee = parseFloat(info[0].express_fee || 0).toFixed(2)
+            packing_fee = parseFloat(info[0].packing_fee || 0).toFixed(2)
             profit = parseFloat(info[0].profit || 0).toFixed(2)
             profit_rate = parseFloat(info[0].profit_rate || 0).toFixed(2)
             operation_amount = parseFloat(info[0].operation_amount || 0).toFixed(2)
@@ -384,6 +390,7 @@ const queryShopInfo = async (shops, result, type, start, end, func) => {
             market_rate,
             refund_rate,
             express_fee,
+            packing_fee,
             profit,
             profit_rate,
             operation_amount,
@@ -399,7 +406,7 @@ const queryShopInfo = async (shops, result, type, start, end, func) => {
 }
 
 const queryUserInfo = async (users, result, type, start, end, func) => {
-    let sale_amount = 0, info, links, promotion_amount = 0, 
+    let sale_amount = 0, info, links, promotion_amount = 0, packing_fee = 0, 
         express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
         order_num = 0, refund_num = 0, words_market_vol = 0, words_vol = 0
@@ -443,6 +450,7 @@ const queryUserInfo = async (users, result, type, start, end, func) => {
             market_rate = parseFloat(info[0].market_rate || 0).toFixed(2)
             refund_rate = parseFloat(info[0].refund_rate || 0).toFixed(2)
             express_fee = parseFloat(info[0].express_fee || 0).toFixed(2)
+            packing_fee = parseFloat(info[0].packing_fee || 0).toFixed(2)
             profit = parseFloat(info[0].profit || 0).toFixed(2)
             profit_rate = parseFloat(info[0].profit_rate || 0).toFixed(2)
             operation_amount = parseFloat(info[0].operation_amount || 0).toFixed(2)
@@ -468,6 +476,7 @@ const queryUserInfo = async (users, result, type, start, end, func) => {
             market_rate,
             refund_rate,
             express_fee,
+            packing_fee,
             profit,
             profit_rate,
             operation_amount,
@@ -699,15 +708,10 @@ const getGoodsInfoDetailTotal = async (goods_id, start, end, stats) => {
             roi: info[i].roi,
             refund_rate: info[i].refund_rate,
             profit_rate: info[i].profit_rate,
+            gross_profit: info[i].gross_profit, 
             hasChild: false
         })
         dateMap[info[i].date] = i
-    }
-    info = []
-    info = await func.getDataGrossProfitByTime(goods_id, start, end)
-    for (let i = 0; i < info.length; i++) {
-        if (!result[dateMap[info[i].date]]) result[dateMap[info[i].date]] = {}
-        result[dateMap[info[i].date]]['gross_profit'] = info[i].gross_profit
     }
     info = []
     info = await func.getDataPromotionQOQByTime(goods_id, start, end)
@@ -908,7 +912,14 @@ const importGoodsOrderStat = async (rows, time) => {
             date, goods_id: null, sku_code: code, ...dataMap2[code]})
     }
     if (result) redisRepo.batchDelete(`${redisKeys.operation}:info:*`)
+    batchInsertGoodsSalesStats(time)
     return result
+}
+
+const batchInsertGoodsSalesStats = async (date) => {
+    await goodsSalesStats.deleteByDate(date)
+    await goodsSalesStats.batchInsert(date)
+    logger.info(`[发货单品数据刷新]：时间:${date}`)
 }
 
 const importGoodsKeyWords = async (rows, time) => {
@@ -939,6 +950,7 @@ const importGoodsKeyWords = async (rows, time) => {
                 j++
             }
             await goodsOtherInfoRepo.updateKeyWords([total, base, words, goods_id, time])
+            updateGoodsStatsVol(goods_id, total, base, time)
         }
         result = true
     } else {
@@ -970,6 +982,7 @@ const importGoodsKeyWords = async (rows, time) => {
                 words,
                 time
             )
+            updateGoodsStatsVol(goods_id, total, base, time)
             count += 1
         }
         if (count > 0) {
@@ -1000,6 +1013,7 @@ const importGoodsDSR = async (rows, time) => {
             }
             dsr = parseInt(dsr)
             await goodsOtherInfoRepo.updateDSR([dsr, goods_id, time])
+            updateGoodsStatsDSR(goods_id, dsr, time)
         }
         result = true
     } else {
@@ -1022,6 +1036,7 @@ const importGoodsDSR = async (rows, time) => {
                 null,
                 time
             )
+            updateGoodsStatsDSR(goods_id, dsr, time)
             count += 1
         }
         if (count > 0) {
@@ -1030,6 +1045,14 @@ const importGoodsDSR = async (rows, time) => {
     }
     if (result) redisRepo.batchDelete(`${redisKeys.operation}:*`)
     return result
+}
+
+const updateGoodsStatsVol = async (goods_id, total, base, date) => {
+    await goodsSalesStats.updateVol(goods_id, total, base, date)
+}
+
+const updateGoodsStatsDSR = async (goods_id, dsr, date) => {
+    await goodsSalesStats.updateDSR(goods_id, dsr, date)
 }
 
 const getGoodsLineInfo = async (startDate, endDate, params, id) => {
@@ -1227,7 +1250,7 @@ const getWorkStats = async (user, start, end, params) => {
 }
 
 const importGoodsPayInfo = async (rows, time) => {
-    let count = 0, count1 = 0, count2 = 0, 
+    let count = 0, count1 = 0, count2 = 0, dataMap = {}
         data = [], data1 = [], data2 = [], result = false
     let columns = rows[0].values,
         goods_id_row = null, 
@@ -1365,6 +1388,7 @@ const importGoodsPayInfo = async (rows, time) => {
             express_fee,
             bill
         )
+        dataMap[goods_id] = true
     }
     logger.info(`[支付数据导入]：时间:${date}, 总计数量:${count}, 推广数据:${count1}, 账单数据:${count2}`)
     if (count > 0) {
@@ -1379,7 +1403,18 @@ const importGoodsPayInfo = async (rows, time) => {
             await goodsBillRepo.batchInsert(count2, data2)
         }
     }
+    updateGoodsStatsPayments(dataMap, date)
     return result
+}
+
+const updateGoodsStatsPayments = async (data, date) => {
+    for (let goods_id in data) {
+        if (goods_id) {
+            await goodsSalesStats.updatePayments(goods_id, date)
+            await goodsVerifiedsStats.updatePayments(goods_id, date)
+        }
+    }
+    logger.info(`[单品表支付数据刷新]：时间:${date}`)
 }
 
 const importGoodsCompositeInfo = async (rows, time) => {
@@ -1639,6 +1674,7 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
         await goodsPromotionRepo.deleteByDate(date, promotion_name)
         result = await goodsPromotionRepo.batchInsert(count, data)
     }
+    batchInsertGoodsSalesStats(date)
     return result
 }
 
@@ -1738,7 +1774,7 @@ const importGoodsXHSInfo = async (rows, time) => {
 }
 
 const importGoodsBrushingInfo = async (rows, time) => {
-    let result = false, count = 0
+    let result = false, count = 0, dataMap = {}
     let columns = rows[0].values,
         goods_id_row = null,
         sku_code_row = null,
@@ -1769,6 +1805,7 @@ const importGoodsBrushingInfo = async (rows, time) => {
             else goods_id_info[info] += 1
             order_id_info[order] = true
         }
+        dataMap[goods_id] = true
     }
     for (let index in goods_id_info) {
         goods_id = index.split('_')[0]
@@ -1784,6 +1821,7 @@ const importGoodsBrushingInfo = async (rows, time) => {
         }
         count += 1
     }
+    updateGoodsStatsPayments(dataMap, date)
     logger.info(`[刷单数据导入]：时间:${date}, 总计数量:${count}`)
     return result
 }
@@ -2160,12 +2198,154 @@ const importGoodsOrderVerifiedStat = async (rows, time) => {
             date, goods_id: null, sku_code: code, ...dataMap2[code]})
     }
     if (result) redisRepo.batchDelete(`${redisKeys.operation}:verified:*`)
+    batchInsertGoodsVerifiedsStats(time)
     return result
+}
+
+const batchInsertGoodsVerifiedsStats = async (date) => {
+    await goodsVerifiedsStats.deleteByDate(date)
+    await goodsVerifiedsStats.batchInsert(date)
+    logger.info(`[核销单品数据刷新]：时间:${date}`)
 }
 
 const createShopPromotionLog = async (date, shop_name) => {
     const result = await shopPromotionLog.create(date, shop_name)
     return result
+}
+
+const importOrdersGoods = async (rows, date) => {
+    let orderMap = {}, dataMap = {}, data = [], count = 0, result = false
+    let columns = rows[0].values,
+        order_code_row = null,
+        shop_name_row = null,
+        shop_id_row = null, 
+        sku_code_row = null,
+        goods_id_row = null,
+        sale_amount_row = null
+    for (let i = 1; i <= columns.length; i++) {
+        if (columns[i] == '店铺') {shop_name_row = i; continue}
+        if (columns[i] == '店铺编码') {shop_id_row = i; continue}
+        if (columns[i] == '线上单号') {order_code_row = i; continue}
+        if (columns[i] == '商品编码') {sku_code_row = i; continue}
+        if (columns[i] == '收入-实收金额') {sale_amount_row = i; continue}
+        if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
+    }
+    for (let i = 1; i < rows.length; i++) {
+        let order_code = typeof(rows[i].getCell(order_code_row).value) == 'string' ? 
+            rows[i].getCell(order_code_row).value.trim() : 
+            rows[i].getCell(order_code_row).value
+        let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
+            rows[i].getCell(shop_name_row).value.trim() : 
+            rows[i].getCell(shop_name_row).value
+        let shop_id = typeof(rows[i].getCell(shop_id_row).value) == 'string' ? 
+            rows[i].getCell(shop_id_row).value.trim() : 
+            rows[i].getCell(shop_id_row).value
+        let sku_code = typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
+            rows[i].getCell(sku_code_row).value.trim() : 
+            rows[i].getCell(sku_code_row).value
+        let goods_id = typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
+            rows[i].getCell(goods_id_row).value.trim() : 
+            rows[i].getCell(goods_id_row).value
+        let sale_amount = rows[i].getCell(sale_amount_row).value
+        if (sale_amount <= 0) continue
+        if (orderMap[order_code] != undefined) { 
+            orderMap[order_code].total_amount += parseFloat(sale_amount)
+        } else {
+            orderMap[order_code] = {
+                shop_id,
+                shop_name,
+                total_amount: parseFloat(sale_amount)
+            }
+        }
+        dataMap[`${order_code}_${goods_id || ''}_${sku_code}`] = parseFloat(sale_amount)
+    }
+    logger.info(`[订单利润-发货导入]：时间:${date}`)
+    await ordersGoodsRepo.deleteByDate(date)
+    for(let info in dataMap) {
+        let values = info.split('_')
+        data.push(
+            values[0],
+            date,
+            orderMap[values[0]].shop_id,
+            orderMap[values[0]].shop_name,
+            values[1]?.length ? values[1] : null,
+            values[2],
+            dataMap[info],
+            orderMap[values[0]].total_amount,
+            orderMap[values[0]].total_amount > 0 ? 
+                (dataMap[info] / orderMap[values[0]].total_amount).toFixed(2) : 0
+        )
+        count += 1
+    }
+    updateOrderGoods(dataMap, orderMap, date)
+    result = await ordersGoodsRepo.batchInsert(count, data)
+    return result
+}
+
+const updateOrderGoods = async (data, order, date) => {
+    for (let info in data) {
+        let values = info.split('_')
+        let goods_id = values[1]?.length ? values[1] : null
+        let shop_id = order[values[0]].shop_id
+        await goodsSalesStats.updateLaborCost(goods_id, shop_id, date)
+    }
+    logger.info(`[发货人工费刷新]：时间:${date}`)
+}
+
+const importOrdersGoodsVerified = async (rows, date) => {
+    let data = [], result = false
+    let columns = rows[0].values,
+        shop_id_row = null, 
+        order_code_row = null,
+        sku_code_row = null,
+        goods_id_row = null,
+        sale_amount_row = null
+    for (let i = 1; i <= columns.length; i++) {        
+        if (columns[i] == '店铺编码') {shop_id_row = i; continue}
+        if (columns[i] == '线上单号') {order_code_row = i; continue}
+        if (columns[i] == '商品编码') {sku_code_row = i; continue}
+        if (columns[i] == '收入-实收金额') {sale_amount_row = i; continue}
+        if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
+    }
+    for (let i = 1; i < rows.length; i++) {
+        let shop_id = typeof(rows[i].getCell(shop_id_row).value) == 'string' ? 
+            rows[i].getCell(shop_id_row).value.trim() : 
+            rows[i].getCell(shop_id_row).value
+        let order_code = typeof(rows[i].getCell(order_code_row).value) == 'string' ? 
+            rows[i].getCell(order_code_row).value.trim() : 
+            rows[i].getCell(order_code_row).value
+        let sku_code = typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
+            rows[i].getCell(sku_code_row).value.trim() : 
+            rows[i].getCell(sku_code_row).value
+        let goods_id = typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
+            rows[i].getCell(goods_id_row).value.trim() : 
+            rows[i].getCell(goods_id_row).value
+        let sale_amount = rows[i].getCell(sale_amount_row).value
+        if (sale_amount <= 0) continue
+        data.push({order_code, goods_id, sku_code, shop_id})
+    }
+    logger.info(`[订单利润-核销导入]：时间:${date}`)
+    result = true
+    updateOrderGoodsVerified(data, date)
+    return result
+}
+
+const updateOrderGoodsVerified = async (data, date) => {
+    let dataMap = {}
+    for (let i = 0; i < data.length; i++) {
+        let result = await ordersGoodsRepo.update(
+            date, data[i].order_code, data[i].goods_id, data[i].sku_code
+        )
+        dataMap[`${data[i].goods_id || ''}_${data[i].shop_id}`] = true
+        if (!result) logger.error(`[订单利润-核销导入]: ${JSON.stringify(data[i])} 失败`)
+    }
+    for (let info in dataMap) {
+        let values = info.split('_')
+        let goods_id = values[0]?.length ? values[0] : null
+        let shop_id = values[1]
+        await goodsVerifiedsStats.updateLaborCost(goods_id, shop_id, date)
+    }
+    logger.info(`[核销人工费刷新]：时间:${date}`)
 }
 
 module.exports = {
@@ -2196,5 +2376,7 @@ module.exports = {
     checkOperationOptimize,
     importGoodsVerified,
     importGoodsOrderVerifiedStat,
-    createShopPromotionLog
+    createShopPromotionLog,
+    importOrdersGoods,
+    importOrdersGoodsVerified,
 }

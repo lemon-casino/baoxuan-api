@@ -45,6 +45,7 @@ const columnList = [
     {label: '订单量', key: 'order_num'},
     {label: '退货率(%)', key: 'refund_rate'}, 
     {label: '运费', key: 'express_fee'}, 
+    {label: '包材费', key: 'packing_fee'}, 
     {label: '利润', key: 'profit'}, 
     {label: '利润率(%)', key: 'profit_rate'}
 ]

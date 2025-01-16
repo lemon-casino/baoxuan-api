@@ -41,5 +41,7 @@ module.exports = [
     '/util/dingding-config',
     '/util/getUserInfo',
     '/operation/shop-promotion-log',
+    "/operation/orders-goods/import",
+    '/operation/orders-goods-verified/import',
     /^\/download\/.*/,
 ]
