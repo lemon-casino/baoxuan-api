@@ -25,6 +25,9 @@ router.post('/goods-orders/import', operationApi.importGoodsOrderInfo)
 router.post('/goods-verified/import', operationApi.importGoodsVerified)
 router.post('/goods-order-verified-stat/import', operationApi.importGoodsOrderVerifiedStat)
 router.post('/shop-promotion-log', operationApi.createShopPromotionLog)
+//订单数据导入
+router.post('/orders-goods/import', operationApi.importOrdersGoods)
+router.post('/orders-goods-verified/import', operationApi.importOrdersGoodsVerified)
 /**
  * 京东自营
  */
