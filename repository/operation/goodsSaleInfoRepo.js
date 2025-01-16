@@ -569,7 +569,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         row[i].important_attribute = row1[0].important_attribute
                         row[i].first_category = row1[0].first_category
                         row[i].second_category = row1[0].second_category
-                        row[i].pit_target = row1[0].pit_target
+                        row[i].pit_target = row1[0].pit_target*targettime
                         row[i].onsale_info = row1[0].onsale_info
                         row[i].sale_amount_profit_day=(row[i].sale_amount/(row1[0].pit_target*targettime)*100).toFixed(2) + '%'
                         row[i].sale_amount_profit_month=(row[i].sale_amount/(row1[0].pit_target*days)*100).toFixed(2) + '%'
