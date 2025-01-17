@@ -905,6 +905,32 @@ const importOrdersGoodsVerified = async (req, res, next) => {
     }
 }
 
+const refreshGoodsSalesStats = async (req, res, next) => {
+    try {
+        const {date} = req.body
+        joiUtil.validate({
+            date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        await operationService.batchInsertGoodsSalesStats(date)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const refreshGoodsVerifiedsStats = async (req, res, next) => {
+    try {
+        const {date} = req.body
+        joiUtil.validate({
+            date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        await operationService.batchInsertGoodsVerifiedsStats(date)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -935,5 +961,7 @@ module.exports = {
     importGoodsOrderVerifiedStat,
     createShopPromotionLog,
     importOrdersGoods,
-    importOrdersGoodsVerified
+    importOrdersGoodsVerified,
+    refreshGoodsSalesStats,
+    refreshGoodsVerifiedsStats
 }

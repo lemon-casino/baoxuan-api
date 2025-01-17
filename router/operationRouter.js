@@ -45,4 +45,8 @@ router.post('/pannel-setting', operationApi.setPannelSetting)
 //测试优化
 router.post('/check-optimize', operationApi.checkOperationOptimize)
 
+//数据同步
+router.post('/refresh-sale-stats', operationApi.refreshGoodsSalesStats)
+router.post('/refresh-verify-stats', operationApi.refreshGoodsVerifiedsStats)
+
 module.exports = router
