@@ -912,7 +912,7 @@ const importGoodsOrderStat = async (rows, time) => {
             date, goods_id: null, sku_code: code, ...dataMap2[code]})
     }
     if (result) redisRepo.batchDelete(`${redisKeys.operation}:info:*`)
-    batchInsertGoodsSalesStats(time)
+    await batchInsertGoodsSalesStats(time)
     return result
 }
 
@@ -1674,7 +1674,7 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
         await goodsPromotionRepo.deleteByDate(date, promotion_name)
         result = await goodsPromotionRepo.batchInsert(count, data)
     }
-    batchInsertGoodsSalesStats(date)
+    await batchInsertGoodsSalesStats(date)
     return result
 }
 
@@ -2198,7 +2198,7 @@ const importGoodsOrderVerifiedStat = async (rows, time) => {
             date, goods_id: null, sku_code: code, ...dataMap2[code]})
     }
     if (result) redisRepo.batchDelete(`${redisKeys.operation}:verified:*`)
-    batchInsertGoodsVerifiedsStats(time)
+    await batchInsertGoodsVerifiedsStats(time)
     return result
 }
 
@@ -2379,4 +2379,6 @@ module.exports = {
     createShopPromotionLog,
     importOrdersGoods,
     importOrdersGoodsVerified,
+    batchInsertGoodsSalesStats,
+    batchInsertGoodsVerifiedsStats
 }
