@@ -221,9 +221,10 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
     }
     let preStart = moment(start).subtract(1, 'day').format('YYYY-MM-DD')
     let preEnd = moment(end).subtract(1, 'day').format('YYYY-MM-DD')  
-    // let targettime = moment(end).startOf('month').format('YYYY-MM-DD')
+    let targetstart = moment(end).startOf('month').format('YYYY-MM-DD')
+    let targetend = moment(end).endOf('month').format('YYYY-MM-DD')
     let targettime = moment(preEnd).diff(moment(preStart), 'days')+1
-    let days = moment().daysInMonth()
+    let days = moment(end).daysInMonth()
     let sql = `SELECT SUM(a1.sale_amount) AS sale_amount, a1.goods_id FROM goods_verifieds a1`
     subsql = ` WHERE a1.date BETWEEN ? AND ?`
     p.push(start, end)
@@ -330,7 +331,7 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                     FROM goods_verifieds WHERE date BETWEEN ? AND ?
                     GROUP BY goods_id
                     )AS a2
-                    left join (
+                    LEFT JOIN (
                     SELECT goods_id,IFNULL(pit_target,0)AS pit_target
                     FROM dianshang_operatiON_attribute 
                     WHERE product_definition IS NOT NULL 
@@ -344,10 +345,10 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                 SELECT val FROM (
                 SELECT a2.goods_id,ROUND(IFNULL(sale_amount,0)/(pit_target*${days})*100,2) AS val FROM (
                 SELECT goods_id,SUM(sale_amount)AS sale_amount 
-                FROM goods_verifieds where date BETWEEN ? AND ?
+                FROM goods_verifieds WHERE date BETWEEN ? AND ?
                 GROUP BY goods_id
                 )AS a2
-                left join (
+                LEFT JOIN (
                 SELECT goods_id,IFNULL(pit_target,0)AS pit_target
                 FROM dianshang_operatiON_attribute 
                 WHERE product_definition IS NOT NULL
@@ -393,8 +394,8 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
             subsql = `${subsql} AND a1.shop_id LIKE '%${params.search[i].value}%'`
         } else if (params.search[i].field_id == 'onsale_info') {
             if (params.search[i].value != 'old') {
-                let tStart = moment().subtract(params.search[i].value, 'day').format('YYYY-MM-DD')
-                let tEnd = moment().subtract(params.search[i].value, 'day').format('YYYY-MM-DD')
+                let tStart = moment().subtract(params.search[i].value-1, 'day').format('YYYY-MM-DD')
+                let tEnd = moment().subtract(params.search[i].value-1, 'day').format('YYYY-MM-DD')
                 subsql = `${subsql} AND EXISTS(
                         SELECT a2.goods_id FROM dianshang_operation_attribute a2 
                         WHERE a2.onsale_date BETWEEN ? AND ? AND a1.goods_id = a2.goods_id)`
@@ -482,6 +483,7 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                 SUM(a2.real_pay_amount) * 100, 2), 0) AS real_pay_amount_qoq,
             IFNULL(SUM(a1.bill), 0) AS bill,
             IFNULL(SUM(a1.sale_amount), 0) AS sale_amount,
+            IFNULL(SUM(a3.sale_amount), 0) AS sale_amount_month,
             IFNULL(SUM(a1.cost_amount), 0) AS cost_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.packing_fee), 0) AS packing_fee, 
@@ -522,7 +524,13 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                 ) * 100, 2), 0) AS gross_profit  
             FROM goods_verifieds_stats a1 LEFT JOIN goods_verifieds_stats a2 
                 ON a2.goods_id = a1.goods_id 
-                AND a2.date = DATE_SUB(a1.date, INTERVAL 1 DAY)`
+                AND a2.date = DATE_SUB(a1.date, INTERVAL 1 DAY)
+            LEFT JOIN(SELECT goods_id,shop_name,sum(sale_amount) AS sale_amount 
+                FROM goods_verifieds_stats 
+                WHERE date BETWEEN '${targetstart}' AND '${targetend}'
+                GROUP BY goods_id,shop_name
+                ) AS a3
+			ON a1.goods_id=a3.goods_id`
         sql1 = `GROUP BY a1.goods_id, a1.shop_name, a1.shop_id`
         sql = `SELECT aa.* FROM (${sql}${subsql}${sql1}) aa`
         if (params.sort) sql = `${sql} ORDER BY aa.${params.sort}`
@@ -562,10 +570,16 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                         row[i].important_attribute = row1[0].important_attribute
                         row[i].first_category = row1[0].first_category
                         row[i].second_category = row1[0].second_category
-                        row[i].pit_target = row1[0].pit_target
+                        row[i].pit_target = row1[0].pit_target*targettime
                         row[i].onsale_info = row1[0].onsale_info
                         row[i].sale_amount_profit_day=(row[i].sale_amount/(row1[0].pit_target*targettime)*100).toFixed(2) + '%'
-                        row[i].sale_amount_profit_month=(row[i].sale_amount/(row1[0].pit_target*days)*100).toFixed(2) + '%'
+                        row[i].sale_amount_profit_month=(row[i].sale_amount_month/(row1[0].pit_target*days)*100).toFixed(2) + '%'
+                        row[i].pit_target_month = row1[0].pit_target*days
+                        const arrary=["pakchoice旗舰店（天猫）","八千行旗舰店（天猫）","宝厨行（淘宝）","八千行（淘宝）","北平商号（淘宝）","天猫teotm旗舰店"]
+                        if (!arrary.includes(row[i].shop_name)) {
+                            row[i].sale_amount_profit_day=null
+                            row[i].sale_amount_profit_month=null
+                        }
                     }
                     sql = `SELECT sku_code FROM goods_sale_verified WHERE goods_id = ? 
                             AND \`date\` >= ? AND \`date\` <= ?
