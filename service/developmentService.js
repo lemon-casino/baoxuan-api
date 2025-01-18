@@ -1,6 +1,7 @@
 const newFormsRepo = require('../repository/newFormsRepo')
 const userRepo = require('../repository/userRepo')
 const producerPlanRepo = require('../repository/producerPlanRepo')
+const userOperationRepo = require('../repository/operation/userOperationRepo')
 const { redisKeys } = require('../const/redisConst')
 const redisUtil = require("../utils/redisUtil")
 const crypto = require('crypto')
@@ -204,6 +205,124 @@ developmentService.getPlans = async (month) => {
     for (let i = 0; i < result.length; i++) {
         result[i].children.sort((a, b) => moment(b.months).valueOf() - moment(a.months).valueOf())
     }
+    return result
+}
+
+developmentService.getSaleStats = async (type, month, limit, offset, sort) => {
+    let result = {
+        column: [
+            {title: '产品线简称', field_id: 'brief_product_line', type: 'input', show: true},
+            {
+                title: type == 'verified' ? '核销金额' : '发货金额', 
+                field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
+            }, {
+                title: '推广费', field_id: 'promotion_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '费比(%)', field_id: 'operation_rate', type: 'number', 
+                min: 80, max: 100, show: true
+            }, {
+                title: 'ROI', field_id: 'roi', type: 'number', 
+                min: 1, max: 3, show: true
+            }, {
+                title: '市占率(%)', field_id: 'market_rate', type: 'number', 
+                min: 0, max: 10, show: true
+            }, {
+                title: '退货率(%)', field_id: 'refund_rate', type: 'number', 
+                min: 10, max: 30, show: true
+            }, {
+                title: 'DSR评分', field_id: 'dsr', type: 'number', 
+                min: 0, max: 90, show: true
+            }, {
+                title: '运费', field_id: 'express_fee', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '包材费', field_id: 'packing_fee', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '人工费', field_id: 'labor_cost', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '利润', field_id: 'profit', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '利润率(%)', field_id: 'profit_rate', type: 'number', 
+                min: 0, max: 15, show: true
+            },
+            {title: '操作', field_id: 'operate', show: true}
+        ],
+        data: {}
+    }
+    const {data, total} = await userOperationRepo.getProductLine(type, month, limit, offset, sort)
+    result.data = data
+    result.total = total
+    return result
+}
+
+developmentService.getSaleStatsDetail = async (type, month, brief_product_line) => {
+    let result = {
+        column: [
+            {title: '产品线简称', field_id: 'brief_product_line', type: 'input', show: true},
+            {
+                title: type == 'verified' ? '核销金额' : '发货金额', 
+                field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
+            }, {
+                title: '推广费', field_id: 'promotion_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '费比(%)', field_id: 'operation_rate', type: 'number', 
+                min: 80, max: 100, show: true
+            }, {
+                title: 'ROI', field_id: 'roi', type: 'number', 
+                min: 1, max: 3, show: true
+            }, {
+                title: '市占率(%)', field_id: 'market_rate', type: 'number', 
+                min: 0, max: 10, show: true
+            }, {
+                title: '退货率(%)', field_id: 'refund_rate', type: 'number', 
+                min: 10, max: 30, show: true
+            }, {
+                title: 'DSR评分', field_id: 'dsr', type: 'number', 
+                min: 0, max: 90, show: true
+            }, {
+                title: '运费', field_id: 'express_fee', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '包材费', field_id: 'packing_fee', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '人工费', field_id: 'labor_cost', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '利润', field_id: 'profit', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '利润率(%)', field_id: 'profit_rate', type: 'number', 
+                min: 0, max: 15, show: true
+            },
+            {title: '主销编码', field_id: 'sku_id', type: 'input', show: true},
+            {title: '项目', field_id: 'project_name', type: 'input', show: true, default: null},
+            {title: '链接ID', field_id: 'goods_id', type: 'input', show: true, default: null},
+            {title: '一级类目', field_id: 'first_category', type: 'input', show: true, default: null},
+            {title: '二级类目', field_id: 'second_category', type: 'input', show: true, default: null},
+            {title: '三级类目', field_id: 'level_3_category', type: 'input', show: true, default: null},
+            {title: '销售目标', field_id: 'product_rank', type: 'input', show: true, default: null},
+            {title: '产品定义', field_id: 'product_definition', type: 'input', show: true, default: null},
+            {title: '库存结构', field_id: 'stock_structure', type: 'input', show: true, default: null},
+            {title: '产品等级', field_id: 'product_rank', type: 'input', show: true, default: null},
+            {title: '产品设计属性', field_id: 'product_design_attr', type: 'input', show: true, default: null},
+            {title: '季节', field_id: 'seasons', type: 'input', show: true, default: null},
+            {title: '品牌', field_id: 'brand', type: 'input', show: true, default: null},
+            {title: '开发负责人', field_id: 'exploit_director', type: 'input', show: true, default: null},
+            {title: '采购负责人', field_id: 'purchase_director', type: 'input', show: true, default: null},
+            {title: '产品线管理人', field_id: 'line_manager', type: 'input', show: true, default: null},
+            {title: '运营负责人', field_id: 'operator', type: 'input', show: true, default: null},
+            {title: '产品线负责人', field_id: 'line_director', type: 'input', show: true, default: null},
+            {title: '上架时间', field_id: 'onsale_date', type: 'input', show: true, default: null},
+        ],
+        data: {}
+    }
+    result.data = await userOperationRepo.getProductLineDetail(type, month, brief_product_line)
     return result
 }
 

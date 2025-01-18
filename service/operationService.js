@@ -16,7 +16,10 @@ const {
     optimizeFlowUUid,
     optimizeUser,
     platformMap,
-    optimizeFieldMap
+    optimizeFieldMap,
+    goodsIsOldMap,
+    goodsRankMap,
+    optimizeRankMap
 } = require('../const/operationConst')
 const newFormsRepo = require('../repository/newFormsRepo')
 const goodsOtherInfoRepo = require('../repository/operation/goodsOtherInfoRepo')
@@ -39,6 +42,7 @@ const shopPromotionLog = require('../repository/operation/shopPromotionLog')
 const ordersGoodsRepo = require('../repository/operation/ordersGoodsRepo')
 const goodsSalesStats = require('@/repository/operation/goodsSalesStats')
 const goodsVerifiedsStats = require('@/repository/operation/goodsVerifiedsStats')
+const moment = require('moment')
 
 /**
  * get operation data pannel data stats
@@ -2045,6 +2049,33 @@ const checkOperationOptimize = async () => {
                 info = await newFormsRepo.checkOptimize(goods_info[i].goods_id, optimize[j].title, optimize[j].days)
                 if (!info?.length) {
                     let params = {}
+                    params[optimizeFieldMap.optimize_rank] = optimizeRankMap[0]
+                    if (moment(goods_info[i].onsale_date).add(60, 'day').valueOf() >= moment().valueOf()) {
+                        params[optimizeFieldMap.is_old] = goodsIsOldMap[0]
+                        params[optimizeFieldMap.optimize_rank] = optimizeRankMap[1]
+                    } else {
+                        params[optimizeFieldMap.is_old] = goodsIsOldMap[1]
+                    }
+                    switch (goods_info[i].product_rank) {
+                        case 'S:1万':
+                        case 'S(月销20w以上)':
+                            params[optimizeFieldMap.rank] = goodsRankMap.S
+                            params[optimizeFieldMap.optimize_rank] = optimizeRankMap[1]
+                            break
+                        case 'A:5千':
+                        case 'A(月销10-20w)':
+                            params[optimizeFieldMap.rank] = goodsRankMap.A
+                            break
+                        case 'B:2千':
+                        case 'B(月销3-10w)':
+                            params[optimizeFieldMap.rank] = goodsRankMap.B
+                            break
+                        case 'C:1千':
+                        case 'C(月销3w以下)':
+                            params[optimizeFieldMap.rank] = goodsRankMap.C
+                            break
+                        default:
+                    }
                     params[optimizeFieldMap.name] = goods_info[i].brief_name
                     params[optimizeFieldMap.operator] = [goods_info[i].dingding_user_id]
                     params[optimizeFieldMap.goods_id] = goods_info[i].goods_id

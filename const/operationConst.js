@@ -144,13 +144,25 @@ const platformMap = {
     '淘工厂部': '淘工厂'
 }
 const optimizeFieldMap = {
-    name: 'textField_liihs7kv',
-    operator: 'employeeField_liihs7l0',
-    goods_id: 'textField_liihs7kw',
-    platform: 'radioField_lxlncgm1',
-    type: 'selectField_lk7qoefv',
-    content: 'multiSelectField_lwufb7oy'
+    name: 'textField_liihs7kv', //链接名称
+    operator: 'employeeField_liihs7l0', //运营负责人
+    goods_id: 'textField_liihs7kw', //链接ID
+    platform: 'radioField_lxlncgm1', //平台
+    is_old: 'radioField_m6072fu6', //是否为新老品
+    rank: 'radioField_m4s69d9s', //链接级别
+    optimize_rank: 'radioField_m6072fu7', //优化等级
+    type: 'selectField_liihs7kz', //优化类型
+    content: 'multiSelectField_lwufb7oy' //链接优化内容
 }
+
+const goodsIsOldMap = ['新品', '老品']
+const goodsRankMap = {
+    'S': 'S（月销20w以上）',
+    'A': 'A（月销10-20w）',
+    'B': 'B（月销3-10w）',
+    'C': 'C（月销3w以下）',
+}
+const optimizeRankMap = ['正常', '紧急']
 
 module.exports = {
     typeList,
@@ -169,5 +181,8 @@ module.exports = {
     optimizeFlowUUid,
     platformMap,
     optimizeFieldMap,
-    optimizeUser
+    optimizeUser,
+    goodsIsOldMap,
+    goodsRankMap,
+    optimizeRankMap
 }
