@@ -350,7 +350,7 @@ const importGoodsPayInfo = async (req, res, next) => {
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()
-            let readRes = await workbook.csv.readFile(newPath)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
@@ -535,7 +535,7 @@ const importJDZYInfo = async (req, res, next) => {
             let datainfo = fs.readFileSync(newPath)
             datainfo = iconv.decode(datainfo, 'GBK')
             fs.writeFileSync(newPath, datainfo)
-            let readRes = await workbook.csv.readFile(newPath)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
@@ -573,7 +573,7 @@ const importJDZYPromotionInfo = async (req, res, next) => {
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()
-            let readRes = await workbook.csv.readFile(newPath)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
@@ -650,7 +650,7 @@ const importGoodsOrderInfo = async (req, res, next) => {
             datainfo = iconv.decode(datainfo, 'GBK')
             fs.writeFileSync(newPath, datainfo)
             const workbook = new ExcelJS.Workbook()
-            let readRes = await workbook.csv.readFile(newPath)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
