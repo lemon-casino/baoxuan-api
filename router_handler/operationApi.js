@@ -123,7 +123,7 @@ const importGoodsInfo = async (req, res, next) => {
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()
-            let readRes = await workbook.csv.readFile(newPath)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
@@ -163,7 +163,7 @@ const importGoodsOrderStat = async (req, res, next) => {
             let datainfo = fs.readFileSync(newPath)
             datainfo = iconv.decode(datainfo, 'GBK')
             fs.writeFileSync(newPath, datainfo)
-            let readRes = await workbook.csv.readFile(newPath)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
@@ -752,7 +752,7 @@ const importGoodsVerified = async (req, res, next) => {
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()
-            let readRes = await workbook.csv.readFile(newPath)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
@@ -792,7 +792,7 @@ const importGoodsOrderVerifiedStat = async (req, res, next) => {
             let datainfo = fs.readFileSync(newPath)
             datainfo = iconv.decode(datainfo, 'GBK')
             fs.writeFileSync(newPath, datainfo)
-            let readRes = await workbook.csv.readFile(newPath)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
@@ -931,6 +931,19 @@ const refreshGoodsVerifiedsStats = async (req, res, next) => {
     }
 }
 
+const refreshLaborCost = async (req, res, next) => {
+    try {
+        const {date} = req.body
+        joiUtil.validate({
+            date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        await operationService.updateOrderGoods(date)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -963,5 +976,6 @@ module.exports = {
     importOrdersGoods,
     importOrdersGoodsVerified,
     refreshGoodsSalesStats,
-    refreshGoodsVerifiedsStats
+    refreshGoodsVerifiedsStats,
+    refreshLaborCost
 }

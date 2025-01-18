@@ -2277,17 +2277,20 @@ const importOrdersGoods = async (rows, date) => {
         )
         count += 1
     }
-    updateOrderGoods(dataMap, orderMap, date)
     result = await ordersGoodsRepo.batchInsert(count, data)
+    await updateOrderGoods(date)
     return result
 }
 
-const updateOrderGoods = async (data, order, date) => {
-    for (let info in data) {
-        let values = info.split('_')
-        let goods_id = values[1]?.length ? values[1] : null
-        let shop_id = order[values[0]].shop_id
-        await goodsSalesStats.updateLaborCost(goods_id, shop_id, date)
+const updateOrderGoods = async (date) => {
+    let result = await ordersGoodsRepo.getByDate(date)
+    for (let i = 0; i < result.length; i++) {
+        await goodsSalesStats.updateLaborCost(
+            result[i].labor_cost, 
+            result[i].goods_id, 
+            result[i].shop_id, 
+            date
+        )
     }
     logger.info(`[发货人工费刷新]：时间:${date}`)
 }
@@ -2380,5 +2383,6 @@ module.exports = {
     importOrdersGoods,
     importOrdersGoodsVerified,
     batchInsertGoodsSalesStats,
-    batchInsertGoodsVerifiedsStats
+    batchInsertGoodsVerifiedsStats,
+    updateOrderGoods
 }

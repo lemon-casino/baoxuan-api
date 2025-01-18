@@ -116,14 +116,10 @@ goodsSalesStats.updateDSR = async (goods_id, dsr, date) => {
     return result?.affectedRows ? true : false
 }
 
-goodsSalesStats.updateLaborCost = async (goods_id, shop_id, date) => {
-    let sql = `SELECT SUM(rate) AS labor_cost FROM orders_goods WHERE goods_id = ? 
-        AND shop_id = ? AND \`date\` = ?`
-    let rows = await query(sql, [goods_id, shop_id, date])
-    if (!rows?.length) return false
-    sql = `UPDATE goods_sales_stats SET labor_cost = ? WHERE goods_id = ? AND shop_id = ? 
+goodsSalesStats.updateLaborCost = async (labor_cost, goods_id, shop_id, date) => {
+    const sql = `UPDATE goods_sales_stats SET labor_cost = ? WHERE goods_id = ? AND shop_id = ? 
         AND \`date\` = ?`
-    const result = await query(sql, [rows[0].labor_cost, goods_id, shop_id, date])
+    const result = await query(sql, [labor_cost, goods_id, shop_id, date])
     return result?.affectedRows ? true : false
 }
 

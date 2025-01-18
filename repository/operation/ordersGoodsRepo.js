@@ -1,6 +1,20 @@
 const { query } = require('../../model/dbConn')
 const ordersGoodsRepo = {}
 
+ordersGoodsRepo.getByDate = async (date) => {
+    const sql = `SELECT SUM(rate) AS labor_cost, shop_id, goods_id FROM orders_goods 
+        WHERE \`date\` = ? GROUP BY shop_id, goods_id`
+    const result = await query(sql, [date])
+    return result || []
+}
+
+ordersGoodsRepo.getByVerifiedDate = async (date) => {
+    const sql = `SELECT SUM(rate) AS labor_cost, shop_id, goods_id FROM orders_goods 
+        WHERE verified_date = ? GROUP BY shop_id, goods_id`
+    const result = await query(sql, [date])
+    return result || []
+}
+
 ordersGoodsRepo.batchInsert = async (count, data) => {
     let sql = `INSERT INTO orders_goods(
             order_code, 
