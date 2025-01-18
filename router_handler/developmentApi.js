@@ -37,6 +37,41 @@ const getWorkPannel = async (req, res, next) => {
     }
 }
 
+const getDataPannel = async (req, res, next) => {
+    try {
+        const {type, month, currentPage, pageSize, sort} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
+            month: {value: month, schema: joiUtil.commonJoiSchemas.strRequired},
+            currentPage: {value: currentPage, schema: joiUtil.commonJoiSchemas.dateRequired},
+            pageSize: {value: pageSize, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        let limit = parseInt(pageSize)
+        let offset = (currentPage - 1) * pageSize
+        const result = await developmentService.getSaleStats(type, month, limit, offset, sort)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getDataPannelDetail = async (req, res, next) => {
+    try {
+        const {type, month, brief_product_line} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
+            month: {value: month, schema: joiUtil.commonJoiSchemas.strRequired},
+            brief_product_line: {value: brief_product_line, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const result = await developmentService.getSaleStatsDetail(type, month, brief_product_line)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
-    getWorkPannel
+    getWorkPannel, 
+    getDataPannel,
+    getDataPannelDetail
 }

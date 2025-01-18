@@ -288,4 +288,116 @@ userOperationRepo.getProjectById = async (id) => {
     return result || []
 }
 
+userOperationRepo.getProductLine = async (type, month, limit, offset, sort) => {
+    let table_name = type == 'verified' ? 'goods_verifieds_stats' : 'goods_sales_stats'
+    let sql = `SELECT COUNT(1) AS count FROM (
+        SELECT a.brief_product_line FROM (SELECT brief_product_line FROM 
+        dianshang_operation_attribute WHERE platform = '天猫部' GROUP BY brief_product_line) a 
+        LEFT JOIN dianshang_operation_attribute b ON a.brief_product_line = b.brief_product_line
+        LEFT JOIN ${table_name} a1 ON b.goods_id = a1.goods_id 
+            AND DATE_FORMAT(a1.date, '%Y-%m') = ? GROUP BY a.brief_product_line) aa`
+    let row = await query(sql, [month])
+    let total = 0, data = []
+    if (row?.length) total = row[0].count
+    else return {data, total}
+    sql = `SELECT * FROM (SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
+            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, IFNULL(SUM(operation_amount), 0) / 
+                SUM(sale_amount), 0), 2) AS operation_rate, 
+            FORMAT(IF(IFNULL(SUM(promotion_amount), 0) > 0, IFNULL(SUM(sale_amount), 0) / 
+                SUM(promotion_amount), 0), 2) AS roi,
+            FORMAT(IF(IFNULL(SUM(words_market_vol), 0) > 0, IFNULL(SUM(words_vol), 0) / 
+                SUM(words_market_vol), 0), 2) AS market_rate,
+            FORMAT(IF(IFNULL(SUM(order_num), 0) > 0, IFNULL(SUM(refund_num), 0) / 
+                SUM(order_num), 0), 2) AS refund_rate,
+            FORMAT(IFNULL(SUM(dsr), 0) / COUNT(1), 2) AS dsr, 
+            IFNULL(SUM(express_fee), 0) AS express_fee, 
+            IFNULL(SUM(packing_fee), 0) AS packing_fee, 
+            IFNULL(SUM(labor_cost), 0) AS labor_cost, 
+            IFNULL(SUM(profit), 0) AS profit, 
+            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, IFNULL(SUM(profit), 0) / 
+                SUM(sale_amount), 0), 2) AS profit_rate, 
+            a.brief_product_line 
+        FROM (SELECT brief_product_line FROM dianshang_operation_attribute 
+        WHERE platform = '天猫部' GROUP BY brief_product_line) a 
+        LEFT JOIN dianshang_operation_attribute b ON a.brief_product_line = b.brief_product_line
+        LEFT JOIN ${table_name} a1 ON b.goods_id = a1.goods_id 
+            AND DATE_FORMAT(a1.date, '%Y-%m') = ? GROUP BY a.brief_product_line) aa `
+    if (sort) sql = `${sql} ORDER BY aa.${sort} LIMIT ?, ?`
+    data = await query(sql, [month, offset, limit]) || []
+    return { data, total }
+}
+
+userOperationRepo.getProductLineDetail = async (type, month, brief_product_line) => {
+    let table_name = type == 'verified' ? 'goods_verifieds_stats' : 'goods_sales_stats'
+    let sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
+            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, IFNULL(SUM(operation_amount), 0) / 
+                SUM(sale_amount), 0), 2) AS operation_rate, 
+            FORMAT(IF(IFNULL(SUM(promotion_amount), 0) > 0, IFNULL(SUM(sale_amount), 0) / 
+                SUM(promotion_amount), 0), 2) AS roi,
+            FORMAT(IF(IFNULL(SUM(words_market_vol), 0) > 0, IFNULL(SUM(words_vol), 0) / 
+                SUM(words_market_vol), 0), 2) AS market_rate,
+            FORMAT(IF(IFNULL(SUM(order_num), 0) > 0, IFNULL(SUM(refund_num), 0) / 
+                SUM(order_num), 0), 2) AS refund_rate,
+            FORMAT(IFNULL(SUM(dsr), 0) / COUNT(1), 2) AS dsr, 
+            IFNULL(SUM(express_fee), 0) AS express_fee, 
+            IFNULL(SUM(packing_fee), 0) AS packing_fee, 
+            IFNULL(SUM(labor_cost), 0) AS labor_cost, 
+            IFNULL(SUM(profit), 0) AS profit, 
+            FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, IFNULL(SUM(profit), 0) / 
+                SUM(sale_amount), 0), 2) AS profit_rate, 
+            a.brief_product_line,
+            pi.project_name,
+            a.goods_id,
+            first_category,
+            second_category,
+            level_3_category,
+            product_rank,
+            product_definition,
+            stock_structure,
+            product_rank,
+            product_design_attr,
+            seasons,
+            brand,
+            exploit_director,
+            purchase_director,
+            line_manager,
+            operator,
+            line_director,
+            onsale_date
+        FROM dianshang_operation_attribute a
+        JOIN shop_info si ON a.shop_name = si.shop_name
+        JOIN project_info pi ON si.project_id = pi.id
+        LEFT JOIN ${table_name} a1 ON a.goods_id = a1.goods_id 
+            AND DATE_FORMAT(a1.date, '%Y-%m') = ?
+		WHERE a.brief_product_line = ?
+        GROUP BY pi.project_name, a.goods_id, first_category,
+            second_category,
+            level_3_category,
+            product_rank,
+            product_definition,
+            stock_structure,
+            product_rank,
+            product_design_attr,
+            seasons,
+            brand,
+            exploit_director,
+            purchase_director,
+            line_manager,
+            operator,
+            line_director,
+            onsale_date;`
+    let result = await query(sql, [month, brief_product_line]) || []
+    for (let i = 0; i < result.length; i++) {
+        sql = `SELECT sku_code FROM goods_sale_info WHERE goods_id = ? 
+                AND DATE_FORMAT(\`date\`, '%Y-%m') = ?
+            GROUP BY sku_code ORDER BY IFNULL(SUM(sale_amount), 0) DESC LIMIT 1`
+        let row = await query(sql, [result[i].goods_id, month])
+        result[i].sku_id = ''
+        if (row?.length) result[i].sku_id = row[0].sku_code
+    }
+    return result
+}
+
 module.exports = userOperationRepo
