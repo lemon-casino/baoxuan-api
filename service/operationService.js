@@ -43,6 +43,7 @@ const ordersGoodsRepo = require('../repository/operation/ordersGoodsRepo')
 const goodsSalesStats = require('@/repository/operation/goodsSalesStats')
 const goodsVerifiedsStats = require('@/repository/operation/goodsVerifiedsStats')
 const moment = require('moment')
+const goodsSalesRepo = require('@/repository/operation/goodsSalesRepo')
 
 /**
  * get operation data pannel data stats
@@ -916,8 +917,14 @@ const importGoodsOrderStat = async (rows, time) => {
             date, goods_id: null, sku_code: code, ...dataMap2[code]})
     }
     if (result) redisRepo.batchDelete(`${redisKeys.operation}:info:*`)
-    await batchInsertGoodsSalesStats(time)
+    await batchInsertGoodsSales(time)
     return result
+}
+
+const batchInsertGoodsSales = async (date) => {
+    await goodsSalesRepo.delete(date)
+    await goodsSalesRepo.batchInsert(date)
+    await batchInsertGoodsSalesStats(date)
 }
 
 const batchInsertGoodsSalesStats = async (date) => {
@@ -1678,7 +1685,7 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
         await goodsPromotionRepo.deleteByDate(date, promotion_name)
         result = await goodsPromotionRepo.batchInsert(count, data)
     }
-    await batchInsertGoodsSalesStats(date)
+    await batchInsertGoodsSales(date)
     return result
 }
 

@@ -721,7 +721,7 @@ goodsSaleVerifiedRepo.getNewOnSaleInfo = async (sale_date, start, end, limit, of
     }
     let presql = `SELECT COUNT(1) AS count FROM (SELECT doa.goods_id, doa.onsale_date `
     const sql = `FROM dianshang_operation_attribute doa
-        LEFT JOIN goods_sale_verified gsi ON doa.goods_id = gsi.goods_id
+        LEFT JOIN goods_verifieds gsi ON doa.goods_id = gsi.goods_id
         WHERE doa.onsale_date >= ? 
             AND gsi.date >= ? 
             AND gsi.date <= ? 
@@ -755,7 +755,7 @@ goodsSaleVerifiedRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                 sql = `${sql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
-                            IFNULL(SUM(a1.profit), 0) AS profit FROM goods_sale_verified a1 
+                            IFNULL(SUM(a1.profit), 0) AS profit FROM goods_verifieds a1 
                         WHERE a1.goods_id = "${goods_id}" 
                             AND a1.date BETWEEN "${start}" AND "${end}") aa 
                     WHERE IF(sale_amount > 0, profit / sale_amount * 100`
