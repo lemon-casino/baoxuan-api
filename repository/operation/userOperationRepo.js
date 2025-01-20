@@ -324,6 +324,7 @@ userOperationRepo.getProductLine = async (type, month, limit, offset, sort) => {
         LEFT JOIN ${table_name} a1 ON b.goods_id = a1.goods_id 
             AND DATE_FORMAT(a1.date, '%Y-%m') = ? GROUP BY a.brief_product_line) aa `
     if (sort) sql = `${sql} ORDER BY aa.${sort} LIMIT ?, ?`
+    else sql = `${sql} LIMIT ?, ?`
     data = await query(sql, [month, offset, limit]) || []
     return { data, total }
 }
