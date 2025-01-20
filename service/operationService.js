@@ -802,7 +802,7 @@ const importGoodsInfo = async (rows, time) => {
     }
     let amount = 0, saveAmount = 0
     for (let i = 1; i < rows.length; i++) {
-        amount += rows[i].getCell(sale_amount_row).value
+        amount += parseFloat(rows[i].getCell(sale_amount_row).value)
         let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
             rows[i].getCell(shop_name_row).value.trim() : 
             rows[i].getCell(shop_name_row).value
@@ -847,7 +847,7 @@ const importGoodsInfo = async (rows, time) => {
             null,
         )
         count += 1
-        saveAmount += rows[i].getCell(sale_amount_row).value
+        saveAmount += parseFloat(rows[i].getCell(sale_amount_row).value)
     }
     logger.info(`[发货数据导入]：时间:${time}, 总计金额:${amount}, 存储金额:${saveAmount}`)
     if (count > 0) {
@@ -1533,7 +1533,7 @@ const importJDZYInfo = async (rows, time) => {
     }
     let amount = 0, saveAmount = 0
     for (let i = 1; i < rows.length; i++) {
-        amount += rows[i].getCell(sale_amount_row).value
+        amount += parseFloat(rows[i].getCell(sale_amount_row).value)
         if (!rows[i].getCell(1).value) continue
         let sku_id = sku_id_row ? (typeof(rows[i].getCell(sku_id_row).value) == 'string' ? 
             rows[i].getCell(sku_id_row).value.trim() : 
@@ -1594,7 +1594,7 @@ const importJDZYInfo = async (rows, time) => {
             date
         )
         count += 1
-        saveAmount += rows[i].getCell(sale_amount_row).value
+        saveAmount += parseFloat(rows[i].getCell(sale_amount_row).value)
     }
     logger.info(`[京东自营发货数据导入]：时间:${date}, 总计金额:${amount}, 存储金额:${saveAmount}`)
     if (count > 0) {
@@ -1950,10 +1950,10 @@ const importGoodsOrderInfo = async (rows, time) => {
                 express_fee
             })
         } else {
-            data[tmp[goods_id][sku_code]].cost_amount += cost_amount
-            data[tmp[goods_id][sku_code]].qty += qty
-            data[tmp[goods_id][sku_code]].sale_amount += sale_amount
-            data[tmp[goods_id][sku_code]].express_fee += express_fee
+            data[tmp[goods_id][sku_code]].cost_amount += parseFloat(cost_amount)
+            data[tmp[goods_id][sku_code]].qty += parseInt(qty)
+            data[tmp[goods_id][sku_code]].sale_amount += parseFloat(sale_amount)
+            data[tmp[goods_id][sku_code]].express_fee += parseFloat(express_fee)
         }
     }
     for (let id in tmp) {
@@ -2141,7 +2141,7 @@ const importGoodsVerified = async (rows, time) => {
     }
     let amount = 0, saveAmount = 0
     for (let i = 1; i < rows.length; i++) {
-        amount += rows[i].getCell(sale_amount_row).value
+        amount += parseFloat(rows[i].getCell(sale_amount_row).value)
         let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
             rows[i].getCell(shop_name_row).value.trim() : 
             rows[i].getCell(shop_name_row).value
@@ -2168,7 +2168,7 @@ const importGoodsVerified = async (rows, time) => {
             rows[i].getCell(bill_amount_row).value
         )
         count += 1
-        saveAmount += rows[i].getCell(sale_amount_row).value
+        saveAmount += parseFloat(rows[i].getCell(sale_amount_row).value)
     }
     logger.info(`[核销数据导入]：时间:${time}, 总计金额:${amount}, 存储金额:${saveAmount}`)
     if (count > 0) {
