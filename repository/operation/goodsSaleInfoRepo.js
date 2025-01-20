@@ -814,7 +814,7 @@ goodsSaleInfoRepo.getNewOnSaleInfo = async (sale_date, start, end, limit, offset
     }
     let presql = `SELECT COUNT(1) AS count FROM (SELECT doa.goods_id, doa.onsale_date `
     const sql = `FROM dianshang_operation_attribute doa
-        LEFT JOIN goods_sale_info gsi ON doa.goods_id = gsi.goods_id
+        LEFT JOIN goods_sales gsi ON doa.goods_id = gsi.goods_id
         WHERE doa.onsale_date >= ? 
             AND gsi.date >= ? 
             AND gsi.date <= ? 
@@ -848,7 +848,7 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                 sql = `${sql} AND EXISTS(
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
-                            IFNULL(SUM(a1.profit), 0) AS profit FROM goods_sale_info a1 
+                            IFNULL(SUM(a1.profit), 0) AS profit FROM goods_sales a1 
                         WHERE a1.goods_id = "${goods_id}" 
                             AND a1.date BETWEEN "${start}" AND "${end}") aa 
                     WHERE IF(sale_amount > 0, profit / sale_amount * 100`
@@ -886,7 +886,7 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
                             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount 
-                        FROM goods_sale_info a1 WHERE a1.goods_id = "${goods_id}" 
+                        FROM goods_sales a1 WHERE a1.goods_id = "${goods_id}" 
                             AND a1.date BETWEEN "${start}" AND "${end}") aa WHERE IF(sale_amount > 0, operation_amount / sale_amount * 100`
                 if (optimize[i].min != null && optimize[i].max != null) {
                     sql = `${sql} >= ${optimize[i].min} 
@@ -942,7 +942,7 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                     SELECT * FROM (
                         SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
                             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount 
-                        FROM goods_sale_info a1 WHERE a1.goods_id = "${goods_id}" 
+                        FROM goods_sales a1 WHERE a1.goods_id = "${goods_id}" 
                             AND a1.date BETWEEN "${start}" AND "${end}") aa WHERE 
                             IF(promotion_amount > 0, sale_amount / promotion_amount`
                 if (optimize[i].min != null && optimize[i].max != null) {
