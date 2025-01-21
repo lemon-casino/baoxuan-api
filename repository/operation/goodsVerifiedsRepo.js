@@ -1,8 +1,8 @@
 const { query } = require('../../model/dbConn')
-const goodsSalesRepo = {}
+const goodsVerifiedsRepo = {}
 
-goodsSalesRepo.batchInsert = async (date) => {
-    let sql = `SELECT goods_id, shop_name, shop_id, 
+goodsVerifiedsRepo.batchInsert = async (date) => {
+    let sql = `SELECT goods_id, shop_name, 
             IFNULL(SUM(sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(cost_amount), 0) AS cost_amount,
             IFNULL(SUM(gross_profit), 0) AS gross_profit,
@@ -14,17 +14,15 @@ goodsSalesRepo.batchInsert = async (date) => {
             IFNULL(SUM(refund_qty), 0) AS refund_qty,
             IFNULL(SUM(real_sale_amount), 0) AS real_sale_amount,
             IFNULL(SUM(packing_fee), 0) AS packing_fee,
-            IFNULL(SUM(real_gross_profit), 0) AS real_gross_profit,
             IFNULL(SUM(bill_amount), 0) AS bill_amount,
             IFNULL(SUM(order_num), 0) AS order_num,
             IFNULL(SUM(refund_num), 0) AS refund_num
-        FROM goods_sale_info WHERE date = ? GROUP BY goods_id, shop_name, shop_id`
+        FROM goods_sale_verified WHERE date = ? GROUP BY goods_id, shop_name`
     let rows = await query(sql, [date]), data = []
     if (!rows?.length) return false
-    sql = `INSERT INTO goods_sales(
+    sql = `INSERT INTO goods_verifieds(
             goods_id, 
             shop_name, 
-            shop_id, 
             \`date\`, 
             sale_amount, 
             cost_amount, 
@@ -37,16 +35,14 @@ goodsSalesRepo.batchInsert = async (date) => {
             refund_qty, 
             real_sale_amount, 
             packing_fee, 
-            real_gross_profit, 
             bill_amount, 
             order_num, 
             refund_num) VALUES`
     for (let i = 0; i < rows.length; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
         data.push(
             rows[i].goods_id, 
             rows[i].shop_name, 
-            rows[i].shop_id, 
             date, 
             rows[i].sale_amount, 
             rows[i].cost_amount, 
@@ -59,7 +55,6 @@ goodsSalesRepo.batchInsert = async (date) => {
             rows[i].refund_qty, 
             rows[i].real_sale_amount, 
             rows[i].packing_fee, 
-            rows[i].real_gross_profit, 
             rows[i].bill_amount, 
             rows[i].order_num, 
             rows[i].refund_num
@@ -70,10 +65,10 @@ goodsSalesRepo.batchInsert = async (date) => {
     return result?.affectedRows ? true : false
 }
 
-goodsSalesRepo.delete = async (date) => {
-    const sql = `DELETE FROM goods_sales WHERE \`date\` = ?`
+goodsVerifiedsRepo.delete = async (date) => {
+    const sql = `DELETE FROM goods_verifieds WHERE \`date\` = ?`
     const result = await query(sql, [date])
     return result?.affectedRows ? true : false
 }
 
-module.exports = goodsSalesRepo
+module.exports = goodsVerifiedsRepo
