@@ -1,4 +1,4 @@
-const { query } = require('../../model/dbConn')
+const { query, transaction } = require('../../model/dbConn')
 const goodsSalesStats = {}
 
 goodsSalesStats.batchInsert = async (date) => {
@@ -76,26 +76,6 @@ goodsSalesStats.batchInsert = async (date) => {
     return result?.affectedRows ? true : false
 }
 
-goodsSalesStats.updatePayments = async (goods_id, date) => {
-    let sql = `SELECT pay_amount, brushing_amount, brushing_qty, refund_amount, 
-        pay_express_fee, bill FROM goods_payments WHERE goods_id = ? AND \`date\` = ?`
-    let rows = await query(sql, [goods_id, date])
-    if (!rows?.length) return false
-    sql = `UPDATE goods_sales_stats SET pay_amount = ?, brushing_amount = ?, 
-            brushing_qty = ?, refund_amount = ?, pay_express_fee = ?, bill = ? 
-        WHERE goods_id = ? AND \`date\` = ?`
-    const result = await query(sql, [
-        rows[0].pay_amount, 
-        rows[0].brushing_amount, 
-        rows[0].brushing_qty, 
-        rows[0].refund_amount, 
-        rows[0].pay_express_fee, 
-        rows[0].bill, 
-        goods_id, 
-        date])
-    return result?.affectedRows ? true : false
-}
-
 goodsSalesStats.updateVol = async (goods_id, words_market_vol, words_vol, date) => {
     const sql = `UPDATE goods_sales_stats SET words_market_vol = ?, words_vol = ?, 
         WHERE goods_id = ? AND \`date\` = ?`
@@ -107,13 +87,21 @@ goodsSalesStats.updateVol = async (goods_id, words_market_vol, words_vol, date) 
     return result?.affectedRows ? true : false
 }
 
-goodsSalesStats.updateDSR = async (goods_id, dsr, date) => {
-    const sql = `UPDATE goods_sales_stats SET dsr = ? WHERE goods_id = ? AND \`date\` = ?`
-    const result = await query(sql, [
-        dsr, 
-        goods_id, 
-        date])
-    return result?.affectedRows ? true : false
+goodsSalesStats.updateDSR = async (date) => {
+    const sql = `SELECT dsr, goods_id FROM goods_other_info WHERE date = ?`
+    const rows = await query(sql, [date])
+    let sqls = [], params = []
+    for (let i = 0; i < rows.length; i++) {
+        sqls.push(`UPDATE goods_sales_stats SET dsr = ? WHERE goods_id = ? AND \`date\` = ?`)
+        params.push([
+            rows[i].dsr, 
+            rows[i].goods_id, 
+            date
+        ])
+    }
+    const result = await transaction(sqls, params)
+    console.log(result)
+    return result
 }
 
 goodsSalesStats.updateLaborCost = async (labor_cost, goods_id, shop_id, date) => {

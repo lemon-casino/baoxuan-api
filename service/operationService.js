@@ -45,6 +45,7 @@ const goodsVerifiedsStats = require('@/repository/operation/goodsVerifiedsStats'
 const moment = require('moment')
 const goodsSalesRepo = require('@/repository/operation/goodsSalesRepo')
 const goodsVerifiedsRepo = require('@/repository/operation/goodsVerifiedsRepo')
+const goodsPaymentsRepo = require('@/repository/operation/goodsPaymentsRepo')
 
 /**
  * get operation data pannel data stats
@@ -1006,40 +1007,26 @@ const importGoodsKeyWords = async (rows, time) => {
 }
 
 const importGoodsDSR = async (rows, time) => {
-    let count = 0, data = [], result = false
+    let count = 0, data = [], result = true
     let goods_id = typeof(rows[1].getCell(2).value) == 'string' ? 
         rows[1].getCell(2).value.trim() : 
         rows[1].getCell(2).value
-    let info = await goodsOtherInfoRepo.search(goods_id, time)
-    if (info?.length) {
-        for (let i = 1; i < rows.length; i++) {
-            if (!rows[i].getCell(1).value) continue
-            goods_id = typeof(rows[i].getCell(2).value) == 'string' ? 
-                rows[i].getCell(2).value.trim() : 
-                rows[i].getCell(2).value
-            let dsr = rows[i].getCell(6).value
-            if (typeof(dsr) == 'string' && dsr.indexOf('分') != -1) {
-                dsr = dsr.replace('分', '')
-            } else if (typeof(dsr) == 'string' && dsr.indexOf('未诊断') != -1) {
-                dsr = 0
-            }
-            dsr = parseInt(dsr)
-            await goodsOtherInfoRepo.updateDSR([dsr, goods_id, time])
-            updateGoodsStatsDSR(goods_id, dsr, time)
+    for (let i = 0; i < rows.length; i++) {
+        if (!rows[i].getCell(1).value) continue
+        goods_id = typeof(rows[i].getCell(2).value) == 'string' ? 
+            rows[i].getCell(2).value.trim() : 
+            rows[i].getCell(2).value
+        let dsr = rows[i].getCell(6).value
+        if (typeof(dsr) == 'string' && dsr.indexOf('分') != -1) {
+            dsr = dsr.replace('分', '')
+        } else if (typeof(dsr) == 'string' && dsr.indexOf('未诊断') != -1) {
+            dsr = 0
         }
-        result = true
-    } else {
-        for (let i = 1; i < rows.length; i++) {
-            if (!rows[i].getCell(1).value) continue
-            goods_id = typeof(rows[i].getCell(2).value) == 'string' ? 
-                rows[i].getCell(2).value.trim() : 
-                rows[i].getCell(2).value
-            let dsr = rows[i].getCell(6).value
-            if (typeof(dsr) == 'string' && dsr.indexOf('分') != -1) {
-                dsr = parseInt(dsr.replace('分', ''))
-            } else if (typeof(dsr) == 'string' && dsr.indexOf('未诊断') != -1) {
-                dsr = 0
-            }
+        dsr = parseInt(dsr)
+        let info = await goodsOtherInfoRepo.search(goods_id, time)
+        if (info?.length) {
+            await goodsOtherInfoRepo.updateDSR([dsr, goods_id, time])
+        } else {
             data.push(
                 goods_id,
                 dsr,
@@ -1048,13 +1035,13 @@ const importGoodsDSR = async (rows, time) => {
                 null,
                 time
             )
-            updateGoodsStatsDSR(goods_id, dsr, time)
             count += 1
         }
-        if (count > 0) {
-            result = await goodsOtherInfoRepo.batchInsert(count, data)
-        }
     }
+    if (count > 0) {
+        result = await goodsOtherInfoRepo.batchInsert(count, data)
+    }
+    await updateGoodsStatsDSR(time)
     if (result) redisRepo.batchDelete(`${redisKeys.operation}:*`)
     return result
 }
@@ -1063,8 +1050,9 @@ const updateGoodsStatsVol = async (goods_id, total, base, date) => {
     await goodsSalesStats.updateVol(goods_id, total, base, date)
 }
 
-const updateGoodsStatsDSR = async (goods_id, dsr, date) => {
-    await goodsSalesStats.updateDSR(goods_id, dsr, date)
+const updateGoodsStatsDSR = async (date) => {
+    let result = await goodsSalesStats.updateDSR(date)
+    logger.info(`[单品表DSR数据刷新]：时间:${date}, ${result}`)
 }
 
 const getGoodsLineInfo = async (startDate, endDate, params, id) => {
@@ -1415,18 +1403,13 @@ const importGoodsPayInfo = async (rows, time) => {
             await goodsBillRepo.batchInsert(count2, data2)
         }
     }
-    updateGoodsStatsPayments(dataMap, date)
+    await updateGoodsPayments(date)
     return result
 }
 
-const updateGoodsStatsPayments = async (data, date) => {
-    for (let goods_id in data) {
-        if (goods_id) {
-            await goodsSalesStats.updatePayments(goods_id, date)
-            await goodsVerifiedsStats.updatePayments(goods_id, date)
-        }
-    }
-    logger.info(`[单品表支付数据刷新]：时间:${date}`)
+const updateGoodsPayments = async (date) => {
+    let result = await goodsPaymentsRepo.batchInsert(date)
+    logger.info(`[单品表支付数据刷新]：时间:${date}, ${result}`)
 }
 
 const importGoodsCompositeInfo = async (rows, time) => {
@@ -1511,7 +1494,7 @@ const importJDZYInfo = async (rows, time) => {
         sale_amount_row = null,
         gross_profit_row = null
     for (let i = 1; i < columns.length; i++) {
-        if (columns[i] == '商品编号') {
+        if (columns[i] == '商品编号' || columns[i] == '商品ID') {
             sku_id_row = i
             continue
         }
@@ -2429,5 +2412,6 @@ module.exports = {
     importOrdersGoodsVerified,
     batchInsertGoodsSalesStats,
     batchInsertGoodsVerifiedsStats,
-    updateOrderGoods
+    updateOrderGoods,
+    updateGoodsPayments
 }

@@ -526,16 +526,22 @@ const importJDZYInfo = async (req, res, next) => {
             
             const file = files.file
             const date = file.originalFilename.split('.')[0].split('_')
+            const ext = file.originalFilename.split('.')[1]
             const time = date[1]
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
             fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
             })
-            const workbook = new ExcelJS.Workbook()
-            let datainfo = fs.readFileSync(newPath)
-            datainfo = iconv.decode(datainfo, 'GBK')
-            fs.writeFileSync(newPath, datainfo)
-            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            const workbook = new ExcelJS.Workbook()            
+            let readRes
+            if (ext == 'xlsx') {
+                readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
+            } else {                
+                let datainfo = fs.readFileSync(newPath)
+                datainfo = iconv.decode(datainfo, 'GBK')
+                fs.writeFileSync(newPath, datainfo)
+                readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            }
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
@@ -931,6 +937,19 @@ const refreshGoodsVerifiedsStats = async (req, res, next) => {
     }
 }
 
+const refreshGoodsPayments = async (req, res, next) => {
+    try {
+        const {date} = req.body
+        joiUtil.validate({
+            date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        await operationService.updateGoodsPayments(date)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
 const refreshLaborCost = async (req, res, next) => {
     try {
         const {date} = req.body
@@ -977,5 +996,6 @@ module.exports = {
     importOrdersGoodsVerified,
     refreshGoodsSalesStats,
     refreshGoodsVerifiedsStats,
+    refreshGoodsPayments,
     refreshLaborCost
 }

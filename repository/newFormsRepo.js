@@ -942,7 +942,7 @@ const getDevelopmentProcessInstances = async function (userNames, params, offset
                                 AND p2.show_name = pir${j}.show_name
                                 AND p2.activity_id = pir${j}.activity_id 
                         )`
-                if (activity[j].action_exit == '"agree"') 
+                if (activity[j].action_exit == '"agree"' || activity[j].action_exit == '"agree","redirect"') 
                     sql = `${sql} 
                         AND NOT EXISTS(
                             SELECT p2.id FROM process_instance_records p2 
