@@ -48,6 +48,7 @@ router.post('/check-optimize', operationApi.checkOperationOptimize)
 //数据同步
 router.post('/refresh-sale-stats', operationApi.refreshGoodsSalesStats)
 router.post('/refresh-verify-stats', operationApi.refreshGoodsVerifiedsStats)
+router.post('/refresh-payments', operationApi.refreshGoodsPayments)
 router.post('/refresh-labor-cost', operationApi.refreshLaborCost)
 
 module.exports = router

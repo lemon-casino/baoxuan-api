@@ -87,29 +87,22 @@ const getTGCInfo = async (params) => {
     let columns = params.sheet[0].getRow(1).values
     let settle_time_row = null, order_id_row = null, sub_order_id_row = null, 
         settle_order_id_row = null, amount_row = 0, goods_id_row = null, 
-        sku_id_row = null, update_time = false, minus = false, 
-        min_settle_time = null, max_settle_time = null, 
+        sku_id_row = null, min_settle_time = null, max_settle_time = null, 
         type = params.extra, shop_name = params.shopName
     for (let i = 1; i <= columns.length; i++) {
-        if (['扣款时间', '结算时间'].includes(columns[i])) {
+        if (columns[i] == '结算日期') {
             settle_time_row = i
-        } else if (columns[i] == '结算日期') {
-            settle_time_row = i
-            update_time = true
-        } else if (['主订单单号', '订单号', '交易主单'].includes(columns[i])) {
+        } else if (columns[i] == '交易主单号') {
             order_id_row = i
-        } else if (['子订单单号', '子订单号', '交易子单'].includes(columns[i])) {
+        } else if (columns[i] == '交易子单号') {
             sub_order_id_row = i
-        } else if (['商户订单号', '支付宝流水号', '支付宝商户订单号'].includes(columns[i])) {
+        } else if (columns[i] == '商户订单号') {
             settle_order_id_row = i
-        } else if (['结算金额(元)', '推广费用'].includes(columns[i])) {
+        } else if (columns[i] == '账单金额') {
             amount_row = i
-            minus = true
-        } else if (columns[i] == '总结算金额') {
-            amount_row = i
-        } else if (columns[i] == '商品id') {
+        } else if (columns[i] == '商品ID') {
             goods_id_row = i
-        } else if (['skuid', 'skuId'].includes(columns[i])) {
+        } else if (columns[i] == 'skuID') {
             sku_id_row = i
         }
     }
@@ -119,17 +112,11 @@ const getTGCInfo = async (params) => {
         if (!row.getCell(1).value) break
         let settle_time = '', order_id = '', sub_order_id = '', 
         settle_order_id = '', amount = 0, goods_id = '', sku_id = ''
-        if (update_time && settle_time_row) {
-            let time = row.getCell(settle_time_row).value
-            settle_time = `${time.substring(0, 4)}-${time.substring(4, 6)}-${time.substring(6, 8)}`
-        } else if (settle_time_row) settle_time = row.getCell(settle_time_row).value
+        if (settle_time_row) settle_time = row.getCell(settle_time_row).value
         if (order_id_row) order_id = row.getCell(order_id_row).value
         if (sub_order_id_row) sub_order_id = row.getCell(sub_order_id_row).value
         if (settle_order_id_row) settle_order_id = row.getCell(settle_order_id_row).value
-        if (amount_row) {
-            amount = row.getCell(amount_row).value
-            if (minus) amount = - amount
-        }
+        if (amount_row) amount = row.getCell(amount_row).value
         if (goods_id_row) goods_id = row.getCell(goods_id_row).value
         if (sku_id_row) 
             sku_id = row.getCell(sku_id_row).value != '-' ? row.getCell(sku_id_row).value : ''
@@ -141,7 +128,6 @@ const getTGCInfo = async (params) => {
         if (!max_settle_time) max_settle_time = settle_time
         else if (moment(settle_time).valueOf() > moment(max_settle_time).valueOf())
             max_settle_time = settle_time
-        let sku_id2 = sku_id ? sku_id.split('|')[0] : null
         data.push(
             settle_time,
             order_id,
@@ -152,7 +138,7 @@ const getTGCInfo = async (params) => {
             shop_name,
             goods_id,
             sku_id,
-            sku_id2
+            sku_id
         )
     }
     await settlementRepo.delete(params.shopName, type, min_settle_time, max_settle_time)

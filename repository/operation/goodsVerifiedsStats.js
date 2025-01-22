@@ -77,26 +77,6 @@ goodsVerifiedsStats.batchInsert = async (date) => {
     return result?.affectedRows ? true : false
 }
 
-goodsVerifiedsStats.updatePayments = async (goods_id, date) => {
-    let sql = `SELECT pay_amount, brushing_amount, brushing_qty, refund_amount, 
-        pay_express_fee, bill FROM goods_payments WHERE goods_id = ? AND \`date\` = ?`
-    let rows = await query(sql, [goods_id, date])
-    if (!rows?.length) return false
-    sql = `UPDATE goods_verifieds_stats SET pay_amount = ?, brushing_amount = ?, 
-            brushing_qty = ?, refund_amount = ?, pay_express_fee = ?, bill = ? 
-        WHERE goods_id = ? AND \`date\` = ?`
-    const result = await query(sql, [
-        rows[0].pay_amount, 
-        rows[0].brushing_amount, 
-        rows[0].brushing_qty, 
-        rows[0].refund_amount, 
-        rows[0].pay_express_fee, 
-        rows[0].bill, 
-        goods_id, 
-        date])
-    return result?.affectedRows ? true : false
-}
-
 goodsVerifiedsStats.updateVol = async (goods_id, words_market_vol, words_vol, date) => {
     const sql = `UPDATE goods_verifieds_stats SET words_market_vol = ?, words_vol = ?, 
         WHERE goods_id = ? AND \`date\` = ?`
