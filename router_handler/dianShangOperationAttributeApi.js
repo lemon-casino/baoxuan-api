@@ -136,7 +136,8 @@ const uploadTable = async (req, res, next) => {
             '坑产目标': 'pitTarget',
             '一级类目': 'firstCategory',
             '二级类目': 'secondCategory',
-            '三级类目': 'level3Category'
+            '三级类目': 'level3Category',
+            '产品线简称': 'briefProductLine'
         };
 
         // 可选字段映射
