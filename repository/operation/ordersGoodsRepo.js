@@ -35,9 +35,15 @@ ordersGoodsRepo.batchInsert = async (count, data) => {
 }
 
 ordersGoodsRepo.update = async (date, order_code, goods_id, sku_code) => {
-    const sql = `UPDATE orders_goods SET verified_date = ? WHERE order_code = ? 
-        AND goods_id = ? AND sku_code = ?`
-    const result = await query(sql, [date, order_code, goods_id, sku_code])
+    let sql = `UPDATE orders_goods SET verified_date = ? WHERE order_code = ? 
+        AND goods_id = ? AND sku_code = ?`, 
+        params = [date, order_code, goods_id, sku_code]
+    if (goods_id === null) {
+        sql = `UPDATE orders_goods SET verified_date = ? WHERE order_code = ? 
+        AND goods_id IS NULL AND sku_code = ?`
+        params = [date, order_code, sku_code]
+    }
+    result = await query(sql, params)
     return result?.affectedRows ? true : false
 }
 
