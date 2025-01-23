@@ -63,6 +63,12 @@ const getShopNameAttrDetails = async (id) => {
     return  result || []
 }
 
+const savelog = async (body,userId,user,username,currentTime,type) => {
+    const sql=`INSERT INTO attribute_user_log (new_value,userId,users,username,create_time,type)VALUES (?,?,?,?,?,?)`
+    let result = await query(sql,[body,userId,user,username,currentTime,type])
+    return result
+}
+
 const updateProductAttrDetails = async (details, id) => {
     return await dianShangOperationAttributeModel.update(details, {where: {id}})
 }
@@ -289,6 +295,7 @@ module.exports = {
     getAllGoodsAttrDetails,
     updateskuIdAttrDetails,
     bulkCreateTable,
-    getOperateAttributesMaintainer
+    getOperateAttributesMaintainer,
+    savelog
 }
 

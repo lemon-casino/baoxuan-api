@@ -35,6 +35,10 @@ const updateProductAttrDetails = async (details) => {
     return await dianShangOperationAttributeRepo.updateProductAttrDetails(details, details.id)
 }
 
+const savelog = async (body,userId,user,username,currentTime,type) => {
+    return await dianShangOperationAttributeRepo.savelog(body,userId,user,username,currentTime,type)
+}
+
 const saveProductAttr = async (details) => {
     return await dianShangOperationAttributeRepo.saveProductAttr(details)
 }
@@ -116,5 +120,6 @@ module.exports = {
     saveProductAttr,
     deleteProductAttr,
     uploadBulkUploadsTable,
-    uploadtmBulkUploadsTable
+    uploadtmBulkUploadsTable,
+    savelog
 }

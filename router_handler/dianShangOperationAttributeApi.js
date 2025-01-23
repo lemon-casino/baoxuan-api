@@ -1,7 +1,8 @@
 const dianShangOperationAttributeService = require("../service/dianShangOperationAttributeService")
 const joiUtil = require("../utils/joiUtil")
 const biResponse = require("../utils/biResponse")
-const XLSX = require("xlsx");
+const XLSX = require("xlsx")
+const moment = require('moment')
 const tmallCompetitorService = require("@/service/tmallCompetitorService");
 
 const getPagingOperateAttributes = async (req, res, next) => {
@@ -65,6 +66,13 @@ const updateProductAttrDetails = async (req, res, next) => {
     try {
         const body = req.body
         await dianShangOperationAttributeService.updateProductAttrDetails(body)
+        const userId = req.user.userId
+        const user = req.user.id
+        const username = req.user.username
+        const currentTime = moment(req._startTime).format('YYYY-MM-DD HH:mm:ss')
+        const type='updete'
+        const jsonString = JSON.stringify(body);
+        await dianShangOperationAttributeService.savelog(jsonString,userId,user,username,currentTime,type)
         return res.send(biResponse.success())
     } catch (e) {
         next(e)
@@ -75,6 +83,13 @@ const saveProductAttrDetails = async (req, res, next) => {
     try {
         const body = req.body
         await dianShangOperationAttributeService.saveProductAttr(body)
+        const userId = req.user.userId
+        const user = req.user.id
+        const username = req.user.username
+        const currentTime = moment(req._startTime).format('YYYY-MM-DD HH:mm:ss')
+        const type='insert'
+        const jsonString = JSON.stringify(body);
+        await dianShangOperationAttributeService.savelog(jsonString,userId,user,username,currentTime,type)
         return res.send(biResponse.success())
     } catch (e) {
         next(e)
@@ -85,6 +100,12 @@ const deleteProductAttr = async (req, res, next) => {
     try {
         const {id} = req.query
         joiUtil.validate({id})
+        const userId = req.user.userId
+        const user = req.user.id
+        const username = req.user.username
+        const currentTime = moment(req._startTime).format('YYYY-MM-DD HH:mm:ss')
+        const type='delete'
+        await dianShangOperationAttributeService.savelog(id,userId,user,username,currentTime,type)
         await dianShangOperationAttributeService.deleteProductAttr(id)
         return res.send(biResponse.success())
     } catch (e) {
