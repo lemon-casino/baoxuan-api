@@ -2,6 +2,9 @@ const { query, transaction } = require('../../model/dbConn')
 const goodsSalesStats = {}
 
 goodsSalesStats.batchInsert = async (date) => {
+    let sqls = [], params = []
+    sqls.push(`DELETE FROM goods_sales_stats WHERE \`date\` = ?`)
+    params.push([date])
     let sql = `SELECT a1.goods_id, a1.shop_name, a1.shop_id, a1.date, a1.sale_amount, 
 	        a1.cost_amount, a1.express_fee, a1.packing_fee, a2.labor_cost, a1.promotion_amount, 
             a1.operation_amount, a1.order_num, a1.refund_num, a1.profit, a3.pay_amount, 
@@ -72,8 +75,10 @@ goodsSalesStats.batchInsert = async (date) => {
         )
     }
     sql = sql.substring(0, sql.length - 1)
-    const result = await query(sql, data)
-    return result?.affectedRows ? true : false
+    sqls.push(sql)
+    params.push(data)
+    const result = await transaction(sqls, params)
+    return result
 }
 
 goodsSalesStats.updateVol = async (goods_id, words_market_vol, words_vol, date) => {
@@ -100,7 +105,6 @@ goodsSalesStats.updateDSR = async (date) => {
         ])
     }
     const result = await transaction(sqls, params)
-    console.log(result)
     return result
 }
 

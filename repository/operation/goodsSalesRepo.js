@@ -1,7 +1,10 @@
-const { query } = require('../../model/dbConn')
+const { query, transaction } = require('../../model/dbConn')
 const goodsSalesRepo = {}
 
 goodsSalesRepo.batchInsert = async (date) => {
+    let sqls = [], params = []
+    sqls.push(`DELETE FROM goods_sales WHERE \`date\` = ?`)
+    params.push([date])
     let sql = `SELECT goods_id, shop_name, shop_id, 
             IFNULL(SUM(sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(cost_amount), 0) AS cost_amount,
@@ -66,8 +69,10 @@ goodsSalesRepo.batchInsert = async (date) => {
         )
     }
     sql = sql.substring(0, sql.length - 1)
-    const result = await query(sql, data)
-    return result?.affectedRows ? true : false
+    sqls.push(sql)
+    params.push(data)
+    const result = await transaction(sqls, params)
+    return result
 }
 
 goodsSalesRepo.delete = async (date) => {
