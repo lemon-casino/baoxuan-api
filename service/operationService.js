@@ -924,15 +924,14 @@ const importGoodsOrderStat = async (rows, time) => {
 }
 
 const batchInsertGoodsSales = async (date) => {
-    await goodsSalesRepo.delete(date)
-    await goodsSalesRepo.batchInsert(date)
+    let result = await goodsSalesRepo.batchInsert(date)
+    logger.info(`[发货数据刷新]：时间:${date}, ${result}`)
     await batchInsertGoodsSalesStats(date)
 }
 
 const batchInsertGoodsSalesStats = async (date) => {
-    await goodsSalesStats.deleteByDate(date)
-    await goodsSalesStats.batchInsert(date)
-    logger.info(`[发货单品数据刷新]：时间:${date}`)
+    let result = await goodsSalesStats.batchInsert(date)
+    logger.info(`[发货单品表数据刷新]：时间:${date}, ${result}`)
 }
 
 const importGoodsKeyWords = async (rows, time) => {
@@ -1816,7 +1815,7 @@ const importGoodsBrushingInfo = async (rows, time) => {
         }
         count += 1
     }
-    updateGoodsStatsPayments(dataMap, date)
+    await updateGoodsPayments(date)
     logger.info(`[刷单数据导入]：时间:${date}, 总计数量:${count}`)
     return result
 }
@@ -2225,15 +2224,14 @@ const importGoodsOrderVerifiedStat = async (rows, time) => {
 }
 
 const batchInsertGoodsVerifieds = async (date) => {
-    await goodsVerifiedsRepo.delete(date)
-    await goodsVerifiedsRepo.batchInsert(date)
+    let result = await goodsVerifiedsRepo.batchInsert(date)
+    logger.info(`[核销数据刷新]：时间:${date}, ${result}`)
     await batchInsertGoodsVerifiedsStats(date)
 }
 
 const batchInsertGoodsVerifiedsStats = async (date) => {
-    await goodsVerifiedsStats.deleteByDate(date)
-    await goodsVerifiedsStats.batchInsert(date)
-    logger.info(`[核销单品数据刷新]：时间:${date}`)
+    let result = await goodsVerifiedsStats.batchInsert(date)
+    logger.info(`[核销单品表数据刷新]：时间:${date}, ${result}`)
 }
 
 const createShopPromotionLog = async (date, shop_name) => {
