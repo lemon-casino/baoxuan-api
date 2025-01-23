@@ -11,21 +11,21 @@ goodsPaymentsRepo.batchInsert = async (date) => {
             FROM goods_pay_info WHERE \`date\` = ? GROUP BY goods_id`
     let rows = await query(sql, [date])
     if (!rows?.length) return false
-    let sqls = [], params = []
+    let sqls = [], params = [], data = []
+    sql = `INSERT INTO goods_payments(goods_id, \`date\`, pay_amount, brushing_amount, 
+        brushing_qty, refund_amount, pay_express_fee, bill) VALUES`
     for (let i = 0; i < rows.length; i++) {
-        sqls.push(`UPDATE goods_payments SET pay_amount = ?, brushing_amount = ?, 
-                brushing_qty = ?, refund_amount = ?, pay_express_fee = ?, bill = ? 
-            WHERE goods_id = ? AND \`date\` = ?`)
-        params.push([
+        sql = `${sql}(?,?,?,?,?,?,?,?),`
+        data.push(
+            rows[i].goods_id, 
+            date,
             rows[i].pay_amount, 
             rows[i].brushing_amount, 
             rows[i].brushing_qty, 
             rows[i].refund_amount, 
             rows[i].pay_express_fee, 
-            rows[i].bill, 
-            rows[i].goods_id, 
-            date
-        ])
+            rows[i].bill)
+        
         sqls.push(`UPDATE goods_sales_stats SET pay_amount = ?, brushing_amount = ?, 
                 brushing_qty = ?, refund_amount = ?, pay_express_fee = ?, bill = ? 
             WHERE goods_id = ? AND \`date\` = ?`)
@@ -39,7 +39,27 @@ goodsPaymentsRepo.batchInsert = async (date) => {
             rows[i].goods_id, 
             date
         ])
+        sqls.push(`UPDATE goods_verifieds_stats SET pay_amount = ?, brushing_amount = ?, 
+                brushing_qty = ?, refund_amount = ?, pay_express_fee = ?, real_pay_amount = ?, 
+                bill = ? WHERE goods_id = ? AND \`date\` = ?`)
+        params.push([
+            rows[i].pay_amount, 
+            rows[i].brushing_amount, 
+            rows[i].brushing_qty, 
+            rows[i].refund_amount, 
+            rows[i].pay_express_fee, 
+            (rows[i].pay_amount || 0) - (rows[i].brushing_amount || 0) - (rows[i].refund_amount || 0), 
+            rows[i].bill, 
+            rows[i].goods_id, 
+            date
+        ])
     }
+    sql = sql.substring(0, sql.length - 1)
+    sqls = [
+        `DELETE FROM goods_payments WHERE \`date\` = ?`,
+        sql
+    ].concat(sqls)
+    params = [[date], data].concat(params)
     const result = await transaction(sqls, params)
     return result
 }
