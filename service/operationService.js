@@ -1152,6 +1152,7 @@ const getWorkStats = async (user, start, end, params) => {
     params.user_type = 1
     let permissions = [], project_name = '', project_info
     params.userNames = []
+    params.names = []
     if (params.type) {
         switch (parseInt(params.type)) {
             case typeList.division.key:
@@ -1198,12 +1199,15 @@ const getWorkStats = async (user, start, end, params) => {
             default:
         }
         if (userList?.length) {
-            let userNames = ''
+            let userNames = '', names = ''
             for (let j = 0; j < userList.length; j++) {
                 userNames = `${userNames}"${userList[j].nickname}",`
+                names = `${names}'["${userList[j].nickname}"]',`
             }
             userNames = userNames.substring(0, userNames.length - 1)
+            names = names.substring(0, names.length - 1)
             params.userNames.push(userNames)
+            params.names.push(names)
             let item = JSON.parse(JSON.stringify(statItem))
             item.actionCode = permissions[i].type
             item.actionName = permissions[i].name
@@ -1997,10 +2001,59 @@ const getNewOnSaleInfo = async (sale_date, start, end, limit, offset) => {
     return result
 }
 
-const getOptimizeInfo = async (start, end, limit, offset) => {
-    let result = await newFormsRepo.getOperationOptimizeInfo(start, end, limit, offset)
+const getOptimizeInfo = async (params, user) => {
+    let permissions = []
+    if (params.type) {
+        switch (parseInt(params.type)) {
+            case typeList.division.key:
+                permissions = await divisionInfoRepo.getProjectByDivisionName(params.name)
+                break
+            case typeList.project.key:
+                permissions = await projectInfoRepo.getTeamByProjectName(params.name)
+                if (!permissions?.length)
+                    permissions = await projectInfoRepo.getUserByProjectName(params.name)
+                break
+            case typeList.team.key:
+                permissions = await teamInfoRepo.getUserByTeamName(params.name)
+                break
+            case typeList.user.key:
+                permissions = await userOperationRepo.getUserByName(params.name)
+                break
+            default:
+        }
+    } else {
+        permissions = await userOperationRepo.getPermissionLimit(user.id)
+    }
+    if (permissions.length == 0) return result
+    let users = [] 
+    for (let i = 0; i < permissions.length; i++) {
+        if (i > 0 && permissions[i].type != permissions[i-1].type) break
+        let userList = []
+        switch (permissions[i].type) {
+            case typeList.division.key:
+                userList = await divisionInfoRepo.getUsersById(permissions[i].detail_id)
+                break
+            case typeList.project.key:
+                userList = await projectInfoRepo.getUsersById(permissions[i].detail_id) 
+                break
+            case typeList.team.key:
+                userList = await teamInfoRepo.getUsersById(permissions[i].detail_id)
+                break
+            case typeList.user.key:
+                userList = await userOperationRepo.getUserById(permissions[i].detail_id)
+                break
+            default:
+        }
+        if (userList?.length) users = users.concat(userList)
+    }
+    params.userNames = ''
+    for (let i = 0; i < users.length; i++) {
+        params.userNames = `${params.userNames}'["${users[i].nickname}"]',`
+    }
+    if (params.userNames?.length) params.userNames = params.userNames.substring(0, params.userNames.length - 1)
+    let result = await newFormsRepo.getOperationOptimizeInfo(params)
     for (let i = 0; i < result.data.length; i++) {
-        result.data[i].goods_id = result.data[i].goods_id.replace(/\"/g, '')
+        result.data[i].name = result.data[i].name.replace(/[\[\]\"]/g, '')
         let optimize_info = result.data[i].optimize_info.replace(/[\[\]]/g, '')
         result.data[i].optimize_info = result.data[i].optimize_info.replace(/[\[\]\"]/g, '')
         let optimize = await goodsOptimizeSetting.getByTitle(optimize_info)
@@ -2008,16 +2061,13 @@ const getOptimizeInfo = async (start, end, limit, offset) => {
         let total = result.data[i].children.length, failed = 0
         if (optimize?.length)
             for (let j = 0; j < result.data[i].children.length; j++) {
-                if (j == 0 || 
-                    result.data[i].children[j].time != result.data[i].children[j-1].time) {
-                    let info = await goodsSaleInfoRepo.getOptimizeResult(
-                        result.data[i].goods_id,
-                        result.data[i].children[j].time,
-                        optimize
-                    )
-                    if (info?.length) {
-                        failed += info[0].count
-                    }
+                let info = await goodsSaleInfoRepo.getOptimizeResult(
+                    result.data[i].children[j].goods_id,
+                    result.data[i].children[j].time,
+                    optimize
+                )
+                if (info?.length) {
+                    failed += info[0].count
                 }
             }
         if (total > 0) result.data[i].success_rate = ((total - failed) / total * 100).toFixed(2)
@@ -2309,16 +2359,8 @@ const importOrdersGoods = async (rows, date) => {
 }
 
 const updateOrderGoods = async (date) => {
-    let result = await ordersGoodsRepo.getByDate(date)
-    for (let i = 0; i < result.length; i++) {
-        await goodsSalesStats.updateLaborCost(
-            result[i].labor_cost, 
-            result[i].goods_id, 
-            result[i].shop_id, 
-            date
-        )
-    }
-    logger.info(`[发货人工费刷新]：时间:${date}`)
+    let result = await goodsSalesStats.updateLaborCost(date)
+    logger.info(`[发货人工费刷新]：时间:${date}, ${result}`)
 }
 
 const importOrdersGoodsVerified = async (rows, date) => {
@@ -2360,21 +2402,11 @@ const importOrdersGoodsVerified = async (rows, date) => {
 }
 
 const updateOrderGoodsVerified = async (data, date) => {
-    let dataMap = {}
-    for (let i = 0; i < data.length; i++) {
-        let result = await ordersGoodsRepo.update(
-            date, data[i].order_code, data[i].goods_id, data[i].sku_code
-        )
-        dataMap[`${data[i].goods_id || ''}_${data[i].shop_id}`] = true
-        if (!result) logger.error(`[订单利润-核销导入]: ${JSON.stringify(data[i])} 失败`)
-    }
-    for (let info in dataMap) {
-        let values = info.split('_')
-        let goods_id = values[0]?.length ? values[0] : null
-        let shop_id = values[1]
-        await goodsVerifiedsStats.updateLaborCost(goods_id, shop_id, date)
-    }
-    logger.info(`[核销人工费刷新]：时间:${date}`)
+    let result = await ordersGoodsRepo.update(data, date)
+    if (result) {
+        result = await goodsVerifiedsStats.updateLaborCost(date)
+        logger.info(`[核销人工费刷新]：时间:${date}, ${result}`)
+    } else logger.error(`[核销人工费刷新]：时间:${date}, ${result}`)
 }
 
 module.exports = {

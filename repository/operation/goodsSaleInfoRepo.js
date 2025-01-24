@@ -838,10 +838,15 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
     for (let i = 0; i < optimize.length; i++) {
         if (!time) {
             end = moment().subtract(1, 'day').format('YYYY-MM-DD')
-            start = moment().subtract(optimize[i].days, 'day').format('YYYY-MM-DD')
+            if (optimize[i].column == 'profit_rate')
+                start = moment().subtract(3, 'day').format('YYYY-MM-DD')
+            else 
+                start = moment().subtract(optimize[i].days, 'day').format('YYYY-MM-DD')
         } else {
             start = moment(time).add(1, 'day').format('YYYY-MM-DD')
-            end = moment(time).add(optimize[i].days, 'day').format('YYYY-MM-DD')
+            if (optimize[i].column == 'profit_rate')
+                end = moment(time).add(3, 'day').format('YYYY-MM-DD')
+            else end = moment(time).add(optimize[i].days, 'day').format('YYYY-MM-DD')
         }
         switch (optimize[i].column) {
             case 'profit_rate':

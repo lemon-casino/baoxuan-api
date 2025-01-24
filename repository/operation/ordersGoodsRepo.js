@@ -1,4 +1,4 @@
-const { query } = require('../../model/dbConn')
+const { query, transaction } = require('../../model/dbConn')
 const ordersGoodsRepo = {}
 
 ordersGoodsRepo.getByDate = async (date) => {
@@ -34,17 +34,31 @@ ordersGoodsRepo.batchInsert = async (count, data) => {
     return result?.affectedRows ? true : false
 }
 
-ordersGoodsRepo.update = async (date, order_code, goods_id, sku_code) => {
+ordersGoodsRepo.update = async (data, date) => {
     let sql = `UPDATE orders_goods SET verified_date = ? WHERE order_code = ? 
         AND goods_id = ? AND sku_code = ?`, 
-        params = [date, order_code, goods_id, sku_code]
-    if (goods_id === null) {
-        sql = `UPDATE orders_goods SET verified_date = ? WHERE order_code = ? 
-        AND goods_id IS NULL AND sku_code = ?`
-        params = [date, order_code, sku_code]
+        sql1 = `UPDATE orders_goods SET verified_date = ? WHERE order_code = ? 
+        AND goods_id IS NULL AND sku_code = ?`, sqls = [], params = []
+    for (let i = 0; i < data.length; i++) {
+        if (data[i].goods_id === null) {
+            sqls.push(sql1)
+            params.push([
+                date,
+                data[i].order_code,
+                data[i].sku_code
+            ])
+        } else {
+            sqls.push(sql)
+            params.push([
+                date,
+                data[i].order_code,
+                data[i].goods_id,
+                data[i].sku_code
+            ])
+        }
     }
-    result = await query(sql, params)
-    return result?.affectedRows ? true : false
+    const result = await transaction(sqls, params)
+    return result
 }
 
 ordersGoodsRepo.deleteByDate = async (date) => {

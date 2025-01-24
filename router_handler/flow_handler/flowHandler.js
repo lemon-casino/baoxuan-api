@@ -112,7 +112,7 @@ const getFlowProcessActions = async (req, res, next) => {
  */
 const exportFlowsProcess = async (req, res, next) => {
     try {
-        joiUtil.clarityValidate(flowSchema.requiredIdSchema, req.body)
+        joiUtil.clarityValidate(flowSchema.requiredIdsSchema, req.body)
         const flows = await flowService.getFlows(req.body)
         if (!flows?.length) return res.send(biResponse.canTFindIt)
         let data = []
