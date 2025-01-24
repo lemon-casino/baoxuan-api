@@ -38,18 +38,17 @@ ordersGoodsRepo.update = async (data, date) => {
     let sql = `UPDATE orders_goods SET verified_date = ? WHERE order_code = ? 
         AND goods_id = ? AND sku_code = ?`, 
         sql1 = `UPDATE orders_goods SET verified_date = ? WHERE order_code = ? 
-        AND goods_id IS NULL AND sku_code = ?`, sqls = [], params = []
+        AND goods_id IS NULL AND sku_code = ?`, result
     for (let i = 0; i < data.length; i++) {
         if (data[i].goods_id === null) {
-            sqls.push(sql1)
-            params.push([
+            result = await query(sql1, [
                 date,
                 data[i].order_code,
                 data[i].sku_code
             ])
+            
         } else {
-            sqls.push(sql)
-            params.push([
+            result = await query(sql, [
                 date,
                 data[i].order_code,
                 data[i].goods_id,
@@ -57,8 +56,7 @@ ordersGoodsRepo.update = async (data, date) => {
             ])
         }
     }
-    const result = await transaction(sqls, params)
-    return result
+    return result?.affectedRows ? true : false
 }
 
 ordersGoodsRepo.deleteByDate = async (date) => {
