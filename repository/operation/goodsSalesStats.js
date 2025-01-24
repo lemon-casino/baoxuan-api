@@ -116,18 +116,24 @@ goodsSalesStats.updateLaborCost = async (date) => {
     sql = `UPDATE goods_sales_stats SET labor_cost = ? WHERE goods_id = ? AND shop_id = ? 
         AND \`date\` = ?`
     let sql1 = `UPDATE goods_sales_stats SET labor_cost = ? WHERE goods_id IS NULL 
-        AND shop_id = ? AND \`date\` = ?`, sqls = [], params = []
+        AND shop_id = ? AND \`date\` = ?`, result
     for (let i = 0; i < rows.length; i++) {
         if (rows[i].goods_id === null) {
-            sqls.push(sql1)
-            params.push([rows[i].labor_cost, rows[i].shop_id, date])
+            result = await query(sql1, [
+                rows[i].labor_cost, 
+                rows[i].shop_id, 
+                date
+            ])
         } else {
-            sqls.push(sql)
-            params.push([rows[i].labor_cost, rows[i].goods_id, rows[i].shop_id, date])
+            result = await query(sql, [
+                rows[i].labor_cost, 
+                rows[i].goods_id, 
+                rows[i].shop_id, 
+                date
+            ])
         }
-    }    
-    const result = await transaction(sqls, params)
-    return result
+    }
+    return result?.affectedRows ? true : false
 }
 
 goodsSalesStats.deleteByDate = async (date) => {
