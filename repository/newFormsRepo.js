@@ -2109,9 +2109,8 @@ const getOperationWork = async function (start, end, params) {
                     AND p2.show_name = ota.activity_name
                     AND p2.activity_id = ota.activity_id
             )
-        WHERE pi.status IN ('COMPLETED', 'RUNNING')
-            AND pir.operate_time >= ?
-            AND pir.operate_time <= ?
+        WHERE ((pi.status = 'COMPLETED' AND pir.operate_time >= ? AND pir.operate_time <= ?) 
+            OR (pi.status = 'RUNNING' AND pir.operate_time <= ?))
             AND ota.type = ?`
     let p = [], search = ''
     for (let i = 0; i < params.userNames.length; i++) {
@@ -2120,7 +2119,7 @@ const getOperationWork = async function (start, end, params) {
             GROUP BY p.form_id, pi.id, ot.type, ot.operate_type
         ) a GROUP BY form_id, type, operate_type
         UNION ALL `
-        p.push(start, end, params.user_type)
+        p.push(start, end, end, params.user_type)
     }
     search = search.substring(0, search.length - 10)
     let result = await query(search, p)
@@ -2172,18 +2171,23 @@ const getOperationOptimizeInfo = async function (start, end, limit, offset) {
         LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id 
             AND piv.field_id = 'multiSelectField_lwufb7oy' 
         LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
-            AND piv1.field_id = 'textField_liihs7kw'
-        WHERE p.form_id = 105 AND pi.update_time BETWEEN '${start}' AND '${end}'
-            AND pi.status = 'COMPLETED'
-            AND NOT EXISTS(
-                SELECT pir.id FROM process_instance_records pir WHERE pir.instance_id = pi.id 
-                    AND pir.action_exit = 'disagree')
+            AND piv1.field_id = 'employeeField_liihs7l0'
+        LEFT JOIN process_instance_records pir ON pir.instance_id = pi.id 
+			AND pir.action_exit = 'disagree'
+        WHERE p.form_id = 105 AND (
+                (pi.status = 'COMPLETED' AND pi.update_time BETWEEN '${start}' AND '${end}') 
+                OR
+                (pi.status = 'RUNNING' AND pi.update_time <= '${end}')
+            )
         GROUP BY piv.value, piv1.value`
     let search = `${presql}${sql}) aa`
     let rows = await query(search)
     if (rows?.length && rows[0].count) {
         result.total = rows[0].count
-        presql = `SELECT COUNT(1) AS count, piv1.value AS goods_id, piv.value AS optimize_info `
+        presql = `SELECT COUNT(1) AS count, piv1.value AS name, piv.value AS optimize_info, 
+            SUM(IF(pi.status = 'RUNNING', 1, 0)) AS running, 
+            SUM(IF(pi.status = 'COMPLETED', 1, 0)) AS finished, 
+            SUM(IF(pir.id IS NOT NULL, 1, 0)) AS rejected `
         search = `${presql}${sql} LIMIT ${offset}, ${limit}`
         rows = await query(search)
         if (rows?.length) {
@@ -2196,6 +2200,8 @@ const getOperationOptimizeInfo = async function (start, end, limit, offset) {
                         AND piv.field_id = 'multiSelectField_lwufb7oy' 
                     JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
                         AND piv1.field_id = 'textField_liihs7kw' 
+                    LEFT JOIN process_instance_values piv2 ON piv2.instance_id = pi.id
+                        AND piv2.field_id = 'employeeField_liihs7l0' 
                     WHERE p.form_id = 105 AND pi.update_time BETWEEN '${start}' AND '${end}'
                         AND pi.status = 'COMPLETED'
                         AND piv.value = '${result.data[i].optimize_info}'

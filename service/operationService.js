@@ -2000,7 +2000,7 @@ const getNewOnSaleInfo = async (sale_date, start, end, limit, offset) => {
 const getOptimizeInfo = async (start, end, limit, offset) => {
     let result = await newFormsRepo.getOperationOptimizeInfo(start, end, limit, offset)
     for (let i = 0; i < result.data.length; i++) {
-        result.data[i].goods_id = result.data[i].goods_id.replace(/\"/g, '')
+        result.data[i].name = result.data[i].name.replace(/[\[\]\"]/g, '')
         let optimize_info = result.data[i].optimize_info.replace(/[\[\]]/g, '')
         result.data[i].optimize_info = result.data[i].optimize_info.replace(/[\[\]\"]/g, '')
         let optimize = await goodsOptimizeSetting.getByTitle(optimize_info)
@@ -2309,16 +2309,8 @@ const importOrdersGoods = async (rows, date) => {
 }
 
 const updateOrderGoods = async (date) => {
-    let result = await ordersGoodsRepo.getByDate(date)
-    for (let i = 0; i < result.length; i++) {
-        await goodsSalesStats.updateLaborCost(
-            result[i].labor_cost, 
-            result[i].goods_id, 
-            result[i].shop_id, 
-            date
-        )
-    }
-    logger.info(`[发货人工费刷新]：时间:${date}`)
+    let result = await goodsSalesStats.updateLaborCost(date)
+    logger.info(`[发货人工费刷新]：时间:${date}, ${result}`)
 }
 
 const importOrdersGoodsVerified = async (rows, date) => {
@@ -2360,21 +2352,11 @@ const importOrdersGoodsVerified = async (rows, date) => {
 }
 
 const updateOrderGoodsVerified = async (data, date) => {
-    let dataMap = {}
-    for (let i = 0; i < data.length; i++) {
-        let result = await ordersGoodsRepo.update(
-            date, data[i].order_code, data[i].goods_id, data[i].sku_code
-        )
-        dataMap[`${data[i].goods_id || ''}_${data[i].shop_id}`] = true
-        if (!result) logger.error(`[订单利润-核销导入]: ${JSON.stringify(data[i])} 失败`)
-    }
-    for (let info in dataMap) {
-        let values = info.split('_')
-        let goods_id = values[0]?.length ? values[0] : null
-        let shop_id = values[1]
-        await goodsVerifiedsStats.updateLaborCost(goods_id, shop_id, date)
-    }
-    logger.info(`[核销人工费刷新]：时间:${date}`)
+    let result = await ordersGoodsRepo.update(data, date)
+    if (result) {
+        result = await goodsVerifiedsStats.updateLaborCost(date)
+        logger.info(`[核销人工费刷新]：时间:${date}, ${result}`)
+    } else logger.error(`[核销人工费刷新]：时间:${date}, ${result}`)
 }
 
 module.exports = {
