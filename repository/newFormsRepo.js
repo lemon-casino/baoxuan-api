@@ -2199,8 +2199,6 @@ const getOperationOptimizeInfo = async function (params) {
     if (rows?.length && rows[0].count) {
         result.total = rows[0].count
         presql = `SELECT COUNT(1) AS count, piv1.value AS name, piv.value AS optimize_info, 
-            SUM(IF(pi.status = 'RUNNING', 1, 0)) AS running, 
-            SUM(IF(pi.status = 'COMPLETED', 1, 0)) AS finished,             
             SUM(IF(pir.id IS NOT NULL, 1, 0)) AS rejected `
         search = `${presql}${sql}${subsql} 
             GROUP BY piv.value, piv1.value 
@@ -2210,31 +2208,44 @@ const getOperationOptimizeInfo = async function (params) {
         if (rows?.length) {
             result.data = rows
             for (let i = 0; i < result.data.length; i++) {
-                result.data[i].children = []
+                result.data[i].children = []                
                 result.data[i].optimized = 0
-                if (parseInt(result.data[i].finished) - parseInt(result.data[i].rejected) > 0) {
-                    result.data[i].optimized = parseInt(result.data[i].finished) - 
-                        parseInt(result.data[i].rejected)
-                    sql = `SELECT pi.instance_id, piv1.value AS goods_id, 
-                            IF(piv3.value IS NULL, pi.update_time, FROM_UNIXTIME(piv3.value)) AS time, 
-                            DATE_FORMAT(pi.update_time, '%Y-%m-%d') AS time  
-                        FROM processes p JOIN process_instances pi ON p.id = pi.process_id 
-                        LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id 
-                            AND piv.field_id = 'multiSelectField_lwufb7oy' 
-                        LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
-                            AND piv1.field_id = 'textField_liihs7kw' 
-                        LEFT JOIN process_instance_values piv2 ON piv2.instance_id = pi.id
-                            AND piv2.field_id = 'employeeField_liihs7l0'                         
-                        LEFT JOIN process_instance_values piv3 ON piv3.instance_id = pi.id
-                            AND piv3.field_id = 'dateField_m6072fu9' 
-                        WHERE p.form_id = 105 AND pi.update_time BETWEEN '${params.start}' AND '${params.end}'
-                            AND pi.status = 'COMPLETED'
-                            AND piv.value = '${result.data[i].optimize_info}'
-                            AND piv2.value = '${result.data[i].name}'
-                        ORDER BY pi.update_time`
-                    rows = await query(sql)
-                    if (rows?.length) result.data[i].children = rows
-                }             
+                sql = `SELECT pi.instance_id, REPLACE(piv1.value, '"', '') AS goods_id, 
+                        IF(piv3.value IS NULL, pi.update_time, FROM_UNIXTIME(piv3.value)) AS time, 
+                        DATE_FORMAT(pi.update_time, '%Y-%m-%d') AS time 
+                    FROM operation_type ot
+                    JOIN operation_type_activity ota ON ot.id = ota.type_id
+                    JOIN processes p ON p.form_id = ot.form_id
+                    JOIN process_instances pi ON p.id = pi.process_id
+                    JOIN process_instance_records pir ON pi.id = pir.instance_id
+                        AND pir.show_name = ota.activity_name
+                        AND pir.activity_id = ota.activity_id
+                        AND pir.action_exit = ota.action_exit
+                        AND pir.id = (
+                            SELECT MAX(p2.id) FROM process_instance_records p2
+                            WHERE p2.instance_id = pi.id
+                                AND p2.show_name = ota.activity_name
+                                AND p2.activity_id = ota.activity_id
+                        )
+                    LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id 
+                        AND piv.field_id = 'multiSelectField_lwufb7oy' 
+                    LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
+                        AND piv1.field_id = 'textField_liihs7kw'
+                    LEFT JOIN process_instance_values piv2 ON piv2.instance_id = pi.id 
+                        AND piv2.field_id = 'employeeField_liihs7l0' 
+                    LEFT JOIN process_instance_values piv3 ON piv3.instance_id = pi.id
+                        AND piv3.field_id = 'dateField_m6072fu9'
+                    WHERE ((pi.status = 'COMPLETED' AND pi.update_time BETWEEN '${params.start}' AND '${params.end}') 
+                        OR (pi.status = 'RUNNING' AND pi.update_time <= '${params.end}'))
+                        AND ota.type = 1 AND ot.type = 2 AND ot.operate_type = 4 
+                        AND pir.id IS NOT NULL 
+                        AND piv.value = '${result.data[i].optimize_info}'
+                        AND piv2.value = '${result.data[i].name}'`
+                rows = await query(sql)
+                if (rows?.length) {
+                    result.data[i].optimized = rows?.length
+                    result.data[i].children = rows
+                }        
             }
         }
     }
