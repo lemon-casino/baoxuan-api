@@ -1288,7 +1288,7 @@ const getFlowSplitFormfieldKeyAndField = async (formId, fieldKey, selectField, f
 const getFlows = async (params, id) => {
     let result, setting = []
     if (params.tag) result = await newFormsRepo.getFlowInstances(params)
-    if (params.dept) result = await newFormsRepo.getDevelopmentFlowInstances(params)
+    else if (params.dept) result = await newFormsRepo.getDevelopmentFlowInstances(params)
     else result = await newFormsRepo.getOperationFlowInstances(params)
     if (result?.length) {
         for (let index = 0; index < result.length; index++) {

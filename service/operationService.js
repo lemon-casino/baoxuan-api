@@ -2440,8 +2440,8 @@ module.exports = {
     createShopPromotionLog,
     importOrdersGoods,
     importOrdersGoodsVerified,
-    batchInsertGoodsSalesStats,
-    batchInsertGoodsVerifiedsStats,
+    batchInsertGoodsSales,
+    batchInsertGoodsVerifieds,
     updateOrderGoods,
     updateGoodsPayments
 }

@@ -43,7 +43,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id 
             JOIN form_fields ff2 ON ff2.field_id = a.field_id 
                 AND ffd.form_field_id = ff2.id
-            WHERE a.type LIKE CONCAT('%', ffd.value, '%') 
+            WHERE (a.type LIKE CONCAT('%', ffd.value, '%') OR a.type IS NULL) 
             ORDER BY a.id, 
                 CASE a.action_exit 
                 WHEN 'agree' THEN 2 
@@ -78,7 +78,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
                 piv3.field_id, piv3.value, pis2.field_id, pis2.value, vp.type
         ) a LEFT JOIN vision_field_type vft ON vft.form_id = a.form_id 
             LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id 
-            WHERE a.type LIKE CONCAT('%', ffd.value, '%')
+            WHERE (a.type LIKE CONCAT('%', ffd.value, '%') OR a.type IS NULL) 
         GROUP BY a.action_exit`
     let tmp, tmp1
    
