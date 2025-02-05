@@ -917,7 +917,7 @@ const refreshGoodsSalesStats = async (req, res, next) => {
         joiUtil.validate({
             date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
         })
-        await operationService.batchInsertGoodsSalesStats(date)
+        await operationService.batchInsertGoodsSales(date)
         return res.send(biResponse.success())
     } catch (e) {
         next(e)
@@ -930,7 +930,7 @@ const refreshGoodsVerifiedsStats = async (req, res, next) => {
         joiUtil.validate({
             date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
         })
-        await operationService.batchInsertGoodsVerifiedsStats(date)
+        await operationService.batchInsertGoodsVerifieds(date)
         return res.send(biResponse.success())
     } catch (e) {
         next(e)
