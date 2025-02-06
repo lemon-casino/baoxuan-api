@@ -32,22 +32,22 @@ const typeList = {
 }
 
 const columnList = [
-    {label: '', key: 'name', is_link: true}, 
-    {label: '发货金额', key: 'sale_amount'}, 
-    {label: '推广费', key: 'promotion_amount'}, 
-    {label: '费用', key: 'operation_amount'},  
-    {label: '费比(%)', key: 'operation_rate'}, 
-    {label: 'ROI', key: 'roi'}, 
-    {label: '访问量', key: 'words_vol'},
-    {label: '市场流量', key: 'words_market_vol'},
-    {label: '市占率(%)', key: 'market_rate'}, 
-    {label: '退单量', key: 'refund_num'},
-    {label: '订单量', key: 'order_num'},
-    {label: '退货率(%)', key: 'refund_rate'}, 
-    {label: '运费', key: 'express_fee'}, 
-    {label: '包材费', key: 'packing_fee'}, 
-    {label: '利润', key: 'profit'}, 
-    {label: '利润率(%)', key: 'profit_rate'}
+    {label: '', key: 'name', is_link: true,show:true,sort:1}, 
+    {label: '发货金额', key: 'sale_amount',show:true}, 
+    {label: '推广费', key: 'promotion_amount',show:true}, 
+    {label: '费用', key: 'operation_amount',show:true},  
+    {label: '费比(%)', key: 'operation_rate',show:true}, 
+    {label: 'ROI', key: 'roi',show:true}, 
+    {label: '访问量', key: 'words_vol',show:true},
+    {label: '市场流量', key: 'words_market_vol',show:true},
+    {label: '市占率(%)', key: 'market_rate',show:true}, 
+    {label: '退单量', key: 'refund_num',show:true},
+    {label: '订单量', key: 'order_num',show:true},
+    {label: '退货率(%)', key: 'refund_rate',show:true}, 
+    {label: '运费', key: 'express_fee',show:true}, 
+    {label: '包材费', key: 'packing_fee',show:true}, 
+    {label: '利润', key: 'profit',show:true}, 
+    {label: '利润率(%)', key: 'profit_rate',show:true}
 ]
 
 const operationDefaultItem = {

@@ -62,7 +62,16 @@ const getDataStats = async (id, start, end, params) => {
     let key = crypto.createHash('md5').update(info).digest('hex')
     key = `${redisKeys.operation}:${params.stats}:${key}`
     result = await redisUtil.get(key)
-    if (result) return JSON.parse(result)
+    let setting = await userSettingRepo.getByType(id, 3)
+    setting = JSON.parse(setting[0].attributes)
+    if (params.stats == 'verified') setting[1].label = '核销金额'
+    if (result) {
+        result = JSON.parse(result)
+        if (setting.length > 0) {
+            result.total.column = setting
+        }
+        return result
+    }
     result = JSON.parse(JSON.stringify(operationDefaultItem))
     let func = params.stats == 'verified' ? goodsSaleVerifiedRepo : goodsSaleInfoRepo
     let sale_amount = 0, promotion_amount = 0, express_fee = 0, profit = 0, 
@@ -176,7 +185,7 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].market_rate = words_market_vol > 0 ? (words_vol / words_market_vol * 100).toFixed(2) : '0.00'
     result.total.data[0].refund_rate = order_num > 0 ? (refund_num / order_num * 100).toFixed(2) : '0.00'
     result.total.column = JSON.parse(JSON.stringify(result[type].column))
-    result.total.column[0].is_link = false
+    // result.total.column[0].is_link = false
     result.total.data[0].sale_amount = sale_amount.toFixed(2)
     result.total.data[0].promotion_amount = promotion_amount.toFixed(2)
     result.total.data[0].express_fee = express_fee.toFixed(2)
@@ -185,6 +194,11 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].children = children.filter(item => item.id)
     result.total.data[0].warning = warning
     redisUtil.set(key, JSON.stringify(result), 3600)
+    if (setting.length > 0) {
+        // 创建深拷贝
+        setting[0].is_link=true
+        result.total.column = setting
+    }
     return result
 }
 
