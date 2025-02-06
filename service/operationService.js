@@ -2024,7 +2024,7 @@ const getOptimizeInfo = async (params, user) => {
     } else {
         permissions = await userOperationRepo.getPermissionLimit(user.id)
     }
-    if (permissions.length == 0) return result
+    if (permissions.length == 0) return []
     let users = [] 
     for (let i = 0; i < permissions.length; i++) {
         if (i > 0 && permissions[i].type != permissions[i-1].type) break
