@@ -55,6 +55,21 @@ const getDataPannel = async (req, res, next) => {
     }
 }
 
+const getDataPannelProject = async (req, res, next) => {
+    try {
+        const {type, month, brief_product_line} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
+            month: {value: month, schema: joiUtil.commonJoiSchemas.strRequired},
+            brief_product_line: {value: brief_product_line, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const result = await developmentService.getSaleStatsPoject(type, month, brief_product_line)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const getDataPannelDetail = async (req, res, next) => {
     try {
         const {type, month, brief_product_line} = req.query
@@ -73,5 +88,6 @@ const getDataPannelDetail = async (req, res, next) => {
 module.exports = {
     getWorkPannel, 
     getDataPannel,
+    getDataPannelProject,
     getDataPannelDetail
 }
