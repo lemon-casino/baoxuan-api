@@ -63,11 +63,12 @@ const getDataStats = async (id, start, end, params) => {
     key = `${redisKeys.operation}:${params.stats}:${key}`
     result = await redisUtil.get(key)
     let setting = await userSettingRepo.getByType(id, 3)
-    setting = JSON.parse(setting[0].attributes)
+    
     if (params.stats == 'verified') setting[1].label = '核销金额'
     if (result) {
         result = JSON.parse(result)
         if (setting.length > 0) {
+            setting = JSON.parse(setting[0].attributes || '[]')
             result.total.column = setting
         }
         return result
