@@ -303,20 +303,20 @@ userOperationRepo.getProductLine = async (type, month, limit, offset, sort) => {
     sql = `SELECT * FROM (SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
             FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, IFNULL(SUM(operation_amount), 0) / 
-                SUM(sale_amount), 0), 2) AS operation_rate, 
+                SUM(sale_amount), 0) * 100, 2) AS operation_rate, 
             FORMAT(IF(IFNULL(SUM(promotion_amount), 0) > 0, IFNULL(SUM(sale_amount), 0) / 
-                SUM(promotion_amount), 0), 2) AS roi,
+                SUM(promotion_amount), 0) * 100, 2) AS roi,
             FORMAT(IF(IFNULL(SUM(words_market_vol), 0) > 0, IFNULL(SUM(words_vol), 0) / 
-                SUM(words_market_vol), 0), 2) AS market_rate,
+                SUM(words_market_vol), 0) * 100, 2) AS market_rate,
             FORMAT(IF(IFNULL(SUM(order_num), 0) > 0, IFNULL(SUM(refund_num), 0) / 
-                SUM(order_num), 0), 2) AS refund_rate,
+                SUM(order_num), 0) * 100, 2) AS refund_rate,
             FORMAT(IFNULL(SUM(dsr), 0) / COUNT(1), 2) AS dsr, 
             IFNULL(SUM(express_fee), 0) AS express_fee, 
             IFNULL(SUM(packing_fee), 0) AS packing_fee, 
             IFNULL(SUM(labor_cost), 0) AS labor_cost, 
             IFNULL(SUM(profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, IFNULL(SUM(profit), 0) / 
-                SUM(sale_amount), 0), 2) AS profit_rate, 
+                SUM(sale_amount), 0) * 100, 2) AS profit_rate, 
             a.brief_product_line 
         FROM (SELECT brief_product_line FROM dianshang_operation_attribute 
         WHERE platform = '天猫部' GROUP BY brief_product_line) a 
@@ -339,20 +339,20 @@ userOperationRepo.getProductLineProject = async (type, month, brief_product_line
     let sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
             FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, IFNULL(SUM(operation_amount), 0) / 
-                SUM(sale_amount), 0), 2) AS operation_rate, 
+                SUM(sale_amount), 0) * 100, 2) AS operation_rate, 
             FORMAT(IF(IFNULL(SUM(promotion_amount), 0) > 0, IFNULL(SUM(sale_amount), 0) / 
-                SUM(promotion_amount), 0), 2) AS roi,
+                SUM(promotion_amount), 0) * 100, 2) AS roi,
             FORMAT(IF(IFNULL(SUM(words_market_vol), 0) > 0, IFNULL(SUM(words_vol), 0) / 
-                SUM(words_market_vol), 0), 2) AS market_rate,
+                SUM(words_market_vol), 0) * 100, 2) AS market_rate,
             FORMAT(IF(IFNULL(SUM(order_num), 0) > 0, IFNULL(SUM(refund_num), 0) / 
-                SUM(order_num), 0), 2) AS refund_rate,
+                SUM(order_num), 0) * 100, 2) AS refund_rate,
             FORMAT(IFNULL(SUM(dsr), 0) / COUNT(1), 2) AS dsr, 
             IFNULL(SUM(express_fee), 0) AS express_fee, 
             IFNULL(SUM(packing_fee), 0) AS packing_fee, 
             IFNULL(SUM(labor_cost), 0) AS labor_cost, 
             IFNULL(SUM(profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, IFNULL(SUM(profit), 0) / 
-                SUM(sale_amount), 0), 2) AS profit_rate, 
+                SUM(sale_amount), 0) * 100, 2) AS profit_rate, 
             pi.project_name AS brief_product_line 
         FROM dianshang_operation_attribute a
         JOIN shop_info si ON a.shop_name = si.shop_name
@@ -375,20 +375,20 @@ userOperationRepo.getProductLineDetail = async (type, month, brief_product_line)
     let sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
             FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, IFNULL(SUM(operation_amount), 0) / 
-                SUM(sale_amount), 0), 2) AS operation_rate, 
+                SUM(sale_amount), 0) * 100, 2) AS operation_rate, 
             FORMAT(IF(IFNULL(SUM(promotion_amount), 0) > 0, IFNULL(SUM(sale_amount), 0) / 
-                SUM(promotion_amount), 0), 2) AS roi,
+                SUM(promotion_amount), 0) * 100, 2) AS roi,
             FORMAT(IF(IFNULL(SUM(words_market_vol), 0) > 0, IFNULL(SUM(words_vol), 0) / 
-                SUM(words_market_vol), 0), 2) AS market_rate,
+                SUM(words_market_vol), 0) * 100, 2) AS market_rate,
             FORMAT(IF(IFNULL(SUM(order_num), 0) > 0, IFNULL(SUM(refund_num), 0) / 
-                SUM(order_num), 0), 2) AS refund_rate,
+                SUM(order_num), 0) * 100, 2) AS refund_rate,
             FORMAT(IFNULL(SUM(dsr), 0) / COUNT(1), 2) AS dsr, 
             IFNULL(SUM(express_fee), 0) AS express_fee, 
             IFNULL(SUM(packing_fee), 0) AS packing_fee, 
             IFNULL(SUM(labor_cost), 0) AS labor_cost, 
             IFNULL(SUM(profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(sale_amount), 0) > 0, IFNULL(SUM(profit), 0) / 
-                SUM(sale_amount), 0), 2) AS profit_rate, 
+                SUM(sale_amount), 0) * 100, 2) AS profit_rate, 
             a.brief_product_line,
             pi.project_name,
             a.goods_id,
