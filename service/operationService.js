@@ -1243,15 +1243,36 @@ const getWorkStats = async (user, start, end, params) => {
     for (let i = 0; i < workItemList.length; i++) {
         let tmp = JSON.parse(JSON.stringify(statItem))
         tmp.children = JSON.parse(JSON.stringify(childInfo))
+        if (i == 5) tmp.children.map(item => {
+            item.children[item.children.length - 1]['faild'] = 0
+            let child = JSON.parse(JSON.stringify(statItem))
+            child.actionName = '已拒绝'
+            item.children.push(child)
+        })
         result.push(tmp)
     }
     let info = await newFormsRepo.getOperationWork(start, end, params)
+    let optimize = await newFormsRepo.getOperationOptimizeRate(start, end, params)
+    for (let i = 0; i < optimize.length; i++) {
+        let opt = await goodsOptimizeSetting.getByTitle(
+            optimize[i].opt.substring(1, optimize[i].opt.length - 1))
+        let faild = await goodsSaleInfoRepo.getOptimizeResult(
+            optimize[i].goods_id,
+            optimize[i].time,
+            opt
+        )
+        if (faild?.length) {
+            result[workItemMap[optimize[i].operate_type]]
+                .children[optimize[i].user_type]
+                .children[optimize[i].type].faild += parseInt(faild[0].count)
+        }
+    }
     for (let i = 0; i < info.length; i++) {
         result[workItemMap[info[i].operate_type]]
-            .children[info[i].user_type].sum += info[i].count
+            .children[info[i].user_type].sum += parseInt(info[i].count)
         result[workItemMap[info[i].operate_type]]
             .children[info[i].user_type]
-            .children[info[i].type].sum += info[i].count
+            .children[info[i].type].sum += parseInt(info[i].count)
         result[workItemMap[info[i].operate_type]]
             .children[info[i].user_type]
             .children[info[i].type]
@@ -1263,11 +1284,26 @@ const getWorkStats = async (user, start, end, params) => {
         let item = JSON.parse(JSON.stringify(statItem))
         item.actionName = info[i].title
         item.actionCode = info[i].form_id
-        item.sum = info[i].count
+        item.sum = parseInt(info[i].count)
         result[workItemMap[info[i].operate_type]]
             .children[info[i].user_type]
             .children[info[i].type]
             .children.push(item)
+        if (result[workItemMap[info[i].operate_type]]
+            .children[info[i].user_type]
+            .children[info[i].type].faild != undefined) {
+            let child = JSON.parse(JSON.stringify(statItem))
+            child.actionName = '优化成功率'
+            child.sum = ((1 - result[workItemMap[info[i].operate_type]]
+                .children[info[i].user_type]
+                .children[info[i].type].faild / result[workItemMap[info[i].operate_type]]
+                .children[info[i].user_type]
+                .children[info[i].type].sum) * 100).toFixed(2) + '%'
+            result[workItemMap[info[i].operate_type]]
+                .children[info[i].user_type]
+                .children[info[i].type]
+                .children.push(child)
+        }
     }
     return result
 }
@@ -2067,11 +2103,14 @@ const getOptimizeInfo = async (params, user) => {
         if (userList?.length) users = users.concat(userList)
     }
     params.userNames = ''
-    for (let i = 0; i < users.length; i++) {
-        params.userNames = `${params.userNames}'["${users[i].nickname}"]',`
-    }
+    if (params.user) params.userNames = `'["${params.user}"]',`
+    else
+        for (let i = 0; i < users.length; i++) {
+            params.userNames = `${params.userNames}'["${users[i].nickname}"]',`
+        }
     if (params.userNames?.length) params.userNames = params.userNames.substring(0, params.userNames.length - 1)
     let result = await newFormsRepo.getOperationOptimizeInfo(params)
+    result.users = users
     for (let i = 0; i < result.data.length; i++) {
         result.data[i].name = result.data[i].name.replace(/[\[\]\"]/g, '')
         let optimize_info = result.data[i].optimize_info.replace(/[\[\]]/g, '')
