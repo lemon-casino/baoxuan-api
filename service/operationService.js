@@ -201,6 +201,7 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].warning = warning
     redisUtil.set(key, JSON.stringify(result), 3600)
     if (setting.length > 0) {
+        setting = JSON.parse(setting[0].attributes || '[]')
         setting[0].is_link=true
         result.total.column = setting
     }
