@@ -102,14 +102,31 @@ goodsVerifiedsStats.updateDSR = async (goods_id, dsr, date) => {
     return result?.affectedRows ? true : false
 }
 
-goodsVerifiedsStats.updateLaborCost = async (goods_id, shop_id, date) => {
-    let sql = `SELECT SUM(rate) AS labor_cost FROM orders_goods WHERE goods_id = ? 
-        AND shop_id = ? AND verified_date = ?`
-    let rows = await query(sql, [goods_id, shop_id, date])
+goodsVerifiedsStats.updateLaborCost = async (date) => {
+    let sql = `SELECT SUM(rate) AS labor_cost, goods_id, shop_id FROM orders_goods 
+        WHERE verified_date = ? GROUP BY goods_id, shop_id`
+    let rows = await query(sql, [date])
     if (!rows?.length) return false
     sql = `UPDATE goods_verifieds_stats SET labor_cost = ? WHERE goods_id = ? 
         AND shop_id = ? AND \`date\` = ?`
-    const result = await query(sql, [rows[0].labor_cost, goods_id, shop_id, date])
+    let sql1 = `UPDATE goods_verifieds_stats SET labor_cost = ? WHERE goods_id IS NULL  
+            AND shop_id = ? AND \`date\` = ?`, result
+    for (let i = 0; i < rows.length; i++) {
+        if (rows[i].goods_id === null) {
+            result = await query(sql1, [
+                rows[i].labor_cost, 
+                rows[i].shop_id, 
+                date
+            ])
+        } else {
+            result = await query(sql, [
+                rows[i].labor_cost, 
+                rows[i].goods_id, 
+                rows[i].shop_id, 
+                date
+            ])
+        }
+    }
     return result?.affectedRows ? true : false
 }
 

@@ -259,6 +259,11 @@ developmentService.getSaleStats = async (type, month, limit, offset, sort) => {
     return result
 }
 
+developmentService.getSaleStatsPoject = async (type, month, brief_product_line) => {
+    let result = await userOperationRepo.getProductLineProject(type, month, brief_product_line)
+    return result
+}
+
 developmentService.getSaleStatsDetail = async (type, month, brief_product_line) => {
     let result = {
         column: [

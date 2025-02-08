@@ -1288,7 +1288,7 @@ const getFlowSplitFormfieldKeyAndField = async (formId, fieldKey, selectField, f
 const getFlows = async (params, id) => {
     let result, setting = []
     if (params.tag) result = await newFormsRepo.getFlowInstances(params)
-    if (params.dept) result = await newFormsRepo.getDevelopmentFlowInstances(params)
+    else if (params.dept) result = await newFormsRepo.getDevelopmentFlowInstances(params)
     else result = await newFormsRepo.getOperationFlowInstances(params)
     if (result?.length) {
         for (let index = 0; index < result.length; index++) {
@@ -1402,12 +1402,15 @@ const getOperationProcesses = async (user, params, offset, limit) => {
         }
         if (userList?.length) users = users.concat(userList)
     }
-    params.userNames = ''
+    params.userNames = '', params.names = ''
     for (let i = 0; i < users.length; i++) {
         params.userNames = `${params.userNames}"${users[i].nickname}",`
+        params.names = `${params.names}'["${users[i].nickname}"]',`
     }
-    if (params.userNames?.length > 0) 
+    if (params.userNames?.length > 0) {
         params.userNames = params.userNames.substring(0, params.userNames.length - 1)
+        params.names = params.names.substring(0, params.names.length - 1)
+    }
     let result = await newFormsRepo.getOperationProcessInstances(params, offset, limit)
     return result
 }

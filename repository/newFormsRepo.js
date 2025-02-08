@@ -43,7 +43,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id 
             JOIN form_fields ff2 ON ff2.field_id = a.field_id 
                 AND ffd.form_field_id = ff2.id
-            WHERE a.type LIKE CONCAT('%', ffd.value, '%') 
+            WHERE (a.type LIKE CONCAT('%', ffd.value, '%') OR a.type IS NULL) 
             ORDER BY a.id, 
                 CASE a.action_exit 
                 WHEN 'agree' THEN 2 
@@ -78,7 +78,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
                 piv3.field_id, piv3.value, pis2.field_id, pis2.value, vp.type
         ) a LEFT JOIN vision_field_type vft ON vft.form_id = a.form_id 
             LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id 
-            WHERE a.type LIKE CONCAT('%', ffd.value, '%')
+            WHERE (a.type LIKE CONCAT('%', ffd.value, '%') OR a.type IS NULL) 
         GROUP BY a.action_exit`
     let tmp, tmp1
    
@@ -803,9 +803,9 @@ const getOperationProcessInstances = async function (params, offset, limit) {
             pi.creator 
         FROM processes p
         JOIN operation_type ot ON p.form_id = ot.form_id
-        JOIN operation_type_activity ota ON ot.id = ota.type_id
+        LEFT JOIN operation_type_activity ota ON ot.id = ota.type_id
         JOIN process_instances pi ON pi.process_id = p.id
-        JOIN process_instance_records pir ON pi.id = pir.instance_id
+        LEFT JOIN process_instance_records pir ON pi.id = pir.instance_id
             AND pir.show_name = ota.activity_name
             AND pir.activity_id = ota.activity_id
             AND pir.action_exit = ota.action_exit
@@ -815,31 +815,50 @@ const getOperationProcessInstances = async function (params, offset, limit) {
                     AND p2.show_name = ota.activity_name
                     AND p2.activity_id = ota.activity_id
             )
-        WHERE pi.status IN ('COMPLETED', 'RUNNING') 
-            AND ota.type = ? `
-    p1.push(params.user_type)
-    if (params.startDate) {
-        subsql = `${subsql} AND pir.operate_time >= ?`
-        p1.push(moment(params.startDate).format('YYYY-MM-DD') + ' 00:00:00')
-    }
-    if (params.endDate) {
-        subsql = `${subsql} AND pir.operate_time <= ?`
-        p1.push(moment(params.endDate).format('YYYY-MM-DD') + ' 23:59:59')
+        LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id 
+            AND piv.field_id = 'employeeField_liihs7l0' 
+        WHERE pi.status IN ('COMPLETED', 'RUNNING') `
+    if (params.endDate) {        
+        if (params.startDate) {
+            subsql = `${subsql} AND (
+                (pi.status = 'COMPLETED' AND pi.update_time BETWEEN ? AND ?) OR 
+                (pi.status = 'RUNNING' AND pi.update_time <= ?))`
+            p1.push(
+                moment(params.startDate).format('YYYY-MM-DD') + ' 00:00:00',
+                moment(params.endDate).format('YYYY-MM-DD') + ' 23:59:59',
+                moment(params.endDate).format('YYYY-MM-DD') + ' 23:59:59'
+            )
+        }
     }
     if (params.operateType) {
         subsql = `${subsql} AND ot.operate_type = ?`
         p1.push(params.operateType)
     }
-    if (params.userNames) {
-        subsql = `${subsql} AND pir.operator_name IN (${params.userNames})`
-    }
     if (params.action) {
-        subsql = `${subsql} AND ot.type = ?`
-        p1.push(fullActionFilter[params.action])
+        if (params.action == '已拒绝') {
+            subsql = `${subsql} AND EXISTS(
+                SELECT * FROM process_instance_records pir1 WHERE pir1.instance_id = pi.id 
+                AND pir1.action_exit = 'disagree'
+            )`
+        } else {            
+            subsql = `${subsql} AND ot.type = ? AND ota.type = ? AND pir.operate_time <= ? `
+            p1.push(
+                fullActionFilter[params.action], 
+                params.user_type, 
+                moment(params.endDate).format('YYYY-MM-DD') + ' 23:59:59'
+            )
+        }
+    } else {
+        subsql = `${subsql} AND ota.type = ? AND pir.operate_time <= ? `
+        p1.push(params.user_type, moment(params.endDate).format('YYYY-MM-DD') + ' 23:59:59')
     }
     if (params.id) {
         subsql = `${subsql} AND p.form_id = ?`
         p1.push(params.id)
+    }
+    if (params.userNames) {
+        if (params.id == 105) subsql = `${subsql} AND piv.value IN (${params.names})`
+        else subsql = `${subsql} AND pir.operator_name IN (${params.userNames})`
     }
     subsql = `${subsql}
         GROUP BY pi.id, pi.instance_id, pi.status, pi.title,  pi.create_time, pi.update_time`
@@ -2109,21 +2128,89 @@ const getOperationWork = async function (start, end, params) {
                     AND p2.show_name = ota.activity_name
                     AND p2.activity_id = ota.activity_id
             )
-        WHERE pi.status IN ('COMPLETED', 'RUNNING')
-            AND pir.operate_time >= ?
-            AND pir.operate_time <= ?
+        LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id 
+            AND piv.field_id = 'employeeField_liihs7l0' 
+        WHERE ((pi.status = 'COMPLETED' AND pi.update_time BETWEEN ? AND ?) 
+            OR (pi.status = 'RUNNING' AND pi.update_time <= ?))
             AND ota.type = ?`
     let p = [], search = ''
     for (let i = 0; i < params.userNames.length; i++) {
         search = `${search}${presql}, ${[i]} AS user_type ${sql}
-            AND pir.operator_name IN (${params.userNames[i]})
+            AND IF(piv.id IS NOT NULL, piv.value IN (${params.names[i]}), 
+                pir.operator_name IN (${params.userNames[i]}))
             GROUP BY p.form_id, pi.id, ot.type, ot.operate_type
         ) a GROUP BY form_id, type, operate_type
         UNION ALL `
-        p.push(start, end, params.user_type)
+        p.push(start, end, end, params.user_type)
     }
     search = search.substring(0, search.length - 10)
     let result = await query(search, p)
+    let optimize = await getOperationOptimizeWork(start, end, params)
+    result = result.concat(optimize)
+    return result || []
+}
+
+const getOperationOptimizeWork = async function (start, end, params) {
+    let sql = `4 AS operate_type, 3 AS type, 105 AS form_id, 
+        (SELECT title FROM forms WHERE id = 105) AS title, 
+        IFNULL(SUM(IF(pir.id IS NOT NULL, 1, 0)), 0) AS count 
+            FROM processes p JOIN process_instances pi ON p.id = pi.process_id  
+        LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
+            AND piv1.field_id = 'employeeField_liihs7l0'
+        LEFT JOIN process_instance_records pir ON pir.instance_id = pi.id 
+            AND pir.action_exit = 'disagree'
+        WHERE p.form_id = 105 AND 
+			pi.status = 'COMPLETED'`
+    let search = ''
+    for (let i = 0; i < params.userNames.length; i++) {
+        search = `${search}SELECT ${i} AS user_type, ${sql}
+                AND pi.update_time BETWEEN '${start}' AND '${end}' 
+                AND piv1.value IN (${params.names[i]})
+            UNION ALL `
+    }
+    search = search.substring(0, search.length - 10)
+    let result = await query(search)
+    return result || []
+}
+
+const getOperationOptimizeRate = async function (start, end, params) {
+    let sql = `4 AS operate_type, 2 AS type, pi.instance_id, REPLACE(piv1.value, '"', '') 
+            AS goods_id, piv2.value AS name, piv.value AS opt, 
+            DATE_FORMAT(IF(piv3.value IS NULL, pi.update_time, 
+                FROM_UNIXTIME(piv3.value / 1000)), '%Y-%m-%d') AS time FROM operation_type ot
+        JOIN operation_type_activity ota ON ot.id = ota.type_id
+        JOIN processes p ON p.form_id = ot.form_id
+        JOIN process_instances pi ON p.id = pi.process_id
+        JOIN process_instance_records pir ON pi.id = pir.instance_id
+            AND pir.show_name = ota.activity_name
+            AND pir.activity_id = ota.activity_id
+            AND pir.action_exit = ota.action_exit
+            AND pir.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2
+                WHERE p2.instance_id = pi.id
+                    AND p2.show_name = ota.activity_name
+                    AND p2.activity_id = ota.activity_id
+            )
+        LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id 
+            AND piv.field_id = 'multiSelectField_lwufb7oy'
+        LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
+            AND piv1.field_id = 'textField_liihs7kw'
+        LEFT JOIN process_instance_values piv2 ON piv2.instance_id = pi.id 
+            AND piv2.field_id = 'employeeField_liihs7l0' 
+        LEFT JOIN process_instance_values piv3 ON piv3.instance_id = pi.id
+            AND piv3.field_id = 'dateField_m6072fu9'
+        WHERE ((pi.status = 'COMPLETED' AND pi.update_time BETWEEN '${start}' AND '${end}') 
+            OR (pi.status = 'RUNNING' AND pi.update_time <= '${end}'))
+            AND ota.type = 1 AND ot.type = 2 AND ot.operate_type = 4 
+            AND pir.id IS NOT NULL `
+    let search = ''
+    for (let i = 0; i < params.userNames.length; i++) {
+        search = `${search}SELECT ${i} AS user_type, ${sql} 
+                AND piv2.value in (${params.names[i]})
+            UNION ALL `
+    }
+    search = search.substring(0, search.length - 10)
+    let result = await query(search)
     return result || []
 }
 
@@ -2162,7 +2249,7 @@ const checkOperationNodes = async function (instance_id, activity, userId) {
     return row?.length ? true : false
 }
 
-const getOperationOptimizeInfo = async function (start, end, limit, offset) {
+const getOperationOptimizeInfo = async function (params) {
     let result = {
         data: [],
         total: 0
@@ -2172,41 +2259,72 @@ const getOperationOptimizeInfo = async function (start, end, limit, offset) {
         LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id 
             AND piv.field_id = 'multiSelectField_lwufb7oy' 
         LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
-            AND piv1.field_id = 'textField_liihs7kw'
-        WHERE p.form_id = 105 AND pi.update_time BETWEEN '${start}' AND '${end}'
-            AND pi.status = 'COMPLETED'
-            AND NOT EXISTS(
-                SELECT pir.id FROM process_instance_records pir WHERE pir.instance_id = pi.id 
-                    AND pir.action_exit = 'disagree')
-        GROUP BY piv.value, piv1.value`
-    let search = `${presql}${sql}) aa`
+            AND piv1.field_id = 'employeeField_liihs7l0'
+        LEFT JOIN process_instance_records pir ON pir.instance_id = pi.id 
+            AND pir.action_exit = 'disagree'
+        WHERE p.form_id = 105 AND (
+                (pi.status = 'COMPLETED' AND pi.update_time BETWEEN '${params.start}' AND '${params.end}') 
+                OR
+                (pi.status = 'RUNNING' AND pi.update_time <= '${params.end}')
+            )`
+    let subsql = ''
+    if (params.userNames?.length) subsql = `${subsql} AND piv1.value IN (${params.userNames})`
+    if (params.optimize) {
+        subsql = `${subsql} AND piv.value LIKE '%${params.optimize.replace('%', '\%')}%'`
+    }
+    let search = `${presql}${sql}${subsql}
+        GROUP BY piv.value, piv1.value) aa`
     let rows = await query(search)
     if (rows?.length && rows[0].count) {
         result.total = rows[0].count
-        presql = `SELECT COUNT(1) AS count, piv1.value AS goods_id, piv.value AS optimize_info `
-        search = `${presql}${sql} LIMIT ${offset}, ${limit}`
+        presql = `SELECT COUNT(1) AS count, piv1.value AS name, piv.value AS optimize_info, 
+            SUM(IF(pir.id IS NOT NULL, 1, 0)) AS rejected `
+        search = `${presql}${sql}${subsql} 
+            GROUP BY piv.value, piv1.value 
+            ORDER BY piv1.value 
+            LIMIT ${params.offset}, ${params.limit}`
         rows = await query(search)
         if (rows?.length) {
             result.data = rows
             for (let i = 0; i < result.data.length; i++) {
-                result.data[i].children = []
-                sql = `SELECT pi.instance_id, DATE_FORMAT(pi.update_time, '%Y-%m-%d') AS time  
-                    FROM processes p JOIN process_instances pi ON p.id = pi.process_id 
-                    JOIN process_instance_values piv ON piv.instance_id = pi.id 
+                result.data[i].children = []                
+                result.data[i].optimized = 0
+                sql = `SELECT pi.instance_id, REPLACE(piv1.value, '"', '') AS goods_id, 
+                        DATE_FORMAT(IF(piv3.value IS NULL, pi.update_time, 
+                            FROM_UNIXTIME(piv3.value / 1000)), '%Y-%m-%d') AS time  
+                    FROM operation_type ot
+                    JOIN operation_type_activity ota ON ot.id = ota.type_id
+                    JOIN processes p ON p.form_id = ot.form_id
+                    JOIN process_instances pi ON p.id = pi.process_id
+                    JOIN process_instance_records pir ON pi.id = pir.instance_id
+                        AND pir.show_name = ota.activity_name
+                        AND pir.activity_id = ota.activity_id
+                        AND pir.action_exit = ota.action_exit
+                        AND pir.id = (
+                            SELECT MAX(p2.id) FROM process_instance_records p2
+                            WHERE p2.instance_id = pi.id
+                                AND p2.show_name = ota.activity_name
+                                AND p2.activity_id = ota.activity_id
+                        )
+                    LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id 
                         AND piv.field_id = 'multiSelectField_lwufb7oy' 
-                    JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
-                        AND piv1.field_id = 'textField_liihs7kw' 
-                    WHERE p.form_id = 105 AND pi.update_time BETWEEN '${start}' AND '${end}'
-                        AND pi.status = 'COMPLETED'
+                    LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
+                        AND piv1.field_id = 'textField_liihs7kw'
+                    LEFT JOIN process_instance_values piv2 ON piv2.instance_id = pi.id 
+                        AND piv2.field_id = 'employeeField_liihs7l0' 
+                    LEFT JOIN process_instance_values piv3 ON piv3.instance_id = pi.id
+                        AND piv3.field_id = 'dateField_m6072fu9'
+                    WHERE ((pi.status = 'COMPLETED' AND pi.update_time BETWEEN '${params.start}' AND '${params.end}') 
+                        OR (pi.status = 'RUNNING' AND pi.update_time <= '${params.end}'))
+                        AND ota.type = 1 AND ot.type = 2 AND ot.operate_type = 4 
+                        AND pir.id IS NOT NULL 
                         AND piv.value = '${result.data[i].optimize_info}'
-                        AND piv1.value = '${result.data[i].goods_id}'
-                        AND NOT EXISTS(
-                            SELECT pir.id FROM process_instance_records pir 
-                            WHERE pir.instance_id = pi.id 
-                                AND pir.action_exit = 'disagree')
-                    ORDER BY pi.update_time`
+                        AND piv2.value = '${result.data[i].name}'`
                 rows = await query(sql)
-                if (rows?.length) result.data[i].children = rows                
+                if (rows?.length) {
+                    result.data[i].optimized = rows?.length
+                    result.data[i].children = rows
+                }        
             }
         }
     }
@@ -2531,5 +2649,6 @@ module.exports = {
     getDevelopmentProblem,
     getPlanStats,
     getOperationOptimizeInfo,
-    checkOptimize
+    checkOptimize,
+    getOperationOptimizeRate
 }

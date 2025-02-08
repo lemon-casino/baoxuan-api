@@ -718,12 +718,12 @@ const getOptimizeInfo = async (req, res, next) => {
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
         })
-        let limit = parseInt(pageSize)
-        let offset = (currentPage - 1) * pageSize
-        if (limit <= 0 || offset < 0) return res.send(biResponse.canTFindIt())
-        let start = moment(startDate).format('YYYY-MM-DD')
-        let end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
-        const result = await operationService.getOptimizeInfo(start, end, limit, offset)
+        req.query.limit = parseInt(pageSize)
+        req.query.offset = (currentPage - 1) * pageSize
+        if (req.query.limit <= 0 || req.query.offset < 0) return res.send(biResponse.canTFindIt())
+        req.query.start = moment(startDate).format('YYYY-MM-DD')
+        req.query.end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
+        const result = await operationService.getOptimizeInfo(req.query, req.user)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -917,7 +917,7 @@ const refreshGoodsSalesStats = async (req, res, next) => {
         joiUtil.validate({
             date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
         })
-        await operationService.batchInsertGoodsSalesStats(date)
+        await operationService.batchInsertGoodsSales(date)
         return res.send(biResponse.success())
     } catch (e) {
         next(e)
@@ -930,7 +930,7 @@ const refreshGoodsVerifiedsStats = async (req, res, next) => {
         joiUtil.validate({
             date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
         })
-        await operationService.batchInsertGoodsVerifiedsStats(date)
+        await operationService.batchInsertGoodsVerifieds(date)
         return res.send(biResponse.success())
     } catch (e) {
         next(e)
