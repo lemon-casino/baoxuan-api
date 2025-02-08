@@ -37,6 +37,31 @@ goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) =
     return result || []
 }
 
+goodsSaleInfoRepo.getTargetsByShopNames = async (shopNames, months) => {
+    let presql = `SELECT FORMAT(IF(IFNULL(SUM(a2.amount), 0) > 0, 
+            IFNULL(SUM(a1.amount), 0) / SUM(a2.amount) * 100, 0), 2) AS target, 
+        IFNULL(SUM(a1.amount), 0) AS amount1, 
+        IFNULL(SUM(a2.amount), 0) AS amount2, a2.month FROM 
+        goods_monthly_sales_target a2 LEFT JOIN (SELECT IFNULL(sum(sale_amount), 0) AS amount, `
+    let search = ''
+    for (let i = 0; i < months.length; i++) {
+        let sql = `'${moment(months[i].start).format('YYYYMM')}' AS month, goods_id 
+            FROM goods_sales WHERE date >= '${months[i].start}' 
+                AND date < '${months[i].end}' 
+                AND shop_name IN ("${shopNames}") GROUP BY goods_id) a1 
+                ON a1.month = a2.month AND a1.goods_id = a2.goods_id
+            WHERE a2.month = '${moment(months[i].start).format('YYYYMM')}' 
+            GROUP BY a2.month`
+        search = `${search}${presql}
+                ${sql}
+            UNION ALL `
+    }
+    search = search.substring(0, search.length - 10)
+    search = `${search} ORDER BY month`
+    let result = await query(search)
+    return result || []
+}
+
 goodsSaleInfoRepo.getNullPromotionByTime = async (shopNames, start, end) => {
     let sql = `SELECT a1.shop_name FROM goods_sale_info a1 LEFT JOIN shop_info si
             ON a1.shop_name = si.shop_name 
@@ -74,6 +99,7 @@ goodsSaleInfoRepo.getRateByShopNamesAndTme = async (shopNames, col1, col2, colum
 goodsSaleInfoRepo.getChildPaymentByShopNamesAndTime = async (shopNames, start, end) => {
     const sql = `SELECT IFNULL(SUM(A1.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
+            IFNULL(SUM(a1.packing_fee), 0) AS packing_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
@@ -146,6 +172,31 @@ goodsSaleInfoRepo.getPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
             AND a1.date >= ?
             AND a1.date <= ?`
     const result = await query(sql, [start, end])
+    return result || []
+}
+
+goodsSaleInfoRepo.getTargetsByLinkIds = async (linkIds, months) => {
+    let presql = `SELECT FORMAT(IF(IFNULL(SUM(a2.amount), 0) > 0, 
+            IFNULL(SUM(a1.amount), 0) / SUM(a2.amount) * 100, 0), 2) AS target, 
+        IFNULL(SUM(a1.amount), 0) AS amount1, 
+        IFNULL(SUM(a2.amount), 0) AS amount2, a2.month FROM 
+        goods_monthly_sales_target a2 LEFT JOIN (SELECT IFNULL(sum(sale_amount), 0) AS amount, `
+    let search = ''
+    for (let i = 0; i < months.length; i++) {
+        let sql = `'${moment(months[i].start).format('YYYYMM')}' AS month, goods_id 
+            FROM goods_sales WHERE date >= '${months[i].start}' 
+                AND date < '${months[i].end}' 
+                AND goods_id IN ("${linkIds}") GROUP BY goods_id) a1 
+                ON a1.month = a2.month AND a1.goods_id = a2.goods_id
+            WHERE a2.month = '${moment(months[i].start).format('YYYYMM')}' 
+            GROUP BY a2.month`
+        search = `${search}${presql}
+                ${sql}
+            UNION ALL `
+    }
+    search = search.substring(0, search.length - 10)
+    search = `${search} ORDER BY month`
+    let result = await query(search)
     return result || []
 }
 
