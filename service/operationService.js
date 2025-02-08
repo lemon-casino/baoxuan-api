@@ -1221,8 +1221,10 @@ const getWorkStats = async (user, start, end, params) => {
         if (userList?.length) {
             let userNames = '', names = ''
             for (let j = 0; j < userList.length; j++) {
-                userNames = `${userNames}"${userList[j].nickname}",`
-                names = `${names}'["${userList[j].nickname}"]',`
+                if (userList[j].nickname != '赵天鹏') {
+                    userNames = `${userNames}"${userList[j].nickname}",`
+                    names = `${names}'["${userList[j].nickname}"]',`
+                }
             }
             userNames = userNames.substring(0, userNames.length - 1)
             names = names.substring(0, names.length - 1)
