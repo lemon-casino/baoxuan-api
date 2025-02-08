@@ -84,6 +84,17 @@ const getDataStats = async (id, start, end, params) => {
         oriType, type = '', except = false, operation_amount = 0, 
         words_market_vol = 0, words_vol = 0, order_num = 0, refund_num = 0,
         children = [], warning = 0, packing_fee = 0
+    let month_duration = parseInt(moment(end).format('YYYYMM')) - parseInt(moment(start).format('YYYYMM')) + 1
+    let months = [], timeline = '', start1 = start
+    for (let i = 0; i < month_duration; i++) {
+        let tmp = i+1 < month_duration ? 
+            moment(start1).add(i + 1, 'months').format('YYYY-MM') + '-01' : 
+            moment(end).add(1, 'days').format('YYYY-MM-DD')
+        months.push({start: start1, end: tmp})
+        let rate = ((moment(tmp).diff(start1, 'days')) / moment(start1).daysInMonth() * 100).toFixed(2)    
+        timeline = `${timeline}${moment(start1).format('YYYYMM')}: ${rate}% \n`
+        start1 = tmp
+    }
     let columnInfo = JSON.parse(JSON.stringify(columnList))
     if (params.stats == 'verified') columnInfo[1].label = '核销金额'
     if (params.type) {
@@ -97,12 +108,11 @@ const getDataStats = async (id, start, end, params) => {
                 params.name, 
             )
             if (shops.length) {
-                result = await queryShopInfo(shops, result, typeValue, start, end, func)
+                result = await queryShopInfo(shops, result, typeValue, start, end, months, timeline, func)
             }
             if (users.length) {
-                result = await queryUserInfo(users, result, typeValue, start, end, func)
+                result = await queryUserInfo(users, result, typeValue, start, end, months, timeline, func)
             }
-            result[typeValue].column = columnInfo
         }
     } else {
         // user permission
@@ -118,12 +128,11 @@ const getDataStats = async (id, start, end, params) => {
                 null,
             )
             if (shops.length) {
-                result = await queryShopInfo(shops, result, typeValue, start, end, func)
+                result = await queryShopInfo(shops, result, typeValue, start, end, months, timeline, func)
             }
             if (users.length) {
-                result = await queryUserInfo(users, result, typeValue, start, end, func)
+                result = await queryUserInfo(users, result, typeValue, start, end, months, timeline, func)
             }
-            result[typeValue].column = columnInfo
         }
     }
     // get total stats calc level
@@ -145,6 +154,7 @@ const getDataStats = async (id, start, end, params) => {
             break
         default:
     }
+    let targets_info = {}
     for (let i = 0; i < result[type].data.length; i++) {
         sale_amount += parseFloat(result[type].data[i].sale_amount)
         promotion_amount += parseFloat(result[type].data[i].promotion_amount)
@@ -156,8 +166,20 @@ const getDataStats = async (id, start, end, params) => {
         express_fee += parseFloat(result[type].data[i].express_fee)
         packing_fee += parseFloat(result[type].data[i].packing_fee)
         profit += parseFloat(result[type].data[i].profit)
+        for (let j = 0; j < result[type].data[i].targets_info.length; j++) {
+            if (!targets_info[result[type].data[i].targets_info[j].month]) {
+                targets_info[result[type].data[i].targets_info[j].month] = {
+                    amount1: parseFloat(result[type].data[i].targets_info[j].amount1),
+                    amount2: parseFloat(result[type].data[i].targets_info[j].amount2)
+                }
+            } else {
+                targets_info[result[type].data[i].targets_info[j].month].amount1 += parseFloat(result[type].data[i].targets_info[j].amount1)
+                targets_info[result[type].data[i].targets_info[j].month].amount2 += parseFloat(result[type].data[i].targets_info[j].amount2)
+            }            
+        }
         if (type == typeList.project.value && result[type].data[i].name == projectNameList.coupang) continue
         for (let j = 0; j < result[type].data[i].children.length; j++) {
+            result[type].data[i].children[j]['timeline'] = timeline
             if (!children[result[type].data[i].children[j].type]) {
                 let tmp = JSON.parse(JSON.stringify(result[type].data[i].children[j]))
                 tmp.id = 11 + j
@@ -174,8 +196,9 @@ const getDataStats = async (id, start, end, params) => {
         if (result[type].data[i].warning) warning = 1
     }
     for (let j = 0; j < children.length; j++) {
+        children[j]['timeline'] = timeline
         for (let k in children[j]) {
-            if (!['id', 'name', 'closed'].includes(k))
+            if (!['id', 'name', 'closed', 'timeline', 'targets'].includes(k))
                 children[j][k] = parseFloat(children[j][k]).toFixed(2)
         }
     }
@@ -190,8 +213,7 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].roi = promotion_amount > 0 ? (sale_amount / promotion_amount).toFixed(2) : '0.00'
     result.total.data[0].market_rate = words_market_vol > 0 ? (words_vol / words_market_vol * 100).toFixed(2) : '0.00'
     result.total.data[0].refund_rate = order_num > 0 ? (refund_num / order_num * 100).toFixed(2) : '0.00'
-    result.total.column = JSON.parse(JSON.stringify(result[type].column))
-    // result.total.column[0].is_link = false
+    result.total.column = columnInfo
     result.total.data[0].sale_amount = sale_amount.toFixed(2)
     result.total.data[0].promotion_amount = promotion_amount.toFixed(2)
     result.total.data[0].express_fee = express_fee.toFixed(2)
@@ -199,11 +221,16 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].profit = profit.toFixed(2)
     result.total.data[0].children = children.filter(item => item.id)
     result.total.data[0].warning = warning
-    redisUtil.set(key, JSON.stringify(result), 3600)
+    result.total.data[0].timeline = timeline
+    result.total.data[0].targets = ''
+    for (let i in targets_info) {
+        let rate = (targets_info[i].amount1 / targets_info[i].amount2 * 100).toFixed(2)
+        result.total.data[0].targets = `${result.total.data[0].targets}${i}: ${rate}%\n`
+    }
+    // redisUtil.set(key, JSON.stringify(result), 3600)
     if (setting.length > 0) {
         setting = JSON.parse(setting[0].attributes || '[]')
-        setting[0].is_link=true
-        result.total.column = setting
+        result.total.setting = setting
     }
     return result
 }
@@ -358,7 +385,7 @@ const getQueryInfo = async (type, oriType, id, oriName) => {
     return {users, shops, typeValue}
 }
 
-const queryShopInfo = async (shops, result, type, start, end, func) => {
+const queryShopInfo = async (shops, result, type, start, end, months, timeline, func) => {
     let sale_amount = 0, info, promotion_amount = 0, packing_fee = 0, 
         express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
@@ -381,6 +408,10 @@ const queryShopInfo = async (shops, result, type, start, end, func) => {
     for (let i = 0; i < shopName.length; i++) {
         info = await func.getPaymentByShopNamesAndTime(shopName[i].shop_name, start, end)
         let children = await func.getChildPaymentByShopNamesAndTime(shopName[i].shop_name, start, end)
+        let info1 = await func.getTargetsByShopNames(shopName[i].shop_name, months), targets = ''
+        for (let j = 0; j < info1.length; j++) {
+            targets = `${targets}${info1[j].month}: ${info1[j].target}%\n`
+        }
         if (info?.length) {
             sale_amount = parseFloat(info[0].sale_amount || 0).toFixed(2)
             promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)
@@ -426,13 +457,16 @@ const queryShopInfo = async (shops, result, type, start, end, func) => {
             words_market_vol,
             words_vol,
             children,
-            warning
+            warning,
+            targets,
+            targets_info: info1,
+            timeline
         })           
     }
     return result
 }
 
-const queryUserInfo = async (users, result, type, start, end, func) => {
+const queryUserInfo = async (users, result, type, start, end, months, timeline, func) => {
     let sale_amount = 0, info, links, promotion_amount = 0, packing_fee = 0, 
         express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
@@ -468,6 +502,10 @@ const queryUserInfo = async (users, result, type, start, end, func) => {
         links = await userOperationRepo.getLinkIdsByUserNames(userName[i].nickname, userName[i].shopNames)
         let linkIds = links.map((item) => item.goods_id).join('","')
         info = await func.getPaymentByLinkIdsAndTime(linkIds, start, end)
+        let info1 = await func.getTargetsByLinkIds(linkIds, months), targets = ''
+        for (let j = 0; j < info1.length; j++) {
+            targets = `${targets}${info1[j].month}: ${info1[j].target}%\n`
+        }
         let children = await func.getChildPaymentByLinkIdsAndTime(linkIds, start, end)
         if (info?.length) {
             sale_amount = parseFloat(info[0].sale_amount || 0).toFixed(2)
@@ -511,7 +549,10 @@ const queryUserInfo = async (users, result, type, start, end, func) => {
             refund_num,
             words_market_vol,
             words_vol,
-            children
+            children,
+            targets,
+            targets_info: info1,
+            timeline
         })        
     }
     return result
@@ -1221,8 +1262,10 @@ const getWorkStats = async (user, start, end, params) => {
         if (userList?.length) {
             let userNames = '', names = ''
             for (let j = 0; j < userList.length; j++) {
-                userNames = `${userNames}"${userList[j].nickname}",`
-                names = `${names}'["${userList[j].nickname}"]',`
+                if (userList[j].nickname != '赵天鹏') {
+                    userNames = `${userNames}"${userList[j].nickname}",`
+                    names = `${names}'["${userList[j].nickname}"]',`
+                }
             }
             userNames = userNames.substring(0, userNames.length - 1)
             names = names.substring(0, names.length - 1)

@@ -12,7 +12,7 @@ const syncGoods = async () => {
     for (let i = 0; i < goods.length; i++) {
         let goodsInfo = await goodsRepo.getByIId(goods[i].i_id)
         if (goodsInfo?.length) {
-            await goodsRepo.updateById(
+            await goodsRepo.updateById([
                 goods[i].name,
                 goods[i].c_id,
                 goods[i].c_name,
@@ -31,7 +31,7 @@ const syncGoods = async () => {
                 goods[i].h,
                 goods[i].shelf_life,
                 goods[i].i_id
-            )
+            ])
             logger.info(`sync jst goods: ${goods[i].i_id}`)
         } else {
             goods_count += 1
@@ -165,10 +165,16 @@ const syncGoods = async () => {
             }        
         }
     }
-    let result = await goodsRepo.create(goods_data, goods_count)
-    if (result?.affectedRows) logger.info(`sync jst goods info rows: ${result.affectedRows}`)
-    result = await skuRepo.create(sku_data, sku_count)
-    if (result?.affectedRows) logger.info(`sync jst sku info rows: ${result.affectedRows}`)
+
+    let result
+    if (goods_count) {
+        result = await goodsRepo.create(goods_data, goods_count)
+        if (result?.affectedRows) logger.info(`sync jst goods info rows: ${result.affectedRows}`)
+    }
+    if (sku_count) {
+        result = await skuRepo.create(sku_data, sku_count)
+        if (result?.affectedRows) logger.info(`sync jst sku info rows: ${result.affectedRows}`)
+    }
     // goods = await getGoodsByTime(start_time, end_time)
     // for (let i = 0; i < goods.length; i++) {
     //     result = await goodsRepo.updateById([

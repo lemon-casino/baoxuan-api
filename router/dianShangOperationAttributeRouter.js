@@ -34,6 +34,8 @@ router.get('/download', (req, res) => {
     }
 });
 
-
+// 链接月度销售目标导入
+router.post('/goods-monthly-sales-target/import', dianShangOperationAttributeApi.importGoodsMonthlySalesTarget)
+router.get('/goods-monthly-sales-target', dianShangOperationAttributeApi.getGoodsMonthlySalesTarget)
 
 module.exports = router
