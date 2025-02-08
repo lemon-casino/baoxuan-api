@@ -202,6 +202,13 @@ const getDataStats = async (id, start, end, params) => {
     redisUtil.set(key, JSON.stringify(result), 3600)
     if (setting.length > 0) {
         setting = JSON.parse(setting[0].attributes || '[]')
+            if (params.stats == 'verified'){
+                for(let i=0;i<setting.length; i++){
+                    if(setting[i].key=='sale_amount'){
+                        setting[i].label = '核销金额'
+                    }
+                }
+            }
         setting[0].is_link=true
         result.total.column = setting
     }
@@ -595,6 +602,21 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: '成本', field_id: 'cost_amount', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
+                title: '全站推广', field_id: 'promotion1', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '多目标直投', field_id: 'promotion2', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '精准人群推广', field_id: 'promotion3', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '货品运营', field_id: 'promotion4', type: 'number', 
+                min: 0, max: 100, show: true
+            },,{
+                title: '关键词推广', field_id: 'promotion5', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
                 title: '推广费', field_id: 'promotion_amount', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
