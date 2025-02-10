@@ -216,15 +216,17 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].warning = warning
     result.total.data[0].timeline = timeline
     result.total.data[0].targets = ''
+    result.total.data[0].goal = ''
     for (let i in targets_info) {
         let rate = (targets_info[i].amount1 / targets_info[i].amount2 * 100).toFixed(2)
         result.total.data[0].targets = `${result.total.data[0].targets}${i}: ${rate}%\n`
+        result.total.data[0].goal = `${result.total.data[0].goal}${i}: ${targets_info[i].amount2.toFixed(2)}\n`
     }
     if (setting.length > 0) {
         setting = JSON.parse(setting[0].attributes || '[]')
         result.total.setting = setting
     }
-    redisUtil.set(key, JSON.stringify(result), 3600)
+    // redisUtil.set(key, JSON.stringify(result), 3600)
     return result
 }
 
@@ -401,9 +403,10 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
     for (let i = 0; i < shopName.length; i++) {
         info = await func.getPaymentByShopNamesAndTime(shopName[i].shop_name, start, end)
         let children = await func.getChildPaymentByShopNamesAndTime(shopName[i].shop_name, start, end)
-        let info1 = await func.getTargetsByShopNames(shopName[i].shop_name, months), targets = ''
+        let info1 = await func.getTargetsByShopNames(shopName[i].shop_name, months), targets = '', goal = ''
         for (let j = 0; j < info1.length; j++) {
             targets = `${targets}${info1[j].month}: ${info1[j].target}%\n`
+            goal = `${goal}${info1[j].month}: ${parseFloat(info1[j].amount2).toFixed(2)}\n`
         }
         if (info?.length) {
             sale_amount = parseFloat(info[0].sale_amount || 0).toFixed(2)
@@ -453,6 +456,7 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
             children,
             warning,
             targets,
+            goal,
             targets_info: info1,
             timeline
         })           
@@ -496,9 +500,10 @@ const queryUserInfo = async (users, result, type, start, end, months, timeline, 
         links = await userOperationRepo.getLinkIdsByUserNames(userName[i].nickname, userName[i].shopNames)
         let linkIds = links.map((item) => item.goods_id).join('","')
         info = await func.getPaymentByLinkIdsAndTime(linkIds, start, end)
-        let info1 = await func.getTargetsByLinkIds(linkIds, months), targets = ''
+        let info1 = await func.getTargetsByLinkIds(linkIds, months), targets = '', goal = ''
         for (let j = 0; j < info1.length; j++) {
             targets = `${targets}${info1[j].month}: ${info1[j].target}%\n`
+            goal = `${goal}${info1[j].month}: ${parseFloat(info1[j].amount2).toFixed(2)}\n`
         }
         let children = await func.getChildPaymentByLinkIdsAndTime(linkIds, start, end)
         if (info?.length) {
@@ -546,6 +551,7 @@ const queryUserInfo = async (users, result, type, start, end, months, timeline, 
             words_vol,
             children,
             targets,
+            goal,
             targets_info: info1,
             timeline
         })        
@@ -702,6 +708,8 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             }, {
                 title: '运费', field_id: 'express_fee', type: 'number', 
                 min: 0, max: 100, show: true
+            }, {
+                title: '销售目标', field_id: 'goal', type: 'text', show: true
             }, 
             {title: '操作', field_id: 'operate', show: true}
         ],

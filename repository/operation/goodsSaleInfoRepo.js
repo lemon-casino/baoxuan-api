@@ -613,9 +613,20 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                                 THEN '新品60' 
                             WHEN DATE_SUB(NOW(), INTERVAL 90 DAY) <= onsale_date 
                                 THEN '新品90' 
-                            ELSE '老品' END) AS onsale_info FROM
-                        dianshang_operation_attribute d WHERE goods_id = ?`
-                    let row1 = await query(sql, [row[i].goods_id])
+                            ELSE '老品' END) AS onsale_info, 
+                            a.goal 
+                        FROM dianshang_operation_attribute d 
+                        LEFT JOIN (
+                            SELECT GROUP_CONCAT(CONCAT(g.month, ': ', FORMAT(g.amount, 2)) SEPARATOR '\n') 
+                                AS goal, g.goods_id FROM goods_monthly_sales_target g
+                            WHERE g.goods_id = ? AND g.month BETWEEN ? AND ? 
+                        ) a ON a.goods_id = d.goods_id WHERE d.goods_id = ?`
+                    let row1 = await query(sql, [
+                        row[i].goods_id, 
+                        moment(start).format('YYYYMM'), 
+                        moment(end).format('YYYYMM'),
+                        row[i].goods_id
+                    ])
                     if (row1?.length) {
                         row[i].goods_name = row1[0].goods_name
                         row[i].brief_name = row1[0].brief_name
@@ -632,6 +643,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         row[i].pit_target_day = row1[0].pit_target*targettime
                         row[i].pit_target_month = row1[0].pit_target*days
                         row[i].onsale_info = row1[0].onsale_info
+                        row[i].goal = row1[0].goal
                         row[i].sale_amount_profit_day = row1[0].pit_target*targettime>0 ? (row[i].sale_amount/(row1[0].pit_target*targettime)*100).toFixed(2) + '%' : null
                         row[i].sale_amount_profit_month = row1[0].pit_target*days>0 ? (row[i].sale_amount_month/(row1[0].pit_target*days)*100).toFixed(2) + '%' : null
                         const arrary=["pakchoice旗舰店（天猫）","八千行旗舰店（天猫）","宝厨行（淘宝）","八千行（淘宝）","北平商号（淘宝）","天猫teotm旗舰店"]
