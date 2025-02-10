@@ -226,7 +226,7 @@ const getDataStats = async (id, start, end, params) => {
         setting = JSON.parse(setting[0].attributes || '[]')
         result.total.setting = setting
     }
-    // redisUtil.set(key, JSON.stringify(result), 3600)
+    redisUtil.set(key, JSON.stringify(result), 3600)
     return result
 }
 
