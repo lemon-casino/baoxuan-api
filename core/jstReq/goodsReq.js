@@ -24,7 +24,8 @@ const getGoodsByTime = async (start, end, type) => {
         modified_begin: start,
         modified_end: end,
     }
-    if (type) biz["date_field"] = 2
+    biz['date_field'] = 'created'
+    if (type) biz["date_field"] = 'modified'
     body['biz'] = JSON.stringify(biz)
     let message = `${appSecret}access_token${access_token}app_key${appKey}biz${body['biz']}charsetutf-8timestamp${time}version2`
     body['sign'] = crypto.createHash('md5').update(message).digest('hex')

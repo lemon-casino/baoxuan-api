@@ -3,7 +3,11 @@ const joiUtil = require("../utils/joiUtil")
 const biResponse = require("../utils/biResponse")
 const XLSX = require("xlsx")
 const moment = require('moment')
-const tmallCompetitorService = require("@/service/tmallCompetitorService");
+const tmallCompetitorService = require("@/service/tmallCompetitorService")
+const ExcelJS = require('exceljs')
+const formidable = require("formidable")
+const fs = require('fs')
+const goodsMonthlySalesTargetService = require("../service/goodsMonthlySalesTargetService")
 
 const getPagingOperateAttributes = async (req, res, next) => {
     try {
@@ -399,8 +403,58 @@ const uploadtmTable = async (req, res, next) => {
     } catch (e) {
         next(e);
     }
-};
+}
 
+const importGoodsMonthlySalesTarget = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.xlsx.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await goodsMonthlySalesTargetService.import(rows)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getGoodsMonthlySalesTarget = async (req, res, next) => {
+    try {
+        const {goods_id, currentPage, pageSize} = req.query
+        joiUtil.validate({
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strNumRequired},
+            currentPage: {value: currentPage, schema: joiUtil.commonJoiSchemas.strRequired},
+            pageSize: {value: pageSize, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const result = await goodsMonthlySalesTargetService.get(req.query)
+        if (result) return res.send(biResponse.success(result))
+        return res.send(biResponse.createFailed())
+    } catch (e) {
+        next(e)
+    }
+}
 
 module.exports = {
     getPagingOperateAttributes,
@@ -411,4 +465,6 @@ module.exports = {
     deleteProductAttr,
     uploadTable,
     uploadtmTable,
+    importGoodsMonthlySalesTarget,
+    getGoodsMonthlySalesTarget
 }
