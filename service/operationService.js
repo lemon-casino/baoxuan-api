@@ -67,14 +67,7 @@ const getDataStats = async (id, start, end, params) => {
         result = JSON.parse(result)
         if (setting.length > 0) {
             setting = JSON.parse(setting[0].attributes || '[]')
-            if (params.stats == 'verified'){
-                for(let i=0;i<setting.length; i++){
-                    if(setting[i].key=='sale_amount'){
-                        setting[i].label = '核销金额'
-                    }
-                }
-            }
-            result.total.column = setting
+            result.total.setting = setting
         }
         return result
     }
@@ -431,6 +424,7 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
         }
         for (let j = 0; j < children.length; j++) {
             children[j].id = (typeList[type].key + i) * 20 + 1 + j
+            children[j].timeline = timeline
             children[j].closed = true
             if (children[j].type == 0) children[j].name = '无操作'
             else if (children[j].type == 1) children[j].name = '新品'
@@ -526,6 +520,7 @@ const queryUserInfo = async (users, result, type, start, end, months, timeline, 
         }
         for (let j = 0; j < children.length; j++) {
             children[j].id = (typeList[type].key + i) * 20 + 1 + j
+            children[j].timeline = timeline
             children[j].closed = true
             if (children[j].type == 0) children[j].name = '无操作'
             else if (children[j].type == 1) children[j].name = '新品'
