@@ -42,7 +42,9 @@ goodsSaleInfoRepo.getTargetsByShopNames = async (shopNames, months) => {
             IFNULL(SUM(a1.amount), 0) / SUM(a2.amount) * 100, 0), 2) AS target, 
         IFNULL(SUM(a1.amount), 0) AS amount1, 
         IFNULL(SUM(a2.amount), 0) AS amount2, a2.month FROM 
-        goods_monthly_sales_target a2 LEFT JOIN (SELECT IFNULL(sum(sale_amount), 0) AS amount, `
+        goods_monthly_sales_target a2 JOIN dianshang_operation_attribute doa 
+            ON a2.goods_id = doa.goods_id 
+        LEFT JOIN (SELECT IFNULL(sum(sale_amount), 0) AS amount, `
     let search = ''
     for (let i = 0; i < months.length; i++) {
         let sql = `'${moment(months[i].start).format('YYYYMM')}' AS month, goods_id 
@@ -51,6 +53,7 @@ goodsSaleInfoRepo.getTargetsByShopNames = async (shopNames, months) => {
                 AND shop_name IN ("${shopNames}") GROUP BY goods_id) a1 
                 ON a1.month = a2.month AND a1.goods_id = a2.goods_id
             WHERE a2.month = '${moment(months[i].start).format('YYYYMM')}' 
+                AND doa.shop_name IN ("${shopNames}") 
             GROUP BY a2.month`
         search = `${search}${presql}
                 ${sql}
@@ -189,6 +192,7 @@ goodsSaleInfoRepo.getTargetsByLinkIds = async (linkIds, months) => {
                 AND goods_id IN ("${linkIds}") GROUP BY goods_id) a1 
                 ON a1.month = a2.month AND a1.goods_id = a2.goods_id
             WHERE a2.month = '${moment(months[i].start).format('YYYYMM')}' 
+                AND a2.goods_id IN ("${linkIds}") 
             GROUP BY a2.month`
         search = `${search}${presql}
                 ${sql}
@@ -221,6 +225,7 @@ goodsSaleInfoRepo.getRateByLinkIdsAndTme = async (linkIds, col1, col2, column, s
 goodsSaleInfoRepo.getChildPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
     const sql = `SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
+            IFNULL(SUM(a1.packing_fee), 0) AS packing_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 

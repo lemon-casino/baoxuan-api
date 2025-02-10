@@ -67,14 +67,7 @@ const getDataStats = async (id, start, end, params) => {
         result = JSON.parse(result)
         if (setting.length > 0) {
             setting = JSON.parse(setting[0].attributes || '[]')
-            if (params.stats == 'verified'){
-                for(let i=0;i<setting.length; i++){
-                    if(setting[i].key=='sale_amount'){
-                        setting[i].label = '核销金额'
-                    }
-                }
-            }
-            result.total.column = setting
+            result.total.setting = setting
         }
         return result
     }
@@ -83,7 +76,7 @@ const getDataStats = async (id, start, end, params) => {
     let sale_amount = 0, promotion_amount = 0, express_fee = 0, profit = 0, 
         oriType, type = '', except = false, operation_amount = 0, 
         words_market_vol = 0, words_vol = 0, order_num = 0, refund_num = 0,
-        children = [], warning = 0, packing_fee = 0
+        children = [{}, {}, {}], warning = 0, packing_fee = 0
     let month_duration = parseInt(moment(end).format('YYYYMM')) - parseInt(moment(start).format('YYYYMM')) + 1
     let months = [], timeline = '', start1 = start
     for (let i = 0; i < month_duration; i++) {
@@ -196,7 +189,7 @@ const getDataStats = async (id, start, end, params) => {
         if (result[type].data[i].warning) warning = 1
     }
     for (let j = 0; j < children.length; j++) {
-        children[j]['timeline'] = timeline
+        if (children[j]) children[j]['timeline'] = timeline
         for (let k in children[j]) {
             if (!['id', 'name', 'closed', 'timeline', 'targets'].includes(k))
                 children[j][k] = parseFloat(children[j][k]).toFixed(2)
@@ -227,11 +220,11 @@ const getDataStats = async (id, start, end, params) => {
         let rate = (targets_info[i].amount1 / targets_info[i].amount2 * 100).toFixed(2)
         result.total.data[0].targets = `${result.total.data[0].targets}${i}: ${rate}%\n`
     }
-    // redisUtil.set(key, JSON.stringify(result), 3600)
     if (setting.length > 0) {
         setting = JSON.parse(setting[0].attributes || '[]')
         result.total.setting = setting
     }
+    redisUtil.set(key, JSON.stringify(result), 3600)
     return result
 }
 
@@ -431,6 +424,7 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
         }
         for (let j = 0; j < children.length; j++) {
             children[j].id = (typeList[type].key + i) * 20 + 1 + j
+            children[j].timeline = timeline
             children[j].closed = true
             if (children[j].type == 0) children[j].name = '无操作'
             else if (children[j].type == 1) children[j].name = '新品'
@@ -526,6 +520,7 @@ const queryUserInfo = async (users, result, type, start, end, months, timeline, 
         }
         for (let j = 0; j < children.length; j++) {
             children[j].id = (typeList[type].key + i) * 20 + 1 + j
+            children[j].timeline = timeline
             children[j].closed = true
             if (children[j].type == 0) children[j].name = '无操作'
             else if (children[j].type == 1) children[j].name = '新品'
