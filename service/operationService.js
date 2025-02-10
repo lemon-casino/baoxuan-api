@@ -230,19 +230,7 @@ const getDataStats = async (id, start, end, params) => {
     // redisUtil.set(key, JSON.stringify(result), 3600)
     if (setting.length > 0) {
         setting = JSON.parse(setting[0].attributes || '[]')
-<<<<<<< HEAD
-            if (params.stats == 'verified'){
-                for(let i=0;i<setting.length; i++){
-                    if(setting[i].key=='sale_amount'){
-                        setting[i].label = '核销金额'
-                    }
-                }
-            }
-        setting[0].is_link=true
-        result.total.column = setting
-=======
         result.total.setting = setting
->>>>>>> master
     }
     return result
 }
