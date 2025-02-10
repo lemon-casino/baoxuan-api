@@ -48,8 +48,8 @@ const columnList = [
 	{ label: "包材费", key: "packing_fee", show: true },
 	{ label: "利润", key: "profit", show: true },
 	{ label: "利润率(%)", key: "profit_rate", show: true },
-	{ label: "时间线(%)", key: "timeline", show: true },
-    { label: "销售目标(%)", key: "targets", show: true }
+	{ label: "时间进度(%)", key: "timeline", show: true },
+    { label: "销售达成(%)", key: "targets", show: true }
 ]
 
 const operationDefaultItem = {
