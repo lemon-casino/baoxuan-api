@@ -220,11 +220,11 @@ const getDataStats = async (id, start, end, params) => {
         let rate = (targets_info[i].amount1 / targets_info[i].amount2 * 100).toFixed(2)
         result.total.data[0].targets = `${result.total.data[0].targets}${i}: ${rate}%\n`
     }
-    redisUtil.set(key, JSON.stringify(result), 3600)
     if (setting.length > 0) {
         setting = JSON.parse(setting[0].attributes || '[]')
         result.total.setting = setting
     }
+    redisUtil.set(key, JSON.stringify(result), 3600)
     return result
 }
 
