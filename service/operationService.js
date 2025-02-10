@@ -613,11 +613,26 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             },{
                 title: '货品运营', field_id: 'promotion4', type: 'number', 
                 min: 0, max: 100, show: true
-            },,{
+            },{
                 title: '关键词推广', field_id: 'promotion5', type: 'number', 
                 min: 0, max: 100, show: true
             },{
                 title: '推广费', field_id: 'promotion_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '搜索访客数', field_id: 'users_num', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '搜索支付买家数', field_id: 'trans_users_num', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '真实转化率', field_id: 'real_pay_rate', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '总支付买家数', field_id: 'total_trans_users_num', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '总访客数', field_id: 'total_users_num', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: '推广费环比(%)', field_id: 'promotion_amount_qoq', type: 'number', 
@@ -696,6 +711,8 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             }
         }
     }
+    // console.log('11111111111111111111111111111111111111111111111')
+    // console.log(result)
     return result
 }
 

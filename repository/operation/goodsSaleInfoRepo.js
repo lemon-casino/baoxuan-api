@@ -583,6 +583,47 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                             row[i].sale_amount_profit_month = null
                         }
                     }
+                    sql = `WITH t1 AS(SELECT promotion_name,sum(amount) as amount 
+                        FROM goods_promotion_info WHERE date BETWEEN '${targetstart}' AND '${targetend}' AND goods_id=?
+                        GROUP BY promotion_name)
+                        SELECT * FROM 
+                        (SELECT SUM(amount)as promotion1 FROM t1 WHERE promotion_name='6003431万相台无界-全站推广' ) AS t2
+                        JOIN
+                        (SELECT SUM(amount)as promotion2 FROM t1 WHERE promotion_name='6003414多目标直投' ) AS t3
+                        JOIN
+                        (SELECT SUM(amount)as promotion3 FROM t1 WHERE promotion_name='6003416精准人群推广' ) AS t4
+                        JOIN
+                        (SELECT SUM(amount)as promotion4 FROM t1 WHERE promotion_name='6003432万相台无界-货品运营' ) AS t5
+                        JOIN
+                        (SELECT SUM(amount)as promotion5 FROM t1 WHERE promotion_name='60030412关键词推广' ) AS t6`
+                    let row2 = await query(sql, [row[i].goods_id])
+                    if(row2?.length){
+                        row[i].promotion1 = row2[0].promotion1
+                        row[i].promotion2 = row2[0].promotion2
+                        row[i].promotion3 = row2[0].promotion3
+                        row[i].promotion4 = row2[0].promotion4
+                        row[i].promotion5 = row2[0].promotion5
+                    }
+                    // console.log(row2)
+                    sql=`SELECT IFNULL(SUM(a1.users_num), 0) AS users_num, 
+                            IFNULL(SUM(a1.trans_users_num), 0) AS trans_users_num,
+                            IF(IFNULL(SUM(a1.users_num), 0) > 0, FORMAT(
+                                (IFNULL(SUM(a1.trans_users_num), 0) - 
+                                IFNULL(SUM(a2.brushing_qty), 0)) / 
+                                IFNULL(SUM(a1.users_num), 0) * 100, 2), 0) AS real_pay_rate,
+                                IFNULL(SUM(a1.total_users_num), 0) AS total_users_num, 
+                                IFNULL(SUM(a1.total_trans_users_num), 0) AS total_trans_users_num
+                        FROM goods_composite_info a1 
+                        LEFT JOIN goods_pay_info a2 
+                        ON a1.goods_id = a2.goods_id AND a1.date = a2.date 
+                        WHERE  a1.date BETWEEN '${targetstart}' AND '${targetend}' AND a1.goods_id = ?`
+                    let row3 = await query(sql, [row[i].goods_id])
+                    row[i].users_num = row3[0].users_num
+                    row[i].trans_users_num = row3[0].trans_users_num
+                    row[i].real_pay_rate = row3[0].real_pay_rate
+                    row[i].total_trans_users_num = row3[0].total_trans_users_num
+                    row[i].total_users_num = row3[0].total_users_num
+
                     sql = `SELECT sku_code FROM goods_sale_info WHERE goods_id = ? 
                             AND \`date\` >= ? AND \`date\` <= ?
                         GROUP BY sku_code ORDER BY IFNULL(SUM(sale_amount), 0) DESC LIMIT 2`
@@ -594,6 +635,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             result.data = row
         }
     }
+    // console.log(result)
     return result
 }
 
@@ -665,12 +707,12 @@ goodsSaleInfoRepo.gettarget = async (column,goods_id, start, end) =>{
     const sql=`SELECT CONCAT(ROUND(b.num/a.target*100,2),'%') AS ${column}  FROM (
         SELECT goods_id,(
         CASE 
-            WHEN product_definitiON='三级:10万' THEN 100000
-            WHEN product_definitiON='二级:30万' THEN 300000
-            WHEN product_definitiON='一级:50万' THEN 500000
+            WHEN product_definition='三级:10万' THEN 100000
+            WHEN product_definition='二级:30万' THEN 300000
+            WHEN product_definition='一级:50万' THEN 500000
         END
         ) AS target
-        FROM dianshang_operatiON_attribute WHERE goods_id= ?) AS a
+        FROM dianshang_operation_attribute WHERE goods_id= ?) AS a
         LEFT JOIN(
         SELECT goods_id AS id,SUM(sale_amount) AS num FROM goods_sale_info WHERE \`date\` BETWEEN ? AND ? AND  goods_id= ? )AS b
         ON a.goods_id = b.id`
