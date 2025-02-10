@@ -594,7 +594,13 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: params.stats == 'verified' ? '核销金额' : '发货金额', 
                 field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
             },{
+                title: '日销目标', field_id: 'pit_target_day', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
                 title: '日销目标达成率(%)', field_id: 'sale_amount_profit_day', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '月销目标', field_id: 'pit_target_month', type: 'number', 
                 min: 0, max: 100, show: true
             },{
                 title: '月销目标达成率(%)', field_id: 'sale_amount_profit_month', type: 'number', 
@@ -638,17 +644,32 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             }, {
                 title: '全站推广', field_id: 'promotion1', type: 'number', 
                 min: 0, max: 100, show: true
+            }, {
+                title: '全站推广ROI', field_id: 'promotion1_roi', type: 'number', 
+                min: 0, max: 100, show: true
             },{
                 title: '多目标直投', field_id: 'promotion2', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '多目标直投ROI', field_id: 'promotion2_roi', type: 'number', 
                 min: 0, max: 100, show: true
             },{
                 title: '精准人群推广', field_id: 'promotion3', type: 'number', 
                 min: 0, max: 100, show: true
             },{
+                title: '精准人群推广ROI', field_id: 'promotion3_roi', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
                 title: '货品运营', field_id: 'promotion4', type: 'number', 
                 min: 0, max: 100, show: true
             },{
+                title: '货品运营ROI', field_id: 'promotion4_roi', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
                 title: '关键词推广', field_id: 'promotion5', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '关键词推广ROI', field_id: 'promotion5_roi', type: 'number', 
                 min: 0, max: 100, show: true
             },{
                 title: '推广费', field_id: 'promotion_amount', type: 'number', 
@@ -745,8 +766,6 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             }
         }
     }
-    // console.log('11111111111111111111111111111111111111111111111')
-    // console.log(result)
     return result
 }
 

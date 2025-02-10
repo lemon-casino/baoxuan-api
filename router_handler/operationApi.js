@@ -97,7 +97,6 @@ const getGoodsInfo = async (req, res, next) => {
             return res.send(biResponse.success())
         } else {
             result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id)
-            console.log(result.column)
         }
         return res.send(biResponse.success(result))
     } catch (e) {

@@ -623,11 +623,12 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         row[i].important_attribute = row1[0].important_attribute
                         row[i].first_category = row1[0].first_category
                         row[i].second_category = row1[0].second_category
-                        row[i].pit_target = row1[0].pit_target*targettime
-                        row[i].onsale_info = row1[0].onsale_info
-                        row[i].sale_amount_profit_day = (row[i].sale_amount/(row1[0].pit_target*targettime)*100).toFixed(2) + '%'
-                        row[i].sale_amount_profit_month = (row[i].sale_amount_month/(row1[0].pit_target*days)*100).toFixed(2) + '%'
+                        row[i].pit_target = row1[0].pit_target
+                        row[i].pit_target_day = row1[0].pit_target*targettime
                         row[i].pit_target_month = row1[0].pit_target*days
+                        row[i].onsale_info = row1[0].onsale_info
+                        row[i].sale_amount_profit_day = row1[0].pit_target*targettime>0 ? (row[i].sale_amount/(row1[0].pit_target*targettime)*100).toFixed(2) + '%' : null
+                        row[i].sale_amount_profit_month = row1[0].pit_target*days>0 ? (row[i].sale_amount_month/(row1[0].pit_target*days)*100).toFixed(2) + '%' : null
                         const arrary=["pakchoice旗舰店（天猫）","八千行旗舰店（天猫）","宝厨行（淘宝）","八千行（淘宝）","北平商号（淘宝）","天猫teotm旗舰店"]
                         if (!arrary.includes(row[i].shop_name)) {
                             row[i].sale_amount_profit_day = null
@@ -654,8 +655,12 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         row[i].promotion3 = row2[0].promotion3
                         row[i].promotion4 = row2[0].promotion4
                         row[i].promotion5 = row2[0].promotion5
+                        row[i].promotion1_roi = row2[0].promotion1!=null ? (row[i].sale_amount/row2[0].promotion1).toFixed(2) : null
+                        row[i].promotion2_roi = row2[0].promotion2!=null ? (row[i].sale_amount/row2[0].promotion2).toFixed(2) : null
+                        row[i].promotion3_roi = row2[0].promotion3!=null ? (row[i].sale_amount/row2[0].promotion3).toFixed(2) : null
+                        row[i].promotion4_roi = row2[0].promotion4!=null ? (row[i].sale_amount/row2[0].promotion4).toFixed(2) : null
+                        row[i].promotion5_roi = row2[0].promotion5!=null ? (row[i].sale_amount/row2[0].promotion5).toFixed(2) : null
                     }
-                    // console.log(row2)
                     sql=`SELECT IFNULL(SUM(a1.users_num), 0) AS users_num, 
                             IFNULL(SUM(a1.trans_users_num), 0) AS trans_users_num,
                             IF(IFNULL(SUM(a1.users_num), 0) > 0, FORMAT(
@@ -686,7 +691,6 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             result.data = row
         }
     }
-    // console.log(result)
     return result
 }
 
