@@ -98,6 +98,7 @@ goodsSaleVerifiedRepo.getRateByShopNamesAndTme = async (shopNames, col1, col2, c
 goodsSaleVerifiedRepo.getChildPaymentByShopNamesAndTime = async (shopNames, start, end) => {
     const sql = `SELECT IFNULL(SUM(A1.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
+            IFNULL(SUM(a1.packing_fee), 0) AS packing_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
@@ -141,6 +142,7 @@ goodsSaleVerifiedRepo.getChildPaymentByShopNamesAndTime = async (shopNames, star
 goodsSaleVerifiedRepo.getPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
     const sql = `SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
+            IFNULL(SUM(a1.packing_fee), 0) AS packing_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
@@ -218,6 +220,7 @@ goodsSaleVerifiedRepo.getRateByLinkIdsAndTme = async (linkIds, col1, col2, colum
 goodsSaleVerifiedRepo.getChildPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
     const sql = `SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
+            IFNULL(SUM(a1.packing_fee), 0) AS packing_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
