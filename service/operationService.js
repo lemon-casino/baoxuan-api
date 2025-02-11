@@ -772,41 +772,51 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
     return result
 }
 
-const getGoodsInfoDetail = async (column, goods_id, start, end, stats) => {
-    let result = []
+const getGoodsInfoDetail = async (column, goods_id, start, end, stats, id) => {
+    let result={}
+    let data=[]
+    let setting = []
     let func = stats == 'verified' ? goodsSaleVerifiedRepo : goodsSaleInfoRepo
     if (['sale_amount', 'cost_amount', 'operation_amount', 'promotion_amount', 'express_fee', 'profit'].includes(column))
-        result = await func.getDataDetailByTime(column, goods_id, start, end)
+        data = await func.getDataDetailByTime(column, goods_id, start, end)
     else if (column == 'operation_rate')
-        result = await func.getDataRateByTime('sale_amount', 'operation_amount', column, goods_id, start, end, 100)
+        data = await func.getDataRateByTime('sale_amount', 'operation_amount', column, goods_id, start, end, 100)
     else if (column == 'roi')
-        result = await func.getDataRateByTime('promotion_amount', 'sale_amount', column, goods_id, start, end, 1)
+        data = await func.getDataRateByTime('promotion_amount', 'sale_amount', column, goods_id, start, end, 1)
     else if (column == 'refund_rate')
-        result = await func.getDataRateByTime('order_num', 'refund_num', column, goods_id, start, end, 100)
+        data = await func.getDataRateByTime('order_num', 'refund_num', column, goods_id, start, end, 100)
     else if (column == 'profit_rate')
-        result = await func.getDataRateByTime('sale_amount', 'profit', column, goods_id, start, end, 100)
+        data = await func.getDataRateByTime('sale_amount', 'profit', column, goods_id, start, end, 100)
     else if (column == 'dsr')
-        result = await goodsOtherInfoRepo.getDataDetailByTime(column, goods_id, start, end)
+        data = await goodsOtherInfoRepo.getDataDetailByTime(column, goods_id, start, end)
     else if (column == 'market_rate')
-        result = await goodsOtherInfoRepo.getDataRateByTime('words_market_vol', 'words_vol', column, goods_id, start, end, 100)
+        data = await goodsOtherInfoRepo.getDataRateByTime('words_market_vol', 'words_vol', column, goods_id, start, end, 100)
     else if (column == 'gross_profit')
-        result = await func.getDataGrossProfitByTime(goods_id, start, end)
+        data = await func.getDataGrossProfitByTime(goods_id, start, end)
     else if (['pay_amount', 'brushing_amount', 'brushing_qty', 'refund_amount', 'bill'].includes(column))
-        result = await goodsPayInfoRepo.getDataDetailByTime(column, goods_id, start, end)
+        data = await goodsPayInfoRepo.getDataDetailByTime(column, goods_id, start, end)
     else if (column == 'pay_express_fee')
-        result = await goodsPayInfoRepo.getExpressFeeByTime(goods_id, start, end)
+        data = await goodsPayInfoRepo.getExpressFeeByTime(goods_id, start, end)
     else if (column == 'real_pay_amount')
-        result = await goodsPayInfoRepo.getRealPayAmountByTime(goods_id, start, end)
+        data = await goodsPayInfoRepo.getRealPayAmountByTime(goods_id, start, end)
     else if (column == 'real_pay_amount_qoq')
-        result = await goodsPayInfoRepo.getRealPayAmountQOQByTime(goods_id, start, end)
-    else if (column == 'composite_info')
-        result = await goodsCompositeRepo.getDataDetailByTime(goods_id, start, end)
-    else if (column == 'promotion_info')
-        result = await goodsPromotionRepo.getDataDetailByTime(goods_id, start, end)
-    else if (column == 'bill_info')
-        result = await goodsBillRepo.getDataDetailByTime(goods_id, start, end)
+        data = await goodsPayInfoRepo.getRealPayAmountQOQByTime(goods_id, start, end)
+    else if (column == 'composite_info'){
+        data = await goodsCompositeRepo.getDataDetailByTime(goods_id, start, end)
+        setting = await userSettingRepo.getByType(id, 4)
+    }
+    else if (column == 'promotion_info') {
+        data = await goodsPromotionRepo.getDataDetailByTime(goods_id, start, end)
+        setting = await userSettingRepo.getByType(id, 5)
+    }
+    else if (column == 'bill_info'){
+        data = await goodsBillRepo.getDataDetailByTime(goods_id, start, end)
+        setting = await userSettingRepo.getByType(id, 6)
+    }
     else if (column == 'promotion_amount_qoq')
         result = await func.getDataPromotionQOQByTime(goods_id, start, end)
+    result.data = data
+    if (setting?.length) result.setting = JSON.parse(setting[0].attributes) || []
     return result
 }
 
