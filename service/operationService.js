@@ -1134,7 +1134,7 @@ const importGoodsDSR = async (rows, time) => {
     let count = 0, data = [], result = true
     let goods_id = typeof(rows[1].getCell(2).value) == 'string' ? 
         rows[1].getCell(2).value.trim() : 
-        rows[1].getCell(2).value
+        rows[1].getCell(2).value, goodsMap = {}
     for (let i = 0; i < rows.length; i++) {
         if (!rows[i].getCell(1).value) continue
         goods_id = typeof(rows[i].getCell(2).value) == 'string' ? 
@@ -1151,15 +1151,18 @@ const importGoodsDSR = async (rows, time) => {
         if (info?.length) {
             await goodsOtherInfoRepo.updateDSR([dsr, goods_id, time])
         } else {
-            data.push(
-                goods_id,
-                dsr,
-                null,
-                null,
-                null,
-                time
-            )
-            count += 1
+            if (!goodsMap[goods_id]) {
+                data.push(
+                    goods_id,
+                    dsr,
+                    null,
+                    null,
+                    null,
+                    time
+                )
+                count += 1
+                goodsMap[goods_id] = true
+            }
         }
     }
     if (count > 0) {
