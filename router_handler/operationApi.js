@@ -278,7 +278,7 @@ const getGoodsInfoDetail = async (req, res, next) => {
         })
         const start = moment(req.query.startDate).format('YYYY-MM-DD')
         const end = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getGoodsInfoDetail(req.params.column, goods_id, start, end, stats)
+        const result = await operationService.getGoodsInfoDetail(req.params.column, goods_id, start, end, stats, req.user.id)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
