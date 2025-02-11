@@ -206,28 +206,40 @@ const getUsersWithDepartmentFromDingDing = async () => {
     const departmentList = await getDepartments()
     const allUsersFromDepartments = [];
     // 获取部门下的所有用户信息
-    for (const item of departmentList) {
-        if (item.dep_chil && item.dep_chil.length > 0) {
-            for (const subItem of item.dep_chil) {
-                let res = await contactsReq.getDeptUserList(access_token, subItem.dept_id);
-                if (res.errmsg === "ok") {
-                    allUsersFromDepartments.push(res.result.userid_list)
-                }
-                if (subItem.dep_chil && subItem.dep_chil.length > 0) {
-                    for (const thirdItem of subItem.dep_chil) {
-                        res = await contactsReq.getDeptUserList(access_token, thirdItem.dept_id);
-                        if (res.errmsg === "ok") {
-                            allUsersFromDepartments.push(res.result.userid_list)
-                        }
-                    }
-                }
+    const addUsersFromDepartments = async function (list) {
+        for (const item of list) {
+            let res = await contactsReq.getDeptUserList(access_token, item.dept_id)
+            if (res.errmsg === "ok") {
+                allUsersFromDepartments.push(res.result.userid_list)
+            }
+            if (item.dep_chil && item.dep_chil.length > 0) {
+                await addUsersFromDepartments(item.dep_chil)
             }
         }
-        const res = await contactsReq.getDeptUserList(access_token, item.dept_id);
-        if (res.errmsg === "ok") {
-            allUsersFromDepartments.push(res.result.userid_list);
-        }
     }
+    // for (const item of departmentList) {
+    //     if (item.dep_chil && item.dep_chil.length > 0) {
+    //         for (const subItem of item.dep_chil) {
+    //             let res = await contactsReq.getDeptUserList(access_token, subItem.dept_id);
+    //             if (res.errmsg === "ok") {
+    //                 allUsersFromDepartments.push(res.result.userid_list)
+    //             }
+    //             if (subItem.dep_chil && subItem.dep_chil.length > 0) {
+    //                 for (const thirdItem of subItem.dep_chil) {
+    //                     res = await contactsReq.getDeptUserList(access_token, thirdItem.dept_id);
+    //                     if (res.errmsg === "ok") {
+    //                         allUsersFromDepartments.push(res.result.userid_list)
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     const res = await contactsReq.getDeptUserList(access_token, item.dept_id);
+    //     if (res.errmsg === "ok") {
+    //         allUsersFromDepartments.push(res.result.userid_list);
+    //     }
+    // }
+    await addUsersFromDepartments(departmentList)
     // 用户去重
     const uniqueUsers = new Set(allUsersFromDepartments.flat());
     const userDetails = [];
