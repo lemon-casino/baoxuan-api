@@ -2456,14 +2456,26 @@ const importOrdersGoods = async (rows, date) => {
         shop_id_row = null, 
         sku_code_row = null,
         goods_id_row = null,
-        sale_amount_row = null
+        sku_id_row = null,
+        sale_amount_row = null,
+        cost_amount_row = null,
+        express_fee_row = null,
+        packing_fee_row = null,
+        bill_amount_row = null,
+        quantity_row = null
     for (let i = 1; i <= columns.length; i++) {
         if (columns[i] == '店铺') {shop_name_row = i; continue}
         if (columns[i] == '店铺编码') {shop_id_row = i; continue}
         if (columns[i] == '线上单号') {order_code_row = i; continue}
         if (columns[i] == '商品编码') {sku_code_row = i; continue}
-        if (columns[i] == '收入-实收金额') {sale_amount_row = i; continue}
+        if (columns[i] == '收入-商品销售金额(扣退)') {sale_amount_row = i; continue}
+        if (columns[i] == '成本-商品销售成本(扣退)') {cost_amount_row = i; continue}
+        if (columns[i] == '费用-快递费') {express_fee_row = i; continue}
+        if (columns[i] == '费用-包材费') {packing_fee_row = i; continue}
+        if (columns[i] == '费用-账单费用') {bill_amount_row = i; continue}
+        if (columns[i] == '店铺商品编码') {sku_id_row = i; continue}
         if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
+        if (columns[i] == '数量-销售数量(扣退)') {quantity_row = i; continue}
     }
     for (let i = 1; i < rows.length; i++) {
         let order_code = typeof(rows[i].getCell(order_code_row).value) == 'string' ? 
@@ -2481,7 +2493,15 @@ const importOrdersGoods = async (rows, date) => {
         let goods_id = typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
             rows[i].getCell(goods_id_row).value.trim() : 
             rows[i].getCell(goods_id_row).value
+        let sku_id = typeof(rows[i].getCell(sku_id_row).value) == 'string' ? 
+            rows[i].getCell(sku_id_row).value.trim() : 
+            rows[i].getCell(sku_id_row).value
         let sale_amount = rows[i].getCell(sale_amount_row).value
+        let cost_amount = rows[i].getCell(cost_amount_row).value
+        let express_fee = rows[i].getCell(express_fee_row).value
+        let packing_fee = rows[i].getCell(packing_fee_row).value
+        let bill_amount = rows[i].getCell(bill_amount_row).value
+        let quantity = rows[i].getCell(quantity_row).value
         if (sale_amount <= 0) continue
         if (orderMap[order_code] != undefined) { 
             orderMap[order_code].total_amount += parseFloat(sale_amount)
@@ -2492,7 +2512,14 @@ const importOrdersGoods = async (rows, date) => {
                 total_amount: parseFloat(sale_amount)
             }
         }
-        dataMap[`${order_code}_${goods_id || ''}_${sku_code}`] = parseFloat(sale_amount)
+        dataMap[`${order_code}_${goods_id || ''}_${sku_id || ''}_${sku_code}`] = {
+            sale_amount: parseFloat(sale_amount),
+            cost_amount: parseFloat(cost_amount),
+            express_fee: parseFloat(express_fee),
+            packing_fee: parseFloat(packing_fee),
+            bill_amount: parseFloat(bill_amount),
+            quantity: parseInt(quantity)
+        }
     }
     logger.info(`[订单利润-发货导入]：时间:${date}`)
     await ordersGoodsRepo.deleteByDate(date)
@@ -2504,11 +2531,17 @@ const importOrdersGoods = async (rows, date) => {
             orderMap[values[0]].shop_id,
             orderMap[values[0]].shop_name,
             values[1]?.length ? values[1] : null,
-            values[2],
-            dataMap[info],
+            values[2]?.length ? values[2] : null,
+            values[3],
+            dataMap[info].sale_amount,
             orderMap[values[0]].total_amount,
             orderMap[values[0]].total_amount > 0 ? 
-                (dataMap[info] / orderMap[values[0]].total_amount).toFixed(2) : 0
+                (dataMap[info].sale_amount / orderMap[values[0]].total_amount).toFixed(2) : 0,
+            dataMap[info].cost_amount,
+            dataMap[info].express_fee,
+            dataMap[info].packing_fee,
+            dataMap[info].bill_amount,
+            dataMap[info].quantity
         )
         count += 1
     }
@@ -2523,19 +2556,31 @@ const updateOrderGoods = async (date) => {
 }
 
 const importOrdersGoodsVerified = async (rows, date) => {
-    let data = [], result = false
+    let orderMap = {}, dataMap = {}, data = [], result = false
     let columns = rows[0].values,
         shop_id_row = null, 
         order_code_row = null,
         sku_code_row = null,
         goods_id_row = null,
-        sale_amount_row = null
+        sku_id_row = null,
+        sale_amount_row = null,
+        cost_amount_row = null,
+        express_fee_row = null,
+        packing_fee_row = null,
+        bill_amount_row = null,
+        quantity_row = null
     for (let i = 1; i <= columns.length; i++) {        
         if (columns[i] == '店铺编码') {shop_id_row = i; continue}
         if (columns[i] == '线上单号') {order_code_row = i; continue}
         if (columns[i] == '商品编码') {sku_code_row = i; continue}
-        if (columns[i] == '收入-实收金额') {sale_amount_row = i; continue}
+        if (columns[i] == '收入-商品销售金额(扣退)') {sale_amount_row = i; continue}
+        if (columns[i] == '成本-商品销售成本(扣退)') {cost_amount_row = i; continue}
+        if (columns[i] == '费用-快递费') {express_fee_row = i; continue}
+        if (columns[i] == '费用-包材费') {packing_fee_row = i; continue}
+        if (columns[i] == '费用-账单费用') {bill_amount_row = i; continue}
+        if (columns[i] == '店铺商品编码') {sku_id_row = i; continue}
         if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
+        if (columns[i] == '数量-销售数量(扣退)') {quantity_row = i; continue}
     }
     for (let i = 1; i < rows.length; i++) {
         let shop_id = typeof(rows[i].getCell(shop_id_row).value) == 'string' ? 
@@ -2550,11 +2595,55 @@ const importOrdersGoodsVerified = async (rows, date) => {
         let goods_id = typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
             rows[i].getCell(goods_id_row).value.trim() : 
             rows[i].getCell(goods_id_row).value
+        let sku_id = typeof(rows[i].getCell(sku_id_row).value) == 'string' ? 
+            rows[i].getCell(sku_id_row).value.trim() : 
+            rows[i].getCell(sku_id_row).value
         let sale_amount = rows[i].getCell(sale_amount_row).value
+        let cost_amount = rows[i].getCell(cost_amount_row).value
+        let express_fee = rows[i].getCell(express_fee_row).value
+        let packing_fee = rows[i].getCell(packing_fee_row).value
+        let bill_amount = rows[i].getCell(bill_amount_row).value
+        let quantity = rows[i].getCell(quantity_row).value
         if (sale_amount <= 0) continue
-        data.push({order_code, goods_id, sku_code, shop_id})
+        if (orderMap[order_code] != undefined) { 
+            orderMap[order_code].total_amount += parseFloat(sale_amount)
+        } else {
+            orderMap[order_code] = {
+                shop_id,
+                shop_name,
+                total_amount: parseFloat(sale_amount)
+            }
+        }
+        dataMap[`${order_code}_${goods_id || ''}_${sku_id || ''}_${sku_code}`] = {
+            sale_amount: parseFloat(sale_amount),
+            cost_amount: parseFloat(cost_amount),
+            express_fee: parseFloat(express_fee),
+            packing_fee: parseFloat(packing_fee),
+            bill_amount: parseFloat(bill_amount),
+            quantity: parseInt(quantity)
+        }
     }
     logger.info(`[订单利润-核销导入]：时间:${date}`)
+    for(let info in dataMap) {
+        let values = info.split('_')
+        data.push({
+            order_code: values[0],
+            shop_id: orderMap[values[0]].shop_id,
+            shop_name: orderMap[values[0]].shop_name,
+            goods_id: values[1]?.length ? values[1] : null,
+            sku_id: values[2]?.length ? values[2] : null,
+            sku_code: values[3],
+            sale_amount: dataMap[info].sale_amount,
+            total_amount: orderMap[values[0]].total_amount,
+            rate: orderMap[values[0]].total_amount > 0 ? 
+                (dataMap[info].sale_amount / orderMap[values[0]].total_amount).toFixed(2) : 0,
+            cost_amount: dataMap[info].cost_amount,
+            express_fee: dataMap[info].express_fee,
+            packing_fee: dataMap[info].packing_fee,
+            bill_amount: dataMap[info].bill_amount,
+            quantity: dataMap[info].quantity
+        })
+    }
     result = true
     updateOrderGoodsVerified(data, date)
     return result

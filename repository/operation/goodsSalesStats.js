@@ -113,6 +113,8 @@ goodsSalesStats.updateLaborCost = async (date) => {
         WHERE \`date\` = ? GROUP BY shop_id, goods_id`
     let rows = await query(sql, [date])
     if (!rows?.length) return false
+    sql = `UPDATE goods_sales_stats SET labor_cost = NULL WHERE \`date\` = ?`
+    await query(sql, [date])
     sql = `UPDATE goods_sales_stats SET labor_cost = ? WHERE goods_id = ? AND shop_id = ? 
         AND \`date\` = ?`
     let sql1 = `UPDATE goods_sales_stats SET labor_cost = ? WHERE goods_id IS NULL 
