@@ -613,6 +613,9 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: '实际支付金额', field_id: 'real_pay_amount', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
+                title: '退款', field_id: 'refund_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
                 title: '实际支付金额环比(%)', field_id: 'real_pay_amount_qoq', type: 'number', 
                 min: 0, max: 100, show: true
             }, {

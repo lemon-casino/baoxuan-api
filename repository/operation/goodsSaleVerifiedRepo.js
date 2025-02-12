@@ -3,7 +3,7 @@ const moment = require('moment')
 const goodsSaleVerifiedRepo = {}
 
 goodsSaleVerifiedRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) => {
-    const sql = `SELECT IFNULL(SUM(A1.sale_amount), 0) AS sale_amount, 
+    const sql = `SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
