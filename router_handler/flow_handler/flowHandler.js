@@ -219,7 +219,7 @@ const getVisionUsersStat = async (req, res, next) => {
                 break
             case coreActionStatTypeConst.StatUser: 
                 result = await visionCoreActionService.getUsersStat(tags, 
-                    ["482162119", "933412643", "962724541", "962893128"], 
+                    ["482162119", "933412643", "962724541", "962893128", "973369955", "973499911", "973568918", "973641822", "973809817"], 
                     userId, userNames, start, end)
                 break
             case coreActionStatTypeConst.StatLeader:
@@ -365,7 +365,7 @@ const getFormsFlowsActivitiesStat = async (req, res, next) => {
             deptIds: {value: deptIds, schema: joiUtil.commonJoiSchemas.arrayRequired}
         })
         if (deptIds.includes("933412643")) {
-            deptIds.push("962724541", "962893128")
+            deptIds.push("962724541", "962893128", "973369955", "973499911", "973568918", "973641822", "973809817")
         }
         const result = await flowService.getFormsFlowsActivitiesStat(userId, startDate, endDate, formIds, deptIds)
         return res.send(biResponse.success(result))

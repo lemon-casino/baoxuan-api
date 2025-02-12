@@ -49,6 +49,7 @@ const columnList = [
 	{ label: "利润", key: "profit", show: true },
 	{ label: "利润率(%)", key: "profit_rate", show: true },
 	{ label: "时间进度(%)", key: "timeline", show: true },
+	{ label: "销售目标", key: "goal", show: true },
     { label: "销售达成(%)", key: "targets", show: true }
 ]
 
