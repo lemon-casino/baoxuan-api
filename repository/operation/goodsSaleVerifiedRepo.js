@@ -652,7 +652,7 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                         }
                     }
                     sql = `WITH t1 AS(SELECT promotion_name,sum(amount) as amount 
-                        FROM goods_promotion_info WHERE date BETWEEN '${targetstart}' AND '${targetend}' AND goods_id=?
+                        FROM goods_promotion_info WHERE date BETWEEN '${start}' AND '${end}' AND goods_id=?
                         GROUP BY promotion_name)
                         SELECT * FROM 
                         (SELECT SUM(amount)as promotion1 FROM t1 WHERE promotion_name='6003431万相台无界-全站推广' ) AS t2
@@ -688,7 +688,7 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                         FROM goods_composite_info a1 
                         LEFT JOIN goods_pay_info a2 
                         ON a1.goods_id = a2.goods_id AND a1.date = a2.date 
-                        WHERE  a1.date BETWEEN '${targetstart}' AND '${targetend}' AND a1.goods_id = ?`
+                        WHERE  a1.date BETWEEN '${start}' AND '${end}' AND a1.goods_id = ?`
                     let row3 = await query(sql, [row[i].goods_id])
                     row[i].users_num = row3[0].users_num
                     row[i].trans_users_num = row3[0].trans_users_num
