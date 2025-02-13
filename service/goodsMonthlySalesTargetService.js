@@ -24,7 +24,7 @@ goodsMonthSalesTargetService.import = async (rows) => {
         let amount = rows[i].getCell(amount_row).value
         let info = await goodsMonthSalesTarget.getInfo(goods_id, month)
         if (info?.length) {
-            await goodsMonthSalesTarget.update(goods_id, month, amount)
+            result = await goodsMonthSalesTarget.update(goods_id, month, amount)
             logger.info(`[销售目标更新], 链接ID:${goods_id}, 年月:${month}, 原目标:${info[0].amount}, 现目标:${amount}`)
         } else {
             data.push(
@@ -35,7 +35,8 @@ goodsMonthSalesTargetService.import = async (rows) => {
             count += 1
         }
     }
-    result = await goodsMonthSalesTarget.batchInsert(count, data)
+    if (count > 0)
+        result = await goodsMonthSalesTarget.batchInsert(count, data)
     logger.info(`[销售目标导入], 总计数量:${count}`)
     return result
 }
