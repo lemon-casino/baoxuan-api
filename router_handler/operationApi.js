@@ -10,7 +10,8 @@ const formidable = require("formidable")
 const fs = require('fs')
 const iconv = require("iconv-lite")
 const crypto = require('crypto')
-
+const AdmZip = require('adm-zip')
+const path = require('path')
 const newMap = function(datum) {
     if (datum === '') {
         return null;
@@ -597,6 +598,72 @@ const importJDZYPromotionInfo = async (req, res, next) => {
     }
 }
 
+const importJDZYcompositeInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+
+            const file = files.file
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+
+            // 将上传的 ZIP 文件移动到指定目录
+            fs.renameSync(file.filepath, newPath, (err) => {
+                if (err) throw err
+            })
+
+            try {
+                // 解压 ZIP 文件
+                const zip = new AdmZip(newPath)
+                const extractPath = path.join(form.uploadDir, `extracted-${moment().valueOf()}`)
+                fs.mkdirSync(extractPath, { recursive: true })
+                zip.extractAllTo(extractPath, true)
+
+                // 获取解压后的所有文件
+                const extractedFiles = fs.readdirSync(extractPath)
+                for (const extractedFile of extractedFiles) {
+                    const filePath = path.join(extractPath, extractedFile)
+                    const workbook = new ExcelJS.Workbook()
+                    const date = extractedFile.split('.')[0].split('-全部')
+                    const time1 = date[0].split('报-')
+                    const time = time1[1]
+                    let readRes = await workbook.xlsx.readFile(filePath, {map: newMap})
+                    if (readRes) {
+                        const worksheet = workbook.getWorksheet(1)
+                        let rows = worksheet.getRows(1, worksheet.rowCount)
+                        let result = await operationService.importJDZYcompositeInfo(rows, time)
+                        if (result) {
+                            fs.rmSync(filePath)
+                        } else {
+                            return res.send(biResponse.createFailed())
+                        }
+                    }
+                    return res.send(biResponse.success())
+                    
+                }
+
+                // 删除解压后的目录和原始 ZIP 文件
+                fs.rmSync(extractPath, { recursive: true, force: true })
+                fs.rmSync(newPath)
+
+                return res.send(biResponse.success())
+            } catch (zipError) {
+                console.error('解压 ZIP 文件时出错:', zipError)
+                return res.send(biResponse.createFailed())
+            }
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+
 const importGoodsPDDInfo = async (req, res, next) => {
     try {
         let form = new formidable.IncomingForm()
@@ -997,5 +1064,6 @@ module.exports = {
     refreshGoodsSalesStats,
     refreshGoodsVerifiedsStats,
     refreshGoodsPayments,
-    refreshLaborCost
+    refreshLaborCost,
+    importJDZYcompositeInfo
 }

@@ -33,6 +33,7 @@ router.post('/orders-goods-verified/import', operationApi.importOrdersGoodsVerif
  */
 router.post('/jdzz-info/import', operationApi.importJDZYInfo)
 router.post('/jdzz-promotion-info/import', operationApi.importJDZYPromotionInfo)
+router.post('/jdzz-composite-info/import', operationApi.importJDZYcompositeInfo)
 
 // 工作面板
 router.get('/work-pannel', operationApi.getWorkStats)

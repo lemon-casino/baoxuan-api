@@ -1,6 +1,5 @@
 const { query } = require('../../model/dbConn')
 const goodsCompositeRepo = {}
-
 goodsCompositeRepo.deleteByDate = async (date, source) => {
     let sql = `DELETE FROM goods_composite_info WHERE \`date\` = ?
         AND source = ?`
@@ -57,6 +56,27 @@ goodsCompositeRepo.batchInsertSYCM = async (count, data) => {
             trans_users_num) VALUES`
     for (let i = 0; i < count; i++) {
         sql = `${sql}(?,?, '生意参谋',?, '生意参谋',?,?,?,?,?,?,?,?),`
+    }
+    sql = sql.substring(0, sql.length - 1)
+    const result = await query(sql, data)
+    return result?.affectedRows ? true : false
+}
+
+goodsCompositeRepo.batchInsertJDZY = async (count, data) => {
+    let sql = `INSERT INTO goods_composite_info(
+            sku_id, 
+            shop_name,
+            source,
+            \`date\`,
+            composite_name,
+            users_num,
+            total_click_num,
+            total_cart_num,
+            trans_num,
+            trans_qty,
+            trans_users) VALUES`
+    for (let i = 0; i < count; i++) {
+        sql = `${sql}(?,'京东自营旗舰店', '京东自营',?, '经营状况-商品明细数据',?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, data)
