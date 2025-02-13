@@ -2558,6 +2558,7 @@ const updateOrderGoods = async (date) => {
 const importOrdersGoodsVerified = async (rows, date) => {
     let orderMap = {}, dataMap = {}, data = [], result = false
     let columns = rows[0].values,
+        shop_name_row = null, 
         shop_id_row = null, 
         order_code_row = null,
         sku_code_row = null,
@@ -2569,7 +2570,8 @@ const importOrdersGoodsVerified = async (rows, date) => {
         packing_fee_row = null,
         bill_amount_row = null,
         quantity_row = null
-    for (let i = 1; i <= columns.length; i++) {        
+    for (let i = 1; i <= columns.length; i++) {  
+        if (columns[i] == '店铺') {shop_name_row = i; continue}      
         if (columns[i] == '店铺编码') {shop_id_row = i; continue}
         if (columns[i] == '线上单号') {order_code_row = i; continue}
         if (columns[i] == '商品编码') {sku_code_row = i; continue}
@@ -2586,6 +2588,9 @@ const importOrdersGoodsVerified = async (rows, date) => {
         let shop_id = typeof(rows[i].getCell(shop_id_row).value) == 'string' ? 
             rows[i].getCell(shop_id_row).value.trim() : 
             rows[i].getCell(shop_id_row).value
+        let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
+            rows[i].getCell(shop_name_row).value.trim() : 
+            rows[i].getCell(shop_name_row).value
         let order_code = typeof(rows[i].getCell(order_code_row).value) == 'string' ? 
             rows[i].getCell(order_code_row).value.trim() : 
             rows[i].getCell(order_code_row).value
