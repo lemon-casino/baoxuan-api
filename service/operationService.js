@@ -1649,7 +1649,7 @@ const importGoodsCompositeInfo = async (rows, time) => {
     logger.info(`[综合数据导入]：时间:${date}, 总计数量:${count}`)
     if (count > 0) {
         await goodsCompositeRepo.deleteByDate(date, '聚水潭-商品综合')
-        result = goodsCompositeRepo.batchInsertDefault(count, data)
+        result = await goodsCompositeRepo.batchInsertDefault(count, data)
     }
     return result
 }
@@ -1845,6 +1845,46 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
     return result
 }
 
+const importJDZYcompositeInfo = async (rows, time) => {
+    let count = 0, data = [], result = false
+    let columns = rows[0].values,
+        sku_id_row = null,
+        date = time,
+        total_click_num_row = null,
+        total_cart_num_row = null,
+        users_num_row = null,
+        trans_num_row = null,
+        trans_qty_row = null,
+        trans_users_row = null
+    for (let i in columns) {
+        if (columns[i] == 'SKU') {sku_id_row = i;  continue}
+        if (columns[i] == '访客数') {users_num_row = i; continue}
+        if (columns[i] == '浏览量') {total_click_num_row = i; continue}
+        if (columns[i] == '加购商品件数') {total_cart_num_row = i; continue}
+        if (columns[i] == '成交单量') {trans_num_row = i; continue}
+        if (columns[i] == '成交商品件数') {trans_qty_row = i; continue}
+        if (columns[i] == '成交人数') {trans_users_row = i; continue}
+    }
+    for (let i = 1; i < rows.length; i++) {
+        data.push(
+            rows[i].getCell([sku_id_row]).value,
+            date,
+            rows[i].getCell([users_num_row]).value,
+            rows[i].getCell([total_click_num_row]).value,
+            rows[i].getCell([total_cart_num_row]).value,
+            rows[i].getCell([trans_num_row]).value,
+            rows[i].getCell([trans_qty_row]).value,
+            rows[i].getCell([trans_users_row]).value
+        )
+        count += 1
+    }
+    logger.info(`[京东自营]：时间:${date}, 总计数量:${count}`)
+    if (count > 0) {
+        await goodsCompositeRepo.deleteByDate(date, '京东自营')
+        result = await goodsCompositeRepo.batchInsertJDZY(count, data)
+    }
+    return result
+}
 const importGoodsSYCMInfo = async (rows, time) => {
     let count = 0, data = [], result = false
     let columns = rows[1],
@@ -2709,5 +2749,6 @@ module.exports = {
     batchInsertGoodsSales,
     batchInsertGoodsVerifieds,
     updateOrderGoods,
-    updateGoodsPayments
+    updateGoodsPayments,
+    importJDZYcompositeInfo
 }
