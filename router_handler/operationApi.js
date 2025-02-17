@@ -1030,6 +1030,19 @@ const refreshLaborCost = async (req, res, next) => {
     }
 }
 
+const refreshVerifiedLaborCost = async (req, res, next) => {
+    try {
+        const {date} = req.body
+        joiUtil.validate({
+            date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        await operationService.updateOrderGoodsVerified(date)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -1065,5 +1078,6 @@ module.exports = {
     refreshGoodsVerifiedsStats,
     refreshGoodsPayments,
     refreshLaborCost,
+    refreshVerifiedLaborCost,
     importJDZYcompositeInfo
 }
