@@ -14,7 +14,7 @@ goodsSalesStats.batchInsert = async (date) => {
         FROM goods_sales a1 LEFT JOIN goods_other_info a4 ON a4.goods_id = a1.goods_id 
 		    AND a4.date = ?
         LEFT JOIN goods_payments a3 ON a1.goods_id = a3.goods_id AND a3.date = ?
-        LEFT JOIN (SELECT SUM(rate) AS labor_cost, goods_id, shop_id FROM orders_goods 
+        LEFT JOIN (SELECT SUM(rate) AS labor_cost, goods_id, shop_id FROM orders_goods_sales 
             WHERE \`date\` = ? GROUP BY goods_id, shop_id) a2 ON a1.goods_id = a2.goods_id 
             AND a1.shop_id = a2.shop_id 
         WHERE a1.date = ?`
@@ -109,10 +109,12 @@ goodsSalesStats.updateDSR = async (date) => {
 }
 
 goodsSalesStats.updateLaborCost = async (date) => {
-    let sql = `SELECT SUM(rate) AS labor_cost, shop_id, goods_id FROM orders_goods 
+    let sql = `SELECT SUM(rate) AS labor_cost, shop_id, goods_id FROM orders_goods_sales 
         WHERE \`date\` = ? GROUP BY shop_id, goods_id`
     let rows = await query(sql, [date])
     if (!rows?.length) return false
+    sql = `UPDATE goods_sales_stats SET labor_cost = NULL WHERE \`date\` = ?`
+    await query(sql, [date])
     sql = `UPDATE goods_sales_stats SET labor_cost = ? WHERE goods_id = ? AND shop_id = ? 
         AND \`date\` = ?`
     let sql1 = `UPDATE goods_sales_stats SET labor_cost = ? WHERE goods_id IS NULL 

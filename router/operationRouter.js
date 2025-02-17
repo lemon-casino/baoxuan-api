@@ -51,5 +51,6 @@ router.post('/refresh-sale-stats', operationApi.refreshGoodsSalesStats)
 router.post('/refresh-verify-stats', operationApi.refreshGoodsVerifiedsStats)
 router.post('/refresh-payments', operationApi.refreshGoodsPayments)
 router.post('/refresh-labor-cost', operationApi.refreshLaborCost)
+router.post('/refresh-verified-labor-cost', operationApi.refreshVerifiedLaborCost)
 
 module.exports = router
