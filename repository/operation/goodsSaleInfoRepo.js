@@ -709,7 +709,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         row[i].product_operation_promotion_roi = row2[0].product_operation_promotion!=null ? (row[i].sale_amount/row2[0].product_operation_promotion).toFixed(2) : null
                         row[i].keyword_promotion_roi = row2[0].keyword_promotion!=null ? (row[i].sale_amount/row2[0].keyword_promotion).toFixed(2) : null
                     }
-                    if(shopNames.includes(['京东自营旗舰店'])){
+                    if(['京东自营旗舰店'].includes(row[i].shop_name)){
                         sql = `SELECT real_sale_qty,real_sale_amount,real_gross_profit
                                 FROM goods_sales 
                                 WHERE goods_id= ?
@@ -724,7 +724,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                             row[i].profit_rate_gmv = row4[0].real_sale_amount>0 ? (row[i].profit/row4[0].real_sale_amount*100).toFixed(2) : null
                             
                         }
-                        sql = `SELECT goods_name, brief_name, operator, brief_product_line, 
+                        sql1 = `SELECT goods_name, brief_name, operator, brief_product_line, 
                             line_director, purchase_director, onsale_date, link_attribute, 
                             important_attribute, first_category, second_category, pit_target,
                             cost_price,supply_price,
@@ -742,11 +742,12 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                                 AS goal, g.goods_id FROM goods_monthly_sales_target g
                             WHERE g.goods_id = ? AND g.month BETWEEN ? AND ? 
                         ) a ON a.goods_id = d.brief_name WHERE d.brief_name = ?`
-                        let row5 = await query(sql, [
+                        let row5 = await query(sql1, [
                             row[i].goods_id, 
                             moment(start).format('YYYYMM'), 
                             moment(end).format('YYYYMM'),
                             row[i].goods_id])
+                        if(row5?.length>0){
                             row[i].goods_name = row5[0].goods_name
                             row[i].brief_name = row5[0].brief_name
                             row[i].operator = row5[0].operator
@@ -763,6 +764,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                             row[i].cost_price = row5[0].cost_price
                             row[i].supply_price = row5[0].supply_price
                             row[i].goal = row5[0].goal
+                        }
                     }
                     sql=`SELECT IFNULL(SUM(a1.users_num), 0) AS users_num, 
                             IFNULL(SUM(a1.trans_users_num), 0) AS trans_users_num,
