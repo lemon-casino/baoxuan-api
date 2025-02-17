@@ -64,19 +64,22 @@ goodsCompositeRepo.batchInsertSYCM = async (count, data) => {
 
 goodsCompositeRepo.batchInsertJDZY = async (count, data) => {
     let sql = `INSERT INTO goods_composite_info(
+            goods_id,
             sku_id, 
             shop_name,
             source,
             \`date\`,
             composite_name,
             users_num,
+            total_users_num,
             total_click_num,
             total_cart_num,
             trans_num,
             trans_qty,
-            trans_users) VALUES`
+            trans_users_num,
+            total_trans_users_num) VALUES`
     for (let i = 0; i < count; i++) {
-        sql = `${sql}(?,'京东自营旗舰店', '京东自营',?, '经营状况-商品明细数据',?,?,?,?,?,?),`
+        sql = `${sql}(?,?,'京东自营旗舰店', '京东自营',?, '经营状况-商品明细数据',?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, data)
