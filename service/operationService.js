@@ -594,16 +594,37 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             {
                 title: params.stats == 'verified' ? '核销金额' : '发货金额', 
                 field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
-            },{
+            }, {
+                title: '发货商品件数', field_id: 'real_sale_qty', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '京仓发货金额', field_id: 'real_sale_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
                 title: '日销目标', field_id: 'pit_target_day', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
+            }, {
+                title: '单位成本', field_id: 'cost_price', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '供货价', field_id: 'supply_price', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '综毛标准', field_id: 'gross_standard', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '实际综毛', field_id: 'real_gross_profit', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '需补综毛', field_id: 'other_cost', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
                 title: '日销目标达成率(%)', field_id: 'sale_amount_profit_day', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
+            }, {
                 title: '月销目标', field_id: 'pit_target_month', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
+            }, {
                 title: '月销目标达成率(%)', field_id: 'sale_amount_profit_month', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
@@ -637,60 +658,75 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: '利润', field_id: 'profit', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '利润率(%)', field_id: 'profit_rate', type: 'number', 
+                title: '利润率(发货)(%)', field_id: 'profit_rate', type: 'number', 
+                min: 0, max: 15, show: true
+            }, {
+                title: '利润率(gmv)(%)', field_id: 'profit_rate_gmv', type: 'number', 
                 min: 0, max: 15, show: true
             }, {
                 title: '扣点(账单费用)', field_id: 'bill', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '成本', field_id: 'cost_amount', type: 'number', 
+                title: '总成本', field_id: 'cost_amount', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '全站推广', field_id: 'promotion1', type: 'number', 
+                title: '全站推广', field_id: 'full_site_promotion', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '全站推广ROI', field_id: 'promotion1_roi', type: 'number', 
+                title: '全站推广ROI', field_id: 'full_site_promotion_roi', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
-                title: '多目标直投', field_id: 'promotion2', type: 'number', 
+            }, {
+                title: '多目标直投', field_id: 'multi_objective_promotion', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
-                title: '多目标直投ROI', field_id: 'promotion2_roi', type: 'number', 
+            }, {
+                title: '多目标直投ROI', field_id: 'multi_objective_promotion_roi', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
-                title: '精准人群推广', field_id: 'promotion3', type: 'number', 
+            }, {
+                title: '精准人群推广', field_id: 'targeted_audience_promotion', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
-                title: '精准人群推广ROI', field_id: 'promotion3_roi', type: 'number', 
+            }, {
+                title: '精准人群推广ROI', field_id: 'targeted_audience_promotion_roi', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
-                title: '货品运营', field_id: 'promotion4', type: 'number', 
+            },  {
+                title: '货品运营', field_id: 'product_operation_promotion', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
-                title: '货品运营ROI', field_id: 'promotion4_roi', type: 'number', 
+            }, {
+                title: '货品运营ROI', field_id: 'product_operation_promotion_roi', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
-                title: '关键词推广', field_id: 'promotion5', type: 'number', 
+            }, {
+                title: '关键词推广', field_id: 'keyword_promotion', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
-                title: '关键词推广ROI', field_id: 'promotion5_roi', type: 'number', 
+            }, {
+                title: '关键词推广ROI', field_id: 'keyword_promotion_roi', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
-                title: '推广费', field_id: 'promotion_amount', type: 'number', 
+            }, {
+                title: '日常推广', field_id: 'daily_promotion', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
+            }, {
+                title: '场景推广', field_id: 'scene_promotion', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '京东快车', field_id: 'jd_express_promotion', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '全站营销', field_id: 'total_promotion', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '推广合计', field_id: 'promotion_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
                 title: '搜索访客数', field_id: 'users_num', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
+            }, {
                 title: '搜索支付买家数', field_id: 'trans_users_num', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
+            }, {
                 title: '真实转化率', field_id: 'real_pay_rate', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
+            }, {
                 title: '总支付买家数', field_id: 'total_trans_users_num', type: 'number', 
                 min: 0, max: 100, show: true
-            },{
+            }, {
                 title: '总访客数', field_id: 'total_users_num', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
@@ -1863,18 +1899,28 @@ const importJDZYcompositeInfo = async (rows, time) => {
         if (columns[i] == '加购商品件数') {total_cart_num_row = i; continue}
         if (columns[i] == '成交单量') {trans_num_row = i; continue}
         if (columns[i] == '成交商品件数') {trans_qty_row = i; continue}
-        if (columns[i] == '成交人数') {trans_users_row = i; continue}
+        if (columns[i] == '成交人数') {trans_users_num_row = i; continue}
     }
     for (let i = 1; i < rows.length; i++) {
+        let sku_id = sku_id_row ? (typeof(rows[i].getCell([sku_id_row]).value) == 'string' ? 
+            rows[i].getCell([sku_id_row]).value.trim() : 
+            rows[i].getCell([sku_id_row]).value) : null, goods_id = null
+        if (sku_id) {
+            let info = await userOperationRepo.getDetailBySkuId(sku_id)
+            if (info?.length) goods_id = info[0].brief_name
+        }
         data.push(
+            goods_id,
             rows[i].getCell([sku_id_row]).value,
             date,
+            rows[i].getCell([users_num_row]).value,
             rows[i].getCell([users_num_row]).value,
             rows[i].getCell([total_click_num_row]).value,
             rows[i].getCell([total_cart_num_row]).value,
             rows[i].getCell([trans_num_row]).value,
             rows[i].getCell([trans_qty_row]).value,
-            rows[i].getCell([trans_users_row]).value
+            rows[i].getCell([trans_users_num_row]).value,
+            rows[i].getCell([trans_users_num_row]).value
         )
         count += 1
     }
