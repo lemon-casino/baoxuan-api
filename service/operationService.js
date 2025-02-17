@@ -39,7 +39,8 @@ const { createProcess } =  require('./dingDingService')
 const fs = require('fs')
 const goodsSaleVerifiedRepo = require('../repository/operation/goodsSaleVerifiedRepo')
 const shopPromotionLog = require('../repository/operation/shopPromotionLog')
-const ordersGoodsRepo = require('../repository/operation/ordersGoodsRepo')
+const ordersGoodsSalesRepo = require('../repository/operation/ordersGoodsSalesRepo')
+const ordersGoodsVerifiedsRepo = require('../repository/operation/ordersGoodsVerifiedsRepo')
 const goodsSalesStats = require('@/repository/operation/goodsSalesStats')
 const goodsVerifiedsStats = require('@/repository/operation/goodsVerifiedsStats')
 const moment = require('moment')
@@ -2575,7 +2576,7 @@ const importOrdersGoods = async (rows, date) => {
         }
     }
     logger.info(`[订单利润-发货导入]：时间:${date}`)
-    await ordersGoodsRepo.deleteByDate(date)
+    await ordersGoodsSalesRepo.deleteByDate(date)
     for(let info in dataMap) {
         let values = info.split('_')
         data.push(
@@ -2598,7 +2599,7 @@ const importOrdersGoods = async (rows, date) => {
         )
         count += 1
     }
-    result = await ordersGoodsRepo.batchInsert(count, data)
+    result = await ordersGoodsSalesRepo.batchInsert(count, data)
     await updateOrderGoods(date)
     return result
 }
@@ -2609,7 +2610,7 @@ const updateOrderGoods = async (date) => {
 }
 
 const importOrdersGoodsVerified = async (rows, date) => {
-    let orderMap = {}, dataMap = {}, data = [], result = false
+    let orderMap = {}, dataMap = {}, data = [], count = 0, result = false
     let columns = rows[0].values,
         shop_name_row = null, 
         shop_id_row = null, 
@@ -2682,37 +2683,38 @@ const importOrdersGoodsVerified = async (rows, date) => {
         }
     }
     logger.info(`[订单利润-核销导入]：时间:${date}`)
+    await ordersGoodsVerifiedsRepo.deleteByDate(date)
     for(let info in dataMap) {
         let values = info.split('_')
-        data.push({
-            order_code: values[0],
-            shop_id: orderMap[values[0]].shop_id,
-            shop_name: orderMap[values[0]].shop_name,
-            goods_id: values[1]?.length ? values[1] : null,
-            sku_id: values[2]?.length ? values[2] : null,
-            sku_code: values[3],
-            sale_amount: dataMap[info].sale_amount,
-            total_amount: orderMap[values[0]].total_amount,
-            rate: orderMap[values[0]].total_amount > 0 ? 
+        data.push(
+            values[0],
+            date,
+            orderMap[values[0]].shop_id,
+            orderMap[values[0]].shop_name,
+            values[1]?.length ? values[1] : null,
+            values[2]?.length ? values[2] : null,
+            values[3],
+            dataMap[info].sale_amount,
+            orderMap[values[0]].total_amount,
+            orderMap[values[0]].total_amount > 0 ? 
                 (dataMap[info].sale_amount / orderMap[values[0]].total_amount).toFixed(2) : 0,
-            cost_amount: dataMap[info].cost_amount,
-            express_fee: dataMap[info].express_fee,
-            packing_fee: dataMap[info].packing_fee,
-            bill_amount: dataMap[info].bill_amount,
-            quantity: dataMap[info].quantity
-        })
+            dataMap[info].cost_amount,
+            dataMap[info].express_fee,
+            dataMap[info].packing_fee,
+            dataMap[info].bill_amount,
+            dataMap[info].quantity
+        )
+        count += 1
     }
     result = true
-    updateOrderGoodsVerified(data, date)
+    result = await ordersGoodsVerifiedsRepo.batchInsert(count, data)
+    await updateOrderGoodsVerified(date)
     return result
 }
 
-const updateOrderGoodsVerified = async (data, date) => {
-    let result = await ordersGoodsRepo.update(data, date)
-    if (result) {
-        result = await goodsVerifiedsStats.updateLaborCost(date)
-        logger.info(`[核销人工费刷新]：时间:${date}, ${result}`)
-    } else logger.error(`[核销人工费刷新]：时间:${date}, ${result}`)
+const updateOrderGoodsVerified = async (date) => {
+    let result = await goodsVerifiedsStats.updateLaborCost(date)
+    logger.info(`[核销人工费刷新]：时间:${date}, ${result}`)
 }
 
 module.exports = {
@@ -2749,6 +2751,7 @@ module.exports = {
     batchInsertGoodsSales,
     batchInsertGoodsVerifieds,
     updateOrderGoods,
+    updateOrderGoodsVerified,
     updateGoodsPayments,
     importJDZYcompositeInfo
 }
