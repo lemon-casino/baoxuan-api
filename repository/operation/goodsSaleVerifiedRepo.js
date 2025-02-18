@@ -663,27 +663,96 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                         FROM goods_promotion_info WHERE date BETWEEN '${start}' AND '${end}' AND goods_id=?
                         GROUP BY promotion_name)
                         SELECT * FROM 
-                        (SELECT SUM(amount)as promotion1 FROM t1 WHERE promotion_name='6003431万相台无界-全站推广' ) AS t2
+                        (SELECT SUM(amount)as full_site_promotion FROM t1 WHERE promotion_name='6003431万相台无界-全站推广' ) AS t2
                         JOIN
-                        (SELECT SUM(amount)as promotion2 FROM t1 WHERE promotion_name='6003414多目标直投' ) AS t3
+                        (SELECT SUM(amount)as multi_objective_promotion FROM t1 WHERE promotion_name='6003414多目标直投' ) AS t3
                         JOIN
-                        (SELECT SUM(amount)as promotion3 FROM t1 WHERE promotion_name='6003416精准人群推广' ) AS t4
+                        (SELECT SUM(amount)as targeted_audience_promotion FROM t1 WHERE promotion_name='6003416精准人群推广' ) AS t4
                         JOIN
-                        (SELECT SUM(amount)as promotion4 FROM t1 WHERE promotion_name='6003432万相台无界-货品运营' ) AS t5
+                        (SELECT SUM(amount)as product_operation_promotion FROM t1 WHERE promotion_name='6003432万相台无界-货品运营' ) AS t5
                         JOIN
-                        (SELECT SUM(amount)as promotion5 FROM t1 WHERE promotion_name='60030412关键词推广' ) AS t6`
+                        (SELECT SUM(amount)as keyword_promotion FROM t1 WHERE promotion_name='60030412关键词推广' ) AS t6
+                        JOIN
+                        (SELECT SUM(amount)as daily_promotion FROM t1 WHERE promotion_name='日常推广' ) AS t7
+                        JOIN
+                        (SELECT SUM(amount)as scene_promotion FROM t1 WHERE promotion_name='场景推广' ) AS t8
+                        JOIN
+                        (SELECT SUM(amount)as jd_express_promotion FROM t1 WHERE promotion_name in ('京东快车1','京东快车2','京东快车3') ) AS t9
+                        JOIN
+                        (SELECT SUM(amount)as total_promotion FROM t1 WHERE promotion_name in ('全站营销','新品全站营销') ) AS t10`
                     let row2 = await query(sql, [row[i].goods_id])
                     if(row2?.length){
-                        row[i].promotion1 = row2[0].promotion1
-                        row[i].promotion2 = row2[0].promotion2
-                        row[i].promotion3 = row2[0].promotion3
-                        row[i].promotion4 = row2[0].promotion4
-                        row[i].promotion5 = row2[0].promotion5
-                        row[i].promotion1_roi = row2[0].promotion1!=null ? (row[i].sale_amount/row2[0].promotion1).toFixed(2) : null
-                        row[i].promotion2_roi = row2[0].promotion2!=null ? (row[i].sale_amount/row2[0].promotion2).toFixed(2) : null
-                        row[i].promotion3_roi = row2[0].promotion3!=null ? (row[i].sale_amount/row2[0].promotion3).toFixed(2) : null
-                        row[i].promotion4_roi = row2[0].promotion4!=null ? (row[i].sale_amount/row2[0].promotion4).toFixed(2) : null
-                        row[i].promotion5_roi = row2[0].promotion5!=null ? (row[i].sale_amount/row2[0].promotion5).toFixed(2) : null
+                        row[i].full_site_promotion = row2[0].full_site_promotion
+                        row[i].multi_objective_promotion = row2[0].multi_objective_promotion
+                        row[i].targeted_audience_promotion = row2[0].targeted_audience_promotion
+                        row[i].product_operation_promotion = row2[0].product_operation_promotion
+                        row[i].keyword_promotion = row2[0].keyword_promotion
+                        row[i].daily_promotion = row2[0].daily_promotion
+                        row[i].scene_promotion = row2[0].scene_promotion
+                        row[i].jd_express_promotion = row2[0].jd_express_promotion
+                        row[i].total_promotion = row2[0].total_promotion
+                        row[i].full_site_promotion_roi = row2[0].full_site_promotion!=null ? (row[i].sale_amount/row2[0].full_site_promotion).toFixed(2) : null
+                        row[i].multi_objective_promotion_roi = row2[0].multi_objective_promotion!=null ? (row[i].sale_amount/row2[0].multi_objective_promotion).toFixed(2) : null
+                        row[i].targeted_audience_promotion_roi = row2[0].targeted_audience_promotion!=null ? (row[i].sale_amount/row2[0].targeted_audience_promotion).toFixed(2) : null
+                        row[i].product_operation_promotion_roi = row2[0].product_operation_promotion!=null ? (row[i].sale_amount/row2[0].product_operation_promotion).toFixed(2) : null
+                        row[i].keyword_promotion_roi = row2[0].keyword_promotion!=null ? (row[i].sale_amount/row2[0].keyword_promotion).toFixed(2) : null
+                    }
+                    if(['京东自营旗舰店'].includes(row[i].shop_name)){
+                        sql = `SELECT real_sale_qty,real_sale_amount,real_gross_profit
+                                FROM goods_sales 
+                                WHERE goods_id= ?
+                                AND date BETWEEN '${start}' AND '${end}'`
+                        let row4 = await query(sql, [row[i].goods_id])
+                        if(row4?.length){
+                            row[i].real_sale_qty = row4[0].real_sale_qty
+                            row[i].real_sale_amount = row4[0].real_sale_amount
+                            row[i].real_gross_profit = row4[0].real_gross_profit
+                            row[i].gross_standard = (row4[0].real_sale_amount * 0.28).toFixed(2)
+                            row[i].other_cost = (row[i].gross_standard - row4[0].real_gross_profit).toFixed(2)
+                            row[i].profit_rate_gmv = row4[0].real_sale_amount>0 ? (row[i].profit/row4[0].real_sale_amount*100).toFixed(2) : null
+                            
+                        }
+                        sql1 = `SELECT goods_name, brief_name, operator, brief_product_line, 
+                            line_director, purchase_director, onsale_date, link_attribute, 
+                            important_attribute, first_category, second_category, pit_target,
+                            cost_price,supply_price,
+                            (CASE WHEN DATE_SUB(NOW(), INTERVAL 30 DAY) <= onsale_date 
+                                THEN '新品30' 
+                            WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= onsale_date 
+                                THEN '新品60' 
+                            WHEN DATE_SUB(NOW(), INTERVAL 90 DAY) <= onsale_date 
+                                THEN '新品90' 
+                            ELSE '老品' END) AS onsale_info, 
+                            a.goal 
+                        FROM dianshang_operation_attribute d 
+                        LEFT JOIN (
+                            SELECT GROUP_CONCAT(CONCAT(g.month, ': ', FORMAT(g.amount, 2)) SEPARATOR '\n') 
+                                AS goal, g.goods_id FROM goods_monthly_sales_target g
+                            WHERE g.goods_id = ? AND g.month BETWEEN ? AND ? 
+                        ) a ON a.goods_id = d.brief_name WHERE d.brief_name = ?`
+                        let row5 = await query(sql1, [
+                            row[i].goods_id, 
+                            moment(start).format('YYYYMM'), 
+                            moment(end).format('YYYYMM'),
+                            row[i].goods_id])
+                        if(row5?.length>0){
+                            row[i].goods_name = row5[0].goods_name
+                            row[i].brief_name = row5[0].brief_name
+                            row[i].operator = row5[0].operator
+                            row[i].brief_product_line = row5[0].brief_product_line
+                            row[i].line_director = row5[0].line_director
+                            row[i].purchase_director = row5[0].purchase_director
+                            row[i].onsale_date = row5[0].onsale_date
+                            row[i].link_attribute = row5[0].link_attribute
+                            row[i].important_attribute = row5[0].important_attribute
+                            row[i].first_category = row5[0].first_category
+                            row[i].second_category = row5[0].second_category
+                            row[i].pit_target = row5[0].pit_target
+                            row[i].onsale_info = row5[0].onsale_info
+                            row[i].cost_price = row5[0].cost_price
+                            row[i].supply_price = row5[0].supply_price
+                            row[i].goal = row5[0].goal
+                        }
                     }
                     sql=`SELECT IFNULL(SUM(a1.users_num), 0) AS users_num, 
                             IFNULL(SUM(a1.trans_users_num), 0) AS trans_users_num,
