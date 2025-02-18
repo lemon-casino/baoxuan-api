@@ -35,6 +35,7 @@ module.exports = [
     '/operation/goods-orders/import',
     '/operation/jdzz-info/import',
     '/operation/jdzz-promotion-info/import',
+    '/operation/jdzz-composite-info/import',
     "/operation/goods-order-stat/import",
     '/operation/goods-verified/import',
     '/operation/goods-order-verified-stat/import',
