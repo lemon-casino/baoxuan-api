@@ -479,23 +479,31 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         } else if (params.search[i].field_id == 'sku_id') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
-                        SELECT a2.sku_id FROM orders_goods_sales a2 WHERE 
-                            a2.goods_id = a1.goods_id AND a2.date BETWEEN ? AND ? 
-                        GROUP BY a2.sku_id 
+                        SELECT IFNULL(s.on_sku_code, a2.sku_id) AS sku_id FROM 
+                        orders_goods_sales a2 LEFT JOIN jst_goods_sku s 
+                            ON a2.goods_id = s.goods_id AND a2.sku_id = s.sku_id 
+                        WHERE a2.goods_id = a1.goods_id AND a2.date BETWEEN ? AND ? 
+                        GROUP BY a2.sku_id, s.on_sku_code 
                         ORDER BY IFNULL(SUM(a2.sale_amount), 0) DESC LIMIT 1 
                     ) a3 WHERE a3.sku_id LIKE '%${params.search[i].value}%')`
             p.push(start, end)
         } else if (params.search[i].field_id == 'sku_sid') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (SELECT * FROM (
-                        SELECT a2.sku_id, IFNULL(SUM(a2.sale_amount), 0) AS amount 
-                        FROM orders_goods_sales a2 WHERE a2.goods_id = a1.goods_id 
-                            AND a2.date BETWEEN ? AND ? GROUP BY a2.sku_id 
+                        SELECT IFNULL(s.on_sku_code, a2.sku_id) AS sku_id, 
+                            IFNULL(SUM(a2.sale_amount), 0) AS amount 
+                        FROM orders_goods_sales a2 LEFT JOIN jst_goods_sku s 
+                            ON a2.goods_id = s.goods_id AND a2.sku_id = s.sku_id 
+                        WHERE a2.goods_id = a1.goods_id AND a2.date BETWEEN ? AND ? 
+                        GROUP BY a2.sku_id, s.on_sku_code 
                         ORDER BY IFNULL(SUM(a2.sale_amount), 0) DESC LIMIT 2 
                     ) a3 WHERE (SELECT COUNT(1) FROM (
-                        SELECT a2.sku_id, IFNULL(SUM(a2.sale_amount), 0) AS amount 
-                        FROM orders_goods_sales a2 WHERE a2.goods_id = a1.goods_id 
-                            AND a2.date BETWEEN ? AND ? GROUP BY a2.sku_id 
+                        SELECT IFNULL(s.on_sku_code, a2.sku_id) AS sku_id, 
+                            IFNULL(SUM(a2.sale_amount), 0) AS amount 
+                        FROM orders_goods_sales a2 LEFT JOIN jst_goods_sku s 
+                            ON a2.goods_id = s.goods_id AND a2.sku_id = s.sku_id 
+                        WHERE a2.goods_id = a1.goods_id AND a2.date BETWEEN ? AND ? 
+                        GROUP BY a2.sku_id, s.on_sku_code 
                         ORDER BY IFNULL(SUM(a2.sale_amount), 0) DESC LIMIT 2) a4
                     ) = 2 ORDER BY amount LIMIT 1) a4 
                     WHERE a4.sku_id LIKE '%${params.search[i].value}%')`
@@ -785,9 +793,12 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                     row[i].total_trans_users_num = row3[0].total_trans_users_num
                     row[i].total_users_num = row3[0].total_users_num
 
-                    sql = `SELECT sku_id FROM orders_goods_sales WHERE goods_id = ? 
-                            AND \`date\` BETWEEN ? AND ? 
-                        GROUP BY sku_id ORDER BY IFNULL(SUM(sale_amount), 0) DESC LIMIT 2`
+                    sql = `SELECT IFNULL(s.on_sku_code, o.sku_id) AS sku_id 
+                        FROM orders_goods_sales o LEFT JOIN jst_goods_sku s 
+                            ON o.goods_id = s.goods_id AND o.sku_id = s.sku_id 
+                        WHERE o.goods_id = ? AND o.date BETWEEN ? AND ? 
+                        GROUP BY o.sku_id, s.on_sku_code 
+                        ORDER BY IFNULL(SUM(o.sale_amount), 0) DESC LIMIT 2`
                     row1 = await query(sql, [row[i].goods_id, start, end])
                     if (row1?.length) row[i].sku_id = row1[0].sku_id
                     if (row1?.length > 1) row[i].sku_sid = row1[1].sku_id
