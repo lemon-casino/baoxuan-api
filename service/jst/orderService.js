@@ -271,7 +271,7 @@ const importGoodsSku = async (rows) => {
     }
     logger.info(`[店铺商品资料导入]`)
     if (count > 0) {
-        result = await goodsSkuRepo.batchInsert(count, data)
+        result = await goodsSkuRepo.batchInsert(data, count)
     }
     return result
 }
