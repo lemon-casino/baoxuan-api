@@ -167,7 +167,7 @@ goodsSaleVerifiedRepo.getPaymentByLinkIdsAndTime = async (linkIds, start, end) =
             IFNULL(SUM(a1.profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
                 IFNULL(SUM(a1.profit), 0) / SUM(a1.sale_amount) * 100, 
-                0), 2) AS profit_rate FROM goods_sale_verified a1 
+                0), 2) AS profit_rate FROM goods_verifieds a1 
         LEFT JOIN goods_other_info a2 ON a1.goods_id = a2.goods_id
             AND a1.date = a2.date
         WHERE a1.goods_id IN ("${linkIds}") 
@@ -250,7 +250,7 @@ goodsSaleVerifiedRepo.getChildPaymentByLinkIdsAndTime = async (linkIds, start, e
             (CASE WHEN doa.onsale_date IS NULL OR 
 					doa.operator IN ('无操作', '非操作') THEN 0
 				WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= doa.onsale_date THEN 1
-				ELSE 2 END) AS type FROM goods_sale_verified a1 
+				ELSE 2 END) AS type FROM goods_verifieds a1 
         LEFT JOIN dianshang_operation_attribute doa ON doa.goods_id = a1.goods_id
         LEFT JOIN goods_other_info a2 ON a1.goods_id = a2.goods_id
             AND a1.date = a2.date
