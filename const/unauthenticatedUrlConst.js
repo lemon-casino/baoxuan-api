@@ -44,5 +44,6 @@ module.exports = [
     '/operation/shop-promotion-log',
     "/operation/orders-goods/import",
     '/operation/orders-goods-verified/import',
+    '/stock/goods-sku/import',
     /^\/download\/.*/,
 ]
