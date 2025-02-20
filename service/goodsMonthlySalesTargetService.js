@@ -52,8 +52,8 @@ goodsMonthSalesTargetService.get = async (params) => {
 }
 
 goodsMonthSalesTargetService.getByDate = async (params) => {
-    let start = moment(params.start).format('YYYYMM')
-    let end = moment(params.end).format('YYYYMM')
+    let start = moment(params.startDate).format('YYYYMM')
+    let end = moment(params.endDate).format('YYYYMM')
     let result = await goodsMonthSalesTarget.getDetailByMonth(start, end, params.department)
     return result
 }
