@@ -456,6 +456,82 @@ const getPhotographerDetails = async (users, action, start, end) => {
 }
 
 /**
+ * 获取视觉项目明细
+ * @param {*} start 
+ * @param {*} end 
+ * @returns 
+ */
+const getLeaderDetails = async (start, end) => {
+    let data = [], dataMap = {}, columns = [
+        {title: '标题', value: 'title', is_sub: false},
+        {title: '视觉类型', value: 'vision_type', is_sub: false},
+        {title: '运营负责人', value: 'operator', is_sub: false},
+        {title: '运营合计', value: 'op_total', is_sub: true, children: [
+            {title: '数量', value: 'num', is_sub: false},
+            {title: '分值', value: 'score', is_sub: false}
+        ]},
+        {title: '视觉合计', value: 'vi_total', is_sub: true, children: [
+            {title: '数量', value: 'num', is_sub: false},
+            {title: '分值', value: 'score', is_sub: false}
+        ]}
+    ], columnsMap = {}
+    let row = await newFormRepo.getLeaderFinishProjectStat(start, end)
+    for (let i = 0; i < row.length; i++) {
+        if (!dataMap[row[i].id]) {
+            let tmp = {
+                title: row[i].title,
+                instance_id: row[i].instance_id,
+                vision_type: row[i].vision_type,
+                operator: row[i].operator,
+                op_total: {num: 0, score: 0},
+                vi_total: {num: 0, score: 0}
+            }
+            tmp[row[i].parent_id] = {}
+            tmp[row[i].parent_id][row[i].field_id] = row[i].num
+            tmp[row[i].parent_id][row[i].field_id1] = row[i].score
+            if (['numberField_m4mikq2k', 'numberField_m4mikq2a', 'numberField_m4mikq34', 
+                'numberField_m72psn84', 'numberField_m4mikq2u'].includes(row[i].field_id)) {
+                tmp.op_total.num = parseInt(row[i].num)
+                tmp.op_total.score = parseFloat(row[i].score)
+            } else {
+                tmp.vi_total.num = parseInt(row[i].num)
+                tmp.vi_total.score = parseFloat(row[i].score)
+            }
+            data.push(tmp)
+            dataMap[row[i].id] = {}
+            dataMap[row[i].id][row[i].parent_id] = {}
+        } else {
+            if (!dataMap[row[i].id][row[i].parent_id]) {
+                data[data.length - 1][row[i].parent_id] = {}
+            }
+            if (['numberField_m4mikq2k', 'numberField_m4mikq2a', 'numberField_m4mikq34', 
+                'numberField_m72psn84', 'numberField_m4mikq2u'].includes(row[i].field_id)) {
+                data[data.length - 1].op_total.num += parseInt(row[i].num)
+                data[data.length - 1].op_total.score += parseFloat(row[i].score)
+            } else {
+                data[data.length - 1].vi_total.num += parseInt(row[i].num)
+                data[data.length - 1].vi_total.score += parseFloat(row[i].score)
+            }
+            data[data.length - 1][row[i].parent_id][row[i].field_id] = row[i].num
+            data[data.length - 1][row[i].parent_id][row[i].field_id1] = row[i].score
+        }
+        if (!columnsMap[row[i].parent_id]) {
+            columns.push({
+                title: row[i].ptitle, value: row[i].parent_id, is_sub: true,
+                children: [
+                    {title: row[i].title1, value: row[i].field_id, is_sub: false},
+                    {title: row[i].title2, value: row[i].field_id1, is_sub: false}
+                ]
+            })
+            columnsMap[row[i].parent_id] = true
+        }
+        data[data.length - 1].op_total.score = parseFloat(data[data.length - 1].op_total.score.toFixed(2))
+        data[data.length - 1].vi_total.score = parseFloat(data[data.length - 1].vi_total.score.toFixed(2))
+    }
+    return {data, columns}
+}
+
+/**
  * 根据tags过滤用户
  *
  * @param users
@@ -665,5 +741,6 @@ module.exports = {
     getDesignerDetails,
     getPhotographerStat,
     getPhotographerDetails,
+    getLeaderDetails,
     getStat
 }
