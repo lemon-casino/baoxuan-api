@@ -456,6 +456,39 @@ const getGoodsMonthlySalesTarget = async (req, res, next) => {
     }
 }
 
+const exportGoodsMonthlySalesTarget = async (req, res, next) => {
+    try {
+        const {startDate, endDate, department} = req.body
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.strRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.strRequired},
+            department: {value: department, schema: joiUtil.commonJoiSchemas.numberRequired},
+        })
+        const workbook = new ExcelJS.Workbook()
+        const worksheet = workbook.addWorksheet(`销售目标`)
+        worksheet.columns = [
+            { header: '链接ID', key: 'goods_id', isDefault: true },
+            { header: '产品简称', key: 'brief_name', isDefault: true }, 
+            { header: '产品线简称', key: 'brief_product_line', isDefault: true },
+            { header: '运营负责人', key: 'operator', isDefault: true },
+            { header: '月份', key: 'month', isDefault: true },
+            { header: '销售目标', key: 'amount', isDefault: true }
+        ]
+        let data = await goodsMonthlySalesTargetService.getByDate({startDate, endDate, department})
+
+        for (let i = 0; i < data.length; i++) {
+            worksheet.addRow({...data[i]})
+        }
+
+        const buffer = await workbook.xlsx.writeBuffer()
+        res.setHeader('Content-Disposition', `attachment; filename="goods-monthly-sales-target.xlsx"`)
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')        
+        return res.send(buffer)
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getPagingOperateAttributes,
     getProductAttrDetails,
@@ -466,5 +499,6 @@ module.exports = {
     uploadTable,
     uploadtmTable,
     importGoodsMonthlySalesTarget,
-    getGoodsMonthlySalesTarget
+    getGoodsMonthlySalesTarget,
+    exportGoodsMonthlySalesTarget
 }

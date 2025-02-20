@@ -49,4 +49,14 @@ goodsMonthSalesTarget.getByMonth = async (goods_id, offset, limit, start, end) =
     return result
 }
 
+goodsMonthSalesTarget.getDetailByMonth = async (start, end, department) => {
+    const sql = `SELECT a1.goods_id, a2.brief_name, a2.brief_product_line, 
+            a2.operator, a1.month, a1.amount FROM goods_monthly_sales_target a1 
+        LEFT JOIN dianshang_operation_attribute a2 ON a1.goods_id = a2.goods_id
+        WHERE a1.month BETWEEN ? AND ? AND a2.dept_id = ?
+        ORDER BY a1.goods_id, a1.month`
+    const result = await query(sql, [start, end, department])
+    return result || []
+}
+
 module.exports = goodsMonthSalesTarget
