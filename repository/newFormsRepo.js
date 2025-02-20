@@ -65,7 +65,8 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
                 ), FALSE, TRUE)
             LEFT JOIN process_instance_sub_values pis2 ON pis2.instance_id = vp.id 
                 AND pis2.field_id = vaf.field_id 
-                AND vaf.is_sub = 1
+                AND vaf.is_sub = 1 
+                AND vp.parent_id = pis2.parent_id 
                 AND vp.index = pis2.index
 
             WHERE vp.tag = '${tag}' 
@@ -1755,6 +1756,7 @@ const getDesignerStat = async function (user, type, start, end) {
             LEFT JOIN process_instance_sub_values pis ON pis.instance_id = pi.id
                 AND pis.field_id = vaf.field_id
                 AND vaf.is_sub = 1
+                AND pis.parent_id = pis1.parent_id 
                 AND pis.index = pis1.index
             JOIN form_fields ff ON ff.form_id = vl1.form_id
                 AND ff.field_id = IF(pis.id IS NOT NULL, pis.field_id, piv.field_id)
@@ -1821,7 +1823,8 @@ const getPhotographerStat = async function (user, type, start, end) {
                 AND pis1.value = p1.operator_name
             LEFT JOIN process_instance_sub_values pis ON pis.instance_id = pi.id
                 AND pis.field_id = vaf.field_id
-                AND vaf.is_sub = 1
+                AND vaf.is_sub = 1 
+                AND pis.parent_id = pis1.parent_id 
                 AND pis.index = pis1.index
             JOIN form_fields ff ON ff.form_id = vl.form_id
                 AND ff.field_id = IF(pis.id IS NOT NULL, pis.field_id, piv.field_id)
@@ -1837,6 +1840,61 @@ const getPhotographerStat = async function (user, type, start, end) {
     let row = await query(sql, params)
     if (row?.length) result = row
     return result
+}
+
+const getLeaderFinishProjectStat = async function(start, end) {
+    let sql = `SELECT pi.id, pi.instance_id, pi.title, REPLACE(piv.value, '"', '') AS vision_type, 
+            REPLACE(REPLACE(REPLACE(piv1.value,'"',''),'[' ,''),']','') AS operator,
+            a1.num, a1.parent_id, ff.title AS ptitle, FORMAT(a1.score, 2) AS score, a1.field_id, 
+            ff1.title AS title1, a1.field_id1, ff2.title AS title2 FROM vision_leader vl 
+        JOIN processes p ON vl.form_id = p.form_id
+        JOIN process_instances pi ON pi.process_id = p.id
+        JOIN process_instance_records pir ON pir.instance_id = pi.id
+            AND pir.show_name = vl.activity_name
+            AND pir.activity_id = vl.activity_id
+            AND pir.action_exit = vl.action_exit
+            AND pir.id = (
+                SELECT max(p2.id) FROM process_instance_records p2
+                WHERE p2.instance_id = pir.instance_id
+                    AND p2.activity_id = pir.activity_id
+                    AND p2.show_name = pir.show_name
+            )
+        JOIN process_instance_values piv ON piv.instance_id = pi.id
+            AND piv.field_id = 'radioField_m47v83c5'
+        JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
+            AND piv1.field_id = 'employeeField_lxkb9f9a'
+        LEFT JOIN (
+            SELECT pis.instance_id, IFNULL(SUM(pis.value), 0) AS num, 
+                IFNULL(SUM(pis1.value), 0) AS score, pis.parent_id, pis.field_id, 
+                pis1.field_id AS field_id1 
+            FROM process_instance_sub_values pis LEFT JOIN process_instance_sub_values pis1 
+                ON pis1.instance_id = pis.instance_id
+                AND pis1.parent_id = pis.parent_id
+                AND pis1.index = pis.index 
+            WHERE pis.field_id IN (
+                'numberField_m487nnl2', 'numberField_m487nnl6', 'numberField_m487nnlb', 
+                'numberField_m487nnlf', 'numberField_m487nnlj', 'numberField_m487nnln',
+                'numberField_m487nnlv', 'numberField_m487nnm0', 'numberField_m487nnm4',
+                'numberField_m487nnm8', 'numberField_m487nnmc', 'numberField_m487nnmj',
+                'numberField_m487nnmn', 'numberField_m4mikq2k', 'numberField_m4mikq2a', 
+                'numberField_m4mikq34', 'numberField_m72psn84', 'numberField_m4mikq2u'
+            ) AND pis1.field_id IN (
+                'numberField_m487nnl3', 'numberField_m487nnl7', 'numberField_m487nnlc',
+                'numberField_m487nnlg', 'numberField_m487nnlk', 'numberField_m487nnlo',
+                'numberField_m487nnlw', 'numberField_m487nnm1', 'numberField_m487nnm5',
+                'numberField_m487nnm9', 'numberField_m487nnmd', 'numberField_m487nnmk',
+                'numberField_m487nnmo', 'numberField_m4mikq2l', 'numberField_m4mikq2b', 
+                'numberField_m4mikq35', 'numberField_m72psn85', 'numberField_m4mikq2v'
+            ) GROUP BY pis.instance_id, pis.parent_id, pis.field_id, pis1.field_id) a1 
+            ON a1.instance_id = pi.id 
+        LEFT JOIN form_fields ff ON ff.form_id = 29915 AND ff.field_id = a1.parent_id 
+        LEFT JOIN form_fields ff1 ON ff.id = ff1.parent_id AND ff1.field_id = a1.field_id 
+        LEFT JOIN form_fields ff2 ON ff.id = ff2.parent_id AND ff2.field_id = a1.field_id1 
+        WHERE vl.vision_type = 2 AND vl.type = 2 AND vl.form_id = 29915
+            AND pir.operate_time BETWEEN '${start}' AND '${end}'
+        ORDER BY pi.id`
+    let result = await query(sql)
+    return result || []
 }
 
 const getVisionFieldName = async function (tag) {
@@ -2650,5 +2708,6 @@ module.exports = {
     getPlanStats,
     getOperationOptimizeInfo,
     checkOptimize,
-    getOperationOptimizeRate
+    getOperationOptimizeRate,
+    getLeaderFinishProjectStat
 }
