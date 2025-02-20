@@ -754,7 +754,6 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                             WHERE goods_id= ?
                             AND date BETWEEN '${start}' AND '${end}'`
                     let row4 = await query(sql, [row[i].goods_id])
-                    console.log(row4)
                     if(row4?.length){
                         row[i].real_sale_qty = row4[0].real_sale_qty
                         row[i].real_sale_amount = row4[0].real_sale_amount
