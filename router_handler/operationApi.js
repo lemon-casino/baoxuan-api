@@ -286,6 +286,24 @@ const getGoodsInfoDetail = async (req, res, next) => {
     }
 }
 
+const getJDskuInfoDetail = async (req, res, next) => {
+    try {
+        const {goods_id, startDate, endDate, stats} = req.query
+        joiUtil.validate({
+            column: {value: req.params.column, schema: joiUtil.commonJoiSchemas.strRequired},
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const start = moment(req.query.startDate).format('YYYY-MM-DD')
+        const end = moment(req.query.endDate).format('YYYY-MM-DD')
+        const result = await operationService.getGoodsInfoDetail(req.params.column, goods_id, start, end, stats, req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const getGoodsInfoDetailTotal = async (req, res, next) => {
     try {
         const {goods_id, startDate, endDate, stats} = req.query
@@ -621,7 +639,7 @@ const importJDZYcompositeInfo = async (req, res, next) => {
             try {
                 // 解压 ZIP 文件
                 const zip = new AdmZip(newPath)
-                const extractPath = path.join(form.uploadDir, `extracted-${moment().valueOf()}`)
+                const extractPath = path.join(form.uploadDir, `经营状况-${moment().valueOf()}`)
                 fs.mkdirSync(extractPath, { recursive: true })
                 zip.extractAllTo(extractPath, true)
 
@@ -644,14 +662,9 @@ const importJDZYcompositeInfo = async (req, res, next) => {
                             return res.send(biResponse.createFailed())
                         }
                     }
-                    return res.send(biResponse.success())
-                    
                 }
-
-                // 删除解压后的目录和原始 ZIP 文件
                 fs.rmSync(extractPath, { recursive: true, force: true })
                 fs.rmSync(newPath)
-
                 return res.send(biResponse.success())
             } catch (zipError) {
                 console.error('解压 ZIP 文件时出错:', zipError)
@@ -1079,5 +1092,6 @@ module.exports = {
     refreshGoodsPayments,
     refreshLaborCost,
     refreshVerifiedLaborCost,
-    importJDZYcompositeInfo
+    importJDZYcompositeInfo,
+    getJDskuInfoDetail
 }
