@@ -193,7 +193,7 @@ userOperationRepo.getGoodsLine = async (start, end, params, shopNames, userNames
 
 userOperationRepo.getUsersByShopName = async (shopName) => {
     const sql = `SELECT doa.operator AS nickname, doa.operator AS name, 
-            GROUP_CONCAT(doa.shop_name) AS shop_name 
+            GROUP_CONCAT(DISTINCT doa.shop_name) AS shop_name 
         FROM dianshang_operation_attribute doa 
         JOIN users u ON u.nickname = doa.operator AND u.is_resign = 0 
         WHERE doa.shop_name = ? 
@@ -204,7 +204,7 @@ userOperationRepo.getUsersByShopName = async (shopName) => {
 
 userOperationRepo.getUsersByProjectName = async (projectName) => {
     const sql = `SELECT doa.operator AS nickname, doa.operator AS name, 
-            GROUP_CONCAT(doa.shop_name) AS shop_name 
+            GROUP_CONCAT(DISTINCT doa.shop_name) AS shop_name 
         FROM dianshang_operation_attribute doa 
         JOIN users u ON u.nickname = doa.operator AND u.is_resign = 0 
         JOIN shop_info si ON si.shop_name = doa.shop_name 

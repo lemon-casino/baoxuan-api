@@ -128,7 +128,7 @@ goodsSaleInfoRepo.getChildPaymentByShopNamesAndTime = async (shopNames, start, e
             (CASE WHEN doa.onsale_date IS NULL OR 
 					doa.operator IN ('无操作', '非操作') THEN 0
 				WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= doa.onsale_date THEN 1
-				ELSE 2 END) AS type FROM goods_sale_info a1
+				ELSE 2 END) AS type FROM goods_sales a1
         LEFT JOIN dianshang_operation_attribute doa ON doa.goods_id = a1.goods_id
         LEFT JOIN goods_other_info a2 ON a1.goods_id = a2.goods_id 
             AND a1.date = a2.date
@@ -168,7 +168,7 @@ goodsSaleInfoRepo.getPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
             IFNULL(SUM(a1.profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
                 IFNULL(SUM(a1.profit), 0) / SUM(a1.sale_amount) * 100, 
-                0), 2) AS profit_rate FROM goods_sale_info a1 
+                0), 2) AS profit_rate FROM goods_sales a1 
         LEFT JOIN goods_other_info a2 ON a1.goods_id = a2.goods_id
             AND a1.date = a2.date
         WHERE a1.goods_id IN ("${linkIds}") 
@@ -251,7 +251,7 @@ goodsSaleInfoRepo.getChildPaymentByLinkIdsAndTime = async (linkIds, start, end) 
             (CASE WHEN doa.onsale_date IS NULL OR 
 					doa.operator IN ('无操作', '非操作') THEN 0
 				WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= doa.onsale_date THEN 1
-				ELSE 2 END) AS type FROM goods_sale_info a1 
+				ELSE 2 END) AS type FROM goods_sales a1 
         LEFT JOIN dianshang_operation_attribute doa ON doa.goods_id = a1.goods_id
         LEFT JOIN goods_other_info a2 ON a1.goods_id = a2.goods_id
             AND a1.date = a2.date
@@ -479,23 +479,31 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         } else if (params.search[i].field_id == 'sku_id') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (
-                        SELECT a2.sku_id FROM orders_goods_sales a2 WHERE 
-                            a2.goods_id = a1.goods_id AND a2.date BETWEEN ? AND ? 
-                        GROUP BY a2.sku_id 
+                        SELECT IFNULL(s.on_sku_code, a2.sku_id) AS sku_id FROM 
+                        orders_goods_sales a2 LEFT JOIN jst_goods_sku s 
+                            ON a2.goods_id = s.goods_id AND a2.sku_id = s.sku_id 
+                        WHERE a2.goods_id = a1.goods_id AND a2.date BETWEEN ? AND ? 
+                        GROUP BY a2.sku_id, s.on_sku_code 
                         ORDER BY IFNULL(SUM(a2.sale_amount), 0) DESC LIMIT 1 
                     ) a3 WHERE a3.sku_id LIKE '%${params.search[i].value}%')`
             p.push(start, end)
         } else if (params.search[i].field_id == 'sku_sid') {
             subsql = `${subsql} AND EXISTS(
                     SELECT * FROM (SELECT * FROM (
-                        SELECT a2.sku_id, IFNULL(SUM(a2.sale_amount), 0) AS amount 
-                        FROM orders_goods_sales a2 WHERE a2.goods_id = a1.goods_id 
-                            AND a2.date BETWEEN ? AND ? GROUP BY a2.sku_id 
+                        SELECT IFNULL(s.on_sku_code, a2.sku_id) AS sku_id, 
+                            IFNULL(SUM(a2.sale_amount), 0) AS amount 
+                        FROM orders_goods_sales a2 LEFT JOIN jst_goods_sku s 
+                            ON a2.goods_id = s.goods_id AND a2.sku_id = s.sku_id 
+                        WHERE a2.goods_id = a1.goods_id AND a2.date BETWEEN ? AND ? 
+                        GROUP BY a2.sku_id, s.on_sku_code 
                         ORDER BY IFNULL(SUM(a2.sale_amount), 0) DESC LIMIT 2 
                     ) a3 WHERE (SELECT COUNT(1) FROM (
-                        SELECT a2.sku_id, IFNULL(SUM(a2.sale_amount), 0) AS amount 
-                        FROM orders_goods_sales a2 WHERE a2.goods_id = a1.goods_id 
-                            AND a2.date BETWEEN ? AND ? GROUP BY a2.sku_id 
+                        SELECT IFNULL(s.on_sku_code, a2.sku_id) AS sku_id, 
+                            IFNULL(SUM(a2.sale_amount), 0) AS amount 
+                        FROM orders_goods_sales a2 LEFT JOIN jst_goods_sku s 
+                            ON a2.goods_id = s.goods_id AND a2.sku_id = s.sku_id 
+                        WHERE a2.goods_id = a1.goods_id AND a2.date BETWEEN ? AND ? 
+                        GROUP BY a2.sku_id, s.on_sku_code 
                         ORDER BY IFNULL(SUM(a2.sale_amount), 0) DESC LIMIT 2) a4
                     ) = 2 ORDER BY amount LIMIT 1) a4 
                     WHERE a4.sku_id LIKE '%${params.search[i].value}%')`
@@ -775,9 +783,12 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                     row[i].total_trans_users_num = row3[0].total_trans_users_num
                     row[i].total_users_num = row3[0].total_users_num
 
-                    sql = `SELECT sku_id FROM orders_goods_sales WHERE goods_id = ? 
-                            AND \`date\` BETWEEN ? AND ? 
-                        GROUP BY sku_id ORDER BY IFNULL(SUM(sale_amount), 0) DESC LIMIT 2`
+                    sql = `SELECT IFNULL(s.on_sku_code, o.sku_id) AS sku_id 
+                        FROM orders_goods_sales o LEFT JOIN jst_goods_sku s 
+                            ON o.goods_id = s.goods_id AND o.sku_id = s.sku_id 
+                        WHERE o.goods_id = ? AND o.date BETWEEN ? AND ? 
+                        GROUP BY o.sku_id, s.on_sku_code 
+                        ORDER BY IFNULL(SUM(o.sale_amount), 0) DESC LIMIT 2`
                     row1 = await query(sql, [row[i].goods_id, start, end])
                     if (row1?.length) row[i].sku_id = row1[0].sku_id
                     if (row1?.length > 1) row[i].sku_sid = row1[1].sku_id

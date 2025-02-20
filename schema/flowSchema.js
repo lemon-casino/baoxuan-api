@@ -43,6 +43,7 @@ const getCoreDetailsSchema = {
         coreActionStatTypeConst.StatDesigner,
         coreActionStatTypeConst.StatMainDesigner,
         coreActionStatTypeConst.StatPhotographer,
+        coreActionStatTypeConst.StatLeader,
     ),
     action: Joi.string().valid(
         ...statItem3.map((item) => item.code),

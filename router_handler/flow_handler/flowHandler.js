@@ -258,6 +258,9 @@ const getVisionUsersDetails = async (req, res, next) => {
             case coreActionStatTypeConst.StatPhotographer:
                 result = await visionCoreActionService.getPhotographerDetails(JSON.parse(users), action, start, end)
                 break
+            case coreActionStatTypeConst.StatLeader:
+                result = await visionCoreActionService.getLeaderDetails(start, end)
+                break
             default:
         }
         return res.send(biResponse.success(result))
