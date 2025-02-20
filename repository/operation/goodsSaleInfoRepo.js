@@ -508,6 +508,18 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                     ) = 2 ORDER BY amount LIMIT 1) a4 
                     WHERE a4.sku_id LIKE '%${params.search[i].value}%')`
             p.push(start, end, start, end)
+        } else if (['pit_target_day', 'pit_target_month'].includes(params.search[i].field_id)) {
+            if(params.search[i].field_id=='pit_target_day'){
+                day_s = targettime
+            }else{
+                day_s = days
+            }
+            subsql = `${subsql} AND EXISTS(
+                    select * FROM (								
+                    select pit_target*${day_s} as val from dianshang_operation_attribute AS a2
+                    where a2.goods_id=a1.goods_id
+                    )AS b
+                    WHERE b.val>=${params.search[i].min} and b.val<=${params.search[i].max})`
         } else if (params.search[i].type == 'number') {
             subsql = `${subsql} AND a1.goods_id IS NOT NULL AND EXISTS(
                     SELECT * FROM (
@@ -559,7 +571,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                 SUM(a2.real_pay_amount) * 100, 2), 0) AS real_pay_amount_qoq, 
             IFNULL(SUM(a1.bill), 0) AS bill,
             IFNULL(SUM(a1.sale_amount), 0) AS sale_amount,
-            IFNULL(SUM(a3.sale_amount), 0) AS sale_amount_month,
+            IFNULL(MAX(a1.sale_month), 0) AS sale_month,
             IFNULL(SUM(a1.cost_amount), 0) AS cost_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.packing_fee), 0) AS packing_fee, 
@@ -602,10 +614,6 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                 0) * 100, 2) AS gross_profit 
             FROM goods_sales_stats a1 LEFT JOIN goods_sales_stats a2 ON a2.goods_id = a1.goods_id 
                 AND a2.date = DATE_SUB(a1.date, INTERVAL 1 DAY) 
-            LEFT JOIN (
-                SELECT goods_id, shop_name, SUM(sale_amount) AS sale_amount 
-                FROM goods_sales_stats WHERE date BETWEEN '${targetstart}' AND '${targetend}'
-                GROUP BY goods_id, shop_name) AS a3 ON a1.goods_id = a3.goods_id 
             LEFT JOIN goods_verifieds_stats a4 ON a1.goods_id = a4.goods_id 
                 AND a1.date = DATE_SUB(a4.date, INTERVAL 1 DAY) 
             LEFT JOIN (
@@ -633,7 +641,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                 if (row[i].goods_id) {
                     sql = `SELECT goods_name, brief_name, operator, brief_product_line, 
                             line_director, purchase_director, onsale_date, link_attribute, 
-                            important_attribute, first_category, second_category, pit_target, 
+                            important_attribute, first_category, second_category, pit_target,
                             (CASE WHEN DATE_SUB(NOW(), INTERVAL 30 DAY) <= onsale_date 
                                 THEN '新品30' 
                             WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= onsale_date 
@@ -647,8 +655,30 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                             SELECT GROUP_CONCAT(CONCAT(g.month, ': ', FORMAT(g.amount, 2)) SEPARATOR '\n') 
                                 AS goal, g.goods_id FROM goods_monthly_sales_target g
                             WHERE g.goods_id = ? AND g.month BETWEEN ? AND ? 
-                        ) a ON a.goods_id = d.goods_id WHERE d.goods_id = ?`
+                        ) a ON a.goods_id = d.goods_id WHERE d.goods_id = ? AND d.platform !='自营'
+                        UNION ALL
+                        SELECT goods_name, brief_name, operator, brief_product_line, 
+                            line_director, purchase_director, onsale_date, link_attribute, 
+                            important_attribute, first_category, second_category, pit_target,
+                            (CASE WHEN DATE_SUB(NOW(), INTERVAL 30 DAY) <= onsale_date 
+                                THEN '新品30' 
+                            WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= onsale_date 
+                                THEN '新品60' 
+                            WHEN DATE_SUB(NOW(), INTERVAL 90 DAY) <= onsale_date 
+                                THEN '新品90' 
+                            ELSE '老品' END) AS onsale_info, 
+                            a.goal 
+                        FROM dianshang_operation_attribute d 
+                        LEFT JOIN (
+                            SELECT GROUP_CONCAT(CONCAT(g.month, ': ', FORMAT(g.amount, 2)) SEPARATOR '\n') 
+                                AS goal, g.goods_id FROM goods_monthly_sales_target g
+                            WHERE g.goods_id = ? AND g.month BETWEEN ? AND ? 
+                        ) a ON a.goods_id = d.brief_name WHERE d.brief_name = ? AND d.platform ='自营'`
                     let row1 = await query(sql, [
+                        row[i].goods_id, 
+                        moment(start).format('YYYYMM'), 
+                        moment(end).format('YYYYMM'),
+                        row[i].goods_id,
                         row[i].goods_id, 
                         moment(start).format('YYYYMM'), 
                         moment(end).format('YYYYMM'),
@@ -672,7 +702,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         row[i].onsale_info = row1[0].onsale_info
                         row[i].goal = row1[0].goal
                         row[i].sale_amount_profit_day = row1[0].pit_target*targettime>0 ? (row[i].sale_amount/(row1[0].pit_target*targettime)*100).toFixed(2) + '%' : null
-                        row[i].sale_amount_profit_month = row1[0].pit_target*days>0 ? (row[i].sale_amount_month/(row1[0].pit_target*days)*100).toFixed(2) + '%' : null
+                        row[i].sale_amount_profit_month = row1[0].pit_target*days>0 ? (row[i].sale_month/(row1[0].pit_target*days)*100).toFixed(2) + '%' : null
                         const arrary=["pakchoice旗舰店（天猫）","八千行旗舰店（天猫）","宝厨行（淘宝）","八千行（淘宝）","北平商号（淘宝）","天猫teotm旗舰店"]
                         if (!arrary.includes(row[i].shop_name)) {
                             row[i].sale_amount_profit_day = null
@@ -717,62 +747,21 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         row[i].product_operation_promotion_roi = row2[0].product_operation_promotion!=null ? (row[i].sale_amount/row2[0].product_operation_promotion).toFixed(2) : null
                         row[i].keyword_promotion_roi = row2[0].keyword_promotion!=null ? (row[i].sale_amount/row2[0].keyword_promotion).toFixed(2) : null
                     }
-                    if(['京东自营旗舰店'].includes(row[i].shop_name)){
-                        sql = `SELECT real_sale_qty,real_sale_amount,real_gross_profit
-                                FROM goods_sales 
-                                WHERE goods_id= ?
-                                AND date BETWEEN '${start}' AND '${end}'`
-                        let row4 = await query(sql, [row[i].goods_id])
-                        if(row4?.length){
-                            row[i].real_sale_qty = row4[0].real_sale_qty
-                            row[i].real_sale_amount = row4[0].real_sale_amount
-                            row[i].real_gross_profit = row4[0].real_gross_profit
-                            row[i].gross_standard = (row4[0].real_sale_amount * 0.28).toFixed(2)
-                            row[i].other_cost = (row[i].gross_standard - row4[0].real_gross_profit).toFixed(2)
-                            row[i].profit_rate_gmv = row4[0].real_sale_amount>0 ? (row[i].profit/row4[0].real_sale_amount*100).toFixed(2) : null
-                            
-                        }
-                        sql1 = `SELECT goods_name, brief_name, operator, brief_product_line, 
-                            line_director, purchase_director, onsale_date, link_attribute, 
-                            important_attribute, first_category, second_category, pit_target,
-                            cost_price,supply_price,
-                            (CASE WHEN DATE_SUB(NOW(), INTERVAL 30 DAY) <= onsale_date 
-                                THEN '新品30' 
-                            WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= onsale_date 
-                                THEN '新品60' 
-                            WHEN DATE_SUB(NOW(), INTERVAL 90 DAY) <= onsale_date 
-                                THEN '新品90' 
-                            ELSE '老品' END) AS onsale_info, 
-                            a.goal 
-                        FROM dianshang_operation_attribute d 
-                        LEFT JOIN (
-                            SELECT GROUP_CONCAT(CONCAT(g.month, ': ', FORMAT(g.amount, 2)) SEPARATOR '\n') 
-                                AS goal, g.goods_id FROM goods_monthly_sales_target g
-                            WHERE g.goods_id = ? AND g.month BETWEEN ? AND ? 
-                        ) a ON a.goods_id = d.brief_name WHERE d.brief_name = ?`
-                        let row5 = await query(sql1, [
-                            row[i].goods_id, 
-                            moment(start).format('YYYYMM'), 
-                            moment(end).format('YYYYMM'),
-                            row[i].goods_id])
-                        if(row5?.length>0){
-                            row[i].goods_name = row5[0].goods_name
-                            row[i].brief_name = row5[0].brief_name
-                            row[i].operator = row5[0].operator
-                            row[i].brief_product_line = row5[0].brief_product_line
-                            row[i].line_director = row5[0].line_director
-                            row[i].purchase_director = row5[0].purchase_director
-                            row[i].onsale_date = row5[0].onsale_date
-                            row[i].link_attribute = row5[0].link_attribute
-                            row[i].important_attribute = row5[0].important_attribute
-                            row[i].first_category = row5[0].first_category
-                            row[i].second_category = row5[0].second_category
-                            row[i].pit_target = row5[0].pit_target
-                            row[i].onsale_info = row5[0].onsale_info
-                            row[i].cost_price = row5[0].cost_price
-                            row[i].supply_price = row5[0].supply_price
-                            row[i].goal = row5[0].goal
-                        }
+                    sql = `SELECT SUM(real_sale_qty) AS real_sale_qty
+                                ,SUM(real_sale_amount) AS real_sale_amount
+                                ,SUM(real_gross_profit) AS real_gross_profit
+                            FROM goods_sales 
+                            WHERE goods_id= ?
+                            AND date BETWEEN '${start}' AND '${end}'`
+                    let row4 = await query(sql, [row[i].goods_id])
+                    if(row4?.length){
+                        row[i].real_sale_qty = row4[0].real_sale_qty
+                        row[i].real_sale_amount = row4[0].real_sale_amount
+                        row[i].real_gross_profit = row4[0].real_gross_profit
+                        row[i].gross_standard = row4[0].real_sale_amount!=null ? (row4[0].real_sale_amount * 0.28).toFixed(2) : null
+                        row[i].other_cost = row4[0].real_gross_profit!=null ? (row[i].gross_standard - row4[0].real_gross_profit).toFixed(2) : null
+                        row[i].profit_rate_gmv = row4[0].real_sale_amount>0 ? (row[i].profit/row4[0].real_sale_amount*100).toFixed(2) : null
+                        
                     }
                     sql=`SELECT IFNULL(SUM(a1.users_num), 0) AS users_num, 
                             IFNULL(SUM(a1.trans_users_num), 0) AS trans_users_num,
@@ -914,6 +903,12 @@ goodsSaleInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
                     - IF(a2.sale_amount > 0,
                         a2.bill / a2.sale_amount, 0)
                 ) * 100, 2), 0) AS gross_profit, 
+            FORMAT(IFNULL(a4.real_sale_qty,0),2) AS real_sale_qty,
+            FORMAT(IFNULL(a4.real_sale_amount,0),2) AS real_sale_amount,
+            FORMAT(IFNULL(a4.real_gross_profit,0),2) AS real_gross_profit,
+            FORMAT(IFNULL(a4.real_sale_amount * 0.28,0),2) AS gross_standard,
+            FORMAT(IFNULL(a4.real_sale_amount * 0.28 - a4.real_gross_profit ,0),2) AS other_cost,
+            FORMAT(IFNULL(a1.profit/a4.real_sale_amount*100,0),2) AS profit_rate_gmv,
             DATE_FORMAT(a1.date, '%Y-%m-%d') as \`date\` 
         FROM goods_sales_stats a1 LEFT JOIN goods_verifieds_stats a2 ON a1.goods_id = a2.goods_id 
             AND a1.date = DATE_SUB(a2.date, INTERVAL 1 DAY) 
@@ -924,11 +919,22 @@ goodsSaleInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
                 IFNULL(SUM(o1.express_fee), 0) AS express_fee, 
                 IFNULL(SUM(o1.packing_fee), 0) AS packing_fee, 
                 IFNULL(SUM(o1.rate), 0) AS labor_cost FROM orders_goods_sales o1 
-            WHERE o1.date BETWEEN '${start}' AND '${end}' 
-            GROUP BY o1.goods_id, o1.date) a3 ON a1.goods_id = a3.goods_id 
-                AND a1.date = a3.date 
+            WHERE o1.date BETWEEN '${start}' AND '${end}' AND goods_id= ?
+            GROUP BY o1.goods_id, o1.date) a3 
+        ON a1.goods_id = a3.goods_id AND a1.date = a3.date
+        LEFT JOIN(
+            SELECT goods_id,date
+                    ,SUM(real_sale_qty) as real_sale_qty
+                    ,SUM(real_sale_amount) as real_sale_amount
+                    ,SUM(real_gross_profit) as real_gross_profit
+                    FROM goods_sales 
+                    WHERE goods_id= ?
+                    AND date BETWEEN '${start}' AND '${end}'
+            GROUP BY goods_id, date
+        )as a4 
+        ON a1.goods_id = a4.goods_id AND a1.date = a4.date
         WHERE a1.date BETWEEN ? AND ? AND a1.goods_id = ?`
-    const result = await query(sql, [start, end, goods_id])
+    const result = await query(sql, [goods_id,goods_id,start, end, goods_id])
     return result || []
 }
 

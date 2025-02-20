@@ -593,7 +593,7 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             {title: '二级类目', field_id: 'second_category', type: 'input', show: true},
             {title: '坑产目标', field_id: 'pit_target', type: 'input', show: true},
             {
-                title: params.stats == 'verified' ? '核销金额' : '发货金额', 
+                title: params.stats == 'verified' ? '核销金额' : '发货金额(总供货价)', 
                 field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
             }, {
                 title: '发货商品件数', field_id: 'real_sale_qty', type: 'number', 
@@ -603,12 +603,6 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 min: 0, max: 100, show: true
             }, {
                 title: '日销目标', field_id: 'pit_target_day', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '单位成本', field_id: 'cost_price', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '供货价', field_id: 'supply_price', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: '综毛标准', field_id: 'gross_standard', type: 'number', 
@@ -659,7 +653,7 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: '利润', field_id: 'profit', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '利润率(发货)(%)', field_id: 'profit_rate', type: 'number', 
+                title: '利润率(利润率(供货价))(%)', field_id: 'profit_rate', type: 'number', 
                 min: 0, max: 15, show: true
             }, {
                 title: '利润率(gmv)(%)', field_id: 'profit_rate_gmv', type: 'number', 
@@ -881,6 +875,12 @@ const getGoodsInfoDetailTotal = async (goods_id, start, end, stats) => {
             refund_rate: info[i].refund_rate,
             profit_rate: info[i].profit_rate,
             gross_profit: info[i].gross_profit, 
+            real_sale_qty: info[i].real_sale_qty,
+            real_sale_amount: info[i].real_sale_amount,
+            real_gross_profit: info[i].real_gross_profit,
+            gross_standard: info[i].gross_standard,
+            other_cost: info[i].other_cost,
+            profit_rate_gmv: info[i].profit_rate_gmv,
             hasChild: false
         })
         dateMap[info[i].date] = i
@@ -910,6 +910,7 @@ const getGoodsInfoDetailTotal = async (goods_id, start, end, stats) => {
         result[dateMap[info[i].date]]['pay_express_fee'] = info[i].pay_express_fee
         result[dateMap[info[i].date]]['real_pay_amount'] = info[i].real_pay_amount
     }
+    console.log(result.info)
     return result
 }
 
@@ -1097,6 +1098,7 @@ const batchInsertGoodsSales = async (date) => {
 const batchInsertGoodsSalesStats = async (date) => {
     let result = await goodsSalesStats.batchInsert(date)
     logger.info(`[发货单品表数据刷新]：时间:${date}, ${result}`)
+    let result1 = await goodsSalesStats.updateSalemonth(date)
 }
 
 const importGoodsKeyWords = async (rows, time) => {
@@ -2541,6 +2543,7 @@ const batchInsertGoodsVerifieds = async (date) => {
 const batchInsertGoodsVerifiedsStats = async (date) => {
     let result = await goodsVerifiedsStats.batchInsert(date)
     logger.info(`[核销单品表数据刷新]：时间:${date}, ${result}`)
+    let result1 = await goodsVerifiedsStats.updateSalemonth(date)
 }
 
 const createShopPromotionLog = async (date, shop_name) => {

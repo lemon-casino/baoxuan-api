@@ -1,4 +1,5 @@
 const { query, transaction } = require('../../model/dbConn')
+const moment = require('moment')
 const goodsVerifiedsStats = {}
 
 goodsVerifiedsStats.batchInsert = async (date) => {
@@ -79,6 +80,21 @@ goodsVerifiedsStats.batchInsert = async (date) => {
     sqls.push(sql)
     params.push(data)
     const result = await transaction(sqls, params)
+    return result
+}
+
+goodsVerifiedsStats.updateSalemonth = async (date) => {
+    let targetstart = moment(date).startOf('month').format('YYYY-MM-DD')
+    let targetend = moment(date).endOf('month').format('YYYY-MM-DD')
+    let sql1 = `SELECT goods_id,shop_id,SUM(IFNULL(sale_amount,0)) AS sale_month
+                FROM goods_verifieds_stats
+                WHERE date BETWEEN '${targetstart}' AND '${targetend}'
+                GROUP BY goods_id,shop_id`
+    const sales_month = await query(sql1)
+    for(let i = 0; i < sales_month.length; i++){
+        sql1 = `UPDATE goods_verifieds_stats SET sale_month = ? WHERE goods_id =? AND shop_id=? AND date BETWEEN '${targetstart}' AND '${targetend}'`
+        result = await query(sql1,[sales_month[i].sale_month,sales_month[i].goods_id,sales_month[i].shop_id])
+    }
     return result
 }
 
