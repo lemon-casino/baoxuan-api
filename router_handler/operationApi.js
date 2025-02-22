@@ -297,7 +297,7 @@ const getJDskuInfoDetail = async (req, res, next) => {
         })
         const start = moment(req.query.startDate).format('YYYY-MM-DD')
         const end = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getGoodsInfoDetail(req.params.column, goods_id, start, end, stats, req.user.id)
+        const result = await operationService.getJDskuInfoDetail(goods_id, start, end, stats, req.user.id)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -315,6 +315,23 @@ const getGoodsInfoDetailTotal = async (req, res, next) => {
         const start = moment(req.query.startDate).format('YYYY-MM-DD')
         const end = moment(req.query.endDate).format('YYYY-MM-DD')
         const result = await operationService.getGoodsInfoDetailTotal(goods_id, start, end, stats)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getskuInfoDetailTotal = async (req, res, next) => {
+    try {
+        const {sku_id, startDate, endDate, stats} = req.query
+        joiUtil.validate({
+            sku_id: {value: sku_id, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const start = moment(req.query.startDate).format('YYYY-MM-DD')
+        const end = moment(req.query.endDate).format('YYYY-MM-DD')
+        const result = await operationService.getskuInfoDetailTotal(sku_id, start, end, stats)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -1093,5 +1110,6 @@ module.exports = {
     refreshLaborCost,
     refreshVerifiedLaborCost,
     importJDZYcompositeInfo,
-    getJDskuInfoDetail
+    getJDskuInfoDetail,
+    getskuInfoDetailTotal
 }

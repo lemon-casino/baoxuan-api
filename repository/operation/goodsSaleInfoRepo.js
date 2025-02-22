@@ -938,6 +938,105 @@ goodsSaleInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
     return result || []
 }
 
+goodsSaleInfoRepo.getskuDetailTotalByTime = async(sku_id, start, end) => {
+    const sql = `SELECT a1.sku_id
+						,a1.sale_amount
+						,a1.cost_amount
+						,a1.real_sale_amount
+						,a1.real_sale_qty
+						,IFNULL(a1.operation_rate,0) AS operation_rate
+						,a1.real_gross_profit
+						,a1.promotion_amount
+						,a1.gross_standard
+						,a1.other_cost
+                        ,a1.profit
+                        ,a1.bill_name
+                        ,a1.profit_rate
+                        ,a1.profit_rate_gmv
+						,a2.users_num
+						,a2.trans_users_num
+						,a2.real_pay_rate
+						,a2.total_users_num
+						,a2.total_trans_users_num
+						,IFNULL(a4.jd_express_promotion,0) AS jd_express_promotion
+						,IFNULL(a5.daily_promotion,0) AS daily_promotion
+						,IFNULL(a6.scene_promotion,0) AS scene_promotion
+						,IFNULL(a7.total_promotion,0) AS total_promotion
+                        ,DATE_FORMAT(a1.date, '%Y-%m-%d') AS \`date\`
+        FROM (
+            SELECT sku_id
+                    ,IFNULL(sale_amount,0) AS sale_amount
+                    ,IFNULL(cost_amount,0) AS cost_amount
+                    ,IFNULL(real_sale_amount,0) AS real_sale_amount
+                    ,IFNULL(real_sale_qty,0) AS real_sale_qty
+                    ,FORMAT(IFNULL(operation_amount,0)/IFNULL(sale_amount,0)*100,2) AS operation_rate
+                    ,IFNULL(real_gross_profit,0) AS real_gross_profit
+                    ,IFNULL(promotion_amount,0) AS promotion_amount
+                    ,FORMAT(IFNULL(real_sale_amount,0) * 0.28,2) AS gross_standard
+                    ,FORMAT(IFNULL(real_sale_amount,0) * 0.28 - IFNULL(real_gross_profit,0),2) AS other_cost
+                    ,IFNULL(profit,0) AS profit
+                    ,FORMAT(IFNULL(sale_amount*0.07,0),2) AS bill_name
+                    ,FORMAT(IF(IFNULL(sale_amount,0) > 0, IFNULL(profit, 0) / sale_amount * 100,0) ,2) AS profit_rate
+                    ,FORMAT(IF(IFNULL(real_sale_amount,0) > 0, IFNULL(profit, 0) / real_sale_amount * 100,0), 2) AS profit_rate_gmv
+					,date
+            FROM goods_sale_info
+            WHERE date BETWEEN '${start}' AND '${end}' AND sku_id=?)AS a1
+        LEFT JOIN (
+                SELECT IFNULL(a1.users_num, 0) AS users_num,
+                        IFNULL(a1.trans_users_num, 0) AS trans_users_num,
+                        IF(IFNULL(a1.users_num, 0) > 0, FORMAT(
+                        (IFNULL(a1.trans_users_num, 0) -
+                        IFNULL(a2.brushing_qty, 0)) /
+                        IFNULL(a1.users_num, 0) * 100, 2), 0) AS real_pay_rate,
+                        IFNULL(a1.total_users_num, 0) AS total_users_num,
+                        IFNULL(a1.total_trans_users_num, 0) AS total_trans_users_num,
+                        a1.sku_id,
+						a1.date
+                FROM goods_composite_info a1
+                LEFT JOIN goods_pay_info a2
+                ON a1.sku_id = a2.sku_id AND a1.date = a2.date
+                WHERE  a1.date BETWEEN '${start}' AND '${end}' AND a1.sku_id = ?) AS a2
+        ON a1.sku_id= a2.sku_id AND a1.date = a2.date
+        LEFT JOIN (
+            select IFNULL(amount,0) AS jd_express_promotion,sku_id,date
+            FROM goods_promotion_info
+            WHERE sku_id=?
+            AND date BETWEEN '${start}' AND '${end}'
+            AND shop_name='京东自营旗舰店'
+            AND promotion_name in ('京东快车1','京东快车2','京东快车3')
+        ) AS a4
+        ON a1.sku_id=a4.sku_id AND a1.date = a4.date
+        LEFT JOIN (
+            select IFNULL(amount,0) AS daily_promotion,sku_id,date
+            FROM goods_promotion_info
+            WHERE sku_id=?
+            AND date BETWEEN '${start}' AND '${end}'
+            AND shop_name='京东自营旗舰店'
+            AND promotion_name ='日常推广'
+        ) AS a5
+        ON a1.sku_id=a5.sku_id AND a1.date = a5.date
+        LEFT JOIN (
+            select IFNULL(amount,0) AS scene_promotion,sku_id,date
+            FROM goods_promotion_info
+            WHERE sku_id=?
+            AND date BETWEEN '${start}' AND '${end}'
+            AND shop_name='京东自营旗舰店'
+            AND promotion_name ='场景推广'
+        ) AS a6
+        ON a1.sku_id=a6.sku_id AND a1.date = a6.date
+        LEFT JOIN (
+            select IFNULL(amount,0) AS total_promotion,sku_id,date
+            FROM goods_promotion_info
+            WHERE sku_id=?
+            AND date BETWEEN '${start}' AND '${end}'
+            AND shop_name='京东自营旗舰店'
+            AND promotion_name in ('全站营销','新品全站营销')
+        ) AS a7
+        ON a1.sku_id=a7.sku_id AND a1.date = a7.date`
+    const result = await query(sql, [sku_id,sku_id,sku_id, sku_id, sku_id,sku_id])
+    return result || []
+}
+
 goodsSaleInfoRepo.getDataRateByTime = async(col1, col2, column, goods_id, start, end, percent) => {
     const sql = `SELECT FORMAT(IF(IFNULL(SUM(${col1}), 0) > 0, 
             IFNULL(SUM(${col2}), 0) / SUM(${col1}), 0) * ${percent}, 2) AS ${column}, 
@@ -1219,5 +1318,129 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
     }
     let result = await query(sql)
     return result|| []
+}
+
+goodsSaleInfoRepo.getJDskuInfoDetail = async(goods_id, start, end, stats) =>{
+    let hasChild = start == end ? false : true
+    sql = `SELECT a1.sku_id
+			,a1.sale_amount
+			,a1.cost_amount
+			,a1.real_sale_amount
+			,a1.real_sale_qty
+			,IFNULL(a1.operation_rate,0) AS operation_rate
+			,a1.real_gross_profit
+			,a1.promotion_amount
+			,a1.gross_standard
+			,a1.other_cost
+            ,a1.profit
+            ,a1.bill_name
+            ,a1.profit_rate
+            ,a1.profit_rate_gmv
+			,a2.users_num
+			,a2.trans_users_num
+			,a2.real_pay_rate
+			,a2.total_users_num
+			,a2.total_trans_users_num
+			,a3.brief_name
+			,a3.code
+			,a3.operator
+			,a3.userDef1
+			,a3.onsale_date
+			,a3.supply_price
+			,a3.cost_price
+			,IFNULL(a4.jd_express_promotion,0) AS jd_express_promotion
+			,IFNULL(a5.daily_promotion,0) AS daily_promotion
+			,IFNULL(a6.scene_promotion,0) AS scene_promotion
+			,IFNULL(a7.total_promotion,0) AS total_promotion
+            ,(CASE WHEN DATE_SUB(NOW(), INTERVAL 30 DAY) <= a3.onsale_date 
+                                THEN '新品30' 
+                            WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= a3.onsale_date 
+                                THEN '新品60' 
+                            WHEN DATE_SUB(NOW(), INTERVAL 90 DAY) <= a3.onsale_date 
+                                THEN '新品90' 
+                            ELSE '老品' END) AS onsale_info
+        FROM (
+            SELECT sku_id
+                    ,IFNULL(SUM(sale_amount),0) AS sale_amount
+                    ,IFNULL(SUM(cost_amount),0) AS cost_amount
+                    ,IFNULL(SUM(real_sale_amount),0) AS real_sale_amount
+                    ,IFNULL(SUM(real_sale_qty),0) AS real_sale_qty
+                    ,FORMAT(IFNULL(SUM(operation_amount),0)/IFNULL(SUM(sale_amount),0)*100,2) AS operation_rate
+                    ,IFNULL(SUM(real_gross_profit),0) AS real_gross_profit
+                    ,IFNULL(SUM(promotion_amount),0) AS promotion_amount
+                    ,FORMAT(IFNULL(SUM(real_sale_amount),0) * 0.28,2) AS gross_standard
+                    ,FORMAT(IFNULL(SUM(real_sale_amount),0) * 0.28 - IFNULL(SUM(real_gross_profit),0),2) AS other_cost
+                    ,IFNULL(SUM(profit),0) AS profit
+                    ,FORMAT(IFNULL(SUM(sale_amount)*0.07,0),2) AS bill_name
+                    ,FORMAT(IF(IFNULL(SUM(sale_amount),0) > 0, IFNULL(SUM(profit), 0) / SUM(sale_amount) * 100,0) ,2) AS profit_rate
+                    ,FORMAT(IF(IFNULL(SUM(real_sale_amount),0) > 0, IFNULL(SUM(profit), 0) / SUM(real_sale_amount) * 100,0), 2) AS profit_rate_gmv
+            FROM goods_sale_info
+            WHERE date BETWEEN '${start}' AND '${end}' AND goods_id=?
+            GROUP BY sku_id)AS a1
+        LEFT JOIN (
+                SELECT IFNULL(SUM(a1.users_num), 0) AS users_num, 
+                        IFNULL(SUM(a1.trans_users_num), 0) AS trans_users_num,
+                        IF(IFNULL(SUM(a1.users_num), 0) > 0, FORMAT(
+                        (IFNULL(SUM(a1.trans_users_num), 0) - 
+                        IFNULL(SUM(a2.brushing_qty), 0)) / 
+                        IFNULL(SUM(a1.users_num), 0) * 100, 2), 0) AS real_pay_rate,
+                        IFNULL(SUM(a1.total_users_num), 0) AS total_users_num, 
+                        IFNULL(SUM(a1.total_trans_users_num), 0) AS total_trans_users_num,
+                        a1.sku_id
+                FROM goods_composite_info a1 
+                LEFT JOIN goods_pay_info a2 
+                ON a1.goods_id = a2.goods_id AND a1.date = a2.date 
+                WHERE  a1.date BETWEEN '${start}' AND '${end}' AND a1.goods_id = ?
+                GROUP BY a1.sku_id) AS a2
+        ON a1.sku_id= a2.sku_id
+        LEFT JOIN dianshang_operation_attribute AS a3
+        ON a1.sku_id= a3.sku_id
+        LEFT JOIN (
+            select IFNULL(SUM(amount),0) AS jd_express_promotion,sku_id
+            FROM goods_promotion_info 
+            WHERE goods_id=? 
+            AND date BETWEEN '${start}' AND '${end}' 
+            AND shop_name='京东自营旗舰店' 
+            AND promotion_name in ('京东快车1','京东快车2','京东快车3')
+            GROUP BY sku_id
+        ) AS a4
+        ON a1.sku_id=a4.sku_id
+        LEFT JOIN (
+            select IFNULL(SUM(amount),0) AS daily_promotion,sku_id
+            FROM goods_promotion_info 
+            WHERE goods_id=? 
+            AND date BETWEEN '${start}' AND '${end}' 
+            AND shop_name='京东自营旗舰店' 
+            AND promotion_name ='日常推广'
+            GROUP BY sku_id
+        ) AS a5
+        ON a1.sku_id=a5.sku_id
+        LEFT JOIN (
+            select IFNULL(SUM(amount),0) AS scene_promotion,sku_id
+            FROM goods_promotion_info 
+            WHERE goods_id=? 
+            AND date BETWEEN '${start}' AND '${end}' 
+            AND shop_name='京东自营旗舰店' 
+            AND promotion_name ='场景推广'
+            GROUP BY sku_id
+        ) AS a6
+        ON a1.sku_id=a6.sku_id
+        LEFT JOIN (
+            select IFNULL(SUM(amount),0) AS total_promotion,sku_id
+            FROM goods_promotion_info 
+            WHERE goods_id=? 
+            AND date BETWEEN '${start}' AND '${end}' 
+            AND shop_name='京东自营旗舰店' 
+            AND promotion_name in ('全站营销','新品全站营销')
+            GROUP BY sku_id
+        ) AS a7
+        ON a1.sku_id=a7.sku_id`
+    let row = await query(sql,[goods_id,goods_id,goods_id,goods_id,goods_id,goods_id])
+    for (let i=0;i<row.length;i++){
+        row[i].hasChild=hasChild
+        row[i].id = row[i].sku_id
+    }
+    return row
+    
 }
 module.exports = goodsSaleInfoRepo

@@ -854,6 +854,17 @@ const getGoodsInfoDetail = async (column, goods_id, start, end, stats, id) => {
     return result
 }
 
+const getJDskuInfoDetail = async (goods_id, start, end, stats,id) => {
+    let result={}
+    let data=[]
+    let setting = []
+    data = await goodsSaleInfoRepo.getJDskuInfoDetail(goods_id, start, end, stats)
+    setting = await userSettingRepo.getByType(id, 7)
+    result.data = data
+    if (setting?.length) result.setting = JSON.parse(setting[0].attributes) || []
+    return result 
+}
+
 const getGoodsInfoDetailTotal = async (goods_id, start, end, stats) => {
     let result = [], info = []
     let func = stats == 'verified' ? goodsSaleVerifiedRepo : goodsSaleInfoRepo
@@ -911,6 +922,41 @@ const getGoodsInfoDetailTotal = async (goods_id, start, end, stats) => {
         result[dateMap[info[i].date]]['real_pay_amount'] = info[i].real_pay_amount
     }
     console.log(result.info)
+    return result
+}
+
+const getskuInfoDetailTotal = async (sku_id, start, end, stats) => {
+    let result = [], info = []
+    info = await goodsSaleInfoRepo.getskuDetailTotalByTime(sku_id, start, end)
+    let dateMap = {}
+    for (let i = 0; i < info.length; i++) {
+        result.push({
+            id: `${sku_id}${i}`,
+            sku_id: info[i].date,
+            parent_id: sku_id,
+            total_users_num: info[i].total_users_num,
+            trans_users_num: info[i].trans_users_num,
+            real_pay_rate: info[i].real_pay_rate,
+            real_sale_qty: info[i].real_sale_qty,
+            real_sale_amount: info[i].real_sale_amount,
+            daily_promotion: info[i].daily_promotion,
+            scene_promotion: info[i].scene_promotion,
+            total_promotion: info[i].total_promotion,
+            promotion_amount: info[i].promotion_amount,
+            operation_rate: info[i].operation_rate,
+            cost_amount: info[i].cost_amount,
+            sale_amount: info[i].sale_amount,
+            gross_standard: info[i].gross_standard,
+            real_gross_profit: info[i].real_gross_profit,
+            other_cost: info[i].other_cost,
+            profit: info[i].profit,
+            bill_name: info[i].bill_name,
+            profit_rate: info[i].profit_rate,
+            profit_rate_gmv: info[i].profit_rate_gmv,
+            hasChild: false
+        })
+        dateMap[info[i].date] = i
+    }
     return result
 }
 
@@ -2802,5 +2848,7 @@ module.exports = {
     updateOrderGoods,
     updateOrderGoodsVerified,
     updateGoodsPayments,
-    importJDZYcompositeInfo
+    importJDZYcompositeInfo,
+    getJDskuInfoDetail,
+    getskuInfoDetailTotal
 }
