@@ -433,7 +433,7 @@ const importGoodsMonthlySalesTarget = async (req, res, next) => {
                     return res.send(biResponse.createFailed())
                 }
             }
-            return res.send(biResponse.success())
+            return res.send(biResponse.success({ code: 200, data: "文件上传并解析成功!" }))
         })
     } catch (e) {
         next(e)
