@@ -43,7 +43,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id 
             JOIN form_fields ff2 ON ff2.field_id = a.field_id 
                 AND ffd.form_field_id = ff2.id
-            WHERE (a.type LIKE CONCAT('%', ffd.value, '%') OR a.type IS NULL) 
+            WHERE (a.type = ffd.value OR a.type IS NULL) 
             ORDER BY a.id, 
                 CASE a.action_exit 
                 WHEN 'agree' THEN 2 
@@ -52,7 +52,9 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             
     let sql1 = `SELECT IFNULL(SUM(a.count), 0) AS count, a.action_exit FROM (
             SELECT vp.id, vp.field_id, vp.form_id, vp.show_name, vp.action_exit, 
-                CAST(IFNULL(IF(piv3.value IS NULL, REPLACE(pis2.value, '"', ''), REPLACE(piv3.value, '"', '')), 0) AS DECIMAL) AS count, vp.type
+                CAST(IFNULL(IF(piv3.value IS NULL, 
+                    REPLACE(pis2.value, '"', ''), 
+                    REPLACE(piv3.value, '"', '')), 0) AS DECIMAL) AS count, vp.type
             FROM vision_personal vp 
             LEFT JOIN vision_activity_field vaf ON vp.vt_form_id = vaf.form_id
                 AND vaf.activity_id = vp.va_id
@@ -79,7 +81,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
                 piv3.field_id, piv3.value, pis2.field_id, pis2.value, vp.type
         ) a LEFT JOIN vision_field_type vft ON vft.form_id = a.form_id 
             LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id 
-            WHERE (a.type LIKE CONCAT('%', ffd.value, '%') OR a.type IS NULL) 
+            WHERE (a.type = ffd.value OR a.type IS NULL) 
         GROUP BY a.action_exit`
     let tmp, tmp1
    
@@ -147,7 +149,7 @@ const getStat = async function (result, startDate, endDate) {
     let sql =  `SELECT COUNT(1) AS count, 0 AS id, vision_type, type FROM vision_nodes
             WHERE tag = 'total' AND operate_time >= '${startDate}'
                 AND operate_time <= '${endDate}'
-                AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+                AND IF(v1 IS NULL, v2, v1) = v3 
             GROUP BY type, vision_type
         
         UNION ALL 
@@ -155,7 +157,7 @@ const getStat = async function (result, startDate, endDate) {
         SELECT COUNT(1) AS count, 2 AS id, vision_type, type FROM vision_nodes vn
             WHERE tag = 'inside' AND operate_time >= '${startDate}'
                 AND operate_time <= '${endDate}'
-                AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+                AND IF(v1 IS NULL, v2, v1) = v3 
                 AND EXISTS (
                     SELECT pir.id FROM process_instance_records pir 
                     JOIN vision_activity va ON va.form_id = vn.form_id
@@ -172,7 +174,7 @@ const getStat = async function (result, startDate, endDate) {
         SELECT COUNT(1) AS count, 1 AS id, vision_type, type FROM vision_nodes vn
             WHERE tag = 'out' AND operate_time >= '${startDate}'
                 AND operate_time <= '${endDate}'
-                AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+                AND IF(v1 IS NULL, v2, v1) = v3 
                 AND EXISTS (
                     SELECT pir.id FROM process_instance_records pir 
                     JOIN vision_activity va ON va.form_id = vn.form_id
@@ -189,7 +191,7 @@ const getStat = async function (result, startDate, endDate) {
         SELECT COUNT(1) AS count, 3 AS id, vision_type, type FROM vision_nodes
             WHERE tag = 'retouch' AND operate_time >= '${startDate}'
                 AND operate_time <= '${endDate}'
-                AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+                AND IF(v1 IS NULL, v2, v1) = v3 
             GROUP BY type, vision_type`
 
     let row = await query(sql)
@@ -214,7 +216,7 @@ const getStat = async function (result, startDate, endDate) {
             SELECT vn.id FROM vision_nodes vn
             WHERE tag = 'retouch' AND operate_time >= '${startDate}'
                 AND operate_time <= '${endDate}'
-                AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+                AND IF(v1 IS NULL, v2, v1) = v3 
                 AND EXISTS (
                     SELECT pir.id FROM process_instance_records pir 
                     JOIN vision_activity va ON va.form_id = vn.form_id
@@ -233,7 +235,7 @@ const getStat = async function (result, startDate, endDate) {
             SELECT vn.id FROM vision_nodes vn
             WHERE tag = 'retouch' AND operate_time >= '${startDate}'
                 AND operate_time <= '${endDate}'
-                AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+                AND IF(v1 IS NULL, v2, v1) = v3 
                 AND EXISTS (
                     SELECT pir.id FROM process_instance_records pir 
                     JOIN vision_activity va ON va.form_id = vn.form_id
@@ -254,7 +256,7 @@ const getStat = async function (result, startDate, endDate) {
     sql = `SELECT id, activity_id, field_id, tag, type, value, action_exit 
         FROM vision_node_works WHERE operate_time >= '${startDate}' 
             AND operate_time <= '${endDate}'
-            AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+            AND IF(v1 IS NULL, v2, v1) = v3 
         ORDER BY id`
 
     row = await query(sql)
@@ -526,7 +528,7 @@ const getFlowProcessInstances = async function (params, offset, limit) {
         }
         if (typeFilter[params.type]) {
             subsql = `${subsql} AND vision_type IN (${typeFilter[params.type].map(() => '?').join(',')})
-                AND type LIKE CONCAT('%', value, '%')`
+                AND type = value`
             p1.push(...typeFilter[params.type])
         }
     }
@@ -1251,12 +1253,18 @@ const getVisionProcessInstances = async function (params, offset, limit) {
         LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id
             AND vlf.field_id LIKE CONCAT('%', piv.field_id, '%') 
         LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
-            AND piv1.field_id = vt.field_id
-            AND vt.type = 0
+            AND LOCATE(piv1.field_id, vt.field_id) > 0
+            AND piv.id = (
+				SELECT MAX(p2.id) FROM process_instance_values p2 
+                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pi.id
+            ) AND vt.type = 0
         LEFT JOIN process_receipt pr ON pr.process_id = pi.id
         LEFT JOIN receipt_instance_values riv ON riv.instance_id = pr.receipt_id
-            AND riv.field_id = vt.field_id
-            AND vt.type = 1
+            AND LOCATE(riv.field_id, vt.field_id) > 0 
+            AND riv.id = (
+				SELECT MAX(p2.id) FROM receipt_instance_values p2 
+                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pr.receipt_id
+            ) AND vt.type = 1
         JOIN process_instance_records pir ON pir.instance_id = pi.id
             AND pir.show_name = vl.activity_name
             AND pir.activity_id = vl.activity_id
@@ -1267,7 +1275,11 @@ const getVisionProcessInstances = async function (params, offset, limit) {
                     AND p2.show_name = vl.activity_name
                     AND p2.activity_id = vl.activity_id)
         JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
-            AND vt.field_id = ff.field_id
+            AND ff.id = (
+				SELECT MAX(p2.id) FROM form_fields p2 
+                WHERE p2.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
+                    AND LOCATE(ff.field_id, vt.field_id) > 0 
+            ) AND LOCATE(ff.field_id, vt.field_id) > 0
         LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
         LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
         WHERE vl.form_id = ? 
@@ -1440,7 +1452,7 @@ const getFlowActions = async function (id) {
 const getLeaderStat = async function (result, start, end) {
     let sql = `SELECT COUNT(1) AS count, type, leader_type FROM 
         (SELECT type, leader_type FROM vision_leaders
-            WHERE IF(type = 2 OR leader_type > 0, IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%'), 1=1)
+            WHERE IF(type = 2 OR leader_type > 0, IF(v1 IS NULL, v2, v1) = v3, 1=1)
                 AND operate_time >= ? 
                 AND operate_time <= ?
                 AND tag = 'visionLeader'
@@ -1493,13 +1505,23 @@ const getDesignerFlowStat = async function (users, start, end) {
                     AND p2.show_name = vl2.activity_name)
         JOIN vision_type vt ON vt.form_id = vl1.form_id 
         LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
-            AND piv1.field_id = vt.field_id
-            AND vt.type = 0
+            AND LOCATE(piv1.field_id, vt.field_id) > 0 
+            AND piv.id = (
+				SELECT MAX(p2.id) FROM process_instance_values p2 
+                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pi.id
+            ) AND vt.type = 0
         LEFT JOIN process_receipt pr ON pr.process_id = pi.id
-        LEFT JOIN receipt_instance_values riv ON riv.field_id = vt.field_id
-            AND riv.instance_id = pr.receipt_id
+        LEFT JOIN receipt_instance_values riv ON LOCATE(riv.field_id, vt.field_id) > 0 
+            AND riv.id = (
+				SELECT MAX(p2.id) FROM receipt_instance_values p2 
+                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pr.receipt_id
+            ) AND riv.instance_id = pr.receipt_id
         JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
-            AND vt.field_id = ff.field_id
+            AND ff.id = (
+				SELECT MAX(p2.id) FROM form_fields p2 
+                WHERE p2.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
+                    AND LOCATE(ff.field_id, vt.field_id) > 0 
+            ) AND LOCATE(ff.field_id, vt.field_id) > 0
         LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
         LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
         WHERE pir1.operate_time >= ?
@@ -1533,13 +1555,23 @@ const getPhotographerFlowStat = async function (users, start, end) {
                         AND p2.show_name = vl.activity_name)
         JOIN vision_type vt ON vt.form_id = vl.form_id 
         LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
-            AND piv1.field_id = vt.field_id
-            AND vt.type = 0
+            AND LOCATE(piv1.field_id, vt.field_id) > 0 
+            AND piv.id = (
+				SELECT MAX(p2.id) FROM process_instance_values p2 
+                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pi.id
+            ) AND vt.type = 0
         LEFT JOIN process_receipt pr ON pr.process_id = pi.id
-        LEFT JOIN receipt_instance_values riv ON riv.field_id = vt.field_id
-            AND riv.instance_id = pr.receipt_id
+        LEFT JOIN receipt_instance_values riv ON LOCATE(riv.field_id, vt.field_id) > 0
+            AND riv.id = (
+				SELECT MAX(p2.id) FROM receipt_instance_values p2 
+                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pr.receipt_id
+            ) AND riv.instance_id = pr.receipt_id
         JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
-            AND vt.field_id = ff.field_id
+            AND ff.id = (
+				SELECT MAX(p2.id) FROM form_fields p2 
+                WHERE p2.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
+                    AND LOCATE(ff.field_id, vt.field_id) > 0 
+            ) AND LOCATE(ff.field_id, vt.field_id) > 0 
         LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
         LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
         WHERE vl.vision_type = 2
@@ -1592,13 +1624,23 @@ const getDesignerNodeStat = async function (group, start, end) {
                     AND p2.show_name = vl2.activity_name)
         JOIN vision_type vt ON vt.form_id = vl1.form_id 
         LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
-            AND piv1.field_id = vt.field_id
-            AND vt.type = 0
+            AND LOCATE(piv1.field_id, vt.field_id) > 0 
+            AND piv.id = (
+				SELECT MAX(p2.id) FROM process_instance_values p2 
+                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pi.id
+            ) AND vt.type = 0
         LEFT JOIN process_receipt pr ON pr.process_id = pi.id
-        LEFT JOIN receipt_instance_values riv ON riv.field_id = vt.field_id
-            AND riv.instance_id = pr.receipt_id
+        LEFT JOIN receipt_instance_values riv ON LOCATE(riv.field_id, vt.field_id) > 0 
+            AND riv.id = (
+				SELECT MAX(p2.id) FROM receipt_instance_values p2 
+                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pr.receipt_id
+            ) AND riv.instance_id = pr.receipt_id
         JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
-            AND vt.field_id = ff.field_id
+            AND ff.id = (
+				SELECT MAX(p2.id) FROM form_fields p2 
+                WHERE p2.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
+                    AND LOCATE(ff.field_id, vt.field_id) > 0 
+            ) AND LOCATE(ff.field_id, vt.field_id) > 0 
         LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
         LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
         WHERE pir1.operate_time >= ? 
@@ -1669,13 +1711,23 @@ const getPhotographerNodeStat = async function (users, start, end) {
             AND piv.value = '"是"'
         JOIN vision_type vt ON vt.form_id = vl.form_id 
         LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
-            AND piv1.field_id = vt.field_id
-            AND vt.type = 0
+            AND LOCATE(piv1.field_id, vt.field_id) > 0 
+            AND piv.id = (
+				SELECT MAX(p2.id) FROM process_instance_values p2 
+                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pi.id
+            ) AND vt.type = 0
         LEFT JOIN process_receipt pr ON pr.process_id = pi.id
-        LEFT JOIN receipt_instance_values riv ON riv.field_id = vt.field_id
-            AND riv.instance_id = pr.receipt_id
+        LEFT JOIN receipt_instance_values riv ON LOCATE(riv.field_id, vt.field_id) > 0 
+            AND riv.id = (
+				SELECT MAX(p2.id) FROM receipt_instance_values p2 
+                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pr.receipt_id
+            ) AND riv.instance_id = pr.receipt_id
         JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
-            AND vt.field_id = ff.field_id
+            AND ff.id = (
+				SELECT MAX(p2.id) FROM form_fields p2 
+                WHERE p2.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
+                    AND LOCATE(ff.field_id, vt.field_id) > 0 
+            ) AND LOCATE(ff.field_id, vt.field_id) > 0 
         LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
         LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
         WHERE vl.vision_type = 2 
@@ -1763,13 +1815,23 @@ const getDesignerStat = async function (user, type, start, end) {
             JOIN vision_type vt ON vt.form_id = vl1.form_id 
                 AND vt.tag = va.tag
             LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
-                AND piv1.field_id = vt.field_id
-                AND vt.type = 0
+                AND LOCATE(piv1.field_id, vt.field_id) > 0 
+                AND piv1.id = (
+                    SELECT MAX(p2.id) FROM process_instance_values p2 
+                    WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pi.id
+                ) AND vt.type = 0
             LEFT JOIN process_receipt pr ON pr.process_id = pi.id
-            LEFT JOIN receipt_instance_values riv ON riv.field_id = vt.field_id
-                AND riv.instance_id = pr.receipt_id
+            LEFT JOIN receipt_instance_values riv ON LOCATE(riv.field_id, vt.field_id) > 0 
+                AND riv.id = (
+                    SELECT MAX(p2.id) FROM receipt_instance_values p2 
+                    WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pr.receipt_id
+                ) AND riv.instance_id = pr.receipt_id
             JOIN form_fields ff1 ON ff1.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
-                AND vt.field_id = ff1.field_id
+                AND ff.id = (
+                    SELECT MAX(p2.id) FROM form_fields p2 
+                    WHERE p2.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
+                        AND LOCATE(ff.field_id, vt.field_id) > 0 
+                ) AND LOCATE(ff1.field_id, vt.field_id) > 0 
             LEFT JOIN vision_field_type vft ON vft.form_id = ff1.form_id
             LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
             WHERE pir1.operate_time >= ?
@@ -1844,7 +1906,7 @@ const getPhotographerStat = async function (user, type, start, end) {
 
 const getLeaderFinishProjectStat = async function(start, end) {
     let sql = `SELECT pi.id, pi.instance_id, pi.title, REPLACE(piv.value, '"', '') AS vision_type, 
-            REPLACE(REPLACE(REPLACE(piv1.value,'"',''),'[' ,''),']','') AS operator,
+            REGEXP_REPLACE(piv1.value, '[\\[\\]"]', '') AS operator,
             a1.num, a1.parent_id, ff.title AS ptitle, FORMAT(a1.score, 2) AS score, a1.field_id, 
             ff1.title AS title1, a1.field_id1, ff2.title AS title2 FROM vision_leader vl 
         JOIN processes p ON vl.form_id = p.form_id
@@ -1913,7 +1975,7 @@ const getVisionFieldName = async function (tag) {
 
 const getVisionType = async function (start, end, tag, type, leader_type) {
     let sql = `SELECT COUNT(1) AS count, vision_type FROM vision_leaders
-        WHERE IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')
+        WHERE IF(v1 IS NULL, v2, v1) = v3 
             AND tag = ? 
             AND type = ? 
             AND leader_type = ?
@@ -1925,7 +1987,7 @@ const getVisionType = async function (start, end, tag, type, leader_type) {
 }
 
 const getVisionField = async function (start, end, tag, type, leader_type, field_type) {
-    let sql = `SELECT REPLACE(a.value, '"', '') AS value, COUNT(1) AS count FROM (
+    let sql = `SELECT REGEXP_REPLACE(a.value, '[\\[\\]"]', '') AS value, COUNT(1) AS count FROM (
         SELECT vl.id, piv.value FROM vision_leaders vl
         JOIN vision_leader_field vlf ON vl.form_id = vlf.form_id
             AND vl.tag = vlf.tag
@@ -1934,7 +1996,7 @@ const getVisionField = async function (start, end, tag, type, leader_type, field
         WHERE vl.tag = ? 
             AND vl.type = ?
             AND vl.leader_type = ?
-            AND IF(v1 IS NULL, v2, v1) LIKE CONCAT('%', v3, '%')`
+            AND IF(v1 IS NULL, v2, v1) = v3`
     let params = [tag, type, leader_type]
     if (field_type != null) {
         sql = `${sql} AND vlf.type = ?`
@@ -1958,7 +2020,7 @@ const getVisionFieldValue = async function (start, end, tag, type, leader_type, 
             AND vl.type = ?
             AND vl.leader_type = ? 
             AND vlf.type = ? 
-            AND IF(v1 IS null, v2, v1) LIKE CONCAT('%', v3, '%') 
+            AND IF(v1 IS null, v2, v1) = v3 
             AND IF(vlf.is_reverse = 0, 
                 EXISTS(SELECT piv.id FROM process_instance_values piv 
                     WHERE piv.instance_id = vl.id 
@@ -2013,7 +2075,7 @@ const getVisionInfo = async function (type) {
     if (row?.length) result.columns = result.columns.concat(row)
     sql = `SELECT pi.instance_id, pi.title, ff.field_id, pi.id, 
         (CASE vl.type WHEN 0 THEN '待转入' ELSE '进行中' END) AS type, 
-        REPLACE(piv.value, '"', '') AS value, p.form_id FROM vision_leader vl
+        REGEXP_REPLACE(piv.value, '[\\[\\]"]', '') AS value, p.form_id FROM vision_leader vl
         JOIN processes p ON p.form_id = vl.form_id
         LEFT JOIN process_instances pi ON pi.process_id = p.id
             AND pi.status IN ('COMPLETED', 'RUNNING')
@@ -2122,7 +2184,7 @@ const getOperateSelection = async function (start, end, title, page, size, form_
     if (row?.length && row[0].count) {
         total = row[0].count
         search = `SELECT a.id, a.instance_id, a.title, ff.field_id, 
-            REPLACE(piv.value, '"', '') AS value, 
+            REGEXP_REPLACE(piv.value, '[\\[\\]"]', '') AS value, 
             DATE_FORMAT(a.create_time, '%Y-%m-%d') AS create_time FROM (
                 ${sql}
                 LIMIT ${(page - 1) * size}, ${size}) a            
