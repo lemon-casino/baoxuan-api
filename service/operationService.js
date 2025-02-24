@@ -2382,6 +2382,12 @@ const getOptimizeInfo = async (params, user) => {
     return result
 }
 
+const getReportInfo = async (start,end) =>{
+    let result = await teamInfoRepo.getTeamName(start,end)
+    console.log(result)
+    return result
+}
+
 const checkOperationOptimize = async () => {
     let optimize = await goodsOptimizeSetting.getInfo()
     let goods_info = await userOperationRepo.getLinkIds()
@@ -2850,5 +2856,6 @@ module.exports = {
     updateGoodsPayments,
     importJDZYcompositeInfo,
     getJDskuInfoDetail,
-    getskuInfoDetailTotal
+    getskuInfoDetailTotal,
+    getReportInfo
 }

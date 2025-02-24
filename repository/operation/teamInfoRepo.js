@@ -69,4 +69,23 @@ teamInfoRepo.getProjectById = async (id) => {
     return result || []
 }
 
+teamInfoRepo.getTeamName = async (start,end) => {
+    const sql = `SELECT a.team_name AS team_name,u1.nickname AS line_director,u.nickname AS operator FROM (
+                    SELECT t1.team_name,t1.user_id,t2.user_id AS member_id FROM team_info AS t1
+                    LEFT JOIN team_member AS t2
+                    ON t2.team_id=t1.id
+                    WHERE t1.project_id=14
+                )AS a
+                LEFT JOIN users AS u
+                ON a.member_id=u.user_id
+                LEFT JOIN users AS u1
+                ON a.user_id=u1.user_id`
+    const result = await query(sql)
+    result.forEach(item => {
+        item.date = `${start}至${end}`;
+    });
+    console.log(start,end)
+    return result || []
+}
+
 module.exports = teamInfoRepo
