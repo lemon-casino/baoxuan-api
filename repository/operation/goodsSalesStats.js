@@ -19,7 +19,7 @@ goodsSalesStats.batchInsert = async (date) => {
             WHERE \`date\` = ? GROUP BY goods_id, shop_id) a2 ON a1.goods_id = a2.goods_id 
             AND a1.shop_id = a2.shop_id 
         WHERE a1.date = ?`
-    let rows = await query(sql, [date, date, date, date]), data = []
+    let rows = await query(sql, [date, date, date, date]), data = [], start, end
     if (!rows?.length) return false
     let chunk = Math.ceil(rows.length / 500)
     for (let i = 0; i < chunk; i++) {
