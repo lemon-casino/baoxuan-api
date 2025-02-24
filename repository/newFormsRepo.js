@@ -146,15 +146,23 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
 }
 
 const getStat = async function (result, startDate, endDate) {
-    let sql =  `SELECT COUNT(1) AS count, 0 AS id, vision_type, type FROM vision_nodes
+    let sql =  `SELECT COUNT(1) AS count, 0 AS id, vision_type, type FROM vision_nodes vn
             WHERE tag = 'total' AND operate_time >= '${startDate}'
                 AND operate_time <= '${endDate}'
                 AND IF(v1 IS NULL, v2, v1) = v3 
+                AND EXISTS (
+                    SELECT pir.id FROM process_instance_records pir 
+                    JOIN vision_activity va ON va.form_id = vn.form_id
+                        AND va.activity_id = pir.activity_id
+                        AND va.activity_name = pir.show_name
+                        AND pir.action_exit IN ('next', 'doing', 'agree')
+                    WHERE pir.instance_id = vn.id
+                )
             GROUP BY type, vision_type
         
         UNION ALL 
 
-        SELECT COUNT(1) AS count, 2 AS id, vision_type, type FROM vision_nodes vn
+        SELECT COUNT(1) AS count, 2 AS id, vision_type, type FROM vision_nodes vn 
             WHERE tag = 'inside' AND operate_time >= '${startDate}'
                 AND operate_time <= '${endDate}'
                 AND IF(v1 IS NULL, v2, v1) = v3 
@@ -171,7 +179,7 @@ const getStat = async function (result, startDate, endDate) {
         
         UNION ALL 
             
-        SELECT COUNT(1) AS count, 1 AS id, vision_type, type FROM vision_nodes vn
+        SELECT COUNT(1) AS count, 1 AS id, vision_type, type FROM vision_nodes vn 
             WHERE tag = 'out' AND operate_time >= '${startDate}'
                 AND operate_time <= '${endDate}'
                 AND IF(v1 IS NULL, v2, v1) = v3 
@@ -188,10 +196,18 @@ const getStat = async function (result, startDate, endDate) {
         
         UNION ALL 
         
-        SELECT COUNT(1) AS count, 3 AS id, vision_type, type FROM vision_nodes
+        SELECT COUNT(1) AS count, 3 AS id, vision_type, type FROM vision_nodes vn 
             WHERE tag = 'retouch' AND operate_time >= '${startDate}'
                 AND operate_time <= '${endDate}'
                 AND IF(v1 IS NULL, v2, v1) = v3 
+                AND EXISTS (
+                    SELECT pir.id FROM process_instance_records pir 
+                    JOIN vision_activity va ON va.form_id = vn.form_id
+                        AND va.activity_id = pir.activity_id
+                        AND va.activity_name = pir.show_name
+                        AND pir.action_exit IN ('next', 'doing', 'agree')
+                    WHERE pir.instance_id = vn.id
+                )
             GROUP BY type, vision_type`
 
     let row = await query(sql)
@@ -283,9 +299,9 @@ const getStat = async function (result, startDate, endDate) {
             }
         }
         result[4].sum += value
-        for (let j = 5; j < 9; j++) {
+        for (let j = 5; j < 17; j++) {
             if (totalStatType[row[i].tag] && 
-                statItem2Type[row[i].type].includes(j - 4) && (
+                statItem2Type[row[i].type].includes(j - 5) && (
                     i == 0 || 
                     !(row[i - 1].id == row[i].id && 
                         row[i - 1].activity_id == row[i].activity_id &&
@@ -528,7 +544,14 @@ const getFlowProcessInstances = async function (params, offset, limit) {
         }
         if (typeFilter[params.type]) {
             subsql = `${subsql} AND vision_type IN (${typeFilter[params.type].map(() => '?').join(',')})
-                AND type = value`
+                AND type = value AND EXISTS (
+                    SELECT pir.id FROM process_instance_records pir 
+                    JOIN vision_activity va ON va.form_id = vp.form_id
+                        AND va.activity_id = pir.activity_id
+                        AND va.activity_name = pir.show_name
+                        AND pir.action_exit IN ('next', 'doing', 'agree')
+                    WHERE pir.instance_id = vp.id
+                )`
             p1.push(...typeFilter[params.type])
         }
     }
@@ -1906,7 +1929,7 @@ const getPhotographerStat = async function (user, type, start, end) {
 
 const getLeaderFinishProjectStat = async function(start, end) {
     let sql = `SELECT pi.id, pi.instance_id, pi.title, REPLACE(piv.value, '"', '') AS vision_type, 
-            REGEXP_REPLACE(piv1.value, '[\\[\\]"]', '') AS operator,
+            REGEXP_REPLACE(piv1.value, '[\\\\[\\\\]"]', '') AS operator,
             a1.num, a1.parent_id, ff.title AS ptitle, FORMAT(a1.score, 2) AS score, a1.field_id, 
             ff1.title AS title1, a1.field_id1, ff2.title AS title2 FROM vision_leader vl 
         JOIN processes p ON vl.form_id = p.form_id
@@ -1987,7 +2010,7 @@ const getVisionType = async function (start, end, tag, type, leader_type) {
 }
 
 const getVisionField = async function (start, end, tag, type, leader_type, field_type) {
-    let sql = `SELECT REGEXP_REPLACE(a.value, '[\\[\\]"]', '') AS value, COUNT(1) AS count FROM (
+    let sql = `SELECT REGEXP_REPLACE(a.value, '[\\\\[\\\\]"]', '') AS value, COUNT(1) AS count FROM (
         SELECT vl.id, piv.value FROM vision_leaders vl
         JOIN vision_leader_field vlf ON vl.form_id = vlf.form_id
             AND vl.tag = vlf.tag
@@ -2075,7 +2098,7 @@ const getVisionInfo = async function (type) {
     if (row?.length) result.columns = result.columns.concat(row)
     sql = `SELECT pi.instance_id, pi.title, ff.field_id, pi.id, 
         (CASE vl.type WHEN 0 THEN '待转入' ELSE '进行中' END) AS type, 
-        REGEXP_REPLACE(piv.value, '[\\[\\]"]', '') AS value, p.form_id FROM vision_leader vl
+        REGEXP_REPLACE(piv.value, '[\\\\[\\\\]"]', '') AS value, p.form_id FROM vision_leader vl
         JOIN processes p ON p.form_id = vl.form_id
         LEFT JOIN process_instances pi ON pi.process_id = p.id
             AND pi.status IN ('COMPLETED', 'RUNNING')
@@ -2184,7 +2207,7 @@ const getOperateSelection = async function (start, end, title, page, size, form_
     if (row?.length && row[0].count) {
         total = row[0].count
         search = `SELECT a.id, a.instance_id, a.title, ff.field_id, 
-            REGEXP_REPLACE(piv.value, '[\\[\\]"]', '') AS value, 
+            REGEXP_REPLACE(piv.value, '[\\\\[\\\\]"]', '') AS value, 
             DATE_FORMAT(a.create_time, '%Y-%m-%d') AS create_time FROM (
                 ${sql}
                 LIMIT ${(page - 1) * size}, ${size}) a            
