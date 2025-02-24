@@ -47,7 +47,7 @@ goodsSalesStats.batchInsert = async (date) => {
             dsr, 
             order_num, 
             refund_num, 
-            profit) VALUES`, start = i * 500, 
+            profit) VALUES`, start = i * 500, data = [], 
             end = (i + 1) * 500 <= rows.length ? (i + 1) * 500 : rows.length
         for (let j = start; j < end; j++) {
             sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
