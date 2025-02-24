@@ -112,7 +112,7 @@ const getFlowProcessActions = async (req, res, next) => {
  */
 const exportFlowsProcess = async (req, res, next) => {
     try {
-        joiUtil.clarityValidate(flowSchema.requiredIdsSchema, req.body)
+        joiUtil.clarityValidate(flowSchema.getFlowsActionsSchema, req.body)
         const flows = await flowService.getFlows(req.body)
         if (!flows?.length) return res.send(biResponse.canTFindIt)
         let data = []
@@ -143,12 +143,14 @@ const exportFlowsProcess = async (req, res, next) => {
             { header: '审批人', key: 'operator', isDefault: true },
         ]
         for (let i = 0; i < flows[0].flowFormDetails.length; i++) {
-            columns.push({
-                header: flows[0].flowFormDetails[i].fieldName,
-                key: flows[0].flowFormDetails[i].fieldId,
-                isDefault: true
-            })
-            tmpDefault[flows[0].flowFormDetails[i].fieldId] = null
+            if (!['processInstanceId', 'creator', 'title'].includes(flows[0].flowFormDetails[i].fieldId)) {
+                columns.push({
+                    header: flows[0].flowFormDetails[i].fieldName,
+                    key: flows[0].flowFormDetails[i].fieldId,
+                    isDefault: true
+                })
+                tmpDefault[flows[0].flowFormDetails[i].fieldId] = null
+            }
         }
 
         worksheet.columns = columns
