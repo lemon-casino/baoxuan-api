@@ -19,9 +19,11 @@ goodsSalesStats.batchInsert = async (date) => {
             WHERE \`date\` = ? GROUP BY goods_id, shop_id) a2 ON a1.goods_id = a2.goods_id 
             AND a1.shop_id = a2.shop_id 
         WHERE a1.date = ?`
-    let rows = await query(sql, [date, date, date, date]), data = []
+    let rows = await query(sql, [date, date, date, date]), data = [], start, end
     if (!rows?.length) return false
-    sql = `INSERT INTO goods_sales_stats(
+    let chunk = Math.ceil(rows.length / 500)
+    for (let i = 0; i < chunk; i++) {
+        sql = `INSERT INTO goods_sales_stats(
             goods_id, 
             shop_name, 
             shop_id, 
@@ -45,39 +47,41 @@ goodsSalesStats.batchInsert = async (date) => {
             dsr, 
             order_num, 
             refund_num, 
-            profit) VALUES`
-    for (let i = 0; i < rows.length; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
-        data.push(
-            rows[i].goods_id, 
-            rows[i].shop_name, 
-            rows[i].shop_id, 
-            rows[i].date, 
-            rows[i].pay_amount, 
-            rows[i].brushing_amount, 
-            rows[i].brushing_qty, 
-            rows[i].refund_amount, 
-            rows[i].pay_express_fee, 
-            rows[i].real_pay_amount, 
-            rows[i].bill, 
-            rows[i].sale_amount, 
-            rows[i].cost_amount, 
-            rows[i].express_fee, 
-            rows[i].packing_fee, 
-            rows[i].labor_cost, 
-            rows[i].promotion_amount, 
-            rows[i].operation_amount, 
-            rows[i].words_market_vol, 
-            rows[i].words_vol, 
-            rows[i].dsr, 
-            rows[i].order_num, 
-            rows[i].refund_num, 
-            rows[i].profit
-        )
+            profit) VALUES`, start = i * 500, data = [], 
+            end = (i + 1) * 500 <= rows.length ? (i + 1) * 500 : rows.length
+        for (let j = start; j < end; j++) {
+            sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+            data.push(
+                rows[j].goods_id, 
+                rows[j].shop_name, 
+                rows[j].shop_id, 
+                rows[j].date, 
+                rows[j].pay_amount, 
+                rows[j].brushing_amount, 
+                rows[j].brushing_qty, 
+                rows[j].refund_amount, 
+                rows[j].pay_express_fee, 
+                rows[j].real_pay_amount, 
+                rows[j].bill, 
+                rows[j].sale_amount, 
+                rows[j].cost_amount, 
+                rows[j].express_fee, 
+                rows[j].packing_fee, 
+                rows[j].labor_cost, 
+                rows[j].promotion_amount, 
+                rows[j].operation_amount, 
+                rows[j].words_market_vol, 
+                rows[j].words_vol, 
+                rows[j].dsr, 
+                rows[j].order_num, 
+                rows[j].refund_num, 
+                rows[j].profit
+            )
+        }
+        sql = sql.substring(0, sql.length - 1)
+        sqls.push(sql)
+        params.push(data)
     }
-    sql = sql.substring(0, sql.length - 1)
-    sqls.push(sql)
-    params.push(data)
     const result = await transaction(sqls, params)
     return result
 }

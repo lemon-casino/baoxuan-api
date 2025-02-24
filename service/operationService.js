@@ -1138,13 +1138,13 @@ const importGoodsOrderStat = async (rows, time) => {
 const batchInsertGoodsSales = async (date) => {
     let result = await goodsSalesRepo.batchInsert(date)
     logger.info(`[发货数据刷新]：时间:${date}, ${result}`)
-    await batchInsertGoodsSalesStats(date)
+    if (result) await batchInsertGoodsSalesStats(date)
 }
 
 const batchInsertGoodsSalesStats = async (date) => {
     let result = await goodsSalesStats.batchInsert(date)
     logger.info(`[发货单品表数据刷新]：时间:${date}, ${result}`)
-    let result1 = await goodsSalesStats.updateSalemonth(date)
+    if (result) await goodsSalesStats.updateSalemonth(date)
 }
 
 const importGoodsKeyWords = async (rows, time) => {
@@ -2589,13 +2589,13 @@ const importGoodsOrderVerifiedStat = async (rows, time) => {
 const batchInsertGoodsVerifieds = async (date) => {
     let result = await goodsVerifiedsRepo.batchInsert(date)
     logger.info(`[核销数据刷新]：时间:${date}, ${result}`)
-    await batchInsertGoodsVerifiedsStats(date)
+    if (result) await batchInsertGoodsVerifiedsStats(date)
 }
 
 const batchInsertGoodsVerifiedsStats = async (date) => {
     let result = await goodsVerifiedsStats.batchInsert(date)
     logger.info(`[核销单品表数据刷新]：时间:${date}, ${result}`)
-    let result1 = await goodsVerifiedsStats.updateSalemonth(date)
+    if (result) await goodsVerifiedsStats.updateSalemonth(date)
 }
 
 const createShopPromotionLog = async (date, shop_name) => {
