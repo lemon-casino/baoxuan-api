@@ -22,7 +22,8 @@ goodsVerifiedsStats.batchInsert = async (date) => {
         WHERE a1.date = ?`
     let rows = await query(sql, [date, date, date, date]), data = [], start, end
     if (!rows?.length) return false
-    for (let i = 0; i < rows.length; i++) {
+    let chunk = Math.ceil(rows.length / 500)
+    for (let i = 0; i < chunk; i++) {
         sql = `INSERT INTO goods_verifieds_stats(
             goods_id, 
             shop_name, 
