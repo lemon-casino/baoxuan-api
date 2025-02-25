@@ -2,6 +2,8 @@ const { query } = require('../model/newDbConn')
 const {
     item,
     action,
+    statItem,
+    statItem2,
     actionItem,
     actionItem2,
     actionFilter,
@@ -41,7 +43,7 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
             GROUP BY id, field_id, form_id, show_name, action_exit, type
         ) a LEFT JOIN vision_field_type vft ON vft.form_id = a.form_id 
             LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id 
-            JOIN form_fields ff2 ON ff2.field_id = a.field_id 
+            JOIN form_fields ff2 ON LOCATE(ff2.field_id, a.field_id) > 0 
                 AND ffd.form_field_id = ff2.id
             WHERE (a.type = ffd.value OR a.type IS NULL) 
             ORDER BY a.id, 
@@ -91,6 +93,13 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
         let user = JSON.parse(JSON.stringify(item)), userItem = JSON.parse(JSON.stringify(actionItem))
         user.actionName = userNames[i]
         userItem.actionName = action.next.value
+        for (let j = 0; j < userItem.children.length; j++) {
+            for (let k = 0; k < statItem2.length; k++) {
+                let childItem = JSON.parse(JSON.stringify(statItem))
+                childItem.actionName = statItem2[k].name
+                userItem.children[j].children.push(childItem)            
+            }
+        }
         user.children.push(JSON.parse(JSON.stringify(userItem)))
         userItem.actionName = action.doing.value
         user.children.push(JSON.parse(JSON.stringify(userItem)))
