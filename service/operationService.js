@@ -1141,6 +1141,17 @@ const batchInsertGoodsSales = async (date) => {
     if (result) await batchInsertGoodsSalesStats(date)
 }
 
+const batchInsertJDGoodsSales = async (date) => {
+    let result = await goodsSalesRepo.batchInsert(date)
+    logger.info(`[京东发货数据刷新]：时间:${date}, ${result}`)
+    if (result) await batchInsertJDGoodsSalesStats(date)
+}
+
+const batchInsertJDGoodsSalesStats = async (date) => {
+    let result = await goodsSalesStats.batchInsert(date)
+    logger.info(`[京东发货单品表数据刷新]：时间:${date}, ${result}`)
+}
+
 const batchInsertGoodsSalesStats = async (date) => {
     let result = await goodsSalesStats.batchInsert(date)
     logger.info(`[发货单品表数据刷新]：时间:${date}, ${result}`)
@@ -1926,7 +1937,7 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
         await goodsPromotionRepo.deleteByDate(date, promotion_name)
         result = await goodsPromotionRepo.batchInsert(count, data)
     }
-    await batchInsertGoodsSales(date)
+    await batchInsertJDGoodsSales(date)
     return result
 }
 
@@ -1940,7 +1951,7 @@ const importJDZYcompositeInfo = async (rows, time) => {
         users_num_row = null,
         trans_num_row = null,
         trans_qty_row = null,
-        trans_users_row = null
+        trans_users_num_row = null
     for (let i in columns) {
         if (columns[i] == 'SKU') {sku_id_row = i;  continue}
         if (columns[i] == '访客数') {users_num_row = i; continue}
@@ -2857,5 +2868,7 @@ module.exports = {
     importJDZYcompositeInfo,
     getJDskuInfoDetail,
     getskuInfoDetailTotal,
-    getReportInfo
+    getReportInfo,
+    batchInsertJDGoodsSales,
+    batchInsertJDGoodsSalesStats
 }
