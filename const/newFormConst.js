@@ -20,35 +20,11 @@ const actionItem = {
     actionName: '',
     children: [{
         actionName: '逾期',
-        children: [{
-            actionName: '全套',
-            sum: 0,
-        },{
-            actionName: '半套',
-            sum: 0,
-        },{
-            actionName: '散图',
-            sum: 0,
-        },{
-            actionName: '视频',
-            sum: 0,
-        }],
+        children: [],
         sum: 0
     },{
         actionName: '未逾期',
-        children: [{
-            actionName: '全套',
-            sum: 0,
-        },{
-            actionName: '半套',
-            sum: 0,
-        },{
-            actionName: '散图',
-            sum: 0,
-        },{
-            actionName: '视频',
-            sum: 0,
-        }],
+        children: [],
         sum: 0
     }],
     sum: 0
@@ -166,6 +142,8 @@ const statItem2 = [
         name: '整套规范存图（单位：套）',
     }, {
         name: '主图打标/logo修改（单位：张）',
+    }, {
+        name: '摄影'
     }
 ]
 
@@ -183,7 +161,8 @@ const statItem2Type = {
     11: [9],
     12: [10],
     13: [11],
-    14: [12]
+    14: [12],
+    15: [13]
 }
 
 const statItem3 = [
