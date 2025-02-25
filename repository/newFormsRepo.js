@@ -1285,18 +1285,12 @@ const getVisionProcessInstances = async function (params, offset, limit) {
         LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id
             AND vlf.field_id LIKE CONCAT('%', piv.field_id, '%') 
         LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
-            AND LOCATE(piv1.field_id, vt.field_id) > 0
-            AND piv.id = (
-				SELECT MAX(p2.id) FROM process_instance_values p2 
-                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pi.id
-            ) AND vt.type = 0
+            AND LOCATE(piv1.field_id, vt.field_id) > 0 
+            AND vt.type = 0
         LEFT JOIN process_receipt pr ON pr.process_id = pi.id
         LEFT JOIN receipt_instance_values riv ON riv.instance_id = pr.receipt_id
             AND LOCATE(riv.field_id, vt.field_id) > 0 
-            AND riv.id = (
-				SELECT MAX(p2.id) FROM receipt_instance_values p2 
-                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pr.receipt_id
-            ) AND vt.type = 1
+            AND vt.type = 1
         JOIN process_instance_records pir ON pir.instance_id = pi.id
             AND pir.show_name = vl.activity_name
             AND pir.activity_id = vl.activity_id
@@ -1307,11 +1301,7 @@ const getVisionProcessInstances = async function (params, offset, limit) {
                     AND p2.show_name = vl.activity_name
                     AND p2.activity_id = vl.activity_id)
         JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
-            AND ff.id = (
-				SELECT MAX(p2.id) FROM form_fields p2 
-                WHERE p2.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
-                    AND LOCATE(ff.field_id, vt.field_id) > 0 
-            ) AND LOCATE(ff.field_id, vt.field_id) > 0
+            AND LOCATE(ff.field_id, vt.field_id) > 0
         LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
         LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
         WHERE vl.form_id = ? 
@@ -1537,23 +1527,12 @@ const getDesignerFlowStat = async function (users, start, end) {
                     AND p2.show_name = vl2.activity_name)
         JOIN vision_type vt ON vt.form_id = vl1.form_id 
         LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
-            AND LOCATE(piv1.field_id, vt.field_id) > 0 
-            AND piv.id = (
-				SELECT MAX(p2.id) FROM process_instance_values p2 
-                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pi.id
-            ) AND vt.type = 0
+            AND LOCATE(piv1.field_id, vt.field_id) > 0 AND vt.type = 0
         LEFT JOIN process_receipt pr ON pr.process_id = pi.id
         LEFT JOIN receipt_instance_values riv ON LOCATE(riv.field_id, vt.field_id) > 0 
-            AND riv.id = (
-				SELECT MAX(p2.id) FROM receipt_instance_values p2 
-                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pr.receipt_id
-            ) AND riv.instance_id = pr.receipt_id
+            AND riv.instance_id = pr.receipt_id
         JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
-            AND ff.id = (
-				SELECT MAX(p2.id) FROM form_fields p2 
-                WHERE p2.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
-                    AND LOCATE(ff.field_id, vt.field_id) > 0 
-            ) AND LOCATE(ff.field_id, vt.field_id) > 0
+            AND LOCATE(ff.field_id, vt.field_id) > 0
         LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
         LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
         WHERE pir1.operate_time >= ?
@@ -1588,22 +1567,12 @@ const getPhotographerFlowStat = async function (users, start, end) {
         JOIN vision_type vt ON vt.form_id = vl.form_id 
         LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
             AND LOCATE(piv1.field_id, vt.field_id) > 0 
-            AND piv.id = (
-				SELECT MAX(p2.id) FROM process_instance_values p2 
-                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pi.id
-            ) AND vt.type = 0
+            AND vt.type = 0
         LEFT JOIN process_receipt pr ON pr.process_id = pi.id
         LEFT JOIN receipt_instance_values riv ON LOCATE(riv.field_id, vt.field_id) > 0
-            AND riv.id = (
-				SELECT MAX(p2.id) FROM receipt_instance_values p2 
-                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pr.receipt_id
-            ) AND riv.instance_id = pr.receipt_id
-        JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
-            AND ff.id = (
-				SELECT MAX(p2.id) FROM form_fields p2 
-                WHERE p2.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
-                    AND LOCATE(ff.field_id, vt.field_id) > 0 
-            ) AND LOCATE(ff.field_id, vt.field_id) > 0 
+            AND riv.instance_id = pr.receipt_id
+        JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
+            AND LOCATE(ff.field_id, vt.field_id) > 0 
         LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
         LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
         WHERE vl.vision_type = 2
@@ -1657,22 +1626,12 @@ const getDesignerNodeStat = async function (group, start, end) {
         JOIN vision_type vt ON vt.form_id = vl1.form_id 
         LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
             AND LOCATE(piv1.field_id, vt.field_id) > 0 
-            AND piv.id = (
-				SELECT MAX(p2.id) FROM process_instance_values p2 
-                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pi.id
-            ) AND vt.type = 0
+            AND vt.type = 0
         LEFT JOIN process_receipt pr ON pr.process_id = pi.id
         LEFT JOIN receipt_instance_values riv ON LOCATE(riv.field_id, vt.field_id) > 0 
-            AND riv.id = (
-				SELECT MAX(p2.id) FROM receipt_instance_values p2 
-                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pr.receipt_id
-            ) AND riv.instance_id = pr.receipt_id
-        JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
-            AND ff.id = (
-				SELECT MAX(p2.id) FROM form_fields p2 
-                WHERE p2.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
-                    AND LOCATE(ff.field_id, vt.field_id) > 0 
-            ) AND LOCATE(ff.field_id, vt.field_id) > 0 
+            AND riv.instance_id = pr.receipt_id
+        JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
+            AND LOCATE(ff.field_id, vt.field_id) > 0 
         LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
         LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
         WHERE pir1.operate_time >= ? 
@@ -1744,22 +1703,12 @@ const getPhotographerNodeStat = async function (users, start, end) {
         JOIN vision_type vt ON vt.form_id = vl.form_id 
         LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
             AND LOCATE(piv1.field_id, vt.field_id) > 0 
-            AND piv.id = (
-				SELECT MAX(p2.id) FROM process_instance_values p2 
-                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pi.id
-            ) AND vt.type = 0
+            AND vt.type = 0
         LEFT JOIN process_receipt pr ON pr.process_id = pi.id
         LEFT JOIN receipt_instance_values riv ON LOCATE(riv.field_id, vt.field_id) > 0 
-            AND riv.id = (
-				SELECT MAX(p2.id) FROM receipt_instance_values p2 
-                WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pr.receipt_id
-            ) AND riv.instance_id = pr.receipt_id
+            AND riv.instance_id = pr.receipt_id
         JOIN form_fields ff ON ff.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
-            AND ff.id = (
-				SELECT MAX(p2.id) FROM form_fields p2 
-                WHERE p2.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
-                    AND LOCATE(ff.field_id, vt.field_id) > 0 
-            ) AND LOCATE(ff.field_id, vt.field_id) > 0 
+            AND LOCATE(ff.field_id, vt.field_id) > 0 
         LEFT JOIN vision_field_type vft ON vft.form_id = ff.form_id
         LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
         WHERE vl.vision_type = 2 
@@ -1848,22 +1797,12 @@ const getDesignerStat = async function (user, type, start, end) {
                 AND vt.tag = va.tag
             LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id
                 AND LOCATE(piv1.field_id, vt.field_id) > 0 
-                AND piv1.id = (
-                    SELECT MAX(p2.id) FROM process_instance_values p2 
-                    WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pi.id
-                ) AND vt.type = 0
+                AND vt.type = 0
             LEFT JOIN process_receipt pr ON pr.process_id = pi.id
             LEFT JOIN receipt_instance_values riv ON LOCATE(riv.field_id, vt.field_id) > 0 
-                AND riv.id = (
-                    SELECT MAX(p2.id) FROM receipt_instance_values p2 
-                    WHERE LOCATE(p2.field_id, vt.field_id) > 0 AND p2.instance_id = pr.receipt_id
-                ) AND riv.instance_id = pr.receipt_id
-            JOIN form_fields ff1 ON ff1.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id)
-                AND ff.id = (
-                    SELECT MAX(p2.id) FROM form_fields p2 
-                    WHERE p2.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
-                        AND LOCATE(ff.field_id, vt.field_id) > 0 
-                ) AND LOCATE(ff1.field_id, vt.field_id) > 0 
+                AND riv.instance_id = pr.receipt_id
+            JOIN form_fields ff1 ON ff1.form_id = IF(vt.type = 0, vt.form_id, vt.sub_form_id) 
+                AND LOCATE(ff1.field_id, vt.field_id) > 0 
             LEFT JOIN vision_field_type vft ON vft.form_id = ff1.form_id
             LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id
             WHERE pir1.operate_time >= ?
