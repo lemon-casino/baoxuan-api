@@ -290,7 +290,6 @@ const getJDskuInfoDetail = async (req, res, next) => {
     try {
         const {goods_id, startDate, endDate, stats} = req.query
         joiUtil.validate({
-            column: {value: req.params.column, schema: joiUtil.commonJoiSchemas.strRequired},
             goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
@@ -827,6 +826,19 @@ const getOptimizeInfo = async (req, res, next) => {
     }
 }
 
+const getReportInfo = async (req, res, next) => {
+    try {
+        const {startDate, endDate} = req.query
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const result = await operationService.getReportInfo(startDate, endDate)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
 const checkOperationOptimize = async (req, res, next) => {
     try {
         const result = await operationService.checkOperationOptimize()
@@ -1111,5 +1123,6 @@ module.exports = {
     refreshVerifiedLaborCost,
     importJDZYcompositeInfo,
     getJDskuInfoDetail,
-    getskuInfoDetailTotal
+    getskuInfoDetailTotal,
+    getReportInfo
 }
