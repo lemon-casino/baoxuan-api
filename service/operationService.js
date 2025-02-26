@@ -1155,7 +1155,11 @@ const batchInsertJDGoodsSalesStats = async (date) => {
 const batchInsertGoodsSalesStats = async (date) => {
     let result = await goodsSalesStats.batchInsert(date)
     logger.info(`[发货单品表数据刷新]：时间:${date}, ${result}`)
-    if (result) await goodsSalesStats.updateSalemonth(date)
+}
+
+const SalesupdateSalemonth = async (date) => {
+    let result= await goodsSalesStats.updateSalemonth(date)
+    logger.info(`[发货月销售额数据刷新]：时间:${date}, ${result}`)
 }
 
 const importGoodsKeyWords = async (rows, time) => {
@@ -2606,7 +2610,11 @@ const batchInsertGoodsVerifieds = async (date) => {
 const batchInsertGoodsVerifiedsStats = async (date) => {
     let result = await goodsVerifiedsStats.batchInsert(date)
     logger.info(`[核销单品表数据刷新]：时间:${date}, ${result}`)
-    if (result) await goodsVerifiedsStats.updateSalemonth(date)
+}
+
+const VerifiedsupdateSalemonth = async (date) => {
+    let result= await goodsVerifiedsStats.updateSalemonth(date)
+    logger.info(`[核销月销售额数据刷新]：时间:${date}, ${result}`)
 }
 
 const createShopPromotionLog = async (date, shop_name) => {
@@ -2870,5 +2878,7 @@ module.exports = {
     getskuInfoDetailTotal,
     getReportInfo,
     batchInsertJDGoodsSales,
-    batchInsertJDGoodsSalesStats
+    batchInsertJDGoodsSalesStats,
+    SalesupdateSalemonth,
+    VerifiedsupdateSalemonth
 }

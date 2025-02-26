@@ -97,12 +97,21 @@ goodsVerifiedsStats.updateSalemonth = async (date) => {
                 GROUP BY goods_id,shop_id`
     const sales_month = await query(sql1)
     for(let i = 0; i < sales_month.length; i++){
-        sqls.push(`UPDATE goods_verifieds_stats SET sale_month = ? WHERE goods_id =? AND shop_id=? AND date BETWEEN '${targetstart}' AND '${targetend}'`)
-        params.push([
-            sales_month[i].sale_month,
-            sales_month[i].goods_id,
-            sales_month[i].shop_id
-        ])
+        if(sales_month[i].goods_id === null){
+            sqls.push(`UPDATE goods_verifieds_stats SET sale_month = ? WHERE goods_id IS NULL AND shop_id=? AND date BETWEEN '${targetstart}' AND '${targetend}'`)
+            params.push([
+                sales_month[i].sale_month,
+                sales_month[i].goods_id,
+                sales_month[i].shop_id
+            ])
+        }else{
+            sqls.push(`UPDATE goods_verifieds_stats SET sale_month = ? WHERE goods_id =? AND shop_id=? AND date BETWEEN '${targetstart}' AND '${targetend}'`)
+            params.push([
+                sales_month[i].sale_month,
+                sales_month[i].goods_id,
+                sales_month[i].shop_id
+            ])
+        }
     }
     const result = await transaction(sqls, params)
     return result
