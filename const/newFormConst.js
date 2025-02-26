@@ -36,6 +36,7 @@ const actionItem2 = {
         actionName: '进行中',
         children: [],
         sum: 0,
+        score: 0,
         sumAlone: true,
         tooltip: '该工作量会统计表单中预计的数据',
         uniqueIds: true
@@ -43,10 +44,12 @@ const actionItem2 = {
         actionName: '已完成',
         children: [],
         sum: 0,
+        score: 0,
         sumAlone: true,
         uniqueIds: true
     }],
-    sum: 0
+    sum: 0,
+    score: 0
 }
 const item = {
     actionCode: 'userActStat',
