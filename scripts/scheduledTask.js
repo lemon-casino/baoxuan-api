@@ -42,22 +42,17 @@ if (process.env.NODE_ENV === "dev") {
     syncResignEmployeeCron = "35 5 17 * * ?"
 }
 let jstOrderCron = "0 0 7 * * ?"
-let saleCron = "0 30 9 * * ?"
-let saleCron1 = "0 30 12 * * ?"
-//9点半刷新_stats里的sale_month
+let saleCron = "0 30 9/12 * * ?"
+//9点半/12点半刷新_stats里的sale_month
 schedule.scheduleJob(saleCron, async function () {
     if (process.env.NODE_ENV === "prod") {
         let date = moment().format("YYYY-MM-DD")
-        await operationService.SalesupdateSalemonth(date)
         await operationService.VerifiedsupdateSalemonth(date)
     }
 })
-
-//12点半刷新_stats里的sale_month
-schedule.scheduleJob(saleCron1, async function () {
+schedule.scheduleJob(saleCron, async function () {
     if (process.env.NODE_ENV === "prod") {
         let date = moment().format("YYYY-MM-DD")
-        await operationService.SalesupdateSalemonth(date)
         await operationService.VerifiedsupdateSalemonth(date)
     }
 })
