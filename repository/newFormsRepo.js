@@ -608,7 +608,7 @@ const getFlowProcessInstances = async function (params, offset, limit) {
         }
         if (typeFilter[params.type]) {
             subsql = `${subsql} AND vision_type IN (${typeFilter[params.type].map(() => '?').join(',')})
-                AND type = value AND EXISTS (
+                AND LOCATE(value, type) > 0 AND EXISTS (
                     SELECT pir.id FROM process_instance_records pir 
                     JOIN vision_activity va ON va.form_id = vp.form_id
                         AND va.activity_id = pir.activity_id
