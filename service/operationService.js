@@ -2757,7 +2757,7 @@ const importErleiShuadan = async (rows, date) => {
 }
 
 // const importXhsShuadan = async (rows, date) => {
-//     let data = [], count = 0, result = false,name='二类'
+//     let data = [], count = 0, result = false,name='小红书返款'
 //     let columns = rows[0].values,
 //     order_id_row = null,
 //     sale_amount_row = null,
@@ -2766,12 +2766,12 @@ const importErleiShuadan = async (rows, date) => {
 //     for(let i=0;i<columns.length;i++){
 //         if(columns[i] == '线上订单号'){
 //             order_id_row = i
-//         }else if(columns[i]=='佣金'){
+//         }else if(columns[i]=='打款金额'){
 //             sale_amount_row = i
 //         }else if(columns[i] == '商品信息'){
 //             goods_id_row = i
-//         }else if(columns[i] == '打款金额'){
-//             sale_amount_row = i
+//         }else if(columns[i] == '店铺名称'){
+//             shop_name_row = i
 //         }
 //     }
 //     for(let i=1;i<rows.length;i++){
@@ -2779,11 +2779,10 @@ const importErleiShuadan = async (rows, date) => {
 //         let q = await ordersGoodsSalesRepo.getByordercode(order_id,date)
 //         data.push(
 //             order_id,
-//             rows[i].getCell(commission_row).value,
-//             q[0].shop_id,
-//             q[0].sale_amount,
-//             q[0].goods_id,
-//             q[0].shop_name,
+//             ,
+//             rows[i].getCell(sale_amount_row).value,
+//             rows[i].getCell(goods_id_row).value,
+//             rows[i].getCell(shop_name_row).value,
 //             date,
 //             name
 //         )
@@ -2952,5 +2951,5 @@ module.exports = {
     SalesupdateSalemonth,
     VerifiedsupdateSalemonth,
     importErleiShuadan,
-    importXhsShuadan
+    // importXhsShuadan
 }
