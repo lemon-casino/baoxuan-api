@@ -2756,42 +2756,44 @@ const importErleiShuadan = async (rows, date) => {
     return result
 }
 
-// const importXhsShuadan = async (rows, date) => {
-//     let data = [], count = 0, result = false,name='小红书返款'
-//     let columns = rows[0].values,
-//     order_id_row = null,
-//     sale_amount_row = null,
-//     goods_id_row = null,
-//     shop_name_row = null
-//     for(let i=0;i<columns.length;i++){
-//         if(columns[i] == '线上订单号'){
-//             order_id_row = i
-//         }else if(columns[i]=='打款金额'){
-//             sale_amount_row = i
-//         }else if(columns[i] == '商品信息'){
-//             goods_id_row = i
-//         }else if(columns[i] == '店铺名称'){
-//             shop_name_row = i
-//         }
-//     }
-//     for(let i=1;i<rows.length;i++){
-//         let order_id=rows[i].getCell(order_id_row).value
-//         let q = await ordersGoodsSalesRepo.getByordercode(order_id,date)
-//         data.push(
-//             order_id,
-//             ,
-//             rows[i].getCell(sale_amount_row).value,
-//             rows[i].getCell(goods_id_row).value,
-//             rows[i].getCell(shop_name_row).value,
-//             date,
-//             name
-//         )
-//         count += 1
-//     }
-//     await clickFarmingRepo.deleteByName(date,name)
-//     result = await clickFarmingRepo.InsertErlei(data,count)
-//     return result
-// }
+const importXhsShuadan = async (rows, date) => {
+    let data = [], count = 0, result = false,name='小红书返款'
+    let columns = rows[0].values,
+    order_id_row = null,
+    sale_amount_row = null,
+    goods_id_row = null,
+    shop_name_row = null
+    for(let i=0;i<columns.length;i++){
+        if(columns[i] == '线上订单号'){
+            order_id_row = i
+        }else if(columns[i]=='打款金额'){
+            sale_amount_row = i
+        }else if(columns[i] == '商品信息'){
+            goods_id_row = i
+        }else if(columns[i] == '店铺名称'){
+            shop_name_row = i
+        }
+    }
+    for(let i=1;i<rows.length;i++){
+        let order_id=rows[i].getCell(order_id_row).value
+        shop_name=rows[i].getCell(shop_name_row).value
+        let q = await shopInfoRepo.getShopIdByName(shop_name)
+        console.log(q)
+        data.push(
+            order_id,
+            q[0].shop_id,
+            rows[i].getCell(sale_amount_row).value,
+            rows[i].getCell(goods_id_row).value,
+            shop_name,
+            date,
+            name
+        )
+        count += 1
+    }
+    await clickFarmingRepo.deleteByName(date,name)
+    result = await clickFarmingRepo.InsertXhs(data,count)
+    return result
+}
 
 const updateOrderGoods = async (date) => {
     let result = await goodsSalesStats.updateLaborCost(date)
@@ -2951,5 +2953,5 @@ module.exports = {
     SalesupdateSalemonth,
     VerifiedsupdateSalemonth,
     importErleiShuadan,
-    // importXhsShuadan
+    importXhsShuadan
 }
