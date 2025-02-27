@@ -32,4 +32,11 @@ ordersGoodsSalesRepo.deleteByDate = async (date) => {
     return result?.affectedRows ? true : false
 }
 
+ordersGoodsSalesRepo.getByordercode = async (order_id,date) =>{
+    const sql = `SELECT shop_id,order_code,sum(sale_amount) AS sale_amount,MAX(goods_id) AS goods_id,MAX(shop_name) AS shop_name
+                FROM orders_goods_sales WHERE order_code = ? GROUP BY shop_id,order_code`
+    const result  = await query(sql,order_id)
+    return result
+}
+
 module.exports = ordersGoodsSalesRepo

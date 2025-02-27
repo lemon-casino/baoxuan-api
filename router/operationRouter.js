@@ -30,6 +30,10 @@ router.post('/shop-promotion-log', operationApi.createShopPromotionLog)
 //订单数据导入
 router.post('/orders-goods/import', operationApi.importOrdersGoods)
 router.post('/orders-goods-verified/import', operationApi.importOrdersGoodsVerified)
+// 二类刷单
+router.post('/orders-erlei/import', operationApi.importErleiShuadan)
+// 小红书
+router.post('/orders-xhs-gd/import', operationApi.importXhsShuadan)
 /**
  * 京东自营
  */
