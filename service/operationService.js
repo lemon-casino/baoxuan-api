@@ -47,7 +47,7 @@ const moment = require('moment')
 const goodsSalesRepo = require('@/repository/operation/goodsSalesRepo')
 const goodsVerifiedsRepo = require('@/repository/operation/goodsVerifiedsRepo')
 const goodsPaymentsRepo = require('@/repository/operation/goodsPaymentsRepo')
-
+const clickFarmingRepo = require('../repository/operation/clickFarmingRepo')
 /**
  * get operation data pannel data stats
  * division > project > shop / team > user
@@ -1137,7 +1137,7 @@ const importGoodsOrderStat = async (rows, time) => {
 
 const batchInsertGoodsSales = async (date) => {
     let result = await goodsSalesRepo.batchInsert(date)
-    logger.info(`[发货数据刷新]：时间:${date}, ${result}`)
+    logger.info(`[聚水潭发货数据刷新]：时间:${date}, ${result}`)
     if (result) await batchInsertGoodsSalesStats(date)
 }
 
@@ -1148,18 +1148,18 @@ const batchInsertJDGoodsSales = async (date) => {
 }
 
 const batchInsertJDGoodsSalesStats = async (date) => {
-    let result = await goodsSalesStats.batchInsert(date)
+    let result = await goodsSalesStats.batchInsertJD(date)
     logger.info(`[京东发货单品表数据刷新]：时间:${date}, ${result}`)
 }
 
 const batchInsertGoodsSalesStats = async (date) => {
     let result = await goodsSalesStats.batchInsert(date)
-    logger.info(`[发货单品表数据刷新]：时间:${date}, ${result}`)
+    logger.info(`[聚水潭发货单品表数据刷新]：时间:${date}, ${result}`)
 }
 
 const SalesupdateSalemonth = async (date) => {
     let result= await goodsSalesStats.updateSalemonth(date)
-    logger.info(`[发货月销售额数据刷新]：时间:${date}, ${result}`)
+    logger.info(`[聚水潭发货月销售额数据刷新]：时间:${date}, ${result}`)
 }
 
 const importGoodsKeyWords = async (rows, time) => {
@@ -2724,6 +2724,76 @@ const importOrdersGoods = async (rows, date) => {
     return result
 }
 
+const importErleiShuadan = async (rows, date) => {
+    let data = [], count = 0, result = false,name='二类'
+    let columns = rows[0].values,
+    order_id_row = null,
+    commission_row = null
+    for(let i=0;i<columns.length;i++){
+        if(columns[i] == '线上单号'){
+            order_id_row = i
+        }else if(columns[i]=='佣金'){
+            commission_row = i
+        }
+    }
+    for(let i=1;i<rows.length;i++){
+        let order_id=rows[i].getCell(order_id_row).value
+        let q = await ordersGoodsSalesRepo.getByordercode(order_id,date)
+        data.push(
+            order_id,
+            rows[i].getCell(commission_row).value,
+            q[0].shop_id,
+            q[0].sale_amount,
+            q[0].goods_id,
+            q[0].shop_name,
+            date,
+            name
+        )
+        count += 1
+    }
+    await clickFarmingRepo.deleteByName(date,name)
+    result = await clickFarmingRepo.InsertErlei(data,count)
+    return result
+}
+
+// const importXhsShuadan = async (rows, date) => {
+//     let data = [], count = 0, result = false,name='二类'
+//     let columns = rows[0].values,
+//     order_id_row = null,
+//     sale_amount_row = null,
+//     goods_id_row = null,
+//     shop_name_row = null
+//     for(let i=0;i<columns.length;i++){
+//         if(columns[i] == '线上订单号'){
+//             order_id_row = i
+//         }else if(columns[i]=='佣金'){
+//             sale_amount_row = i
+//         }else if(columns[i] == '商品信息'){
+//             goods_id_row = i
+//         }else if(columns[i] == '打款金额'){
+//             sale_amount_row = i
+//         }
+//     }
+//     for(let i=1;i<rows.length;i++){
+//         let order_id=rows[i].getCell(order_id_row).value
+//         let q = await ordersGoodsSalesRepo.getByordercode(order_id,date)
+//         data.push(
+//             order_id,
+//             rows[i].getCell(commission_row).value,
+//             q[0].shop_id,
+//             q[0].sale_amount,
+//             q[0].goods_id,
+//             q[0].shop_name,
+//             date,
+//             name
+//         )
+//         count += 1
+//     }
+//     await clickFarmingRepo.deleteByName(date,name)
+//     result = await clickFarmingRepo.InsertErlei(data,count)
+//     return result
+// }
+
 const updateOrderGoods = async (date) => {
     let result = await goodsSalesStats.updateLaborCost(date)
     logger.info(`[发货人工费刷新]：时间:${date}, ${result}`)
@@ -2880,5 +2950,7 @@ module.exports = {
     batchInsertJDGoodsSales,
     batchInsertJDGoodsSalesStats,
     SalesupdateSalemonth,
-    VerifiedsupdateSalemonth
+    VerifiedsupdateSalemonth,
+    importErleiShuadan,
+    importXhsShuadan
 }
