@@ -33,7 +33,7 @@ router.post('/orders-goods-verified/import', operationApi.importOrdersGoodsVerif
 // 二类刷单
 router.post('/orders-erlei/import', operationApi.importErleiShuadan)
 // 小红书
-router.post('/orders-xhs-gd/import', operationApi.importXhsShuadan)
+// router.post('/orders-xhs-gd/import', operationApi.importXhsShuadan)
 /**
  * 京东自营
  */
