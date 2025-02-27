@@ -2951,5 +2951,5 @@ module.exports = {
     SalesupdateSalemonth,
     VerifiedsupdateSalemonth,
     importErleiShuadan,
-    importXhsShuadan
+    // importXhsShuadan
 }
