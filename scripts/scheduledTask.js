@@ -47,7 +47,7 @@ let saleCron = "0 30 9/12 * * ?"
 schedule.scheduleJob(saleCron, async function () {
     if (process.env.NODE_ENV === "prod") {
         let date = moment().format("YYYY-MM-DD")
-        await operationService.VerifiedsupdateSalemonth(date)
+        await operationService.SalesupdateSalemonth(date)
     }
 })
 schedule.scheduleJob(saleCron, async function () {

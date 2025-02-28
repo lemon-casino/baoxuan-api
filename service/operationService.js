@@ -580,7 +580,7 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             {title: '产品线简称', field_id: 'brief_product_line', type: 'input', show: true},
             {title: '产品线负责人', field_id: 'line_director', type: 'input', show: true},
             {title: '采购负责人', field_id: 'purchase_director', type: 'input', show: true},
-            {title: '上架日期', field_id: 'onsale_date', type: 'date', show: true},
+            {title: '上架date', field_id: 'onsale_date', type: 'date', show: true},
             {title: '上架信息', field_id: 'onsale_info', type: 'select', select: [
                 {key: '30', value: '新品30'},
                 {key: '60', value: '新品60'},
@@ -2398,8 +2398,72 @@ const getOptimizeInfo = async (params, user) => {
 }
 
 const getReportInfo = async (start,end) =>{
-    let result = await teamInfoRepo.getTeamName(start,end)
-    console.log(result)
+    // let result = await teamInfoRepo.getTeamName(start,end)
+    let week = await goodsSaleInfoRepo.getweeklyreport ()
+    const groupedData = week.reduce((acc, item) => {
+        if (!acc[item.team_name]) {
+            acc[item.team_name] = []
+        }
+        acc[item.team_name].push(item)
+        return acc
+    }, {})
+    // 2. 计算环比
+    const calculateChainRatio = (currentWeek, lastWeek) => {
+    if (lastWeek === 0) return 0; // 避免除零错误
+    return ((currentWeek - lastWeek) / lastWeek) * 100;
+    }
+    
+    // 3. 添加周数据和汇总数据
+    const result = Object.keys(groupedData).map(teamName => {
+        const teamData = groupedData[teamName];
+
+        // 分离上周和上上周的数据
+        const lastWeekData = teamData.filter(item => item.date === "上周");
+        const lastLastWeekData = teamData.filter(item => item.date === "上上周");
+
+        // 计算汇总数据
+        const sumData = (data, key) => data.reduce((sum, item) => sum + parseFloat(item[key] || 0), 0);
+
+        const lastWeekSummary = {
+            line_director: teamName+'汇总',
+            team_name: teamName+'汇总',
+            date: "上周汇总",
+            operator: teamName+'汇总',
+            sale_amount: sumData(lastWeekData, "sale_amount"),
+            profit: sumData(lastWeekData, "profit"),
+            // 其他字段可以根据需要添加
+        };
+
+        const lastLastWeekSummary = {
+            line_director: teamName+'汇总',
+            team_name: teamName+'汇总',
+            date: "上上周汇总",
+            operator: teamName+'汇总',
+            sale_amount: sumData(lastLastWeekData, "sale_amount"),
+            profit: sumData(lastLastWeekData, "profit"),
+            // 其他字段可以根据需要添加
+        };
+
+        // 计算环比
+        const chainRatio = calculateChainRatio(lastWeekSummary.sale_amount, lastLastWeekSummary.sale_amount);
+
+        const chainRatioData = {
+            line_director: teamName+'环比',
+            team_name: teamName+'环比',
+            date: "环比",
+            operator: teamName+'环比',
+            sale_amount: chainRatio.toFixed(2) + "%", // 保留两位小数
+        }
+        // 构建结果
+        return [
+            ...lastLastWeekData,
+            lastLastWeekSummary,
+            ...lastWeekData,
+            lastWeekSummary,
+            chainRatioData,
+        ]
+    }).flat()
+    // console.log(result)
     return result
 }
 
