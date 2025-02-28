@@ -1448,27 +1448,27 @@ goodsSaleInfoRepo.getweeklyreport = async() =>{
     let sql =`with t1 as(
             select * from (
             select '上周' AS date
-                        ,a.operator
-                        ,count(a.goods_id) as goods
-                        ,SUM(a.sale_amount) AS sale_amount
-                        ,SUM(a.profit) AS profit
-                        ,SUM(a.profit)/SUM(a.sale_amount) AS profit_rate
-                        ,SUM(a.promotion_amount) AS promotion_amount
-                        ,SUM(a.promotion_amount)/SUM(a.sale_amount) AS promotion_rate
-                        ,SUM(a.bill_amount) AS bill_amount
-                        ,SUM(a.order_num) AS order_num
-                        ,SUM(a.refund_num) AS refund_num
-                        ,SUM(a.refund_num)/SUM(a.order_num) AS refund_rate
-                        ,SUM(a.p) AS p
-                        ,SUM(a1.verified_amount) AS verified_amount
-                        ,SUM(a1.verified_profit) AS verified_profit
-                        ,SUM(a1.verified_profit)/SUM(a1.verified_amount) AS verified_profit_rate
-                        ,SUM(a2.after_sales_compensation) AS after_sales_compensation
-                        ,AVG(a3.dsr) AS dsr
-                        ,SUM(a4.xhs_shuadan) AS xhs_shuadan
-                        ,SUM(a5.erlei_shuadan) AS erlei_shuadan
-                        ,(IFNULL(SUM(a.bill_amount),0)+IFNULL(SUM(a.promotion_amount),0)+IFNULL(SUM(a2.after_sales_compensation),0)+IFNULL(SUM(a4.xhs_shuadan),0)+IFNULL(SUM(a5.erlei_shuadan),0)) as bill
-                        ,(IFNULL(SUM(a.bill_amount),0)+IFNULL(SUM(a.promotion_amount),0)+IFNULL(SUM(a2.after_sales_compensation),0)+IFNULL(SUM(a4.xhs_shuadan),0)+IFNULL(SUM(a5.erlei_shuadan),0))/SUM(a.sale_amount) as bill_rate
+							,a.operator
+							,count(a.goods_id) as goods
+							,SUM(a.sale_amount) AS sale_amount
+							,SUM(a.profit) AS profit
+							,ROUND(SUM(a.profit)/SUM(a.sale_amount)*100,2) AS profit_rate
+							,SUM(a.promotion_amount) AS promotion_amount
+							,ROUND(SUM(a.promotion_amount)/SUM(a.sale_amount)*100,2) AS promotion_rate
+							,SUM(a.bill_amount) AS bill_amount
+							,SUM(a.order_num) AS order_num
+							,SUM(a.refund_num) AS refund_num
+							,ROUND(SUM(a.refund_num)/SUM(a.order_num)*100,2) AS refund_rate
+							,SUM(a.p) AS express
+							,SUM(a1.verified_amount) AS verified_amount
+							,SUM(a1.verified_profit) AS verified_profit
+							,ROUND(SUM(a1.verified_profit)/SUM(a1.verified_amount)*100,2) AS verified_profit_rate
+							,SUM(a2.after_sales_compensation) AS after_sales_compensation
+							,ROUND(AVG(dsr),2) AS dsr
+							,IFNULL(SUM(a4.xhs_shuadan),0) AS xhs_shuadan
+							,IFNULL(SUM(a5.erlei_shuadan),0) AS erlei_shuadan
+							,(IFNULL(SUM(a.bill_amount),0)+IFNULL(SUM(a.promotion_amount),0)+IFNULL(SUM(a2.after_sales_compensation),0)+IFNULL(SUM(a4.xhs_shuadan),0)+IFNULL(SUM(a5.erlei_shuadan),0)) as bill
+							,ROUND((IFNULL(SUM(a.bill_amount),0)+IFNULL(SUM(a.promotion_amount),0)+IFNULL(SUM(a2.after_sales_compensation),0)+IFNULL(SUM(a4.xhs_shuadan),0)+IFNULL(SUM(a5.erlei_shuadan),0))/SUM(a.sale_amount)*100,2) as bill_rate
             from (		
             select IFNULL(d.operator,'无操作') AS operator,s.* from (
             select s.goods_id,SUM(s.sale_amount) AS sale_amount
@@ -1508,20 +1508,20 @@ goodsSaleInfoRepo.getweeklyreport = async() =>{
             ) as a3
             on a.goods_id=a3.goods_id
             left join(
-                SELECT goods_id,SUM(cost_amount) +SUM(express_fee)+SUM(packing_fee)+SUM(bill_amount) AS 'xhs_shuadan' 
+                SELECT goods_id,IFNULL(SUM(cost_amount),0) +IFNULL(SUM(express_fee),0)+IFNULL(SUM(packing_fee),0)+IFNULL(SUM(bill_amount),0) AS 'xhs_shuadan' 
                         FROM orders_goods_sales
                         WHERE order_code in (SELECT order_code FROM click_farming WHERE date BETWEEN '2025-02-17' and '2025-02-24' and name='小红书返款')
                         GROUP BY goods_id
             ) as a4
             on a.goods_id=a4.goods_id
             left join (
-                SELECT t.goods_id,t1.er+t.commission AS erlei_shuadan from (
+                SELECT t.goods_id,IFNULL(t1.er+t.commission,0) AS erlei_shuadan from (
                     SELECT goods_id,sum(commission) AS commission 
                     from click_farming 
                     WHERE shop_id=15545775 and name ='二类' and date BETWEEN '2025-02-17' and '2025-02-23' 
                     GROUP BY goods_id) as t
                     left join (
-                    select goods_id,SUM(express_fee)+SUM(packing_fee)+SUM(bill_amount) AS er 
+                    select goods_id,IFNULL(SUM(express_fee),0)+IFNULL(SUM(packing_fee),0)+IFNULL(SUM(bill_amount),0) AS er 
                     FROM orders_goods_sales 
                     where order_code in (select order_code from click_farming WHERE shop_id=15545775 and name ='二类' and date BETWEEN '2025-02-17' and '2025-02-23')
                     GROUP BY goods_id
@@ -1533,27 +1533,27 @@ goodsSaleInfoRepo.getweeklyreport = async() =>{
             union all 
             select * from (
             select '上上周' AS date
-                        ,a.operator
-                        ,count(a.goods_id) as goods
-                        ,SUM(a.sale_amount) AS sale_amount
-                        ,SUM(a.profit) AS profit
-                        ,SUM(a.profit)/SUM(a.sale_amount) AS profit_rate
-                        ,SUM(a.promotion_amount) AS promotion_amount
-                        ,SUM(a.promotion_amount)/SUM(a.sale_amount) AS promotion_rate
-                        ,SUM(a.bill_amount) AS bill_amount
-                        ,SUM(a.order_num) AS order_num
-                        ,SUM(a.refund_num) AS refund_num
-                        ,SUM(a.refund_num)/SUM(a.order_num) AS refund_rate
-                        ,SUM(a.p) AS p
-                        ,SUM(a1.verified_amount) AS verified_amount
-                        ,SUM(a1.verified_profit) AS verified_profit
-                        ,SUM(a1.verified_profit)/SUM(a1.verified_amount) AS verified_profit_rate
-                        ,SUM(a2.after_sales_compensation) AS after_sales_compensation
-                        ,AVG(a3.dsr) AS dsr
-                        ,SUM(a4.xhs_shuadan) AS xhs_shuadan
-                        ,SUM(a5.erlei_shuadan) AS erlei_shuadan
-                        ,(IFNULL(SUM(a.bill_amount),0)+IFNULL(SUM(a.promotion_amount),0)+IFNULL(SUM(a2.after_sales_compensation),0)+IFNULL(SUM(a4.xhs_shuadan),0)+IFNULL(SUM(a5.erlei_shuadan),0)) as bill
-                        ,(IFNULL(SUM(a.bill_amount),0)+IFNULL(SUM(a.promotion_amount),0)+IFNULL(SUM(a2.after_sales_compensation),0)+IFNULL(SUM(a4.xhs_shuadan),0)+IFNULL(SUM(a5.erlei_shuadan),0))/SUM(a.sale_amount) as bill_rate
+               ,a.operator
+							,count(a.goods_id) as goods
+							,SUM(a.sale_amount) AS sale_amount
+							,SUM(a.profit) AS profit
+							,ROUND(SUM(a.profit)/SUM(a.sale_amount)*100,2) AS profit_rate
+							,SUM(a.promotion_amount) AS promotion_amount
+							,ROUND(SUM(a.promotion_amount)/SUM(a.sale_amount)*100,2) AS promotion_rate
+							,SUM(a.bill_amount) AS bill_amount
+							,SUM(a.order_num) AS order_num
+							,SUM(a.refund_num) AS refund_num
+							,ROUND(SUM(a.refund_num)/SUM(a.order_num)*100,2) AS refund_rate
+							,SUM(a.p) AS express
+							,SUM(a1.verified_amount) AS verified_amount
+							,SUM(a1.verified_profit) AS verified_profit
+							,ROUND(SUM(a1.verified_profit)/SUM(a1.verified_amount)*100,2) AS verified_profit_rate
+							,SUM(a2.after_sales_compensation) AS after_sales_compensation
+							,ROUND(AVG(dsr),2) AS dsr
+							,IFNULL(SUM(a4.xhs_shuadan),0) AS xhs_shuadan
+							,IFNULL(SUM(a5.erlei_shuadan),0) AS erlei_shuadan
+							,(IFNULL(SUM(a.bill_amount),0)+IFNULL(SUM(a.promotion_amount),0)+IFNULL(SUM(a2.after_sales_compensation),0)+IFNULL(SUM(a4.xhs_shuadan),0)+IFNULL(SUM(a5.erlei_shuadan),0)) as bill
+							,ROUND((IFNULL(SUM(a.bill_amount),0)+IFNULL(SUM(a.promotion_amount),0)+IFNULL(SUM(a2.after_sales_compensation),0)+IFNULL(SUM(a4.xhs_shuadan),0)+IFNULL(SUM(a5.erlei_shuadan),0))/SUM(a.sale_amount)*100,2) as bill_rate
             from (		
             select IFNULL(d.operator,'无操作') AS operator,s.* from (
             select s.goods_id,SUM(s.sale_amount) AS sale_amount
@@ -1638,23 +1638,23 @@ goodsSaleInfoRepo.getweeklyreport = async() =>{
                         ,sum(goods) as goods
                         ,SUM(sale_amount) AS sale_amount
                         ,SUM(profit) AS profit
-                        ,SUM(profit)/SUM(sale_amount) AS profit_rate
+                        ,ROUND(SUM(profit)/SUM(sale_amount)*100,2) AS profit_rate
                         ,SUM(promotion_amount) AS promotion_amount
-                        ,SUM(promotion_amount)/SUM(sale_amount) AS promotion_rate
+                        ,ROUND(SUM(promotion_amount)/SUM(sale_amount)*100,2) AS promotion_rate
                         ,SUM(bill_amount) AS bill_amount
                         ,SUM(order_num) AS order_num
                         ,SUM(refund_num) AS refund_num
-                        ,SUM(refund_num)/SUM(order_num) AS refund_rate
-                        ,SUM(p) AS p
+                        ,ROUND(SUM(refund_num)/SUM(order_num),2) AS refund_rate
+                        ,SUM(express) AS express
                         ,SUM(verified_amount) AS verified_amount
                         ,SUM(verified_profit) AS verified_profit
-                        ,SUM(verified_profit)/SUM(verified_amount) AS verified_profit_rate
+                        ,ROUND(SUM(verified_profit)/SUM(verified_amount)*100,2) AS verified_profit_rate
                         ,SUM(after_sales_compensation) AS after_sales_compensation
-                        ,AVG(dsr) AS dsr
+                        ,ROUND(AVG(dsr),2) AS dsr
                         ,SUM(xhs_shuadan) AS xhs_shuadan
                         ,SUM(erlei_shuadan) AS erlei_shuadan
                         ,IFNULL(SUM(bill),0) AS bill
-                        ,IFNULL(SUM(bill),0)/SUM(sale_amount) as bill_rate
+                        ,ROUND(IFNULL(SUM(bill),0)/SUM(sale_amount)*100,2) as bill_rate
             from t1
             GROUP BY date`
         let result = await query(sql)
