@@ -41,30 +41,36 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
                 AND operate_time >= '${startDate}' 
                 AND operate_time <= '${endDate}'
             GROUP BY id, field_id, form_id, show_name, action_exit, type
-        ) a LEFT JOIN vision_field_type vft ON vft.form_id = a.form_id 
-            LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id 
-            JOIN form_fields ff2 ON LOCATE(ff2.field_id, a.field_id) > 0 
-                AND ffd.form_field_id = ff2.id
-            WHERE (a.type = ffd.value OR a.type IS NULL) 
+        ) a LEFT JOIN vision_field_type vft ON vft.form_id = a.form_id             
+            WHERE IF(a.type IS NOT NULL, EXISTS(
+                SELECT * FROM form_field_data ffd 
+                WHERE ffd.id = vft.ffd_id AND LOCATE(ffd.value, a.type) > 0
+            ), TRUE) 
             ORDER BY a.id, 
                 CASE a.action_exit 
                 WHEN 'agree' THEN 2 
                 WHEN 'doing' THEN 1 
                 ELSE 0 END`
             
-    let sql1 = `SELECT IFNULL(SUM(a.count), 0) AS count, a.action_exit FROM (
-            SELECT vp.id, vp.field_id, vp.form_id, vp.show_name, vp.action_exit, 
-                CAST(IFNULL(IF(piv3.value IS NULL, 
+    let sql1 = `SELECT IFNULL(SUM(b.count), 0) AS count, 
+                IFNULL(SUM(b.score), 0) AS score, b.action_exit FROM(
+            SELECT a.count, a.score, a.action_exit FROM (
+            SELECT vp.id, IF(vaf.is_sub = 1, pis2.field_id, piv3.field_id) AS field_id, 
+                pis2.index AS pindex, pis2.parent_id, vp.form_id, vp.show_name, 
+                vp.action_exit, pis3.value AS score, CAST(IFNULL(IF(vaf.is_sub = 1, 
                     REPLACE(pis2.value, '"', ''), 
                     REPLACE(piv3.value, '"', '')), 0) AS DECIMAL) AS count, vp.type
             FROM vision_personal vp 
             LEFT JOIN vision_activity_field vaf ON vp.vt_form_id = vaf.form_id
                 AND vaf.activity_id = vp.va_id
                 AND IF(vp.action_exit = 'agree', vaf.type = 1, vaf.type = 0)
+            LEFT JOIN vision_activity_score vas ON vas.activity_id = vaf.activity_id 
+                AND IF(vp.action_exit = 'agree', vas.type = 1, vas.type = 0)
             LEFT JOIN process_instance_values piv3 ON piv3.instance_id = vp.id 
                 AND piv3.field_id = vaf.field_id 
                 AND vaf.is_sub = 0
-                AND IF(vp.is_sub = 1 AND EXISTS(SELECT pis3.id FROM process_instance_sub_values pis3 
+                AND IF(vp.is_sub = 1 AND EXISTS(
+                    SELECT pis3.id FROM process_instance_sub_values pis3 
                     WHERE pis3.instance_id = vp.id
                 ), FALSE, TRUE)
             LEFT JOIN process_instance_sub_values pis2 ON pis2.instance_id = vp.id 
@@ -72,7 +78,11 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
                 AND vaf.is_sub = 1 
                 AND vp.parent_id = pis2.parent_id 
                 AND vp.index = pis2.index
-
+            LEFT JOIN process_instance_sub_values pis3 ON pis3.instance_id = vp.id 
+                AND pis3.field_id = vas.field_id 
+                AND vas.is_sub = vaf.is_sub 
+                AND pis3.parent_id = pis2.parent_id 
+                AND pis3.index = pis2.index 
             WHERE vp.tag = '${tag}' 
                 AND (((vp.operator_name = ? OR vp.v1 = ? ????) AND piv3.id IS NOT NULL) 
                     OR (vp.v2 = ? AND pis2.id IS NOT NULL ?????)) 
@@ -80,11 +90,15 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
                 AND vp.operate_time <= '${endDate}'
 
             GROUP BY vp.id, vp.field_id, vp.form_id, vp.action_exit, vp.show_name, 
-                piv3.field_id, piv3.value, pis2.field_id, pis2.value, vp.type
+                vaf.is_sub, piv3.field_id, piv3.value, pis2.field_id, pis2.value, 
+                vp.type, pis2.index, pis2.parent_id, pis3.value 
         ) a LEFT JOIN vision_field_type vft ON vft.form_id = a.form_id 
-            LEFT JOIN form_field_data ffd ON ffd.id = vft.ffd_id 
-            WHERE (a.type = ffd.value OR a.type IS NULL) 
-        GROUP BY a.action_exit`
+            WHERE IF(a.type IS NOT NULL, EXISTS(
+                SELECT * FROM form_field_data ffd 
+                WHERE ffd.id = vft.ffd_id AND LOCATE(ffd.value, a.type) > 0
+            ), TRUE) 
+        GROUP BY a.id, a.action_exit, a.count, a.score, a.field_id, a.pindex, a.parent_id) b 
+        GROUP BY b.action_exit`
     let tmp, tmp1
    
     for (let i = 0; i < userNames.length; i++) {
@@ -144,10 +158,19 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
         if (row?.length) {
             for (let j = 0; j < row.length; j++) {
                 user.children[3].children[row[j].action_exit == action.agree.key ? 1 : 0].sum += parseInt(row[j].count)
+                user.children[3].children[row[j].action_exit == action.agree.key ? 1 : 0].score += parseFloat(row[j].score)
                 user.children[3].sum += parseInt(row[j].count)
+                user.children[3].score += parseFloat(row[j].score)
             }
         }
-
+        if (user.children[3].score > 0) {
+            for (let j = 0; j < user.children[3].children.length; j++) {
+                if (user.children[3].children[j].score > 0) {
+                    user.children[3].children[j].score = user.children[3].children[j].score.toFixed(2)
+                }
+            }
+            user.children[3].score = user.children[3].score.toFixed(2)
+        }
         result.push(user)
     }
 
@@ -278,23 +301,26 @@ const getStat = async function (result, startDate, endDate) {
         result[3].children[child_key].sum = row[i].count
     }
 
-    sql = `SELECT id, activity_id, field_id, tag, type, value, action_exit 
+    sql = `SELECT id, activity_id, field_id, tag, type, score, pindex, parent_id, value, action_exit 
         FROM vision_node_works WHERE operate_time >= '${startDate}' 
             AND operate_time <= '${endDate}'
-            AND IF(v1 IS NULL, v2, v1) = v3 
-        ORDER BY id`
+            AND LOCATE(v3, IF(v1 IS NULL, v2, v1)) > 0  
+        ORDER BY id, score DESC`
 
     row = await query(sql)
     for (let i = 0; i < row.length; i++) {
-        let value = row[i].value instanceof Number ? row[i].value : parseInt(row[i].value.replace(/"/g, ''))
+        let value = row[i].value instanceof Number ? row[i].value : parseFloat(row[i].value.replace(/"/g, ''))
+        let score = row[i].score instanceof Number ? row[i].score : parseFloat(row[i].score.replace(/"/g, ''))
         if (!value) value = 0
         
         for (let k = 0; k < statItem2Type[row[i].type].length; k++) {
             if (totalStatType[row[i].tag] && (
                 i == 0 || 
-                !(row[i - 1].id == row[i].id && 
-                    row[i - 1].activity_id == row[i].activity_id &&
-                    row[i - 1].field_id == row[i].field_id)
+                row[i - 1].id !== row[i].id || 
+                !(row[i - 1].activity_id === row[i].activity_id &&
+                    row[i - 1].field_id === row[i].field_id &&
+                    row[i - 1].pindex === row[i].pindex &&
+                    row[i - 1].parent_id === row[i].parent_id)
             )) {
                 result[4].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .children[1]
@@ -302,26 +328,55 @@ const getStat = async function (result, startDate, endDate) {
                     .sum += value
                 result[4].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .children[1]
+                    .children[statItem2Type[row[i].type][k]]
+                    .score += score
+                result[4].children[totalStatType[row[i].tag][row[i].action_exit]]
+                    .children[1]
                     .sum += value
                 result[4].children[totalStatType[row[i].tag][row[i].action_exit]]
+                    .children[1]
+                    .score += score
+                result[4].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .sum += value
+                result[4].children[totalStatType[row[i].tag][row[i].action_exit]]
+                    .score += score
             }
         }
         result[4].sum += value
+        result[4].score += score
         for (let j = 5; j < 17; j++) {
             if (totalStatType[row[i].tag] && 
                 statItem2Type[row[i].type].includes(j - 5) && (
                     i == 0 || 
-                    !(row[i - 1].id == row[i].id && 
-                        row[i - 1].activity_id == row[i].activity_id &&
-                        row[i - 1].field_id == row[i].field_id)
+                    row[i - 1].id !== row[i].id || 
+                    !(row[i - 1].activity_id === row[i].activity_id &&
+                        row[i - 1].field_id === row[i].field_id &&
+                        row[i - 1].pindex === row[i].pindex &&
+                        row[i - 1].parent_id === row[i].parent_id)
                 )) {
                 result[j].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .children[1]
                     .sum += value
                 result[j].children[totalStatType[row[i].tag][row[i].action_exit]]
+                    .children[1]
+                    .score += score
+                result[j].children[totalStatType[row[i].tag][row[i].action_exit]]
                     .sum += value
+                result[j].children[totalStatType[row[i].tag][row[i].action_exit]]
+                    .score += score
                 result[j].sum += value
+                result[j].score += score
+            }
+        }
+    }
+    for (let i = 4; i < 17; i++) {
+        if (result[i].score > 0) {
+            result[i].score = result[i].score.toFixed(2)
+            for (let j = 0; j < result[i].children.length; j++) {
+                if (result[i].children[j].score > 0) {
+                    result[i].children[j].score = result[i].children[j].score.toFixed(2)
+                    result[i].children[j].children[1].score = result[i].children[j].children[1].score.toFixed(2)
+                }
             }
         }
     }
@@ -553,7 +608,7 @@ const getFlowProcessInstances = async function (params, offset, limit) {
         }
         if (typeFilter[params.type]) {
             subsql = `${subsql} AND vision_type IN (${typeFilter[params.type].map(() => '?').join(',')})
-                AND type = value AND EXISTS (
+                AND LOCATE(value, type) > 0 AND EXISTS (
                     SELECT pir.id FROM process_instance_records pir 
                     JOIN vision_activity va ON va.form_id = vp.form_id
                         AND va.activity_id = pir.activity_id
@@ -2155,7 +2210,7 @@ const getOperateSelection = async function (start, end, title, page, size, form_
     if (row?.length && row[0].count) {
         total = row[0].count
         search = `SELECT a.id, a.instance_id, a.title, ff.field_id, 
-            REGEXP_REPLACE(piv.value, '[\\\\[\\\\]"]', '') AS value, 
+            REPLACE(piv.value, '"', '') AS value, 
             DATE_FORMAT(a.create_time, '%Y-%m-%d') AS create_time FROM (
                 ${sql}
                 LIMIT ${(page - 1) * size}, ${size}) a            

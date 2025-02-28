@@ -36,6 +36,7 @@ const actionItem2 = {
         actionName: '进行中',
         children: [],
         sum: 0,
+        score: 0,
         sumAlone: true,
         tooltip: '该工作量会统计表单中预计的数据',
         uniqueIds: true
@@ -43,10 +44,12 @@ const actionItem2 = {
         actionName: '已完成',
         children: [],
         sum: 0,
+        score: 0,
         sumAlone: true,
         uniqueIds: true
     }],
-    sum: 0
+    sum: 0,
+    score: 0
 }
 const item = {
     actionCode: 'userActStat',
@@ -79,7 +82,8 @@ const statItem = {
     actionCode: '',
     children: [],
     ids: [],
-    sum: 0
+    sum: 0,
+    score: 0
 }
 
 const statItem1 = [
@@ -274,7 +278,8 @@ const typeFilter = {
     '视频剪辑': [11],
     '换文字/换产品/调色/换背景/ 新增小元素/套图（单位：张）': [12],
     '整套规范存图（单位：套）': [13],
-    '主图打标/logo修改（单位：张）': [14]
+    '主图打标/logo修改（单位：张）': [14],
+    '摄影': [15]
 }
 
 const nameFilter = {
