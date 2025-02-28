@@ -1443,4 +1443,221 @@ goodsSaleInfoRepo.getJDskuInfoDetail = async(goods_id, start, end, stats) =>{
     return row
     
 }
+
+goodsSaleInfoRepo.getweeklyreport = async() =>{
+    let sql =`with t1 as(
+            select * from (
+            select '上周' AS date
+							,a.operator
+							,count(a.goods_id) as goods
+							,SUM(a.sale_amount) AS sale_amount
+							,SUM(a.profit) AS profit
+							,ROUND(SUM(a.profit)/SUM(a.sale_amount)*100,2) AS profit_rate
+							,SUM(a.promotion_amount) AS promotion_amount
+							,ROUND(SUM(a.promotion_amount)/SUM(a.sale_amount)*100,2) AS promotion_rate
+							,SUM(a.bill_amount) AS bill_amount
+							,SUM(a.order_num) AS order_num
+							,SUM(a.refund_num) AS refund_num
+							,ROUND(SUM(a.refund_num)/SUM(a.order_num)*100,2) AS refund_rate
+							,SUM(a.p) AS express
+							,SUM(a1.verified_amount) AS verified_amount
+							,SUM(a1.verified_profit) AS verified_profit
+							,ROUND(SUM(a1.verified_profit)/SUM(a1.verified_amount)*100,2) AS verified_profit_rate
+							,SUM(a2.after_sales_compensation) AS after_sales_compensation
+							,ROUND(AVG(dsr),2) AS dsr
+							,IFNULL(SUM(a4.xhs_shuadan),0) AS xhs_shuadan
+							,IFNULL(SUM(a5.erlei_shuadan),0) AS erlei_shuadan
+							,(IFNULL(SUM(a.bill_amount),0)+IFNULL(SUM(a.promotion_amount),0)+IFNULL(SUM(a2.after_sales_compensation),0)+IFNULL(SUM(a4.xhs_shuadan),0)+IFNULL(SUM(a5.erlei_shuadan),0)) as bill
+							,ROUND((IFNULL(SUM(a.bill_amount),0)+IFNULL(SUM(a.promotion_amount),0)+IFNULL(SUM(a2.after_sales_compensation),0)+IFNULL(SUM(a4.xhs_shuadan),0)+IFNULL(SUM(a5.erlei_shuadan),0))/SUM(a.sale_amount)*100,2) as bill_rate
+            from (		
+            select IFNULL(d.operator,'无操作') AS operator,s.* from (
+            select s.goods_id,SUM(s.sale_amount) AS sale_amount
+                        ,SUM(s.profit) AS profit
+                        ,SUM(s.promotion_amount) AS promotion_amount
+                        ,sum(s.bill_amount) AS bill_amount
+                        ,sum(s.order_num) AS order_num
+                        ,sum(s.refund_num) AS refund_num
+                        ,sum(s.packing_fee)+sum(s.express_fee) AS p
+            from goods_sales s
+            WHERE s.shop_name='pakchoice旗舰店（天猫）' and s.date BETWEEN '2025-02-17' and '2025-02-23' 
+            GROUP BY s.goods_id
+            )as s
+            left join (select * from dianshang_operation_attribute where platform='天猫部')as d
+            on s.goods_id=d.goods_id
+            ) as a
+            left join (
+            select goods_id
+                        ,sum(sale_amount) AS verified_amount
+                        ,SUM(profit) AS verified_profit
+            from goods_verifieds
+            WHERE shop_name='pakchoice旗舰店（天猫）' and date BETWEEN '2025-02-17' and '2025-02-23'
+            GROUP BY goods_id
+            ) as a1
+            on a.goods_id=a1.goods_id
+            left join (
+                SELECT goods_id,sum(amount) AS after_sales_compensation from goods_bill_info
+                WHERE bill_name='6008小额打款' and shop_name='pakchoice旗舰店（天猫）' and date BETWEEN '2025-02-17' and '2025-02-23'
+                GROUP BY goods_id
+            ) as a2
+            on a.goods_id=a2.goods_id
+            left join (
+                SELECT goods_id,ROUND(avg(dsr),2) AS dsr
+                    FROM goods_other_info 
+                    WHERE date BETWEEN '2025-02-17' and '2025-02-23'
+                    GROUP BY goods_id
+            ) as a3
+            on a.goods_id=a3.goods_id
+            left join(
+                SELECT goods_id,IFNULL(SUM(cost_amount),0) +IFNULL(SUM(express_fee),0)+IFNULL(SUM(packing_fee),0)+IFNULL(SUM(bill_amount),0) AS 'xhs_shuadan' 
+                        FROM orders_goods_sales
+                        WHERE order_code in (SELECT order_code FROM click_farming WHERE date BETWEEN '2025-02-17' and '2025-02-24' and name='小红书返款')
+                        GROUP BY goods_id
+            ) as a4
+            on a.goods_id=a4.goods_id
+            left join (
+                SELECT t.goods_id,IFNULL(t1.er+t.commission,0) AS erlei_shuadan from (
+                    SELECT goods_id,sum(commission) AS commission 
+                    from click_farming 
+                    WHERE shop_id=15545775 and name ='二类' and date BETWEEN '2025-02-17' and '2025-02-23' 
+                    GROUP BY goods_id) as t
+                    left join (
+                    select goods_id,IFNULL(SUM(express_fee),0)+IFNULL(SUM(packing_fee),0)+IFNULL(SUM(bill_amount),0) AS er 
+                    FROM orders_goods_sales 
+                    where order_code in (select order_code from click_farming WHERE shop_id=15545775 and name ='二类' and date BETWEEN '2025-02-17' and '2025-02-23')
+                    GROUP BY goods_id
+                    )AS t1
+                    on t.goods_id=t1.goods_id
+            )as a5
+            on a.goods_id=a5.goods_id
+            GROUP BY operator) as a
+            union all 
+            select * from (
+            select '上上周' AS date
+               ,a.operator
+							,count(a.goods_id) as goods
+							,SUM(a.sale_amount) AS sale_amount
+							,SUM(a.profit) AS profit
+							,ROUND(SUM(a.profit)/SUM(a.sale_amount)*100,2) AS profit_rate
+							,SUM(a.promotion_amount) AS promotion_amount
+							,ROUND(SUM(a.promotion_amount)/SUM(a.sale_amount)*100,2) AS promotion_rate
+							,SUM(a.bill_amount) AS bill_amount
+							,SUM(a.order_num) AS order_num
+							,SUM(a.refund_num) AS refund_num
+							,ROUND(SUM(a.refund_num)/SUM(a.order_num)*100,2) AS refund_rate
+							,SUM(a.p) AS express
+							,SUM(a1.verified_amount) AS verified_amount
+							,SUM(a1.verified_profit) AS verified_profit
+							,ROUND(SUM(a1.verified_profit)/SUM(a1.verified_amount)*100,2) AS verified_profit_rate
+							,SUM(a2.after_sales_compensation) AS after_sales_compensation
+							,ROUND(AVG(dsr),2) AS dsr
+							,IFNULL(SUM(a4.xhs_shuadan),0) AS xhs_shuadan
+							,IFNULL(SUM(a5.erlei_shuadan),0) AS erlei_shuadan
+							,(IFNULL(SUM(a.bill_amount),0)+IFNULL(SUM(a.promotion_amount),0)+IFNULL(SUM(a2.after_sales_compensation),0)+IFNULL(SUM(a4.xhs_shuadan),0)+IFNULL(SUM(a5.erlei_shuadan),0)) as bill
+							,ROUND((IFNULL(SUM(a.bill_amount),0)+IFNULL(SUM(a.promotion_amount),0)+IFNULL(SUM(a2.after_sales_compensation),0)+IFNULL(SUM(a4.xhs_shuadan),0)+IFNULL(SUM(a5.erlei_shuadan),0))/SUM(a.sale_amount)*100,2) as bill_rate
+            from (		
+            select IFNULL(d.operator,'无操作') AS operator,s.* from (
+            select s.goods_id,SUM(s.sale_amount) AS sale_amount
+                        ,SUM(s.profit) AS profit
+                        ,SUM(s.promotion_amount) AS promotion_amount
+                        ,sum(s.bill_amount) AS bill_amount
+                        ,sum(s.order_num) AS order_num
+                        ,sum(s.refund_num) AS refund_num
+                        ,sum(s.packing_fee)+sum(s.express_fee) AS p
+            from goods_sales s
+            WHERE s.shop_name='pakchoice旗舰店（天猫）' and s.date BETWEEN '2025-02-10' and '2025-02-16' 
+            GROUP BY s.goods_id
+            )as s
+            left join (select * from dianshang_operation_attribute where platform='天猫部')as d
+            on s.goods_id=d.goods_id
+            ) as a
+            left join (
+            select goods_id
+                        ,sum(sale_amount) AS verified_amount
+                        ,SUM(profit) AS verified_profit
+            from goods_verifieds
+            WHERE shop_name='pakchoice旗舰店（天猫）' and date BETWEEN '2025-02-10' and '2025-02-16' 
+            GROUP BY goods_id
+            ) as a1
+            on a.goods_id=a1.goods_id
+            left join (
+                SELECT goods_id,sum(amount) AS after_sales_compensation from goods_bill_info
+                WHERE bill_name='6008小额打款' and shop_name='pakchoice旗舰店（天猫）' and date BETWEEN '2025-02-10' and '2025-02-16' 
+                GROUP BY goods_id
+            ) as a2
+            on a.goods_id=a2.goods_id
+            left join (
+                SELECT goods_id,ROUND(avg(dsr),2) AS dsr
+                    FROM goods_other_info 
+                    WHERE date BETWEEN '2025-02-17' and '2025-02-23'
+                    GROUP BY goods_id
+            ) as a3
+            on a.goods_id=a3.goods_id
+            left join(
+                SELECT goods_id,SUM(cost_amount) +SUM(express_fee)+SUM(packing_fee)+SUM(bill_amount) AS 'xhs_shuadan' 
+                        FROM orders_goods_sales
+                        WHERE order_code in (SELECT order_code FROM click_farming WHERE date BETWEEN '2025-02-10' and '2025-02-16'  and name='小红书返款')
+                        GROUP BY goods_id
+            ) as a4
+            on a.goods_id=a4.goods_id
+            left join (
+                SELECT t.goods_id,t1.er+t.commission AS erlei_shuadan from (
+                    SELECT goods_id,sum(commission) AS commission 
+                    from click_farming 
+                    WHERE shop_id=15545775 and name ='二类' and date BETWEEN '2025-02-10' and '2025-02-16' 
+                    GROUP BY goods_id) as t
+                    left join (
+                    select goods_id,SUM(express_fee)+SUM(packing_fee)+SUM(bill_amount) AS er 
+                    FROM orders_goods_sales 
+                    where order_code in (select order_code from click_farming WHERE shop_id=15545775 and name ='二类' and date BETWEEN '2025-02-10' and '2025-02-16' )
+                    GROUP BY goods_id
+                    )AS t1
+                    on t.goods_id=t1.goods_id
+            )as a5
+            on a.goods_id=a5.goods_id
+            GROUP BY operator) as b
+            )
+            SELECT IFNULL(b.line_director,'无操作') AS line_director ,IFNULL(b.team_name,'无操作') AS team_name,t1.* from t1
+            left join (
+                SELECT a.team_name AS team_name,u1.nickname AS line_director,u.nickname AS operator FROM (
+                                SELECT t1.team_name,t1.user_id,t2.user_id AS member_id FROM team_info AS t1
+                                LEFT JOIN team_member AS t2
+                                ON t2.team_id=t1.id
+                                WHERE t1.project_id=14
+                            )AS a
+                            LEFT JOIN users AS u
+                            ON a.member_id=u.user_id
+                            LEFT JOIN users AS u1
+                            ON a.user_id=u1.user_id
+            )as b
+            on t1.operator=b.operator
+            union all
+            select '总计' AS line_director
+                        ,'总计' AS team_name
+                        ,date
+                        ,'总计' AS operator
+                        ,sum(goods) as goods
+                        ,SUM(sale_amount) AS sale_amount
+                        ,SUM(profit) AS profit
+                        ,ROUND(SUM(profit)/SUM(sale_amount)*100,2) AS profit_rate
+                        ,SUM(promotion_amount) AS promotion_amount
+                        ,ROUND(SUM(promotion_amount)/SUM(sale_amount)*100,2) AS promotion_rate
+                        ,SUM(bill_amount) AS bill_amount
+                        ,SUM(order_num) AS order_num
+                        ,SUM(refund_num) AS refund_num
+                        ,ROUND(SUM(refund_num)/SUM(order_num),2) AS refund_rate
+                        ,SUM(express) AS express
+                        ,SUM(verified_amount) AS verified_amount
+                        ,SUM(verified_profit) AS verified_profit
+                        ,ROUND(SUM(verified_profit)/SUM(verified_amount)*100,2) AS verified_profit_rate
+                        ,SUM(after_sales_compensation) AS after_sales_compensation
+                        ,ROUND(AVG(dsr),2) AS dsr
+                        ,SUM(xhs_shuadan) AS xhs_shuadan
+                        ,SUM(erlei_shuadan) AS erlei_shuadan
+                        ,IFNULL(SUM(bill),0) AS bill
+                        ,ROUND(IFNULL(SUM(bill),0)/SUM(sale_amount)*100,2) as bill_rate
+            from t1
+            GROUP BY date`
+        let result = await query(sql)
+        return result
+}
 module.exports = goodsSaleInfoRepo

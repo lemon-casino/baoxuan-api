@@ -2398,9 +2398,155 @@ const getOptimizeInfo = async (params, user) => {
 }
 
 const getReportInfo = async (start,end) =>{
-    let result = await teamInfoRepo.getTeamName(start,end)
-    console.log(result)
-    return result
+    let week = await goodsSaleInfoRepo.getweeklyreport ()
+    const groupedData = week.reduce((acc, item) => {
+        if (!acc[item.team_name]) {
+            acc[item.team_name] = []
+        }
+        acc[item.team_name].push(item)
+        return acc
+    }, {})
+    // 2. 计算环比
+    const calculateChainRatio = (currentWeek, lastWeek) => {
+    if (lastWeek === 0 || lastWeek==null) return 0 // 避免除零错误
+    return ((currentWeek - lastWeek) / lastWeek) * 100
+    }
+    
+    // 3. 添加周数据和汇总数据
+    const result = Object.keys(groupedData).map(teamName => {
+        const teamData = groupedData[teamName]
+
+        // 分离上周和上上周的数据
+        const lastWeekData = teamData.filter(item => item.date === "上周")
+        const lastLastWeekData = teamData.filter(item => item.date === "上上周")
+
+        // 计算汇总数据
+        const sumData = (data, key) => data.reduce((sum, item) => sum + parseFloat(item[key] || 0), 0)
+        const averageData = (data, key) => {
+            const sum = sumData(data, key) // 先计算总和
+            const count = data.length // 数据条数
+            return count === 0 ? 0 : sum / count // 避免除零错误
+        };
+        const lastWeekSummary = {
+            line_director: teamName+'汇总',
+            team_name: teamName+'汇总',
+            date: "上周汇总",
+            operator: teamName+'汇总',
+            goods:sumData(lastWeekData, "goods"),
+            sale_amount: sumData(lastWeekData, "sale_amount").toFixed(2),
+            profit: sumData(lastWeekData, "profit").toFixed(2),
+            profit_rate: (sumData(lastWeekData, "profit")/sumData(lastWeekData, "sale_amount")*100).toFixed(2),
+            promotion_amount: sumData(lastWeekData, "promotion_amount").toFixed(2),
+            promotion_rate: (sumData(lastWeekData, "promotion_amount")/sumData(lastWeekData, "sale_amount")*100).toFixed(2),
+            bill_amount: sumData(lastWeekData, "bill_amount").toFixed(2),
+            order_num: sumData(lastWeekData, "order_num").toFixed(2),
+            refund_num: sumData(lastWeekData, "refund_num").toFixed(2),
+            refund_rate: (sumData(lastWeekData, "refund_num")/sumData(lastWeekData, "order_num")*100).toFixed(2),
+            express: sumData(lastWeekData, "express").toFixed(2),
+            verified_amount: sumData(lastWeekData, "verified_amount").toFixed(2),
+            verified_profit: sumData(lastWeekData, "verified_profit").toFixed(2),
+            verified_profit_rate: (sumData(lastWeekData, "verified_profit")/sumData(lastWeekData, "verified_amount")*100).toFixed(2),
+            after_sales_compensation: sumData(lastWeekData, "after_sales_compensation").toFixed(2),
+            dsr: averageData(lastWeekData, "dsr").toFixed(2),
+            xhs_shuadan: sumData(lastWeekData, "xhs_shuadan").toFixed(2),
+            erlei_shuadan: sumData(lastWeekData, "erlei_shuadan").toFixed(2),
+            bill: sumData(lastWeekData, "bill").toFixed(2),
+            bill_rate: (sumData(lastWeekData, "bill")/sumData(lastWeekData, "sale_amount")*100).toFixed(2),
+            // 其他字段可以根据需要添加
+        }
+
+        const lastLastWeekSummary = {
+            line_director: teamName+'汇总',
+            team_name: teamName+'汇总',
+            date: "上上周汇总",
+            operator: teamName+'汇总',
+            goods:sumData(lastLastWeekData, "goods"),
+            sale_amount: sumData(lastLastWeekData, "sale_amount").toFixed(2),
+            profit: sumData(lastLastWeekData, "profit").toFixed(2),
+            profit_rate: (sumData(lastLastWeekData, "profit")/sumData(lastLastWeekData, "sale_amount")*100).toFixed(2),
+            promotion_amount: sumData(lastLastWeekData, "promotion_amount").toFixed(2),
+            promotion_rate: (sumData(lastLastWeekData, "promotion_amount")/sumData(lastLastWeekData, "sale_amount")*100).toFixed(2),
+            bill_amount: sumData(lastLastWeekData, "bill_amount").toFixed(2),
+            order_num: sumData(lastLastWeekData, "order_num").toFixed(2),
+            refund_num: sumData(lastLastWeekData, "refund_num").toFixed(2),
+            refund_rate: (sumData(lastLastWeekData, "refund_num")/sumData(lastLastWeekData, "order_num")*100).toFixed(2),
+            express: sumData(lastLastWeekData, "express").toFixed(2),
+            verified_amount: sumData(lastLastWeekData, "verified_amount").toFixed(2),
+            verified_profit: sumData(lastLastWeekData, "verified_profit").toFixed(2),
+            verified_profit_rate: (sumData(lastLastWeekData, "verified_profit")/sumData(lastLastWeekData, "verified_amount")*100).toFixed(2),
+            after_sales_compensation: sumData(lastLastWeekData, "after_sales_compensation").toFixed(2),
+            dsr: averageData(lastWeekData, "dsr").toFixed(2),
+            xhs_shuadan: sumData(lastLastWeekData, "xhs_shuadan").toFixed(2),
+            erlei_shuadan: sumData(lastLastWeekData, "erlei_shuadan").toFixed(2),
+            bill: sumData(lastLastWeekData, "bill").toFixed(2),
+            bill_rate: (sumData(lastLastWeekData, "bill")/sumData(lastLastWeekData, "sale_amount")*100).toFixed(2),
+            // 其他字段可以根据需要添加
+        }
+
+        // 计算环比
+        const chainRatio = calculateChainRatio(lastWeekSummary.sale_amount, lastLastWeekSummary.sale_amount);
+
+        const chainRatioData = {
+            line_director: teamName+'环比',
+            team_name: teamName+'环比',
+            date: "环比",
+            operator: teamName+'环比',
+            goods: calculateChainRatio(lastWeekSummary.goods, lastLastWeekSummary.goods).toFixed(2) + "%",
+            sale_amount: calculateChainRatio(lastWeekSummary.sale_amount, lastLastWeekSummary.sale_amount).toFixed(2) + "%",
+            profit: calculateChainRatio(lastWeekSummary.profit, lastLastWeekSummary.profit).toFixed(2) + "%",
+            profit_rate: calculateChainRatio(lastWeekSummary.profit_rate, lastLastWeekSummary.profit_rate).toFixed(2),
+            promotion_amount: calculateChainRatio(lastWeekSummary.promotion_amount, lastLastWeekSummary.promotion_amount).toFixed(2) + "%",
+            promotion_rate: calculateChainRatio(lastWeekSummary.promotion_rate, lastLastWeekSummary.promotion_rate).toFixed(2),
+            bill_amount: calculateChainRatio(lastWeekSummary.bill_amount, lastLastWeekSummary.bill_amount).toFixed(2) + "%",
+            order_num: calculateChainRatio(lastWeekSummary.order_num, lastLastWeekSummary.order_num).toFixed(2) + "%",
+            refund_num: calculateChainRatio(lastWeekSummary.refund_num, lastLastWeekSummary.refund_num).toFixed(2) + "%",
+            refund_rate: calculateChainRatio(lastWeekSummary.refund_rate, lastLastWeekSummary.refund_rate).toFixed(2),
+            express: calculateChainRatio(lastWeekSummary.express, lastLastWeekSummary.express).toFixed(2) + "%",
+            verified_amount: calculateChainRatio(lastWeekSummary.verified_amount, lastLastWeekSummary.verified_amount).toFixed(2) + "%",
+            verified_profit: calculateChainRatio(lastWeekSummary.verified_profit, lastLastWeekSummary.verified_profit).toFixed(2) + "%",
+            verified_profit_rate: calculateChainRatio(lastWeekSummary.verified_profit_rate, lastLastWeekSummary.verified_profit_rate).toFixed(2),
+            after_sales_compensation: calculateChainRatio(lastWeekSummary.after_sales_compensation, lastLastWeekSummary.after_sales_compensation).toFixed(2) + "%",
+            dsr: calculateChainRatio(lastWeekSummary.dsr, lastLastWeekSummary.dsr).toFixed(2) + "%",
+            xhs_shuadan: calculateChainRatio(lastWeekSummary.xhs_shuadan, lastLastWeekSummary.xhs_shuadan).toFixed(2) + "%",
+            erlei_shuadan: calculateChainRatio(lastWeekSummary.erlei_shuadan, lastLastWeekSummary.erlei_shuadan).toFixed(2) + "%",
+            bill: calculateChainRatio(lastWeekSummary.bill, lastLastWeekSummary.bill).toFixed(2) + "%",
+            bill_rate: calculateChainRatio(lastWeekSummary.bill_rate, lastLastWeekSummary.bill_rate).toFixed(2),
+        }
+        // 构建结果
+        return [
+            ...lastLastWeekData,
+            lastLastWeekSummary,
+            ...lastWeekData,
+            lastWeekSummary,
+            chainRatioData,
+        ]
+    }).flat()
+    
+    const sortOrder = {
+        "一组": 1,
+        "二组": 2,
+        "三组": 3,
+        "四组": 4,
+        "无操作": 5 
+    }
+    
+    // 提取组别名称
+    const extractGroupName = (teamName) => {
+        if (teamName.includes("一组")) return "一组";
+        if (teamName.includes("二组")) return "二组";
+        if (teamName.includes("三组")) return "三组";
+        if (teamName.includes("四组")) return "四组";
+        return "无操作" // 默认返回 "无操作"
+    }
+    
+    // 排序函数
+    const sortedData = result.sort((a, b) => {
+        const groupA = extractGroupName(a.team_name)
+        const groupB = extractGroupName(b.team_name)
+        return sortOrder[groupA] - sortOrder[groupB]
+    })
+    const filteredData = sortedData.filter(item => !["无操作汇总", "总计汇总"].some(group => item.team_name.includes(group)))
+    return filteredData
 }
 
 const checkOperationOptimize = async () => {
