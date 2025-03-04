@@ -1,6 +1,5 @@
 const { query } = require('../../model/dbConn')
 const moment = require('moment')
-const mysql = require('mysql2')
 const goodsSaleInfoRepo = {}
 
 goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) => {
@@ -1450,7 +1449,6 @@ goodsSaleInfoRepo.getweeklyreport = async(start,end) =>{
     let lend = moment(end).format('YYYY-MM-DD') 
     let preStart = moment(start).subtract(7, 'day').format('YYYY-MM-DD')
     let preEnd = moment(end).subtract(7, 'day').format('YYYY-MM-DD')
-    console.log(preStart,preEnd)
     let sql =`with t1 as(
             select * from (
             select '上周' AS date
@@ -1662,7 +1660,6 @@ goodsSaleInfoRepo.getinfoweeklyreport = async(start,end,goodsinfo) =>{
     let lend = moment(end).format('YYYY-MM-DD') 
     let preStart = moment(start).subtract(7, 'day').format('YYYY-MM-DD')
     let preEnd = moment(end).subtract(7, 'day').format('YYYY-MM-DD')
-    console.log(preStart,preEnd)
     let sql = `WITH t1 AS (  SELECT * FROM (
 	SELECT '上周' AS date
 		,a.operator
@@ -1864,8 +1861,6 @@ goodsSaleInfoRepo.getinfoweeklyreport = async(start,end,goodsinfo) =>{
 			WHERE t1.goodsinfo=?
             GROUP BY date`
     let result = await query(sql,goodsinfo)
-    let q = mysql.format(sql,goodsinfo)
-    console.log(q)
     return result
 }
 module.exports = goodsSaleInfoRepo
