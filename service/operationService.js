@@ -921,7 +921,6 @@ const getGoodsInfoDetailTotal = async (goods_id, start, end, stats) => {
         result[dateMap[info[i].date]]['pay_express_fee'] = info[i].pay_express_fee
         result[dateMap[info[i].date]]['real_pay_amount'] = info[i].real_pay_amount
     }
-    console.log(result.info)
     return result
 }
 
@@ -2397,8 +2396,14 @@ const getOptimizeInfo = async (params, user) => {
     return result
 }
 
-const getReportInfo = async (start,end) =>{
-    let week = await goodsSaleInfoRepo.getweeklyreport ()
+const getReportInfo = async (start,end,goodsinfo) =>{
+    let week =[]
+    if(goodsinfo=='汇总'){
+        week = await goodsSaleInfoRepo.getweeklyreport(start,end)
+    } else{
+        week = await goodsSaleInfoRepo.getinfoweeklyreport(start,end,goodsinfo)
+    }
+    
     const groupedData = week.reduce((acc, item) => {
         if (!acc[item.team_name]) {
             acc[item.team_name] = []
@@ -2924,7 +2929,6 @@ const importXhsShuadan = async (rows, date) => {
         let order_id=rows[i].getCell(order_id_row).value
         shop_name=rows[i].getCell(shop_name_row).value
         let q = await shopInfoRepo.getShopIdByName(shop_name)
-        console.log(q)
         data.push(
             order_id,
             q[0].shop_id,

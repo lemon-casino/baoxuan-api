@@ -828,12 +828,13 @@ const getOptimizeInfo = async (req, res, next) => {
 
 const getReportInfo = async (req, res, next) => {
     try {
-        const {startDate, endDate} = req.query
+        const {startDate, endDate,goodsinfo} = req.query
         joiUtil.validate({
+            goodsinfo: {value: goodsinfo, schema: joiUtil.commonJoiSchemas.strRequired},
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
         })
-        const result = await operationService.getReportInfo(startDate, endDate)
+        const result = await operationService.getReportInfo(startDate, endDate,goodsinfo)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
