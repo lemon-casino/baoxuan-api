@@ -2397,8 +2397,14 @@ const getOptimizeInfo = async (params, user) => {
     return result
 }
 
-const getReportInfo = async (start,end) =>{
-    let week = await goodsSaleInfoRepo.getweeklyreport ()
+const getReportInfo = async (start,end,goodsinfo) =>{
+    let week =[]
+    if(goodsinfo=='汇总'){
+        week = await goodsSaleInfoRepo.getweeklyreport(start,end)
+    } else{
+        week = await goodsSaleInfoRepo.getinfoweeklyreport(start,end,goodsinfo)
+    }
+    
     const groupedData = week.reduce((acc, item) => {
         if (!acc[item.team_name]) {
             acc[item.team_name] = []
