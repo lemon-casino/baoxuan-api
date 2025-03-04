@@ -59,13 +59,20 @@ const getShopNameAttrDetails = async (id) => {
     const sql=`SELECT shop_name AS value,shop_name AS label FROM  shop_info WHERE project_id IN (
     SELECT id FROM project_info WHERE dept_id =?)`
     let result = await query(sql,id)
-    console.log(result)
     return  result || []
 }
 
-const savelog = async (body,userId,user,username,currentTime,type) => {
-    const sql=`INSERT INTO attribute_user_log (new_value,userId,users,username,create_time,type)VALUES (?,?,?,?,?,?)`
-    let result = await query(sql,[body,userId,user,username,currentTime,type])
+const savelog = async (old,body,userId,user,username,currentTime,type) => {
+    const sql=`INSERT INTO attribute_user_log (old_value,new_value,userId,users,username,create_time,type)VALUES (?,?,?,?,?,?,?)`
+    let result = await query(sql,[old,body,userId,user,username,currentTime,type])
+    return result
+}
+
+const saveupdatelog = async (oldbody,body,oldgoodsId,newgoodsId,oldbriefName,newbriefName,oldoperator,newoperator,oldlineDirector,newlineDirector,userId,user,username,currentTime,type) => {
+    const sql=`INSERT INTO attribute_user_log (old_value,new_value,old_goods_id,new_goods_id,old_brief_name,new_brief_name,
+    old_operator,new_operator,old_line_director,new_line_director,userId,users,username,create_time,type)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+    let result = await query(sql,[oldbody,body,oldgoodsId,newgoodsId,oldbriefName,newbriefName,oldoperator,newoperator,oldlineDirector,newlineDirector,userId,user,username,currentTime,type])
     return result
 }
 
@@ -296,6 +303,7 @@ module.exports = {
     updateskuIdAttrDetails,
     bulkCreateTable,
     getOperateAttributesMaintainer,
-    savelog
+    savelog,
+    saveupdatelog
 }
 

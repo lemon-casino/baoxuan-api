@@ -35,8 +35,34 @@ const updateProductAttrDetails = async (details) => {
     return await dianShangOperationAttributeRepo.updateProductAttrDetails(details, details.id)
 }
 
-const savelog = async (body,userId,user,username,currentTime,type) => {
-    return await dianShangOperationAttributeRepo.savelog(body,userId,user,username,currentTime,type)
+const savelog = async (old,body,userId,user,username,currentTime,type) => {
+    return await dianShangOperationAttributeRepo.savelog(old,body,userId,user,username,currentTime,type)
+}
+
+const saveupdatelog = async (oldbody,body,userId,user,username,currentTime,type) => {
+    let oldbriefName = null,
+    newbriefName = null,
+    oldoperator = null,
+    newoperator = null,
+    oldlineDirector = null,
+    newlineDirector = null,
+    oldgoodsId = oldbody.goodsId,
+    newgoodsId = body.goodsId
+    if(oldbody.briefName!=body.briefName){
+        oldbriefName=oldbody.briefName
+        newbriefName=body.briefName
+    }
+    if(oldbody.operator!=body.operator){
+        oldoperator=oldbody.operator
+        newoperator=body.operator
+    }
+    if(oldbody.lineDirector!=body.lineDirector){
+        oldlineDirector=oldbody.lineDirector
+        newlineDirector=body.lineDirector
+    }
+    let old=JSON.stringify(oldbody)
+    let newbody=JSON.stringify(body)
+    return await dianShangOperationAttributeRepo.saveupdatelog(old,newbody,oldgoodsId,newgoodsId,oldbriefName,newbriefName,oldoperator,newoperator,oldlineDirector,newlineDirector,userId,user,username,currentTime,type)
 }
 
 const saveProductAttr = async (details) => {
@@ -121,5 +147,6 @@ module.exports = {
     deleteProductAttr,
     uploadBulkUploadsTable,
     uploadtmBulkUploadsTable,
-    savelog
+    savelog,
+    saveupdatelog
 }

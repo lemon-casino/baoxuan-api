@@ -69,14 +69,14 @@ const getProductAttrDetails = async (req, res, next) => {
 const updateProductAttrDetails = async (req, res, next) => {
     try {
         const body = req.body
+        const result = await dianShangOperationAttributeService.getProductAttrDetails(body.id)
         await dianShangOperationAttributeService.updateProductAttrDetails(body)
         const userId = req.user.userId
         const user = req.user.id
         const username = req.user.username
         const currentTime = moment(req._startTime).format('YYYY-MM-DD HH:mm:ss')
         const type='updete'
-        const jsonString = JSON.stringify(body);
-        await dianShangOperationAttributeService.savelog(jsonString,userId,user,username,currentTime,type)
+        await dianShangOperationAttributeService.saveupdatelog(result,body,userId,user,username,currentTime,type)
         return res.send(biResponse.success())
     } catch (e) {
         next(e)
@@ -92,8 +92,9 @@ const saveProductAttrDetails = async (req, res, next) => {
         const username = req.user.username
         const currentTime = moment(req._startTime).format('YYYY-MM-DD HH:mm:ss')
         const type='insert'
+        const old = null
         const jsonString = JSON.stringify(body);
-        await dianShangOperationAttributeService.savelog(jsonString,userId,user,username,currentTime,type)
+        await dianShangOperationAttributeService.savelog(old,jsonString,userId,user,username,currentTime,type)
         return res.send(biResponse.success())
     } catch (e) {
         next(e)
@@ -104,12 +105,14 @@ const deleteProductAttr = async (req, res, next) => {
     try {
         const {id} = req.query
         joiUtil.validate({id})
+        const result = await dianShangOperationAttributeService.getProductAttrDetails(id)
         const userId = req.user.userId
         const user = req.user.id
         const username = req.user.username
         const currentTime = moment(req._startTime).format('YYYY-MM-DD HH:mm:ss')
         const type='delete'
-        await dianShangOperationAttributeService.savelog(id,userId,user,username,currentTime,type)
+        const old = JSON.stringify(result)
+        await dianShangOperationAttributeService.savelog(old,id,userId,user,username,currentTime,type)
         await dianShangOperationAttributeService.deleteProductAttr(id)
         return res.send(biResponse.success())
     } catch (e) {
