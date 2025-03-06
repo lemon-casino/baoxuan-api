@@ -1224,62 +1224,62 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                     }
                 }
                 break
-            case 'operation_rate':
-                sql = `${sql} AND EXISTS(
-                    SELECT * FROM (
-                        SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
-                            IFNULL(SUM(a1.operation_amount), 0) AS operation_amount 
-                        FROM goods_sales a1 WHERE a1.goods_id = "${goods_id}" 
-                            AND a1.date BETWEEN "${start}" AND "${end}") aa WHERE IF(sale_amount > 0, operation_amount / sale_amount * 100`
-                if (optimize[i].min != null && optimize[i].max != null) {
-                    sql = `${sql} >= ${optimize[i].min} 
-                            AND operation_amount / sale_amount * 100 < ${optimize[i].max}`
-                } else if (optimize[i].min != null) {
-                    sql = `${sql} >= ${optimize[i].min}`
-                } else if (optimize[i].max != null) {
-                    sql = `${sql} < ${optimize[i].max}`
-                }
-                sql = `${sql}, 1))`
-                if (optimize[i].children?.length) {
-                    let start1 = moment(start).subtract(8, 'day').format('YYYY-MM-DD')
-                    let end1 = moment(start).subtract(2, 'day').format('YYYY-MM-DD')
-                    for (let j = 0; j < optimize[i].children.length; j++) {
-                        if (optimize[i].children[j].type == 3) {
-                            let values = optimize[i].children[j].value.split(',')
-                            for (let k = 0; k < values.length; k++) {
-                                sql = `${sql}
-                                    AND NOT EXISTS(
-                                        SELECT doa.goods_id FROM dianshang_operation_attribute doa 
-                                        WHERE doa.goods_id = "${goods_id}" AND
-                                            IF(doa.${optimize[i].children[j].column} IS NOT NULL, doa.${optimize[i].children[j].column} NOT LIKE '%${values[k]}%', 1=1))`
-                            }              } else if (optimize[i].children[j].type == 1) {
-                            sql = `${sql} AND EXISTS(
-                                SELECT  * FROM (SELECT IFNULL(SUM(a2.sale_amount), 0) AS sale_amount, 
-                                    IFNULL(SUM(a2.packing_fee), 0) AS packing_fee, 
-                                    IFNULL(SUM(a2.labor_cost), 0) AS labor_cost, 
-                                    IFNULL(SUM(a2.bill), 0) AS bill, 
-                                    IFNULL(SUM(a2.express_fee), 0) AS express_fee, 
-                                    IFNULL(SUM(a2.cost_amount), 0) AS cost_amount, 
-                                    a2.goods_id FROM goods_sales_stats a2 
-                                WHERE a2.goods_id = "${goods_id}" 
-                                    AND a2.date BETWEEN "${start1}" AND "${end1}") aa WHERE 
-                                    goods_id IS NOT NULL AND 
-                                    IF(sale_amount > 0, 
-                                        (1 - (express_fee + packing_fee + labor_cost + cost_amount + bill) / sale_amount) * 100`
-                            if (optimize[i].children[j].min != null && optimize[i].children[j].max != null) {
-                                sql = `${sql} >= ${optimize[i].children[j].min} 
-                                        AND (1 - (express_fee + packing_fee + labor_cost + cost_amount + bill) / sale_amount) * 100 < 
-                                            ${optimize[i].children[j].max}`
-                            } else if (optimize[i].children[j].min != null) {
-                                sql = `${sql} >= ${optimize[i].children[j].min}`
-                            } else if (optimize[i].children[j].max != null) {
-                                sql = `${sql} < ${optimize[i].children[j].max}`
-                            }
-                            sql = `${sql}, 1))`
-                        }
-                    }
-                }
-                break
+            // case 'operation_rate':
+            //     sql = `${sql} AND EXISTS(
+            //         SELECT * FROM (
+            //             SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
+            //                 IFNULL(SUM(a1.operation_amount), 0) AS operation_amount 
+            //             FROM goods_sales a1 WHERE a1.goods_id = "${goods_id}" 
+            //                 AND a1.date BETWEEN "${start}" AND "${end}") aa WHERE IF(sale_amount > 0, operation_amount / sale_amount * 100`
+            //     if (optimize[i].min != null && optimize[i].max != null) {
+            //         sql = `${sql} >= ${optimize[i].min} 
+            //                 AND operation_amount / sale_amount * 100 < ${optimize[i].max}`
+            //     } else if (optimize[i].min != null) {
+            //         sql = `${sql} >= ${optimize[i].min}`
+            //     } else if (optimize[i].max != null) {
+            //         sql = `${sql} < ${optimize[i].max}`
+            //     }
+            //     sql = `${sql}, 1))`
+            //     if (optimize[i].children?.length) {
+            //         let start1 = moment(start).subtract(8, 'day').format('YYYY-MM-DD')
+            //         let end1 = moment(start).subtract(2, 'day').format('YYYY-MM-DD')
+            //         for (let j = 0; j < optimize[i].children.length; j++) {
+            //             if (optimize[i].children[j].type == 3) {
+            //                 let values = optimize[i].children[j].value.split(',')
+            //                 for (let k = 0; k < values.length; k++) {
+            //                     sql = `${sql}
+            //                         AND NOT EXISTS(
+            //                             SELECT doa.goods_id FROM dianshang_operation_attribute doa 
+            //                             WHERE doa.goods_id = "${goods_id}" AND
+            //                                 IF(doa.${optimize[i].children[j].column} IS NOT NULL, doa.${optimize[i].children[j].column} NOT LIKE '%${values[k]}%', 1=1))`
+            //                 }              } else if (optimize[i].children[j].type == 1) {
+            //                 sql = `${sql} AND EXISTS(
+            //                     SELECT  * FROM (SELECT IFNULL(SUM(a2.sale_amount), 0) AS sale_amount, 
+            //                         IFNULL(SUM(a2.packing_fee), 0) AS packing_fee, 
+            //                         IFNULL(SUM(a2.labor_cost), 0) AS labor_cost, 
+            //                         IFNULL(SUM(a2.bill), 0) AS bill, 
+            //                         IFNULL(SUM(a2.express_fee), 0) AS express_fee, 
+            //                         IFNULL(SUM(a2.cost_amount), 0) AS cost_amount, 
+            //                         a2.goods_id FROM goods_sales_stats a2 
+            //                     WHERE a2.goods_id = "${goods_id}" 
+            //                         AND a2.date BETWEEN "${start1}" AND "${end1}") aa WHERE 
+            //                         goods_id IS NOT NULL AND 
+            //                         IF(sale_amount > 0, 
+            //                             (1 - (express_fee + packing_fee + labor_cost + cost_amount + bill) / sale_amount) * 100`
+            //                 if (optimize[i].children[j].min != null && optimize[i].children[j].max != null) {
+            //                     sql = `${sql} >= ${optimize[i].children[j].min} 
+            //                             AND (1 - (express_fee + packing_fee + labor_cost + cost_amount + bill) / sale_amount) * 100 < 
+            //                                 ${optimize[i].children[j].max}`
+            //                 } else if (optimize[i].children[j].min != null) {
+            //                     sql = `${sql} >= ${optimize[i].children[j].min}`
+            //                 } else if (optimize[i].children[j].max != null) {
+            //                     sql = `${sql} < ${optimize[i].children[j].max}`
+            //                 }
+            //                 sql = `${sql}, 1))`
+            //             }
+            //         }
+            //     }
+            //     break
             case 'roi':
                 sql = `${sql} AND EXISTS(
                     SELECT * FROM (
