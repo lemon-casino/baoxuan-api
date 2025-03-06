@@ -2396,12 +2396,12 @@ const getOptimizeInfo = async (params, user) => {
     return result
 }
 
-const getReportInfo = async (start,end,goodsinfo) =>{
+const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
     let week =[]
     if(goodsinfo=='汇总'){
-        week = await goodsSaleInfoRepo.getweeklyreport(start,end)
+        week = await goodsSaleInfoRepo.getweeklyreport(lstart, lend,preStart,preEnd,goodsinfo)
     } else{
-        week = await goodsSaleInfoRepo.getinfoweeklyreport(start,end,goodsinfo)
+        week = await goodsSaleInfoRepo.getinfoweeklyreport(lstart, lend,preStart,preEnd,goodsinfo)
     }
     
     const groupedData = week.reduce((acc, item) => {
@@ -2879,24 +2879,37 @@ const importErleiShuadan = async (rows, date) => {
     let data = [], count = 0, result = false,name='二类'
     let columns = rows[0].values,
     order_id_row = null,
-    commission_row = null
-    for(let i=0;i<columns.length;i++){
+    commission_row = null,
+    sho_name_row = null,
+    sale_amount_row = null,
+    goods_id_row = null
+    for(let i=0;i<=columns.length;i++){
         if(columns[i] == '线上单号'){
             order_id_row = i
         }else if(columns[i]=='佣金'){
             commission_row = i
+        }else if(columns[i]=='ID'){
+            goods_id_row = i
+        }else if(columns[i]=='店铺'){
+            sho_name_row = i
+        }else if(columns[i]=='实付金额'){
+            sale_amount_row = i
         }
     }
-    for(let i=1;i<rows.length;i++){
+    for(let i = 1;i < rows.length;i++){
         let order_id=rows[i].getCell(order_id_row).value
         let q = await ordersGoodsSalesRepo.getByordercode(order_id,date)
+        let shop_id = q?.length ? q[0].shop_id :null
+        let sale_amount = q?.length ? q[0].sale_amount : rows[i].getCell(sale_amount_row).value
+        let goods_id = q?.length ? q[0].goods_id : rows[i].getCell(goods_id_row).value
+        let shop_name = q?.length ? q[0].shop_name : rows[i].getCell(sho_name_row).value
         data.push(
             order_id,
             rows[i].getCell(commission_row).value,
-            q[0].shop_id,
-            q[0].sale_amount,
-            q[0].goods_id,
-            q[0].shop_name,
+            shop_id,
+            sale_amount,
+            goods_id,
+            shop_name,
             date,
             name
         )
