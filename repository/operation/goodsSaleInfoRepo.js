@@ -1444,11 +1444,7 @@ goodsSaleInfoRepo.getJDskuInfoDetail = async(goods_id, start, end, stats) =>{
     
 }
 
-goodsSaleInfoRepo.getweeklyreport = async(start,end) =>{
-    let lstart = moment(start).format('YYYY-MM-DD')
-    let lend = moment(end).format('YYYY-MM-DD') 
-    let preStart = moment(start).subtract(7, 'day').format('YYYY-MM-DD')
-    let preEnd = moment(end).subtract(7, 'day').format('YYYY-MM-DD')
+goodsSaleInfoRepo.getweeklyreport = async(lstart, lend,preStart,preEnd,goodsinfo) =>{
     let sql =`with t1 as(
             select * from (
             select '上周' AS date
@@ -1655,11 +1651,7 @@ goodsSaleInfoRepo.getweeklyreport = async(start,end) =>{
     let result = await query(sql)
     return result
 }
-goodsSaleInfoRepo.getinfoweeklyreport = async(start,end,goodsinfo) =>{
-    let lstart = moment(start).format('YYYY-MM-DD')
-    let lend = moment(end).format('YYYY-MM-DD') 
-    let preStart = moment(start).subtract(7, 'day').format('YYYY-MM-DD')
-    let preEnd = moment(end).subtract(7, 'day').format('YYYY-MM-DD')
+goodsSaleInfoRepo.getinfoweeklyreport = async(lstart, lend,preStart,preEnd,goodsinfo) =>{
     let sql = `WITH t1 AS (  SELECT * FROM (
 	SELECT '上周' AS date
 		,a.operator
@@ -1765,7 +1757,7 @@ goodsSaleInfoRepo.getinfoweeklyreport = async(start,end,goodsinfo) =>{
 		,ROUND((IFNULL(SUM(a.bill_amount),0)+IFNULL(SUM(a.promotion_amount),0)+IFNULL(SUM(a2.after_sales_compensation),0)+IFNULL(SUM(a4.xhs_shuadan),0)+IFNULL(SUM(a5.erlei_shuadan),0))/SUM(a.sale_amount)*100,2) AS bill_rate
 		,a.goodsinfo
 	FROM (		
-	SELECT IFNULL(d.operator,'无操作') AS operator,s.*,IF(DATE_SUB('${lend}', INTERVAL 60 DAY) <= d.onsale_date,'新品','老品')  AS goodsinfo FROM (
+	SELECT IFNULL(d.operator,'无操作') AS operator,s.*,IF(DATE_SUB('${preEnd}', INTERVAL 60 DAY) <= d.onsale_date,'新品','老品')  AS goodsinfo FROM (
 	SELECT s.goods_id,SUM(s.sale_amount) AS sale_amount
 		,SUM(s.profit) AS profit
 		,SUM(s.promotion_amount) AS promotion_amount
@@ -1830,7 +1822,7 @@ goodsSaleInfoRepo.getinfoweeklyreport = async(start,end,goodsinfo) =>{
                             LEFT JOIN users AS u1
                             ON a.user_id=u1.user_id)AS b
             on t1.operator=b.operator
-			WHERE t1.goodsinfo='新品'
+			WHERE t1.goodsinfo=?
             UNION ALL
             select '总计' AS line_director
             ,'总计' AS team_name
@@ -1860,7 +1852,7 @@ goodsSaleInfoRepo.getinfoweeklyreport = async(start,end,goodsinfo) =>{
             from t1
 			WHERE t1.goodsinfo=?
             GROUP BY date`
-    let result = await query(sql,goodsinfo)
+    let result = await query(sql,[goodsinfo,goodsinfo])
     return result
 }
 module.exports = goodsSaleInfoRepo

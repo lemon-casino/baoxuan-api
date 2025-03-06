@@ -834,7 +834,20 @@ const getReportInfo = async (req, res, next) => {
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
         })
-        const result = await operationService.getReportInfo(startDate, endDate,goodsinfo)
+        let lstart = moment(startDate).format('YYYY-MM-DD')
+        let lend = moment(endDate).format('YYYY-MM-DD') 
+        let preStart = moment(startDate).subtract(7, 'day').format('YYYY-MM-DD')
+        let preEnd = moment(endDate).subtract(7, 'day').format('YYYY-MM-DD')
+        let mstart = moment(startDate).startOf('month').format('YYYY-MM-DD')
+        let mend = moment(endDate).endOf('month').format('YYYY-MM-DD')
+        let lmstart = moment(startDate).subtract(1, 'month').startOf('month').format('YYYY-MM-DD')
+        let lmend = moment(endDate).subtract(1, 'month').endOf('month').format('YYYY-MM-DD')
+        let result=[]
+        if(moment(lstart).isSame(mstart, 'day')&&moment(lend).isSame(mend, 'day')){
+            result = await operationService.getReportInfo(lstart, lend,lmstart,lmend,goodsinfo)
+        }else{
+            result = await operationService.getReportInfo(lstart, lend,preStart,preEnd,goodsinfo)
+        }
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -995,7 +1008,6 @@ const importErleiShuadan = async (req, res, next) => {
             const file = files.file
             const date = file.originalFilename.split('.')[0].split('_')
             const time = date[1]
-            console.log(time)
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
             fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
@@ -1033,7 +1045,6 @@ const importXhsShuadan = async (req, res, next) => {
             const file = files.file
             const date = file.originalFilename.split('.')[0].split('_')
             const time = date[1]
-            console.log(time)
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
             fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
