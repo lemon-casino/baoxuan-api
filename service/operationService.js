@@ -2559,6 +2559,7 @@ const checkOperationOptimize = async () => {
     let goods_info = await userOperationRepo.getLinkIds()
     for (let i = 0; i < goods_info.length; i++) {
         for (let j = 0; j < optimize.length; j++) {
+            if (optimize[j].optimize_type == '费比高') continue
             let info = await goodsSaleInfoRepo.getOptimizeResult(
                 goods_info[i].goods_id,
                 null,

@@ -93,10 +93,6 @@ const getProcessStat = async function (userNames, tag, startDate, endDate) {
                 vaf.is_sub, piv3.field_id, piv3.value, pis2.field_id, pis2.value, 
                 vp.type, pis2.index, pis2.parent_id, pis3.value 
         ) a LEFT JOIN vision_field_type vft ON vft.form_id = a.form_id 
-            WHERE IF(a.type IS NOT NULL, EXISTS(
-                SELECT * FROM form_field_data ffd 
-                WHERE ffd.id = vft.ffd_id AND LOCATE(ffd.value, a.type) > 0
-            ), TRUE) 
         GROUP BY a.id, a.action_exit, a.count, a.score, a.field_id, a.pindex, a.parent_id) b 
         GROUP BY b.action_exit`
     let tmp, tmp1
