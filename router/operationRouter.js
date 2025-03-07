@@ -46,6 +46,7 @@ router.get('/work-pannel', operationApi.getWorkStats)
 router.get('/new-on-sale', operationApi.getNewOnSaleInfo)
 router.get('/optimize', operationApi.getOptimizeInfo)
 router.get('/report', operationApi.getReportInfo)
+router.get('/report/download', operationApi.ReportDownload)
 
 //表单配置
 router.post('/pannel-setting', operationApi.setPannelSetting)
