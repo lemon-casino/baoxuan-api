@@ -2435,7 +2435,7 @@ const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
         const lastWeekSummary = {
             line_director: teamName+'汇总',
             team_name: teamName+'汇总',
-            date: "上周汇总",
+            date: "上周",
             operator: teamName+'汇总',
             goods:sumData(lastWeekData, "goods"),
             sale_amount: sumData(lastWeekData, "sale_amount").toFixed(2),
@@ -2463,7 +2463,7 @@ const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
         const lastLastWeekSummary = {
             line_director: teamName+'汇总',
             team_name: teamName+'汇总',
-            date: "上上周汇总",
+            date: "上上周",
             operator: teamName+'汇总',
             goods:sumData(lastLastWeekData, "goods"),
             sale_amount: sumData(lastLastWeekData, "sale_amount").toFixed(2),
@@ -2494,7 +2494,7 @@ const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
         const chainRatioData = {
             line_director: teamName+'环比',
             team_name: teamName+'环比',
-            date: "环比",
+            date: teamName+'环比',
             operator: teamName+'环比',
             goods: calculateChainRatio(lastWeekSummary.goods, lastLastWeekSummary.goods).toFixed(2) + "%",
             sale_amount: calculateChainRatio(lastWeekSummary.sale_amount, lastLastWeekSummary.sale_amount).toFixed(2) + "%",
