@@ -843,11 +843,19 @@ const getReportInfo = async (req, res, next) => {
         let lmstart = moment(startDate).subtract(1, 'month').startOf('month').format('YYYY-MM-DD')
         let lmend = moment(endDate).subtract(1, 'month').endOf('month').format('YYYY-MM-DD')
         let result=[]
-        if(moment(lstart).isSame(mstart, 'day')&&moment(lend).isSame(mend, 'day')){
-            result = await operationService.getReportInfo(lstart, lend,lmstart,lmend,goodsinfo)
+        if(goodsinfo=='推广汇总'){
+            result = await operationService.getTMPromotion(lstart,lend)
+        }else if(goodsinfo=='推广明细'){
+            result = await operationService.getTMPromotioninfo(lstart,lend)
         }else{
-            result = await operationService.getReportInfo(lstart, lend,preStart,preEnd,goodsinfo)
+            if(moment(lstart).isSame(mstart, 'day')&&moment(lend).isSame(mend, 'day')){
+                result = await operationService.getReportInfo(lstart, lend,lmstart,lmend,goodsinfo)
+            }else{
+                result = await operationService.getReportInfo(lstart, lend,preStart,preEnd,goodsinfo)
+                
+            }
         }
+        console.log(result)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -861,31 +869,6 @@ const ReportDownload = async (req, res, next) => {
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
         })
-        const columns = [
-            { header: "日期", key: 'date' },
-            { header: "组", key: 'team_name' },
-            { header: "产品线负责人", key: 'line_director' },
-            { header: "运营负责人", key: 'operator' },
-            { header: "链接ID", key: 'goods' },
-            { header: "实际发货金额", key: 'sale_amount' },
-            { header: "利润额", key: 'profit' },
-            { header: "核销金额", key: 'verified_amount' },
-            { header: "核销利润额", key: 'verified_profit' },
-            { header: "快递费", key: 'express' },
-            { header: "扣点", key: 'bill' },
-            { header: "推广", key: 'promotion_amount' },
-            { header: "推广费比", key: 'promotion_rate' },
-            { header: "平台刷单", key: 'erlei_shuadan' },
-            { header: "小红书刷单", key: 'xhs_shuadan' },
-            { header: "售后赔偿", key: 'after_sales_compensation' },
-            { header: "退换率", key: 'refund_rate' },
-            { header: "质量分", key: 'dsr' },
-            { header: "汇总费比", key: 'bill_rate' },
-            { header: "组内人效", key: 'group_effectiveness' },
-            { header: "利润率", key: 'profit_rate' },
-            { header: "核销利润率", key: 'verified_profit_rate' },
-            { header: "组金额占比", key: 'team_saleamount_rate' },
-        ]
         let lstart = moment(startDate).format('YYYY-MM-DD')
         let lend = moment(endDate).format('YYYY-MM-DD') 
         let preStart = moment(startDate).subtract(7, 'day').format('YYYY-MM-DD')
@@ -898,23 +881,35 @@ const ReportDownload = async (req, res, next) => {
         const sheet1 = workbook.addWorksheet('汇总')
         const sheet2 = workbook.addWorksheet('新品')
         const sheet3 = workbook.addWorksheet('老品')
-        sheet1.columns = columns
-        sheet2.columns = columns
-        sheet3.columns = columns
+        const sheet4 = workbook.addWorksheet('推广明细')
+        const sheet5 = workbook.addWorksheet('推广汇总')
         if(moment(lstart).isSame(mstart, 'day')&&moment(lend).isSame(mend, 'day')){
-            data1 = await operationService.getReportInfo(lstart, lend,lmstart,lmend,'汇总')
-            data2 = await operationService.getReportInfo(lstart, lend,lmstart,lmend,'新品')
-            data3 = await operationService.getReportInfo(lstart, lend,lmstart,lmend,'老品')
+           result1 = await operationService.getReportInfo(lstart, lend,lmstart,lmend,'汇总')
+           result2 = await operationService.getReportInfo(lstart, lend,lmstart,lmend,'新品')
+           result3 = await operationService.getReportInfo(lstart, lend,lmstart,lmend,'老品')
         }else{
-            data1 = await operationService.getReportInfo(lstart, lend,preStart,preEnd,'汇总')
-            data2 = await operationService.getReportInfo(lstart, lend,preStart,preEnd,'新品')
-            data3 = await operationService.getReportInfo(lstart, lend,preStart,preEnd,'老品')
+            result1 = await operationService.getReportInfo(lstart, lend,preStart,preEnd,'汇总')
+            result2 = await operationService.getReportInfo(lstart, lend,preStart,preEnd,'新品')
+            result3 = await operationService.getReportInfo(lstart, lend,preStart,preEnd,'老品')
         }
+        result4 = await operationService.getTMPromotioninfo(lstart, lend)
+        result5 = await operationService.getTMPromotion(lstart, lend)
+        sheet1.columns = result1.columns
+        sheet2.columns = result2.columns
+        sheet3.columns = result3.columns
+        sheet4.columns = result4.columns
+        sheet5.columns = result5.columns
+        data1 = result1.data
+        data2 = result2.data
+        data3 = result3.data
+        data4 = result4.data
+        data5 = result5.data
         for (let i = 0; i < data1.length; i++) {
             data1[i].promotion_rate = data1[i].promotion_rate + '%'
             data1[i].bill_rate = data1[i].bill_rate + '%'
             data1[i].profit_rate = data1[i].profit_rate + '%'
             data1[i].verified_profit_rate = data1[i].verified_profit_rate + '%'
+            data1[i].team_saleamount_rate = data1[i].team_saleamount_rate + '%'
             sheet1.addRow(data1[i])
         }
         for (let i = 0; i < data2.length; i++) {
@@ -922,6 +917,7 @@ const ReportDownload = async (req, res, next) => {
             data2[i].bill_rate = data2[i].bill_rate + '%'
             data2[i].profit_rate = data2[i].profit_rate + '%'
             data2[i].verified_profit_rate = data2[i].verified_profit_rate + '%'
+            data2[i].team_saleamount_rate = data2[i].team_saleamount_rate + '%'
             sheet2.addRow(data2[i])
         }
         for (let i = 0; i < data3.length; i++) {
@@ -929,7 +925,14 @@ const ReportDownload = async (req, res, next) => {
             data3[i].bill_rate = data3[i].bill_rate + '%'
             data3[i].profit_rate = data3[i].profit_rate + '%'
             data3[i].verified_profit_rate = data3[i].verified_profit_rate + '%'
+            data3[i].team_saleamount_rate = data3[i].team_saleamount_rate + '%'
             sheet3.addRow(data3[i])
+        }
+        for (let i = 0; i < data4.length; i++) {
+            sheet4.addRow(data4[i])
+        }
+        for (let i = 0; i < data3.length; i++) {
+            sheet5.addRow(data5[i])
         }
         const buffer = await workbook.xlsx.writeBuffer()
         res.setHeader('Content-Disposition', `attachment; filename="zb-${req.query.startDate}-${req.query.endDate}.xlsx"`)
