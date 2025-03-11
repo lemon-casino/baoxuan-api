@@ -528,6 +528,88 @@ const tableHeaderExtra = {
     }]
 }
 
+const newPannelHeader = [
+    {
+        field_id: 'textField_lxkb9f8v', 
+        title: '需求/产品名称'
+    }, {
+        field_id: 'radioField_lxkb9f93', 
+        title: '上架平台'
+    }, {
+        field_id: 'employeeField_lxkb9f9a', 
+        title: '运营负责人'
+    }, {
+        field_id: 'operation_leader', 
+        title: '运营组长'
+    }, {
+        field_id: 'product_img', 
+        title: '产品图片'
+    }, {
+        field_id: 'radioField_m4s69d9s', 
+        title: '链接级别'
+    }, {
+        field_id: 'radioField_m82nqz8h', 
+        title: '优先级'
+    }, {
+        field_id: 'sample_complete', 
+        title: '样品是否齐全'
+    }, {
+        field_id: 'operation_vision_type', 
+        title: '运营视觉类别'
+    }, {
+        field_id: 'operation_vision_info', 
+        title: '运营类别细分'
+    }, {
+        field_id: 'vision_type', 
+        title: '视觉类别'
+    }, {
+        field_id: 'vision_info', 
+        title: '类别细分'
+    }, {
+        field_id: 'employeeField_m0n7i20u', 
+        title: '视觉负责人'
+    }, {
+        field_id: 'plan_status', 
+        title: '方案'
+    }, {
+        field_id: 'checkboxField_m5orks8h', 
+        title: '方案类型'
+    }, {
+        field_id: 'num', 
+        title: '过方案后需求屏数',
+        children: [
+            {
+                field_id: 'textField_m82nqz8k',
+                title: '重点'
+            }, {
+                field_id: 'textField_m82nqz8l',
+                title: '普通'
+            }, {
+                field_id: 'textField_m82nqz8m',
+                title: '简单'
+            }
+        ]
+    }, {
+        field_id: 'design_start', 
+        title: '设计开始啥时间'
+    }, {
+        field_id: 'photography_progress', 
+        title: '摄影进度'
+    }, {
+        field_id: 'employeeField_lzcfqrh3', 
+        title: '摄影负责人'
+    }, {
+        field_id: 'design_progress', 
+        title: '视觉进度'
+    }, {
+        field_id: 'design_end', 
+        title: '设计完成时间'
+    }, {
+        field_id: 'upload_status', 
+        title: '上传链图云'
+    }
+]
+
 const developmentType = {
     1: 'supplier_num',
     2: 're_num',
@@ -605,5 +687,6 @@ module.exports = {
     developmentTypeMap,
     developmentStatusMap,
     developmentWorkType,
-    developmentWorkProblem
+    developmentWorkProblem,
+    newPannelHeader
 }

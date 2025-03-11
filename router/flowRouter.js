@@ -49,6 +49,10 @@ router.get("/vision-review", flowHandler.getVisionReview)
  * 视觉方案
  */
 router.get("/vision-plan", flowHandler.getVisionPlan)
+/**
+ * 新版爆款-视觉画板
+ */
+router.get('/vision-new-pannel', flowHandler.getVisionNewPannel)
 router.get("/vision-action-details", flowHandler.getVisionUsersDetails)
 /**
  * 运营选品池

@@ -397,6 +397,15 @@ const getVisionPlan = async (req, res, next) => {
     }
 }
 
+const getVisionNewPannel = async (req, res, next) => {
+    try {
+        const result = await flowService.getVisionNewPannel(req.query)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const getOperateSelection = async (req, res, next) => {
     try {
         const {currentPage, pageSize, type} = req.query
@@ -461,5 +470,6 @@ module.exports = {
     getVisionUsersDetails,
     getOperateSelection,
     getOperateSelectionHeader,
-    createOperateAnalysis
+    createOperateAnalysis,
+    getVisionNewPannel
 }

@@ -29,7 +29,7 @@ const patchUtil = require("@/patch/patchUtil")
 const userCommonService = require("@/service/common/userCommonService");
 const outUsersRepo = require("@/repository/outUsersRepo");
 const newFormsRepo = require('../repository/newFormsRepo')
-const { designerTags, nameFilter, tableHeaderExtra } = require("../const/newFormConst")
+const { designerTags, nameFilter, tableHeaderExtra, newPannelHeader } = require("../const/newFormConst")
 const userOperationRepo = require("../repository/operation/userOperationRepo")
 const userFlowSettingRepo = require("../repository/userFlowSettingRepo")
 const { typeList, operationSelectionFlow, operationSelectionFlowNode, analysisFieldMap, analysisFlowUUid, analysisLinkPrevious } = require("../const/operationConst")
@@ -1483,6 +1483,12 @@ const getVisionPlan = async () => {
     return result
 }
 
+const getVisionNewPannel = async (params) => {
+    let columns = newPannelHeader;
+    let data = await newFormsRepo.getVisionNewPannel()
+    return {columns, data}
+}
+
 const getOperateSelection = async (params, userId) => {
     let result = {
         currentPage: parseInt(params.currentPage),
@@ -1674,5 +1680,6 @@ module.exports = {
     getVisionPlan,
     getOperateSelection,
     getOperateSelectionHeader,
-    createOperateAnalysis
+    createOperateAnalysis,
+    getVisionNewPannel
 }
