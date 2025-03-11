@@ -2155,6 +2155,254 @@ const getVisionInfo = async function (type) {
     return result
 }
 
+const getVisionNewPannel = async function () {
+    let data = []
+    let sql = `SELECT pi.instance_id, pi.status, ff.field_id, pi.id, piv.value, p.form_id 
+        FROM vision_leader vl JOIN processes p ON p.form_id = vl.form_id
+        LEFT JOIN process_instances pi ON pi.process_id = p.id
+            AND pi.status IN ('COMPLETED', 'RUNNING', 'TERMINATED')
+        JOIN vision_pannel vp ON vp.form_id = vl.form_id 
+		JOIN process_instance_records pir ON pir.instance_id = pi.id
+			AND pir.show_name = vl.activity_name 
+			AND pir.activity_id = vl.activity_id
+			AND pir.action_exit = vl.action_exit
+        LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id
+            AND piv.field_id = vp.field_id
+        JOIN form_fields ff ON ff.form_id = vl.form_id 
+            AND ff.field_id = vp.field_id
+        WHERE vp.type = 3
+        ORDER BY pi.id DESC, ff.field_id`
+    let row = await query(sql)
+    if (row?.length) {
+        let info = {}, row1, value, dataMap = {}
+        for (let i = 0; i < row.length; i++) {
+            if (i == 0 || !(row[i].id == row[i-1].id && 
+                row[i].field_id == row[i-1].field_id)) {
+                if (!info[row[i].instance_id]) {
+                    info[row[i].instance_id] = {
+                        instance_id: row[i].instance_id,
+                        form_id: row[i].form_id,
+                        status: row[i].status,
+                        id: row[i].id,
+                        operation_vision_info: [],
+                        vision_info: []
+                    }
+                    if (row[i].status == 'TERMINATED') {
+                        info[row[i].instance_id]['sample_complete'] = '不做了'
+                        info[row[i].instance_id]['plan_status'] = '不做了'
+                    }
+                    sql = `SELECT pir.id, pir.action_exit, pir.operate_time, 0 AS type 
+                        FROM process_instance_records pir
+                        WHERE pir.instance_id = ${row[i].id} 
+                            AND pir.activity_id IN ('node_ocm0n6oqik4', 'node_ocm0nitc3f7') 
+                            AND pir.id = (
+                                SELECT MAX(p2.id) FROM process_instance_records p2
+                                WHERE pir.instance_id = p2.instance_id
+                                    AND pir.activity_id = p2.activity_id
+                                    AND pir.show_name = p2.show_name)
+                        UNION ALL 
+                        SELECT pir.id, pir.action_exit, pir.operate_time, 1 AS type 
+                        FROM process_instance_records pir
+                        WHERE pir.instance_id = ${row[i].id} 
+                            AND pir.activity_id IN ('node_ocm0nieqby2') 
+                            AND pir.id = (
+                                SELECT MAX(p2.id) FROM process_instance_records p2
+                                WHERE pir.instance_id = p2.instance_id
+                                    AND pir.activity_id = p2.activity_id
+                                    AND pir.show_name = p2.show_name)
+                        UNION ALL 
+                        SELECT pir.id, pir.action_exit, pir.operate_time, 2 AS type 
+                        FROM process_instance_records pir
+                        WHERE pir.instance_id = ${row[i].id} 
+                            AND pir.activity_id IN ('node_ocm0nitc3fl') 
+                            AND pir.id = (
+                                SELECT MAX(p2.id) FROM process_instance_records p2
+                                WHERE pir.instance_id = p2.instance_id
+                                    AND pir.activity_id = p2.activity_id
+                                    AND pir.show_name = p2.show_name)
+                        UNION ALL 
+                        SELECT pir.id, pir.action_exit, pir.operate_time, 3 AS type 
+                        FROM process_instance_records pir
+                        WHERE pir.instance_id = ${row[i].id} 
+                            AND pir.activity_id IN ('node_ocm0nitc3f1p') 
+                            AND pir.id = (
+                                SELECT MAX(p2.id) FROM process_instance_records p2
+                                WHERE pir.instance_id = p2.instance_id
+                                    AND pir.activity_id = p2.activity_id
+                                    AND pir.show_name = p2.show_name)`
+                    row1 = await query(sql)
+                    info[row[i].instance_id]['sample_complete'] = '不需要样品'
+                    info[row[i].instance_id]['design_progress'] = '未开始'
+                    info[row[i].instance_id]['upload_status'] = '未完成'
+                    if (row1?.length) {
+                        for (let ii = 0; ii < row1.length; ii++) {
+                            if (row1[ii].type == 0) {
+                                if (row1[0].action_exit == 'agree') 
+                                    info[row[i].instance_id]['sample_complete'] = '齐全'
+                                else info[row[i].instance_id]['sample_complete'] = '不齐全'
+                            } else if (row1[ii].type == 1) {                       
+                                if (row1[0].action_exit == 'agree') {
+                                    info[row[i].instance_id]['plan_status'] = '已过'
+                                    info[row[i].instance_id]['design_start'] = row1[0].operate_time
+                                    info[row[i].instance_id]['design_progress'] = '进行中'
+                                } else info[row[i].instance_id]['plan_status'] = '未过'
+                            } else if (row1[ii].type == 2) {
+                                if (row1[0].action_exit == 'agree') {
+                                    info[row[i].instance_id]['photography_progress'] = '已拍完'
+                                } else if (row1[0].action_exit == 'doing') {
+                                    info[row[i].instance_id]['photography_progress'] = '拍摄中'
+                                } else {
+                                    info[row[i].instance_id]['photography_progress'] = '未开始'
+                                }
+                            } else if (row1[ii].type == 3 && row1[ii].action_exit == 'agree') {
+                                info[row[i].instance_id]['design_progress'] = '已完成'
+                                info[row[i].instance_id]['design_end'] = row1[0].operate_time
+                                info[row[i].instance_id]['upload_status'] = '完成上传'
+                            }
+                        }
+                    }
+                }
+                switch (row[i].field_id) { 
+                    case 'employeeField_m4jjxmrt':
+                        if (row[i].value) 
+                            info[row[i].instance_id]['operation_leader'] = row[i].value.replace(/[\[\]"]+/g, "")
+                        break
+                    case 'employeeField_lxkd9f59':
+                        if (row[i].value && !info[row[i].instance_id]['operation_leader']) 
+                            info[row[i].instance_id]['operation_leader'] = row[i].value.replace(/[\[\]"]+/g, "")
+                        break
+                    case 'attachmentField_m17lwgyj':
+                        value = row[i].value ? JSON.parse(JSON.parse(row[i].value))[0]['downloadUrl'] : null
+                        info[row[i].instance_id]['product_img'] = value
+                        break
+                    case 'radioField_m47v83c5':
+                        if (row[i].value) 
+                            info[row[i].instance_id]['operation_vision_type'] = row[i].value.replace(/[\\"]+/g, "")
+                        break
+                    case 'checkboxField_m5nq85ha':
+                        if (row[i].value && !info[row[i].instance_id]['operation_vision_info']) {
+                            info[row[i].instance_id]['operation_vision_info'] = row[i].value.replace(/[\[\\\]"]+/g, "").split(',')
+                        }
+                        break
+                    case 'checkboxField_m5kifg28':
+                        if (row[i].value && row[i].value.indexOf('店铺（单位：套）') != -1) {
+                            info[row[i].instance_id]['operation_vision_info'].push('活动首页+日常首页')
+                        }
+                        break
+                    case 'radioField_m47v83ca':
+                        if (row[i].value) 
+                            info[row[i].instance_id]['operation_vision_info'].push(row[i].value.replace(/[\\"]+/g, ""))
+                        break
+                    case 'radioField_m47v83cb':
+                        if (row[i].value) 
+                            info[row[i].instance_id]['operation_vision_info'].push(row[i].value.replace(/[\\"]+/g, ""))
+                        break
+                    case 'checkboxField_m5orks8h':
+                        if (row[i].value && row[i].value.indexOf('拍摄') == 0) {
+                            info[row[i].instance_id]['photography_progress'] = '不需要拍摄'
+                        } else if (row[i].value)
+                            info[row[i].instance_id][row[i].field_id] = row[i].value.replace(/[\[\]\\"]+/g, "").replace(/,/g, ' + ')
+                        break
+                    case 'checkboxField_m72psn80':
+                        info[row[i].instance_id]['vision_type'] = ''
+                        if (row[i].value && row[i].value.indexOf('-') != -1) 
+                            info[row[i].instance_id]['vision_type'] = `${info[row[i].instance_id]['vision_type']}原创 + `
+                        if (row[i].value && row[i].value.indexOf('半原创') != -1) 
+                            info[row[i].instance_id]['vision_type'] = `${info[row[i].instance_id]['vision_type']}半原创 + `
+                        if (row[i].value && row[i].value.indexOf('基础修改') != -1)
+                            info[row[i].instance_id]['vision_type'] = `${info[row[i].instance_id]['vision_type']}基础修改 + `
+                        if (info[row[i].instance_id]['vision_type']?.length) 
+                            info[row[i].instance_id]['vision_type'] = info[row[i].instance_id]['vision_type'].substring(0, info[row[i].instance_id]['vision_type'].length - 3)
+                        break
+                    case 'tableField_m4mikq3b':                    
+                        value = row[i].value ? JSON.parse(row[i].value) : []
+                        dataMap = {}
+                        for (let ii = 0; ii < value.length; ii++) {
+                            for (let iii in value[ii]) {
+                                if (value[ii][iii]['selectField_m4mikq32'] && 
+                                    !dataMap[value[ii][iii]['selectField_m4mikq32']]) {
+                                    info[row[i].instance_id]['vision_info'].push(value[ii][iii]['selectField_m4mikq32'])
+                                    dataMap[value[ii][iii]['selectField_m4mikq32']] = true
+                                }
+                            }
+                        }
+                        break
+                    case 'tableField_m4mikq2r':                            
+                        value = row[i].value ? JSON.parse(row[i].value) : []
+                        dataMap = {}
+                        for (let ii = 0; ii < value.length; ii++) {
+                            for (let iii in value[ii]) {
+                                if (value[ii][iii]['selectField_m4mikq2i'] && 
+                                    !dataMap[value[ii][iii]['selectField_m4mikq2i']]) {
+                                    info[row[i].instance_id]['vision_info'].push(value[ii][iii]['selectField_m4mikq2i'])
+                                    dataMap[value[ii][iii]['selectField_m4mikq2i']] = true
+                                }
+                            }
+                        }
+                        break
+                    case 'tableField_m4mikq2h':
+                        value = row[i].value ? JSON.parse(row[i].value) : []
+                        dataMap = {}
+                        for (let ii = 0; ii < value.length; ii++) {
+                            for (let iii in value[ii]) {
+                                if (value[ii][iii]['selectField_m4mikq28'] && 
+                                    !dataMap[value[ii][iii]['selectField_m4mikq28']]) {
+                                    info[row[i].instance_id]['vision_info'].push(value[ii][iii]['selectField_m4mikq28'])
+                                    dataMap[value[ii][iii]['selectField_m4mikq28']] = true
+                                }
+                            }
+                        }
+                        break                    
+                    case 'tableField_m72psn81':
+                        value = row[i].value ? JSON.parse(row[i].value) : []
+                        dataMap = {}
+                        for (let ii = 0; ii < value.length; ii++) {
+                            for (let iii in value[ii]) {
+                                if (value[ii][iii]['selectField_m72psn82'] && 
+                                    !dataMap[value[ii][iii]['selectField_m72psn82']]) {
+                                    info[row[i].instance_id]['vision_info'].push(value[ii][iii]['selectField_m72psn82'])
+                                    dataMap[value[ii][iii]['selectField_m72psn82']] = true
+                                }
+                            }
+                        }
+                        break
+                    case 'radioField_m1lqi84c': 
+                        if (row[i].value == '不需要视觉') info[row[i].instance_id]['plan_status'] = '无需过方案'
+                        break
+                    case 'tableField_m82nqz8j':
+                        value = row[i].value ? JSON.parse(row[i].value) : []
+                        for (let ii = 0; ii < value.length; ii++) {
+                            for (let iii in value[ii]) {                
+                                info[row[i].instance_id][iii] = value[ii][iii]
+                            }
+                        }
+                        break
+                    case 'radioField_lyptiaxd':
+                        if (!row[i].value) {
+                            info[row[i].instance_id]['photography_progress'] = '不需要拍摄'
+                        } else if (row[i].value == '自行拍摄:杭州公司' && 
+                            !info[row[i].instance_id]['photography_progress']
+                        ) {
+                            info[row[i].instance_id]['photography_progress'] = '未开始'
+                        }
+                        break
+                    case 'radioField_m82nam20':
+                        if (row[i].value == '散图不上传') 
+                            info[row[i].instance_id]['upload_status'] = row[i].value
+                        break
+                    default:
+                        if (row[i].value)
+                            info[row[i].instance_id][row[i].field_id] = row[i].value.replace(/[\[\]"]+/g, "")
+                }                
+            }
+        }
+        for (let index in info) {
+            data.push(info[index])
+        }
+    }
+    return data
+}
+
 const getOperateSelection = async function (start, end, title, page, size, form_id, p) {
     let params = [], search = '', total = 0, data = []
     let presql = `SELECT COUNT(1) AS count FROM (`
@@ -2770,6 +3018,7 @@ module.exports = {
     getStat,
     getLeaderStat,
     getVisionInfo,
+    getVisionNewPannel,
     getDesignerFlowStat,
     getPhotographerFlowStat,
     getDesignerNodeStat,
