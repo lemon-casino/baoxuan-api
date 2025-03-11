@@ -719,7 +719,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                             ,SUM(IF(promotion_name='京东快车1' OR promotion_name='京东快车2' OR promotion_name='京东快车3',amount,0)) AS jd_express_promotion
                             ,SUM(IF(promotion_name='全站营销' OR promotion_name='新品全站营销' OR promotion_name='京东快车3',amount,0)) AS total_promotion
                         from goods_promotion_info 
-                        where date BETWEEN '${start}' AND '${end}' WHERE goods_id = ?`
+                        where date BETWEEN '${start}' AND '${end}' AND goods_id = ?`
                     let row2 = await query(sql, [row[i].goods_id])
                     if(row2?.length){
                         row[i].full_site_promotion = row2[0].full_site_promotion
