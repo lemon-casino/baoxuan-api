@@ -2397,6 +2397,32 @@ const getOptimizeInfo = async (params, user) => {
 }
 
 const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
+    let data ={
+            columns:[
+            { header: "日期", key: 'date' },
+            { header: "组", key: 'team_name' },
+            { header: "产品线负责人", key: 'line_director' },
+            { header: "运营负责人", key: 'operator' },
+            { header: "链接ID", key: 'goods' },
+            { header: "实际发货金额", key: 'sale_amount' },
+            { header: "利润额", key: 'profit' },
+            { header: "核销金额", key: 'verified_amount' },
+            { header: "核销利润额", key: 'verified_profit' },
+            { header: "快递费", key: 'express' },
+            { header: "扣点", key: 'bill' },
+            { header: "推广", key: 'promotion_amount' },
+            { header: "推广费比", key: 'promotion_rate' },
+            { header: "平台刷单", key: 'erlei_shuadan' },
+            { header: "小红书刷单", key: 'xhs_shuadan' },
+            { header: "售后赔偿", key: 'after_sales_compensation' },
+            { header: "退换率", key: 'refund_rate' },
+            { header: "质量分", key: 'dsr' },
+            { header: "汇总费比", key: 'bill_rate' },
+            { header: "组内人效", key: 'group_effectiveness' },
+            { header: "利润率", key: 'profit_rate' },
+            { header: "核销利润率", key: 'verified_profit_rate' },
+            { header: "组金额占比", key: 'team_saleamount_rate' },
+    ]}
     let week =[]
     if(goodsinfo=='汇总'){
         week = await goodsSaleInfoRepo.getweeklyreport(lstart, lend,preStart,preEnd,goodsinfo)
@@ -2457,6 +2483,9 @@ const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
             erlei_shuadan: sumData(lastWeekData, "erlei_shuadan").toFixed(2),
             bill: sumData(lastWeekData, "bill").toFixed(2),
             bill_rate: (sumData(lastWeekData, "bill")/sumData(lastWeekData, "sale_amount")*100).toFixed(2),
+            group_effectiveness:averageData(lastWeekData,"group_effectiveness"),
+            total_sale_amount:sumData(lastWeekData, "total_sale_amount").toFixed(2),
+            team_saleamount_rate:(sumData(lastWeekData, "total_sale_amount")/sumData(lastWeekData, "sale_amount")).toFixed(2)
             // 其他字段可以根据需要添加
         }
 
@@ -2485,12 +2514,13 @@ const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
             erlei_shuadan: sumData(lastLastWeekData, "erlei_shuadan").toFixed(2),
             bill: sumData(lastLastWeekData, "bill").toFixed(2),
             bill_rate: (sumData(lastLastWeekData, "bill")/sumData(lastLastWeekData, "sale_amount")*100).toFixed(2),
+            group_effectiveness:averageData(lastLastWeekData,"group_effectiveness"),
+            total_sale_amount:sumData(lastLastWeekData, "total_sale_amount"),
+            team_saleamount_rate:(sumData(lastLastWeekData, "total_sale_amount")/sumData(lastLastWeekData, "sale_amount")).toFixed(2)
             // 其他字段可以根据需要添加
         }
 
         // 计算环比
-        const chainRatio = calculateChainRatio(lastWeekSummary.sale_amount, lastLastWeekSummary.sale_amount);
-
         const chainRatioData = {
             line_director: teamName+'环比',
             team_name: teamName+'环比',
@@ -2516,6 +2546,8 @@ const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
             erlei_shuadan: calculateChainRatio(lastWeekSummary.erlei_shuadan, lastLastWeekSummary.erlei_shuadan).toFixed(2) + "%",
             bill: calculateChainRatio(lastWeekSummary.bill, lastLastWeekSummary.bill).toFixed(2) + "%",
             bill_rate: calculateChainRatio(lastWeekSummary.bill_rate, lastLastWeekSummary.bill_rate).toFixed(2),
+            group_effectiveness:calculateChainRatio(lastWeekSummary.group_effectiveness, lastLastWeekSummary.group_effectiveness).toFixed(2) + "%",
+            team_saleamount_rate:calculateChainRatio(lastWeekSummary.team_saleamount_rate, lastLastWeekSummary.team_saleamount_rate).toFixed(2),
         }
         // 构建结果
         return [
@@ -2526,7 +2558,8 @@ const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
             chainRatioData,
         ]
     }).flat()
-    
+    // 组内人效=组发货金额/人数
+    // 租金额占比=个人发货金额/汇总发货金额
     const sortOrder = {
         "一组": 1,
         "二组": 2,
@@ -2551,7 +2584,53 @@ const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
         return sortOrder[groupA] - sortOrder[groupB]
     })
     const filteredData = sortedData.filter(item => !["无操作汇总", "总计汇总"].some(group => item.team_name.includes(group)))
-    return filteredData
+    data.data = []
+    data.data = filteredData
+    return data
+}
+
+const getTMPromotioninfo = async (lstart, lend) =>{
+    let data ={
+        columns:[
+        { header: "链接ID", key: 'goods_id' },
+        { header: "简称", key: 'brief_name' },
+        { header: "产品线负责人", key: 'line_director' },
+        { header: "运营负责人", key: 'operator' },
+        { header: "超级短视频", key: 'super_short_video' },
+        { header: "全站推广", key: 'full_site_promotion' },
+        { header: "精准人群推广", key: 'targeted_audience_promotion' },
+        { header: "关键词推广", key: 'keyword_promotion' },
+        { header: "多目标直投", key: 'multi_objective_promotion' },
+        { header: "货品运营", key: 'product_operation_promotion' },
+        { header: "推广汇总金额", key: 'promotion_amount' },
+        { header: "实际发货金额", key: 'sale_amount' },
+        { header: "ROI", key: 'roi' }
+    ]}
+    let resutl = await goodsSaleInfoRepo.getTMPromotioninfo(lstart, lend)
+    console.log(resutl)
+    data.data = []
+    data.data = resutl
+    return data
+}
+
+const getTMPromotion = async (lstart, lend) =>{
+    let data ={
+        columns:[
+        { header: "组", key: 'team_name' },
+        { header: "产品线负责人", key: 'line_director' },
+        { header: "运营负责人", key: 'operator' },
+        { header: "超级短视频", key: 'super_short_video' },
+        { header: "全站推广", key: 'full_site_promotion' },
+        { header: "精准人群推广", key: 'targeted_audience_promotion' },
+        { header: "关键词推广", key: 'keyword_promotion' },
+        { header: "多目标直投", key: 'multi_objective_promotion' },
+        { header: "货品运营", key: 'product_operation_promotion' },
+        { header: "推广汇总金额", key: 'promotion_amount' }
+    ]}
+    let resutl = await goodsSaleInfoRepo.getTMPromotion(lstart, lend)
+    data.data = []
+    data.data = resutl
+    return data
 }
 
 const checkOperationOptimize = async () => {
@@ -3117,5 +3196,7 @@ module.exports = {
     SalesupdateSalemonth,
     VerifiedsupdateSalemonth,
     importErleiShuadan,
-    importXhsShuadan
+    importXhsShuadan,
+    getTMPromotion,
+    getTMPromotioninfo
 }
