@@ -2446,7 +2446,6 @@ const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
     // 3. 添加周数据和汇总数据
     const result = Object.keys(groupedData).map(teamName => {
         const teamData = groupedData[teamName]
-
         // 分离上周和上上周的数据
         const lastWeekData = teamData.filter(item => item.date === "上周")
         const lastLastWeekData = teamData.filter(item => item.date === "上上周")
@@ -2607,7 +2606,6 @@ const getTMPromotioninfo = async (lstart, lend) =>{
         { header: "ROI", key: 'roi' }
     ]}
     let resutl = await goodsSaleInfoRepo.getTMPromotioninfo(lstart, lend)
-    console.log(resutl)
     data.data = []
     data.data = resutl
     return data
@@ -2627,9 +2625,32 @@ const getTMPromotion = async (lstart, lend) =>{
         { header: "货品运营", key: 'product_operation_promotion' },
         { header: "推广汇总金额", key: 'promotion_amount' }
     ]}
-    let resutl = await goodsSaleInfoRepo.getTMPromotion(lstart, lend)
+    let result = await goodsSaleInfoRepo.getTMPromotion(lstart, lend)
+    console.log(result)
+    const sortOrder = {
+        "一组": 1,
+        "二组": 2,
+        "三组": 3,
+        "四组": 4,
+        "无操作": 5 
+    }
+    // 提取组别名称
+    const extractGroupName = (teamName) => {
+        if (teamName.includes("一组")) return "一组";
+        if (teamName.includes("二组")) return "二组";
+        if (teamName.includes("三组")) return "三组";
+        if (teamName.includes("四组")) return "四组";
+        return "无操作" // 默认返回 "无操作"
+    }
+    // 排序函数
+    const sortedData = result.sort((a, b) => {
+        const groupA = extractGroupName(a.team_name)
+        const groupB = extractGroupName(b.team_name)
+        return sortOrder[groupA] - sortOrder[groupB]
+    })
+    const filteredData = sortedData.filter(item => !["无操作汇总"].some(group => item.team_name.includes(group)))
     data.data = []
-    data.data = resutl
+    data.data = filteredData
     return data
 }
 
