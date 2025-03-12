@@ -709,15 +709,15 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                             row[i].sale_amount_profit_month = null
                         }
                     }
-                    sql = `select SUM(IF(promotion_name='6003416精准人群推广',amount,0)) as targeted_audience_promotion
-                            ,SUM(IF(promotion_name='6003431万相台无界-全站推广',amount,0)) as full_site_promotion
-                            ,SUM(IF(promotion_name='6003414多目标直投',amount,0)) as multi_objective_promotion
-                            ,SUM(IF(promotion_name='60030412关键词推广',amount,0)) as keyword_promotion
-                            ,SUM(IF(promotion_name='6003432万相台无界-货品运营',amount,0)) as product_operation_promotion
-                            ,SUM(IF(promotion_name='日常推广',amount,0)) AS daily_promotion
-                            ,SUM(IF(promotion_name='场景推广',amount,0)) AS scene_promotion
-                            ,SUM(IF(promotion_name='京东快车1' OR promotion_name='京东快车2' OR promotion_name='京东快车3',amount,0)) AS jd_express_promotion
-                            ,SUM(IF(promotion_name='全站营销' OR promotion_name='新品全站营销' OR promotion_name='京东快车3',amount,0)) AS total_promotion
+                    sql = `select SUM(IF(promotion_name='6003416精准人群推广',amount,null)) as targeted_audience_promotion
+                            ,SUM(IF(promotion_name='6003431万相台无界-全站推广',amount,null)) as full_site_promotion
+                            ,SUM(IF(promotion_name='6003414多目标直投',amount,null)) as multi_objective_promotion
+                            ,SUM(IF(promotion_name='60030412关键词推广',amount,null)) as keyword_promotion
+                            ,SUM(IF(promotion_name='6003432万相台无界-货品运营',amount,null)) as product_operation_promotion
+                            ,SUM(IF(promotion_name='日常推广',amount,null)) AS daily_promotion
+                            ,SUM(IF(promotion_name='场景推广',amount,null)) AS scene_promotion
+                            ,SUM(IF(promotion_name='京东快车1' OR promotion_name='京东快车2' OR promotion_name='京东快车3',amount,null)) AS jd_express_promotion
+                            ,SUM(IF(promotion_name='全站营销' OR promotion_name='新品全站营销' OR promotion_name='京东快车3',amount,null)) AS total_promotion
                         from goods_promotion_info 
                         where date BETWEEN '${start}' AND '${end}' AND goods_id = ?`
                     let row2 = await query(sql, [row[i].goods_id])
@@ -1921,49 +1921,76 @@ goodsSaleInfoRepo.getTMPromotioninfo = async(lstart, lend) =>{
 }
 
 goodsSaleInfoRepo.getTMPromotion = async(lstart, lend) =>{
-    let sql = `select IFNULL(b.team_name,'无操作') AS team_name
-    ,IFNULL(b.line_director,'无操作') AS line_director,a.* from (
-	SELECT a.operator
-        ,SUM(targeted_audience_promotion) AS targeted_audience_promotion
-        ,SUM(super_short_video) AS super_short_video
-        ,SUM(full_site_promotion) AS full_site_promotion
-        ,SUM(multi_objective_promotion) AS multi_objective_promotion
-        ,SUM(keyword_promotion) AS keyword_promotion
-        ,SUM(product_operation_promotion) AS product_operation_promotion
-        ,SUM(promotion_amount) AS promotion_amount
-	FROM (
-		select IFNULL(d.operator,'无操作') AS operator
-        ,a.*
-		from (
-			SELECT goods_id
-                ,SUM(IF(promotion_name='6003416精准人群推广',amount,0)) AS targeted_audience_promotion
-                ,SUM(IF(promotion_name='60030433万相台-超级短视频',amount,0)) AS super_short_video
-                ,SUM(IF(promotion_name='6003431万相台无界-全站推广',amount,0)) AS full_site_promotion
-                ,SUM(IF(promotion_name='6003414多目标直投',amount,0)) AS multi_objective_promotion
-                ,SUM(IF(promotion_name='60030412关键词推广',amount,0)) AS keyword_promotion
-                ,SUM(IF(promotion_name='6003432万相台无界-货品运营',amount,0)) AS product_operation_promotion
-                ,SUM(amount) AS promotion_amount
-            FROM goods_promotion_info WHERE shop_name = 'pakchoice旗舰店（天猫）' AND date BETWEEN '${lstart}' AND '${lend}'
-            GROUP BY goods_id
-			)as a
-		LEFT JOIN dianshang_operation_attribute AS d
-		ON a.goods_id = d.goods_id
-        )AS a
-        GROUP BY operator
-    )as a
-    LEFT JOIN(
-        SELECT a.team_name AS team_name,u1.nickname AS line_director,u.nickname AS operator FROM (
+    let sql = `WITH t1 AS(
+        select IFNULL(b.team_name,'无操作') AS team_name
+            ,IFNULL(b.line_director,'无操作') AS line_director,a.* from (
+            SELECT a.operator
+                ,SUM(targeted_audience_promotion) AS targeted_audience_promotion
+                ,SUM(super_short_video) AS super_short_video
+                ,SUM(full_site_promotion) AS full_site_promotion
+                ,SUM(multi_objective_promotion) AS multi_objective_promotion
+                ,SUM(keyword_promotion) AS keyword_promotion
+                ,SUM(product_operation_promotion) AS product_operation_promotion
+                ,SUM(promotion_amount) AS promotion_amount
+            FROM (
+                select IFNULL(d.operator,'无操作') AS operator
+                ,a.*
+                from (
+                    SELECT goods_id
+                        ,SUM(IF(promotion_name='6003416精准人群推广',amount,0)) AS targeted_audience_promotion
+                        ,SUM(IF(promotion_name='60030433万相台-超级短视频',amount,0)) AS super_short_video
+                        ,SUM(IF(promotion_name='6003431万相台无界-全站推广',amount,0)) AS full_site_promotion
+                        ,SUM(IF(promotion_name='6003414多目标直投',amount,0)) AS multi_objective_promotion
+                        ,SUM(IF(promotion_name='60030412关键词推广',amount,0)) AS keyword_promotion
+                        ,SUM(IF(promotion_name='6003432万相台无界-货品运营',amount,0)) AS product_operation_promotion
+                        ,SUM(amount) AS promotion_amount
+                    FROM goods_promotion_info WHERE shop_name = 'pakchoice旗舰店（天猫）' AND date BETWEEN '${lstart}' AND '${lend}'
+                    GROUP BY goods_id
+                    )as a
+                LEFT JOIN dianshang_operation_attribute AS d
+                ON a.goods_id = d.goods_id
+                )AS a
+                GROUP BY operator
+            )AS a
+            LEFT JOIN(
+                SELECT a.team_name AS team_name,u1.nickname AS line_director,u.nickname AS operator FROM (
                     SELECT t1.team_name,t1.user_id,t2.user_id AS member_id FROM team_info AS t1
                     LEFT JOIN team_member AS t2
                     ON t2.team_id=t1.id
                     WHERE t1.project_id=14
-            )AS a
-            LEFT JOIN users AS u 
-            ON a.member_id=u.user_id
-            LEFT JOIN users AS u1
-            ON a.user_id=u1.user_id
-    )AS b
-    on a.operator = b.operator`
+                    )AS a
+                LEFT JOIN users AS u 
+                ON a.member_id=u.user_id
+                LEFT JOIN users AS u1
+                ON a.user_id=u1.user_id
+            )AS b
+            ON a.operator = b.operator)
+        SELECT * FROM t1
+        UNION ALL
+        SELECT CONCAT(team_name,'汇总')AS team_name
+            ,CONCAT(team_name,'汇总')AS line_director
+            ,CONCAT(team_name,'汇总')AS operator
+            ,SUM(targeted_audience_promotion) AS targeted_audience_promotion
+            ,SUM(super_short_video) AS super_short_video
+            ,SUM(full_site_promotion) AS full_site_promotion
+            ,SUM(multi_objective_promotion) AS multi_objective_promotion
+            ,SUM(keyword_promotion) AS keyword_promotion
+            ,SUM(product_operation_promotion) AS product_operation_promotion
+            ,SUM(promotion_amount) AS promotion_amount
+        FROM t1
+        GROUP BY team_name
+        UNION ALL
+        SELECT '汇总'AS team_name
+            ,'汇总'AS line_director
+            ,'汇总'AS operator
+            ,SUM(targeted_audience_promotion) AS targeted_audience_promotion
+            ,SUM(super_short_video) AS super_short_video
+            ,SUM(full_site_promotion) AS full_site_promotion
+            ,SUM(multi_objective_promotion) AS multi_objective_promotion
+            ,SUM(keyword_promotion) AS keyword_promotion
+            ,SUM(product_operation_promotion) AS product_operation_promotion
+            ,SUM(promotion_amount) AS promotion_amount
+        FROM t1`
     let result = await query(sql)
     return result
 }
