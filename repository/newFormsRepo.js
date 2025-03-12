@@ -2319,10 +2319,10 @@ const getVisionNewPannel = async function () {
                         dataMap = {}
                         for (let ii = 0; ii < value.length; ii++) {
                             for (let iii in value[ii]) {
-                                if (value[ii][iii]['selectField_m4mikq32'] && 
-                                    !dataMap[value[ii][iii]['selectField_m4mikq32']]) {
-                                    info[row[i].instance_id]['vision_info'].push(value[ii][iii]['selectField_m4mikq32'])
-                                    dataMap[value[ii][iii]['selectField_m4mikq32']] = true
+                                if (value[ii][iii] && iii == 'selectField_m4mikq32' && 
+                                    !dataMap[value[ii][iii]]) {
+                                    info[row[i].instance_id]['vision_info'].push(value[ii][iii])
+                                    dataMap[value[ii][iii]] = true
                                 }
                             }
                         }
@@ -2332,10 +2332,10 @@ const getVisionNewPannel = async function () {
                         dataMap = {}
                         for (let ii = 0; ii < value.length; ii++) {
                             for (let iii in value[ii]) {
-                                if (value[ii][iii]['selectField_m4mikq2i'] && 
-                                    !dataMap[value[ii][iii]['selectField_m4mikq2i']]) {
-                                    info[row[i].instance_id]['vision_info'].push(value[ii][iii]['selectField_m4mikq2i'])
-                                    dataMap[value[ii][iii]['selectField_m4mikq2i']] = true
+                                if (value[ii][iii] && iii == 'selectField_m4mikq2i' && 
+                                    !dataMap[value[ii][iii]]) {
+                                    info[row[i].instance_id]['vision_info'].push(value[ii][iii])
+                                    dataMap[value[ii][iii]] = true
                                 }
                             }
                         }
@@ -2345,10 +2345,10 @@ const getVisionNewPannel = async function () {
                         dataMap = {}
                         for (let ii = 0; ii < value.length; ii++) {
                             for (let iii in value[ii]) {
-                                if (value[ii][iii]['selectField_m4mikq28'] && 
-                                    !dataMap[value[ii][iii]['selectField_m4mikq28']]) {
-                                    info[row[i].instance_id]['vision_info'].push(value[ii][iii]['selectField_m4mikq28'])
-                                    dataMap[value[ii][iii]['selectField_m4mikq28']] = true
+                                if (value[ii][iii] && iii == 'selectField_m4mikq28' && 
+                                    !dataMap[value[ii][iii]]) {
+                                    info[row[i].instance_id]['vision_info'].push(value[ii][iii])
+                                    dataMap[value[ii][iii]] = true
                                 }
                             }
                         }
@@ -2358,10 +2358,10 @@ const getVisionNewPannel = async function () {
                         dataMap = {}
                         for (let ii = 0; ii < value.length; ii++) {
                             for (let iii in value[ii]) {
-                                if (value[ii][iii]['selectField_m72psn82'] && 
-                                    !dataMap[value[ii][iii]['selectField_m72psn82']]) {
-                                    info[row[i].instance_id]['vision_info'].push(value[ii][iii]['selectField_m72psn82'])
-                                    dataMap[value[ii][iii]['selectField_m72psn82']] = true
+                                if (value[ii][iii] && iii == 'selectField_m72psn82' && 
+                                    !dataMap[value[ii][iii]]) {
+                                    info[row[i].instance_id]['vision_info'].push(value[ii][iii])
+                                    dataMap[value[ii][iii]] = true
                                 }
                             }
                         }
