@@ -1485,7 +1485,7 @@ const getVisionPlan = async () => {
 
 const getVisionNewPannel = async (params) => {
     let columns = newPannelHeader;
-    let data = await newFormsRepo.getVisionNewPannel()
+    let data = await newFormsRepo.getVisionNewPannel(params)
     return {columns, data}
 }
 

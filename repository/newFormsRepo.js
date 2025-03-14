@@ -2155,24 +2155,256 @@ const getVisionInfo = async function (type) {
     return result
 }
 
-const getVisionNewPannel = async function () {
-    let data = []
+const getVisionNewPannel = async function (params) {
+    let data = [], p = [], search = ''
     let sql = `SELECT pi.instance_id, pi.status, ff.field_id, pi.id, piv.value, p.form_id 
         FROM vision_leader vl JOIN processes p ON p.form_id = vl.form_id
         LEFT JOIN process_instances pi ON pi.process_id = p.id
             AND pi.status IN ('COMPLETED', 'RUNNING', 'TERMINATED')
         JOIN vision_pannel vp ON vp.form_id = vl.form_id 
-		JOIN process_instance_records pir ON pir.instance_id = pi.id
-			AND pir.show_name = vl.activity_name 
-			AND pir.activity_id = vl.activity_id
-			AND pir.action_exit = vl.action_exit
+        JOIN process_instance_records pir ON pir.instance_id = pi.id 
+            AND pir.show_name = vl.activity_name 
+            AND pir.activity_id = vl.activity_id 
+            AND pir.action_exit = vl.action_exit
         LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id
             AND piv.field_id = vp.field_id
         JOIN form_fields ff ON ff.form_id = vl.form_id 
             AND ff.field_id = vp.field_id
-        WHERE vp.type = 3
+        WHERE vp.type = 3`
+    let subsql = ''
+    for (let index in params) {
+        if (params[index])
+            switch (index) {
+                case 'operation_leader':
+                    subsql = `${subsql} AND EXISTS(
+                        SELECT p1.id FROM process_instance_values p1 WHERE p1.instance_id = pi.id 
+                            AND p1.field_id IN ('employeeField_m4jjxmrt', 'employeeField_lxkd9f59') 
+                            AND p1.value LIKE '%${params[index]}%')`
+                    break
+                case 'sample_complete':
+                    if (params[index] == '不做了') {
+                        subsql = `${subsql} AND pi.status = 'TERMINATED'`
+                    } else if (params[index] == '齐全') {
+                        subsql = `${subsql} AND EXISTS(
+                            SELECT p2.id FROM process_instance_records p2 WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id IN ('node_ocm0n6oqik4', 'node_ocm0nitc3f7')
+                                AND p2.action_exit = 'agree' 
+                                AND p2.id = (SELECT MAX(p3.id) FROM process_instance_records p3
+                                    WHERE p3.instance_id = p2.instance_id
+                                        AND p3.activity_id = p2.activity_id
+                                        AND p3.show_name = p2.show_name))`
+                    } else if (params[index] == '不齐全') {
+                        subsql = `${subsql} AND EXISTS(
+                            SELECT p2.id FROM process_instance_records p2 WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id IN ('node_ocm0n6oqik4', 'node_ocm0nitc3f7')
+                                AND p2.action_exit IN ('next', 'doing') 
+                                AND p2.id = (SELECT MAX(p3.id) FROM process_instance_records p3
+                                    WHERE p3.instance_id = p2.instance_id
+                                        AND p3.activity_id = p2.activity_id
+                                        AND p3.show_name = p2.show_name))`
+                    } else {
+                        subsql = `${subsql} AND NOT EXISTS(
+                            SELECT p2.id FROM process_instance_records p2 WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id IN ('node_ocm0n6oqik4', 'node_ocm0nitc3f7'))`
+                    }
+                    break
+                case 'operation_vision_type':
+                    subsql = `${subsql} AND EXISTS(
+                        SELECT p1.id FROM process_instance_values p1 WHERE p1.instance_id = pi.id 
+                            AND p1.field_id = 'radioField_m47v83c5' AND p1.value = ?)`
+                    p.push(`"${params[index]}"`)
+                    break
+                case 'operation_vision_info':
+                    if (params[index] == '活动首页+日常首页') {
+                        subsql = `${subsql} AND EXISTS(
+                            SELECT p1.id FROM process_instance_values p1 WHERE p1.instance_id = pi.id 
+                                AND p1.field_id = 'checkboxField_m5kifg28' 
+                                AND p1.value LIKE '%店铺（单位：套）%')`
+                    } else {
+                        subsql = `${subsql} AND EXISTS(
+                            SELECT p1.id FROM process_instance_values p1 WHERE p1.instance_id = pi.id 
+                                AND p1.field_id IN ('checkboxField_m5nq85ha', 'radioField_m47v83ca', 
+                                    'radioField_m47v83cb') AND p1.value LIKE '%${params[index]}%')`
+                    }
+                    break
+                case 'vision_type':
+                    subsql = `${subsql} AND EXISTS(
+                        SELECT p1.id FROM process_instance_values p1 WHERE p1.instance_id = pi.id 
+                            AND p1.field_id = 'checkboxField_m72psn80' AND p1.value LIKE 
+                                '%${params[index] == '原创' ? '原创-' : params[index]}%')`
+                    break
+                case 'vision_info':
+                    subsql = `${subsql} AND EXISTS(
+                        SELECT p1.id FROM process_instance_values p1 WHERE p1.instance_id = pi.id 
+                            AND p1.field_id IN ('tableField_m4mikq3b', 'tableField_m4mikq2r', 
+                                'tableField_m4mikq2h', 'tableField_m72psn81') 
+                            AND p1.value LIKE '%${params[index]}%')`
+                    break
+                case 'plan_status':
+                    if (params[index] == '不做了') {
+                        subsql = `${subsql} AND pi.status = 'TERMINATED'`
+                    } else if (params[index] == '已过') {
+                        subsql = `${subsql} AND pi.status != 'TERMINATED' AND EXISTS(
+                            SELECT p2.id FROM process_instance_records p2 WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id = 'node_ocm0nieqby2' 
+                                AND p2.action_exit = 'agree'
+                                AND p2.id = (SELECT MAX(p3.id) FROM process_instance_records p3
+                                    WHERE p3.instance_id = p2.instance_id
+                                        AND p3.activity_id = p2.activity_id
+                                        AND p3.show_name = p2.show_name))`
+                    } else if (params[index] == '未过') {
+                        subsql = `${subsql} AND pi.status != 'TERMINATED' AND EXISTS(
+                            SELECT p2.id FROM process_instance_records p2 WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id = 'node_ocm0nieqby2' 
+                                AND p2.action_exit IN ('next', 'doing')
+                                AND p2.id = (SELECT MAX(p3.id) FROM process_instance_records p3
+                                    WHERE p3.instance_id = p2.instance_id
+                                        AND p3.activity_id = p2.activity_id
+                                        AND p3.show_name = p2.show_name))`
+                    } else {
+                        subsql = `${subsql} AND pi.status != 'TERMINATED' AND EXISTS(
+                            SELECT p1.id FROM process_instance_values p1 WHERE p1.instance_id = pi.id 
+                                AND p1.field_id = 'radioField_m1lqi84c' 
+                                AND p1.value = '"不需要视觉"')`
+                    }
+                    break
+                case 'design_start':
+                    subsql = `${subsql} AND EXISTS(
+                        SELECT p2.id FROM process_instance_records p2 WHERE p2.instance_id = pi.id 
+                            AND p2.activity_id = 'node_ocm0nieqby2' 
+                            AND p2.action_exit = 'agree' 
+                            AND p2.operate_time BETWEEN ? AND ? 
+                            AND p2.id = (SELECT MAX(p3.id) FROM process_instance_records p3
+                                WHERE p3.instance_id = p2.instance_id
+                                    AND p3.activity_id = p2.activity_id
+                                    AND p3.show_name = p2.show_name))`
+                    p.push(...params[index])
+                    break
+                case 'photography_progress':
+                    if (params[index] == '不需要拍摄') {
+                        subsql = `${subsql} AND NOT EXISTS(
+                            SELECT p1.id FROM process_instance_values p1 
+                            WHERE p1.instance_id = pi.id
+                                AND p1.field_id = 'checkboxField_m5orks8h'
+                                AND p1.value LIKE '%拍摄%') AND NOT EXISTS(
+                            SELECT p2.id FROM process_instance_records p2
+                            WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id = 'node_ocm0nitc3fl') AND NOT EXISTS(
+                            SELECT p1.id FROM process_instance_values p1 
+                            WHERE p1.instance_id = pi.id 
+                                AND p1.field_id = 'radioField_lyptiaxd')`
+                    } else {
+                        subsql = `${subsql} AND EXISTS(
+                            SELECT p2.id FROM process_instance_records p2
+                            WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id = 'node_ocm0nitc3fl' 
+                                AND p2.action_exit = ? 
+                                AND p2.id = (SELECT MAX(p3.id) FROM process_instance_records p3 
+                                    WHERE p3.instance_id = p2.instance_id 
+                                        AND p3.activity_id = p2.activity_id 
+                                        AND p3.show_name = p2.show_name))`
+                        if (params[index] == '未开始') {
+                            p.push('next')
+                        } else if (params[index] == '拍摄中') {
+                            p.push('doing')
+                        } else {
+                            p.push('agree')
+                        }
+                    }
+                    break
+                case 'design_progress':
+                    if (params[index] == '已完成') {
+                        subsql = `${subsql} AND EXISTS(
+                            SELECT p2.id FROM process_instance_records p2 WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id = 'node_ocm0nitc3f1p' 
+                                AND p2.action_exit = 'agree' 
+                                AND p2.id = (SELECT MAX(p3.id) FROM process_instance_records p3
+                                    WHERE p3.instance_id = p2.instance_id
+                                        AND p3.activity_id = p2.activity_id
+                                        AND p3.show_name = p2.show_name))`
+                    } else if (params[index] == '进行中') {
+                        subsql = `${subsql} AND (EXISTS(
+                            SELECT p2.id FROM process_instance_records p2 WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id = 'node_ocm0nitc3f1p' 
+                                AND p2.action_exit IN ('next', 'doing') 
+                                AND p2.id = (SELECT MAX(p3.id) FROM process_instance_records p3
+                                    WHERE p3.instance_id = p2.instance_id
+                                        AND p3.activity_id = p2.activity_id
+                                        AND p3.show_name = p2.show_name)) OR (EXISTS(
+                            SELECT p2.id FROM process_instance_records p2 WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id = 'node_ocm0nieqby2' 
+                                AND p2.action_exit = 'agree' 
+                                AND p2.id = (SELECT MAX(p3.id) FROM process_instance_records p3
+                                    WHERE p3.instance_id = p2.instance_id
+                                        AND p3.activity_id = p2.activity_id
+                                        AND p3.show_name = p2.show_name)) AND NOT EXISTS(
+                            SELECT p2.id FROM process_instance_records p2 WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id = 'node_ocm0nitc3f1p' 
+                                AND p2.id = (SELECT MAX(p3.id) FROM process_instance_records p3
+                                    WHERE p3.instance_id = p2.instance_id
+                                        AND p3.activity_id = p2.activity_id
+                                        AND p3.show_name = p2.show_name))))`
+                    } else {
+                        subsql = `${subsql} AND NOT EXISTS(
+                            SELECT p2.id FROM process_instance_records p2 WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id = 'node_ocm0nieqby2' 
+                                AND p2.action_exit = 'agree' 
+                                AND p2.id = (SELECT MAX(p3.id) FROM process_instance_records p3
+                                    WHERE p3.instance_id = p2.instance_id
+                                        AND p3.activity_id = p2.activity_id
+                                        AND p3.show_name = p2.show_name))`
+                    }
+                    break
+                case 'design_end':
+                    if (params[index]) {
+                        subsql = `${subsql} AND EXISTS(
+                            SELECT p2.id FROM process_instance_records p2 WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id = 'node_ocm0nitc3f1p' 
+                                AND p2.action_exit = 'agree'
+                                AND p2.operate_time BETWEEN ? AND ? 
+                                AND p2.id = (SELECT MAX(p3.id) FROM process_instance_records p3
+                                    WHERE p3.instance_id = p2.instance_id
+                                        AND p3.activity_id = p2.activity_id
+                                        AND p3.show_name = p2.show_name))`
+                        p.push(...params[index])
+                    }
+                    break
+                case 'upload_status':
+                    if (params[index] == '完成上传') {
+                        subsql = `${subsql} AND EXISTS(
+                            SELECT p2.id FROM process_instance_records p2 WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id = 'node_ocm0nitc3f1p' 
+                                AND p2.action_exit = 'agree'
+                                AND p2.id = (SELECT MAX(p3.id) FROM process_instance_records p3
+                                    WHERE p3.instance_id = p2.instance_id
+                                        AND p3.activity_id = p2.activity_id
+                                        AND p3.show_name = p2.show_name))`
+                    } else if (params[index] == '未完成') {
+                        subsql = `${subsql} AND EXISTS(
+                            SELECT p2.id FROM process_instance_records p2 WHERE p2.instance_id = pi.id 
+                                AND p2.activity_id = 'node_ocm0nitc3f1p' 
+                                AND p2.action_exit IN ('next', 'doing')
+                                AND p2.id = (SELECT MAX(p3.id) FROM process_instance_records p3
+                                    WHERE p3.instance_id = p2.instance_id
+                                        AND p3.activity_id = p2.activity_id
+                                        AND p3.show_name = p2.show_name))`
+                    } else {
+                        subsql = `${subsql} AND EXISTS(
+                            SELECT p1.id FROM process_instance_values p1 WHERE p1.instance_id = pi.id 
+                                AND p1.field_id = 'radioField_m82nam20' 
+                                AND p1.value LIKE '%散图不上传%')`
+                    }
+                    break
+                default: 
+                    subsql = `${subsql} AND EXISTS(
+                        SELECT p1.id FROM process_instance_values p1 WHERE p1.instance_id = pi.id 
+                            AND p1.field_id = ? AND p1.value LIKE '%${params[index]}%')`
+                    p.push(index)
+            }
+    }
+    search = `${sql}${subsql} 
         ORDER BY pi.id DESC, ff.field_id`
-    let row = await query(sql)
+    let row = await query(search, p)
     if (row?.length) {
         let info = {}, row1, value, dataMap = {}
         for (let i = 0; i < row.length; i++) {
@@ -2192,41 +2424,33 @@ const getVisionNewPannel = async function () {
                         info[row[i].instance_id]['plan_status'] = '不做了'
                     }
                     sql = `SELECT pir.id, pir.action_exit, pir.operate_time, 0 AS type 
-                        FROM process_instance_records pir
-                        WHERE pir.instance_id = ${row[i].id} 
+                        FROM process_instance_records pir WHERE pir.instance_id = ${row[i].id} 
                             AND pir.activity_id IN ('node_ocm0n6oqik4', 'node_ocm0nitc3f7') 
-                            AND pir.id = (
-                                SELECT MAX(p2.id) FROM process_instance_records p2
+                            AND pir.id = (SELECT MAX(p2.id) FROM process_instance_records p2
                                 WHERE pir.instance_id = p2.instance_id
                                     AND pir.activity_id = p2.activity_id
                                     AND pir.show_name = p2.show_name)
                         UNION ALL 
                         SELECT pir.id, pir.action_exit, pir.operate_time, 1 AS type 
-                        FROM process_instance_records pir
-                        WHERE pir.instance_id = ${row[i].id} 
+                        FROM process_instance_records pir WHERE pir.instance_id = ${row[i].id} 
                             AND pir.activity_id IN ('node_ocm0nieqby2') 
-                            AND pir.id = (
-                                SELECT MAX(p2.id) FROM process_instance_records p2
+                            AND pir.id = (SELECT MAX(p2.id) FROM process_instance_records p2
                                 WHERE pir.instance_id = p2.instance_id
                                     AND pir.activity_id = p2.activity_id
                                     AND pir.show_name = p2.show_name)
                         UNION ALL 
                         SELECT pir.id, pir.action_exit, pir.operate_time, 2 AS type 
-                        FROM process_instance_records pir
-                        WHERE pir.instance_id = ${row[i].id} 
+                        FROM process_instance_records pir WHERE pir.instance_id = ${row[i].id} 
                             AND pir.activity_id IN ('node_ocm0nitc3fl') 
-                            AND pir.id = (
-                                SELECT MAX(p2.id) FROM process_instance_records p2
+                            AND pir.id = (SELECT MAX(p2.id) FROM process_instance_records p2
                                 WHERE pir.instance_id = p2.instance_id
                                     AND pir.activity_id = p2.activity_id
                                     AND pir.show_name = p2.show_name)
                         UNION ALL 
                         SELECT pir.id, pir.action_exit, pir.operate_time, 3 AS type 
-                        FROM process_instance_records pir
-                        WHERE pir.instance_id = ${row[i].id} 
+                        FROM process_instance_records pir WHERE pir.instance_id = ${row[i].id} 
                             AND pir.activity_id IN ('node_ocm0nitc3f1p') 
-                            AND pir.id = (
-                                SELECT MAX(p2.id) FROM process_instance_records p2
+                            AND pir.id = (SELECT MAX(p2.id) FROM process_instance_records p2
                                 WHERE pir.instance_id = p2.instance_id
                                     AND pir.activity_id = p2.activity_id
                                     AND pir.show_name = p2.show_name)`
@@ -2237,26 +2461,28 @@ const getVisionNewPannel = async function () {
                     if (row1?.length) {
                         for (let ii = 0; ii < row1.length; ii++) {
                             if (row1[ii].type == 0) {
-                                if (row1[0].action_exit == 'agree') 
+                                if (row1[ii].action_exit == 'agree') 
                                     info[row[i].instance_id]['sample_complete'] = '齐全'
                                 else info[row[i].instance_id]['sample_complete'] = '不齐全'
                             } else if (row1[ii].type == 1) {                       
-                                if (row1[0].action_exit == 'agree') {
-                                    info[row[i].instance_id]['plan_status'] = '已过'
-                                    info[row[i].instance_id]['design_start'] = row1[0].operate_time
+                                if (row1[ii].action_exit == 'agree') {
+                                    if (row[i].status != 'TERMINATED')
+                                        info[row[i].instance_id]['plan_status'] = '已过'
+                                    info[row[i].instance_id]['design_start'] = row1[ii].operate_time
                                     info[row[i].instance_id]['design_progress'] = '进行中'
-                                } else info[row[i].instance_id]['plan_status'] = '未过'
+                                } else if (['doing', 'next'].includes(row1[ii].action_exit) && row[i].status != 'TERMINATED') 
+                                    info[row[i].instance_id]['plan_status'] = '未过'
                             } else if (row1[ii].type == 2) {
-                                if (row1[0].action_exit == 'agree') {
+                                if (row1[ii].action_exit == 'agree') {
                                     info[row[i].instance_id]['photography_progress'] = '已拍完'
-                                } else if (row1[0].action_exit == 'doing') {
+                                } else if (row1[ii].action_exit == 'doing') {
                                     info[row[i].instance_id]['photography_progress'] = '拍摄中'
                                 } else {
                                     info[row[i].instance_id]['photography_progress'] = '未开始'
                                 }
                             } else if (row1[ii].type == 3 && row1[ii].action_exit == 'agree') {
                                 info[row[i].instance_id]['design_progress'] = '已完成'
-                                info[row[i].instance_id]['design_end'] = row1[0].operate_time
+                                info[row[i].instance_id]['design_end'] = row1[ii].operate_time
                                 info[row[i].instance_id]['upload_status'] = '完成上传'
                             }
                         }
@@ -2280,8 +2506,8 @@ const getVisionNewPannel = async function () {
                             info[row[i].instance_id]['operation_vision_type'] = row[i].value.replace(/[\\"]+/g, "")
                         break
                     case 'checkboxField_m5nq85ha':
-                        if (row[i].value && !info[row[i].instance_id]['operation_vision_info']) {
-                            info[row[i].instance_id]['operation_vision_info'] = row[i].value.replace(/[\[\\\]"]+/g, "").split(',')
+                        if (row[i].value && info[row[i].instance_id]['operation_vision_info'].length == 0) {
+                            info[row[i].instance_id]['operation_vision_info'] = row[i].value.replace(/[\[\]"]+/g, "").split(',')
                         }
                         break
                     case 'checkboxField_m5kifg28':
@@ -2367,7 +2593,8 @@ const getVisionNewPannel = async function () {
                         }
                         break
                     case 'radioField_m1lqi84c': 
-                        if (row[i].value == '不需要视觉') info[row[i].instance_id]['plan_status'] = '无需过方案'
+                        if (row[i].value == '"不需要视觉"' && row[i].status != 'TERMINATED') 
+                            info[row[i].instance_id]['plan_status'] = '无需过方案'
                         break
                     case 'tableField_m82nqz8j':
                         value = row[i].value ? JSON.parse(row[i].value) : []
@@ -2378,12 +2605,8 @@ const getVisionNewPannel = async function () {
                         }
                         break
                     case 'radioField_lyptiaxd':
-                        if (!row[i].value) {
+                        if (!row[i].value && !info[row[i].instance_id]['photography_progress']) {
                             info[row[i].instance_id]['photography_progress'] = '不需要拍摄'
-                        } else if (row[i].value == '自行拍摄:杭州公司' && 
-                            !info[row[i].instance_id]['photography_progress']
-                        ) {
-                            info[row[i].instance_id]['photography_progress'] = '未开始'
                         }
                         break
                     case 'radioField_m82nam20':
