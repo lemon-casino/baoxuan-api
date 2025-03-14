@@ -531,49 +531,118 @@ const tableHeaderExtra = {
 const newPannelHeader = [
     {
         field_id: 'textField_lxkb9f8v', 
-        title: '需求/产品名称'
+        title: '需求/产品名称',
+        type: 'input'
     }, {
         field_id: 'radioField_lxkb9f93', 
-        title: '上架平台'
+        title: '上架平台',
+        type: 'select',
+        data: [
+            '天猫', '拼多多', '京东', '唯品会', '天猫超市', '1688', '得物',
+            '淘工厂', '天猫垂类店', '小红书', 'Coupang', '抖音', '快手', '人事/行政'
+        ]
     }, {
         field_id: 'employeeField_lxkb9f9a', 
-        title: '运营负责人'
+        title: '运营负责人',
+        type: 'input'
     }, {
         field_id: 'operation_leader', 
-        title: '运营组长'
+        title: '运营组长',
+        type: 'input'
     }, {
         field_id: 'product_img', 
         title: '产品图片'
     }, {
         field_id: 'radioField_m4s69d9s', 
-        title: '链接级别'
+        title: '链接级别',
+        type: 'select',
+        data: [
+            'S（月销20w以上）', 'A（月销10-20w）', 'B（月销3-10w）', 'C（月销3w以下）'
+        ]
     }, {
         field_id: 'radioField_m82nqz8h', 
-        title: '优先级'
+        title: '优先级',
+        type: 'select',
+        data: ['P0', 'P1', 'P2', 'P3']
     }, {
         field_id: 'sample_complete', 
-        title: '样品是否齐全'
+        title: '样品是否齐全',
+        type: 'select',
+        data: ['齐全', '不齐全']
     }, {
         field_id: 'operation_vision_type', 
-        title: '运营视觉类别'
+        title: '运营视觉类别',
+        type: 'select',
+        data: ['原创', '半原创']
     }, {
         field_id: 'operation_vision_info', 
-        title: '运营类别细分'
+        title: '运营类别细分',
+        type: 'select',
+        data: [
+            '套版详情/套（简单）（单位：套）',
+            '套版详情/套（复杂）（单位：套）',
+            '仿主图/仿车图/仿详情（简单）（单位：张）',
+            '仿主图/仿车图/仿详情（复杂）（单位：屏）',
+            '详情/KV/推广图仅部分原创（单位：屏）',
+            '厂图基础上做设计调整（单位：屏）',
+            '活动首页+日常首页',
+            '原创详情（S级 6天）（单位：屏）',
+            '原创详情（A级 4天）（单位：屏）',
+            '原创详情（B级 3天）（单位：屏）',
+            '原创详情（C级 2天）（单位：屏）',
+            '主图/车图/详情前3屏创意图（重点）（单位：张）',
+            '主图/车图/详情创意图（普通）（单位：张）'
+        ]
     }, {
         field_id: 'vision_type', 
-        title: '视觉类别'
+        title: '视觉类别',
+        type: 'select',
+        data: ['原创', '半原创', '基础修改']
     }, {
         field_id: 'vision_info', 
-        title: '类别细分'
+        title: '类别细分',
+        type: 'select',
+        data: [
+            '活动首页+日常首页（4天）',
+            '主图/车图/详情前3屏创意图（重点）',
+            '主图/车图/详情创意图（普通）',
+            '原创详情（S级 6天）',
+            '原创详情（A级 4天）',
+            '原创详情（B级 3天）',
+            '原创详情（C级 2天）',
+            '主图/车图/详情首张（重点）',
+            '详情靠前三张大图/其他推广图（普通）',
+            '换背景 部分修图（简单）',
+            '建模渲染主图/车图/详情(简单）',
+            '建模渲染主图/车图/详情(复杂）',
+            '动态详情/屏',
+            '产品建模（简单）',
+            '产品建模（复杂）',
+            '3D场景库素材',
+            '场景背景AI生成（简单）',
+            '场景AI生成（复杂）',
+            'AI工作流搭建',
+            '套版详情/套（简单）',
+            '套版详情/套（复杂）',
+            '仿主图/仿车图/仿详情（简单）',
+            '仿主图/仿车图/仿详情（复杂）',
+            '详情/KV/推广图仅部分原创',
+            '厂图基础上做设计调整'
+        ]
     }, {
         field_id: 'employeeField_m0n7i20u', 
-        title: '视觉负责人'
+        title: '视觉负责人',
+        type: 'input'
     }, {
         field_id: 'plan_status', 
-        title: '方案'
+        title: '方案',
+        type: 'select',
+        data: ['已过', '未过', '无需过方案', '不做了']
     }, {
         field_id: 'checkboxField_m5orks8h', 
-        title: '方案类型'
+        title: '方案类型',
+        type: 'select',
+        data: ['3D', '拍摄', '修图', 'AI']
     }, {
         field_id: 'num', 
         title: '过方案后需求屏数',
@@ -591,22 +660,31 @@ const newPannelHeader = [
         ]
     }, {
         field_id: 'design_start', 
-        title: '设计开始啥时间'
+        title: '设计开始啥时间',
+        type: 'date'
     }, {
         field_id: 'photography_progress', 
-        title: '摄影进度'
+        title: '摄影进度',
+        type: 'select',
+        data: ['未开始', '拍摄中', '已拍完', '不需要拍摄']
     }, {
         field_id: 'employeeField_lzcfqrh3', 
-        title: '摄影负责人'
+        title: '摄影负责人',
+        type: 'input'
     }, {
         field_id: 'design_progress', 
-        title: '视觉进度'
+        title: '视觉进度',
+        type: 'select',
+        data: ['未开始', '进行中', '已完成']
     }, {
         field_id: 'design_end', 
-        title: '设计完成时间'
+        title: '设计完成时间',
+        type: 'date'
     }, {
         field_id: 'upload_status', 
-        title: '上传链图云'
+        title: '上传链图云',
+        type: 'select',
+        data: ['未完成', '完成上传', '散图不上传']
     }
 ]
 
