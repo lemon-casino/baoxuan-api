@@ -2160,11 +2160,11 @@ const importGoodsPDDInfo = async (rows, time) => {
         if (columns[i] == '店铺') {shop_name_row = i; continue}
         if (columns[i] == '商品访客数') {user_num_row = i; continue}
         if (columns[i] == '商品浏览量') {click_num_row = i; continue}
-        if (columns[i] == '支付件数') {trans_qty_row = i; continue}
-        if (columns[i] == '支付买家数') {trans_users_num_row = i; continue}
-        if (columns[i] == '支付订单数') {trans_num_row = i; continue}
-        if (columns[i] == '成交额(元)') {trans_amount_row = i; continue}
-        if (columns[i] == '支付转化率') {pay_rate_row = i; continue}
+        if (columns[i] == '成交件数') {trans_qty_row = i; continue}
+        if (columns[i] == '成交买家数') {trans_users_num_row = i; continue}
+        if (columns[i] == '成交订单数') {trans_num_row = i; continue}
+        if (columns[i] == '成交金额(元)') {trans_amount_row = i; continue}
+        if (columns[i] == '成交转化率') {pay_rate_row = i; continue}
     }
     for (let i = 1; i < rows.length; i++) {
         if (!rows[i].getCell(1).value) continue
