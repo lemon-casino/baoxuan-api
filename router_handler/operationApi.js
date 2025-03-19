@@ -1140,7 +1140,10 @@ const importXhsShuadan = async (req, res, next) => {
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()
-            let readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
