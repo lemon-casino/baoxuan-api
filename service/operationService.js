@@ -2055,12 +2055,10 @@ const importGoodsXHSInfo = async (rows, time) => {
     let count = 0, data = [], result = false
     let columns = rows[0].values,
         goods_id_row = null,
-        shop_name_row = null,
         date = time,
         amount_row = null
     for (let i = 1; i < columns.length; i++) {
-        if (columns[i] == '商品信息') {goods_id_row = i;  continue}
-        if (columns[i] == '店铺名称') {shop_name_row = i; continue}
+        if (columns[i] == 'SPUID') {goods_id_row = i;  continue}
         if (columns[i] == '打款金额') {amount_row = i; continue}
     }
     for (let i = 1; i < rows.length; i++) {
@@ -2068,13 +2066,10 @@ const importGoodsXHSInfo = async (rows, time) => {
         let goods_id = goods_id_row ? (typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
             rows[i].getCell(goods_id_row).value.trim() : 
             rows[i].getCell(goods_id_row).value) : null
-        let shop_name = shop_name_row ? (typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
-            rows[i].getCell(shop_name_row).value.trim() : 
-            rows[i].getCell(shop_name_row).value) : null
         data.push(
             goods_id,
             null,
-            shop_name,
+            'pakchoice旗舰店（天猫）',
             '小红书返款',
             rows[i].getCell(amount_row).value,
             date
