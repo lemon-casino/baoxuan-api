@@ -3026,31 +3026,26 @@ const importXhsShuadan = async (rows, date) => {
     let columns = rows[0].values,
     order_id_row = null,
     sale_amount_row = null,
-    goods_id_row = null,
-    shop_name_row = null
-    for(let i=0;i<columns.length;i++){
-        if(columns[i] == '线上订单号'){
+    goods_id_row = null
+    for(let i=1;i<columns.length;i++){
+        if(columns[i] == '订单ID'){
             order_id_row = i
-        }else if(columns[i]=='打款金额'){
+        }else if(columns[i]=='金额'){
             sale_amount_row = i
-        }else if(columns[i] == '商品信息'){
+        }else if(columns[i] == 'SPUID'){
             goods_id_row = i
-        }else if(columns[i] == '店铺名称'){
-            shop_name_row = i
         }
     }
     for(let i=1;i<rows.length;i++){
         let order_id=rows[i].getCell(order_id_row).value
-        shop_name=rows[i].getCell(shop_name_row).value
-        let q = await shopInfoRepo.getShopIdByName(shop_name)
         data.push(
             order_id,
-            q[0].shop_id,
+            '15545775',
             rows[i].getCell(sale_amount_row).value,
             rows[i].getCell(goods_id_row).value,
-            shop_name,
+            'pakchoice旗舰店（天猫）',
             date,
-            name
+            '小红书返款'
         )
         count += 1
     }
