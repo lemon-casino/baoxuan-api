@@ -69,6 +69,7 @@ const getProductAttrDetails = async (req, res, next) => {
 const updateProductAttrDetails = async (req, res, next) => {
     try {
         const body = req.body
+        body.goodsId = body.goodsId.trim()
         const result = await dianShangOperationAttributeService.getProductAttrDetails(body.id)
         await dianShangOperationAttributeService.updateProductAttrDetails(body)
         const userId = req.user.userId
@@ -86,6 +87,7 @@ const updateProductAttrDetails = async (req, res, next) => {
 const saveProductAttrDetails = async (req, res, next) => {
     try {
         const body = req.body
+        body.goodsId = body.goodsId.trim()
         await dianShangOperationAttributeService.saveProductAttr(body)
         const userId = req.user.userId
         const user = req.user.id
