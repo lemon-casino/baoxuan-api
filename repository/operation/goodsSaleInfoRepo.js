@@ -762,7 +762,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                                 IFNULL(SUM(a1.total_users_num), 0) AS total_users_num, 
                                 IFNULL(SUM(a1.total_trans_users_num), 0) AS total_trans_users_num
                         FROM goods_composite_info a1 
-                        LEFT JOIN goods_pay_info a2 
+                        LEFT JOIN goods_payments a2 
                         ON a1.goods_id = a2.goods_id AND a1.date = a2.date 
                         WHERE  a1.date BETWEEN '${start}' AND '${end}' AND a1.goods_id = ?`
                     let row3 = await query(sql, [row[i].goods_id])
