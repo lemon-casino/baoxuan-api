@@ -22,13 +22,13 @@ const getInquiryTodayjdDailyReport = async () => {
         .map(item => {
             const questionType = [];
             // 暂停 4月1日恢复
-            // if (item.profitMargin < 10 && item.listingInfo==="老品") {
-            //     questionType.push('利润率小于10%');
-            // }
+            if (item.profitMargin < 10 && item.listingInfo==="老品") {
+                questionType.push('利润率小于10%');
+            }
             // 暂停 4月1日恢复
-            // if (item.costRatio > 0.12 && item.listingInfo==="老品" ) {
-            //     questionType.push('推广费比大于12%');
-            // }
+            if (item.costRatio > 0.12 && item.listingInfo==="老品" ) {
+                questionType.push('推广费比大于12%');
+            }
             
             if (item.flux > 20 && item.listingInfo==="老品" ) {
                 questionType.push('流量下降');
