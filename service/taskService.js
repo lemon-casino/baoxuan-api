@@ -681,13 +681,13 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
                     checkboxField_m11r277t,
                     radioField_locg3nxq
                 }, null, 2);
-                 await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
+                await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
             }
-            }
-            }
+        }
+    }
             await removeDuplicateLinkIds();
     logger.info("同步完成：京东异常发起")
-    };
+};
 
 const purchaseSelectionMeetingInitiated = async () => {
     await  sendDingReportBao()
