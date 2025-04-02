@@ -2059,7 +2059,7 @@ const importGoodsXHSInfo = async (rows, time) => {
         amount_row = null
     for (let i = 1; i < columns.length; i++) {
         if (columns[i] == 'SPUID') {goods_id_row = i;  continue}
-        if (columns[i] == '打款金额') {amount_row = i; continue}
+        if (columns[i] == '金额') {amount_row = i; continue}
     }
     for (let i = 1; i < rows.length; i++) {
         if (!rows[i].getCell(1).value) continue
@@ -3161,6 +3161,8 @@ const updateOrderGoodsVerified = async (date) => {
     let result = await goodsVerifiedsStats.updateLaborCost(date)
     logger.info(`[核销人工费刷新]：时间:${date}, ${result}`)
 }
+
+
 
 module.exports = {
     getDataStats,
