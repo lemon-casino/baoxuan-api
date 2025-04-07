@@ -74,7 +74,7 @@ const importVIPData = async (req, res, next) => {
             
             const file = files.file
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
-            fs.rename(file.filepath, newPath, (err) => {  
+            fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()

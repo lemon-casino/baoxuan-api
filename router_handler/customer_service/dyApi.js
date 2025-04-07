@@ -411,7 +411,7 @@ const importDYData = async (req, res, next) => {
             const start_time = date[1]
             const end_time = date[2] ? date[2] : date[1]
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
-            fs.rename(file.filepath, newPath, (err) => {  
+            fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()
