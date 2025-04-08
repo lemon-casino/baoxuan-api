@@ -163,7 +163,7 @@ const importTmallAsData = async (req, res, next) => {
                 } else {
                     let count = 3                   
                     for (const row of jsonData){
-                        if(row['旺旺']!='汇总'&&row['旺旺']!='均值'){
+                        if(row['旺旺']!='汇总'&&row['旺旺']!='均值'&&row['旺旺']!=null){
                             const start_time1=start_time
                             const end_time1=end_time
                             const servicer=row['旺旺']
@@ -354,7 +354,7 @@ const importTmallPsData = async (req, res, next) => {
                 
                 if (file.originalFilename.indexOf('有未回复') != -1) {
                     for (const row of jsonData){
-                        if(row['旺旺']!='汇总'&&row['旺旺']!='均值'){
+                        if(row['旺旺']!='汇总'&&row['旺旺']!='均值'&&row['旺旺']!=null){
                             const response_average=row['平均响应(秒)'] != null ? Number(row['平均响应(秒)']) : null
                             const success_rate=row['询单->次日付款成功率'] != null ? Number((row['询单->次日付款成功率']*100).toFixed(2)) : null
                             const satisfaction_rate=row['客户满意率']!=null ? Number((row['客户满意率']*100).toFixed(2)) : null

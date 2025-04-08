@@ -21,15 +21,13 @@ const getInquiryTodayjdDailyReport = async () => {
     let filteredResults = data
         .map(item => {
             const questionType = [];
-
             if (item.profitMargin < 10 && item.listingInfo==="老品") {
                 questionType.push('利润率小于10%');
             }
-
             if (item.costRatio > 0.12 && item.listingInfo==="老品" ) {
                 questionType.push('推广费比大于12%');
             }
-
+            
             if (item.flux > 20 && item.listingInfo==="老品" ) {
                 questionType.push('流量下降');
             }
@@ -208,6 +206,9 @@ const getInquiryTodayjdDailyReport = async () => {
                 break;
             case '下柜':
                 filteredResult.questionType = filteredResult.questionType.filter(type => type === '利润为负');
+                break;
+            case '高付费模型':
+                filteredResult.questionType = filteredResult.questionType.filter(type => type === '推广费比大于12%');
                 break;
         }
         filteredResult.questionType = filteredResult.questionType.filter(type => !type.startsWith('周'));

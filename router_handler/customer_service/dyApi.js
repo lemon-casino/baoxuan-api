@@ -420,7 +420,7 @@ const importDYData = async (req, res, next) => {
                 const worksheet = workbook.getWorksheet(1)
                 let info = []
                 let rows = worksheet.getRows(2, worksheet.rowCount - 1)
-                
+                console.log(rows)
                 let count = 0                   
                 for (let i = 0; i < worksheet.rowCount - 1; i++) {
                     let row = rows[i]
@@ -434,17 +434,17 @@ const importDYData = async (req, res, next) => {
                         info.push(row.getCell(4).value != '-' ? row.getCell(4).value : null)
                         info.push(row.getCell(5).value != '-' ? row.getCell(5).value : null)
                         info.push(row.getCell(6).value != '-' ? row.getCell(6).value : null)
-                        info.push(typeof(row.getCell(7).value) == 'number' ? row.getCell(7).value * 100 : null)
-                        info.push(typeof(row.getCell(8).value) == 'number' ? row.getCell(8).value * 100 : null)
-                        info.push(typeof(row.getCell(9).value) == 'number' ? row.getCell(9).value * 100 : null)
+                        info.push(typeof(row.getCell(7).value) == 'number' ? (row.getCell(7).value * 100).toFixed(2) : null)
+                        info.push(typeof(row.getCell(8).value) == 'number' ? (row.getCell(8).value * 100).toFixed(2) : null)
+                        info.push(typeof(row.getCell(9).value) == 'number' ? (row.getCell(9).value * 100).toFixed(2) : null)
                         info.push(row.getCell(10).value != '-' ? row.getCell(10).value : null)
                         info.push(row.getCell(11).value != '-' ? row.getCell(11).value : null)
-                        info.push(typeof(row.getCell(12).value) == 'number' ? row.getCell(12).value * 100 : null)
+                        info.push(typeof(row.getCell(12).value) == 'number' ? (row.getCell(12).value * 100).toFixed(2) : null)
                         info.push(row.getCell(13).value != '-' ? row.getCell(13).value : null)
                         info.push(row.getCell(14).value != '-' ? row.getCell(14).value : null)
                         info.push(row.getCell(15).value != '-' ? row.getCell(15).value : null)
                         info.push(row.getCell(16).value != '-' ? row.getCell(16).value : null)
-                        info.push(typeof(row.getCell(17).value) == 'number' ? row.getCell(17).value * 100 : null)
+                        info.push(typeof(row.getCell(17).value) == 'number' ? (row.getCell(17).value * 100).toFixed(2) : null)
                         info.push(row.getCell(18).value != '-' ? row.getCell(18).value : null)
                         info.push(row.getCell(19).value != '-' ? row.getCell(19).value : null)
                         info.push(row.getCell(20).value != '-' ? row.getCell(20).value : null)

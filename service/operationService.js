@@ -2055,26 +2055,21 @@ const importGoodsXHSInfo = async (rows, time) => {
     let count = 0, data = [], result = false
     let columns = rows[0].values,
         goods_id_row = null,
-        shop_name_row = null,
         date = time,
         amount_row = null
     for (let i = 1; i < columns.length; i++) {
-        if (columns[i] == '商品信息') {goods_id_row = i;  continue}
-        if (columns[i] == '店铺名称') {shop_name_row = i; continue}
-        if (columns[i] == '打款金额') {amount_row = i; continue}
+        if (columns[i] == 'SPUID') {goods_id_row = i;  continue}
+        if (columns[i] == '金额') {amount_row = i; continue}
     }
     for (let i = 1; i < rows.length; i++) {
         if (!rows[i].getCell(1).value) continue
         let goods_id = goods_id_row ? (typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
             rows[i].getCell(goods_id_row).value.trim() : 
             rows[i].getCell(goods_id_row).value) : null
-        let shop_name = shop_name_row ? (typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
-            rows[i].getCell(shop_name_row).value.trim() : 
-            rows[i].getCell(shop_name_row).value) : null
         data.push(
             goods_id,
             null,
-            shop_name,
+            'pakchoice旗舰店（天猫）',
             '小红书返款',
             rows[i].getCell(amount_row).value,
             date
@@ -2160,11 +2155,11 @@ const importGoodsPDDInfo = async (rows, time) => {
         if (columns[i] == '店铺') {shop_name_row = i; continue}
         if (columns[i] == '商品访客数') {user_num_row = i; continue}
         if (columns[i] == '商品浏览量') {click_num_row = i; continue}
-        if (columns[i] == '支付件数') {trans_qty_row = i; continue}
-        if (columns[i] == '支付买家数') {trans_users_num_row = i; continue}
-        if (columns[i] == '支付订单数') {trans_num_row = i; continue}
-        if (columns[i] == '成交额(元)') {trans_amount_row = i; continue}
-        if (columns[i] == '支付转化率') {pay_rate_row = i; continue}
+        if (columns[i] == '成交件数') {trans_qty_row = i; continue}
+        if (columns[i] == '成交买家数') {trans_users_num_row = i; continue}
+        if (columns[i] == '成交订单数') {trans_num_row = i; continue}
+        if (columns[i] == '成交金额(元)') {trans_amount_row = i; continue}
+        if (columns[i] == '成交转化率') {pay_rate_row = i; continue}
     }
     for (let i = 1; i < rows.length; i++) {
         if (!rows[i].getCell(1).value) continue
@@ -2446,7 +2441,6 @@ const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
     // 3. 添加周数据和汇总数据
     const result = Object.keys(groupedData).map(teamName => {
         const teamData = groupedData[teamName]
-
         // 分离上周和上上周的数据
         const lastWeekData = teamData.filter(item => item.date === "上周")
         const lastLastWeekData = teamData.filter(item => item.date === "上上周")
@@ -2607,7 +2601,6 @@ const getTMPromotioninfo = async (lstart, lend) =>{
         { header: "ROI", key: 'roi' }
     ]}
     let resutl = await goodsSaleInfoRepo.getTMPromotioninfo(lstart, lend)
-    console.log(resutl)
     data.data = []
     data.data = resutl
     return data
@@ -2627,9 +2620,32 @@ const getTMPromotion = async (lstart, lend) =>{
         { header: "货品运营", key: 'product_operation_promotion' },
         { header: "推广汇总金额", key: 'promotion_amount' }
     ]}
-    let resutl = await goodsSaleInfoRepo.getTMPromotion(lstart, lend)
+    let result = await goodsSaleInfoRepo.getTMPromotion(lstart, lend)
+    console.log(result)
+    const sortOrder = {
+        "一组": 1,
+        "二组": 2,
+        "三组": 3,
+        "四组": 4,
+        "无操作": 5 
+    }
+    // 提取组别名称
+    const extractGroupName = (teamName) => {
+        if (teamName.includes("一组")) return "一组";
+        if (teamName.includes("二组")) return "二组";
+        if (teamName.includes("三组")) return "三组";
+        if (teamName.includes("四组")) return "四组";
+        return "无操作" // 默认返回 "无操作"
+    }
+    // 排序函数
+    const sortedData = result.sort((a, b) => {
+        const groupA = extractGroupName(a.team_name)
+        const groupB = extractGroupName(b.team_name)
+        return sortOrder[groupA] - sortOrder[groupB]
+    })
+    const filteredData = sortedData.filter(item => !["无操作汇总"].some(group => item.team_name.includes(group)))
     data.data = []
-    data.data = resutl
+    data.data = filteredData
     return data
 }
 
@@ -3005,31 +3021,26 @@ const importXhsShuadan = async (rows, date) => {
     let columns = rows[0].values,
     order_id_row = null,
     sale_amount_row = null,
-    goods_id_row = null,
-    shop_name_row = null
-    for(let i=0;i<columns.length;i++){
-        if(columns[i] == '线上订单号'){
+    goods_id_row = null
+    for(let i=1;i<columns.length;i++){
+        if(columns[i] == '订单ID'){
             order_id_row = i
-        }else if(columns[i]=='打款金额'){
+        }else if(columns[i]=='金额'){
             sale_amount_row = i
-        }else if(columns[i] == '商品信息'){
+        }else if(columns[i] == 'SPUID'){
             goods_id_row = i
-        }else if(columns[i] == '店铺名称'){
-            shop_name_row = i
         }
     }
     for(let i=1;i<rows.length;i++){
         let order_id=rows[i].getCell(order_id_row).value
-        shop_name=rows[i].getCell(shop_name_row).value
-        let q = await shopInfoRepo.getShopIdByName(shop_name)
         data.push(
             order_id,
-            q[0].shop_id,
+            '15545775',
             rows[i].getCell(sale_amount_row).value,
             rows[i].getCell(goods_id_row).value,
-            shop_name,
+            'pakchoice旗舰店（天猫）',
             date,
-            name
+            '小红书返款'
         )
         count += 1
     }
@@ -3150,6 +3161,8 @@ const updateOrderGoodsVerified = async (date) => {
     let result = await goodsVerifiedsStats.updateLaborCost(date)
     logger.info(`[核销人工费刷新]：时间:${date}, ${result}`)
 }
+
+
 
 module.exports = {
     getDataStats,
