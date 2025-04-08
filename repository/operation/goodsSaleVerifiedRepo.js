@@ -620,6 +620,8 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                 LIMIT ${offset}, ${size}`
         row = await query(sql, p)
         if (row?.length) {
+            let goods_ids = '', goods_ids1 = '', goodsMap = {}, row1
+            sql = ''
             for (let i = 0; i < row.length; i++) {
                 row[i].sku_id = ''
                 row[i].sku_sid = ''                
@@ -627,158 +629,179 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                 row[i].id = row[i].goods_id || row[i].sku_code
                 row[i].parent_id = null
                 if (row[i].goods_id) {
-                    sql = `SELECT goods_name, brief_name, operator, brief_product_line, 
-                            line_director, purchase_director, onsale_date, link_attribute, 
-                            important_attribute, first_category, second_category, pit_target, 
-                            (CASE WHEN DATE_SUB(NOW(), INTERVAL 30 DAY) <= onsale_date 
-                                THEN '新品30' 
-                            WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= onsale_date 
-                                THEN '新品60' 
-                            WHEN DATE_SUB(NOW(), INTERVAL 90 DAY) <= onsale_date 
-                                THEN '新品90' 
-                            ELSE '老品' END) AS onsale_info, 
-                            a.goal 
-                        FROM dianshang_operation_attribute d 
-                        LEFT JOIN (
-                            SELECT GROUP_CONCAT(CONCAT(g.month, ': ', FORMAT(g.amount, 2)) SEPARATOR '\n') 
-                                AS goal, g.goods_id FROM goods_monthly_sales_target g
-                            WHERE g.goods_id = ? AND g.month BETWEEN ? AND ? 
-                        ) a ON a.goods_id = d.goods_id WHERE d.goods_id = ? AND d.platform !='自营'
-                        UNION ALL
-                        SELECT goods_name, brief_name, operator, brief_product_line, 
-                            line_director, purchase_director, onsale_date, link_attribute, 
-                            important_attribute, first_category, second_category, pit_target,
-                            (CASE WHEN DATE_SUB(NOW(), INTERVAL 30 DAY) <= onsale_date 
-                                THEN '新品30' 
-                            WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= onsale_date 
-                                THEN '新品60' 
-                            WHEN DATE_SUB(NOW(), INTERVAL 90 DAY) <= onsale_date 
-                                THEN '新品90' 
-                            ELSE '老品' END) AS onsale_info, 
-                            a.goal 
-                        FROM dianshang_operation_attribute d 
-                        LEFT JOIN (
-                            SELECT GROUP_CONCAT(CONCAT(g.month, ': ', FORMAT(g.amount, 2)) SEPARATOR '\n') 
-                                AS goal, g.goods_id FROM goods_monthly_sales_target g
-                            WHERE g.goods_id = ? AND g.month BETWEEN ? AND ? 
-                        ) a ON a.goods_id = d.brief_name WHERE d.brief_name = ? AND d.platform ='自营'`
-                        let row1 = await query(sql, [
-                            row[i].goods_id, 
-                            moment(start).format('YYYYMM'), 
-                            moment(end).format('YYYYMM'),
-                            row[i].goods_id,
-                            row[i].goods_id, 
-                            moment(start).format('YYYYMM'), 
-                            moment(end).format('YYYYMM'),
-                            row[i].goods_id
-                        ])
-                    if (row1?.length) {
-                        row[i].goods_name = row1[0].goods_name
-                        row[i].brief_name = row1[0].brief_name
-                        row[i].operator = row1[0].operator
-                        row[i].brief_product_line = row1[0].brief_product_line
-                        row[i].line_director = row1[0].line_director
-                        row[i].purchase_director = row1[0].purchase_director
-                        row[i].onsale_date = row1[0].onsale_date
-                        row[i].link_attribute = row1[0].link_attribute
-                        row[i].important_attribute = row1[0].important_attribute
-                        row[i].first_category = row1[0].first_category
-                        row[i].second_category = row1[0].second_category
-                        row[i].pit_target = row1[0].pit_target
-                        row[i].pit_target_day = row1[0].pit_target*targettime
-                        row[i].pit_target_month = row1[0].pit_target*days
-                        row[i].onsale_info = row1[0].onsale_info
-                        row[i].goal = row1[0].goal
-                        row[i].sale_amount_profit_day = row1[0].pit_target*targettime>0 ? (row[i].sale_amount/(row1[0].pit_target*targettime)*100).toFixed(2) + '%' : null
-                        row[i].sale_amount_profit_month = row1[0].pit_target*days>0 ? (row[i].sale_month/(row1[0].pit_target*days)*100).toFixed(2) + '%' : null
+                    goods_ids = `${goods_ids}"${row[i].goods_id}",`
+                    if (row[i].shop_name == '京东自营旗舰店') 
+                        goods_ids1 = `${goods_ids1}"${row[i].goods_id}",`
+                    goodsMap[row[i].goods_id] = i
+                    sql = `${sql} (SELECT IFNULL(s.on_sku_code, o.sku_id) AS sku_id, o.goods_id 
+                        FROM orders_goods_verifieds o LEFT JOIN jst_goods_sku s 
+                            ON o.goods_id = s.goods_id AND o.sku_id = s.sku_id 
+                        WHERE o.goods_id = "${row[i].goods_id}" AND o.date 
+                            BETWEEN "${start}" AND "${end}" 
+                        GROUP BY o.sku_id, s.on_sku_code, o.goods_id  
+                        ORDER BY IFNULL(SUM(o.sale_amount), 0) DESC LIMIT 2)
+                        UNION ALL`
+                }
+            }
+            if (goods_ids?.length) {
+                goods_ids = goods_ids.substring(0, goods_ids.length - 1) 
+                sql = sql.substring(0, sql.length - 9)
+                row1 = await query(sql)
+                if (row1?.length) {
+                    for (let j = 0; j < row1.length; j++) {
+                        let i = goodsMap[row1[j].goods_id]
+                        if (row[i].sku_id) row[i].sku_sid = row1[j].sku_id
+                        else row[i].sku_id = row1[j].sku_id               
+                    }
+                }
+                sql = `SELECT goods_name, brief_name, operator, brief_product_line, 
+                        line_director, purchase_director, onsale_date, link_attribute, 
+                        important_attribute, first_category, second_category, pit_target, 
+                        (CASE WHEN DATE_SUB(NOW(), INTERVAL 30 DAY) <= onsale_date 
+                            THEN '新品30' 
+                        WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= onsale_date 
+                            THEN '新品60' 
+                        WHEN DATE_SUB(NOW(), INTERVAL 90 DAY) <= onsale_date 
+                            THEN '新品90' 
+                        ELSE '老品' END) AS onsale_info, 
+                        a.goal, d.goods_id 
+                    FROM dianshang_operation_attribute d 
+                    LEFT JOIN (
+                        SELECT GROUP_CONCAT(CONCAT(g.month, ': ', FORMAT(g.amount, 2)) SEPARATOR '\n') 
+                            AS goal, g.goods_id FROM goods_monthly_sales_target g
+                        WHERE g.goods_id IN (${goods_ids}) AND g.month BETWEEN ? AND ? 
+                        GROUP BY g.goods_id 
+                    ) a ON a.goods_id = d.goods_id 
+                    WHERE d.goods_id IN (${goods_ids}) AND d.platform !='自营'
+                    UNION ALL
+                    SELECT goods_name, brief_name, operator, brief_product_line, 
+                        line_director, purchase_director, onsale_date, link_attribute, 
+                        important_attribute, first_category, second_category, pit_target,
+                        (CASE WHEN DATE_SUB(NOW(), INTERVAL 30 DAY) <= onsale_date 
+                            THEN '新品30' 
+                        WHEN DATE_SUB(NOW(), INTERVAL 60 DAY) <= onsale_date 
+                            THEN '新品60' 
+                        WHEN DATE_SUB(NOW(), INTERVAL 90 DAY) <= onsale_date 
+                            THEN '新品90' 
+                        ELSE '老品' END) AS onsale_info, 
+                        a.goal, d.goods_id 
+                    FROM dianshang_operation_attribute d 
+                    LEFT JOIN (
+                        SELECT GROUP_CONCAT(CONCAT(g.month, ': ', FORMAT(g.amount, 2)) SEPARATOR '\n') 
+                            AS goal, g.goods_id FROM goods_monthly_sales_target g
+                        WHERE g.goods_id IN (${goods_ids}) AND g.month BETWEEN ? AND ? 
+                        GROUP BY g.goods_id 
+                    ) a ON a.goods_id = d.brief_name 
+                    WHERE d.brief_name IN (${goods_ids}) AND d.platform ='自营'`
+                row1 = await query(sql, [
+                    moment(start).format('YYYYMM'), 
+                    moment(end).format('YYYYMM'),
+                    moment(start).format('YYYYMM'), 
+                    moment(end).format('YYYYMM')
+                ])
+                if (row1?.length) {
+                    for (let j = 0; j < row1.length; j++) {
+                        let i = goodsMap[row1[j].goods_id ? row1[j].goods_id : row1[j].brief_name]
+                        row[i].goods_name = row1[j].goods_name
+                        row[i].brief_name = row1[j].brief_name
+                        row[i].operator = row1[j].operator
+                        row[i].brief_product_line = row1[j].brief_product_line
+                        row[i].line_director = row1[j].line_director
+                        row[i].purchase_director = row1[j].purchase_director
+                        row[i].onsale_date = row1[j].onsale_date
+                        row[i].link_attribute = row1[j].link_attribute
+                        row[i].important_attribute = row1[j].important_attribute
+                        row[i].first_category = row1[j].first_category
+                        row[i].second_category = row1[j].second_category
+                        row[i].pit_target = row1[j].pit_target
+                        row[i].pit_target_day = row1[j].pit_target*targettime
+                        row[i].pit_target_month = row1[j].pit_target*days
+                        row[i].onsale_info = row1[j].onsale_info
+                        row[i].goal = row1[j].goal
+                        row[i].sale_amount_profit_day = row1[j].pit_target*targettime>0 ? (row[i].sale_amount/(row1[j].pit_target*targettime)*100).toFixed(2) + '%' : null
+                        row[i].sale_amount_profit_month = row1[j].pit_target*days>0 ? (row[i].sale_month/(row1[j].pit_target*days)*100).toFixed(2) + '%' : null
                         const arrary=["pakchoice旗舰店（天猫）","八千行旗舰店（天猫）","宝厨行（淘宝）","八千行（淘宝）","北平商号（淘宝）","天猫teotm旗舰店"]
                         if (!arrary.includes(row[i].shop_name)) {
                             row[i].sale_amount_profit_day=null
                             row[i].sale_amount_profit_month=null
                         }
                     }
-                    sql = `WITH t1 AS(SELECT promotion_name,sum(amount) as amount 
-                        FROM goods_promotion_info WHERE date BETWEEN '${start}' AND '${end}' AND goods_id=?
-                        GROUP BY promotion_name)
-                        SELECT * FROM 
-                        (SELECT SUM(amount)as full_site_promotion FROM t1 WHERE promotion_name='6003431万相台无界-全站推广' ) AS t2
-                        JOIN
-                        (SELECT SUM(amount)as multi_objective_promotion FROM t1 WHERE promotion_name='6003414多目标直投' ) AS t3
-                        JOIN
-                        (SELECT SUM(amount)as targeted_audience_promotion FROM t1 WHERE promotion_name='6003416精准人群推广' ) AS t4
-                        JOIN
-                        (SELECT SUM(amount)as product_operation_promotion FROM t1 WHERE promotion_name='6003432万相台无界-货品运营' ) AS t5
-                        JOIN
-                        (SELECT SUM(amount)as keyword_promotion FROM t1 WHERE promotion_name='60030412关键词推广' ) AS t6
-                        JOIN
-                        (SELECT SUM(amount)as daily_promotion FROM t1 WHERE promotion_name='日常推广' ) AS t7
-                        JOIN
-                        (SELECT SUM(amount)as scene_promotion FROM t1 WHERE promotion_name='场景推广' ) AS t8
-                        JOIN
-                        (SELECT SUM(amount)as jd_express_promotion FROM t1 WHERE promotion_name in ('京东快车1','京东快车2','京东快车3') ) AS t9
-                        JOIN
-                        (SELECT SUM(amount)as total_promotion FROM t1 WHERE promotion_name in ('全站营销','新品全站营销') ) AS t10`
-                    let row2 = await query(sql, [row[i].goods_id])
-                    if(row2?.length){
-                        row[i].full_site_promotion = row2[0].full_site_promotion
-                        row[i].multi_objective_promotion = row2[0].multi_objective_promotion
-                        row[i].targeted_audience_promotion = row2[0].targeted_audience_promotion
-                        row[i].product_operation_promotion = row2[0].product_operation_promotion
-                        row[i].keyword_promotion = row2[0].keyword_promotion
-                        row[i].daily_promotion = row2[0].daily_promotion
-                        row[i].scene_promotion = row2[0].scene_promotion
-                        row[i].jd_express_promotion = row2[0].jd_express_promotion
-                        row[i].total_promotion = row2[0].total_promotion
-                        row[i].full_site_promotion_roi = row2[0].full_site_promotion!=null ? (row[i].sale_amount/row2[0].full_site_promotion).toFixed(2) : null
-                        row[i].multi_objective_promotion_roi = row2[0].multi_objective_promotion!=null ? (row[i].sale_amount/row2[0].multi_objective_promotion).toFixed(2) : null
-                        row[i].targeted_audience_promotion_roi = row2[0].targeted_audience_promotion!=null ? (row[i].sale_amount/row2[0].targeted_audience_promotion).toFixed(2) : null
-                        row[i].product_operation_promotion_roi = row2[0].product_operation_promotion!=null ? (row[i].sale_amount/row2[0].product_operation_promotion).toFixed(2) : null
-                        row[i].keyword_promotion_roi = row2[0].keyword_promotion!=null ? (row[i].sale_amount/row2[0].keyword_promotion).toFixed(2) : null
+                }
+                sql = `select SUM(IF(promotion_name='6003416精准人群推广',amount,null)) as targeted_audience_promotion
+                        ,SUM(IF(promotion_name='6003431万相台无界-全站推广',amount,null)) as full_site_promotion
+                        ,SUM(IF(promotion_name='6003414多目标直投',amount,null)) as multi_objective_promotion
+                        ,SUM(IF(promotion_name='60030412关键词推广',amount,null)) as keyword_promotion
+                        ,SUM(IF(promotion_name='6003432万相台无界-货品运营',amount,null)) as product_operation_promotion
+                        ,SUM(IF(promotion_name='日常推广',amount,null)) AS daily_promotion
+                        ,SUM(IF(promotion_name='场景推广',amount,null)) AS scene_promotion
+                        ,SUM(IF(promotion_name='京东快车1' OR promotion_name='京东快车2' OR promotion_name='京东快车3',amount,null)) AS jd_express_promotion
+                        ,SUM(IF(promotion_name='全站营销' OR promotion_name='新品全站营销' OR promotion_name='京东快车3',amount,null)) AS total_promotion, goods_id 
+                    from goods_promotion_info 
+                    where date BETWEEN '${start}' AND '${end}' AND goods_id IN (${goods_ids}) 
+                    GROUP BY goods_id`
+                let row2 = await query(sql)
+                if(row2?.length){
+                    for (let j = 0; j < row2.length; j++) {
+                        let i = goodsMap[row2[j].goods_id]
+                        row[i].full_site_promotion = row2[j].full_site_promotion
+                        row[i].multi_objective_promotion = row2[j].multi_objective_promotion
+                        row[i].targeted_audience_promotion = row2[j].targeted_audience_promotion
+                        row[i].product_operation_promotion = row2[j].product_operation_promotion
+                        row[i].keyword_promotion = row2[j].keyword_promotion
+                        row[i].daily_promotion = row2[j].daily_promotion
+                        row[i].scene_promotion = row2[j].scene_promotion
+                        row[i].jd_express_promotion = row2[j].jd_express_promotion
+                        row[i].total_promotion = row2[j].total_promotion
+                        row[i].full_site_promotion_roi = row2[j].full_site_promotion!=null ? (row[i].sale_amount/row2[j].full_site_promotion).toFixed(2) : null
+                        row[i].multi_objective_promotion_roi = row2[j].multi_objective_promotion!=null ? (row[i].sale_amount/row2[j].multi_objective_promotion).toFixed(2) : null
+                        row[i].targeted_audience_promotion_roi = row2[j].targeted_audience_promotion!=null ? (row[i].sale_amount/row2[j].targeted_audience_promotion).toFixed(2) : null
+                        row[i].product_operation_promotion_roi = row2[j].product_operation_promotion!=null ? (row[i].sale_amount/row2[j].product_operation_promotion).toFixed(2) : null
+                        row[i].keyword_promotion_roi = row2[j].keyword_promotion!=null ? (row[i].sale_amount/row2[j].keyword_promotion).toFixed(2) : null
                     }
-                    if(['京东自营旗舰店'].includes(row[i].shop_name)){
-                        sql = `SELECT SUM(real_sale_qty) AS real_sale_qty
-                                ,SUM(real_sale_amount) AS real_sale_amount
-                                ,SUM(real_gross_profit) AS real_gross_profit
-                            FROM goods_sales 
-                            WHERE goods_id= ?
-                            AND date BETWEEN '${start}' AND '${end}'`
-                        let row4 = await query(sql, [row[i].goods_id])
-                        if(row4?.length){
-                            row[i].real_sale_qty = row4[0].real_sale_qty
-                            row[i].real_sale_amount = row4[0].real_sale_amount
-                            row[i].real_gross_profit = row4[0].real_gross_profit
-                            row[i].gross_standard = row4[0].real_sale_amount!=null ? (row4[0].real_sale_amount * 0.28).toFixed(2) : null
-                            row[i].other_cost = row4[0].real_gross_profit!=null ? (row[i].gross_standard - row4[0].real_gross_profit).toFixed(2) : null
-                            row[i].profit_rate_gmv = row4[0].real_sale_amount>0 ? (row[i].profit/row4[0].real_sale_amount*100).toFixed(2) : null
+                }
+                if(goods_ids1?.length){
+                    goods_ids1 = goods_ids1.substring(0, goods_ids1.length - 1)
+                    sql = `SELECT SUM(real_sale_qty) AS real_sale_qty
+                            ,SUM(real_sale_amount) AS real_sale_amount
+                            ,SUM(real_gross_profit) AS real_gross_profit, goods_id
+                        FROM goods_sales 
+                        WHERE goods_id IN (${goods_ids1})
+                            AND date BETWEEN '${start}' AND '${end}' 
+                        GROUP BY goods_id`
+                    let row4 = await query(sql)
+                    if(row4?.length){
+                        for (let j = 0; j < row4.length; j++) {
+                            let i = goodsMap[row4[j].goods_id]
+                            row[i].real_sale_qty = row4[j].real_sale_qty
+                            row[i].real_sale_amount = row4[j].real_sale_amount
+                            row[i].real_gross_profit = row4[j].real_gross_profit
+                            row[i].gross_standard = row4[j].real_sale_amount!=null ? (row4[j].real_sale_amount * 0.28).toFixed(2) : null
+                            row[i].other_cost = row4[j].real_gross_profit!=null ? (row[i].gross_standard - row4[j].real_gross_profit).toFixed(2) : null
+                            row[i].profit_rate_gmv = row4[j].real_sale_amount>0 ? (row[i].profit/row4[j].real_sale_amount*100).toFixed(2) : null
                         }
                     }
-                    sql=`SELECT IFNULL(SUM(a1.users_num), 0) AS users_num, 
-                            IFNULL(SUM(a1.trans_users_num), 0) AS trans_users_num,
-                            IF(IFNULL(SUM(a1.users_num), 0) > 0, FORMAT(
-                                (IFNULL(SUM(a1.trans_users_num), 0) - 
-                                IFNULL(SUM(a2.brushing_qty), 0)) / 
-                                IFNULL(SUM(a1.users_num), 0) * 100, 2), 0) AS real_pay_rate,
-                                IFNULL(SUM(a1.total_users_num), 0) AS total_users_num, 
-                                IFNULL(SUM(a1.total_trans_users_num), 0) AS total_trans_users_num
-                        FROM goods_composite_info a1 
-                        LEFT JOIN goods_pay_info a2 
-                        ON a1.goods_id = a2.goods_id AND a1.date = a2.date 
-                        WHERE  a1.date BETWEEN '${start}' AND '${end}' AND a1.goods_id = ?`
-                    let row3 = await query(sql, [row[i].goods_id])
-                    row[i].users_num = row3[0].users_num
-                    row[i].trans_users_num = row3[0].trans_users_num
-                    row[i].real_pay_rate = row3[0].real_pay_rate
-                    row[i].total_trans_users_num = row3[0].total_trans_users_num
-                    row[i].total_users_num = row3[0].total_users_num
-                    sql = `SELECT IFNULL(s.on_sku_code, o.sku_id) AS sku_id 
-                        FROM orders_goods_verifieds o LEFT JOIN jst_goods_sku s 
-                            ON o.goods_id = s.goods_id AND o.sku_id = s.sku_id 
-                        WHERE o.goods_id = ? AND o.date BETWEEN ? AND ? 
-                        GROUP BY o.sku_id, s.on_sku_code 
-                        ORDER BY IFNULL(SUM(o.sale_amount), 0) DESC LIMIT 2`
-                    row1 = await query(sql, [row[i].goods_id, start, end])
-                    if (row1?.length) row[i].sku_id = row1[0].sku_id
-                    if (row1?.length > 1) row[i].sku_sid = row1[1].sku_id
+                }
+                sql=`SELECT IFNULL(SUM(a1.users_num), 0) AS users_num, 
+                        IFNULL(SUM(a1.trans_users_num), 0) AS trans_users_num,
+                        IF(IFNULL(SUM(a1.users_num), 0) > 0, FORMAT(
+                            (IFNULL(SUM(a1.trans_users_num), 0) - 
+                            IFNULL(SUM(a2.brushing_qty), 0)) / 
+                            IFNULL(SUM(a1.users_num), 0) * 100, 2), 0) AS real_pay_rate,
+                            IFNULL(SUM(a1.total_users_num), 0) AS total_users_num, 
+                            IFNULL(SUM(a1.total_trans_users_num), 0) AS total_trans_users_num, a1.goods_id 
+                    FROM goods_composite_info a1 
+                    LEFT JOIN goods_pay_info a2 
+                    ON a1.goods_id = a2.goods_id AND a1.date = a2.date 
+                    WHERE  a1.date BETWEEN '${start}' AND '${end}' AND a1.goods_id IN (${goods_ids}) 
+                    GROUP BY a1.goods_id`
+                let row3 = await query(sql)
+                for (let j = 0; j < row3.length; j++) {
+                    let i = goodsMap[row3[j].goods_id]
+                    row[i].users_num = row3[j].users_num
+                    row[i].trans_users_num = row3[j].trans_users_num
+                    row[i].real_pay_rate = row3[j].real_pay_rate
+                    row[i].total_trans_users_num = row3[j].total_trans_users_num
+                    row[i].total_users_num = row3[j].total_users_num
                 }
             }
             result.data = row
