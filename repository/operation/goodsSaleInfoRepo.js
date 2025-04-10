@@ -1071,20 +1071,19 @@ goodsSaleInfoRepo.getDataGrossProfitByTime = async(goods_id, start, end) => {
                         SUM(o.rate)) / SUM(o.sale_amount)
                         - IF(IFNULL(SUM(g.sale_amount), 0) > 0, 
                             IFNULL(SUM(g.bill), 0) / SUM(g.sale_amount), 0)
-                ) * 100, 2), 0) AS gross_profit, ? AS date
+                ) * 100, 2), 0) AS gross_profit, o.date
         FROM orders_goods_sales o LEFT JOIN goods_verifieds_stats g 
-            ON o.goods_id = g.goods_id AND g.date = ?
-        WHERE o.date = ? AND o.goods_id = ?`
-    let search = '', time = start, params = []
-    while (moment(time).valueOf() <= moment(end).valueOf()) {
-        let preTime = moment(time).subtract(1, 'day').format('YYYY-MM-DD')
-        search = `${search}${sql} 
-            UNION ALL `
-        params.push(time, preTime, time, goods_id)
-        time = moment(time).subtract(-1, 'day').format('YYYY-MM-DD')
-    }
-    search = search.substring(0, search.length - 10)
-    const result = await query(search, params)
+            ON o.goods_id = g.goods_id AND g.date = DATE_SUB(o.date, INTERVAL 1 DAY) 
+        WHERE o.date BETWEEN ? AND ? 
+            AND IF(g.goods_id IS NOT NULL, g.date BETWEEN ? AND ?, true) 
+            AND o.goods_id = ? 
+        GROUP BY o.date`
+    const result = await query(sql, [
+        start, 
+        end,
+        moment(start).subtract(1, 'day').format('YYYY-MM-DD'),
+        moment(end).subtract(1, 'day').format('YYYY-MM-DD'),
+        goods_id])
     return result || []
 }
 
@@ -1113,8 +1112,15 @@ goodsSaleInfoRepo.getDataGrossProfitDetailByTime = async(goods_id, start, end) =
             ) * 100, 2), 0) AS gross_profit, o.sku_id AS sku_code FROM orders_goods_sales o 
             LEFT JOIN goods_verifieds_stats g ON o.goods_id = g.goods_id 
                 AND g.date = DATE_SUB(o.date, INTERVAL 1 DAY) 
-            WHERE o.date BETWEEN ? AND ? AND o.goods_id = ? GROUP BY o.sku_id`
-    const result = await query(sql, [start, end, goods_id])
+            WHERE o.date BETWEEN ? AND ? 
+                AND IF(g.goods_id IS NOT NULL, g.date BETWEEN ? AND ?, true) 
+                AND o.goods_id = ? GROUP BY o.sku_id`
+    const result = await query(sql, [
+        start, 
+        end, 
+        moment(start).subtract(1, 'day').format('YYYY-MM-DD'), 
+        moment(end).subtract(1, 'day').format('YYYY-MM-DD'), 
+        goods_id])
     return result || []
 }
 
