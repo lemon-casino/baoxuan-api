@@ -615,7 +615,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
             FROM goods_sales_stats a1 LEFT JOIN goods_sales_stats a2 ON a2.goods_id = a1.goods_id 
                 AND a2.date = DATE_SUB(a1.date, INTERVAL 1 DAY) 
             LEFT JOIN goods_verifieds_stats a4 ON a1.goods_id = a4.goods_id 
-                AND a1.date = DATE_SUB(a4.date, INTERVAL 1 DAY) 
+                AND a4.date = DATE_SUB(a1.date, INTERVAL 1 DAY) 
             LEFT JOIN (
                 SELECT o1.goods_id, IFNULL(SUM(o1.sale_amount), 0) AS sale_amount, 
                     IFNULL(SUM(o1.cost_amount), 0) AS cost_amount, 
@@ -927,7 +927,7 @@ goodsSaleInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
             FORMAT(IFNULL(a1.profit/a4.real_sale_amount*100,0),2) AS profit_rate_gmv,
             DATE_FORMAT(a1.date, '%Y-%m-%d') as \`date\` 
         FROM goods_sales_stats a1 LEFT JOIN goods_verifieds_stats a2 ON a1.goods_id = a2.goods_id 
-            AND a1.date = DATE_SUB(a2.date, INTERVAL 1 DAY) 
+            AND a2.date = DATE_SUB(a1.date, INTERVAL 1 DAY) 
         LEFT JOIN (
             SELECT o1.goods_id, o1.date, 
                 IFNULL(SUM(o1.sale_amount), 0) AS sale_amount, 
@@ -1071,11 +1071,20 @@ goodsSaleInfoRepo.getDataGrossProfitByTime = async(goods_id, start, end) => {
                         SUM(o.rate)) / SUM(o.sale_amount)
                         - IF(IFNULL(SUM(g.sale_amount), 0) > 0, 
                             IFNULL(SUM(g.bill), 0) / SUM(g.sale_amount), 0)
-                ) * 100, 2), 0) AS gross_profit, o.date
-        FROM orders_goods_sales o LEFT JOIN goods_verifieds_stats g ON o.goods_id = g.goods_id 
-            AND o.date = DATE_SUB(g.date, INTERVAL 1 DAY) 
-        WHERE o.date BETWEEN ? AND ? AND o.goods_id = ? GROUP BY o.date`
-    const result = await query(sql, [start, end, goods_id])
+                ) * 100, 2), 0) AS gross_profit, ? AS date
+        FROM orders_goods_sales o LEFT JOIN goods_verifieds_stats g 
+            ON o.goods_id = g.goods_id AND g.date = ?
+        WHERE o.date = ? AND o.goods_id = ?`
+    let search = '', time = start, params = []
+    while (moment(time).valueOf() <= moment(end).valueOf()) {
+        let preTime = moment(time).subtract(1, 'day').format('YYYY-MM-DD')
+        search = `${search}${sql} 
+            UNION ALL `
+        params.push(time, preTime, time, goods_id)
+        time = moment(time).subtract(-1, 'day').format('YYYY-MM-DD')
+    }
+    search = search.substring(0, search.length - 10)
+    const result = await query(search, params)
     return result || []
 }
 
@@ -1100,10 +1109,10 @@ goodsSaleInfoRepo.getDataGrossProfitDetailByTime = async(goods_id, start, end) =
                     SUM(o.cost_amount) + 
                     SUM(o.rate)) / SUM(o.sale_amount) 
                     - (IF(IFNULL(SUM(g.sale_amount), 0) > 0, 
-                        IFNULL(SUM(g.bill), 0) - SUM(g.sale_amount), 0)) 
+                        IFNULL(SUM(g.bill), 0) / SUM(g.sale_amount), 0)) 
             ) * 100, 2), 0) AS gross_profit, o.sku_id AS sku_code FROM orders_goods_sales o 
             LEFT JOIN goods_verifieds_stats g ON o.goods_id = g.goods_id 
-                AND o.date = DATE_SUB(g.date, INTERVAL 1 DAY) 
+                AND g.date = DATE_SUB(o.date, INTERVAL 1 DAY) 
             WHERE o.date BETWEEN ? AND ? AND o.goods_id = ? GROUP BY o.sku_id`
     const result = await query(sql, [start, end, goods_id])
     return result || []
