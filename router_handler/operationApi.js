@@ -1270,6 +1270,49 @@ const refreshVerifiedLaborCost = async (req, res, next) => {
     }
 }
 
+const importTmallpromotioninfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const filename = file.originalFilename.split('.')[0].split('_')
+            const shopname = filename[0]
+            const paytime = filename[1]
+            const day = filename[2]
+            const date = moment(paytime).add(day-1, 'days').format("YYYY-MM-DD")
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importTmallpromotioninfo(rows, shopname,paytime,day,date)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -1312,5 +1355,6 @@ module.exports = {
     getReportInfo,
     importErleiShuadan,
     importXhsShuadan,
-    ReportDownload
+    ReportDownload,
+    importTmallpromotioninfo
 }

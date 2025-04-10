@@ -2994,7 +2994,7 @@ const importErleiShuadan = async (rows, date) => {
     }
     for(let i = 1;i < rows.length;i++){
         let order_id=rows[i].getCell(order_id_row).value
-        let q = await ordersGoodsSalesRepo.getByordercode(order_id,date)
+        let q = await ordersGoodsSalesRepo.getByordercode(order_id)
         let shop_id = q?.length ? q[0].shop_id :null
         let sale_amount = q?.length ? q[0].sale_amount : rows[i].getCell(sale_amount_row).value
         let goods_id = q?.length ? q[0].goods_id : rows[i].getCell(goods_id_row).value
@@ -3163,6 +3163,131 @@ const updateOrderGoodsVerified = async (date) => {
 }
 
 
+const importTmallpromotioninfo = async (rows,shopname, paytime, day, date) => {
+    let summaryMap = {};
+    let columns = rows[0].values,
+        promotion_name_row = null, 
+        goods_id_row = null, 
+        direct_amount_row = null,
+        indirect_amount_row = null,
+        trans_amount_row = null,
+        trans_num_row = null,
+        direct_num_row = null,
+        indirect_num_row = null,
+        trans_users_num_row = null,
+        total_cart_num_row = null,
+        exposure_row = null,
+        click_num_row = null,
+        pay_amount_row = null;
+    for (let i = 1; i <= columns.length; i++) {  
+        if (columns[i] == '场景名字') {promotion_name_row = i; continue}      
+        if (columns[i] == '主体ID') {goods_id_row = i; continue}
+        if (columns[i] == '直接成交金额') {direct_amount_row = i; continue}
+        if (columns[i] == '间接成交金额') {indirect_amount_row = i; continue}
+        if (columns[i] == '总成交金额') {trans_amount_row = i; continue}
+        if (columns[i] == '总成交笔数') {trans_num_row = i; continue}
+        if (columns[i] == '直接成交笔数') {direct_num_row = i; continue}
+        if (columns[i] == '间接成交笔数') {indirect_num_row = i; continue}
+        if (columns[i] == '成交人数') {trans_users_num_row = i; continue}
+        if (columns[i] == '总购物车数') {total_cart_num_row = i; continue}
+        if (columns[i] == '展现量') {exposure_row = i; continue}
+        if (columns[i] == '点击量') {click_num_row = i; continue}
+        if (columns[i] == '花费') {pay_amount_row = i; continue}
+    }
+    for(let i = 1; i < rows.length; i++) {
+        const promotionName = rows[i].getCell(promotion_name_row).value
+        const goodsId = rows[i].getCell(goods_id_row).value
+        const directAmount = parseFloat(rows[i].getCell(direct_amount_row).value) || 0
+        const indirectAmount = parseFloat(rows[i].getCell(indirect_amount_row).value) || 0
+        const transAmount = parseFloat(rows[i].getCell(trans_amount_row).value) || 0
+        const transNum = parseInt(rows[i].getCell(trans_num_row).value) || 0
+        const directNum = parseInt(rows[i].getCell(direct_num_row).value) || 0
+        const indirectNum = parseInt(rows[i].getCell(indirect_num_row).value) || 0
+        const transUsersNum = parseInt(rows[i].getCell(trans_users_num_row).value) || 0
+        const totalCartNum = parseInt(rows[i].getCell(total_cart_num_row).value) || 0
+        const exposure = parseInt(rows[i].getCell(exposure_row).value) || 0
+        const clickNum = parseInt(rows[i].getCell(click_num_row).value) || 0
+        const payAmount = parseFloat(rows[i].getCell(pay_amount_row).value) || 0
+
+        const key = `${goodsId}-${promotionName}`;
+        if (!summaryMap[key]) {
+            summaryMap[key] = {
+                goodsId: goodsId,
+                promotionName: promotionName,
+                directAmount: 0,
+                indirectAmount: 0,
+                transAmount: 0,
+                transNum: 0,
+                directNum: 0,
+                indirectNum: 0,
+                transUsersNum: 0,
+                totalCartNum: 0,
+                exposure: 0,
+                clickNum: 0,
+                payAmount: 0,
+            };
+        }
+
+        summaryMap[key].directAmount += directAmount
+        summaryMap[key].indirectAmount += indirectAmount
+        summaryMap[key].transAmount += transAmount
+        summaryMap[key].transNum += transNum
+        summaryMap[key].directNum += directNum
+        summaryMap[key].indirectNum += indirectNum
+        summaryMap[key].transUsersNum += transUsersNum
+        summaryMap[key].totalCartNum += totalCartNum
+        summaryMap[key].exposure += exposure
+        summaryMap[key].clickNum += clickNum
+        summaryMap[key].payAmount += payAmount
+    }
+    
+    let summaryData = Object.values(summaryMap).map(item => ({
+        promotionName: item.promotionName,
+        goodsId: item.goodsId,
+        directAmount: item.directAmount,
+        indirectAmount: item.indirectAmount,
+        transAmount: item.transAmount,
+        transNum: item.transNum,
+        directNum: item.directNum,
+        indirectNum: item.indirectNum,
+        transUsersNum: item.transUsersNum,
+        totalCartNum: item.totalCartNum,
+        exposure: item.exposure,
+        clickNum: item.clickNum,
+        payAmount: item.payAmount,
+        period: day,
+        payTime: paytime,
+        date: date,
+        ROI: (item.transAmount / item.payAmount).toFixed(2) >0 ? (item.transAmount / item.payAmount).toFixed(2) : 0,
+        shopName: shopname
+        
+    }))
+
+    let data = summaryData.map(item => ([
+        item.promotionName,
+        item.goodsId,
+        item.directAmount,
+        item.indirectAmount,
+        item.transAmount,
+        item.transNum,
+        item.directNum,
+        item.indirectNum,
+        item.transUsersNum,
+        item.totalCartNum,
+        item.exposure,
+        item.clickNum,
+        item.payAmount,
+        item.day,
+        item.payTime,
+        item.date,
+        item.ROI ,
+        item.shopName
+    ]))
+    console.log(data)
+    await goodsPromotionRepo.deletetmallpromotion(shopname, paytime, day)
+    let result = await goodsPromotionRepo.Inserttmallpromotion(data)
+    return result
+}
 
 module.exports = {
     getDataStats,
@@ -3211,5 +3336,6 @@ module.exports = {
     importErleiShuadan,
     importXhsShuadan,
     getTMPromotion,
-    getTMPromotioninfo
+    getTMPromotioninfo,
+    importTmallpromotioninfo
 }
