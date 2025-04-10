@@ -1,5 +1,4 @@
 const { query } = require('../../model/dbConn')
-const mysql = require('mysql2')
 const goodsPromotionRepo = {}
 
 goodsPromotionRepo.deleteByDate = async (date, promotion_name) => {
@@ -62,8 +61,6 @@ goodsPromotionRepo.deletetmallpromotion = async (shopname, paytime, day) =>{
     sql = `delete from tmall_promotion_info where pay_time= ? and period = ? and shop_name= ? `
     
     const result = await query(sql, [paytime,day,shopname])
-    let q = mysql.format(sql, [paytime,day,shopname])
-    console.log(q)
     return result
 }
 goodsPromotionRepo.Inserttmallpromotion = async (data) =>{
@@ -86,8 +83,6 @@ goodsPromotionRepo.Inserttmallpromotion = async (data) =>{
                 roi,
                 shop_name) VALUES ?`
     const result = await query(sql, [data])
-    let q = mysql.format(sql, [data])
-    console.log(q)
     return result
     
 }
