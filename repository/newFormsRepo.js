@@ -628,7 +628,7 @@ const getFlowProcessInstances = async function (params, offset, limit) {
             if (index)
                 subsql = `${subsql} AND EXISTS(
                         SELECT piv.id FROM process_instance_values piv 
-                        WHERE AND piv.instance_id = vp.id 
+                        WHERE piv.instance_id = vp.id 
                             AND piv.field_id = "${index}"
                             AND piv.value like '%${p[index]}%'
                     )`

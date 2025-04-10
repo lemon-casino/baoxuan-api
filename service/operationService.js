@@ -789,20 +789,20 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
     if (setting?.length) result.setting = JSON.parse(setting[0].attributes)
     let func = params.stats == 'verified' ? goodsSaleVerifiedRepo : goodsSaleInfoRepo
     result.data = await func.getData(startDate, endDate, params, shopNames, linkIds)
-    let optimize = await goodsOptimizeSetting.getInfo()
-    for (let i = 0; i < result.data?.data.length; i++) {
-        if (['无操作', '非操作'].includes(result.data.data[i].operator)) continue
-        for (let j = 0; j < optimize.length; j++) {
-            let info = await goodsSaleInfoRepo.getOptimizeResult(
-                result.data.data[i].goods_id,
-                null,
-                [optimize[j]]
-            )
-            if (info?.length && info[0].count) {
-                result.data.data[i][`${optimize[j].column}_warn`] = 1
-            }
-        }
-    }
+    // let optimize = await goodsOptimizeSetting.getInfo()
+    // for (let i = 0; i < result.data?.data.length; i++) {
+    //     if (['无操作', '非操作'].includes(result.data.data[i].operator)) continue
+    //     for (let j = 0; j < optimize.length; j++) {
+    //         let info = await goodsSaleInfoRepo.getOptimizeResult(
+    //             result.data.data[i].goods_id,
+    //             null,
+    //             [optimize[j]]
+    //         )
+    //         if (info?.length && info[0].count) {
+    //             result.data.data[i][`${optimize[j].column}_warn`] = 1
+    //         }
+    //     }
+    // }
     return result
 }
 
