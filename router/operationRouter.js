@@ -61,4 +61,6 @@ router.post('/refresh-payments', operationApi.refreshGoodsPayments)
 router.post('/refresh-labor-cost', operationApi.refreshLaborCost)
 router.post('/refresh-verified-labor-cost', operationApi.refreshVerifiedLaborCost)
 
+//天猫单渠道推广
+router.post('/tmall-promotion-info/import', operationApi.importTmallpromotioninfo)
 module.exports = router
