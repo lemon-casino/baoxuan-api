@@ -806,7 +806,7 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
     return result
 }
 
-const getGoodsInfoDetail = async (column, goods_id, start, end, stats, id) => {
+const getGoodsInfoDetail = async (column, goods_id, shop_name, start, end, stats, id) => {
     let result={}
     let data=[]
     let setting = []
@@ -840,7 +840,7 @@ const getGoodsInfoDetail = async (column, goods_id, start, end, stats, id) => {
         setting = await userSettingRepo.getByType(id, 4)
     }
     else if (column == 'promotion_info') {
-        data = await goodsPromotionRepo.getDataDetailByTime(goods_id, start, end)
+        data = await goodsPromotionRepo.getDataDetailByTime(goods_id, shop_name, start, end)
         setting = await userSettingRepo.getByType(id, 5)
     }
     else if (column == 'bill_info'){
@@ -875,6 +875,7 @@ const getGoodsInfoDetailTotal = async (goods_id, start, end, stats) => {
             id: `${goods_id}${i}`,
             goods_id: info[i].date,
             parent_id: goods_id,
+            shop_name: info[i].shop_name,
             sale_amount: info[i].sale_amount,
             cost_amount: info[i].cost_amount,
             operation_amount: info[i].operation_amount,
@@ -3277,13 +3278,12 @@ const importTmallpromotioninfo = async (rows,shopname, paytime, day, date) => {
         item.exposure,
         item.clickNum,
         item.payAmount,
-        item.day,
+        item.period,
         item.payTime,
         item.date,
         item.ROI ,
         item.shopName
     ]))
-    console.log(data)
     await goodsPromotionRepo.deletetmallpromotion(shopname, paytime, day)
     let result = await goodsPromotionRepo.Inserttmallpromotion(data)
     return result
