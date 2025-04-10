@@ -26,7 +26,7 @@ goodsSaleVerifiedRepo.getPaymentByShopNamesAndTime = async (shopNames, start, en
             IFNULL(SUM(a1.profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
                 IFNULL(SUM(a1.profit), 0) / SUM(a1.sale_amount) * 100, 
-                0), 2) AS profit_rate FROM goods_verifieds a1
+                0), 2) AS profit_rate FROM goods_verifieds_stats a1
         LEFT JOIN goods_other_info a2 ON a1.goods_id = a2.goods_id
             AND a1.date = a2.date
         WHERE a1.shop_name IN ("${shopNames}") 
@@ -167,7 +167,7 @@ goodsSaleVerifiedRepo.getPaymentByLinkIdsAndTime = async (linkIds, start, end) =
             IFNULL(SUM(a1.profit), 0) AS profit, 
             FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
                 IFNULL(SUM(a1.profit), 0) / SUM(a1.sale_amount) * 100, 
-                0), 2) AS profit_rate FROM goods_verifieds a1 
+                0), 2) AS profit_rate FROM goods_verifieds_stats a1 
         LEFT JOIN goods_other_info a2 ON a1.goods_id = a2.goods_id
             AND a1.date = a2.date
         WHERE a1.goods_id IN ("${linkIds}") 
