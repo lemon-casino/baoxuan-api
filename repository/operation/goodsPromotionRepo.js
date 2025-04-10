@@ -1,4 +1,5 @@
 const { query } = require('../../model/dbConn')
+const mysql = require('mysql2')
 const goodsPromotionRepo = {}
 
 goodsPromotionRepo.deleteByDate = async (date, promotion_name) => {
@@ -32,14 +33,33 @@ goodsPromotionRepo.getByPromotionName = async (date, promotion_name, goods_id, s
     return result || []
 }
 
-goodsPromotionRepo.getDataDetailByTime = async (goods_id, start, end) => {
+goodsPromotionRepo.getDataDetailByTime = async (goods_id, shop_name, start, end) => {
     let sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount FROM 
         goods_sale_info WHERE goods_id = ? AND \`date\` >= ? AND \`date\` <= ?`
     let row = await query(sql, [goods_id, start, end])
     let sale_amount = 0
     if (row?.length) sale_amount = row[0].sale_amount
-    
-    sql = `SELECT IFNULL(SUM(amount), 0) AS amount, IF(IFNULL(SUM(amount), 0) > 0, 
+    if (['pakchoice旗舰店（天猫）','八千行旗舰店（天猫）','天猫teotm旗舰店'].includes(shop_name)){
+        sql = `SELECT IFNULL(SUM(pay_amount), 0) AS amount
+                    ,IFNULL(SUM(trans_amount), 0) as trans_amount 
+                    ,IF(IFNULL(SUM(pay_amount), 0) > 0 and IFNULL(SUM(trans_amount), 0) > 0
+                    , FORMAT(IFNULL(SUM(trans_amount), 0) / IFNULL(SUM(pay_amount), 0), 2), 0) AS roi
+                    ,promotion_name, ${sale_amount} AS sale_amount
+            FROM tmall_promotion_info 
+            WHERE goods_id = ? AND \`date\` >= ? AND \`date\` <= ? AND period = 1
+            GROUP BY promotion_name
+
+            UNION ALL
+
+            SELECT IFNULL(SUM(pay_amount), 0) AS amount
+                        ,IFNULL(SUM(trans_amount), 0) as trans_amount
+                        ,IF(IFNULL(SUM(pay_amount), 0) > 0 and IFNULL(SUM(trans_amount), 0) > 0
+                        ,FORMAT(IFNULL(SUM(trans_amount), 0) / IFNULL(SUM(pay_amount), 0), 2), 0) AS roi
+                        ,'合计' AS promotion_name
+                        ,${sale_amount} AS sale_amount
+            FROM tmall_promotion_info WHERE goods_id = ? AND \`date\` >= ? AND \`date\` <= ? AND period = 1` 
+    }else{
+        sql = `SELECT IFNULL(SUM(amount), 0) AS amount, IF(IFNULL(SUM(amount), 0) > 0, 
                 FORMAT(${sale_amount} / IFNULL(SUM(amount), 0), 2), 0) AS roi, 
             promotion_name, ${sale_amount} AS sale_amount 
         FROM goods_promotion_info WHERE goods_id = ? 
@@ -53,13 +73,13 @@ goodsPromotionRepo.getDataDetailByTime = async (goods_id, start, end) => {
             '合计' AS promotion_name, ${sale_amount} AS sale_amount 
         FROM goods_promotion_info WHERE goods_id = ? 
             AND \`date\` >= ? AND \`date\` <= ?`
+    }
     const result = await query(sql, [goods_id, start, end, goods_id, start, end])
     return result || []
 }
 
 goodsPromotionRepo.deletetmallpromotion = async (shopname, paytime, day) =>{
     sql = `delete from tmall_promotion_info where pay_time= ? and period = ? and shop_name= ? `
-    
     const result = await query(sql, [paytime,day,shopname])
     return result
 }

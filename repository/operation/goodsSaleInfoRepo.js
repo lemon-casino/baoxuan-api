@@ -903,6 +903,7 @@ goodsSaleInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
             IFNULL(a1.promotion_amount, 0) AS promotion_amount, 
             IFNULL(a1.express_fee, 0) AS express_fee, 
             IFNULL(a1.profit, 0) AS profit, 
+            IFNULL(a1.shop_name,'') AS shop_name, 
             FORMAT(IF(IFNULL(a1.sale_amount, 0) > 0, 
                 IFNULL(a1.operation_amount, 0) / a1.sale_amount, 0) * 100, 2) AS operation_rate, 
             FORMAT(IF(IFNULL(a1.promotion_amount, 0) > 0, 
