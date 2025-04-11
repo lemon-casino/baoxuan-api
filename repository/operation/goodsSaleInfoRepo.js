@@ -643,25 +643,25 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                 if (row[i].goods_id) {
                     goods_ids = `${goods_ids}"${row[i].goods_id}",`
                     goodsMap[row[i].goods_id] = i
-                    sql = `${sql} (SELECT IFNULL(s.on_sku_code, o.sku_id) AS sku_id, o.goods_id 
-                        FROM orders_goods_sales o LEFT JOIN jst_goods_sku s 
-                            ON o.goods_id = s.goods_id AND o.sku_id = s.sku_id 
-                        WHERE o.goods_id = "${row[i].goods_id}" AND o.date 
-                            BETWEEN "${start}" AND "${end}" 
-                        GROUP BY o.sku_id, s.on_sku_code, o.goods_id  
-                        ORDER BY IFNULL(SUM(o.sale_amount), 0) DESC LIMIT 2)
-                        UNION ALL`
                 }
             }
             if (goods_ids?.length) {
                 goods_ids = goods_ids.substring(0, goods_ids.length - 1) 
-                sql = sql.substring(0, sql.length - 9)
-                row1 = await query(sql)
+                sql = `WITH a1 AS (
+                        SELECT IFNULL(s.on_sku_code, o.sku_id) AS sku_id, o.goods_id, 
+                        ROW_NUMBER() OVER (PARTITION BY o.goods_id ORDER BY 
+                            IFNULL(SUM(o.sale_amount), 0) DESC) AS rk FROM orders_goods_sales o 
+                        LEFT JOIN jst_goods_sku s ON o.goods_id = s.goods_id 
+                            AND o.sku_id = s.sku_id 
+                        WHERE o.goods_id IN (${goods_ids}) AND o.date BETWEEN ? AND ? 
+                        GROUP BY o.sku_id, s.on_sku_code, o.goods_id
+                    ) SELECT sku_id, goods_id, rk FROM a1 WHERE rk <= 2`
+                row1 = await query(sql, [start, end])
                 if (row1?.length) {
                     for (let j = 0; j < row1.length; j++) {
                         let i = goodsMap[row1[j].goods_id]
-                        if (row[i].sku_id) row[i].sku_sid = row1[j].sku_id
-                        else row[i].sku_id = row1[j].sku_id               
+                        if (row1[j].rk == 1) row[i].sku_id = row1[j].sku_id
+                        else row[i].sku_sid = row1[j].sku_id               
                     }
                 }
                 sql = `SELECT goods_name, brief_name, operator, brief_product_line, 
