@@ -1538,14 +1538,14 @@ goodsSaleInfoRepo.getweeklyreport = async(lstart, lend,preStart,preEnd,goodsinfo
                 FROM orders_goods_sales
                 WHERE order_code in (SELECT order_code FROM click_farming WHERE date BETWEEN '${lstart}' AND '${lend}' AND name='小红书返款')
                 GROUP BY goods_id
-            ) as a4
+            ) AS a4
             ON a.goods_id=a4.goods_id
             LEFT JOIN (
                 SELECT t.goods_id,IFNULL(t1.er+t.commission,0) AS erlei_shuadan FROM (
                     SELECT goods_id,SUM(commission) AS commission
                     FROM click_farming
                     WHERE shop_id=15545775 AND name ='二类' AND date BETWEEN '${lstart}' AND '${lend}'
-                    GROUP BY goods_id) as t
+                    GROUP BY goods_id) AS t
                     LEFT JOIN (
                     SELECT goods_id,IFNULL(SUM(express_fee),0)+IFNULL(SUM(packing_fee),0)+IFNULL(SUM(bill_amount),0) AS er
                     FROM orders_goods_sales
@@ -1726,10 +1726,10 @@ goodsSaleInfoRepo.getinfoweeklyreport = async(lstart, lend,preStart,preEnd,goods
         SELECT s.goods_id,SUM(s.sale_amount) AS sale_amount
             ,SUM(s.profit) AS profit
             ,SUM(s.promotion_amount) AS promotion_amount
-            ,sum(s.bill_amount) AS bill_amount
-            ,sum(s.order_num) AS order_num
-            ,sum(s.refund_num) AS refund_num
-            ,sum(s.packing_fee)+sum(s.express_fee) AS p
+            ,SUM(s.bill_amount) AS bill_amount
+            ,SUM(s.order_num) AS order_num
+            ,SUM(s.refund_num) AS refund_num
+            ,SUM(s.packing_fee)+SUM(s.express_fee) AS p
         FROM goods_sales s
         WHERE s.shop_name='pakchoice旗舰店（天猫）' AND s.date BETWEEN '${lstart}' AND '${lend}'
         GROUP BY s.goods_id)AS s
@@ -1737,7 +1737,7 @@ goodsSaleInfoRepo.getinfoweeklyreport = async(lstart, lend,preStart,preEnd,goods
         ON s.goods_id=d.goods_id) AS a
         LEFT JOIN (
         SELECT goods_id
-            ,sum(sale_amount) AS verified_amount
+            ,SUM(sale_amount) AS verified_amount
             ,SUM(profit) AS verified_profit
         FROM goods_verifieds
         WHERE shop_name='pakchoice旗舰店（天猫）' AND date BETWEEN '${lstart}' AND '${lend}'
@@ -1814,7 +1814,7 @@ goodsSaleInfoRepo.getinfoweeklyreport = async(lstart, lend,preStart,preEnd,goods
         WHERE s.shop_name='pakchoice旗舰店（天猫）' AND s.date BETWEEN '${preStart}' AND '${preEnd}'
         GROUP BY s.goods_id)AS s
         LEFT JOIN (SELECT * FROM dianshang_operation_attribute WHERE platform='天猫部')AS d
-        on s.goods_id=d.goods_id) AS a
+        ON s.goods_id=d.goods_id) AS a
         LEFT JOIN (
         SELECT goods_id
             ,sum(sale_amount) AS verified_amount
@@ -1842,7 +1842,7 @@ goodsSaleInfoRepo.getinfoweeklyreport = async(lstart, lend,preStart,preEnd,goods
         ON a.goods_id=a4.goods_id
         LEFT JOIN (
         SELECT t.goods_id,IFNULL(t1.er+t.commission,0) AS erlei_shuadan FROM (
-            SELECT goods_id,sum(commission) AS commission
+            SELECT goods_id,SUM(commission) AS commission
             FROM click_farming
             WHERE shop_id=15545775 AND name ='二类' AND date BETWEEN '${preStart}' AND '${preEnd}'
             GROUP BY goods_id) AS t
@@ -1888,7 +1888,7 @@ goodsSaleInfoRepo.getinfoweeklyreport = async(lstart, lend,preStart,preEnd,goods
             ,'总计' AS team_name
             ,date
             ,'总计' AS operator
-            ,sum(goods) AS goods
+            ,SUM(goods) AS goods
             ,SUM(sale_amount) AS sale_amount
             ,SUM(profit) AS profit
             ,ROUND(SUM(profit)/SUM(sale_amount)*100,2) AS profit_rate
@@ -1912,7 +1912,7 @@ goodsSaleInfoRepo.getinfoweeklyreport = async(lstart, lend,preStart,preEnd,goods
 			,SUM(sale_amount) AS total_sale_amount
             ,ROUND(SUM(sale_amount)/SUM(sale_amount)*100,2) AS team_saleamount_rate
 			,ROUND(SUM(sale_amount)/COUNT(operator),2) AS group_effectiveness
-            from t1
+            FROM t1
             WHERE t1.goodsinfo = ?
             GROUP BY date`
     let result = await query(sql,[goodsinfo,goodsinfo])
@@ -1923,15 +1923,22 @@ goodsSaleInfoRepo.getTMPromotioninfo = async(lstart, lend) =>{
 			,d.brief_name
 			,d.line_director
 			,d.operator
-			,a.targeted_audience_promotion
-			,a.super_short_video
-			,a.full_site_promotion
-			,a.multi_objective_promotion
-			,a.keyword_promotion
-			,a.product_operation_promotion
-			,a.promotion_amount
-			,b.sale_amount
-			,b.sale_amount/a.promotion_amount AS roi			
+			,ROUND(a.targeted_audience_promotion,2) AS targeted_audience_promotion
+			,ROUND(b.targeted_audience_promotion_trans_amount/a.targeted_audience_promotion,2) AS targeted_audience_promotion_roi
+            ,ROUND(a.super_short_video,2) AS super_short_video
+            ,ROUND(b.super_short_video_trans_amount/a.super_short_video,2) AS super_short_video_roi
+            ,ROUND(a.full_site_promotion,2) AS full_site_promotion
+            ,ROUND(b.full_site_promotion_trans_amount/a.full_site_promotion,2) AS full_site_promotion_roi
+            ,ROUND(a.multi_objective_promotion,2) AS multi_objective_promotion
+            ,ROUND(b.multi_objective_promotion_trans_amount/a.multi_objective_promotion,2) AS multi_objective_promotion_roi
+            ,ROUND(a.keyword_promotion,2) AS keyword_promotion
+            ,ROUND(b.keyword_promotion_trans_amount/a.keyword_promotion,2) AS keyword_promotion_roi
+            ,ROUND(a.product_operation_promotion,2) AS product_operation_promotion
+            ,ROUND(b.product_operation_promotion_trans_amount/a.product_operation_promotion,2) AS product_operation_promotion_roi
+            ,ROUND(a.promotion_amount,2) AS promotion_amount
+            ,ROUND(b.trans_amount/promotion_amount,2) AS roi 
+            ,c.sale_amount
+            ,c.sale_amount/a.promotion_amount AS sale_amount_roi
         FROM(
             SELECT goods_id,SUM(IF(promotion_name='6003416精准人群推广',amount,0)) AS targeted_audience_promotion
                 ,SUM(IF(promotion_name='60030433万相台-超级短视频',amount,0)) AS super_short_video
@@ -1944,12 +1951,24 @@ goodsSaleInfoRepo.getTMPromotioninfo = async(lstart, lend) =>{
             GROUP BY goods_id
         ) AS a
         LEFT JOIN(
-            select goods_id,SUM(sale_amount) as sale_amount 
-            from goods_sales 
+            SELECT goods_id,SUM(IF(promotion_name='人群推广',trans_amount,0)) AS targeted_audience_promotion_trans_amount
+                ,SUM(IF(promotion_name='超级短视频',trans_amount,0)) AS super_short_video_trans_amount
+                ,SUM(IF(promotion_name='全站推广',trans_amount,0)) AS full_site_promotion_trans_amount
+                ,SUM(IF(promotion_name='多目标直投',trans_amount,0)) AS multi_objective_promotion_trans_amount
+                ,SUM(IF(promotion_name='关键词推广',trans_amount,0)) AS keyword_promotion_trans_amount
+                ,SUM(IF(promotion_name='货品运营',trans_amount,0)) AS product_operation_promotion_trans_amount
+                ,SUM(trans_amount) AS trans_amount
+            FROM tmall_promotion_info WHERE shop_name = 'pakchoice旗舰店（天猫）' AND date BETWEEN '${lstart}' AND '${lend}' and period=1
+            GROUP BY goods_id
+        )AS b
+        ON a.goods_id=b.goods_id
+        LEFT JOIN(
+            SELECT goods_id,SUM(sale_amount) AS sale_amount 
+            FROM goods_sales 
             WHERE shop_name = 'pakchoice旗舰店（天猫）' AND date BETWEEN '${lstart}' AND '${lend}'
             GROUP BY goods_id
-        )as b
-        ON a.goods_id=b.goods_id
+        )AS c
+        ON a.goods_id=c.goods_id
         LEFT JOIN dianshang_operation_attribute AS d
         ON a.goods_id = d.goods_id`
     let result = await query(sql)
@@ -1958,7 +1977,7 @@ goodsSaleInfoRepo.getTMPromotioninfo = async(lstart, lend) =>{
 
 goodsSaleInfoRepo.getTMPromotion = async(lstart, lend) =>{
     let sql = `WITH t1 AS(
-        select IFNULL(b.team_name,'无操作') AS team_name
+        SELECT IFNULL(b.team_name,'无操作') AS team_name
             ,IFNULL(b.line_director,'无操作') AS line_director,a.* from (
             SELECT a.operator
                 ,SUM(targeted_audience_promotion) AS targeted_audience_promotion
@@ -1968,10 +1987,18 @@ goodsSaleInfoRepo.getTMPromotion = async(lstart, lend) =>{
                 ,SUM(keyword_promotion) AS keyword_promotion
                 ,SUM(product_operation_promotion) AS product_operation_promotion
                 ,SUM(promotion_amount) AS promotion_amount
+				,SUM(targeted_audience_promotion_trans_amount) AS targeted_audience_promotion_trans_amount
+                ,SUM(super_short_video_trans_amount) AS super_short_video_trans_amount
+                ,SUM(full_site_promotion_trans_amount) AS full_site_promotion_trans_amount
+                ,SUM(multi_objective_promotion_trans_amount) AS multi_objective_promotion_trans_amount
+                ,SUM(keyword_promotion_trans_amount) AS keyword_promotion_trans_amount
+                ,SUM(product_operation_promotion_trans_amount) AS product_operation_promotion_trans_amount
+                ,SUM(trans_amount) AS trans_amount
             FROM (
-                select IFNULL(d.operator,'无操作') AS operator
-                ,a.*
-                from (
+                SELECT IFNULL(d.operator,'无操作') AS operator,a.*,b.targeted_audience_promotion_trans_amount
+                ,b.super_short_video_trans_amount,b.full_site_promotion_trans_amount,b.multi_objective_promotion_trans_amount
+                ,b.keyword_promotion_trans_amount,b.product_operation_promotion_trans_amount,b.trans_amount
+                FROM (
                     SELECT goods_id
                         ,SUM(IF(promotion_name='6003416精准人群推广',amount,0)) AS targeted_audience_promotion
                         ,SUM(IF(promotion_name='60030433万相台-超级短视频',amount,0)) AS super_short_video
@@ -1983,6 +2010,16 @@ goodsSaleInfoRepo.getTMPromotion = async(lstart, lend) =>{
                     FROM goods_promotion_info WHERE shop_name = 'pakchoice旗舰店（天猫）' AND date BETWEEN '${lstart}' AND '${lend}'
                     GROUP BY goods_id
                     )as a
+					LEFT JOIN (select goods_id,SUM(IF(promotion_name='人群推广',trans_amount,0)) AS targeted_audience_promotion_trans_amount
+                        ,SUM(IF(promotion_name='超级短视频',trans_amount,0)) AS super_short_video_trans_amount
+                        ,SUM(IF(promotion_name='全站推广',trans_amount,0)) AS full_site_promotion_trans_amount
+                        ,SUM(IF(promotion_name='多目标直投',trans_amount,0)) AS multi_objective_promotion_trans_amount
+                        ,SUM(IF(promotion_name='关键词推广',trans_amount,0)) AS keyword_promotion_trans_amount
+                        ,SUM(IF(promotion_name='货品运营',trans_amount,0)) AS product_operation_promotion_trans_amount
+                        ,SUM(trans_amount) AS trans_amount
+                        from tmall_promotion_info WHERE shop_name = 'pakchoice旗舰店（天猫）' AND date BETWEEN '${lstart}' AND '${lend}' and period=1
+                        GROUP BY goods_id) as b
+					ON a.goods_id = b.goods_id
                 LEFT JOIN dianshang_operation_attribute AS d
                 ON a.goods_id = d.goods_id
                 )AS a
@@ -1995,37 +2032,68 @@ goodsSaleInfoRepo.getTMPromotion = async(lstart, lend) =>{
                     ON t2.team_id=t1.id
                     WHERE t1.project_id=14
                     )AS a
-                LEFT JOIN users AS u 
+                LEFT JOIN users AS u
                 ON a.member_id=u.user_id
                 LEFT JOIN users AS u1
                 ON a.user_id=u1.user_id
             )AS b
             ON a.operator = b.operator)
-        SELECT * FROM t1
+        SELECT team_name
+            ,line_director
+            ,operator
+            ,ROUND(targeted_audience_promotion,2) AS targeted_audience_promotion
+			,ROUND(targeted_audience_promotion_trans_amount/targeted_audience_promotion,2) AS targeted_audience_promotion_roi
+            ,ROUND(super_short_video,2) AS super_short_video
+			,ROUND(super_short_video_trans_amount/super_short_video,2) AS super_short_video_roi
+            ,ROUND(full_site_promotion,2) AS full_site_promotion
+			,ROUND(full_site_promotion_trans_amount/full_site_promotion,2) AS full_site_promotion_roi
+            ,ROUND(multi_objective_promotion,2) AS multi_objective_promotion
+			,ROUND(multi_objective_promotion_trans_amount/multi_objective_promotion,2) AS multi_objective_promotion_roi
+            ,ROUND(keyword_promotion,2) AS keyword_promotion
+			,ROUND(keyword_promotion_trans_amount/keyword_promotion,2) AS keyword_promotion_roi
+            ,ROUND(product_operation_promotion,2) AS product_operation_promotion
+			,ROUND(product_operation_promotion_trans_amount/product_operation_promotion,2) AS product_operation_promotion_roi
+            ,ROUND(promotion_amount,2) AS promotion_amount
+			,ROUND(trans_amount/promotion_amount,2) AS roi 
+		FROM t1
         UNION ALL
         SELECT CONCAT(team_name,'汇总')AS team_name
             ,CONCAT(team_name,'汇总')AS line_director
             ,CONCAT(team_name,'汇总')AS operator
-            ,SUM(targeted_audience_promotion) AS targeted_audience_promotion
-            ,SUM(super_short_video) AS super_short_video
-            ,SUM(full_site_promotion) AS full_site_promotion
-            ,SUM(multi_objective_promotion) AS multi_objective_promotion
-            ,SUM(keyword_promotion) AS keyword_promotion
-            ,SUM(product_operation_promotion) AS product_operation_promotion
-            ,SUM(promotion_amount) AS promotion_amount
+            ,ROUND(SUM(targeted_audience_promotion),2) AS targeted_audience_promotion
+			,ROUND(SUM(targeted_audience_promotion_trans_amount)/SUM(targeted_audience_promotion),2) AS targeted_audience_promotion_roi
+            ,ROUND(SUM(super_short_video),2) AS super_short_video
+			,ROUND(SUM(super_short_video_trans_amount)/SUM(super_short_video),2) AS super_short_video_roi
+            ,ROUND(SUM(full_site_promotion),2) AS full_site_promotion
+			,ROUND(SUM(full_site_promotion_trans_amount)/SUM(full_site_promotion),2) AS full_site_promotion_roi
+            ,ROUND(SUM(multi_objective_promotion),2) AS multi_objective_promotion
+			,ROUND(SUM(multi_objective_promotion_trans_amount)/SUM(multi_objective_promotion),2) AS multi_objective_promotion_roi
+            ,ROUND(SUM(keyword_promotion),2) AS keyword_promotion
+			,ROUND(SUM(keyword_promotion_trans_amount)/SUM(keyword_promotion),2) AS keyword_promotion_roi
+            ,ROUND(SUM(product_operation_promotion),2) AS product_operation_promotion
+			,ROUND(SUM(product_operation_promotion_trans_amount)/SUM(product_operation_promotion),2) AS product_operation_promotion_roi
+            ,ROUND(SUM(promotion_amount),2) AS promotion_amount
+			,ROUND(SUM(trans_amount)/SUM(promotion_amount),2) AS roi
         FROM t1
         GROUP BY team_name
         UNION ALL
         SELECT '汇总'AS team_name
             ,'汇总'AS line_director
             ,'汇总'AS operator
-            ,SUM(targeted_audience_promotion) AS targeted_audience_promotion
-            ,SUM(super_short_video) AS super_short_video
-            ,SUM(full_site_promotion) AS full_site_promotion
-            ,SUM(multi_objective_promotion) AS multi_objective_promotion
-            ,SUM(keyword_promotion) AS keyword_promotion
-            ,SUM(product_operation_promotion) AS product_operation_promotion
-            ,SUM(promotion_amount) AS promotion_amount
+            ,ROUND(SUM(targeted_audience_promotion),2) AS targeted_audience_promotion
+			,ROUND(SUM(targeted_audience_promotion_trans_amount)/SUM(targeted_audience_promotion),2) AS targeted_audience_promotion_roi
+            ,ROUND(SUM(super_short_video),2) AS super_short_video
+			,ROUND(SUM(super_short_video_trans_amount)/SUM(super_short_video),2) AS super_short_video_roi
+            ,ROUND(SUM(full_site_promotion),2) AS full_site_promotion
+			,ROUND(SUM(full_site_promotion_trans_amount)/SUM(full_site_promotion),2) AS full_site_promotion_roi
+            ,ROUND(SUM(multi_objective_promotion),2) AS multi_objective_promotion
+			,ROUND(SUM(multi_objective_promotion_trans_amount)/SUM(multi_objective_promotion),2) AS multi_objective_promotion_roi
+            ,ROUND(SUM(keyword_promotion),2) AS keyword_promotion
+			,ROUND(SUM(keyword_promotion_trans_amount)/SUM(keyword_promotion),2) AS keyword_promotion_roi
+            ,ROUND(SUM(product_operation_promotion),2) AS product_operation_promotion
+			,ROUND(SUM(product_operation_promotion_trans_amount)/SUM(product_operation_promotion),2) AS product_operation_promotion_roi
+            ,ROUND(SUM(promotion_amount),2) AS promotion_amount
+			,ROUND(SUM(trans_amount)/SUM(promotion_amount),2) AS roi
         FROM t1`
     let result = await query(sql)
     return result

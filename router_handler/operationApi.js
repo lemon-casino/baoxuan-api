@@ -859,7 +859,6 @@ const getReportInfo = async (req, res, next) => {
                 
             }
         }
-        console.log(result)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)

@@ -66,8 +66,6 @@ pddRepo.getPddKFData = async (start, end, servicer) => {
     }
     sql = `${sql} GROUP BY c1.servicer `
     const result = await query(sql)
-    console.log(sql)
-    console.log(result)
     return result
 }
 
