@@ -1,5 +1,4 @@
 const { query } = require('../../model/dbConn')
-const mysql = require('mysql2')
 const goodsPromotionRepo = {}
 
 goodsPromotionRepo.deleteByDate = async (date, promotion_name) => {

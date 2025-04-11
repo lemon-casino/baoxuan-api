@@ -2592,14 +2592,21 @@ const getTMPromotioninfo = async (lstart, lend) =>{
         { header: "产品线负责人", key: 'line_director' },
         { header: "运营负责人", key: 'operator' },
         { header: "超级短视频", key: 'super_short_video' },
+        { header: "超级短视频ROI", key: 'super_short_video_roi' },
         { header: "全站推广", key: 'full_site_promotion' },
+        { header: "全站推广ROI", key: 'full_site_promotion_roi' },
         { header: "精准人群推广", key: 'targeted_audience_promotion' },
+        { header: "精准人群推广ROI", key: 'targeted_audience_promotion_roi' },
         { header: "关键词推广", key: 'keyword_promotion' },
+        { header: "关键词推广ROI", key: 'keyword_promotion_roi' },
         { header: "多目标直投", key: 'multi_objective_promotion' },
+        { header: "多目标直投ROI", key: 'multi_objective_promotion_roi' },
         { header: "货品运营", key: 'product_operation_promotion' },
+        { header: "货品运营ROI", key: 'product_operation_promotion_roi' },
         { header: "推广汇总金额", key: 'promotion_amount' },
+        { header: "推广汇总ROI", key: 'roi' },
         { header: "实际发货金额", key: 'sale_amount' },
-        { header: "ROI", key: 'roi' }
+        { header: "发货ROI", key: 'sale_amount_roi' }
     ]}
     let resutl = await goodsSaleInfoRepo.getTMPromotioninfo(lstart, lend)
     data.data = []
@@ -2614,15 +2621,21 @@ const getTMPromotion = async (lstart, lend) =>{
         { header: "产品线负责人", key: 'line_director' },
         { header: "运营负责人", key: 'operator' },
         { header: "超级短视频", key: 'super_short_video' },
+        { header: "超级短视频ROI", key: 'super_short_video_roi' },
         { header: "全站推广", key: 'full_site_promotion' },
+        { header: "全站推广ROI", key: 'full_site_promotion_roi' },
         { header: "精准人群推广", key: 'targeted_audience_promotion' },
+        { header: "精准人群推广ROI", key: 'targeted_audience_promotion_roi' },
         { header: "关键词推广", key: 'keyword_promotion' },
+        { header: "关键词推广ROI", key: 'keyword_promotion_roi' },
         { header: "多目标直投", key: 'multi_objective_promotion' },
+        { header: "多目标直投ROI", key: 'multi_objective_promotion_roi' },
         { header: "货品运营", key: 'product_operation_promotion' },
-        { header: "推广汇总金额", key: 'promotion_amount' }
+        { header: "货品运营ROI", key: 'product_operation_promotion_roi' },
+        { header: "推广汇总金额", key: 'promotion_amount' },
+        { header: "推广汇总ROI", key: 'roi' }
     ]}
     let result = await goodsSaleInfoRepo.getTMPromotion(lstart, lend)
-    console.log(result)
     const sortOrder = {
         "一组": 1,
         "二组": 2,
