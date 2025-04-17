@@ -2675,7 +2675,10 @@ const checkOperationOptimize = async () => {
                 [optimize[j]]
             )
             if (info?.length && info[0].count) {
-                info = await newFormsRepo.checkOptimize(goods_info[i].goods_id, optimize[j].title, optimize[j].days)
+                optimize_title = optimize[j].title
+                if (optimize[j].column == 'channel_roi') 
+                    optimize_title = optimize[j].value + optimize[j].title
+                info = await newFormsRepo.checkOptimize(goods_info[i].goods_id, optimize_title, optimize[j].days)
                 if (!info?.length) {
                     let params = {}
                     params[optimizeFieldMap.optimize_rank] = optimizeRankMap[0]
@@ -2710,7 +2713,7 @@ const checkOperationOptimize = async () => {
                     params[optimizeFieldMap.goods_id] = goods_info[i].goods_id
                     params[optimizeFieldMap.platform] = platformMap[goods_info[i].platform]
                     params[optimizeFieldMap.type] = optimize[j].optimize_type
-                    params[optimizeFieldMap.content] = [optimize[j].title]
+                    params[optimizeFieldMap.content] = [optimize_title]
                     // fs.writeFileSync('./public/info.json', JSON.stringify(params) + '\n', {flag: 'a'})
                     await createProcess(
                         optimizeFlowUUid,
