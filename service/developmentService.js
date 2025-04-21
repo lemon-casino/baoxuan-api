@@ -83,6 +83,42 @@ developmentService.getWorkDetail = async (start, end, id) => {
     return result
 }
 
+developmentService.getWorkData = async (start, end) => {
+    let data = [], columns = [
+        {field_id: 'exploit_director', label: '开发负责人'},
+        {field_id: 'status', label: '市场分析进度'},
+        {field_id: 'first_category', label: '一级类目'},
+        {field_id: 'second_category', label: '二级类目'},
+        {field_id: 'third_category', label: '三级类目'},
+        {field_id: 'type', label: '市场分析名称'},
+        {field_id: 'goods_name', label: '立项产品名称'},
+        {field_id: 'seasons', label: '产品销售季节'},
+        {field_id: 'patent_belongs', label: '专利归属'},
+        {field_id: 'patent_type', label: '专利-二级'},
+        {field_id: 'related', label: '相关联的产品类型和节日'},
+        {field_id: 'schedule_time', label: '预计市场分析过会时间'},
+        {field_id: 'analyse_data', label: '市场分析表'},
+        {field_id: 'complete_time', label: '分析表过会且通过时间'},
+        {field_id: 'sale_purpose', label: '产品销售目的'},
+        {field_id: 'exploitation_features', label: '产品开发性质'},
+        {field_id: 'core_reasons', label: '核心立项理由'},
+        {field_id: 'link', label: '流程链接'},
+        {field_id: 'schedule_arrived_time', label: '预计开发周期（大货时间）'},
+        {field_id: 'schedule_confirm_time', label: '预计样品确认时间'},
+        {field_id: 'product_info', label: '提交产品信息'},
+        {field_id: 'confirm_time', label: '实际样品到货时间'},
+        {field_id: 'order_time', label: '实际订货时间'},
+        {field_id: 'arrived_time', label: '实际大货到货时间'},
+        {field_id: 'brief_product_line', label: '产品线简称'},
+        {field_id: 'expected_monthly_sales', label: '预计月销量'},
+        {field_id: 'goods_ids', label: '各平台上架完毕'},
+        {field_id: 'product_img', label: '对应产品图片'},
+        {field_id: 'remark', label: '特殊备注/要求'},
+    ]
+    // data = await newFormsRepo.getDevelopmentData(start, end)
+    return {data, columns}
+}
+
 developmentService.getFlows = async (start, end) => {
     let result = [], data = []
     data = await newFormsRepo.getDevelopmentType(start, end)

@@ -54,6 +54,22 @@ const getWorkDetail = async (req, res, next) => {
     }
 }
 
+const getWorkData = async (req, res, next) => {
+    try {
+        const {startDate, endDate, id} = req.query
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.strRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        let start = moment(startDate).format('YYYY-MM-DD')
+        let end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
+        const result = await developmentService.getWorkData(start, end)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const getDataPannel = async (req, res, next) => {
     try {
         const {type, month, currentPage, pageSize, sort} = req.query
@@ -105,6 +121,7 @@ const getDataPannelDetail = async (req, res, next) => {
 module.exports = {
     getWorkPannel, 
     getWorkDetail,
+    getWorkData,
     getDataPannel,
     getDataPannelProject,
     getDataPannelDetail
