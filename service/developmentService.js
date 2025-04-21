@@ -5,17 +5,17 @@ const userOperationRepo = require('../repository/operation/userOperationRepo')
 const { redisKeys } = require('../const/redisConst')
 const redisUtil = require("../utils/redisUtil")
 const crypto = require('crypto')
-const { statItem3, developmentType, developmentWorkType, developmentWorkProblem } = require('../const/newFormConst')
+const { developmentItem, developmentType, developmentWorkType, developmentWorkProblem } = require('../const/newFormConst')
 const moment = require('moment')
 const developmentService = {}
 
 developmentService.getDataStats = async (type, start, end, month) => {
     let result = []
-    let info = `${type}-${start}-${end}-${month}`
-    let key = crypto.createHash('md5').update(info).digest('hex')
-    key = `${redisKeys.development}:${key}`
-    result = await redisUtil.get(key)
-    if (result) return JSON.parse(result)
+    // let info = `${type}-${start}-${end}-${month}`
+    // let key = crypto.createHash('md5').update(info).digest('hex')
+    // key = `${redisKeys.development}:${key}`
+    // result = await redisUtil.get(key)
+    // if (result) return JSON.parse(result)
     switch(type) {
         case '1':
             result = await developmentService.getFlows(start, end)
@@ -32,7 +32,54 @@ developmentService.getDataStats = async (type, start, end, month) => {
         default:
 
     }
-    redisUtil.set(key, JSON.stringify(result), 3600)
+    // redisUtil.set(key, JSON.stringify(result), 3600)
+    return result
+}
+
+developmentService.getWorkDetail = async (start, end, id) => {
+    let users = await userRepo.getUserByDeptName('产品开发部')
+    let userNames = '', result = [], data = []
+    users = users.filter((item) => item['nickname'] != '崔竹')
+    userNames = users.map((item) => item['nickname']).join('","')
+    userNames = `${userNames}","孙旭东`
+    let status = ''
+    if (id == '1') status = '1,3,4'
+    else status = id
+    data = await newFormsRepo.getDevelopmentDetail(userNames, start, end, status)
+    if (data?.length) {
+        let defaultTmp = {status: '', ch: {}}
+        for (let i in developmentType) {
+            defaultTmp.ch[developmentType[i]] = []
+            defaultTmp[developmentType[i]] = 0
+        }
+        for (let i = 0; i < data.length; i++) {
+            if (i == 0 || (data[i].operator_name != data[i-1].operator_name)) {
+                let tmp = JSON.parse(JSON.stringify(defaultTmp))
+                tmp.parent_id = id
+                tmp[developmentType[data[i].type]] = data[i].count
+                tmp['id'] = id + result.length.toString()
+                tmp['status'] = data[i].operator_name
+                tmp['parent_id'] = id
+                tmp['hasChild'] = false
+                result.push(tmp)
+            } else if (data[i].status < 3) {
+                result[result.length - 1][developmentType[data[i].type]] = data[i].count
+            } else if (data[i].status == 3 && data[i].count > 0) {
+                result[result.length - 1].ch[developmentType[data[i].type]].push({
+                    selected: data[i].count,
+                    rejected: 0
+                })
+            } else if (data[i].count > 0) {
+                if (result[result.length - 1].ch[developmentType[data[i].type]]?.length)
+                    result[result.length - 1].ch[developmentType[data[i].type]][0]['rejected'] = data[i].count
+                else
+                    result[result.length - 1].ch[developmentType[data[i].type]].push({
+                        rejected: data[i].count,
+                        selected: 0
+                    })
+            }
+        }
+    }
     return result
 }
 
@@ -40,30 +87,32 @@ developmentService.getFlows = async (start, end) => {
     let result = [], data = []
     data = await newFormsRepo.getDevelopmentType(start, end)
     if (data?.length) {
-        let defaultTmp = {status: '', children: {}}
+        let defaultTmp = {status: '', ch: {}}
         for (let i in developmentType) {
-            defaultTmp.children[developmentType[i]] = []
+            defaultTmp.ch[developmentType[i]] = []
             defaultTmp[developmentType[i]] = 0
         }
         for (let i = 0; i < data.length; i++) {
             if (i == 0 || (data[i].status != data[i-1].status && data[i].status < 3)) {
                 let tmp = JSON.parse(JSON.stringify(defaultTmp))
-                tmp.status = statItem3[data[i].status].name
+                tmp.status = developmentItem[data[i].status].name
                 tmp[developmentType[data[i].type]] = data[i].count
+                tmp['id'] = result.length.toString()
+                tmp['parent_id'] = null
+                tmp['hasChild'] = true
                 result.push(tmp)
             } else if (data[i].status < 3) {
                 result[result.length - 1][developmentType[data[i].type]] = data[i].count
             } else if (data[i].status == 3 && data[i].count > 0) {
-                result[result.length - 1].children[developmentType[data[i].type]].push({
+                result[1].ch[developmentType[data[i].type]].push({
                     selected: data[i].count,
                     rejected: 0
                 })
             } else if (data[i].count > 0) {
-                if (result[result.length - 1].children[developmentType[data[i].type]]?.length)
-                    result[result.length - 1]
-                        .children[developmentType[data[i].type]][0]['rejected'] = data[i].count
+                if (result[1].ch[developmentType[data[i].type]]?.length)
+                    result[1].ch[developmentType[data[i].type]][0]['rejected'] = data[i].count
                 else
-                    result[result.length - 1].children[developmentType[data[i].type]].push({
+                    result[1].ch[developmentType[data[i].type]].push({
                         rejected: data[i].count,
                         selected: 0
                     })
@@ -92,7 +141,7 @@ developmentService.getWorks = async (start, end) => {
     if (userNames?.length) userNames = userNames.substring(0, userNames.length - 1)
     else return result
     userIds = userIds.substring(0, userIds.length - 1)
-    let data = await newFormsRepo.getDevepmentWork(userNames, userIds, start, end)
+    let data = await newFormsRepo.getDevelopmentWork(userNames, userIds, start, end)
     for (let i = 0; i < data.length; i++) {
         let name = data[i].name == '' ? userInfo[data[i].id] : data[i].name
         result[userMap[name]][developmentWorkType[data[i].type]] = parseInt(data[i].count)
