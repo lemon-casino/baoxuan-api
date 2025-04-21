@@ -83,15 +83,15 @@ developmentService.getWorkDetail = async (start, end, id) => {
     return result
 }
 
-developmentService.getWorkData = async (start, end) => {
-    let data = [], columns = [
-        {field_id: 'exploit_director', label: '开发负责人'},
-        {field_id: 'status', label: '市场分析进度'},
-        {field_id: 'first_category', label: '一级类目'},
-        {field_id: 'second_category', label: '二级类目'},
-        {field_id: 'third_category', label: '三级类目'},
-        {field_id: 'type', label: '市场分析名称'},
-        {field_id: 'goods_name', label: '立项产品名称'},
+developmentService.getWorkData = async (start, end, limit, offset) => {
+    let columns = [
+        {field_id: 'exploit_director', label: '开发负责人', fixed: true},
+        {field_id: 'status', label: '市场分析进度', fixed: true},
+        {field_id: 'first_category', label: '一级类目', fixed: true},
+        {field_id: 'second_category', label: '二级类目', fixed: true},
+        {field_id: 'third_category', label: '三级类目', fixed: true},
+        {field_id: 'type', label: '市场分析名称', fixed: true},
+        {field_id: 'goods_name', label: '立项产品名称', fixed: true},
         {field_id: 'seasons', label: '产品销售季节'},
         {field_id: 'patent_belongs', label: '专利归属'},
         {field_id: 'patent_type', label: '专利-二级'},
@@ -115,8 +115,17 @@ developmentService.getWorkData = async (start, end) => {
         {field_id: 'product_img', label: '对应产品图片'},
         {field_id: 'remark', label: '特殊备注/要求'},
     ]
-    // data = await newFormsRepo.getDevelopmentData(start, end)
-    return {data, columns}
+    let users = await userRepo.getUserByDeptName('产品开发部')
+    let userNames = ''
+    users = users.filter((item) => item['nickname'] != '崔竹')
+    userNames = users.map((item) => item['nickname']).join('","')
+    userNames = `${userNames}","孙旭东`
+    const {result, total} = await newFormsRepo.getDevelopmentData(userNames, start, end, limit, offset)
+    let data = []
+    for (let i = 0; i < result.length; i++) {
+        
+    }
+    return {data, columns, total}
 }
 
 developmentService.getFlows = async (start, end) => {
