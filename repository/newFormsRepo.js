@@ -1015,45 +1015,53 @@ const getDevelopmentProcessInstances = async function (userNames, params, offset
                     pi.status AS instanceStatus, pi.create_time AS createTime, 
                     pi.update_time AS operateTime, pi.creator 
                 FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id ` 
-            let subsql = `WHERE p.form_id = ${type[i].form_id} `
+            let subsql = `WHERE p.form_id = ${type[i].form_id} 
+                AND pi.create_time BETWEEN '${start}' AND '${end}' `
             for (let j = 0; j < field?.length; j++) {
-                sql = `${sql}
-                    LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
-                        AND piv${j}.field_id = "${field[j].field_id}" `
+                
                 if (field[j].status) {
-                    subsql = `${subsql}
-                        AND (piv${j}.value = '${field[j].value}' OR piv${j}.value IS NULL) `
-                } else if (field[j].field_id.indexOf('numberField') != -1) {
-                    if (field[j].value == 0)
-                        subsql = `${subsql}
-                            AND (piv${j}.value = 0 OR piv${j}.value IS NULL) `
-                    else
-                        subsql = `${subsql}
-                            AND piv${j}.value > 0 `
+                    sql = `${sql}
+                    LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
+                        AND piv${j}.field_id = "${field[j].field_id}" 
+                        AND piv${j}.value != '${field[j].value}' `
                 } else {
-                    subsql = `${subsql}
-                            AND piv${j}.value = '${field[j].value}' `
+                    sql = `${sql}
+                    LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
+                        AND piv${j}.field_id = "${field[j].field_id}" 
+                        AND piv${j}.value == '${field[j].value}' `
+                    subsql = `${subsql} AND piv${j}.id IS NOT NULL`
                 }
             }
+            let names = userNames
+            if (params['userNames']) names = `"${params['userNames']}"`
+            sql = `${sql} LEFT JOIN process_instance_records pir ON pir.instance_id = pi.id 
+                AND pir.operator_name IN (${names}) 
+                AND pir.action_exit IN ('next', 'doing', 'agree') 
+                AND pir.id = (
+                    SELECT MAX(p2.id) FROM process_instance_records p2 
+                    WHERE p2.instance_id = pi.id
+                        AND p2.show_name = pir.show_name 
+                        AND p2.activity_id = pir.activity_id)`
+            subsql = `${subsql} AND pir.operator_name IS NOT NULL`
             for (let j = 0; j < activity?.length; j++) {
                 sql = `${sql}
                     LEFT JOIN process_instance_records pir${j} ON pir${j}.instance_id = pi.id 
-                        AND pir${j}.show_name = "${activity[j].activity_name}" 
+                        AND pir${j}.show_name IN (${activity[j].activity_name}) 
                         AND pir${j}.activity_id IN (${activity[j].activity_id}) 
                         AND pir${j}.action_exit IN (${activity[j].action_exit}) 
                         AND pir${j}.id = (
                             SELECT MAX(p2.id) FROM process_instance_records p2 
                             WHERE p2.instance_id = pi.id
-                                AND p2.show_name = pir${j}.show_name
-                                AND p2.activity_id = pir${j}.activity_id 
+                                AND p2.show_name IN (${activity[j].activity_name}) 
+                                AND p2.activity_id IN (${activity[j].activity_id})
                         )`
-                if (activity[j].action_exit == '"agree"' || activity[j].action_exit == '"agree","redirect"') 
+                if (activity[j].action_exit == '"agree"') 
                     sql = `${sql} 
                         AND NOT EXISTS(
                             SELECT p2.id FROM process_instance_records p2 
                             WHERE p2.instance_id = pi.id
-                                AND p2.show_name = pir${j}.show_name
-                                AND p2.activity_id = pir${j}.activity_id
+                                AND p2.show_name IN (${activity[j].activity_name}) 
+                                AND p2.activity_id IN (${activity[j].activity_id})
                                 AND p2.action_exit IN ('next', 'doing')
                         )`
                 if (activity[j].status) 
@@ -1062,10 +1070,7 @@ const getDevelopmentProcessInstances = async function (userNames, params, offset
                 else subsql = `${subsql} 
                         AND (pir${j}.id IS NOT NULL)`
             }
-            if (activity?.length) 
-                subsql = `${subsql}
-                    AND pir${activity.length - 1}.operate_time BETWEEN "${start}" AND "${end}"`
-            search = `${search}${sql}${subsql} 
+            search = `${search}${sql}${subsql} GROUP BY pir.operator_name, pi.id 
                 UNION ALL `
         }
         if (search?.length) {
@@ -2972,56 +2977,50 @@ const getDevelopmentType = async function (start, end) {
         let activity = await query(sql)
         sql = `SELECT count(1) AS count, ${type[i].type} AS type, ${type[i].status} AS status 
             FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id ` 
-        let subsql = `WHERE p.form_id = ${type[i].form_id} `
+        let subsql = `WHERE p.form_id = ${type[i].form_id} 
+                AND pi.create_time BETWEEN '${start}' AND '${end}' `
         for (let j = 0; j < field?.length; j++) {
-            sql = `${sql}
-                LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
-                    AND piv${j}.field_id = "${field[j].field_id}" `
             if (field[j].status) {
-                subsql = `${subsql}
-                    AND (piv${j}.value = '${field[j].value}' OR piv${j}.value IS NULL) `
-            } else if (field[j].field_id.indexOf('numberField') != -1) {
-                if (field[j].value == 0)
-                    subsql = `${subsql}
-                        AND (piv${j}.value = 0 OR piv${j}.value IS NULL) `
-                else
-                    subsql = `${subsql}
-                        AND piv${j}.value > 0 `
+                sql = `${sql}
+                LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
+                    AND piv${j}.field_id = "${field[j].field_id}" 
+                    AND piv${j}.value != '${field[j].value}' `
             } else {
-                subsql = `${subsql}
-                        AND piv${j}.value = '${field[j].value}' `
+                sql = `${sql}
+                LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
+                    AND piv${j}.field_id = "${field[j].field_id}" 
+                    AND piv${j}.value = '${field[j].value}' `
+                subsql = `${subsql} AND piv${j}.id IS NOT NULL`
             }
+            
         }
         for (let j = 0; j < activity?.length; j++) {
             sql = `${sql}
                 LEFT JOIN process_instance_records pir${j} ON pir${j}.instance_id = pi.id 
-                    AND pir${j}.show_name = "${activity[j].activity_name}" 
+                    AND pir${j}.show_name IN (${activity[j].activity_name}) 
                     AND pir${j}.activity_id IN (${activity[j].activity_id}) 
                     AND pir${j}.action_exit IN (${activity[j].action_exit}) 
                     AND pir${j}.id = (
                         SELECT MAX(p2.id) FROM process_instance_records p2 
                         WHERE p2.instance_id = pi.id
-                            AND p2.show_name = pir${j}.show_name
-                            AND p2.activity_id = pir${j}.activity_id 
+                            AND p2.show_name IN (${activity[j].activity_name}) 
+                            AND p2.activity_id IN (${activity[j].activity_id}) 
                     )`
             if (activity[j].action_exit == '"agree"') 
                 sql = `${sql} 
                     AND NOT EXISTS(
                         SELECT p2.id FROM process_instance_records p2 
                         WHERE p2.instance_id = pi.id
-                            AND p2.show_name = pir${j}.show_name
-                            AND p2.activity_id = pir${j}.activity_id
+                            AND p2.show_name IN (${activity[j].activity_name}) 
+                            AND p2.activity_id IN (${activity[j].activity_id}) 
                             AND p2.action_exit IN ('next', 'doing')
                     )`
             if (activity[j].status) 
                 subsql = `${subsql} 
                     AND (pir${j}.id IS NOT NULL OR pir${j}.id IS NULL)`
             else subsql = `${subsql} 
-                    AND (pir${j}.id IS NOT NULL)`
+                    AND pir${j}.id IS NOT NULL` 
         }
-        if (activity?.length) 
-            subsql = `${subsql}
-                AND pir${activity.length - 1}.operate_time BETWEEN "${start}" AND "${end}"`
         search = `${search}${sql}${subsql} 
             UNION ALL `
     }
@@ -3035,7 +3034,85 @@ const getDevelopmentType = async function (start, end) {
     return result || []
 }
 
-const getDevepmentWork = async function (userNames, userIds, start, end) {
+const getDevelopmentDetail = async function (userNames, start, end, status) {
+    let sql = `SELECT * FROM development_type 
+            WHERE \`status\` IN (${status}) ORDER BY type, status`
+    let type = await query(sql), search = '', result = []
+    for (let i = 0; i < type?.length; i++) {  
+        sql = `SELECT * FROM development_type_field WHERE type_id = ${type[i].id}`
+        let field = await query(sql)
+        sql = `SELECT * FROM development_type_activity WHERE type_id = ${type[i].id}`
+        let activity = await query(sql)
+        sql = `SELECT count(1) AS count, pir.operator_name, 
+                ${type[i].type} AS type, ${type[i].status} AS status 
+            FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id ` 
+        let subsql = `WHERE p.form_id = ${type[i].form_id} 
+                AND pi.create_time BETWEEN '${start}' AND '${end}' `
+        for (let j = 0; j < field?.length; j++) {
+            if (field[j].status) {
+                sql = `${sql}
+                LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
+                    AND piv${j}.field_id = "${field[j].field_id}" 
+                    AND piv${j}.value != '${field[j].value}' `
+            } else {
+                sql = `${sql}
+                LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
+                    AND piv${j}.field_id = "${field[j].field_id}" 
+                    AND piv${j}.value = '${field[j].value}' `
+                subsql = `${subsql} AND piv${j}.id IS NOT NULL`
+            }
+            
+        }
+        sql = `${sql} LEFT JOIN process_instance_records pir ON pir.instance_id = pi.id 
+            AND pir.operator_name IN ("${userNames}") 
+            AND pir.action_exit IN ('next', 'doing', 'agree') 
+            AND pir.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2 
+                WHERE p2.instance_id = pi.id
+                    AND p2.show_name = pir.show_name 
+                    AND p2.activity_id = pir.activity_id)`        
+        subsql = `${subsql} AND pir.operator_name IS NOT NULL`
+        for (let j = 0; j < activity?.length; j++) {
+            sql = `${sql}
+                LEFT JOIN process_instance_records pir${j} ON pir${j}.instance_id = pi.id 
+                    AND pir${j}.show_name IN (${activity[j].activity_name}) 
+                    AND pir${j}.activity_id IN (${activity[j].activity_id}) 
+                    AND pir${j}.action_exit IN (${activity[j].action_exit}) 
+                    AND pir${j}.id = (
+                        SELECT MAX(p2.id) FROM process_instance_records p2 
+                        WHERE p2.instance_id = pi.id
+                            AND p2.show_name IN (${activity[j].activity_name}) 
+                            AND p2.activity_id IN (${activity[j].activity_id}) 
+                    )`
+            if (activity[j].action_exit == '"agree"') 
+                sql = `${sql} 
+                    AND NOT EXISTS(
+                        SELECT p2.id FROM process_instance_records p2 
+                        WHERE p2.instance_id = pi.id
+                            AND p2.show_name IN (${activity[j].activity_name}) 
+                            AND p2.activity_id IN (${activity[j].activity_id}) 
+                            AND p2.action_exit IN ('next', 'doing')
+                    )`
+            if (activity[j].status) 
+                subsql = `${subsql} 
+                    AND (pir${j}.id IS NOT NULL OR pir${j}.id IS NULL)`
+            else subsql = `${subsql} 
+                    AND pir${j}.id IS NOT NULL` 
+        }
+        search = `${search}${sql}${subsql} GROUP BY pir.operator_name, pi.id  
+            UNION ALL `
+    }
+    if (search?.length) {
+        search = search.substring(0, search.length - 10)
+        search = `SELECT COUNT(1) AS count, aa.type, aa.status, aa.operator_name FROM(
+            ${search}
+            ) aa GROUP BY aa.type, aa.status, aa.operator_name ORDER BY aa.operator_name, aa.type`
+        result = await query(search)
+    }
+    return result || []
+}
+
+const getDevelopmentWork = async function (userNames, userIds, start, end) {
     let sql = `SELECT COUNT(1) AS count, pir.operator_name AS name, '' AS id, 1 AS type 
         FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
         JOIN process_instance_records pir ON pir.instance_id = pi.id 
@@ -3259,7 +3336,8 @@ module.exports = {
     getOperationAnalysisStats,
     checkOperationNodes,
     getDevelopmentType,
-    getDevepmentWork,
+    getDevelopmentDetail,
+    getDevelopmentWork,
     getDevelopmentProblem,
     getPlanStats,
     getOperationOptimizeInfo,

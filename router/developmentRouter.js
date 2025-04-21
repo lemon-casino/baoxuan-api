@@ -16,6 +16,7 @@ router.get("/type-statistics", procurement.typeStatistics)
 
 //工作面板
 router.get("/work-pannel", developmentApi.getWorkPannel)
+router.get('/work-detail', developmentApi.getWorkDetail)
 //数据面板
 router.get('/data-pannel', developmentApi.getDataPannel)
 router.get('/data-pannel-project', developmentApi.getDataPannelProject)
