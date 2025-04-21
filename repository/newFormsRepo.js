@@ -1021,15 +1021,15 @@ const getDevelopmentProcessInstances = async function (userNames, params, offset
                 if (field[j].status) {
                     sql = `${sql}
                     LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
-                        AND piv${j}.field_id = "${field[j].field_id}" 
+                        AND piv${j}.field_id IN ("${field[j].field_id}") 
                         AND piv${j}.value != '${field[j].value}' `
                 } else {
                     sql = `${sql}
                     LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
-                        AND piv${j}.field_id = "${field[j].field_id}" 
+                        AND piv${j}.field_id IN ("${field[j].field_id}") 
                         AND piv${j}.value = '${field[j].value}' `
-                    subsql = `${subsql} AND piv${j}.id IS NOT NULL`
                 }
+                subsql = `${subsql} AND piv${j}.id IS NOT NULL`
             }
             let names = userNames
             if (params['userNames']) names = `"${params['userNames']}"`
@@ -2988,16 +2988,15 @@ const getDevelopmentType = async function (start, end) {
             if (field[j].status) {
                 sql = `${sql}
                 LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
-                    AND piv${j}.field_id = "${field[j].field_id}" 
+                    AND piv${j}.field_id IN ("${field[j].field_id}") 
                     AND piv${j}.value != '${field[j].value}' `
             } else {
                 sql = `${sql}
                 LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
-                    AND piv${j}.field_id = "${field[j].field_id}" 
+                    AND piv${j}.field_id IN ("${field[j].field_id}") 
                     AND piv${j}.value = '${field[j].value}' `
-                subsql = `${subsql} AND piv${j}.id IS NOT NULL`
             }
-            
+            subsql = `${subsql} AND piv${j}.id IS NOT NULL`            
         }
         for (let j = 0; j < activity?.length; j++) {
             sql = `${sql}
@@ -3052,7 +3051,7 @@ const getDevelopmentDetail = async function (userNames, start, end, status) {
         sql = `SELECT * FROM development_type_activity WHERE type_id = ${type[i].id}`
         let activity = await query(sql)
         sql = `SELECT count(1) AS count, IFNULL(pir.operator_name, p1.operator_name) AS operator_name, 
-                ${type[i].type} AS type, ${type[i].status} AS status 
+                ${type[i].type} AS type, "${type[i].status}" AS status 
             FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id ` 
         let subsql = `WHERE p.form_id = ${type[i].form_id} 
                 AND pi.create_time BETWEEN '${start}' AND '${end}' `
@@ -3060,16 +3059,15 @@ const getDevelopmentDetail = async function (userNames, start, end, status) {
             if (field[j].status) {
                 sql = `${sql}
                 LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
-                    AND piv${j}.field_id = "${field[j].field_id}" 
+                    AND piv${j}.field_id IN ("${field[j].field_id}") 
                     AND piv${j}.value != '${field[j].value}' `
             } else {
                 sql = `${sql}
                 LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
-                    AND piv${j}.field_id = "${field[j].field_id}" 
+                    AND piv${j}.field_id IN ("${field[j].field_id}") 
                     AND piv${j}.value = '${field[j].value}' `
-                subsql = `${subsql} AND piv${j}.id IS NOT NULL`
             }
-            
+            subsql = `${subsql} AND piv${j}.id IS NOT NULL`
         }
         sql = `${sql} LEFT JOIN process_instance_records pir ON pir.instance_id = pi.id 
             AND pir.operator_name IN ("${userNames}") 
@@ -3124,18 +3122,19 @@ const getDevelopmentDetail = async function (userNames, start, end, status) {
     return result || []
 }
 
-const getDevelopmentData = async function (start, end) {
+const getDevelopmentData = async function (userNames, start, end, limit, offset) {
     let sql = `SELECT * FROM development_type 
-            WHERE \`status\` IN (${status}) ORDER BY type, status`
-    let type = await query(sql), search = '', result = []
+            WHERE \`status\` < 3 ORDER BY type, status`
+    let type = await query(sql), search = '', result = [], total = 0
     for (let i = 0; i < type?.length; i++) {  
         sql = `SELECT * FROM development_type_field WHERE type_id = ${type[i].id}`
         let field = await query(sql)
         sql = `SELECT * FROM development_type_activity WHERE type_id = ${type[i].id}`
         let activity = await query(sql)
-        sql = `SELECT count(1) AS count, IFNULL(pir.operator_name, p1.operator_name) AS operator_name, 
-                ${type[i].type} AS type, ${type[i].status} AS status 
-            FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id ` 
+        let presql = `SELECT pi.id, IFNULL(pir.operator_name, p1.operator_name) AS exploit_director, 
+                ${type[i].status == 0 ? '进行中' : (type[i].status == 1 ? '已完成' : '已终止')} AS status, 
+                p.form_id `
+        sql = `FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id ` 
         let subsql = `WHERE p.form_id = ${type[i].form_id} 
                 AND pi.create_time BETWEEN '${start}' AND '${end}' `
         for (let j = 0; j < field?.length; j++) {
@@ -3151,7 +3150,6 @@ const getDevelopmentData = async function (start, end) {
                     AND piv${j}.value = '${field[j].value}' `
                 subsql = `${subsql} AND piv${j}.id IS NOT NULL`
             }
-            
         }
         sql = `${sql} LEFT JOIN process_instance_records pir ON pir.instance_id = pi.id 
             AND pir.operator_name IN ("${userNames}") 
@@ -3163,6 +3161,7 @@ const getDevelopmentData = async function (start, end) {
         LEFT JOIN process_instance_records p1 ON p1.instance_id = pi.id 
             AND p1.operator_name IN ("${userNames}") 
             AND p1.activity_id = 'sid-restartevent' ` 
+        let tSql = ''
         for (let j = 0; j < activity?.length; j++) {
             sql = `${sql}
                 LEFT JOIN process_instance_records pir${j} ON pir${j}.instance_id = pi.id 
@@ -3174,7 +3173,7 @@ const getDevelopmentData = async function (start, end) {
                             AND p2.show_name IN (${activity[j].activity_name}) 
                             AND p2.activity_id IN (${activity[j].activity_id}) 
                     ) AND (pir${j}.action_exit IN (${activity[j].action_exit}) `
-            if (activity[j].action_exit == '"agree"') 
+            if (activity[j].action_exit == '"agree"') {
                 sql = `${sql}) 
                     AND NOT EXISTS(
                         SELECT p2.id FROM process_instance_records p2 
@@ -3183,27 +3182,35 @@ const getDevelopmentData = async function (start, end) {
                             AND p2.activity_id IN (${activity[j].activity_id}) 
                             AND p2.action_exit IN ('next', 'doing')
                     )`
-            else if (activity[j].action_exit == '"reject"')
+            } else if (activity[j].action_exit == '"reject"') {
                 sql = `${sql}) `
-            else
+                tSql = `"${activity[j].operate_time}" AS `
+            } else {
                 sql = `${sql}OR pir${j}.action_exit IS NULL) `
+            }
             if (activity[j].status) 
                 subsql = `${subsql} 
                     AND (pir${j}.id IS NOT NULL OR pir${j}.id IS NULL)`
             else subsql = `${subsql} 
-                    AND pir${j}.id IS NOT NULL` 
+                    AND pir${j}.id IS NOT NULL`
         }
-        search = `${search}${sql}${subsql} GROUP BY IFNULL(pir.operator_name, p1.operator_name), pi.id  
+        search = `${search}${presql}${sql}${subsql} 
+            GROUP BY IFNULL(pir.operator_name, p1.operator_name), 
+                pi.id, p.form_id  
             UNION ALL `
     }
     if (search?.length) {
         search = search.substring(0, search.length - 10)
-        search = `SELECT COUNT(1) AS count, aa.type, aa.status, aa.operator_name FROM(
-            ${search}
-            ) aa GROUP BY aa.type, aa.status, aa.operator_name ORDER BY aa.operator_name, aa.type`
-        result = await query(search)
+        sql = `SELECT COUNT(1) AS count FROM (${search}) aa`
+        let row = await query(sql)
+        if (row?.length && row[0].count) {
+            total = row[0].count            
+            sql = `SELECT * FROM (${search}) aa LIMIT ${offset}, ${limit}`
+            row = await query(sql)
+            if (row?.length) result = row
+        }
     }
-    return result || []
+    return {result, total}
 }
 
 const getDevelopmentWork = async function (userNames, userIds, start, end) {

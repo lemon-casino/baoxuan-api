@@ -56,14 +56,18 @@ const getWorkDetail = async (req, res, next) => {
 
 const getWorkData = async (req, res, next) => {
     try {
-        const {startDate, endDate, id} = req.query
+        const {startDate, endDate, currentPage, pageSize} = req.query
         joiUtil.validate({
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.strRequired},
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.strRequired},
+            currentPage: {value: currentPage, schema: joiUtil.commonJoiSchemas.strRequired},
+            pageSize: {value: pageSize, schema: joiUtil.commonJoiSchemas.strRequired}
         })
         let start = moment(startDate).format('YYYY-MM-DD')
         let end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
-        const result = await developmentService.getWorkData(start, end)
+        let limit = parseInt(pageSize)
+        let offset = (currentPage - 1) * pageSize
+        const result = await developmentService.getWorkData(start, end, limit, offset)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
