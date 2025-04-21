@@ -46,7 +46,7 @@ const getWorkDetail = async (req, res, next) => {
             id: {value: id, schema: joiUtil.commonJoiSchemas.strRequired}
         })
         let start = moment(startDate).format('YYYY-MM-DD')
-        let end = moment(endDate).format('YYYY-MM-DD')
+        let end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
         const result = await developmentService.getWorkDetail(start, end, id)
         return res.send(biResponse.success(result))
     } catch (e) {
