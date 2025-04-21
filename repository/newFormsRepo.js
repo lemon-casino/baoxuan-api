@@ -1017,8 +1017,7 @@ const getDevelopmentProcessInstances = async function (userNames, params, offset
                 FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id ` 
             let subsql = `WHERE p.form_id = ${type[i].form_id} 
                 AND pi.create_time BETWEEN '${start}' AND '${end}' `
-            for (let j = 0; j < field?.length; j++) {
-                
+            for (let j = 0; j < field?.length; j++) {                
                 if (field[j].status) {
                     sql = `${sql}
                     LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
@@ -1028,7 +1027,7 @@ const getDevelopmentProcessInstances = async function (userNames, params, offset
                     sql = `${sql}
                     LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
                         AND piv${j}.field_id = "${field[j].field_id}" 
-                        AND piv${j}.value == '${field[j].value}' `
+                        AND piv${j}.value = '${field[j].value}' `
                     subsql = `${subsql} AND piv${j}.id IS NOT NULL`
                 }
             }
@@ -1040,8 +1039,7 @@ const getDevelopmentProcessInstances = async function (userNames, params, offset
                 AND pir.id = (
                     SELECT MAX(p2.id) FROM process_instance_records p2 
                     WHERE p2.instance_id = pi.id
-                        AND p2.show_name = pir.show_name 
-                        AND p2.activity_id = pir.activity_id) 
+                        AND p2.operator_name IN (${names}))  
             LEFT JOIN process_instance_records p1 ON p1.instance_id = pi.id 
                 AND p1.operator_name IN (${names}) 
                 AND p1.activity_id = 'sid-restartevent' `
@@ -3079,8 +3077,7 @@ const getDevelopmentDetail = async function (userNames, start, end, status) {
             AND pir.id = (
                 SELECT MAX(p2.id) FROM process_instance_records p2 
                 WHERE p2.instance_id = pi.id
-                    AND p2.show_name = pir.show_name 
-                    AND p2.activity_id = pir.activity_id) 
+                    AND p2.operator_name IN ("${userNames}"))  
         LEFT JOIN process_instance_records p1 ON p1.instance_id = pi.id 
             AND p1.operator_name IN ("${userNames}") 
             AND p1.activity_id = 'sid-restartevent' ` 
@@ -3091,7 +3088,89 @@ const getDevelopmentDetail = async function (userNames, start, end, status) {
                     AND pir${j}.activity_id IN (${activity[j].activity_id}) 
                     AND pir${j}.id = (
                         SELECT MAX(p2.id) FROM process_instance_records p2 
+                        WHERE p2.instance_id = pi.id 
+                            AND p2.show_name IN (${activity[j].activity_name}) 
+                            AND p2.activity_id IN (${activity[j].activity_id}) 
+                    ) AND (pir${j}.action_exit IN (${activity[j].action_exit}) `
+            if (activity[j].action_exit == '"agree"') 
+                sql = `${sql}) 
+                    AND NOT EXISTS(
+                        SELECT p2.id FROM process_instance_records p2 
                         WHERE p2.instance_id = pi.id
+                            AND p2.show_name IN (${activity[j].activity_name}) 
+                            AND p2.activity_id IN (${activity[j].activity_id}) 
+                            AND p2.action_exit IN ('next', 'doing')
+                    )`
+            else if (activity[j].action_exit == '"reject"')
+                sql = `${sql}) `
+            else
+                sql = `${sql}OR pir${j}.action_exit IS NULL) `
+            if (activity[j].status) 
+                subsql = `${subsql} 
+                    AND (pir${j}.id IS NOT NULL OR pir${j}.id IS NULL)`
+            else subsql = `${subsql} 
+                    AND pir${j}.id IS NOT NULL` 
+        }
+        search = `${search}${sql}${subsql} GROUP BY IFNULL(pir.operator_name, p1.operator_name), pi.id  
+            UNION ALL `
+    }
+    if (search?.length) {
+        search = search.substring(0, search.length - 10)
+        search = `SELECT COUNT(1) AS count, aa.type, aa.status, aa.operator_name FROM(
+            ${search}
+            ) aa GROUP BY aa.type, aa.status, aa.operator_name ORDER BY aa.operator_name, aa.type`
+        result = await query(search)
+    }
+    return result || []
+}
+
+const getDevelopmentData = async function (start, end) {
+    let sql = `SELECT * FROM development_type 
+            WHERE \`status\` IN (${status}) ORDER BY type, status`
+    let type = await query(sql), search = '', result = []
+    for (let i = 0; i < type?.length; i++) {  
+        sql = `SELECT * FROM development_type_field WHERE type_id = ${type[i].id}`
+        let field = await query(sql)
+        sql = `SELECT * FROM development_type_activity WHERE type_id = ${type[i].id}`
+        let activity = await query(sql)
+        sql = `SELECT count(1) AS count, IFNULL(pir.operator_name, p1.operator_name) AS operator_name, 
+                ${type[i].type} AS type, ${type[i].status} AS status 
+            FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id ` 
+        let subsql = `WHERE p.form_id = ${type[i].form_id} 
+                AND pi.create_time BETWEEN '${start}' AND '${end}' `
+        for (let j = 0; j < field?.length; j++) {
+            if (field[j].status) {
+                sql = `${sql}
+                LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
+                    AND piv${j}.field_id = "${field[j].field_id}" 
+                    AND piv${j}.value != '${field[j].value}' `
+            } else {
+                sql = `${sql}
+                LEFT JOIN process_instance_values piv${j} ON piv${j}.instance_id = pi.id 
+                    AND piv${j}.field_id = "${field[j].field_id}" 
+                    AND piv${j}.value = '${field[j].value}' `
+                subsql = `${subsql} AND piv${j}.id IS NOT NULL`
+            }
+            
+        }
+        sql = `${sql} LEFT JOIN process_instance_records pir ON pir.instance_id = pi.id 
+            AND pir.operator_name IN ("${userNames}") 
+            AND (pir.action_exit IN ('next', 'doing', 'agree') OR pir.action_exit IS NULL) 
+            AND pir.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2 
+                WHERE p2.instance_id = pi.id
+                    AND p2.operator_name IN ("${userNames}"))  
+        LEFT JOIN process_instance_records p1 ON p1.instance_id = pi.id 
+            AND p1.operator_name IN ("${userNames}") 
+            AND p1.activity_id = 'sid-restartevent' ` 
+        for (let j = 0; j < activity?.length; j++) {
+            sql = `${sql}
+                LEFT JOIN process_instance_records pir${j} ON pir${j}.instance_id = pi.id 
+                    AND pir${j}.show_name IN (${activity[j].activity_name}) 
+                    AND pir${j}.activity_id IN (${activity[j].activity_id}) 
+                    AND pir${j}.id = (
+                        SELECT MAX(p2.id) FROM process_instance_records p2 
+                        WHERE p2.instance_id = pi.id 
                             AND p2.show_name IN (${activity[j].activity_name}) 
                             AND p2.activity_id IN (${activity[j].activity_id}) 
                     ) AND (pir${j}.action_exit IN (${activity[j].action_exit}) `
@@ -3352,6 +3431,7 @@ module.exports = {
     checkOperationNodes,
     getDevelopmentType,
     getDevelopmentDetail,
+    getDevelopmentData,
     getDevelopmentWork,
     getDevelopmentProblem,
     getPlanStats,
