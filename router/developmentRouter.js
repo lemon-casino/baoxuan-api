@@ -17,7 +17,11 @@ router.get("/type-statistics", procurement.typeStatistics)
 //工作面板
 router.get("/work-pannel", developmentApi.getWorkPannel)
 router.get('/work-detail', developmentApi.getWorkDetail)
-router.get('/work-data', developmentApi.getWorkData)
+//立项管理
+router.get('/project-data', developmentApi.getProjectData)
+router.post('/project-data/create', developmentApi.createProjectData)
+router.put('/project-data/update/:id', developmentApi.updateProjectData)
+router.put('/project-data/update-status/:id', developmentApi.updateProjectDataStatus)
 //数据面板
 router.get('/data-pannel', developmentApi.getDataPannel)
 router.get('/data-pannel-project', developmentApi.getDataPannelProject)

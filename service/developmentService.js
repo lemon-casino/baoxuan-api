@@ -7,6 +7,8 @@ const redisUtil = require("../utils/redisUtil")
 const crypto = require('crypto')
 const { developmentItem, developmentType, developmentWorkType, developmentWorkProblem } = require('../const/newFormConst')
 const moment = require('moment')
+const projectManagementRepo = require('@/repository/development/projectManagement')
+const pmEditLogRepo = require('@/repository/development/pmEditLog')
 const developmentService = {}
 
 developmentService.getDataStats = async (type, start, end, month) => {
@@ -83,49 +85,224 @@ developmentService.getWorkDetail = async (start, end, id) => {
     return result
 }
 
-developmentService.getWorkData = async (start, end, limit, offset) => {
-    let columns = [
-        {field_id: 'exploit_director', label: '开发负责人', fixed: true},
-        {field_id: 'status', label: '市场分析进度', fixed: true},
-        {field_id: 'first_category', label: '一级类目', fixed: true},
-        {field_id: 'second_category', label: '二级类目', fixed: true},
-        {field_id: 'third_category', label: '三级类目', fixed: true},
-        {field_id: 'type', label: '市场分析名称', fixed: true},
-        {field_id: 'goods_name', label: '立项产品名称', fixed: true},
-        {field_id: 'seasons', label: '产品销售季节'},
-        {field_id: 'patent_belongs', label: '专利归属'},
-        {field_id: 'patent_type', label: '专利-二级'},
-        {field_id: 'related', label: '相关联的产品类型和节日'},
-        {field_id: 'schedule_time', label: '预计市场分析过会时间'},
-        {field_id: 'analyse_data', label: '市场分析表'},
-        {field_id: 'complete_time', label: '分析表过会且通过时间'},
-        {field_id: 'sale_purpose', label: '产品销售目的'},
-        {field_id: 'exploitation_features', label: '产品开发性质'},
-        {field_id: 'core_reasons', label: '核心立项理由'},
-        {field_id: 'link', label: '流程链接'},
-        {field_id: 'schedule_arrived_time', label: '预计开发周期（大货时间）'},
-        {field_id: 'schedule_confirm_time', label: '预计样品确认时间'},
-        {field_id: 'product_info', label: '提交产品信息'},
-        {field_id: 'confirm_time', label: '实际样品到货时间'},
-        {field_id: 'order_time', label: '实际订货时间'},
-        {field_id: 'arrived_time', label: '实际大货到货时间'},
-        {field_id: 'brief_product_line', label: '产品线简称'},
-        {field_id: 'expected_monthly_sales', label: '预计月销量'},
-        {field_id: 'goods_ids', label: '各平台上架完毕'},
-        {field_id: 'product_img', label: '对应产品图片'},
-        {field_id: 'remark', label: '特殊备注/要求'},
+developmentService.getProjectData = async (limit, offset) => {
+    const columns = [
+        {field_id: 'exploit_director', label: '开发负责人', type: 'input', fixed: true},
+        {field_id: 'status', label: '市场分析进度', type: 'select', fixed: true, select: [
+            {key: 0, value: '进行中：立项前'},
+            {key: 1, value: '已完成：成功立项'},
+            {key: -1, value: '已终止：立项未通过'}
+        ]},
+        {field_id: 'first_category', label: '一级类目', edit: true, required: true, fixed: true, type: 'input'},
+        {field_id: 'second_category', label: '二级类目', edit: true, required: true, fixed: true, type: 'input'},
+        {field_id: 'third_category', label: '三级类目', edit: true, required: true, fixed: true, type: 'input'},
+        {field_id: 'type', label: '市场分析名称', edit: true, fixed: true, required: true, type: 'input'},
+        {field_id: 'goods_name', label: '立项产品名称', edit: true, required: true, fixed: true, type: 'input'},
+        {field_id: 'seasons', label: '产品销售季节', edit: true, required: true, type: 'select', select: [
+            {key: '春季3月-5月', value: '春季3月-5月'},
+            {key: '夏季6月-8月', value: '夏季6月-8月'},
+            {key: '秋季9月-12月', value: '秋季9月-12月'},
+            {key: '冬季12月-2月', value: '冬季12月-2月'},
+            {key: '全年', value: '全年'}
+        ]},
+        {field_id: 'patent_belongs', label: '专利归属', edit: true, required: true, type: 'select', select: [
+            {key: '工厂', value: '工厂'},
+            {key: '公司', value: '公司'},
+            {key: '无', value: '无'}
+        ]},
+        {field_id: 'patent_type', label: '专利-二级', edit: true, type: 'select', select: [
+            {key: '实用新型', value: '实用新型'},
+            {key: '著作权', value: '著作权'},
+            {key: '发明专利', value: '发明专利'},
+            {key: '外观专利', value: '外观专利'},
+            {key: '无', value: '无'}
+        ]},
+        {field_id: 'related', label: '相关联的产品类型和节日', edit: true, type: 'select', select: [
+            {key: '过年相关产品', value: '过年相关产品'},
+            {key: '保存产品的相关产品', value: '保存产品的相关产品'},
+            {key: '厨房产品，情人节', value: '厨房产品，情人节'},
+            {key: '春季开学季', value: '春季开学季'},
+            {key: '三八妇女节', value: '三八妇女节'},
+            {key: '春游秋游相关产品', value: '春游秋游相关产品'},
+            {key: '4月热切冷水杯', value: '4月热切冷水杯'},
+            {key: '520节', value: '520节'},
+            {key: '6.1儿童节', value: '6.1儿童节'},
+            {key: '毕业季', value: '毕业季'},
+            {key: '七夕产品', value: '七夕产品'},
+            {key: '准备购买中秋国庆旅游装备', value: '准备购买中秋国庆旅游装备'},
+            {key: '秋季开学产品', value: '秋季开学产品'},
+            {key: '水具换季', value: '水具换季'},
+            {key: '无', value: '无'},
+            {key: '礼品', value: '礼品'},
+            {key: '春夏泡茶类产品', value: '春夏泡茶类产品'}
+        ]},
+        {field_id: 'schedule_time', label: '预计市场分析过会时间', required: true, edit: true, type: 'date'},
+        {field_id: 'analyse_link', label: '市场分析表', edit: true, required: true, type: 'file'},
+        {field_id: 'complete_time', label: '分析表过会且通过时间', type: 'date'},
+        {field_id: 'sale_purpose', label: '产品销售目的', edit: true, required: true, type: 'select', select: [
+            {key: '迭代', value: '迭代'},
+            {key: '填补空白', value: '填补空白'}
+        ]},
+        {field_id: 'exploitation_features', label: '产品开发性质', edit: true, required: true, 
+            type: 'select', select: [
+            {key: '通货', value: '通货'},
+            {key: '供应商知识产权', value: '供应商知识产权'},
+            {key: '自研', value: '自研'},
+            {key: 'IP', value: 'IP'}
+        ]},
+        {field_id: 'core_reasons', label: '核心立项理由', edit: true, required: true, type: 'input'},
+        {field_id: 'link', label: '流程链接', type: 'link'},
+        {field_id: 'schedule_arrived_time', label: '预计开发周期（大货时间）', type: 'date'},
+        {field_id: 'schedule_confirm_time', label: '预计样品确认时间', type: 'date'},
+        {field_id: 'product_info', label: '提交产品信息', type: 'input'},
+        {field_id: 'confirm_time', label: '实际样品到货时间', type: 'date'},
+        {field_id: 'order_time', label: '实际订货时间', type: 'date'},
+        {field_id: 'arrived_time', label: '实际大货到货时间', type: 'date'},
+        {field_id: 'brief_product_line', label: '产品线简称', type: 'input'},
+        {field_id: 'expected_monthly_sales', label: '预计月销量', type: 'table'},
+        {field_id: 'goods_ids', label: '各平台上架完毕', type: 'table'},
+        {field_id: 'product_img', label: '对应产品图片', edit: true, required: true, type: 'image'},
+        {field_id: 'remark', label: '特殊备注/要求', edit: true, type: 'input'},
     ]
-    let users = await userRepo.getUserByDeptName('产品开发部')
-    let userNames = ''
-    users = users.filter((item) => item['nickname'] != '崔竹')
-    userNames = users.map((item) => item['nickname']).join('","')
-    userNames = `${userNames}","孙旭东`
-    const {result, total} = await newFormsRepo.getDevelopmentData(userNames, start, end, limit, offset)
-    let data = []
-    for (let i = 0; i < result.length; i++) {
-        
-    }
+    const {data, total} = await projectManagementRepo.get(limit, offset) 
+    // let linkIds = ''
+    // for (let i = 0; i < data.length; i++) {
+    //     if (data[i].link) {
+    //         let chunk = data[i].link.split('?')
+    //         if (chunk?.length == 2) {
+    //             chunk = chunk[1].split('&')
+    //             for (let j = 0; j < chunk.length; j++) {
+    //                 let info = chunk[j].split('=')
+    //                 if (info?.length == 2 && ['procInsId', 'formInstId'].includes(info[0])) {
+    //                     linkIds = `${linkIds}"${info[1]}",`
+    //                     break
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+    // if (linkIds?.length) linkIds = linkIds.substring(0, linkIds.length - 1)
+    // const result = await newFormsRepo.getDevelopmentData(linkIds)
     return {data, columns, total}
+}
+
+developmentService.createProjectData = async (user_id, params) => {
+    let goods = await projectManagementRepo.getByGoodsName(params.goods_name)
+    if (goods?.length) return null
+    const result = await projectManagementRepo.insert([
+        user_id, 
+        0, 
+        params.first_category, 
+        params.second_category,
+        params.third_category,
+        params.type,
+        params.goods_name,
+        params.seasons,
+        params.patent_belongs,
+        params.patent_type,
+        params.related,
+        params.schedule_time,
+        params.analyse_link,
+        params.sale_purpose,
+        params.exploitation_features,
+        params.core_reasons,
+        params.product_img,
+        params.remark
+    ])
+    if (result) {
+        await pmEditLogRepo.insert([
+            'insert',
+            user_id,
+            null,
+            JSON.stringify({
+                exploit_director: user_id, 
+                status: 0, 
+                first_category: params.first_category, 
+                second_category: params.second_category,
+                third_category: params.third_category,
+                type: params.type,
+                goods_name: params.goods_name,
+                seasons: params.seasons,
+                patent_belongs: params.patent_belongs,
+                patent_type: params.patent_type,
+                related: params.related,
+                schedule_time: params.schedule_time,
+                analyse_link: params.analyse_link,
+                sale_purpose: params.sale_purpose,
+                exploitation_features: params.exploitation_features,
+                core_reasons: params.core_reasons,
+                product_img: params.product_img,
+                remark: params.remark
+            })
+        ])
+    }
+    return result
+}
+
+developmentService.updateProjectData = async (user_id, id, params) => {
+    let goods = await projectManagementRepo.getById(id)
+    if (!goods?.length) return null
+    if (goods[0].status != 0) false
+    const result = await projectManagementRepo.update([
+        params.first_category, 
+        params.second_category,
+        params.third_category,
+        params.type,
+        params.goods_name,
+        params.seasons,
+        params.patent_belongs,
+        params.patent_type,
+        params.related,
+        params.schedule_time,
+        params.analyse_link,
+        params.sale_purpose,
+        params.exploitation_features,
+        params.core_reasons,
+        params.product_img,
+        params.remark,
+        id
+    ])
+    if (result) await pmEditLogRepo.insert([
+        'update',
+        user_id,
+        JSON.stringify(goods[0]),
+        JSON.stringify({
+            first_category: params.first_category, 
+            second_category: params.second_category,
+            third_category: params.third_category,
+            type: params.type,
+            goods_name: params.goods_name,
+            seasons: params.seasons,
+            patent_belongs: params.patent_belongs,
+            patent_type: params.patent_type,
+            related: params.related,
+            schedule_time: params.schedule_time,
+            analyse_link: params.analyse_link,
+            sale_purpose: params.sale_purpose,
+            exploitation_features: params.exploitation_features,
+            core_reasons: params.core_reasons,
+            product_img: params.product_img,
+            remark: params.remark,
+            id
+        })
+    ])
+    return result
+}
+
+developmentService.updateProjectDataStatus = async (user_id, id, status) => {
+    let goods = await projectManagementRepo.getById(id)
+    if (!goods?.length) return null
+    if (goods[0].status != 0 || status == 0) return false
+    const result = await projectManagementRepo.updateStatus(id, status)
+    if (result) {
+        await pmEditLogRepo.insert([
+            'update',
+            user_id,
+            JSON.stringify({id, status: goods[0].status}),
+            JSON.stringify({id, status})
+        ])
+    }
+    return result
 }
 
 developmentService.getFlows = async (start, end) => {
