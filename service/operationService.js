@@ -1804,18 +1804,20 @@ const importJDZYInfo = async (rows, time) => {
         //供货金额
         let sale_amount = parseFloat(rows[i].getCell(sale_amount_row).value || 0)
         let qty = parseInt(rows[i].getCell(real_sale_qty_row).value || 0)
+        //总成本
         let cost_amount = (cost_price + 0.8 + 1.4) * qty
         //京东销售额
         let supplier_amount = parseFloat(rows[i].getCell(supplier_amount_row).value || 0)
+        //税点
         let tax = sale_amount * 0.07
         //综毛标准
         let jd_gross_profit_std = supplier_amount * 0.28
         //实际棕毛
         let real_gross_profit = parseFloat(rows[i].getCell(gross_profit_row).value || 0)
-        real_jd_gross_profit = real_gross_profit < 0 ? 0 : real_gross_profit
+        // let real_jd_gross_profit = real_gross_profit < 0 ? 0 : real_gross_profit
         //需补综毛
-        let other_cost =jd_gross_profit_std - real_jd_gross_profit
-        let profit = sale_amount - cost_amount - tax - other_cost
+        let other_cost =jd_gross_profit_std - real_gross_profit
+        let profit = other_cost>0 ? sale_amount - cost_amount - tax - other_cost : sale_amount - cost_amount - tax
         data.push(
             goods_id,
             sku_id,
@@ -1833,7 +1835,7 @@ const importJDZYInfo = async (rows, time) => {
             sale_amount ? profit / sale_amount : 0,
             0,
             null,
-            tax + other_cost,
+            other_cost>0? tax + other_cost : tax,
             qty,
             null,
             supplier_amount,
@@ -2405,7 +2407,7 @@ const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
             { header: "核销金额", key: 'verified_amount' },
             { header: "核销利润额", key: 'verified_profit' },
             { header: "快递费", key: 'express' },
-            { header: "扣点", key: 'bill' },
+            { header: "扣点", key: 'bill_amount' },
             { header: "推广", key: 'promotion_amount' },
             { header: "推广费比", key: 'promotion_rate' },
             { header: "平台刷单", key: 'erlei_shuadan' },
@@ -3275,7 +3277,7 @@ const importTmallpromotioninfo = async (rows,shopname, paytime, day, date) => {
         period: day,
         payTime: paytime,
         date: date,
-        ROI: (item.transAmount / item.payAmount).toFixed(2) >0 ? (item.transAmount / item.payAmount).toFixed(2) : 0,
+        ROI: item.payAmount > 0 ? Number((item.transAmount / item.payAmount).toFixed(2)) : 0,
         shopName: shopname
         
     }))
