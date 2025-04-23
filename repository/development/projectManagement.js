@@ -13,15 +13,29 @@ projectManagementRepo.getByGoodsName = async (goods_name) => {
     return result?.length ? result[0] : {}
 }
 
-projectManagementRepo.get = async (limit, offset) => {
-    let data = [], total = 0
-    let sql = `SELECT COUNT(1) AS count FROM develop_project_management`
+projectManagementRepo.get = async (limit, offset, params) => {
+    let data = [], total = 0, subsql = 'WHERE 1=1'
+    for (let i = 0; i < params.length; i++) {
+        if (params[i].value !== undefined) {
+            if (params[i].type == 'input') {
+                if (params[i].field_id == 'exploit_director') {
+                    subsql = `${subsql} AND EXISTS(
+                        SELECT id FROM users WHERE nickname LIKE '%${params[i].value}%'
+                            AND users.user_id = exploit_director)`
+                } else 
+                    subsql = `${subsql} AND \`${params[i].field_id}\` LIKE '%${params[i].value}%'`
+            } else if (['select', 'date'].includes(params[i].type)) {
+                subsql = `${subsql} AND \`${params[i].field_id}\` = '${params[i].value}'`
+            }
+        }
+    }
+    let sql = `SELECT COUNT(1) AS count FROM develop_project_management ${subsql}`
     let row = await query(sql)
     if (row?.length && row[0].count) {
         total = row[0].count
         sql = `SELECT *, (
                 SELECT nickname FROM users WHERE user_id = exploit_director LIMIT 1
-            ) AS exploit_director FROM develop_project_management 
+            ) AS exploit_director FROM develop_project_management ${subsql} 
             ORDER BY id DESC LIMIT ${offset}, ${limit}`
         row = await query(sql, [limit, offset])
         if (row?.length) data = row

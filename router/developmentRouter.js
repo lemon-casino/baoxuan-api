@@ -26,5 +26,7 @@ router.put('/project-data/update-status/:id', developmentApi.updateProjectDataSt
 router.get('/data-pannel', developmentApi.getDataPannel)
 router.get('/data-pannel-project', developmentApi.getDataPannelProject)
 router.get('/data-pannel-detail', developmentApi.getDataPannelDetail)
+//三级类目
+router.get('/category', developmentApi.getCategoryList)
 
 module.exports = router
