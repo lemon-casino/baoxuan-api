@@ -10,6 +10,9 @@ const moment = require('moment')
 const projectManagementRepo = require('@/repository/development/projectManagement')
 const pmEditLogRepo = require('@/repository/development/pmEditLog')
 const developmentService = {}
+const { createProcess } =  require('./dingDingService')
+const { productManageFlowUUid } = require("../const/operationConst")
+const goodsCategoryRepo = require('@/repository/goodsCategoryRepo')
 
 developmentService.getDataStats = async (type, start, end, month) => {
     let result = []
@@ -85,7 +88,7 @@ developmentService.getWorkDetail = async (start, end, id) => {
     return result
 }
 
-developmentService.getProjectData = async (limit, offset) => {
+developmentService.getProjectData = async (limit, offset, params) => {
     const columns = [
         {field_id: 'exploit_director', label: '开发负责人', type: 'input', fixed: true},
         {field_id: 'status', label: '市场分析进度', type: 'select', fixed: true, select: [
@@ -93,12 +96,12 @@ developmentService.getProjectData = async (limit, offset) => {
             {key: 1, value: '已完成：成功立项'},
             {key: -1, value: '已终止：立项未通过'}
         ]},
-        {field_id: 'first_category', label: '一级类目', edit: true, required: true, fixed: true, type: 'input'},
-        {field_id: 'second_category', label: '二级类目', edit: true, required: true, fixed: true, type: 'input'},
-        {field_id: 'third_category', label: '三级类目', edit: true, required: true, fixed: true, type: 'input'},
-        {field_id: 'type', label: '市场分析名称', edit: true, fixed: true, required: true, type: 'input'},
-        {field_id: 'goods_name', label: '立项产品名称', edit: true, required: true, fixed: true, type: 'input'},
-        {field_id: 'seasons', label: '产品销售季节', edit: true, required: true, type: 'select', select: [
+        {field_id: 'first_category', label: '一级类目', info: '基于天猫类目1-4级', edit: true, required: true, fixed: true, type: 'input'},
+        {field_id: 'second_category', label: '二级类目', info: '基于天猫类目1-4级', edit: true, required: true, fixed: true, type: 'input'},
+        {field_id: 'third_category', label: '三级类目', info: '基于天猫类目1-4级', edit: true, fixed: true, type: 'input'},
+        {field_id: 'type', label: '市场分析名称', info: '本次分析产品具体名称-基于产品特征或关键词', edit: true, fixed: true, required: true, type: 'input'},
+        {field_id: 'goods_name', label: '立项产品名称', info: '名称不许重复', edit: true, required: true, fixed: true, type: 'input'},
+        {field_id: 'seasons', label: '产品销售季节', info: '填写主力售卖时间', edit: true, required: true, type: 'select', select: [
             {key: '春季3月-5月', value: '春季3月-5月'},
             {key: '夏季6月-8月', value: '夏季6月-8月'},
             {key: '秋季9月-12月', value: '秋季9月-12月'},
@@ -136,14 +139,15 @@ developmentService.getProjectData = async (limit, offset) => {
             {key: '礼品', value: '礼品'},
             {key: '春夏泡茶类产品', value: '春夏泡茶类产品'}
         ]},
-        {field_id: 'schedule_time', label: '预计市场分析过会时间', required: true, edit: true, type: 'date'},
-        {field_id: 'analyse_link', label: '市场分析表', edit: true, required: true, type: 'file'},
+        {field_id: 'schedule_time', label: '预计市场分析过会时间', info: '预计过会时间', required: true, edit: true, type: 'date'},
+        {field_id: 'analyse_link', label: '市场分析表', info: '分析过程中需要附上分析表，确认最终稿', edit: true, required: true, type: 'file'},
         {field_id: 'complete_time', label: '分析表过会且通过时间', type: 'date'},
-        {field_id: 'sale_purpose', label: '产品销售目的', edit: true, required: true, type: 'select', select: [
+        {field_id: 'sale_purpose', label: '产品销售目的', info: '存量=迭代，增量=填补空白，原来有就叫迭代', 
+            edit: true, required: true, type: 'select', select: [
             {key: '迭代', value: '迭代'},
             {key: '填补空白', value: '填补空白'}
         ]},
-        {field_id: 'exploitation_features', label: '产品开发性质', edit: true, required: true, 
+        {field_id: 'exploitation_features', label: '产品开发性质', info: '仅换材料不叫自研', edit: true, required: true, 
             type: 'select', select: [
             {key: '通货', value: '通货'},
             {key: '供应商知识产权', value: '供应商知识产权'},
@@ -162,9 +166,16 @@ developmentService.getProjectData = async (limit, offset) => {
         {field_id: 'expected_monthly_sales', label: '预计月销量', type: 'table'},
         {field_id: 'goods_ids', label: '各平台上架完毕', type: 'table'},
         {field_id: 'product_img', label: '对应产品图片', edit: true, required: true, type: 'image'},
-        {field_id: 'remark', label: '特殊备注/要求', edit: true, type: 'input'},
+        {field_id: 'remark', label: '特殊备注/要求', 
+            info: '工厂知识产权/独家/有特殊要求，工厂开发有知识产权不能是自研，自研不能工厂有知识产权，如果工厂一定要有知识产权，宝选必须是独家（有合同）', 
+            edit: true, type: 'input'},
     ]
-    const {data, total} = await projectManagementRepo.get(limit, offset) 
+    if (params) {
+        params = JSON.parse(params)
+    } else {
+        params = []
+    }
+    const {data, total} = await projectManagementRepo.get(limit, offset, params) 
     // let linkIds = ''
     // for (let i = 0; i < data.length; i++) {
     //     if (data[i].link) {
@@ -182,6 +193,7 @@ developmentService.getProjectData = async (limit, offset) => {
     //     }
     // }
     // if (linkIds?.length) linkIds = linkIds.substring(0, linkIds.length - 1)
+    // console.log(linkIds)
     // const result = await newFormsRepo.getDevelopmentData(linkIds)
     return {data, columns, total}
 }
@@ -242,7 +254,7 @@ developmentService.createProjectData = async (user_id, params) => {
 developmentService.updateProjectData = async (user_id, id, params) => {
     let goods = await projectManagementRepo.getById(id)
     if (!goods?.length) return null
-    if (goods[0].status != 0) false
+    // if (goods[0].status != 0) false
     const result = await projectManagementRepo.update([
         params.first_category, 
         params.second_category,
@@ -289,7 +301,7 @@ developmentService.updateProjectData = async (user_id, id, params) => {
     return result
 }
 
-developmentService.updateProjectDataStatus = async (user_id, id, status) => {
+developmentService.updateProjectDataStatus = async (user_id, id, status, dingding_user_id) => {
     let goods = await projectManagementRepo.getById(id)
     if (!goods?.length) return null
     if (goods[0].status != 0 || status == 0) return false
@@ -301,8 +313,41 @@ developmentService.updateProjectDataStatus = async (user_id, id, status) => {
             JSON.stringify({id, status: goods[0].status}),
             JSON.stringify({id, status})
         ])
+        let params = {}
+        params['employeeField_m9s31pkf'] = [dingding_user_id]
+        params['cascadeSelectField_m4mf17qn'] = [
+            goods[0].first_category, 
+            goods[0].second_category, 
+            goods[0].third_category]
+        params['textField_m9ju9pu8'] = goods[0].type
+        params['textField_m9kpxfs8'] = goods[0].goods_name
+        params['radioField_m9ju9pu9'] = [goods[0].seasons]
+        params['radioField_m9ju9pua'] = [goods[0].patent_belongs]
+        if (goods[0].patent_type)
+            params['radioField_m9ju9pub'] = [goods[0].patent_type]
+        if (goods[0].related)
+            params['radioField_m9ju9puc'] = [goods[0].related]
+        params['dateField_m9ju9pue'] = moment(goods[0].schedule_time).valueOf()
+        params['textField_m9s6jnub'] = goods[0].analyse_link
+        params['radioField_m9ju9puf'] = [goods[0].sale_purpose]
+        params['radioField_m9kpxfs9'] = [goods[0].exploitation_features]
+        params['textareaField_m9mdbbam'] = goods[0].core_reasons
+        params['textField_m9s6jnud'] = goods[0].product_img
+        if (params['textareaField_m9s6jnuc'])
+            params['textareaField_m9s6jnuc'] = goods[0].remark
+        // await createProcess(
+        //     productManageFlowUUid,
+        //     dingding_user_id,
+        //     null,
+        //     JSON.stringify(params)
+        // )
     }
     return result
+}
+
+developmentService.getCategoryList = async (parent_id) => {
+    let result = await goodsCategoryRepo.get(parent_id)
+    return result;
 }
 
 developmentService.getFlows = async (start, end) => {

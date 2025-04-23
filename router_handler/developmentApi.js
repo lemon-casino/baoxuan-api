@@ -63,7 +63,7 @@ const getProjectData = async (req, res, next) => {
         })
         let limit = parseInt(pageSize)
         let offset = (currentPage - 1) * pageSize
-        const result = await developmentService.getProjectData(limit, offset)
+        const result = await developmentService.getProjectData(limit, offset, req.query.search)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -128,12 +128,26 @@ const updateProjectDataStatus = async (req, res, next) => {
         })
         const id = req.params.id     
         const user_id = req.user.id
-        const result = await developmentService.updateProjectDataStatus(user_id, id, status)
+        const dingding_user_id = req.user.userId
+        const result = await developmentService.updateProjectDataStatus(user_id, id, status, dingding_user_id)
         if (result)
             return res.send(biResponse.success(result))
         else if (result === false)
             return res.send(biResponse.createFailed())
         return res.send(biResponse.createFailed('立项不存在'))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getCategoryList = async (req, res, next) => {
+    try {
+        const {parent_id} = req.query
+        joiUtil.validate({
+            parent_id: {value: parent_id, schema: joiUtil.commonJoiSchemas.required}
+        })
+        const result = await developmentService.getCategoryList(parent_id)
+        return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
     }
@@ -196,5 +210,6 @@ module.exports = {
     updateProjectDataStatus,
     getDataPannel,
     getDataPannelProject,
-    getDataPannelDetail
+    getDataPannelDetail,
+    getCategoryList
 }
