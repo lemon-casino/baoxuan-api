@@ -73,15 +73,14 @@ const getProjectData = async (req, res, next) => {
 const createProjectData = async (req, res, next) => {
     try {
         const {
-            first_category, second_category, third_category, type, goods_name, seasons, 
-            patent_belongs, schedule_time, analyse_link, sale_purpose, exploitation_features, 
+            first_category, second_category, type, goods_name, seasons, patent_belongs, 
+            schedule_time, analyse_link, sale_purpose, exploitation_features, 
             core_reasons, product_img
         } = req.body
         const user_id = req.user.id
         joiUtil.validate({
             first_category: {value: first_category, schema: joiUtil.commonJoiSchemas.strRequired}, 
-            second_category: {value: second_category, schema: joiUtil.commonJoiSchemas.strRequired}, 
-            third_category: {value: third_category, schema: joiUtil.commonJoiSchemas.strRequired}, 
+            second_category: {value: second_category, schema: joiUtil.commonJoiSchemas.strRequired},  
             type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}, 
             goods_name: {value: goods_name, schema: joiUtil.commonJoiSchemas.strRequired}, 
             seasons: {value: seasons, schema: joiUtil.commonJoiSchemas.strRequired}, 
