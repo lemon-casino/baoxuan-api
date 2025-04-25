@@ -306,7 +306,7 @@ const getDataStatsDetail = async (type, name, column, start, end, stats, user) =
         if (['sale_amount', 'promotion_amount', 'express_fee', 'packing_fee', 'profit', 'operation_amount', 'order_num', 'refund_num'].includes(column))
             result = await func.getDetailByShopNamesAndTme(shopNames, column, start, end)
         else if (column == 'operation_rate')
-            result = await func.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'promotion_amount', column, start, end, 100)
+            result = await func.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'operation_amount', column, start, end, 100)
         else if (column == 'roi')
             result = await func.getRateByShopNamesAndTme(shopNames, 'promotion_amount', 'sale_amount', column, start, end, 1)
         else if (column == 'refund_rate')
