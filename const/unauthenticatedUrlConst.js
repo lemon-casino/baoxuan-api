@@ -48,5 +48,6 @@ module.exports = [
     "/operation/orders-goods/import",
     '/operation/orders-goods-verified/import',
     '/stock/goods-sku/import',
+    '/product-attrs/upload-pdd',
     /^\/download\/.*/,
 ]

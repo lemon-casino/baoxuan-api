@@ -650,10 +650,10 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: '费比(%)', field_id: 'operation_rate', type: 'number', 
                 min: 80, max: 100, show: true
             }, {
-                title: '利润', field_id: 'profit', type: 'number', 
+                title: '利润额', field_id: 'profit', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '利润率(利润率(供货价))(%)', field_id: 'profit_rate', type: 'number', 
+                title: '利润率(供货价)(%)', field_id: 'profit_rate', type: 'number', 
                 min: 0, max: 15, show: true
             }, {
                 title: '利润率(gmv)(%)', field_id: 'profit_rate_gmv', type: 'number', 
@@ -1319,7 +1319,7 @@ const getGoodsLineInfo = async (startDate, endDate, params, id) => {
                 title: '运费', field_id: 'express_fee', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '利润', field_id: 'profit', type: 'number', 
+                title: '利润额', field_id: 'profit', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: '利润率(%)', field_id: 'profit_rate', type: 'number', 
