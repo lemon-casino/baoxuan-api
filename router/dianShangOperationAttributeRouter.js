@@ -19,6 +19,7 @@ const upload = createUploader(uploadDirectory);
 
 router.post("/upload", upload.single('file'),dianShangOperationAttributeApi.uploadTable)
 router.post("/upload-tm", upload.single('file'),dianShangOperationAttributeApi.uploadtmTable)
+router.post("/upload-pdd", upload.single('file'),dianShangOperationAttributeApi.uploadpddTable)
 
 router.get('/download', (req, res) => {
     const filePath = path.join(uploadDirectory, 'template', uploadFileName);
