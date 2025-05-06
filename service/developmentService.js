@@ -559,7 +559,7 @@ developmentService.getSaleStats = async (type, month, limit, offset, sort) => {
                 title: '人工费', field_id: 'labor_cost', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '利润', field_id: 'profit', type: 'number', 
+                title: '利润额', field_id: 'profit', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: '利润率(%)', field_id: 'profit_rate', type: 'number', 
@@ -615,7 +615,7 @@ developmentService.getSaleStatsDetail = async (type, month, brief_product_line) 
                 title: '人工费', field_id: 'labor_cost', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '利润', field_id: 'profit', type: 'number', 
+                title: '利润额', field_id: 'profit', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: '利润率(%)', field_id: 'profit_rate', type: 'number', 
