@@ -3307,6 +3307,77 @@ const importTmallpromotioninfo = async (rows,shopname, paytime, day, date) => {
     return result
 }
 
+const getSaleData = async(lstart,lend,preStart,preEnd,value,name) => {
+    let data = await goodsSaleInfoRepo.getSaleData(lstart,lend,preStart,preEnd,value,name)
+    const result = []; // 初始化一个空数组用于存储转换后的数据
+    for (let i = 0; i < data.length; i++) {
+        const item = data[i];
+        const { name: divisionName, "本期销售额": currentSales, "上期销售额": previousSales,
+             "本期销售数量": currentQuantity, "上期销售数量": previousQuantity, "销售额环比": salesIncrease,
+              "销售数量环比": quantityIncrease } = item;
+
+        // 创建事业部对象
+        const division = {
+            actionName: divisionName,
+            actionCode: i,
+            sum: 0, // 根据实际需求设置
+            children: [
+                {
+                    actionName: "销售金额",
+                    children: [
+                        {
+                            actionName: "本期",
+                            actionCode: 0,
+                            sum: parseFloat(currentSales),
+                            children: []
+                        },
+                        {
+                            actionName: "上期",
+                            actionCode: 0,
+                            sum: parseFloat(previousSales),
+                            children: []
+                        },
+                        {
+                            actionName: "环比",
+                            actionCode: 0,
+                            sum: salesIncrease,
+                            children: []
+                        }
+                    ]
+                },
+                {
+                    actionName: "销售数量",
+                    actionCode: 0,
+                    sum: 0,
+                    children: [
+                        {
+                            actionName: "本期",
+                            actionCode: 0,
+                            sum: parseInt(currentQuantity),
+                            children: []
+                        },
+                        {
+                            actionName: "上期",
+                            actionCode: 0,
+                            sum: parseInt(previousQuantity),
+                            children: []
+                        },
+                        {
+                            actionName: "环比",
+                            actionCode: 0,
+                            sum: quantityIncrease,
+                            children: []
+                        }
+                    ]
+                }
+            ]
+        }
+
+        // 将转换后的对象插入到 transformed 数组中
+        result.push(division);
+    }
+    return result
+}
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -3355,5 +3426,6 @@ module.exports = {
     importXhsShuadan,
     getTMPromotion,
     getTMPromotioninfo,
-    importTmallpromotioninfo
+    importTmallpromotioninfo,
+    getSaleData
 }
