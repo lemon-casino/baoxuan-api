@@ -150,6 +150,7 @@ const getDataStats = async (id, start, end, params) => {
     }
     let targets_info = {}
     for (let i = 0; i < result[type].data.length; i++) {
+        // if (result[type].data[i].name == 'COUPANG') continue
         sale_amount += parseFloat(result[type].data[i].sale_amount)
         promotion_amount += parseFloat(result[type].data[i].promotion_amount)
         operation_amount += parseFloat(result[type].data[i].operation_amount)
@@ -387,8 +388,10 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
         order_num = 0, refund_num = 0, words_market_vol = 0, words_vol = 0
     let shopName = [], j = -1, except = false
-    if (typeList[type].key < 3) except = true
-    for (let i = 0; i < shops.length; i++) {
+    if (typeList[type].key < 2) except = true
+    for (let i = 0; i < shops.length; i++) {        
+        // let isCoupang = await shopInfoRepo.isCoupang(shops[i].shop_name)
+        // if (except && isCoupang) continue
         if (i == 0 || shops[i].name != shops[i-1].name) {
             shopName.push({
                 shop_name: shops[i].shop_name,

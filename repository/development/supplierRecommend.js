@@ -1,19 +1,19 @@
 const { query } = require('../../model/dbConn')
-const projectManagementRepo = {}
+const supplierRecommendRepo = {}
 
-projectManagementRepo.getById = async (id) => {
-    let sql = `SELECT * FROM develop_project_management WHERE id = ?`
+supplierRecommendRepo.getById = async (id) => {
+    let sql = `SELECT * FROM supplier_recommend_management WHERE id = ?`
     const result = await query(sql, [id])
     return result
 }
 
-projectManagementRepo.getByGoodsName = async (goods_name) => {
-    let sql = `SELECT * FROM develop_project_management WHERE goods_name = ?`
+supplierRecommendRepo.getByGoodsName = async (goods_name) => {
+    let sql = `SELECT * FROM supplier_recommend_management WHERE goods_name = ?`
     const result = await query(sql, [goods_name])
     return result?.length ? result[0] : {}
 }
 
-projectManagementRepo.get = async (limit, offset, params) => {
+supplierRecommendRepo.get = async (limit, offset, params) => {
     let data = [], total = 0, subsql = 'WHERE 1=1'
     for (let i = 0; i < params.length; i++) {
         if (params[i].value !== undefined) {
@@ -29,13 +29,13 @@ projectManagementRepo.get = async (limit, offset, params) => {
             }
         }
     }
-    let sql = `SELECT COUNT(1) AS count FROM develop_project_management ${subsql}`
+    let sql = `SELECT COUNT(1) AS count FROM supplier_recommend_management ${subsql}`
     let row = await query(sql)
     if (row?.length && row[0].count) {
         total = row[0].count
         sql = `SELECT *, (
                 SELECT nickname FROM users WHERE user_id = exploit_director LIMIT 1
-            ) AS exploit_director FROM develop_project_management ${subsql} 
+            ) AS exploit_director FROM supplier_recommend_management ${subsql} 
             ORDER BY id DESC LIMIT ${offset}, ${limit}`
         row = await query(sql, [limit, offset])
         if (row?.length) data = row
@@ -43,62 +43,55 @@ projectManagementRepo.get = async (limit, offset, params) => {
     return {data, total}
 }
 
-projectManagementRepo.insert = async (data) => {
-    let sql = `INSERT INTO develop_project_management(
-            exploit_director, 
-            \`status\`, 
-            first_category, 
+supplierRecommendRepo.insert = async (data) => {
+    let sql = `INSERT INTO supplier_recommend_management(
+            exploit_director,
+            recommend_time,
+            brief_product_line,
+            first_category,
             second_category,
             third_category,
-            type,
+            supplier,
+            supplier_type,
+            purchase_type,
+            product_info,
             goods_name,
+            goods_type,
             seasons,
             patent_belongs,
             patent_type,
             related,
-            schedule_time,
-            analyse_link,
             sale_purpose,
-            exploitation_features,
-            core_reasons,
             product_img,
-            project_status,
             remark,
             update_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())`
     const result = await query(sql, data)
     return result?.affectedRows ? true : false
 }
 
-projectManagementRepo.update = async (data) => {
-    let sql = `UPDATE develop_project_management SET first_category = ?, 
-        second_category = ?, third_category = ?, type = ?, goods_name = ?, 
-        seasons = ?, patent_belongs = ?, patent_type = ?, related = ?, 
-        schedule_time = ?, analyse_link = ?, sale_purpose = ?, 
-        exploitation_features = ?, core_reasons = ?, product_img = ?, remark = ?, 
-        project_status = ?, update_time = NOW() WHERE id = ?`
+supplierRecommendRepo.update = async (data) => {
+    let sql = `UPDATE supplier_recommend_management SET recommend_time = ?, 
+        brief_product_line = ?, first_category = ?, second_category = ?, 
+        third_category = ?, supplier = ?, supplier_type = ?, purchase_type = ?, 
+        product_info = ?, goods_name = ?, goods_type = ?, seasons = ?, 
+        patent_belongs = ?, patent_type = ?, related = ?, sale_purpose = ?, 
+        product_img = ?, remark = ?, update_time = NOW() WHERE id = ?`
     const result = await query(sql, data)
     return result?.affectedRows ? true : false
 }
 
-projectManagementRepo.updateStatus = async (id, status) => {
-    let sql = `UPDATE develop_project_management SET \`status\` = ?, 
+supplierRecommendRepo.updateStatus = async (id, status) => {
+    let sql = `UPDATE supplier_recommend_management SET \`status\` = ?, 
         update_time = NOW() WHERE id = ?`
     const result = await query(sql, [status, id])
     return result?.affectedRows ? true : false
 }
 
-projectManagementRepo.updateProjectStatus = async (id, status) => {
-    let sql = `UPDATE develop_project_management SET project_status = ?, 
-        update_time = NOW() WHERE id = ?`
-    const result = await query(sql, [status, id])
-    return result?.affectedRows ? true : false
-}
-
-projectManagementRepo.updateLink = async (id, link) => {
-    let sql = `UPDATE develop_project_management SET link = ?, 
+supplierRecommendRepo.updateLink = async (id, link) => {
+    let sql = `UPDATE supplier_recommend_management SET link = ?, 
         update_time = NOW() WHERE id = ?`
     const result = await query(sql, [link, id])
     return result?.affectedRows ? true : false
 }
 
-module.exports = projectManagementRepo
+module.exports = supplierRecommendRepo
