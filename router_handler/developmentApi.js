@@ -57,13 +57,14 @@ const getWorkDetail = async (req, res, next) => {
 const getProjectData = async (req, res, next) => {
     try {
         const {currentPage, pageSize} = req.query
+        const type = req.params.type
         joiUtil.validate({
             currentPage: {value: currentPage, schema: joiUtil.commonJoiSchemas.strRequired},
             pageSize: {value: pageSize, schema: joiUtil.commonJoiSchemas.strRequired}
         })
         let limit = parseInt(pageSize)
         let offset = (currentPage - 1) * pageSize
-        const result = await developmentService.getProjectData(limit, offset, req.query.search)
+        const result = await developmentService.getProjectData(limit, offset, req.query.search, type)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -72,28 +73,9 @@ const getProjectData = async (req, res, next) => {
 
 const createProjectData = async (req, res, next) => {
     try {
-        const {
-            first_category, second_category, type, goods_name, seasons, patent_belongs, 
-            schedule_time, analyse_link, sale_purpose, exploitation_features, 
-            core_reasons, product_img
-        } = req.body
+        const type = req.params.type
         const user_id = req.user.id
-        joiUtil.validate({
-            first_category: {value: first_category, schema: joiUtil.commonJoiSchemas.strRequired}, 
-            second_category: {value: second_category, schema: joiUtil.commonJoiSchemas.strRequired},  
-            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}, 
-            goods_name: {value: goods_name, schema: joiUtil.commonJoiSchemas.strRequired}, 
-            seasons: {value: seasons, schema: joiUtil.commonJoiSchemas.strRequired}, 
-            patent_belongs: {value: patent_belongs, schema: joiUtil.commonJoiSchemas.strRequired}, 
-            schedule_time: {value: schedule_time, schema: joiUtil.commonJoiSchemas.strRequired}, 
-            analyse_link: {value: analyse_link, schema: joiUtil.commonJoiSchemas.strRequired}, 
-            sale_purpose: {value: sale_purpose, schema: joiUtil.commonJoiSchemas.strRequired}, 
-            exploitation_features: {value: exploitation_features, schema: joiUtil.commonJoiSchemas.strRequired}, 
-            core_reasons: {value: core_reasons, schema: joiUtil.commonJoiSchemas.strRequired}, 
-            product_img: {value: product_img, schema: joiUtil.commonJoiSchemas.strRequired}
-        })
-        req.body.schedule_time = moment(req.body.schedule_time).format('YYYY-MM-DD')
-        const result = await developmentService.createProjectData(user_id, req.body)
+        const result = await developmentService.createProjectData(user_id, req.body, type)
         if (result)
             return res.send(biResponse.success(result))
         else if (result === false)
@@ -108,7 +90,8 @@ const updateProjectData = async (req, res, next) => {
     try {
         const id = req.params.id
         const user_id = req.user.id
-        const result = await developmentService.updateProjectData(user_id, id, req.body)
+        const type = req.params.type
+        const result = await developmentService.updateProjectData(user_id, id, req.body, type)
         if (result)
             return res.send(biResponse.success(result))
         else if (result === false)
@@ -119,20 +102,16 @@ const updateProjectData = async (req, res, next) => {
     }
 }
 
-const updateProjectDataStatus = async (req, res, next) => {
+const start = async (req, res, next) => {
     try {
-        const {status} = req.body
-        joiUtil.validate({
-            status: {value: status, schema: joiUtil.commonJoiSchemas.required}
-        })
-        const id = req.params.id     
+        const id = req.params.id  
+        const type = req.params.type   
         const user_id = req.user.id
-        const dingding_user_id = req.user.userId
-        const result = await developmentService.updateProjectDataStatus(user_id, id, status, dingding_user_id)
+        const result = await developmentService.start(type, id, user_id)
         if (result)
             return res.send(biResponse.success(result))
         else if (result === false)
-            return res.send(biResponse.createFailed())
+            return res.send(biResponse.createFailed('发起流程失败'))
         return res.send(biResponse.createFailed('立项不存在'))
     } catch (e) {
         next(e)
@@ -206,7 +185,7 @@ module.exports = {
     getProjectData,
     createProjectData,
     updateProjectData,
-    updateProjectDataStatus,
+    start,
     getDataPannel,
     getDataPannelProject,
     getDataPannelDetail,

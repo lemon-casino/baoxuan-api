@@ -22,6 +22,18 @@ const configs = {
         logging: false,
         timezone: '+08:00'
     },
+    bpmDbConfig: {
+        dbName: nConf.get("BPM_PROD_DB_NAME"),
+        username: nConf.get("BPM_PROD_DB_USER_NAME"),
+        password: nConf.get("BPM_PROD_DB_PWD"),
+        host: nConf.get("BPM_PROD_DB_HOST"),
+        port: nConf.get("BPM_PROD_DB_PORT"),
+        define: {
+            timestamps: false
+        },
+        logging: false,
+        timezone: '+08:00'
+    },
     serverConfig: {
         port: nConf.get("BI_PROD_SERVER_PORT")
     }

@@ -7,12 +7,20 @@ const redisUtil = require("../utils/redisUtil")
 const crypto = require('crypto')
 const { developmentItem, developmentType, developmentWorkType, developmentWorkProblem } = require('../const/newFormConst')
 const moment = require('moment')
-const projectManagementRepo = require('@/repository/development/projectManagement')
-const pmEditLogRepo = require('@/repository/development/pmEditLog')
 const developmentService = {}
 const { createProcess } =  require('./dingDingService')
 const { productManageFlowUUid } = require("../const/operationConst")
 const goodsCategoryRepo = require('@/repository/goodsCategoryRepo')
+const developConst = require('../const/development/defaultConst')
+const projectService = require('./development/projectService')
+const selfService = require('./development/selfService')
+const ipService = require('./development/ipService')
+const supplierService = require('./development/supplierService')
+const operatorService = require('./development/operatorService')
+const systemUsersRepo = require('@/repository/bpm/systemUsersRepo')
+const commonReq = require('@/core/bpmReq/commonReq')
+const actReProcdefRepo = require('@/repository/bpm/actReProcdefRepo')
+const defaultConst = require('../const/development/defaultConst')
 
 developmentService.getDataStats = async (type, start, end, month) => {
     let result = []
@@ -88,259 +96,166 @@ developmentService.getWorkDetail = async (start, end, id) => {
     return result
 }
 
-developmentService.getProjectData = async (limit, offset, params) => {
-    const columns = [
-        {field_id: 'exploit_director', label: '开发负责人', type: 'input', fixed: true},
-        {field_id: 'status', label: '市场分析进度', type: 'select', fixed: true, select: [
-            {key: 0, value: '进行中：立项前'},
-            {key: 1, value: '已完成：成功立项'},
-            {key: -1, value: '已终止：立项未通过'}
-        ]},
-        {field_id: 'first_category', label: '一级类目', info: '基于天猫类目1-4级', edit: true, required: true, fixed: true, type: 'input'},
-        {field_id: 'second_category', label: '二级类目', info: '基于天猫类目1-4级', edit: true, required: true, fixed: true, type: 'input'},
-        {field_id: 'third_category', label: '三级类目', info: '基于天猫类目1-4级', edit: true, fixed: true, type: 'input'},
-        {field_id: 'type', label: '市场分析名称', info: '本次分析产品具体名称-基于产品特征或关键词', edit: true, fixed: true, required: true, type: 'input'},
-        {field_id: 'goods_name', label: '立项产品名称', info: '名称不许重复', edit: true, required: true, fixed: true, type: 'input'},
-        {field_id: 'seasons', label: '产品销售季节', info: '填写主力售卖时间', edit: true, required: true, type: 'select', select: [
-            {key: '春季3月-5月', value: '春季3月-5月'},
-            {key: '夏季6月-8月', value: '夏季6月-8月'},
-            {key: '秋季9月-12月', value: '秋季9月-12月'},
-            {key: '冬季12月-2月', value: '冬季12月-2月'},
-            {key: '全年', value: '全年'}
-        ]},
-        {field_id: 'patent_belongs', label: '专利归属', edit: true, required: true, type: 'select', select: [
-            {key: '工厂', value: '工厂'},
-            {key: '公司', value: '公司'},
-            {key: '无', value: '无'}
-        ]},
-        {field_id: 'patent_type', label: '专利-二级', edit: true, type: 'select', select: [
-            {key: '实用新型', value: '实用新型'},
-            {key: '著作权', value: '著作权'},
-            {key: '发明专利', value: '发明专利'},
-            {key: '外观专利', value: '外观专利'},
-            {key: '无', value: '无'}
-        ]},
-        {field_id: 'related', label: '相关联的产品类型和节日', edit: true, type: 'select', select: [
-            {key: '过年相关产品', value: '过年相关产品'},
-            {key: '保存产品的相关产品', value: '保存产品的相关产品'},
-            {key: '厨房产品，情人节', value: '厨房产品，情人节'},
-            {key: '春季开学季', value: '春季开学季'},
-            {key: '三八妇女节', value: '三八妇女节'},
-            {key: '春游秋游相关产品', value: '春游秋游相关产品'},
-            {key: '4月热切冷水杯', value: '4月热切冷水杯'},
-            {key: '520节', value: '520节'},
-            {key: '6.1儿童节', value: '6.1儿童节'},
-            {key: '毕业季', value: '毕业季'},
-            {key: '七夕产品', value: '七夕产品'},
-            {key: '准备购买中秋国庆旅游装备', value: '准备购买中秋国庆旅游装备'},
-            {key: '秋季开学产品', value: '秋季开学产品'},
-            {key: '水具换季', value: '水具换季'},
-            {key: '无', value: '无'},
-            {key: '礼品', value: '礼品'},
-            {key: '春夏泡茶类产品', value: '春夏泡茶类产品'}
-        ]},
-        {field_id: 'schedule_time', label: '预计市场分析过会时间', info: '预计过会时间', required: true, edit: true, type: 'date'},
-        {field_id: 'analyse_link', label: '市场分析表', info: '分析过程中需要附上分析表，确认最终稿', edit: true, required: true, type: 'file'},
-        {field_id: 'complete_time', label: '分析表过会且通过时间', type: 'date'},
-        {field_id: 'sale_purpose', label: '产品销售目的', info: '存量=迭代，增量=填补空白，原来有就叫迭代', 
-            edit: true, required: true, type: 'select', select: [
-            {key: '迭代', value: '迭代'},
-            {key: '填补空白', value: '填补空白'}
-        ]},
-        {field_id: 'exploitation_features', label: '产品开发性质', info: '仅换材料不叫自研', edit: true, required: true, 
-            type: 'select', select: [
-            {key: '通货', value: '通货'},
-            {key: '供应商知识产权', value: '供应商知识产权'},
-            {key: '自研', value: '自研'},
-            {key: 'IP', value: 'IP'}
-        ]},
-        {field_id: 'core_reasons', label: '核心立项理由', edit: true, required: true, type: 'input'},
-        {field_id: 'link', label: '流程链接', type: 'link'},
-        {field_id: 'schedule_arrived_time', label: '预计开发周期（大货时间）', type: 'date'},
-        {field_id: 'schedule_confirm_time', label: '预计样品确认时间', type: 'date'},
-        {field_id: 'product_info', label: '提交产品信息', type: 'input'},
-        {field_id: 'confirm_time', label: '实际样品到货时间', type: 'date'},
-        {field_id: 'order_time', label: '实际订货时间', type: 'date'},
-        {field_id: 'arrived_time', label: '实际大货到货时间', type: 'date'},
-        {field_id: 'brief_product_line', label: '产品线简称', type: 'input'},
-        {field_id: 'expected_monthly_sales', label: '预计月销量', type: 'table'},
-        {field_id: 'goods_ids', label: '各平台上架完毕', type: 'table'},
-        {field_id: 'product_img', label: '对应产品图片', edit: true, required: true, type: 'image'},
-        {field_id: 'remark', label: '特殊备注/要求', 
-            info: '工厂知识产权/独家/有特殊要求，工厂开发有知识产权不能是自研，自研不能工厂有知识产权，如果工厂一定要有知识产权，宝选必须是独家（有合同）', 
-            edit: true, type: 'input'},
-    ]
+developmentService.getProjectData = async (limit, offset, params, type) => {
+    let columns = [], data = [], total = 0, result
     if (params) {
         params = JSON.parse(params)
     } else {
         params = []
     }
-    const {data, total} = await projectManagementRepo.get(limit, offset, params) 
-    // let linkIds = ''
-    // for (let i = 0; i < data.length; i++) {
-    //     if (data[i].link) {
-    //         let chunk = data[i].link.split('?')
-    //         if (chunk?.length == 2) {
-    //             chunk = chunk[1].split('&')
-    //             for (let j = 0; j < chunk.length; j++) {
-    //                 let info = chunk[j].split('=')
-    //                 if (info?.length == 2 && ['procInsId', 'formInstId'].includes(info[0])) {
-    //                     linkIds = `${linkIds}"${info[1]}",`
-    //                     break
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-    // if (linkIds?.length) linkIds = linkIds.substring(0, linkIds.length - 1)
-    // console.log(linkIds)
-    // const result = await newFormsRepo.getDevelopmentData(linkIds)
+    switch (type) {
+        case developConst.SELF: 
+            columns = await selfService.getColumn()
+            result = await selfService.getData(limit, offset, params)
+            break;
+        case developConst.IP: 
+            columns = await ipService.getColumn()
+            result = await ipService.getData(limit, offset, params)
+            break;
+        case developConst.SUPPLIER: 
+            columns = await supplierService.getColumn()
+            result = await supplierService.getData(limit, offset, params)
+            break;
+        case developConst.OPERATOR: 
+            columns = await operatorService.getColumn()
+            result = await operatorService.getData(limit, offset, params)
+            break;
+        default:
+            columns = await projectService.getColumn()
+            result = await projectService.getData(limit, offset, params) 
+    }
+    data = result.data
+    total = result.total
     return {data, columns, total}
 }
 
-developmentService.createProjectData = async (user_id, params) => {
-    let goods = await projectManagementRepo.getByGoodsName(params.goods_name)
-    if (goods?.length) return null
-    const result = await projectManagementRepo.insert([
-        user_id, 
-        0, 
-        params.first_category, 
-        params.second_category,
-        params.third_category,
-        params.type,
-        params.goods_name,
-        params.seasons,
-        params.patent_belongs,
-        params.patent_type,
-        params.related,
-        params.schedule_time,
-        params.analyse_link,
-        params.sale_purpose,
-        params.exploitation_features,
-        params.core_reasons,
-        params.product_img,
-        params.remark
-    ])
-    if (result) {
-        await pmEditLogRepo.insert([
-            'insert',
-            user_id,
-            null,
-            JSON.stringify({
-                exploit_director: user_id, 
-                status: 0, 
-                first_category: params.first_category, 
-                second_category: params.second_category,
-                third_category: params.third_category,
-                type: params.type,
-                goods_name: params.goods_name,
-                seasons: params.seasons,
-                patent_belongs: params.patent_belongs,
-                patent_type: params.patent_type,
-                related: params.related,
-                schedule_time: params.schedule_time,
-                analyse_link: params.analyse_link,
-                sale_purpose: params.sale_purpose,
-                exploitation_features: params.exploitation_features,
-                core_reasons: params.core_reasons,
-                product_img: params.product_img,
-                remark: params.remark
-            })
-        ])
+developmentService.createProjectData = async (user_id, params, type) => {
+    let result = false
+    switch (type) {
+        case developConst.SELF: 
+            result = await selfService.create(user_id, params)
+            break;
+        case developConst.IP: 
+            result = await ipService.create(user_id, params)
+            break;
+        case developConst.SUPPLIER: 
+            result = await supplierService.create(user_id, params)
+            break;
+        case developConst.OPERATOR: 
+            result = await operatorService.create(user_id, params)
+            break;
+        default:
+            result = await projectService.create(user_id, params) 
     }
     return result
 }
 
-developmentService.updateProjectData = async (user_id, id, params) => {
-    let goods = await projectManagementRepo.getById(id)
-    if (!goods?.length) return null
-    // if (goods[0].status != 0) false
-    const result = await projectManagementRepo.update([
-        params.first_category, 
-        params.second_category,
-        params.third_category,
-        params.type,
-        params.goods_name,
-        params.seasons,
-        params.patent_belongs,
-        params.patent_type,
-        params.related,
-        params.schedule_time,
-        params.analyse_link,
-        params.sale_purpose,
-        params.exploitation_features,
-        params.core_reasons,
-        params.product_img,
-        params.remark,
-        id
-    ])
-    if (result) await pmEditLogRepo.insert([
-        'update',
-        user_id,
-        JSON.stringify(goods[0]),
-        JSON.stringify({
-            first_category: params.first_category, 
-            second_category: params.second_category,
-            third_category: params.third_category,
-            type: params.type,
-            goods_name: params.goods_name,
-            seasons: params.seasons,
-            patent_belongs: params.patent_belongs,
-            patent_type: params.patent_type,
-            related: params.related,
-            schedule_time: params.schedule_time,
-            analyse_link: params.analyse_link,
-            sale_purpose: params.sale_purpose,
-            exploitation_features: params.exploitation_features,
-            core_reasons: params.core_reasons,
-            product_img: params.product_img,
-            remark: params.remark,
-            id
-        })
-    ])
+developmentService.updateProjectData = async (user_id, id, params, type) => {
+    let result = false
+    switch (type) {
+        case developConst.SELF: 
+            result = await selfService.update(user_id, id, params)
+            break;
+        case developConst.IP: 
+            result = await ipService.update(user_id, id, params)
+            break;
+        case developConst.SUPPLIER: 
+            result = await supplierService.update(user_id, id, params)
+            break;
+        case developConst.OPERATOR: 
+            result = await operatorService.update(user_id, id, params)
+            break;
+        default:
+            result = await projectService.update(user_id, id, params) 
+    }
     return result
 }
 
-developmentService.updateProjectDataStatus = async (user_id, id, status, dingding_user_id) => {
-    let goods = await projectManagementRepo.getById(id)
-    if (!goods?.length) return null
-    if (goods[0].status != 0 || status == 0) return false
-    const result = await projectManagementRepo.updateStatus(id, status)
+developmentService.start = async (type, id, user_id) => {
+    let mobile = await userRepo.getMobileByUserId(user_id)
+    if (!mobile) return false
+    let token = await systemUsersRepo.getRefreshToken(mobile)
+    if (!token?.length) return false
+    let refresh_token = token[0].refresh_token
+    let goods = {}, updateFunc, processDefinitionId
+    switch (type) {
+        case developConst.SELF: 
+            goods = await selfService.getById(id)
+            goods['category'] = []
+            if (goods.first_category) goods['category'].push(goods.first_category)
+            if (goods.second_category) goods['category'].push(goods.second_category)
+            if (goods.third_category) goods['category'].push(goods.third_category)
+            goods.product_info = [goods.product_info]
+            goods.analysis_link = [goods.analysis_link]
+            goods.product_img = [goods.product_img]
+            updateFunc = selfService.updateLink
+            processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
+                defaultConst.self_title,
+                defaultConst.self_key
+            )
+            break;
+        case developConst.IP: 
+            goods = await ipService.getById(id)
+            goods['category'] = []
+            if (goods.first_category) goods['category'].push(goods.first_category)
+            if (goods.second_category) goods['category'].push(goods.second_category)
+            if (goods.third_category) goods['category'].push(goods.third_category)
+            goods.product_info = [goods.product_info]
+            goods.analysis_link = [goods.analysis_link]
+            goods.product_img = [goods.product_img]
+            updateFunc = ipService.updateLink
+            processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
+                defaultConst.ip_title,
+                defaultConst.ip_key
+            )
+            break;
+        case developConst.SUPPLIER: 
+            goods = await supplierService.getById(id)
+            goods['category'] = []
+            if (goods.first_category) goods['category'].push(goods.first_category)
+            if (goods.second_category) goods['category'].push(goods.second_category)
+            if (goods.third_category) goods['category'].push(goods.third_category)
+            goods.product_info = [goods.product_info]
+            goods.analysis_link = [goods.analysis_link]
+            updateFunc = supplierService.updateLink
+            processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
+                defaultConst.supplier_title,
+                defaultConst.supplier_key
+            )
+            break;
+        case developConst.OPERATOR: 
+            goods = await operatorService.getById(id)
+            goods['category'] = []
+            if (goods.first_category) goods['category'].push(goods.first_category)
+            if (goods.second_category) goods['category'].push(goods.second_category)
+            if (goods.third_category) goods['category'].push(goods.third_category)
+            goods.analysis_link = [goods.analysis_link]
+            updateFunc = operatorService.updateLink
+            processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
+                defaultConst.operator_title,
+                defaultConst.operator_key
+            )
+            break;
+        default:
+            goods = await projectService.getById(id)
+            goods['category'] = []
+            if (goods.first_category) goods['category'].push(goods.first_category)
+            if (goods.second_category) goods['category'].push(goods.second_category)
+            if (goods.third_category) goods['category'].push(goods.third_category)
+            goods.product_info = [goods.product_info]
+            goods.analysis_link = [goods.analysis_link]
+            goods.product_img = [goods.product_img]
+            updateFunc = projectService.updateLink
+            processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
+                defaultConst.project_title,
+                defaultConst.project_key
+            )
+    }
+    if (!goods) return false
+    if (!processDefinitionId) return false
+    let result = await commonReq.createProcessInstance(refresh_token, processDefinitionId, type, goods)
     if (result) {
-        await pmEditLogRepo.insert([
-            'update',
-            user_id,
-            JSON.stringify({id, status: goods[0].status}),
-            JSON.stringify({id, status})
-        ])
-        let params = {}
-        params['employeeField_m9s31pkf'] = [dingding_user_id]
-        params['cascadeSelectField_m4mf17qn'] = [
-            goods[0].first_category, 
-            goods[0].second_category, 
-            goods[0].third_category]
-        params['textField_m9ju9pu8'] = goods[0].type
-        params['textField_m9kpxfs8'] = goods[0].goods_name
-        params['radioField_m9ju9pu9'] = [goods[0].seasons]
-        params['radioField_m9ju9pua'] = [goods[0].patent_belongs]
-        if (goods[0].patent_type)
-            params['radioField_m9ju9pub'] = [goods[0].patent_type]
-        if (goods[0].related)
-            params['radioField_m9ju9puc'] = [goods[0].related]
-        params['dateField_m9ju9pue'] = moment(goods[0].schedule_time).valueOf()
-        params['textField_m9s6jnub'] = goods[0].analyse_link
-        params['radioField_m9ju9puf'] = [goods[0].sale_purpose]
-        params['radioField_m9kpxfs9'] = [goods[0].exploitation_features]
-        params['textareaField_m9mdbbam'] = goods[0].core_reasons
-        params['textField_m9s6jnud'] = goods[0].product_img
-        if (params['textareaField_m9s6jnuc'])
-            params['textareaField_m9s6jnuc'] = goods[0].remark
-        // await createProcess(
-        //     productManageFlowUUid,
-        //     dingding_user_id,
-        //     null,
-        //     JSON.stringify(params)
-        // )
+        await updateFunc(id, result)
     }
     return result
 }

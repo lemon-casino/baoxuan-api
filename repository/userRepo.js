@@ -319,6 +319,12 @@ const getUserByDeptName = async (dept_name) => {
     return result
 }
 
+const getMobileByUserId = async (user_id) => {
+    const sql = `SELECT username AS mobile FROM users WHERE user_id = ?`
+    const result = await query(sql, [user_id])
+    return result?.length ? result[0].mobile : null
+}
+
 module.exports = {
     getUsersByTagCodes,
     getUserWithTags,
@@ -339,5 +345,6 @@ module.exports = {
     getUsersByTagCodesAndNickname,
     getUsersWithTagsByTagCodes,
     getUserByDingdingUserId,
-    getUserByDeptName
+    getUserByDeptName,
+    getMobileByUserId
 }

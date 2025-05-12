@@ -389,7 +389,6 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
         order_num = 0, refund_num = 0, words_market_vol = 0, words_vol = 0
     let shopName = [], j = -1, except = false
     if (typeList[type].key < 2) except = true
-    console.log(typeList[type].key, shops)
     for (let i = 0; i < shops.length; i++) {        
         // let isCoupang = await shopInfoRepo.isCoupang(shops[i].shop_name)
         // if (except && isCoupang) continue
