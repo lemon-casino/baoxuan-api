@@ -2098,4 +2098,38 @@ goodsSaleInfoRepo.getTMPromotion = async(lstart, lend) =>{
     let result = await query(sql)
     return result
 }
+
+goodsSaleInfoRepo.getSaleData = async(lstart,lend,preStart,preEnd,value,name) => {
+    let sql =`select * from (
+            select a.${name} as name
+                        ,SUM(g.sale_amount) as '本期销售额'
+                        ,SUM(g.real_sale_qty) as '本期销售数量' 
+                        ,SUM(g1.sale_amount) as '上期销售额'
+                        ,SUM(g1.real_sale_qty) as '上期销售数量'
+                        ,ROUND((SUM(g.sale_amount)-SUM(g1.sale_amount))/SUM(g1.sale_amount)*100,2) as '销售额环比'
+                        ,ROUND((SUM(g.real_sale_qty)-SUM(g1.real_sale_qty))/SUM(g1.real_sale_qty)*100,2) as '销售数量环比'
+            FROM (SELECT shop_name,SUM(sale_amount)as sale_amount,SUM(real_sale_qty) as real_sale_qty
+            FROM goods_sales WHERE date BETWEEN '${preStart}' and '${preEnd}' GROUP BY shop_name) as g
+            LEFT JOIN (SELECT shop_name,SUM(sale_amount)as sale_amount,SUM(real_sale_qty) as real_sale_qty
+            FROM goods_sales WHERE date BETWEEN '${lstart}' and '${lend}' GROUP BY shop_name) as g1
+            on g.shop_name=g1.shop_name
+            LEFT JOIN (select p.project_name
+                        ,s.shop_name
+                        ,d.division_name
+            from shop_info as s 
+            left join project_info as p 
+            on s.project_id=p.id
+            left join division_info as d 
+            on p.division_id=d.id
+            )as a
+            on g.shop_name=a.shop_name
+            WHERE a.division_name is not null
+            GROUP BY a.${name}
+            )as a`
+    if(value?.length){
+        sql = `${sql} where a.name in (?)`
+    }
+    let result = await query(sql,[value])
+    return result
+}
 module.exports = goodsSaleInfoRepo
