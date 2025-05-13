@@ -2109,9 +2109,9 @@ goodsSaleInfoRepo.getSaleData = async(lstart,lend,preStart,preEnd,value,name) =>
                         ,ROUND((SUM(g.sale_amount)-SUM(g1.sale_amount))/SUM(g1.sale_amount)*100,2) as '销售额环比'
                         ,ROUND((SUM(g.real_sale_qty)-SUM(g1.real_sale_qty))/SUM(g1.real_sale_qty)*100,2) as '销售数量环比'
             FROM (SELECT shop_name,SUM(sale_amount)as sale_amount,SUM(real_sale_qty) as real_sale_qty
-            FROM goods_sales WHERE date BETWEEN '${preStart}' and '${preEnd}' GROUP BY shop_name) as g
+            FROM goods_sales WHERE date BETWEEN '${lstart}' and '${lend}' GROUP BY shop_name) as g
             LEFT JOIN (SELECT shop_name,SUM(sale_amount)as sale_amount,SUM(real_sale_qty) as real_sale_qty
-            FROM goods_sales WHERE date BETWEEN '${lstart}' and '${lend}' GROUP BY shop_name) as g1
+            FROM goods_sales WHERE date BETWEEN '${preStart}' and '${preEnd}' GROUP BY shop_name) as g1
             on g.shop_name=g1.shop_name
             LEFT JOIN (select p.project_name
                         ,s.shop_name
