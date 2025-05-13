@@ -16,8 +16,8 @@ selfService.getColumn = async () => {
         {field_id: 'goods_name', label: '立项产品名称', info: '名称不许重复', edit: true, required: true, fixed: true, type: 'input'},
         {field_id: 'seasons', label: '产品销售季节', info: '填写主力售卖时间', edit: true, required: true, type: 'select', select: selfConst.SEASON_LIST},
         {field_id: 'patent_belongs', label: '专利归属', edit: true, required: true, type: 'select', select: selfConst.PATENT_BELONGS_LIST},
-        {field_id: 'patent_type', label: '专利-二级', edit: true, type: 'select', select: selfConst.PATENT_TYPE_LIST},
-        {field_id: 'related', label: '相关联的产品类型和节日', edit: true, type: 'select', select: selfConst.RELATED_LIST},
+        {field_id: 'patent_type', label: '专利-二级', edit: true, required: true, type: 'select', select: selfConst.PATENT_TYPE_LIST},
+        {field_id: 'related', label: '相关联的产品类型和节日', edit: true, required: true, type: 'select', select: selfConst.RELATED_LIST},
         {field_id: 'analyse_link', label: '市场分析表', info: '分析过程中需要附上分析表，确认最终稿', edit: true, required: true, type: 'file'},
         {field_id: 'sale_purpose', label: '产品销售目的', info: '存量=迭代，增量=填补空白，原来有就叫迭代', 
             edit: true, required: true, type: 'select', select: selfConst.SALE_PURPOSE_LIST},
@@ -45,7 +45,7 @@ selfService.getColumn = async () => {
 
 selfService.getData = async (limit, offset, params) => {
     const {data, total} = await selfManagementRepo.get(limit, offset, params)
-    
+
     return {data, total}
 }
 

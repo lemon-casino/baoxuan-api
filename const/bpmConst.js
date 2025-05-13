@@ -1,6 +1,6 @@
 const bpmConst = {
-    host: 'http://bpm.pakchoice.cn:8848/baoxuan',
-    webHost: 'http://bpm.pakchoice.cn:8848',
+    host: 'http://localhost:48080',
+    webHost: 'http://localhost:5173',
     webLink: {
         instanceDetail: '/bpm/process-instance/detail?id='
     },

@@ -22,8 +22,8 @@ supplierService.getColumn = async () => {
         {field_id: 'goods_type', label: '产品属性', edit: true, required: true, type: 'select', select: supplierConst.GOODS_TYPE_LIST},
         {field_id: 'seasons', label: '产品销售季节', info: '填写主力售卖时间', edit: true, required: true, type: 'select', select: supplierConst.SEASON_LIST},
         {field_id: 'patent_belongs', label: '专利归属', edit: true, required: true, type: 'select', select: supplierConst.PATENT_BELONGS_LIST},
-        {field_id: 'patent_type', label: '专利-二级', edit: true, type: 'select', select: supplierConst.PATENT_TYPE_LIST},
-        {field_id: 'related', label: '相关联的产品类型和节日', edit: true, type: 'select', select: supplierConst.RELATED_LIST},
+        {field_id: 'patent_type', label: '专利-二级', edit: true, required: true, type: 'select', select: supplierConst.PATENT_TYPE_LIST},
+        {field_id: 'related', label: '相关联的产品类型和节日', edit: true, required: true, type: 'select', select: supplierConst.RELATED_LIST},
         {field_id: 'sale_purpose', label: '产品销售目的', info: '存量=迭代，增量=填补空白，原来有就叫迭代', 
             edit: true, required: true, type: 'select', select: supplierConst.SALE_PURPOSE_LIST},
         {field_id: 'link', label: '流程链接', type: 'link', info: '后面填供应商推品流程'},
@@ -44,7 +44,7 @@ supplierService.getColumn = async () => {
 
 supplierService.getData = async (limit, offset, params) => {
     const {data, total} = await supplierRecommendRepo.get(limit, offset, params)
-    
+
     return {data, total}
 }
 

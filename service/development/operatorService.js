@@ -17,9 +17,9 @@ operatorService.getColumn = async () => {
         {field_id: 'second_category', label: '二级类目', info: '基于天猫类目1-4级', edit: true, required: true, type: 'input'},
         {field_id: 'third_category', label: '三级类目', info: '基于天猫类目1-4级', edit: true, type: 'input'},
         {field_id: 'seasons', label: '产品销售季节', info: '填写主力售卖时间', edit: true, required: true, type: 'select', select: operatorConst.SEASON_LIST},
-        {field_id: 'related', label: '相关联的产品类型和节日', edit: true, type: 'select', select: operatorConst.RELATED_LIST},
+        {field_id: 'related', label: '相关联的产品类型和节日', edit: true, required: true, type: 'select', select: operatorConst.RELATED_LIST},
         {field_id: 'patent_belongs', label: '专利归属', edit: true, required: true, type: 'select', select: operatorConst.PATENT_BELONGS_LIST},
-        {field_id: 'patent_type', label: '专利-二级', edit: true, type: 'select', select: operatorConst.PATENT_TYPE_LIST},
+        {field_id: 'patent_type', label: '专利-二级', edit: true, required: true, type: 'select', select: operatorConst.PATENT_TYPE_LIST},
         {field_id: 'sale_type', label: '供应商产品销售方式', edit: true, required: true, type: 'select', select: operatorConst.SALE_TYPE_LIST},
         {field_id: 'status', label: '反推进度', type: 'select', select: operatorConst.STATUS_LIST, info: '目标为16工时找到货品给结果'},
         {field_id: 'sale_purpose', label: '产品销售目的', info: '存量=迭代，增量=填补空白，原来有就叫迭代', 
@@ -46,7 +46,7 @@ operatorService.getData = async (limit, offset, params) => {
         for (let index in defaultConst.operator_params_related) {
             if (!data[i][index]) {
                 if (defaultConst.operator_params_related[index] instanceof String) {
-                    
+
                 }
             }
         }
