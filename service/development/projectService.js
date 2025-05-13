@@ -16,8 +16,8 @@ projectService.getColumn = async () => {
         {field_id: 'goods_name', label: '立项产品名称', info: '名称不许重复', edit: true, required: true, fixed: true, type: 'input'},
         {field_id: 'seasons', label: '产品销售季节', info: '填写主力售卖时间', edit: true, required: true, type: 'select', select: projectConst.SEASON_LIST},
         {field_id: 'patent_belongs', label: '专利归属', edit: true, required: true, type: 'select', select: projectConst.PATENT_BELONGS_LIST},
-        {field_id: 'patent_type', label: '专利-二级', edit: true, type: 'select', select: projectConst.PATENT_TYPE_LIST},
-        {field_id: 'related', label: '相关联的产品类型和节日', edit: true, type: 'select', select: projectConst.RELATED_LIST},
+        {field_id: 'patent_type', label: '专利-二级', edit: true, required: true, type: 'select', select: projectConst.PATENT_TYPE_LIST},
+        {field_id: 'related', label: '相关联的产品类型和节日', edit: true, required: true, type: 'select', select: projectConst.RELATED_LIST},
         {field_id: 'schedule_time', label: '预计市场分析过会时间', info: '预计过会时间', required: true, edit: true, type: 'date'},
         {field_id: 'design_type', label: '设计定义', required: true, edit: true, type: 'select', select: projectConst.DESIGN_TYPE_LIST},
         {field_id: 'analyse_link', label: '市场分析表', info: '分析过程中需要附上分析表，确认最终稿', edit: true, required: true, type: 'file'},
@@ -48,7 +48,7 @@ projectService.getColumn = async () => {
 
 projectService.getData = async (limit, offset, params) => {
     const {data, total} = await projectManagementRepo.get(limit, offset, params)
-    
+
     return {data, total}
 }
 
@@ -56,6 +56,8 @@ projectService.create = async (user_id, params) => {
     let goods = await projectManagementRepo.getByGoodsName(params.goods_name)
     if (goods?.length) return null
     params.schedule_time = moment(params.schedule_time).format('YYYY-MM-DD')
+    params.schedule_arrived_time = moment(params.schedule_arrived_time).format('YYYY-MM-DD')
+    params.schedule_confirm_time = moment(params.schedule_confirm_time).format('YYYY-MM-DD')
     const result = await projectManagementRepo.insert([
         user_id, 
         projectConst.STATUS.PENDING, 
@@ -69,12 +71,16 @@ projectService.create = async (user_id, params) => {
         params.patent_type,
         params.related,
         params.schedule_time,
+        params.design_type,
         params.analyse_link,
         params.sale_purpose,
         params.exploitation_features,
         params.core_reasons,
+        params.schedule_arrived_time,
+        params.schedule_confirm_time,
+        params.product_info,
+        params.brief_product_line,
         params.product_img,
-        params.project_status,
         params.remark
     ])
     if (result) {
@@ -96,12 +102,16 @@ projectService.create = async (user_id, params) => {
                 patent_type: params.patent_type,
                 related: params.related,
                 schedule_time: params.schedule_time,
+                design_type: params.design_type,
                 analyse_link: params.analyse_link,
                 sale_purpose: params.sale_purpose,
                 exploitation_features: params.exploitation_features,
                 core_reasons: params.core_reasons,
+                schedule_arrived_time: params.schedule_arrived_time,
+                schedule_confirm_time: params.schedule_confirm_time,
+                product_info: params.product_info,
+                brief_product_line: params.brief_product_line,
                 product_img: params.product_img,
-                project_status: params.project_status,
                 remark: params.remark
             })
         ])
@@ -113,6 +123,8 @@ projectService.update = async (user_id, id, params) => {
     let goods = await projectManagementRepo.getById(id)
     if (!goods?.length) return null
     params.schedule_time = moment(params.schedule_time).format('YYYY-MM-DD')
+    params.schedule_arrived_time = moment(params.schedule_arrived_time).format('YYYY-MM-DD')
+    params.schedule_confirm_time = moment(params.schedule_confirm_time).format('YYYY-MM-DD')
     const result = await projectManagementRepo.update([
         params.first_category, 
         params.second_category,
@@ -124,10 +136,15 @@ projectService.update = async (user_id, id, params) => {
         params.patent_type,
         params.related,
         params.schedule_time,
+        params.design_type,
         params.analyse_link,
         params.sale_purpose,
         params.exploitation_features,
         params.core_reasons,
+        params.schedule_arrived_time,
+        params.schedule_confirm_time,
+        params.product_info,
+        params.brief_product_line,
         params.product_img,
         params.project_status,
         params.remark,
@@ -149,10 +166,15 @@ projectService.update = async (user_id, id, params) => {
             patent_type: params.patent_type,
             related: params.related,
             schedule_time: params.schedule_time,
+            design_type: params.design_type,
             analyse_link: params.analyse_link,
             sale_purpose: params.sale_purpose,
             exploitation_features: params.exploitation_features,
             core_reasons: params.core_reasons,
+            schedule_arrived_time: params.schedule_arrived_time,
+            schedule_confirm_time: params.schedule_confirm_time,
+            product_info: params.product_info,
+            brief_product_line: params.brief_product_line,
             product_img: params.product_img,
             project_status: params.project_status,
             remark: params.remark,

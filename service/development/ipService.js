@@ -16,10 +16,10 @@ ipService.getColumn = async () => {
         {field_id: 'goods_name', label: '立项产品名称', info: '名称不许重复', edit: true, required: true, fixed: true, type: 'input'},
         {field_id: 'seasons', label: '产品销售季节', info: '填写主力售卖时间', edit: true, required: true, type: 'select', select: ipConst.SEASON_LIST},
         {field_id: 'patent_belongs', label: '专利归属', edit: true, required: true, type: 'select', select: ipConst.PATENT_BELONGS_LIST},
-        {field_id: 'patent_type', label: '专利-二级', edit: true, type: 'select', select: ipConst.PATENT_TYPE_LIST},
-        {field_id: 'related', label: '相关联的产品类型和节日', edit: true, type: 'select', select: ipConst.RELATED_LIST},
+        {field_id: 'patent_type', label: '专利-二级', edit: true, required: true, type: 'select', select: ipConst.PATENT_TYPE_LIST},
+        {field_id: 'related', label: '相关联的产品类型和节日', edit: true, required: true, type: 'select', select: ipConst.RELATED_LIST},
         {field_id: 'project_type', label: '立项性质', edit: true, required: true, type: 'select', select: ipConst.PROJECT_TYPE_LIST},
-        {field_id: 'decision_making', label: '立项决策（已DM是否平替）', type: 'select', select: ipConst.DECISION_MAKING_LIST},
+        {field_id: 'decision_making', label: '立项决策（已DM是否平替）', edit: true, required: true, type: 'select', select: ipConst.DECISION_MAKING_LIST},
         {field_id: 'analyse_link', label: '市场分析表', info: '分析过程中需要附上分析表，确认最终稿', edit: true, required: true, type: 'file'},
         {field_id: 'link', label: '流程链接', type: 'link', info: '后面填自研流程'},
         {field_id: 'schedule_arrived_time', label: '预计开发周期（大货时间）', edit: true, required: true, type: 'date', info: '对产品上市时间进行预期，产品立项要有上架销售时间'},
@@ -45,7 +45,7 @@ ipService.getColumn = async () => {
 
 ipService.getData = async (limit, offset, params) => {
     const {data, total} = await ipManagementRepo.get(limit, offset, params)
-    
+
     return {data, total}
 }
 
@@ -67,6 +67,7 @@ ipService.create = async (user_id, params) => {
         params.patent_type,
         params.related,
         params.project_type,
+        params.decision_making,
         params.analyse_link,
         params.schedule_arrived_time,
         params.schedule_confirm_time,
@@ -94,6 +95,7 @@ ipService.create = async (user_id, params) => {
                 patent_type: params.patent_type,
                 related: params.related,
                 project_type: params.project_type,
+                decision_making: params.decision_making,
                 analyse_link: params.analyse_link,
                 schedule_arrived_time: params.schedule_arrived_time,
                 schedule_confirm_time: params.schedule_confirm_time,
@@ -123,6 +125,7 @@ ipService.update = async (user_id, id, params) => {
         params.patent_type,
         params.related,
         params.project_type,
+        params.decision_making,
         params.analyse_link,
         params.schedule_arrived_time,
         params.schedule_confirm_time,
@@ -148,6 +151,7 @@ ipService.update = async (user_id, id, params) => {
             patent_type: params.patent_type,
             related: params.related,
             project_type: params.project_type,
+            decision_making: params.decision_making,
             analyse_link: params.analyse_link,
             schedule_arrived_time: params.schedule_arrived_time,
             schedule_confirm_time: params.schedule_confirm_time,

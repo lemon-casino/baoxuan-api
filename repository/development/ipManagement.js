@@ -57,6 +57,7 @@ ipManagementRepo.insert = async (data) => {
             patent_type,
             related,
             project_type,
+            decision_making,
             analyse_link,
             schedule_arrived_time,
             schedule_confirm_time,
@@ -64,7 +65,7 @@ ipManagementRepo.insert = async (data) => {
             brief_product_line,
             product_img,
             remark,
-            update_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())`
+            update_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())`
     const result = await query(sql, data)
     return result?.affectedRows ? true : false
 }
@@ -73,9 +74,10 @@ ipManagementRepo.update = async (data) => {
     let sql = `UPDATE ip_develop_management SET first_category = ?, 
         second_category = ?, third_category = ?, type = ?, goods_name = ?, 
         seasons = ?, patent_belongs = ?, patent_type = ?, related = ?, 
-        project_type = ?, analyse_link = ?, schedule_arrived_time = ?, 
-        schedule_confirm_time = ?, product_info = ?, brief_product_line = ?, 
-        product_img = ?, remark = ?, update_time = NOW() WHERE id = ?`
+        project_type = ?, decision_making = ?, analyse_link = ?, 
+        schedule_arrived_time = ?, schedule_confirm_time = ?, 
+        product_info = ?, brief_product_line = ?, product_img = ?, 
+        remark = ?, update_time = NOW() WHERE id = ?`
     const result = await query(sql, data)
     return result?.affectedRows ? true : false
 }

@@ -57,14 +57,18 @@ projectManagementRepo.insert = async (data) => {
             patent_type,
             related,
             schedule_time,
+            design_type,
             analyse_link,
             sale_purpose,
             exploitation_features,
             core_reasons,
+            schedule_arrived_time,
+            schedule_confirm_time,
+            product_info,
+            brief_product_line,
             product_img,
-            project_status,
             remark,
-            update_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())`
+            update_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())`
     const result = await query(sql, data)
     return result?.affectedRows ? true : false
 }
@@ -73,9 +77,10 @@ projectManagementRepo.update = async (data) => {
     let sql = `UPDATE develop_project_management SET first_category = ?, 
         second_category = ?, third_category = ?, type = ?, goods_name = ?, 
         seasons = ?, patent_belongs = ?, patent_type = ?, related = ?, 
-        schedule_time = ?, analyse_link = ?, sale_purpose = ?, 
-        exploitation_features = ?, core_reasons = ?, product_img = ?, remark = ?, 
-        project_status = ?, update_time = NOW() WHERE id = ?`
+        schedule_time = ?, design_type = ?, analyse_link = ?, sale_purpose = ?, 
+        exploitation_features = ?, core_reasons = ?, schedule_arrived_time = ?, 
+        schedule_confirm_time = ?, product_info = ?, brief_product_line = ?, 
+        product_img = ?, remark = ?, project_status = ?, update_time = NOW() WHERE id = ?`
     const result = await query(sql, data)
     return result?.affectedRows ? true : false
 }
