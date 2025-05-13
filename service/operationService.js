@@ -814,7 +814,7 @@ const getGoodsInfoDetail = async (column, goods_id, shop_name, start, end, stats
     let data=[]
     let setting = []
     let func = stats == 'verified' ? goodsSaleVerifiedRepo : goodsSaleInfoRepo
-    if (['sale_amount', 'cost_amount', 'operation_amount', 'promotion_amount', 'express_fee', 'profit'].includes(column))
+    if (['sale_amount', 'cost_amount', 'operation_amount', 'promotion_amount', 'express_fee', 'profit','real_sale_amount','real_sale_qty','real_gross_profit'].includes(column))
         data = await func.getDataDetailByTime(column, goods_id, start, end)
     else if (column == 'operation_rate')
         data = await func.getDataRateByTime('sale_amount', 'operation_amount', column, goods_id, start, end, 100)
