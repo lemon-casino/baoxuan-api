@@ -866,7 +866,6 @@ const getReportInfo = async (req, res, next) => {
 }
 
 const getSaleData = async (req, res, next) => {
-    console.log(req.query)
     try {
         const {startDate, endDate,value,name} = req.query
         joiUtil.validate({
@@ -880,7 +879,6 @@ const getSaleData = async (req, res, next) => {
         let preStart = moment(startDate).subtract(daysDifference, 'day').format('YYYY-MM-DD')
         let preEnd = moment(endDate).subtract(daysDifference, 'day').format('YYYY-MM-DD')
         let result=[]
-        console.log(value)
         result = await operationService.getSaleData(lstart,lend,preStart,preEnd,value,name)
         
         return res.send(biResponse.success(result))
