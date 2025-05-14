@@ -11,7 +11,6 @@ const developmentService = {}
 const { createProcess } =  require('./dingDingService')
 const { productManageFlowUUid } = require("../const/operationConst")
 const goodsCategoryRepo = require('@/repository/goodsCategoryRepo')
-const developConst = require('../const/development/defaultConst')
 const projectService = require('./development/projectService')
 const selfService = require('./development/selfService')
 const ipService = require('./development/ipService')
@@ -96,7 +95,7 @@ developmentService.getWorkDetail = async (start, end, id) => {
     return result
 }
 
-developmentService.getProjectData = async (limit, offset, params, type) => {
+developmentService.getProjectData = async (limit, offset, params, type, user_id) => {
     let columns = [], data = [], total = 0, result
     if (params) {
         params = JSON.parse(params)
@@ -104,25 +103,25 @@ developmentService.getProjectData = async (limit, offset, params, type) => {
         params = []
     }
     switch (type) {
-        case developConst.SELF: 
+        case defaultConst.SELF: 
             columns = await selfService.getColumn()
-            result = await selfService.getData(limit, offset, params)
+            result = await selfService.getData(limit, offset, params, user_id)
             break;
-        case developConst.IP: 
+        case defaultConst.IP: 
             columns = await ipService.getColumn()
-            result = await ipService.getData(limit, offset, params)
+            result = await ipService.getData(limit, offset, params, user_id)
             break;
-        case developConst.SUPPLIER: 
+        case defaultConst.SUPPLIER: 
             columns = await supplierService.getColumn()
-            result = await supplierService.getData(limit, offset, params)
+            result = await supplierService.getData(limit, offset, params, user_id)
             break;
-        case developConst.OPERATOR: 
+        case defaultConst.OPERATOR: 
             columns = await operatorService.getColumn()
-            result = await operatorService.getData(limit, offset, params)
+            result = await operatorService.getData(limit, offset, params, user_id)
             break;
         default:
             columns = await projectService.getColumn()
-            result = await projectService.getData(limit, offset, params) 
+            result = await projectService.getData(limit, offset, params, user_id) 
     }
     data = result.data
     total = result.total
@@ -132,16 +131,16 @@ developmentService.getProjectData = async (limit, offset, params, type) => {
 developmentService.createProjectData = async (user_id, params, type) => {
     let result = false
     switch (type) {
-        case developConst.SELF: 
+        case defaultConst.SELF: 
             result = await selfService.create(user_id, params)
             break;
-        case developConst.IP: 
+        case defaultConst.IP: 
             result = await ipService.create(user_id, params)
             break;
-        case developConst.SUPPLIER: 
+        case defaultConst.SUPPLIER: 
             result = await supplierService.create(user_id, params)
             break;
-        case developConst.OPERATOR: 
+        case defaultConst.OPERATOR: 
             result = await operatorService.create(user_id, params)
             break;
         default:
@@ -153,16 +152,16 @@ developmentService.createProjectData = async (user_id, params, type) => {
 developmentService.updateProjectData = async (user_id, id, params, type) => {
     let result = false
     switch (type) {
-        case developConst.SELF: 
+        case defaultConst.SELF: 
             result = await selfService.update(user_id, id, params)
             break;
-        case developConst.IP: 
+        case defaultConst.IP: 
             result = await ipService.update(user_id, id, params)
             break;
-        case developConst.SUPPLIER: 
+        case defaultConst.SUPPLIER: 
             result = await supplierService.update(user_id, id, params)
             break;
-        case developConst.OPERATOR: 
+        case defaultConst.OPERATOR: 
             result = await operatorService.update(user_id, id, params)
             break;
         default:
@@ -177,9 +176,9 @@ developmentService.start = async (type, id, user_id) => {
     let token = await systemUsersRepo.getRefreshToken(mobile)
     if (!token?.length) return false
     let refresh_token = token[0].refresh_token
-    let goods = {}, updateFunc, processDefinitionId
+    let goods = {}, updateFunc, updateStatusFunc, processDefinitionId
     switch (type) {
-        case developConst.SELF: 
+        case defaultConst.SELF: 
             goods = await selfService.getById(id)
             goods['category'] = []
             if (goods.first_category) goods['category'].push(goods.first_category)
@@ -189,12 +188,13 @@ developmentService.start = async (type, id, user_id) => {
             goods.analysis_link = [goods.analysis_link]
             goods.product_img = [goods.product_img]
             updateFunc = selfService.updateLink
+            updateStatusFunc = selfService.updateLinkStatus
             processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
                 defaultConst.self_title,
                 defaultConst.self_key
             )
             break;
-        case developConst.IP: 
+        case defaultConst.IP: 
             goods = await ipService.getById(id)
             goods['category'] = []
             if (goods.first_category) goods['category'].push(goods.first_category)
@@ -204,12 +204,13 @@ developmentService.start = async (type, id, user_id) => {
             goods.analysis_link = [goods.analysis_link]
             goods.product_img = [goods.product_img]
             updateFunc = ipService.updateLink
+            updateStatusFunc = ipService.updateLinkStatus
             processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
                 defaultConst.ip_title,
                 defaultConst.ip_key
             )
             break;
-        case developConst.SUPPLIER: 
+        case defaultConst.SUPPLIER: 
             goods = await supplierService.getById(id)
             goods['category'] = []
             if (goods.first_category) goods['category'].push(goods.first_category)
@@ -218,19 +219,22 @@ developmentService.start = async (type, id, user_id) => {
             goods.product_info = [goods.product_info]
             goods.analysis_link = [goods.analysis_link]
             updateFunc = supplierService.updateLink
+            updateStatusFunc = supplierService.updateLinkStatus
             processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
                 defaultConst.supplier_title,
                 defaultConst.supplier_key
             )
             break;
-        case developConst.OPERATOR: 
+        case defaultConst.OPERATOR: 
             goods = await operatorService.getById(id)
             goods['category'] = []
             if (goods.first_category) goods['category'].push(goods.first_category)
             if (goods.second_category) goods['category'].push(goods.second_category)
             if (goods.third_category) goods['category'].push(goods.third_category)
             goods.analysis_link = [goods.analysis_link]
+            goods['user_id'] = refresh_token
             updateFunc = operatorService.updateLink
+            updateStatusFunc = operatorService.updateLinkStatus
             processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
                 defaultConst.operator_title,
                 defaultConst.operator_key
@@ -246,6 +250,7 @@ developmentService.start = async (type, id, user_id) => {
             goods.analysis_link = [goods.analysis_link]
             goods.product_img = [goods.product_img]
             updateFunc = projectService.updateLink
+            updateStatusFunc = projectService.updateLinkStatus
             processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
                 defaultConst.project_title,
                 defaultConst.project_key
@@ -255,7 +260,8 @@ developmentService.start = async (type, id, user_id) => {
     if (!processDefinitionId) return false
     let result = await commonReq.createProcessInstance(refresh_token, processDefinitionId, type, goods)
     if (result) {
-        await updateFunc(id, result)
+        await updateFunc(user_id, id, result)
+        await updateStatusFunc(user_id, id, null, defaultConst.link_status.RUNNING)
     }
     return result
 }

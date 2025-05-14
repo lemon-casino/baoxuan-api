@@ -46,6 +46,7 @@ supplierRecommendRepo.get = async (limit, offset, params) => {
 supplierRecommendRepo.insert = async (data) => {
     let sql = `INSERT INTO supplier_recommend_management(
             exploit_director,
+            \`status\`
             recommend_time,
             brief_product_line,
             first_category,
@@ -64,7 +65,7 @@ supplierRecommendRepo.insert = async (data) => {
             sale_purpose,
             product_img,
             remark,
-            update_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())`
+            update_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())`
     const result = await query(sql, data)
     return result?.affectedRows ? true : false
 }
@@ -91,6 +92,20 @@ supplierRecommendRepo.updateLink = async (id, link) => {
     let sql = `UPDATE supplier_recommend_management SET link = ?, 
         update_time = NOW() WHERE id = ?`
     const result = await query(sql, [link, id])
+    return result?.affectedRows ? true : false
+}
+
+supplierRecommendRepo.updateLinkStatus = async (id, status) => {
+    let sql = `UPDATE supplier_recommend_management SET link_status = ?, 
+        update_time = NOW() WHERE id = ?`
+    const result = await query(sql, [status, id])
+    return result?.affectedRows ? true : false
+}
+
+supplierRecommendRepo.updateExtraValue = async (id, key, value) => {
+    let sql = `UPDATE supplier_recommend_management SET ${key} = ?, 
+        update_time = NOW() WHERE id = ?`
+    const result = await query(sql, [value, id])
     return result?.affectedRows ? true : false
 }
 

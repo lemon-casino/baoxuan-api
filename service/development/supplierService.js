@@ -4,11 +4,13 @@ const pmEditLogRepo = require('@/repository/development/pmEditLog')
 const defaultConst = require('@/const/development/defaultConst')
 const supplierService = {}
 const moment = require('moment')
+const actHiTaskinstRepo = require('@/repository/bpm/actHiTaskinstRepo')
+const actHiVarinstRepo = require('@/repository/bpm/actHiVarinstRepo')
 
 supplierService.getColumn = async () => {
     const columns = [
         {field_id: 'exploit_director', label: '开发负责人', type: 'input', fixed: true},
-        {field_id: 'status', label: '市场分析进度', type: 'select', fixed: true, select: supplierConst.STATUS_LIST, info: 'IT抓取流程结果'},
+        {field_id: 'status', label: '选品进度', type: 'select', fixed: true, select: supplierConst.STATUS_LIST, info: 'IT抓取流程结果'},
         {field_id: 'recommend_time', label: '推品日期', edit: true, required: true, type: 'date', fixed: true},
         {field_id: 'brief_product_line', label: '产品线简称', edit: true, required: true, type: 'input', fixed: true, info: '核心关键词+确认辅助/提炼核心转化理由（人群/场景/功能/风格）+价位段(低/中低/中高/高)+内部款号（举例密封袋，功能/颜色）密封袋母婴拉链中高价位（用老的ID，继承原有数据。产品线要迭代，系统要有修改日志，）'},
         {field_id: 'first_category', label: '一级类目', info: '基于天猫类目1-4级', edit: true, required: true, fixed: true, type: 'input'},
@@ -42,18 +44,71 @@ supplierService.getColumn = async () => {
     return columns
 }
 
-supplierService.getData = async (limit, offset, params) => {
+supplierService.getData = async (limit, offset, params, user_id) => {
     const {data, total} = await supplierRecommendRepo.get(limit, offset, params)
-
+    for (let i = 0; i < data.length; i++) {
+        if (data[i].link_status == 0) {
+            let instanceId = data[i].link.split('=')[1]
+            let status = await actHiVarinstRepo.getStatus(instanceId)
+            if ([defaultConst.process_status.APPROVE, 
+                defaultConst.process_status.REJECT,
+                defaultConst.process_status.CANCEL].includes(status)) {
+                supplierService.updateLinkStatus(data[i].id, defaultConst.link_status.FINISH)
+            }
+            for (let index in defaultConst.supplier_params_related) {
+                if (!data[i][index]) {
+                    if (defaultConst.supplier_params_related[index]['params']) {
+                        let info = await actHiVarinstRepo.getValue(
+                            instanceId, 
+                            defaultConst.supplier_params_related[index]['params']
+                        )
+                        for (let j = 0; j < info?.length; j++) {
+                            if (info[j].type == 0) {
+                                data[i][index] = `${data[i][index]}${info[j].value},`
+                            }
+                        }
+                        data[i][index] = data[i][index]?.length ? 
+                            data[i][index].substring(0, data[i][index]?.length - 1) : 
+                            data[i][index]
+                        supplierService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                    } else {
+                        let info = await actHiTaskinstRepo.getNodeTime(
+                            instanceId, 
+                            defaultConst.supplier_params_related[index]['node']
+                        )
+                        if (index == 'status') {
+                            let status = await actHiVarinstRepo.getTaskStatus(
+                                instanceId, 
+                                defaultConst.supplier_params_related[index]['node']
+                            )
+                            if (status == defaultConst.TASK_STATUS.APPROVE) {
+                                data[i][index] = supplierConst.STATUS.SUCCESS
+                                supplierService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                            } else if ([defaultConst.TASK_STATUS.CANCEL, defaultConst.TASK_STATUS.REJECT].includes(status)) {
+                                data[i][index] = supplierConst.STATUS.FAILED
+                                supplierService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                            }
+                        } else {
+                            data[i][index] = info
+                            supplierService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                        }
+                    }
+                }
+            }
+        }
+    }
     return {data, total}
 }
 
 supplierService.create = async (user_id, params) => {
     let goods = await supplierRecommendRepo.getByGoodsName(params.goods_name)
     if (goods?.length) return null
+    let otherGoods = await supplierRecommendRepo.getByGoodsName(params.goods_name)
+    if (otherGoods.id && otherGoods.id != id) return null
     params.recommend_time = moment(params.recommend_time).format('YYYY-MM-DD')
     const result = await supplierRecommendRepo.insert([
         user_id, 
+        supplierConst.STATUS.RUNNING,
         params.recommend_time, 
         params.brief_product_line, 
         params.first_category, 
@@ -81,6 +136,7 @@ supplierService.create = async (user_id, params) => {
             null,
             JSON.stringify({
                 exploit_director: user_id, 
+                status: supplierConst.STATUS.RUNNING,
                 recommend_time: params.recommend_time, 
                 brief_product_line: params.brief_product_line, 
                 first_category: params.first_category, 
@@ -163,8 +219,45 @@ supplierService.getById = async (id) => {
     return result?.length ? result[0] : null
 }
 
-supplierService.updateLink = async (id, link) => {
+supplierService.updateLink = async (user_id, id, link) => {
     const result = await supplierRecommendRepo.updateLink(id, link)
+    if (result)
+        await pmEditLogRepo.insert([
+            defaultConst.LOG_TYPE.UPDATE,
+            defaultConst.SUPPLIER,
+            user_id,
+            null,
+            JSON.stringify({link})
+        ])
+    return result
+}
+
+supplierService.updateLinkStatus = async (user_id, id, origin_status, status) => {
+    const result = await supplierRecommendRepo.updateLinkStatus(id, status)
+    if (result)
+        await pmEditLogRepo.insert([
+            defaultConst.LOG_TYPE.UPDATE,
+            defaultConst.SUPPLIER,
+            user_id,
+            JSON.stringify({link_status: origin_status}),
+            JSON.stringify({link_status: status})
+        ])
+    return result
+}
+
+supplierService.updateExtraValue = async (user_id, id, key, value) => {
+    const result = await supplierRecommendRepo.updateExtraValue(id, key, value)
+    if (result) {
+        let info = {}
+        info[key] = value
+        await pmEditLogRepo.insert([
+            defaultConst.LOG_TYPE.UPDATE,
+            defaultConst.SUPPLIER,
+            user_id,
+            null,
+            JSON.stringify(info)
+        ])
+    }
     return result
 }
 

@@ -1,11 +1,13 @@
 const supplierConst = {
     STATUS: {
         SUCCESS: 1, //选中-运营立项
-        FAILED: 0, //未选中
+        FAILED: -1, //未选中
+        RUNNING: 0  //进行中
     },
     STATUS_LIST: [
         {key: 1, value: '选中-运营立项'},
-        {key: 0, value: '未选中'},
+        {key: -1, value: '未选中'},
+        {key: 0, value: '进行中'},
     ],
     SUPPLIER_TYPE_LIST: [
         {key: '新供应商', value: '新供应商'},

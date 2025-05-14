@@ -4,6 +4,8 @@ const pmEditLogRepo = require('@/repository/development/pmEditLog')
 const defaultConst = require('@/const/development/defaultConst')
 const projectService = {}
 const moment = require('moment')
+const actHiVarinstRepo = require('@/repository/bpm/actHiVarinstRepo')
+const actHiTaskinstRepo = require('@/repository/bpm/actHiTaskinstRepo')
 
 projectService.getColumn = async () => {
     const columns = [
@@ -46,9 +48,59 @@ projectService.getColumn = async () => {
     return columns
 }
 
-projectService.getData = async (limit, offset, params) => {
+projectService.getData = async (limit, offset, params, user_id) => {
     const {data, total} = await projectManagementRepo.get(limit, offset, params)
-
+    for (let i = 0; i < data.length; i++) {
+        if (data[i].link_status == 0) {
+            let instanceId = data[i].link.split('=')[1]
+            let status = await actHiVarinstRepo.getStatus(instanceId)
+            if ([defaultConst.process_status.APPROVE, 
+                defaultConst.process_status.REJECT,
+                defaultConst.process_status.CANCEL].includes(status)) {
+                projectService.updateLinkStatus(data[i].id, defaultConst.link_status.FINISH)
+            }
+            for (let index in defaultConst.project_params_related) {
+                if (!data[i][index]) {
+                    if (defaultConst.project_params_related[index]['params']) {
+                        let info = await actHiVarinstRepo.getValue(
+                            instanceId, 
+                            defaultConst.project_params_related[index]['params']
+                        )
+                        for (let j = 0; j < info?.length; j++) {
+                            if (info[j].type == 0) {
+                                data[i][index] = `${data[i][index]}${info[j].value},`
+                            }
+                        }
+                        data[i][index] = data[i][index]?.length ? 
+                            data[i][index].substring(0, data[i][index]?.length - 1) : 
+                            data[i][index]
+                        projectService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                    } else {
+                        let info = await actHiTaskinstRepo.getNodeTime(
+                            instanceId, 
+                            defaultConst.project_params_related[index]['node']
+                        )
+                        if (index == 'status') {
+                            let status = await actHiVarinstRepo.getTaskStatus(
+                                instanceId, 
+                                defaultConst.project_params_related[index]['node']
+                            )
+                            if (status == defaultConst.TASK_STATUS.APPROVE) {
+                                data[i][index] = projectConst.STATUS.SUCCESS
+                                projectService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                            } else if ([defaultConst.TASK_STATUS.CANCEL, defaultConst.TASK_STATUS.REJECT].includes(status)) {
+                                data[i][index] = projectConst.STATUS.FAILED
+                                projectService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                            }
+                        } else {
+                            data[i][index] = info
+                            projectService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                        }
+                    }
+                }
+            }
+        }
+    }
     return {data, total}
 }
 
@@ -122,6 +174,8 @@ projectService.create = async (user_id, params) => {
 projectService.update = async (user_id, id, params) => {
     let goods = await projectManagementRepo.getById(id)
     if (!goods?.length) return null
+    let otherGoods = await projectManagementRepo.getByGoodsName(params.goods_name)
+    if (otherGoods.id && otherGoods.id != id) return null
     params.schedule_time = moment(params.schedule_time).format('YYYY-MM-DD')
     params.schedule_arrived_time = moment(params.schedule_arrived_time).format('YYYY-MM-DD')
     params.schedule_confirm_time = moment(params.schedule_confirm_time).format('YYYY-MM-DD')
@@ -189,8 +243,45 @@ projectService.getById = async (id) => {
     return result?.length ? result[0] : null
 }
 
-projectService.updateLink = async (id, link) => {
+projectService.updateLink = async (user_id, id, link) => {
     const result = await projectManagementRepo.updateLink(id, link)
+    if (result)
+        await pmEditLogRepo.insert([
+            defaultConst.LOG_TYPE.UPDATE,
+            defaultConst.PROJECT,
+            user_id,
+            null,
+            JSON.stringify({link})
+        ])
+    return result
+}
+
+projectService.updateLinkStatus = async (user_id, id, origin_status, status) => {
+    const result = await projectManagementRepo.updateLinkStatus(id, status)
+    if (result)
+        await pmEditLogRepo.insert([
+            defaultConst.LOG_TYPE.UPDATE,
+            defaultConst.PROJECT,
+            user_id,
+            JSON.stringify({link_status: origin_status}),
+            JSON.stringify({link_status: status})
+        ])
+    return result
+}
+
+projectService.updateExtraValue = async (user_id, id, key, value) => {
+    const result = await projectManagementRepo.updateExtraValue(id, key, value)
+    if (result) {
+        let info = {}
+        info[key] = value
+        await pmEditLogRepo.insert([
+            defaultConst.LOG_TYPE.UPDATE,
+            defaultConst.PROJECT,
+            user_id,
+            null,
+            JSON.stringify(info)
+        ])
+    }
     return result
 }
 

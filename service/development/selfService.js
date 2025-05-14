@@ -4,6 +4,8 @@ const pmEditLogRepo = require('@/repository/development/pmEditLog')
 const defaultConst = require('@/const/development/defaultConst')
 const selfService = {}
 const moment = require('moment')
+const actHiVarinstRepo = require('@/repository/bpm/actHiVarinstRepo')
+const actHiTaskinstRepo = require('@/repository/bpm/actHiTaskinstRepo')
 
 selfService.getColumn = async () => {
     const columns = [
@@ -43,9 +45,59 @@ selfService.getColumn = async () => {
     return columns
 }
 
-selfService.getData = async (limit, offset, params) => {
+selfService.getData = async (limit, offset, params, user_id) => {
     const {data, total} = await selfManagementRepo.get(limit, offset, params)
-
+    for (let i = 0; i < data.length; i++) {
+        if (data[i].link_status == 0) {
+            let instanceId = data[i].link.split('=')[1]
+            let status = await actHiVarinstRepo.getStatus(instanceId)
+            if ([defaultConst.process_status.APPROVE, 
+                defaultConst.process_status.REJECT,
+                defaultConst.process_status.CANCEL].includes(status)) {
+                selfService.updateLinkStatus(data[i].id, defaultConst.link_status.FINISH)
+            }
+            for (let index in defaultConst.self_params_related) {
+                if (!data[i][index]) {
+                    if (defaultConst.self_params_related[index]['params']) {
+                        let info = await actHiVarinstRepo.getValue(
+                            instanceId, 
+                            defaultConst.self_params_related[index]['params']
+                        )
+                        for (let j = 0; j < info?.length; j++) {
+                            if (info[j].type == 0) {
+                                data[i][index] = `${data[i][index]}${info[j].value},`
+                            }
+                        }
+                        data[i][index] = data[i][index]?.length ? 
+                            data[i][index].substring(0, data[i][index]?.length - 1) : 
+                            data[i][index]
+                        selfService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                    } else {
+                        let info = await actHiTaskinstRepo.getNodeTime(
+                            instanceId, 
+                            defaultConst.self_params_related[index]['node']
+                        )
+                        if (index == 'status') {
+                            let status = await actHiVarinstRepo.getTaskStatus(
+                                instanceId, 
+                                defaultConst.self_params_related[index]['node']
+                            )
+                            if (status == defaultConst.TASK_STATUS.APPROVE) {
+                                data[i][index] = selfConst.STATUS.SUCCESS
+                                selfService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                            } else if ([defaultConst.TASK_STATUS.CANCEL, defaultConst.TASK_STATUS.REJECT].includes(status)) {
+                                data[i][index] = selfConst.STATUS.FAILED
+                                selfService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                            }
+                        } else {
+                            data[i][index] = info
+                            selfService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                        }
+                    }
+                }
+            }
+        }
+    }
     return {data, total}
 }
 
@@ -116,6 +168,8 @@ selfService.create = async (user_id, params) => {
 selfService.update = async (user_id, id, params) => {
     let goods = await selfManagementRepo.getById(id)
     if (!goods?.length || goods[0].link != null) return null
+    let otherGoods = await selfManagementRepo.getByGoodsName(params.goods_name)
+    if (otherGoods.id && otherGoods.id != id) return null
     params.schedule_arrived_time = moment(params.schedule_arrived_time).format('YYYY-MM-DD')
     params.schedule_confirm_time = moment(params.schedule_confirm_time).format('YYYY-MM-DD')
     const result = await selfManagementRepo.update([
@@ -178,8 +232,45 @@ selfService.getById = async (id) => {
     return result?.length ? result[0] : null
 }
 
-selfService.updateLink = async (id, link) => {
+selfService.updateLink = async (user_id, id, link) => {
     const result = await selfManagementRepo.updateLink(id, link)
+    if (result)
+        await pmEditLogRepo.insert([
+            defaultConst.LOG_TYPE.UPDATE,
+            defaultConst.SELF,
+            user_id,
+            null,
+            JSON.stringify({link})
+        ])
+    return result
+}
+
+selfService.updateLinkStatus = async (user_id, id, origin_status, status) => {
+    const result = await selfManagementRepo.updateLinkStatus(id, status)
+    if (result)
+        await pmEditLogRepo.insert([
+            defaultConst.LOG_TYPE.UPDATE,
+            defaultConst.SELF,
+            user_id,
+            JSON.stringify({link_status: origin_status}),
+            JSON.stringify({link_status: status})
+        ])
+    return result
+}
+
+selfService.updateExtraValue = async (user_id, id, key, value) => {
+    const result = await selfManagementRepo.updateExtraValue(id, key, value)
+    if (result) {
+        let info = {}
+        info[key] = value
+        await pmEditLogRepo.insert([
+            defaultConst.LOG_TYPE.UPDATE,
+            defaultConst.SELF,
+            user_id,
+            null,
+            JSON.stringify(info)
+        ])
+    }
     return result
 }
 

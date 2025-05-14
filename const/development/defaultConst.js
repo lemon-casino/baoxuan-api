@@ -10,6 +10,26 @@ const defaultConst = {
         UPDATE: 'update'
     },
 
+    process_status: {
+        NOT_START: -1,
+        RUNNING: 1,
+        APPROVE: 2,
+        REJECT: 3,
+        CANCEL: 4
+    },
+
+    TASK_STATUS: {
+        APPROVE: 2,
+        REJECT: 3,
+        CANCEL: 4
+    },
+
+    link_status: {
+        DEFAULT: -1,
+        RUNNING: 0,
+        FINISH: 1
+    },
+
     project_title: '市场推广推品流程',
     project_key: 'sctgtplc',
     project_params: {
@@ -21,10 +41,15 @@ const defaultConst = {
         patent_type: 'F2cqma3omoitb5c',
         related: 'Fbaqma3onfyqb8c',
         schedule_time: 'Fckama3opwdfbbc',
+        design_type: 'F3p2ma3oqbiabec',
         analyse_link: 'Cfidvbjy22qes',
         sale_purpose: 'Fbejma3orj6objc',
         exploitation_features: 'Fbu2ma3os6s8bmc',
         core_reasons: 'Fltema3p6ljrbpc',
+        schedule_arrived_time: 'Fw29ma3p705cbsc',
+        schedule_confirm_time: 'Fkpima3p7cd0bvc',
+        product_info: 'Cfidjhk1jb293',
+        brief_product_line: 'Fj0jma3p8evsc0c',
         product_img: 'Cfidpl3a7e5tm',
         remark: 'Fv1umai7a21acuc'
     },
@@ -78,14 +103,21 @@ const defaultConst = {
         status: {
             node: ['终审立项']
         },
-        expected_monthly_sales: ['货品汇总判断订货量'],
-        confirm_time: ['杭州确认样品'],
-        order_time: ['填写订货合同'],
+        expected_monthly_sales: {
+            node: ['货品汇总判断订货量']
+        },
+        confirm_time: {
+            node: ['杭州确认样品']
+        },
+        order_time: {
+            node: ['填写订货合同']
+        },
         arrived_time: {
             params: ['Fkm9ma3pyjsbh7c'],
-            node: ['确定到仓时间']
         },
-        goods_ids: 'finish'
+        goods_ids: {
+            params: ['Fejnma3pxrw1gqc', 'Fuibma3py3dch0c', 'Fb9oma3py81ah5c']
+        }
     },
 
     ip_title: 'IP推品流程',
@@ -99,6 +131,7 @@ const defaultConst = {
         patent_type: 'F2cqma3omoitb5c',
         related: 'Fbaqma3onfyqb8c',
         project_type: 'F91kmai75w18arc',
+        decision_making: 'Faqhmai76cqjauc',
         analyse_link: 'Cfidvbjy22qes',
         schedule_arrived_time: 'Fw29ma3p705cbsc',
         schedule_confirm_time: 'Fkpima3p7cd0bvc',
@@ -108,19 +141,36 @@ const defaultConst = {
         remark: 'Fq06mai77e3maxc'
     },
     ip_params_related: {
-        status: ['终审立项'],
-        expected_monthly_sales: ['货品汇总判断订货量'],
-        design_review_time: ['IP设计监修'],
-        sample_review_time: ['设计报样品IP监修'],
-        confirm_time: ['杭州确认样品'],
-        product_review_time: ['设计报大货设计监修'],
-        vision_review_time: ['开始视觉并视觉监修'],
-        order_time: ['填写订货量及订货合同'],
+        status: {
+            node: ['终审立项']
+        },
+        expected_monthly_sales: {
+            node: ['货品汇总判断订货量']
+        },
+        design_review_time: {
+            node: ['IP设计监修']
+        },
+        sample_review_time: {
+            node: ['设计报样品IP监修']
+        },
+        confirm_time: {
+            node: ['杭州确认样品']
+        },
+        product_review_time: {
+            node: ['设计报大货设计监修']
+        },
+        vision_review_time: {
+            node: ['开始视觉并视觉监修']
+        },
+        order_time: {
+            node: ['填写订货量及订货合同']
+        },
         arrived_time: {
             params: ['Fkm9ma3pyjsbh7c'],
-            node: ['确定到仓时间']
         },
-        goods_ids: 'finish'
+        goods_ids: {
+            params: ['Fejnma3pxrw1gqc', 'Fuibma3py3dch0c', 'Fb9oma3py81ah5c']
+        }
     },
 
     supplier_title: '供应商推品流程',
@@ -144,23 +194,30 @@ const defaultConst = {
         remark: 'Fb35mai7b790duc'
     },
     supplier_params_related: {
-        status: ['审核产品'],
-        schedule_confirm_time: {
-            params: ['Fn8ema24ab8zbmc'],
-            node: ['开发寄样，填写快递单号']
+        status: {
+            node: ['审核产品']
         },
-        confirm_time: ['杭州样品收到确认'],
+        schedule_confirm_time: {
+            params: ['Fn8ema24ab8zbmc']
+        },
+        confirm_time: {
+            node: ['杭州样品收到确认']
+        },
         analyse_link: {
             params: ['Cfid7h60opf5z', 'Cfideil88tv6a', 'Cfidlfqo2bh4s'],
+        },
+        expected_monthly_sales: {
             node: ['汇总货品并判断订货数量']
         },
-        expected_monthly_sales: ['汇总货品并判断订货数量'],
-        order_time: ['采购执行人签订周转合同'],
+        order_time: {
+            node: ['采购执行人签订周转合同']
+        },
         arrived_time: {
             params: ['F69vma29vaqec7c'],
-            node: ['仓库负责人确认货到仓入库时间']
         },
-        goods_ids: 'finish'
+        goods_ids: {
+            params: ['Fyvmma25isbtf4c', 'F183ma25jl5sffc', 'Fmvrma25jqhlflc']
+        }
     },
 
     operator_title: '反推推品流程',
@@ -168,6 +225,7 @@ const defaultConst = {
     operator_params: {
         project: 'Fj1ama2csbpoabc',
         recommend_time: 'Fo8xmai7pq5gb8c',
+        user_id: 'Cfidbxyi2vqjo',
         analyse_link: 'Cfid2frytpxdj',
         category: 'Foaomaknt8tlbec', 
         seasons: 'Fcjjma2elxdqabc',
@@ -180,30 +238,42 @@ const defaultConst = {
         remark: 'Fy8xmai7amwqdbc'
     },
     operator_params_related: {
-        status: ['事业部一负责人审核', '事业部二负责人审核', '事业部三负责人审核'],
+        status: {
+            params: ['Fsaqma2et04janc', 'Fd94ma3j5t4me4c', 'Fuusma3kfq9tinc', 'F2e7ma3l2n9vk8c', 'Fm06ma3kixpkj7c']
+        },
+        patent_belongs: {
+            params: ['Fd74ma2eqxsgaec']
+        },
+        patent_type: {
+            params: ['F8ghma2erfjrahc']
+        },
+        sale_type: {
+            params: ['Fyfuma2esicvakc']
+        },
         product_info: {
             params: ['Cfidtpsmmff8d'],
-            node: ['开发寄样，填写快递单号']
         },
         product_img: {
             params: ['Cfidkv5b7kw4k'],
-            node: ['反选1上传产品信息', '反选2上传产品信息', '反选3上传产品信息', '反选4上传产品信息', '开发执行人跟进']
         },
         schedule_confirm_time: {
             params: ['Fuhmma2eu7d4atc'],
-            node: ['反选1上传产品信息', '反选2上传产品信息', '反选3上传产品信息', '反选4上传产品信息', '开发执行人跟进']
         },
-        confirm_time: ['杭州运营确认样品'],
-        expected_monthly_sales: ['汇总货品并判断订货量'],
+        confirm_time: {
+            node: ['杭州运营确认样品']
+        },
+        expected_monthly_sales: {
+            node: ['汇总货品并判断订货量']
+        },
         order_time: {
             params: ['Fp5oma2ewqhkb4c'],
-            node: ['填写合同']
         },
         arrived_time: {
             params: ['Fiw0ma3jh33nggc'],
-            node: ['仓库负责人确认货到仓入库时间']
         },
-        goods_ids: 'finish'
+        goods_ids: {
+            params: ['F7wxma3jio5ngmc', 'Fg6bma3jj21jh0c', 'Fvv8ma3jj87kh4c']
+        }
     },
 }
 
