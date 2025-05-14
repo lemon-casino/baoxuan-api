@@ -50,13 +50,10 @@ operatorRecommendRepo.insert = async (data) => {
             third_category,
             seasons,
             related,
-            patent_belongs,
-            patent_type,
-            sale_type,
             sale_purpose,
             brief_product_line,
             remark,
-            update_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())`
+            update_time) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,NOW())`
     const result = await query(sql, data)
     return result?.affectedRows ? true : false
 }
@@ -64,9 +61,8 @@ operatorRecommendRepo.insert = async (data) => {
 operatorRecommendRepo.update = async (data) => {
     let sql = `UPDATE operator_recommend_management SET project = ?, recommend_time = ?, 
         analyse_link = ?, first_category = ?, second_category = ?, third_category = ?, 
-        seasons = ?, related = ?, patent_belongs = ?, patent_type = ?, sale_type = ?, 
-        sale_purpose = ?, brief_product_line = ?, remark = ?, update_time = NOW() 
-        WHERE id = ?`
+        seasons = ?, related = ?, sale_purpose = ?, brief_product_line = ?, remark = ?, 
+        update_time = NOW() WHERE id = ?`
     const result = await query(sql, data)
     return result?.affectedRows ? true : false
 }
@@ -82,6 +78,20 @@ operatorRecommendRepo.updateLink = async (id, link) => {
     let sql = `UPDATE operator_recommend_management SET link = ?, 
         update_time = NOW() WHERE id = ?`
     const result = await query(sql, [link, id])
+    return result?.affectedRows ? true : false
+}
+
+operatorRecommendRepo.updateLinkStatus = async (id, status) => {
+    let sql = `UPDATE operator_recommend_management SET link_status = ?, 
+        update_time = NOW() WHERE id = ?`
+    const result = await query(sql, [status, id])
+    return result?.affectedRows ? true : false
+}
+
+operatorRecommendRepo.updateExtraValue = async (id, key, value) => {
+    let sql = `UPDATE operator_recommend_management SET ${key} = ?, 
+        update_time = NOW() WHERE id = ?`
+    const result = await query(sql, [value, id])
     return result?.affectedRows ? true : false
 }
 

@@ -4,6 +4,8 @@ const pmEditLogRepo = require('@/repository/development/pmEditLog')
 const defaultConst = require('@/const/development/defaultConst')
 const ipService = {}
 const moment = require('moment')
+const actHiVarinstRepo = require('@/repository/bpm/actHiVarinstRepo')
+const actHiTaskinstRepo = require('@/repository/bpm/actHiTaskinstRepo')
 
 ipService.getColumn = async () => {
     const columns = [
@@ -43,9 +45,56 @@ ipService.getColumn = async () => {
     return columns
 }
 
-ipService.getData = async (limit, offset, params) => {
+ipService.getData = async (limit, offset, params, user_id) => {
     const {data, total} = await ipManagementRepo.get(limit, offset, params)
-
+    for (let i = 0; i < data.length; i++) {
+        if (data[i].link_status == 0) {
+            let instanceId = data[i].link.split('=')[1]
+            let status = await actHiVarinstRepo.getStatus(instanceId)
+            if ([defaultConst.process_status.APPROVE, 
+                defaultConst.process_status.REJECT,
+                defaultConst.process_status.CANCEL].includes(status)) {
+                ipService.updateLinkStatus(data[i].id, defaultConst.link_status.FINISH)
+            }
+            for (let index in defaultConst.ip_params_related) {
+                if (!data[i][index]) {
+                    if (defaultConst.ip_params_related[index]['params']) {
+                        let info = await actHiVarinstRepo.getValue(
+                            instanceId, 
+                            defaultConst.ip_params_related[index]['params']
+                        )
+                        for (let j = 0; j < info?.length; j++) {
+                            if (info[j].type == 0) {
+                                data[i][index] = `${data[i][index]}${info[j].value},`
+                            }
+                        }
+                        data[i][index] = data[i][index]?.length ? 
+                            data[i][index].substring(0, data[i][index]?.length - 1) : 
+                            data[i][index]
+                        ipService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                    } else {
+                        let info = await actHiTaskinstRepo.getNodeTime(
+                            instanceId, 
+                            defaultConst.ip_params_related[index]['node']
+                        )
+                        if (index == 'status') {
+                            let status = await actHiVarinstRepo.getTaskStatus(
+                                instanceId, 
+                                defaultConst.ip_params_related[index]['node']
+                            )
+                            if (status == defaultConst.TASK_STATUS.APPROVE) {
+                                data[i][index] = ipConst.STATUS.SUCCESS
+                                ipService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                            }
+                        } else {
+                            data[i][index] = info
+                            ipService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                        }
+                    }
+                }
+            }
+        }
+    }
     return {data, total}
 }
 
@@ -112,6 +161,8 @@ ipService.create = async (user_id, params) => {
 ipService.update = async (user_id, id, params) => {
     let goods = await ipManagementRepo.getById(id)
     if (!goods?.length || goods[0].link != null) return null
+    let otherGoods = await ipManagementRepo.getByGoodsName(params.goods_name)
+    if (otherGoods.id && otherGoods.id != id) return null
     params.schedule_arrived_time = moment(params.schedule_arrived_time).format('YYYY-MM-DD')
     params.schedule_confirm_time = moment(params.schedule_confirm_time).format('YYYY-MM-DD')
     const result = await ipManagementRepo.update([
@@ -170,8 +221,45 @@ ipService.getById = async (id) => {
     return result?.length ? result[0] : null
 }
 
-ipService.updateLink = async (id, link) => {
+ipService.updateLink = async (user_id, id, link) => {
     const result = await ipManagementRepo.updateLink(id, link)
+    if (result)
+        await pmEditLogRepo.insert([
+            defaultConst.LOG_TYPE.UPDATE,
+            defaultConst.IP,
+            user_id,
+            null,
+            JSON.stringify({link})
+        ])
+    return result
+}
+
+ipService.updateLinkStatus = async (user_id, id, origin_status, status) => {
+    const result = await ipManagementRepo.updateLinkStatus(id, status)
+    if (result)
+        await pmEditLogRepo.insert([
+            defaultConst.LOG_TYPE.UPDATE,
+            defaultConst.IP,
+            user_id,
+            JSON.stringify({link_status: origin_status}),
+            JSON.stringify({link_status: status})
+        ])
+    return result
+}
+
+ipService.updateExtraValue = async (user_id, id, key, value) => {
+    const result = await ipManagementRepo.updateExtraValue(id, key, value)
+    if (result) {
+        let info = {}
+        info[key] = value
+        await pmEditLogRepo.insert([
+            defaultConst.LOG_TYPE.UPDATE,
+            defaultConst.IP,
+            user_id,
+            null,
+            JSON.stringify(info)
+        ])
+    }
     return result
 }
 

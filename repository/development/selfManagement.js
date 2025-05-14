@@ -98,4 +98,18 @@ selfManagementRepo.updateLink = async (id, link) => {
     return result?.affectedRows ? true : false
 }
 
+selfManagementRepo.updateLinkStatus = async (id, status) => {
+    let sql = `UPDATE self_develop_management SET link_status = ?, 
+        update_time = NOW() WHERE id = ?`
+    const result = await query(sql, [status, id])
+    return result?.affectedRows ? true : false
+}
+
+selfManagementRepo.updateExtraValue = async (id, key, value) => {
+    let sql = `UPDATE self_develop_management SET ${key} = ?, 
+        update_time = NOW() WHERE id = ?`
+    const result = await query(sql, [value, id])
+    return result?.affectedRows ? true : false
+}
+
 module.exports = selfManagementRepo

@@ -64,7 +64,7 @@ const getProjectData = async (req, res, next) => {
         })
         let limit = parseInt(pageSize)
         let offset = (currentPage - 1) * pageSize
-        const result = await developmentService.getProjectData(limit, offset, req.query.search, type)
+        const result = await developmentService.getProjectData(limit, offset, req.query.search, type, req.user.id)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -96,7 +96,7 @@ const updateProjectData = async (req, res, next) => {
             return res.send(biResponse.success(result))
         else if (result === false)
             return res.send(biResponse.createFailed())
-        return res.send(biResponse.createFailed('立项不存在'))
+        return res.send(biResponse.createFailed('立项产品名称已存在或立项不存在'))
     } catch (e) {
         next(e)
     }
