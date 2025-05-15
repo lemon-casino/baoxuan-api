@@ -64,7 +64,7 @@ const defaultConst = {
             node: ['杭州确认样品1', '杭州确认样品2', '杭州确认样品3']
         },
         expected_monthly_sales: {
-            node: ['F6gkma3pfcjfd1c']
+            params: ['F6gkma3pfcjfd1c']
         },
         order_time: {
             node: ['填写订货合同1', '填写订货合同2', '填写订货合同3']
