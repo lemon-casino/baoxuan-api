@@ -64,7 +64,7 @@ const defaultConst = {
             node: ['杭州确认样品1', '杭州确认样品2', '杭州确认样品3']
         },
         expected_monthly_sales: {
-            node: ['货品汇总判断订货量1', '货品汇总判断订货量2', '货品汇总判断订货量3']
+            node: ['F6gkma3pfcjfd1c']
         },
         order_time: {
             node: ['填写订货合同1', '填写订货合同2', '填写订货合同3']
@@ -74,6 +74,26 @@ const defaultConst = {
         },
         goods_ids: {
             params: ['Fejnma3pxrw1gqc', 'Fuibma3py3dch0c', 'Fb9oma3py81ah5c']
+        }
+    },
+    project_params_yida: {
+        complete_time: {
+            node: ['node_oclwekm6l81', 'node_oclxo08rk42', 'node_ocm5ut9eh46']
+        },
+        status: {
+            node: ['node_oclwekm6l81', 'node_oclxo08rk42', 'node_ocm5ut9eh46']
+        },
+        confirm_time: {
+            node: ['node_oclv2c2ehf1', 'node_ocm422dnchj']
+        },
+        expected_monthly_sales: {
+            params: ['tableField_m1g2w3gr', 'tableField_m1g2w3gr']
+        },
+        order_time: {
+            node: ['node_ocm734nlmea', 'node_oclkxfaina1', 'node_ocm1klukik7']
+        },
+        arrived_time: {
+            node: ['node_ocm734nlmec', 'node_ocly2rqoe41', 'node_ocm1kmfmv82']
         }
     },
 
@@ -104,7 +124,7 @@ const defaultConst = {
             node: ['终审立项']
         },
         expected_monthly_sales: {
-            node: ['货品汇总判断订货量']
+            params: ['F6gkma3pfcjfd1c']
         },
         confirm_time: {
             node: ['杭州确认样品']
@@ -118,7 +138,7 @@ const defaultConst = {
         goods_ids: {
             params: ['Fejnma3pxrw1gqc', 'Fuibma3py3dch0c', 'Fb9oma3py81ah5c']
         }
-    },
+    }, 
 
     ip_title: 'IP推品流程',
     ip_key: 'iptplc',
@@ -145,7 +165,7 @@ const defaultConst = {
             node: ['终审立项']
         },
         expected_monthly_sales: {
-            node: ['货品汇总判断订货量']
+            params: ['F6gkma3pfcjfd1c']
         },
         design_review_time: {
             node: ['IP设计监修']
@@ -207,7 +227,7 @@ const defaultConst = {
             params: ['Cfid7h60opf5z', 'Cfideil88tv6a', 'Cfidlfqo2bh4s'],
         },
         expected_monthly_sales: {
-            node: ['汇总货品并判断订货数量']
+            params: ['Fig2ma24zzz9brc']
         },
         order_time: {
             node: ['采购执行人签订周转合同']
@@ -217,6 +237,26 @@ const defaultConst = {
         },
         goods_ids: {
             params: ['Fyvmma25isbtf4c', 'F183ma25jl5sffc', 'Fmvrma25jqhlflc']
+        }
+    },
+    supplier_params_yida: {
+        status: {
+            node: ['node_oclwekm6l81', 'node_oclxo08rk42', 'node_ocm5ut9eh46']
+        },
+        confirm_time: {
+            node: ['node_oclv2c2ehf1', 'node_ocm422dnchj']
+        },
+        analyse_link: {
+            params: ['attachmentField_m4kwkur3', 'attachmentField_lvesa8t5']
+        },
+        expected_monthly_sales: {
+            params: ['tableField_m1g2w3gr', 'tableField_m1g2w3gr']
+        },
+        order_time: {
+            node: ['node_ocm734nlmea', 'node_oclkxfaina1', 'node_ocm1klukik7']
+        },
+        arrived_time: {
+            node: ['node_ocm734nlmec', 'node_ocly2rqoe41', 'node_ocm1kmfmv82']
         }
     },
 
@@ -263,7 +303,7 @@ const defaultConst = {
             node: ['杭州运营确认样品']
         },
         expected_monthly_sales: {
-            node: ['汇总货品并判断订货量']
+            params: ['Fcilma2exazkb7c']
         },
         order_time: {
             params: ['Fp5oma2ewqhkb4c'],
@@ -273,6 +313,32 @@ const defaultConst = {
         },
         goods_ids: {
             params: ['F7wxma3jio5ngmc', 'Fg6bma3jj21jh0c', 'Fvv8ma3jj87kh4c']
+        }
+    },
+    operator_params_yida: {
+        status: {
+            node: ['node_oclwekm6l81', 'node_oclxo08rk42', 'node_ocm5ut9eh46']
+        },
+        confirm_time: {
+            node: ['node_oclv2c2ehf1', 'node_ocm422dnchj']
+        },
+        patent_belongs: {
+            params: ['radioField_m1hhyk7e']
+        },
+        patent_type: {
+            params: ['checkboxField_m1hhyk7f']
+        },
+        product_img: {
+            params: ['attachmentField_m2ivm1hh', 'imageField_m2y6bawu']
+        },
+        expected_monthly_sales: {
+            params: ['tableField_m1g2w3gr', 'tableField_m1g2w3gr']
+        },
+        order_time: {
+            node: ['node_ocm734nlmea', 'node_oclkxfaina1', 'node_ocm1klukik7']
+        },
+        arrived_time: {
+            node: ['node_ocm734nlmec', 'node_ocly2rqoe41', 'node_ocm1kmfmv82']
         }
     },
 }

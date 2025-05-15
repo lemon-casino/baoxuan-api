@@ -44,55 +44,60 @@ operatorService.getData = async (limit, offset, params, user_id) => {
     const {data, total} = await operatorRecommendRepo.get(limit, offset, params)
     for (let i = 0; i < data.length; i++) {
         if (data[i].link_status == 0) {
-            let instanceId = data[i].link.split('=')[1]
-            let status = await actHiVarinstRepo.getStatus(instanceId)
-            if ([defaultConst.process_status.APPROVE, 
-                defaultConst.process_status.REJECT,
-                defaultConst.process_status.CANCEL].includes(status)) {
-                operatorService.updateLinkStatus(data[i].id, defaultConst.link_status.FINISH)
-            }
-            for (let index in defaultConst.operator_params_related) {
-                if (!data[i][index]) {
-                    if (defaultConst.operator_params_related[index]['params']) {                        
-                        if (index == 'status') {
-                            let list = await actHiVarinstRepo.getStatusInfo(
-                                instanceId, 
-                                defaultConst.operator_params_related[index]['params']
-                            )
-                            for (let k = 0; k < list?.length; k++) {
-                                if (list[k].value == '找到') {
-                                    data[i][index] = operatorConst.STATUS.SUCCESS
+            let linkInfo = data[i].link.split('='), instanceId
+            if (linkInfo.length == 2) {
+                instanceId = linkInfo[1]
+                let status = await actHiVarinstRepo.getStatus(instanceId)
+                if ([defaultConst.process_status.APPROVE, 
+                    defaultConst.process_status.REJECT,
+                    defaultConst.process_status.CANCEL].includes(status)) {
+                    operatorService.updateLinkStatus(data[i].id, defaultConst.link_status.FINISH)
+                }
+                for (let index in defaultConst.operator_params_related) {
+                    if (!data[i][index]) {
+                        if (defaultConst.operator_params_related[index]['params']) {                        
+                            if (index == 'status') {
+                                let list = await actHiVarinstRepo.getStatusInfo(
+                                    instanceId, 
+                                    defaultConst.operator_params_related[index]['params']
+                                )
+                                for (let k = 0; k < list?.length; k++) {
+                                    if (list[k].value == '找到') {
+                                        data[i][index] = operatorConst.STATUS.SUCCESS
+                                        operatorService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                                    }
+                                }
+                                if (data[i][index] == null && list?.length == defaultConst.operator_params_related[index]['params'].length) {
+                                    data[i][index] = operatorConst.STATUS.FAILED
                                     operatorService.updateExtraValue(user_id, data[i].id, index, data[i][index])
                                 }
-                            }
-                            if (data[i][index] == null && list?.length == defaultConst.operator_params_related[index]['params'].length) {
-                                data[i][index] = operatorConst.STATUS.FAILED
+                            } else {
+                                let info = await actHiVarinstRepo.getValue(
+                                    instanceId, 
+                                    defaultConst.operator_params_related[index]['params']
+                                )
+                                for (let j = 0; j < info?.length; j++) {
+                                    if (info[j].type == 0) {
+                                        data[i][index] = `${data[i][index]}${info[j].value},`
+                                    }
+                                }
+                                data[i][index] = data[i][index]?.length ? 
+                                    data[i][index].substring(0, data[i][index]?.length - 1) : 
+                                    data[i][index]
                                 operatorService.updateExtraValue(user_id, data[i].id, index, data[i][index])
                             }
                         } else {
-                            let info = await actHiVarinstRepo.getValue(
+                            let info = await actHiTaskinstRepo.getNodeTime(
                                 instanceId, 
-                                defaultConst.operator_params_related[index]['params']
+                                defaultConst.operator_params_related[index]['node']
                             )
-                            for (let j = 0; j < info?.length; j++) {
-                                if (info[j].type == 0) {
-                                    data[i][index] = `${data[i][index]}${info[j].value},`
-                                }
-                            }
-                            data[i][index] = data[i][index]?.length ? 
-                                data[i][index].substring(0, data[i][index]?.length - 1) : 
-                                data[i][index]
+                            data[i][index] = info
                             operatorService.updateExtraValue(user_id, data[i].id, index, data[i][index])
                         }
-                    } else {
-                        let info = await actHiTaskinstRepo.getNodeTime(
-                            instanceId, 
-                            defaultConst.operator_params_related[index]['node']
-                        )
-                        data[i][index] = info
-                        operatorService.updateExtraValue(user_id, data[i].id, index, data[i][index])
                     }
                 }
+            } else {
+                
             }
         }
     }

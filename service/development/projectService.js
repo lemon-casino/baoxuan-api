@@ -52,52 +52,58 @@ projectService.getData = async (limit, offset, params, user_id) => {
     const {data, total} = await projectManagementRepo.get(limit, offset, params)
     for (let i = 0; i < data.length; i++) {
         if (data[i].link_status == 0) {
-            let instanceId = data[i].link.split('=')[1]
-            let status = await actHiVarinstRepo.getStatus(instanceId)
-            if ([defaultConst.process_status.APPROVE, 
-                defaultConst.process_status.REJECT,
-                defaultConst.process_status.CANCEL].includes(status)) {
-                projectService.updateLinkStatus(data[i].id, defaultConst.link_status.FINISH)
-            }
-            for (let index in defaultConst.project_params_related) {
-                if (!data[i][index]) {
-                    if (defaultConst.project_params_related[index]['params']) {
-                        let info = await actHiVarinstRepo.getValue(
-                            instanceId, 
-                            defaultConst.project_params_related[index]['params']
-                        )
-                        for (let j = 0; j < info?.length; j++) {
-                            if (info[j].type == 0) {
-                                data[i][index] = `${data[i][index]}${info[j].value},`
+            let linkInfo = data[i].link.split('='), instanceId
+            if (linkInfo.length == 2) {
+                instanceId = linkInfo[1]            
+                let status = await actHiVarinstRepo.getStatus(instanceId)
+                if ([defaultConst.process_status.APPROVE, 
+                    defaultConst.process_status.REJECT,
+                    defaultConst.process_status.CANCEL].includes(status)) {
+                    projectService.updateLinkStatus(data[i].id, defaultConst.link_status.FINISH)
+                }
+                for (let index in defaultConst.project_params_related) {
+                    if (!data[i][index]) {
+                        if (defaultConst.project_params_related[index]['params']) {
+                            let info = await actHiVarinstRepo.getValue(
+                                instanceId, 
+                                defaultConst.project_params_related[index]['params']
+                            )
+                            for (let j = 0; j < info?.length; j++) {
+                                if (info[j].type == 0) {
+                                    data[i][index] = `${data[i][index]}${info[j].value},`
+                                }
                             }
-                        }
-                        data[i][index] = data[i][index]?.length ? 
-                            data[i][index].substring(0, data[i][index]?.length - 1) : 
-                            data[i][index]
-                        projectService.updateExtraValue(user_id, data[i].id, index, data[i][index])
-                    } else {
-                        let info = await actHiTaskinstRepo.getNodeTime(
-                            instanceId, 
-                            defaultConst.project_params_related[index]['node']
-                        )
-                        if (index == 'status') {
-                            let status = await actHiVarinstRepo.getTaskStatus(
+                            data[i][index] = data[i][index]?.length ? 
+                                data[i][index].substring(0, data[i][index]?.length - 1) : 
+                                data[i][index]
+                            projectService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                        } else {
+                            let info = await actHiTaskinstRepo.getNodeTime(
                                 instanceId, 
                                 defaultConst.project_params_related[index]['node']
                             )
-                            if (status == defaultConst.TASK_STATUS.APPROVE) {
-                                data[i][index] = projectConst.STATUS.SUCCESS
-                                projectService.updateExtraValue(user_id, data[i].id, index, data[i][index])
-                            } else if ([defaultConst.TASK_STATUS.CANCEL, defaultConst.TASK_STATUS.REJECT].includes(status)) {
-                                data[i][index] = projectConst.STATUS.FAILED
+                            if (index == 'status') {
+                                let status = await actHiVarinstRepo.getTaskStatus(
+                                    instanceId, 
+                                    defaultConst.project_params_related[index]['node']
+                                )
+                                if (status == defaultConst.TASK_STATUS.APPROVE) {
+                                    data[i][index] = projectConst.STATUS.SUCCESS
+                                    projectService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                                } else if ([defaultConst.TASK_STATUS.CANCEL, defaultConst.TASK_STATUS.REJECT].includes(status)) {
+                                    data[i][index] = projectConst.STATUS.FAILED
+                                    projectService.updateExtraValue(user_id, data[i].id, index, data[i][index])
+                                }
+                            } else {
+                                data[i][index] = info
                                 projectService.updateExtraValue(user_id, data[i].id, index, data[i][index])
                             }
-                        } else {
-                            data[i][index] = info
-                            projectService.updateExtraValue(user_id, data[i].id, index, data[i][index])
                         }
                     }
                 }
+            } else {
+                // instanceId = linkInfo[1].split('&&')[0]
+                
             }
         }
     }
