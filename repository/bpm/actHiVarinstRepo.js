@@ -21,6 +21,7 @@ actHiVarinstRepo.getStatus = async (instanceId) => {
     let sql = `SELECT * FROM ACT_HI_VARINST WHERE PROC_INST_ID_ = "${instanceId}" 
         AND NAME_ = "PROCESS_STATUS"`
     let result = await query(sql)
+    console.log(instanceId, 'PROCESS_STATUS result:', result)
     return result?.length ? result[0].LONG_ : null
 }
 
@@ -32,6 +33,7 @@ actHiVarinstRepo.getTaskStatus = async (instanceId, nodes) => {
             AND t.NAME_ IN ("${nodes.join('","')}")
         ORDER BY t.START_TIME_ DESC, t.END_TIME_ DESC LIMIT 1`
     let result = await query(sql)
+    console.log(instanceId, nodes, 'TASK_STATUS result:', result)
     return result?.length ? result[0].LONG_ : null
 }
 
