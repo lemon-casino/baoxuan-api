@@ -184,9 +184,9 @@ developmentService.start = async (type, id, user_id) => {
             if (goods.first_category) goods['category'].push(goods.first_category)
             if (goods.second_category) goods['category'].push(goods.second_category)
             if (goods.third_category) goods['category'].push(goods.third_category)
-            goods.product_info = [goods.product_info]
-            goods.analysis_link = [goods.analysis_link]
-            goods.product_img = [goods.product_img]
+            goods.product_info = goods.product_info?.length ? goods.product_info.split(',') : null
+            goods.analysis_link = goods.analysis_link?.length ? goods.analysis_link.split(',') : null
+            goods.product_img = goods.product_img?.length ? goods.product_img.split(',') : null
             updateFunc = selfService.updateLink
             updateStatusFunc = selfService.updateLinkStatus
             processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
@@ -200,9 +200,9 @@ developmentService.start = async (type, id, user_id) => {
             if (goods.first_category) goods['category'].push(goods.first_category)
             if (goods.second_category) goods['category'].push(goods.second_category)
             if (goods.third_category) goods['category'].push(goods.third_category)
-            goods.product_info = [goods.product_info]
-            goods.analysis_link = [goods.analysis_link]
-            goods.product_img = [goods.product_img]
+            goods.product_info = goods.product_info?.length ? goods.product_info.split(',') : null
+            goods.analysis_link = goods.analysis_link?.length ? goods.analysis_link.split(',') : null
+            goods.product_img = goods.product_img?.length ? goods.product_img.split(',') : null
             updateFunc = ipService.updateLink
             updateStatusFunc = ipService.updateLinkStatus
             processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
@@ -216,8 +216,8 @@ developmentService.start = async (type, id, user_id) => {
             if (goods.first_category) goods['category'].push(goods.first_category)
             if (goods.second_category) goods['category'].push(goods.second_category)
             if (goods.third_category) goods['category'].push(goods.third_category)
-            goods.product_info = [goods.product_info]
-            goods.analysis_link = [goods.analysis_link]
+            goods.product_info = goods.product_info?.length ? goods.product_info.split(',') : null
+            goods.analysis_link = goods.analysis_link?.length ? goods.analysis_link.split(',') : null
             updateFunc = supplierService.updateLink
             updateStatusFunc = supplierService.updateLinkStatus
             processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
@@ -231,7 +231,7 @@ developmentService.start = async (type, id, user_id) => {
             if (goods.first_category) goods['category'].push(goods.first_category)
             if (goods.second_category) goods['category'].push(goods.second_category)
             if (goods.third_category) goods['category'].push(goods.third_category)
-            goods.analysis_link = [goods.analysis_link]
+            goods.analysis_link = goods.analysis_link?.length ? goods.analysis_link.split(',') : null
             goods['user_id'] = refresh_token
             updateFunc = operatorService.updateLink
             updateStatusFunc = operatorService.updateLinkStatus
@@ -246,9 +246,9 @@ developmentService.start = async (type, id, user_id) => {
             if (goods.first_category) goods['category'].push(goods.first_category)
             if (goods.second_category) goods['category'].push(goods.second_category)
             if (goods.third_category) goods['category'].push(goods.third_category)
-            goods.product_info = [goods.product_info]
-            goods.analysis_link = [goods.analysis_link]
-            goods.product_img = [goods.product_img]
+            goods.product_info = goods.product_info?.length ? goods.product_info.split(',') : null
+            goods.analysis_link = goods.analysis_link?.length ? goods.analysis_link.split(',') : null
+            goods.product_img = goods.product_img?.length ? goods.product_img.split(',') : null
             updateFunc = projectService.updateLink
             updateStatusFunc = projectService.updateLinkStatus
             processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
