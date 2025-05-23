@@ -117,8 +117,7 @@ const getAllGoodsAttrDetails = async () => {
     return dianShangOperationAttributeModel.findAll({
         attributes: ['goodsId'],
         where: {
-            goodsId: {$ne: null},
-            platform:'天猫部'
+            goodsId: {$ne: null}
         },
         raw: true
     }).then(res => {

@@ -50,5 +50,6 @@ module.exports = [
     '/stock/goods-sku/import',
     '/stock/purchase-info/import',
     '/stock/ori-sku-info/import',
+    '/product-attrs/upload-pdd',
     /^\/download\/.*/,
 ]

@@ -208,7 +208,7 @@ const getInquiryTodayjdDailyReport = async () => {
                 filteredResult.questionType = filteredResult.questionType.filter(type => type === '利润为负');
                 break;
             case '高付费模型':
-                filteredResult.questionType = filteredResult.questionType.filter(type => type === '推广费比大于12%');
+                filteredResult.questionType = filteredResult.questionType.filter(type => type !== '推广费比大于12%');
                 break;
         }
         filteredResult.questionType = filteredResult.questionType.filter(type => !type.startsWith('周'));

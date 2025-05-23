@@ -418,6 +418,147 @@ const uploadtmTable = async (req, res, next) => {
     }
 }
 
+const uploadpddTable = async (req, res, next) => {
+    try {
+        if (!req.file) {
+            return res.send(biResponse.canTFindIt('没有上传文件！'));
+        }
+
+        // 读取Excel文件
+        const filePath = req.file.path;
+        const workbook = XLSX.readFile(filePath);
+
+        // Excel日期转换函数
+        function excelDateToJSDate(excelDate) {
+            if (typeof excelDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(excelDate)) {
+                return excelDate;
+            }
+            if (typeof excelDate !== 'number' || isNaN(excelDate)) {
+                console.error(`Invalid excelDate value: ${excelDate}`);
+                return '';
+            }
+            const excelEpochOffset = 25567;
+            const jsTimestamp = (excelDate - excelEpochOffset) * 86400 * 1000;
+            const date = new Date(jsTimestamp);
+            if (isNaN(date.getTime())) {
+                console.error(`Invalid JS Date generated from excelDate: ${excelDate}`);
+                return '';
+            }
+            return date.toISOString().split('T')[0];
+        }
+
+        // 必填字段映射
+        const requiredKeyMapping = {
+            '链接ID':'goodsId',
+            '店铺名称':'shopName',
+            '商品简称':'briefName',
+            '产品线负责人':'lineDirector',
+            '运营负责人':'operator',
+            '上架日期':'onsaleDate',
+            '一级类目':'firstCategory',
+            '二级类目':'secondCategory'
+
+        };
+
+        // 可选字段映射
+        const optionalKeyMapping = {
+            '链接属性2':'importantAttribute',
+            '维护负责人':'maintenanceLeader',
+            '利润目标':'profitTarget',
+            '产品线1':'goodsLine1',
+            '产品线2':'goodsLine2',
+            '链接类型':'userDef1',
+            '实时状态':'userDef2',
+            '自定义3':'userDef3',
+            '自定义4':'userDef4',
+            '自定义5':'userDef5',
+            '自定义6':'userDef6',
+            '自定义7':'userDef7',
+            '自定义8':'userDef8',
+            '自定义9':'userDef9',
+            '自定义10':'userDef10',
+            '库存结构':'stockStructure',
+            '产品设计属性':'productDesignAttr',
+            '品牌':'brand',
+            '产品线管理人':'lineManager',
+            '款式编码(参考)':'code'
+
+        };
+
+        // 错误收集数组
+        let errorMessages = [];
+
+        // 循环遍历每个工作表
+        for (const sheetName of workbook.SheetNames) {
+            const worksheet = workbook.Sheets[sheetName];
+
+            if (sheetName !== '拼多多部') {
+                errorMessages.push(`sheet名请换成平台（拼多多部）`);
+                continue; // 继续处理下一个工作表
+            }
+
+            const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+            const headers = data[0]; // 标题行
+            const translatedData = [];
+
+            // 循环遍历每行数据（从第二行开始）
+            for (let rowIndex = 1; rowIndex < data.length; rowIndex++) {
+                const row = data[rowIndex];
+                const translatedItem = {};
+
+                // 检查必填字段
+                for (const [key, value] of Object.entries(requiredKeyMapping)) {
+                    const columnIndex = headers.indexOf(key);
+
+                    if (columnIndex === -1 || row[columnIndex] === '') {
+                        errorMessages.push(`缺少必填字段: ${key} 在第${rowIndex + 1}行, 第${columnIndex + 1}列`);
+                        continue; // 继续处理下一行
+                    } else {
+                        if (key === 'goodsID') {
+                            translatedItem[value] = parseInt(row[columnIndex]);
+                        } else if (key === '上架日期') {
+                            translatedItem[value] = excelDateToJSDate(row[columnIndex]);
+                        } else {
+                            translatedItem[value] = row[columnIndex];
+                        }
+                    }
+                }
+
+                // 添加可选字段（如果存在）
+                for (const [key, value] of Object.entries(optionalKeyMapping)) {
+                    const columnIndex = headers.indexOf(key);
+                    if (columnIndex !== -1 && row[columnIndex] !== '') {
+                        translatedItem[value] = row[columnIndex];
+                    }
+                }
+
+                translatedItem['deptId'] = 902768824;
+                translatedItem['platform'] = sheetName;
+                translatedData.push(translatedItem);
+            }
+
+            // 上传数据，使用 Promise.all 等待所有上传完成
+            try {
+                await dianShangOperationAttributeService.uploadtmBulkUploadsTable(translatedData);
+                console.log(`Sheet ${sheetName} uploaded successfully`);
+            } catch (e) {
+                errorMessages.push(`文件解析失败: ${e.message}`);
+            }
+        }
+
+        // 如果有错误，返回错误信息
+        if (errorMessages.length > 0) {
+            return res.send(biResponse.canTFindIt(errorMessages.join('; ')));
+        }
+
+        // 所有操作成功后，返回成功响应
+        return res.send(biResponse.success({ code: 200, data: "文件上传并解析成功!" }));
+
+    } catch (e) {
+        next(e);
+    }
+}
+
 const importGoodsMonthlySalesTarget = async (req, res, next) => {
     try {
         let form = new formidable.IncomingForm()
@@ -511,6 +652,7 @@ module.exports = {
     deleteProductAttr,
     uploadTable,
     uploadtmTable,
+    uploadpddTable,
     importGoodsMonthlySalesTarget,
     getGoodsMonthlySalesTarget,
     exportGoodsMonthlySalesTarget

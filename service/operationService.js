@@ -653,10 +653,10 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: '费比(%)', field_id: 'operation_rate', type: 'number', 
                 min: 80, max: 100, show: true
             }, {
-                title: '利润', field_id: 'profit', type: 'number', 
+                title: '利润额', field_id: 'profit', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '利润率(利润率(供货价))(%)', field_id: 'profit_rate', type: 'number', 
+                title: '利润率(供货价)(%)', field_id: 'profit_rate', type: 'number', 
                 min: 0, max: 15, show: true
             }, {
                 title: '利润率(gmv)(%)', field_id: 'profit_rate_gmv', type: 'number', 
@@ -814,7 +814,7 @@ const getGoodsInfoDetail = async (column, goods_id, shop_name, start, end, stats
     let data=[]
     let setting = []
     let func = stats == 'verified' ? goodsSaleVerifiedRepo : goodsSaleInfoRepo
-    if (['sale_amount', 'cost_amount', 'operation_amount', 'promotion_amount', 'express_fee', 'profit'].includes(column))
+    if (['sale_amount', 'cost_amount', 'operation_amount', 'promotion_amount', 'express_fee', 'profit','real_sale_amount','real_sale_qty','real_gross_profit'].includes(column))
         data = await func.getDataDetailByTime(column, goods_id, start, end)
     else if (column == 'operation_rate')
         data = await func.getDataRateByTime('sale_amount', 'operation_amount', column, goods_id, start, end, 100)
@@ -1322,7 +1322,7 @@ const getGoodsLineInfo = async (startDate, endDate, params, id) => {
                 title: '运费', field_id: 'express_fee', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '利润', field_id: 'profit', type: 'number', 
+                title: '利润额', field_id: 'profit', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: '利润率(%)', field_id: 'profit_rate', type: 'number', 
@@ -1807,18 +1807,20 @@ const importJDZYInfo = async (rows, time) => {
         //供货金额
         let sale_amount = parseFloat(rows[i].getCell(sale_amount_row).value || 0)
         let qty = parseInt(rows[i].getCell(real_sale_qty_row).value || 0)
+        //总成本
         let cost_amount = (cost_price + 0.8 + 1.4) * qty
         //京东销售额
         let supplier_amount = parseFloat(rows[i].getCell(supplier_amount_row).value || 0)
+        //税点
         let tax = sale_amount * 0.07
         //综毛标准
         let jd_gross_profit_std = supplier_amount * 0.28
         //实际棕毛
         let real_gross_profit = parseFloat(rows[i].getCell(gross_profit_row).value || 0)
-        real_jd_gross_profit = real_gross_profit < 0 ? 0 : real_gross_profit
+        // let real_jd_gross_profit = real_gross_profit < 0 ? 0 : real_gross_profit
         //需补综毛
-        let other_cost =jd_gross_profit_std - real_jd_gross_profit
-        let profit = sale_amount - cost_amount - tax - other_cost
+        let other_cost =jd_gross_profit_std - real_gross_profit
+        let profit = other_cost>0 ? sale_amount - cost_amount - tax - other_cost : sale_amount - cost_amount - tax
         data.push(
             goods_id,
             sku_id,
@@ -1836,7 +1838,7 @@ const importJDZYInfo = async (rows, time) => {
             sale_amount ? profit / sale_amount : 0,
             0,
             null,
-            tax + other_cost,
+            other_cost>0? tax + other_cost : tax,
             qty,
             null,
             supplier_amount,
@@ -2408,7 +2410,7 @@ const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
             { header: "核销金额", key: 'verified_amount' },
             { header: "核销利润额", key: 'verified_profit' },
             { header: "快递费", key: 'express' },
-            { header: "扣点", key: 'bill' },
+            { header: "扣点", key: 'bill_amount' },
             { header: "推广", key: 'promotion_amount' },
             { header: "推广费比", key: 'promotion_rate' },
             { header: "平台刷单", key: 'erlei_shuadan' },
@@ -3278,7 +3280,7 @@ const importTmallpromotioninfo = async (rows,shopname, paytime, day, date) => {
         period: day,
         payTime: paytime,
         date: date,
-        ROI: (item.transAmount / item.payAmount).toFixed(2) >0 ? (item.transAmount / item.payAmount).toFixed(2) : 0,
+        ROI: item.payAmount > 0 ? Number((item.transAmount / item.payAmount).toFixed(2)) : 0,
         shopName: shopname
         
     }))
@@ -3308,6 +3310,77 @@ const importTmallpromotioninfo = async (rows,shopname, paytime, day, date) => {
     return result
 }
 
+const getSaleData = async(lstart,lend,preStart,preEnd,value,name) => {
+    let data = await goodsSaleInfoRepo.getSaleData(lstart,lend,preStart,preEnd,value,name)
+    const result = []; // 初始化一个空数组用于存储转换后的数据
+    for (let i = 0; i < data.length; i++) {
+        const item = data[i];
+        const { name: divisionName, "本期销售额": currentSales, "上期销售额": previousSales,
+             "本期销售数量": currentQuantity, "上期销售数量": previousQuantity, "销售额环比": salesIncrease,
+              "销售数量环比": quantityIncrease } = item;
+
+        // 创建事业部对象
+        const division = {
+            actionName: divisionName,
+            actionCode: i,
+            sum: 0, // 根据实际需求设置
+            children: [
+                {
+                    actionName: "销售金额",
+                    children: [
+                        {
+                            actionName: "本期",
+                            actionCode: 0,
+                            sum: parseFloat(currentSales),
+                            children: []
+                        },
+                        {
+                            actionName: "上期",
+                            actionCode: 0,
+                            sum: parseFloat(previousSales),
+                            children: []
+                        },
+                        {
+                            actionName: "环比",
+                            actionCode: 0,
+                            sum: salesIncrease,
+                            children: []
+                        }
+                    ]
+                },
+                {
+                    actionName: "销售数量",
+                    actionCode: 0,
+                    sum: 0,
+                    children: [
+                        {
+                            actionName: "本期",
+                            actionCode: 0,
+                            sum: parseInt(currentQuantity),
+                            children: []
+                        },
+                        {
+                            actionName: "上期",
+                            actionCode: 0,
+                            sum: parseInt(previousQuantity),
+                            children: []
+                        },
+                        {
+                            actionName: "环比",
+                            actionCode: 0,
+                            sum: quantityIncrease,
+                            children: []
+                        }
+                    ]
+                }
+            ]
+        }
+
+        // 将转换后的对象插入到 transformed 数组中
+        result.push(division);
+    }
+    return result
+}
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -3356,5 +3429,6 @@ module.exports = {
     importXhsShuadan,
     getTMPromotion,
     getTMPromotioninfo,
-    importTmallpromotioninfo
+    importTmallpromotioninfo,
+    getSaleData
 }

@@ -865,6 +865,28 @@ const getReportInfo = async (req, res, next) => {
     }
 }
 
+const getSaleData = async (req, res, next) => {
+    try {
+        const {startDate, endDate,value,name} = req.query
+        joiUtil.validate({
+            name: {value: name, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const daysDifference = moment(endDate).diff(startDate, 'days')+1
+        let lstart = moment(startDate).format('YYYY-MM-DD')
+        let lend = moment(endDate).format('YYYY-MM-DD') 
+        let preStart = moment(startDate).subtract(daysDifference, 'day').format('YYYY-MM-DD')
+        let preEnd = moment(endDate).subtract(daysDifference, 'day').format('YYYY-MM-DD')
+        let result=[]
+        result = await operationService.getSaleData(lstart,lend,preStart,preEnd,value,name)
+        
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const ReportDownload = async (req, res, next) => {
     try {
         const {startDate, endDate} = req.query
@@ -1356,5 +1378,6 @@ module.exports = {
     importErleiShuadan,
     importXhsShuadan,
     ReportDownload,
-    importTmallpromotioninfo
+    importTmallpromotioninfo,
+    getSaleData
 }
