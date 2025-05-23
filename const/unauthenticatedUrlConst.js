@@ -48,5 +48,7 @@ module.exports = [
     "/operation/orders-goods/import",
     '/operation/orders-goods-verified/import',
     '/stock/goods-sku/import',
+    '/stock/purchase-info/import',
+    '/stock/ori-sku-info/import',
     /^\/download\/.*/,
 ]
