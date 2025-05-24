@@ -3321,6 +3321,51 @@ const getPlanStats = async (userIds, months) => {
     return result || []
 }
 
+const getDevelopmentOtherInfo = async (type, time) => {
+    let params = []    
+    let sql = `SELECT piv.value as content, pi.creator, 
+            REPLACE(REPLACE(REPLACE(piv1.value, '"', ''), '[', ''), ']', '') as director 
+        FROM processes p LEFT JOIN process_instances pi ON pi.process_id = p.id 
+        LEFT JOIN process_instance_sub_values piv ON piv.instance_id = pi.id 
+            AND piv.parent_id = 'tableField_m38ikxm7'
+            AND piv.field_id = 'textField_m38ikxm8'
+        LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
+            AND piv1.field_id IN ('employeeField_lssfx9gb',
+                'employeeField_m9gzfubt',
+                'employeeField_m8k0206c',
+                'employeeField_m8k0206d')
+            AND piv1.id = (
+                SELECT MAX(pv.id) FROM process_instance_values pv
+                WHERE pv.instance_id = pi.id AND pv.field_id IN (
+                    'employeeField_lssfx9gb',
+                    'employeeField_m9gzfubt',
+                    'employeeField_m8k0206c',
+                    'employeeField_m8k0206d')
+                )
+        WHERE p.form_id = ? AND pi.create_time < ? AND piv.value IS NOT NULL`
+    if (type == 1) {
+        params = [44324, time]
+    } else if (type == 2) {
+        params = [106, time]
+    } else if (type == 4) {
+        params = [6409, time]
+        sql = `${sql} 
+                AND EXISTS(
+                    SELECT * FROM process_instance_values piv2 WHERE piv2.instance_id = pi.id 
+                        AND piv2.field_id = 'radioField_m3iglqdy' AND piv2.value = '"自研"'
+                )`
+    } else if (type == 5) {
+        params = [6409, time]
+        sql = `${sql} 
+                AND NOT EXISTS(
+                    SELECT * FROM process_instance_values piv2 WHERE piv2.instance_id = pi.id 
+                        AND piv2.field_id = 'radioField_m3iglqdy' AND piv2.value = '"自研"'
+                )`
+    }
+    let result = await query(sql, params)
+    return result
+}
+
 module.exports = {
     getProcessStat,
     getFlowInstances,
@@ -3360,5 +3405,6 @@ module.exports = {
     getOperationOptimizeInfo,
     checkOptimize,
     getOperationOptimizeRate,
-    getLeaderFinishProjectStat
+    getLeaderFinishProjectStat,
+    getDevelopmentOtherInfo
 }

@@ -1142,5 +1142,20 @@ goodsSaleVerifiedRepo.getOptimizeResult = async (goods_id, time, optimize) => {
     return result|| []
 }
 
+goodsSaleVerifiedRepo.sumSaleAmountAndProfitBySkuCode = async (sku_code) => {
+    let sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(profit), 0) AS profit 
+        FROM goods_sale_verified WHERE sku_code = ?`
+    let result = await query(sql, [sku_code])
+    return result?.length ? result[0] : {sale_amount:0, profit:0}
+}
+
+goodsSaleVerifiedRepo.sumSaleAmountAndProfitByGoodsId = async (goods_id) => {
+    let sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(profit), 0) AS profit 
+        FROM goods_sale_verified WHERE goods_id = ?`
+    let result = await query(sql, [goods_id])
+    return result?.length ? result[0] : {sale_amount:0, profit:0}
+}
 
 module.exports = goodsSaleVerifiedRepo
