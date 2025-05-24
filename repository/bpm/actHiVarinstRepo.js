@@ -37,4 +37,74 @@ actHiVarinstRepo.getTaskStatus = async (instanceId, nodes) => {
     return result?.length ? result[0].LONG_ : null
 }
 
+
+
+actHiVarinstRepo.getProjectSkuInfo = async (time) => {
+    let sql = `SELECT (SELECT u.nickname FROM system_users u WHERE p.START_USER_ID_ = u.id) 
+            AS username, b.BYTES_ AS content FROM ACT_HI_VARINST v 
+        LEFT JOIN ACT_HI_PROCINST p ON p.PROC_INST_ID_ = v.PROC_INST_ID_ 
+        LEFT JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
+        LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v.BYTEARRAY_ID_
+        WHERE d.KEY_ = 'sctgtplc' AND v.NAME_ = 'F6gkma3pfcjfd1c' 
+            AND p.START_TIME_ < ?
+        ORDER BY p.START_USER_ID_ DESC`
+    let result = await query(sql, [time])
+    return result
+}
+
+actHiVarinstRepo.getSelfSkuInfo = async (time) => {
+    let sql = `SELECT (SELECT u.nickname FROM system_users u WHERE p.START_USER_ID_ = u.id) 
+            AS username, b.BYTES_ AS content FROM ACT_HI_VARINST v 
+        LEFT JOIN ACT_HI_PROCINST p ON p.PROC_INST_ID_ = v.PROC_INST_ID_ 
+        LEFT JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
+        LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v.BYTEARRAY_ID_
+        WHERE d.KEY_ = 'zytplc' AND v.NAME_ = 'F6gkma3pfcjfd1c' 
+            AND p.START_TIME_ < ? AND p.START_USER_ID_ IN (177,186,207,243)
+        ORDER BY p.START_USER_ID_ DESC`
+    let result = await query(sql, [time])
+    return result
+}
+
+actHiVarinstRepo.getIpSkuInfo = async (time) => {
+    let sql = `SELECT (SELECT u.nickname FROM system_users u WHERE p.START_USER_ID_ = u.id) 
+            AS username, b.BYTES_ AS content FROM ACT_HI_VARINST v 
+        LEFT JOIN ACT_HI_PROCINST p ON p.PROC_INST_ID_ = v.PROC_INST_ID_ 
+        LEFT JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
+        LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v.BYTEARRAY_ID_
+        WHERE d.KEY_ = 'iptplc' AND v.NAME_ = 'F6gkma3pfcjfd1c' 
+            AND p.START_TIME_ < ? AND p.START_USER_ID_ IN (177,186,207,243)
+        ORDER BY p.START_USER_ID_ DESC`
+    let result = await query(sql, [time])
+    return result
+}
+
+actHiVarinstRepo.getOperatorSkuInfo = async (time) => {
+    let sql = `SELECT (SELECT u.nickname FROM system_users u WHERE v.TEXT_ = u.id) 
+            AS username, b.BYTES_ AS content FROM ACT_HI_VARINST v 
+        LEFT JOIN ACT_HI_PROCINST p ON p.PROC_INST_ID_ = v.PROC_INST_ID_ 
+        LEFT JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
+        LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v.BYTEARRAY_ID_ 
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = v.PROC_INST_ID_ 
+			AND v1.NAME_ = 'Fm06ma3kixpkj7c' 
+        WHERE d.KEY_ = 'fttplc' AND v.NAME_ IN 
+            ('Cfidcvooh9jnf', 'Cfidvu2osk3k9', 'Cfidzncsybu0e', 'Cfid1wglixgnx') 
+            AND p.START_TIME_ < ? AND v1.TEXT_ IS NULL
+        ORDER BY v.TEXT_ DESC`
+    let result = await query(sql, [time])
+    return result
+}
+
+actHiVarinstRepo.getSupplierSkuInfo = async (time) => {
+    let sql = `SELECT (SELECT u.nickname FROM system_users u WHERE p.START_USER_ID_ = u.id) 
+            AS username, b.BYTES_ AS content FROM ACT_HI_VARINST v 
+        LEFT JOIN ACT_HI_PROCINST p ON p.PROC_INST_ID_ = v.PROC_INST_ID_ 
+        LEFT JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
+        LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v.BYTEARRAY_ID_
+        WHERE d.KEY_ = 'gystplc' AND v.NAME_ = 'Fig2ma24zzz9brc' 
+            AND p.START_TIME_ < ? AND p.START_USER_ID_ IN (177,186,207,243) 
+        ORDER BY p.START_USER_ID_ DESC`
+    let result = await query(sql, [time])
+    return result
+}
+
 module.exports = actHiVarinstRepo

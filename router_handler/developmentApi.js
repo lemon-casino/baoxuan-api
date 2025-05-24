@@ -5,15 +5,15 @@ const moment = require('moment')
 
 const getWorkPannel = async (req, res, next) => {
     try {
-        const {type, startDate, endDate, months} = req.query
+        const {type, startDate, endDate, months, timeType, project, process} = req.query
         joiUtil.validate({
             type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}
         })
         let start, end, month
         switch (type) {
             case '1':
-            case '2':
             case '3':
+            case '4':
                 joiUtil.validate({
                     startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
                     endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
@@ -21,16 +21,25 @@ const getWorkPannel = async (req, res, next) => {
                 start = moment(startDate).format('YYYY-MM-DD')
                 end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
                 break
-            case '4':
+            case '5':
                 joiUtil.validate({
                     months: {value: months, schema: joiUtil.commonJoiSchemas.strRequired}
                 })
                 month = JSON.parse(months)
                 break
+            case '2':
+                joiUtil.validate({
+                    startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+                    endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+                    timeType: {value: timeType, schema: joiUtil.commonJoiSchemas.strRequired}
+                })
+                start = moment(startDate).format('YYYY-MM-DD')
+                end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
+                break
             default:
                 return res.send(biResponse.canTFindIt())
         }
-        const result = await developmentService.getDataStats(type, start, end, month)
+        const result = await developmentService.getDataStats(type, start, end, month, timeType, project, process)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
