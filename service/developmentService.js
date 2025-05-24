@@ -24,6 +24,7 @@ const goodsSkuRepo = require('@/repository/jst/goodsSkuRepo')
 const actHiVarinstRepo = require('@/repository/bpm/actHiVarinstRepo')
 const { ObjectInputStream  } = require('java-object-serialization')
 const goodsSaleVerifiedRepo = require('@/repository/operation/goodsSaleVerifiedRepo')
+const actHiProcinstRepo = require('@/repository/bpm/actHiProcinstRepo')
 
 developmentService.getDataStats = async (type, start, end, month, timeType, project, process) => {
     let result = []
@@ -891,6 +892,28 @@ developmentService.getProduct = async (start, end, timeType, project, process) =
             }
         }
     }
+    return result
+}
+
+developmentService.getRunningProcessInfo = async () => {
+    let start = moment().subtract(14, 'day').format('YYYY-MM-DD')
+    let end = moment().format('YYYY-MM-DD')
+    let result = []
+    let project_info = await newFormsRepo.getDevelopmentRunning(start, end)
+    if (project_info?.length) result = result.concat(project_info)
+    let project_info1 = await actHiProcinstRepo.getRunning(start, end)
+    if (project_info1?.length) result = result.concat(project_info1)
+    return result
+}
+
+developmentService.getFinishProcessInfo = async () => {
+    let start = moment().subtract(14, 'day').format('YYYY-MM-DD')
+    let end = moment().format('YYYY-MM-DD')
+    let result = []
+    let project_info = await newFormsRepo.getDevelopmentFinish(start, end)
+    if (project_info?.length) result = result.concat(project_info)
+    let project_info1 = await actHiProcinstRepo.getFinish(start, end)
+    if (project_info1?.length) result = result.concat(project_info1)
     return result
 }
 

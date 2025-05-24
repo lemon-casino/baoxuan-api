@@ -29,4 +29,7 @@ router.get('/data-pannel-detail', developmentApi.getDataPannelDetail)
 //三级类目
 router.get('/category', developmentApi.getCategoryList)
 
+router.get('/running-process', developmentApi.getRunningProcessInfo)
+router.get('/finish-process', developmentApi.getFinishProcessInfo)
+
 module.exports = router

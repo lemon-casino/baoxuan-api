@@ -3366,6 +3366,69 @@ const getDevelopmentOtherInfo = async (type, time) => {
     return result
 }
 
+const getDevelopmentRunning = async (start, end) => {
+    let sql = `SELECT f.title, pi.title AS name, pi.create_time AS create_time, 
+            CONCAT('https://t8sk7d.aliwork.com/APP_BXS79QCC8MY5ZV0EZZ07/processDetail?procInsId=', pi.instance_id) 
+            AS link, pir.operator_name AS operator, pir.show_name AS node FROM process_instances pi
+        LEFT JOIN process_instance_records pir ON pir.instance_id = pi.id 
+            AND pir.id = (
+                SELECT MAX(p2.id) FROM process_instance_records p2 
+                WHERE p2.instance_id = pi.instance_id AND p2.action_exit = 'doing'
+            )
+        JOIN processes p ON p.id = pi.process_id
+        JOIN forms f ON f.id = p.form_id
+        WHERE pi.process_id in (3, 88, 838) AND pi.status IN ('COMPLETED', 'TERMINATED') 
+            AND pi.create_time BETWEEN "${start}" AND "${end}" ORDER BY f.id`
+    let result = await query(sql)
+    return result
+}
+
+const getDevelopmentFinish = async (start, end) => {
+    let sql = `SELECT f.title, pi.title AS name, pi.create_time AS create_time, 
+            CONCAT('https://t8sk7d.aliwork.com/APP_BXS79QCC8MY5ZV0EZZ07/processDetail?procInsId=', pi.instance_id) 
+            AS link, (CASE pi.status WHEN 'COMPLETED' THEN '完成' ELSE '终止' END) AS \`status\`, 
+            REPLACE(piv.value, '"', '') AS reason FROM process_instances pi
+        LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id
+            AND piv.field_id IN (
+                'selectField_liiewljq', 
+                'radioField_lxn4uimw', 
+                'radioField_lxn4uimx', 
+                'radioField_lxn4uimy', 
+                'radioField_lxn4uimz', 
+                'radioField_lxn4uin0', 
+                'radioField_lxn4uin1', 
+                'radioField_lxn4uin2', 
+                'radioField_lxn4uin3', 
+                'radioField_lxn4uin4', 
+                'radioField_lxn4uin5', 
+                'radioField_m21tpkll', 
+                'radioField_m21tpklm', 
+                'radioField_m21tpkln', 
+                'radioField_m21tpklo', 
+                'radioField_m21tpklp', 
+                'radioField_m21tpklq', 
+                'radioField_m21tpklr', 
+                'radioField_m21tpkls', 
+                'radioField_m21tpklt', 
+                'checkboxField_lzal1evd', 
+                'radioField_m1hjo1ka', 
+                'radioField_m5gim2in', 
+                'radioField_m5gim2ip', 
+                'radioField_m5gim2ir', 
+                'radioField_m5gim2it', 
+                'radioField_m5gim2iv', 
+                'radioField_m5gim2ix', 
+                'radioField_m5gim2j1', 
+                'radioField_m5gim2j3'
+            )
+        JOIN processes p ON p.id = pi.process_id
+        JOIN forms f ON f.id = p.form_id
+        WHERE pi.process_id in (3, 88, 838) AND pi.status IN ('COMPLETED', 'TERMINATED') 
+            AND pi.create_time BETWEEN "${start}" AND "${end}" ORDER BY f.id`
+    let result = await query(sql)
+    return result
+}
+
 module.exports = {
     getProcessStat,
     getFlowInstances,
@@ -3406,5 +3469,7 @@ module.exports = {
     checkOptimize,
     getOperationOptimizeRate,
     getLeaderFinishProjectStat,
-    getDevelopmentOtherInfo
+    getDevelopmentOtherInfo,
+    getDevelopmentRunning,
+    getDevelopmentFinish
 }
