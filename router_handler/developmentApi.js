@@ -2,6 +2,7 @@ const biResponse = require("../utils/biResponse")
 const joiUtil = require("../utils/joiUtil")
 const developmentService = require('../service/developmentService')
 const moment = require('moment')
+const ExcelJS = require('exceljs')
 
 const getWorkPannel = async (req, res, next) => {
     try {
@@ -188,6 +189,62 @@ const getDataPannelDetail = async (req, res, next) => {
     }
 }
 
+const getRunningProcessInfo = async (req, res, next) => {
+    try {
+        let result           
+        const workbook = new ExcelJS.Workbook()
+        const worksheet = workbook.addWorksheet()
+        result = await developmentService.getRunningProcessInfo()
+        worksheet.columns = [
+            {header: '流程名称', key: 'title'},
+            {header: '链接', key: 'link'},
+            {header: '流程标题', key: 'name'},
+            {header: '流程创建时间', key: 'create_time'},
+            {header: '卡滞节点', key: 'node'},
+            {header: '操作人', key: 'operator'},
+        ]
+        for (let i = 0; i < result.length; i++) {                           
+            worksheet.addRow(result[i])
+        }
+        const buffer = await workbook.xlsx.writeBuffer()
+        let start = moment().subtract(14, 'day').format('YYYY-MM-DD')
+        let end = moment().format('YYYY-MM-DD')
+        res.setHeader('Content-Disposition', `attachment; filename="${start}~${end}~running-process.xlsx"`)
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')        
+        return res.send(buffer)
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getFinishProcessInfo = async (req, res, next) => {
+    try {
+        let result           
+        const workbook = new ExcelJS.Workbook()
+        const worksheet = workbook.addWorksheet()
+        result = await developmentService.getFinishProcessInfo()
+        worksheet.columns = [
+            {header: '流程名称', key: 'title'},
+            {header: '链接', key: 'link'},
+            {header: '流程标题', key: 'name'},
+            {header: '流程创建时间', key: 'create_time'},
+            {header: '流程状态', key: 'status'},
+            {header: '完结原因', key: 'reason'},
+        ]
+        for (let i = 0; i < result.length; i++) {                           
+            worksheet.addRow(result[i])
+        }
+        const buffer = await workbook.xlsx.writeBuffer()
+        let start = moment().subtract(14, 'day').format('YYYY-MM-DD')
+        let end = moment().format('YYYY-MM-DD')
+        res.setHeader('Content-Disposition', `attachment; filename="${start}~${end}~finish-process.xlsx"`)
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')        
+        return res.send(buffer)
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getWorkPannel, 
     getWorkDetail,
@@ -198,5 +255,7 @@ module.exports = {
     getDataPannel,
     getDataPannelProject,
     getDataPannelDetail,
-    getCategoryList
+    getCategoryList,
+    getFinishProcessInfo,
+    getRunningProcessInfo
 }
