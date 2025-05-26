@@ -51,5 +51,7 @@ module.exports = [
     '/stock/purchase-info/import',
     '/stock/ori-sku-info/import',
     '/product-attrs/upload-pdd',
+    '/development/running-process',
+    '/development/finish-process',
     /^\/download\/.*/,
 ]
