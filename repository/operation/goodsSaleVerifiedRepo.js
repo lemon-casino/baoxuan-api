@@ -972,6 +972,63 @@ goodsSaleVerifiedRepo.getDataGrossProfitDetailByTime = async(goods_id, start, en
     return result || []
 }
 
+goodsSaleVerifiedRepo.getpromotionByTime = async( column,goods_id, start, end) => {
+    let sql =``
+    if(column == 'targeted_audience_promotion'){
+        sql = `SELECT date,SUM(amount) AS targeted_audience_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name ='6003416精准人群推广' GROUP BY date`
+    }else if(column == 'full_site_promotion'){
+        sql = `SELECT date,SUM(amount) AS full_site_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name ='6003431万相台无界-全站推广' GROUP BY date`
+    }else if(column == 'multi_objective_promotion'){
+        sql = `SELECT date,SUM(amount) AS multi_objective_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name ='6003414多目标直投' GROUP BY date`
+    }else if(column == 'keyword_promotion'){
+        sql = `SELECT date,SUM(amount) AS keyword_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name ='60030412关键词推广' GROUP BY date`
+    }else if(column == 'product_operation_promotion'){
+        sql = `SELECT date,SUM(amount) AS product_operation_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name ='6003432万相台无界-货品运营' GROUP BY date`
+    }else if(column == 'daily_promotion'){
+        sql = `SELECT date,SUM(amount) AS daily_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name ='日常推广' GROUP BY date`
+    }else if(column == 'scene_promotion'){
+        sql = `SELECT date,SUM(amount) AS scene_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name ='场景推广' GROUP BY date`
+    }else if(column == 'jd_express_promotion'){
+        sql = `SELECT date,SUM(amount) AS jd_express_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name in ('京东快车1','京东快车2','京东快车3') GROUP BY date`
+    }else if(column == 'total_promotion'){
+        sql = `SELECT date,SUM(amount) AS total_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name in ('全站营销','新品全站营销') GROUP BY date`
+    }
+    const result = await query(sql,[start, end, goods_id])
+    return result || []
+}
+
+goodsSaleVerifiedRepo.getpromotionroiByTime = async(column,goods_id, start, end) => {
+    let name =null
+    if(column == 'targeted_audience_promotion_roi'){
+        name ='6003416精准人群推广'
+    }else if(column == 'full_site_promotion_roi'){
+        name ='6003431万相台无界-全站推广'
+    }else if(column == 'multi_objective_promotion_roi'){
+        name ='6003414多目标直投'
+    }else if(column == 'keyword_promotion_roi'){
+        name ='60030412关键词推广'
+    }else if(column == 'product_operation_promotion_roi'){
+        name ='6003432万相台无界-货品运营'
+    }
+    let sql =`SELECT a.date,ROUND(IFNULL(b.sale_amount,0)/a.amount,2) AS ${column} FROM (
+        SELECT date,SUM(amount) AS amount FROM goods_promotion_info 
+                WHERE date BETWEEN ? AND ? AND goods_id =? AND promotion_name ='${name}' GROUP BY date) AS a
+        LEFT JOIN (SELECT date,sale_amount FROM goods_verifieds  WHERE date BETWEEN ? AND ? AND goods_id =?) AS b
+        ON a.date=b.date`
+    const result = await query(sql,[start, end, goods_id,start, end, goods_id])
+    return result || []
+}
+    
+
 goodsSaleVerifiedRepo.getNewOnSaleInfo = async (sale_date, start, end, limit, offset) => {
     let result = {
         data: [],

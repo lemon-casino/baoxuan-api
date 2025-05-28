@@ -822,7 +822,7 @@ const getGoodsInfoDetail = async (column, goods_id, shop_name, start, end, stats
         data = await func.getDataRateByTime('promotion_amount', 'sale_amount', column, goods_id, start, end, 1)
     else if (column == 'refund_rate')
         data = await func.getDataRateByTime('order_num', 'refund_num', column, goods_id, start, end, 100)
-    else if (column == 'profit_rate')
+    else if (['profit_rate','profit_rate_gmv'].includes(column))
         data = await func.getDataRateByTime('sale_amount', 'profit', column, goods_id, start, end, 100)
     else if (column == 'dsr')
         data = await goodsOtherInfoRepo.getDataDetailByTime(column, goods_id, start, end)
@@ -849,6 +849,16 @@ const getGoodsInfoDetail = async (column, goods_id, shop_name, start, end, stats
     else if (column == 'bill_info'){
         data = await goodsBillRepo.getDataDetailByTime(goods_id, start, end)
         setting = await userSettingRepo.getByType(id, 6)
+    }
+    else if (['gross_standard','other_cost'].includes(column)){
+        data = await func.getGrossStandardByTime(column,goods_id, start, end)
+    }
+    else if(['full_site_promotion','multi_objective_promotion','targeted_audience_promotion','product_operation_promotion',
+        'keyword_promotion','daily_promotion','scene_promotion','jd_express_promotion','total_promotion'].includes(column)){
+            data = await func.getpromotionByTime(column,goods_id, start, end)
+    }else if(['full_site_promotion_roi','multi_objective_promotion_roi','targeted_audience_promotion_roi',
+        'product_operation_promotion_roi','keyword_promotion_roi',].includes(column)){
+            data = await func.getpromotionroiByTime(column,goods_id, start, end)
     }
     else if (column == 'promotion_amount_qoq')
         result = await func.getDataPromotionQOQByTime(goods_id, start, end)
@@ -993,7 +1003,8 @@ const importGoodsInfo = async (rows, time) => {
         real_sale_qty_row = null,
         refund_qty_row = null,
         packing_fee_row = null,
-        bill_amount_row = null
+        bill_amount_row = null,
+        sale_qty_row = null
     for (let i = 1; i <= columns.length; i++) {
         if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
         if (columns[i] == '款式编码(参考)') {sku_id_row = i; continue}
@@ -1003,6 +1014,7 @@ const importGoodsInfo = async (rows, time) => {
         if (columns[i] == '店铺编码') {shop_id_row = i; continue}
         if (columns[i] == '商品名称') {goods_name_row = i; continue}
         if (columns[i] == '利润-销售金额(扣退)') {sale_amount_row = i; continue}
+        if (columns[i] == '利润-销售数量(扣退)') {sale_qty_row = i; continue}
         if (columns[i] == '利润-销售成本(扣退)') {cost_amount_row = i; continue}
         if (columns[i] == '利润-毛利') {gross_profit_row = i; continue}
         if (columns[i] == '利润-毛利率') {gross_profit_rate_row = i; continue}
@@ -1044,6 +1056,7 @@ const importGoodsInfo = async (rows, time) => {
                 rows[i].getCell(goods_name_row).value,
             date,
             rows[i].getCell(sale_amount_row).value,
+            rows[i].getCell(sale_qty_row).value,
             rows[i].getCell(cost_amount_row).value,
             rows[i].getCell(gross_profit_row).value,
             typeof(rows[i].getCell(gross_profit_rate_row).value) == 'string' ? 
