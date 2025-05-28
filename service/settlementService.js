@@ -90,17 +90,17 @@ const getTGCInfo = async (params) => {
         sku_id_row = null, min_settle_time = null, max_settle_time = null, 
         type = params.extra, shop_name = params.shopName
     for (let i = 1; i <= columns.length; i++) {
-        if (columns[i] == '结算日期') {
+        if (columns[i] == '结算日期' || columns[i] == '账单入账时间') {
             settle_time_row = i
-        } else if (columns[i] == '交易主单号') {
+        } else if (columns[i] == '交易主单号' || columns[i] == '订单号' || columns[i] == '主订单单号') {
             order_id_row = i
-        } else if (columns[i] == '交易子单号') {
+        } else if (columns[i] == '交易子单号' || columns[i] == '子订单号' || columns[i] == '子订单单号') {
             sub_order_id_row = i
         } else if (columns[i] == '商户订单号') {
             settle_order_id_row = i
-        } else if (columns[i] == '账单金额') {
+        } else if (columns[i] == '账单金额' || columns[i] == '金额') {
             amount_row = i
-        } else if (columns[i] == '商品ID') {
+        } else if (columns[i] == '商品ID' || columns[i] == '商品id') {
             goods_id_row = i
         } else if (columns[i] == 'skuID') {
             sku_id_row = i

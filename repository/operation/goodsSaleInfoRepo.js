@@ -745,7 +745,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                         ,SUM(IF(promotion_name='日常推广',amount,null)) AS daily_promotion
                         ,SUM(IF(promotion_name='场景推广',amount,null)) AS scene_promotion
                         ,SUM(IF(promotion_name='京东快车1' OR promotion_name='京东快车2' OR promotion_name='京东快车3',amount,null)) AS jd_express_promotion
-                        ,SUM(IF(promotion_name='全站营销' OR promotion_name='新品全站营销' OR promotion_name='京东快车3',amount,null)) AS total_promotion, goods_id 
+                        ,SUM(IF(promotion_name='全站营销' OR promotion_name='新品全站营销',amount,null)) AS total_promotion, goods_id 
                     from goods_promotion_info 
                     where date BETWEEN '${start}' AND '${end}' AND goods_id IN (${goods_ids}) 
                     GROUP BY goods_id`
@@ -880,6 +880,98 @@ goodsSaleInfoRepo.getDataDetailByTime = async(column, goods_id, start, end) => {
     const result = await query(sql, [start, end, goods_id])
     return result || []
 }
+
+goodsSaleInfoRepo.getGrossStandardByTime = async( column,goods_id, start, end) => {
+    let sql = `SELECT date
+                    ,real_sale_amount
+                    ,(CASE 
+                    WHEN b.second_category in('水具', '酒杯/酒具','咖啡具','烹饪锅具','刀剪菜板','酒店用品','菜板/砧板') THEN real_sale_amount*0.28
+                    WHEN b.second_category in('餐具', '茶具') THEN real_sale_amount*0.25
+                    WHEN b.second_category in('厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具') THEN real_sale_amount*0.25
+                    END ) AS gross_standard
+            FROM goods_sales AS a
+            LEFT JOIN (
+                SELECT DISTINCT brief_name,second_category 
+                FROM dianshang_operation_attribute WHERE brief_name = ? 
+            ) AS b
+            ON a.goods_id=b.brief_name
+            WHERE goods_id = ? AND date BETWEEN ? AND ?
+            ORDER BY date
+            `
+    if (column=='other_cost'){
+        sql =`SELECT date
+                    ,(CASE 
+                    WHEN b.second_category in('水具', '酒杯/酒具','咖啡具','烹饪锅具','刀剪菜板','酒店用品','菜板/砧板') THEN real_sale_amount*0.28
+                    WHEN b.second_category in('餐具', '茶具') THEN real_sale_amount*0.25
+                    WHEN b.second_category in('厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具') THEN real_sale_amount*0.25
+                    END ) - real_gross_profit AS other_cost
+            FROM goods_sales AS a
+            LEFT JOIN (
+                SELECT DISTINCT brief_name,second_category 
+                FROM dianshang_operation_attribute WHERE brief_name = ?
+            ) AS b
+            ON a.goods_id=b.brief_name
+            WHERE goods_id = ? AND date BETWEEN ? AND ?`
+    } 
+    const result = await query(sql, [goods_id,goods_id,start, end])
+    return result || []
+}
+goodsSaleInfoRepo.getpromotionByTime = async( column,goods_id, start, end) => {
+    let sql =``
+    if(column == 'targeted_audience_promotion'){
+        sql = `SELECT date,SUM(amount) AS targeted_audience_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name ='6003416精准人群推广' GROUP BY date`
+    }else if(column == 'full_site_promotion'){
+        sql = `SELECT date,SUM(amount) AS full_site_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name ='6003431万相台无界-全站推广' GROUP BY date`
+    }else if(column == 'multi_objective_promotion'){
+        sql = `SELECT date,SUM(amount) AS multi_objective_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name ='6003414多目标直投' GROUP BY date`
+    }else if(column == 'keyword_promotion'){
+        sql = `SELECT date,SUM(amount) AS keyword_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name ='60030412关键词推广' GROUP BY date`
+    }else if(column == 'product_operation_promotion'){
+        sql = `SELECT date,SUM(amount) AS product_operation_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name ='6003432万相台无界-货品运营' GROUP BY date`
+    }else if(column == 'daily_promotion'){
+        sql = `SELECT date,SUM(amount) AS daily_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name ='日常推广' GROUP BY date`
+    }else if(column == 'scene_promotion'){
+        sql = `SELECT date,SUM(amount) AS scene_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name ='场景推广' GROUP BY date`
+    }else if(column == 'jd_express_promotion'){
+        sql = `SELECT date,SUM(amount) AS jd_express_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name in ('京东快车1','京东快车2','京东快车3') GROUP BY date`
+    }else if(column == 'total_promotion'){
+        sql = `SELECT date,SUM(amount) AS total_promotion from goods_promotion_info 
+        WHERE date BETWEEN ? AND ? AND goods_id = ? AND promotion_name in ('全站营销','新品全站营销') GROUP BY date`
+    }
+    const result = await query(sql,[start, end, goods_id])
+    return result || []
+}
+
+goodsSaleInfoRepo.getpromotionroiByTime = async(column,goods_id, start, end) => {
+    let name =null
+    if(column == 'targeted_audience_promotion_roi'){
+        name ='6003416精准人群推广'
+    }else if(column == 'full_site_promotion_roi'){
+        name ='6003431万相台无界-全站推广'
+    }else if(column == 'multi_objective_promotion_roi'){
+        name ='6003414多目标直投'
+    }else if(column == 'keyword_promotion_roi'){
+        name ='60030412关键词推广'
+    }else if(column == 'product_operation_promotion_roi'){
+        name ='6003432万相台无界-货品运营'
+    }
+    let sql =`SELECT a.date,ROUND(IFNULL(b.sale_amount,0)/a.amount,2) AS ${column} FROM (
+        SELECT date,SUM(amount) AS amount FROM goods_promotion_info 
+                WHERE date BETWEEN ? AND ? AND goods_id =? AND promotion_name ='${name}' GROUP BY date) AS a
+        LEFT join (SELECT date,sale_amount FROM goods_sales  WHERE date BETWEEN ? AND ? AND goods_id =?) AS b
+        ON a.date=b.date`
+    const result = await query(sql,[start, end, goods_id,start, end, goods_id])
+    return result || []
+}
+    
 goodsSaleInfoRepo.gettarget = async (column,goods_id, start, end) =>{
     const sql=`SELECT CONCAT(ROUND(b.num/a.target*100,2),'%') AS ${column}  FROM (
         SELECT goods_id,(
@@ -1055,11 +1147,18 @@ goodsSaleInfoRepo.getskuDetailTotalByTime = async(sku_id, start, end) => {
 }
 
 goodsSaleInfoRepo.getDataRateByTime = async(col1, col2, column, goods_id, start, end, percent) => {
-    const sql = `SELECT FORMAT(IF(IFNULL(SUM(${col1}), 0) > 0, 
+    let sql = `SELECT FORMAT(IF(IFNULL(SUM(${col1}), 0) > 0, 
             IFNULL(SUM(${col2}), 0) / SUM(${col1}), 0) * ${percent}, 2) AS ${column}, 
             \`date\` FROM goods_sale_info WHERE \`date\` >= ? AND \`date\` <= ? 
             AND goods_id = ?
         GROUP BY \`date\``
+    if(column == 'profit_rate_gmv'){
+        sql = `SELECT FORMAT(IF(IFNULL(SUM(real_sale_amount), 0) > 0
+                , IFNULL(SUM(profit), 0) / SUM(real_sale_amount), 0) * ${percent}, 2) AS ${column}, 
+            \`date\` FROM goods_sale_info WHERE \`date\` >= ? AND \`date\` <= ? 
+            AND goods_id = ?
+        GROUP BY \`date\``
+    }
     const result = await query(sql, [start, end, goods_id])
     return result || []
 }
