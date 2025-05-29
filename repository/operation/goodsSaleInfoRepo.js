@@ -1020,13 +1020,18 @@ goodsSaleInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
             FORMAT(IFNULL(a1.profit/a4.real_sale_amount*100,0),2) AS profit_rate_gmv,
             FORMAT(IFNULL(a5.targeted_audience_promotion,0),2) AS targeted_audience_promotion,
             FORMAT(IFNULL(a5.full_site_promotion,0),2) AS full_site_promotion,
-            FORMAT(IFNULL(a5.multi_objective_promotion,0),2) AS targeted_audience_promotion,
+            FORMAT(IFNULL(a5.multi_objective_promotion,0),2) AS multi_objective_promotion,
             FORMAT(IFNULL(a5.keyword_promotion,0),2) AS keyword_promotion,
             FORMAT(IFNULL(a5.product_operation_promotion,0),2) AS product_operation_promotion,
             FORMAT(IFNULL(a5.daily_promotion,0),2) AS daily_promotion,
             FORMAT(IFNULL(a5.scene_promotion,0),2) AS scene_promotion,
             FORMAT(IFNULL(a5.jd_express_promotion,0),2) AS jd_express_promotion,
             FORMAT(IFNULL(a5.total_promotion,0),2) AS total_promotion,
+            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.targeted_audience_promotion,0),2) AS targeted_audience_promotion_roi,
+            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.full_site_promotion,0),2) AS full_site_promotion_roi,
+            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.multi_objective_promotion,0),2) AS multi_objective_promotion_roi,
+            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.keyword_promotion,0),2) AS keyword_promotion_roi,
+            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.product_operation_promotion,0),2) AS product_operation_promotion_roi,
             DATE_FORMAT(a1.date, '%Y-%m-%d') as \`date\` 
         FROM goods_sales_stats a1 LEFT JOIN goods_verifieds_stats a2 ON a1.goods_id = a2.goods_id 
             AND a2.date = DATE_SUB(a1.date, INTERVAL 1 DAY) 

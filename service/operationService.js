@@ -912,6 +912,11 @@ const getGoodsInfoDetailTotal = async (goods_id, start, end, stats) => {
             scene_promotion: info[i].scene_promotion,
             jd_express_promotion: info[i].jd_express_promotion,
             total_promotion: info[i].total_promotion,
+            targeted_audience_promotion_roi: info[i].targeted_audience_promotion_roi,
+            full_site_promotion_roi: info[i].full_site_promotion_roi,
+            targeted_audience_promotion_roi: info[i].targeted_audience_promotion_roi,
+            keyword_promotion_roi: info[i].keyword_promotion_roi,
+            product_operation_promotion_roi: info[i].product_operation_promotion_roi,
             hasChild: false
         })
         dateMap[info[i].date] = i
