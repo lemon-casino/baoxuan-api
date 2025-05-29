@@ -887,12 +887,12 @@ goodsSaleInfoRepo.getGrossStandardByTime = async( column,goods_id, start, end) =
                     ,(CASE 
                     WHEN b.second_category in('水具', '酒杯/酒具','咖啡具','烹饪锅具','刀剪菜板','酒店用品','菜板/砧板') THEN real_sale_amount*0.28
                     WHEN b.second_category in('餐具', '茶具') THEN real_sale_amount*0.25
-                    WHEN b.second_category in('厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具') THEN real_sale_amount*0.25
+                    WHEN b.second_category in('厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具') THEN real_sale_amount*0.26
                     END ) AS gross_standard
             FROM goods_sales AS a
             LEFT JOIN (
                 SELECT DISTINCT brief_name,second_category 
-                FROM dianshang_operation_attribute WHERE brief_name = ? 
+                FROM dianshang_operation_attribute WHERE brief_name = ? and platform ='自营'
             ) AS b
             ON a.goods_id=b.brief_name
             WHERE goods_id = ? AND date BETWEEN ? AND ?
@@ -903,12 +903,12 @@ goodsSaleInfoRepo.getGrossStandardByTime = async( column,goods_id, start, end) =
                     ,(CASE 
                     WHEN b.second_category in('水具', '酒杯/酒具','咖啡具','烹饪锅具','刀剪菜板','酒店用品','菜板/砧板') THEN real_sale_amount*0.28
                     WHEN b.second_category in('餐具', '茶具') THEN real_sale_amount*0.25
-                    WHEN b.second_category in('厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具') THEN real_sale_amount*0.25
+                    WHEN b.second_category in('厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具') THEN real_sale_amount*0.26
                     END ) - real_gross_profit AS other_cost
             FROM goods_sales AS a
             LEFT JOIN (
                 SELECT DISTINCT brief_name,second_category 
-                FROM dianshang_operation_attribute WHERE brief_name = ?
+                FROM dianshang_operation_attribute WHERE brief_name = ? and platform ='自营'
             ) AS b
             ON a.goods_id=b.brief_name
             WHERE goods_id = ? AND date BETWEEN ? AND ?`
@@ -1015,9 +1015,18 @@ goodsSaleInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
             FORMAT(IFNULL(a4.real_sale_qty,0),2) AS real_sale_qty,
             FORMAT(IFNULL(a4.real_sale_amount,0),2) AS real_sale_amount,
             FORMAT(IFNULL(a4.real_gross_profit,0),2) AS real_gross_profit,
-            FORMAT(IFNULL(a4.real_sale_amount * 0.28,0),2) AS gross_standard,
-            FORMAT(IFNULL(a4.real_sale_amount * 0.28 - a4.real_gross_profit ,0),2) AS other_cost,
+            FORMAT(IFNULL(a6.gross_standard,0),2) AS gross_standard,
+            FORMAT(IFNULL(a6.gross_standard,0)-IFNULL(a4.real_gross_profit,0),2) AS other_cost,
             FORMAT(IFNULL(a1.profit/a4.real_sale_amount*100,0),2) AS profit_rate_gmv,
+            FORMAT(IFNULL(a5.targeted_audience_promotion,0),2) AS targeted_audience_promotion,
+            FORMAT(IFNULL(a5.full_site_promotion,0),2) AS full_site_promotion,
+            FORMAT(IFNULL(a5.multi_objective_promotion,0),2) AS targeted_audience_promotion,
+            FORMAT(IFNULL(a5.keyword_promotion,0),2) AS keyword_promotion,
+            FORMAT(IFNULL(a5.product_operation_promotion,0),2) AS product_operation_promotion,
+            FORMAT(IFNULL(a5.daily_promotion,0),2) AS daily_promotion,
+            FORMAT(IFNULL(a5.scene_promotion,0),2) AS scene_promotion,
+            FORMAT(IFNULL(a5.jd_express_promotion,0),2) AS jd_express_promotion,
+            FORMAT(IFNULL(a5.total_promotion,0),2) AS total_promotion,
             DATE_FORMAT(a1.date, '%Y-%m-%d') as \`date\` 
         FROM goods_sales_stats a1 LEFT JOIN goods_verifieds_stats a2 ON a1.goods_id = a2.goods_id 
             AND a2.date = DATE_SUB(a1.date, INTERVAL 1 DAY) 
@@ -1042,8 +1051,41 @@ goodsSaleInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
             GROUP BY goods_id, date
         )as a4 
         ON a1.goods_id = a4.goods_id AND a1.date = a4.date
+        LEFT JOIN(
+            select date
+                    ,SUM(IF(promotion_name='6003416精准人群推广',amount,null)) as targeted_audience_promotion
+                    ,SUM(IF(promotion_name='6003431万相台无界-全站推广',amount,null)) as full_site_promotion
+                    ,SUM(IF(promotion_name='6003414多目标直投',amount,null)) as multi_objective_promotion
+                    ,SUM(IF(promotion_name='60030412关键词推广',amount,null)) as keyword_promotion
+                    ,SUM(IF(promotion_name='6003432万相台无界-货品运营',amount,null)) as product_operation_promotion
+                    ,SUM(IF(promotion_name='日常推广',amount,null)) AS daily_promotion
+                    ,SUM(IF(promotion_name='场景推广',amount,null)) AS scene_promotion
+                    ,SUM(IF(promotion_name='京东快车1' OR promotion_name='京东快车2' OR promotion_name='京东快车3',amount,null)) AS jd_express_promotion
+                    ,SUM(IF(promotion_name='全站营销' OR promotion_name='新品全站营销',amount,null)) AS total_promotion,goods_id
+            from goods_promotion_info 
+            where date BETWEEN ? AND ? AND goods_id = ?
+            GROUP BY date,goods_id
+        ) as a5
+        ON a1.goods_id = a5.goods_id AND a1.date = a5.date
+        LEFT JOIN(
+                SELECT date
+            ,(CASE 
+            WHEN MAX(b.second_category) in('水具', '酒杯/酒具','咖啡具','烹饪锅具','刀剪菜板','酒店用品','菜板/砧板') THEN SUM(real_sale_amount)*0.28
+            WHEN MAX(b.second_category) in('餐具', '茶具') THEN SUM(real_sale_amount)*0.25
+            WHEN MAX(b.second_category) in('厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具') THEN SUM(real_sale_amount)*0.26
+            END ) AS gross_standard,goods_id
+        FROM goods_sales AS a
+        LEFT JOIN (
+            SELECT DISTINCT brief_name,second_category 
+            FROM dianshang_operation_attribute WHERE brief_name = ? and platform ='自营'
+        ) AS b
+        ON a.goods_id=b.brief_name
+        WHERE goods_id = ? AND date BETWEEN ? AND ?
+                    GROUP BY date,goods_id
+        )as a6
+        ON a1.goods_id = a6.goods_id AND a1.date = a6.date
         WHERE a1.date BETWEEN ? AND ? AND a1.goods_id = ?`
-    const result = await query(sql, [goods_id,goods_id,start, end, goods_id])
+    const result = await query(sql, [goods_id,goods_id,start, end, goods_id ,goods_id,goods_id,start, end ,start, end, goods_id])
     return result || []
 }
 
