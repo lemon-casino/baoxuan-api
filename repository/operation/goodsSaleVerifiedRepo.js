@@ -851,6 +851,7 @@ goodsSaleVerifiedRepo.batchInsert = async (count, data) => {
             sku_code, 
             shop_name, 
             \`date\`, 
+            sale_qty,
             sale_amount, 
             cost_amount, 
             gross_profit, 

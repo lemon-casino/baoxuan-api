@@ -1014,7 +1014,8 @@ const importGoodsInfo = async (rows, time) => {
         real_sale_qty_row = null,
         refund_qty_row = null,
         packing_fee_row = null,
-        bill_amount_row = null
+        bill_amount_row = null,
+        sale_qty_row = null
     for (let i = 1; i <= columns.length; i++) {
         if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
         if (columns[i] == '款式编码(参考)') {sku_id_row = i; continue}
@@ -1023,6 +1024,7 @@ const importGoodsInfo = async (rows, time) => {
         if (columns[i] == '店铺名称') {shop_name_row = i; continue}
         if (columns[i] == '店铺编码') {shop_id_row = i; continue}
         if (columns[i] == '商品名称') {goods_name_row = i; continue}
+        if (columns[i] == '利润-销售数量(扣退)') {sale_qty_row = i; continue}
         if (columns[i] == '利润-销售金额(扣退)') {sale_amount_row = i; continue}
         if (columns[i] == '利润-销售成本(扣退)') {cost_amount_row = i; continue}
         if (columns[i] == '利润-毛利') {gross_profit_row = i; continue}
@@ -1064,6 +1066,7 @@ const importGoodsInfo = async (rows, time) => {
                 rows[i].getCell(goods_name_row).value.trim() : 
                 rows[i].getCell(goods_name_row).value,
             date,
+            rows[i].getCell(sale_qty_row).value,
             rows[i].getCell(sale_amount_row).value,
             rows[i].getCell(cost_amount_row).value,
             rows[i].getCell(gross_profit_row).value,
@@ -2769,11 +2772,13 @@ const importGoodsVerified = async (rows, time) => {
         real_sale_qty_row = null,
         refund_qty_row = null,
         packing_fee_row = null,
-        bill_amount_row = null
+        bill_amount_row = null,
+        sale_qty_row = null
     for (let i = 1; i <= columns.length; i++) {
         if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
         if (columns[i] == '商品编码') {sku_code_row = i; continue}
         if (columns[i] == '店铺名称') {shop_name_row = i; continue}
+        if (columns[i] == '利润-销售数量(扣退)') {sale_qty_row = i; continue}
         if (columns[i] == '利润-销售金额(扣退)') {sale_amount_row = i; continue}
         if (columns[i] == '利润-销售成本(扣退)') {cost_amount_row = i; continue}
         if (columns[i] == '利润-毛利') {gross_profit_row = i; continue}
@@ -2802,6 +2807,7 @@ const importGoodsVerified = async (rows, time) => {
                 rows[i].getCell(sku_code_row).value) : null,
             shop_name,
             date,
+            rows[i].getCell(sale_qty_row).value,
             rows[i].getCell(sale_amount_row).value,
             rows[i].getCell(cost_amount_row).value,
             rows[i].getCell(gross_profit_row).value,

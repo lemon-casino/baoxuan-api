@@ -826,6 +826,7 @@ goodsSaleInfoRepo.batchInsert = async (count, data) => {
             shop_id, 
             goods_name, 
             \`date\`, 
+            sale_qty,
             sale_amount, 
             cost_amount, 
             gross_profit, 

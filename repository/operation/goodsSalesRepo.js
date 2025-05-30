@@ -5,7 +5,8 @@ goodsSalesRepo.batchInsert = async (date) => {
     let sqls = [], params = []
     sqls.push(`DELETE FROM goods_sales WHERE \`date\` = ?`)
     params.push([date])
-    let sql = `SELECT goods_id, shop_name, shop_id, 
+    let sql = `SELECT goods_id, shop_name, shop_id,
+            IFNULL(SUM(sale_qty), 0) AS sale_qty, 
             IFNULL(SUM(sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(cost_amount), 0) AS cost_amount,
             IFNULL(SUM(gross_profit), 0) AS gross_profit,
@@ -29,6 +30,7 @@ goodsSalesRepo.batchInsert = async (date) => {
             shop_name, 
             shop_id, 
             \`date\`, 
+            sale_qty,
             sale_amount, 
             cost_amount, 
             gross_profit, 

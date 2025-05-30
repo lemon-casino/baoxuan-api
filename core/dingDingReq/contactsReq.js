@@ -115,7 +115,6 @@ const getDp = async (access_token, user_id) => {
  * @param access_token
  * @param dept_id
  * @returns {Promise<*|undefined>}
- * 1
  */
 const getDpInfo = async (access_token, dept_id) => {
     const url = `https://oapi.dingtalk.com/topapi/v2/department/get?access_token=${access_token}`

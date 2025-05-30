@@ -6,7 +6,7 @@ goodsSalesStats.batchInsert = async (date) => {
     let sqls = [], params = []
     sqls.push(`DELETE FROM goods_sales_stats WHERE \`date\` = ? AND shop_name !='京东自营旗舰店'`)
     params.push([date])
-    let sql = `SELECT a1.goods_id, a1.shop_name, a1.shop_id, a1.date, a1.sale_amount, 
+    let sql = `SELECT a1.goods_id, a1.shop_name, a1.shop_id, a1.date,a1.sale_qty, a1.sale_amount, 
 	        a1.cost_amount, a1.express_fee, a1.packing_fee, a2.labor_cost, a1.promotion_amount, 
             a1.operation_amount, a1.order_num, a1.refund_num, a1.profit, a3.pay_amount, 
             a3.brushing_amount, a3.brushing_qty, a3.refund_amount, a3.pay_express_fee, 
@@ -34,7 +34,8 @@ goodsSalesStats.batchInsert = async (date) => {
             refund_amount, 
             pay_express_fee, 
             real_pay_amount, 
-            bill, 
+            bill,
+            sale_qty, 
             sale_amount, 
             cost_amount, 
             express_fee, 
@@ -90,7 +91,7 @@ goodsSalesStats.batchInsertJD = async (date) => {
     let sqls = [], params = []
     sqls.push(`DELETE FROM goods_sales_stats WHERE \`date\` = ? AND shop_name ='京东自营旗舰店'`)
     params.push([date])
-    let sql = `SELECT a1.goods_id, a1.shop_name, a1.shop_id, a1.date, a1.sale_amount, 
+    let sql = `SELECT a1.goods_id, a1.shop_name, a1.shop_id, a1.date,a1.sale_qty, a1.sale_amount, 
 	        a1.cost_amount, a1.express_fee, a1.packing_fee, a2.labor_cost, a1.promotion_amount, 
             a1.operation_amount, a1.order_num, a1.refund_num, a1.profit, a3.pay_amount, 
             a3.brushing_amount, a3.brushing_qty, a3.refund_amount, a3.pay_express_fee, 
@@ -119,6 +120,7 @@ goodsSalesStats.batchInsertJD = async (date) => {
             pay_express_fee, 
             real_pay_amount, 
             bill, 
+            sale_qty,
             sale_amount, 
             cost_amount, 
             express_fee, 
