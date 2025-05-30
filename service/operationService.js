@@ -1857,6 +1857,7 @@ const importJDZYInfo = async (rows, time) => {
             shop_id,
             null,
             date,
+            qty,
             sale_amount,
             cost_amount,
             sale_amount - cost_amount,

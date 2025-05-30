@@ -51,7 +51,7 @@ goodsSalesStats.batchInsert = async (date) => {
             profit) VALUES`, start = i * 500, data = [], 
             end = (i + 1) * 500 <= rows.length ? (i + 1) * 500 : rows.length
         for (let j = start; j < end; j++) {
-            sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+            sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
             data.push(
                 rows[j].goods_id, 
                 rows[j].shop_name, 
@@ -64,6 +64,7 @@ goodsSalesStats.batchInsert = async (date) => {
                 rows[j].pay_express_fee, 
                 rows[j].real_pay_amount, 
                 rows[j].bill, 
+                rows[j].sale_qty,
                 rows[j].sale_amount, 
                 rows[j].cost_amount, 
                 rows[j].express_fee, 
@@ -136,7 +137,7 @@ goodsSalesStats.batchInsertJD = async (date) => {
             profit) VALUES`, start = i * 500, data = [], 
             end = (i + 1) * 500 <= rows.length ? (i + 1) * 500 : rows.length
         for (let j = start; j < end; j++) {
-            sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+            sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
             data.push(
                 rows[j].goods_id, 
                 rows[j].shop_name, 
@@ -148,7 +149,8 @@ goodsSalesStats.batchInsertJD = async (date) => {
                 rows[j].refund_amount, 
                 rows[j].pay_express_fee, 
                 rows[j].real_pay_amount, 
-                rows[j].bill, 
+                rows[j].bill,
+                rows[j].sale_qty,  
                 rows[j].sale_amount, 
                 rows[j].cost_amount, 
                 rows[j].express_fee, 

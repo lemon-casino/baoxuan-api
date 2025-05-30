@@ -44,11 +44,12 @@ goodsVerifiedsRepo.batchInsert = async (date) => {
             order_num, 
             refund_num) VALUES`
     for (let i = 0; i < rows.length; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
         data.push(
             rows[i].goods_id, 
             rows[i].shop_name, 
             date, 
+            rows[i].sale_qty,
             rows[i].sale_amount, 
             rows[i].cost_amount, 
             rows[i].gross_profit, 
