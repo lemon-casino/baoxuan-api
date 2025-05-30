@@ -150,6 +150,7 @@ const getDataStats = async (id, start, end, params) => {
     }
     let targets_info = {}
     for (let i = 0; i < result[type].data.length; i++) {
+        // if (result[type].data[i].name == 'COUPANG') continue
         sale_amount += parseFloat(result[type].data[i].sale_amount)
         promotion_amount += parseFloat(result[type].data[i].promotion_amount)
         operation_amount += parseFloat(result[type].data[i].operation_amount)
@@ -306,7 +307,7 @@ const getDataStatsDetail = async (type, name, column, start, end, stats, user) =
         if (['sale_amount', 'promotion_amount', 'express_fee', 'packing_fee', 'profit', 'operation_amount', 'order_num', 'refund_num'].includes(column))
             result = await func.getDetailByShopNamesAndTme(shopNames, column, start, end)
         else if (column == 'operation_rate')
-            result = await func.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'promotion_amount', column, start, end, 100)
+            result = await func.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'operation_amount', column, start, end, 100)
         else if (column == 'roi')
             result = await func.getRateByShopNamesAndTme(shopNames, 'promotion_amount', 'sale_amount', column, start, end, 1)
         else if (column == 'refund_rate')
@@ -387,8 +388,10 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
         order_num = 0, refund_num = 0, words_market_vol = 0, words_vol = 0
     let shopName = [], j = -1, except = false
-    if (typeList[type].key < 3) except = true
-    for (let i = 0; i < shops.length; i++) {
+    if (typeList[type].key < 2) except = true
+    for (let i = 0; i < shops.length; i++) {        
+        // let isCoupang = await shopInfoRepo.isCoupang(shops[i].shop_name)
+        // if (except && isCoupang) continue
         if (i == 0 || shops[i].name != shops[i-1].name) {
             shopName.push({
                 shop_name: shops[i].shop_name,
@@ -1014,7 +1017,8 @@ const importGoodsInfo = async (rows, time) => {
         real_sale_qty_row = null,
         refund_qty_row = null,
         packing_fee_row = null,
-        bill_amount_row = null
+        bill_amount_row = null,
+        sale_qty_row = null
     for (let i = 1; i <= columns.length; i++) {
         if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
         if (columns[i] == '款式编码(参考)') {sku_id_row = i; continue}
@@ -1023,6 +1027,7 @@ const importGoodsInfo = async (rows, time) => {
         if (columns[i] == '店铺名称') {shop_name_row = i; continue}
         if (columns[i] == '店铺编码') {shop_id_row = i; continue}
         if (columns[i] == '商品名称') {goods_name_row = i; continue}
+        if (columns[i] == '利润-销售数量(扣退)') {sale_qty_row = i; continue}
         if (columns[i] == '利润-销售金额(扣退)') {sale_amount_row = i; continue}
         if (columns[i] == '利润-销售成本(扣退)') {cost_amount_row = i; continue}
         if (columns[i] == '利润-毛利') {gross_profit_row = i; continue}
@@ -1064,6 +1069,7 @@ const importGoodsInfo = async (rows, time) => {
                 rows[i].getCell(goods_name_row).value.trim() : 
                 rows[i].getCell(goods_name_row).value,
             date,
+            rows[i].getCell(sale_qty_row).value,
             rows[i].getCell(sale_amount_row).value,
             rows[i].getCell(cost_amount_row).value,
             rows[i].getCell(gross_profit_row).value,
@@ -2701,7 +2707,10 @@ const checkOperationOptimize = async () => {
                 [optimize[j]]
             )
             if (info?.length && info[0].count) {
-                info = await newFormsRepo.checkOptimize(goods_info[i].goods_id, optimize[j].title, optimize[j].days)
+                optimize_title = optimize[j].title
+                if (optimize[j].column == 'channel_roi') 
+                    optimize_title = optimize[j].value + optimize[j].title
+                info = await newFormsRepo.checkOptimize(goods_info[i].goods_id, optimize_title, optimize[j].days)
                 if (!info?.length) {
                     let params = {}
                     params[optimizeFieldMap.optimize_rank] = optimizeRankMap[0]
@@ -2736,7 +2745,7 @@ const checkOperationOptimize = async () => {
                     params[optimizeFieldMap.goods_id] = goods_info[i].goods_id
                     params[optimizeFieldMap.platform] = platformMap[goods_info[i].platform]
                     params[optimizeFieldMap.type] = optimize[j].optimize_type
-                    params[optimizeFieldMap.content] = [optimize[j].title]
+                    params[optimizeFieldMap.content] = [optimize_title]
                     // fs.writeFileSync('./public/info.json', JSON.stringify(params) + '\n', {flag: 'a'})
                     await createProcess(
                         optimizeFlowUUid,
@@ -2769,11 +2778,13 @@ const importGoodsVerified = async (rows, time) => {
         real_sale_qty_row = null,
         refund_qty_row = null,
         packing_fee_row = null,
-        bill_amount_row = null
+        bill_amount_row = null,
+        sale_qty_row = null
     for (let i = 1; i <= columns.length; i++) {
         if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
         if (columns[i] == '商品编码') {sku_code_row = i; continue}
         if (columns[i] == '店铺名称') {shop_name_row = i; continue}
+        if (columns[i] == '利润-销售数量(扣退)') {sale_qty_row = i; continue}
         if (columns[i] == '利润-销售金额(扣退)') {sale_amount_row = i; continue}
         if (columns[i] == '利润-销售成本(扣退)') {cost_amount_row = i; continue}
         if (columns[i] == '利润-毛利') {gross_profit_row = i; continue}
@@ -2802,6 +2813,7 @@ const importGoodsVerified = async (rows, time) => {
                 rows[i].getCell(sku_code_row).value) : null,
             shop_name,
             date,
+            rows[i].getCell(sale_qty_row).value,
             rows[i].getCell(sale_amount_row).value,
             rows[i].getCell(cost_amount_row).value,
             rows[i].getCell(gross_profit_row).value,

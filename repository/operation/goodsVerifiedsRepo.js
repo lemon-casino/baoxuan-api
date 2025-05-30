@@ -6,6 +6,7 @@ goodsVerifiedsRepo.batchInsert = async (date) => {
     sqls.push(`DELETE FROM goods_verifieds WHERE \`date\` = ?`)
     params.push([date])
     let sql = `SELECT goods_id, shop_name, 
+            IFNULL(SUM(sale_qty), 0) AS sale_qty,
             IFNULL(SUM(sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(cost_amount), 0) AS cost_amount,
             IFNULL(SUM(gross_profit), 0) AS gross_profit,
@@ -27,6 +28,7 @@ goodsVerifiedsRepo.batchInsert = async (date) => {
             goods_id, 
             shop_name, 
             \`date\`, 
+            sale_qty,
             sale_amount, 
             cost_amount, 
             gross_profit, 
