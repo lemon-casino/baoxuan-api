@@ -181,19 +181,6 @@ const statItem3 = [
         code: 'DONE'
     }
 ]
-    
-const developmentItem = [
-    {
-        name: '进行中',
-        code: 'DOING'
-    }, {
-        name: '已完成',
-        code: 'DONE'
-    }, {
-        name: '已终止',
-        code: 'TERMINATED'
-    }
-]
 
 const statItem3Type = {
     next: 0,
@@ -716,9 +703,9 @@ const developmentTypeMap = {
     create_num: 5
 }
 const developmentStatusMap = {
-    '进行中': 0,
-    '已完成': 1,
-    '已终止': 2,
+    '待转入': 0,
+    '进行中': 1,
+    '已完成': 2,
     '选中': 3,
     '未选中': 4
 }
@@ -774,7 +761,6 @@ module.exports = {
     retouchList,
     photographerChild,
     tableHeaderExtra,
-    developmentItem,
     developmentType,
     developmentTypeMap,
     developmentStatusMap,

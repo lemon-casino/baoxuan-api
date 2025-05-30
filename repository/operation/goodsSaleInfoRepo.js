@@ -643,25 +643,25 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                 if (row[i].goods_id) {
                     goods_ids = `${goods_ids}"${row[i].goods_id}",`
                     goodsMap[row[i].goods_id] = i
+                    sql = `${sql} (SELECT IFNULL(s.on_sku_code, o.sku_id) AS sku_id, o.goods_id 
+                        FROM orders_goods_sales o LEFT JOIN jst_goods_sku s 
+                            ON o.goods_id = s.goods_id AND o.sku_id = s.sku_id 
+                        WHERE o.goods_id = "${row[i].goods_id}" AND o.date 
+                            BETWEEN "${start}" AND "${end}" 
+                        GROUP BY o.sku_id, s.on_sku_code, o.goods_id  
+                        ORDER BY IFNULL(SUM(o.sale_amount), 0) DESC LIMIT 2)
+                        UNION ALL`
                 }
             }
             if (goods_ids?.length) {
                 goods_ids = goods_ids.substring(0, goods_ids.length - 1) 
-                sql = `WITH a1 AS (
-                        SELECT IFNULL(s.on_sku_code, o.sku_id) AS sku_id, o.goods_id, 
-                        ROW_NUMBER() OVER (PARTITION BY o.goods_id ORDER BY 
-                            IFNULL(SUM(o.sale_amount), 0) DESC) AS rk FROM orders_goods_sales o 
-                        LEFT JOIN jst_goods_sku s ON o.goods_id = s.goods_id 
-                            AND o.sku_id = s.sku_id 
-                        WHERE o.goods_id IN (${goods_ids}) AND o.date BETWEEN ? AND ? 
-                        GROUP BY o.sku_id, s.on_sku_code, o.goods_id
-                    ) SELECT sku_id, goods_id, rk FROM a1 WHERE rk <= 2`
-                row1 = await query(sql, [start, end])
+                sql = sql.substring(0, sql.length - 9)
+                row1 = await query(sql)
                 if (row1?.length) {
                     for (let j = 0; j < row1.length; j++) {
                         let i = goodsMap[row1[j].goods_id]
-                        if (row1[j].rk == 1) row[i].sku_id = row1[j].sku_id
-                        else row[i].sku_sid = row1[j].sku_id               
+                        if (row[i].sku_id) row[i].sku_sid = row1[j].sku_id
+                        else row[i].sku_id = row1[j].sku_id               
                     }
                 }
                 sql = `SELECT goods_name, brief_name, operator, brief_product_line, 
@@ -1219,19 +1219,20 @@ goodsSaleInfoRepo.getDataGrossProfitByTime = async(goods_id, start, end) => {
                         SUM(o.rate)) / SUM(o.sale_amount)
                         - IF(IFNULL(SUM(g.sale_amount), 0) > 0, 
                             IFNULL(SUM(g.bill), 0) / SUM(g.sale_amount), 0)
-                ) * 100, 2), 0) AS gross_profit, o.date
+                ) * 100, 2), 0) AS gross_profit, ? AS date
         FROM orders_goods_sales o LEFT JOIN goods_verifieds_stats g 
-            ON o.goods_id = g.goods_id AND g.date = DATE_SUB(o.date, INTERVAL 1 DAY) 
-        WHERE o.date BETWEEN ? AND ? 
-            AND IF(g.goods_id IS NOT NULL, g.date BETWEEN ? AND ?, true) 
-            AND o.goods_id = ? 
-        GROUP BY o.date`
-    const result = await query(sql, [
-        start, 
-        end,
-        moment(start).subtract(1, 'day').format('YYYY-MM-DD'),
-        moment(end).subtract(1, 'day').format('YYYY-MM-DD'),
-        goods_id])
+            ON o.goods_id = g.goods_id AND g.date = ?
+        WHERE o.date = ? AND o.goods_id = ?`
+    let search = '', time = start, params = []
+    while (moment(time).valueOf() <= moment(end).valueOf()) {
+        let preTime = moment(time).subtract(1, 'day').format('YYYY-MM-DD')
+        search = `${search}${sql} 
+            UNION ALL `
+        params.push(time, preTime, time, goods_id)
+        time = moment(time).subtract(-1, 'day').format('YYYY-MM-DD')
+    }
+    search = search.substring(0, search.length - 10)
+    const result = await query(search, params)
     return result || []
 }
 
@@ -1260,15 +1261,8 @@ goodsSaleInfoRepo.getDataGrossProfitDetailByTime = async(goods_id, start, end) =
             ) * 100, 2), 0) AS gross_profit, o.sku_id AS sku_code FROM orders_goods_sales o 
             LEFT JOIN goods_verifieds_stats g ON o.goods_id = g.goods_id 
                 AND g.date = DATE_SUB(o.date, INTERVAL 1 DAY) 
-            WHERE o.date BETWEEN ? AND ? 
-                AND IF(g.goods_id IS NOT NULL, g.date BETWEEN ? AND ?, true) 
-                AND o.goods_id = ? GROUP BY o.sku_id`
-    const result = await query(sql, [
-        start, 
-        end, 
-        moment(start).subtract(1, 'day').format('YYYY-MM-DD'), 
-        moment(end).subtract(1, 'day').format('YYYY-MM-DD'), 
-        goods_id])
+            WHERE o.date BETWEEN ? AND ? AND o.goods_id = ? GROUP BY o.sku_id`
+    const result = await query(sql, [start, end, goods_id])
     return result || []
 }
 
@@ -1420,8 +1414,8 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                 }
                 sql = `${sql}, 1))`
                 if (optimize[i].children?.length) {
-                    let start1 = moment(start).subtract(1, 'day').format('YYYY-MM-DD')
-                    let end1 = moment(end).subtract(1, 'day').format('YYYY-MM-DD')
+                    let start1 = moment(start).subtract(8, 'day').format('YYYY-MM-DD')
+                    let end1 = moment(start).subtract(2, 'day').format('YYYY-MM-DD')
                     for (let j = 0; j < optimize[i].children.length; j++) {
                         if (optimize[i].children[j].type == 3) {
                             let values = optimize[i].children[j].value.split(',')
@@ -1433,24 +1427,21 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                                             IF(doa.${optimize[i].children[j].column} IS NOT NULL, doa.${optimize[i].children[j].column} NOT LIKE '%${values[k]}%', 1=1))`
                             }              } else if (optimize[i].children[j].type == 1) {
                             sql = `${sql} AND EXISTS(
-                                SELECT  * FROM (SELECT IFNULL(SUM(a3.sale_amount), 0) AS sale_amount, 
-                                    IFNULL(SUM(a3.cost_amount), 0) AS cost_amount, 
-                                    IFNULL(SUM(a3.express_fee), 0) AS express_fee, 
-                                    IFNULL(SUM(a3.packing_fee), 0) AS packing_fee, 
-                                    IFNULL(SUM(a3.rate), 0) AS labor_cost, 
+                                SELECT  * FROM (SELECT IFNULL(SUM(a2.sale_amount), 0) AS sale_amount, 
+                                    IFNULL(SUM(a2.packing_fee), 0) AS packing_fee, 
+                                    IFNULL(SUM(a2.labor_cost), 0) AS labor_cost, 
                                     IFNULL(SUM(a2.bill), 0) AS bill, 
-                                    IFNULL(SUM(a2.sale_amount), 0) AS amount, 
-                                    a2.goods_id FROM goods_verifieds_stats a2, orders_goods_sales a3 
+                                    IFNULL(SUM(a2.express_fee), 0) AS express_fee, 
+                                    IFNULL(SUM(a2.cost_amount), 0) AS cost_amount, 
+                                    a2.goods_id FROM goods_sales_stats a2 
                                 WHERE a2.goods_id = "${goods_id}" 
-                                    AND a3.goods_id = "${goods_id}" 
-                                    AND a2.date BETWEEN "${start1}" AND "${end1}"
-                                    AND a3.date BETWEEN '${start}' AND '${end}') aa WHERE 
+                                    AND a2.date BETWEEN "${start1}" AND "${end1}") aa WHERE 
                                     goods_id IS NOT NULL AND 
                                     IF(sale_amount > 0, 
-                                        (1 - (express_fee + packing_fee + labor_cost + cost_amount) / sale_amount - IF(amount > 0, bill / amount, 0)) * 100`
+                                        (1 - (express_fee + packing_fee + labor_cost + cost_amount + bill) / sale_amount) * 100`
                             if (optimize[i].children[j].min != null && optimize[i].children[j].max != null) {
                                 sql = `${sql} >= ${optimize[i].children[j].min} 
-                                        AND (1 - (express_fee + packing_fee + labor_cost + cost_amount) / sale_amount - IF(amount > 0, bill / amount, 0)) * 100 < 
+                                        AND (1 - (express_fee + packing_fee + labor_cost + cost_amount + bill) / sale_amount) * 100 < 
                                             ${optimize[i].children[j].max}`
                             } else if (optimize[i].children[j].min != null) {
                                 sql = `${sql} >= ${optimize[i].children[j].min}`
@@ -1494,32 +1485,6 @@ goodsSaleInfoRepo.getOptimizeResult = async (goods_id, time, optimize) => {
                     sql = `${sql} < ${optimize[i].max}`
                 }
                 sql = `${sql})`
-                break
-            case 'channel_roi':
-                let start1 = moment(start).subtract(1, 'day').format('YYYY-MM-DD')
-                let end1 = moment(end).subtract(1, 'day').format('YYYY-MM-DD')
-                sql = `${sql} AND EXISTS(
-                    SELECT * FROM (
-                        SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
-                            IFNULL(SUM(cost_amount), 0) AS cost_amount, 
-                            IFNULL(SUM(express_fee), 0) AS express_fee, 
-                            IFNULL(SUM(packing_fee), 0) AS packing_fee, 
-                            IFNULL(SUM(rate), 0) AS labor_cost, goods_id 
-                        FROM orders_goods_sales
-                        WHERE \`date\` BETWEEN "${start}" AND "${end}" 
-                            AND goods_id = '${goods_id}'
-                    ) a2 LEFT JOIN (
-                        SELECT IFNULL(SUM(bill), 0) AS bill, 
-                            IFNULL(SUM(sale_amount), 0) AS amount, goods_id
-                        FROM goods_verifieds_stats 
-                        WHERE \`date\` BETWEEN "${start1}" AND "${end1}" 
-                            AND goods_id = '${goods_id}'
-                    ) a3 ON a2.goods_id = a3.goods_id 
-                    JOIN tmall_promotion_info i ON i.goods_id = a2.goods_id
-                        AND i.promotion_name = '${optimize[i]['value']}' 
-                    WHERE a2.goods_id IS NOT NULL AND i.pay_time = '${end}' 
-                        AND IF(a2.sale_amount > 0, 
-                            a2.sale_amount > (a2.express_fee + a2.packing_fee + a2.labor_cost + a2.cost_amount + IF(a3.amount > 0, a3.bill / a3.amount, 0) * a2.sale_amount) * i.roi, 0))`
                 break
             default:
         }

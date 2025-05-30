@@ -162,7 +162,6 @@ const syncUserWithDepartment = async () => {
         //     user.leader_in_dept.push(...extension.virtualDeps)
         // }
     }
-    logger.info(usersWithDepartment)
     
     await redisUtil.set(redisKeys.Users, JSON.stringify(usersWithDepartment))
     globalSetter.setGlobalUsers(usersWithDepartment)

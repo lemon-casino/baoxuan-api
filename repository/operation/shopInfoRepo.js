@@ -34,10 +34,4 @@ shopInfoRepo.getShopIdByName = async (name) =>{
     const result = await query(sql, [name])
     return result || []
 }
-
-shopInfoRepo.isCoupang = async (name) => {
-    const sql = `SELECT id FROM shop_info WHERE shop_name = ? AND project_id = 4`
-    const result = await query(sql, [name])
-    return result?.length ? true : false
-}
 module.exports = shopInfoRepo

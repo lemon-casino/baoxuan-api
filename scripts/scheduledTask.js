@@ -69,7 +69,7 @@ schedule.scheduleJob(jstOrderCron, async function () {
 //检查运营链接优化
 schedule.scheduleJob(tmallLinkData, async function () {
     if (process.env.NODE_ENV === "prod") {
-        // await operationService.checkOperationOptimize()
+        await operationService.checkOperationOptimize()
     }
 })
 
@@ -215,7 +215,7 @@ schedule.scheduleJob(syncRunningFlowsCron, async function () {
 
 schedule.scheduleJob(tmallLinkData, async function () {
     if (process.env.NODE_ENV === "prod") {
-        // await taskService.executeTask("tianmao")
+        await taskService.executeTask("tianmao")
     }
 })
 
