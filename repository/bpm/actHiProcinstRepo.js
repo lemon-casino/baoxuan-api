@@ -43,4 +43,227 @@ actHiProcinstRepo.getFinish = async (start, end) => {
     return result
 }
 
+actHiProcinstRepo.getFtInfo = async (userNames, start, end) => {
+    let sql = `SELECT IF(v.TEXT_ = '3', 2, IF(v1.TEXT_ = '2', 1, 0)) AS \`status\`, 
+            v2.TEXT_ AS task_status, COUNT(1) AS count 
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v.NAME_ = 'PROCESS_STATUS'
+            AND v.TEXT_ NOT IN ('-1', '4')
+        JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND t.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')
+            AND IF(t.END_TIME_ IS NULL, 1, t.END_TIME_ = (
+                SELECT MAX(t1.END_TIME_) FROM ACT_HI_TASKINST t1 WHERE t1.PROC_INST_ID_ = p.PROC_INST_ID_
+                    AND t1.NAME_ = t.NAME_
+            ))
+        LEFT JOIN ACT_HI_TASKINST t2 ON t2.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND t2.NAME_ = '反选运营确认样品是否选中'
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v1.NAME_ = 'TASK_STATUS' AND v1.TASK_ID_ = t2.ID_ 
+        LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v2.NAME_ = 'Fy6xma3jakboekc' AND v2.TASK_ID_ = t2.ID_ 
+        JOIN system_users u ON u.id = t.ASSIGNEE_ AND u.nickname in ("${userNames}") 
+        WHERE d.KEY_ = 'fttplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        GROUP BY IF(v.TEXT_ = '3', 2, IF(v1.TEXT_ = '2', 1, 0)), v2.TEXT_`
+    let result = await query(sql, [start, end])
+    return result
+}
+
+actHiProcinstRepo.getGysInfo = async (userNames, start, end) => {
+    let sql = `SELECT IF(v.TEXT_ = '3', 2, IF(v1.TEXT_ IS NULL OR v2.TEXT_ IS NULL OR v3.TEXT_ IS NULL, 0, 1)) 
+            AS \`status\`, COUNT(1) AS count  
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v.NAME_ = 'PROCESS_STATUS' 
+            AND v.TEXT_ NOT IN ('-1', '4') 
+        LEFT JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND t.NAME_ = '事业部一提交市场分析' 
+            AND t.START_TIME_ = ( 
+                SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                    AND tt.NAME_ = t.NAME_ 
+            )
+        LEFT JOIN ACT_HI_TASKINST t1 ON t1.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND t1.NAME_ = '事业部二提交市场分析' 
+            AND t1.START_TIME_ = ( 
+                SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                    AND tt.NAME_ = t1.NAME_ 
+            )
+        LEFT JOIN ACT_HI_TASKINST t2 ON t2.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND t2.NAME_ = '事业部三提交市场分析' 
+            AND t2.START_TIME_ = ( 
+                SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                    AND tt.NAME_ = t2.NAME_ 
+            )
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v1.TASK_ID_ IS NULL 
+            AND v1.NAME_ = 'Fmtama25a3lrcwc' 
+        LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v2.TASK_ID_ IS NULL 
+            AND v2.NAME_ = 'Fkyuma25az2ud8c' 
+        LEFT JOIN ACT_HI_VARINST v3 ON v3.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v3.TASK_ID_ IS NULL 
+            AND v3.NAME_ = 'Fiaama25b6zidec' 
+        JOIN system_users u ON u.id = p.START_USER_ID_ AND u.nickname in ("${userNames}") 
+        WHERE d.KEY_ = 'gystplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        GROUP BY IF(v.TEXT_ = '3', 2, IF(v1.TEXT_ IS NULL OR v2.TEXT_ IS NULL OR v3.TEXT_ IS NULL, 0, 1))`
+    let result = await query(sql, [start, end])
+    return result
+}
+
+actHiProcinstRepo.getZyInfo = async (userNames, start, end) => {
+    let sql = `SELECT IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0)) AS \`status\`, 
+            COUNT(1) AS count FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v.NAME_ = 'PROCESS_STATUS' 
+            AND v.TEXT_ NOT IN ('-1', '4') 
+        JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v1.NAME_ = 'Cfidbw9ff40k6' 
+        JOIN system_users u ON u.id = v1.TEXT_ AND u.nickname in ("${userNames}") 
+        WHERE d.KEY_ = 'zytplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        GROUP BY IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0))`
+    let result = await query(sql, [start, end])
+    return result
+}
+
+actHiProcinstRepo.getIpInfo = async (userNames, start, end) => {
+    let sql = `SELECT IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0)) AS \`status\`, 
+            COUNT(1) AS count FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v.NAME_ = 'PROCESS_STATUS' 
+            AND v.TEXT_ NOT IN ('-1', '4') 
+        JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v1.NAME_ = 'Cfidaq7mz3963' 
+        JOIN system_users u ON u.id = v1.TEXT_ AND u.nickname in ("${userNames}") 
+        WHERE d.KEY_ = 'iptplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        GROUP BY IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0))`
+    let result = await query(sql, [start, end])
+    return result
+}
+
+actHiProcinstRepo.getSctgInfo = async (userNames, start, end) => {
+    let sql = `SELECT IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0)) AS \`status\`, 
+            COUNT(1) AS count FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v.NAME_ = 'PROCESS_STATUS' 
+            AND v.TEXT_ NOT IN ('-1', '4') 
+        JOIN system_users u ON u.id = p.START_USER_ID_ AND u.nickname in ("${userNames}") 
+        WHERE d.KEY_ = 'sctgtplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        GROUP BY IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0))`
+    let result = await query(sql, [start, end])
+    return result
+}
+
+actHiProcinstRepo.getFtDetail = async (status, userNames, start, end) => {
+    let sql = `SELECT u.nickname, v2.TEXT_ AS task_status, COUNT(1) AS count 
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v.NAME_ = 'PROCESS_STATUS'
+            AND v.TEXT_ NOT IN ('-1', '4')
+        JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND t.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')
+            AND IF(t.END_TIME_ IS NULL, 1, t.END_TIME_ = (
+                SELECT MAX(t1.END_TIME_) FROM ACT_HI_TASKINST t1 WHERE t1.PROC_INST_ID_ = p.PROC_INST_ID_
+                    AND t1.NAME_ = t.NAME_
+            ))
+        LEFT JOIN ACT_HI_TASKINST t2 ON t2.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND t2.NAME_ = '反选运营确认样品是否选中'
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v1.NAME_ = 'TASK_STATUS' AND v1.TASK_ID_ = t2.ID_ 
+        LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v2.NAME_ = 'Fy6xma3jakboekc' AND v2.TASK_ID_ = t2.ID_
+        JOIN system_users u ON u.id = t.ASSIGNEE_ AND u.nickname in ("${userNames}") 
+        WHERE d.KEY_ = 'fttplc' AND p.START_TIME_ BETWEEN ? AND ? 
+            AND IF(v.TEXT_ = '3', 2, IF(v1.TEXT_ = '2', 1, 0)) = ?
+        GROUP BY u.nickname, v2.TEXT_`
+    let result = await query(sql, [start, end, status])
+    return result
+}
+
+actHiProcinstRepo.getGysDetail = async (status, userNames, start, end) => {
+    let sql = `SELECT u.nickname, COUNT(1) AS count 
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v.NAME_ = 'PROCESS_STATUS' 
+            AND v.TEXT_ NOT IN ('-1', '4') 
+        LEFT JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND t.NAME_ = '事业部一提交市场分析' 
+            AND t.START_TIME_ = ( 
+                SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                    AND tt.NAME_ = t.NAME_ 
+            )
+        LEFT JOIN ACT_HI_TASKINST t1 ON t1.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND t1.NAME_ = '事业部二提交市场分析' 
+            AND t1.START_TIME_ = ( 
+                SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                    AND tt.NAME_ = t1.NAME_ 
+            )
+        LEFT JOIN ACT_HI_TASKINST t2 ON t2.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND t2.NAME_ = '事业部三提交市场分析' 
+            AND t2.START_TIME_ = ( 
+                SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                    AND tt.NAME_ = t2.NAME_ 
+            )
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v1.TASK_ID_ IS NULL 
+            AND v1.NAME_ = 'Fmtama25a3lrcwc' 
+        LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v2.TASK_ID_ IS NULL 
+            AND v2.NAME_ = 'Fkyuma25az2ud8c' 
+        LEFT JOIN ACT_HI_VARINST v3 ON v3.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v3.TASK_ID_ IS NULL 
+            AND v3.NAME_ = 'Fiaama25b6zidec' 
+        JOIN system_users u ON u.id = p.START_USER_ID_ AND u.nickname in ("${userNames}") 
+        WHERE d.KEY_ = 'gystplc' AND p.START_TIME_ BETWEEN ? AND ? 
+            AND IF(v.TEXT_ = '3', 2, IF(v1.TEXT_ IS NULL OR v2.TEXT_ IS NULL OR v3.TEXT_ IS NULL, 0, 1)) = ? 
+        GROUP BY u.nickname`
+    let result = await query(sql, [start, end, status])
+    return result
+}
+
+actHiProcinstRepo.getZyDetail = async (status, userNames, start, end) => {
+    let sql = `SELECT u.nickname, COUNT(1) AS count 
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v.NAME_ = 'PROCESS_STATUS' 
+            AND v.TEXT_ NOT IN ('-1', '4') 
+        JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v1.NAME_ = 'Cfidbw9ff40k6' 
+        JOIN system_users u ON u.id = v1.TEXT_ AND u.nickname in ("${userNames}") 
+        WHERE d.KEY_ = 'zytplc' AND p.START_TIME_ BETWEEN ? AND ? 
+            AND IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0)) = ? 
+        GROUP BY v1.TEXT_`
+    let result = await query(sql, [start, end, status])
+    return result
+}
+
+actHiProcinstRepo.getIpDetail = async (status, userNames, start, end) => {
+    let sql = `SELECT u.nickname, COUNT(1) AS count 
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v.NAME_ = 'PROCESS_STATUS' 
+            AND v.TEXT_ NOT IN ('-1', '4') 
+        JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v1.NAME_ = 'Cfidaq7mz3963' 
+        JOIN system_users u ON u.id = v1.TEXT_ AND u.nickname in ("${userNames}") 
+        WHERE d.KEY_ = 'iptplc' AND p.START_TIME_ BETWEEN ? AND ? 
+            AND IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0)) = ? 
+        GROUP BY v1.TEXT_`
+    let result = await query(sql, [start, end, status])
+    return result
+}
+
+actHiProcinstRepo.getSctgDetail = async (status, userNames, start, end) => {
+    let sql = `SELECT u.nickname, COUNT(1) AS count 
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v.NAME_ = 'PROCESS_STATUS' 
+            AND v.TEXT_ NOT IN ('-1', '4') 
+        JOIN system_users u ON u.id = p.START_USER_ID_ AND u.nickname in ("${userNames}") 
+        WHERE d.KEY_ = 'sctgtplc' AND p.START_TIME_ BETWEEN ? AND ? 
+            AND IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0)) = ? 
+        GROUP BY p.START_USER_ID_`
+    let result = await query(sql, [start, end, status])
+    return result
+}
+
 module.exports = actHiProcinstRepo
