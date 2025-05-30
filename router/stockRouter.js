@@ -7,5 +7,7 @@ const stockApi = require('../router_handler/stockApi')
 router.post('/get-week-stats', stockApi.getWeekStats)
 router.post('/sync-order', stockApi.syncOrder)
 router.post('/goods-sku/import', stockApi.importGoodsSku)
+router.post('/purchase-info/import', stockApi.importPurchaseInfo)
+router.post('/ori-sku-info/import', stockApi.importOriSkuInfo)
 
 module.exports = router

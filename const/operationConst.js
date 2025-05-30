@@ -135,6 +135,7 @@ const analysisFieldMap = {
 	link: "textField_m2py5hjz",
 	operator: "employeeField_lii9qts2",
 }
+const productManageFlowUUid = "FORM-2FAE8F12CBB54CB8A604A74597D19CB18U9I"
 
 const optimizeFlowUUid = "FORM-51A6DCCF660B4C1680135461E762AC82JV53"
 const optimizeUser = "02353062153726101260"
@@ -186,4 +187,5 @@ module.exports = {
 	goodsIsOldMap,
 	goodsRankMap,
 	optimizeRankMap,
+	productManageFlowUUid
 }

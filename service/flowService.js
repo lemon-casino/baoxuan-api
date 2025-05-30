@@ -1423,7 +1423,10 @@ const getDevelopmentProcesses = async (params, offset, limit) => {
             userNames = `${userNames}"${users[i].nickname}",`
         }
     }
-    if (userNames?.length) userNames = userNames.substring(0, userNames.length - 1)
+    if (userNames?.length) {
+        if (params.type == 1) userNames = `${userNames}"孙旭东"`
+        else userNames = userNames.substring(0, userNames.length - 1)
+    }
     let result = await newFormsRepo.getDevelopmentProcessInstances(userNames, params, offset, limit)
     return result
 }
