@@ -4,6 +4,8 @@ const outOrderRepo = require('../../repository/jst/outOrderRepo')
 const outSubOrderRepo = require('../../repository/jst/outSubOrderRepo')
 const goodsSkuRepo = require('../../repository/jst/goodsSkuRepo')
 const moment = require('moment')
+const purchaseRepo = require('@/repository/jst/purchaseRepo')
+const oriSkuRepo = require('@/repository/jst/oriSkuRepo')
 
 const syncOrder = async (start, end) => {
     let shops = await shopInfoRepo.getInfo(), 
@@ -197,7 +199,9 @@ const importGoodsSku = async (rows) => {
         or_sku_id_row = null,
         on_sku_code_row = null, 
         sys_goods_id_row = null, 
-        sys_sku_id_row = null
+        sys_sku_id_row = null, 
+        is_shelf_row = null, 
+        create_time_row = null
     for (let i = 1; i <= columns.length; i++) {
         if (columns[i] == '店铺编号') {shop_id_row = i; continue}
         if (columns[i] == '店铺名称') {shop_name_row = i; continue}
@@ -209,6 +213,8 @@ const importGoodsSku = async (rows) => {
         if (columns[i] == '线上颜色规格') {on_sku_code_row = i; continue}
         if (columns[i] == '系统款式编码') {sys_goods_id_row = i; continue}
         if (columns[i] == '系统商品编码') {sys_sku_id_row = i; continue}
+        if (columns[i] == '是否上架') {is_shelf_row = i; continue}
+        if (columns[i] == '创建时间') {create_time_row = i; continue}
     }
     for (let i = 1; i < rows.length; i++) {
         let shop_id = typeof(rows[i].getCell(shop_id_row).value) == 'string' ? 
@@ -240,7 +246,13 @@ const importGoodsSku = async (rows) => {
             rows[i].getCell(sys_goods_id_row).value       
         let sys_sku_id = typeof(rows[i].getCell(sys_sku_id_row).value) == 'string' ? 
             rows[i].getCell(sys_sku_id_row).value.trim() : 
-            rows[i].getCell(sys_sku_id_row).value
+            rows[i].getCell(sys_sku_id_row).value     
+        let is_shelf = typeof(rows[i].getCell(is_shelf_row).value) == 'string' ? 
+            rows[i].getCell(is_shelf_row).value.trim() : 
+            rows[i].getCell(is_shelf_row).value        
+        let create_time = typeof(rows[i].getCell(create_time_row).value) == 'string' ? 
+            rows[i].getCell(create_time_row).value.trim() : 
+            rows[i].getCell(create_time_row).value
         let goods = await goodsSkuRepo.get(goods_id, sku_id)
         if (goods?.length) {
             result = await goodsSkuRepo.update([
@@ -250,6 +262,8 @@ const importGoodsSku = async (rows) => {
                 on_sku_code,
                 sys_goods_id,
                 sys_sku_id,
+                is_shelf,
+                create_time,
                 goods_id,
                 sku_id,
             ])
@@ -264,7 +278,9 @@ const importGoodsSku = async (rows) => {
                 or_sku_id,
                 on_sku_code,
                 sys_goods_id,
-                sys_sku_id
+                sys_sku_id,
+                is_shelf,
+                create_time
             )
             count += 1
         }
@@ -276,8 +292,119 @@ const importGoodsSku = async (rows) => {
     return result
 }
 
+const importPurchaseInfo = async (rows) => {
+    let count = 0, data = [], result = false
+    let columns = rows[0].values,
+        po_id_row = null, 
+        io_date_row = null, 
+        warehouse_row = null,
+        io_id_row = null,
+        sku_code_row = null,
+        goods_code_row = null
+    for (let i = 1; i <= columns.length; i++) {
+        if (columns[i] == '采购单号') {po_id_row = i; continue}
+        if (columns[i] == '入库日期') {io_date_row = i; continue}
+        if (columns[i] == '仓库') {warehouse_row = i; continue}
+        if (columns[i] == '入仓单号') {io_id_row = i; continue}
+        if (columns[i] == '商品编码') {sku_code_row = i; continue}
+        if (columns[i] == '款式编号') {goods_code_row = i; continue}
+    }
+    for (let i = 1; i < rows.length; i++) {
+        let po_id = typeof(rows[i].getCell(po_id_row).value) == 'string' ? 
+            rows[i].getCell(po_id_row).value.trim() : 
+            rows[i].getCell(po_id_row).value
+        let io_date = typeof(rows[i].getCell(io_date_row).value) == 'string' ? 
+            rows[i].getCell(io_date_row).value.trim() : 
+            rows[i].getCell(io_date_row).value
+        let warehouse = typeof(rows[i].getCell(warehouse_row).value) == 'string' ? 
+            rows[i].getCell(warehouse_row).value.trim() : 
+            rows[i].getCell(warehouse_row).value
+        let io_id = typeof(rows[i].getCell(io_id_row).value) == 'string' ? 
+            rows[i].getCell(io_id_row).value.trim() : 
+            rows[i].getCell(io_id_row).value
+        let sku_code = typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
+            rows[i].getCell(sku_code_row).value.trim() : 
+            rows[i].getCell(sku_code_row).value
+        let goods_code = typeof(rows[i].getCell(goods_code_row).value) == 'string' ? 
+            rows[i].getCell(goods_code_row).value.trim() : 
+            rows[i].getCell(goods_code_row).value
+        let purchase = await purchaseRepo.get(po_id, io_id, sku_code)
+        if (purchase?.length) {
+            result = await purchaseRepo.update([
+                io_date,
+                warehouse,
+                goods_code,
+                po_id,
+                io_id,
+                sku_code
+            ])
+        } else {
+            data.push(
+                po_id,
+                io_date,
+                warehouse,
+                io_id,
+                sku_code,
+                goods_code
+            )
+            count += 1
+        }
+    }
+    logger.info(`[采购入库导入]`)
+    if (count > 0) {
+        result = await purchaseRepo.batchInsert(data, count)
+    }
+    return result
+}
+
+const importOriSkuInfo = async (rows) => {
+    let count = 0, data = [], result = false
+    let columns = rows[0].values,
+        goods_code_row = null, 
+        sku_code_row = null, 
+        spu_short_name_row = null
+    for (let i = 1; i <= columns.length; i++) {
+        if (columns[i] == '款式编码') {goods_code_row = i; continue}
+        if (columns[i] == '商品编码') {sku_code_row = i; continue}
+        if (columns[i] == 'spu简称') {spu_short_name_row = i; continue}
+    }
+    for (let i = 1; i < rows.length; i++) {
+        let goods_code = typeof(rows[i].getCell(goods_code_row).value) == 'string' ? 
+            rows[i].getCell(goods_code_row).value.trim() : 
+            rows[i].getCell(goods_code_row).value
+        let sku_code = typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
+            rows[i].getCell(sku_code_row).value.trim() : 
+            rows[i].getCell(sku_code_row).value
+        let spu_short_name = typeof(rows[i].getCell(spu_short_name_row).value) == 'string' ? 
+            rows[i].getCell(spu_short_name_row).value.trim() : 
+            rows[i].getCell(spu_short_name_row).value
+        let goods = await oriSkuRepo.get(goods_code, sku_code)
+        if (goods?.length) {
+            result = await oriSkuRepo.update([
+                spu_short_name,
+                goods_code,
+                sku_code
+            ])
+        } else {
+            data.push(
+                goods_code, 
+                sku_code,
+                spu_short_name
+            )
+            count += 1
+        }
+    }
+    logger.info(`[普通商品资料导入]`)
+    if (count > 0) {
+        result = await oriSkuRepo.batchInsert(data, count)
+    }
+    return result
+}
+
 module.exports = {
     syncOrder,
     getSaleStats,
-    importGoodsSku
+    importGoodsSku,
+    importPurchaseInfo,
+    importOriSkuInfo
 }
