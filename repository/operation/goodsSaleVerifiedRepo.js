@@ -851,6 +851,7 @@ goodsSaleVerifiedRepo.batchInsert = async (count, data) => {
             sku_code, 
             shop_name, 
             \`date\`, 
+            sale_qty,
             sale_amount, 
             cost_amount, 
             gross_profit, 
@@ -864,7 +865,7 @@ goodsSaleVerifiedRepo.batchInsert = async (count, data) => {
             packing_fee,
             bill_amount) VALUES`
     for (let i = 0; i < count; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, data)

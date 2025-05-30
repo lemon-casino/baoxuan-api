@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const hrRecruit = require('../router_handler/Hr_Recruit');
-// 修改
 router.get("/RecruitmentDepartmentPositions", hrRecruit.recruitmentDepartment)
 router.get("/RecruitmentTalentDynamic", hrRecruit.recruitmentTalent)
 router.get("/progressMap", hrRecruit.progressMap)

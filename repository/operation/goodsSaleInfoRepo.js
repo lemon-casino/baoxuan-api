@@ -826,6 +826,7 @@ goodsSaleInfoRepo.batchInsert = async (count, data) => {
             shop_id, 
             goods_name, 
             \`date\`, 
+            sale_qty,
             sale_amount, 
             cost_amount, 
             gross_profit, 
@@ -842,7 +843,7 @@ goodsSaleInfoRepo.batchInsert = async (count, data) => {
             bill_amount,
             real_gross_profit) VALUES`
     for (let i = 0; i < count; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, data)
@@ -1315,7 +1316,7 @@ goodsSaleInfoRepo.selectFee = async(sku_id, date, goods_id) => {
             packing_fee,
             bill_amount,
             real_gross_profit)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
         const insertResult = await query(sql, [goods_id,
             sku_id,null,null,'京东自营旗舰店','16314655',null
             ,date,0,0,0,0,0,0,0,null,0,0,null,0,null,null,0])
