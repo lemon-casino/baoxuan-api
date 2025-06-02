@@ -219,17 +219,17 @@ schedule.scheduleJob(tmallLinkData, async function () {
     }
 })
 
-// schedule.scheduleJob(jdLinkData, async function () {
-//     try {
-//         if (process.env.NODE_ENV === "prod") {
-//             await taskService.executeTask("jingdong");
-//         }
-//     } catch (error) {
-//         console.error("执行任务时出错:", error);
-//     } finally {
+schedule.scheduleJob(jdLinkData, async function () {
+    try {
+        if (process.env.NODE_ENV === "prod") {
+            await taskService.executeTask("jingdong");
+        }
+    } catch (error) {
+        console.error("执行任务时出错:", error);
+    } finally {
 
-//     }
-// });
+    }
+});
 
 schedule.scheduleJob(caigouLinkData, async function () {
     if (process.env.NODE_ENV === "prod") {
