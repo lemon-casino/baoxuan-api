@@ -58,7 +58,7 @@ developmentService.getDataStats = async (type, start, end, month, timeType, proj
 
 developmentService.getWorkDetail = async (start, end, id) => {
     let users = await userRepo.getUserByDeptName('产品开发部')
-    let userNames = '', result = [], data = []
+    let userNames = '', result = [], data = [], nameMap = {}
     users = users.filter((item) => item['nickname'] != '崔竹')
     userNames = users.map((item) => item['nickname']).join('","')
     userNames = `${userNames}","孙旭东`
@@ -66,8 +66,8 @@ developmentService.getWorkDetail = async (start, end, id) => {
     if (id == '1') status = '1,3,4'
     else status = id
     data = await newFormsRepo.getDevelopmentDetail(userNames, start, end, status)
+    let defaultTmp = {status: '', ch: {}, supplier_num: 0, re_num: 0, ip_num: 0, create_num: 0, self_num: 0}
     if (data?.length) {
-        let defaultTmp = {status: '', ch: {}}
         for (let i in developmentType) {
             defaultTmp.ch[developmentType[i]] = []
             defaultTmp[developmentType[i]] = 0
@@ -76,29 +76,113 @@ developmentService.getWorkDetail = async (start, end, id) => {
             if (i == 0 || (data[i].operator_name != data[i-1].operator_name)) {
                 let tmp = JSON.parse(JSON.stringify(defaultTmp))
                 tmp.parent_id = id
-                tmp[developmentType[data[i].type]] = data[i].count
+                tmp[developmentType[data[i].type]] = parseInt(data[i].count)
                 tmp['id'] = id + result.length.toString()
                 tmp['status'] = data[i].operator_name
                 tmp['parent_id'] = id
                 tmp['hasChild'] = false
+                if (nameMap[data[i].operator_name] == undefined) nameMap[data[i].operator_name] = result.length
                 result.push(tmp)
             } else if (data[i].status < 3) {
-                result[result.length - 1][developmentType[data[i].type]] = data[i].count
+                result[result.length - 1][developmentType[data[i].type]] = parseInt(data[i].count)
             } else if (data[i].status == 3 && data[i].count > 0) {
                 result[result.length - 1].ch[developmentType[data[i].type]].push({
-                    selected: data[i].count,
+                    selected: parseInt(data[i].count),
                     rejected: 0
                 })
-            } else if (data[i].count > 0) {
+            } else if (parseInt(data[i].count) > 0) {
                 if (result[result.length - 1].ch[developmentType[data[i].type]]?.length)
-                    result[result.length - 1].ch[developmentType[data[i].type]][0]['rejected'] = data[i].count
+                    result[result.length - 1].ch[developmentType[data[i].type]][0]['rejected'] = parseInt(data[i].count)
                 else
                     result[result.length - 1].ch[developmentType[data[i].type]].push({
-                        rejected: data[i].count,
+                        rejected: parseInt(data[i].count),
                         selected: 0
                     })
             }
         }
+    }
+    let reInfo = await actHiProcinstRepo.getFtDetail(status, userNames, start, end)
+    for (let i = 0; i < reInfo?.length; i++) {
+        if (nameMap[reInfo[i].nickname] == undefined) {
+            let tmp = JSON.parse(JSON.stringify(defaultTmp))
+            tmp.parent_id = id
+            tmp['id'] = id + result.length.toString()
+            tmp['status'] = reInfo[i].nickname
+            tmp['parent_id'] = id
+            tmp['hasChild'] = false
+            nameMap[reInfo[i].nickname] = result.length
+            result.push(tmp)
+        }
+        result[nameMap[reInfo[i].nickname]]['re_num'] += parseInt(reInfo[i]['count'])
+        if (id == '1') {
+            if (result[nameMap[reInfo[i].nickname]]['ch']['re_num'].length == 0) {
+                result[nameMap[reInfo[i].nickname]]['ch']['re_num'].push({
+                    reject: 0,
+                    selected: 0
+                })
+            }
+            if (reInfo[i]['task_status'] == '选中') {
+                result[nameMap[reInfo[i].nickname]]['ch']['re_num'][0]['selected'] += parseInt(reInfo[i]['count'])
+            } else {
+                result[nameMap[reInfo[i].nickname]]['ch']['re_num'][0]['rejected'] += parseInt(reInfo[i]['count'])
+            }
+        } 
+    }
+    let supplierInfo = await actHiProcinstRepo.getGysDetail(status, userNames, start, end)
+    for (let i = 0; i < supplierInfo?.length; i++) {
+        if (nameMap[supplierInfo[i].nickname] == undefined) {
+            let tmp = JSON.parse(JSON.stringify(defaultTmp))
+            tmp.parent_id = id
+            tmp['id'] = id + result.length.toString()
+            tmp['status'] = supplierInfo[i].nickname
+            tmp['parent_id'] = id
+            tmp['hasChild'] = false
+            nameMap[supplierInfo[i].nickname] = result.length
+            result.push(tmp)
+        }
+        result[nameMap[supplierInfo[i].nickname]]['supplier_num'] += parseInt(supplierInfo[i]['count'])
+    }
+    let selfInfo = await actHiProcinstRepo.getSctgDetail(status, userNames, start, end)
+    for (let i = 0; i < selfInfo?.length; i++) {
+        if (nameMap[selfInfo[i].nickname] == undefined) {
+            let tmp = JSON.parse(JSON.stringify(defaultTmp))
+            tmp.parent_id = id
+            tmp['id'] = id + result.length.toString()
+            tmp['status'] = selfInfo[i].nickname
+            tmp['parent_id'] = id
+            tmp['hasChild'] = false
+            nameMap[selfInfo[i].nickname] = result.length
+            result.push(tmp)
+        }
+        result[nameMap[selfInfo[i].nickname]]['self_num'] += parseInt(selfInfo[i]['count'])
+    }
+    let ipInfo = await actHiProcinstRepo.getIpDetail(status, userNames, start, end)
+    for (let i = 0; i < ipInfo?.length; i++) {
+        if (nameMap[ipInfo[i].nickname] == undefined) {
+            let tmp = JSON.parse(JSON.stringify(defaultTmp))
+            tmp.parent_id = id
+            tmp['id'] = id + result.length.toString()
+            tmp['status'] = ipInfo[i].nickname
+            tmp['parent_id'] = id
+            tmp['hasChild'] = false
+            nameMap[ipInfo[i].nickname] = result.length
+            result.push(tmp)
+        }
+        result[nameMap[ipInfo[i].nickname]]['ip_num'] += parseInt(ipInfo[i]['count'])
+    }
+    let createInfo = await actHiProcinstRepo.getZyDetail(status, userNames, start, end)
+    for (let i = 0; i < createInfo?.length; i++) {
+        if (nameMap[createInfo[i].nickname] == undefined) {
+            let tmp = JSON.parse(JSON.stringify(defaultTmp))
+            tmp.parent_id = id
+            tmp['id'] = id + result.length.toString()
+            tmp['status'] = createInfo[i].nickname
+            tmp['parent_id'] = id
+            tmp['hasChild'] = false
+            nameMap[createInfo[i].nickname] = result.length
+            result.push(tmp)
+        }
+        result[nameMap[createInfo[i].nickname]]['create_num'] += parseInt(createInfo[i]['count'])
     }
     return result
 }
@@ -280,7 +364,11 @@ developmentService.getCategoryList = async (parent_id) => {
 }
 
 developmentService.getFlows = async (start, end) => {
-    let result = [], data = []
+    let result = [], data = [], userNames = ''
+    let users = await userRepo.getUserByDeptName('产品开发部')
+    users = users.filter((item) => item['nickname'] != '崔竹')
+    userNames = users.map((item) => item['nickname']).join('","')
+    userNames = `${userNames}","孙旭东`
     data = await newFormsRepo.getDevelopmentType(start, end)
     if (data?.length) {
         let defaultTmp = {status: '', ch: {}}
@@ -292,27 +380,60 @@ developmentService.getFlows = async (start, end) => {
             if (i == 0 || (data[i].status != data[i-1].status && data[i].status < 3)) {
                 let tmp = JSON.parse(JSON.stringify(defaultTmp))
                 tmp.status = developmentItem[data[i].status].name
-                tmp[developmentType[data[i].type]] = data[i].count
+                tmp[developmentType[data[i].type]] = parseInt(data[i].count)
                 tmp['id'] = result.length.toString()
                 tmp['parent_id'] = null
                 tmp['hasChild'] = true
                 result.push(tmp)
             } else if (data[i].status < 3) {
-                result[result.length - 1][developmentType[data[i].type]] = data[i].count
+                result[result.length - 1][developmentType[data[i].type]] = parseInt(data[i].count)
             } else if (data[i].status == 3 && data[i].count > 0) {
                 result[1].ch[developmentType[data[i].type]].push({
-                    selected: data[i].count,
+                    selected: parseInt(data[i].count),
                     rejected: 0
                 })
             } else if (data[i].count > 0) {
                 if (result[1].ch[developmentType[data[i].type]]?.length)
-                    result[1].ch[developmentType[data[i].type]][0]['rejected'] = data[i].count
+                    result[1].ch[developmentType[data[i].type]][0]['rejected'] = parseInt(data[i].count)
                 else
                     result[1].ch[developmentType[data[i].type]].push({
-                        rejected: data[i].count,
+                        rejected: parseInt(data[i].count),
                         selected: 0
                     })
             }
+        }
+        let reInfo = await actHiProcinstRepo.getFtInfo(userNames, start, end)
+        for (let i = 0; i < reInfo.length; i++) {
+            result[reInfo[i]['status']]['re_num'] += parseInt(reInfo[i]['count'])
+            if (reInfo[i]['count'] > 0 && reInfo[i]['status'] == '1') {
+                if (result[reInfo[i]['status']]['ch']['re_num'].length == 0) {
+                    result[reInfo[i]['status']]['ch']['re_num'].push({
+                        reject: 0,
+                        selected: 0
+                    })
+                }
+                if (reInfo[i]['task_status'] == '选中') {
+                    result[reInfo[i]['status']]['ch']['re_num'][0]['selected'] += parseInt(reInfo[i]['count'])
+                } else {
+                    result[reInfo[i]['status']]['ch']['re_num'][0]['rejected'] += parseInt(reInfo[i]['count'])
+                }
+            } 
+        }
+        let supplierInfo = await actHiProcinstRepo.getGysInfo(userNames, start, end)
+        for (let i = 0; i < supplierInfo.length; i++) {
+            result[supplierInfo[i]['status']]['supplier_num'] += parseInt(supplierInfo[i]['count'])
+        }
+        let selfInfo = await actHiProcinstRepo.getSctgInfo(userNames, start, end)
+        for (let i = 0; i < selfInfo.length; i++) {
+            result[selfInfo[i]['status']]['self_num'] += parseInt(selfInfo[i]['count'])
+        }
+        let ipInfo = await actHiProcinstRepo.getIpInfo(userNames, start, end)
+        for (let i = 0; i < ipInfo.length; i++) {
+            result[ipInfo[i]['status']]['ip_num'] += parseInt(ipInfo[i]['count'])
+        }
+        let createInfo = await actHiProcinstRepo.getZyInfo(userNames, start, end)
+        for (let i = 0; i < createInfo.length; i++) {
+            result[createInfo[i]['status']]['create_num'] += parseInt(createInfo[i]['count'])
         }
     }
     return result
