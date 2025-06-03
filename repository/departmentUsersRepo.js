@@ -13,6 +13,19 @@ const save = async (deptId, userId) => {
     }
 }
 
+const remove = async (deptId, userId) => {
+    try {
+        const result = await deptsUsersModel.destroy({
+            truncate: true, // 明确指定清空表
+            cascade: true
+        });
+        
+        return result > 0;
+    } catch (e) {
+        throw e;
+    }
+}
+
 const updateInvalidInfo = async (deptId, userIds) => {
     return await deptsUsersModel.update(
         {isValid: false, invalidDate: new Date()},
@@ -33,5 +46,6 @@ const getByDeptIds = async (deptIds) => {
 module.exports = {
     save,
     updateInvalidInfo,
-    getByDeptIds
+    getByDeptIds,
+    remove
 }

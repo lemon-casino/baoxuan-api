@@ -114,6 +114,7 @@ const syncDepartmentWithUser = async () => {
     await redisUtil.set(redisKeys.DepartmentsUsers, JSON.stringify(allDepartmentsWithUsers))
     globalSetter.setGlobalUsersOfDepartments(allDepartmentsWithUsers)
     // 保存入库并设置无效关系： 离职、调部门等
+    await departmentUsersRepo.remove()
     await loopSaveDeptUserAndSetInvalidInfo(allDepartmentsWithUsers)
     logger.info("同步完成：syncDepartmentWithUser")
     console.log("同步完成")
