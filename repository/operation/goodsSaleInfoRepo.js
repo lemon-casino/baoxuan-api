@@ -1301,6 +1301,7 @@ goodsSaleInfoRepo.selectFee = async(sku_id, date, goods_id) => {
             shop_id, 
             goods_name, 
             date, 
+            sale_qty,
             sale_amount, 
             cost_amount, 
             gross_profit, 
@@ -1319,7 +1320,7 @@ goodsSaleInfoRepo.selectFee = async(sku_id, date, goods_id) => {
 			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
         const insertResult = await query(sql, [goods_id,
             sku_id,null,null,'京东自营旗舰店','16314655',null
-            ,date,0,0,0,0,0,0,0,null,0,0,null,0,null,null,0])
+            ,date,0,0,0,0,0,0,0,0,null,0,0,null,0,null,null,0])
     }
     return result
 }
