@@ -26,7 +26,7 @@ let syncUserLoginCron = "0 0/5 * * * ?"
 let syncResignEmployeeCron = "0 0 18 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
 let tmallLinkData = "45 13 * * 1-6"
-let jdLinkData  = "00 13 * * 1-6"
+let jdLinkData  = "00 16 * * 1-6"
 let caigouLinkData  = "*/5 * * * 1-6"
 //转正通知 周一到周六  每天9点半触发流程
 let confirmationNotice = "0 30 9 * * 1-6"
@@ -219,17 +219,17 @@ schedule.scheduleJob(tmallLinkData, async function () {
     }
 })
 
-// schedule.scheduleJob(jdLinkData, async function () {
-//     try {
-//         if (process.env.NODE_ENV === "prod") {
-//             await taskService.executeTask("jingdong");
-//         }
-//     } catch (error) {
-//         console.error("执行任务时出错:", error);
-//     } finally {
+schedule.scheduleJob(jdLinkData, async function () {
+    try {
+        if (process.env.NODE_ENV === "prod") {
+            await taskService.executeTask("jingdong");
+        }
+    } catch (error) {
+        console.error("执行任务时出错:", error);
+    } finally {
 
-//     }
-// });
+    }
+});
 
 schedule.scheduleJob(caigouLinkData, async function () {
     if (process.env.NODE_ENV === "prod") {
