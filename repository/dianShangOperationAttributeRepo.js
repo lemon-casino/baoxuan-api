@@ -13,7 +13,8 @@ const getOperateAttributes = async (deptId,
                                     linkId,
                                     platform,
                                     shopName,
-                                    skuId) => {
+                                    skuId,
+                                    code) => {
 
     const andGroup = []
     const orGroup = [{deptId, platform}]
@@ -32,6 +33,8 @@ const getOperateAttributes = async (deptId,
     }
     if (skuId) {
         andGroup.push({skuId: {$like: `%${skuId}%`}})
+    }if (code) {
+        andGroup.push({code: {$like: `%${code}%`}})
     }
 
     const result = await dianShangOperationAttributeModel.findAndCountAll({
