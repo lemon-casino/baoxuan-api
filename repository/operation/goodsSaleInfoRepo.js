@@ -2315,4 +2315,12 @@ goodsSaleInfoRepo.getSaleData = async(lstart,lend,preStart,preEnd,value,name) =>
     let result = await query(sql,[value])
     return result
 }
+
+goodsSaleInfoRepo.getProductSaleInfo = async (sku_code) => {
+    let sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(profit), 0) AS profit FROM goods_sale_info 
+        WHERE sku_code IN ("${sku_code}")`
+    let row = await query(sql)
+    return row
+}
 module.exports = goodsSaleInfoRepo

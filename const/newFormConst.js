@@ -738,6 +738,10 @@ const developmentWorkProblem = {
     4: 'reject',
 }
 
+const platformList = [
+    '1688', 'coupang', '京东', '天猫', '天猫超市', '得物、唯品会', '抖音、快手', '拼多多', '淘工厂'
+]
+
 module.exports = {
     action,
     actionItem,
@@ -780,5 +784,6 @@ module.exports = {
     developmentStatusMap,
     developmentWorkType,
     developmentWorkProblem,
-    newPannelHeader
+    newPannelHeader,
+    platformList
 }

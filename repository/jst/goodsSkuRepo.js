@@ -77,4 +77,11 @@ goodsSkuRepo.getProcessInfoByGoodsId = async (goods_id, project) => {
     return result
 }
 
+goodsSkuRepo.getBySysSkuId = async (sku_id) => {
+    let sql = `SELECT goods_id, sys_sku_id AS sku_id, create_time FROM jst_goods_sku 
+        WHERE sys_sku_id IN ("${sku_id}") AND is_shelf = '是' ORDER BY goods_id`
+    let row = await query(sql)
+    return row
+}
+
 module.exports = goodsSkuRepo
