@@ -3429,6 +3429,61 @@ const getDevelopmentFinish = async (start, end) => {
     return result
 }
 
+const getProductDevelopInfo = async (start, end, type, order) => {
+    let ids = '88, 836, 838'
+    if (type == '3') ids = '836'
+    else if (type == '4') ids = '88'
+    else if (type == '5') ids = '838'
+    let order_info = ''
+    if (order == 1) {
+        order_info = 'if(pir2.operator is null, pi.creator, pir2.operator)'
+    } else if (order == 2) {
+        order_info = "replace(ff1.title, '预估订货量', '')"
+    } else {
+        order_info = 'pi.id'
+    }
+    let sql = `select pi.id, pir.operate_time, replace(ff1.title, '预估订货量', '') as platform, 
+            if(pir2.operator is null, pi.creator, pir2.operator) as director, 
+            pis2.value as sku_id from process_instances pi join processes p on p.id = pi.process_id
+        join process_instance_values piv on pi.id = piv.instance_id
+            and piv.field_id in ('tableField_m9gzfubr', 'tableField_m1g2w3gr')
+        join process_instance_sub_values pis on pi.id = pis.instance_id
+            and pis.parent_id = piv.field_id
+            and pis.field_id like '%numberField%' and pis.field_id not like '%value'
+            and pis.value > 0
+            and pis.id = (
+                select max(p2.id) from process_instance_sub_values p2 where p2.instance_id = pi.id
+                    and p2.field_id = pis.field_id
+                    and p2.parent_id = pis.parent_id
+            )
+        join forms f on f.id = p.form_id
+        join form_fields ff on ff.form_id = f.id and ff.field_id = piv.field_id
+        join form_fields ff1 on ff1.form_id = f.id and ff1.field_id = pis.field_id
+            and ff1.title not like '%销量%'
+        join process_instance_records pir on pir.instance_id = pi.id
+            and pir.show_name in ('分配采购订货人', '分配采购办理人', '分配周转订货')
+            and pir.action_exit = 'agree'
+            and pir.id = (
+                select max(p2.id) from process_instance_records p2 where p2.instance_id = pi.id
+                    and p2.show_name = pir.show_name
+            ) and pir.operate_time between '${start}' and '${end}'
+        join process_instance_values piv1 on piv1.instance_id = pi.id
+            and piv1.field_id in ('tableField_m38ikxm7')
+        join process_instance_sub_values pis2 on pis2.instance_id = pi.id
+            and pis2.parent_id = piv1.field_id
+            and pis2.field_id = 'textField_m38ikxm8'
+        left join process_instance_records pir2 on pir2.instance_id = pi.id 
+            and pir2.show_name in (
+                '开发在聚水潭建立商品信息1', 
+                '开发在聚水潭建立商品信息2', 
+                '开发在聚水潭建立商品信息3', 
+                '开发在聚水潭建立商品信息')
+        where pi.process_id in (${ids}) and pi.status in ('RUNNING', 'COMPLETED')
+        order by ${order_info}`
+    let row = await query(sql)
+    return row
+}
+
 module.exports = {
     getProcessStat,
     getFlowInstances,
@@ -3471,5 +3526,6 @@ module.exports = {
     getLeaderFinishProjectStat,
     getDevelopmentOtherInfo,
     getDevelopmentRunning,
-    getDevelopmentFinish
+    getDevelopmentFinish,
+    getProductDevelopInfo
 }

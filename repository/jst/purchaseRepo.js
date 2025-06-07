@@ -24,6 +24,13 @@ purchaseRepo.get = async (po_id, io_id, goods_code) => {
     return result || []
 }
 
+purchaseRepo.getBySkuCode = async (sku_code) => {
+    let sql = `SELECT sku_code, MIN(io_date) as io_date FROM jst_purchase_info 
+        WHERE sku_code IN ("${sku_code}") GROUP BY sku_code`
+    const result = await query(sql)
+    return result || []
+}
+
 purchaseRepo.update = async (data) => {
     let sql = `UPDATE jst_purchase_info SET io_date = ?, warehouse = ?, 
         goods_code = ? WHERE po_id = ? AND io_id = ? AND sku_code = ?`

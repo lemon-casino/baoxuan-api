@@ -32,4 +32,8 @@ router.get('/category', developmentApi.getCategoryList)
 router.get('/running-process', developmentApi.getRunningProcessInfo)
 router.get('/finish-process', developmentApi.getFinishProcessInfo)
 
+router.get('/product-develop/first', developmentApi.getProductDevelopFirst)
+router.get('/product-develop/second', developmentApi.getProductDevelopSecond)
+router.get('/product-develop/third', developmentApi.getProductDevelopThird)
+
 module.exports = router
