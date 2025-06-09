@@ -266,4 +266,45 @@ actHiProcinstRepo.getSctgDetail = async (status, userNames, start, end) => {
     return result
 }
 
+actHiProcinstRepo.getProductDevelopInfo = async (start, end, type, order) => {
+    let order_info = 'p.ID_', keys = "'gystplc', 'fttplc', 'sctgtplc', 'zytplc', 'iptpc'"
+    if (type == '1') keys = "'sctgtplc'"
+    else if (type == '2') keys = "'zytplc'"
+    else if (type == '3') keys = "'iptpc'"
+    else if (type == '4') keys = "'fttplc'"
+    else if (type == '5') keys = "'gystplc'"
+    if (order == 1) order_info = 't2.ASSIGNEE_'
+    let sql = `SELECT p.ID_ AS id, t.LAST_UPDATED_TIME_ as operate_time, b.BYTES_ AS info, 
+            (SELECT nickname FROM system_users WHERE t2.ASSIGNEE_ = id) AS nickname 
+        FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v.NAME_ IN ('Fcilma2exazkb7c', 'Fig2ma24zzz9brc', 'F6gkma3pfcjfd1c')
+            AND v.LAST_UPDATED_TIME_ = (
+                SELECT MAX(v1.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v1 
+                WHERE v1.PROC_INST_ID_ = p.PROC_INST_ID_ AND v1.NAME_ = v.NAME_ 
+            )
+        JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v.BYTEARRAY_ID_
+        JOIN ACT_HI_TASKINST t on t.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND t.NAME_ IN ('分配采购执行人', '分配采购执行人1', '分配采购执行人2', '分配采购执行人3') 
+            AND t.STATE_ = 'completed' 
+            AND t.LAST_UPDATED_TIME_ = (
+                SELECT MAX(t1.LAST_UPDATED_TIME_) FROM ACT_HI_TASKINST t1 
+                WHERE t1.PROC_INST_ID_ = p.PROC_INST_ID_ AND t1.NAME_ = t.NAME_ AND t.ASSIGNEE_ IS NOT NULL 
+            ) AND t.LAST_UPDATED_TIME_ BETWEEN '${start}' AND '${end}'
+        JOIN ACT_HI_TASKINST t2 on t2.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND t2.NAME_ LIKE '%寄样%' 
+            AND t2.STATE_ = 'completed' 
+            AND t2.LAST_UPDATED_TIME_ = (
+                SELECT MAX(t1.LAST_UPDATED_TIME_) FROM ACT_HI_TASKINST t1 
+                    WHERE t1.PROC_INST_ID_ = p.PROC_INST_ID_ AND t1.NAME_ = t2.NAME_ AND t2.ASSIGNEE_ IS NOT NULL 
+            )
+        JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v2.NAME_ = 'PROCESS_STATUS' AND v2.TEXT_ IN ('1', '2')
+        WHERE d.KEY_ IN (${keys}) 
+        ORDER BY ${order_info}`
+    let result = await query(sql)
+    return result
+}
+
+
 module.exports = actHiProcinstRepo
