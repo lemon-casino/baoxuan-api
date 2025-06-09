@@ -3430,11 +3430,10 @@ const getDevelopmentFinish = async (start, end) => {
 }
 
 const getProductDevelopInfo = async (start, end, type, order) => {
-    let ids = '88, 836, 838'
+    let ids = '88, 836, 838', order_info = '', subsql = ''
     if (type == '3') ids = '836'
     else if (type == '4') ids = '88'
     else if (type == '5') ids = '838'
-    let order_info = ''
     if (order == 1) {
         order_info = 'if(pir2.operator is null, pi.creator, pir2.operator)'
     } else if (order == 2) {
@@ -3478,7 +3477,7 @@ const getProductDevelopInfo = async (start, end, type, order) => {
                 '开发在聚水潭建立商品信息2', 
                 '开发在聚水潭建立商品信息3', 
                 '开发在聚水潭建立商品信息')
-        where pi.process_id in (${ids}) and pi.status in ('RUNNING', 'COMPLETED')
+        where pi.process_id in (${ids}) and pi.status in ('RUNNING', 'COMPLETED') 
         order by ${order_info}`
     let row = await query(sql)
     return row

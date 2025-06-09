@@ -2316,10 +2316,17 @@ goodsSaleInfoRepo.getSaleData = async(lstart,lend,preStart,preEnd,value,name) =>
     return result
 }
 
-goodsSaleInfoRepo.getProductSaleInfo = async (sku_code) => {
+goodsSaleInfoRepo.getProductSaleInfo = async (sku_code, addSales) => {
     let sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
-            IFNULL(SUM(profit), 0) AS profit FROM goods_sale_info 
+            IFNULL(SUM(profit), 0) AS profit FROM goods_sale_info s 
         WHERE sku_code IN ("${sku_code}")`
+    if (addSales == '0') {
+        sql = `${sql} AND EXISTS(
+            SELECT * FROM jst_goods_sku g WHERE g.sys_sku_id = s.sku_code 
+                AND g.shop_name = s.shop_name AND g.goods_id = s.goods_id 
+                AND s.date > DATE_ADD(g.create_time, INTERVAL 14 DAY)
+        )`
+    }
     let row = await query(sql)
     return row
 }
