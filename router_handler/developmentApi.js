@@ -255,7 +255,7 @@ const getProductDevelopFirst = async (req, res, next) => {
             addSales: {value: addSales, schema: joiUtil.commonJoiSchemas.strRequired},
         })
         start = moment(start).format('YYYY-MM-DD')
-        end = moment(end).format('YYYY-MM-DD')
+        end = moment(end).format('YYYY-MM-DD') + ' 23:59:59'
         const result = await developmentService.getProductDevelopFirst(start, end, type, addSales)
         return res.send(biResponse.success(result))
     } catch (e) {
@@ -273,7 +273,7 @@ const getProductDevelopSecond = async (req, res, next) => {
             addSales: {value: addSales, schema: joiUtil.commonJoiSchemas.strRequired},
         })
         start = moment(start).format('YYYY-MM-DD')
-        end = moment(end).format('YYYY-MM-DD')
+        end = moment(end).format('YYYY-MM-DD') + ' 23:59:59'
         const result = await developmentService.getProductDevelopSecond(start, end, type, addSales, platform)
         return res.send(biResponse.success(result))
     } catch (e) {
@@ -291,7 +291,7 @@ const getProductDevelopThird = async (req, res, next) => {
             addSales: {value: addSales, schema: joiUtil.commonJoiSchemas.strRequired},
         })
         start = moment(start).format('YYYY-MM-DD')
-        end = moment(end).format('YYYY-MM-DD')
+        end = moment(end).format('YYYY-MM-DD') + ' 23:59:59'
         const result = await developmentService.getProductDevelopThird(start, end, type, addSales, spu)
         return res.send(biResponse.success(result))
     } catch (e) {
