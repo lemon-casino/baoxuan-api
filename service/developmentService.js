@@ -28,6 +28,7 @@ const actHiProcinstRepo = require('@/repository/bpm/actHiProcinstRepo')
 const goodsInfoRepo = require('@/repository/danpin/goodsInfoRepo')
 const purchaseRepo = require('@/repository/jst/purchaseRepo')
 const goodsSaleInfoRepo = require('@/repository/operation/goodsSaleInfoRepo')
+const goodsSalesRepo = require('@/repository/operation/goodsSalesRepo')
 
 developmentService.getDataStats = async (type, start, end, month, timeType, project, process) => {
     let result = []
@@ -1442,6 +1443,26 @@ developmentService.getProductDevelopThird = async (start, end, type, addSales, s
         if (resultCount[i]) result[i].time = result[i].time/resultCount[i]
         if (shelfCount[i]) result[i].shelf_time = result[i].shelf_time/shelfCount[i]
     }
+    return result
+}
+
+developmentService.getProductSalesFirst = async (start, end, productType, addSales) => {
+    let result = await goodsSalesRepo.getSalesByDivision(start, end, productType, addSales)
+    return result
+}
+
+developmentService.getProductSalesSecond = async (start, end, productType, addSales) => {
+    let result = await goodsSalesRepo.getSalesByProject(start, end, productType, addSales)
+    return result
+}
+
+developmentService.getProductSalesThird = async (start, end, productType, addSales, shop_name) => {
+    let result = await goodsSalesRepo.getSalesByShop(start, end, productType, addSales)
+    return result
+}
+
+developmentService.getProductSalesFourth = async (start, end, productType, addSales, spu) => {
+    let result = await goodsSalesRepo.getSalesBySpu(start, end, productType, addSales)
     return result
 }
 
