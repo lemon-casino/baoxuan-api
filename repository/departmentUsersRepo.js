@@ -1,4 +1,5 @@
 const models = require('@/model')
+const { query } = require('../model/dbConn')
 const deptsUsersModel = models.deptsUsersModel
 const sequelizeUtil = require("@/utils/sequelizeUtil")
 
@@ -14,14 +15,10 @@ const save = async (deptId, userId) => {
 }
 
 const remove = async (deptId, userId) => {
-    try {
-        const result = await deptsUsersModel.destroy({
-            truncate: true, // 明确指定清空表
-            cascade: true
-        });
-        
-        return result > 0;
-    } catch (e) {
+    try{
+        let sql = `DELETE FROM depts_users WHERE user_id NOT IN (SELECT dingding_user_id FROM users WHERE status=0)`
+        await query(sql)
+    }catch (e) {
         throw e;
     }
 }
