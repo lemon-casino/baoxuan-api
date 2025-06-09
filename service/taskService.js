@@ -687,7 +687,7 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
             }
         }
     }
-            await removeDuplicateLinkIds();
+    await removeDuplicateLinkIds();
     logger.info("同步完成：京东异常发起")
 };
 
