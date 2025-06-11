@@ -3427,7 +3427,6 @@ const getInventoryData = async(day,day7,day30,day31) => {
     let data4 = await goodsSaleInfoRepo.getInventoryCostData(day30,day,30)
     // 30天销售数量
     let data5 = await goodsSaleInfoRepo.getInventorysaleqtyData(day30,day)
-    // console.log(data1)
     result[0].current_inventory_cost=(data1[0].Current_inventory_cost/10000).toFixed(1)
     result[0].total_inventory_cost=(data1[0].total_inventory_cost/10000).toFixed(1)
     result[0].stock_sale7=(data1[0].Current_inventory_cost/data3[0].cost_avg).toFixed(0)
@@ -3436,7 +3435,6 @@ const getInventoryData = async(day,day7,day30,day31) => {
     result[0].inventory_turnover=(data4[0].cost/(data1[0].Current_inventory_cost+data2[0].Current_inventory_cost)*100).toFixed(1)
     result[0].gross_margin7=((data3[0].sale-data3[0].cost)/data3[0].sale*100).toFixed(1)
     result[0].gross_margin30=((data4[0].sale-data4[0].cost)/data4[0].sale*100).toFixed(1)
-    // console.log(result)
     return result
 }
 
@@ -3456,11 +3454,9 @@ const getDivisionSaleData = async(day,day7,day30,day31) => {
     // 3. 添加周数据和汇总数据
     const result = Object.keys(groupedData).map(division => {
         const teamData = groupedData[division]
-        console.log(teamData)
         const thisyear = teamData.filter(item => item.year === "2025")
         const lastyaer = teamData.filter(item => item.year === "2024")
         // 计算环比
-        // console.log(thisyear[0].five,lastyaer[0].five)
         const chainRatioData = {
             year: '同比',
             division: division,
@@ -3496,7 +3492,6 @@ const getDivisionSaleData = async(day,day7,day30,day31) => {
         const groupB = b.division
         return sortOrder[groupA] - sortOrder[groupB]
     })
-    console.log(sortedData)
     return sortedData
 }
 
@@ -3516,11 +3511,9 @@ const getDivisionSaleQtyData = async(day,day7,day30,day31) => {
     // 3. 添加周数据和汇总数据
     const result = Object.keys(groupedData).map(division => {
         const teamData = groupedData[division]
-        console.log(teamData)
         const thisyear = teamData.filter(item => item.year === "2025")
         const lastyaer = teamData.filter(item => item.year === "2024")
         // 计算环比
-        // console.log(thisyear[0].five,lastyaer[0].five)
         const chainRatioData = {
             year: '同比',
             division: division,
@@ -3556,7 +3549,6 @@ const getDivisionSaleQtyData = async(day,day7,day30,day31) => {
         const groupB = b.division
         return sortOrder[groupA] - sortOrder[groupB]
     })
-    console.log(sortedData)
     return sortedData
 }
 
@@ -3577,11 +3569,9 @@ const getProjectSaleData = async(day,day7,day30,day31) => {
     // 3. 添加周数据和汇总数据
     const result = Object.keys(groupedData).map(project => {
         const teamData = groupedData[project]
-        console.log(teamData)
         const thisyear = teamData.filter(item => item.year === "2025")
         const lastyaer = teamData.filter(item => item.year === "2024")
         // 计算环比
-        // console.log(thisyear[0].five,lastyaer[0].five)
         const chainRatioData = {
             year: '同比',
             project: project,
@@ -3620,7 +3610,6 @@ const getProjectSaleData = async(day,day7,day30,day31) => {
         const groupB = b.project
         return sortOrder[groupA] - sortOrder[groupB]
     })
-    console.log(sortedData)
     return sortedData
 }
 
@@ -3641,11 +3630,9 @@ const getProjectSaleQtyData = async(day,day7,day30,day31) => {
     // 3. 添加周数据和汇总数据
     const result = Object.keys(groupedData).map(project => {
         const teamData = groupedData[project]
-        console.log(teamData)
         const thisyear = teamData.filter(item => item.year === "2025")
         const lastyaer = teamData.filter(item => item.year === "2024")
         // 计算环比
-        // console.log(thisyear[0].five,lastyaer[0].five)
         const chainRatioData = {
             year: '同比',
             project: project,
@@ -3684,7 +3671,6 @@ const getProjectSaleQtyData = async(day,day7,day30,day31) => {
         const groupB = b.project
         return sortOrder[groupA] - sortOrder[groupB]
     })
-    console.log(sortedData)
     return sortedData
 }
 
