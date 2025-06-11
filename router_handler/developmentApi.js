@@ -245,6 +245,60 @@ const getFinishProcessInfo = async (req, res, next) => {
     }
 }
 
+const getProductDevelopFirst = async (req, res, next) => {
+    try {
+        let {start, end, type, addSales} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
+            start: {value: start, schema: joiUtil.commonJoiSchemas.strRequired},
+            end: {value: end, schema: joiUtil.commonJoiSchemas.strRequired},
+            addSales: {value: addSales, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        start = moment(start).format('YYYY-MM-DD')
+        end = moment(end).format('YYYY-MM-DD')
+        const result = await developmentService.getProductDevelopFirst(start, end, type, addSales)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getProductDevelopSecond = async (req, res, next) => {
+    try {
+        let {start, end, type, addSales, platform} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
+            start: {value: start, schema: joiUtil.commonJoiSchemas.strRequired},
+            end: {value: end, schema: joiUtil.commonJoiSchemas.strRequired},
+            addSales: {value: addSales, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        start = moment(start).format('YYYY-MM-DD')
+        end = moment(end).format('YYYY-MM-DD')
+        const result = await developmentService.getProductDevelopSecond(start, end, type, addSales, platform)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getProductDevelopThird = async (req, res, next) => {
+    try {
+        let {start, end, type, addSales, spu} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
+            start: {value: start, schema: joiUtil.commonJoiSchemas.strRequired},
+            end: {value: end, schema: joiUtil.commonJoiSchemas.strRequired},
+            addSales: {value: addSales, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        start = moment(start).format('YYYY-MM-DD')
+        end = moment(end).format('YYYY-MM-DD')
+        const result = await developmentService.getProductDevelopThird(start, end, type, addSales, spu)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getWorkPannel, 
     getWorkDetail,
@@ -257,5 +311,8 @@ module.exports = {
     getDataPannelDetail,
     getCategoryList,
     getFinishProcessInfo,
-    getRunningProcessInfo
+    getRunningProcessInfo,
+    getProductDevelopFirst,
+    getProductDevelopSecond,
+    getProductDevelopThird,
 }

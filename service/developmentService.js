@@ -5,7 +5,7 @@ const userOperationRepo = require('../repository/operation/userOperationRepo')
 const { redisKeys } = require('../const/redisConst')
 const redisUtil = require("../utils/redisUtil")
 const crypto = require('crypto')
-const { developmentItem, developmentType, developmentWorkType, developmentWorkProblem } = require('../const/newFormConst')
+const { developmentItem, developmentType, developmentWorkType, developmentWorkProblem, platformList } = require('../const/newFormConst')
 const moment = require('moment')
 const developmentService = {}
 const { createProcess } =  require('./dingDingService')
@@ -25,6 +25,9 @@ const actHiVarinstRepo = require('@/repository/bpm/actHiVarinstRepo')
 const { ObjectInputStream  } = require('java-object-serialization')
 const goodsSaleVerifiedRepo = require('@/repository/operation/goodsSaleVerifiedRepo')
 const actHiProcinstRepo = require('@/repository/bpm/actHiProcinstRepo')
+const goodsInfoRepo = require('@/repository/danpin/goodsInfoRepo')
+const purchaseRepo = require('@/repository/jst/purchaseRepo')
+const goodsSaleInfoRepo = require('@/repository/operation/goodsSaleInfoRepo')
 
 developmentService.getDataStats = async (type, start, end, month, timeType, project, process) => {
     let result = []
@@ -59,7 +62,7 @@ developmentService.getDataStats = async (type, start, end, month, timeType, proj
 developmentService.getWorkDetail = async (start, end, id) => {
     let users = await userRepo.getUserByDeptName('产品开发部')
     let userNames = '', result = [], data = [], nameMap = {}
-    users = users.filter((item) => item['nickname'] != '崔竹')
+    users = users.filter((item) => !['崔竹', '鲁红旺'].includes(item['nickname']))
     userNames = users.map((item) => item['nickname']).join('","')
     userNames = `${userNames}","孙旭东`
     let status = ''
@@ -366,7 +369,7 @@ developmentService.getCategoryList = async (parent_id) => {
 developmentService.getFlows = async (start, end) => {
     let result = [], data = [], userNames = ''
     let users = await userRepo.getUserByDeptName('产品开发部')
-    users = users.filter((item) => item['nickname'] != '崔竹')
+    users = users.filter((item) => !['崔竹', '鲁红旺'].includes(item['nickname']))
     userNames = users.map((item) => item['nickname']).join('","')
     userNames = `${userNames}","孙旭东`
     data = await newFormsRepo.getDevelopmentType(start, end)
@@ -443,7 +446,7 @@ developmentService.getWorks = async (start, end) => {
     let users = await userRepo.getUserByDeptName('产品开发部')
     let userNames = '', userIds = '', userInfo = {}, userMap = {}, result = []
     for (let i = 0; i < users.length; i++) {
-        if (users[i].nickname != '崔竹') {
+        if (!['崔竹', '鲁红旺'].includes(users[i].nickname)) {
             userNames = `${userNames}"${users[i].nickname}",`
             userIds = `${userIds}"${users[i].dingding_user_id}",`
             userInfo[users[i].dingding_user_id] = users[i].nickname
@@ -470,7 +473,7 @@ developmentService.getProblems = async (start, end) => {
     let users = await userRepo.getUserByDeptName('产品开发部')
     let userNames = '', userIds = '', userInfo = {}, userMap = {}, result = []
     for (let i = 0; i < users.length; i++) {
-        if (users[i].nickname != '崔竹') {
+        if (!['崔竹', '鲁红旺'].includes(users[i].nickname)) {
             userNames = `${userNames}"${users[i].nickname}",`
             userIds = `${userIds}"${users[i].dingding_user_id}",`
             userInfo[users[i].dingding_user_id] = users[i].nickname
@@ -1035,6 +1038,410 @@ developmentService.getFinishProcessInfo = async () => {
     if (project_info?.length) result = result.concat(project_info)
     let project_info1 = await actHiProcinstRepo.getFinish(start, end)
     if (project_info1?.length) result = result.concat(project_info1)
+    return result
+}
+
+developmentService.getProductDevelopFirst = async (start, end, type, addSales) => {    
+    let users = await userRepo.getUserByDeptName('产品开发部')
+    let userIds = '', userMap = {}, result = [], resultMap = {}, user1Map = {}
+    for (let i = 0; i < users.length; i++) {
+        if (!['崔竹', '鲁红旺'].includes(users[i].nickname)) {
+            userIds = `${userIds}"${users[i].dingding_user_id}",`
+            userMap[users[i].dingding_user_id] = users[i].nickname
+            user1Map[users[i].nickname] = users[i].dingding_user_id
+            resultMap[users[i].nickname] = result.length
+            result.push({
+                director: users[i].nickname,
+                selected_num: 0,
+                purchase_time: 0.00,
+                out_purchase_time_num: 0,
+                shelf_num: 0,
+                shelf_link_num: 0,
+                shelf_time: 0.00,
+                out_shelf_time_num: 0,
+                sale_amount: 0.00,
+                profit: 0.00,
+            })
+        }
+    }
+    let info = [], info1 = []
+    if (['0', '3', '4', '5'].includes(type)) {
+        info = await newFormsRepo.getProductDevelopInfo(start, end, type, 1)
+    }
+    info1 = await actHiProcinstRepo.getProductDevelopInfo(start, end, type, 1)
+    for (let i = 0; i < info1.length; i++) {
+        let content = new ObjectInputStream(info1[i].info)
+        content = content.readObject()
+        content?.annotations.splice(0, 1)
+        content = content?.annotations
+        for (let j = 0; j < content.length; j++) {
+            content[j].annotations.splice(0, 1)
+            for (let k = 0; k < content[j].annotations.length; k = k+2) {
+                if (['Fo4qma3c22cic3c', 'Fwb8makvcyibm9c', 'Ferjmade1tm0axc'].includes(content[j].annotations[k]))
+                    info1[i]['platform'] = content[j].annotations[k+1]
+                else if (['F1ujma2exiosbcc', 'Fssama252xmjbzc', 'Fxx1ma3pg5efdec'].includes(content[j].annotations[k]))
+                    info1[i]['sku_id'] = content[j].annotations[k+1]
+            }
+        }
+        info1[i].director = user1Map[info1[i].nickname]
+    }
+    if (info1?.length) {
+        info = (info || []).concat(info1).sort((a, b) => a.director.localeCompare(b.director, 'zh-Hans-CN'))
+    }
+    let skuids = [], infoMap = {}
+    for (let i = 0; i < info.length; i++) {
+        if (userMap[info[i].director]) {
+            let index = resultMap[userMap[info[i].director]]
+            result[index].selected_num += 1
+            infoMap[info[i].sku_id] = info[i].operate_time
+            if (i == 0) {
+                skuids = [info[i].sku_id]
+            } else if (info[i].director != info[i-1].director) {
+                let goodsInfo = await goodsInfoRepo.get(skuids.join('","'))
+                let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
+                let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
+                let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuids.join('","'), addSales)
+                let time = 0, out_time = 0, shelf_time = 0, out_shelf_time = 0
+                for (let j = 0; j < purchaseInfo?.length; j++) {
+                    time += moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')
+                    for (let k = 0; k < goodsInfo.length; k++) {
+                        if (goodsInfo[k].sku_id == purchaseInfo[j].sku_code) {
+                            if (goodsInfo[k].purchase_time < moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')) {
+                                out_time += 1
+                            }
+                            break
+                        }
+                    }
+                }
+                if (purchaseInfo?.length) time = time/purchaseInfo.length
+                result[index].purchase_time = time
+                result[index].out_purchase_time_num = out_time
+                result[index].shelf_num = shelfInfo?.length || 0
+                let shelf_link_num = 0
+                for (let j = 0; j < shelfInfo.length; j++) {
+                    if (j == 0 || shelfInfo[j].goods_id != shelfInfo[j-1].goods_id) shelf_link_num += 1
+                    for (let k = 0; k < purchaseInfo.length; k++) {
+                        if (purchaseInfo[k].sku_code == shelfInfo[j].sku_id) {
+                            shelf_time += moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day')
+                            if (moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day') > 7) {
+                                out_shelf_time += 1
+                            }
+                            break
+                        }
+                    }
+                }
+                result[index].shelf_link_num = shelf_link_num
+                result[index].shelf_time = shelf_time
+                result[index].out_shelf_time_num = out_shelf_time
+                if (salesInfo?.length) {
+                    result[index].sale_amount = parseFloat(salesInfo[0].sale_amount)
+                    result[index].profit = parseFloat(salesInfo[0].profit)
+                }
+                skuids = [info[i].sku_id]
+            } else {
+                skuids.push(info[i].sku_id)
+            }
+        }
+    }
+    if (skuids?.length) {
+        let index = resultMap[userMap[info[info.length-1].director]]
+        let goodsInfo = await goodsInfoRepo.get(skuids.join('","'))
+        let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
+        let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
+        let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuids.join('","'), addSales)
+        let time = 0, out_time = 0, shelf_time = 0, out_shelf_time = 0
+        for (let j = 0; j < purchaseInfo?.length; j++) {
+            time += moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')
+            for (let k = 0; k < goodsInfo.length; k++) {
+                if (goodsInfo[k].sku_id == purchaseInfo[j].sku_code) {
+                    if (goodsInfo[k].purchase_time < moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')) {
+                        out_time += 1
+                    }
+                    break
+                }
+            }
+        }
+        if (purchaseInfo?.length) time = time/purchaseInfo.length
+        result[index].purchase_time = time
+        result[index].out_purchase_time_num = out_time
+        result[index].shelf_num = shelfInfo?.length || 0
+        let shelf_link_num = 0
+        for (let j = 0; j < shelfInfo.length; j++) {
+            if (j == 0 || shelfInfo[j].goods_id != shelfInfo[j-1].goods_id) shelf_link_num += 1
+            for (let k = 0; k < purchaseInfo.length; k++) {
+                if (purchaseInfo[k].sku_code == shelfInfo[j].sku_id) {
+                    shelf_time += moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day')
+                    if (moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day') > 7) {
+                        out_shelf_time += 1
+                    }
+                    break
+                }
+            }
+        }
+        result[index].shelf_link_num = shelf_link_num
+        result[index].shelf_time = shelf_time
+        result[index].out_shelf_time_num = out_shelf_time
+        if (salesInfo?.length) {
+            result[index].sale_amount = parseFloat(salesInfo[0].sale_amount)
+            result[index].profit = parseFloat(salesInfo[0].profit)
+        }
+    }
+    return result
+}
+
+developmentService.getProductDevelopSecond = async (start, end, type, addSales, platform) => {
+    let result = [], resultMap = {}
+    for (let i = 0; i < platformList.length; i++) {
+        if (!platform || (platform && platformList[i] == platform)) {
+            resultMap[platformList[i]] = result.length
+            result.push({
+                platform: platformList[i],
+                selected_num: 0,
+                purchase_time: 0.00,
+                out_purchase_time_num: 0,
+                shelf_num: 0,
+                shelf_link_num: 0,
+                shelf_time: 0.00,
+                out_shelf_time_num: 0,
+                sale_amount: 0.00,
+                profit: 0.00,
+            })
+        }
+    }
+    let info = [], info1 = []
+    if (['0', '3', '4', '5'].includes(type)) {
+        info = await newFormsRepo.getProductDevelopInfo(start, end, type, 2)
+    }
+    info1 = await actHiProcinstRepo.getProductDevelopInfo(start, end, type)
+    for (let i = 0; i < info1.length; i++) {
+        let content = new ObjectInputStream(info1[i].info)
+        content = content.readObject()
+        content?.annotations.splice(0, 1)
+        content = content?.annotations
+        for (let j = 0; j < content.length; j++) {
+            content[j].annotations.splice(0, 1)
+            for (let k = 0; k < content[j].annotations.length; k = k+2) {
+                if (['Fo4qma3c22cic3c', 'Fwb8makvcyibm9c', 'Ferjmade1tm0axc'].includes(content[j].annotations[k])) {
+                    info1[i]['platform'] = content[j].annotations[k+1]
+                } else if (['F1ujma2exiosbcc', 'Fssama252xmjbzc', 'Fxx1ma3pg5efdec'].includes(content[j].annotations[k]))
+                    info1[i]['sku_id'] = content[j].annotations[k+1]
+            }
+        }
+    }
+    if (info1?.length) {
+        info = (info || []).concat(info1).map((item) => {
+            if ('得物、唯品会'.indexOf(item['platform']) != -1) {
+                item['platform'] = '得物、唯品会'
+            } else if ('抖音、快手'.indexOf(item['platform']) != -1) {
+                item['platform'] = '抖音、快手'
+            } else if (item['platform'] == 'Coupang') {
+                item['platform'] = 'coupang'
+            }
+            return item
+        }).sort((a, b) => a.platform.localeCompare(b.platform, 'zh-Hans-CN'))
+    }
+    let skuids = [], infoMap = {}
+    for (let i = 0; i < info.length; i++) {
+        let index = resultMap[info[i].platform]
+        if (index == undefined) continue
+        result[index].selected_num += 1
+        infoMap[info[i].sku_id] = info[i].operate_time
+        if (i == 0) {
+            skuids = [info[i].sku_id]
+        } else if (info[i].platform != info[i-1].platform) {
+            let goodsInfo = await goodsInfoRepo.get(skuids.join('","'))
+            let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
+            let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
+            let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuids.join('","'), addSales)
+            let time = 0, out_time = 0, shelf_time = 0, out_shelf_time = 0
+            for (let j = 0; j < purchaseInfo?.length; j++) {
+                time += moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')
+                for (let k = 0; k < goodsInfo.length; k++) {
+                    if (goodsInfo[k].sku_id == purchaseInfo[j].sku_code) {
+                        if (goodsInfo[k].purchase_time < moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')) {
+                            out_time += 1
+                        }
+                        break
+                    }
+                }
+            }
+            if (purchaseInfo?.length) time = time/purchaseInfo.length
+            result[index].purchase_time = time
+            result[index].out_purchase_time_num = out_time
+            result[index].shelf_num = shelfInfo?.length || 0
+            let shelf_link_num = 0
+            for (let j = 0; j < shelfInfo.length; j++) {
+                if (j == 0 || shelfInfo[j].goods_id != shelfInfo[j-1].goods_id) shelf_link_num += 1
+                for (let k = 0; k < purchaseInfo.length; k++) {
+                    if (purchaseInfo[k].sku_code == shelfInfo[j].sku_id) {
+                        shelf_time += moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day')
+                        if (moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day') > 7) {
+                            out_shelf_time += 1
+                        }
+                        break
+                    }
+                }
+            }
+            result[index].shelf_link_num = shelf_link_num
+            result[index].shelf_time = shelf_time
+            result[index].out_shelf_time_num = out_shelf_time
+            if (salesInfo?.length) {
+                result[index].sale_amount = salesInfo[0].sale_amount
+                result[index].profit = salesInfo[0].profit
+            }
+            skuids = [info[i].sku_id]
+        } else {
+            skuids.push(info[i].sku_id)
+        }
+    }
+    if (skuids?.length) {
+        let index = result?.length - 1
+        let goodsInfo = await goodsInfoRepo.get(skuids.join('","'))
+        let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
+        let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
+        let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuids.join('","'), addSales)
+        let time = 0, out_time = 0, shelf_time = 0, out_shelf_time = 0
+        for (let j = 0; j < purchaseInfo?.length; j++) {
+            time += moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')
+            for (let k = 0; k < goodsInfo.length; k++) {
+                if (goodsInfo[k].sku_id == purchaseInfo[j].sku_code) {
+                    if (goodsInfo[k].purchase_time < moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')) {
+                        out_time += 1
+                    }
+                    break
+                }
+            }
+        }
+        if (purchaseInfo?.length) time = time/purchaseInfo.length
+        result[index].purchase_time = time
+        result[index].out_purchase_time_num = out_time
+        result[index].shelf_num = shelfInfo?.length || 0
+        let shelf_link_num = 0
+        for (let j = 0; j < shelfInfo.length; j++) {
+            if (j == 0 || shelfInfo[j].goods_id != shelfInfo[j-1].goods_id) shelf_link_num += 1
+            for (let k = 0; k < purchaseInfo.length; k++) {
+                if (purchaseInfo[k].sku_code == shelfInfo[j].sku_id) {
+                    shelf_time += moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day')
+                    if (moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day') > 7) {
+                        out_shelf_time += 1
+                    }
+                    break
+                }
+            }
+        }
+        result[index].shelf_link_num = shelf_link_num
+        result[index].shelf_time = shelf_time
+        result[index].out_shelf_time_num = out_shelf_time
+        if (salesInfo?.length) {
+            result[index].sale_amount = salesInfo[0].sale_amount
+            result[index].profit = salesInfo[0].profit
+        }
+    }
+    return result
+}
+
+developmentService.getProductDevelopThird = async (start, end, type, addSales, spu) => {
+    let result = [], resultMap = {}
+    let defaultInfo = {
+        spu: '',
+        selected_num: 0,
+        time: 0.00,
+        purchase_time: 0.00,
+        out_purchase_time_num: 0,
+        shelf_num: 0,
+        shelf_link_num: 0,
+        shelf_time: 0.00,
+        out_shelf_time_num: 0,
+        sale_amount: 0.00,
+        profit: 0.00,
+    }
+    let info = [], info1 = []
+    if (['0', '3', '4', '5'].includes(type)) {
+        info = await newFormsRepo.getProductDevelopInfo(start, end, type, 3)
+    }
+    info1 = await actHiProcinstRepo.getProductDevelopInfo(start, end, type)
+    for (let i = 0; i < info1.length; i++) {
+        let content = new ObjectInputStream(info1[i].info)
+        content = content.readObject()
+        content?.annotations.splice(0, 1)
+        content = content?.annotations
+        for (let j = 0; j < content.length; j++) {
+            content[j].annotations.splice(0, 1)
+            for (let k = 0; k < content[j].annotations.length; k = k+2) {
+                if (['Fo4qma3c22cic3c', 'Fwb8makvcyibm9c', 'Ferjmade1tm0axc'].includes(content[j].annotations[k]))
+                    info1[i]['platform'] = content[j].annotations[k+1]
+                else if (['F1ujma2exiosbcc', 'Fssama252xmjbzc', 'Fxx1ma3pg5efdec'].includes(content[j].annotations[k]))
+                    info1[i]['sku_id'] = content[j].annotations[k+1]
+            }
+        }
+    }
+    if (info1?.length) {
+        info = (info || []).concat(info1).sort((a, b) => a.sku_id.localeCompare(b.sku_id, 'zh-Hans-CN'))
+    }
+    let skuids = [], infoMap = {}, dateMap = {}, skuInfo = [], resultCount = {}, shelfCount = {}
+    for (let i = 0; i < info.length; i++) {
+        skuids.push(info[i].sku_id)
+        dateMap[info[i].sku_id] = info[i].operate_time
+    }
+    if (skuids?.length) {
+        let goodsInfo = await goodsInfoRepo.get(skuids.join('","'))
+        let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
+        let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
+        for (let i = 0; i < goodsInfo.length; i++) {
+            infoMap[goodsInfo[i].sku_id] = goodsInfo[i].purchase_time
+            if (!spu || (spu && goodsInfo[i].spu && goodsInfo[i].spu.indexOf(spu) !=-1)) {                
+                if (i == 0 || goodsInfo[i].spu != goodsInfo[i-1].spu) {
+                    resultMap[goodsInfo[i].sku_id] = result?.length
+                    let tmp = JSON.parse(JSON.stringify(defaultInfo))
+                    tmp.spu = goodsInfo[i].spu
+                    tmp.selected_num += 1
+                    result.push(tmp)
+                    resultCount[result?.length-1] = 0
+                    shelfCount[result?.length-1] = 0
+                    skuInfo.push([goodsInfo[i].sku_id])
+                } else {
+                    resultMap[goodsInfo[i].sku_id] = result?.length-1
+                    result[result?.length-1].selected_num += 1
+                    skuInfo[result?.length-1].push(goodsInfo[i-1].sku_id)
+                }
+            }
+        }
+        let purchaseMap = {}
+        for (let i = 0; i < purchaseInfo.length; i++) {
+            purchaseMap[purchaseInfo[i].sku_code] = purchaseInfo[i].io_date
+            if (resultMap[purchaseInfo[i].sku_code] != undefined) {
+                let index = resultMap[purchaseInfo[i].sku_code]
+                result[index].time += moment(purchaseInfo[i].io_date).diff(dateMap[purchaseInfo[i].sku_code], 'day')
+                resultCount[index] += 1
+                if (moment(purchaseInfo[i].io_date).diff(dateMap[purchaseInfo[i].sku_code], 'day') > infoMap[purchaseInfo[i].sku_code]) {
+                    result[index].out_purchase_time_num += 1
+                }
+            }
+        }
+        for (let i = 0; i < shelfInfo.length; i++) {
+            if (resultCount[shelfInfo[i].sku_id] != undefined) {
+                let index = resultMap[shelfInfo[i].sku_id]
+                result[index].shelf_num += 1
+                if (i == 0 || shelfInfo[i].goods_id != shelfInfo[i-1].goods_id) {
+                    result[index].shelf_link_num += 1
+                }
+                result[index].shelf_time += moment(shelfInfo[i].create_time).diff(purchaseMap[shelfInfo[i].sku_id], 'day')
+                shelfCount[index] += 1
+                if (moment(shelfInfo[i].create_time).diff(purchaseMap[shelfInfo[i].sku_id], 'day') > 7) {
+                    result[index].out_shelf_time_num += 1
+                }
+            }
+        }
+    }
+    for (let i = 0; i < result.length; i++) {
+        let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuInfo[i].join('","'), addSales)
+        if (salesInfo?.length) {
+            result[i].sale_amount = salesInfo[0].sale_amount
+            result[i].profit = salesInfo[0].profit
+        }
+        if (resultCount[i]) result[i].time = result[i].time/resultCount[i]
+        if (shelfCount[i]) result[i].shelf_time = result[i].shelf_time/shelfCount[i]
+    }
     return result
 }
 
