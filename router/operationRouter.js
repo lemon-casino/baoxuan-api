@@ -65,4 +65,9 @@ router.post('/refresh-verified-labor-cost', operationApi.refreshVerifiedLaborCos
 router.post('/tmall-promotion-info/import', operationApi.importTmallpromotioninfo)
 //首页销售数据
 router.get('/sale_data', operationApi.getSaleData)
+router.get('/inventory-data', operationApi.getInventoryData)
+router.get('/division-sale', operationApi.getDivisionSaleData)
+router.get('/project-sale', operationApi.getProjectSaleData)
+router.get('/division-qty', operationApi.getDivisionSaleQtyData)
+router.get('/project-qty', operationApi.getProjectSaleQtyData)
 module.exports = router

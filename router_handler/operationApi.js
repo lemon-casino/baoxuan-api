@@ -887,6 +887,83 @@ const getSaleData = async (req, res, next) => {
     }
 }
 
+const getInventoryData = async (req, res, next) => {
+    try {
+        // const {startDate, endDate,value,name} = req.query
+        // joiUtil.validate({
+        //     name: {value: name, schema: joiUtil.commonJoiSchemas.strRequired},
+        //     startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+        //     endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        // })
+        // const daysDifference = moment(endDate).diff(startDate, 'days')+1
+        // let lstart = moment(startDate).format('YYYY-MM-DD')
+        // let lend = moment(endDate).format('YYYY-MM-DD') 
+        // let preStart = moment(startDate).subtract(daysDifference, 'day').format('YYYY-MM-DD')
+        // let preEnd = moment(endDate).subtract(daysDifference, 'day').format('YYYY-MM-DD')
+        // let result=[]
+        const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
+        const day7 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+        const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+        const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
+        result = await operationService.getInventoryData(day,day7,day30,day31)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getDivisionSaleData = async (req, res, next) => {
+    try {
+        const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
+        const day7 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+        const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+        const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
+        result = await operationService.getDivisionSaleData(day,day7,day30,day31)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getProjectSaleData = async (req, res, next) => {
+    try {
+        const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
+        const day7 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+        const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+        const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
+        result = await operationService.getProjectSaleData(day,day7,day30,day31)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getDivisionSaleQtyData = async (req, res, next) => {
+    try {
+        const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
+        const day7 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+        const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+        const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
+        result = await operationService.getDivisionSaleQtyData(day,day7,day30,day31)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getProjectSaleQtyData = async (req, res, next) => {
+    try {
+        const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
+        const day7 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+        const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+        const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
+        result = await operationService.getProjectSaleQtyData(day,day7,day30,day31)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const ReportDownload = async (req, res, next) => {
     try {
         const {startDate, endDate} = req.query
@@ -1379,5 +1456,10 @@ module.exports = {
     importXhsShuadan,
     ReportDownload,
     importTmallpromotioninfo,
-    getSaleData
+    getSaleData,
+    getInventoryData,
+    getDivisionSaleData,
+    getDivisionSaleQtyData,
+    getProjectSaleData,
+    getProjectSaleQtyData
 }
