@@ -1098,6 +1098,7 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
             if (i == 0) {
                 skuids = [info[i].sku_id]
             } else if (info[i].director != info[i-1].director) {
+                index = resultMap[userMap[info[i-1].director]]
                 let goodsInfo = await goodsInfoRepo.get(skuids.join('","'))
                 let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
                 let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
@@ -1117,9 +1118,12 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
                 if (purchaseInfo?.length) time = time/purchaseInfo.length
                 result[index].purchase_time = time
                 result[index].out_purchase_time_num = out_time
-                result[index].shelf_num = shelfInfo?.length || 0
-                let shelf_link_num = 0
+                let shelf_link_num = 0, shelfMap = {}
                 for (let j = 0; j < shelfInfo.length; j++) {
+                    if (!shelfMap[shelfInfo[j].sku_id]) {
+                        result[index].shelf_num += 1
+                        shelfMap[shelfInfo[j].sku_id] = true
+                    }
                     if (j == 0 || shelfInfo[j].goods_id != shelfInfo[j-1].goods_id) shelf_link_num += 1
                     for (let k = 0; k < purchaseInfo.length; k++) {
                         if (purchaseInfo[k].sku_code == shelfInfo[j].sku_id) {
@@ -1165,9 +1169,12 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
         if (purchaseInfo?.length) time = time/purchaseInfo.length
         result[index].purchase_time = time
         result[index].out_purchase_time_num = out_time
-        result[index].shelf_num = shelfInfo?.length || 0
-        let shelf_link_num = 0
+        let shelf_link_num = 0, shelfMap = {}
         for (let j = 0; j < shelfInfo.length; j++) {
+            if (!shelfMap[shelfInfo[j].sku_id]) {
+                result[index].shelf_num += 1
+                shelfMap[shelfInfo[j].sku_id] = true
+            }
             if (j == 0 || shelfInfo[j].goods_id != shelfInfo[j-1].goods_id) shelf_link_num += 1
             for (let k = 0; k < purchaseInfo.length; k++) {
                 if (purchaseInfo[k].sku_code == shelfInfo[j].sku_id) {
@@ -1250,6 +1257,7 @@ developmentService.getProductDevelopSecond = async (start, end, type, addSales, 
         if (i == 0) {
             skuids = [info[i].sku_id]
         } else if (info[i].platform != info[i-1].platform) {
+            index = resultMap[info[i-1].platform]
             let goodsInfo = await goodsInfoRepo.get(skuids.join('","'))
             let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
             let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
@@ -1269,9 +1277,12 @@ developmentService.getProductDevelopSecond = async (start, end, type, addSales, 
             if (purchaseInfo?.length) time = time/purchaseInfo.length
             result[index].purchase_time = time
             result[index].out_purchase_time_num = out_time
-            result[index].shelf_num = shelfInfo?.length || 0
-            let shelf_link_num = 0
+            let shelf_link_num = 0, shelfMap = {}
             for (let j = 0; j < shelfInfo.length; j++) {
+                if (!shelfMap[shelfInfo[j].sku_id]) {
+                    result[index].shelf_num += 1
+                    shelfMap[shelfInfo[j].sku_id] = true
+                }
                 if (j == 0 || shelfInfo[j].goods_id != shelfInfo[j-1].goods_id) shelf_link_num += 1
                 for (let k = 0; k < purchaseInfo.length; k++) {
                     if (purchaseInfo[k].sku_code == shelfInfo[j].sku_id) {
@@ -1316,9 +1327,12 @@ developmentService.getProductDevelopSecond = async (start, end, type, addSales, 
         if (purchaseInfo?.length) time = time/purchaseInfo.length
         result[index].purchase_time = time
         result[index].out_purchase_time_num = out_time
-        result[index].shelf_num = shelfInfo?.length || 0
-        let shelf_link_num = 0
+        let shelf_link_num = 0, shelfMap = {}
         for (let j = 0; j < shelfInfo.length; j++) {
+            if (!shelfMap[shelfInfo[j].sku_id]) {
+                result[index].shelf_num += 1
+                shelfMap[shelfInfo[j].sku_id] = true
+            }
             if (j == 0 || shelfInfo[j].goods_id != shelfInfo[j-1].goods_id) shelf_link_num += 1
             for (let k = 0; k < purchaseInfo.length; k++) {
                 if (purchaseInfo[k].sku_code == shelfInfo[j].sku_id) {
@@ -1345,6 +1359,8 @@ developmentService.getProductDevelopThird = async (start, end, type, addSales, s
     let result = [], resultMap = {}
     let defaultInfo = {
         spu: '',
+        line_brief_name: '',
+        category: '',
         selected_num: 0,
         time: 0.00,
         purchase_time: 0.00,
@@ -1395,6 +1411,8 @@ developmentService.getProductDevelopThird = async (start, end, type, addSales, s
                     resultMap[goodsInfo[i].sku_id] = result?.length
                     let tmp = JSON.parse(JSON.stringify(defaultInfo))
                     tmp.spu = goodsInfo[i].spu
+                    tmp.category = goodsInfo[i].category
+                    if (goodsInfo[i].line_brief_name) tmp.line_brief_name = goodsInfo[i].line_brief_name
                     tmp.selected_num += 1
                     result.push(tmp)
                     resultCount[result?.length-1] = 0
@@ -1403,6 +1421,8 @@ developmentService.getProductDevelopThird = async (start, end, type, addSales, s
                 } else {
                     resultMap[goodsInfo[i].sku_id] = result?.length-1
                     result[result?.length-1].selected_num += 1
+                    if (goodsInfo[i].line_brief_name && result[result?.length-1].line_brief_name.length == 0)
+                        result[result?.length-1].line_brief_name = goodsInfo[i].line_brief_name
                     skuInfo[result?.length-1].push(goodsInfo[i-1].sku_id)
                 }
             }
