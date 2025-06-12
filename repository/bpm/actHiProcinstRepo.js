@@ -275,7 +275,7 @@ actHiProcinstRepo.getProductDevelopInfo = async (start, end, type, order) => {
     else if (type == '5') keys = "'gystplc'"
     if (order == 1) order_info = 't2.ASSIGNEE_'
     let sql = `SELECT p.ID_ AS id, t.LAST_UPDATED_TIME_ as operate_time, b.BYTES_ AS info, 
-            (SELECT nickname FROM system_users WHERE t2.ASSIGNEE_ = id) AS nickname 
+            (SELECT nickname FROM system_users WHERE t2.ASSIGNEE_ = id) AS nickname, v3.TEXT_ AS line_brief_name  
         FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_
         JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
             AND v.NAME_ IN ('Fcilma2exazkb7c', 'Fig2ma24zzz9brc', 'F6gkma3pfcjfd1c')
@@ -300,6 +300,12 @@ actHiProcinstRepo.getProductDevelopInfo = async (start, end, type, order) => {
             )
         JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_
             AND v2.NAME_ = 'PROCESS_STATUS' AND v2.TEXT_ IN ('1', '2')
+        JOIN ACT_HI_VARINST v3 ON v3.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v3.NAME_ IN ('Fj0jma3p8evsc0c', 'Fncjma23ezl8aec', 'F6w0ma2d2mnxakc') 
+            AND v3.LAST_UPDATED_TIME_ = (
+                SELECT MAX(v1.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v1 
+                WHERE v1.PROC_INST_ID_ = p.PROC_INST_ID_ AND v1.NAME_ = v3.NAME_ 
+            )
         WHERE d.KEY_ IN (${keys}) 
         ORDER BY ${order_info}`
     let result = await query(sql)
