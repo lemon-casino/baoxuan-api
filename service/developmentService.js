@@ -29,6 +29,7 @@ const goodsInfoRepo = require('@/repository/danpin/goodsInfoRepo')
 const purchaseRepo = require('@/repository/jst/purchaseRepo')
 const goodsSaleInfoRepo = require('@/repository/operation/goodsSaleInfoRepo')
 const goodsSalesRepo = require('@/repository/operation/goodsSalesRepo')
+const combinationProductCodeRepo = require('@/repository/danpin/combinationProductCodeRepo')
 
 developmentService.getDataStats = async (type, start, end, month, timeType, project, process) => {
     let result = []
@@ -1108,6 +1109,11 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
                 let goodsInfo = await goodsInfoRepo.get(skuids.join('","'))
                 let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
                 let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
+                let shelfInfo1 = await combinationProductCodeRepo.get(skuids.join('","'))
+                for (let j = 0; j < shelfInfo1.length; j++) {
+                    let tmp = await goodsSkuRepo.getBySysSkuId(shelfInfo1[j].sku_id)
+                    if (tmp?.length) shelfInfo = shelfInfo.concat(tmp)
+                }
                 let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuids.join('","'), addSales)
                 let time = 0, out_num = 0, outMap = {}, shelf_time = 0, out_shelf_num = 0, outShelfMap = {}
                 for (let j = 0; j < purchaseInfo?.length; j++) {
@@ -1161,6 +1167,11 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
         let goodsInfo = await goodsInfoRepo.get(skuids.join('","'))
         let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
         let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
+        let shelfInfo1 = await combinationProductCodeRepo.get(skuids.join('","'))
+        for (let j = 0; j < shelfInfo1.length; j++) {
+            let tmp = await goodsSkuRepo.getBySysSkuId(shelfInfo1[j].sku_id)
+            if (tmp?.length) shelfInfo = shelfInfo.concat(tmp)
+        }
         let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuids.join('","'), addSales)
         let time = 0, out_num = 0, outMap = {}, shelf_time = 0, out_shelf_num = 0, outShelfMap = {}
         for (let j = 0; j < purchaseInfo?.length; j++) {
@@ -1272,6 +1283,11 @@ developmentService.getProductDevelopSecond = async (start, end, type, addSales, 
             let goodsInfo = await goodsInfoRepo.get(skuids.join('","'))
             let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
             let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
+            let shelfInfo1 = await combinationProductCodeRepo.get(skuids.join('","'))
+            for (let j = 0; j < shelfInfo1.length; j++) {
+                let tmp = await goodsSkuRepo.getBySysSkuId(shelfInfo1[j].sku_id)
+                if (tmp?.length) shelfInfo = shelfInfo.concat(tmp)
+            }
             let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuids.join('","'), addSales)
             let time = 0, out_num = 0, outMap = {}, shelf_time = 0, out_shelf_num = 0, outShelfMap = {}
             for (let j = 0; j < purchaseInfo?.length; j++) {
@@ -1325,6 +1341,11 @@ developmentService.getProductDevelopSecond = async (start, end, type, addSales, 
         let goodsInfo = await goodsInfoRepo.get(skuids.join('","'))
         let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
         let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
+        let shelfInfo1 = await combinationProductCodeRepo.get(skuids.join('","'))
+        for (let j = 0; j < shelfInfo1.length; j++) {
+            let tmp = await goodsSkuRepo.getBySysSkuId(shelfInfo1[j].sku_id)
+            if (tmp?.length) shelfInfo = shelfInfo.concat(tmp)
+        }
         let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuids.join('","'), addSales)
         let time = 0, out_num = 0, outMap = {}, shelf_time = 0, out_shelf_num = 0, outShelfMap = {}
         for (let j = 0; j < purchaseInfo?.length; j++) {
@@ -1422,6 +1443,11 @@ developmentService.getProductDevelopThird = async (start, end, type, addSales, s
         let goodsInfo = await goodsInfoRepo.get(skuids.join('","'))
         let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
         let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
+        let shelfInfo1 = await combinationProductCodeRepo.get(skuids.join('","'))
+        for (let j = 0; j < shelfInfo1.length; j++) {
+            let tmp = await goodsSkuRepo.getBySysSkuId(shelfInfo1[j].sku_id)
+            if (tmp?.length) shelfInfo = shelfInfo.concat(tmp)
+        }
         for (let i = 0; i < goodsInfo.length; i++) {
             infoMap[goodsInfo[i].sku_id] = goodsInfo[i].purchase_time
             if (!spu || (spu && goodsInfo[i].spu && goodsInfo[i].spu.indexOf(spu) !=-1)) {                
