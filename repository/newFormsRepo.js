@@ -3442,8 +3442,9 @@ const getProductDevelopInfo = async (start, end, type, order) => {
         order_info = 'pi.id'
     }
     let sql = `select pi.id, pir.operate_time, replace(ff1.title, '预估订货量', '') as platform, 
-            if(pir2.operator is null, pi.creator, pir2.operator) as director, 
-            pis2.value as sku_id from process_instances pi join processes p on p.id = pi.process_id
+            if(pir2.operator is null, pi.creator, pir2.operator) as director, pis2.value as sku_id, 
+            concat('https://t8sk7d.aliwork.com/APP_BXS79QCC8MY5ZV0EZZ07/processDetail?formInstId=', pi.instance_id) as link 
+        from process_instances pi join processes p on p.id = pi.process_id 
         join process_instance_values piv on pi.id = piv.instance_id
             and piv.field_id in ('tableField_m9gzfubr', 'tableField_m1g2w3gr')
         join process_instance_sub_values pis on pi.id = pis.instance_id
@@ -3479,6 +3480,43 @@ const getProductDevelopInfo = async (start, end, type, order) => {
                 '开发在聚水潭建立商品信息')
         where pi.process_id in (${ids}) and pi.status in ('RUNNING', 'COMPLETED') 
         order by ${order_info}`
+    let row = await query(sql)
+    return row
+}
+
+const getProductDeveloper = async (start, end, type, id, name) => {
+    let ids = '88, 836, 838'
+    if (type == '3') ids = '836'
+    else if (type == '4') ids = '88'
+    else if (type == '5') ids = '838'
+        let sql = `select count(1) as count from process_instances pi join processes p on p.id = pi.process_id 
+        left join process_instance_values piv1 on pi.id = piv1.instance_id
+            and piv1.value = '["${name}"]' and piv1.field_id  in (
+                'employeeField_m9gzfubt', 
+                'employeeField_m8k0206c', 
+                'employeeField_m8k0206d', 
+                'employeeField_lssfx9gb'
+            ) and if(piv1.field_id in ('employeeField_m8k0206d', 'employeeField_lssfx9gb'), 
+                (select max(pir.operate_time) from process_instance_records pir where pir.instance_id = pi.id
+                    and pir.show_name = '分配开发' and pir.action_exit = 'agree') between '${start}' and '${end}', 
+                if(piv1.field_id = 'employeeField_m9gzfubt', 
+                    (select min(pir.operate_time) from process_instance_records pir 
+                        where pir.instance_id = pi.id and pir.show_name = '分配开发' and pir.action_exit = 'agree') 
+                        between '${start}' and '${end}', 
+                        (select pir.operate_time from process_instance_records pir 
+                            where pir.instance_id = pi.id and pir.show_name = '分配开发' 
+                                and pir.action_exit = 'agree' and pir.operate_time > 
+                                    (select min(p2.operate_time) from process_instance_records p2 
+                                        where p2.instance_id = pi.id and p2.show_name = '分配开发' 
+                                            and p2.action_exit = 'agree') 
+                                        order by pir.id limit 1) between '${start}' and '${end}'))
+        left join process_instance_values piv2 on pi.id = piv2.instance_id
+            and piv2.field_id  = 'employeeField_m42elnbz'
+        where pi.process_id in (${ids}) and pi.status in ('RUNNING', 'COMPLETED') 
+            and if(pi.process_id = 88, piv1.id is not null, 
+                if(pi.process_id = 833, 
+                    piv2.id is not null and pi.create_time between '${start}' and '${end}', 
+                    pi.create_time between '${start}' and '${end}' and pi.creator = ${id}))`
     let row = await query(sql)
     return row
 }
@@ -3526,5 +3564,6 @@ module.exports = {
     getDevelopmentOtherInfo,
     getDevelopmentRunning,
     getDevelopmentFinish,
-    getProductDevelopInfo
+    getProductDevelopInfo,
+    getProductDeveloper
 }

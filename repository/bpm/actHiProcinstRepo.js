@@ -275,7 +275,8 @@ actHiProcinstRepo.getProductDevelopInfo = async (start, end, type, order) => {
     else if (type == '5') keys = "'gystplc'"
     if (order == 1) order_info = 't2.ASSIGNEE_'
     let sql = `SELECT p.ID_ AS id, t.LAST_UPDATED_TIME_ as operate_time, b.BYTES_ AS info, 
-            (SELECT nickname FROM system_users WHERE t2.ASSIGNEE_ = id) AS nickname, v3.TEXT_ AS line_brief_name  
+            (SELECT nickname FROM system_users WHERE t2.ASSIGNEE_ = id) AS nickname, v3.TEXT_ AS line_brief_name, 
+            CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=', p.PROC_INST_ID_) AS link 
         FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_
         JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
             AND v.NAME_ IN ('Fcilma2exazkb7c', 'Fig2ma24zzz9brc', 'F6gkma3pfcjfd1c')
@@ -312,5 +313,56 @@ actHiProcinstRepo.getProductDevelopInfo = async (start, end, type, order) => {
     return result
 }
 
+actHiProcinstRepo.getProductDeveloper = async (start, end, type, name) => {
+    let keys = "'gystplc', 'fttplc', 'sctgtplc', 'zytplc', 'iptpc'"
+    if (type == '1') keys = "'sctgtplc'"
+    else if (type == '2') keys = "'zytplc'"
+    else if (type == '3') keys = "'iptpc'"
+    else if (type == '4') keys = "'fttplc'"
+    else if (type == '5') keys = "'gystplc'"
+    let sql = `SELECT COUNT(1) AS count FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_
+        LEFT JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v.NAME_ IN (
+                'Cfidbw9ff40k6', 
+                'Cfidaq7mz3963', 
+                'Cfidcvooh9jnf', 
+                'Cfidvu2osk3k9', 
+                'Cfidzncsybu0e', 
+                'Cfid1wglixgnx'
+            ) AND v.LAST_UPDATED_TIME_ = (
+                SELECT MAX(v1.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v1 
+                WHERE v1.PROC_INST_ID_ = p.PROC_INST_ID_ AND v1.NAME_ = v.NAME_ 
+            ) AND IF(v.NAME_ = 'Cfidcvooh9jnf', EXISTS(
+				SELECT t.ID_ FROM ACT_HI_TASKINST t WHERE t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+					AND t.NAME_ LIKE '%反推承接人1%' AND t.START_TIME_ BETWEEN '${start}' AND '${end}' 
+                    AND t.START_TIME_ = (
+                        SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
+                        WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ AND tt.NAME_ = t.NAME_)), 
+                IF(v.NAME_ = 'Cfidvu2osk3k9', EXISTS(
+				    SELECT t.ID_ FROM ACT_HI_TASKINST t WHERE t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+					    AND t.NAME_ LIKE '%反推承接人2%' AND t.START_TIME_ BETWEEN '${start}' AND '${end}'
+                        AND t.START_TIME_ = (
+                            SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
+                            WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ AND tt.NAME_ = t.NAME_)), 
+                    IF(v.NAME_ = 'Cfidzncsybu0e', EXISTS(
+				        SELECT t.ID_ FROM ACT_HI_TASKINST t WHERE t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+					        AND t.NAME_ LIKE '%反推承接人3%' AND t.START_TIME_ BETWEEN '${start}' AND '${end}'
+                            AND t.START_TIME_ = (
+                                SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
+                                WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ AND tt.NAME_ = t.NAME_)), 
+                        IF(v.NAME_ = 'Cfid1wglixgnx', EXISTS(
+				            SELECT t.ID_ FROM ACT_HI_TASKINST t WHERE t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+					            AND t.NAME_ LIKE '%反推承接人4%' AND t.START_TIME_ BETWEEN '${start}' AND '${end}'
+                                AND t.START_TIME_ = (
+                                    SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
+                                    WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ AND tt.NAME_ = t.NAME_)), 1))))
+        WHERE d.KEY_ IN (${keys}) AND IF(d.KEY_ = 'fttplc', v.TEXT_ IS NOT NULL, 
+				IF(d.KEY_ IN ('gystplc', 'sctgtplc'), v.TEXT_ IS NOT NULL, 1) 
+                AND p.START_TIME_ BETWEEN '${start}' AND '${end}')
+			AND (SELECT u.nickname FROM system_users u 
+                WHERE u.id = IF(v.TEXT_ IS NOT NULL, v.TEXT_, p.START_USER_ID_)) = '${name}'`
+    let result = await query(sql)
+    return result
+}
 
 module.exports = actHiProcinstRepo
