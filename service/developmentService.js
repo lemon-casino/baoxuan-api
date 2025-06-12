@@ -1051,8 +1051,14 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
             userMap[users[i].dingding_user_id] = users[i].nickname
             user1Map[users[i].nickname] = users[i].dingding_user_id
             resultMap[users[i].nickname] = result.length
+            let process_num = 0
+            let num = await newFormsRepo.getProductDeveloper(start, end, type, users[i].dingding_user_id, users[i].nickname)
+            if (num?.length) process_num += num[0].count
+            num = await actHiProcinstRepo.getProductDeveloper(start, end, type, users[i].nickname)
+            if (num?.length) process_num += num[0].count
             result.push({
                 director: users[i].nickname,
+                process_num,
                 selected_num: 0,
                 purchase_time: 0.00,
                 out_purchase_time_num: 0,
@@ -1061,7 +1067,7 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
                 shelf_time: 0.00,
                 out_shelf_time_num: 0,
                 sale_amount: 0.00,
-                profit: 0.00,
+                profit: 0.00
             })
         }
     }
@@ -1103,13 +1109,14 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
                 let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
                 let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
                 let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuids.join('","'), addSales)
-                let time = 0, out_time = 0, shelf_time = 0, out_shelf_time = 0
+                let time = 0, out_num = 0, outMap = {}, shelf_time = 0, out_shelf_num = 0, outShelfMap = {}
                 for (let j = 0; j < purchaseInfo?.length; j++) {
                     time += moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')
                     for (let k = 0; k < goodsInfo.length; k++) {
-                        if (goodsInfo[k].sku_id == purchaseInfo[j].sku_code) {
+                        if (outMap[goodsInfo[k].sku_id] == undefined && goodsInfo[k].sku_id == purchaseInfo[j].sku_code) {
                             if (goodsInfo[k].purchase_time < moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')) {
-                                out_time += 1
+                                out_num += 1
+                                outMap[goodsInfo[k].sku_id] = true
                             }
                             break
                         }
@@ -1117,7 +1124,7 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
                 }
                 if (purchaseInfo?.length) time = time/purchaseInfo.length
                 result[index].purchase_time = time
-                result[index].out_purchase_time_num = out_time
+                result[index].out_purchase_time_num = out_num
                 let shelf_link_num = 0, shelfMap = {}
                 for (let j = 0; j < shelfInfo.length; j++) {
                     if (!shelfMap[shelfInfo[j].sku_id]) {
@@ -1128,8 +1135,9 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
                     for (let k = 0; k < purchaseInfo.length; k++) {
                         if (purchaseInfo[k].sku_code == shelfInfo[j].sku_id) {
                             shelf_time += moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day')
-                            if (moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day') > 7) {
-                                out_shelf_time += 1
+                            if (outShelfMap[shelfInfo[j].sku_id] == undefined && moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day') > 7) {
+                                out_shelf_num += 1
+                                outShelfMap[shelfInfo[j].sku_id] = true
                             }
                             break
                         }
@@ -1137,10 +1145,10 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
                 }
                 result[index].shelf_link_num = shelf_link_num
                 result[index].shelf_time = shelf_time
-                result[index].out_shelf_time_num = out_shelf_time
+                result[index].out_shelf_time_num = out_shelf_num
                 if (salesInfo?.length) {
-                    result[index].sale_amount = parseFloat(salesInfo[0].sale_amount)
-                    result[index].profit = parseFloat(salesInfo[0].profit)
+                    result[index].sale_amount = parseFloat(salesInfo[0].sale_amount / 10000)
+                    result[index].profit = parseFloat(salesInfo[0].profit / 10000)
                 }
                 skuids = [info[i].sku_id]
             } else {
@@ -1154,13 +1162,14 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
         let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
         let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
         let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuids.join('","'), addSales)
-        let time = 0, out_time = 0, shelf_time = 0, out_shelf_time = 0
+        let time = 0, out_num = 0, outMap = {}, shelf_time = 0, out_shelf_num = 0, outShelfMap = {}
         for (let j = 0; j < purchaseInfo?.length; j++) {
             time += moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')
             for (let k = 0; k < goodsInfo.length; k++) {
-                if (goodsInfo[k].sku_id == purchaseInfo[j].sku_code) {
+                if (outMap[purchaseInfo[j].sku_code] == undefined && goodsInfo[k].sku_id == purchaseInfo[j].sku_code) {
                     if (goodsInfo[k].purchase_time < moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')) {
-                        out_time += 1
+                        out_num += 1
+                        outMap[purchaseInfo[j].sku_code] = true
                     }
                     break
                 }
@@ -1168,7 +1177,7 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
         }
         if (purchaseInfo?.length) time = time/purchaseInfo.length
         result[index].purchase_time = time
-        result[index].out_purchase_time_num = out_time
+        result[index].out_purchase_time_num = out_num
         let shelf_link_num = 0, shelfMap = {}
         for (let j = 0; j < shelfInfo.length; j++) {
             if (!shelfMap[shelfInfo[j].sku_id]) {
@@ -1179,19 +1188,21 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
             for (let k = 0; k < purchaseInfo.length; k++) {
                 if (purchaseInfo[k].sku_code == shelfInfo[j].sku_id) {
                     shelf_time += moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day')
-                    if (moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day') > 7) {
-                        out_shelf_time += 1
+                    if (outShelfMap[shelfInfo[j].sku_id] == undefined && moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day') > 7) {
+                        out_shelf_num += 1
+                        outShelfMap[shelfInfo[j].sku_id] = true
                     }
                     break
                 }
             }
         }
         result[index].shelf_link_num = shelf_link_num
+        if (shelfInfo?.length) shelf_time = shelf_time/shelfInfo.length
         result[index].shelf_time = shelf_time
-        result[index].out_shelf_time_num = out_shelf_time
+        result[index].out_shelf_time_num = out_shelf_num
         if (salesInfo?.length) {
-            result[index].sale_amount = parseFloat(salesInfo[0].sale_amount)
-            result[index].profit = parseFloat(salesInfo[0].profit)
+            result[index].sale_amount = parseFloat(salesInfo[0].sale_amount / 10000)
+            result[index].profit = parseFloat(salesInfo[0].profit / 10000)
         }
     }
     return result
@@ -1262,13 +1273,14 @@ developmentService.getProductDevelopSecond = async (start, end, type, addSales, 
             let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
             let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
             let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuids.join('","'), addSales)
-            let time = 0, out_time = 0, shelf_time = 0, out_shelf_time = 0
+            let time = 0, out_num = 0, outMap = {}, shelf_time = 0, out_shelf_num = 0, outShelfMap = {}
             for (let j = 0; j < purchaseInfo?.length; j++) {
                 time += moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')
                 for (let k = 0; k < goodsInfo.length; k++) {
-                    if (goodsInfo[k].sku_id == purchaseInfo[j].sku_code) {
+                    if (outMap[purchaseInfo[j].sku_code] == undefined && goodsInfo[k].sku_id == purchaseInfo[j].sku_code) {
                         if (goodsInfo[k].purchase_time < moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')) {
-                            out_time += 1
+                            out_num += 1
+                            outMap[purchaseInfo[j].sku_code] = true
                         }
                         break
                     }
@@ -1276,7 +1288,7 @@ developmentService.getProductDevelopSecond = async (start, end, type, addSales, 
             }
             if (purchaseInfo?.length) time = time/purchaseInfo.length
             result[index].purchase_time = time
-            result[index].out_purchase_time_num = out_time
+            result[index].out_purchase_time_num = out_num
             let shelf_link_num = 0, shelfMap = {}
             for (let j = 0; j < shelfInfo.length; j++) {
                 if (!shelfMap[shelfInfo[j].sku_id]) {
@@ -1287,19 +1299,21 @@ developmentService.getProductDevelopSecond = async (start, end, type, addSales, 
                 for (let k = 0; k < purchaseInfo.length; k++) {
                     if (purchaseInfo[k].sku_code == shelfInfo[j].sku_id) {
                         shelf_time += moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day')
-                        if (moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day') > 7) {
-                            out_shelf_time += 1
+                        if (outShelfMap[shelfInfo[j].sku_id] == undefined && moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day') > 7) {
+                            out_shelf_num += 1
+                            outShelfMap[shelfInfo[j].sku_id] = true
                         }
                         break
                     }
                 }
             }
             result[index].shelf_link_num = shelf_link_num
+            if (shelfInfo?.length) shelf_time = shelf_time/shelfInfo.length
             result[index].shelf_time = shelf_time
-            result[index].out_shelf_time_num = out_shelf_time
+            result[index].out_shelf_time_num = out_shelf_num
             if (salesInfo?.length) {
-                result[index].sale_amount = salesInfo[0].sale_amount
-                result[index].profit = salesInfo[0].profit
+                result[index].sale_amount = parseFloat(salesInfo[0].sale_amount / 10000)
+                result[index].profit = parseFloat(salesInfo[0].profit / 10000)
             }
             skuids = [info[i].sku_id]
         } else {
@@ -1312,13 +1326,14 @@ developmentService.getProductDevelopSecond = async (start, end, type, addSales, 
         let purchaseInfo = await purchaseRepo.getBySkuCode(skuids.join('","'))
         let shelfInfo = await goodsSkuRepo.getBySysSkuId(skuids.join('","'))
         let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuids.join('","'), addSales)
-        let time = 0, out_time = 0, shelf_time = 0, out_shelf_time = 0
+        let time = 0, out_num = 0, outMap = {}, shelf_time = 0, out_shelf_num = 0, outShelfMap = {}
         for (let j = 0; j < purchaseInfo?.length; j++) {
             time += moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')
             for (let k = 0; k < goodsInfo.length; k++) {
-                if (goodsInfo[k].sku_id == purchaseInfo[j].sku_code) {
+                if (outMap[purchaseInfo[j].sku_code] == undefined && goodsInfo[k].sku_id == purchaseInfo[j].sku_code) {
                     if (goodsInfo[k].purchase_time < moment(purchaseInfo[j].io_date).diff(infoMap[purchaseInfo[j].sku_code], 'day')) {
-                        out_time += 1
+                        out_num += 1
+                        outMap[purchaseInfo[j].sku_code] = true
                     }
                     break
                 }
@@ -1326,7 +1341,7 @@ developmentService.getProductDevelopSecond = async (start, end, type, addSales, 
         }
         if (purchaseInfo?.length) time = time/purchaseInfo.length
         result[index].purchase_time = time
-        result[index].out_purchase_time_num = out_time
+        result[index].out_purchase_time_num = out_num
         let shelf_link_num = 0, shelfMap = {}
         for (let j = 0; j < shelfInfo.length; j++) {
             if (!shelfMap[shelfInfo[j].sku_id]) {
@@ -1337,19 +1352,21 @@ developmentService.getProductDevelopSecond = async (start, end, type, addSales, 
             for (let k = 0; k < purchaseInfo.length; k++) {
                 if (purchaseInfo[k].sku_code == shelfInfo[j].sku_id) {
                     shelf_time += moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day')
-                    if (moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day') > 7) {
-                        out_shelf_time += 1
+                    if (outShelfMap[shelfInfo[j].sku_id] == undefined && moment(shelfInfo[j].create_time).diff(purchaseInfo[k].io_date, 'day') > 7) {
+                        out_shelf_num += 1
+                        outShelfMap[shelfInfo[j].sku_id] = true
                     }
                     break
                 }
             }
         }
         result[index].shelf_link_num = shelf_link_num
+        if (shelfInfo?.length) shelf_time = shelf_time/shelfInfo.length
         result[index].shelf_time = shelf_time
-        result[index].out_shelf_time_num = out_shelf_time
+        result[index].out_shelf_time_num = out_shelf_num
         if (salesInfo?.length) {
-            result[index].sale_amount = salesInfo[0].sale_amount
-            result[index].profit = salesInfo[0].profit
+            result[index].sale_amount = parseFloat(salesInfo[0].sale_amount / 10000)
+            result[index].profit = parseFloat(salesInfo[0].profit / 10000)
         }
     }
     return result
@@ -1395,10 +1412,11 @@ developmentService.getProductDevelopThird = async (start, end, type, addSales, s
     if (info1?.length) {
         info = (info || []).concat(info1).sort((a, b) => a.sku_id.localeCompare(b.sku_id, 'zh-Hans-CN'))
     }
-    let skuids = [], infoMap = {}, dateMap = {}, skuInfo = [], resultCount = {}, shelfCount = {}
+    let skuids = [], infoMap = {}, dateMap = {}, skuInfo = [], resultCount = {}, shelfCount = {}, lineMap = {}
     for (let i = 0; i < info.length; i++) {
         skuids.push(info[i].sku_id)
         dateMap[info[i].sku_id] = info[i].operate_time
+        lineMap[info[i].sku_id] = info[i].line_brief_name
     }
     if (skuids?.length) {
         let goodsInfo = await goodsInfoRepo.get(skuids.join('","'))
@@ -1412,7 +1430,7 @@ developmentService.getProductDevelopThird = async (start, end, type, addSales, s
                     let tmp = JSON.parse(JSON.stringify(defaultInfo))
                     tmp.spu = goodsInfo[i].spu
                     tmp.category = goodsInfo[i].category
-                    if (goodsInfo[i].line_brief_name) tmp.line_brief_name = goodsInfo[i].line_brief_name
+                    if (lineMap[goodsInfo[i].sku_id]) tmp.line_brief_name = lineMap[goodsInfo[i].sku_id]
                     tmp.selected_num += 1
                     result.push(tmp)
                     resultCount[result?.length-1] = 0
@@ -1421,8 +1439,8 @@ developmentService.getProductDevelopThird = async (start, end, type, addSales, s
                 } else {
                     resultMap[goodsInfo[i].sku_id] = result?.length-1
                     result[result?.length-1].selected_num += 1
-                    if (goodsInfo[i].line_brief_name && result[result?.length-1].line_brief_name.length == 0)
-                        result[result?.length-1].line_brief_name = goodsInfo[i].line_brief_name
+                    if (lineMap[goodsInfo[i].sku_id] && result[result?.length-1].line_brief_name.length == 0)
+                        result[result?.length-1].line_brief_name = lineMap[goodsInfo[i].sku_id]
                     skuInfo[result?.length-1].push(goodsInfo[i-1].sku_id)
                 }
             }
@@ -1439,10 +1457,17 @@ developmentService.getProductDevelopThird = async (start, end, type, addSales, s
                 }
             }
         }
+        let shelfMap = {}
         for (let i = 0; i < shelfInfo.length; i++) {
-            if (resultCount[shelfInfo[i].sku_id] != undefined) {
+            if (resultMap[shelfInfo[i].sku_id] != undefined) {
                 let index = resultMap[shelfInfo[i].sku_id]
-                result[index].shelf_num += 1
+                if (shelfMap[index] == undefined) {
+                    result[index].shelf_num += 1
+                    shelfMap[index] = {}
+                } else if (shelfMap[index][shelfInfo[i].sku_id] == undefined) {
+                    result[index].shelf_num += 1
+                }
+                shelfMap[index][shelfInfo[i].sku_id] = true
                 if (i == 0 || shelfInfo[i].goods_id != shelfInfo[i-1].goods_id) {
                     result[index].shelf_link_num += 1
                 }
@@ -1457,8 +1482,8 @@ developmentService.getProductDevelopThird = async (start, end, type, addSales, s
     for (let i = 0; i < result.length; i++) {
         let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuInfo[i].join('","'), addSales)
         if (salesInfo?.length) {
-            result[i].sale_amount = salesInfo[0].sale_amount
-            result[i].profit = salesInfo[0].profit
+            result[i].sale_amount = parseFloat(salesInfo[0].sale_amount / 10000)
+            result[i].profit = parseFloat(salesInfo[0].profit / 10000)
         }
         if (resultCount[i]) result[i].time = result[i].time/resultCount[i]
         if (shelfCount[i]) result[i].shelf_time = result[i].shelf_time/shelfCount[i]
