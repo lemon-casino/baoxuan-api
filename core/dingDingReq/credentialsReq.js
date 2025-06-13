@@ -2,7 +2,7 @@
 
 const httpUtil = require("@/utils/httpUtil")
 const {dingDingConfig} = require("@/config");
-
+const { bpmlogin } = require('../../config/index')
 const systemToken = dingDingConfig.systemToken;
 const appType = dingDingConfig.appType;
 const appKey = dingDingConfig.appKey;
@@ -68,8 +68,8 @@ const getDingDingAccessToken = async () => {
 const getBpmgAccessToken = async () => {
     const url = "http://bpm.pakchoice.cn:8848/admin-api/system/auth/login"
     const data = {
-        "username":"jiqiren",
-        "password":"admin123"
+        "username":bpmlogin.name,
+        "password":bpmlogin.password
     }
     const headers ={
         'tenant-id': '1', 
