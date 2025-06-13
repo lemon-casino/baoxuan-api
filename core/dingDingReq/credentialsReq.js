@@ -65,10 +65,25 @@ const getDingDingAccessToken = async () => {
     return await httpUtil.get(url, params)
 }
 
+const getBpmgAccessToken = async () => {
+    const url = "http://bpm.pakchoice.cn:8848/admin-api/system/auth/login"
+    const data = {
+        "username":"jiqiren",
+        "password":"admin123"
+    }
+    const headers ={
+        'tenant-id': '1', 
+        'Content-Type': 'application/json', 
+        'Host': 'http://bpm.pakchoice.cn:8848'
+    }
+    return await httpUtil.post(url, data,headers)
+}
+
 module.exports = {
     corpAccessToken,
     getDingDingAccessToken,
     getUserDingDingAccessToken,
-    getJsapiTickets
+    getJsapiTickets,
+    getBpmgAccessToken
 }
 
