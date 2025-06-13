@@ -1,8 +1,7 @@
 // accessToken的有效期为7200秒（2小时），有效期内重复获取会返回相同结果并自动续期，过期后获取会返回新的accessToken。
 
 const httpUtil = require("@/utils/httpUtil")
-const {dingDingConfig} = require("@/config");
-
+const {dingDingConfig,bpmlogin} = require("@/config");
 const systemToken = dingDingConfig.systemToken;
 const appType = dingDingConfig.appType;
 const appKey = dingDingConfig.appKey;
@@ -65,10 +64,25 @@ const getDingDingAccessToken = async () => {
     return await httpUtil.get(url, params)
 }
 
+const getBpmgAccessToken = async () => {
+    const url = "http://bpm.pakchoice.cn:8848/admin-api/system/auth/login"
+    const data = {
+        "username":bpmlogin.name,
+        "password":bpmlogin.password
+    }
+    const headers ={
+        'tenant-id': '1', 
+        'Content-Type': 'application/json', 
+        'Host': 'http://bpm.pakchoice.cn:8848'
+    }
+    return await httpUtil.post(url, data,headers)
+}
+
 module.exports = {
     corpAccessToken,
     getDingDingAccessToken,
     getUserDingDingAccessToken,
-    getJsapiTickets
+    getJsapiTickets,
+    getBpmgAccessToken
 }
 
