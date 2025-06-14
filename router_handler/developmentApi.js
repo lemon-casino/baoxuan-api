@@ -301,14 +301,15 @@ const getProductDevelopThird = async (req, res, next) => {
 
 const getProductSalesFirst = async (req, res, next) => {
     try {
-        let {start, end, productType, addSales} = req.query
+        let {start, end, type, productType, addSales} = req.query
         joiUtil.validate({
             start: {value: start, schema: joiUtil.commonJoiSchemas.strRequired},
             end: {value: end, schema: joiUtil.commonJoiSchemas.strRequired},
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
             productType: {value: productType, schema: joiUtil.commonJoiSchemas.strRequired},
             addSales: {value: addSales, schema: joiUtil.commonJoiSchemas.strRequired},
         })
-        const result = await developmentService.getProductSalesFirst(start, end, productType, addSales)
+        const result = await developmentService.getProductSalesFirst(start, end, type, productType, addSales)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -317,14 +318,15 @@ const getProductSalesFirst = async (req, res, next) => {
 
 const getProductSalesSecond = async (req, res, next) => {
     try {
-        let {start, end, productType, addSales} = req.query
+        let {start, end, type, productType, addSales} = req.query
         joiUtil.validate({
             start: {value: start, schema: joiUtil.commonJoiSchemas.strRequired},
             end: {value: end, schema: joiUtil.commonJoiSchemas.strRequired},
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
             productType: {value: productType, schema: joiUtil.commonJoiSchemas.strRequired},
             addSales: {value: addSales, schema: joiUtil.commonJoiSchemas.strRequired},
         })
-        const result = await developmentService.getProductSalesSecond(start, end, productType, addSales)
+        const result = await developmentService.getProductSalesSecond(start, end, type, productType, addSales)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -333,14 +335,15 @@ const getProductSalesSecond = async (req, res, next) => {
 
 const getProductSalesThird = async (req, res, next) => {
     try {
-        let {start, end, productType, addSales, shop_name} = req.query
+        let {start, end, type, productType, addSales, shop_name} = req.query
         joiUtil.validate({
             start: {value: start, schema: joiUtil.commonJoiSchemas.strRequired},
             end: {value: end, schema: joiUtil.commonJoiSchemas.strRequired},
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
             productType: {value: productType, schema: joiUtil.commonJoiSchemas.strRequired},
             addSales: {value: addSales, schema: joiUtil.commonJoiSchemas.strRequired},
         })
-        const result = await developmentService.getProductSalesThird(start, end, productType, addSales, shop_name)
+        const result = await developmentService.getProductSalesThird(start, end, type, productType, addSales, shop_name)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -349,14 +352,29 @@ const getProductSalesThird = async (req, res, next) => {
 
 const getProductSalesFourth = async (req, res, next) => {
     try {
-        let {start, end, productType, addSales, spu} = req.query
+        let {start, end, type, productType, addSales, spu} = req.query
         joiUtil.validate({
             start: {value: start, schema: joiUtil.commonJoiSchemas.strRequired},
             end: {value: end, schema: joiUtil.commonJoiSchemas.strRequired},
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
             productType: {value: productType, schema: joiUtil.commonJoiSchemas.strRequired},
             addSales: {value: addSales, schema: joiUtil.commonJoiSchemas.strRequired},
         })
-        const result = await developmentService.getProductSalesFourth(start, end, productType, addSales, spu)
+        const result = await developmentService.getProductSalesFourth(start, end, type, productType, addSales, spu)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getProductDevelopInfo = async (req, res, next) => {
+    try {
+        let {start, end, director} = req.query
+        joiUtil.validate({
+            start: {value: start, schema: joiUtil.commonJoiSchemas.strRequired},
+            end: {value: end, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        const result = await developmentService.getProductDevelopInfo(start, end, director)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -382,5 +400,6 @@ module.exports = {
     getProductSalesFirst,
     getProductSalesSecond,
     getProductSalesThird,
-    getProductSalesFourth
+    getProductSalesFourth,
+    getProductDevelopInfo
 }

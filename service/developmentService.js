@@ -1043,6 +1043,114 @@ developmentService.getFinishProcessInfo = async () => {
     return result
 }
 
+developmentService.getProductDevelopInfo = async (start, end, director) => {
+    start = moment(start).format('YYYY-MM-DD')
+    end = moment(end).format('YYYY-MM-DD') + ' 23:59:59'
+    let users = await userRepo.getUserByDeptName('产品开发部')
+    let userIds = '', userMap = {}, result = [], resultMap = {}, user1Map = {}
+    for (let i = 0; i < users.length; i++) {
+        if (!['崔竹', '鲁红旺'].includes(users[i].nickname)) {
+            if (!(!director || (director && director == users[i].nickname))) continue
+            userIds = `${userIds}"${users[i].dingding_user_id}",`
+            userMap[users[i].dingding_user_id] = users[i].nickname
+            user1Map[users[i].nickname] = users[i].dingding_user_id
+            resultMap[users[i].nickname] = result.length + 5
+            let typeList = ['市场分析推品', '自研推品', 'IP推品', '反推推品', '供应商推品']
+            for (let j = 0; j < typeList.length; j++) {                
+                result.push({
+                    director: users[i].nickname,
+                    type: typeList[j],
+                    create_num: 0,
+                    running_num: 0,
+                    reject_num: 0,
+                    selected_num: 0,
+                    selected_percent: 0,
+                    children: {
+                        create: [],
+                        runing: [],
+                        reject: [],
+                        selected: []
+                    }
+                })
+            }
+        }
+    }
+    let scInfo = await actHiProcinstRepo.getNewSctgInfo(start, end)
+    for (let i = 0; i < scInfo.length; i++) {
+        if (resultMap[scInfo[i].nickname] == undefined) continue
+        let index = resultMap[scInfo[i].nickname] - 5
+        result[index].create_num += 1
+        result[index].running_num += scInfo[i].running
+        result[index].reject_num += scInfo[i].reject
+        result[index].selected_num += scInfo[i].selected
+    }
+    let zyInfo = await actHiProcinstRepo.getNewZyInfo(start, end)
+    for (let i = 0; i < zyInfo.length; i++) {
+        if (resultMap[zyInfo[i].nickname] == undefined) continue
+        let index = resultMap[zyInfo[i].nickname] - 4
+        result[index].create_num += 1
+        result[index].running_num += zyInfo[i].running
+        result[index].reject_num += zyInfo[i].reject
+        result[index].selected_num += zyInfo[i].selected
+    }
+    let ipInfo = await newFormsRepo.getIpInfo(start, end)
+    for (let i = 0; i < ipInfo.length; i++) {
+        let index = resultMap[userMap[ipInfo[i].creator]] - 3
+        result[index].create_num += 1
+        result[index].running_num += ipInfo[i].running
+        result[index].reject_num += ipInfo[i].reject
+        result[index].selected_num += ipInfo[i].selected
+    }
+    ipInfo = await actHiProcinstRepo.getNewIpInfo(start, end)
+    for (let i = 0; i < ipInfo.length; i++) {
+        if (resultMap[ipInfo[i].nickname] == undefined) continue
+        let index = resultMap[ipInfo[i].nickname] - 3
+        result[index].create_num += 1
+        result[index].running_num += ipInfo[i].running
+        result[index].reject_num += ipInfo[i].reject
+        result[index].selected_num += ipInfo[i].selected
+    }
+    let ztInfo = await newFormsRepo.getZtInfo(start, end)
+    for (let i = 0; i < ztInfo.length; i++) {
+        let index = resultMap[userMap[ztInfo[i].creator]] - 2
+        result[index].create_num += 1
+        result[index].running_num += ztInfo[i].running
+        result[index].reject_num += ztInfo[i].reject
+        result[index].selected_num += ztInfo[i].selected
+    }
+    ztInfo = await actHiProcinstRepo.getNewGysInfo(start, end)
+    for (let i = 0; i < ztInfo.length; i++) {
+        if (resultMap[ztInfo[i].nickname] == undefined) continue
+        let index = resultMap[ztInfo[i].nickname] - 2
+        result[index].create_num += 1
+        result[index].running_num += ztInfo[i].running
+        result[index].reject_num += ztInfo[i].reject
+        result[index].selected_num += ztInfo[i].selected
+    }
+    let ftInfo = await newFormsRepo.getFtInfo(start, end)
+    for (let i = 0; i < ftInfo.length; i++) {
+        let index = resultMap[ftInfo[i].operator_name] - 1
+        result[index].create_num += 1
+        result[index].running_num += ftInfo[i].running
+        result[index].reject_num += ftInfo[i].reject
+        result[index].selected_num += ftInfo[i].selected
+    }
+    ftInfo = await actHiProcinstRepo.getNewFtInfo(start, end)
+    for (let i = 0; i < ftInfo.length; i++) {
+        if (resultMap[ftInfo[i].nickname] == undefined) continue
+        let index = resultMap[ftInfo[i].nickname] - 1
+        result[index].create_num += 1
+        result[index].running_num += ftInfo[i].running
+        result[index].reject_num += ftInfo[i].reject
+        result[index].selected_num += ftInfo[i].selected
+    }
+    for (let i = 0; i < result.length; i++) {
+        if (result[i].create_num > 0)
+            result[i].selected_percent = (result[i].selected_num / result[i].create_num * 100).toFixed(2)
+    }
+    return result
+}
+
 developmentService.getProductDevelopFirst = async (start, end, type, addSales) => {    
     let users = await userRepo.getUserByDeptName('产品开发部')
     let userIds = '', userMap = {}, result = [], resultMap = {}, user1Map = {}
@@ -1215,6 +1323,32 @@ developmentService.getProductDevelopFirst = async (start, end, type, addSales) =
             result[index].sale_amount = parseFloat(salesInfo[0].sale_amount / 10000)
             result[index].profit = parseFloat(salesInfo[0].profit / 10000)
         }
+        let total = {
+            director: '总计',
+            process_num: 0,
+            selected_num: 0,
+            purchase_time: 0,
+            out_purchase_time_num: 0,
+            shelf_num: 0,
+            shelf_link_num: 0,
+            shelf_time: 0,
+            out_shelf_time_num: 0,
+            sale_amount: 0,
+            profit: 0
+        }
+        for (let i = 0; i < result.length; i++) {
+            total.process_num += result[i].process_num
+            total.selected_num += result[i].selected_num
+            total.purchase_time += result[i].purchase_time
+            total.out_purchase_time_num += result[i].out_purchase_time_num
+            total.shelf_num += result[i].shelf_num
+            total.shelf_link_num += result[i].shelf_link_num
+            total.shelf_time += result[i].shelf_time
+            total.out_shelf_time_num += result[i].out_shelf_time_num
+            total.sale_amount += result[i].sale_amount
+            total.profit += result[i].profit
+        }
+        result = [total].concat(result)
     }
     return result
 }
@@ -1389,6 +1523,30 @@ developmentService.getProductDevelopSecond = async (start, end, type, addSales, 
             result[index].sale_amount = parseFloat(salesInfo[0].sale_amount / 10000)
             result[index].profit = parseFloat(salesInfo[0].profit / 10000)
         }
+        let total = {
+            platform: '总计',
+            selected_num: 0,
+            purchase_time: 0.00,
+            out_purchase_time_num: 0,
+            shelf_num: 0,
+            shelf_link_num: 0,
+            shelf_time: 0.00,
+            out_shelf_time_num: 0,
+            sale_amount: 0.00,
+            profit: 0.00
+        }
+        for (let i = 0; i < result.length; i++) {
+            total.selected_num += result[i].selected_num
+            total.purchase_time += result[i].purchase_time
+            total.out_purchase_time_num += result[i].out_purchase_time_num
+            total.shelf_num += result[i].shelf_num
+            total.shelf_link_num += result[i].shelf_link_num
+            total.shelf_time += result[i].shelf_time
+            total.out_shelf_time_num += result[i].out_shelf_time_num
+            total.sale_amount += result[i].sale_amount
+            total.profit += result[i].profit
+        }
+        result = [total].concat(result)
     }
     return result
 }
@@ -1505,6 +1663,21 @@ developmentService.getProductDevelopThird = async (start, end, type, addSales, s
             }
         }
     }
+    let total = {
+        spu: '总计',
+        line_brief_name: '',
+        category: '',
+        selected_num: 0,
+        time: 0.00,
+        purchase_time: 0.00,
+        out_purchase_time_num: 0,
+        shelf_num: 0,
+        shelf_link_num: 0,
+        shelf_time: 0.00,
+        out_shelf_time_num: 0,
+        sale_amount: 0.00,
+        profit: 0.00
+    }
     for (let i = 0; i < result.length; i++) {
         let salesInfo = await goodsSaleInfoRepo.getProductSaleInfo(skuInfo[i].join('","'), addSales)
         if (salesInfo?.length) {
@@ -1513,27 +1686,421 @@ developmentService.getProductDevelopThird = async (start, end, type, addSales, s
         }
         if (resultCount[i]) result[i].time = result[i].time/resultCount[i]
         if (shelfCount[i]) result[i].shelf_time = result[i].shelf_time/shelfCount[i]
+        total.selected_num += result[i].selected_num
+        total.purchase_time += result[i].purchase_time
+        total.out_purchase_time_num += result[i].out_purchase_time_num
+        total.shelf_num += result[i].shelf_num
+        total.shelf_link_num += result[i].shelf_link_num
+        total.shelf_time += result[i].shelf_time
+        total.out_shelf_time_num += result[i].out_shelf_time_num
+        total.sale_amount += result[i].sale_amount
+        total.profit += result[i].profit
+    }
+    result = [total].concat(result)
+    return result
+}
+
+developmentService.getProductSalesFirst = async (start, end, type, productType, addSales) => {
+    let result = [], skuids = '', skuMap = {}, resultMap = {}, result1 = [], result2 = []
+    let division = await goodsSalesRepo.getSalesByDivision(start, end, productType, addSales)     
+    const yearStart = moment(start).subtract(1, 'year').format('YYYY-MM-DD')
+    const yearEnd = moment(end).subtract(1, 'year').format('YYYY-MM-DD')
+    const monthStart = moment(start).subtract(1, 'month').format('YYYY-MM-DD')
+    const monthEnd = moment(end).subtract(1, 'month').format('YYYY-MM-DD')
+    if (type != '0') {
+        for (let i = 0; i < division.length; i++) {
+            if (!skuMap[division[i].sku_code]) {
+                skuids = `${skuids}","`
+            }
+        }
+        let skuInfo1 = [], skuInfo2 = [], skuInfo = ''
+        if (['3', '4', '5'].includes(type)) {
+            skuInfo1 = await newFormsRepo.getProductSkuId(skuids, type)
+        }
+        if (skuInfo1?.length) skuInfo = `${skuInfo}"${skuInfo1[0].skuids}",`
+        skuInfo2 = await actHiProcinstRepo.getProductSkuId(start, type)
+        for (let i = 0; i < skuInfo2.length; i++) {
+            let content = new ObjectInputStream(skuInfo2[i].info)
+            content = content.readObject()
+            content?.annotations.splice(0, 1)
+            content = content?.annotations
+            for (let j = 0; j < content.length; j++) {
+                content[j].annotations.splice(0, 1)
+                for (let k = 0; k < content[j].annotations.length; k = k+2) {
+                    if (['F1ujma2exiosbcc', 'Fssama252xmjbzc', 'Fxx1ma3pg5efdec'].includes(content[j].annotations[k]))
+                        skuInfo = `${skuInfo}"${content[j].annotations[k+1]}",`
+                }
+            }
+        }
+        skuInfo = skuInfo?.length ? skuInfo.substring(0, skuInfo.length - 1) : skuInfo
+        for (let i = 0; i < division.length; i++) {
+            if (skuInfo.indexOf(`"${division[i].sku_code}"`) != -1) {
+                if (resultMap[division[i].division_name] == undefined) {
+                    result.push({
+                        division_name: division[i].division_name,
+                        sale_qty: 0,
+                        sale_amount: 0,
+                        gross_profit: 0,
+                        profit: 0
+                    })
+                    resultMap[division[i].division_name] = result.length - 1
+                }
+                result[resultMap[division[i].division_name]].sale_qty += parseInt(division[i].sale_qty)
+                result[resultMap[division[i].division_name]].sale_amount += parseFloat(division[i].sale_amount)
+                result[resultMap[division[i].division_name]].gross_profit += parseFloat(division[i].gross_profit)
+                result[resultMap[division[i].division_name]].profit += parseFloat(division[i].profit)
+            }
+        }
+        result1 = await goodsSalesRepo.getSalesByDivisionAndSkuId(yearStart, yearEnd, productType, addSales, skuInfo)
+        result2 = await goodsSalesRepo.getSalesByDivisionAndSkuId(monthStart, monthEnd, productType, addSales, skuInfo)
+    } else {
+        for (let i = 0; i < division.length; i++) {
+            if (resultMap[division[i].division_name] == undefined) {
+                result.push({
+                    division_name: division[i].division_name,
+                    sale_qty: 0,
+                    sale_amount: 0,
+                    gross_profit: 0,
+                    profit: 0
+                })
+                resultMap[division[i].division_name] = result.length - 1
+            }
+            result[resultMap[division[i].division_name]].sale_qty += parseInt(division[i].sale_qty)
+            result[resultMap[division[i].division_name]].sale_amount += parseFloat(division[i].sale_amount)
+            result[resultMap[division[i].division_name]].gross_profit += parseFloat(division[i].gross_profit)
+            result[resultMap[division[i].division_name]].profit += parseFloat(division[i].profit)
+        }
+        result1 = await goodsSalesRepo.getSalesByDivisionAndSkuId(yearStart, yearEnd, productType, addSales)
+        result2 = await goodsSalesRepo.getSalesByDivisionAndSkuId(monthStart, monthEnd, productType, addSales)
+    }
+    for (let i = 0; i < result.length; i++) {
+        for (let j = 0; j < result1.length; j++) {
+            if (result[i].division_name == result1[j].division_name) {
+                result[i]['sale_amount_yoy'] = result1[j].sale_amount > 0 ? 
+                    ((result[i].sale_amount - result1[j].sale_amount) / result1[j].sale_amount * 100).toFixed(2) : 0
+                result1.splice(j, 1)
+                break
+            }
+        }
+        for (let j = 0; j < result2.length; j++) {
+            if (result[i].division_name == result2[j].division_name) {
+                result[i]['sale_amount_qoq'] = result2[j].sale_amount > 0 ? 
+                    ((result[i].sale_amount - result2[j].sale_amount) / result2[j].sale_amount * 100).toFixed(2) : 0
+                result2.splice(j, 1)
+                break
+            }
+        }
+        result[i].gross_margin = result[i].sale_amount > 0 ? 
+            (result[i].gross_profit / result[i].sale_amount * 100).toFixed(2) : 0
+        result[i].profit_margin = result[i].sale_amount > 0 ? 
+            (result[i].profit / result[i].sale_amount * 100).toFixed(2) : 0
+        result[i].sale_amount = (result[i].sale_amount / 10000).toFixed(2)
+        result[i].gross_profit = (result[i].gross_profit / 10000).toFixed(2)
+        result[i].profit = (result[i].profit / 10000).toFixed(2)
     }
     return result
 }
 
-developmentService.getProductSalesFirst = async (start, end, productType, addSales) => {
-    let result = await goodsSalesRepo.getSalesByDivision(start, end, productType, addSales)
+developmentService.getProductSalesSecond = async (start, end, type, productType, addSales) => {    
+    let result = [], skuids = '', skuMap = {}, resultMap = {}, result1 = [], result2 = []
+    let project = await goodsSalesRepo.getSalesByProject(start, end, productType, addSales)
+    const yearStart = moment(start).subtract(1, 'year').format('YYYY-MM-DD')
+    const yearEnd = moment(end).subtract(1, 'year').format('YYYY-MM-DD')
+    const monthStart = moment(start).subtract(1, 'month').format('YYYY-MM-DD')
+    const monthEnd = moment(end).subtract(1, 'month').format('YYYY-MM-DD')
+    if (type != '0') {
+        for (let i = 0; i < project.length; i++) {
+            if (!skuMap[project[i].sku_code]) {
+                skuids = `${skuids}","`
+            }
+        }
+        let skuInfo1 = [], skuInfo2 = [], skuInfo = ''
+        if (['3', '4', '5'].includes(type)) {
+            skuInfo1 = await newFormsRepo.getProductSkuId(skuids, type)
+        }
+        if (skuInfo1?.length) skuInfo = `${skuInfo}"${skuInfo1[0].skuids}",`
+        skuInfo2 = await actHiProcinstRepo.getProductSkuId(start, type)
+        for (let i = 0; i < skuInfo2.length; i++) {
+            let content = new ObjectInputStream(skuInfo2[i].info)
+            content = content.readObject()
+            content?.annotations.splice(0, 1)
+            content = content?.annotations
+            for (let j = 0; j < content.length; j++) {
+                content[j].annotations.splice(0, 1)
+                for (let k = 0; k < content[j].annotations.length; k = k+2) {
+                    if (['F1ujma2exiosbcc', 'Fssama252xmjbzc', 'Fxx1ma3pg5efdec'].includes(content[j].annotations[k]))
+                        skuInfo = `${skuInfo}"${content[j].annotations[k+1]}",`
+                }
+            }
+        }
+        skuInfo = skuInfo?.length ? skuInfo.substring(0, skuInfo.length - 1) : skuInfo
+        for (let i = 0; i < project.length; i++) {
+            if (skuInfo.indexOf(`"${project[i].sku_code}"`) != -1) {
+                if (resultMap[project[i].project_name] == undefined) {
+                    result.push({
+                        project_name: project[i].project_name,
+                        sale_qty: 0,
+                        sale_amount: 0,
+                        gross_profit: 0,
+                        profit: 0
+                    })
+                    resultMap[project[i].project_name] = result.length - 1
+                }
+                result[resultMap[project[i].project_name]].sale_qty += parseInt(project[i].sale_qty)
+                result[resultMap[project[i].project_name]].sale_amount += parseFloat(project[i].sale_amount)
+                result[resultMap[project[i].project_name]].gross_profit += parseFloat(project[i].gross_profit)
+                result[resultMap[project[i].project_name]].profit += parseFloat(project[i].profit)
+            }
+        }
+        result1 = await goodsSalesRepo.getSalesByProjectAndSkuId(yearStart, yearEnd, productType, addSales, skuInfo)
+        result2 = await goodsSalesRepo.getSalesByProjectAndSkuId(monthStart, monthEnd, productType, addSales, skuInfo)
+    } else {
+        for (let i = 0; i < project?.length; i++) {
+            if (resultMap[project[i].project_name] == undefined) {
+                result.push({
+                    project_name: project[i].project_name,
+                    sale_qty: 0,
+                    sale_amount: 0,
+                    gross_profit: 0,
+                    profit: 0
+                })
+                resultMap[project[i].project_name] = result.length - 1
+            }
+            result[resultMap[project[i].project_name]].sale_qty += parseInt(project[i].sale_qty)
+            result[resultMap[project[i].project_name]].sale_amount += parseFloat(project[i].sale_amount)
+            result[resultMap[project[i].project_name]].gross_profit += parseFloat(project[i].gross_profit)
+            result[resultMap[project[i].project_name]].profit += parseFloat(project[i].profit)
+        }
+        result1 = await goodsSalesRepo.getSalesByProjectAndSkuId(yearStart, yearEnd, productType, addSales)
+        result2 = await goodsSalesRepo.getSalesByProjectAndSkuId(monthStart, monthEnd, productType, addSales)
+    }
+    for (let i = 0; i < result.length; i++) {
+        for (let j = 0; j < result1.length; j++) {
+            if (result[i].project_name == result1[j].project_name) {
+                result[i]['sale_amount_yoy'] = result1[j].sale_amount > 0 ? 
+                    ((result[i].sale_amount - result1[j].sale_amount) / result1[j].sale_amount * 100).toFixed(2) : 0
+                result1.splice(j, 1)
+                break
+            }
+        }
+        for (let j = 0; j < result2.length; j++) {
+            if (result[i].project_name == result2[j].project_name) {
+                result[i]['sale_amount_qoq'] = result2[j].sale_amount > 0 ? 
+                    ((result[i].sale_amount - result2[j].sale_amount) / result2[j].sale_amount * 100).toFixed(2) : 0
+                result2.splice(j, 1)
+                break
+            }
+        }
+        result[i].gross_margin = result[i].sale_amount > 0 ? 
+            (result[i].gross_profit / result[i].sale_amount * 100).toFixed(2) : 0
+        result[i].profit_margin = result[i].sale_amount > 0 ? 
+            (result[i].profit / result[i].sale_amount * 100).toFixed(2) : 0
+        result[i].sale_amount = (result[i].sale_amount / 10000).toFixed(2)
+        result[i].gross_profit = (result[i].gross_profit / 10000).toFixed(2)
+        result[i].profit = (result[i].profit / 10000).toFixed(2)
+    }
     return result
 }
 
-developmentService.getProductSalesSecond = async (start, end, productType, addSales) => {
-    let result = await goodsSalesRepo.getSalesByProject(start, end, productType, addSales)
+developmentService.getProductSalesThird = async (start, end, type, productType, addSales, shop_name) => {
+    let result = [], skuids = '', skuMap = {}, resultMap = {}, result1 = [], result2 = []
+    let shop = await goodsSalesRepo.getSalesByShop(start, end, productType, addSales, shop_name)
+    const yearStart = moment(start).subtract(1, 'year').format('YYYY-MM-DD')
+    const yearEnd = moment(end).subtract(1, 'year').format('YYYY-MM-DD')
+    const monthStart = moment(start).subtract(1, 'month').format('YYYY-MM-DD')
+    const monthEnd = moment(end).subtract(1, 'month').format('YYYY-MM-DD')
+    if (type != '0') {
+        for (let i = 0; i < shop.length; i++) {
+            if (!skuMap[shop[i].sku_code]) {
+                skuids = `${skuids}","`
+            }
+        }
+        let skuInfo1 = [], skuInfo2 = [], skuInfo = ''
+        if (['3', '4', '5'].includes(type)) {
+            skuInfo1 = await newFormsRepo.getProductSkuId(skuids, type)
+        }
+        if (skuInfo1?.length) skuInfo = `${skuInfo}"${skuInfo1[0].skuids}",`
+        skuInfo2 = await actHiProcinstRepo.getProductSkuId(start, type)
+        for (let i = 0; i < skuInfo2.length; i++) {
+            let content = new ObjectInputStream(skuInfo2[i].info)
+            content = content.readObject()
+            content?.annotations.splice(0, 1)
+            content = content?.annotations
+            for (let j = 0; j < content.length; j++) {
+                content[j].annotations.splice(0, 1)
+                for (let k = 0; k < content[j].annotations.length; k = k+2) {
+                    if (['F1ujma2exiosbcc', 'Fssama252xmjbzc', 'Fxx1ma3pg5efdec'].includes(content[j].annotations[k]))
+                        skuInfo = `${skuInfo}"${content[j].annotations[k+1]}",`
+                }
+            }
+        }
+        skuInfo = skuInfo?.length ? skuInfo.substring(0, skuInfo.length - 1) : skuInfo
+        for (let i = 0; i < shop.length; i++) {
+            if (skuInfo.indexOf(`"${shop[i].sku_code}"`) != -1) {
+                if (resultMap[shop[i].shop_name] == undefined) {
+                    result.push({
+                        shop_name: shop[i].shop_name,
+                        sale_qty: 0,
+                        sale_amount: 0,
+                        gross_profit: 0,
+                        profit: 0
+                    })
+                    resultMap[shop[i].shop_name] = result.length - 1
+                }
+                result[resultMap[shop[i].shop_name]].sale_qty += parseInt(shop[i].sale_qty)
+                result[resultMap[shop[i].shop_name]].sale_amount += parseFloat(shop[i].sale_amount)
+                result[resultMap[shop[i].shop_name]].gross_profit += parseFloat(shop[i].gross_profit)
+                result[resultMap[shop[i].shop_name]].profit += parseFloat(shop[i].profit)
+            }
+        }
+        result1 = await goodsSalesRepo.getSalesByShopAndSkuId(yearStart, yearEnd, productType, addSales, shop_name, skuInfo)
+        result2 = await goodsSalesRepo.getSalesByShopAndSkuId(monthStart, monthEnd, productType, addSales, shop_name, skuInfo)
+    } else {
+        for (let i = 0; i < shop.length; i++) {
+            if (resultMap[shop[i].shop_name] == undefined) {
+                result.push({
+                    shop_name: shop[i].shop_name,
+                    sale_qty: 0,
+                    sale_amount: 0,
+                    gross_profit: 0,
+                    profit: 0
+                })
+                resultMap[shop[i].shop_name] = result.length - 1
+            }
+            result[resultMap[shop[i].shop_name]].sale_qty += parseInt(shop[i].sale_qty)
+            result[resultMap[shop[i].shop_name]].sale_amount += parseFloat(shop[i].sale_amount)
+            result[resultMap[shop[i].shop_name]].gross_profit += parseFloat(shop[i].gross_profit)
+            result[resultMap[shop[i].shop_name]].profit += parseFloat(shop[i].profit)
+        }
+        result1 = await goodsSalesRepo.getSalesByShopAndSkuId(yearStart, yearEnd, productType, shop_name, addSales)
+        result2 = await goodsSalesRepo.getSalesByShopAndSkuId(monthStart, monthEnd, productType, shop_name, addSales)
+    }
+    for (let i = 0; i < result.length; i++) {
+        for (let j = 0; j < result1.length; j++) {
+            if (result[i].shop_name == result1[j].shop_name) {
+                result[i]['sale_amount_yoy'] = result1[j].sale_amount > 0 ? 
+                    ((result[i].sale_amount - result1[j].sale_amount) / result1[j].sale_amount * 100).toFixed(2) : 0
+                result1.splice(j, 1)
+                break
+            }
+        }
+        for (let j = 0; j < result2.length; j++) {
+            if (result[i].shop_name == result2[j].shop_name) {
+                result[i]['sale_amount_qoq'] = result2[j].sale_amount > 0 ? 
+                    ((result[i].sale_amount - result2[j].sale_amount) / result2[j].sale_amount * 100).toFixed(2) : 0
+                result2.splice(j, 1)
+                break
+            }
+        }
+        result[i].gross_margin = result[i].sale_amount > 0 ? 
+            (result[i].gross_profit / result[i].sale_amount * 100).toFixed(2) : 0
+        result[i].profit_margin = result[i].sale_amount > 0 ? 
+            (result[i].profit / result[i].sale_amount * 100).toFixed(2) : 0
+        result[i].sale_amount = (result[i].sale_amount / 10000).toFixed(2)
+        result[i].gross_profit = (result[i].gross_profit / 10000).toFixed(2)
+        result[i].profit = (result[i].profit / 10000).toFixed(2)
+    }
     return result
 }
 
-developmentService.getProductSalesThird = async (start, end, productType, addSales, shop_name) => {
-    let result = await goodsSalesRepo.getSalesByShop(start, end, productType, addSales)
-    return result
-}
-
-developmentService.getProductSalesFourth = async (start, end, productType, addSales, spu) => {
-    let result = await goodsSalesRepo.getSalesBySpu(start, end, productType, addSales)
+developmentService.getProductSalesFourth = async (start, end, type, productType, addSales, spu_name) => {
+    let result = [], skuids = '', skuMap = {}, resultMap = {}, result1 = [], result2 = []
+    let spu = await goodsSalesRepo.getSalesBySpu(start, end, productType, addSales, spu_name)
+    const yearStart = moment(start).subtract(1, 'year').format('YYYY-MM-DD')
+    const yearEnd = moment(end).subtract(1, 'year').format('YYYY-MM-DD')
+    const monthStart = moment(start).subtract(1, 'month').format('YYYY-MM-DD')
+    const monthEnd = moment(end).subtract(1, 'month').format('YYYY-MM-DD')
+    if (type != '0') {
+        for (let i = 0; i < spu.length; i++) {
+            if (!skuMap[spu[i].sku_code]) {
+                skuids = `${skuids}","`
+            }
+        }
+        let skuInfo1 = [], skuInfo2 = [], skuInfo = ''
+        if (['3', '4', '5'].includes(type)) {
+            skuInfo1 = await newFormsRepo.getProductSkuId(skuids, type)
+        }
+        if (skuInfo1?.length) skuInfo = `${skuInfo}"${skuInfo1[0].skuids}",`
+        skuInfo2 = await actHiProcinstRepo.getProductSkuId(start, type)
+        for (let i = 0; i < skuInfo2.length; i++) {
+            let content = new ObjectInputStream(skuInfo2[i].info)
+            content = content.readObject()
+            content?.annotations.splice(0, 1)
+            content = content?.annotations
+            for (let j = 0; j < content.length; j++) {
+                content[j].annotations.splice(0, 1)
+                for (let k = 0; k < content[j].annotations.length; k = k+2) {
+                    if (['F1ujma2exiosbcc', 'Fssama252xmjbzc', 'Fxx1ma3pg5efdec'].includes(content[j].annotations[k]))
+                        skuInfo = `${skuInfo}"${content[j].annotations[k+1]}",`
+                }
+            }
+        }
+        skuInfo = skuInfo?.length ? skuInfo.substring(0, skuInfo.length - 1) : skuInfo
+        for (let i = 0; i < spu.length; i++) {
+            if (skuInfo.indexOf(`"${project[i].sku_code}"`) != -1) {
+                if (resultMap[project[i].spu] == undefined) {
+                    result.push({
+                        spu: spu[i].spu,
+                        sale_qty: 0,
+                        sale_amount: 0,
+                        gross_profit: 0,
+                        profit: 0
+                    })
+                    resultMap[spu[i].spu] = result.length - 1
+                }
+                result[resultMap[spu[i].spu]].sale_qty += parseInt(spu[i].sale_qty)
+                result[resultMap[spu[i].spu]].sale_amount += parseFloat(spu[i].sale_amount)
+                result[resultMap[spu[i].spu]].gross_profit += parseFloat(spu[i].gross_profit)
+                result[resultMap[spu[i].spu]].profit += parseFloat(spu[i].profit)
+            }
+        }
+        result1 = await goodsSalesRepo.getSalesBySpuAndSkuId(yearStart, yearEnd, productType, addSales, spu_name, skuInfo)
+        result2 = await goodsSalesRepo.getSalesBySpuAndSkuId(monthStart, monthEnd, productType, spu_name, addSales, skuInfo)
+    } else {
+        for (let i = 0; i < spu.length; i++) {
+            if (resultMap[spu[i].spu] == undefined) {
+                result.push({
+                    spu: spu[i].spu,
+                    sale_qty: 0,
+                    sale_amount: 0,
+                    gross_profit: 0,
+                    profit: 0
+                })
+                resultMap[spu[i].spu] = result.length - 1
+            }
+            result[resultMap[spu[i].spu]].sale_qty += parseInt(spu[i].sale_qty)
+            result[resultMap[spu[i].spu]].sale_amount += parseFloat(spu[i].sale_amount)
+            result[resultMap[spu[i].spu]].gross_profit += parseFloat(spu[i].gross_profit)
+            result[resultMap[spu[i].spu]].profit += parseFloat(spu[i].profit)
+        }
+        result1 = await goodsSalesRepo.getSalesBySpuAndSkuId(yearStart, yearEnd, productType, addSales)
+        result2 = await goodsSalesRepo.getSalesBySpuAndSkuId(monthStart, monthEnd, productType, addSales)
+    }
+    for (let i = 0; i < result.length; i++) {
+        for (let j = 0; j < result1.length; j++) {
+            if (result[i].spu == result1[j].spu) {
+                result[i]['sale_amount_yoy'] = result1[j].sale_amount > 0 ? 
+                    ((result[i].sale_amount - result1[j].sale_amount) / result1[j].sale_amount * 100).toFixed(2) : 0
+                result1.splice(j, 1)
+                break
+            }
+        }
+        for (let j = 0; j < result2.length; j++) {
+            if (result[i].spu == result2[j].spu) {
+                result[i]['sale_amount_qoq'] = result2[j].sale_amount > 0 ? 
+                    ((result[i].sale_amount - result2[j].sale_amount) / result2[j].sale_amount * 100).toFixed(2) : 0
+                result2.splice(j, 1)
+                break
+            }
+        }
+        result[i].gross_margin = result[i].sale_amount > 0 ? 
+            (result[i].gross_profit / result[i].sale_amount * 100).toFixed(2) : 0
+        result[i].profit_margin = result[i].sale_amount > 0 ? 
+            (result[i].profit / result[i].sale_amount * 100).toFixed(2) : 0
+        result[i].sale_amount = (result[i].sale_amount / 10000).toFixed(2)
+        result[i].gross_profit = (result[i].gross_profit / 10000).toFixed(2)
+        result[i].profit = (result[i].profit / 10000).toFixed(2)
+    }
     return result
 }
 

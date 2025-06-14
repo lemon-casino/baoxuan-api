@@ -3484,6 +3484,23 @@ const getProductDevelopInfo = async (start, end, type, order) => {
     return row
 }
 
+const getProductSkuId = async (skuids, type) => {
+    let ids = '88, 836, 838'
+    if (type == '3') ids = '836'
+    else if (type == '4') ids = '88'
+    else if (type == '5') ids = '838'
+    let sql = `select group_concat(pis2.value separator '","') as skuids 
+        from process_instances pi join process_instance_values piv1 on piv1.instance_id = pi.id
+            and piv1.field_id in ('tableField_m38ikxm7')
+        join process_instance_sub_values pis2 on pis2.instance_id = pi.id
+            and pis2.parent_id = piv1.field_id
+            and pis2.field_id = 'textField_m38ikxm8'
+        where pi.process_id = 88 and pis2.value in ("${skuids}") 
+            and pi.process_id in (${ids})`
+    let row = await query(sql)
+    return row
+}
+
 const getProductDeveloper = async (start, end, type, id, name) => {
     let ids = '88, 836, 838'
     if (type == '3') ids = '836'
@@ -3518,6 +3535,65 @@ const getProductDeveloper = async (start, end, type, id, name) => {
                     piv2.id is not null and pi.create_time between '${start}' and '${end}', 
                     pi.create_time between '${start}' and '${end}' and pi.creator = ${id}))`
     let row = await query(sql)
+    return row
+}
+
+const getZtInfo = async (start, end) => {
+    let sql = `select pi.id, pi.creator, piv1.value as image, 
+            if(pi.status = 'RUNNING', 1, 0) as running, 
+            if(pir.id is not null, 1, 0) as reject, 
+            if(piv.id is not null, 1, 0) as selected 
+        from process_instances pi left join process_instance_values piv 
+            on piv.instance_id = pi.id and piv.field_id = 'tableField_m1g2w3gr'
+            and exists(select pis.id from process_instance_sub_values pis 
+                where pis.instance_id = pi.id and pis.parent_id = piv.field_id
+                    and pis.field_id like '%numberField%' and pis.value > 0)
+        left join process_instance_records pir on pir.instance_id = pi.id 
+            and pir.action_exit = 'disagree'
+        join process_instance_values piv1 on piv1.instance_id = pi.id 
+            and piv1.field_id = 'attachmentField_m2ivm1hh' 
+        where pi.process_id = 838 and pi.create_time between ? and ?`
+    let row = await query(sql, [start, end])
+    return row
+}
+
+const getFtInfo = async (start, end) => {
+    let sql = `select pi.id, pi.instance_id, pir.operator_name, piv1.value as image, 
+            if(pi.status = 'RUNNING', 1, 0) as running, 
+            if(pir.action_exit = 'disagree', 1, 0) as reject, 
+            if(piv.id is not null, 1, 0) as selected              
+        from process_instances pi left join process_instance_values piv 
+            on piv.instance_id = pi.id and piv.field_id = 'tableField_m9gzfubr'
+            and exists(select pis.id from process_instance_sub_values pis 
+                where pis.instance_id = pi.id and pis.parent_id = piv.field_id
+                    and pis.field_id like '%numberField%' and pis.value > 0)
+        join process_instance_records pir on pir.instance_id = pi.id 
+            and pir.show_name in (
+                '开发接任务', 
+                '开发是否找到反推产品', 
+                '开发是否找到反推产品1', 
+                '开发是否找到反推产品2',
+                '开发是否找到反推产品3')
+        join process_instance_values piv1 on piv1.instance_id = pi.id 
+            and piv1.field_id in ('attachmentField_m2jue4at', 'attachmentField_m2ivm1hh') 
+        where pi.process_id in (3, 88) and pi.create_time between ? and ?`
+    let row = await query(sql, [start, end])
+    return row
+}
+
+const getIpInfo = async (start, end) => {
+    let sql = `select pi.id, pi.creator, if(pi.status = 'RUNNING', 1, 0) as running, 
+            if(pir.action_exit = 'disagree', 1, 0) as reject, 
+            if(piv.id is not null, 1, 0) as selected 
+        from process_instances pi left join process_instance_values piv 
+            on piv.instance_id = pi.id and piv.field_id = 'tableField_m1g2w3gr'
+            and exists(select pis.id from process_instance_sub_values pis 
+                where pis.instance_id = pi.id and pis.parent_id = piv.field_id
+                    and pis.field_id like '%numberField%' and pis.value > 0)
+        left join process_instance_records pir on pir.instance_id = pi.id 
+            and pir.action_exit = 'disagree'
+        where pi.process_id = 833 and pi.create_time between ? and ?`
+    let row = await query(sql, [start, end])
     return row
 }
 
@@ -3565,5 +3641,9 @@ module.exports = {
     getDevelopmentRunning,
     getDevelopmentFinish,
     getProductDevelopInfo,
-    getProductDeveloper
+    getProductDeveloper,
+    getProductSkuId,
+    getZtInfo,
+    getFtInfo,
+    getIpInfo
 }
