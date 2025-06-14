@@ -41,13 +41,11 @@ commonReq.createProcessInstance = async (refreshToken, processDefinitionId, type
     return false
 }
 
-commonReq.createJDProcess = async (refreshToken, processDefinitionId, variables) => {
+commonReq.createJDProcess = async (refreshToken, processDefinitionId, variables,data) => {
     // console.log('开始发起流程')
     // console.log(variables)
-    let aa = await credentialsReq.getBpmgAccessToken()
-    console.log(aa.data.refreshToken)
     const url = `${bpmConst.webHost}${bpmConst.link.createProcessInstance}`
-    let headers = {Authorization:'Bearer '+aa.data.refreshToken,'Tenant-Id': 1}
+    let headers = {Authorization:'Bearer '+data,'Tenant-Id': 1}
     const body = bpmConst.params.createProcessInstance
     body.refreshToken = refreshToken
     body.processDefinitionId = processDefinitionId

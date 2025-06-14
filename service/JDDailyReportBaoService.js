@@ -4,8 +4,8 @@ const {getTodaySplitFlowsByFormIdAndFlowStatus} = require("@/service/flowService
 const {flowStatusConst} = require("@/const/flowConst");
 const {link_properties} = require("@/repository/dianshangOperationAttribute");
 const JDLinkExceptionFlowFormId = "FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW"
-
-
+const actHiProcinstRepo = require('@/repository/bpm/actHiProcinstRepo')
+const { ObjectInputStream  } = require('java-object-serialization')
 // 查询今天的数据
 const getInquiryTodayjdDailyReport = async () => {
 
@@ -53,7 +53,18 @@ const getInquiryTodayjdDailyReport = async () => {
 
 
     // 京东问题链接三天内 多选数据
-    const  jingdongProblemLinkThreeDays =await theJDProcessIsProblemLinkThreeDays()
+    const jingdongProblemLinkThreeDays =await theJDProcessIsProblemLinkThreeDays()
+    const bpmdata = await actHiProcinstRepo.getJDLinkOptimization()
+    for (let i = 0; i < bpmdata.length; i++) {
+        if (bpmdata[i].questionType) {
+            let questionType = new ObjectInputStream(bpmdata[i].questionType)
+            questionType = questionType.readObject()
+            questionType?.annotations.splice(0, 1)
+            bpmdata[i].questionType = []
+            bpmdata[i].questionType = questionType?.annotations
+            
+        }
+    }
 
     // 查询 Redis  中 京东问题连接优化的 数据
     const transformCompletedData = (data) => {
@@ -95,13 +106,12 @@ const getInquiryTodayjdDailyReport = async () => {
         }));
     };
     // 转换两个数据集
-    const transformedJingdongProblem = transformCompletedData(jingdongProblemLinkThreeDays);
-
+    const array1 = transformCompletedData(jingdongProblemLinkThreeDays);
+        const transformedJingdongProblem = [...bpmdata,...array1]
 // 合并并去重 已经存在的数据
     const mergedResult = mergeDataSets( transformedJingdongProblem);
 
     // 三天内 已发起的异常
-    //console.log(mergedResult);
 
     // 当天异常  - 三天内已发起的异常 - Redis  中存在的异常 = 要发起的流程
        // redis  中存在的异常
