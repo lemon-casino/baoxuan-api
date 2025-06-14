@@ -51,6 +51,7 @@ const {timingSynchronization} = require("@/service/notice/confirmationNoticeServ
 const commonReq = require('@/core/bpmReq/commonReq')
 const systemUsersRepo = require('@/repository/bpm/systemUsersRepo')
 const credentialsReq = require("../core/dingDingReq/credentialsReq")
+const actReProcdefRepo = require('../repository/bpm/actReProcdefRepo')
 const writeFile = util.promisify(fs.writeFile);
 const readFile = util.promisify(fs.readFile);
 const syncWorkingDay = async () => {
@@ -644,9 +645,9 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
     logger.info("京东同步进行中...")
     const userList = await userService.getDingDingUserIdAndNickname()
     let aa = await credentialsReq.getBpmgAccessToken()
+    let processDefinitionId =await actReProcdefRepo.getProcessDefinitionId('京东链接优化流程','form-42')
     const removeDuplicateLinkIds = async () => {
         const runningFightingFlows = await getInquiryTodayjdDailyReport();
-
         // 使用 Set 存储已出现的 linkId
         const seenLinkIds = new Set();
         const uniqueFlows = runningFightingFlows.filter(item => {
@@ -691,7 +692,7 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
                     checkboxField_m11r277t,
                     radioField_locg3nxq
                 });
-                await commonReq.createJDProcess(269, "form-42:21:6e36b037-2bb8-11f0-8726-169e02f97f8f", variables,aa.data.refreshToken)
+                await commonReq.createJDProcess(269, processDefinitionId, variables,aa.data.refreshToken)
                 // await commonReq.createJDProcess(144, "fdvfdgbnfg:1:94d56ff2-4765-11f0-b865-d8bbc176bad5", variables)
                 // await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
             }
