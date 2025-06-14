@@ -65,7 +65,7 @@ const getDingDingAccessToken = async () => {
 }
 
 const getBpmgAccessToken = async () => {
-    const url = "http://bpm.pakchoice.cn:8848/admin-api/system/auth/login"
+    const url = "http://bpm.pakchoice.cn:48080/admin-api/system/auth/login"
     const data = {
         "username":bpmlogin.name,
         "password":bpmlogin.password
@@ -73,7 +73,7 @@ const getBpmgAccessToken = async () => {
     const headers ={
         'tenant-id': '1', 
         'Content-Type': 'application/json', 
-        'Host': 'http://bpm.pakchoice.cn:8848'
+        'Host': 'bpm.pakchoice.cn:48080'
     }
     return await httpUtil.post(url, data,headers)
 }

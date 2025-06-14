@@ -1,6 +1,7 @@
 const httpUtil = require("@/utils/httpUtil")
 const bpmConst = require('../../const/bpmConst')
 const defaultConst = require('../../const/development/defaultConst')
+const credentialsReq = require("../dingDingReq/credentialsReq")
 const commonReq = {}
 commonReq.createProcessInstance = async (refreshToken, processDefinitionId, type, params) => {
     const url = `${bpmConst.host}${bpmConst.link.createProcessInstance}`
