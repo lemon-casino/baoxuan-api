@@ -2584,6 +2584,76 @@ goodsSaleInfoRepo.getProjectSaleData = async() => {
     return result
 }
 
+goodsSaleInfoRepo.getShopSaleData = async() => {
+    let sql = `WITH t1 AS(
+            SELECT YEAR(日期) AS year
+                ,店铺名称 AS shop_name
+                ,SUM(IF(MONTH(日期)=1,\`利润-销售金额(扣退)\`,0)) AS one
+                ,SUM(IF(MONTH(日期)=2,\`利润-销售金额(扣退)\`,0)) AS two
+                ,SUM(IF(MONTH(日期)=3,\`利润-销售金额(扣退)\`,0)) AS three
+                ,SUM(IF(MONTH(日期)=4,\`利润-销售金额(扣退)\`,0)) AS four
+                ,SUM(IF(MONTH(日期)=5,\`利润-销售金额(扣退)\`,0)) AS five
+                ,SUM(IF(MONTH(日期)=6,\`利润-销售金额(扣退)\`,0)) AS six
+                ,SUM(IF(MONTH(日期)=7,\`利润-销售金额(扣退)\`,0)) AS seven
+                ,SUM(IF(MONTH(日期)=8,\`利润-销售金额(扣退)\`,0)) AS eight
+                ,SUM(IF(MONTH(日期)=9,\`利润-销售金额(扣退)\`,0)) AS nine
+                ,SUM(IF(MONTH(日期)=10,\`利润-销售金额(扣退)\`,0)) AS ten
+                ,SUM(IF(MONTH(日期)=11,\`利润-销售金额(扣退)\`,0)) AS eleven
+                ,SUM(IF(MONTH(日期)=12,\`利润-销售金额(扣退)\`,0)) AS twelve
+                ,SUM(\`利润-销售金额(扣退)\`) AS sum
+            FROM danpin.sku_code_sale
+            WHERE 日期 BETWEEN '2024-01-01' AND '2025-12-31' and 店铺名称 !='京东自营旗舰店'
+            GROUP BY 店铺名称,YEAR(日期)
+            UNION ALL
+            SELECT '2024' AS year
+                ,'京东自营旗舰店' AS shop_name
+                ,SUM(IF(MONTH(日期)=1,京仓发货金额,0)) AS one
+                ,SUM(IF(MONTH(日期)=2,京仓发货金额,0)) AS two
+                ,SUM(IF(MONTH(日期)=3,京仓发货金额,0)) AS three
+                ,SUM(IF(MONTH(日期)=4,京仓发货金额,0)) AS four
+                ,SUM(IF(MONTH(日期)=5,京仓发货金额,0)) AS five
+                ,SUM(IF(MONTH(日期)=6,京仓发货金额,0)) AS six
+                ,SUM(IF(MONTH(日期)=7,京仓发货金额,0)) AS seven
+                ,SUM(IF(MONTH(日期)=8,京仓发货金额,0)) AS eight
+                ,SUM(IF(MONTH(日期)=9,京仓发货金额,0)) AS nine
+                ,SUM(IF(MONTH(日期)=10,京仓发货金额,0)) AS ten
+                ,SUM(IF(MONTH(日期)=11,京仓发货金额,0)) AS eleven
+                ,SUM(IF(MONTH(日期)=12,京仓发货金额,0)) AS twelve
+                ,SUM(京仓发货金额) AS sum
+            FROM danpin.jbzz_month where YEAR(日期) =2024
+            UNION ALL
+            SELECT '2025' AS year
+                ,'京东自营旗舰店' AS shop_name
+                ,SUM(IF(MONTH(时间)=1,京仓发货金额,0)) AS one
+                ,SUM(IF(MONTH(时间)=2,京仓发货金额,0)) AS two
+                ,SUM(IF(MONTH(时间)=3,京仓发货金额,0)) AS three
+                ,SUM(IF(MONTH(时间)=4,京仓发货金额,0)) AS four
+                ,SUM(IF(MONTH(时间)=5,京仓发货金额,0)) AS five
+                ,SUM(IF(MONTH(时间)=6,京仓发货金额,0)) AS six
+                ,SUM(IF(MONTH(时间)=7,京仓发货金额,0)) AS seven
+                ,SUM(IF(MONTH(时间)=8,京仓发货金额,0)) AS eight
+                ,SUM(IF(MONTH(时间)=9,京仓发货金额,0)) AS nine
+                ,SUM(IF(MONTH(时间)=10,京仓发货金额,0)) AS ten
+                ,SUM(IF(MONTH(时间)=11,京仓发货金额,0)) AS eleven
+                ,SUM(IF(MONTH(时间)=12,京仓发货金额,0)) AS twelve
+                ,SUM(京仓发货金额) AS sum
+            FROM (
+                SELECT 时间,京仓发货金额 FROM danpin.jb_ziying WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                UNION ALL 
+                SELECT 时间,京仓发货金额 FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+            ) AS a)
+            SELECT * FROM t1
+            UNION ALL 
+            SELECT year, '累计' AS project,ROUND(SUM(one)/10000,1) AS one
+                ,ROUND(SUM(two)/10000,1) AS two,ROUND(SUM(three)/10000,1) AS three,ROUND(SUM(four)/10000,1) AS four
+                ,ROUND(SUM(five)/10000,1) AS five,ROUND(SUM(six)/10000,1) AS six,ROUND(SUM(seven)/10000,1) AS seven
+                ,ROUND(SUM(eight)/10000,1) AS eight,ROUND(SUM(nine)/10000,1) AS nine,ROUND(SUM(ten)/10000,1) AS ten
+                ,ROUND(SUM(eleven)/10000,1) AS eleven,ROUND(SUM(twelve)/10000,1) AS twelve,ROUND(SUM(sum)/10000,1) AS sum
+            FROM t1 GROUP BY year`
+    let result = await query(sql)
+    return result
+}
+
 goodsSaleInfoRepo.getDivisionSaleQtyData = async() => {
     let sql = `WITH t1 AS(
                 SELECT YEAR(日期) AS year
@@ -2760,6 +2830,84 @@ goodsSaleInfoRepo.getProjectSaleQtyData = async() => {
         ON a.shop_name=b.店铺名称
         WHERE b.销售平台 IS NOT NULL
         GROUP BY a.year`
+    let result = await query(sql)
+    return result
+}
+
+goodsSaleInfoRepo.getShopSaleQtyData = async() => {
+    let sql = `WITH t1 AS(
+            SELECT YEAR(日期) AS year
+                ,店铺名称 AS shop_name
+                ,SUM(IF(MONTH(日期)=1,\`利润-销售数量(扣退)\`,0)) AS one
+                ,SUM(IF(MONTH(日期)=2,\`利润-销售数量(扣退)\`,0)) AS two
+                ,SUM(IF(MONTH(日期)=3,\`利润-销售数量(扣退)\`,0)) AS three
+                ,SUM(IF(MONTH(日期)=4,\`利润-销售数量(扣退)\`,0)) AS four
+                ,SUM(IF(MONTH(日期)=5,\`利润-销售数量(扣退)\`,0)) AS five
+                ,SUM(IF(MONTH(日期)=6,\`利润-销售数量(扣退)\`,0)) AS six
+                ,SUM(IF(MONTH(日期)=7,\`利润-销售数量(扣退)\`,0)) AS seven
+                ,SUM(IF(MONTH(日期)=8,\`利润-销售数量(扣退)\`,0)) AS eight
+                ,SUM(IF(MONTH(日期)=9,\`利润-销售数量(扣退)\`,0)) AS nine
+                ,SUM(IF(MONTH(日期)=10,\`利润-销售数量(扣退)\`,0)) AS ten
+                ,SUM(IF(MONTH(日期)=11,\`利润-销售数量(扣退)\`,0)) AS eleven
+                ,SUM(IF(MONTH(日期)=12,\`利润-销售数量(扣退)\`,0)) AS twelve
+                ,SUM(\`利润-销售数量(扣退)\`) AS sum
+            FROM danpin.sku_code_sale
+            WHERE 日期 BETWEEN '2024-01-01' AND '2025-12-31' and 店铺名称 !='京东自营旗舰店'
+            GROUP BY 店铺名称,YEAR(日期)
+            UNION ALL
+            SELECT '2024' AS year
+                ,'京东自营旗舰店' AS shop_name
+                ,SUM(IF(MONTH(日期)=1,发货商品件数,0)) AS one
+                ,SUM(IF(MONTH(日期)=2,发货商品件数,0)) AS two
+                ,SUM(IF(MONTH(日期)=3,发货商品件数,0)) AS three
+                ,SUM(IF(MONTH(日期)=4,发货商品件数,0)) AS four
+                ,SUM(IF(MONTH(日期)=5,发货商品件数,0)) AS five
+                ,SUM(IF(MONTH(日期)=6,发货商品件数,0)) AS six
+                ,SUM(IF(MONTH(日期)=7,发货商品件数,0)) AS seven
+                ,SUM(IF(MONTH(日期)=8,发货商品件数,0)) AS eight
+                ,SUM(IF(MONTH(日期)=9,发货商品件数,0)) AS nine
+                ,SUM(IF(MONTH(日期)=10,发货商品件数,0)) AS ten
+                ,SUM(IF(MONTH(日期)=11,发货商品件数,0)) AS eleven
+                ,SUM(IF(MONTH(日期)=12,发货商品件数,0)) AS twelve
+                ,SUM(发货商品件数) AS sum
+            FROM (
+                SELECT 日期,IF(b.数量 IS NOT NULL,a.发货商品件数*b.数量,a.发货商品件数) AS '发货商品件数' FROM danpin.jbzz_month AS a
+                LEFT JOIN danpin.combination_product_code AS b
+                ON a.商品编码 = b.组合商品编码
+            )AS a where YEAR(a.日期) =2024
+            UNION ALL
+            SELECT '2025' AS year
+                ,'京东自营旗舰店' AS shop_name
+                ,SUM(IF(MONTH(时间)=1,发货商品件数,0)) AS one
+                ,SUM(IF(MONTH(时间)=2,发货商品件数,0)) AS two
+                ,SUM(IF(MONTH(时间)=3,发货商品件数,0)) AS three
+                ,SUM(IF(MONTH(时间)=4,发货商品件数,0)) AS four
+                ,SUM(IF(MONTH(时间)=5,发货商品件数,0)) AS five
+                ,SUM(IF(MONTH(时间)=6,发货商品件数,0)) AS six
+                ,SUM(IF(MONTH(时间)=7,发货商品件数,0)) AS seven
+                ,SUM(IF(MONTH(时间)=8,发货商品件数,0)) AS eight
+                ,SUM(IF(MONTH(时间)=9,发货商品件数,0)) AS nine
+                ,SUM(IF(MONTH(时间)=10,发货商品件数,0)) AS ten
+                ,SUM(IF(MONTH(时间)=11,发货商品件数,0)) AS eleven
+                ,SUM(IF(MONTH(时间)=12,发货商品件数,0)) AS twelve
+                ,SUM(发货商品件数) AS sum
+            FROM (
+                SELECT 时间,IF(b.数量 is not NULL,a.发货商品件数*b.数量,a.发货商品件数) AS '发货商品件数' FROM(
+                    SELECT 编码,时间,发货商品件数 FROM danpin.jb_ziying WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                    UNION ALL
+                    SELECT 编码,时间,发货商品件数 FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                ) as a
+                LEFT JOIN danpin.combination_product_code AS b
+            ON a.编码 = b.组合商品编码
+            ) AS a)
+            SELECT * FROM t1
+            UNION ALL
+            SELECT year, '累计' AS project,SUM(one) AS one
+                ,SUM(two) AS two,SUM(three) AS three,SUM(four) AS four
+                ,SUM(five) AS five,SUM(six) AS six,SUM(seven) AS seven
+                ,SUM(eight) AS eight,SUM(nine) AS nine,SUM(ten) AS ten
+                ,SUM(eleven) AS eleven,SUM(twelve) AS twelve,SUM(sum) AS sum
+            FROM t1 GROUP BY year`
     let result = await query(sql)
     return result
 }

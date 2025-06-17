@@ -938,6 +938,19 @@ const getProjectSaleData = async (req, res, next) => {
     }
 }
 
+const getShopSaleData = async (req, res, next) => {
+    try {
+        const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
+        const day7 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+        const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+        const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
+        result = await operationService.getShopSaleData(day,day7,day30,day31)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const getDivisionSaleQtyData = async (req, res, next) => {
     try {
         const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
@@ -958,6 +971,19 @@ const getProjectSaleQtyData = async (req, res, next) => {
         const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
         const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
         result = await operationService.getProjectSaleQtyData(day,day7,day30,day31)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getShopSaleQtyData = async (req, res, next) => {
+    try {
+        const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
+        const day7 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+        const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+        const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
+        result = await operationService.getShopSaleQtyData(day,day7,day30,day31)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -1461,5 +1487,7 @@ module.exports = {
     getDivisionSaleData,
     getDivisionSaleQtyData,
     getProjectSaleData,
-    getProjectSaleQtyData
+    getProjectSaleQtyData,
+    getShopSaleData,
+    getShopSaleQtyData
 }
