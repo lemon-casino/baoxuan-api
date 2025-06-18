@@ -731,7 +731,7 @@ actHiProcinstRepo.getJDLinkOptimization = async() =>{
         left join ACT_HI_VARINST v2
         on v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ ='textField_lma827od'
         join ACT_GE_BYTEARRAY b on b.ID_ = v1.BYTEARRAY_ID_ 
-        WHERE d.KEY_ ='form-42'and (p.START_TIME_ BETWEEN DATE_SUB(DATE(NOW()),INTERVAL 3 day) and DATE(NOW()) or  p.END_ACT_ID_ is NULL)`
+        WHERE d.KEY_ ='form-42' and p.START_TIME_ >= DATE_SUB(DATE(NOW()),INTERVAL 3 day)`
     let result = await query(sql)
     return result
 }
