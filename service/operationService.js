@@ -3431,7 +3431,7 @@ const getInventoryData = async(day,day7,day30,day31) => {
     result[0].total_inventory_cost=(data1[0].total_inventory_cost/10000).toFixed(1)
     result[0].stock_sale7=(data1[0].Current_inventory_cost/data3[0].cost_avg).toFixed(0)
     result[0].stock_sale30=(data1[0].Current_inventory_cost/data4[0].cost_avg).toFixed(0)
-    result[0].sell_through_rate=(data5[0].sale_qty/(data1[0].Total_inventory+data5[0].sale_qty)*100).toFixed(1)
+    result[0].sell_through_rate=(data5[0].sale_qty/(parseInt(data1[0].Total_inventory)+data5[0].sale_qty)*100).toFixed(1)
     result[0].inventory_turnover=(data4[0].cost/(data1[0].Current_inventory_cost+data2[0].Current_inventory_cost)*100).toFixed(1)
     result[0].gross_margin7=((data3[0].sale-data3[0].cost)/data3[0].sale*100).toFixed(1)
     result[0].gross_margin30=((data4[0].sale-data4[0].cost)/data4[0].sale*100).toFixed(1)

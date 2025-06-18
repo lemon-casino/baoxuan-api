@@ -51,9 +51,14 @@ const getInquiryTodayjdDailyReport = async () => {
         })
         .filter(item => item !== null);
 
+        const count = filteredResults.filter(item =>
 
+            Object.prototype.toString.call(item) === '[object Object]'
+            
+            ).length;
+            
+            console.log(count); 
     // 京东问题链接三天内 多选数据
-    const jingdongProblemLinkThreeDays =await theJDProcessIsProblemLinkThreeDays()
     const bpmdata = await actHiProcinstRepo.getJDLinkOptimization()
     for (let i = 0; i < bpmdata.length; i++) {
         if (bpmdata[i].questionType) {
@@ -65,29 +70,6 @@ const getInquiryTodayjdDailyReport = async () => {
             
         }
     }
-
-    // 查询 Redis  中 京东问题连接优化的 数据
-    const transformCompletedData = (data) => {
-        return data.map(entry => {
-            let questionType = entry.questionType || ''; // 默认值为空字符串
-
-            // 如果需要解析JSON，尝试解析
-
-                try {
-                    questionType = JSON.parse(questionType);
-                } catch (error) {
-                    console.error(`Error parsing JSON for linkId: ${entry.code}`, error);
-                    questionType = []; // 解析失败时默认空数组
-                }
-
-
-            return {
-                code: entry.code, // 保留 code 键
-                questionType: Array.isArray(questionType) ? questionType : [questionType]
-            };
-        });
-    };
-
     const mergeDataSets = (dataSet) => {
         const mergedMap = new Map();
         dataSet.forEach(entry => {
@@ -105,50 +87,13 @@ const getInquiryTodayjdDailyReport = async () => {
             questionType: Array.from(questionTypeSet) // 将 Set 转为数组
         }));
     };
-    // 转换两个数据集
-    const array1 = transformCompletedData(jingdongProblemLinkThreeDays);
-        const transformedJingdongProblem = [...bpmdata,...array1]
-// 合并并去重 已经存在的数据
-    const mergedResult = mergeDataSets( transformedJingdongProblem);
-
-    // 三天内 已发起的异常
-
-    // 当天异常  - 三天内已发起的异常 - Redis  中存在的异常 = 要发起的流程
-       // redis  中存在的异常
-    const runningFightingFlows = await getTodaySplitFlowsByFormIdAndFlowStatus(JDLinkExceptionFlowFormId, flowStatusConst.RUNNING,`flows:today:form:${JDLinkExceptionFlowFormId.replace("FORM-", "")}`)
-
-    //链接id + code 异常
-
-    const  redisPresenceToday=[]
-
-    for (const runningFightingFlow of runningFightingFlows) {
-        //链接id textField_lma827od
-        if (runningFightingFlow.data['checkboxField_m11r277t']!==undefined){
-            redisPresenceToday.push({code:runningFightingFlow.data["textField_lma827od"], questionType:runningFightingFlow.data['checkboxField_m11r277t'] })
-        }
-    }
-
+    const mergedResult = mergeDataSets(bpmdata);
 
 // 创建一个Map方便快速查找mergedResult中的linkId
     const mergedMap = new Map();
     mergedResult.forEach(item => mergedMap.set(item.code, item));
 
-// 遍历redisPresenceToday
-    redisPresenceToday.forEach(redisItem => {
-        const existingMergedItem = mergedMap.get(redisItem.code);
-
-        if (existingMergedItem) {
-            // 如果code相同，合并questionType并去重
-            const mergedTypes = new Set([...existingMergedItem.questionType, ...redisItem.questionType]);
-            existingMergedItem.questionType = Array.from(mergedTypes);
-            mergedResult.push(existingMergedItem);
-        } else {
-            // 如果mergedResult中没有此linkId，则直接添加
-            mergedResult.push(redisItem);
-        }
-    });
-    // 这是最终的 filteredResults -mergedResult（三天内+ 已发起的异常 + Redis  中存在的异常） = 要发起的流程
-  //  console.log(mergedResult);
+    // 这是最终的 filteredResults -mergedResult（三天内已发起的异常） = 要发起的流程
      // 去掉questionType为空的项
     filteredResults = filteredResults
         .map(filteredItem => {
