@@ -42,5 +42,6 @@ router.get('/product-sales/third', developmentApi.getProductSalesThird)
 router.get('/product-sales/fourth', developmentApi.getProductSalesFourth)
 
 router.get('/product-develop/info', developmentApi.getProductDevelopInfo)
+router.get('/product-develop/detail', developmentApi.getProductDevelopDetail)
 
 module.exports = router

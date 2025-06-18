@@ -3,6 +3,7 @@ const joiUtil = require("../utils/joiUtil")
 const developmentService = require('../service/developmentService')
 const moment = require('moment')
 const ExcelJS = require('exceljs')
+const { result } = require("lodash")
 
 const getWorkPannel = async (req, res, next) => {
     try {
@@ -381,6 +382,16 @@ const getProductDevelopInfo = async (req, res, next) => {
     }
 }
 
+const getProductDevelopDetail = async (req, res, next) => {
+    try {
+        let {type, infoType, director, ids} = req.query
+        const result = await developmentService.getProductDevelopDetail(type, infoType, director, ids)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getWorkPannel, 
     getWorkDetail,
@@ -401,5 +412,6 @@ module.exports = {
     getProductSalesSecond,
     getProductSalesThird,
     getProductSalesFourth,
-    getProductDevelopInfo
+    getProductDevelopInfo,
+    getProductDevelopDetail
 }

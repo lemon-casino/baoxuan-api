@@ -53,5 +53,6 @@ module.exports = [
     '/product-attrs/upload-pdd',
     '/development/running-process',
     '/development/finish-process',
+    '/hr/recruit/advise-output',
     /^\/download\/.*/,
 ]

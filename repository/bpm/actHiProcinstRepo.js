@@ -69,8 +69,33 @@ actHiProcinstRepo.getFtInfo = async (userNames, start, end) => {
     return result
 }
 
+actHiProcinstRepo.getFtDetail = async (ids) => {
+    let sql = `SELECT IF(v.TEXT_ = '3', 2, IF(v1.TEXT_ = '2', 1, 0)) AS \`status\`, 
+            v2.TEXT_ AS task_status, COUNT(1) AS count 
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v.NAME_ = 'PROCESS_STATUS'
+            AND v.TEXT_ NOT IN ('-1', '4')
+        JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND t.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')
+            AND IF(t.END_TIME_ IS NULL, 1, t.END_TIME_ = (
+                SELECT MAX(t1.END_TIME_) FROM ACT_HI_TASKINST t1 WHERE t1.PROC_INST_ID_ = p.PROC_INST_ID_
+                    AND t1.NAME_ = t.NAME_
+            ))
+        LEFT JOIN ACT_HI_TASKINST t2 ON t2.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND t2.NAME_ = '反选运营确认样品是否选中'
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v1.NAME_ = 'TASK_STATUS' AND v1.TASK_ID_ = t2.ID_ 
+        LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v2.NAME_ = 'Fy6xma3jakboekc' AND v2.TASK_ID_ = t2.ID_ 
+        WHERE d.KEY_ = 'fttplc' AND p.PROC_INST_ID_ IN ("${ids}") 
+        GROUP BY IF(v.TEXT_ = '3', 2, IF(v1.TEXT_ = '2', 1, 0)), v2.TEXT_`
+    let result = await query(sql, [start, end])
+    return result
+}
+
 actHiProcinstRepo.getNewFtInfo = async (start, end) => {
-    let sql = `SELECT p.PROC_INST_ID_, u.nickname, IF(v.TEXT_ = '1', 1, 0) AS running,
+    let sql = `SELECT p.PROC_INST_ID_ AS id, u.nickname, IF(v.TEXT_ = '1', 1, 0) AS running,
 	        IF(v.TEXT_ = '3', 1, 0) AS reject, 
             IF(v1.ID_ IS NOT NULL AND vv.TEXT_ = '找到', 1, 0) AS selected
         FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
@@ -99,6 +124,33 @@ actHiProcinstRepo.getNewFtInfo = async (start, end) => {
             )
         WHERE d.KEY_ = 'fttplc' AND p.START_TIME_ BETWEEN ? AND ?`
     let result = await query(sql, [start, end])
+    return result
+}
+
+actHiProcinstRepo.getNewFtDetail = async (ids) => {
+    let sql = `SELECT p.PROC_INST_ID_ AS id, DATE_FORMAT(p.START_TIME_, '%Y-%m-%d') AS time, 
+            b.BYTES_ AS info, b1.BYTES_ AS image, 
+            CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=', p.PROC_INST_ID_) AS link
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v.NAME_ = 'PROCESS_STATUS'
+            AND v.TEXT_ NOT IN ('-1', '4')
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+			AND v1.NAME_ = 'F6gkma3pfcjfd1c' 
+            AND v1.LAST_UPDATED_TIME_ = (
+                SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
+                WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v1.NAME_
+            )
+        LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v1.BYTEARRAY_ID_ 
+        LEFT JOIN ACT_HI_VARINST v3 ON v3.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v3.NAME_ = 'Cfidpj2f10qqm'
+            AND v3.LAST_UPDATED_TIME_ = (
+                SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
+                WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v3.NAME_
+            )
+        LEFT JOIN ACT_GE_BYTEARRAY b1 ON b1.ID_ = v3.BYTEARRAY_ID_ 
+        WHERE d.KEY_ = 'fttplc' AND p.PROC_INST_ID_ IN ("${ids}")`
+    let result = await query(sql)
     return result
 }
 
@@ -144,7 +196,7 @@ actHiProcinstRepo.getGysInfo = async (userNames, start, end) => {
 }
 
 actHiProcinstRepo.getNewGysInfo = async (start, end) => {
-    let sql = `SELECT p.PROC_INST_ID_, u.nickname, IF(v.TEXT_ = '1', 1, 0) AS running,
+    let sql = `SELECT p.PROC_INST_ID_ AS id, u.nickname, IF(v.TEXT_ = '1', 1, 0) AS running,
 	        IF(v.TEXT_ = '3', 1, 0) AS reject, IF(v1.ID_ IS NOT NULL, 1, 0) AS selected
         FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
         JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
@@ -164,6 +216,33 @@ actHiProcinstRepo.getNewGysInfo = async (start, end) => {
     return result
 }
 
+actHiProcinstRepo.getNewGysDetail = async (ids) => {
+    let sql = `SELECT p.PROC_INST_ID_ AS id, DATE_FORMAT(p.START_TIME_, '%Y-%m-%d') AS time, 
+            b.BYTES_ AS info, b1.BYTES_ AS image, 
+            CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=', p.PROC_INST_ID_) AS link
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v.NAME_ = 'PROCESS_STATUS'
+            AND v.TEXT_ NOT IN ('-1', '4')
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+			AND v1.NAME_ = 'F6gkma3pfcjfd1c' 
+            AND v1.LAST_UPDATED_TIME_ = (
+                SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
+                WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v1.NAME_
+            )
+        LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v1.BYTEARRAY_ID_ 
+        LEFT JOIN ACT_HI_VARINST v3 ON v3.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v3.NAME_ = 'Cfidqp2zkc9m2'
+            AND v3.LAST_UPDATED_TIME_ = (
+                SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
+                WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v3.NAME_
+            )
+        LEFT JOIN ACT_GE_BYTEARRAY b1 ON b1.ID_ = v3.BYTEARRAY_ID_ 
+        WHERE d.KEY_ = 'gystplc' AND p.PROC_INST_ID_ IN ("${ids}")`
+    let result = await query(sql)
+    return result
+}
+
 actHiProcinstRepo.getZyInfo = async (userNames, start, end) => {
     let sql = `SELECT IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0)) AS \`status\`, 
             COUNT(1) AS count FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
@@ -179,44 +258,8 @@ actHiProcinstRepo.getZyInfo = async (userNames, start, end) => {
     return result
 }
 
-actHiProcinstRepo.getNewIpInfo = async (start, end) => {
-    let sql = `SELECT p.PROC_INST_ID_, u.nickname, IF(v.TEXT_ = '1', 1, 0) AS running,
-	        IF(v.TEXT_ = '3', 1, 0) AS reject, IF(v1.ID_ IS NOT NULL, 1, 0) AS selected
-        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
-        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
-            AND v.NAME_ = 'PROCESS_STATUS'
-            AND v.TEXT_ NOT IN ('-1', '4')
-		JOIN system_users u on u.id = p.START_USER_ID_ 
-        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
-			AND v1.NAME_ IN ('Fzmjma3pe3tnclc', 'F2lmma3petqpcwc', 'F34mma3pf0egd0c')
-            AND v1.TEXT_ = '是'
-            AND v1.LAST_UPDATED_TIME_ = (
-                SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
-                WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                AND v2.NAME_ IN ('Fzmjma3pe3tnclc', 'F2lmma3petqpcwc', 'F34mma3pf0egd0c') 
-            )
-        WHERE d.KEY_ = 'iptplc' AND p.START_TIME_ BETWEEN ? AND ?`
-    let result = await query(sql, [start, end])
-    return result
-}
-
-actHiProcinstRepo.getIpInfo = async (userNames, start, end) => {
-    let sql = `SELECT IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0)) AS \`status\`, 
-            COUNT(1) AS count FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
-        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
-            AND v.NAME_ = 'PROCESS_STATUS' 
-            AND v.TEXT_ NOT IN ('-1', '4') 
-        JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
-            AND v1.NAME_ = 'Cfidaq7mz3963' 
-        JOIN system_users u ON u.id = v1.TEXT_ AND u.nickname in ("${userNames}") 
-        WHERE d.KEY_ = 'iptplc' AND p.START_TIME_ BETWEEN ? AND ? 
-        GROUP BY IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0))`
-    let result = await query(sql, [start, end])
-    return result
-}
-
 actHiProcinstRepo.getNewZyInfo = async (start, end) => {
-    let sql = `SELECT p.PROC_INST_ID_, u.nickname, IF(v.TEXT_ = '1', 1, 0) AS running,
+    let sql = `SELECT p.PROC_INST_ID_ AS id, u.nickname, IF(v.TEXT_ = '1', 1, 0) AS running,
 	        IF(v.TEXT_ = '3', 1, 0) AS reject, IF(v1.ID_ IS NOT NULL, 1, 0) AS selected
         FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
         JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
@@ -236,6 +279,96 @@ actHiProcinstRepo.getNewZyInfo = async (start, end) => {
     return result
 }
 
+actHiProcinstRepo.getNewZyDetail = async (ids) => {
+    let sql = `SELECT p.PROC_INST_ID_ AS id, DATE_FORMAT(p.START_TIME_, '%Y-%m-%d') AS time, 
+            b.BYTES_ AS info, b1.BYTES_ AS image, 
+            CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=', p.PROC_INST_ID_) AS link
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v.NAME_ = 'PROCESS_STATUS'
+            AND v.TEXT_ NOT IN ('-1', '4')
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+			AND v1.NAME_ = 'F6gkma3pfcjfd1c' 
+            AND v1.LAST_UPDATED_TIME_ = (
+                SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
+                WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v1.NAME_
+            )
+        LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v1.BYTEARRAY_ID_ 
+        LEFT JOIN ACT_HI_VARINST v3 ON v3.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v3.NAME_ = 'Cfidpl3a7e5tm'
+            AND v3.LAST_UPDATED_TIME_ = (
+                SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
+                WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v3.NAME_
+            )
+        LEFT JOIN ACT_GE_BYTEARRAY b1 ON b1.ID_ = v3.BYTEARRAY_ID_ 
+        WHERE d.KEY_ = 'zytplc' AND p.PROC_INST_ID_ IN ("${ids}")`
+    let result = await query(sql)
+    return result
+}
+
+actHiProcinstRepo.getIpInfo = async (userNames, start, end) => {
+    let sql = `SELECT IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0)) AS \`status\`, 
+            COUNT(1) AS count FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v.NAME_ = 'PROCESS_STATUS' 
+            AND v.TEXT_ NOT IN ('-1', '4') 
+        JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v1.NAME_ = 'Cfidaq7mz3963' 
+        JOIN system_users u ON u.id = v1.TEXT_ AND u.nickname in ("${userNames}") 
+        WHERE d.KEY_ = 'iptplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        GROUP BY IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0))`
+    let result = await query(sql, [start, end])
+    return result
+}
+
+actHiProcinstRepo.getNewIpInfo = async (start, end) => {
+    let sql = `SELECT p.PROC_INST_ID_ AS id, u.nickname, IF(v.TEXT_ = '1', 1, 0) AS running,
+	        IF(v.TEXT_ = '3', 1, 0) AS reject, IF(v1.ID_ IS NOT NULL, 1, 0) AS selected
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v.NAME_ = 'PROCESS_STATUS'
+            AND v.TEXT_ NOT IN ('-1', '4')
+		JOIN system_users u on u.id = p.START_USER_ID_ 
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+			AND v1.NAME_ IN ('Fzmjma3pe3tnclc', 'F2lmma3petqpcwc', 'F34mma3pf0egd0c')
+            AND v1.TEXT_ = '是'
+            AND v1.LAST_UPDATED_TIME_ = (
+                SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
+                WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND v2.NAME_ IN ('Fzmjma3pe3tnclc', 'F2lmma3petqpcwc', 'F34mma3pf0egd0c') 
+            )
+        WHERE d.KEY_ = 'iptplc' AND p.START_TIME_ BETWEEN ? AND ?`
+    let result = await query(sql, [start, end])
+    return result
+}
+
+actHiProcinstRepo.getNewIpDetail = async (ids) => {
+    let sql = `SELECT p.PROC_INST_ID_ AS id, DATE_FORMAT(p.START_TIME_, '%Y-%m-%d') AS time, 
+            b.BYTES_ AS info, b1.BYTES_ AS image, 
+            CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=', p.PROC_INST_ID_) AS link
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v.NAME_ = 'PROCESS_STATUS'
+            AND v.TEXT_ NOT IN ('-1', '4')
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+			AND v1.NAME_ = 'F6gkma3pfcjfd1c' 
+            AND v1.LAST_UPDATED_TIME_ = (
+                SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
+                WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v1.NAME_
+            )
+        LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v1.BYTEARRAY_ID_ 
+        LEFT JOIN ACT_HI_VARINST v3 ON v3.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v3.NAME_ = 'Cfidpl3a7e5tm'
+            AND v3.LAST_UPDATED_TIME_ = (
+                SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
+                WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v3.NAME_
+            )
+        LEFT JOIN ACT_GE_BYTEARRAY b1 ON b1.ID_ = v3.BYTEARRAY_ID_ 
+        WHERE d.KEY_ = 'iptplc' AND p.PROC_INST_ID_ IN ("${ids}")`
+    let result = await query(sql)
+    return result
+}
+
 actHiProcinstRepo.getSctgInfo = async (userNames, start, end) => {
     let sql = `SELECT IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0)) AS \`status\`, 
             COUNT(1) AS count FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
@@ -250,7 +383,7 @@ actHiProcinstRepo.getSctgInfo = async (userNames, start, end) => {
 }
 
 actHiProcinstRepo.getNewSctgInfo = async (start, end) => {
-    let sql = `SELECT p.PROC_INST_ID_, u.nickname, IF(v.TEXT_ = '1', 1, 0) AS running,
+    let sql = `SELECT p.PROC_INST_ID_ AS id, u.nickname, IF(v.TEXT_ = '1', 1, 0) AS running,
 	        IF(v.TEXT_ = '3', 1, 0) AS reject, IF(v1.ID_ IS NOT NULL, 1, 0) AS selected
         FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
         JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
@@ -267,6 +400,33 @@ actHiProcinstRepo.getNewSctgInfo = async (start, end) => {
             )
         WHERE d.KEY_ = 'sctgtplc' AND p.START_TIME_ BETWEEN ? AND ?`
     let result = await query(sql, [start, end])
+    return result
+}
+
+actHiProcinstRepo.getNewSctgDetail = async (ids) => {
+    let sql = `SELECT p.PROC_INST_ID_ AS id, DATE_FORMAT(p.START_TIME_, '%Y-%m-%d') AS time, 
+            b.BYTES_ AS info, b1.BYTES_ AS image, 
+            CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=', p.PROC_INST_ID_) AS link
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v.NAME_ = 'PROCESS_STATUS'
+            AND v.TEXT_ NOT IN ('-1', '4')
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+			AND v1.NAME_ = 'F6gkma3pfcjfd1c' 
+            AND v1.LAST_UPDATED_TIME_ = (
+                SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
+                WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v1.NAME_
+            )
+        LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v1.BYTEARRAY_ID_ 
+        LEFT JOIN ACT_HI_VARINST v3 ON v3.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v3.NAME_ = 'Cfidpl3a7e5tm'
+            AND v3.LAST_UPDATED_TIME_ = (
+                SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
+                WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v3.NAME_
+            )
+        LEFT JOIN ACT_GE_BYTEARRAY b1 ON b1.ID_ = v3.BYTEARRAY_ID_ 
+        WHERE d.KEY_ = 'sctgtplc' AND p.PROC_INST_ID_ IN ("${ids}")`
+    let result = await query(sql)
     return result
 }
 
@@ -391,7 +551,7 @@ actHiProcinstRepo.getProductDevelopInfo = async (start, end, type, order) => {
     else if (type == '4') keys = "'fttplc'"
     else if (type == '5') keys = "'gystplc'"
     if (order == 1) order_info = 't2.ASSIGNEE_'
-    let sql = `SELECT p.ID_ AS id, t.LAST_UPDATED_TIME_ as operate_time, b.BYTES_ AS info, 
+    let sql = `SELECT p.ID_ AS id, t.LAST_UPDATED_TIME_ AS operate_time, b.BYTES_ AS info, 
             (SELECT nickname FROM system_users WHERE t2.ASSIGNEE_ = id) AS nickname, v3.TEXT_ AS line_brief_name, 
             CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=', p.PROC_INST_ID_) AS link 
         FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_
@@ -506,6 +666,61 @@ actHiProcinstRepo.getProductDeveloper = async (start, end, type, name) => {
 			AND (SELECT u.nickname FROM system_users u 
                 WHERE u.id = IF(v.TEXT_ IS NOT NULL, v.TEXT_, p.START_USER_ID_)) = '${name}'`
     let result = await query(sql)
+    return result
+}
+
+actHiProcinstRepo.getAdviseInfo = async (start, end) => {
+    const sql = `SELECT DATE_FORMAT(p.START_TIME_, '%Y-%m-%d') AS time, u.nickname AS adviser, 
+            (CASE WHEN u.nickname = '陆瑶' THEN '事业二部' 
+                WHEN u.nickname = '刘海涛' THEN '事业一部' 
+                WHEN u.nickname = '王洪彬' THEN '事业三部' 
+                WHEN u.nickname = '郑艳艳' THEN '企划部' 
+                WHEN u.nickname = '鲁红旺' THEN '货品部' 
+                WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' OR dp.name LIKE '%小红书%' THEN '事业三部' 
+                WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
+                    OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
+                WHEN dp.name LIKE '%拼多多%' OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%' THEN '事业一部' 
+                WHEN dp.name LIKE '%开发%' OR dp.name LIKE '%企划%' OR dp.name LIKE '%市场%' THEN '企划部'
+                WHEN dp.name LIKE '%采购%' OR dp.name LIKE '%物流%' THEN '货品部'
+                WHEN dp.name LIKE '%客服%' THEN '客服部' 
+                WHEN dp.name LIKE '%品控%' THEN '质量部' 
+                WHEN dp.name LIKE '%摄影%' OR dp.name LIKE '%视觉%' OR dp.name LIKE '%设计%' THEN '视觉部' 
+                WHEN dp.name LIKE '%人事%' THEN '人事部' 
+                WHEN dp.name LIKE '%数据%' THEN '数据中台' 
+                WHEN dp.name LIKE '%库房%' THEN '库房' ELSE '未拉取到部门' END) AS adviser_dept, 
+            u1.nickname AS solver, u2.nickname AS director, 
+            (CASE WHEN v1.TEXT_ IN ('天猫', '小红书', '淘工厂-国货严选', '天猫垂类店', '天猫中台') THEN '事业三部'
+                WHEN v1.TEXT_ IN ('拼多多', '天猫超市', 'Coupang') THEN '事业一部' 
+                WHEN v1.TEXT_ IN ('京东', '唯品会', '得物', '抖音快手', '1688') THEN '事业二部' 
+                WHEN v1.TEXT_ = '开发' THEN '企划部' 
+                WHEN v1.TEXT_ = '采购' THEN '货品部' 
+                WHEN v1.TEXT_ = '品控' THEN '质量部' 
+                WHEN v1.TEXT_ = '库房' THEN '库房' 
+                WHEN v1.TEXT_ = '客服' THEN '客服部' 
+                WHEN v1.TEXT_ = '人事' THEN '人事部' 
+                WHEN v1.TEXT_ = '数据中台' THEN '数据中台' 
+                WHEN v1.TEXT_ = '视觉' THEN '视觉部' ELSE '其他' end) AS solver_dept, 
+            v3.TEXT_ AS problem, v4.TEXT_ AS detail 
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v.NAME_ = 'PROCESS_STATUS'
+            AND v.TEXT_ NOT IN ('-1', '4')
+        JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v1.NAME_ = 'F0w0m99bi3h6abc'
+        JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v2.NAME_ = 'F9uym9c732e1abc'
+        JOIN ACT_HI_VARINST v3 ON v3.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v3.NAME_ = 'Fkuym99bs5byagc'
+        JOIN ACT_HI_VARINST v4 ON v4.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v4.NAME_ = 'F944m99bui80apc'
+        JOIN ACT_HI_VARINST v5 ON v5.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v5.NAME_ = 'Cfiddehtmhesb'
+        JOIN system_users u ON u.id = p.START_USER_ID_
+        JOIN system_dept dp ON u.dept_id = dp.id
+        JOIN system_users u1 ON u1.id = v2.TEXT_
+        JOIN system_users u2 ON u2.id = v5.TEXT_
+        WHERE d.KEY_ = 'yijianxiang' AND p.START_TIME_ BETWEEN ? AND ?`
+    const result = await query(sql, [start, end])
     return result
 }
 

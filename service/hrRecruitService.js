@@ -1,7 +1,8 @@
 const Hr_RecruitmentDepartmentPositions = require('../repository/hrRecruitmentRepo');
 const {success} = require("../utils/biResponse");
 const globalGetter = require("../global/getter")
-const {flowStatusConst} = require("../const/flowConst")
+const {flowStatusConst} = require("../const/flowConst");
+const actHiProcinstRepo = require('@/repository/bpm/actHiProcinstRepo');
 const PERSONNEL_AUDITS = "FORM-027086325D5B4B24885D75A541FD633E7AMV"
 
 // 招聘数据看板 部门面试情况 岗位面试情况   -RecruitmentDepartmentPositions
@@ -393,6 +394,18 @@ const entryAndResignation = async (rest) => {
 
 };
 
+const adviseOutput = async (start, end) => {
+    let result = await actHiProcinstRepo.getAdviseInfo(start, end)
+    for (let i = 0; i < result.length; i++) {
+        if (result[i].adviser_dept != result[i].solver_dept) {
+            result[i]['is_trans_dept'] = 1
+        } else {
+            result[i]['is_trans_dept'] = 0
+        }
+        result[i]['advise_num'] = 1
+    }
+    return result
+}
 
 module.exports = {
     recruitmentDepartment,
@@ -404,4 +417,5 @@ module.exports = {
     curriculumVitaelikename,
     employeeFiles,
     entryAndResignation,
+    adviseOutput
 }
