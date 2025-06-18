@@ -3412,6 +3412,376 @@ const getSaleData = async(lstart,lend,preStart,preEnd,value,name) => {
     }
     return result
 }
+
+const getInventoryData = async(day,day7,day30,day31) => {
+    let result = [{current_inventory_cost:null,total_inventory_cost:null,stock_sale7:null
+        ,stock_sale30:null,sell_through_rate:null,inventory_turnover:null,gross_margin7:null
+        ,gross_margin30:null}]
+    // 前一天00点库存
+    let data1 = await goodsSaleInfoRepo.getInventoryData(day)
+    // 前31天00点库存
+    let data2 = await goodsSaleInfoRepo.getInventoryData(day31)
+    // 7天日均销售成本,7天销售额
+    let data3 = await goodsSaleInfoRepo.getInventoryCostData(day7,day,7)
+    // 30天日均销售成本,30天销售额
+    let data4 = await goodsSaleInfoRepo.getInventoryCostData(day30,day,30)
+    // 30天销售数量
+    let data5 = await goodsSaleInfoRepo.getInventorysaleqtyData(day30,day)
+    result[0].current_inventory_cost=(data1[0].Current_inventory_cost/10000).toFixed(1)
+    result[0].total_inventory_cost=(data1[0].total_inventory_cost/10000).toFixed(1)
+    result[0].stock_sale7=(data1[0].Current_inventory_cost/data3[0].cost_avg).toFixed(0)
+    result[0].stock_sale30=(data1[0].Current_inventory_cost/data4[0].cost_avg).toFixed(0)
+    result[0].sell_through_rate=(data5[0].sale_qty/(data1[0].Total_inventory+data5[0].sale_qty)*100).toFixed(1)
+    result[0].inventory_turnover=(data4[0].cost/(data1[0].Current_inventory_cost+data2[0].Current_inventory_cost)*100).toFixed(1)
+    result[0].gross_margin7=((data3[0].sale-data3[0].cost)/data3[0].sale*100).toFixed(1)
+    result[0].gross_margin30=((data4[0].sale-data4[0].cost)/data4[0].sale*100).toFixed(1)
+    return result
+}
+
+const getDivisionSaleData = async(day,day7,day30,day31) => {
+    let data = await goodsSaleInfoRepo.getDivisionSaleData()
+    const groupedData = data.reduce((acc, item) => {
+        if (!acc[item.division]) {
+            acc[item.division] = [];
+        }
+        acc[item.division].push(item);
+        return acc;
+    }, {});
+    const calculateChainRatio = (thisyear, lastyaer) => {
+        if (lastyaer === 0 || lastyaer==null) return 0 // 避免除零错误
+        return ((thisyear - lastyaer) / lastyaer) * 100
+    }
+    // 3. 添加周数据和汇总数据
+    const result = Object.keys(groupedData).map(division => {
+        const teamData = groupedData[division]
+        const thisyear = teamData.filter(item => item.year === "2025")
+        const lastyaer = teamData.filter(item => item.year === "2024")
+        // 计算环比
+        const chainRatioData = {
+            year: '同比',
+            division: division,
+            one: calculateChainRatio(thisyear[0].one, lastyaer[0].one).toFixed(2) + "%",
+            two: calculateChainRatio(thisyear[0].two, lastyaer[0].two).toFixed(2) + "%",
+            three: calculateChainRatio(thisyear[0].three, lastyaer[0].three).toFixed(2) + "%",
+            four: calculateChainRatio(thisyear[0].four, lastyaer[0].four).toFixed(2) + "%",
+            five: calculateChainRatio(thisyear[0].five, lastyaer[0].five).toFixed(2) + "%",
+            six: calculateChainRatio(thisyear[0].six, lastyaer[0].six).toFixed(2) + "%",
+            seven: calculateChainRatio(thisyear[0].seven, lastyaer[0].seven).toFixed(2) + "%",
+            eight: calculateChainRatio(thisyear[0].eight, lastyaer[0].eight).toFixed(2) + "%",
+            nine: calculateChainRatio(thisyear[0].nine, lastyaer[0].nine).toFixed(2) + "%",
+            ten: calculateChainRatio(thisyear[0].ten, lastyaer[0].ten).toFixed(2) + "%",
+            eleven: calculateChainRatio(thisyear[0].eleven, lastyaer[0].eleven).toFixed(2) + "%",
+            twelve: calculateChainRatio(thisyear[0].twelve, lastyaer[0].twelve).toFixed(2) + "%",
+            sum: calculateChainRatio(thisyear[0].sum, lastyaer[0].sum).toFixed(2) + "%",
+        }
+        // 构建结果
+        return [
+            ...lastyaer,
+            ...thisyear,
+            chainRatioData
+        ]
+    }).flat()
+    const sortOrder = {
+        "刘海涛部":1,
+        "陆瑶部":2,
+        "王洪彬部":3,
+        "累计":4
+    }
+    const sortedData = result.sort((a, b) => {
+        const groupA = a.division
+        const groupB = b.division
+        return sortOrder[groupA] - sortOrder[groupB]
+    })
+    return sortedData
+}
+
+const getDivisionSaleQtyData = async(day,day7,day30,day31) => {
+    let data = await goodsSaleInfoRepo.getDivisionSaleQtyData()
+    const groupedData = data.reduce((acc, item) => {
+        if (!acc[item.division]) {
+            acc[item.division] = [];
+        }
+        acc[item.division].push(item);
+        return acc;
+    }, {});
+    const calculateChainRatio = (thisyear, lastyaer) => {
+        if (lastyaer === 0 || lastyaer==null) return 0 // 避免除零错误
+        return ((thisyear - lastyaer) / lastyaer) * 100
+    }
+    // 3. 添加周数据和汇总数据
+    const result = Object.keys(groupedData).map(division => {
+        const teamData = groupedData[division]
+        const thisyear = teamData.filter(item => item.year === "2025")
+        const lastyaer = teamData.filter(item => item.year === "2024")
+        // 计算环比
+        const chainRatioData = {
+            year: '同比',
+            division: division,
+            one: calculateChainRatio(thisyear[0].one, lastyaer[0].one).toFixed(2) + "%",
+            two: calculateChainRatio(thisyear[0].two, lastyaer[0].two).toFixed(2) + "%",
+            three: calculateChainRatio(thisyear[0].three, lastyaer[0].three).toFixed(2) + "%",
+            four: calculateChainRatio(thisyear[0].four, lastyaer[0].four).toFixed(2) + "%",
+            five: calculateChainRatio(thisyear[0].five, lastyaer[0].five).toFixed(2) + "%",
+            six: calculateChainRatio(thisyear[0].six, lastyaer[0].six).toFixed(2) + "%",
+            seven: calculateChainRatio(thisyear[0].seven, lastyaer[0].seven).toFixed(2) + "%",
+            eight: calculateChainRatio(thisyear[0].eight, lastyaer[0].eight).toFixed(2) + "%",
+            nine: calculateChainRatio(thisyear[0].nine, lastyaer[0].nine).toFixed(2) + "%",
+            ten: calculateChainRatio(thisyear[0].ten, lastyaer[0].ten).toFixed(2) + "%",
+            eleven: calculateChainRatio(thisyear[0].eleven, lastyaer[0].eleven).toFixed(2) + "%",
+            twelve: calculateChainRatio(thisyear[0].twelve, lastyaer[0].twelve).toFixed(2) + "%",
+            sum: calculateChainRatio(thisyear[0].sum, lastyaer[0].sum).toFixed(2) + "%",
+        }
+        // 构建结果
+        return [
+            ...lastyaer,
+            ...thisyear,
+            chainRatioData
+        ]
+    }).flat()
+    const sortOrder = {
+        "刘海涛部":1,
+        "陆瑶部":2,
+        "王洪彬部":3,
+        "累计":4
+    }
+    const sortedData = result.sort((a, b) => {
+        const groupA = a.division
+        const groupB = b.division
+        return sortOrder[groupA] - sortOrder[groupB]
+    })
+    return sortedData
+}
+
+const getProjectSaleData = async(day,day7,day30,day31) => {
+    let data = await goodsSaleInfoRepo.getProjectSaleData()
+    const groupedData = data.reduce((acc, item) => {
+        if (!acc[item.project]) {
+            acc[item.project] = [];
+        }
+        acc[item.project].push(item);
+        return acc;
+    }, {});
+    
+    const calculateChainRatio = (thisyear, lastyaer) => {
+        if (lastyaer === 0 || lastyaer==null) return 0 // 避免除零错误
+        return ((thisyear - lastyaer) / lastyaer) * 100
+    }
+    // 3. 添加周数据和汇总数据
+    const result = Object.keys(groupedData).map(project => {
+        const teamData = groupedData[project]
+        const thisyear = teamData.filter(item => item.year === "2025")
+        const lastyaer = teamData.filter(item => item.year === "2024")
+        // 计算环比
+        const chainRatioData = {
+            year: '同比',
+            project: project,
+            one: calculateChainRatio(thisyear[0].one, lastyaer[0].one).toFixed(2) + "%",
+            two: calculateChainRatio(thisyear[0].two, lastyaer[0].two).toFixed(2) + "%",
+            three: calculateChainRatio(thisyear[0].three, lastyaer[0].three).toFixed(2) + "%",
+            four: calculateChainRatio(thisyear[0].four, lastyaer[0].four).toFixed(2) + "%",
+            five: calculateChainRatio(thisyear[0].five, lastyaer[0].five).toFixed(2) + "%",
+            six: calculateChainRatio(thisyear[0].six, lastyaer[0].six).toFixed(2) + "%",
+            seven: calculateChainRatio(thisyear[0].seven, lastyaer[0].seven).toFixed(2) + "%",
+            eight: calculateChainRatio(thisyear[0].eight, lastyaer[0].eight).toFixed(2) + "%",
+            nine: calculateChainRatio(thisyear[0].nine, lastyaer[0].nine).toFixed(2) + "%",
+            ten: calculateChainRatio(thisyear[0].ten, lastyaer[0].ten).toFixed(2) + "%",
+            eleven: calculateChainRatio(thisyear[0].eleven, lastyaer[0].eleven).toFixed(2) + "%",
+            twelve: calculateChainRatio(thisyear[0].twelve, lastyaer[0].twelve).toFixed(2) + "%",
+        }
+        // 构建结果
+        return [
+            ...lastyaer,
+            ...thisyear,
+            chainRatioData
+        ]
+    }).flat()
+    const sortOrder = {
+        "天猫":1,
+        "京东自营":2,
+        "拼多多":3,
+        "抖音":4,
+        "淘工厂":5,
+        "POP":6,
+        "其他":7,
+        "累计":8,
+    }
+    const sortedData = result.sort((a, b) => {
+        const groupA = a.project
+        const groupB = b.project
+        return sortOrder[groupA] - sortOrder[groupB]
+    })
+    return sortedData
+}
+
+const getShopSaleData = async(day,day7,day30,day31) => {
+    let data = await goodsSaleInfoRepo.getShopSaleData()
+    const groupedData = data.reduce((acc, item) => {
+        if (!acc[item.shop_name]) {
+            acc[item.shop_name] = [];
+        }
+        acc[item.shop_name].push(item);
+        return acc;
+    }, {});
+    const calculateChainRatio = (thisyear, lastyaer) => {
+        if (lastyaer === 0 || lastyaer==null) return 0 // 避免除零错误
+        return ((thisyear - lastyaer) / lastyaer) * 100
+    }
+    // 3. 添加周数据和汇总数据
+    const result = Object.keys(groupedData).map(shop_name => {
+        const teamData = groupedData[shop_name]
+        const thisyear = teamData.filter(item => item.year === "2025")
+        const lastyaer = teamData.filter(item => item.year === "2024")
+        if (thisyear.length ===0){
+            thisyear[0]={year: '2025',shop_name: shop_name,one: 0,two: 0,three: 0,four: 0,
+                five: 0,six: 0,seven: 0,eight: 0,nine: 0,ten: 0,eleven: 0,twelve: 0,sum: 0}
+        }
+        if (lastyaer.length ===0){
+            lastyaer[0]={year: '2024',shop_name: shop_name,one: 0,two: 0,three: 0,four: 0,
+                five: 0,six: 0,seven: 0,eight: 0,nine: 0,ten: 0,eleven: 0,twelve: 0,sum: 0}
+        }
+        // 计算环比
+        const chainRatioData = {
+            shop_name: shop_name,
+            year: '同比',
+            one: calculateChainRatio(thisyear[0].one, lastyaer[0].one).toFixed(2) + "%",
+            two: calculateChainRatio(thisyear[0].two, lastyaer[0].two).toFixed(2) + "%",
+            three: calculateChainRatio(thisyear[0].three, lastyaer[0].three).toFixed(2) + "%",
+            four: calculateChainRatio(thisyear[0].four, lastyaer[0].four).toFixed(2) + "%",
+            five: calculateChainRatio(thisyear[0].five, lastyaer[0].five).toFixed(2) + "%",
+            six: calculateChainRatio(thisyear[0].six, lastyaer[0].six).toFixed(2) + "%",
+            seven: calculateChainRatio(thisyear[0].seven, lastyaer[0].seven).toFixed(2) + "%",
+            eight: calculateChainRatio(thisyear[0].eight, lastyaer[0].eight).toFixed(2) + "%",
+            nine: calculateChainRatio(thisyear[0].nine, lastyaer[0].nine).toFixed(2) + "%",
+            ten: calculateChainRatio(thisyear[0].ten, lastyaer[0].ten).toFixed(2) + "%",
+            eleven: calculateChainRatio(thisyear[0].eleven, lastyaer[0].eleven).toFixed(2) + "%",
+            twelve: calculateChainRatio(thisyear[0].twelve, lastyaer[0].twelve).toFixed(2) + "%",
+        }
+        // 构建结果
+        return [
+            ...lastyaer,
+            ...thisyear,
+            chainRatioData
+        ]
+    }).flat()
+    return result
+}
+
+const getProjectSaleQtyData = async(day,day7,day30,day31) => {
+    let data = await goodsSaleInfoRepo.getProjectSaleQtyData()
+    const groupedData = data.reduce((acc, item) => {
+        if (!acc[item.project]) {
+            acc[item.project] = [];
+        }
+        acc[item.project].push(item);
+        return acc;
+    }, {});
+    
+    const calculateChainRatio = (thisyear, lastyaer) => {
+        if (lastyaer === 0 || lastyaer==null) return 0 // 避免除零错误
+        return ((thisyear - lastyaer) / lastyaer) * 100
+    }
+    // 3. 添加周数据和汇总数据
+    const result = Object.keys(groupedData).map(project => {
+        const teamData = groupedData[project]
+        const thisyear = teamData.filter(item => item.year === "2025")
+        const lastyaer = teamData.filter(item => item.year === "2024")
+        // 计算环比
+        const chainRatioData = {
+            year: '同比',
+            project: project,
+            one: calculateChainRatio(thisyear[0].one, lastyaer[0].one).toFixed(2) + "%",
+            two: calculateChainRatio(thisyear[0].two, lastyaer[0].two).toFixed(2) + "%",
+            three: calculateChainRatio(thisyear[0].three, lastyaer[0].three).toFixed(2) + "%",
+            four: calculateChainRatio(thisyear[0].four, lastyaer[0].four).toFixed(2) + "%",
+            five: calculateChainRatio(thisyear[0].five, lastyaer[0].five).toFixed(2) + "%",
+            six: calculateChainRatio(thisyear[0].six, lastyaer[0].six).toFixed(2) + "%",
+            seven: calculateChainRatio(thisyear[0].seven, lastyaer[0].seven).toFixed(2) + "%",
+            eight: calculateChainRatio(thisyear[0].eight, lastyaer[0].eight).toFixed(2) + "%",
+            nine: calculateChainRatio(thisyear[0].nine, lastyaer[0].nine).toFixed(2) + "%",
+            ten: calculateChainRatio(thisyear[0].ten, lastyaer[0].ten).toFixed(2) + "%",
+            eleven: calculateChainRatio(thisyear[0].eleven, lastyaer[0].eleven).toFixed(2) + "%",
+            twelve: calculateChainRatio(thisyear[0].twelve, lastyaer[0].twelve).toFixed(2) + "%",
+        }
+        // 构建结果
+        return [
+            ...lastyaer,
+            ...thisyear,
+            chainRatioData
+        ]
+    }).flat()
+    const sortOrder = {
+        "天猫":1,
+        "京东自营":2,
+        "拼多多":3,
+        "抖音":4,
+        "淘工厂":5,
+        "POP":6,
+        "其他":7,
+        "累计":8,
+    }
+    const sortedData = result.sort((a, b) => {
+        const groupA = a.project
+        const groupB = b.project
+        return sortOrder[groupA] - sortOrder[groupB]
+    })
+    return sortedData
+}
+
+const getShopSaleQtyData = async(day,day7,day30,day31) => {
+    let data = await goodsSaleInfoRepo.getShopSaleQtyData()
+    const groupedData = data.reduce((acc, item) => {
+        if (!acc[item.shop_name]) {
+            acc[item.shop_name] = [];
+        }
+        acc[item.shop_name].push(item);
+        return acc;
+    }, {});
+    
+    const calculateChainRatio = (thisyear, lastyaer) => {
+        if (lastyaer === 0 || lastyaer==null) return 0 // 避免除零错误
+        return ((thisyear - lastyaer) / lastyaer) * 100
+    }
+    // 3. 添加周数据和汇总数据
+    const result = Object.keys(groupedData).map(shop_name => {
+        const teamData = groupedData[shop_name]
+        const thisyear = teamData.filter(item => item.year === "2025")
+        const lastyaer = teamData.filter(item => item.year === "2024")
+        if (thisyear.length ===0){
+            thisyear[0]={year: '2025',shop_name: shop_name,one: 0,two: 0,three: 0,four: 0,
+                five: 0,six: 0,seven: 0,eight: 0,nine: 0,ten: 0,eleven: 0,twelve: 0,sum: 0}
+        }
+        if (lastyaer.length ===0){
+            lastyaer[0]={year: '2024',shop_name: shop_name,one: 0,two: 0,three: 0,four: 0,
+                five: 0,six: 0,seven: 0,eight: 0,nine: 0,ten: 0,eleven: 0,twelve: 0,sum: 0}
+        }
+        // 计算环比
+        const chainRatioData = {
+            shop_name: shop_name,
+            year: '同比',
+            one: calculateChainRatio(thisyear[0].one, lastyaer[0].one).toFixed(2) + "%",
+            two: calculateChainRatio(thisyear[0].two, lastyaer[0].two).toFixed(2) + "%",
+            three: calculateChainRatio(thisyear[0].three, lastyaer[0].three).toFixed(2) + "%",
+            four: calculateChainRatio(thisyear[0].four, lastyaer[0].four).toFixed(2) + "%",
+            five: calculateChainRatio(thisyear[0].five, lastyaer[0].five).toFixed(2) + "%",
+            six: calculateChainRatio(thisyear[0].six, lastyaer[0].six).toFixed(2) + "%",
+            seven: calculateChainRatio(thisyear[0].seven, lastyaer[0].seven).toFixed(2) + "%",
+            eight: calculateChainRatio(thisyear[0].eight, lastyaer[0].eight).toFixed(2) + "%",
+            nine: calculateChainRatio(thisyear[0].nine, lastyaer[0].nine).toFixed(2) + "%",
+            ten: calculateChainRatio(thisyear[0].ten, lastyaer[0].ten).toFixed(2) + "%",
+            eleven: calculateChainRatio(thisyear[0].eleven, lastyaer[0].eleven).toFixed(2) + "%",
+            twelve: calculateChainRatio(thisyear[0].twelve, lastyaer[0].twelve).toFixed(2) + "%",
+        }
+        // 构建结果
+        return [
+            ...lastyaer,
+            ...thisyear,
+            chainRatioData
+        ]
+    }).flat()
+    
+    return result
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -3461,5 +3831,12 @@ module.exports = {
     getTMPromotion,
     getTMPromotioninfo,
     importTmallpromotioninfo,
-    getSaleData
+    getSaleData,
+    getInventoryData,
+    getDivisionSaleData,
+    getDivisionSaleQtyData,
+    getProjectSaleData,
+    getProjectSaleQtyData,
+    getShopSaleData,
+    getShopSaleQtyData
 }

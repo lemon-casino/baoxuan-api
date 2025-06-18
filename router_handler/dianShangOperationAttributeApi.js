@@ -21,7 +21,8 @@ const getPagingOperateAttributes = async (req, res, next) => {
             goodsId: linkId,
             platform,
             shopName,
-            skuId
+            skuId,
+            code
         } = req.query
         joiUtil.validate({
             page, pageSize,
@@ -37,7 +38,8 @@ const getPagingOperateAttributes = async (req, res, next) => {
             linkId,
             platform,
             shopName,
-            skuId)
+            skuId,
+            code)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -315,7 +317,9 @@ const uploadtmTable = async (req, res, next) => {
             '产品等级':'productRank',
             '季节':'seasons',
             '一级类目':'firstCategory',
-            '二级类目':'secondCategory'
+            '二级类目':'secondCategory',
+            '转正天数':'userDef4',
+            '链接定义':'userDef5',
 
         };
 
@@ -329,8 +333,6 @@ const uploadtmTable = async (req, res, next) => {
             '链接类型':'userDef1',
             '实时状态':'userDef2',
             '自定义3':'userDef3',
-            '自定义4':'userDef4',
-            '自定义5':'userDef5',
             '自定义6':'userDef6',
             '自定义7':'userDef7',
             '自定义8':'userDef8',

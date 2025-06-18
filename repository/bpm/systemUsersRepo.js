@@ -7,5 +7,10 @@ systemUsersRepo.getRefreshToken = async (mobile) => {
     let result = await query(sql, [mobile])
     return result
 }
+systemUsersRepo.getID = async (nickname) => {
+    let sql = `SELECT id FROM system_users WHERE nickname = ?`
+    let result = await query(sql, [nickname])
+    return result
+}
 
 module.exports = systemUsersRepo

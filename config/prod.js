@@ -34,6 +34,10 @@ const configs = {
         logging: false,
         timezone: '+08:00'
     },
+    bpmlogin:{
+        name : nConf.get("BPM_LOGIN_NAME"),
+        password : nConf.get("BPM_LOGIN_PASS")
+    },
     serverConfig: {
         port: nConf.get("BI_PROD_SERVER_PORT")
     }

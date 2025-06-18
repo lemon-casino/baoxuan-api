@@ -2,7 +2,6 @@ const httpUtil = require("@/utils/httpUtil")
 const bpmConst = require('../../const/bpmConst')
 const defaultConst = require('../../const/development/defaultConst')
 const commonReq = {}
-
 commonReq.createProcessInstance = async (refreshToken, processDefinitionId, type, params) => {
     const url = `${bpmConst.host}${bpmConst.link.createProcessInstance}`
     let headers = bpmConst.headers
@@ -39,6 +38,21 @@ commonReq.createProcessInstance = async (refreshToken, processDefinitionId, type
     if (result?.code === 0) {
         return `${bpmConst.webHost}${bpmConst.webLink.instanceDetail}${result?.data}`
     }
+    return false
+}
+
+commonReq.createJDProcess = async (refreshToken, processDefinitionId, variables,data) => {
+    // console.log('开始发起流程')
+    // console.log(variables)
+    const url = `${bpmConst.webHost}${bpmConst.link.createProcessInstance}`
+    let headers = {Authorization:'Bearer '+data,'Tenant-Id': 1}
+    const body = bpmConst.params.createProcessInstance
+    body.refreshToken = refreshToken
+    body.processDefinitionId = processDefinitionId
+    body.variables=variables
+    // console.log(url, body, headers)
+    let result = await httpUtil.post(url, body, headers)
+    // console.log(result)
     return false
 }
 
