@@ -165,6 +165,8 @@ const goodsRankMap = {
 	C: "C（月销3w以下）",
 }
 const optimizeRankMap = ["正常", "紧急"]
+const optimizeBpmProcessName = '运营优化方案流程（全平台）'
+const optimizeBpmProcessKey = 'form-86'
 
 module.exports = {
 	typeList,
@@ -187,5 +189,7 @@ module.exports = {
 	goodsIsOldMap,
 	goodsRankMap,
 	optimizeRankMap,
-	productManageFlowUUid
+	productManageFlowUUid,
+	optimizeBpmProcessName,
+	optimizeBpmProcessKey
 }

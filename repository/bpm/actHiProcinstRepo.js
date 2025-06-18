@@ -681,21 +681,19 @@ actHiProcinstRepo.getAdviseInfo = async (start, end) => {
                     OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
                 WHEN dp.name LIKE '%拼多多%' OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%' THEN '事业一部' 
                 WHEN dp.name LIKE '%开发%' OR dp.name LIKE '%企划%' OR dp.name LIKE '%市场%' THEN '企划部'
-                WHEN dp.name LIKE '%采购%' OR dp.name LIKE '%物流%' THEN '货品部'
+                WHEN dp.name LIKE '%采购%' OR dp.name LIKE '%物流%' OR dp.name LIKE '%库房%' THEN '货品部'
                 WHEN dp.name LIKE '%客服%' THEN '客服部' 
                 WHEN dp.name LIKE '%品控%' THEN '质量部' 
                 WHEN dp.name LIKE '%摄影%' OR dp.name LIKE '%视觉%' OR dp.name LIKE '%设计%' THEN '视觉部' 
                 WHEN dp.name LIKE '%人事%' THEN '人事部' 
-                WHEN dp.name LIKE '%数据%' THEN '数据中台' 
-                WHEN dp.name LIKE '%库房%' THEN '库房' ELSE '未拉取到部门' END) AS adviser_dept, 
+                WHEN dp.name LIKE '%数据%' THEN '数据中台' ELSE '未拉取到部门' END) AS adviser_dept, 
             u1.nickname AS solver, u2.nickname AS director, 
             (CASE WHEN v1.TEXT_ IN ('天猫', '小红书', '淘工厂-国货严选', '天猫垂类店', '天猫中台') THEN '事业三部'
                 WHEN v1.TEXT_ IN ('拼多多', '天猫超市', 'Coupang') THEN '事业一部' 
                 WHEN v1.TEXT_ IN ('京东', '唯品会', '得物', '抖音快手', '1688') THEN '事业二部' 
                 WHEN v1.TEXT_ = '开发' THEN '企划部' 
-                WHEN v1.TEXT_ = '采购' THEN '货品部' 
+                WHEN v1.TEXT_ IN ('采购', '库房') THEN '货品部' 
                 WHEN v1.TEXT_ = '品控' THEN '质量部' 
-                WHEN v1.TEXT_ = '库房' THEN '库房' 
                 WHEN v1.TEXT_ = '客服' THEN '客服部' 
                 WHEN v1.TEXT_ = '人事' THEN '人事部' 
                 WHEN v1.TEXT_ = '数据中台' THEN '数据中台' 
@@ -736,6 +734,33 @@ actHiProcinstRepo.getJDLinkOptimization = async() =>{
         WHERE d.KEY_ ='form-42'and (p.START_TIME_ BETWEEN DATE_SUB(DATE(NOW()),INTERVAL 3 day) and DATE(NOW()) or  p.END_ACT_ID_ is NULL)`
     let result = await query(sql)
     return result
+}
+
+actHiProcinstRepo.checkOptimize = async (goods_id, title, days) => {
+    const sql = `SELECT p.PROC_INST_ID_ FROM ACT_HI_PROCINST p 
+        JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_INST_ID_ 
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v.NAME_ = 'multiSelectField_lwufb7oy' 
+            AND v.LAST_UPDATED_TIME_ = (
+                SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ AND vv.NAME_ = v.NAME_ 
+            )
+        JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v1.NAME_ = 'textField_liihs7kw' 
+            AND v1.LAST_UPDATED_TIME_ = (
+                SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ AND vv.NAME_ = v1.NAME_ 
+            )
+        JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v2.NAME_ = 'PROCESS_STATUS' 
+            AND v2.TEXT_ IN ('1', '2') 
+        WHERE d.KEY_ = 'form-86' 
+            AND DATE_SUB(NOW(), INTERVAL ${days} DAY) < (
+                SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_
+            ) AND v.TEXT_ = '${title}' AND v1.TEXT_ = '${goods_id}' LIMIT 1`
+    const result = await query(sql)
+    return result || []
 }
 
 module.exports = actHiProcinstRepo

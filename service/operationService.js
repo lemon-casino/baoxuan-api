@@ -19,7 +19,9 @@ const {
     optimizeFieldMap,
     goodsIsOldMap,
     goodsRankMap,
-    optimizeRankMap
+    optimizeRankMap,
+    optimizeBpmProcessKey,
+    optimizeBpmProcessName
 } = require('../const/operationConst')
 const newFormsRepo = require('../repository/newFormsRepo')
 const goodsOtherInfoRepo = require('../repository/operation/goodsOtherInfoRepo')
@@ -48,6 +50,11 @@ const goodsSalesRepo = require('@/repository/operation/goodsSalesRepo')
 const goodsVerifiedsRepo = require('@/repository/operation/goodsVerifiedsRepo')
 const goodsPaymentsRepo = require('@/repository/operation/goodsPaymentsRepo')
 const clickFarmingRepo = require('../repository/operation/clickFarmingRepo')
+const actHiProcinstRepo = require('@/repository/bpm/actHiProcinstRepo')
+const systemUsersRepo = require('@/repository/bpm/systemUsersRepo')
+const commonReq = require('@/core/bpmReq/commonReq')
+const actReProcdefRepo = require('@/repository/bpm/actReProcdefRepo')
+const credentialsReq = require("@/core/dingDingReq/credentialsReq")
 /**
  * get operation data pannel data stats
  * division > project > shop / team > user
@@ -2699,6 +2706,7 @@ const getTMPromotion = async (lstart, lend) =>{
 const checkOperationOptimize = async () => {
     let optimize = await goodsOptimizeSetting.getInfo()
     let goods_info = await userOperationRepo.getLinkIds()
+    let refresh_token = await credentialsReq.getBpmgAccessToken()
     for (let i = 0; i < goods_info.length; i++) {
         for (let j = 0; j < optimize.length; j++) {
             if (optimize[j].optimize_type == '费比高') continue
@@ -2711,9 +2719,11 @@ const checkOperationOptimize = async () => {
                 optimize_title = optimize[j].title
                 if (optimize[j].column == 'channel_roi') 
                     optimize_title = optimize[j].value + optimize[j].title
-                info = await newFormsRepo.checkOptimize(goods_info[i].goods_id, optimize_title, optimize[j].days)
+                info = await actHiProcinstRepo.checkOptimize(goods_info[i].goods_id, optimize_title, optimize[j].days)
                 if (!info?.length) {
                     let params = {}
+                    let user = await systemUsersRepo.getID(goods_info[i].operator)
+                    if (!user.length) continue
                     params[optimizeFieldMap.optimize_rank] = optimizeRankMap[0]
                     if (moment(goods_info[i].onsale_date).add(60, 'day').valueOf() >= moment().valueOf()) {
                         params[optimizeFieldMap.is_old] = goodsIsOldMap[0]
@@ -2742,18 +2752,17 @@ const checkOperationOptimize = async () => {
                         default:
                     }
                     params[optimizeFieldMap.name] = goods_info[i].brief_name
-                    params[optimizeFieldMap.operator] = [goods_info[i].dingding_user_id]
+                    params[optimizeFieldMap.operator] = user[0].id
                     params[optimizeFieldMap.goods_id] = goods_info[i].goods_id
                     params[optimizeFieldMap.platform] = platformMap[goods_info[i].platform]
                     params[optimizeFieldMap.type] = optimize[j].optimize_type
-                    params[optimizeFieldMap.content] = [optimize_title]
+                    params[optimizeFieldMap.content] = optimize_title
                     // fs.writeFileSync('./public/info.json', JSON.stringify(params) + '\n', {flag: 'a'})
-                    await createProcess(
-                        optimizeFlowUUid,
-                        optimizeUser,
-                        null,
-                        JSON.stringify(params)
+                    let processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
+                        optimizeBpmProcessName,
+                        optimizeBpmProcessKey
                     )
+                    await commonReq.createJDProcess(269, processDefinitionId, params, refresh_token.data.accessToken)
                 }
             }
         }
