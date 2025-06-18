@@ -3531,7 +3531,7 @@ const getProductDeveloper = async (start, end, type, id, name) => {
             and piv2.field_id  = 'employeeField_m42elnbz'
         where pi.process_id in (${ids}) and pi.status in ('RUNNING', 'COMPLETED') 
             and if(pi.process_id = 88, piv1.id is not null, 
-                if(pi.process_id = 833, 
+                if(pi.process_id = 836, 
                     piv2.id is not null and pi.create_time between '${start}' and '${end}', 
                     pi.create_time between '${start}' and '${end}' and pi.creator = ${id}))`
     let row = await query(sql)
@@ -3539,7 +3539,7 @@ const getProductDeveloper = async (start, end, type, id, name) => {
 }
 
 const getZtInfo = async (start, end) => {
-    let sql = `select pi.id, pi.creator, piv1.value as image, 
+    let sql = `select pi.instance_id as id, pi.creator, piv1.value as image, 
             if(pi.status = 'RUNNING', 1, 0) as running, 
             if(pir.id is not null, 1, 0) as reject, 
             if(piv.id is not null, 1, 0) as selected 
@@ -3557,8 +3557,35 @@ const getZtInfo = async (start, end) => {
     return row
 }
 
+const getZtDetail = async (ids) => {
+    let sql = `select pi.id, date_format(pi.create_time, '%Y-%m-%d') as time, 
+            piv1.value as image, replace(ff1.title, '预估订货量', '') as platform, 
+            if(piv.id is not null, '选中', '未选中') as \`status\`, pis1.value as sku_id, 
+            concat('https://t8sk7d.aliwork.com/APP_BXS79QCC8MY5ZV0EZZ07/processDetail?formInstId=', pi.instance_id) as link 
+        from process_instances pi left join process_instance_values piv 
+            on piv.instance_id = pi.id and piv.field_id = 'tableField_m1g2w3gr' 
+        left join process_instance_sub_values pis on pis.instance_id = pi.id 
+            and pis.parent_id = piv.field_id
+            and pis.field_id like '%numberField%' 
+            and pis.value > 0
+        left join process_instance_sub_values pis1 on pis1.instance_id = pi.id 
+            and pis1.parent_id = piv.field_id
+            and pis1.field_id = 'textField_m1lrc3mo' 
+            and pis.index = pis1.index 
+        join forms f on f.id = 44324
+        join form_fields ff on ff.form_id = f.id and ff.field_id = piv.field_id
+        join form_fields ff1 on ff1.form_id = f.id and ff1.field_id = pis.field_id
+            and ff1.title not like '%销量%'
+        join process_instance_values piv1 on piv1.instance_id = pi.id 
+            and piv1.field_id = 'attachmentField_m2ivm1hh' 
+        where pi.process_id = 838 and pi.instance_id in ("${ids}")
+        order by pi.id, ff1.title`
+    let row = await query(sql)
+    return row
+}
+
 const getFtInfo = async (start, end) => {
-    let sql = `select pi.id, pi.instance_id, pir.operator_name, piv1.value as image, 
+    let sql = `select pi.instance_id as id, pi.instance_id, pir.operator_name, piv1.value as image, 
             if(pi.status = 'RUNNING', 1, 0) as running, 
             if(pir.action_exit = 'disagree', 1, 0) as reject, 
             if(piv.id is not null, 1, 0) as selected              
@@ -3575,14 +3602,41 @@ const getFtInfo = async (start, end) => {
                 '开发是否找到反推产品2',
                 '开发是否找到反推产品3')
         join process_instance_values piv1 on piv1.instance_id = pi.id 
-            and piv1.field_id in ('attachmentField_m2jue4at', 'attachmentField_m2ivm1hh') 
-        where pi.process_id in (3, 88) and pi.create_time between ? and ?`
+            and piv1.field_id = 'attachmentField_m2jue4at' 
+        where pi.process_id = 88 and pi.create_time between ? and ?`
     let row = await query(sql, [start, end])
     return row
 }
 
+const getFtDetail = async (ids) => {
+    let sql = `select pi.id, date_format(pi.create_time, '%Y-%m-%d') as time, 
+            piv1.value as image, replace(ff1.title, '预估订货量', '') as platform, 
+            if(piv.id is not null, '选中', '未选中') as \`status\`, pis1.value as sku_id, 
+            concat('https://t8sk7d.aliwork.com/APP_BXS79QCC8MY5ZV0EZZ07/processDetail?formInstId=', pi.instance_id) as link 
+        from process_instances pi left join process_instance_values piv 
+            on piv.instance_id = pi.id and piv.field_id = 'tableField_m9gzfubr'
+        left join process_instance_sub_values pis on pis.instance_id = pi.id 
+            and pis.parent_id = piv.field_id
+            and pis.field_id like '%numberField%' 
+            and pis.value > 0
+        left join process_instance_sub_values pis1 on pis1.instance_id = pi.id 
+            and pis1.parent_id = piv.field_id
+            and pis1.field_id = 'textField_m1lrc3mo' 
+            and pis.index = pis1.index 
+        join forms f on f.id = 106
+        join form_fields ff on ff.form_id = f.id and ff.field_id = piv.field_id
+        join form_fields ff1 on ff1.form_id = f.id and ff1.field_id = pis.field_id
+            and ff1.title not like '%销量%'
+        join process_instance_values piv1 on piv1.instance_id = pi.id 
+            and piv1.field_id = 'attachmentField_m2jue4at' 
+        where pi.process_id = 88 and pi.instance_id in ("${ids}")
+        order by pi.id, ff1.title`
+    let row = await query(sql)
+    return row
+}
+
 const getIpInfo = async (start, end) => {
-    let sql = `select pi.id, pi.creator, if(pi.status = 'RUNNING', 1, 0) as running, 
+    let sql = `select pi.instance_id as id, pi.creator, if(pi.status = 'RUNNING', 1, 0) as running, 
             if(pir.action_exit = 'disagree', 1, 0) as reject, 
             if(piv.id is not null, 1, 0) as selected 
         from process_instances pi left join process_instance_values piv 
@@ -3592,8 +3646,35 @@ const getIpInfo = async (start, end) => {
                     and pis.field_id like '%numberField%' and pis.value > 0)
         left join process_instance_records pir on pir.instance_id = pi.id 
             and pir.action_exit = 'disagree'
-        where pi.process_id = 833 and pi.create_time between ? and ?`
+        where pi.process_id = 836 and pi.create_time between ? and ?`
     let row = await query(sql, [start, end])
+    return row
+}
+
+const getIpDetail = async (ids) => {
+    let sql = `select pi.id, date_format(pi.create_time, '%Y-%m-%d') as time, 
+            piv1.value as image, replace(ff1.title, '预估订货量', '') as platform, 
+            if(piv.id is not null, '选中', '未选中') as \`status\`, pis1.value as sku_id, 
+            concat('https://t8sk7d.aliwork.com/APP_BXS79QCC8MY5ZV0EZZ07/processDetail?formInstId=', pi.instance_id) as link 
+        from process_instances pi left join process_instance_values piv 
+            on piv.instance_id = pi.id and piv.field_id = 'tableField_m1g2w3gr'
+        left join process_instance_sub_values pis on pis.instance_id = pi.id 
+            and pis.parent_id = piv.field_id
+            and pis.field_id like '%numberField%' 
+            and pis.value > 0
+        left join process_instance_sub_values pis1 on pis1.instance_id = pi.id 
+            and pis1.parent_id = piv.field_id
+            and pis1.field_id = 'textField_m1lrc3mo' 
+            and pis.index = pis1.index 
+        join forms f on f.id = 6409
+        join form_fields ff on ff.form_id = f.id and ff.field_id = piv.field_id
+        join form_fields ff1 on ff1.form_id = f.id and ff1.field_id = pis.field_id
+            and ff1.title not like '%销量%'
+        join process_instance_values piv1 on piv1.instance_id = pi.id 
+            and piv1.field_id = 'attachmentField_m662jvqe' 
+        where pi.process_id = 836 and pi.instance_id in ("${ids}")
+        order by pi.id, ff1.title`
+    let row = await query(sql)
     return row
 }
 
@@ -3644,6 +3725,9 @@ module.exports = {
     getProductDeveloper,
     getProductSkuId,
     getZtInfo,
+    getZtDetail,
     getFtInfo,
-    getIpInfo
+    getFtDetail,
+    getIpInfo,
+    getIpDetail
 }

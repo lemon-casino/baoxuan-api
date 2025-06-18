@@ -1066,10 +1066,10 @@ developmentService.getProductDevelopInfo = async (start, end, director) => {
                     selected_num: 0,
                     selected_percent: 0,
                     children: {
-                        create: [],
-                        runing: [],
-                        reject: [],
-                        selected: []
+                        create: {yida: [], bpm: []},
+                        running: {yida: [], bpm: []},
+                        reject: {yida: [], bpm: []},
+                        selected: {yida: [], bpm: []},
                     }
                 })
             }
@@ -1083,6 +1083,13 @@ developmentService.getProductDevelopInfo = async (start, end, director) => {
         result[index].running_num += scInfo[i].running
         result[index].reject_num += scInfo[i].reject
         result[index].selected_num += scInfo[i].selected
+        result[index].children['create'].bpm.push(scInfo[i].id)
+        if (scInfo[i].running)
+            result[index].children['running'].bpm.push(scInfo[i].id)
+        if (scInfo[i].reject)
+            result[index].children['reject'].bpm.push(scInfo[i].id)
+        if (scInfo[i].selected)
+            result[index].children['selected'].bpm.push(scInfo[i].id)
     }
     let zyInfo = await actHiProcinstRepo.getNewZyInfo(start, end)
     for (let i = 0; i < zyInfo.length; i++) {
@@ -1092,6 +1099,13 @@ developmentService.getProductDevelopInfo = async (start, end, director) => {
         result[index].running_num += zyInfo[i].running
         result[index].reject_num += zyInfo[i].reject
         result[index].selected_num += zyInfo[i].selected
+        result[index].children['create'].bpm.push(zyInfo[i].id)
+        if (zyInfo[i].running)
+            result[index].children['running'].bpm.push(zyInfo[i].id)
+        if (zyInfo[i].reject)
+            result[index].children['reject'].bpm.push(zyInfo[i].id)
+        if (zyInfo[i].selected)
+            result[index].children['selected'].bpm.push(zyInfo[i].id)
     }
     let ipInfo = await newFormsRepo.getIpInfo(start, end)
     for (let i = 0; i < ipInfo.length; i++) {
@@ -1100,6 +1114,13 @@ developmentService.getProductDevelopInfo = async (start, end, director) => {
         result[index].running_num += ipInfo[i].running
         result[index].reject_num += ipInfo[i].reject
         result[index].selected_num += ipInfo[i].selected
+        result[index].children['create'].yida.push(ipInfo[i].id)
+        if (ipInfo[i].running)
+            result[index].children['running'].yida.push(ipInfo[i].id)
+        if (ipInfo[i].reject)
+            result[index].children['reject'].yida.push(ipInfo[i].id)
+        if (ipInfo[i].selected)
+            result[index].children['selected'].yida.push(ipInfo[i].id)
     }
     ipInfo = await actHiProcinstRepo.getNewIpInfo(start, end)
     for (let i = 0; i < ipInfo.length; i++) {
@@ -1109,6 +1130,13 @@ developmentService.getProductDevelopInfo = async (start, end, director) => {
         result[index].running_num += ipInfo[i].running
         result[index].reject_num += ipInfo[i].reject
         result[index].selected_num += ipInfo[i].selected
+        result[index].children['create'].bpm.push(ipInfo[i].id)
+        if (ipInfo[i].running)
+            result[index].children['running'].bpm.push(ipInfo[i].id)
+        if (ipInfo[i].reject)
+            result[index].children['reject'].bpm.push(ipInfo[i].id)
+        if (ipInfo[i].selected)
+            result[index].children['selected'].bpm.push(ipInfo[i].id)
     }
     let ztInfo = await newFormsRepo.getZtInfo(start, end)
     for (let i = 0; i < ztInfo.length; i++) {
@@ -1117,6 +1145,13 @@ developmentService.getProductDevelopInfo = async (start, end, director) => {
         result[index].running_num += ztInfo[i].running
         result[index].reject_num += ztInfo[i].reject
         result[index].selected_num += ztInfo[i].selected
+        result[index].children['create'].yida.push(ztInfo[i].id)
+        if (ztInfo[i].running)
+            result[index].children['running'].yida.push(ztInfo[i].id)
+        if (ztInfo[i].reject)
+            result[index].children['reject'].yida.push(ztInfo[i].id)
+        if (ztInfo[i].selected)
+            result[index].children['selected'].yida.push(ztInfo[i].id)
     }
     ztInfo = await actHiProcinstRepo.getNewGysInfo(start, end)
     for (let i = 0; i < ztInfo.length; i++) {
@@ -1126,6 +1161,13 @@ developmentService.getProductDevelopInfo = async (start, end, director) => {
         result[index].running_num += ztInfo[i].running
         result[index].reject_num += ztInfo[i].reject
         result[index].selected_num += ztInfo[i].selected
+        result[index].children['create'].bpm.push(ztInfo[i].id)
+        if (ztInfo[i].running)
+            result[index].children['running'].bpm.push(ztInfo[i].id)
+        if (ztInfo[i].reject)
+            result[index].children['reject'].bpm.push(ztInfo[i].id)
+        if (ztInfo[i].selected)
+            result[index].children['selected'].bpm.push(ztInfo[i].id)
     }
     let ftInfo = await newFormsRepo.getFtInfo(start, end)
     for (let i = 0; i < ftInfo.length; i++) {
@@ -1134,6 +1176,13 @@ developmentService.getProductDevelopInfo = async (start, end, director) => {
         result[index].running_num += ftInfo[i].running
         result[index].reject_num += ftInfo[i].reject
         result[index].selected_num += ftInfo[i].selected
+        result[index].children['create'].yida.push(ftInfo[i].id)
+        if (ftInfo[i].running)
+            result[index].children['running'].yida.push(ftInfo[i].id)
+        if (ftInfo[i].reject)
+            result[index].children['reject'].yida.push(ftInfo[i].id)
+        if (ftInfo[i].selected)
+            result[index].children['selected'].yida.push(ftInfo[i].id)
     }
     ftInfo = await actHiProcinstRepo.getNewFtInfo(start, end)
     for (let i = 0; i < ftInfo.length; i++) {
@@ -1143,10 +1192,255 @@ developmentService.getProductDevelopInfo = async (start, end, director) => {
         result[index].running_num += ftInfo[i].running
         result[index].reject_num += ftInfo[i].reject
         result[index].selected_num += ftInfo[i].selected
+        result[index].children['create'].bpm.push(ftInfo[i].id)
+        if (ftInfo[i].running)
+            result[index].children['running'].bpm.push(ftInfo[i].id)
+        if (ftInfo[i].reject)
+            result[index].children['reject'].bpm.push(ftInfo[i].id)
+        if (ftInfo[i].selected)
+            result[index].children['selected'].bpm.push(ftInfo[i].id)
     }
     for (let i = 0; i < result.length; i++) {
         if (result[i].create_num > 0)
             result[i].selected_percent = (result[i].selected_num / result[i].create_num * 100).toFixed(2)
+    }
+    return result
+}
+
+developmentService.getProductDevelopDetail = async (type, infoType, director, ids) => {
+    let result = [], info1 = [], info2 = [], skuids = [], resultMap = {}, skuMap = {}
+    ids = JSON.parse(ids)
+    let tmp = {
+        id: '',
+        time: '',
+        image: '',
+        type,
+        director,
+        platform: '',
+        status: '',
+        definition: '',
+        category: '',
+        sale_reasons: '',
+        spu: '',
+        material: '',
+        specs: '',
+        cost_amount: 0,
+        retail_price: 0,
+        estimated_gross_margin: 0,
+        patent: '',
+        purchase_type: '',
+        num: 0,
+        link: '',
+        file: '',
+        is_seleted: '',
+        sale_amount: 0,
+        profit: 0
+    }
+    switch (type) {
+        case '市场分析推品':
+            if (ids.bpm.length)
+                info2 = await actHiProcinstRepo.getNewSctgDetail(ids.bpm.join('","'))
+            for (let i = 0; i < info2?.length; i++) {
+                if (info2[i].info) {
+                    let content = new ObjectInputStream(info2[i].info)
+                    content = content.readObject()
+                    content?.annotations.splice(0, 1)
+                    content = content?.annotations
+                    console.log(content)
+                    for (let j = 0; j < content.length; j++) {
+                        console.log(content)
+                    }
+                    content = new ObjectInputStream(info2[i].image)
+                    content = content.readObject()
+                    content?.annotations.splice(0, 1)
+                    content = content?.annotations
+                    console.log(content)
+                    for (let j = 0; j < content.length; j++) {
+                        console.log(content)
+                    }
+                }
+            }
+            break
+        case '自研推品':
+            if (ids.bpm.length)
+                info2 = await actHiProcinstRepo.getNewZyDetail(ids.bpm.join('","'))
+            for (let i = 0; i < info2?.length; i++) {
+                if (info2[i].info) {
+                    let content = new ObjectInputStream(info2[i].info)
+                    content = content.readObject()
+                    content?.annotations.splice(0, 1)
+                    content = content?.annotations
+                    console.log(content)
+                    for (let j = 0; j < content.length; j++) {
+                        console.log(content)
+                    }
+                    content = new ObjectInputStream(info2[i].image)
+                    content = content.readObject()
+                    content?.annotations.splice(0, 1)
+                    content = content?.annotations
+                    console.log(content)
+                    for (let j = 0; j < content.length; j++) {
+                        console.log(content)
+                    }
+                }
+            }
+            break
+        case 'IP推品':
+            if (ids.yida.length) {
+                info1 = await newFormsRepo.getIpDetail(ids.yida.join('","'))
+                for (let i = 0; i < info1?.length; i++) {
+                    if (i == 0 || info1[i].id != info1[i-1].id) {
+                        let item = JSON.parse(JSON.stringify(tmp))
+                        item.id = info1[i].id
+                        item.time = info1[i].time
+                        item.image = info1[i].image
+                        item.platform = info1[i].platform
+                        item.status = info1[i].status
+                        item.link = info1[i].link
+                        resultMap[info1[i].id] = result.length
+                        skuMap[info1[i].sku_id] = result.length
+                        result.push(item)
+                    } else {
+                        skuMap[info1[i].sku_id] = result.length - 1
+                    }
+                    skuids.push(info1[i].sku_id)
+                }
+            }
+            if (ids.bpm.length)
+                info2 = await actHiProcinstRepo.getNewIpDetail(ids.bpm.join('","'))
+            for (let i = 0; i < info2.length; i++) {
+                let item = JSON.parse(JSON.stringify(tmp))
+                item.id = info1[i].id
+                item.time = info1[i].time
+                item.image = info1[i].image
+                item.link = info1[i].link
+                resultMap[info1[i].id] = result.length
+                if (info2[i].info) {
+                    let content = new ObjectInputStream(info2[i].info)
+                    content = content.readObject()
+                    content?.annotations.splice(0, 1)
+                    content = content?.annotations
+                    for (let j = 0; j < content.length; j++) {
+                        content[j].annotations.splice(0, 1)
+                        for (let k = 0; k < content[j].annotations.length; k = k+2) {
+                            if (['F1ujma2exiosbcc', 'Fssama252xmjbzc', 'Fxx1ma3pg5efdec'].includes(content[j].annotations[k])) {
+                                skuids.push(content[j].annotations[k+1])
+                            } else {
+                                console.log(content[j].annotations[k], content[j].annotations[k+1])
+                            }
+                        }
+                    }
+                    content = new ObjectInputStream(info2[i].image)
+                    content = content.readObject()
+                    content?.annotations.splice(0, 1)
+                    content = content?.annotations
+                    if (content.length) {
+                        item.image = content[0]
+                    }
+                }
+                result.push(item)
+            }
+            break
+        case '反推推品':
+            if (ids.yida.length) {
+                info1 = await newFormsRepo.getFtDetail(ids.yida.join('","'))
+                for (let i = 0; i < info1.length; i++) {
+                    if (i == 0 || info1[i].id != info1[i-1].id) {
+                        let item = JSON.parse(JSON.stringify(tmp))
+                        item.id = info1[i].id
+                        item.time = info1[i].item
+                        item.image = info1[i].image
+                        item.platform = info1[i].platform
+                        item.status = info1[i].status
+                        item.link = info1[i].link
+                        resultMap[info1[i].id] = result.length
+                        skuMap[info1[i].sku_id] = result.length
+                        result.push(item)
+                    } else {
+                        skuMap[info1[i].sku_id] = result.length - 1
+                    }
+                    skuids.push(info1[i].sku_id)
+                }
+            }
+            if (ids.bpm.length)
+                info2 = await actHiProcinstRepo.getNewFtDetail(ids.bpm.join('","'))
+            for (let i = 0; i < info2.length; i++) {
+                if (info2[i].info) {
+                    let content = new ObjectInputStream(info2[i].info)
+                    content = content.readObject()
+                    content?.annotations.splice(0, 1)
+                    content = content?.annotations
+                    console.log(content)
+                    for (let j = 0; j < content.length; j++) {
+                        console.log(content)
+                    }
+                    content = new ObjectInputStream(info2[i].image)
+                    content = content.readObject()
+                    content?.annotations.splice(0, 1)
+                    content = content?.annotations
+                    console.log(content)
+                    for (let j = 0; j < content.length; j++) {
+                        console.log(content)
+                    }
+                }
+            }
+            break
+        case '供应商推品':
+            if (ids.yida.length) {
+                info1 = await newFormsRepo.getZtDetail(ids.yida.join('","'))
+                for (let i = 0; i < info1.length; i++) {
+                    if (i == 0 || info1[i].id != info1[i-1].id) {
+                        let item = JSON.parse(JSON.stringify(tmp))
+                        item.id = info1[i].id
+                        item.time = info1[i].item
+                        item.image = info1[i].image
+                        item.platform = info1[i].platform
+                        item.status = info1[i].status
+                        item.link = info1[i].link
+                        resultMap[info1[i].id] = result.length
+                        skuMap[info1[i].sku_id] = result.length
+                        result.push(item)
+                    } else {
+                        skuMap[info1[i].sku_id] = result.length - 1
+                    }
+                    skuids.push(info1[i].sku_id)
+                }
+            }
+            if (ids.bpm.length)
+                info2 = await actHiProcinstRepo.getNewGysDetail(ids.bpm.join('","'))
+            for (let i = 0; i < info2.length; i++) {
+                if (info2[i].info) {
+                    let content = new ObjectInputStream(info2[i].info)
+                    content = content.readObject()
+                    content?.annotations.splice(0, 1)
+                    content = content?.annotations
+                    console.log(content)
+                    for (let j = 0; j < content.length; j++) {
+                        console.log(content)
+                    }
+                    content = new ObjectInputStream(info2[i].image)
+                    content = content.readObject()
+                    content?.annotations.splice(0, 1)
+                    content = content?.annotations
+                    console.log(content)
+                    for (let j = 0; j < content.length; j++) {
+                        console.log(content)
+                    }
+                }
+            }
+            break
+        default:
+    }
+    switch (infoType) {
+        case 'create':
+            break
+        case 'running':
+            break
+        case 'reject':
+            break
+        case 'selected':
+            break
+        default:
     }
     return result
 }
