@@ -50,14 +50,6 @@ const getInquiryTodayjdDailyReport = async () => {
             return questionType.length > 0 ? { linkId: item.sku, questionType,listingInfo: item.listingInfo,operationsLeader : item.operationsLeader,code: item.code} : null;
         })
         .filter(item => item !== null);
-
-        const count = filteredResults.filter(item =>
-
-            Object.prototype.toString.call(item) === '[object Object]'
-            
-            ).length;
-            
-            console.log(count); 
     // 京东问题链接三天内 多选数据
     const bpmdata = await actHiProcinstRepo.getJDLinkOptimization()
     for (let i = 0; i < bpmdata.length; i++) {
