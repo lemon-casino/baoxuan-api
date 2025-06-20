@@ -44,4 +44,8 @@ router.get('/product-sales/fourth', developmentApi.getProductSalesFourth)
 router.get('/product-develop/info', developmentApi.getProductDevelopInfo)
 router.get('/product-develop/detail', developmentApi.getProductDevelopDetail)
 
+// 发货属性
+router.get('/product-attribute', developmentApi.getShippingAttribute)
+router.post('/product-attribute/upload', developmentApi.UploadShippingAttribute)
+
 module.exports = router
