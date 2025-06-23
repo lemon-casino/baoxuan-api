@@ -8,8 +8,10 @@ actHiProcinstRepo.getRunning = async (start, end) => {
         FROM ACT_HI_PROCINST P LEFT JOIN ACT_RE_PROCDEF D ON P.PROC_DEF_ID_ = D.ID_
         JOIN ACT_HI_TASKINST T ON T.PROC_INST_ID_ = P.PROC_INST_ID_ AND T.STATE_ = 'created'
         LEFT JOIN system_users U ON U.id = T.ASSIGNEE_
-        WHERE D.KEY_ IN ('gystplc', 'fttplc', 'sctgtplc') 
-            AND P.START_TIME_ BETWEEN "${start}" AND "${end}"`
+        WHERE D.KEY_ IN ('gystplc', 'fttplc', 'sctgtplc', 
+                'fantuituipin', 'iptplcxb', 'ziyantuipin', 'gongyingshangtuipin', 'shichangfenxituipin') 
+            AND P.START_TIME_ BETWEEN "${start}" AND "${end}" 
+            AND D.CATEGORY_ != 'ceshi'`
     let result = await query(sql)
     return result
 }
@@ -21,7 +23,7 @@ actHiProcinstRepo.getFinish = async (start, end) => {
             IF(V3.TEXT_, V3.TEXT_, V2.TEXT_) AS reason
         FROM ACT_HI_PROCINST P LEFT JOIN ACT_RE_PROCDEF D ON P.PROC_DEF_ID_ = D.ID_
         JOIN ACT_HI_VARINST V ON P.PROC_INST_ID_ = V.PROC_INST_ID_ 
-            AND V.NAME_ = 'PROCESS_STATUS' AND V.TEXT_ IN ('2','4')
+            AND V.NAME_ = 'PROCESS_STATUS' AND V.TEXT_ IN ('2','3','4')
         LEFT JOIN ACT_HI_VARINST V1 ON V1.PROC_INST_ID_ = P.PROC_INST_ID_
             AND V1.NAME_ IN ('Cfidcvooh9jnf', 'Cfidvu2osk3k9', 'Cfidzncsybu0e', 'Cfid1wglixgnx')
             AND V1.CREATE_TIME_ = (
@@ -37,8 +39,10 @@ actHiProcinstRepo.getFinish = async (start, end) => {
             )
         LEFT JOIN ACT_HI_VARINST V3 ON V3.PROC_INST_ID_ = P.PROC_INST_ID_
             AND V3.NAME_ = 'Fm06ma3kixpkj7c'
-        WHERE D.KEY_ IN ('gystplc', 'fttplc', 'sctgtplc') 
-            AND P.START_TIME_ BETWEEN "${start}" AND "${end}"`
+        WHERE D.KEY_ IN ('gystplc', 'fttplc', 'sctgtplc', 
+                'fantuituipin', 'iptplcxb', 'ziyantuipin', 'gongyingshangtuipin', 'shichangfenxituipin') 
+            AND P.START_TIME_ BETWEEN "${start}" AND "${end}"
+            AND D.CATEGORY_ != 'ceshi'`
     let result = await query(sql)
     return result
 }
@@ -57,13 +61,14 @@ actHiProcinstRepo.getFtInfo = async (userNames, start, end) => {
                     AND t1.NAME_ = t.NAME_
             ))
         LEFT JOIN ACT_HI_TASKINST t2 ON t2.PROC_INST_ID_ = p.PROC_INST_ID_
-            AND t2.NAME_ = '反选运营确认样品是否选中'
+            AND t2.NAME_ IN ('反选运营确认样品是否选中', '事业部一样品是否选中', '事业部二样品是否选中', '事业部三样品是否选中')
         LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
             AND v1.NAME_ = 'TASK_STATUS' AND v1.TASK_ID_ = t2.ID_ 
         LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND v2.NAME_ = 'Fy6xma3jakboekc' AND v2.TASK_ID_ = t2.ID_ 
         JOIN system_users u ON u.id = t.ASSIGNEE_ AND u.nickname in ("${userNames}") 
-        WHERE d.KEY_ = 'fttplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        WHERE d.KEY_ IN ('fttplc', 'fantuituipin') AND p.START_TIME_ BETWEEN ? AND ? 
+            AND d.CATEGORY_ != 'ceshi'
         GROUP BY IF(v.TEXT_ = '3', 2, IF(v1.TEXT_ = '2', 1, 0)), v2.TEXT_`
     let result = await query(sql, [start, end])
     return result
@@ -83,12 +88,13 @@ actHiProcinstRepo.getFtDetail = async (ids) => {
                     AND t1.NAME_ = t.NAME_
             ))
         LEFT JOIN ACT_HI_TASKINST t2 ON t2.PROC_INST_ID_ = p.PROC_INST_ID_
-            AND t2.NAME_ = '反选运营确认样品是否选中'
+            AND t2.NAME_ IN ('反选运营确认样品是否选中', '事业部一样品是否选中', '事业部二样品是否选中', '事业部三样品是否选中')
         LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
             AND v1.NAME_ = 'TASK_STATUS' AND v1.TASK_ID_ = t2.ID_ 
         LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND v2.NAME_ = 'Fy6xma3jakboekc' AND v2.TASK_ID_ = t2.ID_ 
-        WHERE d.KEY_ = 'fttplc' AND p.PROC_INST_ID_ IN ("${ids}") 
+        WHERE d.KEY_ IN ('fttplc', 'fantuituipin') AND p.PROC_INST_ID_ IN ("${ids}") 
+            AND d.CATEGORY_ != 'ceshi'
         GROUP BY IF(v.TEXT_ = '3', 2, IF(v1.TEXT_ = '2', 1, 0)), v2.TEXT_`
     let result = await query(sql, [start, end])
     return result
@@ -122,7 +128,8 @@ actHiProcinstRepo.getNewFtInfo = async (start, end) => {
                 WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
                 AND v2.NAME_ IN ('Fxfrma3j75fse7c', 'F6c5mbuidfzfqjc', 'F64jmbuie9olqmc', 'Fxkxmbuiecz2qpc') 
             )
-        WHERE d.KEY_ = 'fttplc' AND p.START_TIME_ BETWEEN ? AND ?`
+        WHERE d.KEY_ IN ('fttplc', 'fantuituipin') AND p.START_TIME_ BETWEEN ? AND ?
+            AND d.CATEGORY_ != 'ceshi'`
     let result = await query(sql, [start, end])
     return result
 }
@@ -149,7 +156,8 @@ actHiProcinstRepo.getNewFtDetail = async (ids) => {
                 WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v3.NAME_
             )
         LEFT JOIN ACT_GE_BYTEARRAY b1 ON b1.ID_ = v3.BYTEARRAY_ID_ 
-        WHERE d.KEY_ = 'fttplc' AND p.PROC_INST_ID_ IN ("${ids}")`
+        WHERE d.KEY_ IN ('fttplc', 'fantuituipin') AND p.PROC_INST_ID_ IN ("${ids}")
+            AND d.CATEGORY_ != 'ceshi'`
     let result = await query(sql)
     return result
 }
@@ -189,7 +197,8 @@ actHiProcinstRepo.getGysInfo = async (userNames, start, end) => {
             AND v3.TASK_ID_ IS NULL 
             AND v3.NAME_ = 'Fiaama25b6zidec' 
         JOIN system_users u ON u.id = p.START_USER_ID_ AND u.nickname in ("${userNames}") 
-        WHERE d.KEY_ = 'gystplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        WHERE d.KEY_ IN ('gystplc', 'gongyingshangtuipin') AND p.START_TIME_ BETWEEN ? AND ? 
+            AND d.CATEGORY_ != 'ceshi'
         GROUP BY IF(v.TEXT_ = '3', 2, IF(v1.TEXT_ IS NULL OR v2.TEXT_ IS NULL OR v3.TEXT_ IS NULL, 0, 1))`
     let result = await query(sql, [start, end])
     return result
@@ -211,7 +220,8 @@ actHiProcinstRepo.getNewGysInfo = async (start, end) => {
                 WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
                 AND v2.NAME_ IN ('Fmtama25a3lrcwc', 'Fkyuma25az2ud8c', 'Fiaama25b6zidec') 
             )
-        WHERE d.KEY_ = 'gystplc' AND p.START_TIME_ BETWEEN ? AND ?`
+        WHERE d.KEY_ IN ('gystplc', 'gongyingshangtuipin') AND p.START_TIME_ BETWEEN ? AND ?
+            AND d.CATEGORY_ != 'ceshi'`
     let result = await query(sql, [start, end])
     return result
 }
@@ -238,7 +248,8 @@ actHiProcinstRepo.getNewGysDetail = async (ids) => {
                 WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v3.NAME_
             )
         LEFT JOIN ACT_GE_BYTEARRAY b1 ON b1.ID_ = v3.BYTEARRAY_ID_ 
-        WHERE d.KEY_ = 'gystplc' AND p.PROC_INST_ID_ IN ("${ids}")`
+        WHERE d.KEY_ IN ('gystplc', 'gongyingshangtuipin') AND p.PROC_INST_ID_ IN ("${ids}")
+            AND d.CATEGORY_ != 'ceshi'`
     let result = await query(sql)
     return result
 }
@@ -252,7 +263,8 @@ actHiProcinstRepo.getZyInfo = async (userNames, start, end) => {
         JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
             AND v1.NAME_ = 'Cfidbw9ff40k6' 
         JOIN system_users u ON u.id = v1.TEXT_ AND u.nickname in ("${userNames}") 
-        WHERE d.KEY_ = 'zytplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        WHERE d.KEY_ IN ('zytplc', 'ziyantuipin') AND p.START_TIME_ BETWEEN ? AND ? 
+            AND d.CATEGORY_ != 'ceshi'
         GROUP BY IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0))`
     let result = await query(sql, [start, end])
     return result
@@ -274,7 +286,8 @@ actHiProcinstRepo.getNewZyInfo = async (start, end) => {
                 WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
                 AND v2.NAME_ IN ('Fzmjma3pe3tnclc', 'F2lmma3petqpcwc', 'F34mma3pf0egd0c') 
             )
-        WHERE d.KEY_ = 'zytplc' AND p.START_TIME_ BETWEEN ? AND ?`
+        WHERE d.KEY_ IN ('zytplc', 'ziyantuipin') AND p.START_TIME_ BETWEEN ? AND ?
+            AND d.CATEGORY_ != 'ceshi'`
     let result = await query(sql, [start, end])
     return result
 }
@@ -301,7 +314,8 @@ actHiProcinstRepo.getNewZyDetail = async (ids) => {
                 WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v3.NAME_
             )
         LEFT JOIN ACT_GE_BYTEARRAY b1 ON b1.ID_ = v3.BYTEARRAY_ID_ 
-        WHERE d.KEY_ = 'zytplc' AND p.PROC_INST_ID_ IN ("${ids}")`
+        WHERE d.KEY_ IN ('zytplc', 'ziyantuipin') AND p.PROC_INST_ID_ IN ("${ids}")
+            AND d.CATEGORY_ != 'ceshi'`
     let result = await query(sql)
     return result
 }
@@ -315,7 +329,8 @@ actHiProcinstRepo.getIpInfo = async (userNames, start, end) => {
         JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
             AND v1.NAME_ = 'Cfidaq7mz3963' 
         JOIN system_users u ON u.id = v1.TEXT_ AND u.nickname in ("${userNames}") 
-        WHERE d.KEY_ = 'iptplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        WHERE d.KEY_ IN ('iptplc', 'iptplcxb') AND p.START_TIME_ BETWEEN ? AND ? 
+            AND d.CATEGORY_ != 'ceshi'
         GROUP BY IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0))`
     let result = await query(sql, [start, end])
     return result
@@ -337,7 +352,8 @@ actHiProcinstRepo.getNewIpInfo = async (start, end) => {
                 WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
                 AND v2.NAME_ IN ('Fzmjma3pe3tnclc', 'F2lmma3petqpcwc', 'F34mma3pf0egd0c') 
             )
-        WHERE d.KEY_ = 'iptplc' AND p.START_TIME_ BETWEEN ? AND ?`
+        WHERE d.KEY_ IN ('iptplc', 'iptplcxb') AND p.START_TIME_ BETWEEN ? AND ?
+            AND d.CATEGORY_ != 'ceshi'`
     let result = await query(sql, [start, end])
     return result
 }
@@ -364,7 +380,8 @@ actHiProcinstRepo.getNewIpDetail = async (ids) => {
                 WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v3.NAME_
             )
         LEFT JOIN ACT_GE_BYTEARRAY b1 ON b1.ID_ = v3.BYTEARRAY_ID_ 
-        WHERE d.KEY_ = 'iptplc' AND p.PROC_INST_ID_ IN ("${ids}")`
+        WHERE d.KEY_ IN ('iptplc', 'iptplcxb') AND p.PROC_INST_ID_ IN ("${ids}")
+            AND d.CATEGORY_ != 'ceshi'`
     let result = await query(sql)
     return result
 }
@@ -376,7 +393,8 @@ actHiProcinstRepo.getSctgInfo = async (userNames, start, end) => {
             AND v.NAME_ = 'PROCESS_STATUS' 
             AND v.TEXT_ NOT IN ('-1', '4') 
         JOIN system_users u ON u.id = p.START_USER_ID_ AND u.nickname in ("${userNames}") 
-        WHERE d.KEY_ = 'sctgtplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') AND p.START_TIME_ BETWEEN ? AND ? 
+            AND d.CATEGORY_ != 'ceshi'
         GROUP BY IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0))`
     let result = await query(sql, [start, end])
     return result
@@ -398,7 +416,8 @@ actHiProcinstRepo.getNewSctgInfo = async (start, end) => {
                 WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
                 AND v2.NAME_ IN ('Fzmjma3pe3tnclc', 'F2lmma3petqpcwc', 'F34mma3pf0egd0c') 
             )
-        WHERE d.KEY_ = 'sctgtplc' AND p.START_TIME_ BETWEEN ? AND ?`
+        WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') AND p.START_TIME_ BETWEEN ? AND ?
+            AND d.CATEGORY_ != 'ceshi'`
     let result = await query(sql, [start, end])
     return result
 }
@@ -425,7 +444,8 @@ actHiProcinstRepo.getNewSctgDetail = async (ids) => {
                 WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ = v3.NAME_
             )
         LEFT JOIN ACT_GE_BYTEARRAY b1 ON b1.ID_ = v3.BYTEARRAY_ID_ 
-        WHERE d.KEY_ = 'sctgtplc' AND p.PROC_INST_ID_ IN ("${ids}")`
+        WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') AND p.PROC_INST_ID_ IN ("${ids}")
+            AND d.CATEGORY_ != 'ceshi'`
     let result = await query(sql)
     return result
 }
@@ -449,8 +469,9 @@ actHiProcinstRepo.getFtDetail = async (status, userNames, start, end) => {
         LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND v2.NAME_ = 'Fy6xma3jakboekc' AND v2.TASK_ID_ = t2.ID_
         JOIN system_users u ON u.id = t.ASSIGNEE_ AND u.nickname in ("${userNames}") 
-        WHERE d.KEY_ = 'fttplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        WHERE d.KEY_ IN ('fttplc', 'fantuituipin') AND p.START_TIME_ BETWEEN ? AND ? 
             AND IF(v.TEXT_ = '3', 2, IF(v1.TEXT_ = '2', 1, 0)) = ?
+            AND d.CATEGORY_ != 'ceshi'
         GROUP BY u.nickname, v2.TEXT_`
     let result = await query(sql, [start, end, status])
     return result
@@ -490,8 +511,9 @@ actHiProcinstRepo.getGysDetail = async (status, userNames, start, end) => {
             AND v3.TASK_ID_ IS NULL 
             AND v3.NAME_ = 'Fiaama25b6zidec' 
         JOIN system_users u ON u.id = p.START_USER_ID_ AND u.nickname in ("${userNames}") 
-        WHERE d.KEY_ = 'gystplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        WHERE d.KEY_ IN ('gystplc', 'gongyingshangtuipin') AND p.START_TIME_ BETWEEN ? AND ? 
             AND IF(v.TEXT_ = '3', 2, IF(v1.TEXT_ IS NULL OR v2.TEXT_ IS NULL OR v3.TEXT_ IS NULL, 0, 1)) = ? 
+            AND d.CATEGORY_ != 'ceshi'
         GROUP BY u.nickname`
     let result = await query(sql, [start, end, status])
     return result
@@ -506,8 +528,9 @@ actHiProcinstRepo.getZyDetail = async (status, userNames, start, end) => {
         JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
             AND v1.NAME_ = 'Cfidbw9ff40k6' 
         JOIN system_users u ON u.id = v1.TEXT_ AND u.nickname in ("${userNames}") 
-        WHERE d.KEY_ = 'zytplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        WHERE d.KEY_ IN ('zytplc', 'ziyantuipin') AND p.START_TIME_ BETWEEN ? AND ? 
             AND IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0)) = ? 
+            AND d.CATEGORY_ != 'ceshi'
         GROUP BY v1.TEXT_`
     let result = await query(sql, [start, end, status])
     return result
@@ -522,8 +545,9 @@ actHiProcinstRepo.getIpDetail = async (status, userNames, start, end) => {
         JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND v1.NAME_ = 'Cfidaq7mz3963' 
         JOIN system_users u ON u.id = v1.TEXT_ AND u.nickname in ("${userNames}") 
-        WHERE d.KEY_ = 'iptplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        WHERE d.KEY_ IN ('iptplc', 'iptplcxb') AND p.START_TIME_ BETWEEN ? AND ? 
             AND IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0)) = ? 
+            AND d.CATEGORY_ != 'ceshi'
         GROUP BY v1.TEXT_`
     let result = await query(sql, [start, end, status])
     return result
@@ -536,20 +560,21 @@ actHiProcinstRepo.getSctgDetail = async (status, userNames, start, end) => {
             AND v.NAME_ = 'PROCESS_STATUS' 
             AND v.TEXT_ NOT IN ('-1', '4') 
         JOIN system_users u ON u.id = p.START_USER_ID_ AND u.nickname in ("${userNames}") 
-        WHERE d.KEY_ = 'sctgtplc' AND p.START_TIME_ BETWEEN ? AND ? 
+        WHERE d.KEY_ IN ('sctgtplc', 'gongyingshangtuipin') AND p.START_TIME_ BETWEEN ? AND ? 
             AND IF(v.TEXT_ = '3', 2, IF(v.TEXT_ = '2', 1, 0)) = ? 
+            AND d.CATEGORY_ != 'ceshi'
         GROUP BY p.START_USER_ID_`
     let result = await query(sql, [start, end, status])
     return result
 }
 
 actHiProcinstRepo.getProductDevelopInfo = async (start, end, type, order) => {
-    let order_info = 'p.ID_', keys = "'gystplc', 'fttplc', 'sctgtplc', 'zytplc', 'iptpc'"
-    if (type == '1') keys = "'sctgtplc'"
-    else if (type == '2') keys = "'zytplc'"
-    else if (type == '3') keys = "'iptpc'"
-    else if (type == '4') keys = "'fttplc'"
-    else if (type == '5') keys = "'gystplc'"
+    let order_info = 'p.ID_', keys = "'gystplc', 'fttplc', 'sctgtplc', 'zytplc', 'iptpc', 'fantuituipin', 'iptplcxb', 'ziyantuipin', 'gongyingshangtuipin', 'shichangfenxituipin'"
+    if (type == '1') keys = "'sctgtplc', 'shichangfenxituipin'"
+    else if (type == '2') keys = "'zytplc', 'ziyantuipin'"
+    else if (type == '3') keys = "'iptpc', 'iptplcxb'"
+    else if (type == '4') keys = "'fttplc', 'fantuituipin'"
+    else if (type == '5') keys = "'gystplc', 'gongyingshangtuipin'"
     if (order == 1) order_info = 't2.ASSIGNEE_'
     let sql = `SELECT p.ID_ AS id, t.LAST_UPDATED_TIME_ AS operate_time, b.BYTES_ AS info, 
             (SELECT nickname FROM system_users WHERE t2.ASSIGNEE_ = id) AS nickname, v3.TEXT_ AS line_brief_name, 
@@ -584,19 +609,19 @@ actHiProcinstRepo.getProductDevelopInfo = async (start, end, type, order) => {
                 SELECT MAX(v1.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v1 
                 WHERE v1.PROC_INST_ID_ = p.PROC_INST_ID_ AND v1.NAME_ = v3.NAME_ 
             )
-        WHERE d.KEY_ IN (${keys}) 
+        WHERE d.KEY_ IN (${keys}) AND d.CATEGORY_ != 'ceshi'
         ORDER BY ${order_info}`
     let result = await query(sql)
     return result
 }
 
 actHiProcinstRepo.getProductSkuId = async (start, type) => {
-    let keys = "'gystplc', 'fttplc', 'sctgtplc', 'zytplc', 'iptpc'"
-    if (type == '1') keys = "'sctgtplc'"
-    else if (type == '2') keys = "'zytplc'"
-    else if (type == '3') keys = "'iptpc'"
-    else if (type == '4') keys = "'fttplc'"
-    else if (type == '5') keys = "'gystplc'"
+    let keys = "'gystplc', 'fttplc', 'sctgtplc', 'zytplc', 'iptpc', 'fantuituipin', 'iptplcxb', 'ziyantuipin', 'gongyingshangtuipin', 'shichangfenxituipin'"
+    if (type == '1') keys = "'sctgtplc', 'shichangfenxituipin'"
+    else if (type == '2') keys = "'zytplc', 'ziyantuipin'"
+    else if (type == '3') keys = "'iptpc', 'iptplcxb'"
+    else if (type == '4') keys = "'fttplc', 'fantuituipin'"
+    else if (type == '5') keys = "'gystplc', 'gongyingshangtuipin'"
     let sql = `SELECT b.BYTES_ AS info FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_
         JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
             AND v.NAME_ IN ('Fcilma2exazkb7c', 'Fig2ma24zzz9brc', 'F6gkma3pfcjfd1c')
@@ -612,18 +637,18 @@ actHiProcinstRepo.getProductSkuId = async (start, type) => {
                 SELECT MAX(t1.LAST_UPDATED_TIME_) FROM ACT_HI_TASKINST t1 
                 WHERE t1.PROC_INST_ID_ = p.PROC_INST_ID_ AND t1.NAME_ = t.NAME_ AND t.ASSIGNEE_ IS NOT NULL 
             ) AND t.LAST_UPDATED_TIME_ <= '${start}'
-        WHERE d.KEY_ IN (${keys})`
+        WHERE d.KEY_ IN (${keys}) AND d.CATEGORY_ != 'ceshi'`
     let result = await query(sql)
     return result
 }
 
 actHiProcinstRepo.getProductDeveloper = async (start, end, type, name) => {
-    let keys = "'gystplc', 'fttplc', 'sctgtplc', 'zytplc', 'iptpc'"
-    if (type == '1') keys = "'sctgtplc'"
-    else if (type == '2') keys = "'zytplc'"
-    else if (type == '3') keys = "'iptpc'"
-    else if (type == '4') keys = "'fttplc'"
-    else if (type == '5') keys = "'gystplc'"
+    let keys = "'gystplc', 'fttplc', 'sctgtplc', 'zytplc', 'iptpc', 'fantuituipin', 'iptplcxb', 'ziyantuipin', 'gongyingshangtuipin', 'shichangfenxituipin'"
+    if (type == '1') keys = "'sctgtplc', 'shichangfenxituipin'"
+    else if (type == '2') keys = "'zytplc', 'ziyantuipin'"
+    else if (type == '3') keys = "'iptpc', 'iptplcxb'"
+    else if (type == '4') keys = "'fttplc', 'fantuituipin'"
+    else if (type == '5') keys = "'gystplc', 'gongyingshangtuipin'"
     let sql = `SELECT COUNT(1) AS count FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_
         LEFT JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
             AND v.NAME_ IN (
@@ -660,9 +685,9 @@ actHiProcinstRepo.getProductDeveloper = async (start, end, type, name) => {
                                 AND t.START_TIME_ = (
                                     SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                                     WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ AND tt.NAME_ = t.NAME_)), 1))))
-        WHERE d.KEY_ IN (${keys}) AND IF(d.KEY_ = 'fttplc', v.TEXT_ IS NOT NULL, 
-				IF(d.KEY_ IN ('gystplc', 'sctgtplc'), v.TEXT_ IS NOT NULL, 1) 
-                AND p.START_TIME_ BETWEEN '${start}' AND '${end}')
+        WHERE d.KEY_ IN (${keys}) AND IF(d.KEY_ IN ('fttplc', 'fantuituipin'), v.TEXT_ IS NOT NULL, 
+				IF(d.KEY_ IN ('gystplc', 'sctgtplc', 'gongyingshangtuipin', 'shichangfenxituipin'), v.TEXT_ IS NOT NULL, 1) 
+                AND p.START_TIME_ BETWEEN '${start}' AND '${end}') AND d.CATEGORY_ != 'ceshi'
 			AND (SELECT u.nickname FROM system_users u 
                 WHERE u.id = IF(v.TEXT_ IS NOT NULL, v.TEXT_, p.START_USER_ID_)) = '${name}'`
     let result = await query(sql)

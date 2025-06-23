@@ -33,11 +33,6 @@ const combinationProductCodeRepo = require('@/repository/danpin/combinationProdu
 
 developmentService.getDataStats = async (type, start, end, month, timeType, project, process) => {
     let result = []
-    // let info = `${type}-${start}-${end}-${month}`
-    // let key = crypto.createHash('md5').update(info).digest('hex')
-    // key = `${redisKeys.development}:${key}`
-    // result = await redisUtil.get(key)
-    // if (result) return JSON.parse(result)
     switch(type) {
         case '1':
             result = await developmentService.getFlows(start, end)
@@ -57,7 +52,6 @@ developmentService.getDataStats = async (type, start, end, month, timeType, proj
         default:
 
     }
-    // redisUtil.set(key, JSON.stringify(result), 3600)
     return result
 }
 
