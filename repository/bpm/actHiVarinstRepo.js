@@ -45,8 +45,8 @@ actHiVarinstRepo.getProjectSkuInfo = async (time) => {
         LEFT JOIN ACT_HI_PROCINST p ON p.PROC_INST_ID_ = v.PROC_INST_ID_ 
         LEFT JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
         LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v.BYTEARRAY_ID_
-        WHERE d.KEY_ = 'sctgtplc' AND v.NAME_ = 'F6gkma3pfcjfd1c' 
-            AND p.START_TIME_ < ?
+        WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') AND v.NAME_ = 'F6gkma3pfcjfd1c' 
+            AND p.START_TIME_ < ? AND d.CATEGORY_ != 'ceshi'
         ORDER BY p.START_USER_ID_ DESC`
     let result = await query(sql, [time])
     return result
@@ -58,8 +58,8 @@ actHiVarinstRepo.getSelfSkuInfo = async (time) => {
         LEFT JOIN ACT_HI_PROCINST p ON p.PROC_INST_ID_ = v.PROC_INST_ID_ 
         LEFT JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
         LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v.BYTEARRAY_ID_
-        WHERE d.KEY_ = 'zytplc' AND v.NAME_ = 'F6gkma3pfcjfd1c' 
-            AND p.START_TIME_ < ? AND p.START_USER_ID_ IN (177,186,207,243)
+        WHERE d.KEY_ IN ('zytplc', 'ziyantuipin') AND v.NAME_ = 'F6gkma3pfcjfd1c' 
+            AND p.START_TIME_ < ? AND p.START_USER_ID_ IN (177,186,207,243) AND d.CATEGORY_ != 'ceshi' 
         ORDER BY p.START_USER_ID_ DESC`
     let result = await query(sql, [time])
     return result
@@ -71,8 +71,8 @@ actHiVarinstRepo.getIpSkuInfo = async (time) => {
         LEFT JOIN ACT_HI_PROCINST p ON p.PROC_INST_ID_ = v.PROC_INST_ID_ 
         LEFT JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
         LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v.BYTEARRAY_ID_
-        WHERE d.KEY_ = 'iptplc' AND v.NAME_ = 'F6gkma3pfcjfd1c' 
-            AND p.START_TIME_ < ? AND p.START_USER_ID_ IN (177,186,207,243)
+        WHERE d.KEY_ IN ('iptplc', 'iptplcxb') AND v.NAME_ = 'F6gkma3pfcjfd1c' 
+            AND p.START_TIME_ < ? AND p.START_USER_ID_ IN (177,186,207,243) AND d.CATEGORY_ != 'ceshi' 
         ORDER BY p.START_USER_ID_ DESC`
     let result = await query(sql, [time])
     return result
@@ -86,9 +86,9 @@ actHiVarinstRepo.getOperatorSkuInfo = async (time) => {
         LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v.BYTEARRAY_ID_ 
         LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = v.PROC_INST_ID_ 
 			AND v1.NAME_ = 'Fm06ma3kixpkj7c' 
-        WHERE d.KEY_ = 'fttplc' AND v.NAME_ IN 
+        WHERE d.KEY_ IN ('fttplc', 'fantuituipin') AND v.NAME_ IN 
             ('Cfidcvooh9jnf', 'Cfidvu2osk3k9', 'Cfidzncsybu0e', 'Cfid1wglixgnx') 
-            AND p.START_TIME_ < ? AND v1.TEXT_ IS NULL
+            AND p.START_TIME_ < ? AND v1.TEXT_ IS NULL AND d.CATEGORY_ != 'ceshi' 
         ORDER BY v.TEXT_ DESC`
     let result = await query(sql, [time])
     return result
@@ -100,8 +100,8 @@ actHiVarinstRepo.getSupplierSkuInfo = async (time) => {
         LEFT JOIN ACT_HI_PROCINST p ON p.PROC_INST_ID_ = v.PROC_INST_ID_ 
         LEFT JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_
         LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v.BYTEARRAY_ID_
-        WHERE d.KEY_ = 'gystplc' AND v.NAME_ = 'Fig2ma24zzz9brc' 
-            AND p.START_TIME_ < ? AND p.START_USER_ID_ IN (177,186,207,243) 
+        WHERE d.KEY_ IN ('gystplc', 'gongyingshangtuipin') AND v.NAME_ = 'Fig2ma24zzz9brc' 
+            AND p.START_TIME_ < ? AND p.START_USER_ID_ IN (177,186,207,243) AND d.CATEGORY_ != 'ceshi' 
         ORDER BY p.START_USER_ID_ DESC`
     let result = await query(sql, [time])
     return result
