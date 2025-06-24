@@ -2731,7 +2731,7 @@ const checkOperationOptimize = async () => {
                     } else {
                         params[optimizeFieldMap.is_old] = goodsIsOldMap[1]
                     }
-                    switch (goods_info[i].product_rank) {
+                    switch (goods_info[i].product_rank.replace(' ', '')) {
                         case 'S:1万':
                         case 'S(月销20w以上)':
                             params[optimizeFieldMap.rank] = goodsRankMap.S
@@ -2751,6 +2751,7 @@ const checkOperationOptimize = async () => {
                             break
                         default:
                     }
+                    // console.log(goods_info[i].product_rank, params[optimizeFieldMap.rank])
                     params[optimizeFieldMap.name] = goods_info[i].brief_name
                     params[optimizeFieldMap.operator] = user[0].id
                     params[optimizeFieldMap.goods_id] = goods_info[i].goods_id
