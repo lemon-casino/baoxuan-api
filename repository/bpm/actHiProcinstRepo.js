@@ -763,7 +763,7 @@ actHiProcinstRepo.getJDLinkOptimization = async() =>{
 
 actHiProcinstRepo.checkOptimize = async (goods_id, title, days) => {
     const sql = `SELECT p.PROC_INST_ID_ FROM ACT_HI_PROCINST p 
-        JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_INST_ID_ 
+        JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
         JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND v.NAME_ = 'multiSelectField_lwufb7oy' 
             AND v.LAST_UPDATED_TIME_ = (
@@ -780,10 +780,10 @@ actHiProcinstRepo.checkOptimize = async (goods_id, title, days) => {
             AND v2.NAME_ = 'PROCESS_STATUS' 
             AND v2.TEXT_ IN ('1', '2') 
         WHERE d.KEY_ = 'form-86' 
-            AND DATE_SUB(NOW(), INTERVAL ${days} DAY) < (
+            AND (DATE_SUB(NOW(), INTERVAL ${days} DAY) < (
                 SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
                 WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_
-            ) AND v.TEXT_ = '${title}' AND v1.TEXT_ = '${goods_id}' LIMIT 1`
+            ) OR v2.TEXT_ = '1') AND v.TEXT_ = '${title}' AND v1.TEXT_ = '${goods_id}' LIMIT 1`
     const result = await query(sql)
     return result || []
 }
