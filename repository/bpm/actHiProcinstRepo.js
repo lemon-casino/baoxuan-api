@@ -755,8 +755,10 @@ actHiProcinstRepo.getJDLinkOptimization = async() =>{
         on v1.PROC_INST_ID_ = p.PROC_INST_ID_ AND v1.NAME_ ='checkboxField_m11r277t'
         left join ACT_HI_VARINST v2
         on v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.NAME_ ='textField_lma827od'
+		left join ACT_HI_VARINST v3
+        on v3.PROC_INST_ID_ = p.PROC_INST_ID_ AND v3.NAME_ ='PROCESS_STATUS'
         join ACT_GE_BYTEARRAY b on b.ID_ = v1.BYTEARRAY_ID_ 
-        WHERE d.KEY_ ='form-42' and p.START_TIME_ >= DATE_SUB(DATE(NOW()),INTERVAL 3 day)`
+        WHERE d.KEY_ ='form-42' and p.START_TIME_ >= DATE_SUB(DATE(NOW()),INTERVAL 3 day) and v3.TEXT_ != "4"`
     let result = await query(sql)
     return result
 }

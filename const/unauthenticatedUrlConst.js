@@ -54,5 +54,6 @@ module.exports = [
     '/development/running-process',
     '/development/finish-process',
     '/hr/recruit/advise-output',
+    '/operation/ghyx-promotion-info/import',
     /^\/download\/.*/,
 ]
