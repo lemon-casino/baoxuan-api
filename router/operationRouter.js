@@ -63,6 +63,10 @@ router.post('/refresh-verified-labor-cost', operationApi.refreshVerifiedLaborCos
 
 //天猫单渠道推广
 router.post('/tmall-promotion-info/import', operationApi.importTmallpromotioninfo)
+
+//国货严选推广
+router.post('/ghyx-promotion-info/import',operationApi.importGhyxpromotioninfo)
+
 //首页销售数据
 router.get('/sale_data', operationApi.getSaleData)
 router.get('/inventory-data', operationApi.getInventoryData)

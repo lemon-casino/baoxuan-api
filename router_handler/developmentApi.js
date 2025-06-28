@@ -1,8 +1,11 @@
 const biResponse = require("../utils/biResponse")
 const joiUtil = require("../utils/joiUtil")
 const developmentService = require('../service/developmentService')
+const ShippingAttributeService = require('../service/development/shippingattribute')
 const moment = require('moment')
 const ExcelJS = require('exceljs')
+const formidable = require("formidable")
+const fs = require('fs')
 const { result } = require("lodash")
 
 const getWorkPannel = async (req, res, next) => {
@@ -435,6 +438,51 @@ const getProductDevelopDirectorSales = async (req, res, next) => {
     }
 }
 
+const UploadShippingAttribute = async (req, res, next) => {
+    try {
+        console.log('调用了')
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.xlsx.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await ShippingAttributeService.UploadShippingAttribute(rows)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success({ code: 200, data: "文件上传并解析成功!" }))
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getShippingAttribute = async (req, res, next) => {
+    try {
+        let result = await ShippingAttributeService.getShippingAttribute()
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getWorkPannel, 
     getWorkDetail,
@@ -459,5 +507,7 @@ module.exports = {
     getProductDevelopInfoDetail,
     getProductDevelopSales,
     getProductDevelopSalesDetail,
-    getProductDevelopDirectorSales
+    getProductDevelopDirectorSales,
+    UploadShippingAttribute,
+    getShippingAttribute
 }

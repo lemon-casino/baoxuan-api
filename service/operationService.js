@@ -3441,7 +3441,7 @@ const getInventoryData = async(day,day7,day30,day31) => {
     result[0].total_inventory_cost=(data1[0].total_inventory_cost/10000).toFixed(1)
     result[0].stock_sale7=(data1[0].Current_inventory_cost/data3[0].cost_avg).toFixed(0)
     result[0].stock_sale30=(data1[0].Current_inventory_cost/data4[0].cost_avg).toFixed(0)
-    result[0].sell_through_rate=(data5[0].sale_qty/(data1[0].Total_inventory+data5[0].sale_qty)*100).toFixed(1)
+    result[0].sell_through_rate=(data5[0].sale_qty/(parseInt(data1[0].Total_inventory)+data5[0].sale_qty)*100).toFixed(1)
     result[0].inventory_turnover=(data4[0].cost/(data1[0].Current_inventory_cost+data2[0].Current_inventory_cost)*100).toFixed(1)
     result[0].gross_margin7=((data3[0].sale-data3[0].cost)/data3[0].sale*100).toFixed(1)
     result[0].gross_margin30=((data4[0].sale-data4[0].cost)/data4[0].sale*100).toFixed(1)
@@ -3792,6 +3792,77 @@ const getShopSaleQtyData = async(day,day7,day30,day31) => {
     return result
 }
 
+const importGhyxpromotioninfo = async (rows, time, promotion_name) => {
+    let count = 0, data = [], result = false,data1=[],
+        result1 = false,data2=[],result2 = false
+    let columns = rows[0].values,
+        amount_row = null, 
+        shop_name = '淘工厂国货严选店',
+        sku_id = null,
+        date = time
+    console.log(columns)
+    if (promotion_name == '充值加码消耗') {
+        goods_id = '123456789'
+    } else if(promotion_name == '预算消耗') {
+        goods_id = '123456781'
+    }
+    for (let i = 1; i < columns.length; i++) {
+        if (columns[i] == '金额') {
+            amount_row = i
+            continue
+        }
+    }
+    for (let i = 1; i < rows.length; i++) {
+        let amount = parseFloat(rows[i].getCell(amount_row).value || 0)
+        if (amount == 0) continue
+        data.push(
+            goods_id,
+            sku_id,
+            shop_name,
+            promotion_name,
+            amount,
+            date
+        )
+        data1.push(
+            goods_id,
+            null,
+            promotion_name,
+            promotion_name,
+            shop_name,
+            17931539,
+            promotion_name,
+            date,
+            0,0,0,0,0,
+            0-amount,0,
+            amount,0,
+            amount,0,
+            0,0,0,0,0
+        )
+        data2.push(
+            goods_id,
+            null,
+            shop_name,
+            date,
+            0,0,0,0,0-amount,
+            amount,0,amount,0,0,
+            0,0,0
+        )
+        count += 1
+    }
+    logger.info(`[国货严选推广数据导入]：时间:${date}, 总计数量:${count}`)
+
+    if (count > 0) {
+        await goodsPromotionRepo.deleteByDate(date, promotion_name)
+        result1 = await goodsPromotionRepo.batchInsert(count, data)
+        await goodsSaleInfoRepo.deleteByDateId(date,goods_id)
+        result = await goodsSaleInfoRepo.batchInsert(count,data1)
+        await goodsSaleVerifiedRepo.deleteByDateId(date,goods_id)
+        result2 = await goodsSaleVerifiedRepo.batchInsert(count,data2)
+    }
+    
+    return result
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -3848,5 +3919,6 @@ module.exports = {
     getProjectSaleData,
     getProjectSaleQtyData,
     getShopSaleData,
-    getShopSaleQtyData
+    getShopSaleQtyData,
+    importGhyxpromotioninfo
 }
