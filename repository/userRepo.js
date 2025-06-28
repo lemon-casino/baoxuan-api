@@ -325,6 +325,15 @@ const getMobileByUserId = async (user_id) => {
     return result?.length ? result[0].mobile : null
 }
 
+const getUserWithDeptByDingdingUserId = async (user_id) => {
+    const sql = `SELECT u.nickname, d.dept_name FROM users u 
+        JOIN depts_users du ON du.user_id = u.dingding_user_id 
+        JOIN depts d ON d.dept_id = du.dept_id 
+        WHERE u.dingding_user_id = ? LIMIT 1`
+    const result = await query(sql, [user_id])
+    return result?.length ? result[0] : null
+}
+
 module.exports = {
     getUsersByTagCodes,
     getUserWithTags,
@@ -346,5 +355,6 @@ module.exports = {
     getUsersWithTagsByTagCodes,
     getUserByDingdingUserId,
     getUserByDeptName,
-    getMobileByUserId
+    getMobileByUserId,
+    getUserWithDeptByDingdingUserId
 }

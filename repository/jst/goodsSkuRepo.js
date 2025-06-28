@@ -84,4 +84,38 @@ goodsSkuRepo.getBySysSkuId = async (sku_id) => {
     return row
 }
 
+goodsSkuRepo.getSalesBySysSkuId = async (start, end) => {
+    const sql = `SELECT IFNULL(SUM(a.sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(a.profit), 0) AS profit, 
+            IFNULL(SUM(a.cost_amount), 0) AS cost_amount, 
+            IFNULL(SUM(a.sale_qty), 0) AS sale_qty, 
+            s.sys_sku_id AS sku_id, s.goods_id, di.division_name, s.create_time 
+        FROM jst_goods_sku s LEFT JOIN goods_sale_info a ON s.sys_sku_id = a.sku_code 
+            AND s.goods_id = a.goods_id
+        LEFT JOIN shop_info si ON si.shop_name = s.shop_name 
+        LEFT JOIN project_info pi ON pi.id = si.project_id 
+        LEFT JOIN division_info di ON di.id = pi.division_id 
+        WHERE s.create_time BETWEEN ? AND ? 
+        GROUP BY s.sys_sku_id, s.goods_id, di.division_name, s.create_time`
+    const result = await query(sql, [start, end])
+    return result
+}
+
+goodsSkuRepo.getSales = async (skuids, goods_id) => {
+    let sql = `SELECT IFNULL(SUM(a.sale_amount), 0) AS sale_amount, 
+            IF(DATE_ADD(MIN(s.create_time), INTERVAL 30 DAY) >= NOW(), 1, 
+            IF(DATE_ADD(MIN(s.create_time), INTERVAL 60 DAY) >= NOW(), 2, 3)) AS type, 
+            DATEDIFF(NOW(), MIN(s.create_time)) AS time 
+        FROM jst_goods_sku s LEFT JOIN goods_sale_info a ON s.sys_sku_id = a.sku_code 
+            AND s.goods_id = a.goods_id
+            AND a.date >= DATE_ADD(s.create_time, INTERVAL 14 DAY) 
+        WHERE s.sys_sku_id IN ("${skuids}")`
+    if (goods_id) {
+        sql = `${sql} AND s.goods_id = "${goods_id}"`
+    }
+    sql = `${sql} GROUP BY s.sys_sku_id`
+    const result = await query(sql)
+    return result
+}
+
 module.exports = goodsSkuRepo
