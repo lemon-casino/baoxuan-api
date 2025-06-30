@@ -379,7 +379,7 @@ const getProductDevelopInfo = async (req, res, next) => {
             end: {value: end, schema: joiUtil.commonJoiSchemas.strRequired},
             infoType: {value: infoType, schema: joiUtil.commonJoiSchemas.strNumRequired}
         })
-        const result = await developmentService.getProductDevelopInfo(req.query)
+        const result = await developmentService.getProductDevelopInfo(req.query, req.user.id)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)

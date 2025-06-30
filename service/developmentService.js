@@ -31,6 +31,7 @@ const goodsSaleInfoRepo = require('@/repository/operation/goodsSaleInfoRepo')
 const goodsSalesRepo = require('@/repository/operation/goodsSalesRepo')
 const combinationProductCodeRepo = require('@/repository/danpin/combinationProductCodeRepo')
 const { getRealDepartment, getRealProject } = require('@/service/departmentService')
+const userSettingRepo = require('@/repository/userSettingRepo')
 
 developmentService.getDataStats = async (type, start, end, month, timeType, project, process) => {
     let result = []
@@ -1038,61 +1039,67 @@ developmentService.getFinishProcessInfo = async () => {
     return result
 }
 
-developmentService.getProductDevelopInfo = async (params) => {
+developmentService.getProductDevelopInfo = async (params, id) => {
     let start = moment(params.start).format('YYYY-MM-DD')
     let end = moment(params.end).format('YYYY-MM-DD') + ' 23:59:59'
     let columns = [], indexGoodsMap = {}
-    if (params.infoType == 0) {
-        columns = [
-            { label: '开发性质', field_id: 'type', visible: true },
-            { label: '开发人', field_id: 'director', visible: true },
-            { label: '一级类目', field_id: 'first_category', visible: true },
-            { label: '二级类目', field_id: 'second_category', visible: true },
-            { label: '三级类目', field_id: 'third_category', visible: true },
-            { label: '推品数量', field_id: 'create_num', visible: true },
-            { label: '流程中的数量', field_id: 'running_num', visible: true },
-            { label: '拒绝数量', field_id: 'reject_num', visible: true },
-            { label: '选中SPU数量', field_id: 'selected_num', visible: true },
-            { label: '推品到选中平均时长', field_id: 'selected_time', visible: true },
-            { label: '采购SPU数量', field_id: 'purchase_num', visible: true },
-            { label: '选中到采购平均时长', field_id: 'purchase_time', visible: true },
-            { label: '选中到采购时长超时SPU数量', field_id: 'out_purchase_num', visible: true, info: '从选中到下采购单3天' },
-            { label: '上架SPU数量', field_id: 'shelf_num', visible: true },
-            { label: '采购到入仓平均时长', field_id: 'warehousing_time', visible: true, info: '以实际SKU入仓时间计算时长' },
-            { label: '采购到入仓时长超时SPU量', field_id: 'out_warehousing_num', visible: true, info: '只要有一个SKU超时，即显示超时' },
-            { label: '入仓到上架平均时长', field_id: 'shelf_time', visible: true, info: '上架时间以店铺商品信息创建时间为准' },
-            { label: '上架时长超时SPU量', field_id: 'out_shelf_num', visible: true, info: '以一个SKU超时即为超时，限制天数为1天（自然日）' },
-            { label: '选中率(%)', field_id: 'selected_percent', visible: true, info: '选中数量/推品数量*100%，以SPU为维度计算' },
-            { label: '推品采购率(%)', field_id: 'purchase_percent', visible: true, info: '采购数量/推品数量*100%，以SPU为准' },
-            { label: '上架链接数量', field_id: 'shelf_link_num', visible: true, info: '以聚水潭店铺商品信息为准' },
-            { label: '上架率(%)', field_id: 'shelf_percent', visible: true, info: '上架率=上架数量/入仓数量' }
-        ]
+    if (params.infoType == 0) {        
+        let defautColumns = await userSettingRepo.getByType(id, 8)
+        if (defautColumns?.length) columns = JSON.parse(defautColumns[0].attributes)
+        else
+            columns = [
+                { label: '开发性质', field_id: 'type', visible: true },
+                { label: '开发人', field_id: 'director', visible: true },
+                { label: '一级类目', field_id: 'first_category', visible: true },
+                { label: '二级类目', field_id: 'second_category', visible: true },
+                { label: '三级类目', field_id: 'third_category', visible: true },
+                { label: '推品数量', field_id: 'create_num', visible: true },
+                { label: '流程中的数量', field_id: 'running_num', visible: true },
+                { label: '拒绝数量', field_id: 'reject_num', visible: true },
+                { label: '选中SPU数量', field_id: 'selected_num', visible: true },
+                { label: '推品到选中平均时长', field_id: 'selected_time', visible: true },
+                { label: '采购SPU数量', field_id: 'purchase_num', visible: true },
+                { label: '选中到采购平均时长', field_id: 'purchase_time', visible: true },
+                { label: '选中到采购时长超时SPU数量', field_id: 'out_purchase_num', visible: true, info: '从选中到下采购单3天' },
+                { label: '上架SPU数量', field_id: 'shelf_num', visible: true },
+                { label: '采购到入仓平均时长', field_id: 'warehousing_time', visible: true, info: '以实际SKU入仓时间计算时长' },
+                { label: '采购到入仓时长超时SPU量', field_id: 'out_warehousing_num', visible: true, info: '只要有一个SKU超时，即显示超时' },
+                { label: '入仓到上架平均时长', field_id: 'shelf_time', visible: true, info: '上架时间以店铺商品信息创建时间为准' },
+                { label: '上架时长超时SPU量', field_id: 'out_shelf_num', visible: true, info: '以一个SKU超时即为超时，限制天数为1天（自然日）' },
+                { label: '选中率(%)', field_id: 'selected_percent', visible: true, info: '选中数量/推品数量*100%，以SPU为维度计算' },
+                { label: '推品采购率(%)', field_id: 'purchase_percent', visible: true, info: '采购数量/推品数量*100%，以SPU为准' },
+                { label: '上架链接数量', field_id: 'shelf_link_num', visible: true, info: '以聚水潭店铺商品信息为准' },
+                { label: '上架率(%)', field_id: 'shelf_percent', visible: true, info: '上架率=上架数量/入仓数量' }
+            ]
     } else {
-        columns = [
-            { label: '事业部', field_id: 'division', visible: true, info: '发起人所在部门' },
-            { label: '平台', field_id: 'project', visible: true },
-            { label: '开发人', field_id: 'director', visible: true },
-            { label: '一级类目', field_id: 'first_category', visible: true },
-            { label: '二级类目', field_id: 'second_category', visible: true },
-            { label: '三级类目', field_id: 'third_category', visible: true },
-            { label: '推品数量', field_id: 'create_num', visible: true },
-            { label: '流程中的数量', field_id: 'running_num', visible: true },
-            { label: '拒绝数量', field_id: 'reject_num', visible: true },
-            { label: '选中SPU数量', field_id: 'selected_num', visible: true },
-            { label: '推品到选中平均时长', field_id: 'selected_time', visible: true },
-            { label: '采购SPU数量', field_id: 'purchase_num', visible: true },
-            { label: '选中到采购平均时长', field_id: 'purchase_time', visible: true },
-            { label: '选中到采购时长超时SPU数量', field_id: 'out_purchase_num', visible: true, info: '从选中到下采购单3天' },
-            { label: '上架SPU数量', field_id: 'shelf_num', visible: true },
-            { label: '采购到入仓平均时长', field_id: 'warehousing_time', visible: true, info: '以实际SKU入仓时间计算时长' },
-            { label: '采购到入仓时长超时SPU量', field_id: 'out_warehousing_num', visible: true, info: '只要有一个SKU超时，即显示超时' },
-            { label: '入仓到上架平均时长', field_id: 'shelf_time', visible: true, info: '上架时间以店铺商品信息创建时间为准' },
-            { label: '上架时长超时SPU量', field_id: 'out_shelf_num', visible: true, info: '以一个SKU超时即为超时，限制天数为1天（自然日）' },
-            { label: '选中率(%)', field_id: 'selected_percent', visible: true, info: '选中数量/推品数量*100%，以SPU为维度计算' },
-            { label: '推品采购率(%)', field_id: 'purchase_percent', visible: true, info: '采购数量/推品数量*100%，以SPU为准' },
-            { label: '上架链接数量', field_id: 'shelf_link_num', visible: true, info: '以聚水潭店铺商品信息为准' },
-            { label: '上架率(%)', field_id: 'shelf_percent', visible: true, info: '上架率=上架数量/入仓数量' }
-        ]
+        let defautColumns = await userSettingRepo.getByType(id, 9)
+        if (defautColumns?.length) columns = JSON.parse(defautColumns[0].attributes)
+        else
+            columns = [
+                { label: '事业部', field_id: 'division', visible: true, info: '发起人所在部门' },
+                { label: '平台', field_id: 'project', visible: true },
+                { label: '开发人', field_id: 'director', visible: true },
+                { label: '一级类目', field_id: 'first_category', visible: true },
+                { label: '二级类目', field_id: 'second_category', visible: true },
+                { label: '三级类目', field_id: 'third_category', visible: true },
+                { label: '推品数量', field_id: 'create_num', visible: true },
+                { label: '流程中的数量', field_id: 'running_num', visible: true },
+                { label: '拒绝数量', field_id: 'reject_num', visible: true },
+                { label: '选中SPU数量', field_id: 'selected_num', visible: true },
+                { label: '推品到选中平均时长', field_id: 'selected_time', visible: true },
+                { label: '采购SPU数量', field_id: 'purchase_num', visible: true },
+                { label: '选中到采购平均时长', field_id: 'purchase_time', visible: true },
+                { label: '选中到采购时长超时SPU数量', field_id: 'out_purchase_num', visible: true, info: '从选中到下采购单3天' },
+                { label: '上架SPU数量', field_id: 'shelf_num', visible: true },
+                { label: '采购到入仓平均时长', field_id: 'warehousing_time', visible: true, info: '以实际SKU入仓时间计算时长' },
+                { label: '采购到入仓时长超时SPU量', field_id: 'out_warehousing_num', visible: true, info: '只要有一个SKU超时，即显示超时' },
+                { label: '入仓到上架平均时长', field_id: 'shelf_time', visible: true, info: '上架时间以店铺商品信息创建时间为准' },
+                { label: '上架时长超时SPU量', field_id: 'out_shelf_num', visible: true, info: '以一个SKU超时即为超时，限制天数为1天（自然日）' },
+                { label: '选中率(%)', field_id: 'selected_percent', visible: true, info: '选中数量/推品数量*100%，以SPU为维度计算' },
+                { label: '推品采购率(%)', field_id: 'purchase_percent', visible: true, info: '采购数量/推品数量*100%，以SPU为准' },
+                { label: '上架链接数量', field_id: 'shelf_link_num', visible: true, info: '以聚水潭店铺商品信息为准' },
+                { label: '上架率(%)', field_id: 'shelf_percent', visible: true, info: '上架率=上架数量/入仓数量' }
+            ]
     }
     let defaultTmp = {
         children: {
