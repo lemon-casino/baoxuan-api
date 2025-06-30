@@ -89,32 +89,59 @@ goodsSkuRepo.getSalesBySysSkuId = async (start, end) => {
             IFNULL(SUM(a.profit), 0) AS profit, 
             IFNULL(SUM(a.cost_amount), 0) AS cost_amount, 
             IFNULL(SUM(a.sale_qty), 0) AS sale_qty, 
-            s.sys_sku_id AS sku_id, s.goods_id, di.division_name, s.create_time 
-        FROM jst_goods_sku s LEFT JOIN goods_sale_info a ON s.sys_sku_id = a.sku_code 
-            AND s.goods_id = a.goods_id
-        LEFT JOIN shop_info si ON si.shop_name = s.shop_name 
+            s1.sku_id, s1.goods_id, s1.spu, di.division_name, s1.create_time, 
+            s1.purchase_time, s1.first_category, s1.second_category, 
+            s1.third_category, s1.director, s1.price FROM (        
+            SELECT s.sys_sku_id AS sku_id, s.goods_id, 
+                s.create_time, s.shop_name, 
+                gi.\`工期\` AS purchase_time, gi.\`spu简称\` AS spu, 
+                gi.\`一级类目\` AS first_category, 
+                gi.\`二级类目\` AS second_category, 
+                gi.\`三级类目\` AS third_category, gi.\`开发员\` AS director, 
+                gi.\`市场|吊牌价\` AS price FROM jst_goods_sku s 
+            JOIN danpin.goods_info gi ON gi.\`商品编码\` = s.sys_sku_id             
+            WHERE s.create_time BETWEEN ? AND ?) s1 
+        LEFT JOIN goods_sale_info a ON s1.sku_id = a.sku_code 
+            AND s1.goods_id = a.goods_id 
+        LEFT JOIN shop_info si ON si.shop_name = s1.shop_name 
         LEFT JOIN project_info pi ON pi.id = si.project_id 
         LEFT JOIN division_info di ON di.id = pi.division_id 
-        WHERE s.create_time BETWEEN ? AND ? 
-        GROUP BY s.sys_sku_id, s.goods_id, di.division_name, s.create_time`
+        GROUP BY s1.sku_id, s1.goods_id, s1.spu, di.division_name, s1.create_time, 
+            s1.purchase_time, s1.first_category, s1.second_category, 
+            s1.third_category, s1.director, s1.price`
     const result = await query(sql, [start, end])
     return result
 }
 
-goodsSkuRepo.getSales = async (skuids, goods_id) => {
+goodsSkuRepo.getSalesBySysSkuId2 = async (start, end) => {
+    const sql = `SELECT IFNULL(SUM(a.sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(a.profit), 0) AS profit, COUNT(1) AS shelf_link_num, s1.director FROM (        
+            SELECT s.goods_id, MIN(s.create_time) AS create_time, 
+                s.shop_name, gi.\`开发员\` AS director 
+            FROM jst_goods_sku s JOIN danpin.goods_info gi ON gi.\`商品编码\` = s.sys_sku_id 
+            GROUP BY s.goods_id, s.shop_name, gi.\`开发员\`) s1 
+        JOIN goods_sales_stats a ON s1.goods_id = a.goods_id 
+            AND s1.shop_name = a.shop_name 
+            AND a.date <= DATE_ADD(s1.create_time, INTERVAL 150 DAY)
+        WHERE s1.create_time BETWEEN ? AND ? GROUP BY s1.director`
+    const result = await query(sql, [start, end])
+    return result
+}
+
+goodsSkuRepo.getSales = async (skuids, start, end, goods_id) => {
     let sql = `SELECT IFNULL(SUM(a.sale_amount), 0) AS sale_amount, 
             IF(DATE_ADD(MIN(s.create_time), INTERVAL 30 DAY) >= NOW(), 1, 
             IF(DATE_ADD(MIN(s.create_time), INTERVAL 60 DAY) >= NOW(), 2, 3)) AS type, 
-            DATEDIFF(NOW(), MIN(s.create_time)) AS time 
+            DATEDIFF(NOW(), MIN(a.date)) AS time, MIN(a.date) AS create_time 
         FROM jst_goods_sku s LEFT JOIN goods_sale_info a ON s.sys_sku_id = a.sku_code 
             AND s.goods_id = a.goods_id
             AND a.date >= DATE_ADD(s.create_time, INTERVAL 14 DAY) 
-        WHERE s.sys_sku_id IN ("${skuids}")`
+        WHERE s.sys_sku_id IN ("${skuids}") AND s.create_time BETWEEN ? AND ?`
     if (goods_id) {
         sql = `${sql} AND s.goods_id = "${goods_id}"`
     }
     sql = `${sql} GROUP BY s.sys_sku_id`
-    const result = await query(sql)
+    const result = await query(sql, [start, end])
     return result
 }
 
