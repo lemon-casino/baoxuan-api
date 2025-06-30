@@ -492,7 +492,7 @@ actHiProcinstRepo.getNewDetail = async (id) => {
 }
 
 
-actHiProcinstRepo.getSelectedInfo = async (end) => {
+actHiProcinstRepo.getSelectedInfo = async (start, end) => {
     const sql = `SELECT b.BYTES_ AS info, CASE 
             WHEN d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') THEN '市场分析推品'
             WHEN d.KEY_ IN ('iptplc', 'iptplcxb') THEN 'IP推品' 
@@ -512,8 +512,8 @@ actHiProcinstRepo.getSelectedInfo = async (end) => {
 		JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v1.BYTEARRAY_ID_
         WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin', 'iptplc', 'iptplcxb', 
             'zytplc', 'ziyantuipin', 'gystplc', 'gongyingshangtuipin', 'fttplc', 'fantuituipin') 
-            AND p.START_TIME_ < ?`
-    const result = await query(sql, [end])
+            AND p.START_TIME_ BETWEEN ? AND ?`
+    const result = await query(sql, [start, end])
     return result
 }
 

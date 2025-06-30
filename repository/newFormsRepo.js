@@ -3694,7 +3694,7 @@ const getInfoDetail = async (id) => {
     return result
 }
 
-const getSelectedInfo = async (end) => {
+const getSelectedInfo = async (start, end) => {
     const sql = `SELECT pis1.value AS sku_id, CASE pi.process_id 
             WHEN 88 THEN '反推推品' WHEN 836 THEN 'IP推品' ELSE '供应商推品' END AS type
         FROM process_instances pi JOIN process_instance_values piv 
@@ -3705,8 +3705,8 @@ const getSelectedInfo = async (end) => {
         JOIN process_instance_sub_values pis1 ON pis1.instance_id = pi.id 
             AND pis1.parent_id = piv.field_id
 	        AND pis1.field_id = 'textField_m1lrc3mo'
-        WHERE pi.process_id IN (88, 836, 838) AND pi.create_time < ?`
-    const result = await query(sql, [end])
+        WHERE pi.process_id IN (88, 836, 838) AND pi.create_time BETWEEN ? AND ?`
+    const result = await query(sql, [start, end])
     return result
 }
 

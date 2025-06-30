@@ -2136,12 +2136,12 @@ developmentService.getProductDevelopSales = async (params) => {
             { label: '利润率(牌价)', field_id: 'standard_profit_percent', visible: true, info: '牌价利润率=1-成本/牌价*100%，监控牌价是否合理;成本是成交记录的sku的成本累计，牌价也是以成交记录的牌价累计' },
             { label: '未转正数量', field_id: 'negative_num', visible: true },
             { label: '30天动销数量', field_id: 'month_normal_num', visible: true },
-            { label: '30天动销率', field_id: 'month_normal_percent', visible: true, info: '30天动销数量/上架数量' },
+            { label: '30天动销率', field_id: 'month_normal_percent', visible: true, info: params.infoType == 0 ? '30天动销款式数量/上架款式数量' : '30天动销数量/上架数量' },
             { label: '60天动销数量', field_id: 'two_months_normal_num', visible: true },
-            { label: '60天动销率', field_id: 'two_months_normal_percent', visible: true, info: '60天动销数量/上架数量' },
+            { label: '60天动销率', field_id: 'two_months_normal_percent', visible: true, info: params.infoType == 0 ? '60天动销款式数量/上架款式数量' : '60天动销数量/上架数量' },
             { label: '90天动销数量', field_id: 'three_months_normal_num', visible: true },
-            { label: '90天动销率', field_id: 'three_months_normal_percent', visible: true, info: '90天动销数量/上架数量' },
-            { label: '爆款率', field_id: 'hot_percent', visible: true, info: '爆款数量/上架数量' }
+            { label: '90天动销率', field_id: 'three_months_normal_percent', visible: true, info: params.infoType == 0 ? '90天动销款式数量/上架款式数量' : '90天动销数量/上架数量' },
+            { label: '爆款率', field_id: 'hot_percent', visible: true, info: params.infoType == 0 ? '爆款款式数量/上架款式数量' : '爆款数量/上架数量' }
         ]
     } else {
         columns = [
@@ -2174,11 +2174,12 @@ developmentService.getProductDevelopSales = async (params) => {
             columns[i].field_id.indexOf('profit') != -1 ? 0 : null
     }
     if (params.salesType == 0) {
-        let skuids1 = await newFormsRepo.getSelectedInfo(end)
+        let begin = moment(start).subtract(90, 'day').format('YYYY-MM-DD')
+        let skuids1 = await newFormsRepo.getSelectedInfo(begin, end)
         for (let i = 0; i < skuids1.length; i++) {
             skuMap[skuids1[i].sku_id] = skuids1[i].type
         }
-        skuids1 = await actHiProcinstRepo.getSelectedInfo(end)
+        skuids1 = await actHiProcinstRepo.getSelectedInfo(begin, end)
         for (let i = 0; i < skuids1.length; i++) {
             let content = new ObjectInputStream(skuids1[i].info)
             content = content.readObject()
@@ -2196,30 +2197,24 @@ developmentService.getProductDevelopSales = async (params) => {
     }
     let saleInfo = await goodsSkuRepo.getSalesBySysSkuId(start, end)
     for (let i = 0; i < saleInfo.length; i++) {
-        let info = await goodsInfoRepo.get(saleInfo[i].sku_id)
-        if (!info?.length) continue
-        if (params.salesType == 0 && params.first_category?.length && info[0].first_category != params.first_category) continue 
-        if (params.salesType == 0 && params.second_category?.length && info[0].second_category != params.second_category) continue 
-        if (params.salesType == 0 && params.third_category?.length && info[0].third_category != params.third_category) continue 
+        if (params.salesType == 0 && params.first_category?.length && saleInfo[i].first_category != params.first_category) continue 
+        if (params.salesType == 0 && params.second_category?.length && saleInfo[i].second_category != params.second_category) continue 
+        if (params.salesType == 0 && params.third_category?.length && saleInfo[i].third_category != params.third_category) continue 
         if (params.type && (skuMap[saleInfo[i].sku_id] == undefined || params.type != skuMap[saleInfo[i].sku_id])) continue
         if (params.salesType == 0 || params.infoType == 0) {
-            if (info[0].spu in saleMap) saleMap[info[0].spu].push(i)
-            else saleMap[info[0].spu] = [i]
+            if (saleInfo[i].spu in saleMap) saleMap[saleInfo[i].spu].push(i)
+            else saleMap[saleInfo[i].spu] = [i]
         } else {
             if (saleInfo[i].goods_id in saleMap) saleMap[saleInfo[i].goods_id].push(i)
             else saleMap[saleInfo[i].goods_id] = [i]
         }
-        saleInfo[i]['director'] = info[0].director
-        saleInfo[i]['first_category'] = info[0].first_category
-        saleInfo[i]['second_category'] = info[0].second_category
-        saleInfo[i]['third_category'] = info[0].third_category
-        saleInfo[i]['price'] = info[0].price || 0
     }
     let resultMap = {}
     if (params.salesType == 0) {
         for (let i in saleMap) {
             let profit = 0, cost_amount = 0, price = 0, sale_amount = 0, index, skuids = '',
-                is_positive = '否', is_normal = '否', is_hot = '否', real_positive_day = ''
+                is_positive = '否', is_normal = '否', is_hot = '否', real_positive_day = '', 
+                tmpIndex = '', goodsMap = {}
             for (let j = 0; j < saleMap[i].length; j++) {
                 let item = saleInfo[saleMap[i][j]]
                 index = `${skuMap[item.sku_id]}_${item.division_name}_${item.director}_${item.first_category}_${item.second_category}_${item.third_category}`
@@ -2236,6 +2231,7 @@ developmentService.getProductDevelopSales = async (params) => {
                     tmp.sale_amount = parseFloat(item.sale_amount)
                     tmp['cost_amount'] = parseFloat(item.cost_amount)
                     tmp['price'] = 0
+                    tmp['goods_num'] = 0
                     tmp['children'] = []
                     result.push(tmp)
                 } else {
@@ -2243,38 +2239,90 @@ developmentService.getProductDevelopSales = async (params) => {
                     result[resultMap[index]].sale_amount += parseFloat(item.sale_amount)
                     result[resultMap[index]].cost_amount += parseFloat(item.cost_amount)
                 }
+                if (goodsMap[item.goods_id] == undefined) {
+                     result[resultMap[index]].goods_num += 1
+                     goodsMap[item.goods_id] = true
+                }
                 profit += parseFloat(item.profit)
                 cost_amount += parseFloat(item.cost_amount)
                 price += parseFloat(item.price) * parseFloat(item.sale_qty)
                 sale_amount += parseFloat(item.sale_amount)
                 skuids = `${skuids}${item.sku_id}","`
                 result[resultMap[index]].price += parseFloat(item.price) * parseInt(item.sale_qty)
+                if (tmpIndex != index) {
+                    result[resultMap[index]].shelf_num += 1
+                    if (tmpIndex !== '') {
+                        if (profit - 2000 > 0) {
+                            result[resultMap[tmpIndex]].positive_num += 1
+                            skuids = skuids.substring(0, skuids.length - 3)
+                            is_positive = '是'
+                            let sales = await goodsSkuRepo.getSales(skuids, start, end)
+                            if (sales.length) {
+                                if (parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 1500) {
+                                    result[resultMap[tmpIndex]].hot_num += 1
+                                    is_hot = '是'
+                                } else if (sales[0].type == 1 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
+                                    result[resultMap[tmpIndex]].month_normal_num += 1
+                                    is_normal = '是'
+                                } else if (sales[0].type == 2 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
+                                    result[resultMap[tmpIndex]].two_months_normal_num += 1
+                                    is_normal = '是'
+                                } else if (sales[0].type == 3 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
+                                    result[resultMap[tmpIndex]].three_months_normal_num += 1
+                                    is_normal = '是'
+                                }
+                            }
+                        } else {
+                            result[resultMap[tmpIndex]].negative_num += 1
+                        }
+                        result[resultMap[tmpIndex]].children.push({
+                            spu: i,
+                            sale_amount: sale_amount.toFixed(2),
+                            profit: profit.toFixed(2),
+                            profit_percent: sale_amount > 0 ? (profit/sale_amount*100).toFixed(2) : 0,
+                            standard_profit_percent: price > 0 ? ((1-cost_amount/price)*100).toFixed(2) : 0,
+                            is_positive,
+                            is_normal,
+                            is_hot,
+                            real_positive_day
+                        })
+                        profit = 0
+                        cost_amount = 0 
+                        price = 0
+                        sale_amount = 0
+                        skuids = ''
+                        is_positive = '否'
+                        is_normal = '否'
+                        is_hot = '否'
+                        real_positive_day = ''
+                    }
+                    tmpIndex = JSON.parse(JSON.stringify(index))
+                }
             }
-            result[resultMap[index]].shelf_num += 1
             if (profit - 2000 > 0) {
-                result[resultMap[index]].positive_num += 1
+                result[resultMap[tmpIndex]].positive_num += 1
                 skuids = skuids.substring(0, skuids.length - 3)
                 is_positive = '是'
-                let sales = await goodsSkuRepo.getSales(skuids)
+                let sales = await goodsSkuRepo.getSales(skuids, start, end)
                 if (sales.length) {
                     if (parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 1500) {
-                        result[resultMap[index]].hot_num += 1
+                        result[resultMap[tmpIndex]].hot_num += 1
                         is_hot = '是'
                     } else if (sales[0].type == 1 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
-                        result[resultMap[index]].month_normal_num += 1
+                        result[resultMap[tmpIndex]].month_normal_num += 1
                         is_normal = '是'
                     } else if (sales[0].type == 2 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
-                        result[resultMap[index]].two_months_normal_num += 1
+                        result[resultMap[tmpIndex]].two_months_normal_num += 1
                         is_normal = '是'
                     } else if (sales[0].type == 3 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
-                        result[resultMap[index]].three_months_normal_num += 1
+                        result[resultMap[tmpIndex]].three_months_normal_num += 1
                         is_normal = '是'
                     }
                 }
             } else {
-                result[resultMap[index]].negative_num += 1
+                result[resultMap[tmpIndex]].negative_num += 1
             }
-            result[resultMap[index]].children.push({
+            result[resultMap[tmpIndex]].children.push({
                 spu: i,
                 sale_amount: sale_amount.toFixed(2),
                 profit: profit.toFixed(2),
@@ -2288,7 +2336,7 @@ developmentService.getProductDevelopSales = async (params) => {
         }
     } else if (params.salesType == 1) {
         for (let i in saleMap) {
-            let profit = 0, cost_amount = 0, price = 0, sale_amount = 0, index, skuids = '',
+            let profit = 0, cost_amount = 0, price = 0, sale_amount = 0, index, skuids = '', tmpIndex = '',
                 is_positive = '否', is_normal = '否', is_hot = '否', real_positive_day = '', predict_positive_day = ''
             for (let j = 0; j < saleMap[i].length; j++) {
                 let item = saleInfo[saleMap[i][j]]
@@ -2319,33 +2367,85 @@ developmentService.getProductDevelopSales = async (params) => {
                 sale_amount += parseFloat(item.sale_amount)
                 skuids = `${skuids}${item.sku_id}","`
                 result[resultMap[index]].price += parseFloat(item.price) * parseInt(item.sale_qty)
+                if (tmpIndex != index) {
+                    result[resultMap[index]].shelf_num += 1
+                    if (tmpIndex !== '') {
+                        if (profit - 2000 > 0) {
+                            result[resultMap[tmpIndex]].positive_num += 1
+                            skuids = skuids.substring(0, skuids.length - 3)
+                            let sales = [] 
+                            if (params.infoType == 0) sales = await goodsSkuRepo.getSales(skuids, start, end)
+                            else sales = await goodsSkuRepo.getSales(skuids, start, end, i)
+                            if (sales.length) {
+                                if (parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 1500) {
+                                    result[resultMap[tmpIndex]].hot_num += 1
+                                    is_hot = '是'
+                                } else if (sales[0].type == 1 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
+                                    result[resultMap[tmpIndex]].month_normal_num += 1
+                                    is_normal = '是'
+                                } else if (sales[0].type == 2 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
+                                    result[resultMap[tmpIndex]].two_months_normal_num += 1
+                                    is_normal = '是'
+                                } else if (sales[0].type == 3 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
+                                    result[resultMap[tmpIndex]].three_months_normal_num += 1
+                                    is_normal = '是'
+                                }
+                            }
+                        } else {
+                            result[resultMap[tmpIndex]].negative_num += 1
+                        }
+                        result[resultMap[tmpIndex]].children.push({
+                            goods_id: i,
+                            spu: i,
+                            sale_amount: sale_amount.toFixed(2),
+                            profit: profit.toFixed(2),
+                            profit_percent: sale_amount > 0 ? (profit/sale_amount*100).toFixed(2) : 0,
+                            standard_profit_percent: price > 0 ? ((1-cost_amount/price)*100).toFixed(2) : 0,
+                            is_positive,
+                            is_normal,
+                            is_hot,
+                            real_positive_day,
+                            predict_positive_day
+                        })
+                        profit = 0
+                        cost_amount = 0
+                        price = 0
+                        sale_amount = 0
+                        skuids = ''
+                        is_positive = '否'
+                        is_normal = '否'
+                        is_hot = '否'
+                        real_positive_day = ''
+                        predict_positive_day = ''
+                    }
+                    tmpIndex = JSON.parse(JSON.stringify(index))
+                }
             }
-            result[resultMap[index]].shelf_num += 1
             if (profit - 2000 > 0) {
-                result[resultMap[index]].positive_num += 1
+                result[resultMap[tmpIndex]].positive_num += 1
                 skuids = skuids.substring(0, skuids.length - 3)
                 let sales = [] 
-                if (params.infoType == 0) sales = await goodsSkuRepo.getSales(skuids)
-                else sales = await goodsSkuRepo.getSales(skuids, i)
+                if (params.infoType == 0) sales = await goodsSkuRepo.getSales(skuids, start, end)
+                else sales = await goodsSkuRepo.getSales(skuids, start, end, i)
                 if (sales.length) {
                     if (parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 1500) {
-                        result[resultMap[index]].hot_num += 1
+                        result[resultMap[tmpIndex]].hot_num += 1
                         is_hot = '是'
                     } else if (sales[0].type == 1 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
-                        result[resultMap[index]].month_normal_num += 1
+                        result[resultMap[tmpIndex]].month_normal_num += 1
                         is_normal = '是'
                     } else if (sales[0].type == 2 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
-                        result[resultMap[index]].two_months_normal_num += 1
+                        result[resultMap[tmpIndex]].two_months_normal_num += 1
                         is_normal = '是'
                     } else if (sales[0].type == 3 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
-                        result[resultMap[index]].three_months_normal_num += 1
+                        result[resultMap[tmpIndex]].three_months_normal_num += 1
                         is_normal = '是'
                     }
                 }
             } else {
-                result[resultMap[index]].negative_num += 1
+                result[resultMap[tmpIndex]].negative_num += 1
             }
-            result[resultMap[index]].children.push({
+            result[resultMap[tmpIndex]].children.push({
                 goods_id: i,
                 spu: i,
                 sale_amount: sale_amount.toFixed(2),
@@ -2412,30 +2512,9 @@ developmentService.getProductDevelopDirectorSales = async (params) => {
         { label: '上架链接数量', field_id: 'shelf_link_num', visible: true },
         { label: '利润额', field_id: 'profit', visible: true },
         { label: 'GMV', field_id: 'sale_amount', visible: true }
-    ], result = [], directorMap = {}, directorLinkMap = {}
-    let saleInfo = await goodsSkuRepo.getSalesBySysSkuId(start, end)
-    for (let i = 0; i < saleInfo.length; i++) {
-        let info = await goodsInfoRepo.get(saleInfo[i].sku_id), index
-        if (info?.length && directorMap[info[0].director] == undefined) {
-            index = result.length
-            result.push({
-                director: info[0].director,
-                shelf_link_num: 0,
-                sale_amount: 0,
-                profit: 0
-            })
-            directorMap[info[0].director] = index
-        } else if (info?.length) {
-            index = directorMap[info[0].director]
-        } else continue
-        if (directorLinkMap[saleInfo[i].goods_id] == undefined) {
-            result[index].shelf_link_num += 1
-            directorLinkMap[saleInfo[i].goods_id] = true
-        }
-        result[index].sale_amount += parseFloat((saleInfo[i].sale_amount || '0'))
-        result[index].profit += parseFloat((saleInfo[i].profit || '0'))
-    }
-    return {columns, data: result}
+    ]
+    let data = await goodsSkuRepo.getSalesBySysSkuId2(start, end)
+    return {columns, data}
 }
 
 developmentService.getProductDevelopFirst = async (start, end, type, addSales) => {    
