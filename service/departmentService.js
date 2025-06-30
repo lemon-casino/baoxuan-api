@@ -361,6 +361,60 @@ const getAllUsers = async () => {
     return allUsers
 }
 
+const getRealDepartment = (deptName, nickname) => {
+    if (deptName.indexOf('猫超') != -1 || 
+        deptName.indexOf('拼多多') != -1 || 
+        deptName.indexOf('跨境') != -1 || 
+        nickname == '刘海涛') {
+        return '事业一部'
+    } else if (deptName.indexOf('天猫') != -1 || 
+        deptName.indexOf('小红书') != -1 || 
+        deptName.indexOf('国货') != -1 || 
+        nickname == '王洪彬') {
+        return '事业三部'
+    } else if (deptName.indexOf('京东') != -1 || 
+        deptName.indexOf('1688') != -1 || 
+        deptName.indexOf('抖音') != -1 || 
+        deptName.indexOf('唯品会') != -1 || 
+        nickname == '陆瑶') {
+        return '事业二部'
+    } else if (deptName.indexOf('开发') != -1 || 
+        deptName.indexOf('企划') != -1 || 
+        nickname == '郑艳艳') {
+        return '企划部'
+    } else if (deptName.indexOf('物流') != -1 || 
+        deptName.indexOf('库房') != -1 || 
+        nickname == '鲁红旺') {
+        return '货品部'
+    }
+    return deptName
+}
+
+const getRealProject = (deptName) => {
+    if (deptName.indexOf('猫超') != -1) {
+        return '天猫超市'
+    } else if (deptName.indexOf('拼多多') != -1) {
+        return '拼多多'
+    } else if (deptName.indexOf('跨境') != -1) {
+        return 'coupang'
+    } else if (deptName.indexOf('天猫') != -1) {
+        return '天猫'
+    } else if (deptName.indexOf('小红书') != -1) {
+        return '小红书'
+    } else if (deptName.indexOf('国货') != -1) {
+        return '国货严选'
+    } else if (deptName.indexOf('京东') != -1) {
+        return '京东'
+    } else if (deptName.indexOf('1688') != -1) {
+        return '1688'
+    } else if (deptName.indexOf('抖音') != -1) {
+        return '抖音、快手'
+    } else if (deptName.indexOf('唯品会') != -1) {
+        return '得物、唯品会'
+    }
+    return ''
+}
+
 module.exports = {
     getDepartments,
     getDepartmentsOfUser,
@@ -374,5 +428,7 @@ module.exports = {
     simplifiedUsersOfDepartment,
     getDepartmentWithUsers,
     hasMatchedDeptName,
-    getAllUsers
+    getAllUsers,
+    getRealDepartment,
+    getRealProject
 }
