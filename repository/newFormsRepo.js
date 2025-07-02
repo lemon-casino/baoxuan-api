@@ -3540,31 +3540,35 @@ const getProductDeveloper = async (start, end, type, id, name) => {
 
 const getZtInfo = async (start, end) => {
     let sql = `SELECT pi.instance_id AS id, pi.creator, 
-            IF(pir.id is null AND piv.id is null, 1, 0) AS running, 
-            IF(pir.id IS NOT NULL, 1, 0) AS reject, 
-            IF(piv.id IS NOT NULL, 1, 0) AS selected, 
+            IF(pis.id IS NULL AND pi.status = 'RUNNING', 1, 0) AS running, 
+            IF(pis.id IS NULL AND pi.status IN ('COMPLETED', 'TERMINATED'), 1, 0) AS reject, 
+            IF(pis.id IS NOT NULL, 1, 0) AS selected, 
             IF(pir1.operate_time IS NOT NULL, 
                 DATEDIFF(pir1.operate_time, pi.create_time), 0) AS selected_time, 
             IF(pir2.operate_time IS NOT NULL, 
                 DATEDIFF(pir2.operate_time, pir1.operate_time), 0) AS purchase_time, 
-            pir2.operate_time AS purchase_date, piv1.value AS category, 
+            pir2.operate_time AS purchase_date, 
             (SELECT GROUP_CONCAT(pis1.value SEPARATOR '","') FROM process_instance_sub_values pis1 
                 WHERE pis1.instance_id = pi.id 
                     AND pis1.parent_id = 'tableField_m1g2w3gr' 
 	                AND pis1.field_id = 'textField_m1lrc3mo') AS skuids 
         FROM process_instances pi LEFT JOIN process_instance_values piv 
             ON piv.instance_id = pi.id AND piv.field_id = 'tableField_m1g2w3gr'
-            AND EXISTS(SELECT pis.id FROM process_instance_sub_values pis 
+        LEFT JOIN process_instance_sub_values pis ON pis.instance_id = pi.id 
+            AND pis.parent_id = piv.field_id
+            AND pis.field_id LIKE '%numberField%' 
+            AND pis.field_id NOT LIKE '%_value%' AND pis.value > 0
+            AND pis.id = (
+                SELECT max(pis.id) FROM process_instance_sub_values pis 
                 WHERE pis.instance_id = pi.id AND pis.parent_id = piv.field_id
-                    AND pis.field_id LIKE '%numberField%' AND pis.value > 0)
-        LEFT JOIN process_instance_records pir ON pir.instance_id = pi.id 
-            AND pir.action_exit = 'disagree'
+                    AND pis.field_id LIKE '%numberField%' 
+                    AND pis.field_id NOT LIKE '%_value%' AND pis.value > 0)
         LEFT JOIN process_instance_records pir1 ON pir1.instance_id = pi.id 
             AND pir1.action_exit = 'agree'
             AND pir1.show_name LIKE '%填写订货量%'
             AND pir1.operate_time = (
                 SELECT MIN(p2.operate_time) FROM process_instance_records p2
-                WHERE p2.instance_id = pi.id AND p2.show_name = pir1.show_name 
+                WHERE p2.instance_id = pi.id AND p2.show_name LIKE '%填写订货量%' 
                     AND p2.action_exit = 'agree')
         LEFT JOIN process_instance_records pir2 ON pir2.instance_id = pi.id
             AND pir2.show_name = '周转订货合同说明及办理订货'
@@ -3573,8 +3577,6 @@ const getZtInfo = async (start, end) => {
                 SELECT MIN(p2.operate_time) FROM process_instance_records p2 
                 WHERE p2.instance_id = pi.id AND p2.action_exit = 'agree' 
                     AND p2.show_name = '周转订货合同说明及办理订货')
-        LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
-            AND piv1.field_id = 'cascadeSelectField_m4mf17qn'
         WHERE pi.process_id = 838 AND pi.create_time BETWEEN ? AND ?`
     let row = await query(sql, [start, end])
     return row
@@ -3582,23 +3584,29 @@ const getZtInfo = async (start, end) => {
 
 const getFtInfo = async (start, end) => {
     let sql = `SELECT pi.instance_id AS id, pi.creator, pir.operator_name AS director, 
-            IF(pir.action_exit != 'disagree' AND piv.id is null, 1, 0) AS running, 
-            IF(pir.action_exit = 'disagree', 1, 0) AS reject, 
-            IF(piv.id IS NOT NULL, 1, 0) AS selected,
+            IF(pis.id IS NULL AND pi.status = 'RUNNING', 1, 0) AS running, 
+            IF(pis.id IS NULL AND pi.status IN ('COMPLETED', 'TERMINATED'), 1, 0) AS reject, 
+            IF(pis.id IS NOT NULL, 1, 0) AS selected,
             IF(pir1.operate_time IS NOT NULL, 
                 DATEDIFF(pir1.operate_time, pi.create_time), 0) AS selected_time, 
             IF(pir2.operate_time IS NOT NULL, 
                 DATEDIFF(pir2.operate_time, pir1.operate_time), 0) AS purchase_time, 
-            pir2.operate_time AS purchase_date, piv1.value AS category, 
+            pir2.operate_time AS purchase_date, 
             (SELECT GROUP_CONCAT(pis1.value SEPARATOR '","') FROM process_instance_sub_values pis1 
                 WHERE pis1.instance_id = pi.id 
                     AND pis1.parent_id = 'tableField_m9gzfubr'
 	                AND pis1.field_id = 'textField_m1lrc3mo') AS skuids    
         FROM process_instances pi LEFT JOIN process_instance_values piv 
             ON piv.instance_id = pi.id AND piv.field_id = 'tableField_m9gzfubr'
-            AND EXISTS(SELECT pis.id FROM process_instance_sub_values pis 
+        LEFT JOIN process_instance_sub_values pis ON pis.instance_id = pi.id 
+            AND pis.parent_id = piv.field_id
+            AND pis.field_id LIKE '%numberField%' 
+            AND pis.field_id NOT LIKE '%_value%' AND pis.value > 0
+            AND pis.id = (
+                SELECT max(pis.id) FROM process_instance_sub_values pis 
                 WHERE pis.instance_id = pi.id AND pis.parent_id = piv.field_id
-                    AND pis.field_id LIKE '%numberField%' AND pis.value > 0)
+                    AND pis.field_id LIKE '%numberField%' 
+                    AND pis.field_id NOT LIKE '%_value%' AND pis.value > 0)
         JOIN process_instance_records pir ON pir.instance_id = pi.id 
             AND pir.show_name IN (
                 '开发接任务', 
@@ -3606,12 +3614,20 @@ const getFtInfo = async (start, end) => {
                 '开发是否找到反推产品1', 
                 '开发是否找到反推产品2',
                 '开发是否找到反推产品3') 
+            AND pir.operate_time = (
+                select max(p2.operate_time) from process_instance_records p2 
+                where p2.instance_id = pi.id and p2.show_name in (
+                    '开发接任务', 
+                    '开发是否找到反推产品', 
+                    '开发是否找到反推产品1', 
+                    '开发是否找到反推产品2',
+                    '开发是否找到反推产品3'))
         LEFT JOIN process_instance_records pir1 ON pir1.instance_id = pi.id 
             AND pir1.show_name LIKE '%样品是否选中%' 
             AND pir1.action_exit = 'agree' 
             AND pir1.operate_time = (
                 SELECT MIN(pir1.operate_time) FROM process_instance_records p2
-                WHERE p2.instance_id = pi.id AND p2.show_name = pir1.show_name 
+                WHERE p2.instance_id = pi.id AND p2.show_name LIKE '%样品是否选中%' 
                     AND p2.action_exit = 'agree')
         LEFT JOIN process_instance_records pir2 ON pir2.instance_id = pi.id
             AND pir2.show_name = '周转订货合同说明及办理订货'
@@ -3620,8 +3636,6 @@ const getFtInfo = async (start, end) => {
                 SELECT MIN(p2.operate_time) FROM process_instance_records p2 
                 WHERE p2.instance_id = pi.id AND p2.action_exit = 'agree' 
                     AND p2.show_name = '周转订货合同说明及办理订货')
-        LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
-            AND piv1.field_id = 'cascadeSelectField_m4mf17qn'
         WHERE pi.process_id = 88 AND pi.create_time BETWEEN ? AND ?`
     let row = await query(sql, [start, end])
     return row
@@ -3629,9 +3643,9 @@ const getFtInfo = async (start, end) => {
 
 const getIpInfo = async (start, end) => {
     let sql = `SELECT pi.instance_id AS id, pi.creator, 
-            IF(pir.action_exit != 'disagree' AND piv.id is null, 1, 0) AS running, 
-            IF(pir.action_exit = 'disagree', 1, 0) AS reject, 
-            IF(piv.id IS NOT NULL, 1, 0) AS selected, 
+            IF(pis.id IS NULL AND pi.status = 'RUNNING', 1, 0) AS running, 
+            IF(pis.id IS NULL AND pi.status IN ('COMPLETED', 'TERMINATED'), 1, 0) AS reject, 
+            IF(pis.id IS NOT NULL, 1, 0) AS selected, 
             IF(pir1.operate_time IS NOT NULL, 
                 DATEDIFF(pir1.operate_time, pi.create_time), 0) AS selected_time, 
             IF(pir2.operate_time IS NOT NULL, 
@@ -3644,11 +3658,15 @@ const getIpInfo = async (start, end) => {
 	                AND pis1.field_id = 'textField_m1lrc3mo') AS skuids 
         FROM process_instances pi LEFT JOIN process_instance_values piv 
             ON piv.instance_id = pi.id AND piv.field_id = 'tableField_m1g2w3gr'
-            AND EXISTS(SELECT pis.id FROM process_instance_sub_values pis 
+        LEFT JOIN process_instance_sub_values pis ON pis.instance_id = pi.id 
+            AND pis.parent_id = piv.field_id
+            AND pis.field_id LIKE '%numberField%' 
+            AND pis.field_id NOT LIKE '%_value%' AND pis.value > 0
+            AND pis.id = (
+                SELECT max(pis.id) FROM process_instance_sub_values pis 
                 WHERE pis.instance_id = pi.id AND pis.parent_id = piv.field_id
-                    AND pis.field_id LIKE '%numberField%' AND pis.value > 0)
-        LEFT JOIN process_instance_records pir ON pir.instance_id = pi.id 
-            AND pir.action_exit = 'disagree' 
+                    AND pis.field_id LIKE '%numberField%' 
+                    AND pis.field_id NOT LIKE '%_value%' AND pis.value > 0)
         LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
             AND piv1.field_id = 'employeeField_m3iip0up'
         LEFT JOIN process_instance_records pir1 ON pir1.instance_id = pi.id 
@@ -3671,17 +3689,23 @@ const getIpInfo = async (start, end) => {
 }
 
 const getInfoDetail = async (id) => {
-    const sql = `SELECT pi.title, IF(piv.id IS NOT NULL, 1, 0) AS is_selected, 
+    const sql = `SELECT pi.title, IF(pis.id IS NOT NULL, 1, IF(pi.status = 'RUNNING', 0, -1)) AS is_selected, 
             IF(pir.id IS NOT NULL, 1, 0) AS is_purchase,
-            pir.operate_time AS purchase_time,
+            pir.operate_time AS purchase_time, piv1.value AS category,
             (SELECT GROUP_CONCAT(pis1.value SEPARATOR '","') FROM process_instance_sub_values pis1 
                 WHERE pis1.instance_id = pi.id AND pis1.parent_id = piv.field_id
 	                AND pis1.field_id = 'textField_m1lrc3mo') AS skuids
         FROM process_instances pi LEFT JOIN process_instance_values piv 
             ON piv.instance_id = pi.id AND piv.field_id IN ('tableField_m1g2w3gr', 'tableField_m9gzfubr')
-            AND EXISTS(SELECT pis.id FROM process_instance_sub_values pis 
-            WHERE pis.instance_id = pi.id AND pis.parent_id = piv.field_id
-                AND pis.field_id LIKE '%numberField%' AND pis.value > 0)
+        LEFT JOIN process_instance_sub_values pis ON pis.instance_id = pi.id 
+            AND pis.parent_id = piv.field_id
+            AND pis.field_id LIKE '%numberField%' 
+            AND pis.field_id NOT LIKE '%_value%' AND pis.value > 0
+            AND pis.id = (
+                SELECT max(pis.id) FROM process_instance_sub_values pis 
+                WHERE pis.instance_id = pi.id AND pis.parent_id = piv.field_id
+                    AND pis.field_id LIKE '%numberField%' 
+                    AND pis.field_id NOT LIKE '%_value%' AND pis.value > 0)
         LEFT JOIN process_instance_records pir ON pir.instance_id = pi.id
             AND pir.show_name LIKE '周转订货%'
             AND pir.action_exit = 'agree'
@@ -3689,6 +3713,8 @@ const getInfoDetail = async (id) => {
                 SELECT MIN(p2.operate_time) FROM process_instance_records p2 
                 WHERE p2.instance_id = pi.id AND p2.action_exit = 'agree' 
                     AND p2.show_name LIKE '周转订货%')
+        LEFT JOIN process_instance_values piv1 ON piv1.instance_id = pi.id 
+            AND piv1.field_id = 'cascadeSelectField_m4mf17qn'
         WHERE pi.instance_id = ?`
     const result = await query(sql, [id])
     return result

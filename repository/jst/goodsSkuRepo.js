@@ -84,14 +84,14 @@ goodsSkuRepo.getBySysSkuId = async (sku_id) => {
     return row
 }
 
-goodsSkuRepo.getSalesBySysSkuId = async (start, end) => {
+goodsSkuRepo.getSalesBySysSkuId = async (start, end, info) => {
     const sql = `SELECT IFNULL(SUM(a.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(a.profit), 0) AS profit, 
             IFNULL(SUM(a.cost_amount), 0) AS cost_amount, 
             IFNULL(SUM(a.sale_qty), 0) AS sale_qty, 
             s1.sku_id, s1.goods_id, s1.spu, di.division_name, s1.create_time, 
             s1.purchase_time, s1.first_category, s1.second_category, 
-            s1.third_category, s1.director, s1.price FROM (        
+            s1.third_category, s1.director, s1.price, pi.project_name, s1.shop_name FROM (        
             SELECT s.sys_sku_id AS sku_id, s.goods_id, 
                 s.create_time, s.shop_name, 
                 gi.\`工期\` AS purchase_time, gi.\`spu简称\` AS spu, 
@@ -108,7 +108,8 @@ goodsSkuRepo.getSalesBySysSkuId = async (start, end) => {
         LEFT JOIN division_info di ON di.id = pi.division_id 
         GROUP BY s1.sku_id, s1.goods_id, s1.spu, di.division_name, s1.create_time, 
             s1.purchase_time, s1.first_category, s1.second_category, 
-            s1.third_category, s1.director, s1.price`
+            s1.third_category, s1.director, s1.price, pi.project_name, s1.shop_name
+        ORDER BY s1.${info}`
     const result = await query(sql, [start, end])
     return result
 }
