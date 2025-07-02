@@ -1050,9 +1050,6 @@ developmentService.getProductDevelopInfo = async (params, id) => {
             columns = [
                 { label: '开发性质', field_id: 'type', visible: true },
                 { label: '开发人', field_id: 'director', visible: true },
-                { label: '一级类目', field_id: 'first_category', visible: true },
-                { label: '二级类目', field_id: 'second_category', visible: true },
-                { label: '三级类目', field_id: 'third_category', visible: true },
                 { label: '推品数量', field_id: 'create_num', visible: true },
                 { label: '流程中的数量', field_id: 'running_num', visible: true },
                 { label: '拒绝数量', field_id: 'reject_num', visible: true },
@@ -1079,9 +1076,6 @@ developmentService.getProductDevelopInfo = async (params, id) => {
                 { label: '事业部', field_id: 'division', visible: true, info: '发起人所在部门' },
                 { label: '平台', field_id: 'project', visible: true },
                 { label: '开发人', field_id: 'director', visible: true },
-                { label: '一级类目', field_id: 'first_category', visible: true },
-                { label: '二级类目', field_id: 'second_category', visible: true },
-                { label: '三级类目', field_id: 'third_category', visible: true },
                 { label: '推品数量', field_id: 'create_num', visible: true },
                 { label: '流程中的数量', field_id: 'running_num', visible: true },
                 { label: '拒绝数量', field_id: 'reject_num', visible: true },
@@ -1116,47 +1110,34 @@ developmentService.getProductDevelopInfo = async (params, id) => {
     }
     let scInfo = await actHiProcinstRepo.getNewSctgInfo(start, end)
     for (let i = 0; i < scInfo.length; i++) {
-        let tmp = JSON.parse(JSON.stringify(defaultTmp)), index, first = '', second = '', third = ''
-        let content = new ObjectInputStream(scInfo[i].info1)
-        content = content.readObject()
-        content?.annotations.splice(0, 1)
-        content = content?.annotations
-        first = content[0]
-        second = content.length > 1 ? content[1] : ''
-        third = content.length > 2 ? content[2] : ''
+        let tmp = JSON.parse(JSON.stringify(defaultTmp)), index
         if (params.infoType == 0) {
-            if (resultMap[`0_${scInfo[i].nickname}_${first}_${second}_${third}`] == undefined) {
+            if (resultMap[`0_${scInfo[i].nickname}`] == undefined) {
                 tmp.type = '市场分析推品'
                 tmp.director = scInfo[i].nickname
-                tmp.first_category = first
-                tmp.second_category = second
-                tmp.third_category = third
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
                 result.push(tmp)
-                resultMap[`0_${scInfo[i].nickname}_${first}_${second}_${third}`] = index
+                resultMap[`0_${scInfo[i].nickname}`] = index
             } else {
-                index = resultMap[`0_${scInfo[i].nickname}_${first}_${second}_${third}`]
+                index = resultMap[`0_${scInfo[i].nickname}`]
             }
         } else {
             let dept = getRealDepartment(scInfo[i].dept, scInfo[i].nickname)
             let project = getRealProject(scInfo[i].dept)
             if (params.project != undefined && project != params.project) continue
-            if (resultMap[`${dept}_${project}_${scInfo[i].nickname}_${first}_${second}_${third}`] == undefined) {
+            if (resultMap[`${dept}_${project}_${scInfo[i].nickname}`] == undefined) {
                 tmp.division = dept
                 tmp.project = project
                 tmp.director = scInfo[i].nickname
-                tmp.first_category = first
-                tmp.second_category = second
-                tmp.third_category = third
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
                 result.push(tmp)
-                resultMap[`${dept}_${project}_${scInfo[i].nickname}_${first}_${second}_${third}`] = index
+                resultMap[`${dept}_${project}_${scInfo[i].nickname}`] = index
             } else {
-                index = resultMap[`${dept}_${project}_${scInfo[i].nickname}_${first}_${second}_${third}`]
+                index = resultMap[`${dept}_${project}_${scInfo[i].nickname}`]
             }
         }
         if (scInfo[i].info != null) {
@@ -1228,51 +1209,38 @@ developmentService.getProductDevelopInfo = async (params, id) => {
     }
     let zyInfo = await actHiProcinstRepo.getNewZyInfo(start, end)
     for (let i = 0; i < zyInfo.length; i++) {
-        let tmp = JSON.parse(JSON.stringify(defaultTmp)), index, first = '', second = '', third = ''
-        let content = new ObjectInputStream(zyInfo[i].info1)
-        content = content.readObject()
-        content?.annotations.splice(0, 1)
-        content = content?.annotations
-        first = content[0]
-        second = content.length > 1 ? content[1] : ''
-        third = content.length > 2 ? content[2] : ''
+        let tmp = JSON.parse(JSON.stringify(defaultTmp)), index
         if (zyInfo[i].director == null) {                    
             let dept = getRealDepartment(zyInfo[i].dept, zyInfo[i].nickname)
             if (dept == '企划部') zyInfo[i].director = zyInfo[i].nickname
         }
         if (params.infoType == 0) {
-            if (resultMap[`1_${zyInfo[i].director}_${first}_${second}_${third}`] == undefined) {
+            if (resultMap[`1_${zyInfo[i].director}`] == undefined) {
                 tmp.type = '自研推品'
                 tmp.director = zyInfo[i].director
-                tmp.first_category = first
-                tmp.second_category = second
-                tmp.third_category = third
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
                 result.push(tmp)
-                resultMap[`1_${zyInfo[i].director}_${first}_${second}_${third}`] = index
+                resultMap[`1_${zyInfo[i].director}`] = index
             } else {
-                index = resultMap[`1_${zyInfo[i].director}_${first}_${second}_${third}`]
+                index = resultMap[`1_${zyInfo[i].director}`]
             }
         } else {
             let dept = getRealDepartment(zyInfo[i].dept, zyInfo[i].nickname)
             let project = getRealProject(zyInfo[i].dept)
             if (params.project != undefined && project != params.project) continue
-            if (resultMap[`${dept}_${project}_${zyInfo[i].director}_${first}_${second}_${third}`] == undefined) {
+            if (resultMap[`${dept}_${project}_${zyInfo[i].director}`] == undefined) {
                 tmp.division = dept
                 tmp.project = project
                 tmp.director = zyInfo[i].director
-                tmp.first_category = first
-                tmp.second_category = second
-                tmp.third_category = third
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
                 result.push(tmp)
-                resultMap[`${dept}_${project}_${zyInfo[i].director}_${first}_${second}_${third}`] = index
+                resultMap[`${dept}_${project}_${zyInfo[i].director}`] = index
             } else {
-                index = resultMap[`${dept}_${project}_${zyInfo[i].director}_${first}_${second}_${third}`]
+                index = resultMap[`${dept}_${project}_${zyInfo[i].director}`]
             }
         }        
         if (zyInfo[i].info != null) {
@@ -1350,9 +1318,6 @@ developmentService.getProductDevelopInfo = async (params, id) => {
             if (resultMap[`2_${ipInfo[i].director}___`] == undefined) {
                 tmp.type = 'IP推品'
                 tmp.director = ipInfo[i].director
-                tmp.first_category = ''
-                tmp.second_category = ''
-                tmp.third_category = ''
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
@@ -1369,9 +1334,6 @@ developmentService.getProductDevelopInfo = async (params, id) => {
                 tmp.division = dept
                 tmp.project = project
                 tmp.director = ipInfo[i].director
-                tmp.first_category = ''
-                tmp.second_category = ''
-                tmp.third_category = ''
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
@@ -1439,44 +1401,31 @@ developmentService.getProductDevelopInfo = async (params, id) => {
     }
     ipInfo = await actHiProcinstRepo.getNewIpInfo(start, end)
     for (let i = 0; i < ipInfo.length; i++) {
-        let tmp = JSON.parse(JSON.stringify(defaultTmp)), index, first = '', second = '', third = ''
-        let content = new ObjectInputStream(ipInfo[i].info1)
-        content = content.readObject()
-        content?.annotations.splice(0, 1)
-        content = content?.annotations
-        first = content[0]
-        second = content.length > 1 ? content[1] : ''
-        third = content.length > 2 ? content[2] : ''
+        let tmp = JSON.parse(JSON.stringify(defaultTmp)), index
         if (ipInfo[i].director == null) {                    
             let dept = getRealDepartment(ipInfo[i].dept, ipInfo[i].nickname)
             if (dept == '企划部') ipInfo[i].director = ipInfo[i].nickname
         }
         if (params.infoType == 0) {
-            if (resultMap[`2_${ipInfo[i].director}_${first}_${second}_${third}`] == undefined) {
+            if (resultMap[`2_${ipInfo[i].director}`] == undefined) {
                 tmp.type = 'IP推品'
                 tmp.director = ipInfo[i].director
-                tmp.first_category = first
-                tmp.second_category = second
-                tmp.third_category = third
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
                 result.push(tmp)
-                resultMap[`2_${ipInfo[i].director}_${first}_${second}_${third}`] = index
+                resultMap[`2_${ipInfo[i].director}`] = index
             } else {
-                index = resultMap[`2_${ipInfo[i].director}_${first}_${second}_${third}`]
+                index = resultMap[`2_${ipInfo[i].director}`]
             }
         } else {
             let dept = getRealDepartment(ipInfo[i].dept, ipInfo[i].nickname)
             let project = getRealProject(ipInfo[i].dept)
             if (params.project != undefined && project != params.project) continue
-            if (resultMap[`${dept}_${project}_${ipInfo[i].director}_${first}_${second}_${third}`] == undefined) {
+            if (resultMap[`${dept}_${project}_${ipInfo[i].director}`] == undefined) {
                 tmp.division = dept
                 tmp.project = project
                 tmp.director = ipInfo[i].director
-                tmp.first_category = first
-                tmp.second_category = second
-                tmp.third_category = third
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
@@ -1557,18 +1506,10 @@ developmentService.getProductDevelopInfo = async (params, id) => {
     for (let i = 0; i < ztInfo.length; i++) {
         let tmp = JSON.parse(JSON.stringify(defaultTmp)), index
         let user = await userRepo.getUserWithDeptByDingdingUserId(ztInfo[i].creator)
-        let category = []
-        if (ztInfo[i].category != null) category = JSON.parse(ztInfo[i].category)
-        let first = category?.length ? category[0] : ''
-        let second = category?.length > 1 ? category[1] : ''
-        let third = category?.length > 2 ? category[2] : ''
         if (params.infoType == 0) {
             if (resultMap[`3_${user.nickname}___`] == undefined) {
                 tmp.type = '供应商推品'
                 tmp.director = user.nickname
-                tmp.first_category = first
-                tmp.second_category = second
-                tmp.third_category = third
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
@@ -1585,9 +1526,6 @@ developmentService.getProductDevelopInfo = async (params, id) => {
                 tmp.division = dept
                 tmp.project = project
                 tmp.director = user.nickname
-                tmp.first_category = first
-                tmp.second_category = second
-                tmp.third_category = third
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
@@ -1655,47 +1593,34 @@ developmentService.getProductDevelopInfo = async (params, id) => {
     }
     ztInfo = await actHiProcinstRepo.getNewGysInfo(start, end)
     for (let i = 0; i < ztInfo.length; i++) {
-        let tmp = JSON.parse(JSON.stringify(defaultTmp)), index, first = '', second = '', third = ''
-        let content = new ObjectInputStream(ztInfo[i].info1)
-        content = content.readObject()
-        content?.annotations.splice(0, 1)
-        content = content?.annotations
-        first = content[0]
-        second = content.length > 1 ? content[1] : ''
-        third = content.length > 2 ? content[2] : ''
+        let tmp = JSON.parse(JSON.stringify(defaultTmp)), index
         if (params.infoType == 0) {
-            if (resultMap[`3_${ztInfo[i].nickname}_${first}_${second}_${third}`] == undefined) {
+            if (resultMap[`3_${ztInfo[i].nickname}`] == undefined) {
                 tmp.type = '供应商推品'
                 tmp.director = ztInfo[i].nickname
-                tmp.first_category = first
-                tmp.second_category = second
-                tmp.third_category = third
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
                 result.push(tmp)
-                resultMap[`3_${ztInfo[i].nickname}_${first}_${second}_${third}`] = index
+                resultMap[`3_${ztInfo[i].nickname}`] = index
             } else {
-                index = resultMap[`3_${ztInfo[i].nickname}_${first}_${second}_${third}`]
+                index = resultMap[`3_${ztInfo[i].nickname}`]
             }
         } else {
             let dept = getRealDepartment(ztInfo[i].dept, ztInfo[i].nickname)
             let project = getRealProject(ztInfo[i].dept)
             if (params.project != undefined && project != params.project) continue
-            if (resultMap[`${dept}_${project}_${ztInfo[i].nickname}_${first}_${second}_${third}`] == undefined) {
+            if (resultMap[`${dept}_${project}_${ztInfo[i].nickname}`] == undefined) {
                 tmp.division = dept
                 tmp.project = project
                 tmp.director = ztInfo[i].nickname
-                tmp.first_category = first
-                tmp.second_category = second
-                tmp.third_category = third
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
                 result.push(tmp)
-                resultMap[`${dept}_${project}_${ztInfo[i].nickname}_${first}_${second}_${third}`] = index
+                resultMap[`${dept}_${project}_${ztInfo[i].nickname}`] = index
             } else {
-                index = resultMap[`${dept}_${project}_${ztInfo[i].nickname}_${first}_${second}_${third}`]
+                index = resultMap[`${dept}_${project}_${ztInfo[i].nickname}`]
             }
         }
         if (ztInfo[i].info != null) {
@@ -1769,18 +1694,10 @@ developmentService.getProductDevelopInfo = async (params, id) => {
     for (let i = 0; i < ftInfo.length; i++) {
         let tmp = JSON.parse(JSON.stringify(defaultTmp)), index
         let user = await userRepo.getUserWithDeptByDingdingUserId(ftInfo[i].creator)
-        let category = []
-        if (ftInfo[i].category != null) category = JSON.parse(ftInfo[i].category)
-        let first = category?.length ? category[0] : ''
-        let second = category?.length > 1 ? category[1] : ''
-        let third = category?.length > 2 ? category[2] : ''
         if (params.infoType == 0) {
             if (resultMap[`4_${ftInfo[i].director}___`] == undefined) {
                 tmp.type = '反推推品'
                 tmp.director = ftInfo[i].director
-                tmp.first_category = first
-                tmp.second_category = second
-                tmp.third_category = third
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
@@ -1797,9 +1714,6 @@ developmentService.getProductDevelopInfo = async (params, id) => {
                 tmp.division = dept
                 tmp.project = project
                 tmp.director = ftInfo[i].director
-                tmp.first_category = first
-                tmp.second_category = second
-                tmp.third_category = third
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
@@ -1867,47 +1781,34 @@ developmentService.getProductDevelopInfo = async (params, id) => {
     }
     ftInfo = await actHiProcinstRepo.getNewFtInfo(start, end)
     for (let i = 0; i < ftInfo.length; i++) {
-        let tmp = JSON.parse(JSON.stringify(defaultTmp)), index, first = '', second = '', third = ''
-        let content = new ObjectInputStream(ftInfo[i].info1)
-        content = content.readObject()
-        content?.annotations.splice(0, 1)
-        content = content?.annotations
-        first = content[0]
-        second = content.length > 1 ? content[1] : ''
-        third = content.length > 2 ? content[2] : ''
+        let tmp = JSON.parse(JSON.stringify(defaultTmp)), index
         if (params.infoType == 0) {
-            if (resultMap[`4_${ftInfo[i].director}_${first}_${second}_${third}`] == undefined) {
+            if (resultMap[`4_${ftInfo[i].director}`] == undefined) {
                 tmp.type = '反推推品'
                 tmp.director = ftInfo[i].director
-                tmp.first_category = first
-                tmp.second_category = second
-                tmp.third_category = third
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
                 result.push(tmp)
-                resultMap[`4_${ftInfo[i].director}_${first}_${second}_${third}`] = index
+                resultMap[`4_${ftInfo[i].director}`] = index
             } else {
-                index = resultMap[`4_${ftInfo[i].director}_${first}_${second}_${third}`]
+                index = resultMap[`4_${ftInfo[i].director}`]
             }
         } else {
             let dept = getRealDepartment(ftInfo[i].dept, ftInfo[i].nickname)
             let project = getRealProject(ftInfo[i].dept)
             if (params.project != undefined && project != params.project) continue
-            if (resultMap[`${dept}_${project}_${ftInfo[i].director}_${first}_${second}_${third}`] == undefined) {
+            if (resultMap[`${dept}_${project}_${ftInfo[i].director}`] == undefined) {
                 tmp.division = dept
                 tmp.project = project
                 tmp.director = ftInfo[i].director
-                tmp.first_category = first
-                tmp.second_category = second
-                tmp.third_category = third
                 tmp.warehousing_sku_num = 0
                 tmp.shelf_sku_num = 0
                 index = result.length
                 result.push(tmp)
-                resultMap[`${dept}_${project}_${ftInfo[i].director}_${first}_${second}_${third}`] = index
+                resultMap[`${dept}_${project}_${ftInfo[i].director}`] = index
             } else {
-                index = resultMap[`${dept}_${project}_${ftInfo[i].director}_${first}_${second}_${third}`]
+                index = resultMap[`${dept}_${project}_${ftInfo[i].director}`]
             }
         }
         if (ftInfo[i].info != null) {
@@ -2038,9 +1939,6 @@ developmentService.getProductDevelopInfoDetail = async (params) => {
     defaultTmp.type = info.type
     defaultTmp.division = info.division
     defaultTmp.project = info.project
-    defaultTmp.first_category = info.first_category
-    defaultTmp.second_category = info.second_category
-    defaultTmp.third_category = info.third_category
     for (let i = 0; i < info['children']['bpm'].length; i++) {
         let tmp = JSON.parse(JSON.stringify(defaultTmp))
         tmp.link = 'http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=' + info['children']['bpm'][i]
@@ -2051,7 +1949,7 @@ developmentService.getProductDevelopInfoDetail = async (params) => {
         tmp.is_shelf = '否'
         if (info1?.length) {
             tmp.title = info1[0].title
-            tmp.is_selected = info1[0].is_selected ? '是' : '否'
+            tmp.is_selected = info1[0].is_selected > 0 ? '是' : info1[0].is_selected === 0 ? '进行中' : '否'
             tmp.is_purchase = info1[0].is_purchase ? '是' : '否'
             if (info1[0].info != null) {
                 let content = new ObjectInputStream(info1[0].info), skuids = ''
@@ -2071,6 +1969,15 @@ developmentService.getProductDevelopInfoDetail = async (params) => {
                 info2 = await goodsSkuRepo.getBySysSkuId(skuids)
                 if (info2?.length) tmp.is_shelf = '是'
             }
+            if (info1[0].info1 != null) {
+                let content = new ObjectInputStream(info1[0].info1)
+                content = content.readObject()
+                content?.annotations.splice(0, 1)
+                content = content?.annotations
+                tmp.first_category = content[0]
+                tmp.second_category = content.length > 1 ? content[1] : ''
+                tmp.third_category = content.length > 2 ? content[2] : ''
+            }
         }
         result.push(tmp)
     }
@@ -2084,7 +1991,7 @@ developmentService.getProductDevelopInfoDetail = async (params) => {
         tmp.is_shelf = '否'
         if (info1?.length) {
             tmp.title = info1[0].title
-            tmp.is_selected = info1[0].is_selected ? '是' : '否'
+            tmp.is_selected = info1[0].is_selected > 0 ? '是' : info1[0].is_selected === 0 ? '进行中' : '否'
             tmp.is_purchase = info1[0].is_purchase ? '是' : '否'
             if (info1[0].skuids != null) {
                 let info2 = await purchaseRepo.getBySkuCode(info1[0].skuids)
@@ -2092,6 +1999,12 @@ developmentService.getProductDevelopInfoDetail = async (params) => {
                 info2 = await goodsSkuRepo.getBySysSkuId(info1[0].skuids)
                 if (info2?.length) tmp.is_shelf = '是'
             }
+        }
+        if (info1[0].category != null) {
+            let category = JSON.parse(info1[0].category)        
+            tmp.first_category = category?.length ? category[0] : ''
+            tmp.second_category = category?.length > 1 ? category[1] : ''
+            tmp.third_category = category?.length > 2 ? category[2] : ''
         }
         result.push(tmp)
     }
@@ -2107,9 +2020,6 @@ developmentService.getProductDevelopSales = async (params) => {
             { label: '开发性质', field_id: 'type', visible: true },
             { label: '事业部', field_id: 'division', visible: true },
             { label: '开发人', field_id: 'director', visible: true },
-            { label: '一级类目', field_id: 'first_category', visible: true },
-            { label: '二级类目', field_id: 'second_category', visible: true },
-            { label: '三级类目', field_id: 'third_category', visible: true },
             { label: '上架数量', field_id: 'shelf_num', visible: true },
             { label: '转正数量', field_id: 'positive_num', visible: true },
             { label: '动销数量', field_id: 'normal_num', visible: true },
@@ -2195,7 +2105,7 @@ developmentService.getProductDevelopSales = async (params) => {
             }
         }
     }
-    let saleInfo = await goodsSkuRepo.getSalesBySysSkuId(start, end)
+    let saleInfo = await goodsSkuRepo.getSalesBySysSkuId(start, end, params.infoType == 1 ? 'goods_id' : 'spu')
     for (let i = 0; i < saleInfo.length; i++) {
         if (params.salesType == 0 && params.first_category?.length && saleInfo[i].first_category != params.first_category) continue 
         if (params.salesType == 0 && params.second_category?.length && saleInfo[i].second_category != params.second_category) continue 
@@ -2211,22 +2121,20 @@ developmentService.getProductDevelopSales = async (params) => {
     }
     let resultMap = {}
     if (params.salesType == 0) {
+        let goodsMap = {}
         for (let i in saleMap) {
             let profit = 0, cost_amount = 0, price = 0, sale_amount = 0, index, skuids = '',
                 is_positive = '否', is_normal = '否', is_hot = '否', real_positive_day = '', 
-                tmpIndex = '', goodsMap = {}
+                tmpIndex = ''
             for (let j = 0; j < saleMap[i].length; j++) {
                 let item = saleInfo[saleMap[i][j]]
-                index = `${skuMap[item.sku_id]}_${item.division_name}_${item.director}_${item.first_category}_${item.second_category}_${item.third_category}`
+                index = `${skuMap[item.sku_id]}_${item.division_name}_${item.director}`
                 if (resultMap[index] == undefined) {
                     let tmp = JSON.parse(JSON.stringify(defaultTmp))
                     resultMap[index] = result.length
                     tmp.type = skuMap[item.sku_id]
                     tmp.division = item.division_name
                     tmp.director = item.director
-                    tmp.first_category = item.first_category
-                    tmp.second_category = item.second_category
-                    tmp.third_category = item.third_category
                     tmp.profit = parseFloat(item.profit)
                     tmp.sale_amount = parseFloat(item.sale_amount)
                     tmp['cost_amount'] = parseFloat(item.cost_amount)
@@ -2239,10 +2147,6 @@ developmentService.getProductDevelopSales = async (params) => {
                     result[resultMap[index]].sale_amount += parseFloat(item.sale_amount)
                     result[resultMap[index]].cost_amount += parseFloat(item.cost_amount)
                 }
-                if (goodsMap[item.goods_id] == undefined) {
-                     result[resultMap[index]].goods_num += 1
-                     goodsMap[item.goods_id] = true
-                }
                 profit += parseFloat(item.profit)
                 cost_amount += parseFloat(item.cost_amount)
                 price += parseFloat(item.price) * parseFloat(item.sale_qty)
@@ -2250,7 +2154,6 @@ developmentService.getProductDevelopSales = async (params) => {
                 skuids = `${skuids}${item.sku_id}","`
                 result[resultMap[index]].price += parseFloat(item.price) * parseInt(item.sale_qty)
                 if (tmpIndex != index) {
-                    result[resultMap[index]].shelf_num += 1
                     if (tmpIndex !== '') {
                         if (profit - 2000 > 0) {
                             result[resultMap[tmpIndex]].positive_num += 1
@@ -2275,17 +2178,30 @@ developmentService.getProductDevelopSales = async (params) => {
                         } else {
                             result[resultMap[tmpIndex]].negative_num += 1
                         }
-                        result[resultMap[tmpIndex]].children.push({
-                            spu: i,
-                            sale_amount: sale_amount.toFixed(2),
-                            profit: profit.toFixed(2),
-                            profit_percent: sale_amount > 0 ? (profit/sale_amount*100).toFixed(2) : 0,
-                            standard_profit_percent: price > 0 ? ((1-cost_amount/price)*100).toFixed(2) : 0,
-                            is_positive,
-                            is_normal,
-                            is_hot,
-                            real_positive_day
-                        })
+                        if (goodsMap[`${i}_${resultMap[tmpIndex]}`] == undefined) {
+                            result[resultMap[tmpIndex]].children.push({
+                                spu: i,
+                                sale_amount: sale_amount,
+                                profit: profit,
+                                cost_amount: cost_amount,
+                                profit_percent: sale_amount > 0 ? (profit/sale_amount*100) : 0,
+                                standard_profit_percent: price > 0 ? ((1-cost_amount/price)*100) : 0,
+                                is_positive,
+                                is_normal,
+                                is_hot,
+                                real_positive_day,
+                                first_category: item.first_category,
+                                second_category: item.second_category,
+                                third_category: item.third_category
+                            })
+                            goodsMap[`${i}_${resultMap[tmpIndex]}`] = result[resultMap[tmpIndex]].children.length - 1
+                        } else {
+                            let child = result[resultMap[tmpIndex]].children[goodsMap[`${i}_${resultMap[tmpIndex]}`]]
+                            child.sale_amount += sale_amount
+                            child.profit += profit
+                            child.profit_percent = child.sale_amount > 0 ? (child.profit/child.sale_amount*100) : 0
+                            child.standard_profit_percent = child.price > 0 ? ((1-child.cost_amount/price)*100) : 0
+                        }
                         profit = 0
                         cost_amount = 0 
                         price = 0
@@ -2322,19 +2238,33 @@ developmentService.getProductDevelopSales = async (params) => {
             } else {
                 result[resultMap[tmpIndex]].negative_num += 1
             }
-            result[resultMap[tmpIndex]].children.push({
-                spu: i,
-                sale_amount: sale_amount.toFixed(2),
-                profit: profit.toFixed(2),
-                profit_percent: sale_amount > 0 ? (profit/sale_amount*100).toFixed(2) : 0,
-                standard_profit_percent: price > 0 ? ((1-cost_amount/price)*100).toFixed(2) : 0,
-                is_positive,
-                is_normal,
-                is_hot,
-                real_positive_day
-            })
+            if (goodsMap[`${i}_${resultMap[tmpIndex]}`] == undefined) {
+                result[resultMap[tmpIndex]].children.push({
+                    spu: i,
+                    sale_amount: sale_amount,
+                    profit: profit,
+                    cost_amount: cost_amount,
+                    profit_percent: sale_amount > 0 ? (profit/sale_amount*100) : 0,
+                    standard_profit_percent: price > 0 ? ((1-cost_amount/price)*100) : 0,
+                    is_positive,
+                    is_normal,
+                    is_hot,
+                    real_positive_day,
+                    first_category: saleInfo[saleMap[i][saleMap[i].length-1]].first_category,
+                    second_category: saleInfo[saleMap[i][saleMap[i].length-1]].second_category,
+                    third_category: saleInfo[saleMap[i][saleMap[i].length-1]].third_category
+                })
+                goodsMap[`${i}_${resultMap[tmpIndex]}`] = result[resultMap[tmpIndex]].children.length - 1
+            } else {
+                let child = result[resultMap[tmpIndex]].children[goodsMap[`${i}_${resultMap[tmpIndex]}`]]
+                child.sale_amount += sale_amount
+                child.profit += profit
+                child.profit_percent = child.sale_amount > 0 ? (child.profit/child.sale_amount*100) : 0
+                child.standard_profit_percent = child.price > 0 ? ((1-child.cost_amount/price)*100) : 0
+            }
         }
     } else if (params.salesType == 1) {
+        let goodsMap = {}
         for (let i in saleMap) {
             let profit = 0, cost_amount = 0, price = 0, sale_amount = 0, index, skuids = '', tmpIndex = '',
                 is_positive = '否', is_normal = '否', is_hot = '否', real_positive_day = '', predict_positive_day = ''
@@ -2347,9 +2277,6 @@ developmentService.getProductDevelopSales = async (params) => {
                     tmp.type = skuMap[item.sku_id]
                     tmp.division = item.division_name
                     tmp.director = item.director
-                    tmp.first_category = item.first_category
-                    tmp.second_category = item.second_category
-                    tmp.third_category = item.third_category
                     tmp.profit = parseFloat(item.profit)
                     tmp.sale_amount = parseFloat(item.sale_amount)
                     tmp['cost_amount'] = parseFloat(item.cost_amount)
@@ -2368,7 +2295,6 @@ developmentService.getProductDevelopSales = async (params) => {
                 skuids = `${skuids}${item.sku_id}","`
                 result[resultMap[index]].price += parseFloat(item.price) * parseInt(item.sale_qty)
                 if (tmpIndex != index) {
-                    result[resultMap[index]].shelf_num += 1
                     if (tmpIndex !== '') {
                         if (profit - 2000 > 0) {
                             result[resultMap[tmpIndex]].positive_num += 1
@@ -2393,20 +2319,32 @@ developmentService.getProductDevelopSales = async (params) => {
                             }
                         } else {
                             result[resultMap[tmpIndex]].negative_num += 1
+                        }                        
+                        if (goodsMap[`${i}_${resultMap[tmpIndex]}`] == undefined) {
+                            result[resultMap[tmpIndex]].children.push({
+                                goods_id: i,
+                                spu: i,
+                                sale_amount: sale_amount,
+                                profit: profit,
+                                profit_percent: sale_amount > 0 ? (profit/sale_amount*100) : 0,
+                                standard_profit_percent: price > 0 ? ((1-cost_amount/price)*100) : 0,
+                                is_positive,
+                                is_normal,
+                                is_hot,
+                                real_positive_day,
+                                predict_positive_day,
+                                first_category: item.first_category,
+                                second_category: item.second_category,
+                                third_category: item.third_category
+                            })
+                            goodsMap[`${i}_${resultMap[tmpIndex]}`] = result[resultMap[tmpIndex]].children.length - 1
+                        } else {
+                            let child = result[resultMap[tmpIndex]].children[goodsMap[`${i}_${resultMap[tmpIndex]}`]]
+                            child.sale_amount += sale_amount
+                            child.profit += profit
+                            child.profit_percent = child.sale_amount > 0 ? (child.profit/child.sale_amount*100) : 0
+                            child.standard_profit_percent = child.price > 0 ? ((1-child.cost_amount/price)*100) : 0
                         }
-                        result[resultMap[tmpIndex]].children.push({
-                            goods_id: i,
-                            spu: i,
-                            sale_amount: sale_amount.toFixed(2),
-                            profit: profit.toFixed(2),
-                            profit_percent: sale_amount > 0 ? (profit/sale_amount*100).toFixed(2) : 0,
-                            standard_profit_percent: price > 0 ? ((1-cost_amount/price)*100).toFixed(2) : 0,
-                            is_positive,
-                            is_normal,
-                            is_hot,
-                            real_positive_day,
-                            predict_positive_day
-                        })
                         profit = 0
                         cost_amount = 0
                         price = 0
@@ -2445,19 +2383,175 @@ developmentService.getProductDevelopSales = async (params) => {
             } else {
                 result[resultMap[tmpIndex]].negative_num += 1
             }
-            result[resultMap[tmpIndex]].children.push({
-                goods_id: i,
-                spu: i,
-                sale_amount: sale_amount.toFixed(2),
-                profit: profit.toFixed(2),
-                profit_percent: sale_amount > 0 ? (profit/sale_amount*100).toFixed(2) : 0,
-                standard_profit_percent: price > 0 ? ((1-cost_amount/price)*100).toFixed(2) : 0,
-                is_positive,
-                is_normal,
-                is_hot,
-                real_positive_day,
-                predict_positive_day
-            })
+            
+            if (goodsMap[`${i}_${resultMap[tmpIndex]}`] == undefined) {
+                result[resultMap[tmpIndex]].children.push({
+                    goods_id: i,
+                    spu: i,
+                    sale_amount: sale_amount,
+                    profit: profit,
+                    profit_percent: sale_amount > 0 ? (profit/sale_amount*100) : 0,
+                    standard_profit_percent: price > 0 ? ((1-cost_amount/price)*100) : 0,
+                    is_positive,
+                    is_normal,
+                    is_hot,
+                    real_positive_day,
+                    predict_positive_day,
+                    first_category: saleInfo[saleMap[i][saleMap[i].length-1]].first_category,
+                    second_category: saleInfo[saleMap[i][saleMap[i].length-1]].second_category,
+                    third_category: saleInfo[saleMap[i][saleMap[i].length-1]].third_category
+                })
+                goodsMap[`${i}_${resultMap[tmpIndex]}`] = result[resultMap[tmpIndex]].children.length - 1
+            } else {
+                let child = result[resultMap[tmpIndex]].children[goodsMap[`${i}_${resultMap[tmpIndex]}`]]
+                child.sale_amount += sale_amount
+                child.profit += profit
+                child.profit_percent = child.sale_amount > 0 ? (child.profit/child.sale_amount*100) : 0
+                child.standard_profit_percent = child.price > 0 ? ((1-child.cost_amount/price)*100) : 0
+            }
+        }
+    } else {
+        let goodsMap = {}
+        for (let i in saleMap) {
+            let profit = 0, cost_amount = 0, price = 0, sale_amount = 0, index, skuids = '',
+                is_positive = '否', is_normal = '否', is_hot = '否', real_positive_day = '', 
+                tmpIndex = ''
+            for (let j = 0; j < saleMap[i].length; j++) {
+                let item = saleInfo[saleMap[i][j]]
+                index = `${skuMap[item.sku_id]}_${item.division_name}_${item.project_name}_${item.shop_name}`
+                if (resultMap[index] == undefined) {
+                    let tmp = JSON.parse(JSON.stringify(defaultTmp))
+                    resultMap[index] = result.length
+                    tmp.type = skuMap[item.sku_id]
+                    tmp.division = item.division_name
+                    tmp.project = item.project_name
+                    tmp.shop = item.shop_name
+                    tmp.profit = parseFloat(item.profit)
+                    tmp.sale_amount = parseFloat(item.sale_amount)
+                    tmp['cost_amount'] = parseFloat(item.cost_amount)
+                    tmp['price'] = 0
+                    tmp['goods_num'] = 0
+                    tmp['children'] = []
+                    result.push(tmp)
+                } else {
+                    result[resultMap[index]].profit += parseFloat(item.profit)
+                    result[resultMap[index]].sale_amount += parseFloat(item.sale_amount)
+                    result[resultMap[index]].cost_amount += parseFloat(item.cost_amount)
+                }
+                profit += parseFloat(item.profit)
+                cost_amount += parseFloat(item.cost_amount)
+                price += parseFloat(item.price) * parseFloat(item.sale_qty)
+                sale_amount += parseFloat(item.sale_amount)
+                skuids = `${skuids}${item.sku_id}","`
+                result[resultMap[index]].price += parseFloat(item.price) * parseInt(item.sale_qty)
+                if (tmpIndex != index) {
+                    if (tmpIndex !== '') {
+                        if (profit - 2000 > 0) {
+                            result[resultMap[tmpIndex]].positive_num += 1
+                            skuids = skuids.substring(0, skuids.length - 3)
+                            is_positive = '是'
+                            let sales = await goodsSkuRepo.getSales(skuids, start, end)
+                            if (sales.length) {
+                                if (parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 1500) {
+                                    result[resultMap[tmpIndex]].hot_num += 1
+                                    is_hot = '是'
+                                } else if (sales[0].type == 1 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
+                                    result[resultMap[tmpIndex]].month_normal_num += 1
+                                    is_normal = '是'
+                                } else if (sales[0].type == 2 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
+                                    result[resultMap[tmpIndex]].two_months_normal_num += 1
+                                    is_normal = '是'
+                                } else if (sales[0].type == 3 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
+                                    result[resultMap[tmpIndex]].three_months_normal_num += 1
+                                    is_normal = '是'
+                                }
+                            }
+                        } else {
+                            result[resultMap[tmpIndex]].negative_num += 1
+                        }
+                        
+                        if (goodsMap[`${i}_${resultMap[tmpIndex]}`] == undefined) {
+                            result[resultMap[tmpIndex]].children.push({
+                                spu: i,
+                                sale_amount: sale_amount,
+                                profit: profit,
+                                profit_percent: sale_amount > 0 ? (profit/sale_amount*100) : 0,
+                                standard_profit_percent: price > 0 ? ((1-cost_amount/price)*100) : 0,
+                                is_positive,
+                                is_normal,
+                                is_hot,
+                                real_positive_day,
+                                first_category: item.first_category,
+                                second_category: item.second_category,
+                                third_category: item.third_category
+                            })
+                            goodsMap[`${i}_${resultMap[tmpIndex]}`] = result[resultMap[tmpIndex]].children.length - 1
+                        } else {
+                            let child = result[resultMap[tmpIndex]].children[goodsMap[`${i}_${resultMap[tmpIndex]}`]]
+                            child.sale_amount += sale_amount
+                            child.profit += profit
+                            child.profit_percent = child.sale_amount > 0 ? (child.profit/child.sale_amount*100) : 0
+                            child.standard_profit_percent = child.price > 0 ? ((1-child.cost_amount/price)*100) : 0
+                        }
+                        profit = 0
+                        cost_amount = 0 
+                        price = 0
+                        sale_amount = 0
+                        skuids = ''
+                        is_positive = '否'
+                        is_normal = '否'
+                        is_hot = '否'
+                        real_positive_day = ''
+                    }
+                    tmpIndex = JSON.parse(JSON.stringify(index))
+                }
+            }
+            if (profit - 2000 > 0) {
+                result[resultMap[tmpIndex]].positive_num += 1
+                skuids = skuids.substring(0, skuids.length - 3)
+                is_positive = '是'
+                let sales = await goodsSkuRepo.getSales(skuids, start, end)
+                if (sales.length) {
+                    if (parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 1500) {
+                        result[resultMap[tmpIndex]].hot_num += 1
+                        is_hot = '是'
+                    } else if (sales[0].type == 1 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
+                        result[resultMap[tmpIndex]].month_normal_num += 1
+                        is_normal = '是'
+                    } else if (sales[0].type == 2 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
+                        result[resultMap[tmpIndex]].two_months_normal_num += 1
+                        is_normal = '是'
+                    } else if (sales[0].type == 3 && parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 400) {
+                        result[resultMap[tmpIndex]].three_months_normal_num += 1
+                        is_normal = '是'
+                    }
+                }
+            } else {
+                result[resultMap[tmpIndex]].negative_num += 1
+            }
+            if (goodsMap[`${i}_${resultMap[tmpIndex]}`] == undefined) {
+                result[resultMap[tmpIndex]].children.push({
+                    spu: i,
+                    sale_amount: sale_amount,
+                    profit: profit,
+                    profit_percent: sale_amount > 0 ? (profit/sale_amount*100) : 0,
+                    standard_profit_percent: price > 0 ? ((1-cost_amount/price)*100) : 0,
+                    is_positive,
+                    is_normal,
+                    is_hot,
+                    real_positive_day,
+                    first_category: saleInfo[saleMap[i][saleMap[i].length-1]].first_category,
+                    second_category: saleInfo[saleMap[i][saleMap[i].length-1]].second_category,
+                    third_category: saleInfo[saleMap[i][saleMap[i].length-1]].third_category
+                })
+                goodsMap[`${i}_${resultMap[tmpIndex]}`] = result[resultMap[tmpIndex]].children.length - 1
+            } else {
+                let child = result[resultMap[tmpIndex]].children[goodsMap[`${i}_${resultMap[tmpIndex]}`]]
+                child.sale_amount += sale_amount
+                child.profit += profit
+                child.profit_percent = child.sale_amount > 0 ? (child.profit/child.sale_amount*100) : 0
+                child.standard_profit_percent = child.price > 0 ? ((1-child.cost_amount/price)*100) : 0
+            }
         }
     }
     for (let i = 0; i < result.length; i++) {
@@ -2467,6 +2561,13 @@ developmentService.getProductDevelopSales = async (params) => {
             ((1-(result[i].cost_amount / result[i].price))*100).toFixed(2) : 0
         result[i].profit = result[i].profit.toFixed(2)
         result[i].sale_amount = result[i].sale_amount.toFixed(2)
+        result[i].shelf_num = result[i].children.length
+        for (let j = 0; j < result[i].children.length; j++) {
+            result[i].children[j].sale_amount = result[i].children[j].sale_amount.toFixed(2)
+            result[i].children[j].profit = result[i].children[j].profit.toFixed(2)
+            result[i].children[j].profit_percent = result[i].children[j].profit_percent.toFixed(2)
+            result[i].children[j].standard_profit_percent = result[i].children[j].standard_profit_percent.toFixed(2)            
+        }
         if (result[i].shelf_num > 0) {
             result[i].month_normal_percent = (result[i].month_normal_num/result[i].shelf_num*100).toFixed(2)
             result[i].two_months_normal_percent = (result[i].two_months_normal_num/result[i].shelf_num*100).toFixed(2)
