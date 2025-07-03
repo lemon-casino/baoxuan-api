@@ -115,17 +115,22 @@ goodsSkuRepo.getSalesBySysSkuId = async (start, end, info) => {
 }
 
 goodsSkuRepo.getSalesBySysSkuId2 = async (start, end) => {
-    const sql = `SELECT IFNULL(SUM(a.sale_amount), 0) AS sale_amount, 
-            IFNULL(SUM(a.profit), 0) AS profit, COUNT(1) AS shelf_link_num, s1.director FROM (        
-            SELECT s.goods_id, MIN(s.create_time) AS create_time, 
-                s.shop_name, gi.\`开发员\` AS director 
-            FROM jst_goods_sku s JOIN danpin.goods_info gi ON gi.\`商品编码\` = s.sys_sku_id 
-            GROUP BY s.goods_id, s.shop_name, gi.\`开发员\`) s1 
-        JOIN goods_sales_stats a ON s1.goods_id = a.goods_id 
-            AND s1.shop_name = a.shop_name 
-            AND a.date <= DATE_ADD(s1.create_time, INTERVAL 150 DAY)
-        WHERE s1.create_time BETWEEN ? AND ? GROUP BY s1.director`
-    const result = await query(sql, [start, end])
+    const sql = `SELECT IFNULL(SUM(s2.sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(s2.profit), 0) AS profit, gi.\`开发员\` AS director, 
+            COUNT(DISTINCT s1.goods_id) AS shelf_link_num 
+        FROM (SELECT a2.goods_id, IF(pc.\`商品编码\` IS NOT NULL, 
+            pc.\`商品编码\`, a2.sys_sku_id) AS sku_id FROM (
+            SELECT sys_sku_id, MIN(create_time) AS create_time 
+            FROM jst_goods_sku GROUP BY sys_sku_id
+        ) a1 LEFT JOIN jst_goods_sku a2 ON a1.sys_sku_id = a2.sys_sku_id
+        LEFT JOIN danpin.combination_product_code pc ON pc.\`组合商品编码\` = a1.sys_sku_id
+        WHERE DATE_ADD(a1.create_time, INTERVAL 150 DAY) > ? 
+        GROUP BY a2.goods_id, IF(pc.\`商品编码\` IS NOT NULL, 
+            pc.\`商品编码\`, a2.sys_sku_id), a1.create_time) s1
+        JOIN danpin.goods_info gi ON gi.\`商品编码\` = s1.sku_id
+        JOIN goods_sale_info s2 ON s2.goods_id = s1.goods_id AND s2.sku_code = s1.sku_id
+            AND s2.date BETWEEN ? AND ? GROUP BY gi.\`开发员\``
+    const result = await query(sql, [end, start, end])
     return result
 }
 
