@@ -76,4 +76,6 @@ router.get('/shop-sale', operationApi.getShopSaleData)
 router.get('/division-qty', operationApi.getDivisionSaleQtyData)
 router.get('/project-qty', operationApi.getProjectSaleQtyData)
 router.get('/shop-qty', operationApi.getShopSaleQtyData)
+// 更新 inventory_attributes
+router.post('/inventory_attributes/update',operationApi.updateInventory)
 module.exports = router

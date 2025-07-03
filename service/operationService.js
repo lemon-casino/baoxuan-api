@@ -1005,7 +1005,6 @@ const importGoodsInfo = async (rows, time) => {
     let columns = rows[0].values,
         goods_id_row = null, 
         sku_id_row = null, 
-        goods_code_row = null,
         sku_code_row = null,
         shop_name_row = null, 
         shop_id_row = null, 
@@ -1015,9 +1014,7 @@ const importGoodsInfo = async (rows, time) => {
         real_sale_amount_row = null,
         cost_amount_row = null, 
         gross_profit_row = null, 
-        gross_profit_rate_row = null, 
         profit_row = null, 
-        profit_rate_row = null, 
         promotion_amount_row = null, 
         express_fee_row = null,
         operation_amount_row = null,
@@ -1029,7 +1026,6 @@ const importGoodsInfo = async (rows, time) => {
     for (let i = 1; i <= columns.length; i++) {
         if (columns[i] == '店铺款式编码') {goods_id_row = i; continue}
         if (columns[i] == '款式编码(参考)') {sku_id_row = i; continue}
-        if (columns[i] == '商品款号') {goods_code_row = i; continue}
         if (columns[i] == '商品编码') {sku_code_row = i; continue}
         if (columns[i] == '店铺名称') {shop_name_row = i; continue}
         if (columns[i] == '店铺编码') {shop_id_row = i; continue}
@@ -1038,9 +1034,7 @@ const importGoodsInfo = async (rows, time) => {
         if (columns[i] == '利润-销售金额(扣退)') {sale_amount_row = i; continue}
         if (columns[i] == '利润-销售成本(扣退)') {cost_amount_row = i; continue}
         if (columns[i] == '利润-毛利') {gross_profit_row = i; continue}
-        if (columns[i] == '利润-毛利率') {gross_profit_rate_row = i; continue}
         if (columns[i] == '利润-利润') {profit_row = i; continue}
-        if (columns[i] == '利润-利润率') {profit_rate_row = i; continue}
         if (columns[i] == '利润-其中：推广费') {promotion_amount_row = i; continue}
         if (columns[i] == '订单费用-快递费（自动匹配）') {express_fee_row = i; continue}
         if (columns[i] == '利润-费用') {operation_amount_row = i; continue}
@@ -1064,9 +1058,7 @@ const importGoodsInfo = async (rows, time) => {
             sku_id_row ? (typeof(rows[i].getCell(sku_id_row).value) == 'string' ? 
                 rows[i].getCell(sku_id_row).value.trim() : 
                 rows[i].getCell(sku_id_row).value) : null,
-            goods_code_row ? (typeof(rows[i].getCell(goods_code_row).value) == 'string' ? 
-                rows[i].getCell(goods_code_row).value.trim() : 
-                rows[i].getCell(goods_code_row).value) : null,
+            null,
             sku_code_row ? (typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
                 rows[i].getCell(sku_code_row).value.trim() : 
                 rows[i].getCell(sku_code_row).value) : null,
@@ -1080,13 +1072,9 @@ const importGoodsInfo = async (rows, time) => {
             rows[i].getCell(sale_amount_row).value,
             rows[i].getCell(cost_amount_row).value,
             rows[i].getCell(gross_profit_row).value,
-            typeof(rows[i].getCell(gross_profit_rate_row).value) == 'string' ? 
-                rows[i].getCell(gross_profit_rate_row).value.replace(/%/g, '') : 
-                rows[i].getCell(gross_profit_rate_row).value,
+            null,
             rows[i].getCell(profit_row).value,
-            typeof(rows[i].getCell(profit_rate_row).value) == 'string' ? 
-                rows[i].getCell(profit_rate_row).value.replace(/%/g, '') : 
-                rows[i].getCell(profit_rate_row).value,
+            null,
             rows[i].getCell(promotion_amount_row).value,
             rows[i].getCell(express_fee_row).value,
             rows[i].getCell(operation_amount_row).value,
@@ -3863,6 +3851,13 @@ const importGhyxpromotioninfo = async (rows, time, promotion_name) => {
     return result
 }
 
+const updateInventory = async () =>{
+    await goodsSalesRepo.updatemonth6(6,'month','month6_sale_qty')
+    await goodsSalesRepo.updatemonth6(7,'day','day7_sale_qty')
+    await goodsSalesRepo.updatemonth6(30,'day','day30_sale_qty')
+    return true
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -3920,5 +3915,6 @@ module.exports = {
     getProjectSaleQtyData,
     getShopSaleData,
     getShopSaleQtyData,
-    importGhyxpromotioninfo
+    importGhyxpromotioninfo,
+    updateInventory
 }

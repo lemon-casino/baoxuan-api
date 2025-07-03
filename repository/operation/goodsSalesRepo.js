@@ -709,4 +709,39 @@ goodsSalesRepo.getSalesBySpuAndSkuId = async (start, end, productType, addSales,
     return result
 }
 
+goodsSalesRepo.updatemonth6 = async (day,type,column) =>{
+    let sql = `UPDATE danpin.inventory_attributes a LEFT JOIN (
+        select sku_code,SUM(sale_qty) as sale_qty  from (
+            SELECT sku_code,SUM(sale_qty) as sale_qty  
+            FROM goods_sale_info 
+            WHERE date >= DATE_SUB(DATE(NOW()),INTERVAL ${day} ${type}) 
+            AND shop_name != '京东自营旗舰店' 
+            GROUP BY sku_code  
+            UNION ALL
+            select a.商品编码 as sku_code ,SUM(a.数量) as sale_qty  from (
+            select IFNULL(c.商品编码,a.编码) as '商品编码'
+                ,IF(c.数量 is not NULL,a.数量*c.数量,a.数量) as '数量' 
+            from (
+                select 编码 ,发货商品件数 as '数量',时间 from danpin.jb_ziying 
+                where 时间  >= DATE_SUB(DATE(NOW()),INTERVAL ${day} ${type})
+                UNION ALL
+                select 编码 ,发货商品件数 as '数量',时间 from danpin.jb_ziying_everday
+                where 时间  >= DATE_SUB(DATE(NOW()),INTERVAL ${day} ${type})
+            ) as a
+            LEFT JOIN
+            (select 组合商品编码,商品编码,数量,(数量*子商品成本价)/组合成本价 as '占比' from danpin.combination_product_code) as c
+            on a.编码 = c.组合商品编码
+            )as a
+            where a.商品编码 is not null  and 数量 is not null
+            GROUP BY a.商品编码
+        )as a GROUP BY sku_code) b
+        on a.sku_code = b.sku_code
+        SET a.${column} = b.sale_qty`
+    let sql1 = `update danpin.inventory_attributes set ${column}=0 where ${column} is null`
+
+    const result = await query(sql)
+    const result1 = await query(sql1)
+    return result
+
+}
 module.exports = goodsSalesRepo

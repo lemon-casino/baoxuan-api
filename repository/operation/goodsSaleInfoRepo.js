@@ -2337,12 +2337,12 @@ goodsSaleInfoRepo.getInventoryData = async(day) => {
     FROM danpin.goods_info as a
 	LEFT JOIN (
 		select 商品编码
-					,SUM(主仓实际库存数) as '主仓实际库存数'
-					,SUM(公有可用数) as '公有可用数'
-					,sum(采购在途数) as '采购在途数'
-					,sum(调拨在途数)as '调拨在途数'
-					,SUM(\`订单占有数\`) as '订单占有数'
-					,SUM(\`进货仓库存\`) as '进货仓库存'
+            ,SUM(主仓实际库存数) as '主仓实际库存数'
+            ,SUM(公有可用数) as '公有可用数'
+            ,sum(采购在途数) as '采购在途数'
+            ,sum(调拨在途数)as '调拨在途数'
+            ,SUM(\`订单占有数\`) as '订单占有数'
+            ,SUM(\`进货仓库存\`) as '进货仓库存'
 		from danpin.goods_kucun 
 		where 统计日期 = ? and 仓储方='北京超速树懒科技有限公司'
 		GROUP BY 商品编码
@@ -2350,11 +2350,11 @@ goodsSaleInfoRepo.getInventoryData = async(day) => {
 	on a.商品编码=b.商品编码
 	LEFT JOIN(
 		select \`商品编码\`
-					,sum(IF(运营云仓名称='南京仓京东自备',运营云仓可用数,0)) as '南京仓京东自备'
-					,sum(IF(运营云仓名称='事业三部（天猫/小红书/TEOTM)',运营云仓可用数,0)) as '事业三部'
-					,sum(IF(运营云仓名称='事业一部（PDD/淘工厂/猫超/COUPANG）',运营云仓可用数,0)) AS '事业一部'
-					,sum(IF(运营云仓名称='事业二部（京东/抖音/唯品会/得物/1688）',运营云仓可用数,0)) AS '事业二部'
-					,sum(IF(运营云仓名称='COUPANG/猫超南京仓',运营云仓可用数,0)) AS 'COUPANG/猫超南京仓'
+            ,sum(IF(运营云仓名称='南京仓京东自备',运营云仓可用数,0)) as '南京仓京东自备'
+            ,sum(IF(运营云仓名称='事业三部（天猫/小红书/TEOTM)',运营云仓可用数,0)) as '事业三部'
+            ,sum(IF(运营云仓名称='事业一部（PDD/淘工厂/猫超/COUPANG）',运营云仓可用数,0)) AS '事业一部'
+            ,sum(IF(运营云仓名称='事业二部（京东/抖音/唯品会/得物/1688）',运营云仓可用数,0)) AS '事业二部'
+            ,sum(IF(运营云仓名称='COUPANG/猫超南京仓',运营云仓可用数,0)) AS 'COUPANG/猫超南京仓'
 		FROM danpin.goods_kucun_fen WHERE 统计日期 = ?
 		GROUP BY 商品编码
 	) as c
