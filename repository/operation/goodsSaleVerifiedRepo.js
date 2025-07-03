@@ -888,13 +888,13 @@ goodsSaleVerifiedRepo.updateOrder = async ({
 }
 
 goodsSaleVerifiedRepo.deleteByDate = async (date) => {
-    let sql = `DELETE FROM goods_sale_verified WHERE \`date\` = ? and goods_id not in ('123456789','123456781')`
+    let sql = `DELETE FROM goods_sale_verified WHERE \`date\` = ? AND goods_id not in ('123456789','123456781')`
     const result = await query(sql, [date])
     return result?.affectedRows ? true : false
 }
 
 goodsSaleVerifiedRepo.deleteByDateId = async (date,goods_id) => {
-    let sql = `DELETE FROM goods_sale_verified WHERE \`date\` = ? and goods_id = ?`
+    let sql = `DELETE FROM goods_sale_verified WHERE \`date\` = ? AND goods_id = ?`
     const result = await query(sql, [date,goods_id])
     return result?.affectedRows ? true : false
 }

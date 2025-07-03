@@ -1476,6 +1476,15 @@ const importGhyxpromotioninfo = async (req, res, next) => {
     }
 }
 
+const updateInventory = async(req, res,next) => {
+    try {
+        await operationService.updateInventory()
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -1528,5 +1537,6 @@ module.exports = {
     getProjectSaleQtyData,
     getShopSaleData,
     getShopSaleQtyData,
-    importGhyxpromotioninfo
+    importGhyxpromotioninfo,
+    updateInventory
 }
