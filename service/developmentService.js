@@ -2121,7 +2121,7 @@ developmentService.getProductDevelopSales = async (params) => {
     }
     let resultMap = {}
     if (params.salesType == 0) {
-        let goodsMap = {}
+        let goodsMap = {}, positiveMap = {}
         for (let i in saleMap) {
             let profit = 0, cost_amount = 0, price = 0, sale_amount = 0, index, skuids = '',
                 is_positive = '否', is_normal = '否', is_hot = '否', real_positive_day = '', 
@@ -2181,7 +2181,13 @@ developmentService.getProductDevelopSales = async (params) => {
                             child.standard_profit_percent = child.price > 0 ? ((1-child.cost_amount/price)*100) : 0
                         }  
                         if (profit - 2000 > 0) {
-                            result[resultMap[tmpIndex]].positive_num += 1
+                            if (positiveMap[resultMap[tmpIndex]] == undefined || positiveMap[resultMap[tmpIndex]][goodsMap[`${i}_${resultMap[tmpIndex]}`]] == undefined) {
+                                result[resultMap[tmpIndex]].positive_num += 1
+                                if (positiveMap[resultMap[tmpIndex]] == undefined) {
+                                    positiveMap[resultMap[tmpIndex]] = {}
+                                }
+                                positiveMap[resultMap[tmpIndex]][goodsMap[`${i}_${resultMap[tmpIndex]}`]] = true
+                            }
                             skuids = skuids.substring(0, skuids.length - 3)
                             let child = result[resultMap[tmpIndex]].children[goodsMap[`${i}_${resultMap[tmpIndex]}`]]
                             child.is_positive = '是'
@@ -2245,7 +2251,13 @@ developmentService.getProductDevelopSales = async (params) => {
                 child.standard_profit_percent = child.price > 0 ? ((1-child.cost_amount/price)*100) : 0
             }
             if (profit - 2000 > 0) {
-                result[resultMap[tmpIndex]].positive_num += 1
+                if (positiveMap[resultMap[tmpIndex]] == undefined || positiveMap[resultMap[tmpIndex]][goodsMap[`${i}_${resultMap[tmpIndex]}`]] == undefined) {
+                    result[resultMap[tmpIndex]].positive_num += 1
+                    if (positiveMap[resultMap[tmpIndex]] == undefined) {
+                        positiveMap[resultMap[tmpIndex]] = {}
+                    }
+                    positiveMap[resultMap[tmpIndex]][goodsMap[`${i}_${resultMap[tmpIndex]}`]] = true
+                }
                 skuids = skuids.substring(0, skuids.length - 3)
                 let child = result[resultMap[tmpIndex]].children[goodsMap[`${i}_${resultMap[tmpIndex]}`]]
                 child.is_positive = '是'
@@ -2281,7 +2293,7 @@ developmentService.getProductDevelopSales = async (params) => {
             real_positive_day = ''
         }
     } else if (params.salesType == 1) {
-        let goodsMap = {}
+        let goodsMap = {}, positiveMap = {}
         for (let i in saleMap) {
             let profit = 0, cost_amount = 0, price = 0, sale_amount = 0, index, skuids = '', tmpIndex = '',
                 is_positive = '否', is_normal = '否', is_hot = '否', real_positive_day = '', predict_positive_day = ''
@@ -2340,7 +2352,13 @@ developmentService.getProductDevelopSales = async (params) => {
                             child.standard_profit_percent = child.price > 0 ? ((1-child.cost_amount/price)*100) : 0
                         }
                         if (profit - 2000 > 0) {
-                            result[resultMap[tmpIndex]].positive_num += 1
+                            if (positiveMap[resultMap[tmpIndex]] == undefined || positiveMap[resultMap[tmpIndex]][goodsMap[`${i}_${resultMap[tmpIndex]}`]] == undefined) {
+                                result[resultMap[tmpIndex]].positive_num += 1
+                                if (positiveMap[resultMap[tmpIndex]] == undefined) {
+                                    positiveMap[resultMap[tmpIndex]] = {}
+                                }
+                                positiveMap[resultMap[tmpIndex]][goodsMap[`${i}_${resultMap[tmpIndex]}`]] = true
+                            }
                             skuids = skuids.substring(0, skuids.length - 3)
                             let sales = [] 
                             let child = result[resultMap[tmpIndex]].children[goodsMap[`${i}_${resultMap[tmpIndex]}`]]
@@ -2456,7 +2474,7 @@ developmentService.getProductDevelopSales = async (params) => {
             real_positive_day = ''
         }
     } else {
-        let goodsMap = {}
+        let goodsMap = {}, positiveMap = {}
         for (let i in saleMap) {
             let profit = 0, cost_amount = 0, price = 0, sale_amount = 0, index, skuids = '',
                 is_positive = '否', is_normal = '否', is_hot = '否', real_positive_day = '', 
@@ -2516,7 +2534,13 @@ developmentService.getProductDevelopSales = async (params) => {
                             child.standard_profit_percent = child.price > 0 ? ((1-child.cost_amount/price)*100) : 0
                         }
                         if (profit - 2000 > 0) {
-                            result[resultMap[tmpIndex]].positive_num += 1
+                            if (positiveMap[resultMap[tmpIndex]] == undefined || positiveMap[resultMap[tmpIndex]][goodsMap[`${i}_${resultMap[tmpIndex]}`]] == undefined) {
+                                result[resultMap[tmpIndex]].positive_num += 1
+                                if (positiveMap[resultMap[tmpIndex]] == undefined) {
+                                    positiveMap[resultMap[tmpIndex]] = {}
+                                }
+                                positiveMap[resultMap[tmpIndex]][goodsMap[`${i}_${resultMap[tmpIndex]}`]] = true
+                            }
                             skuids = skuids.substring(0, skuids.length - 3)
                             let child = result[resultMap[tmpIndex]].children[goodsMap[`${i}_${resultMap[tmpIndex]}`]]
                             child.is_positive = '是'
@@ -2577,7 +2601,13 @@ developmentService.getProductDevelopSales = async (params) => {
                 child.standard_profit_percent = child.price > 0 ? ((1-child.cost_amount/price)*100) : 0
             }
             if (profit - 2000 > 0) {
-                result[resultMap[tmpIndex]].positive_num += 1
+                if (positiveMap[resultMap[tmpIndex]] == undefined || positiveMap[resultMap[tmpIndex]][goodsMap[`${i}_${resultMap[tmpIndex]}`]] == undefined) {
+                    result[resultMap[tmpIndex]].positive_num += 1
+                    if (positiveMap[resultMap[tmpIndex]] == undefined) {
+                        positiveMap[resultMap[tmpIndex]] = {}
+                    }
+                    positiveMap[resultMap[tmpIndex]][goodsMap[`${i}_${resultMap[tmpIndex]}`]] = true
+                }
                 skuids = skuids.substring(0, skuids.length - 3)
                 let child = result[resultMap[tmpIndex]].children[goodsMap[`${i}_${resultMap[tmpIndex]}`]]
                 child.is_positive = '是'
@@ -2634,34 +2664,6 @@ developmentService.getProductDevelopSales = async (params) => {
     return {columns, data: result}
 }
 
-developmentService.getProductDevelopSalesDetail = async (params) => {
-    let start = moment(params.start).format('YYYY-MM-DD')
-    let end = moment(params.end).format('YYYY-MM-DD') + ' 23:59:59'
-    let columns = [
-        { label: '开发人员', field_id: 'director', visible: true },
-        { label: '开发性质', field_id: 'type', visible: true },
-        { label: '推品数量', field_id: 'create_num', visible: true },
-        { label: '流程中的数量', field_id: 'running_num', visible: true },
-        { label: '拒绝数量', field_id: 'reject_num', visible: true },
-        { label: '选中SPU数量', field_id: 'selected_num', visible: true },
-        { label: '推品到选中平均时长', field_id: 'selected_time', visible: true },
-        { label: '采购SPU数量', field_id: 'purchase_num', visible: true },
-        { label: '选中到采购平均时长', field_id: 'purchase_time', visible: true },
-        { label: '选中到采购时长超时SPU数量', field_id: 'out_purchase_num', visible: true, info: '从选中到下采购单3天' },
-        { label: '上架SPU数量', field_id: 'shelf_num', visible: true },
-        { label: '采购到入仓平均时长', field_id: 'shelf_num', visible: true, info: '以实际SKU入仓时间计算时长' },
-        { label: '采购到入仓时长超时SPU量', field_id: 'out_shelf_num', visible: true, info: '只要有一个SKU超时，即显示超时' },
-        { label: '入仓到上架平均时长', field_id: 'shelf_time', visible: true, info: '上架时间以店铺商品信息创建时间为准' },
-        { label: '上架时长超时SPU量', field_id: 'out_shelf_num', visible: true, info: '以一个SKU超时即为超时，限制天数为1天（自然日）' },
-        { label: '选中率(%)', field_id: 'selected_percent', visible: true, info: '选中数量/推品数量*100%，以SPU为维度计算' },
-        { label: '推品采购率(%)', field_id: 'purchase_percent', visible: true, info: '采购数量/推品数量*100%，以SPU为准' },
-        { label: '上架链接数量', field_id: 'shelf_link_num', visible: true, info: '以聚水潭店铺商品信息为准' },
-        { label: '上架率(%)', field_id: 'shelf_percent', visible: true, info: '上架率=上架数量/入仓数量' }
-    ], result = []
-    
-    return {columns, data: result}
-}
-
 developmentService.getProductDevelopDirectorSales = async (params) => {
     let start = moment(params.start).format('YYYY-MM-DD'), data = []
     let end = moment(params.end).format('YYYY-MM-DD') + ' 23:59:59'
@@ -2674,6 +2676,53 @@ developmentService.getProductDevelopDirectorSales = async (params) => {
     if (params.infoType == 0)
         data = await goodsSkuRepo.getSalesBySysSkuId1(start, end)
     else data = await goodsSkuRepo.getSalesBySysSkuId2(start, end)
+    return {columns, data}
+}
+
+developmentService.getProductSales = async (params) => {
+    let start = moment(params.start).format('YYYY-MM-DD')
+    let end = moment(params.end).format('YYYY-MM-DD') + ' 23:59:59'
+    let columns = [], data = []
+    if (params.type == 0) {
+        columns = [
+            { label: '事业部', field_id: 'division', visible: true },
+            { label: '平台', field_id: 'project', visible: true },
+            { label: 'GMV', field_id: 'sale_amount', visible: true },
+            { label: '毛利润', field_id: 'gross_profit', visible: true },
+            { label: '利润额(胜算)', field_id: 'profit', visible: true },
+            { label: '利润率(胜算)', field_id: 'profit_percent', visible: true },
+            { label: '利润率(牌价)', field_id: 'standard_profit_percent', visible: true },
+            { label: '新品GMV占比', field_id: 'new_percent', visible: true },
+            { label: '环比', field_id: 'sale_amount_qoq', visible: true },
+            { label: '同比', field_id: 'sale_amount_yoy', visible: true },
+        ]
+    } else if (params.type == 1) {
+        columns = [
+            { label: '店铺', field_id: 'project', visible: true },
+            { label: 'GMV', field_id: 'sale_amount', visible: true },
+            { label: '毛利润', field_id: 'gross_profit', visible: true },
+            { label: '利润额(胜算)', field_id: 'profit', visible: true },
+            { label: '利润率(胜算)', field_id: 'profit_percent', visible: true },
+            { label: '利润率(牌价)', field_id: 'standard_profit_percent', visible: true },
+            { label: '新品GMV占比', field_id: 'new_percent', visible: true },
+            { label: '环比', field_id: 'sale_amount_qoq', visible: true },
+            { label: '同比', field_id: 'sale_amount_yoy', visible: true },
+        ]
+    } else {
+        columns = [
+            { label: '一级类目', field_id: 'first_category', visible: true },
+            { label: '二级类目', field_id: 'second_category', visible: true },
+            { label: '三级类目', field_id: 'third_category', visible: true },
+            { label: 'SPU', field_id: 'spu', visible: true },
+            { label: 'GMV', field_id: 'sale_amount', visible: true },
+            { label: '毛利润', field_id: 'gross_profit', visible: true },
+            { label: '利润额(胜算)', field_id: 'profit', visible: true },
+            { label: '利润率(胜算)', field_id: 'profit_percent', visible: true },
+            { label: '利润率(牌价)', field_id: 'standard_profit_percent', visible: true },
+            { label: '环比', field_id: 'sale_amount_qoq', visible: true },
+            { label: '同比', field_id: 'sale_amount_yoy', visible: true },
+        ]
+    }
     return {columns, data}
 }
 

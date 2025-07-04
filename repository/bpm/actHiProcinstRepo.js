@@ -431,12 +431,15 @@ actHiProcinstRepo.getNewDetail = async (id) => {
 	        IF(v2.ID_ IS NOT NULL, 1, 0) AS is_purchase, b.BYTES_ AS info, b1.BYTES_ AS info1 
         FROM ACT_HI_PROCINST p LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
 			AND v1.NAME_ IN ('Fzmjma3pe3tnclc', 'F2lmma3petqpcwc', 'F34mma3pf0egd0c', 
+                'Fmtama25a3lrcwc', 'Fkyuma25az2ud8c', 'Fiaama25b6zidec', 
                 'Fxfrma3j75fse7c', 'F6c5mbuidfzfqjc', 'F64jmbuie9olqmc', 'Fxkxmbuiecz2qpc', 'Fy6xma3jakboekc')
             AND (v1.TEXT_ = '是' OR v1.TEXT_ = '选中')
             AND v1.LAST_UPDATED_TIME_ = (
                 SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
                 WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND (v2.TEXT_ = '是' OR v2.TEXT_ = '选中')
                 AND v2.NAME_ IN ('Fzmjma3pe3tnclc', 'F2lmma3petqpcwc', 'F34mma3pf0egd0c', 
+                    'Fmtama25a3lrcwc', 'Fkyuma25az2ud8c', 'Fiaama25b6zidec', 
                     'Fxfrma3j75fse7c', 'F6c5mbuidfzfqjc', 'F64jmbuie9olqmc', 'Fxkxmbuiecz2qpc', 'Fy6xma3jakboekc') 
             )
         JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
