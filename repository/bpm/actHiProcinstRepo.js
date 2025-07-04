@@ -114,6 +114,7 @@ actHiProcinstRepo.getNewFtInfo = async (start, end) => {
             AND v1.LAST_UPDATED_TIME_ = (
                 SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
                 WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND vv.TEXT_ = '选中' 
                 AND vv.NAME_ IN ('Fxfrma3j75fse7c', 'F6c5mbuidfzfqjc', 'F64jmbuie9olqmc', 'Fxkxmbuiecz2qpc', 'Fy6xma3jakboekc') 
             )
         LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
@@ -203,6 +204,7 @@ actHiProcinstRepo.getNewGysInfo = async (start, end) => {
             AND v1.LAST_UPDATED_TIME_ = (
                 SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
                 WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND vv.TEXT_ = '选中' 
                 AND vv.NAME_ IN ('Fmtama25a3lrcwc', 'Fkyuma25az2ud8c', 'Fiaama25b6zidec') 
             )
         LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
@@ -273,6 +275,7 @@ actHiProcinstRepo.getNewZyInfo = async (start, end) => {
             AND v1.LAST_UPDATED_TIME_ = (
                 SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
                 WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND vv.TEXT_ = '是'
                 AND vv.NAME_ IN ('Fzmjma3pe3tnclc', 'F2lmma3petqpcwc', 'F34mma3pf0egd0c') 
             )
         LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
@@ -343,6 +346,7 @@ actHiProcinstRepo.getNewIpInfo = async (start, end) => {
             AND v1.LAST_UPDATED_TIME_ = (
                 SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
                 WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND vv.TEXT_ = '是'
                 AND vv.NAME_ IN ('Fzmjma3pe3tnclc', 'F2lmma3petqpcwc', 'F34mma3pf0egd0c') 
             )
         LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
@@ -402,6 +406,7 @@ actHiProcinstRepo.getNewSctgInfo = async (start, end) => {
             AND v1.LAST_UPDATED_TIME_ = (
                 SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
                 WHERE v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND v2.TEXT_ = '是'
                 AND v2.NAME_ IN ('Fzmjma3pe3tnclc', 'F2lmma3petqpcwc', 'F34mma3pf0egd0c') 
             )
         LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
