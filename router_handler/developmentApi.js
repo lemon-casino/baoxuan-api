@@ -410,20 +410,6 @@ const getProductDevelopSales = async (req, res, next) => {
     }
 }
 
-const getProductDevelopSalesDetail = async (req, res, next) => {
-    try {
-        let {start, end} = req.query
-        joiUtil.validate({
-            start: {value: start, schema: joiUtil.commonJoiSchemas.strRequired},
-            end: {value: end, schema: joiUtil.commonJoiSchemas.strRequired}
-        })
-        const result = await developmentService.getProductDevelopSalesDetail(req.query)
-        return res.send(biResponse.success(result))
-    } catch (e) {
-        next(e)
-    }
-}
-
 const getProductDevelopDirectorSales = async (req, res, next) => {
     try {
         let {start, end} = req.query
@@ -432,6 +418,20 @@ const getProductDevelopDirectorSales = async (req, res, next) => {
             end: {value: end, schema: joiUtil.commonJoiSchemas.strRequired},
         })
         const result = await developmentService.getProductDevelopDirectorSales(req.query)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getProductSales = async (req, res, next) => {
+    try {
+        let {start, end} = req.query
+        joiUtil.validate({
+            start: {value: start, schema: joiUtil.commonJoiSchemas.strRequired},
+            end: {value: end, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        const result = await developmentService.getProductSales(req.query)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -506,8 +506,8 @@ module.exports = {
     getProductDevelopInfo,
     getProductDevelopInfoDetail,
     getProductDevelopSales,
-    getProductDevelopSalesDetail,
     getProductDevelopDirectorSales,
+    getProductSales,
     UploadShippingAttribute,
     getShippingAttribute
 }
