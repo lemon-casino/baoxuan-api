@@ -2933,4 +2933,23 @@ goodsSaleInfoRepo.getProductSaleInfo = async (sku_code, addSales) => {
     let row = await query(sql)
     return row
 }
+
+goodsSaleInfoRepo.getSalesBySkuAndShopAndDate = async (skuids, shops, start, end) => {
+    let sql = `SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(cost_amount), 0) AS cost_amount, 
+            IFNULL(SUM(profit), 0) AS profit 
+        FROM goods_sale_info WHERE sku_code IN (${skuids})
+            AND shop_name IN (${shops}) AND \`date\` BETWEEN ? AND ?`
+    let result = await query(sql, [start, end])
+    return result
+}
+
+goodsSaleInfoRepo.getQtyBySkuAndShopAndDate = async (skuids, shops, start, end) => {
+    let sql = `SELECT IFNULL(SUM(sale_qty), 0) AS sale_qty, IFNULL(SUM(cost_amount), 0) AS cost_amount, sku_code 
+        FROM goods_sale_info WHERE sku_code IN (${skuids})
+            AND shop_name IN (${shops}) AND \`date\` BETWEEN ? AND ? 
+        GROUP BY sku_code`
+    let result = await query(sql, [start, end])
+    return result
+}
 module.exports = goodsSaleInfoRepo

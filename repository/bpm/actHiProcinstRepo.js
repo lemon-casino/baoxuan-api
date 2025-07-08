@@ -109,13 +109,15 @@ actHiProcinstRepo.getNewFtInfo = async (start, end) => {
         JOIN system_users u1 ON u1.id = t.ASSIGNEE_ 
         JOIN system_dept du ON du.id = u.dept_id 
         LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
-			AND v1.NAME_ IN ('Fxfrma3j75fse7c', 'F6c5mbuidfzfqjc', 'F64jmbuie9olqmc', 'Fxkxmbuiecz2qpc', 'Fy6xma3jakboekc')
-            AND v1.TEXT_ = '选中'
+			AND v1.NAME_ IN ('Fxfrma3j75fse7c', 'Ffwtma3nntxjn9c', 'Fnixma3nox6onmc', 'Fwtjma3np5o0nuc', 
+            'Fy6xma3jakboekc', 'Flp9mbuigrxjqsc', 'Fexembuihiymqvc', 'F8y4mbuii8dtqyc')
+            AND (v1.TEXT_ = '选中' OR v1.TEXT_ = '是') 
             AND v1.LAST_UPDATED_TIME_ = (
                 SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
                 WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                AND vv.TEXT_ = '选中' 
-                AND vv.NAME_ IN ('Fxfrma3j75fse7c', 'F6c5mbuidfzfqjc', 'F64jmbuie9olqmc', 'Fxkxmbuiecz2qpc', 'Fy6xma3jakboekc') 
+                AND (vv.TEXT_ = '选中' OR v1.TEXT_ = '是') 
+                AND vv.NAME_ IN ('Fxfrma3j75fse7c', 'Ffwtma3nntxjn9c', 'Fnixma3nox6onmc', 'Fwtjma3np5o0nuc', 
+                'Fy6xma3jakboekc', 'Flp9mbuigrxjqsc', 'Fexembuihiymqvc', 'F8y4mbuii8dtqyc') 
             )
         LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND v2.NAME_ = 'F6gkma3pfcjfd1c' 
@@ -437,7 +439,8 @@ actHiProcinstRepo.getNewDetail = async (id) => {
         FROM ACT_HI_PROCINST p LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
 			AND v1.NAME_ IN ('Fzmjma3pe3tnclc', 'F2lmma3petqpcwc', 'F34mma3pf0egd0c', 
                 'Fmtama25a3lrcwc', 'Fkyuma25az2ud8c', 'Fiaama25b6zidec', 
-                'Fxfrma3j75fse7c', 'F6c5mbuidfzfqjc', 'F64jmbuie9olqmc', 'Fxkxmbuiecz2qpc', 'Fy6xma3jakboekc')
+                'Fxfrma3j75fse7c', 'Ffwtma3nntxjn9c', 'Fnixma3nox6onmc', 'Fwtjma3np5o0nuc', 
+                'Fy6xma3jakboekc', 'Flp9mbuigrxjqsc', 'Fexembuihiymqvc', 'F8y4mbuii8dtqyc')
             AND (v1.TEXT_ = '是' OR v1.TEXT_ = '选中')
             AND v1.LAST_UPDATED_TIME_ = (
                 SELECT MAX(v2.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST v2 
@@ -445,7 +448,8 @@ actHiProcinstRepo.getNewDetail = async (id) => {
                 AND (v2.TEXT_ = '是' OR v2.TEXT_ = '选中')
                 AND v2.NAME_ IN ('Fzmjma3pe3tnclc', 'F2lmma3petqpcwc', 'F34mma3pf0egd0c', 
                     'Fmtama25a3lrcwc', 'Fkyuma25az2ud8c', 'Fiaama25b6zidec', 
-                    'Fxfrma3j75fse7c', 'F6c5mbuidfzfqjc', 'F64jmbuie9olqmc', 'Fxkxmbuiecz2qpc', 'Fy6xma3jakboekc') 
+                    'Fxfrma3j75fse7c', 'Ffwtma3nntxjn9c', 'Fnixma3nox6onmc', 'Fwtjma3np5o0nuc', 
+                    'Fy6xma3jakboekc', 'Flp9mbuigrxjqsc', 'Fexembuihiymqvc', 'F8y4mbuii8dtqyc') 
             )
         JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND v.NAME_ = 'PROCESS_STATUS'
@@ -480,6 +484,41 @@ actHiProcinstRepo.getNewDetail = async (id) => {
     return result
 }
 
+actHiProcinstRepo.getInfoByDateAndType = async (type, start, end) => {
+    let keys = ''
+    switch (type) {
+        case '1':
+            keys = "'sctgtplc', 'shichangfenxituipin'"
+            break
+        case '2':
+            keys = "'zytplc', 'ziyantuipin'"
+            break
+        case '3':
+            keys = "'iptplc', 'iptplcxb'"
+            break
+        case '4':
+            keys = "'fttplc', 'fantuituipin'"
+            break
+        case '5':
+            keys = "'gystplc', 'gongyingshangtuipin'"
+            break
+        default:
+            return []
+    }
+    const sql = `SELECT b.BYTES_ AS info 
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
+		LEFT JOIN ACT_HI_VARINST v3 ON v3.PROC_INST_ID_ = p.PROC_INST_ID_
+			AND v3.NAME_ IN ('F6gkma3pfcjfd1c', 'Fcilma2exazkb7c', 'Fig2ma24zzz9brc')
+            AND v3.LAST_UPDATED_TIME_ = (
+				SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                WHERE vv.NAME_ = v3.NAME_ AND vv.PROC_INST_ID_ = p.PROC_INST_ID_
+            )
+		LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v3.BYTEARRAY_ID_ 
+        WHERE d.KEY_ IN (${keys}) 
+            AND p.START_TIME_ BETWEEN ? AND ?`
+    const result = await query(sql, [start, end])
+    return result
+}
 
 actHiProcinstRepo.getSelectedInfo = async (start, end) => {
     const sql = `SELECT b.BYTES_ AS info, CASE 

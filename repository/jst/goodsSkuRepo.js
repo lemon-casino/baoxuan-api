@@ -256,4 +256,46 @@ goodsSkuRepo.getDatesByGoodsId = async (goods_id, start, end) => {
     return {start, end}
 }
 
+goodsSkuRepo.getProductSku = async (params) => {
+    let subsql = '', subsql1 = 'WHERE 1=1'
+    if (params.first_category) {
+        subsql1 = `${subsql1} AND gi.\`一级类目\` = "${params.first_category}"`
+    }
+    if (params.second_category) {
+        subsql1 = `${subsql1} AND gi.\`二级类目\` = "${params.second_category}"`
+    }
+    if (params.third_category) {
+        subsql1 = `${subsql1} AND gi.\`三级类目\` = "${params.third_category}"`
+    }
+    if (params.productType == 1) {
+        subsql = `${subsql} AND a1.create_time BETWEEN DATE_SUB(NOW(), INTERVAL 90 DAY) AND NOW()`
+    } else if (params.productType == 2) {
+        subsql = `${subsql} AND a1.create_time > DATE_SUB(NOW(), INTERVAL 90 DAY)`
+    }
+    if (params.project != undefined) subsql1 = `${subsql1} AND pi.project_name = "${params.project}"`
+    if (params.division != undefined) subsql1 = `${subsql1} AND di.division_name = "${params.division}"`
+    if (params.shop_name != undefined) subsql1 = `${subsql1} AND s.shop_name = "${params.shop_name}"`
+    const sql = `SELECT s.sku_id, s.create_time, s.shop_name, 
+            pi.project_name, di.division_name, 
+            gi.\`一级类目\` AS first_category, 
+            gi.\`二级类目\` AS second_category, 
+            gi.\`三级类目\` AS third_category, 
+            gi.\`市场|吊牌价\` AS price, gi.\`spu简称\` AS spu FROM (
+                SELECT a2.shop_name, IF(pc.\`商品编码\` IS NOT NULL, 
+                    pc.\`商品编码\`, a2.sys_sku_id) AS sku_id, a1.create_time FROM (
+                    SELECT sys_sku_id, MIN(create_time) AS create_time 
+                    FROM jst_goods_sku GROUP BY sys_sku_id
+                ) a1 LEFT JOIN jst_goods_sku a2 ON a1.sys_sku_id = a2.sys_sku_id
+                LEFT JOIN danpin.combination_product_code pc ON pc.\`组合商品编码\` = a1.sys_sku_id
+                WHERE 1=1${subsql}
+                GROUP BY a2.shop_name, a1.create_time, 
+                    IF(pc.\`商品编码\` IS NOT NULL, pc.\`商品编码\`, a2.sys_sku_id) 
+            ) s JOIN shop_info si ON si.shop_name = s.shop_name 
+        JOIN project_info pi ON pi.id = si.project_id 
+        JOIN division_info di ON di.id = pi.division_id 
+        JOIN danpin.goods_info gi ON gi.\`商品编码\` = s.sku_id ${subsql1}`
+    const result = await query(sql)
+    return result
+}
+
 module.exports = goodsSkuRepo

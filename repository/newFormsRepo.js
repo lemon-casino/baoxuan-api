@@ -3720,6 +3720,42 @@ const getInfoDetail = async (id) => {
     return result
 }
 
+const getInfoByDateAndType = async (type, start, end) => {
+    let ids = ''
+    switch (type) {
+        case '1':
+            return []
+        case '2':
+            return []
+        case '3':
+            ids = 836
+            break
+        case '4':
+            ids = 88
+            break
+        case '5':
+            ids = 838
+            break
+        default:
+            return []
+    }
+    const sql = `SELECT pis.value AS sku_id FROM process_instances pi 
+        JOIN process_instance_values piv ON piv.instance_id = pi.id 
+            AND piv.field_id IN ('tableField_m1g2w3gr', 'tableField_m9gzfubr')
+        JOIN process_instance_sub_values pis ON pis.instance_id = pi.id 
+            AND pis.parent_id = piv.field_id
+            AND pis.field_id LIKE '%numberField%' 
+            AND pis.field_id NOT LIKE '%_value%' AND pis.value > 0
+            AND pis.id = (
+                SELECT max(pis.id) FROM process_instance_sub_values pis 
+                WHERE pis.instance_id = pi.id AND pis.parent_id = piv.field_id
+                    AND pis.field_id LIKE '%numberField%' 
+                    AND pis.field_id NOT LIKE '%_value%' AND pis.value > 0)
+        WHERE pi.process_id = ${ids} AND pi.create_time BETWEEN ? AND ?`
+    const result = await query(sql, [start, end])
+    return result
+}
+
 const getSelectedInfo = async (start, end) => {
     const sql = `SELECT pis1.value AS sku_id, CASE pi.process_id 
             WHEN 88 THEN '反推推品' WHEN 836 THEN 'IP推品' ELSE '供应商推品' END AS type
@@ -3786,5 +3822,6 @@ module.exports = {
     getFtInfo,
     getIpInfo,
     getInfoDetail,
+    getInfoByDateAndType,
     getSelectedInfo
 }
