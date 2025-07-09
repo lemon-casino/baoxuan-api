@@ -122,43 +122,88 @@ goodsSkuRepo.getSalesBySysSkuId = async (start, end, info) => {
     return result
 }
 
-goodsSkuRepo.getSalesBySysSkuId1 = async (start, end) => {
+goodsSkuRepo.getSalesBySysSkuId1 = async (start, end, type) => {
+    let time = 0, time1 = 150
+    switch (type) {
+        case '1':
+            time = 0
+            time1 = 30
+            break
+        case '2':
+            time = 30
+            time1 = 60
+            break
+        case '3':
+            time = 60
+            time1 = 90
+            break
+        case '4':
+            time = 90
+            time1 = 120
+            break
+        case '5':
+            time = 120
+            time1 = 150
+        default:
+    }
     const sql = `SELECT IFNULL(SUM(s2.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(s2.profit), 0) AS profit, gi.\`开发员\` AS director, 
-            COUNT(DISTINCT s1.goods_id) AS shelf_link_num 
-        FROM (SELECT a2.goods_id, IF(pc.\`商品编码\` IS NOT NULL, 
-            pc.\`商品编码\`, a2.sys_sku_id) AS sku_id FROM (
-            SELECT sys_sku_id, MIN(create_time) AS create_time 
-            FROM jst_goods_sku GROUP BY sys_sku_id
-        ) a1 LEFT JOIN jst_goods_sku a2 ON a1.sys_sku_id = a2.sys_sku_id
-        LEFT JOIN danpin.combination_product_code pc ON pc.\`组合商品编码\` = a1.sys_sku_id
-        WHERE DATE_ADD(a1.create_time, INTERVAL 150 DAY) > ? 
-        GROUP BY a2.goods_id, IF(pc.\`商品编码\` IS NOT NULL, 
-            pc.\`商品编码\`, a2.sys_sku_id), a1.create_time) s1
-        JOIN danpin.goods_info gi ON gi.\`商品编码\` = s1.sku_id
-        JOIN goods_sale_info s2 ON s2.goods_id = s1.goods_id AND s2.sku_code = s1.sku_id
-            AND s2.date BETWEEN ? AND ? GROUP BY gi.\`开发员\``
-    const result = await query(sql, [end, start, end])
-    return result
-}
-
-goodsSkuRepo.getSalesBySysSkuId2 = async (start, end) => {
-    const sql = `SELECT IFNULL(SUM(s2.sale_amount), 0) AS sale_amount, 
-            IFNULL(SUM(s2.profit), 0) AS profit, gi.\`开发员\` AS director, 
-            COUNT(DISTINCT s1.goods_id) AS shelf_link_num 
+            pi.project_name, COUNT(DISTINCT s1.goods_id) AS link_num 
         FROM (SELECT a2.goods_id, IF(pc.\`商品编码\` IS NOT NULL, 
             pc.\`商品编码\`, a2.sys_sku_id) AS sku_id, a1.create_time FROM (
             SELECT sys_sku_id, MIN(create_time) AS create_time 
             FROM jst_goods_sku GROUP BY sys_sku_id
         ) a1 LEFT JOIN jst_goods_sku a2 ON a1.sys_sku_id = a2.sys_sku_id
         LEFT JOIN danpin.combination_product_code pc ON pc.\`组合商品编码\` = a1.sys_sku_id
-        WHERE a1.create_time BETWEEN ? AND ? 
+        WHERE a1.create_time BETWEEN ? AND ?  
         GROUP BY a2.goods_id, IF(pc.\`商品编码\` IS NOT NULL, 
             pc.\`商品编码\`, a2.sys_sku_id), a1.create_time) s1
         JOIN danpin.goods_info gi ON gi.\`商品编码\` = s1.sku_id
         JOIN goods_sale_info s2 ON s2.goods_id = s1.goods_id AND s2.sku_code = s1.sku_id
-            AND s2.date < DATE_ADD(s1.create_time, INTERVAL 150 DAY) 
-        GROUP BY gi.\`开发员\``
+            AND s2.date >= DATE_ADD(s1.create_time, INTERVAL ${time} DAY) 
+            AND s2.date < DATE_ADD(s1.create_time, INTERVAL ${time1} DAY) 
+        JOIN shop_info si ON si.shop_name = s2.shop_name
+        JOIN project_info pi ON pi.id = si.project_id 
+        GROUP BY gi.\`开发员\`, pi.project_name`
+    const result = await query(sql, [start, end])
+    return result
+}
+
+goodsSkuRepo.getSalesBySysSkuId2 = async (start, end, type) => {
+    let time = 0, time1 = 150
+    switch (type) {
+        case '1':
+            time = 0
+            time1 = 30
+            break
+        case '2':
+            time = 30
+            time1 = 60
+            break
+        case '3':
+            time = 60
+            time1 = 90
+            break
+        case '4':
+            time = 90
+            time1 = 120
+            break
+        case '5':
+            time = 120
+            time1 = 150
+        default:
+    }
+    const sql = `SELECT IFNULL(SUM(s2.sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(s2.profit), 0) AS profit, d.exploit_director AS director, 
+            pi.project_name, COUNT(DISTINCT s2.goods_id) AS link_num 
+        FROM dianshang_operation_attribute d 
+        JOIN goods_sales_stats s2 ON s2.goods_id = d.goods_id
+            AND s2.date >= DATE_ADD(d.onsale_date, INTERVAL ${time} DAY) 
+            AND s2.date < DATE_ADD(d.onsale_date, INTERVAL ${time1} DAY) 
+        JOIN shop_info si ON si.shop_name = s2.shop_name
+        JOIN project_info pi ON pi.id = si.project_id 
+        WHERE d.onsale_date BETWEEN ? AND ? 
+        GROUP BY d.exploit_director, pi.project_name`
     const result = await query(sql, [start, end])
     return result
 }

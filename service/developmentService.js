@@ -1158,7 +1158,7 @@ developmentService.getProductDevelopInfo = async (params, id) => {
             let out_warehousing = 0, out_shelf = 0
             if (info1?.length && scInfo[i].purchase_date != null) {
                 for (let j = 0; j < info1.length; j++) {
-                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(scInfo[i].purchase_time), 'day')
+                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(scInfo[i].purchase_date), 'day')
                     result[index].warehousing_sku_num += 1
                     for (let k = 0; k < info2.length; k++) {
                         if (info1[j].sku_code == info2[k].sku_id) {
@@ -1261,7 +1261,7 @@ developmentService.getProductDevelopInfo = async (params, id) => {
             let out_warehousing = 0, out_shelf = 0
             if (info1?.length && zyInfo[i].purchase_date != null) {
                 for (let j = 0; j < info1.length; j++) {
-                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(zyInfo[i].purchase_time), 'day')
+                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(zyInfo[i].purchase_date), 'day')
                     result[index].warehousing_sku_num += 1
                     for (let k = 0; k < info2.length; k++) {
                         if (info1[j].sku_code == info2[k].sku_id) {
@@ -1350,7 +1350,7 @@ developmentService.getProductDevelopInfo = async (params, id) => {
             let out_warehousing = 0, out_shelf = 0
             if (info1?.length && ipInfo[i].purchase_date != null) {
                 for (let j = 0; j < info1.length; j++) {
-                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(ipInfo[i].purchase_time), 'day')
+                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(ipInfo[i].purchase_date), 'day')
                     result[index].warehousing_sku_num += 1
                     for (let k = 0; k < info2.length; k++) {
                         if (info1[j].sku_code == info2[k].sku_id) {
@@ -1453,7 +1453,7 @@ developmentService.getProductDevelopInfo = async (params, id) => {
             let out_warehousing = 0, out_shelf = 0
             if (info1?.length && ipInfo[i].purchase_date != null) {
                 for (let j = 0; j < info1.length; j++) {
-                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(ipInfo[i].purchase_time), 'day')
+                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(ipInfo[i].purchase_date), 'day')
                     result[index].warehousing_sku_num += 1
                     for (let k = 0; k < info2.length; k++) {
                         if (info1[j].sku_code == info2[k].sku_id) {
@@ -1542,7 +1542,7 @@ developmentService.getProductDevelopInfo = async (params, id) => {
             let out_warehousing = 0, out_shelf = 0
             if (info1?.length && ztInfo[i].purchase_date != null) {
                 for (let j = 0; j < info1.length; j++) {
-                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(ztInfo[i].purchase_time), 'day')
+                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(ztInfo[i].purchase_date), 'day')
                     result[index].warehousing_sku_num += 1
                     for (let k = 0; k < info2.length; k++) {
                         if (info1[j].sku_code == info2[k].sku_id) {
@@ -1641,7 +1641,7 @@ developmentService.getProductDevelopInfo = async (params, id) => {
             let out_warehousing = 0, out_shelf = 0
             if (info1?.length && ztInfo[i].purchase_date != null) {
                 for (let j = 0; j < info1.length; j++) {
-                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(ztInfo[i].purchase_time), 'day')
+                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(ztInfo[i].purchase_date), 'day')
                     result[index].warehousing_sku_num += 1
                     for (let k = 0; k < info2.length; k++) {
                         if (info1[j].sku_code == info2[k].sku_id) {
@@ -1730,7 +1730,7 @@ developmentService.getProductDevelopInfo = async (params, id) => {
             let out_warehousing = 0, out_shelf = 0
             if (info1?.length && ftInfo[i].purchase_date != null) {
                 for (let j = 0; j < info1.length; j++) {
-                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(ftInfo[i].purchase_time), 'day')
+                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(ftInfo[i].purchase_date), 'day')
                     result[index].warehousing_sku_num += 1
                     for (let k = 0; k < info2.length; k++) {
                         if (info1[j].sku_code == info2[k].sku_id) {
@@ -1829,7 +1829,7 @@ developmentService.getProductDevelopInfo = async (params, id) => {
             let out_warehousing = 0, out_shelf = 0
             if (info1?.length && ftInfo[i].purchase_date != null) {
                 for (let j = 0; j < info1.length; j++) {
-                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(ftInfo[i].purchase_time), 'day')
+                    result[index].warehousing_time += moment(info1[j].io_date).diff(moment(ftInfo[i].purchase_date), 'day')
                     result[index].warehousing_sku_num += 1
                     for (let k = 0; k < info2.length; k++) {
                         if (info1[j].sku_code == info2[k].sku_id) {
@@ -2194,7 +2194,6 @@ developmentService.getProductDevelopSales = async (params) => {
                             let sales = await goodsSkuRepo.getSales(skuids, start, end)
                             const {start: realStart, end: realEnd} = await goodsSkuRepo.getDatesBySpu(i, start, end)
                             if (realEnd) real_positive_day = moment(realEnd).diff(moment(realStart), 'day') + 1
-                            console.log(real_positive_day)
                             if (sales.length) {
                                 if (parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 1500) {
                                     result[resultMap[tmpIndex]].hot_num += 1
@@ -2265,7 +2264,6 @@ developmentService.getProductDevelopSales = async (params) => {
                 let sales = await goodsSkuRepo.getSales(skuids, start, end)
                 const {start: realStart, end: realEnd} = await goodsSkuRepo.getDatesBySpu(i, start, end)
                 if (realEnd) real_positive_day = moment(realEnd).diff(moment(realStart), 'day') + 1
-                console.log(real_positive_day)
                 if (sales.length) {
                     if (parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 1500) {
                         result[resultMap[tmpIndex]].hot_num += 1
@@ -2374,7 +2372,6 @@ developmentService.getProductDevelopSales = async (params) => {
                                 const {start: realStart, end: realEnd} = await goodsSkuRepo.getDatesByGoodsId(i, start, end)
                                 if (realEnd) real_positive_day = moment(realEnd).diff(moment(realStart), 'day') + 1
                             }
-                            console.log(real_positive_day)
                             if (sales.length) {
                                 if (parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 1500) {
                                     result[resultMap[tmpIndex]].hot_num += 1
@@ -2448,7 +2445,6 @@ developmentService.getProductDevelopSales = async (params) => {
                     const {start: realStart, end: realEnd} = await goodsSkuRepo.getDatesByGoodsId(i, start, end)
                     if (realEnd) real_positive_day = moment(realEnd).diff(moment(realStart), 'day') + 1
                 }
-                console.log(profit, real_positive_day)
                 if (sales.length) {
                     if (parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 1500) {
                         result[resultMap[tmpIndex]].hot_num += 1
@@ -2558,7 +2554,6 @@ developmentService.getProductDevelopSales = async (params) => {
                                 const {start: realStart, end: realEnd} = await goodsSkuRepo.getDatesByGoodsId(i, start, end)
                                 if (realEnd) real_positive_day = moment(realEnd).diff(moment(realStart), 'day') + 1
                             }
-                            console.log(real_positive_day)
                             if (sales.length) {
                                 if (parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 1500) {
                                     result[resultMap[tmpIndex]].hot_num += 1
@@ -2635,7 +2630,6 @@ developmentService.getProductDevelopSales = async (params) => {
                     const {start: realStart, end: realEnd} = await goodsSkuRepo.getDatesByGoodsId(i, start, end)
                     if (realEnd) real_positive_day = moment(realEnd).diff(moment(realStart), 'day') + 1
                 }
-                console.log(real_positive_day)
                 if (sales.length) {
                     if (parseFloat(sales[0].sale_amount) / parseInt(sales[0].time) > 1500) {
                         result[resultMap[tmpIndex]].hot_num += 1
@@ -2692,14 +2686,76 @@ developmentService.getProductDevelopDirectorSales = async (params) => {
     let start = moment(params.start).format('YYYY-MM-DD'), data = []
     let end = moment(params.end).format('YYYY-MM-DD') + ' 23:59:59'
     let columns = [
-        { label: '开发人员', field_id: 'director', visible: true },
-        { label: '上架链接数量', field_id: 'shelf_link_num', visible: true },
-        { label: '利润额', field_id: 'profit', visible: true },
-        { label: 'GMV', field_id: 'sale_amount', visible: true }
+        { label: '开发员', field_id: 'director', visible: true },
+        { label: '推品数量', field_id: 'create_num', visible: true, info: 'BI发起流程数量' },
+        { label: '推品上架数量', field_id: 'shelf_link_num', visible: true, info: '当前上架数量,推品时间不等于上架时间,以上架时间计算上架数量' },
+        { label: '推品天猫上架链接数', field_id: 'tmall_link_num', visible: true, 
+            info: params.infoType == 0 ? '统计时间内SPU上架的链接数量' : '统计时间内上架的链接数量(运营维护)' },
+        { label: '推品京东上架链接数', field_id: 'jd_link_num', visible: true },
+        { label: '推品拼多多上架链接数', field_id: 'pdd_link_num', visible: true },
+        { label: '天猫销售金额(扣退)', field_id: 'tmall_sale_amount', visible: true, 
+            info: params.infoType == 0 ? '链接中的推品的SPU所产生的销售（商品销售数据-商品销售数量(扣退)）平台店铺商品编码对应的新品SPU' : '新品链接产生的销售额(运营维护)' },
+        { label: '京东销售金额(扣推)', field_id: 'jd_sale_amount', visible: true },
+        { label: '拼多多销售金额(扣推)', field_id: 'pdd_sale_amount', visible: true },
+        { label: '合计销售金额(扣退)', field_id: 'sale_amount', visible: true },
+        { label: '天猫销售利润', field_id: 'tmall_profit', visible: true, 
+            info: params.infoType == 0 ? '当前上架链接中的推品的SPU所产生的利润（胜算利润）' : '新品链接产生的利润额(运营维护)' },
+        { label: '京东销售利润', field_id: 'jd_profit', visible: true },
+        { label: '拼多多销售利润', field_id: 'pdd_profit', visible: true }
     ]
-    if (params.infoType == 0)
-        data = await goodsSkuRepo.getSalesBySysSkuId1(start, end)
-    else data = await goodsSkuRepo.getSalesBySysSkuId2(start, end)
+    let dataMap = {}, result
+    let result1 = await actHiProcinstRepo.getCreateInfo(start, end)
+    let result2 = await newFormsRepo.getCreateInfo(start, end)
+    if (params.infoType == 0) {
+        result = await goodsSkuRepo.getSalesBySysSkuId1(start, end, params.type)
+    } else {
+        result = await goodsSkuRepo.getSalesBySysSkuId2(start, end, params.type)
+    }
+    for (let i = 0; i < result.length; i++) {
+        if (dataMap[result[i].director] == undefined) {
+            dataMap[result[i].director] = data.length
+            data.push({
+                director: result[i].director,
+                create_num: 0,
+                shelf_link_num: 0,
+                tmall_link_num: 0,
+                jd_link_num: 0,
+                pdd_link_num: 0,
+                tmall_sale_amount: 0,
+                jd_sale_amount: 0,
+                pdd_sale_amount: 0,
+                sale_amount: 0,
+                tmall_profit: 0,
+                jd_profit: 0,
+                pdd_profit: 0
+            })
+        }
+        if (result[i].project_name == '宝选天猫') {
+            data[dataMap[result[i].director]].tmall_link_num += parseInt(result[i].link_num)
+            data[dataMap[result[i].director]].tmall_sale_amount += parseFloat(result[i].sale_amount)
+            data[dataMap[result[i].director]].tmall_profit += parseFloat(result[i].profit)
+        } else if (result[i].project_name == '京东') {
+            data[dataMap[result[i].director]].jd_link_num += parseInt(result[i].link_num)
+            data[dataMap[result[i].director]].jd_sale_amount += parseFloat(result[i].sale_amount)
+            data[dataMap[result[i].director]].jd_profit += parseFloat(result[i].profit)
+        } else if (result[i].project_name == '拼多多') {
+            data[dataMap[result[i].director]].pdd_link_num += parseInt(result[i].link_num)
+            data[dataMap[result[i].director]].pdd_sale_amount += parseFloat(result[i].sale_amount)
+            data[dataMap[result[i].director]].pdd_profit += parseFloat(result[i].profit)
+        }
+        data[dataMap[result[i].director]].shelf_link_num += parseInt(result[i].link_num)
+        data[dataMap[result[i].director]].sale_amount += parseInt(result[i].sale_amount)
+    }
+    for (let i = 0; i < result1.length; i++) {
+        if (dataMap[result1[i].director] != undefined) {
+            data[dataMap[result1[i].director]].create_num += parseInt(result1[i].count)
+        }
+    }
+    for (let i = 0; i < result2.length; i++) {
+        if (dataMap[result2[i].director] != undefined) {
+            data[dataMap[result2[i].director]].create_num += parseInt(result2[i].count)
+        }
+    }
     return {columns, data}
 }
 

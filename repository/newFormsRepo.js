@@ -3756,6 +3756,34 @@ const getInfoByDateAndType = async (type, start, end) => {
     return result
 }
 
+const getCreateInfo = async (start, end) => {
+    const sql = `SELECT COUNT(1) AS count, REPLACE(REPLACE(
+            IFNULL(piv.value, IFNULL(pir.operator_name, u.nickname)), '["', ''), '"]', '') AS director  
+        FROM process_instances pi JOIN bi_serve.users u ON u.dingding_user_id = pi.creator
+        LEFT JOIN process_instance_records pir ON pir.instance_id = pi.id 
+            AND pir.show_name IN (
+                '开发接任务', 
+                '开发是否找到反推产品', 
+                '开发是否找到反推产品1', 
+                '开发是否找到反推产品2',
+                '开发是否找到反推产品3') 
+            AND pir.operate_time = (
+                select max(p2.operate_time) from process_instance_records p2 
+                where p2.instance_id = pi.id and p2.show_name in (
+                    '开发接任务', 
+                    '开发是否找到反推产品', 
+                    '开发是否找到反推产品1', 
+                    '开发是否找到反推产品2',
+                    '开发是否找到反推产品3'))
+        LEFT JOIN process_instance_values piv ON piv.instance_id = pi.id 
+            AND piv.field_id = 'employeeField_m3iip0up' 
+        WHERE pi.process_id IN (88, 836, 838) AND pi.create_time BETWEEN ? AND ?
+        GROUP BY REPLACE(REPLACE(
+            IFNULL(piv.value, IFNULL(pir.operator_name, u.nickname)), '["', ''), '"]', '')`
+    const result = await query(sql, [start, end])
+    return result
+}
+
 const getSelectedInfo = async (start, end) => {
     const sql = `SELECT pis1.value AS sku_id, CASE pi.process_id 
             WHEN 88 THEN '反推推品' WHEN 836 THEN 'IP推品' ELSE '供应商推品' END AS type
@@ -3823,5 +3851,6 @@ module.exports = {
     getIpInfo,
     getInfoDetail,
     getInfoByDateAndType,
-    getSelectedInfo
+    getSelectedInfo,
+    getCreateInfo
 }

@@ -89,7 +89,7 @@ actHiProcinstRepo.getNewFtInfo = async (start, end) => {
         JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
             AND v.NAME_ = 'PROCESS_STATUS'
             AND v.TEXT_ NOT IN ('-1', '4')
-        JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_
+        LEFT JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_
             AND t.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')
             AND IF(t.END_TIME_ IS NULL, 1, t.END_TIME_ = (
                 SELECT MAX(t1.END_TIME_) FROM ACT_HI_TASKINST t1 WHERE t1.PROC_INST_ID_ = p.PROC_INST_ID_
@@ -516,6 +516,35 @@ actHiProcinstRepo.getInfoByDateAndType = async (type, start, end) => {
 		LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v3.BYTEARRAY_ID_ 
         WHERE d.KEY_ IN (${keys}) 
             AND p.START_TIME_ BETWEEN ? AND ?`
+    const result = await query(sql, [start, end])
+    return result
+}
+
+actHiProcinstRepo.getCreateInfo = async (start, end) => {
+    const sql = `SELECT IFNULL(u1.nickname, u.nickname) AS director, COUNT(1) AS count 
+        FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_         
+		JOIN system_users u ON u.id = p.START_USER_ID_ 
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND v.NAME_ = 'PROCESS_STATUS'
+            AND v.TEXT_ NOT IN ('-1', '4')
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v1.NAME_ IN ('Cfidaq7mz3963', 'Cfidbw9ff40k6') 
+            AND v1.LAST_UPDATED_TIME_ = (
+                SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND vv.NAME_ IN ('Cfidaq7mz3963', 'Cfidbw9ff40k6') 
+            )
+		LEFT JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_
+            AND t.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')
+            AND IF(t.END_TIME_ IS NULL, 1, t.END_TIME_ = (
+                SELECT MAX(t1.END_TIME_) FROM ACT_HI_TASKINST t1 WHERE t1.PROC_INST_ID_ = p.PROC_INST_ID_
+                    AND t1.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')
+            ))
+        LEFT JOIN system_users u1 ON (u1.id = v1.TEXT_ OR u1.id = t.ASSIGNEE_)
+        WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin', 'iptplc', 'iptplcxb', 
+            'zytplc', 'ziyantuipin', 'gystplc', 'gongyingshangtuipin', 'fttplc', 'fantuituipin') 
+            AND p.START_TIME_ BETWEEN ? AND ? 
+		GROUP by IFNULL(u1.nickname, u.nickname)`
     const result = await query(sql, [start, end])
     return result
 }
