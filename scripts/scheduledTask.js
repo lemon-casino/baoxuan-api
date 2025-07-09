@@ -43,6 +43,11 @@ if (process.env.NODE_ENV === "dev") {
 }
 let jstOrderCron = "0 0 7 * * ?"
 let saleCron = "0 30 9/12 * * ?"
+schedule.scheduleJob(saleCron, async function () {
+    if (process.env.NODE_ENV === "prod") {
+        await operationService.updateInventory()
+    }
+})
 //9点半/12点半刷新_stats里的sale_month
 schedule.scheduleJob(saleCron, async function () {
     if (process.env.NODE_ENV === "prod") {

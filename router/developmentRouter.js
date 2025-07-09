@@ -51,4 +51,5 @@ router.get('/product/sales', developmentApi.getProductSales)
 router.get('/product-attribute', developmentApi.getShippingAttribute)
 router.post('/product-attribute/upload', developmentApi.UploadShippingAttribute)
 
+router.get('/inventory-attribute', developmentApi.getsputags)
 module.exports = router
