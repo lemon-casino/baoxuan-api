@@ -440,7 +440,6 @@ const getProductSales = async (req, res, next) => {
 
 const UploadShippingAttribute = async (req, res, next) => {
     try {
-        console.log('调用了')
         let form = new formidable.IncomingForm()
         form.uploadDir = "./public/excel"
         fs.mkdirSync(form.uploadDir, { recursive: true })
@@ -483,6 +482,15 @@ const getShippingAttribute = async (req, res, next) => {
     }
 }
 
+const getsputags = async (req, res, next) => {
+    try {
+        let result = await developmentService.getsputags()
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getWorkPannel, 
     getWorkDetail,
@@ -509,5 +517,6 @@ module.exports = {
     getProductDevelopDirectorSales,
     getProductSales,
     UploadShippingAttribute,
-    getShippingAttribute
+    getShippingAttribute,
+    getsputags
 }

@@ -3845,4 +3845,9 @@ developmentService.getProductSalesFourth = async (start, end, type, productType,
     return result
 }
 
+developmentService.getsputags = async() =>{
+    let result = await goodsSalesRepo.getsputags()
+    return result
+}
+
 module.exports = developmentService
