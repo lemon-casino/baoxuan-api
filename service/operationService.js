@@ -2122,6 +2122,7 @@ const importGoodsBrushingInfo = async (rows, time) => {
         date = time,
         goods_id_info = {},
         order_id_info = {}
+    console.log(columns)
     for (let i = 1; i < columns.length; i++) {
         if (columns[i] == '店铺款式编码') {goods_id_row = i;  continue}
         if (columns[i] == '商品编码') {sku_code_row = i;  continue}
@@ -2139,7 +2140,10 @@ const importGoodsBrushingInfo = async (rows, time) => {
         let order = order_row ? (typeof(rows[i].getCell(order_row).value) == 'string' ? 
             rows[i].getCell(order_row).value.trim() : 
             rows[i].getCell(order_row).value) : null
-        let info = goods_id.concat('_',sku_code)
+        let info = null
+        if (goods_id !=null && sku_code !=null){
+            info = goods_id.concat('_',sku_code)
+        }
         if (!order_id_info[order]) {
             if (!goods_id_info[info]) goods_id_info[info] = 1
             else goods_id_info[info] += 1

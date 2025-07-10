@@ -70,7 +70,7 @@ goodsPromotionRepo.getDataDetailByTime = async (goods_id, shop_name, start, end)
         sql = `SELECT IFNULL(SUM(amount), 0) AS amount, IF(IFNULL(SUM(amount), 0) > 0, 
                 FORMAT(${sale_amount} / IFNULL(SUM(amount), 0), 2), 0) AS roi, 
                 promotion_name, ${sale_amount} AS sale_amount 
-                ,CONCAT(ROUND(IFNULL(SUM(pay_amount),0)/${real_pay_amount}*100,2),"%") AS promotion_proportion
+                ,CONCAT(ROUND(IFNULL(SUM(amount),0)/${real_pay_amount}*100,2),"%") AS promotion_proportion
                 ,${real_pay_amount} AS real_pay_amount
             FROM goods_promotion_info WHERE goods_id = ? 
                 AND \`date\` >= ? AND \`date\` <= ?
@@ -79,7 +79,7 @@ goodsPromotionRepo.getDataDetailByTime = async (goods_id, shop_name, start, end)
             SELECT IFNULL(SUM(amount), 0) AS amount, IF(IFNULL(SUM(amount), 0) > 0, 
                 FORMAT(${sale_amount} / IFNULL(SUM(amount), 0), 2), 0) AS roi, 
                 '合计' AS promotion_name, ${sale_amount} AS sale_amount
-                ,CONCAT(ROUND(IFNULL(SUM(pay_amount),0)/${real_pay_amount}*100,2),"%") AS promotion_proportion
+                ,CONCAT(ROUND(IFNULL(SUM(amount),0)/${real_pay_amount}*100,2),"%") AS promotion_proportion
                 ,${real_pay_amount} AS real_pay_amount
             FROM goods_promotion_info WHERE goods_id = ? 
                 AND \`date\` >= ? AND \`date\` <= ?`
