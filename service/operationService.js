@@ -2122,7 +2122,6 @@ const importGoodsBrushingInfo = async (rows, time) => {
         date = time,
         goods_id_info = {},
         order_id_info = {}
-    console.log(columns)
     for (let i = 1; i < columns.length; i++) {
         if (columns[i] == '店铺款式编码') {goods_id_row = i;  continue}
         if (columns[i] == '商品编码') {sku_code_row = i;  continue}
@@ -3416,9 +3415,14 @@ const getSaleData = async(lstart,lend,preStart,preEnd,value,name) => {
 }
 
 const getInventoryData = async(day,day7,day30,day31) => {
-    let result = [{current_inventory_cost:null,total_inventory_cost:null,stock_sale7:null
-        ,stock_sale30:null,sell_through_rate:null,inventory_turnover:null,gross_margin7:null
-        ,gross_margin30:null}]
+    let result = [{name:"当前在仓库存成本（万元）",value:null},
+                {name:"当前库总存成本（万元）",value:null},
+                {name:"库存可售天数（按7天日均销售）",value:null},
+                {name:"库存可售天数（按30天日均销售）",value:null},
+                {name:"累计售罄率（月）",value:null},
+                {name:"库存周转率（月）",value:null},
+                {name:"近7天毛利率",value:null},
+                {name:"近30天毛利率",value:null}]
     // 前一天00点库存
     let data1 = await goodsSaleInfoRepo.getInventoryData(day)
     // 前31天00点库存
@@ -3429,14 +3433,14 @@ const getInventoryData = async(day,day7,day30,day31) => {
     let data4 = await goodsSaleInfoRepo.getInventoryCostData(day30,day,30)
     // 30天销售数量
     let data5 = await goodsSaleInfoRepo.getInventorysaleqtyData(day30,day)
-    result[0].current_inventory_cost=(data1[0].Current_inventory_cost/10000).toFixed(1)
-    result[0].total_inventory_cost=(data1[0].total_inventory_cost/10000).toFixed(1)
-    result[0].stock_sale7=(data1[0].Current_inventory_cost/data3[0].cost_avg).toFixed(0)
-    result[0].stock_sale30=(data1[0].Current_inventory_cost/data4[0].cost_avg).toFixed(0)
-    result[0].sell_through_rate=(data5[0].sale_qty/(parseInt(data1[0].Total_inventory)+data5[0].sale_qty)*100).toFixed(1)
-    result[0].inventory_turnover=(data4[0].cost/(data1[0].Current_inventory_cost+data2[0].Current_inventory_cost)*100).toFixed(1)
-    result[0].gross_margin7=((data3[0].sale-data3[0].cost)/data3[0].sale*100).toFixed(1)
-    result[0].gross_margin30=((data4[0].sale-data4[0].cost)/data4[0].sale*100).toFixed(1)
+    result[0].value=(data1[0].Current_inventory_cost/10000).toFixed(1)
+    result[1].value=(data1[0].total_inventory_cost/10000).toFixed(1)
+    result[2].value=(data1[0].Current_inventory_cost/data3[0].cost_avg).toFixed(0)
+    result[3].value=(data1[0].Current_inventory_cost/data4[0].cost_avg).toFixed(0)
+    result[4].value=(data5[0].sale_qty/(parseInt(data1[0].Total_inventory)+data5[0].sale_qty)*100).toFixed(1)
+    result[5].value=(data4[0].cost/(data1[0].Current_inventory_cost+data2[0].Current_inventory_cost)*100).toFixed(1)
+    result[6].value=((data3[0].sale-data3[0].cost)/data3[0].sale*100).toFixed(1)
+    result[7].value=((data4[0].sale-data4[0].cost)/data4[0].sale*100).toFixed(1)
     return result
 }
 

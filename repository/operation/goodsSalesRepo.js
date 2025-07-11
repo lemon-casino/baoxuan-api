@@ -710,7 +710,7 @@ goodsSalesRepo.getSalesBySpuAndSkuId = async (start, end, productType, addSales,
 }
 
 goodsSalesRepo.updatemonth6 = async (day,type,column) =>{
-    let sql = `UPDATE danpin.inventory_attributes a LEFT JOIN (
+    let sql = `UPDATE inventory_attributes a LEFT JOIN (
         select sku_code,SUM(sale_qty) as sale_qty  from (
             SELECT sku_code,SUM(sale_qty) as sale_qty  
             FROM goods_sale_info 
@@ -737,14 +737,14 @@ goodsSalesRepo.updatemonth6 = async (day,type,column) =>{
         )as a GROUP BY sku_code) b
         on a.sku_code = b.sku_code
         SET a.${column} = b.sale_qty`
-    let sql1 = `update danpin.inventory_attributes set ${column}=0 where ${column} is null`
+    let sql1 = `update inventory_attributes set ${column}=0 where ${column} is null`
     const result = await query(sql)
     const result1 = await query(sql1)
     return result
 }
 
 goodsSalesRepo.updateTags = async() =>{
-    const sql = `UPDATE danpin.inventory_attributes as a LEFT JOIN( 
+    const sql = `UPDATE inventory_attributes as a LEFT JOIN( 
             select 商品编码,SUM(在仓库存) as '在仓库存',SUM(总库存) as '总库存' from (
             SELECT a.商品编码
                 ,IFNULL(a.主仓实际库存数,0) - IFNULL(a.订单占有数,0)- IFNULL(a.进货仓库存,0) - IFNULL(c.南京仓京东自备,0) 
@@ -804,21 +804,21 @@ goodsSalesRepo.updateTags = async() =>{
             SET a.num = IF(在仓库存 is not null,在仓库存,0) ,a.total_num = IF(总库存 is not null,总库存,0)`
     const result = await query(sql)
 
-    const sql1 =`UPDATE danpin.inventory_attributes SET sale_days = IF(day30_sale_qty!=0,ROUND(num/day30_sale_qty/30,0),0) WHERE day30_sale_qty != 0`
+    const sql1 =`UPDATE inventory_attributes SET sale_days = IF(day30_sale_qty!=0,ROUND(num/(day30_sale_qty/30),0),0) WHERE day30_sale_qty != 0`
     const result1 = await query(sql1)
     
-    const sql2 = `UPDATE danpin.inventory_attributes set attribute = (CASE 
-                WHEN (sale_days >90 and month6_sale_qty<10) OR day30_sale_qty = 0 THEN
-                '零动销'
-                WHEN sale_days >90 and month6_sale_qty>10 THEN
-                '滞销'
-                WHEN sale_days >60 and sale_days <= 90 THEN
-                '低周转'
-                WHEN sale_days >30 and sale_days <= 60 THEN
-                    '正常周转'
-                WHEN sale_days <30 THEN
-                    '高周转'
-            END)
+    const sql2 = `UPDATE inventory_attributes set attribute = (CASE
+                    WHEN (sale_days >90 and month6_sale_qty<=10) OR day30_sale_qty = 0 THEN
+                    '零动销'
+                    WHEN (sale_days >90 and month6_sale_qty>10) OR ps like '%滞销%' OR ps like '%销完下架%' THEN
+                    '滞销'
+                    WHEN sale_days >60 and sale_days <= 90 THEN
+                    '低周转'
+                    WHEN sale_days >30 and sale_days <= 60  THEN
+                        '正常周转'
+                    WHEN sale_days <=30 THEN
+                        '高周转'
+                END)
             `
     const result2 = await query(sql2)
     return result2
@@ -841,9 +841,9 @@ goodsSalesRepo.getsputags = async() =>{
             FROM (
                 SELECT spu_name,IF(SUM(day30_sale_qty)!=0,ROUND(SUM(num)/(SUM(day30_sale_qty)/30),0),0) as sale_days,SUM(month6_sale_qty) as month6_sale_qty,SUM(num) as num,
                             SUM(day30_sale_qty) as day30_sale_qty,SUM(cost_price*num) as cost 
-                from danpin.inventory_attributes GROUP BY spu_name
+                from inventory_attributes GROUP BY spu_name
             ) as a
-            LEFT JOIN (SELECT SUM(cost_price*num) as total_cost from danpin.inventory_attributes ) as b 
+            LEFT JOIN (SELECT SUM(cost_price*num) as total_cost from inventory_attributes ) as b 
             on 1=1
         ) as a 
         GROUP BY attribute`

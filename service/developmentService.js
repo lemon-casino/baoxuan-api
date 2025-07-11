@@ -3847,7 +3847,19 @@ developmentService.getProductSalesFourth = async (start, end, type, productType,
 
 developmentService.getsputags = async() =>{
     let result = await goodsSalesRepo.getsputags()
-    return result
+    const sortOrder = {
+        "高周转":1,
+        "正常周转":2,
+        "低周转":3,
+        "滞销":4,
+        "零动销":5
+    }
+    const sortedData = result.sort((a, b) => {
+        const groupA = a.attribute
+        const groupB = b.attribute
+        return sortOrder[groupA] - sortOrder[groupB]
+    })
+    return sortedData
 }
 
 module.exports = developmentService
