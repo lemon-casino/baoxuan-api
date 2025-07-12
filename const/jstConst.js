@@ -15,9 +15,14 @@ const inApi = {
     outQuery: '/open/orders/out/simple/query'
 }
 
+const purchaseApi = {
+    purchaseQuery: '/open/purchase/query'
+}
+
 module.exports = {
     goodsApi,
     stockApi,
     commonApi,
-    inApi
+    inApi,
+    purchaseApi
 }
