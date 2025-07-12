@@ -9,5 +9,6 @@ router.post('/sync-order', stockApi.syncOrder)
 router.post('/goods-sku/import', stockApi.importGoodsSku)
 router.post('/purchase-info/import', stockApi.importPurchaseInfo)
 router.post('/ori-sku-info/import', stockApi.importOriSkuInfo)
+router.post('/sync-purchase-order', stockApi.syncPurchaseOrder)
 
 module.exports = router

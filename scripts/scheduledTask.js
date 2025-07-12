@@ -4,6 +4,7 @@ const dateUtil = require("@/utils/dateUtil");
 const redisUtil = require("@/utils/redisUtil");
 const {redisKeys} = require("@/const/redisConst");
 const orderService = require("../service/jst/orderService")
+const purchaseService = require("../service/jst/purchaseService")
 const operationService = require("../service/operationService")
 const moment = require('moment')
 
@@ -42,6 +43,7 @@ if (process.env.NODE_ENV === "dev") {
     syncResignEmployeeCron = "35 5 17 * * ?"
 }
 let jstOrderCron = "0 0 7 * * ?"
+let jstPurchaseCron = "0 36 */1 * * ?"
 let saleCron = "0 30 9/12 * * ?"
 schedule.scheduleJob(saleCron, async function () {
     if (process.env.NODE_ENV === "prod") {
@@ -68,6 +70,12 @@ schedule.scheduleJob(jstOrderCron, async function () {
         let start = moment().subtract(1, 'day').format("YYYY-MM-DD")
         let end = moment().format("YYYY-MM-DD")
         await orderService.syncOrder(start, end)
+    }
+})
+//拉取聚水潭采购单数据
+schedule.scheduleJob(jstPurchaseCron, async function () {
+    if (process.env.NODE_ENV === "prod") {
+        await purchaseService.syncPurchase()
     }
 })
 
