@@ -833,12 +833,11 @@ goodsSalesRepo.updateTags = async() =>{
 goodsSalesRepo.getsputags = async(type) =>{
     let subsql = ''
     if (type == 1){
-        console.log('11111111111111111')
         subsql = `WHERE shipping_attributes is null`
     }
     let sql = `SELECT attribute
 			,COUNT(spu_name) as spu_num
-			,SUM(cost) as cost
+			,ROUND(SUM(cost)/10000,1) as cost
 			,ROUND(SUM(cost)/max(total_cost)*100,2) as cost_proportion
 			,ROUND(SUM(num)/(SUM(day7_sale_qty)/7),0) as stock_sale7
             ,ROUND(SUM(num)/(SUM(day30_sale_qty)/30),0) as stock_sale30
@@ -872,7 +871,6 @@ goodsSalesRepo.getsputags = async(type) =>{
                 on 1=1
         ) as a 
         GROUP BY attribute`
-    
     const result = await query(sql)
     return result
 }
