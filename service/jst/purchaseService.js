@@ -8,9 +8,9 @@ const syncPurchase = async (start, end) => {
     let result = await getPurchaseOrderByDate(start, end)
     let data = [], count = 0
     for (let i = 0; i < result.length; i++) {
-        for (let j = 0; j < result[i]['items'].length; j++) {
+        for (let j = 0; j < result[i]['items']?.length; j++) {
             let info = await purchaseOrderRepo.getBySkuCodeAndDate(
-                result[i]['items'][j]['sku_id'], result[i]['po_date'])
+                result[i]['po_id'], result[i]['items'][j]['sku_id'])
             if (info?.length) {
                 purchaseOrderRepo.update([
                     result[i]['items'][j]['remark'], 
