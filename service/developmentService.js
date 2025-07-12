@@ -3901,8 +3901,8 @@ developmentService.getProductSalesFourth = async (start, end, type, productType,
     return result
 }
 
-developmentService.getsputags = async() =>{
-    let result = await goodsSalesRepo.getsputags()
+developmentService.getsputags = async(type) =>{
+    let result = await goodsSalesRepo.getsputags(type)
     const sortOrder = {
         "高周转":1,
         "正常周转":2,

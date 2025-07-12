@@ -3414,33 +3414,20 @@ const getSaleData = async(lstart,lend,preStart,preEnd,value,name) => {
     return result
 }
 
-const getInventoryData = async(day,day7,day30,day31) => {
+const getInventoryData = async(type) => {
     let result = [{name:"当前在仓库存成本（万元）",value:null},
                 {name:"当前库总存成本（万元）",value:null},
                 {name:"库存可售天数（按7天日均销售）",value:null},
                 {name:"库存可售天数（按30天日均销售）",value:null},
                 {name:"累计售罄率（月）",value:null},
-                {name:"库存周转率（月）",value:null},
-                {name:"近7天毛利率",value:null},
-                {name:"近30天毛利率",value:null}]
-    // 前一天00点库存
-    let data1 = await goodsSaleInfoRepo.getInventoryData(day)
-    // 前31天00点库存
-    let data2 = await goodsSaleInfoRepo.getInventoryData(day31)
-    // 7天日均销售成本,7天销售额
-    let data3 = await goodsSaleInfoRepo.getInventoryCostData(day7,day,7)
-    // 30天日均销售成本,30天销售额
-    let data4 = await goodsSaleInfoRepo.getInventoryCostData(day30,day,30)
-    // 30天销售数量
-    let data5 = await goodsSaleInfoRepo.getInventorysaleqtyData(day30,day)
-    result[0].value=(data1[0].Current_inventory_cost/10000).toFixed(1)
-    result[1].value=(data1[0].total_inventory_cost/10000).toFixed(1)
-    result[2].value=(data1[0].Current_inventory_cost/data3[0].cost_avg).toFixed(0)
-    result[3].value=(data1[0].Current_inventory_cost/data4[0].cost_avg).toFixed(0)
-    result[4].value=(data5[0].sale_qty/(parseInt(data1[0].Total_inventory)+data5[0].sale_qty)*100).toFixed(1)
-    result[5].value=(data4[0].cost/(data1[0].Current_inventory_cost+data2[0].Current_inventory_cost)*100).toFixed(1)
-    result[6].value=((data3[0].sale-data3[0].cost)/data3[0].sale*100).toFixed(1)
-    result[7].value=((data4[0].sale-data4[0].cost)/data4[0].sale*100).toFixed(1)
+                {name:"库存周转率（月）",value:null}]
+    let data = await goodsSaleInfoRepo.getInventoryData(type)
+    result[0].value=(data[0].Current_inventory_cost/10000).toFixed(1)
+    result[1].value=(data[0].total_inventory_cost/10000).toFixed(1)
+    result[2].value=data[0].stock_sale7
+    result[3].value=data[0].stock_sale30
+    result[4].value=data[0].sell_through_rate + '%'
+    result[5].value=data[0].inventory_turnover + '%'
     return result
 }
 
@@ -3863,6 +3850,8 @@ const updateInventory = async () =>{
     await goodsSalesRepo.updatemonth6(6,'month','month6_sale_qty')
     await goodsSalesRepo.updatemonth6(7,'day','day7_sale_qty')
     await goodsSalesRepo.updatemonth6(30,'day','day30_sale_qty')
+    await goodsSalesRepo.updateinventory(1,'a.num','a.total_num')
+    await goodsSalesRepo.updateinventory(30,'a.num30','a.total_num30')
     await goodsSalesRepo.updateTags()
     logger.info(`[inventory_attributes刷新成功]：时间:${moment().subtract(1, 'day').format('YYYY-MM-DD')}`)
     return true

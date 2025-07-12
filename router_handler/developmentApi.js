@@ -484,7 +484,11 @@ const getShippingAttribute = async (req, res, next) => {
 
 const getsputags = async (req, res, next) => {
     try {
-        let result = await developmentService.getsputags()
+        const {type} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        let result = await developmentService.getsputags(type)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
