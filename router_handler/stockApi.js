@@ -1,5 +1,6 @@
 const stockService = require("../service/jst/stockService")
 const orderService = require('../service/jst/orderService')
+const purchaseService = require('../service/jst/purchaseService')
 const biResponse = require("../utils/biResponse")
 const ExcelJS = require('exceljs')
 const moment = require('moment')
@@ -246,10 +247,20 @@ const importOriSkuInfo = async (req, res, next) => {
     }
 }
 
+const syncPurchaseOrder = async (req, res, next) => {
+    try {
+        await purchaseService.syncPurchase(req.body.start, req.body.end)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getWeekStats,
     syncOrder,
     importGoodsSku,
     importPurchaseInfo,
-    importOriSkuInfo
+    importOriSkuInfo,
+    syncPurchaseOrder
 }
