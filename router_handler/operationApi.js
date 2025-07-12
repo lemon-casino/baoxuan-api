@@ -889,23 +889,11 @@ const getSaleData = async (req, res, next) => {
 
 const getInventoryData = async (req, res, next) => {
     try {
-        // const {startDate, endDate,value,name} = req.query
-        // joiUtil.validate({
-        //     name: {value: name, schema: joiUtil.commonJoiSchemas.strRequired},
-        //     startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
-        //     endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
-        // })
-        // const daysDifference = moment(endDate).diff(startDate, 'days')+1
-        // let lstart = moment(startDate).format('YYYY-MM-DD')
-        // let lend = moment(endDate).format('YYYY-MM-DD') 
-        // let preStart = moment(startDate).subtract(daysDifference, 'day').format('YYYY-MM-DD')
-        // let preEnd = moment(endDate).subtract(daysDifference, 'day').format('YYYY-MM-DD')
-        // let result=[]
-        const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
-        const day7 = moment().subtract(7, 'day').format('YYYY-MM-DD')
-        const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
-        const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
-        result = await operationService.getInventoryData(day,day7,day30,day31)
+        const {type} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        result = await operationService.getInventoryData(type)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
