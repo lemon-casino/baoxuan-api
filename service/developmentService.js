@@ -3918,4 +3918,14 @@ developmentService.getsputags = async(type) =>{
     return sortedData
 }
 
+developmentService.getfirst = async(type) =>{
+    let result = await goodsSalesRepo.getfirst(type)
+    return result
+}
+
+developmentService.getfirstInfo = async(type,first,second,third) =>{
+    console.log(third)
+    let result = await goodsSalesRepo.getfirstInfo(type,first,second,third)
+    return result
+}
 module.exports = developmentService

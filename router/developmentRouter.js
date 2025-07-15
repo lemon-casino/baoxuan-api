@@ -52,4 +52,7 @@ router.get('/product-attribute', developmentApi.getShippingAttribute)
 router.post('/product-attribute/upload', developmentApi.UploadShippingAttribute)
 
 router.get('/inventory-attribute', developmentApi.getsputags)
+router.get('/inventory-first', developmentApi.getfirst)
+
+router.get('/first-info', developmentApi.getfirstInfo)
 module.exports = router

@@ -5,6 +5,7 @@ const outSubOrderRepo = require('../../repository/jst/outSubOrderRepo')
 const goodsSkuRepo = require('../../repository/jst/goodsSkuRepo')
 const moment = require('moment')
 const purchaseRepo = require('@/repository/jst/purchaseRepo')
+const returnRepo = require('@/repository/jst/returnRepo')
 const oriSkuRepo = require('@/repository/jst/oriSkuRepo')
 
 const syncOrder = async (start, end) => {
@@ -300,7 +301,9 @@ const importPurchaseInfo = async (rows) => {
         warehouse_row = null,
         io_id_row = null,
         sku_code_row = null,
-        goods_code_row = null
+        goods_code_row = null,
+        io_qty_row = null,
+        io_amount_row = null
     for (let i = 1; i <= columns.length; i++) {
         if (columns[i] == '采购单号') {po_id_row = i; continue}
         if (columns[i] == '入库日期') {io_date_row = i; continue}
@@ -308,6 +311,8 @@ const importPurchaseInfo = async (rows) => {
         if (columns[i] == '入仓单号') {io_id_row = i; continue}
         if (columns[i] == '商品编码') {sku_code_row = i; continue}
         if (columns[i] == '款式编号') {goods_code_row = i; continue}
+        if (columns[i] == '数量') {io_qty_row = i; continue}
+        if (columns[i] == '金额') {io_amount_row = i; continue}
     }
     for (let i = 1; i < rows.length; i++) {
         let po_id = typeof(rows[i].getCell(po_id_row).value) == 'string' ? 
@@ -328,12 +333,16 @@ const importPurchaseInfo = async (rows) => {
         let goods_code = typeof(rows[i].getCell(goods_code_row).value) == 'string' ? 
             rows[i].getCell(goods_code_row).value.trim() : 
             rows[i].getCell(goods_code_row).value
+        let io_qty = rows[i].getCell(io_qty_row).value
+        let io_amount = rows[i].getCell(io_amount_row).value
         let purchase = await purchaseRepo.get(po_id, io_id, sku_code)
         if (purchase?.length) {
             result = await purchaseRepo.update([
                 io_date,
                 warehouse,
                 goods_code,
+                io_qty,
+                io_amount,
                 po_id,
                 io_id,
                 sku_code
@@ -345,7 +354,9 @@ const importPurchaseInfo = async (rows) => {
                 warehouse,
                 io_id,
                 sku_code,
-                goods_code
+                goods_code,
+                io_qty,
+                io_amount
             )
             count += 1
         }
@@ -353,6 +364,83 @@ const importPurchaseInfo = async (rows) => {
     logger.info(`[采购入库导入]`)
     if (count > 0) {
         result = await purchaseRepo.batchInsert(data, count)
+    }
+    return result
+}
+
+const importPurchaseReturn = async (rows) => {
+    let count = 0, data = [], result = false
+    let columns = rows[0].values,
+        return_id_row = null, 
+        return_date_row = null, 
+        warehouse_row = null,
+        supplier_row = null,
+        sku_code_row = null,
+        goods_code_row = null,
+        qty_row = null,
+        amount_row = null
+    console.log(columns)
+    for (let i = 1; i <= columns.length; i++) {
+        if (columns[i] == '退货单号') {return_id_row = i; continue}
+        if (columns[i] == '退货日期') {return_date_row = i; continue}
+        if (columns[i] == '仓库') {warehouse_row = i; continue}
+        if (columns[i] == '供应商') {supplier_row = i; continue}
+        if (columns[i] == '商品编码') {sku_code_row = i; continue}
+        if (columns[i] == '款式编号') {goods_code_row = i; continue}
+        if (columns[i] == '退货数量') {qty_row = i; continue}
+        if (columns[i] == '金额') {amount_row = i; continue}
+    }
+    for (let i = 1; i < rows.length; i++) {
+        let return_id = typeof(rows[i].getCell(return_id_row).value) == 'string' ? 
+            rows[i].getCell(return_id_row).value.trim() : 
+            rows[i].getCell(return_id_row).value
+
+        let return_date = typeof(rows[i].getCell(return_date_row).value) == 'string' ? 
+            rows[i].getCell(return_date_row).value.trim() : 
+            rows[i].getCell(return_date_row).value
+        let warehouse = typeof(rows[i].getCell(warehouse_row).value) == 'string' ? 
+            rows[i].getCell(warehouse_row).value.trim() : 
+            rows[i].getCell(warehouse_row).value
+        let supplier = typeof(rows[i].getCell(supplier_row).value) == 'string' ? 
+            rows[i].getCell(supplier_row).value.trim() : 
+            rows[i].getCell(supplier_row).value
+        let sku_code = typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
+            rows[i].getCell(sku_code_row).value.trim() : 
+            rows[i].getCell(sku_code_row).value
+        let goods_code = typeof(rows[i].getCell(goods_code_row).value) == 'string' ? 
+            rows[i].getCell(goods_code_row).value.trim() : 
+            rows[i].getCell(goods_code_row).value
+        let qty = rows[i].getCell(qty_row).value
+        let amount = rows[i].getCell(amount_row).value
+        let purchase = await returnRepo.get(return_id, sku_code)
+        if (purchase?.length) {
+            result = await returnRepo.update([
+                return_date,
+                warehouse,
+                supplier,
+                qty,
+                amount,
+                goods_code,
+                return_id,
+                sku_code
+            ])
+        } else {
+            data.push(
+                return_id,
+                return_date,
+                warehouse,
+                supplier,
+                sku_code,
+                goods_code,
+                qty,
+                amount
+            )
+            count += 1
+        }
+    }
+    logger.info(`[采购退货导入]`)
+    if (count > 0) {
+        result = await returnRepo.batchInsert(data, count)
     }
     return result
 }
@@ -406,5 +494,6 @@ module.exports = {
     getSaleStats,
     importGoodsSku,
     importPurchaseInfo,
-    importOriSkuInfo
+    importOriSkuInfo,
+    importPurchaseReturn
 }

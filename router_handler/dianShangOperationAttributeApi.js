@@ -439,7 +439,7 @@ const uploadpddTable = async (req, res, next) => {
                 console.error(`Invalid excelDate value: ${excelDate}`);
                 return '';
             }
-            const excelEpochOffset = 25567;
+            const excelEpochOffset = 25569;
             const jsTimestamp = (excelDate - excelEpochOffset) * 86400 * 1000;
             const date = new Date(jsTimestamp);
             if (isNaN(date.getTime())) {
