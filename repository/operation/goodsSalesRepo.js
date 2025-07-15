@@ -1,7 +1,6 @@
 const { query, transaction } = require('../../model/dbConn')
 const goodsSalesRepo = {}
 const moment = require('moment')
-const mysql = require('mysql2')
 goodsSalesRepo.batchInsert = async (date) => {
     let sqls = [], params = []
     sqls.push(`DELETE FROM goods_sales WHERE \`date\` = ?`)
@@ -912,8 +911,6 @@ goodsSalesRepo.getfirst = async(type) =>{
                 WHEN stock_sale30 <=30 THEN '高周转'
                 END) as attribute from ( ${sql})as a`
     const result = await query(sql1)
-    const q = mysql.format(sql1)
-    console.log(q)
     for (let i=0;i<result.length;i++){
         if(result[i].first_category != '无类目'){
             result[i].hasChild=true
