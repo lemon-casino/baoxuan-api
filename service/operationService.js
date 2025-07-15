@@ -3851,7 +3851,7 @@ const updateInventory = async () =>{
     await goodsSalesRepo.updatemonth6(7,'day','day7_sale_qty')
     await goodsSalesRepo.updatemonth6(30,'day','day30_sale_qty')
     await goodsSalesRepo.updateinventory(1,'a.num','a.total_num')
-    await goodsSalesRepo.updateinventory(30,'a.num30','a.total_num30')
+    await goodsSalesRepo.updateinventory(31,'a.num30','a.total_num30')
     await goodsSalesRepo.updateTags()
     logger.info(`[inventory_attributes刷新成功]：时间:${moment().subtract(1, 'day').format('YYYY-MM-DD')}`)
     return true

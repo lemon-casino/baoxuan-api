@@ -495,6 +495,35 @@ const getsputags = async (req, res, next) => {
     }
 }
 
+const getfirst = async (req, res, next) => {
+    try {
+        const {type} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        let result = await developmentService.getfirst(type)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getfirstInfo = async (req, res, next) => {
+    try {
+        const {type,first,second,third} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
+            first: {value: first, schema: joiUtil.commonJoiSchemas.strRequired},
+            second: {value: second, schema: joiUtil.commonJoiSchemas.strRequired},
+            third: {value: third, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        let result = await developmentService.getfirstInfo(type,first,second,third)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getWorkPannel, 
     getWorkDetail,
@@ -522,5 +551,7 @@ module.exports = {
     getProductSales,
     UploadShippingAttribute,
     getShippingAttribute,
-    getsputags
+    getsputags,
+    getfirst,
+    getfirstInfo
 }

@@ -50,6 +50,7 @@ module.exports = [
     '/stock/goods-sku/import',
     '/stock/purchase-info/import',
     '/stock/ori-sku-info/import',
+    '/stock/purchase-return/import',
     '/product-attrs/upload-pdd',
     '/development/running-process',
     '/development/finish-process',

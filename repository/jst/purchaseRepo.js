@@ -8,9 +8,11 @@ purchaseRepo.batchInsert = async (data, count) => {
         warehouse,
         io_id,
         sku_code,
-        goods_code) VALUES`
+        goods_code,
+        io_qty,
+        io_amount) VALUES`
     for (let i = 0; i < count; i++) {
-        sql = `${sql}(?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, data)
@@ -33,7 +35,9 @@ purchaseRepo.getBySkuCode = async (sku_code) => {
 
 purchaseRepo.update = async (data) => {
     let sql = `UPDATE jst_purchase_info SET io_date = ?, warehouse = ?, 
-        goods_code = ? WHERE po_id = ? AND io_id = ? AND sku_code = ?`
+        goods_code = ?, io_qty = ?, io_amount = ? 
+        WHERE po_id = ? AND io_id = ? AND sku_code = ?
+        `
     const result = await query(sql, data)
     return result?.affectedRows ? true:false
 }

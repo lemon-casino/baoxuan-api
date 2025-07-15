@@ -819,15 +819,22 @@ goodsSalesRepo.updateTags = async() =>{
     const sql1 =`UPDATE inventory_attributes SET sale_days = IF(day30_sale_qty!=0,ROUND(num/(day30_sale_qty/30),0),0) WHERE day30_sale_qty != 0`
     const result1 = await query(sql1)
     const sql2 = `UPDATE inventory_attributes set attribute = (CASE
-            WHEN (sale_days >90 and month6_sale_qty<=10) OR day30_sale_qty = 0 THEN '零动销'
+            WHEN (sale_days >90 and month6_sale_qty<=10) OR day30_sale_qty <= 10 THEN '零动销'
             WHEN (sale_days >90 and month6_sale_qty>10) OR ps like '%滞销%' OR ps like '%销完下架%' THEN '滞销'
             WHEN sale_days >60 and sale_days <= 90 THEN '低周转'
             WHEN sale_days >30 and sale_days <= 60  THEN '正常周转'
             WHEN sale_days <=30 THEN '高周转'
-            END)
-            `
+            END)`
     const result2 = await query(sql2)
-    return result2
+    const sql3 = `UPDATE inventory_attributes a LEFT join (
+            select sku_code,SUM(qty) as qty 
+            from jst_purchase_return 
+            WHERE DATE_FORMAT(return_date,'%Y-%m-%d') BETWEEN DATE_SUB(DATE(NOW()),INTERVAL 30 day) and DATE_SUB(DATE(NOW()),INTERVAL 1 day) 
+            GROUP BY sku_code) as b
+            on a.sku_code = b.sku_code 
+            set a.fund_num = IF(b.qty is not null,b.qty,0)`
+    const result3 = await query(sql3)
+    return result3
 }
 
 goodsSalesRepo.getsputags = async(type) =>{
@@ -844,12 +851,12 @@ goodsSalesRepo.getsputags = async(type) =>{
 			,ROUND(SUM(day30_sale_qty)/(SUM(num30)+SUM(io_qty)-IFNULL(SUM(fund_num),0))*100,2) as sell_through_rate
 			,ROUND(SUM(day30_cost)/((sum(cost30)+sum(cost))*2)*100,2) as inventory_turnover
         FROM(
-                SELECT spu_name,(CASE 
-                WHEN (sale_days >90 and month6_sale_qty<10) OR day30_sale_qty <= 10 THEN '零动销'
-                WHEN sale_days >=90 and month6_sale_qty>10 THEN '滞销'
-                WHEN sale_days >=60 and sale_days < 90 THEN '低周转'
-                WHEN sale_days >=30 and sale_days < 60 THEN '正常周转'
-                WHEN sale_days <30 THEN '高周转'
+                SELECT spu_name,(CASE
+                WHEN (sale_days >90 and month6_sale_qty<=10) OR day30_sale_qty <= 10 THEN '零动销'
+                WHEN (sale_days >90 and month6_sale_qty>10) OR ps like '%滞销%' OR ps like '%销完下架%' THEN '滞销'
+                WHEN sale_days >60 and sale_days <= 90 THEN '低周转'
+                WHEN sale_days >30 and sale_days <= 60  THEN '正常周转'
+                WHEN sale_days <=30 THEN '高周转'
                 END) as attribute,a.cost,b.total_cost,a.sale_days,a.month6_sale_qty,a.day7_sale_qty,a.day30_sale_qty,a.num,a.num30,a.io_qty,a.fund_num,a.cost30,a.day30_cost
                 FROM (
                     SELECT spu_name
@@ -864,6 +871,7 @@ goodsSalesRepo.getsputags = async(type) =>{
                         ,SUM(cost_price*num30) as cost30
                         ,SUM(fund_num) as fund_num
                         ,SUM(io_qty) as io_qty
+                        ,MAX(ps) as ps
                     from inventory_attributes ${subsql}
                     GROUP BY spu_name 
                 ) as a
@@ -872,6 +880,117 @@ goodsSalesRepo.getsputags = async(type) =>{
         ) as a 
         GROUP BY attribute`
     const result = await query(sql)
+    return result
+}
+
+goodsSalesRepo.getfirst = async(type) =>{
+    let subsql = ''
+    if (type == 1){
+        subsql = `WHERE shipping_attributes is null`
+    }
+    let sql = `SELECT IFNULL(first_category,'无类目') as first_category
+                ,'' as second_category
+                ,'' as third_category
+                ,IFNULL(ROUND(sum(num*cost_price)/10000,1),0) as cost
+                ,IFNULL(ROUND(SUM(total_num*cost_price)/10000,1),0) as total_cost
+                ,IFNULL(ROUND(SUM(num)/(SUM(day7_sale_qty)/7),0),0) as stock_sale7
+                ,IFNULL(ROUND(SUM(num)/(SUM(day30_sale_qty)/30),0),0) as stock_sale30
+                ,IFNULL(ROUND(SUM(day30_sale_qty)/(SUM(num30)+SUM(io_qty)-IFNULL(SUM(fund_num),0))*100,2),0) as sell_through_rate
+                ,IFNULL(ROUND(SUM(day30_sale_qty*cost_price)/((sum(num30*cost_price)+sum(num*cost_price))*2)*100,2),0) as inventory_turnover
+                ,IFNULL(SUM(month6_sale_qty),0) as month6_sale_qty
+				,IFNULL(SUM(day30_sale_qty),0) as day30_sale_qty
+                ,MAX(ps) as ps
+            from inventory_attributes ${subsql}
+            GROUP BY first_category
+            ORDER BY first_category`
+    let sql1 = `select *,(CASE
+                WHEN (stock_sale30 >90 and month6_sale_qty<=10) OR day30_sale_qty <= 10 THEN '零动销'
+                WHEN (stock_sale30 >90 and month6_sale_qty>10) OR ps like '%滞销%' OR ps like '%销完下架%' THEN '滞销'
+                WHEN stock_sale30 >60 and stock_sale30 <= 90 THEN '低周转'
+                WHEN stock_sale30 >30 and stock_sale30 <= 60  THEN '正常周转'
+                WHEN stock_sale30 <=30 THEN '高周转'
+                END) as attribute from ( ${sql})as a`
+    const result = await query(sql1)
+    for (let i=0;i<result.length;i++){
+        if(result[i].first_category != '无类目'){
+            result[i].hasChild=true
+        }else{
+            result[i].hasChild=false
+        }
+        result[i].parent_id=null
+    }
+    return result
+}
+
+goodsSalesRepo.getfirstInfo  =async(type,first,second,third) =>{
+    let sql = ``
+    if (type == 1){
+        subsql = `AND shipping_attributes is null`
+    }
+    if(first !=1){
+        sql = `SELECT '${first}' as parent_id
+        ,second_category as second_category
+        ,'' as third_category
+        ,IFNULL(ROUND(sum(num*cost_price)/10000,1),0) as cost
+        ,IFNULL(ROUND(SUM(total_num*cost_price)/10000,1),0) as total_cost
+        ,IFNULL(ROUND(SUM(num)/(SUM(day7_sale_qty)/7),0),0) as stock_sale7
+        ,IFNULL(ROUND(SUM(num)/(SUM(day30_sale_qty)/30),0),0) as stock_sale30
+        ,IFNULL(ROUND(SUM(day30_sale_qty)/(SUM(num30)+SUM(io_qty)-IFNULL(SUM(fund_num),0))*100,2),0) as sell_through_rate
+        ,IFNULL(ROUND(SUM(day30_sale_qty*cost_price)/((sum(num30*cost_price)+sum(num*cost_price))*2)*100,2),0) as inventory_turnover
+        ,IFNULL(SUM(month6_sale_qty),0) as month6_sale_qty
+		,IFNULL(SUM(day30_sale_qty),0) as day30_sale_qty
+        ,MAX(ps) as ps
+    from inventory_attributes WHERE first_category = '${first}' ${subsql}
+    GROUP BY second_category
+    ORDER BY second_category`
+    }else if (first==1&&second!=1){
+        sql = `SELECT '${second}' as parent_id
+                ,third_category as third_category
+                ,IFNULL(ROUND(sum(num*cost_price)/10000,1),0) as cost
+                ,IFNULL(ROUND(SUM(total_num*cost_price)/10000,1),0) as total_cost
+                ,IFNULL(ROUND(SUM(num)/(SUM(day7_sale_qty)/7),0),0) as stock_sale7
+                ,IFNULL(ROUND(SUM(num)/(SUM(day30_sale_qty)/30),0),0) as stock_sale30
+                ,IFNULL(ROUND(SUM(day30_sale_qty)/(SUM(num30)+SUM(io_qty)-IFNULL(SUM(fund_num),0))*100,2),0) as sell_through_rate
+                ,IFNULL(ROUND(SUM(day30_sale_qty*cost_price)/((sum(num30*cost_price)+sum(num*cost_price))*2)*100,2),0) as inventory_turnover
+                ,IFNULL(SUM(month6_sale_qty),0) as month6_sale_qty
+				,IFNULL(SUM(day30_sale_qty),0) as day30_sale_qty
+                ,MAX(ps) as ps
+            from inventory_attributes WHERE second_category = '${second}' ${subsql}
+            GROUP BY third_category
+            ORDER BY third_category`
+    }
+    else if (first==1&&second ==1){
+        sql = `SELECT '${third}' as parent_id
+                ,spu_name as spu_name
+                ,IFNULL(ROUND(sum(num*cost_price)/10000,1),0) as cost
+                ,IFNULL(ROUND(SUM(total_num*cost_price)/10000,1),0) as total_cost
+                ,IFNULL(ROUND(SUM(num)/(SUM(day7_sale_qty)/7),0),0) as stock_sale7
+                ,IFNULL(ROUND(SUM(num)/(SUM(day30_sale_qty)/30),0),0) as stock_sale30
+                ,IFNULL(ROUND(SUM(day30_sale_qty)/(SUM(num30)+SUM(io_qty)-IFNULL(SUM(fund_num),0))*100,2),0) as sell_through_rate
+                ,IFNULL(ROUND(SUM(day30_sale_qty*cost_price)/((sum(num30*cost_price)+sum(num*cost_price))*2)*100,2),0) as inventory_turnover
+                ,IFNULL(SUM(month6_sale_qty),0) as month6_sale_qty
+				,IFNULL(SUM(day30_sale_qty),0) as day30_sale_qty
+                ,MAX(ps) as ps
+            from inventory_attributes WHERE third_category = '${third}' ${subsql}
+            GROUP BY spu_name
+            ORDER BY spu_name`
+    }
+    let sql1 = `select *,(CASE
+                WHEN (stock_sale30 >90 and month6_sale_qty<=10) OR day30_sale_qty <= 10 THEN '零动销'
+                WHEN (stock_sale30 >90 and month6_sale_qty>10) OR ps like '%滞销%' OR ps like '%销完下架%' THEN '滞销'
+                WHEN stock_sale30 >60 and stock_sale30 <= 90 THEN '低周转'
+                WHEN stock_sale30 >30 and stock_sale30 <= 60  THEN '正常周转'
+                WHEN stock_sale30 <=30 THEN '高周转'
+                END) as attribute from ( ${sql})as a`
+    const result = await query(sql1)
+    for (let i=0;i<result.length;i++){
+        if(result[i].second_category != null || result[i].third_category != null){
+            result[i].hasChild=true
+        }else{
+            result[i].hasChild=false
+        }
+        result[i].parent_id=null
+    }
     return result
 }
 module.exports = goodsSalesRepo
