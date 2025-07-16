@@ -750,7 +750,6 @@ goodsSalesRepo.updateinventory = async(day,num,total_num) =>{
             - IFNULL(c.\`COUPANG/猫超南京仓\`,0)  as '在仓库存'
             ,IFNULL(a.主仓实际库存数,0) - IFNULL(a.订单占有数,0)- IFNULL(a.进货仓库存,0) - IFNULL(c.南京仓京东自备,0) 
             - IFNULL(c.\`COUPANG/猫超南京仓\`,0) + IFNULL(a.采购在途数,0) as '总库存'
-            ,SUM(返厂数量)  as '返厂数量'
         FROM (
         select 商品编码
             ,SUM(主仓实际库存数) as '主仓实际库存数'
