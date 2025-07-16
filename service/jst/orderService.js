@@ -379,7 +379,6 @@ const importPurchaseReturn = async (rows) => {
         goods_code_row = null,
         qty_row = null,
         amount_row = null
-    console.log(columns)
     for (let i = 1; i <= columns.length; i++) {
         if (columns[i] == '退货单号') {return_id_row = i; continue}
         if (columns[i] == '退货日期') {return_date_row = i; continue}

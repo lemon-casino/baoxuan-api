@@ -34,9 +34,8 @@ returnRepo.getBySkuCode = async (sku_code) => {
 
 returnRepo.update = async (data) => {
     let sql = `UPDATE jst_purchase_return SET return_date = ?, warehouse = ?, 
-        supplier = ?, io_qty = ?, io_amount = ?, goods_code = ?
-        WHERE po_id = ? AND sku_code = ?
-        `
+        supplier = ?, qty = ?, amount = ?, goods_code = ?
+        WHERE return_id = ? AND sku_code = ?`
     const result = await query(sql, data)
     return result?.affectedRows ? true:false
 }
