@@ -335,8 +335,8 @@ goodsPayInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         } else if (params.search[i].field_id == 'gross_profit') {
             subsql = `${subsql} AND a1.goods_id IS NOT NULL AND EXISTS(
                     SELECT * FROM (
-                        SELECT IF(SUM(a4.sale_amount) > 0, 
-                            1 - SUM(a4.cost_amount) / SUM(a4.sale_amount), 0) * 100 AS val 
+                        SELECT FORMAT(IF(SUM(a4.sale_amount) > 0, 
+                            1 - SUM(a4.cost_amount) / SUM(a4.sale_amount), 0) * 100, 2) AS val 
                         FROM goods_verifieds_stats a4 WHERE a1.goods_id = a4.goods_id 
                             AND a4.date BETWEEN '${preStart}' AND '${preEnd}' 
                     ) b WHERE b.val BETWEEN ${params.search[i].min} AND ${params.search[i].max})`
@@ -786,9 +786,8 @@ goodsPayInfoRepo.getDataPromotionQOQByTime = async(goods_id, start, end) => {
 }
 
 goodsPayInfoRepo.getDataGrossProfitByTime = async(goods_id, start, end) => {
-    const sql = `SELECT IF(SUM(g.sale_amount) > 0, 
-                    (1 - SUM(g.cost_amount) / SUM(g.sale_amount)), 0)
-                ) * 100 AS gross_profit, g.date
+    const sql = `SELECT FORMAT(IF(SUM(g.sale_amount) > 0, 
+                (1 - SUM(g.cost_amount) / SUM(g.sale_amount)), 0) * 100, 2) AS gross_profit, g.date
         FROM goods_verifieds_stats g  
         WHERE g.date BETWEEN ? AND ? AND g.goods_id = ? 
         GROUP BY g.date`
@@ -905,7 +904,64 @@ goodsPayInfoRepo.getDataDetailByTime3 = async (goods_id, start, end) => {
     return result || []
 }
 
-goodsPayInfoRepo.getDataDetailTotalByTime = async (goods_id, start, end) => {
+goodsPayInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
+    const sql = `SELECT IFNULL(a1.sale_amount, 0) AS sale_amount, 
+            IFNULL(a1.cost_amount, 0) AS cost_amount, 
+            IFNULL(a1.operation_amount, 0) AS operation_amount, 
+            IFNULL(a1.promotion_amount, 0) AS promotion_amount, 
+            IFNULL(a1.express_fee, 0) AS express_fee, 
+            IFNULL(a1.profit, 0) AS profit, 
+            IFNULL(a1.shop_name,'') AS shop_name, 
+            FORMAT(IF(IFNULL(a1.sale_amount, 0) > 0, 
+                IFNULL(a1.operation_amount, 0) / a1.sale_amount, 0) * 100, 2) AS operation_rate, 
+            FORMAT(IF(IFNULL(a1.promotion_amount, 0) > 0, 
+                IFNULL(a1.sale_amount, 0) / a1.promotion_amount, 0), 2) AS roi, 
+            FORMAT(IF(IFNULL(a1.order_num, 0) > 0, 
+                IFNULL(a1.refund_num, 0) / a1.order_num, 0) * 100, 2) AS refund_rate, 
+            FORMAT(IF(IFNULL(a1.sale_amount, 0) > 0, 
+                IFNULL(a1.profit, 0) / a1.sale_amount, 0) * 100, 2) AS profit_rate, 
+            FORMAT(IF(a2.sale_amount > 0, 
+                (1 - a2.cost_amount / a2.sale_amount) * 100, 0), 2) AS gross_profit, 
+            FORMAT(IF(IFNULL(a1.sale_amount, 0) > 0, 
+                IFNULL(a1.profit, 0) / a1.sale_amount, 0) * 100, 2) AS profit_rate_gmv, 
+            FORMAT(IFNULL(a5.targeted_audience_promotion,0),2) AS targeted_audience_promotion,
+            FORMAT(IFNULL(a5.full_site_promotion,0),2) AS full_site_promotion,
+            FORMAT(IFNULL(a5.multi_objective_promotion,0),2) AS multi_objective_promotion,
+            FORMAT(IFNULL(a5.keyword_promotion,0),2) AS keyword_promotion,
+            FORMAT(IFNULL(a5.product_operation_promotion,0),2) AS product_operation_promotion,
+            FORMAT(IFNULL(a5.daily_promotion,0),2) AS daily_promotion,
+            FORMAT(IFNULL(a5.scene_promotion,0),2) AS scene_promotion,
+            FORMAT(IFNULL(a5.jd_express_promotion,0),2) AS jd_express_promotion,
+            FORMAT(IFNULL(a5.total_promotion,0),2) AS total_promotion,
+            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.targeted_audience_promotion,0),2) AS targeted_audience_promotion_roi,
+            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.full_site_promotion,0),2) AS full_site_promotion_roi,
+            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.multi_objective_promotion,0),2) AS multi_objective_promotion_roi,
+            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.keyword_promotion,0),2) AS keyword_promotion_roi,
+            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.product_operation_promotion,0),2) AS product_operation_promotion_roi,
+            DATE_FORMAT(a1.date, '%Y-%m-%d') as \`date\` 
+        FROM goods_pays_stats a1 LEFT JOIN goods_verifieds_stats a2 ON a1.goods_id = a2.goods_id 
+            AND a2.date = DATE_SUB(a1.date, INTERVAL 1 DAY) 
+        LEFT JOIN(
+            select date
+                    ,SUM(IF(promotion_name='6003416精准人群推广',amount,null)) as targeted_audience_promotion
+                    ,SUM(IF(promotion_name='6003431万相台无界-全站推广',amount,null)) as full_site_promotion
+                    ,SUM(IF(promotion_name='6003414多目标直投',amount,null)) as multi_objective_promotion
+                    ,SUM(IF(promotion_name='60030412关键词推广',amount,null)) as keyword_promotion
+                    ,SUM(IF(promotion_name='6003432万相台无界-货品运营',amount,null)) as product_operation_promotion
+                    ,SUM(IF(promotion_name='日常推广',amount,null)) AS daily_promotion
+                    ,SUM(IF(promotion_name='场景推广',amount,null)) AS scene_promotion
+                    ,SUM(IF(promotion_name='京东快车1' OR promotion_name='京东快车2' OR promotion_name='京东快车3',amount,null)) AS jd_express_promotion
+                    ,SUM(IF(promotion_name='全站营销' OR promotion_name='新品全站营销',amount,null)) AS total_promotion,goods_id
+            from goods_promotion_info 
+            where date BETWEEN ? AND ? AND goods_id = ?
+            GROUP BY date,goods_id
+        ) as a5 ON a1.goods_id = a5.goods_id AND a1.date = a5.date 
+        WHERE a1.date BETWEEN ? AND ? AND a1.goods_id = ?`
+    const result = await query(sql, [start, end, goods_id, start, end, goods_id])
+    return result || []
+}
+
+goodsPayInfoRepo.getDataDetailTotalByTime1 = async (goods_id, start, end) => {
     const sql = `SELECT IFNULL(SUM(pay_amount), 0) AS pay_amount, 
             IFNULL(SUM(brushing_amount), 0) AS brushing_amount, 
             IFNULL(SUM(brushing_qty), 0) AS brushing_qty, 

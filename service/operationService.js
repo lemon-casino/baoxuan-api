@@ -956,7 +956,7 @@ const getGoodsInfoDetailTotal = async (goods_id, start, end, stats) => {
         result[dateMap[info[i].date]]['market_rate'] = info[i].market_rate
     }
     info = []
-    info = await goodsPayInfoRepo.getDataDetailTotalByTime(goods_id, start, end)
+    info = await goodsPayInfoRepo.getDataDetailTotalByTime1(goods_id, start, end)
     for (let i = 0; i < info.length; i++) {
         if (!result[dateMap[info[i].date]]) result[dateMap[info[i].date]] = {}
         result[dateMap[info[i].date]]['pay_amount'] = info[i].pay_amount
