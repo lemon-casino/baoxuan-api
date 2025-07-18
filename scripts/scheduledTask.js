@@ -55,11 +55,7 @@ schedule.scheduleJob(saleCron, async function () {
     if (process.env.NODE_ENV === "prod") {
         let date = moment().format("YYYY-MM-DD")
         await operationService.SalesupdateSalemonth(date)
-    }
-})
-schedule.scheduleJob(saleCron, async function () {
-    if (process.env.NODE_ENV === "prod") {
-        let date = moment().format("YYYY-MM-DD")
+        await operationService.PaysUpdateSaleMonth(date)
         await operationService.VerifiedsupdateSalemonth(date)
     }
 })

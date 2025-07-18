@@ -69,19 +69,20 @@ goodsOtherInfoRepo.getDataRateByTime = async(col1, col2, column, goods_id, start
 }
 
 goodsOtherInfoRepo.getDetailByShopNamesAndTme = async (shopNames, column, start, end) => {
-    let sql = `SELECT IFNULL(SUM(${column}), 0) AS ${column}, \`date\` FROM goods_other_info 
-        WHERE \`date\` >= ? AND \`date\` <= ? AND shop_name IN ("${shopNames}") 
-        GROUP BY \`date\``
+    let sql = `SELECT IFNULL(SUM(o.${column}), 0) AS o.${column}, o.date FROM goods_other_info o 
+        JOIN dianshang_operation_attribute g on o.goods_id = g.goods_id 
+        WHERE o.date >= ? AND o.date <= ? AND g.shop_name IN ("${shopNames}") 
+        GROUP BY o.date`
     let result = await query(sql, [start, end])
     return  result || []
 }
 
 goodsOtherInfoRepo.getRateByShopNamesAndTme = async (shopNames, col1, col2, column, start, end, percent) => {
-    let sql = `SELECT FORMAT(IF(IFNULL(SUM(${col1}), 0) > 0, 
-                IFNULL(SUM(${col2}), 0) / SUM(${col1}) * ${percent}, 0), 2) AS ${column}, \`date\` 
-        FROM goods_other_info 
-        WHERE \`date\` >= ? AND \`date\` <= ? AND shop_name IN ("${shopNames}") 
-        GROUP BY \`date\``
+    let sql = `SELECT FORMAT(IF(IFNULL(SUM(o.${col1}), 0) > 0, 
+                IFNULL(SUM(o.${col2}), 0) / SUM(o.${col1}) * ${percent}, 0), 2) AS o.${column}, o.date 
+        FROM goods_other_info o JOIN dianshang_operation_attribute g ON g.goods_id = o.goods_id 
+        WHERE o.date >= ? AND o.date <= ? AND g.shop_name IN ("${shopNames}") 
+        GROUP BY o.date`
     let result = await query(sql, [start, end])
     return  result || []
 }

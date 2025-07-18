@@ -55,5 +55,6 @@ module.exports = [
     '/development/finish-process',
     '/hr/recruit/advise-output',
     '/operation/ghyx-promotion-info/import',
+    '/operation/goods-order-pay-stat/import',
     /^\/download\/.*/,
 ]
