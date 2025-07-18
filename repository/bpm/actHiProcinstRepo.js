@@ -835,7 +835,8 @@ actHiProcinstRepo.getAdviseInfo = async (start, end) => {
                 WHEN dp.name LIKE '%客服%' THEN '客服部' 
                 WHEN dp.name LIKE '%摄影%' OR dp.name LIKE '%视觉%' OR dp.name LIKE '%设计%' THEN '视觉部' 
                 WHEN dp.name LIKE '%人事%' THEN '人事部' 
-                WHEN dp.name LIKE '%数据%' THEN '数据中台' ELSE '未拉取到部门' END) AS adviser_dept, 
+                WHEN dp.name LIKE '%数据%' THEN '数据中台' 
+                WHEN dp.name LIKE '%财务%' THEN '财务部' ELSE '未拉取到部门' END) AS adviser_dept, 
             u1.nickname AS solver, u2.nickname AS director, 
             (CASE WHEN v1.TEXT_ IN ('天猫', '小红书', '淘工厂-国货严选', '天猫垂类店', '天猫中台') THEN '事业三部'
                 WHEN v1.TEXT_ IN ('拼多多', '天猫超市', 'Coupang') THEN '事业一部' 
@@ -845,7 +846,8 @@ actHiProcinstRepo.getAdviseInfo = async (start, end) => {
                 WHEN v1.TEXT_ = '客服' THEN '客服部' 
                 WHEN v1.TEXT_ = '人事' THEN '人事部' 
                 WHEN v1.TEXT_ = '数据中台' THEN '数据中台' 
-                WHEN v1.TEXT_ = '视觉' THEN '视觉部' ELSE '其他' end) AS solver_dept, 
+                WHEN v1.TEXT_ = '视觉' THEN '视觉部' 
+                WHEN v1.TEXT_ = '财务' THEN '财务部' ELSE '其他' end) AS solver_dept, 
             v3.TEXT_ AS problem, v4.TEXT_ AS detail 
         FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_
         JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
@@ -859,14 +861,52 @@ actHiProcinstRepo.getAdviseInfo = async (start, end) => {
             AND v3.NAME_ = 'Fkuym99bs5byagc'
         JOIN ACT_HI_VARINST v4 ON v4.PROC_INST_ID_ = p.PROC_INST_ID_
             AND v4.NAME_ = 'F944m99bui80apc'
-        JOIN ACT_HI_VARINST v5 ON v5.PROC_INST_ID_ = p.PROC_INST_ID_
+        LEFT JOIN ACT_HI_VARINST v5 ON v5.PROC_INST_ID_ = p.PROC_INST_ID_
             AND v5.NAME_ = 'Cfiddehtmhesb'
         JOIN system_users u ON u.id = p.START_USER_ID_
         JOIN system_dept dp ON u.dept_id = dp.id
         JOIN system_users u1 ON u1.id = v2.TEXT_
-        JOIN system_users u2 ON u2.id = v5.TEXT_
+        LEFT JOIN system_users u2 ON u2.id = v5.TEXT_
         WHERE d.KEY_ = 'yijianxiang' AND p.START_TIME_ BETWEEN ? AND ?`
-    const result = await query(sql, [start, end])
+    let result = await query(sql, [start, end])
+    for (let i = 0; i < result?.length; i++) {
+        if (!result[i].director) {
+            switch (result[i].solver_dept) {
+                case '事业一部':
+                    result[i].director = '刘海涛'
+                    break
+                case '事业二部':
+                    result[i].director = '陆瑶'
+                    break
+                case '事业三部':
+                    result[i].director = '王洪彬'
+                    break
+                case '企划部':
+                    result[i].director = '郑艳艳'
+                    break
+                case '货品部':
+                    result[i].director = '鲁红旺'
+                    break
+                case '客服部':
+                    result[i].director = '郑友'
+                    break
+                case '视觉部':
+                    result[i].director = '黄成'
+                    break
+                case '人事部':
+                    result[i].director = '叶依梦'
+                    break
+                case '数据中台':
+                    result[i].director = '林超超'
+                    break
+                case '财务部':
+                    result[i].director = '高昂'
+                    break
+                default:
+                    result[i].director = ''
+            }
+        }
+    }
     return result
 }
 
