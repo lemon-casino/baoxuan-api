@@ -35,6 +35,7 @@ const columnList = [
 	{ label: "", key: "name", is_link: true, show: true, sort: 1 },
 	{ label: "发货金额", key: "sale_amount", show: true },
 	{ label: "推广费", key: "promotion_amount", show: true },
+	{ label: "推广费比", key: "promotion_rate", show: true },
 	{ label: "费用", key: "operation_amount", show: true },
 	{ label: "费比(%)", key: "operation_rate", show: true },
 	{ label: "ROI", key: "roi", show: true },
