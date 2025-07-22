@@ -85,7 +85,7 @@ const getDataStats = async (id, start, end, params) => {
     let func = params.stats == 'verified' ? goodsSaleVerifiedRepo : 
         params.stats == 'info' ? goodsSaleInfoRepo : goodsPayInfoRepo
     let sale_amount = 0, promotion_amount = 0, express_fee = 0, profit = 0, 
-        oriType, type = '', except = false, operation_amount = 0, 
+        oriType, type = '', except = false, operation_amount = 0, promotion_rate = 0,
         words_market_vol = 0, words_vol = 0, order_num = 0, refund_num = 0,
         children = [{}, {}, {}], warning = 0, packing_fee = 0
     let month_duration = parseInt(moment(end).format('YYYYMM')) - parseInt(moment(start).format('YYYYMM')) + 1
@@ -212,6 +212,7 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].profit_rate = sale_amount > 0 ? (profit / sale_amount * 100).toFixed(2) : '0.00'
     result.total.data[0].operation_rate = sale_amount > 0 ? (operation_amount / sale_amount * 100).toFixed(2) : '0.00'
     result.total.data[0].operation_amount = operation_amount.toFixed(2)
+    result.total.data[0].promotion_rate = sale_amount > 0 ? (promotion_amount / sale_amount * 100).toFixed(2) : '0.00'
     result.total.data[0].words_market_vol = words_market_vol.toFixed(2)
     result.total.data[0].words_vol = words_vol.toFixed(2)
     result.total.data[0].order_num = order_num.toFixed(2)
@@ -320,6 +321,8 @@ const getDataStatsDetail = async (type, name, column, start, end, stats, user) =
             result = await func.getDetailByShopNamesAndTme(shopNames, column, start, end)
         else if (column == 'operation_rate')
             result = await func.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'operation_amount', column, start, end, 100)
+        else if (column == 'promotion_rate')
+            result = await func.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'promotion_amount', column, start, end, 100)
         else if (column == 'roi')
             result = await func.getRateByShopNamesAndTme(shopNames, 'promotion_amount', 'sale_amount', column, start, end, 1)
         else if (column == 'refund_rate')
@@ -344,6 +347,8 @@ const getDataStatsDetail = async (type, name, column, start, end, stats, user) =
         if (['sale_amount', 'promotion_amount', 'express_fee', 'packing_fee', 'profit', 'operation_amount', 'order_num', 'refund_num'].includes(column))
             result = await func.getDetailByLinkIdsAndTme(linkIds, column, start, end)
         else if (column == 'operation_rate')
+            result = await func.getRateByLinkIdsAndTme(linkIds, 'sale_amount', 'operation_amount', column, start, end, 100)
+        else if (column == 'promotion_rate')
             result = await func.getRateByLinkIdsAndTme(linkIds, 'sale_amount', 'promotion_amount', column, start, end, 100)
         else if (column == 'roi')
             result = await func.getRateByLinkIdsAndTme(linkIds, 'promotion_amount', 'sale_amount', column, start, end, 1)
@@ -395,8 +400,8 @@ const getQueryInfo = async (type, oriType, id, oriName) => {
 }
 
 const queryShopInfo = async (shops, result, type, start, end, months, timeline, func) => {
-    let sale_amount = 0, info, promotion_amount = 0, packing_fee = 0, 
-        express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
+    let sale_amount = 0, info, promotion_amount = 0, promotion_rate = 0,
+        packing_fee = 0, express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
         order_num = 0, refund_num = 0, words_market_vol = 0, words_vol = 0
     let shopName = [], j = -1, except = false
@@ -428,6 +433,7 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
             sale_amount = parseFloat(info[0].sale_amount || 0).toFixed(2)
             promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)
             operation_rate = parseFloat(info[0].operation_rate || 0).toFixed(2)
+            promotion_rate = parseFloat(info[0].promotion_rate || 0).toFixed(2)
             roi = parseFloat(info[0].roi || 0).toFixed(2)
             market_rate = parseFloat(info[0].market_rate || 0).toFixed(2)
             refund_rate = parseFloat(info[0].refund_rate || 0).toFixed(2)
@@ -457,6 +463,7 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
             sale_amount,
             promotion_amount,
             operation_rate,
+            promotion_rate,
             roi,
             market_rate,
             refund_rate,
@@ -481,7 +488,7 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
 }
 
 const queryUserInfo = async (users, result, type, start, end, months, timeline, func) => {
-    let sale_amount = 0, info, links, promotion_amount = 0, packing_fee = 0, 
+    let sale_amount = 0, info, links, promotion_amount = 0, packing_fee = 0, promotion_rate = 0,
         express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
         order_num = 0, refund_num = 0, words_market_vol = 0, words_vol = 0
@@ -526,6 +533,7 @@ const queryUserInfo = async (users, result, type, start, end, months, timeline, 
             sale_amount = parseFloat(info[0].sale_amount || 0).toFixed(2)
             promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)            
             operation_rate = parseFloat(info[0].operation_rate || 0).toFixed(2)
+            promotion_rate = parseFloat(info[0].promotion_rate || 0).toFixed(2)
             roi = parseFloat(info[0].roi || 0).toFixed(2)
             market_rate = parseFloat(info[0].market_rate || 0).toFixed(2)
             refund_rate = parseFloat(info[0].refund_rate || 0).toFixed(2)
@@ -553,6 +561,7 @@ const queryUserInfo = async (users, result, type, start, end, months, timeline, 
             sale_amount,
             promotion_amount,
             operation_rate,
+            promotion_rate,
             roi,
             market_rate,
             refund_rate,
