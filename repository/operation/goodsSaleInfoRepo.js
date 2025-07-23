@@ -1665,7 +1665,7 @@ goodsSaleInfoRepo.getweeklyreport = async(lstart, lend,preStart,preEnd,goodsinfo
             ON a.goods_id=a1.goods_id
             LEFT JOIN (
                 SELECT goods_id,SUM(amount) AS after_sales_compensation FROM goods_bill_info
-                WHERE bill_name='6008小额打款' AND shop_name='pakchoice旗舰店（天猫）' AND date BETWEEN '${lstart}' AND '${lend}'
+                WHERE bill_name='600901小额打款' AND shop_name='pakchoice旗舰店（天猫）' AND date BETWEEN '${lstart}' AND '${lend}'
                 GROUP BY goods_id
             ) AS a2
             ON a.goods_id=a2.goods_id
@@ -1888,7 +1888,7 @@ goodsSaleInfoRepo.getinfoweeklyreport = async(lstart, lend,preStart,preEnd,goods
         ON a.goods_id=a1.goods_id
         LEFT JOIN (
             SELECT goods_id,sum(amount) AS after_sales_compensation FROM goods_bill_info
-            WHERE bill_name='6008小额打款' AND shop_name='pakchoice旗舰店（天猫）' AND date BETWEEN '${lstart}' AND '${lend}'
+            WHERE bill_name='600901小额打款' AND shop_name='pakchoice旗舰店（天猫）' AND date BETWEEN '${lstart}' AND '${lend}'
             GROUP BY goods_id) AS a2
         ON a.goods_id=a2.goods_id
         LEFT JOIN (
@@ -1968,7 +1968,7 @@ goodsSaleInfoRepo.getinfoweeklyreport = async(lstart, lend,preStart,preEnd,goods
         ON a.goods_id=a1.goods_id
         LEFT JOIN (
             SELECT goods_id,sum(amount) AS after_sales_compensation FROM goods_bill_info
-            WHERE bill_name='6008小额打款' AND shop_name='pakchoice旗舰店（天猫）' AND date BETWEEN '${preStart}' AND '${preEnd}'
+            WHERE bill_name='600901小额打款' AND shop_name='pakchoice旗舰店（天猫）' AND date BETWEEN '${preStart}' AND '${preEnd}'
             GROUP BY goods_id) AS a2
         ON a.goods_id=a2.goods_id
         LEFT JOIN (
