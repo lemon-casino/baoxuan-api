@@ -596,6 +596,22 @@ const importGoodsMonthlySalesTarget = async (req, res, next) => {
     }
 }
 
+const updatetGoodsMonthlySalesTarget = async (req, res, next) => {
+    try {
+        const {goods_id,month,amount} = req.query
+        joiUtil.validate({
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strNumRequired},
+            month: {value: month, schema: joiUtil.commonJoiSchemas.strNumRequired},
+            amount: {value: amount, schema: joiUtil.commonJoiSchemas.strNumRequired}
+        })
+        const result = await goodsMonthlySalesTargetService.goodsUpdate (goods_id,month,amount)
+        if (result) return res.send(biResponse.success(result))
+        return res.send(biResponse.createFailed())
+    } catch (e) {
+        next(e)
+    }
+}
+
 const getGoodsMonthlySalesTarget = async (req, res, next) => {
     try {
         const {goods_id, currentPage, pageSize} = req.query
@@ -657,5 +673,6 @@ module.exports = {
     uploadpddTable,
     importGoodsMonthlySalesTarget,
     getGoodsMonthlySalesTarget,
-    exportGoodsMonthlySalesTarget
+    exportGoodsMonthlySalesTarget,
+    updatetGoodsMonthlySalesTarget
 }

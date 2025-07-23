@@ -41,6 +41,23 @@ goodsMonthSalesTargetService.import = async (rows) => {
     return result
 }
 
+goodsMonthSalesTargetService.goodsUpdate = async (goods_id,month,amount) => {
+    let result= null,data = []
+    let info = await goodsMonthSalesTarget.getInfo(goods_id,month)
+    if (info?.length){
+        result = await goodsMonthSalesTarget.update(goods_id, month, amount)
+    }else{
+        data.push(
+            goods_id,
+            month,
+            amount
+        )
+        count = 1
+        result = await goodsMonthSalesTarget.batchInsert(count, data)
+    }
+    return result
+}
+
 goodsMonthSalesTargetService.get = async (params) => {
     let page = parseInt(params.currentPage)
     let limit = parseInt(params.pageSize)
