@@ -57,5 +57,6 @@ module.exports = [
     '/hr/recruit/advise-output',
     '/operation/ghyx-promotion-info/import',
     '/operation/goods-order-pay-stat/import',
+    '/operation/promotion-plan/import',
     /^\/download\/.*/,
 ]

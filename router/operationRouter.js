@@ -79,4 +79,7 @@ router.get('/project-qty', operationApi.getProjectSaleQtyData)
 router.get('/shop-qty', operationApi.getShopSaleQtyData)
 // 更新 inventory_attributes
 router.post('/inventory_attributes/update',operationApi.updateInventory)
+
+//推广计划导入
+router.post('/promotion-plan/import', operationApi.importPromotionPlan)
 module.exports = router

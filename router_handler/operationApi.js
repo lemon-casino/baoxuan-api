@@ -25,7 +25,11 @@ const getDataStats = async (req, res, next) => {
         joiUtil.clarityValidate(operationSchema.requiredDateSchema, req.query)
         const startDate = moment(req.query.startDate).format('YYYY-MM-DD')
         const endDate = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getDataStats(req.user.id, startDate, endDate, req.query)
+        let result
+        if (req.query.type == '1') 
+            result = await operationService.getPromotionStats(req.user.id, startDate, endDate, req.query)
+        else 
+            result = await operationService.getDataStats(req.user.id, startDate, endDate, req.query)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -1513,6 +1517,50 @@ const updateInventory = async(req, res,next) => {
     }
 }
 
+const importPromotionPlan = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const info = file.originalFilename.split('.')[0].split('_')
+            const ext = file.originalFilename.split('.')[1]
+            const project = info[0]
+            const shop_name = info[1]
+            const promotion_name = info[2]
+            const date = info[3]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes
+            if (ext == 'csv') {
+                readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            } else readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importPromotionPlan(rows, project, shop_name, promotion_name, date)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -1567,5 +1615,6 @@ module.exports = {
     getShopSaleQtyData,
     importGhyxpromotioninfo,
     updateInventory,
-    importGoodsOrderPayStat
+    importGoodsOrderPayStat,
+    importPromotionPlan
 }
