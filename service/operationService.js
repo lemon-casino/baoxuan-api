@@ -59,7 +59,6 @@ const actReProcdefRepo = require('@/repository/bpm/actReProcdefRepo')
 const credentialsReq = require("@/core/dingDingReq/credentialsReq")
 const goodsPaysStats = require('@/repository/operation/goodsPaysStats')
 const goodsPromotionPlanRepo = require('@/repository/operation/goodsPromotionPlanRepo')
-const { logger } = require('@/utils/log')
 const goodsSkuRepo = require('@/repository/jst/goodsSkuRepo')
 /**
  * get operation data pannel data stats
