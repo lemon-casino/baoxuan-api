@@ -85,4 +85,11 @@ settlementRepo.delete = async (shop_name, type, start_time, end_time) => {
     return result?.affectedRows ? true : false
 }
 
+settlementRepo.tgcdelete = async (shop_name, type, start_time, end_time) => {
+    let sql = `DELETE FROM settlement WHERE shop_name = ? 
+         AND settle_time >= ? AND settle_time <= ?`
+    const result = await query(sql, [shop_name, type, start_time, end_time])
+    return result?.affectedRows ? true : false
+}
+
 module.exports = settlementRepo
