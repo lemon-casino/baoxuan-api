@@ -13,6 +13,7 @@ const {
     projectNameList, 
     workTypeList,
     columnList,
+    columnList1,
     optimizeFlowUUid,
     optimizeUser,
     platformMap,
@@ -57,6 +58,8 @@ const commonReq = require('@/core/bpmReq/commonReq')
 const actReProcdefRepo = require('@/repository/bpm/actReProcdefRepo')
 const credentialsReq = require("@/core/dingDingReq/credentialsReq")
 const goodsPaysStats = require('@/repository/operation/goodsPaysStats')
+const goodsPromotionPlanRepo = require('@/repository/operation/goodsPromotionPlanRepo')
+const goodsSkuRepo = require('@/repository/jst/goodsSkuRepo')
 /**
  * get operation data pannel data stats
  * division > project > shop / team > user
@@ -167,8 +170,8 @@ const getDataStats = async (id, start, end, params) => {
         operation_amount += parseFloat(result[type].data[i].operation_amount)
         words_market_vol += parseFloat(result[type].data[i].words_market_vol)
         words_vol += parseFloat(result[type].data[i].words_vol)
-        order_num += parseFloat(result[type].data[i].order_num)
-        refund_num += parseFloat(result[type].data[i].refund_num)
+        order_num += parseInt(result[type].data[i].order_num)
+        refund_num += parseInt(result[type].data[i].refund_num)
         express_fee += parseFloat(result[type].data[i].express_fee)
         packing_fee += parseFloat(result[type].data[i].packing_fee)
         profit += parseFloat(result[type].data[i].profit)
@@ -212,11 +215,10 @@ const getDataStats = async (id, start, end, params) => {
     result.total.data[0].profit_rate = sale_amount > 0 ? (profit / sale_amount * 100).toFixed(2) : '0.00'
     result.total.data[0].operation_rate = sale_amount > 0 ? (operation_amount / sale_amount * 100).toFixed(2) : '0.00'
     result.total.data[0].operation_amount = operation_amount.toFixed(2)
-    result.total.data[0].promotion_rate = sale_amount > 0 ? (promotion_amount / sale_amount * 100).toFixed(2) : '0.00'
     result.total.data[0].words_market_vol = words_market_vol.toFixed(2)
     result.total.data[0].words_vol = words_vol.toFixed(2)
-    result.total.data[0].order_num = order_num.toFixed(2)
-    result.total.data[0].refund_num = refund_num.toFixed(2)
+    result.total.data[0].order_num = order_num
+    result.total.data[0].refund_num = refund_num
     result.total.data[0].roi = promotion_amount > 0 ? (sale_amount / promotion_amount).toFixed(2) : '0.00'
     result.total.data[0].market_rate = words_market_vol > 0 ? (words_vol / words_market_vol * 100).toFixed(2) : '0.00'
     result.total.data[0].refund_rate = order_num > 0 ? (refund_num / order_num * 100).toFixed(2) : '0.00'
@@ -240,6 +242,93 @@ const getDataStats = async (id, start, end, params) => {
         setting = JSON.parse(setting[0].attributes || '[]')
         result.total.setting = setting
     }
+    redisUtil.set(key, JSON.stringify(result), 3600)
+    return result
+}
+
+/**
+ * get operation data pannel promotion stats
+ * division > project > shop / team > user
+ * @param {*} id 
+ * @param {*} start 
+ * @param {*} end 
+ * @param {*} params 
+ * @returns 
+ */
+const getPromotionStats = async (id, start, end, params) => {
+    let result = {}
+    let info = `${id}-${start}-${end}-${JSON.stringify(params)}`
+    let key = crypto.createHash('md5').update(info).digest('hex')
+    key = `${redisKeys.operation}:promotion:${params.stats}:${key}`
+    result = await redisUtil.get(key)
+    result = JSON.parse(JSON.stringify(operationDefaultItem))
+    let func = params.stats == 'verified' ? goodsSaleVerifiedRepo : 
+        params.stats == 'info' ? goodsSaleInfoRepo : goodsPayInfoRepo
+    let negetive_profit = 0, low_profit = 0, none_promotion = 0, low_promotion = 0, 
+        low_roi = 0, low_plan_roi = 0, goal_not_achieve = 0, invalid_link = 0, 
+        important_link = 0, low_gross_profit = 0
+    let columnInfo = JSON.parse(JSON.stringify(columnList1))
+    if (params.type) {
+        // jump permission, high level => low level
+        oriType = typeList[params.type].map[0]
+        for (let i = 0; i < typeList[params.type].map.length; i++) {
+            const { shops, users, typeValue } = await getQueryInfo(
+                typeList[params.type].map[i], 
+                typeList[params.type].key, 
+                0, 
+                params.name, 
+            )
+            if (shops.length) {
+                result = await queryShopPromotion(shops, result, typeValue, start, end, func)
+            }
+            if (users.length) {
+                result = await queryUserPromotion(users, result, typeValue, start, end, func)
+            }
+        }
+    } else {
+        // user permission
+        const permissions = await userOperationRepo.getPermission(id)
+        if (permissions.length == 0) return []
+        oriType = permissions[0].type
+        if ([typeList.division.key, typeList.project.key].includes(oriType)) except = true
+        for (let i = 0; i < permissions.length; i++) {
+            const { shops, users, typeValue } = await getQueryInfo(
+                permissions[i].type, 
+                null, 
+                permissions[i].detail_id, 
+                null,
+            )
+            if (shops.length) {
+                result = await queryShopPromotion(shops, result, typeValue, start, end, months, timeline, func)
+            }
+            if (users.length) {
+                result = await queryUserPromotion(users, result, typeValue, start, end, months, timeline, func)
+            }
+        }
+    }
+    // get total stats calc level
+    switch(oriType) {
+        case typeList.division.key:
+            type = typeList.division.value
+            break
+        case typeList.project.key:
+            type = typeList.project.value
+            break
+        case typeList.shop.key:
+            type = typeList.shop.value
+            break
+        case typeList.team.key:
+            type = typeList.team.value
+            break
+        case typeList.user.key:
+            type = typeList.user.value
+            break
+        default:
+    }
+    for (let i = 0; i < result[type].data.length; i++) {
+        
+    }
+    
     redisUtil.set(key, JSON.stringify(result), 3600)
     return result
 }
@@ -442,8 +531,8 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
             profit = parseFloat(info[0].profit || 0).toFixed(2)
             profit_rate = parseFloat(info[0].profit_rate || 0).toFixed(2)
             operation_amount = parseFloat(info[0].operation_amount || 0).toFixed(2)
-            order_num = parseFloat(info[0].order_num || 0).toFixed(2)
-            refund_num = parseFloat(info[0].refund_num || 0).toFixed(2)
+            order_num = parseInt(info[0].order_num || 0)
+            refund_num = parseInt(info[0].refund_num || 0)
             words_market_vol = parseFloat(info[0].words_market_vol || 0).toFixed(2)
             words_vol = parseFloat(info[0].words_vol || 0).toFixed(2)
         }
@@ -482,6 +571,32 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
             goal,
             targets_info: info1,
             timeline
+        })           
+    }
+    return result
+}
+
+const queryShopPromotion = async (shops, result, type, start, end, func) => {
+    let negetive_profit = 0, low_profit = 0, none_promotion = 0, low_promotion = 0, 
+        low_roi = 0, low_plan_roi = 0, goal_not_achieve = 0, invalid_link = 0, 
+        important_link = 0, low_gross_profit = 0
+    let shopName = [], j = -1
+    for (let i = 0; i < shops.length; i++) {
+        if (i == 0 || shops[i].name != shops[i-1].name) {
+            shopName.push({
+                shop_name: shops[i].shop_name,
+                name: shops[i].name, 
+                has_promotion: shops[i].has_promotion
+            })
+            j = j+1
+        } else {
+            shopName[j].shop_name = `${shopName[j].shop_name}","${shops[i].shop_name}`
+            if (shops[i].has_promotion) shopName[j].has_promotion = 1
+        }
+    }
+    for (let i = 0; i < shopName.length; i++) {
+        result[type].data.push({
+
         })           
     }
     return result
@@ -542,8 +657,8 @@ const queryUserInfo = async (users, result, type, start, end, months, timeline, 
             profit = parseFloat(info[0].profit || 0).toFixed(2)
             profit_rate = parseFloat(info[0].profit_rate || 0).toFixed(2)
             operation_amount = parseFloat(info[0].operation_amount || 0).toFixed(2)
-            order_num = parseFloat(info[0].order_num || 0).toFixed(2)
-            refund_num = parseFloat(info[0].refund_num || 0).toFixed(2)
+            order_num = parseInt(info[0].order_num || 0)
+            refund_num = parseInt(info[0].refund_num || 0)
             words_market_vol = parseFloat(info[0].words_market_vol || 0).toFixed(2)
             words_vol = parseFloat(info[0].words_vol || 0).toFixed(2)
         }
@@ -579,6 +694,46 @@ const queryUserInfo = async (users, result, type, start, end, months, timeline, 
             goal,
             targets_info: info1,
             timeline
+        })        
+    }
+    return result
+}
+
+
+
+const queryUserPromotion = async (users, result, type, start, end, func) => {
+    let negetive_profit = 0, low_profit = 0, none_promotion = 0, low_promotion = 0, 
+        low_roi = 0, low_plan_roi = 0, goal_not_achieve = 0, invalid_link = 0, 
+        important_link = 0, low_gross_profit = 0
+    let userName = [], j = -1
+    for (let i = 0; i < users.length; i++) {
+        if (i == 0 || users[i].name != users[i-1].name) {
+            userName.push({
+                nickname: users[i].nickname,
+                name: users[i].name,
+                shops: users[i].shop_name ? [...users[i].shop_name.split(',')] : []
+            })
+            j = j+1
+        } else {
+            userName[j].nickname = `${userName[j].nickname}","${users[i].nickname}`
+            userName[j].shops = users[i].shop_name ? 
+                userName[j].shops.push(...users[i].shop_name.split(',')) :
+                userName[j].shops
+        }
+    }
+    for (let i = 0; i < userName.length; i++) {
+        if (userName[i].shops.length) {
+            let shops = [], exists = {}
+            userName[i].shops.forEach(item => {
+                if (!exists[item] && item != '') {
+                    exists[item] = true
+                    shops.push(item)
+                }
+            })
+            userName[i].shopNames = shops.join('","')
+        }
+        result[type].data.push({
+
         })        
     }
     return result
@@ -1989,14 +2144,17 @@ const importJDZYInfo = async (rows, time) => {
 }
 
 const importJDZYPromotionInfo = async (rows, name, time) => {
-    let count = 0, data = [], result = false
+    let count = 0, data = [], data1 = [], result = false
     let columns = rows[0].values,
         sku_id_row = null, 
         amount_row = null, 
         shop_name = '京东自营旗舰店',
         date = time,
         way_row = null,
-        promotion_name = '';
+        promotion_name = '',
+        plan_name_row = null,
+        plan_goal_row = null,
+        trans_amount_row = null;
     if (name.indexOf('宝选快车') != -1) {
         promotion_name = '京东快车1'
     } else if(name.indexOf('快车单日计划') != -1) {
@@ -2014,29 +2172,17 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
     }
     for (let i = 1; i < columns.length; i++) {
         if (promotion_name=='场景推广' || promotion_name=='日常推广'){
-            if (columns[i] == 'SKUID') {
-                sku_id_row = i
-                continue
-            }
+            if (columns[i] == 'SKUID') {sku_id_row = i; continue}
         } else if(promotion_name=='京东快车1' || promotion_name=='京东快车2' || promotion_name=='京东快车3' ){
-            if (columns[i] == '商品SKU') {
-                sku_id_row = i
-                continue
-            }
+            if (columns[i] == '商品SKU') {sku_id_row = i; continue}
         } else if(promotion_name=='全站营销' || promotion_name=='新品全站营销' ){
-            if (columns[i] == 'ID') {
-                sku_id_row = i
-                continue
-            }
+            if (columns[i] == 'ID') {sku_id_row = i; continue}
         }
-        if (columns[i] == '花费') {
-            amount_row = i
-            continue
-        }
-        if (columns[i] == '定向方式') {
-            way_row = i
-            continue
-        }
+        if (columns[i] == '花费') {amount_row = i; continue}
+        if (columns[i] == '定向方式') {way_row = i; continue}
+        if (columns[i] == '推广创意' || columns[i] == '计划名称' || columns[i] == '商品计划名称') {plan_name_row = i; continue}
+        if (columns[i] == '出价方式') {plan_goal_row = i; continue}
+        if (columns[i] == '总订单金额' || columns[i] == '全站交易额') {trans_amount_row = i; continue}
     }
     for (let i = 1; i < rows.length; i++) {
         if (!rows[i].getCell(1).value) continue
@@ -2050,6 +2196,11 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
         }
         let amount = parseFloat(rows[i].getCell(amount_row).value || 0)
         if (amount == 0) continue
+        let plan_name = rows[i].getCell(plan_name_row).value
+        let plan_goal = plan_goal_row && rows[i].getCell(plan_goal_row).value?.length > 1 ? 
+            parseFloat(rows[i].getCell(plan_goal_row).value.substring(8, 
+                rows[i].getCell(plan_goal_row).value.length - 1)) : null
+        let trans_amount = parseFloat(rows[i].getCell(trans_amount_row).value || 0)
         data.push(
             goods_id,
             sku_id,
@@ -2057,6 +2208,17 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
             promotion_name,
             amount,
             date
+        )
+        data1.push(
+            goods_id,
+            sku_id,
+            shop_name,
+            date,
+            promotion_name,
+            plan_name, 
+            plan_goal,
+            amount,
+            trans_amount
         )
         await goodsSaleInfoRepo.selectFee(sku_id, date, goods_id)
         await goodsSaleInfoRepo.updateFee(sku_id, amount, date)
@@ -2066,6 +2228,8 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
     if (count > 0) {
         await goodsPromotionRepo.deleteByDate(date, promotion_name)
         result = await goodsPromotionRepo.batchInsert(count, data)
+        await goodsPromotionPlanRepo.deleteByDate(date, shop_name, promotion_name)
+        await goodsPromotionPlanRepo.batchInsert(count, data1)
     }
     await batchInsertJDGoodsSales(date)
     return result
@@ -3995,8 +4159,97 @@ const updateInventory = async () =>{
     return true
 }
 
+const importPromotionPlan = async (rows, project, shop_name, promotion_name, date) => {
+    let columns = rows[0].values, goods_id_row, sku_id_row, plan_name_row, plan_goal_row, 
+        pay_amount_row, trans_amount_row, date_row, data = [], count = 0, result = false
+    switch (project) {
+        case '宝选天猫':            
+            for (let i = 1; i <= columns.length; i++) {
+                if (columns[i] == '计划ID') {goods_id_row = i; continue}
+                if (columns[i] == '计划名称') {plan_name_row = i; continue}
+                if (columns[i] == '花费') {pay_amount_row = i; continue}
+                if (columns[i] == '总成交金额') {trans_amount_row = i; continue}
+            }
+            break
+        case '京东':
+            for (let i = 1; i <= columns.length; i++) {
+                if (columns[i] == 'ID') {goods_id_row = i; continue}
+                if (columns[i] == '智能投放推广SKU ID' || columns[i] == 'SKU ID') {sku_id_row = i; continue}
+                if (columns[i] == '智能投放推广SKU名称' || columns[i] == '商品名称' || columns[i] == '商品计划名称') {plan_name_row = i; continue}
+                if (columns[i] == '花费') {pay_amount_row = i; continue}
+                if (columns[i] == '总订单金额' || columns[i] == '全站交易额') {trans_amount_row = i; continue}
+            }
+            break
+        case '抖音':
+            for (let i = 1; i <= columns.length; i++) {
+                if (columns[i] == '商品ID') {goods_id_row = i; continue}
+                if (columns[i] == '商品名称') {plan_name_row = i; continue}
+                if (columns[i] == '整体消耗') {pay_amount_row = i; continue}
+                if (columns[i] == '整体成交金额') {trans_amount_row = i; continue}
+                if (columns[i] == '日期') {date_row = i; continue}
+            }
+            break
+        case '拼多多':
+            for (let i = 1; i <= columns.length; i++) {
+                if (columns[i] == '商品ID') {goods_id_row = i; continue}
+                if (columns[i] == '推广名称') {plan_name_row = i; continue}
+                if (columns[i] == '出价方式') {plan_goal_row = i; continue}
+                if (columns[i] == '总花费(元)') {pay_amount_row = i; continue}
+                if (columns[i] == '交易额(元)') {trans_amount_row = i; continue}
+            }
+            break
+        default:
+            break
+    }
+    let flag = 1
+    for (let i = 1; i < rows.length; i++) {
+        let goods_id, sku_id, plan_name, plan_goal, pay_amount, trans_amount
+        if (date_row && rows[i].getCell(date_row).value == '全部') continue
+        if (!goods_id_row && !sku_id_row) {
+            logger.info(`[推广计划导入失败]: 时间:${date}, 店铺:${shop_name}, 推广名称:${promotion_name}`)
+            flag = 0
+            break
+        } else if (!goods_id_row) {
+            sku_id = rows[i].getCell(sku_id_row).value
+            let info = await goodsSkuRepo.getGoodsIdBySkuId(sku_id)
+            if (!info?.length) {
+                flag = 0
+                break
+            }
+            goods_id = info[0].goods_id
+        } else {
+            goods_id = rows[i].getCell(goods_id_row).value
+        }
+        plan_name = rows[i].getCell(plan_name_row).value
+        plan_goal = plan_goal_row && rows[i].getCell(plan_goal_row).value?.length > 1 ? 
+            parseFloat(rows[i].getCell(plan_goal_row).value.substring(7, 
+                rows[i].getCell(plan_goal_row).value.length - 1)) : null
+        pay_amount = parseFloat(rows[i].getCell(pay_amount_row).value || 0)
+        trans_amount = parseFloat(rows[i].getCell(trans_amount_row).value || 0)
+        data.push(
+            goods_id,
+            sku_id,
+            shop_name,
+            date,
+            promotion_name,
+            plan_name,
+            plan_goal,
+            pay_amount,
+            trans_amount
+        )
+        count += 1
+    }
+    if (flag) {
+        logger.info(`[推广计划导入]: 时间:${date}, 店铺:${shop_name}, 推广名称:${promotion_name}`)
+        await goodsPromotionPlanRepo.deleteByDate(date, shop_name, promotion_name)
+        result = await goodsPromotionPlanRepo.batchInsert(count, data)
+    }
+    return result
+}
+
 module.exports = {
     getDataStats,
+    getPromotionStats,
     getDataStatsDetail,
     getGoodsInfo,
     importGoodsInfo,
@@ -4055,5 +4308,6 @@ module.exports = {
     importGhyxpromotioninfo,
     updateInventory,
     importGoodsOrderPayStat,
-    PaysUpdateSaleMonth
+    PaysUpdateSaleMonth,
+    importPromotionPlan
 }

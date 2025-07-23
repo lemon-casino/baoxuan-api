@@ -343,4 +343,10 @@ goodsSkuRepo.getProductSku = async (params) => {
     return result
 }
 
+goodsSkuRepo.getGoodsIdBySkuId = async (sku_id) => {
+    const sql = `SELECT goods_id FROM jst_goods_sku WHERE sku_id = ? LIMIT 1`
+    const result = await query(sql, [sku_id])
+    return result
+}
+
 module.exports = goodsSkuRepo
