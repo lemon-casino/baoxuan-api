@@ -39,5 +39,5 @@ router.get('/download', (req, res) => {
 router.post('/goods-monthly-sales-target/import', dianShangOperationAttributeApi.importGoodsMonthlySalesTarget)
 router.get('/goods-monthly-sales-target', dianShangOperationAttributeApi.getGoodsMonthlySalesTarget)
 router.post('/goods-monthly-sales-target/export', dianShangOperationAttributeApi.exportGoodsMonthlySalesTarget)
-
+router.post('/goods-monthly-sales-update',dianShangOperationAttributeApi.updatetGoodsMonthlySalesTarget)
 module.exports = router
