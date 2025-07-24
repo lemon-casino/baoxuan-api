@@ -4166,7 +4166,7 @@ const importPromotionPlan = async (rows, project, shop_name, promotion_name, dat
         case '宝选天猫':            
             for (let i = 1; i <= columns.length; i++) {
                 if (columns[i] == '主体ID') {goods_id_row = i; continue}
-                if (columns[i] == '计划名称') {plan_name_row = i; continue}
+                if (columns[i] == '计划名字') {plan_name_row = i; continue}
                 if (columns[i] == '花费') {pay_amount_row = i; continue}
                 if (columns[i] == '总成交金额') {trans_amount_row = i; continue}
             }
