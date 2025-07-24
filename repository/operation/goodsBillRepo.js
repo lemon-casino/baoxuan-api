@@ -4,14 +4,15 @@ const goodsBillRepo = {}
 goodsBillRepo.deleteByDate = async (date) => {
     let sql = `DELETE FROM goods_bill_info WHERE \`date\` = ? 
         AND bill_name != '小红书返款'
-        AND shop_name != '京东自营旗舰店'`
+        AND shop_name != '京东自营-厨具'
+        AND shop_name != '京东自营-日用'`
     const result = await query(sql, [date])
     return result?.affectedRows ? true : false
 }
 
 goodsBillRepo.deleteByDate2 = async (date) => {
     let sql = `DELETE FROM goods_bill_info WHERE \`date\` = ? 
-        AND shop_name = '京东自营旗舰店'`
+        AND shop_name = '京东自营-厨具'`
     const result = await query(sql, [date])
     return result?.affectedRows ? true : false
 }
@@ -20,7 +21,8 @@ goodsBillRepo.deleteByDate2 = async (date) => {
 goodsBillRepo.deleteByDate3 = async (date) => {
     let sql = `DELETE FROM goods_bill_info WHERE \`date\` = ? 
         AND bill_name = '小红书返款'
-        AND shop_name != '京东自营旗舰店'`
+        AND shop_name != '京东自营-厨具'
+        AND shop_name != '京东自营-日用'`
     const result = await query(sql, [date])
     return result?.affectedRows ? true : false
 }

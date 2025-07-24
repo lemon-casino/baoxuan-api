@@ -4,7 +4,7 @@ const goodsPromotionRepo = {}
 goodsPromotionRepo.deleteByDate = async (date, promotion_name) => {
     let sql = `DELETE FROM goods_promotion_info WHERE \`date\` = ?`
     if (promotion_name) sql = `${sql} AND promotion_name = "${promotion_name}"`
-    else sql = `${sql} AND shop_name != "京东自营旗舰店"`
+    else sql = `${sql} AND shop_name != "京东自营-厨具"`
     const result = await query(sql, [date])
     return result?.affectedRows ? true : false
 }
