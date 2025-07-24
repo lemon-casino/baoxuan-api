@@ -847,8 +847,8 @@ goodsSaleInfoRepo.updateOrder = async ({
 goodsSaleInfoRepo.deleteByDate = async (date, column, except) => {
     let sql = `DELETE FROM goods_sale_info WHERE \`date\` = ? 
         AND ${column} IS NULL`
-    if (except) sql = `${sql} AND shop_name = '京东自营旗舰店'`
-    else sql = `${sql} AND shop_name != '京东自营旗舰店'`
+    if (except) sql = `${sql} AND shop_name = '京东自营-厨具'`
+    else sql = `${sql} AND shop_name != '京东自营-厨具'`
     const result = await query(sql, [date])
     return result?.affectedRows ? true : false
 }
@@ -1129,7 +1129,7 @@ goodsSaleInfoRepo.getskuDetailTotalByTime = async(sku_id, start, end) => {
             FROM goods_promotion_info
             WHERE sku_id=?
             AND date BETWEEN '${start}' AND '${end}'
-            AND shop_name='京东自营旗舰店'
+            AND shop_name='京东自营-厨具'
             AND promotion_name in ('京东快车1','京东快车2','京东快车3')
         ) AS a4
         ON a1.sku_id=a4.sku_id AND a1.date = a4.date
@@ -1138,7 +1138,7 @@ goodsSaleInfoRepo.getskuDetailTotalByTime = async(sku_id, start, end) => {
             FROM goods_promotion_info
             WHERE sku_id=?
             AND date BETWEEN '${start}' AND '${end}'
-            AND shop_name='京东自营旗舰店'
+            AND shop_name='京东自营-厨具'
             AND promotion_name ='日常推广'
         ) AS a5
         ON a1.sku_id=a5.sku_id AND a1.date = a5.date
@@ -1147,7 +1147,7 @@ goodsSaleInfoRepo.getskuDetailTotalByTime = async(sku_id, start, end) => {
             FROM goods_promotion_info
             WHERE sku_id=?
             AND date BETWEEN '${start}' AND '${end}'
-            AND shop_name='京东自营旗舰店'
+            AND shop_name='京东自营-厨具'
             AND promotion_name ='场景推广'
         ) AS a6
         ON a1.sku_id=a6.sku_id AND a1.date = a6.date
@@ -1156,7 +1156,7 @@ goodsSaleInfoRepo.getskuDetailTotalByTime = async(sku_id, start, end) => {
             FROM goods_promotion_info
             WHERE sku_id=?
             AND date BETWEEN '${start}' AND '${end}'
-            AND shop_name='京东自营旗舰店'
+            AND shop_name='京东自营-厨具'
             AND promotion_name in ('全站营销','新品全站营销')
         ) AS a7
         ON a1.sku_id=a7.sku_id AND a1.date = a7.date`
@@ -1235,7 +1235,7 @@ goodsSaleInfoRepo.updateFee = async(sku_id, promotion_amount, date) => {
     const sql = `UPDATE goods_sale_info SET promotion_amount = promotion_amount + ?, 
         operation_amount = operation_amount + ?, profit = profit - ?, 
         profit_rate = IF(sale_amount, (profit - ?) / sale_amount, 0) WHERE sku_id = ?
-            AND shop_name = '京东自营旗舰店' 
+            AND shop_name = '京东自营-厨具' 
             AND \`date\` = ?`
     const result = await query(sql, [
         promotion_amount, 
@@ -1248,7 +1248,7 @@ goodsSaleInfoRepo.updateFee = async(sku_id, promotion_amount, date) => {
     return result?.affectedRows ? true : false
 }
 goodsSaleInfoRepo.selectFee = async(sku_id, date, goods_id) => {
-    const sql = `SELECT * FROM goods_sale_info WHERE shop_name='京东自营旗舰店' AND sku_id=? AND \`date\`= ?`
+    const sql = `SELECT * FROM goods_sale_info WHERE shop_name='京东自营-厨具' AND sku_id=? AND \`date\`= ?`
     const result = await query(sql, [sku_id, date])
     if (result.length==0){
         const sql=`INSERT INTO goods_sale_info(
@@ -1278,7 +1278,7 @@ goodsSaleInfoRepo.selectFee = async(sku_id, date, goods_id) => {
             real_gross_profit)
 			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
         const insertResult = await query(sql, [goods_id,
-            sku_id,null,null,'京东自营旗舰店','16314655',null
+            sku_id,null,null,'京东自营-厨具','16314655',null
             ,date,0,0,0,0,0,0,0,0,null,0,0,null,0,null,null,0])
     }
     return result
@@ -1568,7 +1568,7 @@ goodsSaleInfoRepo.getJDskuInfoDetail = async(goods_id, start, end, stats) =>{
             FROM goods_promotion_info 
             WHERE goods_id=? 
             AND date BETWEEN '${start}' AND '${end}' 
-            AND shop_name='京东自营旗舰店' 
+            AND shop_name='京东自营-厨具' 
             AND promotion_name in ('京东快车1','京东快车2','京东快车3')
             GROUP BY sku_id
         ) AS a4
@@ -1578,7 +1578,7 @@ goodsSaleInfoRepo.getJDskuInfoDetail = async(goods_id, start, end, stats) =>{
             FROM goods_promotion_info 
             WHERE goods_id=? 
             AND date BETWEEN '${start}' AND '${end}' 
-            AND shop_name='京东自营旗舰店' 
+            AND shop_name='京东自营-厨具' 
             AND promotion_name ='日常推广'
             GROUP BY sku_id
         ) AS a5
@@ -1588,7 +1588,7 @@ goodsSaleInfoRepo.getJDskuInfoDetail = async(goods_id, start, end, stats) =>{
             FROM goods_promotion_info 
             WHERE goods_id=? 
             AND date BETWEEN '${start}' AND '${end}' 
-            AND shop_name='京东自营旗舰店' 
+            AND shop_name='京东自营-厨具' 
             AND promotion_name ='场景推广'
             GROUP BY sku_id
         ) AS a6
@@ -1598,7 +1598,7 @@ goodsSaleInfoRepo.getJDskuInfoDetail = async(goods_id, start, end, stats) =>{
             FROM goods_promotion_info 
             WHERE goods_id=? 
             AND date BETWEEN '${start}' AND '${end}' 
-            AND shop_name='京东自营旗舰店' 
+            AND shop_name='京东自营-厨具' 
             AND promotion_name in ('全站营销','新品全站营销')
             GROUP BY sku_id
         ) AS a7
@@ -2348,11 +2348,11 @@ goodsSaleInfoRepo.getDivisionSaleData = async() => {
                 ,SUM(IF(MONTH(日期)=12,\`利润-销售金额(扣退)\`,0)) AS twelve
                 ,SUM(\`利润-销售金额(扣退)\`) AS sum
             FROM danpin.sku_code_sale
-            WHERE 日期 BETWEEN '2024-01-01' AND '2025-12-31' and 店铺名称 !='京东自营旗舰店'
+            WHERE 日期 BETWEEN '2024-01-01' AND '2025-12-31' and 店铺名称 !='京东自营-厨具'
             GROUP BY 店铺名称,YEAR(日期)
             UNION ALL
             SELECT '2024' AS year
-                ,'京东自营旗舰店' AS shop_name
+                ,'京东自营-厨具' AS shop_name
                 ,SUM(IF(MONTH(日期)=1,京仓发货金额,0)) AS one
                 ,SUM(IF(MONTH(日期)=2,京仓发货金额,0)) AS two
                 ,SUM(IF(MONTH(日期)=3,京仓发货金额,0)) AS three
@@ -2369,7 +2369,7 @@ goodsSaleInfoRepo.getDivisionSaleData = async() => {
             FROM danpin.jbzz_month where YEAR(日期) =2024
             UNION ALL
             SELECT '2025' AS year
-                ,'京东自营旗舰店' AS shop_name
+                ,'京东自营-厨具' AS shop_name
                 ,SUM(IF(MONTH(时间)=1,京仓发货金额,0)) AS one
                 ,SUM(IF(MONTH(时间)=2,京仓发货金额,0)) AS two
                 ,SUM(IF(MONTH(时间)=3,京仓发货金额,0)) AS three
@@ -2430,11 +2430,11 @@ goodsSaleInfoRepo.getProjectSaleData = async() => {
                 ,SUM(IF(MONTH(日期)=12,\`利润-销售金额(扣退)\`,0)) AS twelve
                 ,SUM(\`利润-销售金额(扣退)\`) AS sum
             FROM danpin.sku_code_sale
-            WHERE 日期 BETWEEN '2024-01-01' AND '2025-12-31' and 店铺名称 !='京东自营旗舰店'
+            WHERE 日期 BETWEEN '2024-01-01' AND '2025-12-31' and 店铺名称 !='京东自营-厨具'
             GROUP BY 店铺名称,YEAR(日期)
             UNION ALL
             SELECT '2024' AS year
-                ,'京东自营旗舰店' AS shop_name
+                ,'京东自营-厨具' AS shop_name
                 ,SUM(IF(MONTH(日期)=1,京仓发货金额,0)) AS one
                 ,SUM(IF(MONTH(日期)=2,京仓发货金额,0)) AS two
                 ,SUM(IF(MONTH(日期)=3,京仓发货金额,0)) AS three
@@ -2451,7 +2451,7 @@ goodsSaleInfoRepo.getProjectSaleData = async() => {
             FROM danpin.jbzz_month where YEAR(日期) =2024
             UNION ALL
             SELECT '2025' AS year
-                ,'京东自营旗舰店' AS shop_name
+                ,'京东自营-厨具' AS shop_name
                 ,SUM(IF(MONTH(时间)=1,京仓发货金额,0)) AS one
                 ,SUM(IF(MONTH(时间)=2,京仓发货金额,0)) AS two
                 ,SUM(IF(MONTH(时间)=3,京仓发货金额,0)) AS three
@@ -2512,11 +2512,11 @@ goodsSaleInfoRepo.getShopSaleData = async() => {
                 ,SUM(IF(MONTH(日期)=12,\`利润-销售金额(扣退)\`,0)) AS twelve
                 ,SUM(\`利润-销售金额(扣退)\`) AS sum
             FROM danpin.sku_code_sale
-            WHERE 日期 BETWEEN '2024-01-01' AND '2025-12-31' and 店铺名称 !='京东自营旗舰店'
+            WHERE 日期 BETWEEN '2024-01-01' AND '2025-12-31' and 店铺名称 !='京东自营-厨具'
             GROUP BY 店铺名称,YEAR(日期)
             UNION ALL
             SELECT '2024' AS year
-                ,'京东自营旗舰店' AS shop_name
+                ,'京东自营-厨具' AS shop_name
                 ,SUM(IF(MONTH(日期)=1,京仓发货金额,0)) AS one
                 ,SUM(IF(MONTH(日期)=2,京仓发货金额,0)) AS two
                 ,SUM(IF(MONTH(日期)=3,京仓发货金额,0)) AS three
@@ -2533,7 +2533,7 @@ goodsSaleInfoRepo.getShopSaleData = async() => {
             FROM danpin.jbzz_month where YEAR(日期) =2024
             UNION ALL
             SELECT '2025' AS year
-                ,'京东自营旗舰店' AS shop_name
+                ,'京东自营-厨具' AS shop_name
                 ,SUM(IF(MONTH(时间)=1,京仓发货金额,0)) AS one
                 ,SUM(IF(MONTH(时间)=2,京仓发货金额,0)) AS two
                 ,SUM(IF(MONTH(时间)=3,京仓发货金额,0)) AS three
@@ -2582,11 +2582,11 @@ goodsSaleInfoRepo.getDivisionSaleQtyData = async() => {
                         ,SUM(IF(MONTH(日期)=12,\`利润-销售数量(扣退)\`,0)) AS twelve
                         ,SUM(\`利润-销售数量(扣退)\`) AS sum
                 FROM danpin.sku_code_sale
-                WHERE 日期 BETWEEN '2024-01-01' AND '2025-12-31' and 店铺名称 !='京东自营旗舰店'
+                WHERE 日期 BETWEEN '2024-01-01' AND '2025-12-31' and 店铺名称 !='京东自营-厨具'
                 GROUP BY 店铺名称,YEAR(日期)
                 UNION ALL
                 SELECT '2024' AS year
-                        ,'京东自营旗舰店' AS shop_name
+                        ,'京东自营-厨具' AS shop_name
                         ,SUM(IF(MONTH(日期)=1,发货商品件数,0)) AS one
                         ,SUM(IF(MONTH(日期)=2,发货商品件数,0)) AS two
                         ,SUM(IF(MONTH(日期)=3,发货商品件数,0)) AS three
@@ -2607,7 +2607,7 @@ goodsSaleInfoRepo.getDivisionSaleQtyData = async() => {
                 )AS a where YEAR(a.日期) =2024
                 UNION ALL
                 SELECT '2025' AS year
-                        ,'京东自营旗舰店' AS shop_name
+                        ,'京东自营-厨具' AS shop_name
                         ,SUM(IF(MONTH(时间)=1,发货商品件数,0)) AS one
                         ,SUM(IF(MONTH(时间)=2,发货商品件数,0)) AS two
                         ,SUM(IF(MONTH(时间)=3,发货商品件数,0)) AS three
@@ -2672,11 +2672,11 @@ goodsSaleInfoRepo.getProjectSaleQtyData = async() => {
                 ,SUM(IF(MONTH(日期)=12,\`利润-销售数量(扣退)\`,0)) AS twelve
                 ,SUM(\`利润-销售数量(扣退)\`) AS sum
         FROM danpin.sku_code_sale
-        WHERE 日期 BETWEEN '2024-01-01' AND '2025-12-31' and 店铺名称 !='京东自营旗舰店'
+        WHERE 日期 BETWEEN '2024-01-01' AND '2025-12-31' and 店铺名称 !='京东自营-厨具'
         GROUP BY 店铺名称,YEAR(日期)
         UNION ALL
         SELECT '2024' AS year
-                ,'京东自营旗舰店' AS shop_name
+                ,'京东自营-厨具' AS shop_name
                 ,SUM(IF(MONTH(日期)=1,发货商品件数,0)) AS one
                 ,SUM(IF(MONTH(日期)=2,发货商品件数,0)) AS two
                 ,SUM(IF(MONTH(日期)=3,发货商品件数,0)) AS three
@@ -2697,7 +2697,7 @@ goodsSaleInfoRepo.getProjectSaleQtyData = async() => {
         )AS a where YEAR(a.日期) =2024
         UNION ALL
         SELECT '2025' AS year
-                ,'京东自营旗舰店' AS shop_name
+                ,'京东自营-厨具' AS shop_name
                 ,SUM(IF(MONTH(时间)=1,发货商品件数,0)) AS one
                 ,SUM(IF(MONTH(时间)=2,发货商品件数,0)) AS two
                 ,SUM(IF(MONTH(时间)=3,发货商品件数,0)) AS three
@@ -2762,11 +2762,11 @@ goodsSaleInfoRepo.getShopSaleQtyData = async() => {
                 ,SUM(IF(MONTH(日期)=12,\`利润-销售数量(扣退)\`,0)) AS twelve
                 ,SUM(\`利润-销售数量(扣退)\`) AS sum
             FROM danpin.sku_code_sale
-            WHERE 日期 BETWEEN '2024-01-01' AND '2025-12-31' and 店铺名称 !='京东自营旗舰店'
+            WHERE 日期 BETWEEN '2024-01-01' AND '2025-12-31' and 店铺名称 !='京东自营-厨具'
             GROUP BY 店铺名称,YEAR(日期)
             UNION ALL
             SELECT '2024' AS year
-                ,'京东自营旗舰店' AS shop_name
+                ,'京东自营-厨具' AS shop_name
                 ,SUM(IF(MONTH(日期)=1,发货商品件数,0)) AS one
                 ,SUM(IF(MONTH(日期)=2,发货商品件数,0)) AS two
                 ,SUM(IF(MONTH(日期)=3,发货商品件数,0)) AS three
@@ -2787,7 +2787,7 @@ goodsSaleInfoRepo.getShopSaleQtyData = async() => {
             )AS a where YEAR(a.日期) =2024
             UNION ALL
             SELECT '2025' AS year
-                ,'京东自营旗舰店' AS shop_name
+                ,'京东自营-厨具' AS shop_name
                 ,SUM(IF(MONTH(时间)=1,发货商品件数,0)) AS one
                 ,SUM(IF(MONTH(时间)=2,发货商品件数,0)) AS two
                 ,SUM(IF(MONTH(时间)=3,发货商品件数,0)) AS three

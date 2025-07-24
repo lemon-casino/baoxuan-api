@@ -1225,7 +1225,7 @@ const importGoodsInfo = async (rows, time) => {
         let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
             rows[i].getCell(shop_name_row).value.trim() : 
             rows[i].getCell(shop_name_row).value
-        if (shop_name == '京东自营旗舰店') continue
+        if (shop_name == '京东自营-厨具') continue
         data.push(
             goods_id_row ? (typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
                 rows[i].getCell(goods_id_row).value.trim() : 
@@ -1291,7 +1291,7 @@ const importGoodsOrderStat = async (rows, time) => {
         let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ?
             rows[i].getCell(shop_name_row).value.trim() : 
             rows[i].getCell(shop_name_row).value
-        if (shop_name == '京东自营旗舰店') continue
+        if (shop_name == '京东自营-厨具') continue
         let goods_id = typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
             rows[i].getCell(goods_id_row).value.trim() : 
             rows[i].getCell(goods_id_row).value
@@ -1855,7 +1855,7 @@ const importGoodsPayInfo = async (rows, time) => {
         let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
             rows[i].getCell(shop_name_row).value.trim() : 
             rows[i].getCell(shop_name_row).value
-        if (shop_name == '京东自营旗舰店') continue
+        if (shop_name == '京东自营-厨具') continue
         let goods_id = goods_id_row ? (typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
                 rows[i].getCell(goods_id_row).value.trim() : 
                 rows[i].getCell(goods_id_row).value) : null
@@ -2001,7 +2001,7 @@ const importGoodsCompositeInfo = async (rows, time) => {
         let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
             rows[i].getCell(shop_name_row).value.trim() : 
             rows[i].getCell(shop_name_row).value
-        if (shop_name == '京东自营旗舰店') continue
+        if (shop_name == '京东自营-厨具') continue
         let goods_id = typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
             rows[i].getCell(goods_id_row).value.trim() : 
             rows[i].getCell(goods_id_row).value
@@ -2035,7 +2035,7 @@ const importGoodsCompositeInfo = async (rows, time) => {
 const importJDZYInfo = async (rows, time) => {
     let count = 0, data = [], data2 = [], result = false
     let columns = rows[0].values,
-        shop_name = '京东自营旗舰店',
+        shop_name = '京东自营-厨具',
         shop_id = '16314655',
         sku_id_row = null,
         date = time,
@@ -2148,7 +2148,7 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
     let columns = rows[0].values,
         sku_id_row = null, 
         amount_row = null, 
-        shop_name = '京东自营旗舰店',
+        shop_name = '京东自营-厨具',
         date = time,
         way_row = null,
         promotion_name = '',

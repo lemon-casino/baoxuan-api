@@ -665,7 +665,7 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds) =
                 row[i].parent_id = null
                 if (row[i].goods_id) {
                     goods_ids = `${goods_ids}"${row[i].goods_id}",`
-                    if (row[i].shop_name == '京东自营旗舰店') 
+                    if (row[i].shop_name == '京东自营-厨具') 
                         goods_ids1 = `${goods_ids1}"${row[i].goods_id}",`
                     goodsMap[row[i].goods_id] = i
                 }

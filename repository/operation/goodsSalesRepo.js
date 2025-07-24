@@ -714,7 +714,7 @@ goodsSalesRepo.updatemonth6 = async (day,type,column) =>{
             SELECT sku_code,SUM(sale_qty) as sale_qty  
             FROM goods_sale_info 
             WHERE date >= DATE_SUB(DATE(NOW()),INTERVAL ${day} ${type}) 
-            AND shop_name != '京东自营旗舰店' 
+            AND shop_name != '京东自营-厨具' 
             GROUP BY sku_code  
             UNION ALL
             select a.商品编码 as sku_code ,SUM(a.数量) as sale_qty  from (
