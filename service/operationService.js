@@ -225,6 +225,7 @@ const getDataStats = async (id, start, end, params) => {
     result.total.column = columnInfo
     result.total.data[0].sale_amount = sale_amount.toFixed(2)
     result.total.data[0].promotion_amount = promotion_amount.toFixed(2)
+    result.total.data[0].promotion_rate = sale_amount > 0 ? (promotion_amount / sale_amount * 100).toFixed(2) : '0.00'
     result.total.data[0].express_fee = express_fee.toFixed(2)
     result.total.data[0].packing_fee = packing_fee.toFixed(2)
     result.total.data[0].profit = profit.toFixed(2)

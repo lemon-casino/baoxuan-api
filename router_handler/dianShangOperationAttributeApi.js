@@ -182,7 +182,7 @@ const uploadTable = async (req, res, next) => {
 
         // 可选字段映射
         const optionalKeyMapping = {
-            '自定义1': 'userDef1',
+            '链接属性': 'userDef1',
             '自定义2': 'userDef2',
             '自定义3': 'userDef3',
             '自定义4': 'userDef4',
@@ -320,6 +320,7 @@ const uploadtmTable = async (req, res, next) => {
             '二级类目':'secondCategory',
             '转正天数':'userDef4',
             '链接定义':'userDef5',
+            '商品状态':'userDef6'
 
         };
 
@@ -333,8 +334,7 @@ const uploadtmTable = async (req, res, next) => {
             '链接类型':'userDef1',
             '实时状态':'userDef2',
             '自定义3':'userDef3',
-            '自定义6':'userDef6',
-            '自定义7':'userDef7',
+            '链接动作':'userDef7',
             '自定义8':'userDef8',
             '自定义9':'userDef9',
             '自定义10':'userDef10',
@@ -458,7 +458,8 @@ const uploadpddTable = async (req, res, next) => {
             '运营负责人':'operator',
             '上架日期':'onsaleDate',
             '一级类目':'firstCategory',
-            '二级类目':'secondCategory'
+            '二级类目':'secondCategory',
+            '链接属性':'linkAttribute'
 
         };
 
