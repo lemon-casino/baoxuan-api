@@ -90,17 +90,21 @@ const getDataStats = async (id, start, end, params) => {
     let sale_amount = 0, promotion_amount = 0, express_fee = 0, profit = 0, 
         oriType, type = '', except = false, operation_amount = 0, promotion_rate = 0,
         words_market_vol = 0, words_vol = 0, order_num = 0, refund_num = 0,
-        children = [{}, {}, {}], warning = 0, packing_fee = 0
-    let month_duration = parseInt(moment(end).format('YYYYMM')) - parseInt(moment(start).format('YYYYMM')) + 1
-    let months = [], timeline = '', start1 = start
+        children = [{}, {}, {}], warning = 0, packing_fee = 0, 
+        start_year = parseInt(moment(start).format('YYYY')),
+        end_year = parseInt(moment(end).format('YYYY')),
+        start_month = parseInt(moment(start).format('MM')),
+        end_month = parseInt(moment(end).format('MM'))
+    let month_duration = (end_year - start_year) * 12 + end_month - start_month + 1
+    let months = [], timeline = '', tmp1
     for (let i = 0; i < month_duration; i++) {
         let tmp = i+1 < month_duration ? 
-            moment(start1).add(i + 1, 'months').format('YYYY-MM') + '-01' : 
+            moment(start).add(i + 1, 'months').format('YYYY-MM') + '-01' : 
             moment(end).add(1, 'days').format('YYYY-MM-DD')
-        months.push({start: start1, end: tmp})
-        let rate = ((moment(tmp).diff(start1, 'days')) / moment(start1).daysInMonth() * 100).toFixed(2)    
-        timeline = `${timeline}${moment(start1).format('YYYYMM')}: ${rate}% \n`
-        start1 = tmp
+        months.push({start: tmp1 || start, end: tmp})
+        let rate = ((moment(tmp).diff(tmp1 || start, 'days')) / moment(tmp1 || start).daysInMonth() * 100).toFixed(2)    
+        timeline = `${timeline}${moment(tmp1 || start).format('YYYYMM')}: ${rate}% \n`
+        tmp1 = tmp
     }
     let columnInfo = JSON.parse(JSON.stringify(columnList))
     if (params.stats == 'verified') columnInfo[1].label = '核销金额'
@@ -262,12 +266,10 @@ const getPromotionStats = async (id, start, end, params) => {
     let key = crypto.createHash('md5').update(info).digest('hex')
     key = `${redisKeys.operation}:promotion:${params.stats}:${key}`
     result = await redisUtil.get(key)
+    if (result) return JSON.parse(result)
     result = JSON.parse(JSON.stringify(operationDefaultItem))
     let func = params.stats == 'verified' ? goodsSaleVerifiedRepo : 
         params.stats == 'info' ? goodsSaleInfoRepo : goodsPayInfoRepo
-    let negetive_profit = 0, low_profit = 0, none_promotion = 0, low_promotion = 0, 
-        low_roi = 0, low_plan_roi = 0, goal_not_achieve = 0, invalid_link = 0, 
-        important_link = 0, low_gross_profit = 0
     let columnInfo = JSON.parse(JSON.stringify(columnList1))
     if (params.type) {
         // jump permission, high level => low level
@@ -300,10 +302,10 @@ const getPromotionStats = async (id, start, end, params) => {
                 null,
             )
             if (shops.length) {
-                result = await queryShopPromotion(shops, result, typeValue, start, end, months, timeline, func)
+                result = await queryShopPromotion(shops, result, typeValue, start, end, func)
             }
             if (users.length) {
-                result = await queryUserPromotion(users, result, typeValue, start, end, months, timeline, func)
+                result = await queryUserPromotion(users, result, typeValue, start, end, func)
             }
         }
     }
@@ -326,8 +328,21 @@ const getPromotionStats = async (id, start, end, params) => {
             break
         default:
     }
+    result.total.column = columnInfo
+    for (let i = 1; i < columnInfo.length; i++) {
+        result.total.data[0][columnInfo[i].key] = 0
+    }
     for (let i = 0; i < result[type].data.length; i++) {
-        
+        result.total.data[0].negative_profit += result[type].data[i].negative_profit
+        result.total.data[0].low_profit += result[type].data[i].low_profit
+        result.total.data[0].none_promotion += result[type].data[i].none_promotion
+        result.total.data[0].low_promotion += result[type].data[i].low_promotion
+        result.total.data[0].low_roi += result[type].data[i].low_roi
+        result.total.data[0].low_plan_roi += result[type].data[i].low_plan_roi
+        result.total.data[0].goal_not_achieve += result[type].data[i].goal_not_achieve
+        result.total.data[0].invalid_link += result[type].data[i].invalid_link
+        result.total.data[0].important_link += result[type].data[i].important_link
+        result.total.data[0].low_gross_profit += result[type].data[i].low_gross_profit
     }
     
     redisUtil.set(key, JSON.stringify(result), 3600)
@@ -578,12 +593,9 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
 }
 
 const queryShopPromotion = async (shops, result, type, start, end, func) => {
-    let negetive_profit = 0, low_profit = 0, none_promotion = 0, low_promotion = 0, 
-        low_roi = 0, low_plan_roi = 0, goal_not_achieve = 0, invalid_link = 0, 
-        important_link = 0, low_gross_profit = 0
-    let shopName = [], j = -1
+    let shopName = [], otherName = {}, j = -1
     for (let i = 0; i < shops.length; i++) {
-        if (i == 0 || shops[i].name != shops[i-1].name) {
+        if ((i == 0 || shops[i].name != shops[i-1].name)) {
             shopName.push({
                 shop_name: shops[i].shop_name,
                 name: shops[i].name, 
@@ -593,12 +605,174 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         } else {
             shopName[j].shop_name = `${shopName[j].shop_name}","${shops[i].shop_name}`
             if (shops[i].has_promotion) shopName[j].has_promotion = 1
+        } 
+        if (['京东自营-厨具', '京东自营-日用'].includes(shops[i].shop_name)) {
+            let index = i == 0 ? shopName.length : shopName?.length - 1
+            otherName[index] = otherName[index] ? shops[i].shop_name : `${otherName[index]}","${shops[i].shop_name}`
         }
     }
+    let end1 = moment().subtract(1, 'day').format('YYYY-MM-DD')
+    let start1 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+    let end2 = end1
+    let start2 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+    let end3 = moment(end).subtract(1, 'day').format('YYYY-MM-DD')
+    let start3 = moment(start).subtract(1, 'day').format('YYYY-MM-DD')
+    let start2_start = moment(moment(start2).format('YYYY-MM') + '-01')
+    let end2_start = moment(moment(start2).add(1, 'month').format('YYYY-MM') + '-01')
+    let end2_end = moment(moment(end2).add(1, 'month').format('YYYY-MM') + '-01')
+    let months = [{
+        month: parseInt(moment(start2).format('YYYYMM')),
+        percent: end2_start.diff(moment(start2), 'day') / end2_start.diff(start2_start, 'day')
+    }]
+    if (end2_start != end2_end) {
+        months.push({
+            month: parseInt(moment(end2).format('YYYYMM')),
+            percent: moment(end2).diff(end2_start, 'day') / end2_end.diff(end2_start, 'day')
+        })
+    }
     for (let i = 0; i < shopName.length; i++) {
-        result[type].data.push({
+        let division_info = await shopInfoRepo.getDivisionByShopName(shopName[i].shop_name)
+        let negative_profit = 0, low_profit = 0, none_promotion = 0, low_promotion = 0, 
+        low_roi = 0, low_plan_roi = 0, goal_not_achieve = 0, invalid_link = 0, 
+        important_link = 0, low_gross_profit = 0 
 
-        })           
+        let sale_amount = 3000, rate = 0.18, price1 = 30, rate1 = 0.4, rate2 = 0.45, plan, goal, important, lowp
+        if (division_info?.length) {
+            if (division_info[0].division_name == '事业部2') {
+                rate = 0.15
+                price1 = 50
+                rate1 = 0.55
+                rate2 = 0.6
+                plan = await func.getLowPlanROIByShopNamesAndTime(shopName[i].shop_name, start1, end1)
+                goal = await func.getGoalNotAchieveByShopNameAndTime1(
+                    shopName[i].shop_name, 
+                    start2, 
+                    end2,
+                    sale_amount,
+                    rate,
+                    otherName[i])
+                important = await func.getImportByShopNames1(shopName[i].shop_name)
+                lowp = await func.getLowPromotionByShopNamesAndTime(          
+                    shopName[i].shop_name, 
+                    start, 
+                    end, 
+                    start2, 
+                    end2, 
+                    sale_amount, 
+                    rate,
+                    0.06, 
+                    otherName[i])
+            } else if (division_info[0].division_name == '事业部3') {
+                sale_amount = 12000                
+                price1 = 50
+                rate1 = 0.55
+                rate2 = 0.6
+                plan = await func.getLowPlanROIByShopNamesAndTime(shopName[i].shop_name, start1, end1)
+                goal = await func.getGoalNotAchieveByShopNameAndTime(
+                    shopName[i].shop_name, 
+                    months,
+                    start2, 
+                    end2,
+                    sale_amount,
+                    rate)
+                important = await func.getImportByShopNames(shopName[i].shop_name)
+                lowp = await func.getLowPromotionByShopNamesAndTime(          
+                    shopName[i].shop_name, 
+                    start, 
+                    end, 
+                    start2, 
+                    end2, 
+                    sale_amount, 
+                    rate,
+                    0.1, 
+                    otherName[i])
+            } else {
+                plan = await func.getLowPlanROIByShopNamesAndTime1(shopName[i].shop_name, start1, end1)
+                goal = await func.getGoalNotAchieveByShopNameAndTime(
+                    shopName[i].shop_name, 
+                    months,
+                    start2, 
+                    end2,
+                    sale_amount,
+                    rate)
+                important = await func.getImportByShopNames2(shopName[i].shop_name)
+                lowp = await func.getLowPromotionByShopNamesAndTime(          
+                    shopName[i].shop_name, 
+                    start, 
+                    end, 
+                    start2, 
+                    end2, 
+                    sale_amount, 
+                    rate,
+                    0.1, 
+                    otherName[i])
+            }
+        }
+        if (plan?.length) low_plan_roi = parseInt(plan[0].count)
+        if (goal?.length) goal_not_achieve = parseInt(goal[0].count)
+        if (important?.length) important_link = parseInt(important[0].count)
+        let negative = await func.getNegativeProfitByShopNamesAndTime(
+            shopName[i].shop_name, 
+            start1, 
+            end1, 
+            start2, 
+            end2, 
+            sale_amount,
+            rate,
+            otherName[i])
+        if (negative?.length) negative_profit = parseInt(negative[0].count)
+        let low = await func.getLowProfitByShopNamesAndTime(
+            shopName[i].shop_name, 
+            start1, 
+            end1, 
+            start2, 
+            end2, 
+            sale_amount, 
+            rate, 
+            otherName[i])
+        if (low?.length) low_profit = parseInt(low[0].count)
+        let none = await func.getNullPromotionByShopNamesAndTime(            
+            shopName[i].shop_name, 
+            start, 
+            end, 
+            start2, 
+            end2, 
+            sale_amount, 
+            rate, 
+            otherName[i])
+        if (none?.length) none_promotion = parseInt(none[0].count)
+        if (lowp?.length) low_promotion = parseInt(lowp[0].count)
+        let roi = await func.getLowROIByShopNamesAndTime(shopName[i].shop_name, start1, end1)
+        if (roi?.length) low_roi = parseInt(roi[0].count)
+        let invalid = await func.getInvalidByShopNamesAndTime(
+            shopName[i].shop_name, 
+            sale_amount, 
+            rate,
+            start2,
+            end2,
+            otherName[i])
+        if (invalid?.length) invalid_link = parseInt(invalid[0].count)
+        let gross = await goodsSaleVerifiedRepo.getLowGrossProfitByShopNamesAndTime(
+            shopName[i].shop_name, 
+            start3,
+            end3,
+            price1,
+            rate1,
+            rate2)
+        if (gross?.length) low_gross_profit = parseInt(gross[0].count)
+        result[type].data.push({
+            name: shopName[i].name,
+            negative_profit,
+            low_profit,
+            none_promotion,
+            low_promotion,
+            low_roi,
+            low_plan_roi,
+            goal_not_achieve,
+            invalid_link,
+            important_link,
+            low_gross_profit
+        })
     }
     return result
 }
@@ -700,13 +874,8 @@ const queryUserInfo = async (users, result, type, start, end, months, timeline, 
     return result
 }
 
-
-
 const queryUserPromotion = async (users, result, type, start, end, func) => {
-    let negetive_profit = 0, low_profit = 0, none_promotion = 0, low_promotion = 0, 
-        low_roi = 0, low_plan_roi = 0, goal_not_achieve = 0, invalid_link = 0, 
-        important_link = 0, low_gross_profit = 0
-    let userName = [], j = -1
+    let userName = [], otherName = {}, j = -1
     for (let i = 0; i < users.length; i++) {
         if (i == 0 || users[i].name != users[i-1].name) {
             userName.push({
@@ -722,6 +891,25 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
                 userName[j].shops
         }
     }
+    let end1 = moment().subtract(1, 'day').format('YYYY-MM-DD')
+    let start1 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+    let end2 = end1
+    let start2 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+    let end3 = moment(end).subtract(1, 'day').format('YYYY-MM-DD')
+    let start3 = moment(start).subtract(1, 'day').format('YYYY-MM-DD')
+    let start2_start = moment(moment(start2).format('YYYY-MM') + '-01')
+    let end2_start = moment(moment(start2).add(1, 'month').format('YYYY-MM') + '-01')
+    let end2_end = moment(moment(end2).add(1, 'month').format('YYYY-MM') + '-01')
+    let months = [{
+        month: parseInt(moment(start2).format('YYYYMM')),
+        percent: end2_start.diff(moment(start2), 'day') / end2_start.diff(start2_start, 'day')
+    }]
+    if (end2_start != end2_end) {
+        months.push({
+            month: parseInt(moment(end2).format('YYYYMM')),
+            percent: moment(end2).diff(end2_start, 'day') / end2_end.diff(end2_start, 'day')
+        })
+    }
     for (let i = 0; i < userName.length; i++) {
         if (userName[i].shops.length) {
             let shops = [], exists = {}
@@ -729,12 +917,161 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
                 if (!exists[item] && item != '') {
                     exists[item] = true
                     shops.push(item)
+                    if (['京东自营-厨具', '京东自营-日用'].includes(item)) {
+                        otherName[i] = otherName[i] ? item : `${otherName[i]}","${item}`
+                    }
                 }
             })
             userName[i].shopNames = shops.join('","')
+        }        
+        let links = await userOperationRepo.getLinkIdsByUserNames(userName[i].nickname, userName[i].shopNames)
+        let linkIds = links.map((item) => item.goods_id).join('","')
+        let linkIds1
+        if (otherName[i]) {
+            links = await userOperationRepo.getLinkIdsByUserNames(userName[i].nickname, otherName[i])
+            linkIds1 = links.map((item) => item.goods_id).join('","')
         }
-        result[type].data.push({
+        let division_info = await shopInfoRepo.getDivisionByShopName(userName[i].shopNames)
+        let negative_profit = 0, low_profit = 0, none_promotion = 0, low_promotion = 0, 
+        low_roi = 0, low_plan_roi = 0, goal_not_achieve = 0, invalid_link = 0, 
+        important_link = 0, low_gross_profit = 0 
 
+        let sale_amount = 3000, rate = 0.18, price1 = 30, rate1 = 0.4, rate2 = 0.45, plan, goal, important, lowp
+        if (division_info?.length) {
+            if (division_info[0].division_name == '事业部2') {
+                rate = 0.15
+                price1 = 50
+                rate1 = 0.55
+                rate2 = 0.6
+                plan = await func.getLowPlanROIByLinksAndTime(linkIds, start1, end1)
+                goal = await func.getGoalNotAchieveByLinksAndTime1(
+                    linkIds, 
+                    start2, 
+                    end2,
+                    sale_amount,
+                    rate,
+                    linkIds1)
+                important = await func.getImportByLinks1(linkIds)
+                lowp = await func.getLowPromotionByLinksAndTime(          
+                    linkIds, 
+                    start, 
+                    end, 
+                    start2, 
+                    end2, 
+                    sale_amount, 
+                    rate,
+                    0.06, 
+                    linkIds1)
+            } else if (division_info[0].division_name == '事业部3') {
+                sale_amount = 12000                
+                price1 = 50
+                rate1 = 0.55
+                rate2 = 0.6
+                plan = await func.getLowPlanROIByLinksAndTime(linkIds, start1, end1)
+                goal = await func.getGoalNotAchieveByLinksAndTime(
+                    linkIds, 
+                    months,
+                    start2, 
+                    end2,
+                    sale_amount,
+                    rate)
+                important = await func.getImportByLinks(linkIds)
+                lowp = await func.getLowPromotionByLinksAndTime(          
+                    linkIds, 
+                    start, 
+                    end, 
+                    start2, 
+                    end2, 
+                    sale_amount, 
+                    rate,
+                    0.1, 
+                    linkIds1)
+            } else {
+                plan = await func.getLowPlanROIByLinksAndTime1(linkIds, start1, end1)
+                goal = await func.getGoalNotAchieveByLinksAndTime(
+                    linkIds, 
+                    months,
+                    start2, 
+                    end2,
+                    sale_amount,
+                    rate)
+                important = await func.getImportByLink2(linkIds)
+                lowp = await func.getLowPromotionByLinksAndTime(          
+                    linkIds, 
+                    start, 
+                    end, 
+                    start2, 
+                    end2, 
+                    sale_amount, 
+                    rate,
+                    0.1, 
+                    linkIds1)
+            }
+        }
+        if (plan?.length) low_plan_roi = parseInt(plan[0].count)
+        if (goal?.length) goal_not_achieve = parseInt(goal[0].count)
+        if (important?.length) important_link = parseInt(important[0].count)
+        let negative = await func.getNegativeProfitByLinksAndTime(
+            linkIds, 
+            start1, 
+            end1, 
+            start2, 
+            end2, 
+            sale_amount,
+            rate,
+            linkIds1)
+        if (negative?.length) negative_profit = parseInt(negative[0].count)
+        let low = await func.getLowProfitByLinksAndTime(
+            linkIds, 
+            start1, 
+            end1, 
+            start2, 
+            end2, 
+            sale_amount, 
+            rate, 
+            linkIds1)
+        if (low?.length) low_profit = parseInt(low[0].count)
+        let none = await func.getNullPromotionByLinksAndTime(            
+            linkIds, 
+            start, 
+            end, 
+            start2, 
+            end2, 
+            sale_amount, 
+            rate, 
+            linkIds1)
+        if (none?.length) none_promotion = parseInt(none[0].count)
+        if (lowp?.length) low_promotion = parseInt(lowp[0].count)
+        let roi = await func.getLowROIByLinksAndTime(linkIds, start1, end1)
+        if (roi?.length) low_roi = parseInt(roi[0].count)
+        let invalid = await func.getInvalidByLinksAndTime(
+            linkIds, 
+            sale_amount, 
+            rate,
+            start2,
+            end2,
+            linkIds1)
+        if (invalid?.length) invalid_link = parseInt(invalid[0].count)
+        let gross = await goodsSaleVerifiedRepo.getLowGrossProfitByLinksAndTime(
+            linkIds, 
+            start3,
+            end3,
+            price1,
+            rate1,
+            rate2)
+        if (gross?.length) low_gross_profit = parseInt(gross[0].count)
+        result[type].data.push({
+            name: userName[i].name,
+            negative_profit,
+            low_profit,
+            none_promotion,
+            low_promotion,
+            low_roi,
+            low_plan_roi,
+            goal_not_achieve,
+            invalid_link,
+            important_link,
+            low_gross_profit
         })        
     }
     return result
@@ -969,21 +1306,9 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
     if (setting?.length) result.setting = JSON.parse(setting[0].attributes)
     let func = params.stats == 'verified' ? goodsSaleVerifiedRepo : 
         (params.stats == 'info') ? goodsSaleInfoRepo : goodsPayInfoRepo
-    result.data = await func.getData(startDate, endDate, params, shopNames, linkIds)
-    // let optimize = await goodsOptimizeSetting.getInfo()
-    // for (let i = 0; i < result.data?.data.length; i++) {
-    //     if (['无操作', '非操作'].includes(result.data.data[i].operator)) continue
-    //     for (let j = 0; j < optimize.length; j++) {
-    //         let info = await goodsSaleInfoRepo.getOptimizeResult(
-    //             result.data.data[i].goods_id,
-    //             null,
-    //             [optimize[j]]
-    //         )
-    //         if (info?.length && info[0].count) {
-    //             result.data.data[i][`${optimize[j].column}_warn`] = 1
-    //         }
-    //     }
-    // }
+    if (params.infoType == 1)
+        result.data = await func.getPromotionData(startDate, endDate, params, shopNames, linkIds)
+    else result.data = await func.getData(startDate, endDate, params, shopNames, linkIds)
     return result
 }
 
@@ -1270,7 +1595,10 @@ const importGoodsInfo = async (rows, time) => {
         else await goodsSaleInfoRepo.deleteByDate(time, 'goods_id')
         result = await goodsSaleInfoRepo.batchInsert(count, data)
     }
-    if (result) redisRepo.batchDelete(`${redisKeys.operation}:info:*`)
+    if (result) {
+        redisRepo.batchDelete(`${redisKeys.operation}:info:*`)
+        redisRepo.batchDelete(`${redisKeys.operation}:promotion:info:*`)
+    }
     return result
 }
 
@@ -1331,7 +1659,10 @@ const importGoodsOrderStat = async (rows, time) => {
         result = await goodsSaleInfoRepo.updateOrder({
             date, goods_id: null, sku_code: code, ...dataMap2[code]})
     }
-    if (result) redisRepo.batchDelete(`${redisKeys.operation}:info:*`)
+    if (result) {
+        redisRepo.batchDelete(`${redisKeys.operation}:info:*`)
+        redisRepo.batchDelete(`${redisKeys.operation}:promotion:info:*`)
+    }
     await batchInsertGoodsSales(time)
     return result
 }
@@ -1419,7 +1750,10 @@ const importGoodsOrderPayStat = async (rows, time) => {
         result = await goodsPayInfoRepo.updateOrder({
             date, goods_id: null, sku_code: code, ...dataMap2[code]})
     }
-    if (result) redisRepo.batchDelete(`${redisKeys.operation}:pay:*`)
+    if (result) {
+        redisRepo.batchDelete(`${redisKeys.operation}:pay:*`)
+        redisRepo.batchDelete(`${redisKeys.operation}:promotion:pay:*`)
+    }
     await batchInsertGoodsPays(time)
     return result
 }
@@ -1502,7 +1836,11 @@ const importGoodsKeyWords = async (rows, time) => {
             result = await goodsOtherInfoRepo.batchInsert(count, data)
         }
     }
-    if (result) redisRepo.batchDelete(`${redisKeys.operation}:*`)
+    if (result) {
+        redisRepo.batchDelete(`${redisKeys.operation}:info:*`)
+        redisRepo.batchDelete(`${redisKeys.operation}:pay:*`)
+        redisRepo.batchDelete(`${redisKeys.operation}:verified:*`)
+    }
     return result
 }
 
@@ -1545,7 +1883,11 @@ const importGoodsDSR = async (rows, time) => {
         result = await goodsOtherInfoRepo.batchInsert(count, data)
     }
     await updateGoodsStatsDSR(time)
-    if (result) redisRepo.batchDelete(`${redisKeys.operation}:*`)
+    if (result) {
+        redisRepo.batchDelete(`${redisKeys.operation}:info:*`)
+        redisRepo.batchDelete(`${redisKeys.operation}:pay:*`)
+        redisRepo.batchDelete(`${redisKeys.operation}:verified:*`)
+    }
     return result
 }
 
@@ -3135,7 +3477,10 @@ const importGoodsVerified = async (rows, time) => {
         await goodsSaleVerifiedRepo.deleteByDate(time)
         result = await goodsSaleVerifiedRepo.batchInsert(count, data)
     }
-    if (result) redisRepo.batchDelete(`${redisKeys.operation}:verified:*`)
+    if (result) {
+        redisRepo.batchDelete(`${redisKeys.operation}:verified:*`)
+        redisRepo.batchDelete(`${redisKeys.operation}:promotion:verified:*`)
+    }
     return result
 }
 
@@ -3195,7 +3540,10 @@ const importGoodsOrderVerifiedStat = async (rows, time) => {
         result = await goodsSaleVerifiedRepo.updateOrder({
             date, goods_id: null, sku_code: code, ...dataMap2[code]})
     }
-    if (result) redisRepo.batchDelete(`${redisKeys.operation}:verified:*`)
+    if (result) {
+        redisRepo.batchDelete(`${redisKeys.operation}:verified:*`)
+        redisRepo.batchDelete(`${redisKeys.operation}:promotion:verified:*`)
+    }
     await batchInsertGoodsVerifieds(time)
     return result
 }

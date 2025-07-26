@@ -40,4 +40,14 @@ shopInfoRepo.isCoupang = async (name) => {
     const result = await query(sql, [name])
     return result?.length ? true : false
 }
+
+shopInfoRepo.getDivisionByShopName = async (name) => {
+    const sql = `SELECT di.division_name FROM shop_info si JOIN project_info pi 
+            ON pi.id = si.project_id 
+        JOIN division_info di ON di.id = pi.division_id 
+        WHERE si.shop_name IN ("${name}") LIMIT 1`
+    const result = await query(sql)
+    return result
+}
+
 module.exports = shopInfoRepo
