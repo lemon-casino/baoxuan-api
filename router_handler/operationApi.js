@@ -26,7 +26,7 @@ const getDataStats = async (req, res, next) => {
         const startDate = moment(req.query.startDate).format('YYYY-MM-DD')
         const endDate = moment(req.query.endDate).format('YYYY-MM-DD')
         let result
-        if (req.query.type == '1') 
+        if (req.query.infoType == '1') 
             result = await operationService.getPromotionStats(req.user.id, startDate, endDate, req.query)
         else 
             result = await operationService.getDataStats(req.user.id, startDate, endDate, req.query)
