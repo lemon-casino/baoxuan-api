@@ -844,11 +844,11 @@ goodsSaleInfoRepo.updateOrder = async ({
     return result?.affectedRows ? true : false
 }
 
-goodsSaleInfoRepo.deleteByDate = async (date, column, except) => {
+goodsSaleInfoRepo.deleteByDate = async (date, column, except,shop_name) => {
     let sql = `DELETE FROM goods_sale_info WHERE \`date\` = ? 
         AND ${column} IS NULL`
-    if (except) sql = `${sql} AND shop_name = '京东自营-厨具'`
-    else sql = `${sql} AND shop_name != '京东自营-厨具'`
+    if (except) sql = `${sql} AND shop_name = '${shop_name}'`
+    else sql = `${sql} AND shop_name != '京东自营-厨具' AND shop_name != '京东自营-自营'`
     const result = await query(sql, [date])
     return result?.affectedRows ? true : false
 }
@@ -1231,11 +1231,11 @@ goodsSaleInfoRepo.getDataGrossProfitDetailByTime = async(goods_id, start, end) =
     return result || []
 }
 
-goodsSaleInfoRepo.updateFee = async(sku_id, promotion_amount, date) => {
+goodsSaleInfoRepo.updateFee = async(sku_id, promotion_amount, date,shop_name) => {
     const sql = `UPDATE goods_sale_info SET promotion_amount = promotion_amount + ?, 
         operation_amount = operation_amount + ?, profit = profit - ?, 
         profit_rate = IF(sale_amount, (profit - ?) / sale_amount, 0) WHERE sku_id = ?
-            AND shop_name = '京东自营-厨具' 
+            AND shop_name = '${shop_name}'
             AND \`date\` = ?`
     const result = await query(sql, [
         promotion_amount, 
@@ -1247,9 +1247,9 @@ goodsSaleInfoRepo.updateFee = async(sku_id, promotion_amount, date) => {
     ])
     return result?.affectedRows ? true : false
 }
-goodsSaleInfoRepo.selectFee = async(sku_id, date, goods_id) => {
-    const sql = `SELECT * FROM goods_sale_info WHERE shop_name='京东自营-厨具' AND sku_id=? AND \`date\`= ?`
-    const result = await query(sql, [sku_id, date])
+goodsSaleInfoRepo.selectFee = async(sku_id, date, goods_id,shop_name,shop_id) => {
+    const sql = `SELECT * FROM goods_sale_info WHERE shop_name=? AND sku_id=? AND \`date\`= ?`
+    const result = await query(sql, [shop_name,sku_id, date])
     if (result.length==0){
         const sql=`INSERT INTO goods_sale_info(
             goods_id, 
@@ -1278,7 +1278,7 @@ goodsSaleInfoRepo.selectFee = async(sku_id, date, goods_id) => {
             real_gross_profit)
 			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
         const insertResult = await query(sql, [goods_id,
-            sku_id,null,null,'京东自营-厨具','16314655',null
+            sku_id,null,null,shop_name,shop_id,null
             ,date,0,0,0,0,0,0,0,0,null,0,0,null,0,null,null,0])
     }
     return result

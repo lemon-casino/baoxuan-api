@@ -570,6 +570,7 @@ const importJDZYInfo = async (req, res, next) => {
             const file = files.file
             const date = file.originalFilename.split('.')[0].split('_')
             const ext = file.originalFilename.split('.')[1]
+            const name = date[0]
             const time = date[1]
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
             fs.renameSync(file.filepath, newPath, (err) => {  
@@ -588,7 +589,7 @@ const importJDZYInfo = async (req, res, next) => {
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
-                let result = await operationService.importJDZYInfo(rows, time)
+                let result = await operationService.importJDZYInfo(rows, time,name)
                 if (result) {
                     fs.rmSync(newPath)
                 } else {
@@ -617,6 +618,7 @@ const importJDZYPromotionInfo = async (req, res, next) => {
             const date = file.originalFilename.split('.')[0].split('_')
             const name = date[0]
             const time = date[1]
+            const tag = date[2]
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
             fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
@@ -626,7 +628,7 @@ const importJDZYPromotionInfo = async (req, res, next) => {
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
-                let result = await operationService.importJDZYPromotionInfo(rows, name, time)
+                let result = await operationService.importJDZYPromotionInfo(rows, name, time,tag)
                 if (result) {
                     fs.rmSync(newPath)
                 } else {
@@ -653,17 +655,16 @@ const importJDZYcompositeInfo = async (req, res, next) => {
             }
 
             const file = files.file
-            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
-
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`    
             // 将上传的 ZIP 文件移动到指定目录
             fs.renameSync(file.filepath, newPath, (err) => {
                 if (err) throw err
             })
-
+            const name = file.originalFilename.split('.')[0]
             try {
                 // 解压 ZIP 文件
                 const zip = new AdmZip(newPath)
-                const extractPath = path.join(form.uploadDir, `经营状况-${moment().valueOf()}`)
+                const extractPath = path.join(form.uploadDir, `${name}-${moment().valueOf()}`)
                 fs.mkdirSync(extractPath, { recursive: true })
                 zip.extractAllTo(extractPath, true)
 
@@ -679,7 +680,7 @@ const importJDZYcompositeInfo = async (req, res, next) => {
                     if (readRes) {
                         const worksheet = workbook.getWorksheet(1)
                         let rows = worksheet.getRows(1, worksheet.rowCount)
-                        let result = await operationService.importJDZYcompositeInfo(rows, time)
+                        let result = await operationService.importJDZYcompositeInfo(rows, time,name)
                         if (result) {
                             fs.rmSync(filePath)
                         } else {

@@ -7,6 +7,13 @@ goodsCompositeRepo.deleteByDate = async (date, source) => {
     return result?.affectedRows ? true : false
 }
 
+goodsCompositeRepo.deleteByDateShop = async (date, shop_name) => {
+    let sql = `DELETE FROM goods_composite_info WHERE \`date\` = ?
+        AND shop_name = ?`
+    const result = await query(sql, [date, shop_name])
+    return result?.affectedRows ? true : false
+}
+
 goodsCompositeRepo.batchInsertDefault = async (count, data) => {
     let sql = `INSERT INTO goods_composite_info(
             goods_id, 
@@ -79,7 +86,7 @@ goodsCompositeRepo.batchInsertJDZY = async (count, data) => {
             trans_users_num,
             total_trans_users_num) VALUES`
     for (let i = 0; i < count; i++) {
-        sql = `${sql}(?,?,'京东自营-厨具', '京东自营',?, '经营状况-商品明细数据',?,?,?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?, '京东自营',?, '经营状况-商品明细数据',?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, data)
