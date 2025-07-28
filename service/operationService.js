@@ -1560,7 +1560,7 @@ const importGoodsInfo = async (rows, time) => {
         let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
             rows[i].getCell(shop_name_row).value.trim() : 
             rows[i].getCell(shop_name_row).value
-        if (shop_name == '京东自营-厨具') continue
+        if (shop_name == '京东自营-厨具' || shop_name == '京东自营-日用') continue
         data.push(
             goods_id_row ? (typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
                 rows[i].getCell(goods_id_row).value.trim() : 
@@ -1629,7 +1629,7 @@ const importGoodsOrderStat = async (rows, time) => {
         let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ?
             rows[i].getCell(shop_name_row).value.trim() : 
             rows[i].getCell(shop_name_row).value
-        if (shop_name == '京东自营-厨具') continue
+        if (shop_name == '京东自营-厨具' || shop_name == '京东自营-日用') continue
         let goods_id = typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
             rows[i].getCell(goods_id_row).value.trim() : 
             rows[i].getCell(goods_id_row).value
@@ -2207,7 +2207,7 @@ const importGoodsPayInfo = async (rows, time) => {
         let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
             rows[i].getCell(shop_name_row).value.trim() : 
             rows[i].getCell(shop_name_row).value
-        if (shop_name == '京东自营-厨具') continue
+        if (shop_name == '京东自营-厨具' || shop_name == '京东自营-日用') continue
         let goods_id = goods_id_row ? (typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
                 rows[i].getCell(goods_id_row).value.trim() : 
                 rows[i].getCell(goods_id_row).value) : null
@@ -2353,7 +2353,7 @@ const importGoodsCompositeInfo = async (rows, time) => {
         let shop_name = typeof(rows[i].getCell(shop_name_row).value) == 'string' ? 
             rows[i].getCell(shop_name_row).value.trim() : 
             rows[i].getCell(shop_name_row).value
-        if (shop_name == '京东自营-厨具') continue
+        if (shop_name == '京东自营-厨具' || shop_name == '京东自营-日用') continue
         let goods_id = typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
             rows[i].getCell(goods_id_row).value.trim() : 
             rows[i].getCell(goods_id_row).value
@@ -2384,17 +2384,24 @@ const importGoodsCompositeInfo = async (rows, time) => {
     return result
 }
 
-const importJDZYInfo = async (rows, time) => {
+const importJDZYInfo = async (rows, time,name) => {
     let count = 0, data = [], data2 = [], result = false
     let columns = rows[0].values,
-        shop_name = '京东自营-厨具',
-        shop_id = '16314655',
+        shop_name = null,
+        shop_id = null,
         sku_id_row = null,
         date = time,
         real_sale_qty_row = null,
         supplier_amount_row = null,
         sale_amount_row = null,
         gross_profit_row = null
+    if (name=='日用'){
+        shop_name = '京东自营-日用'
+        shop_id = '18643084'
+    }else if(name=='厨具'){
+        shop_name = '京东自营-厨具'
+        shop_id = '16314655'
+    }
     for (let i = 1; i < columns.length; i++) {
         if (columns[i] == '商品编号' || columns[i] == '商品ID') {
             sku_id_row = i
@@ -2438,10 +2445,24 @@ const importJDZYInfo = async (rows, time) => {
         let cost_amount = (cost_price + 0.8 + 1.4) * qty
         //京东销售额
         let supplier_amount = parseFloat(rows[i].getCell(supplier_amount_row).value || 0)
-        //税点
-        let tax = sale_amount * 0.07
+        let tax = 0
         //综毛标准
-        let jd_gross_profit_std = supplier_amount * 0.28
+        let jd_gross_profit_std = 0
+        const cate = await userOperationRepo.getDetailBycategory()
+        if (shop_name == '京东自营-厨具'){
+            //税点
+            tax = sale_amount * 0.07
+            if (['餐具','茶具'].includes(cate)){
+                jd_gross_profit_std = supplier_amount * 0.25
+            }else if(['厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具'].includes(cate)){
+                jd_gross_profit_std = supplier_amount * 0.26
+            }else if(['水具', '酒杯/酒具','咖啡具','烹饪锅具','刀剪菜板','酒店用品','菜板/砧板'].includes(cate)){
+                jd_gross_profit_std = supplier_amount * 0.28
+            }
+        }else if(shop_name == '京东自营-日用'){
+            tax = sale_amount * 0.07 + supplier_amount *0.02
+            jd_gross_profit_std = supplier_amount * 0.25
+        }
         //实际棕毛
         let real_gross_profit = parseFloat(rows[i].getCell(gross_profit_row).value || 0)
         // let real_jd_gross_profit = real_gross_profit < 0 ? 0 : real_gross_profit
@@ -2487,26 +2508,34 @@ const importJDZYInfo = async (rows, time) => {
     }
     logger.info(`[京东自营发货数据导入]：时间:${date}, 总计金额:${amount}, 存储金额:${saveAmount}`)
     if (count > 0) {
-        await goodsSaleInfoRepo.deleteByDate(date, 'goods_code', 1)
+        await goodsSaleInfoRepo.deleteByDate(date, 'goods_code', 1,shop_name)
         result = await goodsSaleInfoRepo.batchInsert(count, data)
-        await goodsBillRepo.deleteByDate2(date)
+        await goodsBillRepo.deleteByDate2(date,shop_name)
         await goodsBillRepo.batchInsert(count, data2)
     }
     return result
 }
 
-const importJDZYPromotionInfo = async (rows, name, time) => {
+const importJDZYPromotionInfo = async (rows, name, time,tag) => {
     let count = 0, data = [], data1 = [], result = false
     let columns = rows[0].values,
         sku_id_row = null, 
         amount_row = null, 
-        shop_name = '京东自营-厨具',
+        shop_name = null,
+        shop_id = null,
         date = time,
         way_row = null,
         promotion_name = '',
         plan_name_row = null,
         plan_goal_row = null,
         trans_amount_row = null;
+    if (tag=='日用'){
+        shop_name = '京东自营-日用'
+        shop_id = '18643084'
+    }else if(tag=='厨具'){
+        shop_name = '京东自营-厨具'
+        shop_id = '16314655'
+    }
     if (name.indexOf('宝选快车') != -1) {
         promotion_name = '京东快车1'
     } else if(name.indexOf('快车单日计划') != -1) {
@@ -2525,7 +2554,7 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
     for (let i = 1; i < columns.length; i++) {
         if (promotion_name=='场景推广' || promotion_name=='日常推广'){
             if (columns[i] == 'SKUID') {sku_id_row = i; continue}
-        } else if(promotion_name=='京东快车1' || promotion_name=='京东快车2' || promotion_name=='京东快车3' ){
+        } else if(promotion_name=='京东快车1' || promotion_name=='京东快车2' || promotion_name=='京东快车3'){
             if (columns[i] == '商品SKU') {sku_id_row = i; continue}
         } else if(promotion_name=='全站营销' || promotion_name=='新品全站营销' ){
             if (columns[i] == 'ID') {sku_id_row = i; continue}
@@ -2572,13 +2601,14 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
             amount,
             trans_amount
         )
-        await goodsSaleInfoRepo.selectFee(sku_id, date, goods_id)
-        await goodsSaleInfoRepo.updateFee(sku_id, amount, date)
+        await goodsSaleInfoRepo.selectFee(sku_id, date, goods_id,shop_name,shop_id)
+        await goodsSaleInfoRepo.updateFee(sku_id, amount, date,shop_name)
         count += 1
     }
-    logger.info(`[京东自营推广数据导入]：时间:${date}, 总计数量:${count}`)
+    logger.info(`[${shop_name}推广数据导入]：时间:${date}, 总计数量:${count}`)
     if (count > 0) {
-        await goodsPromotionRepo.deleteByDate(date, promotion_name)
+        console.log(shop_name)
+        await goodsPromotionRepo.deleteByDateShop(date, promotion_name,shop_name)
         result = await goodsPromotionRepo.batchInsert(count, data)
         await goodsPromotionPlanRepo.deleteByDate(date, shop_name, promotion_name)
         await goodsPromotionPlanRepo.batchInsert(count, data1)
@@ -2587,7 +2617,7 @@ const importJDZYPromotionInfo = async (rows, name, time) => {
     return result
 }
 
-const importJDZYcompositeInfo = async (rows, time) => {
+const importJDZYcompositeInfo = async (rows, time,name) => {
     let count = 0, data = [], result = false
     let columns = rows[0].values,
         sku_id_row = null,
@@ -2597,7 +2627,8 @@ const importJDZYcompositeInfo = async (rows, time) => {
         users_num_row = null,
         trans_num_row = null,
         trans_qty_row = null,
-        trans_users_num_row = null
+        trans_users_num_row = null,
+        shop_name = null
     for (let i in columns) {
         if (columns[i] == 'SKU') {sku_id_row = i;  continue}
         if (columns[i] == '访客数') {users_num_row = i; continue}
@@ -2606,6 +2637,13 @@ const importJDZYcompositeInfo = async (rows, time) => {
         if (columns[i] == '成交单量') {trans_num_row = i; continue}
         if (columns[i] == '成交商品件数') {trans_qty_row = i; continue}
         if (columns[i] == '成交人数') {trans_users_num_row = i; continue}
+    }
+    if (name=='日用'){
+        shop_name = '京东自营-日用'
+        shop_id = '18643084'
+    }else if(bane=='厨具'){
+        shop_name = '京东自营-厨具'
+        shop_id = '16314655'
     }
     for (let i = 1; i < rows.length; i++) {
         let sku_id = sku_id_row ? (typeof(rows[i].getCell([sku_id_row]).value) == 'string' ? 
@@ -2618,6 +2656,7 @@ const importJDZYcompositeInfo = async (rows, time) => {
         data.push(
             goods_id,
             rows[i].getCell([sku_id_row]).value,
+            shop_name,
             date,
             rows[i].getCell([users_num_row]).value,
             rows[i].getCell([users_num_row]).value,
@@ -2630,10 +2669,10 @@ const importJDZYcompositeInfo = async (rows, time) => {
         )
         count += 1
     }
-    logger.info(`[京东自营]：时间:${date}, 总计数量:${count}`)
+    logger.info(`[${shop_name}]：时间:${date}, 总计数量:${count}`)
     if (count > 0) {
-        await goodsCompositeRepo.deleteByDate(date, '京东自营')
-        result = await goodsCompositeRepo.batchInsertJDZY(count, data)
+        await goodsCompositeRepo.deleteByDateShop(date, shop_name)
+        result = await goodsCompositeRepo.batchInsertJDZY(count, data, shop_name)
     }
     return result
 }

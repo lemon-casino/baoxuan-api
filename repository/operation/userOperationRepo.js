@@ -440,4 +440,10 @@ userOperationRepo.getProductLineDetail = async (type, month, brief_product_line)
     return result
 }
 
+userOperationRepo.getDetailBycategory = async (sku_id) => {
+    let sql = `SELECT second_category FROM dianshang_operation_attribute WHERE sku_id = ?`
+    const result = await query(sql, [sku_id])
+    return result || []
+}
+
 module.exports = userOperationRepo
