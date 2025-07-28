@@ -169,6 +169,7 @@ const getDataStats = async (id, start, end, params) => {
     let targets_info = {}
     for (let i = 0; i < result[type].data.length; i++) {
         // if (result[type].data[i].name == 'COUPANG') continue
+        result[type].data[i].id += i
         sale_amount += parseFloat(result[type].data[i].sale_amount)
         promotion_amount += parseFloat(result[type].data[i].promotion_amount)
         operation_amount += parseFloat(result[type].data[i].operation_amount)
@@ -333,6 +334,7 @@ const getPromotionStats = async (id, start, end, params) => {
         result.total.data[0][columnInfo[i].key] = 0
     }
     for (let i = 0; i < result[type].data.length; i++) {
+        result[type].data[i].id += i
         result.total.data[0].negative_profit += result[type].data[i].negative_profit
         result.total.data[0].low_profit += result[type].data[i].low_profit
         result.total.data[0].none_promotion += result[type].data[i].none_promotion
@@ -587,7 +589,7 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
             goal,
             targets_info: info1,
             timeline
-        })           
+        })
     }
     return result
 }
@@ -633,10 +635,11 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
     for (let i = 0; i < shopName.length; i++) {
         let division_info = await shopInfoRepo.getDivisionByShopName(shopName[i].shop_name)
         let negative_profit = 0, low_profit = 0, none_promotion = 0, low_promotion = 0, 
-        low_roi = 0, low_plan_roi = 0, goal_not_achieve = 0, invalid_link = 0, 
-        important_link = 0, low_gross_profit = 0 
+            low_roi = 0, low_plan_roi = 0, goal_not_achieve = 0, invalid_link = 0, 
+            important_link = 0, low_gross_profit = 0, unsalable_link = 0 
 
-        let sale_amount = 3000, rate = 0.18, price1 = 30, rate1 = 0.4, rate2 = 0.45, plan, goal, important, lowp
+        let sale_amount = 3000, rate = 0.18, price1 = 30, rate1 = 0.4, rate2 = 0.45, 
+            plan, goal, important, lowp
         if (division_info?.length) {
             if (division_info[0].division_name == '事业部2') {
                 rate = 0.15
@@ -651,7 +654,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
                     sale_amount,
                     rate,
                     otherName[i])
-                important = await func.getImportByShopNames1(shopName[i].shop_name)
+                important = await func.getImportByShopNames1(shopName[i].shop_name, otherName[i])
                 lowp = await func.getLowPromotionByShopNamesAndTime(          
                     shopName[i].shop_name, 
                     start, 
@@ -759,7 +762,9 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
             price1,
             rate1,
             rate2)
-        if (gross?.length) low_gross_profit = parseInt(gross[0].count)
+        if (gross?.length) low_gross_profit = parseInt(gross[0].count)        
+        let unsalable = await func.getUnsalableByShopNames(shopName[i].shop_name)
+        if (unsalable?.length) unsalable_link = parseInt(unsalable[0].count)
         result[type].data.push({
             name: shopName[i].name,
             negative_profit,
@@ -771,7 +776,8 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
             goal_not_achieve,
             invalid_link,
             important_link,
-            low_gross_profit
+            low_gross_profit,
+            unsalable_link
         })
     }
     return result
@@ -933,10 +939,11 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
         }
         let division_info = await shopInfoRepo.getDivisionByShopName(userName[i].shopNames)
         let negative_profit = 0, low_profit = 0, none_promotion = 0, low_promotion = 0, 
-        low_roi = 0, low_plan_roi = 0, goal_not_achieve = 0, invalid_link = 0, 
-        important_link = 0, low_gross_profit = 0 
+            low_roi = 0, low_plan_roi = 0, goal_not_achieve = 0, invalid_link = 0, 
+            important_link = 0, low_gross_profit = 0, unsalable_link = 0 
 
-        let sale_amount = 3000, rate = 0.18, price1 = 30, rate1 = 0.4, rate2 = 0.45, plan, goal, important, lowp
+        let sale_amount = 3000, rate = 0.18, price1 = 30, rate1 = 0.4, rate2 = 0.45, 
+            plan, goal, important, lowp
         if (division_info?.length) {
             if (division_info[0].division_name == '事业部2') {
                 rate = 0.15
@@ -1060,6 +1067,8 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
             rate1,
             rate2)
         if (gross?.length) low_gross_profit = parseInt(gross[0].count)
+        let unsalable = await func.getUnsalableByLinks(linkIds)
+        if (unsalable?.length) unsalable_link = parseInt(unsalable[0].count)
         result[type].data.push({
             name: userName[i].name,
             negative_profit,
