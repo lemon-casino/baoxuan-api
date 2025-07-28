@@ -65,7 +65,8 @@ const columnList1 = [
 	{ label: "目标未达成", key: "goal_not_achieve", show: true },
 	{ label: "无效链接", key: "invalid_link", show: true },
 	{ label: "重点关注", key: "important_link", show: true },
-	{ label: "低定价毛利", key: "low_gross_profit", show: true }
+	{ label: "低定价毛利", key: "low_gross_profit", show: true },
+	{ label: "清滞销", key: "unsalable_link", show: true }
 ]
 
 const operationDefaultItem = {

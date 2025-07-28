@@ -1194,21 +1194,24 @@ goodsSaleVerifiedRepo.getPromotionData = async (start, end, params, shopNames, l
                 AND IF(s.onsale_date < DATE_SUB(NOW(), INTERVAL 60 DAY), 
                     IF(pi.division_id = 1, b2.sale_amount >= 3000 OR b2.profit >= b2.sale_amount * 0.18, 
                         IF(pi.division_id = 2, b2.sale_amount >= 3000 OR b2.profit >= b2.sale_amount * 0.15, 
-                            b2.sale_amount >= 12000 OR b2.profit >= b2.sale_amount * 0.18)), 1)`
+                            b2.sale_amount >= 12000 OR b2.profit >= b2.sale_amount * 0.18)), 1)
+                AND (d.id IS NULL OR ((d.userDef1 != '滞销' OR d.userDef1 IS NULL) AND (d.userDef7 != '滞销' OR d.userDef7 IS NULL) AND (d.link_attribute != '滞销' OR d.link_attribute IS NULL)))`
             break
         case 'low_profit':
             subsql = `${subsql} AND s.onsale_date < DATE_SUB(NOW(), INTERVAL 60 DAY) 
                 AND (b1.profit < b1.sale_amount * 0.18 OR b1.sale_amount = 0 OR b1.goods_id IS NULL) 
                 AND IF(pi.division_id = 1, b2.sale_amount >= 3000 OR b2.profit >= b2.sale_amount * 0.18, 
                         IF(pi.division_id = 2, b2.sale_amount >= 3000 OR b2.profit >= b2.sale_amount * 0.15, 
-                            b2.sale_amount >= 12000 OR b2.profit >= b2.sale_amount * 0.18))`
+                            b2.sale_amount >= 12000 OR b2.profit >= b2.sale_amount * 0.18))
+                AND (d.id IS NULL OR ((d.userDef1 != '滞销' OR d.userDef1 IS NULL) AND (d.userDef7 != '滞销' OR d.userDef7 IS NULL) AND (d.link_attribute != '滞销' OR d.link_attribute IS NULL)))`
             break
         case 'none_promotion':
             subsql = `${subsql} AND a1.promotion_amount = 0 
                 AND IF(s.onsale_date < DATE_SUB(NOW(), INTERVAL 60 DAY), 
                     IF(pi.division_id = 1, b2.sale_amount >= 3000 OR b2.profit >= b2.sale_amount * 0.18, 
                         IF(pi.division_id = 2, b2.sale_amount >= 3000 OR b2.profit >= b2.sale_amount * 0.15, 
-                            b2.sale_amount >= 12000 OR b2.profit >= b2.sale_amount * 0.18)), 1)`
+                            b2.sale_amount >= 12000 OR b2.profit >= b2.sale_amount * 0.18)), 1)
+                AND (d.id IS NULL OR ((d.userDef1 != '滞销' OR d.userDef1 IS NULL) AND (d.userDef7 != '滞销' OR d.userDef7 IS NULL) AND (d.link_attribute != '滞销' OR d.link_attribute IS NULL)))`
             break
         case 'low_promotion':
             subsql = `${subsql} AND IF(pi.division_id = 1, a1.promotion_amount < a1.sale_amount * 0.1, 
@@ -1217,16 +1220,19 @@ goodsSaleVerifiedRepo.getPromotionData = async (start, end, params, shopNames, l
                 AND IF(s.onsale_date < DATE_SUB(NOW(), INTERVAL 60 DAY), 
                     IF(pi.division_id = 1, b2.sale_amount >= 3000 OR b2.profit >= b2.sale_amount * 0.18, 
                         IF(pi.division_id = 2, b2.sale_amount >= 3000 OR b2.profit >= b2.sale_amount * 0.15, 
-                            b2.sale_amount >= 12000 OR b2.profit >= b2.sale_amount * 0.18)), 1)`
+                            b2.sale_amount >= 12000 OR b2.profit >= b2.sale_amount * 0.18)), 1)
+                AND (d.id IS NULL OR ((d.userDef1 != '滞销' OR d.userDef1 IS NULL) AND (d.userDef7 != '滞销' OR d.userDef7 IS NULL) AND (d.link_attribute != '滞销' OR d.link_attribute IS NULL)))`
             break
         case 'low_roi':
             subsql = `${subsql} AND a1.promotion_amount * a1.cost_amount < a1.sale_amount * 
-                (2.67 * a1.promotion_amount + 2 * a1.cost_amount - 1.34 * a1.sale_amount)`
+                (2.67 * a1.promotion_amount + 2 * a1.cost_amount - 1.34 * a1.sale_amount)
+                AND (d.id IS NULL OR ((d.userDef1 != '滞销' OR d.userDef1 IS NULL) AND (d.userDef7 != '滞销' OR d.userDef7 IS NULL) AND (d.link_attribute != '滞销' OR d.link_attribute IS NULL)))`
             break
         case 'low_plan_roi':
             subsql = `${subsql} AND IF(pi.division_id = 1, b3.trans_amount < b3.pay_amount * b3.plan_goal, 
                     1.34 * b1.sale_amount * b3.trans_amount + b3.pay_amount * b1.cost_amount < 
-                    2.67 * b1.sale_amount * b3.pay_amount + 2 * b3.trans_amount * b1.cost_amount)`
+                    2.67 * b1.sale_amount * b3.pay_amount + 2 * b3.trans_amount * b1.cost_amount)
+                AND (d.id IS NULL OR ((d.userDef1 != '滞销' OR d.userDef1 IS NULL) AND (d.userDef7 != '滞销' OR d.userDef7 IS NULL) AND (d.link_attribute != '滞销' OR d.link_attribute IS NULL)))`
             break
         case 'goal_not_achieve':
             subsql = `${subsql} AND s.onsale_date < DATE_SUB(NOW(), INTERVAL 60 DAY) 
@@ -1235,7 +1241,8 @@ goodsSaleVerifiedRepo.getPromotionData = async (start, end, params, shopNames, l
                     IF(pi.division_id = 2, b2.sale_amount >= 3000 OR b2.profit >= b2.sale_amount * 0.15 
                         AND b2.sale_amount < d.pit_target * 10000, 
                         b2.sale_amount >= 12000 OR b2.profit >= b2.sale_amount * 0.18 
-                            AND b2.sale_amount < t.amount)`
+                            AND b2.sale_amount < t.amount)
+                AND (d.id IS NULL OR ((d.userDef1 != '滞销' OR d.userDef1 IS NULL) AND (d.userDef7 != '滞销' OR d.userDef7 IS NULL) AND (d.link_attribute != '滞销' OR d.link_attribute IS NULL)))`
             break
         case 'invalid_link':
             subsql = `${subsql} AND s.onsale_date < DATE_SUB(NOW(), INTERVAL 60 DAY) 
@@ -1244,14 +1251,15 @@ goodsSaleVerifiedRepo.getPromotionData = async (start, end, params, shopNames, l
                     IF(pi.division_id = 2, (b2.sale_amount IS NULL OR 
                         (b2.sale_amount < 3000 AND b2.profit < b2.sale_amount * 0.15)), 
                         (b2.sale_amount IS NULL OR 
-                            (b2.sale_amount < 12000 OR b2.profit < b2.sale_amount * 0.18))))`
+                            (b2.sale_amount < 12000 AND b2.profit < b2.sale_amount * 0.18))))
+                AND (d.id IS NULL OR ((d.userDef1 != '滞销' OR d.userDef1 IS NULL) AND (d.userDef7 != '滞销' OR d.userDef7 IS NULL) AND (d.link_attribute != '滞销' OR d.link_attribute IS NULL)))`
             break
         case 'important_link':
             subsql = `${subsql} AND s.onsale_date >= DATE_SUB(NOW(), INTERVAL 60 DAY) 
                 AND pi.project_name IN ('宝选天猫', '京东', '抖音', '拼多多') 
-                AND IF(pi.project_name = '宝选天猫', d.userDef7 IN ('打仗', '爆款', '滞销'), 
-                    IF(pi.project_name = '京东', d.userDef1 IN ('打仗', '爆款', '滞销'), 
-                        d.link_attribute IN ('打仗', '爆款', '滞销')))`
+                AND IF(pi.project_name = '宝选天猫', d.userDef7 IN ('打仗', '爆款'), 
+                    IF(pi.project_name = '京东', d.userDef1 IN ('打仗', '爆款'), 
+                        d.link_attribute IN ('打仗', '爆款')))`
             break
         case 'low_gross_profit':
             subsql = `${subsql} AND IF(pi.division_id = 1, ((b4.cost_amount >= 30 * b4.sale_qty 
@@ -1262,7 +1270,11 @@ goodsSaleVerifiedRepo.getPromotionData = async (start, end, params, shopNames, l
                         OR (b4.cost_amount < 50 * b4.sale_qty AND b4.sale_amount * 0.4 < b4.cost_amount)), 
                         ((b4.cost_amount >= 50 * b4.sale_qty 
                         AND b4.sale_amount * 0.45 < b4.cost_amount) 
-                        OR (b4.cost_amount < 50 * b4.sale_qty AND b4.sale_amount * 0.4 < b4.cost_amount))))`
+                        OR (b4.cost_amount < 50 * b4.sale_qty AND b4.sale_amount * 0.4 < b4.cost_amount))))
+                AND (d.id IS NULL OR ((d.userDef1 != '滞销' OR d.userDef1 IS NULL) AND (d.userDef7 != '滞销' OR d.userDef7 IS NULL) AND (d.link_attribute != '滞销' OR d.link_attribute IS NULL)))`
+            break
+        case 'unsalable_link':
+            subsql = `${subsql} AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销')`
             break
     }
     if (shopNames != null) {
@@ -1957,7 +1969,7 @@ goodsSaleVerifiedRepo.sumSaleAmountAndProfitByGoodsId = async (goods_id) => {
 }
 
 /**
- * negative profit count without invalid link
+ * negative profit count without invalid link & unsalable link
  * @param {*} shopNames 
  * @param {*} start 
  * @param {*} end 
@@ -1984,7 +1996,9 @@ goodsSaleVerifiedRepo.getNegativeProfitByShopNamesAndTime = async (shopNames, st
                 AND date BETWEEN ? AND ? 
                 AND shop_name IN ("${shopNames}") 
             GROUP BY goods_id) a1 ON a1.goods_id = s.goods_id 
-        WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 30 DAY) 
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
+        WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 30 DAY) AND d.id IS NULL 
             AND (a.profit < 0 OR a.goods_id IS NULL) 
             AND IF(s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY), 
 				(a1.sale_amount >= ? OR a1.profit >= a1.sale_amount * ?), 1) `
@@ -1995,7 +2009,7 @@ goodsSaleVerifiedRepo.getNegativeProfitByShopNamesAndTime = async (shopNames, st
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营') s LEFT JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, goods_id 
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, goods_id 
                 FROM goods_verifieds WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
                     AND \`date\` BETWEEN ? AND ? 
                     AND shop_name IN ("${shopNames1}")
@@ -2017,7 +2031,7 @@ goodsSaleVerifiedRepo.getNegativeProfitByShopNamesAndTime = async (shopNames, st
 }
 
 /**
- * negative profit count without invalid link
+ * negative profit count without invalid link & unsalable link
  * @param {*} links 
  * @param {*} start 
  * @param {*} end 
@@ -2044,7 +2058,9 @@ goodsSaleVerifiedRepo.getNegativeProfitByLinksAndTime = async (links, start, end
                 AND date BETWEEN ? AND ? 
                 AND goods_id IN ("${links}") 
             GROUP BY goods_id) a1 ON a1.goods_id = s.goods_id 
-        WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 30 DAY) 
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
+        WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 30 DAY) AND d.id IS NULL 
             AND (a.profit < 0 OR a.goods_id IS NULL) 
             AND IF(s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY), 
 				(a1.sale_amount >= ? OR a1.profit >= a1.sale_amount * ?), 1) `
@@ -2055,7 +2071,7 @@ goodsSaleVerifiedRepo.getNegativeProfitByLinksAndTime = async (links, start, end
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营') s LEFT JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, goods_id 
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, goods_id 
                 FROM goods_verifieds WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
                     AND \`date\` BETWEEN ? AND ? 
                     AND goods_id IN ("${links1}")
@@ -2077,7 +2093,7 @@ goodsSaleVerifiedRepo.getNegativeProfitByLinksAndTime = async (links, start, end
 }
 
 /**
- * low profit count without jdzy and invalid link
+ * low profit count without jdzy and invalid link & unsalable link
  * @param {*} shopNames 
  * @param {*} start 
  * @param {*} end 
@@ -2105,7 +2121,9 @@ goodsSaleVerifiedRepo.getLowProfitByShopNamesAndTime = async (shopNames, start, 
                 AND \`date\` BETWEEN ? AND ? 
                 AND shop_name IN ("${shopNames}")
             GROUP BY goods_id) a1 ON a1.goods_id = s.goods_id 
-        WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY) 
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
+        WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY) AND d.id IS NULL 
             AND (a.profit < a.sale_amount * 0.18 OR a.sale_amount = 0 OR a.goods_id IS NULL)
             AND (a1.sale_amount >= ? OR a1.profit >= a1.sale_amount * ?)`
     let params = [start, end, start1, end1, sale_amount, profit_rate]
@@ -2115,7 +2133,7 @@ goodsSaleVerifiedRepo.getLowProfitByShopNamesAndTime = async (shopNames, start, 
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营') s LEFT JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, 
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                 FROM goods_verifieds WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
                     AND \`date\` BETWEEN ? AND ? 
@@ -2137,7 +2155,7 @@ goodsSaleVerifiedRepo.getLowProfitByShopNamesAndTime = async (shopNames, start, 
 }
 
 /**
- * low profit count without jdzy and invalid link
+ * low profit count without jdzy and invalid link & unsalable link
  * @param {*} links 
  * @param {*} start 
  * @param {*} end 
@@ -2165,7 +2183,9 @@ goodsSaleVerifiedRepo.getLowProfitByLinksAndTime = async (links, start, end, sta
                 AND \`date\` BETWEEN ? AND ? 
                 AND goods_id IN ("${links}")
             GROUP BY goods_id) a1 ON a1.goods_id = s.goods_id 
-        WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY) 
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
+        WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY) AND d.id IS NULL 
             AND (a.profit < a.sale_amount * 0.18 OR a.sale_amount = 0 OR a.goods_id IS NULL)
             AND (a1.sale_amount >= ? OR a1.profit >= a1.sale_amount * ?)`
     let params = [start, end, start1, end1, sale_amount, profit_rate]
@@ -2175,7 +2195,7 @@ goodsSaleVerifiedRepo.getLowProfitByLinksAndTime = async (links, start, end, sta
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营') s LEFT JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, 
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                 FROM goods_verifieds WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
                     AND \`date\` BETWEEN ? AND ? 
@@ -2197,7 +2217,7 @@ goodsSaleVerifiedRepo.getLowProfitByLinksAndTime = async (links, start, end, sta
 }
 
 /**
- * none promotion count without invalid link
+ * none promotion count without invalid link & unsalable link
  * @param {*} shopNames 
  * @param {*} start 
  * @param {*} end 
@@ -2224,7 +2244,9 @@ goodsSaleVerifiedRepo.getNullPromotionByShopNamesAndTime = async (shopNames, sta
                 AND \`date\` BETWEEN ? AND ? 
                 AND shop_name IN ("${shopNames}")
             GROUP BY goods_id) a1 ON a1.goods_id = s.goods_id 
-        WHERE (a.promotion_amount = 0 OR a.goods_id IS NULL) 
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
+        WHERE (a.promotion_amount = 0 OR a.goods_id IS NULL) AND d.id IS NULL 
             AND IF(s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY), 
                 (a1.sale_amount >= ? OR a1.profit >= a1.sale_amount * ?), 1)`
     let params = [start, end, start1, end1, sale_amount, profit_rate]
@@ -2234,7 +2256,7 @@ goodsSaleVerifiedRepo.getNullPromotionByShopNamesAndTime = async (shopNames, sta
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营') s LEFT JOIN (
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (
                 SELECT IFNULL(SUM(promotion_amount), 0) AS promotion_amount, goods_id 
                 FROM goods_verifieds WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
                     AND \`date\` BETWEEN ? AND ? 
@@ -2256,7 +2278,7 @@ goodsSaleVerifiedRepo.getNullPromotionByShopNamesAndTime = async (shopNames, sta
 }
 
 /**
- * none promotion count without invalid link
+ * none promotion count without invalid link & unsalable link
  * @param {*} links 
  * @param {*} start 
  * @param {*} end 
@@ -2283,7 +2305,9 @@ goodsSaleVerifiedRepo.getNullPromotionByLinksAndTime = async (links, start, end,
                 AND \`date\` BETWEEN ? AND ? 
                 AND goods_id IN ("${links}")
             GROUP BY goods_id) a1 ON a1.goods_id = s.goods_id 
-        WHERE (a.promotion_amount = 0 OR a.goods_id IS NULL) 
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
+        WHERE (a.promotion_amount = 0 OR a.goods_id IS NULL) AND d.id IS NULL 
             AND IF(s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY), 
                 (a1.sale_amount >= ? OR a1.profit >= a1.sale_amount * ?), 1)`
     let params = [start, end, start1, end1, sale_amount, profit_rate]
@@ -2293,7 +2317,7 @@ goodsSaleVerifiedRepo.getNullPromotionByLinksAndTime = async (links, start, end,
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营') s LEFT JOIN (
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (
                 SELECT IFNULL(SUM(promotion_amount), 0) AS promotion_amount, goods_id 
                 FROM goods_verifieds WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
                     AND \`date\` BETWEEN ? AND ? 
@@ -2315,7 +2339,7 @@ goodsSaleVerifiedRepo.getNullPromotionByLinksAndTime = async (links, start, end,
 }
 
 /**
- * low promotion count without jdzy and invalid link
+ * low promotion count without jdzy and invalid link & unsalable link
  * @param {*} shopNames 
  * @param {*} start 
  * @param {*} end 
@@ -2344,7 +2368,9 @@ goodsSaleVerifiedRepo.getLowPromotionByShopNamesAndTime = async (shopNames, star
                 AND \`date\` BETWEEN ? AND ? 
                 AND shop_name IN ("${shopNames}")
             GROUP BY goods_id) a1 ON a1.goods_id = s.goods_id 
-        WHERE a.promotion_amount < a.sale_amount * ? 
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
+        WHERE a.promotion_amount < a.sale_amount * ? AND d.id IS NULL 
             AND IF(s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY), 
                 (a1.sale_amount >= ? OR a1.profit >= a1.sale_amount * ?), 1)`
     let params = [start, end, start1, end1, rate, sale_amount, profit_rate]
@@ -2354,7 +2380,7 @@ goodsSaleVerifiedRepo.getLowPromotionByShopNamesAndTime = async (shopNames, star
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营') s JOIN (
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s JOIN (
                 SELECT IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                 FROM goods_verifieds WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
@@ -2377,7 +2403,7 @@ goodsSaleVerifiedRepo.getLowPromotionByShopNamesAndTime = async (shopNames, star
 }
 
 /**
- * low promotion count without jdzy and invalid link
+ * low promotion count without jdzy and invalid link & unsalable link
  * @param {*} links 
  * @param {*} start 
  * @param {*} end 
@@ -2406,7 +2432,9 @@ goodsSaleVerifiedRepo.getLowPromotionByLinksAndTime = async (links, start, end, 
                 AND \`date\` BETWEEN ? AND ? 
                 AND goods_id IN ("${links}")
             GROUP BY goods_id) a1 ON a1.goods_id = s.goods_id 
-        WHERE a.promotion_amount < a.sale_amount * ? 
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
+        WHERE a.promotion_amount < a.sale_amount * ? AND d.id IS NULL 
             AND IF(s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY), 
                 (a1.sale_amount >= ? OR a1.profit >= a1.sale_amount * ?), 1)`
     let params = [start, end, start1, end1, rate, sale_amount, profit_rate]
@@ -2416,7 +2444,7 @@ goodsSaleVerifiedRepo.getLowPromotionByLinksAndTime = async (links, start, end, 
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营') s JOIN (
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s JOIN (
                 SELECT IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                 FROM goods_verifieds WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
@@ -2439,7 +2467,7 @@ goodsSaleVerifiedRepo.getLowPromotionByLinksAndTime = async (links, start, end, 
 }
 
 /**
- * low roi count 
+ * low roi count without unsalable link
  * s = sale_amount, c = cost_amount, p = promotion_amount
  * s / p < s / (0.67 * s - c) + 0.5 ===> s * (0.67 * s - c) < s * p + 0.5 * p * (0.67 * s - c)
  * ===> p * c < s * (2.67 * p + 2 * c - 1.34 * s) 
@@ -2458,14 +2486,17 @@ goodsSaleVerifiedRepo.getLowROIByShopNamesAndTime = async (shopNames, start, end
                 AND \`date\` BETWEEN ? AND ? 
                 AND shop_name IN ("${shopNames}")
             GROUP BY goods_id) a 
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = a.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
         WHERE a.promotion_amount * a.cost_amount < a.sale_amount * 
-                (2.67 * a.promotion_amount + 2 * a.cost_amount - 1.34 * a.sale_amount)`
+                (2.67 * a.promotion_amount + 2 * a.cost_amount - 1.34 * a.sale_amount) 
+            AND d.id IS NULL`
     const result = await query(sql, [start, end])
     return result
 }
 
 /**
- * low roi count 
+ * low roi count without unsalable link
  * s = sale_amount, c = cost_amount, p = promotion_amount
  * s / p < s / (0.67 * s - c) + 0.5 ===> s * (0.67 * s - c) < s * p + 0.5 * p * (0.67 * s - c)
  * ===> p * c < s * (2.67 * p + 2 * c - 1.34 * s) 
@@ -2484,14 +2515,17 @@ goodsSaleVerifiedRepo.getLowROIByLinksAndTime = async (links, start, end) => {
                 AND \`date\` BETWEEN ? AND ? 
                 AND goods_id IN ("${links}")
             GROUP BY goods_id) a 
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = a.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
         WHERE a.promotion_amount * a.cost_amount < a.sale_amount * 
-                (2.67 * a.promotion_amount + 2 * a.cost_amount - 1.34 * a.sale_amount)`
+                (2.67 * a.promotion_amount + 2 * a.cost_amount - 1.34 * a.sale_amount) 
+            AND d.id IS NULL`
     const result = await query(sql, [start, end])
     return result
 }
 
 /**
- * low plan roi count without pdd
+ * low plan roi count without pdd & unsalable link
  * s = sale_amount, c = cost_amount, p = pay_amount, t = trans_amount
  * t / p < s / (0.67 * s - c) + 0.5 ===> t * (0.67 * s - c) < s * p + 0.5 * p * (0.67 * s - c)
  * ===> 1.34 * s * t + p * c < 2.67 * s * p + 2 * t * c
@@ -2512,14 +2546,17 @@ goodsSaleVerifiedRepo.getLowPlanROIByShopNamesAndTime = async (shopNames, start,
                 AND \`date\` BETWEEN ? AND ? 
                 AND shop_name IN ("${shopNames}")
             GROUP BY goods_id) a ON a.goods_id = s.goods_id 
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
         WHERE 1.34 * a.sale_amount * s.trans_amount + s.pay_amount * a.cost_amount < 
-                2.67 * a.sale_amount * s.pay_amount + 2 * s.trans_amount * a.cost_amount`
+                2.67 * a.sale_amount * s.pay_amount + 2 * s.trans_amount * a.cost_amount 
+            AND d.id IS NULL`
     const result = await query(sql, [start, end, start, end])
     return result
 }
 
 /**
- * low plan roi count without pdd
+ * low plan roi count without pdd & unsalable link
  * s = sale_amount, c = cost_amount, p = pay_amount, t = trans_amount
  * t / p < s / (0.67 * s - c) + 0.5 ===> t * (0.67 * s - c) < s * p + 0.5 * p * (0.67 * s - c)
  * ===> 1.34 * s * t + p * c < 2.67 * s * p + 2 * t * c
@@ -2540,14 +2577,17 @@ goodsSaleVerifiedRepo.getLowPlanROIByLinksAndTime = async (links, start, end) =>
                 AND \`date\` BETWEEN ? AND ? 
                 AND goods_id IN ("${links}")
             GROUP BY goods_id) a ON a.goods_id = s.goods_id 
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
         WHERE 1.34 * a.sale_amount * s.trans_amount + s.pay_amount * a.cost_amount < 
-                2.67 * a.sale_amount * s.pay_amount + 2 * s.trans_amount * a.cost_amount`
+                2.67 * a.sale_amount * s.pay_amount + 2 * s.trans_amount * a.cost_amount 
+            AND d.id IS NULL`
     const result = await query(sql, [start, end, start, end])
     return result
 }
 
 /**
- * pdd low plan roi count (7 days average)
+ * pdd low plan roi count (7 days average) without unsalable link
  * g = plan_goal, p = pay_amount, t = trans_amount
  * t / p < g ===> t < p * g
  * @param {*} shopNames 
@@ -2561,13 +2601,15 @@ goodsSaleVerifiedRepo.getLowPlanROIByShopNamesAndTime1 = async (shopNames, start
                 IFNULL(SUM(trans_amount), 0) AS trans_amount, 
                 IFNULL(SUM(plan_goal), 0) / 7 AS plan_goal, goods_id FROM goods_promotion_plan 
             WHERE \`date\` BETWEEN ? AND ? AND shop_name IN ("${shopNames}") GROUP BY goods_id) s 
-        WHERE s.trans_amount < s.pay_amount * s.plan_goal`
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销')
+        WHERE s.trans_amount < s.pay_amount * s.plan_goal AND d.id IS NULL`
     const result = await query(sql, [start, end])
     return result
 }
 
 /**
- * pdd low plan roi count (7 days average)
+ * pdd low plan roi count (7 days average) without unsalable link
  * g = plan_goal, p = pay_amount, t = trans_amount
  * t / p < g ===> t < p * g
  * @param {*} links 
@@ -2581,13 +2623,15 @@ goodsSaleVerifiedRepo.getLowPlanROIByLinksAndTime1 = async (links, start, end) =
                 IFNULL(SUM(trans_amount), 0) AS trans_amount, 
                 IFNULL(SUM(plan_goal), 0) / 7 AS plan_goal, goods_id FROM goods_promotion_plan 
             WHERE \`date\` BETWEEN ? AND ? AND goods_id IN ("${links}") GROUP BY goods_id) s 
-        WHERE s.trans_amount < s.pay_amount * s.plan_goal`
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
+        WHERE s.trans_amount < s.pay_amount * s.plan_goal AND d.id IS NULL`
     const result = await query(sql, [start, end])
     return result
 }
 
 /**
- * goal not acheive without jd
+ * goal not acheive without jd, dy & unsalable link
  * @param {*} shopNames 
  * @param {*} months 
  * @param {*} start 
@@ -2607,6 +2651,8 @@ goodsSaleVerifiedRepo.getGoalNotAchieveByShopNameAndTime = async (shopNames, mon
                 AND date BETWEEN ? AND ? 
                 AND shop_name IN ("${shopNames}")
             GROUP BY goods_id) a ON a.goods_id = s.goods_id 
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
         JOIN (SELECT IFNULL(SUM(amount), 0) AS amount, goods_id FROM (`
     let search = ''
     for (let i = 0; i < months.length; i++) {
@@ -2621,13 +2667,13 @@ goodsSaleVerifiedRepo.getGoalNotAchieveByShopNameAndTime = async (shopNames, mon
             ON t.goods_id = s.goods_id 
         WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY) 
             AND a.sale_amount >= ? AND a.profit >= a.sale_amount * ? 
-            AND a.sale_amount < t.amount`
+            AND a.sale_amount < t.amount AND d.id IS NULL`
     const result = await query(search, [start, end, sale_amount, profit_rate])
     return result
 }
 
 /**
- * goal not acheive without jd
+ * goal not acheive without jd, dy & unsalable link
  * @param {*} links 
  * @param {*} months 
  * @param {*} start 
@@ -2647,6 +2693,8 @@ goodsSaleVerifiedRepo.getGoalNotAchieveByLinksAndTime = async (links, months, st
                 AND date BETWEEN ? AND ? 
                 AND goods_id IN ("${links}")
             GROUP BY goods_id) a ON a.goods_id = s.goods_id 
+        LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+            AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
         JOIN (SELECT IFNULL(SUM(amount), 0) AS amount, goods_id FROM (`
     let search = ''
     for (let i = 0; i < months.length; i++) {
@@ -2661,13 +2709,13 @@ goodsSaleVerifiedRepo.getGoalNotAchieveByLinksAndTime = async (links, months, st
             ON t.goods_id = s.goods_id 
         WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY) 
             AND a.sale_amount >= ? AND a.profit >= a.sale_amount * ? 
-            AND a.sale_amount < t.amount`
+            AND a.sale_amount < t.amount AND d.id IS NULL`
     const result = await query(search, [start, end, sale_amount, profit_rate])
     return result
 }
 
 /**
- * jd goal not acheive
+ * jd & dy goal not acheive without unsalable link
  * @param {*} shopNames 
  * @param {*} start 
  * @param {*} end 
@@ -2688,9 +2736,11 @@ goodsSaleVerifiedRepo.getGoalNotAchieveByShopNameAndTime1 = async (shopNames, st
                 AND shop_name IN ("${shopNames}")
             GROUP BY goods_id) a ON a.goods_id = s.goods_id 
         JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+        LEFT JOIN dianshang_operation_attribute d1 ON d1.goods_id = s.goods_id 
+            AND (d1.userDef1 = '滞销' OR d1.link_attribute = '滞销') 
         WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY) 
             AND a.sale_amount >= ? AND a.profit >= a.sale_amount * ? 
-            AND a.sale_amount < d.pit_target * 10000`
+            AND a.sale_amount < d.pit_target * 10000 AND d1.id IS NULL`
     let params = [start, end, sale_amount, profit_rate]
     if (shopNames1) {
         sql = `SELECT SUM(count) AS count FROM (
@@ -2698,7 +2748,7 @@ goodsSaleVerifiedRepo.getGoalNotAchieveByShopNameAndTime1 = async (shopNames, st
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date, pit_target 
-                FROM dianshang_operation_attribute WHERE platform = '自营') s 
+                FROM dianshang_operation_attribute WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s 
                 JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                 FROM goods_verifieds WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
@@ -2715,7 +2765,7 @@ goodsSaleVerifiedRepo.getGoalNotAchieveByShopNameAndTime1 = async (shopNames, st
 }
 
 /**
- * jd goal not acheive
+ * jd & dy goal not acheive without unsalable link
  * @param {*} links 
  * @param {*} start 
  * @param {*} end 
@@ -2736,9 +2786,11 @@ goodsSaleVerifiedRepo.getGoalNotAchieveByLinksAndTime1 = async (links, start, en
                 AND goods_id IN ("${links}")
             GROUP BY goods_id) a ON a.goods_id = s.goods_id 
         JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+        LEFT JOIN dianshang_operation_attribute d1 ON d1.goods_id = s.goods_id 
+            AND (d1.userDef1 = '滞销' OR d1.link_attribute = '滞销') 
         WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY) 
             AND a.sale_amount >= ? AND a.profit >= a.sale_amount * ? 
-            AND a.sale_amount < d.pit_target * 10000`
+            AND a.sale_amount < d.pit_target * 10000 AND d1.id IS NULL`
     let params = [start, end, sale_amount, profit_rate]
     if (links1) {
         sql = `SELECT SUM(count) AS count FROM (
@@ -2746,7 +2798,7 @@ goodsSaleVerifiedRepo.getGoalNotAchieveByLinksAndTime1 = async (links, start, en
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date, pit_target 
-                FROM dianshang_operation_attribute WHERE platform = '自营') s 
+                FROM dianshang_operation_attribute WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s 
                 JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                 FROM goods_verifieds WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
@@ -2763,7 +2815,7 @@ goodsSaleVerifiedRepo.getGoalNotAchieveByLinksAndTime1 = async (links, start, en
 }
 
 /**
- * invalid count
+ * invalid count without unsalable link
  * @param {*} shopNames 
  * @param {*} sale_amount 
  * @param {*} profit_rate 
@@ -2784,7 +2836,9 @@ goodsSaleVerifiedRepo.getInvalidByShopNamesAndTime = async (shopNames, sale_amou
                     AND date BETWEEN ? AND ? 
                     AND shop_name IN ("${shopNames}") 
                 GROUP BY goods_id) a ON a.goods_id = s.goods_id 
-            WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY) 
+            LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+                AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
+            WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY) AND d.id IS NULL 
                 AND (a.sale_amount IS NULL 
                     OR (a.sale_amount < ? 
                     AND a.sale_amount * ? > a.profit))
@@ -2796,7 +2850,7 @@ goodsSaleVerifiedRepo.getInvalidByShopNamesAndTime = async (shopNames, sale_amou
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营') s LEFT JOIN (
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (
                 SELECT IFNULL(SUM(profit), 0) AS profit, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                     FROM goods_verifieds WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
@@ -2814,7 +2868,7 @@ goodsSaleVerifiedRepo.getInvalidByShopNamesAndTime = async (shopNames, sale_amou
 }
 
 /**
- * invalid count
+ * invalid count without unsalable link
  * @param {*} links 
  * @param {*} sale_amount 
  * @param {*} profit_rate 
@@ -2835,7 +2889,9 @@ goodsSaleVerifiedRepo.getInvalidByLinksAndTime = async (links, sale_amount, prof
                     AND date BETWEEN ? AND ? 
                     AND goods_id IN ("${links}") 
                 GROUP BY goods_id) a ON a.goods_id = s.goods_id 
-            WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY) 
+            LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+                AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
+            WHERE s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY) AND d.id IS NULL 
                 AND (a.sale_amount IS NULL 
                     OR (a.sale_amount < ? 
                     AND a.sale_amount * ? > a.profit))
@@ -2847,7 +2903,7 @@ goodsSaleVerifiedRepo.getInvalidByLinksAndTime = async (links, sale_amount, prof
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营') s LEFT JOIN (
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (
                 SELECT IFNULL(SUM(profit), 0) AS profit, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                     FROM goods_verifieds WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
@@ -2876,7 +2932,7 @@ goodsSaleVerifiedRepo.getImportByShopNames = async (shopNames) => {
             WHERE create_time IS NOT NULL AND is_shelf = '是' 
                 AND shop_name IN ("${shopNames}") GROUP BY goods_id) s ON d.goods_id = s.goods_id 
         WHERE s.create_time >= DATE_SUB(NOW(), INTERVAL 60 DAY) 
-            AND d.userDef7 IN ('打仗', '爆款', '滞销')
+            AND d.userDef7 IN ('打仗', '爆款')
             AND d.shop_name IN ("${shopNames}")`
     const result = await query(sql)
     return result
@@ -2892,10 +2948,10 @@ goodsSaleVerifiedRepo.getImportByLinks = async (links) => {
     const sql = `SELECT COUNT(DISTINCT s.goods_id) AS count FROM dianshang_operation_attribute d 
         JOIN (SELECT MIN(create_time) AS create_time, goods_id FROM jst_goods_sku
             WHERE create_time IS NOT NULL AND is_shelf = '是' 
-                AND shop_name IN ("${links}") GROUP BY goods_id) s ON d.goods_id = s.goods_id 
+                AND goods_id IN ("${links}") GROUP BY goods_id) s ON d.goods_id = s.goods_id 
         WHERE s.create_time >= DATE_SUB(NOW(), INTERVAL 60 DAY) 
-            AND d.userDef7 IN ('打仗', '爆款', '滞销')
-            AND d.shop_name IN ("${links}")`
+            AND d.userDef7 IN ('打仗', '爆款')
+            AND d.goods_id IN ("${links}")`
     const result = await query(sql)
     return result
 }
@@ -2914,7 +2970,7 @@ goodsSaleVerifiedRepo.getImportByShopNames1 = async (shopNames, shopNames1) => {
             WHERE create_time IS NOT NULL AND is_shelf = '是' 
                 AND shop_name IN ("${shopNames}") GROUP BY goods_id) s ON d.goods_id = s.goods_id 
         WHERE s.create_time >= DATE_SUB(NOW(), INTERVAL 60 DAY) 
-            AND (d.userDef1 IN ('打仗', '爆款', '滞销') OR d.link_attribute IN ('打仗', '爆款', '滞销'))
+            AND (d.userDef1 IN ('打仗', '爆款') OR d.link_attribute IN ('打仗', '爆款'))
             AND d.shop_name IN ("${shopNames}")`
     if (shopNames1) {
         sql = `SELECT SUM(count) AS count FROM (
@@ -2922,7 +2978,7 @@ goodsSaleVerifiedRepo.getImportByShopNames1 = async (shopNames, shopNames1) => {
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM dianshang_operation_attribute s 
             WHERE s.onsale_date >= DATE_SUB(NOW(), INTERVAL 60 DAY) 
-                AND s.userDef1 IN ('打仗', '爆款', '滞销')
+                AND s.userDef1 IN ('打仗', '爆款')
                 AND s.shop_name IN ("${shopNames1}")) c`
     }
     const result = await query(sql)
@@ -2943,7 +2999,7 @@ goodsSaleVerifiedRepo.getImportByLinks1 = async (links, links1) => {
             WHERE create_time IS NOT NULL AND is_shelf = '是' 
                 AND goods_id IN ("${links}") GROUP BY goods_id) s ON d.goods_id = s.goods_id 
         WHERE s.create_time >= DATE_SUB(NOW(), INTERVAL 60 DAY) 
-            AND (d.userDef1 IN ('打仗', '爆款', '滞销') OR d.link_attribute IN ('打仗', '爆款', '滞销'))
+            AND (d.userDef1 IN ('打仗', '爆款') OR d.link_attribute IN ('打仗', '爆款'))
             AND d.goods_id IN ("${links}")`
     if (links1) {
         sql = `SELECT SUM(count) AS count FROM (
@@ -2951,7 +3007,7 @@ goodsSaleVerifiedRepo.getImportByLinks1 = async (links, links1) => {
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM dianshang_operation_attribute s 
             WHERE s.onsale_date >= DATE_SUB(NOW(), INTERVAL 60 DAY) 
-                AND s.userDef1 IN ('打仗', '爆款', '滞销')
+                AND s.userDef1 IN ('打仗', '爆款')
                 AND s.goods_id IN ("${links1}")) c`
     }
     const result = await query(sql)
@@ -2970,7 +3026,7 @@ goodsSaleVerifiedRepo.getImportByShopNames2 = async (shopNames) => {
             WHERE create_time IS NOT NULL AND is_shelf = '是' 
                 AND shop_name IN ("${shopNames}") GROUP BY goods_id) s ON d.goods_id = s.goods_id 
         WHERE s.create_time >= DATE_SUB(NOW(), INTERVAL 60 DAY) 
-            AND d.link_attribute IN ('打仗', '爆款', '滞销')
+            AND d.link_attribute IN ('打仗', '爆款')
             AND d.shop_name IN ("${shopNames}")`
     const result = await query(sql)
     return result
@@ -2988,7 +3044,7 @@ goodsSaleVerifiedRepo.getImportByLink2 = async (links) => {
             WHERE create_time IS NOT NULL AND is_shelf = '是' 
                 AND goods_id IN ("${links}") GROUP BY goods_id) s ON d.goods_id = s.goods_id 
         WHERE s.create_time >= DATE_SUB(NOW(), INTERVAL 60 DAY) 
-            AND d.link_attribute IN ('打仗', '爆款', '滞销')
+            AND d.link_attribute IN ('打仗', '爆款')
             AND d.goods_id IN ("${links}")`
     const result = await query(sql)
     return result
@@ -3039,6 +3095,32 @@ goodsSaleVerifiedRepo.getLowGrossProfitByLinksAndTime = async (links, start, end
         WHERE (a.cost_amount >= ? * a.sale_qty AND a.sale_amount * (1-?) < a.cost_amount) 
             OR (a.cost_amount < ? * a.sale_qty AND a.sale_amount * (1-?) < a.cost_amount)`
     const result = await query(sql, [start, end, price, rate, price, rate1])
+    return result
+}
+
+/**
+ * unsalable link count
+ * @param {*} shopNames 
+ * @returns 
+ */
+goodsSaleVerifiedRepo.getUnsalableByShopNames = async (shopNames) => {
+    const sql = `SELECT COUNT(DISTINCT d.goods_id) AS count FROM dianshang_operation_attribute d 
+        WHERE (d.userDef7 = '滞销' OR d.userDef1 = '滞销' OR d.link_attribute = '滞销')
+            AND d.shop_name IN ("${shopNames}")`
+    const result = await query(sql)
+    return result
+}
+
+/**
+ * unsalable link count
+ * @param {*} links 
+ * @returns 
+ */
+goodsSaleVerifiedRepo.getUnsalableByLinks = async (links) => {
+    const sql = `SELECT COUNT(DISTINCT d.goods_id) AS count FROM dianshang_operation_attribute d 
+        WHERE (d.userDef7 = '滞销' OR d.userDef1 = '滞销' OR d.link_attribute = '滞销')
+            AND d.goods_id IN ("${links}")`
+    const result = await query(sql)
     return result
 }
 
