@@ -3604,7 +3604,7 @@ goodsSaleInfoRepo.getNegativeProfitByShopNamesAndTime = async (shopNames, start,
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR userDef1 IS NULL)) s LEFT JOIN (
                 SELECT IFNULL(SUM(profit), 0) AS profit, goods_id 
                 FROM goods_sales WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
                     AND \`date\` BETWEEN ? AND ? 
@@ -3617,7 +3617,7 @@ goodsSaleInfoRepo.getNegativeProfitByShopNamesAndTime = async (shopNames, start,
                     AND shop_name IN ("${shopNames1}") 
                 GROUP BY goods_id) a1 ON a1.goods_id = s.goods_id
             WHERE s.onsale_date < DATE_SUB(NOW(), INTERVAL 30 DAY) 
-                AND (a.profit < 0 AND a.goods_id IS NULL) 
+                AND (a.profit < 0 OR a.goods_id IS NULL) 
                 AND IF(s.onsale_date < DATE_SUB(NOW(), INTERVAL 60 DAY), 
                     (a1.sale_amount >= ? OR a1.profit >= a1.sale_amount * ?), 1)) c`
         params.push(start, end, start1, end1, sale_amount, profit_rate)
@@ -3667,7 +3667,7 @@ goodsSaleInfoRepo.getNegativeProfitByLinksAndTime = async (links, start, end, st
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR userDef1 IS NULL)) s LEFT JOIN (
                 SELECT IFNULL(SUM(profit), 0) AS profit, goods_id 
                 FROM goods_sales WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
                     AND \`date\` BETWEEN ? AND ? 
@@ -3680,7 +3680,7 @@ goodsSaleInfoRepo.getNegativeProfitByLinksAndTime = async (links, start, end, st
                     AND goods_id IN ("${links1}") 
                 GROUP BY goods_id) a1 ON a1.goods_id = s.goods_id
             WHERE s.onsale_date < DATE_SUB(NOW(), INTERVAL 30 DAY) 
-                AND (a.profit < 0 AND a.goods_id IS NULL) 
+                AND (a.profit < 0 OR a.goods_id IS NULL) 
                 AND IF(s.onsale_date < DATE_SUB(NOW(), INTERVAL 60 DAY), 
                     (a1.sale_amount >= ? OR a1.profit >= a1.sale_amount * ?), 1)) c`
         params.push(start, end, start1, end1, sale_amount, profit_rate)
@@ -3730,7 +3730,7 @@ goodsSaleInfoRepo.getLowProfitByShopNamesAndTime = async (shopNames, start, end,
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, 
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR userDef1 IS NULL)) s LEFT JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                 FROM goods_sales WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
                     AND \`date\` BETWEEN ? AND ? 
@@ -3792,7 +3792,7 @@ goodsSaleInfoRepo.getLowProfitByLinksAndTime = async (links, start, end, start1,
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, 
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR userDef1 IS NULL)) s LEFT JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                 FROM goods_sales WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
                     AND \`date\` BETWEEN ? AND ? 
@@ -3853,7 +3853,7 @@ goodsSaleInfoRepo.getNullPromotionByShopNamesAndTime = async (shopNames, start, 
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR userDef1 IS NULL)) s LEFT JOIN (
                 SELECT IFNULL(SUM(promotion_amount), 0) AS promotion_amount, goods_id 
                 FROM goods_sales WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
                     AND \`date\` BETWEEN ? AND ? 
@@ -3914,7 +3914,7 @@ goodsSaleInfoRepo.getNullPromotionByLinksAndTime = async (links, start, end, sta
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR userDef1 IS NULL)) s LEFT JOIN (
                 SELECT IFNULL(SUM(promotion_amount), 0) AS promotion_amount, goods_id 
                 FROM goods_sales WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
                     AND \`date\` BETWEEN ? AND ? 
@@ -3977,7 +3977,7 @@ goodsSaleInfoRepo.getLowPromotionByShopNamesAndTime = async (shopNames, start, e
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s JOIN (
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR userDef1 IS NULL)) s JOIN (
                 SELECT IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                 FROM goods_sales WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
@@ -4041,7 +4041,7 @@ goodsSaleInfoRepo.getLowPromotionByLinksAndTime = async (links, start, end, star
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s JOIN (
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR userDef1 IS NULL)) s JOIN (
                 SELECT IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                 FROM goods_sales WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
@@ -4342,7 +4342,7 @@ goodsSaleInfoRepo.getGoalNotAchieveByShopNameAndTime1 = async (shopNames, start,
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date, pit_target 
-                FROM dianshang_operation_attribute WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s 
+                FROM dianshang_operation_attribute WHERE platform = '自营' AND (userDef1 != '滞销' OR userDef1 IS NULL)) s 
                 JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                 FROM goods_sales WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
@@ -4392,7 +4392,7 @@ goodsSaleInfoRepo.getGoalNotAchieveByLinksAndTime1 = async (links, start, end, s
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date, pit_target 
-                FROM dianshang_operation_attribute WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s 
+                FROM dianshang_operation_attribute WHERE platform = '自营' AND (userDef1 != '滞销' OR userDef1 IS NULL)) s 
                 JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                 FROM goods_sales WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
@@ -4444,7 +4444,7 @@ goodsSaleInfoRepo.getInvalidByShopNamesAndTime = async (shopNames, sale_amount, 
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR userDef1 IS NULL)) s LEFT JOIN (
                 SELECT IFNULL(SUM(profit), 0) AS profit, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                     FROM goods_sales WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
@@ -4497,7 +4497,7 @@ goodsSaleInfoRepo.getInvalidByLinksAndTime = async (links, sale_amount, profit_r
             UNION ALL 
             SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
                 SELECT brief_name AS goods_id, onsale_date FROM dianshang_operation_attribute 
-                WHERE platform = '自营' AND (userDef1 != '滞销' OR id IS NULL)) s LEFT JOIN (
+                WHERE platform = '自营' AND (userDef1 != '滞销' OR userDef1 IS NULL)) s LEFT JOIN (
                 SELECT IFNULL(SUM(profit), 0) AS profit, 
                     IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id 
                     FROM goods_sales WHERE goods_id NOT IN ('', '【无法匹配到商品】') 
