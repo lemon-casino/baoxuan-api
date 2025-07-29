@@ -610,7 +610,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         } 
         if (['京东自营-厨具', '京东自营-日用'].includes(shops[i].shop_name)) {
             let index = i == 0 ? shopName.length : shopName?.length - 1
-            otherName[index] = otherName[index] ? shops[i].shop_name : `${otherName[index]}","${shops[i].shop_name}`
+            otherName[index] = !otherName[index] ? shops[i].shop_name : `${otherName[index]}","${shops[i].shop_name}`
         }
     }
     let end1 = moment().subtract(1, 'day').format('YYYY-MM-DD')
@@ -924,7 +924,7 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
                     exists[item] = true
                     shops.push(item)
                     if (['京东自营-厨具', '京东自营-日用'].includes(item)) {
-                        otherName[i] = otherName[i] ? item : `${otherName[i]}","${item}`
+                        otherName[i] = !otherName[i] ? item : `${otherName[i]}","${item}`
                     }
                 }
             })
