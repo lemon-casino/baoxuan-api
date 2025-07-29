@@ -13,7 +13,7 @@ goodsBillRepo.deleteByDate = async (date) => {
 goodsBillRepo.deleteByDate2 = async (date,shop_name) => {
     let sql = `DELETE FROM goods_bill_info WHERE \`date\` = ? 
         AND shop_name = ?`
-    const result = await query(sql, [date],shop_name)
+    const result = await query(sql, [date,shop_name])
     return result?.affectedRows ? true : false
 }
 

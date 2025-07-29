@@ -17,7 +17,7 @@ goodsPaysStats.batchInsert = async (date) => {
             WHERE \`date\` = ? GROUP BY goods_id, shop_id) a2 ON a1.goods_id = a2.goods_id 
             AND a1.shop_id = a2.shop_id 
         WHERE a1.date = ? AND shop_name !='京东自营-厨具' AND shop_name !='京东自营-日用'`
-    let rows = await query(sql, [date, date, date, date]), data = [], start, end
+    let rows = await query(sql, [date, date, date]), data = [], start, end
     if (!rows?.length) return false
     let chunk = Math.ceil(rows.length / 500)
     for (let i = 0; i < chunk; i++) {
@@ -96,8 +96,8 @@ goodsPaysStats.batchInsertJD = async (date,shop_name) => {
         LEFT JOIN (SELECT SUM(rate) AS labor_cost, goods_id, shop_id FROM orders_goods_pays 
             WHERE \`date\` = ? GROUP BY goods_id, shop_id) a2 ON a1.goods_id = a2.goods_id 
             AND a1.shop_id = a2.shop_id 
-        WHERE a1.date = ? AND shop_name = ?'`
-    let rows = await query(sql, [date, date, date, date,shop_name]), data = [], start, end
+        WHERE a1.date = ? AND shop_name = ?`
+    let rows = await query(sql, [date, date, date, shop_name]), data = [], start, end
     if (!rows?.length) return false
     let chunk = Math.ceil(rows.length / 500)
     for (let i = 0; i < chunk; i++) {
