@@ -1247,7 +1247,7 @@ goodsSaleInfoRepo.updateFee = async(sku_id, promotion_amount, date,shop_name) =>
     ])
 
     const sql1 = `UPDATE goods_pay_info SET promotion_amount = promotion_amount + ?, 
-        operation_amount = operation_amount + ?, profit = profit - ?, 
+        operation_amount = operation_amount + ?, profit = profit - ?
         WHERE sku_id = ? AND shop_name = '${shop_name}' AND \`date\` = ?`
     const result1 = await query(sql1, [
         promotion_amount, 
