@@ -1941,7 +1941,7 @@ goodsSaleInfoRepo.getDataGrossProfitDetailByTime = async(goods_id, start, end) =
 goodsSaleInfoRepo.updateFee = async(sku_id, promotion_amount, date,shop_name) => {
     const sql = `UPDATE goods_sale_info SET promotion_amount = promotion_amount + ?, 
         operation_amount = operation_amount + ?, profit = profit - ?, 
-        profit_rate = IF(sale_amount, (profit - ?) / sale_amount, 0) WHERE sku_id = ?
+        profit_rate = IF(sale_amount>0, (profit - ?) / sale_amount, 0) WHERE sku_id = ?
             AND shop_name = '${shop_name}'
             AND \`date\` = ?`
     const result = await query(sql, [
@@ -1952,7 +1952,18 @@ goodsSaleInfoRepo.updateFee = async(sku_id, promotion_amount, date,shop_name) =>
         sku_id.toString(),
         date
     ])
-    return result?.affectedRows ? true : false
+
+    const sql1 = `UPDATE goods_pay_info SET promotion_amount = promotion_amount + ?, 
+        operation_amount = operation_amount + ?, profit = profit - ?, 
+        WHERE sku_id = ? AND shop_name = '${shop_name}' AND \`date\` = ?`
+    const result1 = await query(sql1, [
+        promotion_amount, 
+        promotion_amount, 
+        promotion_amount, 
+        sku_id.toString(),
+        date
+    ])
+    return result1?.affectedRows ? true : false
 }
 goodsSaleInfoRepo.selectFee = async(sku_id, date, goods_id,shop_name,shop_id) => {
     const sql = `SELECT * FROM goods_sale_info WHERE shop_name=? AND sku_id=? AND \`date\`= ?`

@@ -1778,6 +1778,17 @@ const batchInsertGoodsPaysStats = async (date) => {
     logger.info(`[聚水潭支付单品表数据刷新]：时间:${date}, ${result}`)
 }
 
+const batchInsertJDGoodsPays = async (date,shop_name) => {
+    let result = await goodsPaysRepo.batchInsertJD(date,shop_name)
+    logger.info(`[京东支付数据刷新]：时间:${date}, ${result}`)
+    if (result) await batchInsertJDGoodsPaysStats(date,shop_name)
+}
+
+const batchInsertJDGoodsPaysStats = async (date,shop_name) => {
+    let result = await goodsPaysStats.batchInsertJD(date,shop_name)
+    logger.info(`[京东支付单品表数据刷新]：时间:${date}, ${result}`)
+}
+
 const importGoodsKeyWords = async (rows, time) => {
     let count = 0, data = [], result = false
     let goods_id = typeof(rows[1].getCell(1).value) == 'string' ? 
@@ -2385,7 +2396,7 @@ const importGoodsCompositeInfo = async (rows, time) => {
 }
 
 const importJDZYInfo = async (rows, time,name) => {
-    let count = 0, data = [], data2 = [], result = false
+    let count = 0, data = [], data2 = [], data3 = [], result = false
     let columns = rows[0].values,
         shop_name = null,
         shop_id = null,
@@ -2503,15 +2514,42 @@ const importJDZYInfo = async (rows, time,name) => {
             tax,
             date
         )
+        data3.push(
+            goods_id,
+            sku_id,
+            null,
+            shop_name,
+            shop_id,
+            date,
+            supplier_amount,
+            null,
+            null,
+            null,
+            null,
+            sale_amount,
+            cost_amount,
+            sale_amount - cost_amount,
+            profit,
+            0,
+            other_cost>0? tax + other_cost : tax,
+            null,
+            qty,
+            null
+        )
         count += 1
         saveAmount += parseFloat(rows[i].getCell(sale_amount_row).value)
     }
-    logger.info(`[京东自营发货数据导入]：时间:${date}, 总计金额:${amount}, 存储金额:${saveAmount}`)
+    logger.info(`[京东自营支付发货数据导入]：时间:${date}, 总计金额:${amount}, 存储金额:${saveAmount}`)
     if (count > 0) {
+        await goodsPayInfoRepo.deleteByDate2(date,shop_name)
+        result = await goodsPayInfoRepo.batchInsert(count, data3)
+        console.log('1')
         await goodsSaleInfoRepo.deleteByDate(date, 'goods_code', 1,shop_name)
         result = await goodsSaleInfoRepo.batchInsert(count, data)
+        console.log('12')
         await goodsBillRepo.deleteByDate2(date,shop_name)
         await goodsBillRepo.batchInsert(count, data2)
+        console.log('123')
     }
     return result
 }
@@ -2607,13 +2645,11 @@ const importJDZYPromotionInfo = async (rows, name, time,tag) => {
     }
     logger.info(`[${shop_name}推广数据导入]：时间:${date}, 总计数量:${count}`)
     if (count > 0) {
-        console.log(shop_name)
         await goodsPromotionRepo.deleteByDateShop(date, promotion_name,shop_name)
         result = await goodsPromotionRepo.batchInsert(count, data)
         await goodsPromotionPlanRepo.deleteByDate(date, shop_name, promotion_name)
         await goodsPromotionPlanRepo.batchInsert(count, data1)
     }
-    await batchInsertJDGoodsSales(date)
     return result
 }
 
@@ -2674,6 +2710,9 @@ const importJDZYcompositeInfo = async (rows, time,name) => {
         await goodsCompositeRepo.deleteByDateShop(date, shop_name)
         result = await goodsCompositeRepo.batchInsertJDZY(count, data, shop_name)
     }
+    await batchInsertJDGoodsSales(date)
+    await updateGoodsPayments(date)
+    await batchInsertJDGoodsPays(date,shop_name)
     return result
 }
 const importGoodsSYCMInfo = async (rows, time) => {

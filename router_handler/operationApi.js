@@ -660,7 +660,7 @@ const importJDZYcompositeInfo = async (req, res, next) => {
             fs.renameSync(file.filepath, newPath, (err) => {
                 if (err) throw err
             })
-            const name = file.originalFilename.split('.')[0]
+            const name = file.originalFilename.split('_')[0]
             try {
                 // 解压 ZIP 文件
                 const zip = new AdmZip(newPath)
