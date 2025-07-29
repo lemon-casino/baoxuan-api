@@ -2459,17 +2459,23 @@ const importJDZYInfo = async (rows, time,name) => {
         let tax = 0
         //综毛标准
         let jd_gross_profit_std = 0
-        const cate = await userOperationRepo.getDetailBycategory()
+        const cate = await userOperationRepo.getDetailBycategory(sku_id)
         if (shop_name == '京东自营-厨具'){
             //税点
             tax = sale_amount * 0.07
+            console.log(cate)
             if (['餐具','茶具'].includes(cate)){
+                console.log('11111111')
                 jd_gross_profit_std = supplier_amount * 0.25
+                console.log(jd_gross_profit_std)
             }else if(['厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具'].includes(cate)){
                 jd_gross_profit_std = supplier_amount * 0.26
+                console.log(jd_gross_profit_std)
             }else if(['水具', '酒杯/酒具','咖啡具','烹饪锅具','刀剪菜板','酒店用品','菜板/砧板'].includes(cate)){
                 jd_gross_profit_std = supplier_amount * 0.28
+                console.log(jd_gross_profit_std)
             }
+            
         }else if(shop_name == '京东自营-日用'){
             tax = sale_amount * 0.07 + supplier_amount *0.02
             jd_gross_profit_std = supplier_amount * 0.25
@@ -2677,7 +2683,7 @@ const importJDZYcompositeInfo = async (rows, time,name) => {
     if (name=='日用'){
         shop_name = '京东自营-日用'
         shop_id = '18643084'
-    }else if(bane=='厨具'){
+    }else if(name=='厨具'){
         shop_name = '京东自营-厨具'
         shop_id = '16314655'
     }
