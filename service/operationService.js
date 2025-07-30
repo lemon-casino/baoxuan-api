@@ -2100,6 +2100,7 @@ const importJDZYInfo = async (rows, time,name) => {
         }
         //供货金额
         let sale_amount = parseFloat(rows[i].getCell(sale_amount_row).value || 0)
+        if (!rows[i].getCell(sale_amount_row).value) continue
         let qty = parseInt(rows[i].getCell(real_sale_qty_row).value || 0)
         //总成本
         let cost_amount = (cost_price + 0.8 + 1.4) * qty
@@ -2108,23 +2109,18 @@ const importJDZYInfo = async (rows, time,name) => {
         let tax = 0
         //综毛标准
         let jd_gross_profit_std = 0
-        const cate = await userOperationRepo.getDetailBycategory(sku_id)
         if (shop_name == '京东自营-厨具'){
             //税点
+            const cate = await userOperationRepo.getDetailBycategory(sku_id)
+            category = cate[0].second_category
             tax = sale_amount * 0.07
-            console.log(cate)
-            if (['餐具','茶具'].includes(cate)){
-                console.log('11111111')
+            if (['餐具','茶具'].includes(category)){
                 jd_gross_profit_std = supplier_amount * 0.25
-                console.log(jd_gross_profit_std)
-            }else if(['厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具'].includes(cate)){
+            }else if(['厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具'].includes(category)){
                 jd_gross_profit_std = supplier_amount * 0.26
-                console.log(jd_gross_profit_std)
-            }else if(['水具', '酒杯/酒具','咖啡具','烹饪锅具','刀剪菜板','酒店用品','菜板/砧板'].includes(cate)){
+            }else if(['水具', '酒杯/酒具','咖啡具','烹饪锅具','刀剪菜板','酒店用品','菜板/砧板'].includes(category)){
                 jd_gross_profit_std = supplier_amount * 0.28
-                console.log(jd_gross_profit_std)
             }
-            
         }else if(shop_name == '京东自营-日用'){
             tax = sale_amount * 0.07 + supplier_amount *0.02
             jd_gross_profit_std = supplier_amount * 0.25
