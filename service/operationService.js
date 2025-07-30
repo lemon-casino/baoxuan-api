@@ -2545,13 +2545,10 @@ const importJDZYInfo = async (rows, time,name) => {
     if (count > 0) {
         await goodsPayInfoRepo.deleteByDate2(date,shop_name)
         result = await goodsPayInfoRepo.batchInsert(count, data3)
-        console.log('1')
         await goodsSaleInfoRepo.deleteByDate(date, 'goods_code', 1,shop_name)
         result = await goodsSaleInfoRepo.batchInsert(count, data)
-        console.log('12')
         await goodsBillRepo.deleteByDate2(date,shop_name)
         await goodsBillRepo.batchInsert(count, data2)
-        console.log('123')
     }
     return result
 }
@@ -4517,13 +4514,13 @@ const getShopSaleQtyData = async(day,day7,day30,day31) => {
 
 const importGhyxpromotioninfo = async (rows, time, promotion_name) => {
     let count = 0, data = [], result = false,data1=[],
-        result1 = false,data2=[],result2 = false
+        result1 = false,data2=[],result2 = false,data3=[],
+        result3 = false
     let columns = rows[0].values,
         amount_row = null, 
         shop_name = '淘工厂国货严选店',
         sku_id = null,
         date = time
-    console.log(columns)
     if (promotion_name == '充值加码消耗') {
         goods_id = '123456789'
     } else if(promotion_name == '预算消耗') {
@@ -4570,19 +4567,28 @@ const importGhyxpromotioninfo = async (rows, time, promotion_name) => {
             amount,0,amount,0,0,
             0,0,0
         )
+        data3.push(
+            goods_id,null,promotion_name,
+            shop_name,17931539,date,0,0,
+            0,0,0,0,0,0,0-amount,amount,
+            amount,0,0,0)
         count += 1
     }
     logger.info(`[国货严选推广数据导入]：时间:${date}, 总计数量:${count}`)
 
     if (count > 0) {
         await goodsPromotionRepo.deleteByDate(date, promotion_name)
-        result1 = await goodsPromotionRepo.batchInsert(count, data)
+        result = await goodsPromotionRepo.batchInsert(count, data)
         await goodsSaleInfoRepo.deleteByDateId(date,goods_id)
-        result = await goodsSaleInfoRepo.batchInsert(count,data1)
+        result1 = await goodsSaleInfoRepo.batchInsert(count,data1)
         await goodsSaleVerifiedRepo.deleteByDateId(date,goods_id)
         result2 = await goodsSaleVerifiedRepo.batchInsert(count,data2)
+        await goodsPayInfoRepo.deleteByDateId(date,goods_id)
+        result3 = await goodsPayInfoRepo.batchInsert(count,data3)
     }
-    
+    await batchInsertGoodsSales(date)
+    await batchInsertGoodsPays(date)
+    await batchInsertGoodsVerifieds(date)
     return result
 }
 
