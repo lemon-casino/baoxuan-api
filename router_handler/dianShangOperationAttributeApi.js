@@ -342,7 +342,8 @@ const uploadtmTable = async (req, res, next) => {
             '产品设计属性':'productDesignAttr',
             '品牌':'brand',
             '产品线管理人':'lineManager',
-            '款式编码(参考)':'code'
+            '款式编码(参考)':'code',
+            '是否比价链接':'IsPriceComparison'
 
         };
 

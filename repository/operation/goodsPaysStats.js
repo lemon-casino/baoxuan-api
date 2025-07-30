@@ -84,7 +84,7 @@ goodsPaysStats.batchInsert = async (date) => {
 
 goodsPaysStats.batchInsertJD = async (date,shop_name) => {
     let sqls = [], params = []
-    sqls.push(`DELETE FROM goods_pays_stats WHERE \`date\` = ? AND shop_name = ?' `)
+    sqls.push(`DELETE FROM goods_pays_stats WHERE \`date\` = ? AND shop_name = ? `)
     params.push([date,shop_name])
     let sql = `SELECT a1.goods_id, a1.shop_name, a1.shop_id, a1.date, a1.sale_qty, a1.sale_amount, 
 	        a1.cost_amount, a1.express_fee, a1.packing_fee, a2.labor_cost, a1.promotion_amount, 
