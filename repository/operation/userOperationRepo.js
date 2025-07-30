@@ -238,7 +238,7 @@ userOperationRepo.getPermissionLimit = async (user_id) => {
 }
 
 userOperationRepo.getLinkIdsByUserNames = async (userNames, shopNames) => {
-    let sql = `SELECT goods_id FROM dianshang_operation_attribute 
+    let sql = `SELECT IFNULL(brief_name, goods_id) AS goods_id FROM dianshang_operation_attribute 
         WHERE operator IN ("${userNames}")`
     if (shopNames?.length) sql = `${sql} AND shop_name IN ("${shopNames}")`
     const result = await query(sql)
