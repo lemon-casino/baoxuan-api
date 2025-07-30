@@ -452,6 +452,15 @@ module.exports = sequelize => {
             autoIncrement: false,
             comment: "产品线管理人",
             field: "line_manager"
+        },
+        IsPriceComparison: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: '否',
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "是否比价链接",
+            field: "is_price_comparison"
         }
     };
     const options = {
