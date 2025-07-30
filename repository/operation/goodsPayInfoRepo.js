@@ -1,6 +1,5 @@
 const { query } = require('../../model/dbConn')
 const moment = require('moment')
-
 const goodsPayInfoRepo = {}
 
 goodsPayInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) => {
@@ -1511,6 +1510,13 @@ goodsPayInfoRepo.getDataGrossProfitByTime = async(goods_id, start, end) => {
         moment(end).subtract(1, 'day').format('YYYY-MM-DD'),
         goods_id])
     return result || []
+}
+
+goodsPayInfoRepo.deleteByDateId = async (date, goods_id) => {
+    let sql = `DELETE FROM goods_pay_info WHERE \`date\` = ? 
+        AND goods_id = ?`
+    const result = await query(sql, [date, goods_id])
+    return result?.affectedRows ? true : false
 }
 
 goodsPayInfoRepo.batchInsert = async (count, data) => {

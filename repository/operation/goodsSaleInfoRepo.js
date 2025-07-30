@@ -1,7 +1,6 @@
 const { query } = require('../../model/dbConn')
 const moment = require('moment')
 const goodsSaleInfoRepo = {}
-
 goodsSaleInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) => {
     const sql = `SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, 
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
@@ -2995,7 +2994,6 @@ goodsSaleInfoRepo.getSaleData = async(lstart,lend,preStart,preEnd,value,name) =>
 }
 
 goodsSaleInfoRepo.getInventoryData = async(type) => {
-    console.log(type)
     let sql =`SELECT sum(num*cost_price) as Current_inventory_cost
 			,SUM(total_num*cost_price) as total_inventory_cost
 			,ROUND(SUM(num)/(SUM(day7_sale_qty)/7),0) as stock_sale7
