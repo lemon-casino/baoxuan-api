@@ -17,7 +17,9 @@ goodsPaysRepo.batchInsert = async (date) => {
             IFNULL(SUM(refund_qty), 0) AS refund_qty, 
             IFNULL(SUM(sale_qty), 0) AS sale_qty, 
             IFNULL(SUM(express_fee), 0) AS express_fee, 
-            IFNULL(SUM(packing_fee), 0) AS packing_fee 
+            IFNULL(SUM(packing_fee), 0) AS packing_fee, 
+            IFNULL(SUM(order_num), 0) AS order_num, 
+            IFNULL(SUM(refund_num), 0) AS refund_num  
         FROM goods_pay_info WHERE \`date\` = ? AND shop_name !='京东自营-厨具' AND shop_name !='京东自营-日用'
         GROUP BY goods_id, shop_name, shop_id, \`date\``
     let rows = await query(sql, [date])
@@ -26,9 +28,9 @@ goodsPaysRepo.batchInsert = async (date) => {
     sql = `INSERT INTO goods_pays(goods_id, shop_name, shop_id, \`date\`, pay_amount, 
         brushing_amount, brushing_qty, refund_amount, bill_amount, sale_amount, 
         cost_amount, gross_profit, profit, promotion_amount, operation_amount, 
-        refund_qty, sale_qty, express_fee, packing_fee) VALUES`
+        refund_qty, sale_qty, express_fee, packing_fee, order_num, refund_num) VALUES`
     for (let i = 0; i < rows.length; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
         data.push(
             rows[i].goods_id, 
             rows[i].shop_name,
@@ -48,7 +50,9 @@ goodsPaysRepo.batchInsert = async (date) => {
             rows[i].refund_qty, 
             rows[i].sale_qty, 
             rows[i].express_fee, 
-            rows[i].packing_fee)
+            rows[i].packing_fee, 
+            rows[i].order_num, 
+            rows[i].refund_num)
     }
     sql = sql.substring(0, sql.length - 1)
     sqls = [

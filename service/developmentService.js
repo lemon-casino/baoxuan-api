@@ -3928,4 +3928,605 @@ developmentService.getfirstInfo = async(type,first,second,third) =>{
     let result = await goodsSalesRepo.getfirstInfo(type,first,second,third)
     return result
 }
+
+developmentService.getProcessInfo = async (params) => {
+    let start = moment(params.start).format('YYYY-MM-DD')
+    let end = moment(params.end).format('YYYY-MM-DD') + ' 23:59:59'
+    let typeList = [], data, result = [], tmp = {}
+    switch (params.type) {
+        case '0':
+            typeList = [
+                'total', 'choose', 'reject', 'select', 
+                'ip_review', 'ip_design', 'sample', 'preorder',
+                'order', 'purchase_order', 'pre_vision', 'vision_running', 
+                'vision_completed', 'plan_running', 'plan_completed'
+            ]
+            data = await actHiProcinstRepo.getProcessNodeCount(typeList, start, end)
+            for (let i = 0; i < typeList.length; i++) {
+                tmp[typeList[i]] = 0
+            }
+            result.push(tmp)
+            for (let i = 0; i < data.length; i++) {
+                result[0][data[i].type] += data[i].count
+            }
+            for (let i = 0; i < result.length; i++) {
+                result[i]['purchase'] = 0
+                result[i]['warehouse'] = 0
+                result[i]['shelfing'] = 0
+                result[i]['shelf'] = 0
+                let skuids = '', skuMap = {}, infoMap = {}, infoMap1 = {}, infoMap2 = {}, infoMap3 = {}
+                let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end)
+                for (let j = 0; j < info.length; j++) {
+                    if (info[j].info) {
+                        let content = new ObjectInputStream(info[j].info), skuids = ''
+                        content = content.readObject()
+                        content?.annotations.splice(0, 1)
+                        content = content?.annotations
+                        skuMap[info[j].id] = ''
+                        for (let j = 0; j < content?.length; j++) {
+                            for (let k = 0; k < content[j].annotations.length; k++) {
+                                if (['Fxx1ma3pg5efdec', 'F1ujma2exiosbcc', 'Fssama252xmjbzc']
+                                    .includes(content[j].annotations[k])) {
+                                    skuids = `${skuids}${content[j].annotations[k+1]}","`
+                                    skuMap[content[j].annotations[k+1]] = info[j].id
+                                }
+                            }
+                        }
+                    }
+                }
+                if (skuids?.length) {
+                    skuids = skuids.substring(0, skuids.length - 3)
+                    let purchase = await purchaseRepo.getOrderingBySkuCode(skuids)
+                    for (let j = 0; j < purchase.length; j++) {
+                        if (!infoMap[skuMap[purchase[j].sku_id]]) {
+                            result[i]['purchase'] += 1
+                            infoMap[skuMap[purchase[j].sku_id]] = true
+                        }
+                    }
+                    let warehouse = await purchaseRepo.getBySkuCode(skuids)
+                    let skuids1 = ''
+                    for (let j = 0; j < warehouse.length; j++) {
+                        if (!infoMap1[skuMap[warehouse[j].sku_code]]) {
+                            result[i]['warehouse'] += 1
+                            infoMap1[skuMap[warehouse[j].sku_code]] = true
+                        }
+                        skuids1 = `${skuids1}${warehouse[j].sku_code}","`
+                    }
+                    let shelf = await goodsSkuRepo.getBySysSkuId(skuids)
+                    for (let j = 0; j < shelf.length; j++) {
+                        if (!infoMap2[skuMap[shelf[j].sku_code]]) {
+                            result[i]['shelf'] += 1
+                            infoMap2[skuMap[shelf[j].sku_code]] = true
+                        }
+                    }
+                    if (skuids1?.length) {
+                        skuids1 = skuids1.substring(0, skuids1.length - 2)
+                        let shelfing = await purchaseRepo.getShelfingBySkuCode(skuids1)
+                        for (let j = 0; j < shelfing.length; j++) {
+                        if (!infoMap3[skuMap[shelfing[j].sku_code]]) {
+                            result[i]['shelfing'] += 1
+                            infoMap3[skuMap[shelfing[j].sku_code]] = true
+                        }
+                    }
+                    }
+                }
+            }
+            break
+        case '1':
+            typeList = [
+                'choose', 'pre_vision', 'vision_running', 
+                'vision_completed'
+            ]
+            data = await actHiProcinstRepo.getProcessNodeCount(typeList, start, end)
+            for (let i = 0; i < typeList.length; i++) {
+                tmp[typeList[i]] = 0
+            }
+            result.push(tmp)
+            for (let i = 0; i < data.length; i++) {
+                result[0][data[i].type] += data[i].count
+            }
+            break
+        case '2':
+            typeList = [
+                'preorder', 'order', 'purchase_order'
+            ]
+            data = await actHiProcinstRepo.getProcessNodeCount(typeList, start, end)
+            for (let i = 0; i < typeList.length; i++) {
+                tmp[typeList[i]] = 0
+            }
+            result.push(tmp)
+            for (let i = 0; i < data.length; i++) {
+                result[0][data[i].type] += data[i].count
+            }
+            for (let i = 0; i < result.length; i++) {
+                result[i]['purchase'] = 0
+                result[i]['warehouse'] = 0
+                result[i]['shelfing'] = 0
+                result[i]['shelf'] = 0
+                let skuids = '', skuMap = {}, infoMap = {}, infoMap1 = {}, infoMap2 = {}, infoMap3 = {}
+                let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end)
+                for (let j = 0; j < info.length; j++) {
+                    if (info[j].info) {
+                        let content = new ObjectInputStream(info[j].info), skuids = ''
+                        content = content.readObject()
+                        content?.annotations.splice(0, 1)
+                        content = content?.annotations
+                        skuMap[info[j].id] = ''
+                        for (let j = 0; j < content?.length; j++) {
+                            for (let k = 0; k < content[j].annotations.length; k++) {
+                                if (['Fxx1ma3pg5efdec', 'F1ujma2exiosbcc', 'Fssama252xmjbzc']
+                                    .includes(content[j].annotations[k])) {
+                                    skuids = `${skuids}${content[j].annotations[k+1]}","`
+                                    skuMap[content[j].annotations[k+1]] = info[j].id
+                                }
+                            }
+                        }
+                    }
+                }
+                if (skuids?.length) {
+                    skuids = skuids.substring(0, skuids.length - 3)
+                    let purchase = await purchaseRepo.getOrderingBySkuCode(skuids)
+                    for (let j = 0; j < purchase.length; j++) {
+                        if (!infoMap[skuMap[purchase[j].sku_id]]) {
+                            result[i]['purchase'] += 1
+                            infoMap[skuMap[purchase[j].sku_id]] = true
+                        }
+                    }
+                    let warehouse = await purchaseRepo.getBySkuCode(skuids)
+                    let skuids1 = ''
+                    for (let j = 0; j < warehouse.length; j++) {
+                        if (!infoMap1[skuMap[warehouse[j].sku_code]]) {
+                            result[i]['warehouse'] += 1
+                            infoMap1[skuMap[warehouse[j].sku_code]] = true
+                        }
+                        skuids1 = `${skuids1}${warehouse[j].sku_code}","`
+                    }
+                    let shelf = await goodsSkuRepo.getBySysSkuId(skuids)
+                    for (let j = 0; j < shelf.length; j++) {
+                        if (!infoMap2[skuMap[shelf[j].sku_code]]) {
+                            result[i]['shelf'] += 1
+                            infoMap2[skuMap[shelf[j].sku_code]] = true
+                        }
+                    }
+                    if (skuids1?.length) {
+                        skuids1 = skuids1.substring(0, skuids1.length - 2)
+                        let shelfing = await purchaseRepo.getShelfingBySkuCode(skuids1)
+                        for (let j = 0; j < shelfing.length; j++) {
+                        if (!infoMap3[skuMap[shelfing[j].sku_code]]) {
+                            result[i]['shelfing'] += 1
+                            infoMap3[skuMap[shelfing[j].sku_code]] = true
+                        }
+                    }
+                    }
+                }
+            }
+            break
+        case '3':
+            typeList = [
+                'total', 'choose', 'reject', 'select', 
+                'ip_review', 'ip_design', 'sample', 'preorder',
+                'order', 'purchase_order', 'pre_vision', 'vision_running', 
+                'vision_completed', 'plan_running', 'plan_completed'
+            ]
+            data = await actHiProcinstRepo.getProcessNodeCount(typeList, start, end)
+            for (let i = 0; i < typeList.length; i++) {
+                tmp[typeList[i]] = 0
+            }
+            let infoType, infoMap = {}
+            if (params.infoType == 0) {
+                tmp['developer'] = ''
+                infoType = 'developer'
+            } else if (params.infoType == 1) {
+                tmp['division'] = ''
+                infoType = 'division'
+            } else if (params.infoType == 2) {
+                tmp['develop_type'] = ''
+                infoType = 'develop_type'
+            }
+            for (let i = 0; i < data.length; i++) {
+                if (infoMap[data[i][infoType]] != undefined) {
+                    result[infoMap[data[i][infoType]]][data[i].type] += data[i].count
+                } else {
+                    infoMap[data[i][infoType]] = result.length
+                    result.push(JSON.parse(JSON.stringify(tmp)))
+                     result[result.length-1][infoType] = data[i][infoType]
+                    result[result.length-1][data[i].type] += data[i].count
+                }
+            }
+            for (let i = 0; i < result.length; i++) {
+                result[i]['purchase'] = 0
+                result[i]['warehouse'] = 0
+                result[i]['shelfing'] = 0
+                result[i]['shelf'] = 0
+                let skuids = '', skuMap = {}, infoMap = {}, infoMap1 = {}, infoMap2 = {}, infoMap3 = {}
+                let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end)
+                for (let j = 0; j < info.length; j++) {
+                    if (info[j].info) {
+                        let content = new ObjectInputStream(info[j].info), skuids = ''
+                        content = content.readObject()
+                        content?.annotations.splice(0, 1)
+                        content = content?.annotations
+                        skuMap[info[j].id] = ''
+                        for (let j = 0; j < content?.length; j++) {
+                            for (let k = 0; k < content[j].annotations.length; k++) {
+                                if (['Fxx1ma3pg5efdec', 'F1ujma2exiosbcc', 'Fssama252xmjbzc']
+                                    .includes(content[j].annotations[k])) {
+                                    skuids = `${skuids}${content[j].annotations[k+1]}","`
+                                    skuMap[content[j].annotations[k+1]] = info[j].id
+                                }
+                            }
+                        }
+                    }
+                }
+                if (skuids?.length) {
+                    skuids = skuids.substring(0, skuids.length - 3)
+                    let purchase = await purchaseRepo.getOrderingBySkuCode(skuids)
+                    for (let j = 0; j < purchase.length; j++) {
+                        if (!infoMap[skuMap[purchase[j].sku_id]]) {
+                            result[i]['purchase'] += 1
+                            infoMap[skuMap[purchase[j].sku_id]] = true
+                        }
+                    }
+                    let warehouse = await purchaseRepo.getBySkuCode(skuids)
+                    let skuids1 = ''
+                    for (let j = 0; j < warehouse.length; j++) {
+                        if (!infoMap1[skuMap[warehouse[j].sku_code]]) {
+                            result[i]['warehouse'] += 1
+                            infoMap1[skuMap[warehouse[j].sku_code]] = true
+                        }
+                        skuids1 = `${skuids1}${warehouse[j].sku_code}","`
+                    }
+                    let shelf = await goodsSkuRepo.getBySysSkuId(skuids)
+                    for (let j = 0; j < shelf.length; j++) {
+                        if (!infoMap2[skuMap[shelf[j].sku_code]]) {
+                            result[i]['shelf'] += 1
+                            infoMap2[skuMap[shelf[j].sku_code]] = true
+                        }
+                    }
+                    if (skuids1?.length) {
+                        skuids1 = skuids1.substring(0, skuids1.length - 2)
+                        let shelfing = await purchaseRepo.getShelfingBySkuCode(skuids1)
+                        for (let j = 0; j < shelfing.length; j++) {
+                        if (!infoMap3[skuMap[shelfing[j].sku_code]]) {
+                            result[i]['shelfing'] += 1
+                            infoMap3[skuMap[shelfing[j].sku_code]] = true
+                        }
+                    }
+                    }
+                }
+            }
+            break
+        default:
+    }
+    return result
+}
+
+developmentService.getProcessDetail = async (params) => {
+    let result = [], type  
+    let start = moment(params.start).format('YYYY-MM-DD')
+    let end = moment(params.end).format('YYYY-MM-DD') + ' 23:59:59'
+    if (params.type == 'total') {
+        if (params.selectType) 
+            result = await actHiProcinstRepo.getProcessInfo(start, end, params.type, params.selectType, params.infoType)
+        else result = await actHiProcinstRepo.getProcessInfo(start, end)
+        type = 0
+    } else if (['choose', 'purchase', 'warehouse', 'shelfing', 'shelf', 'reject', 
+        'select', 'ip_review', 'ip_design', 'sample', 'preorder', 'order', 
+        'purchase_order', 'pre_vision'].includes(params.type)) {
+        if (params.selectType) 
+            result = await actHiProcinstRepo.getProcessInfo(start, end, params.type, params.selectType, params.infoType)
+        else result = await actHiProcinstRepo.getProcessInfo(start, end, params.type)
+        type = 0
+    } else if (['vision_running', 'vision_completed'].includes(params.type)) {
+        let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end, params.selectType, params.infoType)
+        let ids = ''
+        for (let i = 0; i < info.length; i++) {
+            ids = `${ids}${info[i].id}","`
+        }
+        if (ids?.length) {
+            ids = ids.substring(0, ids.length - 3)
+            result = await actHiProcinstRepo.getProcessInfo1(params.type, ids)
+        }
+        type = 1
+    } else if (['plan_running', 'plan_completed'].includes(params.type)) {
+        let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end, params.selectType, params.infoType)
+        let ids = ''
+        for (let i = 0; i < info.length; i++) {
+            ids = `${ids}${info[i].id}","`
+        }
+        if (ids?.length) {
+            ids = ids.substring(0, ids.length - 3)
+            result = await actHiProcinstRepo.getProcessInfo2(params.type, ids)
+        }
+        type = 2
+    }
+    if (type == 0) {
+        for (let i = 0; i < result.length; i++) {
+            if (['市场分析推品', 'IP推品', '自研推品'].includes(result[i].type)) {
+                switch (result[i].node) {
+                    case '分配设计执行人1': //立项到草图设计完成
+                    case '上传设计草图1':
+                    case '发起人审核设计草图1':
+                    case '审核设计草图1':
+                    case '立项审核分配开发执行人': 
+                    case '开发判断是否需要自主设计并填写相关信息':
+                    case '北京分配设计执行人':
+                    case '杭州分配设计执行人':
+                    case '北京上传设计草图':
+                    case '杭州上传设计草图':
+                    case '分配设计执行人':
+                    case '上传设计草图':
+                        result[i]['other_status'] = '立项到草图设计完成'
+                        break
+                    case '开发根据设计草图沟通工厂并更新产品信息1': //草图到定稿
+                    case '发起人审核产品信息1':
+                    case '审核产品信息1':
+                    case '填写周期及上传定稿图1':
+                    case '审核定稿图1':
+                    case '发起人审核设计草图':
+                    case '事业部1负责人审核草图':
+                    case '事业部3负责人审核草图':
+                    case '事业部2负责人审核草图':
+                    case '审核设计草图':
+                    case '事业部一负责人审核草图':
+                    case '事业部二负责人审核草图':
+                    case '事业部三负责人审核草图':
+                    case '崔总审核产品信息':
+                    case '填写周期及上传定稿图':
+                    case '审核定稿图':
+                        result[i]['other_status'] = '草图到定稿'
+                        break
+                    case '发起人审核产品信息':
+                        // 自研 草图到定稿
+                        if (result[i].type == '自研推品') result[i]['other_status'] = '草图到定稿'
+                        // IP 定稿到设计监修
+                        else result[i]['other_status'] = '定稿到设计监修'
+                        break
+                    case '发起人选择确认使用设计草图': //定稿到设计监修
+                    case '开发根据设计草图更新产品信息':
+                    case '确认报价':
+                    case '事业部1负责人审核产品信息':
+                    case '事业部3负责人审核产品信息':
+                    case '事业部2负责人审核产品信息':
+                    case '审核产品信息':
+                    case '增加完整产品设计并提供监修文件':
+                    case 'IP设计监修':
+                    case '设计监修通过并上传链图云':
+                        result[i]['other_status'] = '定稿到设计监修'
+                        break
+                    case '开发寄样2': //定稿到选中
+                    case '杭州确认样品2':
+                    case '发起人审核样品2':
+                    case '审核样品2':
+                    case '开发审核样品':
+                    case '事业部1负责人审核样品':
+                    case '事业部3负责人审核样品':
+                    case '事业部2负责人审核样品':
+                    case '设计审核样品':
+                    case '确认样品':
+                    case '开发寄样':
+                    case '杭州确认样品':
+                    case '发起人审核样品':
+                    case '崔总审核样品':
+                    case '建立聚水潭信息并填写商品编码':
+                    case '产品厂图+白膜信息上传网盘在线链接':
+                    case '事业部一是否订货':
+                    case '事业部二是否订货':
+                    case '事业部三是否订货':
+                        result[i]['other_status'] = '定稿到选中'
+                        break
+                    case '开发工厂打样起始时间2': //工厂打样
+                    case '工厂打样':
+                    case '开发工厂打样起始时间':
+                        result[i]['other_status'] = '工厂打样'
+                        break
+                    case '设计报样品IP监修': //样品监修
+                        result[i]['other_status'] = '样品监修'
+                        break
+                    case '设计报大货设计监修': //大货监修
+                        result[i]['other_status'] = '大货监修'
+                        break
+                    case '开始视觉并视觉监修': //视觉监修
+                        result[i]['other_status'] = '视觉监修'
+                        break
+                }
+            }
+            result[i].link = 'http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=' + result[i].id
+            switch (result[i].process_status) {
+                case -1:
+                    result[i].process_status = '未开始'
+                    break
+                case 1:
+                    result[i].process_status = '审批中'
+                    break
+                case 2:
+                    result[i].process_status = '审批通过'
+                    break
+                case 3:
+                    result[i].process_status = '审批不通过'
+                    break
+                case 4:
+                    result[i].process_status = '已取消'
+                    break
+            }
+            if (result[i].due_start) {
+                result[i].duration = moment().diff(moment(result[i].due_start), 'd')
+            }
+            if (result[i].end_time) {
+                result[i].total_duration = moment(result[i].end_time).diff(moment(result[i].start_time), 'd')
+            }
+            if (result[i].info1 && (result[i].image == null || result[i].image == '2')) {
+                let content = new ObjectInputStream(result[i].info1)
+                content = content.readObject()
+                content?.annotations.splice(0, 1)
+                content = content?.annotations
+                for (let j = 0; j < content?.length; j++) {
+                    result[i].image = content[j]
+                }
+            }
+            if (result[i].info) {
+                result[i]['pre_purchase_num'] = 0
+                result[i]['first_purchase'] = '否'
+                result[i]['second_purchase'] = '否'
+                result[i]['third_purchase'] = '否'
+                let content = new ObjectInputStream(result[i].info), skuids = '', 
+                    first_purchase = 0, second_purchase = 0, third_purchase = 0
+                content = content.readObject()
+                content?.annotations.splice(0, 1)
+                content = content?.annotations
+                for (let j = 0; j < content?.length; j++) {
+                    for (let k = 0; k < content[j].annotations.length; k++) {
+                        if (['F5t4ma3ptwn0ftc', 'Fbogma3jgfn4gfc', 'Fi0sma263vtqhkc']
+                            .includes(content[j].annotations[k])) {                            
+                            result[i].pre_purchase_num += parseInt(content[j].annotations[k+1])
+                            first_purchase += parseInt(content[j].annotations[k+1])
+                        }
+                        if (['Frhbma3pulstg5c', 'Fwmjmakutsrdisc', 'Fj3tma2643p9hqc']
+                            .includes(content[j].annotations[k])) {                            
+                            result[i].pre_purchase_num += parseInt(content[j].annotations[k+1])
+                            second_purchase += parseInt(content[j].annotations[k+1])
+                        }
+                        if (['Ffmgma3pv8zxgkc', 'Fkpmmakutu40ivc', 'Fo95ma264bhphxc']
+                            .includes(content[j].annotations[k])) {                            
+                            result[i].pre_purchase_num += parseInt(content[j].annotations[k+1])
+                            third_purchase += parseInt(content[j].annotations[k+1])
+                        }
+                        if (['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
+                            .includes(content[j].annotations[k])) {
+                            skuids = `${skuids}${content[j].annotations[k+1]}","`
+                        }
+                    }
+                }
+                if (first_purchase) result[i]['first_purchase'] = '是'
+                if (second_purchase) result[i]['second_purchase'] = '是'
+                if (third_purchase) result[i]['third_purchase'] = '是'
+                if (skuids?.length) {
+                    skuids = skuids.substring(0, skuids.length - 3)
+                    result[i]['is_purchase'] = '否'
+                    result[i]['is_warehouse'] = '否'
+                    let purchase = await purchaseRepo.getOrderBySkuCode(skuids)
+                    if (purchase?.length) result[i]['is_purchase'] = '是'
+                    let warehouse = await purchaseRepo.getBySkuCode(skuids)
+                    if (warehouse?.length) result[i]['is_warehouse'] = '是'
+                    result[i]['first_shelf'] = '否'
+                    let shelf1 = await goodsSkuRepo.getBySysSkuId(skuids)
+                    if (shelf1?.length) result[i]['first_shelf'] = '是'
+                    result[i]['second_shelf'] = '否'
+                    let shelf2 = await goodsSkuRepo.getBySysSkuId(skuids)
+                    if (shelf2?.length) result[i]['second_shelf'] = '是'
+                    result[i]['third_shelf'] = '否'
+                    let shelf3 = await goodsSkuRepo.getBySysSkuId(skuids)
+                    if (shelf3?.length) result[i]['third_shelf'] = '是'
+                }
+            }
+            if (result[i].first_time && result[i].dept == '事业一部') {
+                let info = await actHiProcinstRepo.getFirstSelect1(result[i].id)
+                if (info?.length) {
+                    let flag = 0
+                    for (let j = 0; j < info.length; j++) {
+                        if (['是', '选中'].includes(info[j]['val']) && 
+                            !['F6c5mbuidfzfqjc', 'Fxfrma3j75fse7c'].includes(info[j]['k'])) {
+                            flag = 1
+                            break
+                        }
+                    }
+                    if (flag) result[i]['first_select'] = '选中'
+                    else result[i]['first_select'] = '未选中'
+                }
+            } else if (result[i].first_time) {
+                let info = await actHiProcinstRepo.getFirstSelect(result[i].id)
+                if (info?.length) {
+                    let flag = 0
+                    for (let j = 0; j < info.length; j++) {
+                        if (['是', '选中'].includes(info[j]['val']) && 
+                            !['F6c5mbuidfzfqjc'].includes(info[j]['k'])) {
+                            flag = 1
+                            break
+                        }
+                    }
+                    if (flag) result[i]['first_select'] = '选中'
+                    else result[i]['first_select'] = '未选中'
+                }
+            }
+            if (result[i].second_time && result[i].dept == '事业二部') {
+                let info = await actHiProcinstRepo.getSecondSelect1(result[i].id)
+                if (info?.length) {
+                    let flag = 0
+                    for (let j = 0; j < info.length; j++) {
+                        if (['是', '选中'].includes(info[j]['val']) && 
+                            !['F64jmbuie9olqmc', 'Fxfrma3j75fse7c'].includes(info[j]['k'])) {
+                            flag = 1
+                            break
+                        }
+                    }
+                    if (flag) result[i]['second_select'] = '选中'
+                    else result[i]['second_select'] = '未选中'
+                }
+            } else if (result[i].second_time) {
+                let info = await actHiProcinstRepo.getSecondSelect(result[i].id)
+                if (info?.length) {
+                    let flag = 0
+                    for (let j = 0; j < info.length; j++) {
+                        if (['是', '选中'].includes(info[j]['val']) && 
+                            !['F64jmbuie9olqmc'].includes(info[j]['k'])) {
+                            flag = 1
+                            break
+                        }
+                    }
+                    if (flag) result[i]['second_select'] = '选中'
+                    else result[i]['second_select'] = '未选中'
+                }
+            }
+            if (result[i].third_time && result[i].dept == '事业三部') {
+                let info = await actHiProcinstRepo.getThirdSelect1(result[i].id)
+                if (info?.length) {
+                    let flag = 0
+                    for (let j = 0; j < info.length; j++) {
+                        if (['是', '选中'].includes(info[j]['val']) && 
+                            !['Fxkxmbuiecz2qpc', 'Fxfrma3j75fse7c'].includes(info[j]['k'])) {
+                            flag = 1
+                            break
+                        }
+                    }
+                    if (flag) result[i]['third_select'] = '选中'
+                    else result[i]['third_select'] = '未选中'
+                }
+            } else if (result[i].third_time) {
+                let info = await actHiProcinstRepo.getThirdSelect(result[i].id)
+                if (info?.length) {
+                    let flag = 0
+                    for (let j = 0; j < info.length; j++) {
+                        if (['是', '选中'].includes(info[j]['val']) && 
+                            !['Fxkxmbuiecz2qpc'].includes(info[j]['k'])) {
+                            flag = 1
+                            break
+                        }
+                    }
+                    if (flag) result[i]['third_select'] = '选中'
+                    else result[i]['third_select'] = '未选中'
+                }
+            }
+        }
+    } else if (type == 1 || type == 2) {
+        for (let i = 0; i < result.length; i++) {
+            if (result[i].info1 && (result[i].image == null || result[i].image == '2')) {
+                let content = new ObjectInputStream(result[i].info1)
+                content = content.readObject()
+                content?.annotations.splice(0, 1)
+                content = content?.annotations
+                for (let j = 0; j < content?.length; j++) {
+                    result[i].image = content[j]
+                }
+            }
+            if (result[i].node) {
+                result[i]['duration'] = moment().diff(moment(result[i].due_start), 'd')
+            }
+            if (result[i].end_time) {
+                result[i]['total_duration'] = moment(result[i].end_time).diff(moment(result[i].start_time), 'd')
+            }
+        }
+    }
+    return result
+}
+
 module.exports = developmentService

@@ -524,6 +524,24 @@ const getfirstInfo = async (req, res, next) => {
     }
 }
 
+const getProcessInfo = async (req, res, next) => {
+    try {
+        let result = await developmentService.getProcessInfo(req.query)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getProcessDetail = async (req, res, next) => {
+    try {
+        let result = await developmentService.getProcessDetail(req.query)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getWorkPannel, 
     getWorkDetail,
@@ -553,5 +571,7 @@ module.exports = {
     getShippingAttribute,
     getsputags,
     getfirst,
-    getfirstInfo
+    getfirstInfo,
+    getProcessInfo,
+    getProcessDetail
 }

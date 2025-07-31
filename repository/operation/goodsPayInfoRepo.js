@@ -325,8 +325,8 @@ goodsPayInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         } else if (params.search[i].field_id == 'refund_rate') {
             subsql = `${subsql} AND a1.goods_id IS NOT NULL AND EXISTS(
                     SELECT * FROM (
-                        SELECT IFNULL(SUM(a2.sale_qty), 0) AS order_num, 
-                            IFNULL(SUM(a2.refund_qty), 0) AS refund_num FROM goods_pays a2 
+                        SELECT IFNULL(SUM(a2.order_num), 0) AS order_num, 
+                            IFNULL(SUM(a2.refund_num), 0) AS refund_num FROM goods_pays a2 
                         WHERE a2.date BETWEEN ? AND ? AND a1.goods_id = a2.goods_id 
                     ) b WHERE b.refund_num * 100 >= ${params.search[i].min} * b.order_num
                         AND b.refund_num * 100 <= ${params.search[i].max} * b.order_num)`
@@ -900,8 +900,8 @@ goodsPayInfoRepo.getPromotionData = async (start, end, params, shopNames, linkId
         } else if (params.search[i].field_id == 'refund_rate') {
             subsql = `${subsql} AND a1.goods_id IS NOT NULL AND EXISTS(
                     SELECT * FROM (
-                        SELECT IFNULL(SUM(a2.sale_qty), 0) AS order_num, 
-                            IFNULL(SUM(a2.refund_qty), 0) AS refund_num FROM goods_pays a2 
+                        SELECT IFNULL(SUM(a2.order_num), 0) AS order_num, 
+                            IFNULL(SUM(a2.refund_num), 0) AS refund_num FROM goods_pays a2 
                         WHERE a2.date BETWEEN ? AND ? AND a1.goods_id = a2.goods_id 
                     ) b WHERE b.refund_num * 100 >= ${params.search[i].min} * b.order_num
                         AND b.refund_num * 100 <= ${params.search[i].max} * b.order_num)`
