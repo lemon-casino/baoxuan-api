@@ -3014,9 +3014,9 @@ goodsSaleInfoRepo.getInventoryCostData = async(start,end,days) => {
         SELECT SUM(cost) AS cost , SUM(cost)/${days} AS cost_avg,SUM(sale) AS sale FROM(
                 SELECT SUM(\`利润-销售成本(扣退)\`)AS cost,SUM(\`利润-销售金额(扣退)\`) AS sale FROM danpin.sku_code_sale WHERE 日期 BETWEEN ? AND ?
                 UNION ALL
-                SELECT SUM(总成本),SUM(京仓发货金额) AS cost FROM danpin.jb_ziying WHERE 时间 BETWEEN ? AND ?
+                SELECT SUM(总成本),SUM(成交金额) AS cost FROM danpin.jb_ziying WHERE 时间 BETWEEN ? AND ?
                 UNION ALL
-                SELECT SUM(总成本),SUM(京仓发货金额) AS cost FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN ? AND ?
+                SELECT SUM(总成本),SUM(成交金额) AS cost FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN ? AND ?
         ) AS a`
     let result = await query(sql,[start,end,start,end,start,end])
     return result
@@ -3030,10 +3030,10 @@ goodsSaleInfoRepo.getInventorysaleqtyData = async(start,end) => {
                 SELECT IFNULL(c.商品编码,a.编码) AS '商品编码'
                     ,IF(c.数量 IS NOT NULL,a.发货商品件数*c.数量,a.发货商品件数) AS '发货商品件数' 
                 FROM (
-                    SELECT 编码,京仓发货金额,发货商品件数 FROM  danpin.jb_ziying 
+                    SELECT 编码,成交金额,发货商品件数 FROM  danpin.jb_ziying 
                     WHERE 时间 BETWEEN ? AND ?
                     UNION ALL
-                    SELECT 编码,京仓发货金额,发货商品件数 FROM  danpin.jb_ziying_everday
+                    SELECT 编码,成交金额,发货商品件数 FROM  danpin.jb_ziying_everday
                     WHERE 时间 BETWEEN ? AND ?
                 ) AS a
                 LEFT JOIN(
@@ -3086,23 +3086,23 @@ goodsSaleInfoRepo.getDivisionSaleData = async() => {
             UNION ALL
             SELECT '2025' AS year
                 ,'京东自营-厨具' AS shop_name
-                ,SUM(IF(MONTH(时间)=1,京仓发货金额,0)) AS one
-                ,SUM(IF(MONTH(时间)=2,京仓发货金额,0)) AS two
-                ,SUM(IF(MONTH(时间)=3,京仓发货金额,0)) AS three
-                ,SUM(IF(MONTH(时间)=4,京仓发货金额,0)) AS four
-                ,SUM(IF(MONTH(时间)=5,京仓发货金额,0)) AS five
-                ,SUM(IF(MONTH(时间)=6,京仓发货金额,0)) AS six
-                ,SUM(IF(MONTH(时间)=7,京仓发货金额,0)) AS seven
-                ,SUM(IF(MONTH(时间)=8,京仓发货金额,0)) AS eight
-                ,SUM(IF(MONTH(时间)=9,京仓发货金额,0)) AS nine
-                ,SUM(IF(MONTH(时间)=10,京仓发货金额,0)) AS ten
-                ,SUM(IF(MONTH(时间)=11,京仓发货金额,0)) AS eleven
-                ,SUM(IF(MONTH(时间)=12,京仓发货金额,0)) AS twelve
-                ,SUM(京仓发货金额) AS sum
+                ,SUM(IF(MONTH(时间)=1,成交金额,0)) AS one
+                ,SUM(IF(MONTH(时间)=2,成交金额,0)) AS two
+                ,SUM(IF(MONTH(时间)=3,成交金额,0)) AS three
+                ,SUM(IF(MONTH(时间)=4,成交金额,0)) AS four
+                ,SUM(IF(MONTH(时间)=5,成交金额,0)) AS five
+                ,SUM(IF(MONTH(时间)=6,成交金额,0)) AS six
+                ,SUM(IF(MONTH(时间)=7,成交金额,0)) AS seven
+                ,SUM(IF(MONTH(时间)=8,成交金额,0)) AS eight
+                ,SUM(IF(MONTH(时间)=9,成交金额,0)) AS nine
+                ,SUM(IF(MONTH(时间)=10,成交金额,0)) AS ten
+                ,SUM(IF(MONTH(时间)=11,成交金额,0)) AS eleven
+                ,SUM(IF(MONTH(时间)=12,成交金额,0)) AS twelve
+                ,SUM(成交金额) AS sum
             FROM (
-                SELECT 时间,京仓发货金额 FROM danpin.jb_ziying WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                SELECT 时间,成交金额 FROM danpin.jb_ziying WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
                 UNION ALL 
-                SELECT 时间,京仓发货金额 FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                SELECT 时间,成交金额 FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
             ) AS a)
             SELECT a.year,b.事业部 AS division,ROUND(SUM(one)/10000,1) AS one,ROUND(SUM(two)/10000,1) AS two,ROUND(SUM(three)/10000,1) AS three
                 ,ROUND(SUM(four)/10000,1) AS four,ROUND(SUM(five)/10000,1) AS five,ROUND(SUM(six)/10000,1) AS six,ROUND(SUM(seven)/10000,1) AS seven
@@ -3168,23 +3168,23 @@ goodsSaleInfoRepo.getProjectSaleData = async() => {
             UNION ALL
             SELECT '2025' AS year
                 ,'京东自营-厨具' AS shop_name
-                ,SUM(IF(MONTH(时间)=1,京仓发货金额,0)) AS one
-                ,SUM(IF(MONTH(时间)=2,京仓发货金额,0)) AS two
-                ,SUM(IF(MONTH(时间)=3,京仓发货金额,0)) AS three
-                ,SUM(IF(MONTH(时间)=4,京仓发货金额,0)) AS four
-                ,SUM(IF(MONTH(时间)=5,京仓发货金额,0)) AS five
-                ,SUM(IF(MONTH(时间)=6,京仓发货金额,0)) AS six
-                ,SUM(IF(MONTH(时间)=7,京仓发货金额,0)) AS seven
-                ,SUM(IF(MONTH(时间)=8,京仓发货金额,0)) AS eight
-                ,SUM(IF(MONTH(时间)=9,京仓发货金额,0)) AS nine
-                ,SUM(IF(MONTH(时间)=10,京仓发货金额,0)) AS ten
-                ,SUM(IF(MONTH(时间)=11,京仓发货金额,0)) AS eleven
-                ,SUM(IF(MONTH(时间)=12,京仓发货金额,0)) AS twelve
-                ,SUM(京仓发货金额) AS sum
+                ,SUM(IF(MONTH(时间)=1,成交金额,0)) AS one
+                ,SUM(IF(MONTH(时间)=2,成交金额,0)) AS two
+                ,SUM(IF(MONTH(时间)=3,成交金额,0)) AS three
+                ,SUM(IF(MONTH(时间)=4,成交金额,0)) AS four
+                ,SUM(IF(MONTH(时间)=5,成交金额,0)) AS five
+                ,SUM(IF(MONTH(时间)=6,成交金额,0)) AS six
+                ,SUM(IF(MONTH(时间)=7,成交金额,0)) AS seven
+                ,SUM(IF(MONTH(时间)=8,成交金额,0)) AS eight
+                ,SUM(IF(MONTH(时间)=9,成交金额,0)) AS nine
+                ,SUM(IF(MONTH(时间)=10,成交金额,0)) AS ten
+                ,SUM(IF(MONTH(时间)=11,成交金额,0)) AS eleven
+                ,SUM(IF(MONTH(时间)=12,成交金额,0)) AS twelve
+                ,SUM(成交金额) AS sum
             FROM (
-                SELECT 时间,京仓发货金额 FROM danpin.jb_ziying WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                SELECT 时间,成交金额 FROM danpin.jb_ziying WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
                 UNION ALL 
-                SELECT 时间,京仓发货金额 FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                SELECT 时间,成交金额 FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
             ) AS a)
             SELECT a.year,b.销售平台 AS project,ROUND(SUM(one)/10000,1) AS one,ROUND(SUM(two)/10000,1) AS two,ROUND(SUM(three)/10000,1) AS three
                 ,ROUND(SUM(four)/10000,1) AS four,ROUND(SUM(five)/10000,1) AS five,ROUND(SUM(six)/10000,1) AS six,ROUND(SUM(seven)/10000,1) AS seven
@@ -3250,23 +3250,23 @@ goodsSaleInfoRepo.getShopSaleData = async() => {
             UNION ALL
             SELECT '2025' AS year
                 ,'京东自营-厨具' AS shop_name
-                ,SUM(IF(MONTH(时间)=1,京仓发货金额,0)) AS one
-                ,SUM(IF(MONTH(时间)=2,京仓发货金额,0)) AS two
-                ,SUM(IF(MONTH(时间)=3,京仓发货金额,0)) AS three
-                ,SUM(IF(MONTH(时间)=4,京仓发货金额,0)) AS four
-                ,SUM(IF(MONTH(时间)=5,京仓发货金额,0)) AS five
-                ,SUM(IF(MONTH(时间)=6,京仓发货金额,0)) AS six
-                ,SUM(IF(MONTH(时间)=7,京仓发货金额,0)) AS seven
-                ,SUM(IF(MONTH(时间)=8,京仓发货金额,0)) AS eight
-                ,SUM(IF(MONTH(时间)=9,京仓发货金额,0)) AS nine
-                ,SUM(IF(MONTH(时间)=10,京仓发货金额,0)) AS ten
-                ,SUM(IF(MONTH(时间)=11,京仓发货金额,0)) AS eleven
-                ,SUM(IF(MONTH(时间)=12,京仓发货金额,0)) AS twelve
-                ,SUM(京仓发货金额) AS sum
+                ,SUM(IF(MONTH(时间)=1,成交金额,0)) AS one
+                ,SUM(IF(MONTH(时间)=2,成交金额,0)) AS two
+                ,SUM(IF(MONTH(时间)=3,成交金额,0)) AS three
+                ,SUM(IF(MONTH(时间)=4,成交金额,0)) AS four
+                ,SUM(IF(MONTH(时间)=5,成交金额,0)) AS five
+                ,SUM(IF(MONTH(时间)=6,成交金额,0)) AS six
+                ,SUM(IF(MONTH(时间)=7,成交金额,0)) AS seven
+                ,SUM(IF(MONTH(时间)=8,成交金额,0)) AS eight
+                ,SUM(IF(MONTH(时间)=9,成交金额,0)) AS nine
+                ,SUM(IF(MONTH(时间)=10,成交金额,0)) AS ten
+                ,SUM(IF(MONTH(时间)=11,成交金额,0)) AS eleven
+                ,SUM(IF(MONTH(时间)=12,成交金额,0)) AS twelve
+                ,SUM(成交金额) AS sum
             FROM (
-                SELECT 时间,京仓发货金额 FROM danpin.jb_ziying WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                SELECT 时间,成交金额 FROM danpin.jb_ziying WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
                 UNION ALL 
-                SELECT 时间,京仓发货金额 FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                SELECT 时间,成交金额 FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
             ) AS a)
             SELECT * FROM t1
             UNION ALL 
@@ -3324,24 +3324,24 @@ goodsSaleInfoRepo.getDivisionSaleQtyData = async() => {
                 UNION ALL
                 SELECT '2025' AS year
                         ,'京东自营-厨具' AS shop_name
-                        ,SUM(IF(MONTH(时间)=1,发货商品件数,0)) AS one
-                        ,SUM(IF(MONTH(时间)=2,发货商品件数,0)) AS two
-                        ,SUM(IF(MONTH(时间)=3,发货商品件数,0)) AS three
-                        ,SUM(IF(MONTH(时间)=4,发货商品件数,0)) AS four
-                        ,SUM(IF(MONTH(时间)=5,发货商品件数,0)) AS five
-                        ,SUM(IF(MONTH(时间)=6,发货商品件数,0)) AS six
-                        ,SUM(IF(MONTH(时间)=7,发货商品件数,0)) AS seven
-                        ,SUM(IF(MONTH(时间)=8,发货商品件数,0)) AS eight
-                        ,SUM(IF(MONTH(时间)=9,发货商品件数,0)) AS nine
-                        ,SUM(IF(MONTH(时间)=10,发货商品件数,0)) AS ten
-                        ,SUM(IF(MONTH(时间)=11,发货商品件数,0)) AS eleven
-                        ,SUM(IF(MONTH(时间)=12,发货商品件数,0)) AS twelve
-                        ,SUM(发货商品件数) AS sum
+                        ,SUM(IF(MONTH(时间)=1,成交商品件数,0)) AS one
+                        ,SUM(IF(MONTH(时间)=2,成交商品件数,0)) AS two
+                        ,SUM(IF(MONTH(时间)=3,成交商品件数,0)) AS three
+                        ,SUM(IF(MONTH(时间)=4,成交商品件数,0)) AS four
+                        ,SUM(IF(MONTH(时间)=5,成交商品件数,0)) AS five
+                        ,SUM(IF(MONTH(时间)=6,成交商品件数,0)) AS six
+                        ,SUM(IF(MONTH(时间)=7,成交商品件数,0)) AS seven
+                        ,SUM(IF(MONTH(时间)=8,成交商品件数,0)) AS eight
+                        ,SUM(IF(MONTH(时间)=9,成交商品件数,0)) AS nine
+                        ,SUM(IF(MONTH(时间)=10,成交商品件数,0)) AS ten
+                        ,SUM(IF(MONTH(时间)=11,成交商品件数,0)) AS eleven
+                        ,SUM(IF(MONTH(时间)=12,成交商品件数,0)) AS twelve
+                        ,SUM(成交商品件数) AS sum
                 FROM (
-                        SELECT 时间,IF(b.数量 is not NULL,a.发货商品件数*b.数量,a.发货商品件数) AS '发货商品件数' FROM(
-                            SELECT 编码,时间,发货商品件数 FROM danpin.jb_ziying WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                        SELECT 时间,IF(b.数量 is not NULL,a.成交商品件数*b.数量,a.成交商品件数) AS '成交商品件数' FROM(
+                            SELECT 编码,时间,成交商品件数 FROM danpin.jb_ziying WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
                             UNION ALL
-                            SELECT 编码,时间,发货商品件数 FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                            SELECT 编码,时间,成交商品件数 FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
                         ) as a
                         LEFT JOIN danpin.combination_product_code AS b
                     ON a.编码 = b.组合商品编码
@@ -3414,24 +3414,24 @@ goodsSaleInfoRepo.getProjectSaleQtyData = async() => {
         UNION ALL
         SELECT '2025' AS year
                 ,'京东自营-厨具' AS shop_name
-                ,SUM(IF(MONTH(时间)=1,发货商品件数,0)) AS one
-                ,SUM(IF(MONTH(时间)=2,发货商品件数,0)) AS two
-                ,SUM(IF(MONTH(时间)=3,发货商品件数,0)) AS three
-                ,SUM(IF(MONTH(时间)=4,发货商品件数,0)) AS four
-                ,SUM(IF(MONTH(时间)=5,发货商品件数,0)) AS five
-                ,SUM(IF(MONTH(时间)=6,发货商品件数,0)) AS six
-                ,SUM(IF(MONTH(时间)=7,发货商品件数,0)) AS seven
-                ,SUM(IF(MONTH(时间)=8,发货商品件数,0)) AS eight
-                ,SUM(IF(MONTH(时间)=9,发货商品件数,0)) AS nine
-                ,SUM(IF(MONTH(时间)=10,发货商品件数,0)) AS ten
-                ,SUM(IF(MONTH(时间)=11,发货商品件数,0)) AS eleven
-                ,SUM(IF(MONTH(时间)=12,发货商品件数,0)) AS twelve
-                ,SUM(发货商品件数) AS sum
+                ,SUM(IF(MONTH(时间)=1,成交商品件数,0)) AS one
+                ,SUM(IF(MONTH(时间)=2,成交商品件数,0)) AS two
+                ,SUM(IF(MONTH(时间)=3,成交商品件数,0)) AS three
+                ,SUM(IF(MONTH(时间)=4,成交商品件数,0)) AS four
+                ,SUM(IF(MONTH(时间)=5,成交商品件数,0)) AS five
+                ,SUM(IF(MONTH(时间)=6,成交商品件数,0)) AS six
+                ,SUM(IF(MONTH(时间)=7,成交商品件数,0)) AS seven
+                ,SUM(IF(MONTH(时间)=8,成交商品件数,0)) AS eight
+                ,SUM(IF(MONTH(时间)=9,成交商品件数,0)) AS nine
+                ,SUM(IF(MONTH(时间)=10,成交商品件数,0)) AS ten
+                ,SUM(IF(MONTH(时间)=11,成交商品件数,0)) AS eleven
+                ,SUM(IF(MONTH(时间)=12,成交商品件数,0)) AS twelve
+                ,SUM(成交商品件数) AS sum
         FROM (
-                SELECT 时间,IF(b.数量 is not NULL,a.发货商品件数*b.数量,a.发货商品件数) AS '发货商品件数' FROM(
-                    SELECT 编码,时间,发货商品件数 FROM danpin.jb_ziying WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                SELECT 时间,IF(b.数量 is not NULL,a.成交商品件数*b.数量,a.成交商品件数) AS '成交商品件数' FROM(
+                    SELECT 编码,时间,成交商品件数 FROM danpin.jb_ziying WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
                     UNION ALL
-                    SELECT 编码,时间,发货商品件数 FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                    SELECT 编码,时间,成交商品件数 FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
                 ) as a
                 LEFT JOIN danpin.combination_product_code AS b
             ON a.编码 = b.组合商品编码
@@ -3504,24 +3504,24 @@ goodsSaleInfoRepo.getShopSaleQtyData = async() => {
             UNION ALL
             SELECT '2025' AS year
                 ,'京东自营-厨具' AS shop_name
-                ,SUM(IF(MONTH(时间)=1,发货商品件数,0)) AS one
-                ,SUM(IF(MONTH(时间)=2,发货商品件数,0)) AS two
-                ,SUM(IF(MONTH(时间)=3,发货商品件数,0)) AS three
-                ,SUM(IF(MONTH(时间)=4,发货商品件数,0)) AS four
-                ,SUM(IF(MONTH(时间)=5,发货商品件数,0)) AS five
-                ,SUM(IF(MONTH(时间)=6,发货商品件数,0)) AS six
-                ,SUM(IF(MONTH(时间)=7,发货商品件数,0)) AS seven
-                ,SUM(IF(MONTH(时间)=8,发货商品件数,0)) AS eight
-                ,SUM(IF(MONTH(时间)=9,发货商品件数,0)) AS nine
-                ,SUM(IF(MONTH(时间)=10,发货商品件数,0)) AS ten
-                ,SUM(IF(MONTH(时间)=11,发货商品件数,0)) AS eleven
-                ,SUM(IF(MONTH(时间)=12,发货商品件数,0)) AS twelve
-                ,SUM(发货商品件数) AS sum
+                ,SUM(IF(MONTH(时间)=1,成交商品件数,0)) AS one
+                ,SUM(IF(MONTH(时间)=2,成交商品件数,0)) AS two
+                ,SUM(IF(MONTH(时间)=3,成交商品件数,0)) AS three
+                ,SUM(IF(MONTH(时间)=4,成交商品件数,0)) AS four
+                ,SUM(IF(MONTH(时间)=5,成交商品件数,0)) AS five
+                ,SUM(IF(MONTH(时间)=6,成交商品件数,0)) AS six
+                ,SUM(IF(MONTH(时间)=7,成交商品件数,0)) AS seven
+                ,SUM(IF(MONTH(时间)=8,成交商品件数,0)) AS eight
+                ,SUM(IF(MONTH(时间)=9,成交商品件数,0)) AS nine
+                ,SUM(IF(MONTH(时间)=10,成交商品件数,0)) AS ten
+                ,SUM(IF(MONTH(时间)=11,成交商品件数,0)) AS eleven
+                ,SUM(IF(MONTH(时间)=12,成交商品件数,0)) AS twelve
+                ,SUM(成交商品件数) AS sum
             FROM (
-                SELECT 时间,IF(b.数量 is not NULL,a.发货商品件数*b.数量,a.发货商品件数) AS '发货商品件数' FROM(
-                    SELECT 编码,时间,发货商品件数 FROM danpin.jb_ziying WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                SELECT 时间,IF(b.数量 is not NULL,a.成交商品件数*b.数量,a.成交商品件数) AS '成交商品件数' FROM(
+                    SELECT 编码,时间,成交商品件数 FROM danpin.jb_ziying WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
                     UNION ALL
-                    SELECT 编码,时间,发货商品件数 FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
+                    SELECT 编码,时间,成交商品件数 FROM danpin.jb_ziying_everday WHERE 时间 BETWEEN '2025-01-01' AND '2025-12-31'
                 ) as a
                 LEFT JOIN danpin.combination_product_code AS b
             ON a.编码 = b.组合商品编码
