@@ -1,7 +1,6 @@
 const { query } = require('../../model/dbConn')
 const userOperationRepo = {}
 const moment = require('moment')
-
 userOperationRepo.getPermission = async (user_id) => {
     const sql = `SELECT * FROM user_operation WHERE user_id = ? ORDER BY type`
     const result = await query(sql, user_id)
@@ -238,7 +237,7 @@ userOperationRepo.getPermissionLimit = async (user_id) => {
 }
 
 userOperationRepo.getLinkIdsByUserNames = async (userNames, shopNames) => {
-    let sql = `SELECT IFNULL(brief_name, goods_id) AS goods_id FROM dianshang_operation_attribute 
+    let sql = `SELECT IFNULL(goods_id,brief_name) AS goods_id FROM dianshang_operation_attribute 
         WHERE operator IN ("${userNames}")`
     if (shopNames?.length) sql = `${sql} AND shop_name IN ("${shopNames}")`
     const result = await query(sql)
