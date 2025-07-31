@@ -78,8 +78,11 @@ goodsSkuRepo.getProcessInfoByGoodsId = async (goods_id, project) => {
 }
 
 goodsSkuRepo.getBySysSkuId = async (sku_id) => {
-    let sql = `SELECT goods_id, sys_sku_id AS sku_id, create_time FROM jst_goods_sku 
-        WHERE sys_sku_id IN ("${sku_id}") AND is_shelf = '是' ORDER BY goods_id`
+    let sql = `SELECT s.goods_id, IFNULL(pc.\`商品编码\`, s.sys_sku_id) AS sku_id, 
+            create_time FROM jst_goods_sku s 
+        LEFT JOIN danpin.combination_product_code pc ON pc.\`组合商品编码\` = s.sys_sku_id
+        WHERE (s.sys_sku_id IN ("${sku_id}") OR pc.\`商品编码\` IN ("${sku_id}")) 
+            AND s.is_shelf = '是' ORDER BY s.goods_id`
     let row = await query(sql)
     return row
 }

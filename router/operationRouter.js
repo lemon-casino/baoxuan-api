@@ -56,6 +56,7 @@ router.post('/pannel-setting', operationApi.setPannelSetting)
 router.post('/check-optimize', operationApi.checkOperationOptimize)
 
 //数据同步
+router.post('/refresh-pay-stats', operationApi.refreshGoodsPaysStats)
 router.post('/refresh-sale-stats', operationApi.refreshGoodsSalesStats)
 router.post('/refresh-verify-stats', operationApi.refreshGoodsVerifiedsStats)
 router.post('/refresh-payments', operationApi.refreshGoodsPayments)

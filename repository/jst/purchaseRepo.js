@@ -42,4 +42,31 @@ purchaseRepo.update = async (data) => {
     return result?.affectedRows ? true:false
 }
 
+purchaseRepo.getOrderBySkuCode = async (sku_code) => {
+    let sql = `SELECT sku_id, MIN(confirm_date) AS create_time FROM jst_purchase_order 
+        WHERE sku_id IN ("${sku_code}") AND confirm_date IS NOT NULL GROUP BY sku_id`
+    const result = await query(sql)
+    return result || []
+}
+
+purchaseRepo.getOrderingBySkuCode = async (sku_code) => {
+    let sql = `SELECT sku_id, MIN(confirm_date) AS create_time FROM jst_purchase_order 
+        WHERE sku_id IN ("${sku_code}") AND confirm_date IS NOT NULL 
+            AND finish_time IS NULL GROUP BY sku_id`
+    const result = await query(sql)
+    return result || []
+}
+
+purchaseRepo.getShelfingBySkuCode = async (sku_code) => {
+    let sql = `SELECT sku_code, MIN(io_date) as io_date FROM jst_purchase_info 
+        WHERE sku_code IN ("${sku_code}") AND NOT EXISTS(
+            SELECT * FROM jst_goods_sku s 
+            LEFT JOIN danpin.combination_product_code pc ON pc.\`组合商品编码\` = s.sys_sku_id
+            WHERE (s.sys_sku_id IN ("${sku_code}") OR pc.\`商品编码\` IN ("${sku_code}")) 
+                AND s.is_shelf = '是'
+        ) GROUP BY sku_code`
+    const result = await query(sql)
+    return result || []
+}
+
 module.exports = purchaseRepo

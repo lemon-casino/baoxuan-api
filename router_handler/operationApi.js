@@ -1362,6 +1362,19 @@ const importOrdersGoodsVerified = async (req, res, next) => {
     }
 }
 
+const refreshGoodsPaysStats = async (req, res, next) => {
+    try {
+        const {date} = req.body
+        joiUtil.validate({
+            date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        await operationService.batchInsertGoodsPays(date)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
 const refreshGoodsSalesStats = async (req, res, next) => {
     try {
         const {date} = req.body
@@ -1593,6 +1606,7 @@ module.exports = {
     createShopPromotionLog,
     importOrdersGoods,
     importOrdersGoodsVerified,
+    refreshGoodsPaysStats,
     refreshGoodsSalesStats,
     refreshGoodsVerifiedsStats,
     refreshGoodsPayments,
