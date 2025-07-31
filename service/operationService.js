@@ -626,7 +626,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         month: parseInt(moment(start2).format('YYYYMM')),
         percent: end2_start.diff(moment(start2), 'day') / end2_start.diff(start2_start, 'day')
     }]
-    if (end2_start != end2_end) {
+    if (end2_start.format('YYYY-MM') != end2_end.format('YYYY-MM')) {
         months.push({
             month: parseInt(moment(end2).format('YYYYMM')),
             percent: moment(end2).diff(end2_start, 'day') / end2_end.diff(end2_start, 'day')
@@ -910,7 +910,7 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
         month: parseInt(moment(start2).format('YYYYMM')),
         percent: end2_start.diff(moment(start2), 'day') / end2_start.diff(start2_start, 'day')
     }]
-    if (end2_start != end2_end) {
+    if (end2_start.format('YYYY-MM') != end2_end.format('YYYY-MM')) {
         months.push({
             month: parseInt(moment(end2).format('YYYYMM')),
             percent: moment(end2).diff(end2_start, 'day') / end2_end.diff(end2_start, 'day')
