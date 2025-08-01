@@ -3946,7 +3946,7 @@ developmentService.getProcessInfo = async (params) => {
                 tmp[typeList[i]] = 0
             }
             result.push(tmp)
-            for (let i = 0; i < data.length; i++) {
+            for (let i = 0; i < data?.length; i++) {
                 result[0][data[i].type] += data[i].count
             }
             for (let i = 0; i < result.length; i++) {
@@ -4196,6 +4196,47 @@ developmentService.getProcessInfo = async (params) => {
                 }
             }
             break
+        case '4':
+            let info = await actHiProcinstRepo.getProcessSelectedCount(start, end)
+            result = [
+                {select_division: '否', first: 0, second: 0, third: 0, total: 0},
+                {select_division: '刘+陆', first: 0, second: 0, third: 0, total: 0},
+                {select_division: '陆+王', first: 0, second: 0, third: 0, total: 0},
+                {select_division: '刘+王', first: 0, second: 0, third: 0, total: 0},
+                {select_division: '三个', first: 0, second: 0, third: 0, total: 0},
+            ]
+            let type = 0, first = 0, second = 0, third = 0
+            for (let i = 0; i < info.length; i++) {
+                if (i == 0) {
+                    first = info[i].type == 1 ? 1:0
+                    second = info[i].type == 2 ? 1:0
+                    third = info[i].type == 3 ? 1:0
+                } else if (i > 0 && (info[i-1].id != info[i].id)) {
+                    result[type].total = (result[type].first + result[type].second + result[type].third) / 
+                        (type == 4 ? 3 : (type == 0 ? 1:2))
+                    result[type].first = result[type].first + first
+                    result[type].second = result[type].second + second
+                    result[type].third = result[type].third + third
+                    first = info[i].type == 1 ? 1:0
+                    second = info[i].type == 2 ? 1:0
+                    third = info[i].type == 3 ? 1:0
+                    type = 0
+                } else if (i > 0 && (info[i-1].type != info[i].type && info[i-1].id == info[i].id)) {
+                    first = info[i].type == 1 ? 1:0
+                    second = info[i].type == 2 ? 1:0
+                    third = info[i].type == 3 ? 1:0
+                    if (first && second && third) type = 4
+                    else if (first && second) type = 1
+                    else if (second && third) type = 2
+                    else if (first && third) type = 3
+                }
+            }
+            result[type].total = (result[type].first + result[type].second + result[type].third) / 
+                (type == 4 ? 3 : (type == 0 ? 1:2))
+            result[type].first = result[type].first + first
+            result[type].second = result[type].second + second
+            result[type].third = result[type].third + third
+            break
         default:
     }
     return result
@@ -4205,8 +4246,55 @@ developmentService.getProcessDetail = async (params) => {
     let result = [], type  
     let start = moment(params.start).format('YYYY-MM-DD')
     let end = moment(params.end).format('YYYY-MM-DD') + ' 23:59:59'
-    if (params.type == 'total') {
-        if (params.selectType) 
+    if (params.selectType == 'select_division') {
+        let info = await actHiProcinstRepo.getProcessSelectedCount(start, end)
+        let ids = '', infoMap = [], infoType = 0
+        for (let i = 0; i < info?.length; i++) {
+            if (i > 0 && info[i].id != info[i-1].id) {
+                if ((params.infoType == '刘+陆' && infoType == 1) || 
+                    (params.infoType == '陆+王' && infoType == 2) || 
+                    (params.infoType == '刘+王' && infoType == 3) || 
+                    (params.infoType == '三个' && infoType == 4)) 
+                    ids = `${ids}${info[i-1].id}","` 
+                else if ((params.infoType == '否' && infoType == 0)) {
+                    if ((params.type == 'first' && info[i-1].type == 1) || 
+                        (params.type == 'second' && info[i-1].type == 2) || 
+                        (params.type == 'third' && info[i-1].type == 3) || (params.type == 'total'))
+                        ids = `${ids}${info[i-1].id}","` 
+                }             
+                infoType = 0
+                infoMap = [info[i].type]
+            } else {
+                infoMap.push(info[i].type)
+                if (infoMap.includes(1) && infoMap.includes(2) && infoMap.includes(3)) {
+                    infoType = 4
+                } else if (infoMap.includes(1) && infoMap.includes(2)) {
+                    infoType = 1
+                } else if (infoMap.includes(2) && infoMap.includes(3)) {
+                    infoType = 2
+                } else if (infoMap.includes(1) && infoMap.includes(3)) {
+                    infoType = 3
+                }
+            }      
+        }
+        if ((params.infoType == '刘+陆' && infoType == 1) || 
+            (params.infoType == '陆+王' && infoType == 2) || 
+            (params.infoType == '刘+王' && infoType == 3) || 
+            (params.infoType == '三个' && infoType == 4)) 
+            ids = `${ids}${info[info?.length - 1].id}","` 
+        else if ((params.infoType == '否' && infoType == 0)) {
+            if ((params.type == 'first' && info[info?.length - 1].type == 1) || 
+                (params.type == 'second' && info[info?.length - 1].type == 2) || 
+                (params.type == 'third' && info[info?.length - 1].type == 3) || (params.type == 'total'))
+                ids = `${ids}${info[info?.length - 1].id}","` 
+        }
+        if (ids?.length) {
+            ids = ids.substring(0, ids?.length - 3)
+            result = await actHiProcinstRepo.getProcessInfo(start, end, 'choose', 'select_division', ids)
+        }
+        type = 0
+    } else if (params.type == 'total') {
+        if (params.selectType)
             result = await actHiProcinstRepo.getProcessInfo(start, end, params.type, params.selectType, params.infoType)
         else result = await actHiProcinstRepo.getProcessInfo(start, end)
         type = 0
