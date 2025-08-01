@@ -4277,16 +4277,18 @@ developmentService.getProcessDetail = async (params) => {
                 }
             }      
         }
-        if ((params.infoType == '刘+陆' && infoType == 1) || 
-            (params.infoType == '陆+王' && infoType == 2) || 
-            (params.infoType == '刘+王' && infoType == 3) || 
-            (params.infoType == '三个' && infoType == 4)) 
-            ids = `${ids}${info[info?.length - 1].id}","` 
-        else if ((params.infoType == '否' && infoType == 0)) {
-            if ((params.type == 'first' && info[info?.length - 1].type == 1) || 
-                (params.type == 'second' && info[info?.length - 1].type == 2) || 
-                (params.type == 'third' && info[info?.length - 1].type == 3) || (params.type == 'total'))
-                ids = `${ids}${info[info?.length - 1].id}","` 
+        if (info?.length) {
+            if ((params.infoType == '刘+陆' && infoType == 1) || 
+                (params.infoType == '陆+王' && infoType == 2) || 
+                (params.infoType == '刘+王' && infoType == 3) || 
+                (params.infoType == '三个' && infoType == 4)) 
+                ids = `${ids}${info[info.length - 1].id}","` 
+            else if ((params.infoType == '否' && infoType == 0)) {
+                if ((params.type == 'first' && info[info.length - 1].type == 1) || 
+                    (params.type == 'second' && info[info.length - 1].type == 2) || 
+                    (params.type == 'third' && info[info.length - 1].type == 3) || (params.type == 'total'))
+                    ids = `${ids}${info[info.length - 1].id}","` 
+            }
         }
         if (ids?.length) {
             ids = ids.substring(0, ids?.length - 3)
