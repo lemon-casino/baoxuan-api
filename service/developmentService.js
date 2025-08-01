@@ -1430,9 +1430,9 @@ developmentService.getProductDevelopInfo = async (params, id) => {
                 tmp.shelf_sku_num = 0
                 index = result.length
                 result.push(tmp)
-                resultMap[`${dept}_${project}_${ipInfo[i].director}_${first}_${second}_${third}`] = index
+                resultMap[`${dept}_${project}_${ipInfo[i].director}`] = index
             } else {
-                index = resultMap[`${dept}_${project}_${ipInfo[i].director}_${first}_${second}_${third}`]
+                index = resultMap[`${dept}_${project}_${ipInfo[i].director}`]
             }
         }
         if (ipInfo[i].info != null) {
