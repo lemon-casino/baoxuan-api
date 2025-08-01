@@ -1878,6 +1878,50 @@ actHiProcinstRepo.getSelectedProcessSkuInfo = async (start, end, selectType, inf
     return result
 }
 
+//get select count
+actHiProcinstRepo.getProcessSelectedCount = async (start, end) => {
+    const sql = `SELECT id, (CASE WHEN name IN (
+            'Fzmjma3pe3tnclc', 'Fmtama25a3lrcwc', 'Flp9mbuigrxjqsc', 'Ffwtma3nntxjn9c') THEN 1 
+        WHEN name IN ('F2lmma3petqpcwc', 'Fkyuma25az2ud8c', 'Fexembuihiymqvc', 'Fnixma3nox6onmc') THEN 2 
+        WHEN name IN ('F34mma3pf0egd0c', 'Fiaama25b6zidec', 'F8y4mbuii8dtqyc', 'Fwtjma3np5o0nuc') THEN 3 
+        ELSE (CASE division WHEN '事业一部' THEN 1 WHEN '事业二部' THEN 2 ELSE 3 END) END) AS type FROM (
+            SELECT p.PROC_INST_ID_ AS id, (CASE WHEN u.nickname = '陆瑶' THEN '事业二部' 
+                    WHEN u.nickname = '刘海涛' THEN '事业一部' 
+                    WHEN u.nickname = '王洪彬' THEN '事业三部' 
+                    WHEN u.nickname = '郑艳艳' THEN '企划部' 
+                    WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                        OR dp.name LIKE '%小红书%' THEN '事业三部' 
+                    WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
+                        OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
+                    WHEN dp.name LIKE '%拼多多%' OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%' 
+                        THEN '事业一部'
+                        WHEN dp.name LIKE '%开发%' OR dp.name LIKE '%企划%' OR dp.name LIKE '%市场%' THEN '企划部' 
+                        ELSE '' END) AS division, v.NAME_ AS name
+            FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_ 
+            JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_
+                AND v.NAME_ IN ('Fzmjma3pe3tnclc', 'Fmtama25a3lrcwc', 
+                    'Flp9mbuigrxjqsc', 'Ffwtma3nntxjn9c', 
+                    'Fy6xma3jakboekc', 
+                    'F2lmma3petqpcwc', 
+                    'Fkyuma25az2ud8c', 'Fexembuihiymqvc', 
+                    'Fnixma3nox6onmc', 
+                    'F34mma3pf0egd0c', 
+                    'Fiaama25b6zidec', 'F8y4mbuii8dtqyc', 'Fwtjma3np5o0nuc')
+                AND v.TEXT_ IN ('是', '选中') 
+                AND v.LAST_UPDATED_TIME_ = (SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv
+                WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ AND vv.NAME_ = v.NAME_)
+            JOIN system_users u ON u.id = p.START_USER_ID_ 
+            JOIN system_dept dp ON dp.id = u.dept_id 
+            WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin', 
+                'iptplc', 'iptplcxb', 
+                'zytplc', 'ziyantuipin', 
+                'gystplc', 'gongyingshangtuipin', 
+                'fttplc', 'fantuituipin') 
+                AND p.START_TIME_ BETWEEN ? AND ? AND d.CATEGORY_ != 'ceshi') a ORDER BY id`
+    const result = await query(sql, [start, end])
+    return result
+}
+
 //get process info
 actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info) => {
     let subsql = ''
@@ -1897,32 +1941,31 @@ actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info) =>
             subsql = 'AND v.LONG_ IN (3,4)'
             break
         case 'select':
-            subsql = 'AND t4.ID_ IS NULL'
+            subsql = 'AND t4.ID_ IS NOT NULL'
             break
         case 'ip_review':
-            subsql = 'AND t5.ID_ IS NULL'
+            subsql = 'AND t5.ID_ IS NOT NULL'
             break
         case 'ip_design':
-            subsql = 'AND t6.ID_ IS NULL'
+            subsql = 'AND t6.ID_ IS NOT NULL'
             break
         case 'sample':
-            subsql = 'AND t7.ID_ IS NULL'
+            subsql = 'AND t7.ID_ IS NOT NULL'
             break
         case 'preorder':
-            subsql = 'AND t8.ID_ IS NULL'
+            subsql = 'AND t8.ID_ IS NOT NULL'
             break
         case 'order':
-            subsql = 'AND t9.ID_ IS NULL'
+            subsql = 'AND t9.ID_ IS NOT NULL'
             break
         case 'purchase_order':
-            subsql = 'AND t10.ID_ IS NULL'
+            subsql = 'AND t10.ID_ IS NOT NULL'
             break
     }
     if (selectType == 'developer') {
         subsql = `${subsql} 
                 AND IFNULL(u1.nickname, IF(d.KEY_ IN ('fttplc', 'fantuituipin'), '', u.nickname)) = "${info}"`
-    }
-    if (selectType == 'division') {
+    } else if (selectType == 'division') {
         subsql = `${subsql} 
                 AND (CASE WHEN u.nickname = '陆瑶' THEN '事业二部' 
                     WHEN u.nickname = '刘海涛' THEN '事业一部' 
@@ -1936,14 +1979,16 @@ actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info) =>
                         THEN '事业一部'
                         WHEN dp.name LIKE '%开发%' OR dp.name LIKE '%企划%' OR dp.name LIKE '%市场%' THEN '企划部' 
                         ELSE '' END) = "${info}"`
-    }
-    if (selectType == 'develop_type') {
+    } else if (selectType == 'develop_type') {
         subsql = `${subsql} 
                 AND (CASE WHEN d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') THEN '市场分析推品' 
                     WHEN d.KEY_ IN ('iptplc', 'iptplcxb') THEN 'IP推品' 
                     WHEN d.KEY_ IN ('zytplc', 'ziyantuipin') THEN '自研推品' 
                     WHEN d.KEY_ IN ('gystplc', 'gongyingshangtuipin') THEN '供应商推品' 
                     ELSE '反推推品' END) = "${info}"`
+    } else if (selectType == 'select_division') {
+        subsql = `${subsql} 
+                AND p.PROC_INST_ID_ IN ("${info}")`
     }
     let sql = `SELECT p.NAME_ AS title, p.PROC_INST_ID_ AS id, v16.TEXT_ AS image, 
             b1.BYTES_ AS info1, IFNULL(v15.TEXT_, '') AS spu, 
@@ -2247,6 +2292,7 @@ actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info) =>
     const result = await query(sql)
     return result
 }
+
 //vision
 actHiProcinstRepo.getProcessInfo1 = async (type, ids) => {
     let subsql = ''
