@@ -3946,7 +3946,7 @@ developmentService.getProcessInfo = async (params) => {
                 tmp[typeList[i]] = 0
             }
             result.push(tmp)
-            for (let i = 0; i < data.length; i++) {
+            for (let i = 0; i < data?.length; i++) {
                 result[0][data[i].type] += data[i].count
             }
             for (let i = 0; i < result.length; i++) {
