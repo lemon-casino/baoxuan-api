@@ -32,7 +32,7 @@ goodsSkuRepo.get = async (goods_id, sku_id) => {
 goodsSkuRepo.update = async (data) => {
     let sql = `UPDATE jst_goods_sku SET on_goods_id = ?, on_sku_id = ?, 
         or_sku_id = ?, on_sku_code = ?, sys_goods_id = ?, sys_sku_id = ?, 
-        is_shelf = ?, create_time = ? WHERE goods_id = ? AND sku_id = ?`
+        is_shelf = ?, create_time = ?, shop_name = ? WHERE goods_id = ? AND sku_id = ?`
     const result = await query(sql, data)
     return result?.affectedRows ? true:false
 }

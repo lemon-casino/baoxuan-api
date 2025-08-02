@@ -265,6 +265,7 @@ const importGoodsSku = async (rows) => {
                 sys_sku_id,
                 is_shelf,
                 create_time,
+                shop_name,
                 goods_id,
                 sku_id,
             ])
