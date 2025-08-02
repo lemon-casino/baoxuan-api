@@ -4212,30 +4212,30 @@ developmentService.getProcessInfo = async (params) => {
                     second = info[i].type == 2 ? 1:0
                     third = info[i].type == 3 ? 1:0
                 } else if (i > 0 && (info[i-1].id != info[i].id)) {
+                    result[type].first += parseInt(first)
+                    result[type].second += parseInt(second)
+                    result[type].third += parseInt(third)
                     result[type].total = (result[type].first + result[type].second + result[type].third) / 
                         (type == 4 ? 3 : (type == 0 ? 1:2))
-                    result[type].first = result[type].first + first
-                    result[type].second = result[type].second + second
-                    result[type].third = result[type].third + third
                     first = info[i].type == 1 ? 1:0
                     second = info[i].type == 2 ? 1:0
                     third = info[i].type == 3 ? 1:0
                     type = 0
                 } else if (i > 0 && (info[i-1].type != info[i].type && info[i-1].id == info[i].id)) {
-                    first = info[i].type == 1 ? 1:0
-                    second = info[i].type == 2 ? 1:0
-                    third = info[i].type == 3 ? 1:0
+                    first = info[i].type == 1 ? first + 1 : first
+                    second = info[i].type == 2 ? second + 1 : second
+                    third = info[i].type == 3 ? third + 1 : third
                     if (first && second && third) type = 4
                     else if (first && second) type = 1
                     else if (second && third) type = 2
                     else if (first && third) type = 3
                 }
-            }
+            }            
+            result[type].first += parseInt(first)
+            result[type].second += parseInt(second)
+            result[type].third += parseInt(third)
             result[type].total = (result[type].first + result[type].second + result[type].third) / 
                 (type == 4 ? 3 : (type == 0 ? 1:2))
-            result[type].first = result[type].first + first
-            result[type].second = result[type].second + second
-            result[type].third = result[type].third + third
             break
         default:
     }

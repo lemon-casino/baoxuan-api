@@ -1880,7 +1880,7 @@ actHiProcinstRepo.getSelectedProcessSkuInfo = async (start, end, selectType, inf
 
 //get select count
 actHiProcinstRepo.getProcessSelectedCount = async (start, end) => {
-    const sql = `SELECT id, (CASE WHEN name IN (
+    const sql = `SELECT id, type FROM (SELECT id, (CASE WHEN name IN (
             'Fzmjma3pe3tnclc', 'Fmtama25a3lrcwc', 'Flp9mbuigrxjqsc', 'Ffwtma3nntxjn9c') THEN 1 
         WHEN name IN ('F2lmma3petqpcwc', 'Fkyuma25az2ud8c', 'Fexembuihiymqvc', 'Fnixma3nox6onmc') THEN 2 
         WHEN name IN ('F34mma3pf0egd0c', 'Fiaama25b6zidec', 'F8y4mbuii8dtqyc', 'Fwtjma3np5o0nuc') THEN 3 
@@ -1917,7 +1917,8 @@ actHiProcinstRepo.getProcessSelectedCount = async (start, end) => {
                 'zytplc', 'ziyantuipin', 
                 'gystplc', 'gongyingshangtuipin', 
                 'fttplc', 'fantuituipin') 
-                AND p.START_TIME_ BETWEEN ? AND ? AND d.CATEGORY_ != 'ceshi') a ORDER BY id`
+                AND p.START_TIME_ BETWEEN ? AND ? AND d.CATEGORY_ != 'ceshi') a 
+            ORDER BY id) b GROUP BY id, type ORDER BY id, type`
     const result = await query(sql, [start, end])
     return result
 }
