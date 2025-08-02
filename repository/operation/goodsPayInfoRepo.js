@@ -325,8 +325,8 @@ goodsPayInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
         } else if (params.search[i].field_id == 'refund_rate') {
             subsql = `${subsql} AND a1.goods_id IS NOT NULL AND EXISTS(
                     SELECT * FROM (
-                        SELECT IFNULL(SUM(a2.sale_qty), 0) AS order_num, 
-                            IFNULL(SUM(a2.refund_qty), 0) AS refund_num FROM goods_pays a2 
+                        SELECT IFNULL(SUM(a2.order_num), 0) AS order_num, 
+                            IFNULL(SUM(a2.refund_num), 0) AS refund_num FROM goods_pays a2 
                         WHERE a2.date BETWEEN ? AND ? AND a1.goods_id = a2.goods_id 
                     ) b WHERE b.refund_num * 100 >= ${params.search[i].min} * b.order_num
                         AND b.refund_num * 100 <= ${params.search[i].max} * b.order_num)`
@@ -900,8 +900,8 @@ goodsPayInfoRepo.getPromotionData = async (start, end, params, shopNames, linkId
         } else if (params.search[i].field_id == 'refund_rate') {
             subsql = `${subsql} AND a1.goods_id IS NOT NULL AND EXISTS(
                     SELECT * FROM (
-                        SELECT IFNULL(SUM(a2.sale_qty), 0) AS order_num, 
-                            IFNULL(SUM(a2.refund_qty), 0) AS refund_num FROM goods_pays a2 
+                        SELECT IFNULL(SUM(a2.order_num), 0) AS order_num, 
+                            IFNULL(SUM(a2.refund_num), 0) AS refund_num FROM goods_pays a2 
                         WHERE a2.date BETWEEN ? AND ? AND a1.goods_id = a2.goods_id 
                     ) b WHERE b.refund_num * 100 >= ${params.search[i].min} * b.order_num
                         AND b.refund_num * 100 <= ${params.search[i].max} * b.order_num)`
@@ -1144,6 +1144,7 @@ goodsPayInfoRepo.getPromotionData = async (start, end, params, shopNames, linkId
 				    IF(pi.division_id = 1, b2.sale_amount >= 3000 OR b2.profit >= b2.sale_amount * 0.18, 
                         IF(pi.division_id = 2, b2.sale_amount >= 3000 OR b2.profit >= b2.sale_amount * 0.15, 
                             b2.sale_amount >= 12000 OR b2.profit >= b2.sale_amount * 0.18)), 1)
+                AND (d.is_price_comparison = '否' OR d.is_price_comparison IS NULL) 
                 AND (d.id IS NULL OR ((d.userDef1 != '滞销' OR d.userDef1 IS NULL) AND (d.userDef7 != '滞销' OR d.userDef7 IS NULL) AND (d.link_attribute != '滞销' OR d.link_attribute IS NULL)))`
             break
         case 'low_promotion':
@@ -2022,6 +2023,7 @@ goodsPayInfoRepo.getNullPromotionByShopNamesAndTime = async (shopNames, start, e
         LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
             AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
         WHERE (a.promotion_amount = 0 OR a.goods_id IS NULL) AND d.id IS NULL 
+            AND (d.is_price_comparison = '否' OR d.is_price_comparison IS NULL)
             AND IF(s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY), 
                 (a1.sale_amount >= ? OR a1.profit >= a1.sale_amount * ?), 1)`
     let params = [start, end, start1, end1, sale_amount, profit_rate]
@@ -2083,6 +2085,7 @@ goodsPayInfoRepo.getNullPromotionByLinksAndTime = async (links, start, end, star
         LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
             AND (d.userDef1 = '滞销' OR d.userDef7 = '滞销' OR d.link_attribute = '滞销') 
         WHERE (a.promotion_amount = 0 OR a.goods_id IS NULL) AND d.id IS NULL 
+            AND (d.is_price_comparison = '否' OR d.is_price_comparison IS NULL)
             AND IF(s.create_time < DATE_SUB(NOW(), INTERVAL 60 DAY), 
                 (a1.sale_amount >= ? OR a1.profit >= a1.sale_amount * ?), 1)`
     let params = [start, end, start1, end1, sale_amount, profit_rate]

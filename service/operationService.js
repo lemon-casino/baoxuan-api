@@ -4723,6 +4723,7 @@ module.exports = {
     createShopPromotionLog,
     importOrdersGoods,
     importOrdersGoodsVerified,
+    batchInsertGoodsPays,
     batchInsertGoodsSales,
     batchInsertGoodsVerifieds,
     updateOrderGoods,
