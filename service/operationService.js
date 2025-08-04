@@ -1759,11 +1759,11 @@ const importGoodsOrderPayStat = async (rows, time) => {
         result = await goodsPayInfoRepo.updateOrder({
             date, goods_id: null, sku_code: code, ...dataMap2[code]})
     }
+    await batchInsertGoodsPays(time)
     if (result) {
         redisRepo.batchDelete(`${redisKeys.operation}:pay:*`)
         redisRepo.batchDelete(`${redisKeys.operation}:promotion:pay:*`)
     }
-    await batchInsertGoodsPays(time)
     return result
 }
 
