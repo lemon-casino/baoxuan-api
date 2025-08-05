@@ -1577,7 +1577,8 @@ goodsPayInfoRepo.insertBrushingInfo = async (data) => {
 
 goodsPayInfoRepo.deleteByDate = async (date) => {
     let sql = `DELETE FROM goods_pay_info WHERE \`date\` = ?
-    AND shop_name != '京东自营-厨具' AND shop_name != '京东自营-日用'`
+    AND shop_name != '京东自营-厨具' AND shop_name != '京东自营-日用' 
+    AND goods_id not in ('123456789','123456781')`
     const result = await query(sql, [date])
     return result?.affectedRows ? true : false
 }

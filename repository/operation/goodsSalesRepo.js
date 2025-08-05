@@ -721,10 +721,10 @@ goodsSalesRepo.updatemonth6 = async (day,type,column) =>{
             select IFNULL(c.商品编码,a.编码) as '商品编码'
                 ,IF(c.数量 is not NULL,a.数量*c.数量,a.数量) as '数量' 
             from (
-                select 编码 ,发货商品件数 as '数量',时间 from danpin.jb_ziying 
+                select 编码 ,成交商品件数 as '数量',时间 from danpin.jb_ziying 
                 where 时间  >= DATE_SUB(DATE(NOW()),INTERVAL ${day} ${type})
                 UNION ALL
-                select 编码 ,发货商品件数 as '数量',时间 from danpin.jb_ziying_everday
+                select 编码 ,成交商品件数 as '数量',时间 from danpin.jb_ziying_everday
                 where 时间  >= DATE_SUB(DATE(NOW()),INTERVAL ${day} ${type})
             ) as a
             LEFT JOIN
