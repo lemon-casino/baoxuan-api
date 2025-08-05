@@ -199,7 +199,7 @@ exports.getUserinfo = async (req, res) => {
         const departmentTemplate = {}
         departmentTemplate.dept_id = dept.dept_id
         departmentTemplate.name = dept.dep_detail?.name
-        logger.info(dept.dep_detail.name)
+        logger.info(dept.dep_detail?.name)
         departmentTemplate.leader = dept.leader
         departmentTemplate.parent_id = curDeptDetails?.parent_id
 
