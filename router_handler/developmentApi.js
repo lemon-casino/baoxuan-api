@@ -207,6 +207,7 @@ const getRunningProcessInfo = async (req, res, next) => {
             {header: '发起人', key: 'nickname'},
             {header: '开发人', key: 'developer'},
             {header: '渠道', key: 'platform'},
+            {header: '卡滞部门', key: 'dept'},
             {header: '目前卡滞人', key: 'operator'},
             {header: '目前卡滞节点', key: 'node'},
             {header: '开始时间', key: 'start_time'},
