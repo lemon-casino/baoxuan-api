@@ -5,7 +5,24 @@ actHiProcinstRepo.getRunning = async (start, end) => {
     let sql = `SELECT p.START_TIME_ AS create_time, p.NAME_ AS title,  
             CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail\?id=', p.ID_) AS link,
             t.NAME_ AS node, u.nickname AS operator, u1.nickname, 
-            IFNULL(u2.nickname, IF(d.KEY_ IN ('fttplc', 'fantuituipin'), '', u1.nickname)) as developer, 
+            (CASE WHEN u.nickname = '陆瑶' THEN '事业二部' 
+                WHEN u.nickname = '刘海涛' THEN '事业一部' 
+                WHEN u.nickname = '王洪彬' THEN '事业三部' 
+                WHEN u.nickname = '郑艳艳' THEN '企划部' 
+                WHEN u.nickname = '鲁红旺' THEN '货品部' 
+                WHEN u.nickname = '杨利强' THEN '货品部' 
+                WHEN u.nickname IN ('郑河', '崔竹') THEN '管理中台' 
+                WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' OR dp.name LIKE '%小红书%' THEN '事业三部' 
+                WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
+                WHEN dp.name LIKE '%拼多多%' OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%' THEN '事业一部' 
+                WHEN dp.name LIKE '%开发%' OR dp.name LIKE '%企划%' OR dp.name LIKE '%市场%' THEN '企划部' 
+                WHEN dp.name LIKE '%采购%' OR dp.name LIKE '%物流%' OR dp.name LIKE '%库房%' OR dp.name LIKE '%品控%' THEN '货品部' 
+                WHEN dp.name LIKE '%客服%' THEN '客服部' 
+                WHEN dp.name LIKE '%摄影%' OR dp.name LIKE '%视觉%' OR dp.name LIKE '%设计%' THEN '视觉部' 
+                WHEN dp.name LIKE '%人事%' THEN '人事部' 
+                WHEN dp.name LIKE '%数据%' THEN '数据中台' 
+                WHEN dp.name LIKE '%财务%' THEN '财务部' ELSE '未拉取到部门' END) AS dept, 
+            IFNULL(u2.nickname, IF(d.KEY_ IN ('fttplc', 'fantuituipin'), '', u1.nickname)) AS developer, 
             CASE WHEN d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') THEN '市场分析推品' 
                 WHEN d.KEY_ IN ('iptplc', 'iptplcxb') THEN 'IP推品' 
                 WHEN d.KEY_ IN ('zytplc', 'ziyantuipin') THEN '自研推品' 
@@ -18,6 +35,7 @@ actHiProcinstRepo.getRunning = async (start, end) => {
             AND EXISTS(SELECT * FROM ACT_HI_VARINST v WHERE v.PROC_INST_ID_ = p.PROC_INST_ID_ 
                     AND v.NAME_ = 'TASK_STATUS' AND v.TASK_ID_ = t.ID_ AND v.LONG_ = 1)
         LEFT JOIN system_users u ON u.id = t.ASSIGNEE_ 
+        LEFT JOIN system_dept dp ON dp.id = u.dept_id 
         JOIN system_users u1 ON u1.id = p.START_USER_ID_ 
         LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
