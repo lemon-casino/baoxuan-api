@@ -3027,14 +3027,14 @@ goodsSaleInfoRepo.getInventorysaleqtyData = async(start,end) => {
     let sql = `SELECT SUM(sale_qty) AS sale_qty FROM (
             SELECT SUM(\`利润-销售数量(扣退)\`) AS sale_qty FROM danpin.sku_code_sale WHERE 日期 BETWEEN ? AND ?
             UNION ALL
-            SELECT SUM(a.发货商品件数) AS sale_qty FROM (
+            SELECT SUM(a.成交商品件数) AS sale_qty FROM (
                 SELECT IFNULL(c.商品编码,a.编码) AS '商品编码'
-                    ,IF(c.数量 IS NOT NULL,a.发货商品件数*c.数量,a.发货商品件数) AS '发货商品件数' 
+                    ,IF(c.数量 IS NOT NULL,a.成交商品件数*c.数量,a.成交商品件数) AS '成交商品件数' 
                 FROM (
-                    SELECT 编码,成交金额,发货商品件数 FROM  danpin.jb_ziying 
+                    SELECT 编码,成交金额,成交商品件数 FROM  danpin.jb_ziying 
                     WHERE 时间 BETWEEN ? AND ?
                     UNION ALL
-                    SELECT 编码,成交金额,发货商品件数 FROM  danpin.jb_ziying_everday
+                    SELECT 编码,成交金额,成交商品件数 FROM  danpin.jb_ziying_everday
                     WHERE 时间 BETWEEN ? AND ?
                 ) AS a
                 LEFT JOIN(
