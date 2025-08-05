@@ -1017,14 +1017,11 @@ developmentService.getProduct = async (start, end, timeType, project, process) =
     return result
 }
 
-developmentService.getRunningProcessInfo = async () => {
-    let start = moment().subtract(14, 'day').format('YYYY-MM-DD')
-    let end = moment().format('YYYY-MM-DD')
-    let result = []
-    let project_info = await newFormsRepo.getDevelopmentRunning(start, end)
-    if (project_info?.length) result = result.concat(project_info)
-    let project_info1 = await actHiProcinstRepo.getRunning(start, end)
-    if (project_info1?.length) result = result.concat(project_info1)
+developmentService.getRunningProcessInfo = async (params) => {
+    if (!params.start_time) return []
+    let start = moment(params.start_time).format('YYYY-MM-DD')
+    let end = moment(params.end_time).format('YYYY-MM-DD') + ' 23:59:59'
+    let result = await actHiProcinstRepo.getRunning(start, end)
     return result
 }
 
