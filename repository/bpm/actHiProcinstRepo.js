@@ -1183,6 +1183,11 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                              ELSE '未拉取到部门' END) AS division, 
                         IFNULL(u1.nickname, IF(d.KEY_ IN ('fttplc', 'fantuituipin'), '', u.nickname)) AS developer 
                     FROM ACT_HI_PROCINST p JOIN ACT_RE_PROCDEF d ON d.ID_ = p.PROC_DEF_ID_  
+                    JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                        AND v.NAME_ = 'PROCESS_STATUS' AND v.LONG_ = 1 
+                        AND v.LAST_UPDATED_TIME_ = (
+                            SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                            WHERE vv.PROC_INST_ID_ = v.PROC_INST_ID_ AND vv.NAME_ = v.NAME_)
                     LEFT JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_ 
 	                    AND t.NAME_ IN (
                             '建立聚水潭信息并填写商品编码', '建立聚水潭信息并填写商品编码1', 
@@ -1978,7 +1983,7 @@ actHiProcinstRepo.getProcessSelectedCount = async (start, end) => {
 }
 
 //get process info
-actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info) => {
+actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info, selectType1, info1) => {
     let subsql = ''
     switch (type) {
         case 'choose':
@@ -1996,7 +2001,7 @@ actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info) =>
             subsql = 'AND v.LONG_ IN (3,4)'
             break
         case 'select':
-            subsql = 'AND t4.ID_ IS NOT NULL'
+            subsql = 'AND t4.ID_ IS NULL AND v.LONG_ = 1'
             break
         case 'ip_review':
             subsql = 'AND t5.ID_ IS NOT NULL'
@@ -2020,7 +2025,8 @@ actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info) =>
     if (selectType == 'developer') {
         subsql = `${subsql} 
                 AND IFNULL(u1.nickname, IF(d.KEY_ IN ('fttplc', 'fantuituipin'), '', u.nickname)) = "${info}"`
-    } else if (selectType == 'division') {
+    } 
+    if (selectType == 'division' || selectType1 == 'division') {
         subsql = `${subsql} 
                 AND (CASE WHEN u.nickname = '陆瑶' THEN '事业二部' 
                     WHEN u.nickname = '刘海涛' THEN '事业一部' 
@@ -2033,15 +2039,17 @@ actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info) =>
                     WHEN dp.name LIKE '%拼多多%' OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%' 
                         THEN '事业一部'
                         WHEN dp.name LIKE '%开发%' OR dp.name LIKE '%企划%' OR dp.name LIKE '%市场%' THEN '企划部' 
-                        ELSE '' END) = "${info}"`
-    } else if (selectType == 'develop_type') {
+                        ELSE '' END) = "${selectType == 'division' ? info : info1}"`
+    } 
+    if (selectType == 'develop_type' || selectType1 == 'develop_type') {
         subsql = `${subsql} 
                 AND (CASE WHEN d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') THEN '市场分析推品' 
                     WHEN d.KEY_ IN ('iptplc', 'iptplcxb') THEN 'IP推品' 
                     WHEN d.KEY_ IN ('zytplc', 'ziyantuipin') THEN '自研推品' 
                     WHEN d.KEY_ IN ('gystplc', 'gongyingshangtuipin') THEN '供应商推品' 
-                    ELSE '反推推品' END) = "${info}"`
-    } else if (selectType == 'select_division') {
+                    ELSE '反推推品' END) = "${selectType == 'develop_type' ? info : info1}"`
+    }
+    if (selectType == 'select_division') {
         subsql = `${subsql} 
                 AND p.PROC_INST_ID_ IN ("${info}")`
     }
