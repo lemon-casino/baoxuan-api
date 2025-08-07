@@ -3929,7 +3929,7 @@ developmentService.getfirstInfo = async(type,first,second,third) =>{
 developmentService.getProcessInfo = async (params) => {
     let start = moment(params.start).format('YYYY-MM-DD')
     let end = moment(params.end).format('YYYY-MM-DD') + ' 23:59:59'
-    let typeList = [], data, result = [], tmp = {}
+    let typeList = [], data, result = [], tmp = {}, defaultTmp = {}
     switch (params.type) {
         case '0':
             typeList = [
@@ -3942,15 +3942,29 @@ developmentService.getProcessInfo = async (params) => {
             for (let i = 0; i < typeList.length; i++) {
                 tmp[typeList[i]] = 0
             }
-            result.push(tmp)
+            let dataMap = {}
+            defaultTmp = JSON.parse(JSON.stringify(tmp))
+            defaultTmp.division = '合计'
             for (let i = 0; i < data?.length; i++) {
-                result[0][data[i].type] += data[i].count
+                let index = `${data[i].division}_${data[i].develop_type}`
+                if (dataMap[index] == undefined) {
+                    dataMap[index] = result.length
+                    result.push(JSON.parse(JSON.stringify(tmp)))
+                    result[dataMap[index]]['division'] = data[i].division
+                    result[dataMap[index]]['develop_type'] = data[i].develop_type                 
+                }
+                result[dataMap[index]][data[i].type] += data[i].count
+                defaultTmp[data[i].type] += data[i].count
             }
             for (let i = 0; i < result.length; i++) {
                 result[i]['purchase'] = 0
                 result[i]['warehouse'] = 0
                 result[i]['shelfing'] = 0
                 result[i]['shelf'] = 0
+                defaultTmp['purchase'] = 0
+                defaultTmp['warehouse'] = 0
+                defaultTmp['shelfing'] = 0
+                defaultTmp['shelf'] = 0
                 let skuids = '', skuMap = {}, infoMap = {}, infoMap1 = {}, infoMap2 = {}, infoMap3 = {}
                 let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end)
                 for (let j = 0; j < info.length; j++) {
@@ -3976,7 +3990,8 @@ developmentService.getProcessInfo = async (params) => {
                     let purchase = await purchaseRepo.getOrderingBySkuCode(skuids)
                     for (let j = 0; j < purchase.length; j++) {
                         if (!infoMap[skuMap[purchase[j].sku_id]]) {
-                            result[i]['purchase'] += 1
+                            result[i]['purchase'] += 1                            
+                            defaultTmp['purchase'] += 1
                             infoMap[skuMap[purchase[j].sku_id]] = true
                         }
                     }
@@ -3984,7 +3999,8 @@ developmentService.getProcessInfo = async (params) => {
                     let skuids1 = ''
                     for (let j = 0; j < warehouse.length; j++) {
                         if (!infoMap1[skuMap[warehouse[j].sku_code]]) {
-                            result[i]['warehouse'] += 1
+                            result[i]['warehouse'] += 1                           
+                            defaultTmp['warehouse'] += 1
                             infoMap1[skuMap[warehouse[j].sku_code]] = true
                         }
                         skuids1 = `${skuids1}${warehouse[j].sku_code}","`
@@ -3992,7 +4008,8 @@ developmentService.getProcessInfo = async (params) => {
                     let shelf = await goodsSkuRepo.getBySysSkuId(skuids)
                     for (let j = 0; j < shelf.length; j++) {
                         if (!infoMap2[skuMap[shelf[j].sku_code]]) {
-                            result[i]['shelf'] += 1
+                            result[i]['shelf'] += 1                       
+                            defaultTmp['shelf'] += 1
                             infoMap2[skuMap[shelf[j].sku_code]] = true
                         }
                     }
@@ -4001,13 +4018,15 @@ developmentService.getProcessInfo = async (params) => {
                         let shelfing = await purchaseRepo.getShelfingBySkuCode(skuids1)
                         for (let j = 0; j < shelfing.length; j++) {
                         if (!infoMap3[skuMap[shelfing[j].sku_code]]) {
-                            result[i]['shelfing'] += 1
+                            result[i]['shelfing'] += 1                   
+                            defaultTmp['shelfing'] += 1
                             infoMap3[skuMap[shelfing[j].sku_code]] = true
                         }
                     }
                     }
                 }
             }
+            result.push(defaultTmp)
             break
         case '1':
             typeList = [
@@ -4109,32 +4128,61 @@ developmentService.getProcessInfo = async (params) => {
             for (let i = 0; i < typeList.length; i++) {
                 tmp[typeList[i]] = 0
             }
-            let infoType, infoMap = {}
-            if (params.infoType == 0) {
-                tmp['developer'] = ''
-                infoType = 'developer'
-            } else if (params.infoType == 1) {
-                tmp['division'] = ''
-                infoType = 'division'
-            } else if (params.infoType == 2) {
-                tmp['develop_type'] = ''
-                infoType = 'develop_type'
-            }
+            tmp['ft'] = 0
+            tmp['gys'] = 0
+            tmp['zy'] = 0
+            tmp['ip'] = 0
+            tmp['scfx'] = 0
+            defaultTmp['ft'] = 0
+            defaultTmp['gys'] = 0
+            defaultTmp['zy'] = 0
+            defaultTmp['ip'] = 0
+            defaultTmp['scfx'] = 0
+            let infoType = 'developer', infoMap = {}
+            defaultTmp = JSON.parse(JSON.stringify(tmp))
+            defaultTmp.developer = '合计'
             for (let i = 0; i < data.length; i++) {
                 if (infoMap[data[i][infoType]] != undefined) {
                     result[infoMap[data[i][infoType]]][data[i].type] += data[i].count
                 } else {
                     infoMap[data[i][infoType]] = result.length
                     result.push(JSON.parse(JSON.stringify(tmp)))
-                     result[result.length-1][infoType] = data[i][infoType]
+                    result[result.length-1][infoType] = data[i][infoType]
                     result[result.length-1][data[i].type] += data[i].count
                 }
+                defaultTmp[data[i].type] += data[i].count
+                if (data[i].type == 'total')
+                    switch (data[i].develop_type) {
+                        case '反推推品':
+                            result[infoMap[data[i][infoType]]]['ft'] += data[i].count
+                            defaultTmp['ft'] += data[i].count
+                            break
+                        case '供应商推品':
+                            result[infoMap[data[i][infoType]]]['gys'] += data[i].count
+                            defaultTmp['gys'] += data[i].count
+                            break
+                        case '自研推品':
+                            result[infoMap[data[i][infoType]]]['zy'] += data[i].count
+                            defaultTmp['zy'] += data[i].count
+                            break
+                        case 'IP推品':
+                            result[infoMap[data[i][infoType]]]['ip'] += data[i].count
+                            defaultTmp['ip'] += data[i].count
+                            break
+                        default:                        
+                            result[infoMap[data[i][infoType]]]['scfx'] += data[i].count
+                            defaultTmp['scfx'] += data[i].count
+                    }
             }
             for (let i = 0; i < result.length; i++) {
                 result[i]['purchase'] = 0
                 result[i]['warehouse'] = 0
                 result[i]['shelfing'] = 0
                 result[i]['shelf'] = 0
+                defaultTmp['purchase'] = 0
+                defaultTmp['warehouse'] = 0
+                defaultTmp['shelfing'] = 0
+                defaultTmp['shelf'] = 0
                 let skuids = '', skuMap = {}, infoMap = {}, infoMap1 = {}, infoMap2 = {}, infoMap3 = {}
                 let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end)
                 for (let j = 0; j < info.length; j++) {
@@ -4161,6 +4209,7 @@ developmentService.getProcessInfo = async (params) => {
                     for (let j = 0; j < purchase.length; j++) {
                         if (!infoMap[skuMap[purchase[j].sku_id]]) {
                             result[i]['purchase'] += 1
+                            defaultTmp['purchase'] += 1
                             infoMap[skuMap[purchase[j].sku_id]] = true
                         }
                     }
@@ -4169,6 +4218,7 @@ developmentService.getProcessInfo = async (params) => {
                     for (let j = 0; j < warehouse.length; j++) {
                         if (!infoMap1[skuMap[warehouse[j].sku_code]]) {
                             result[i]['warehouse'] += 1
+                            defaultTmp['warehouse'] += 1
                             infoMap1[skuMap[warehouse[j].sku_code]] = true
                         }
                         skuids1 = `${skuids1}${warehouse[j].sku_code}","`
@@ -4177,6 +4227,7 @@ developmentService.getProcessInfo = async (params) => {
                     for (let j = 0; j < shelf.length; j++) {
                         if (!infoMap2[skuMap[shelf[j].sku_code]]) {
                             result[i]['shelf'] += 1
+                            defaultTmp['shelf'] += 1
                             infoMap2[skuMap[shelf[j].sku_code]] = true
                         }
                     }
@@ -4186,15 +4237,18 @@ developmentService.getProcessInfo = async (params) => {
                         for (let j = 0; j < shelfing.length; j++) {
                         if (!infoMap3[skuMap[shelfing[j].sku_code]]) {
                             result[i]['shelfing'] += 1
+                            defaultTmp['shelfing'] += 1
                             infoMap3[skuMap[shelfing[j].sku_code]] = true
                         }
                     }
                     }
                 }
             }
+            result.push(defaultTmp)
             break
         case '4':
             let info = await actHiProcinstRepo.getProcessSelectedCount(start, end)
+            defaultTmp = {select_division: '合计', first: 0, second: 0, third: 0, total: 0}
             result = [
                 {select_division: '否', first: 0, second: 0, third: 0, total: 0},
                 {select_division: '刘+陆', first: 0, second: 0, third: 0, total: 0},
@@ -4233,6 +4287,11 @@ developmentService.getProcessInfo = async (params) => {
             result[type].third += parseInt(third)
             result[type].total = (result[type].first + result[type].second + result[type].third) / 
                 (type == 4 ? 3 : (type == 0 ? 1:2))
+            defaultTmp.first = result[0].first + result[1].first + result[2].first + result[3].first + result[4].first
+            defaultTmp.second = result[0].second + result[1].second + result[2].second + result[3].second + result[4].second
+            defaultTmp.third = result[0].third + result[1].third + result[2].third + result[3].third + result[4].third
+            defaultTmp.total = result[0].total + result[1].total + result[2].total + result[3].total + result[4].total
+            result.push(defaultTmp)
             break
         default:
     }
@@ -4294,18 +4353,18 @@ developmentService.getProcessDetail = async (params) => {
         type = 0
     } else if (params.type == 'total') {
         if (params.selectType)
-            result = await actHiProcinstRepo.getProcessInfo(start, end, params.type, params.selectType, params.infoType)
+            result = await actHiProcinstRepo.getProcessInfo(start, end, params.type, params.selectType, params.infoType, params.selectType1, params.infoType1)
         else result = await actHiProcinstRepo.getProcessInfo(start, end)
         type = 0
     } else if (['choose', 'purchase', 'warehouse', 'shelfing', 'shelf', 'reject', 
         'select', 'ip_review', 'ip_design', 'sample', 'preorder', 'order', 
         'purchase_order', 'pre_vision'].includes(params.type)) {
         if (params.selectType) 
-            result = await actHiProcinstRepo.getProcessInfo(start, end, params.type, params.selectType, params.infoType)
+            result = await actHiProcinstRepo.getProcessInfo(start, end, params.type, params.selectType, params.infoType, params.selectType1, params.infoType1)
         else result = await actHiProcinstRepo.getProcessInfo(start, end, params.type)
         type = 0
     } else if (['vision_running', 'vision_completed'].includes(params.type)) {
-        let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end, params.selectType, params.infoType)
+        let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end, params.selectType, params.infoType, params.selectType1, params.infoType1)
         let ids = ''
         for (let i = 0; i < info.length; i++) {
             ids = `${ids}${info[i].id}","`
@@ -4316,7 +4375,7 @@ developmentService.getProcessDetail = async (params) => {
         }
         type = 1
     } else if (['plan_running', 'plan_completed'].includes(params.type)) {
-        let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end, params.selectType, params.infoType)
+        let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end, params.selectType, params.infoType, params.selectType1, params.infoType1)
         let ids = ''
         for (let i = 0; i < info.length; i++) {
             ids = `${ids}${info[i].id}","`
