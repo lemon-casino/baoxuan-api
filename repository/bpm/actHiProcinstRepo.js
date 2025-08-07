@@ -1014,7 +1014,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
         switch (typeList[i]) {
             case 'total': 
                 sql = `${sql}
-                    SELECT COUNT(p.PROC_INST_ID_) AS count, 'total' AS type, 
+                    SELECT COUNT(DISTINCT p.PROC_INST_ID_) AS count, 'total' AS type, 
                         (CASE WHEN d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') THEN '市场分析推品' 
                             WHEN d.KEY_ IN ('iptplc', 'iptplcxb') THEN 'IP推品' 
                             WHEN d.KEY_ IN ('zytplc', 'ziyantuipin') THEN '自研推品' 

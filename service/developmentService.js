@@ -4133,6 +4133,11 @@ developmentService.getProcessInfo = async (params) => {
             tmp['zy'] = 0
             tmp['ip'] = 0
             tmp['scfx'] = 0
+            defaultTmp['ft'] = 0
+            defaultTmp['gys'] = 0
+            defaultTmp['zy'] = 0
+            defaultTmp['ip'] = 0
+            defaultTmp['scfx'] = 0
             let infoType = 'developer', infoMap = {}
             defaultTmp = JSON.parse(JSON.stringify(tmp))
             defaultTmp.developer = '合计'
@@ -4150,18 +4155,23 @@ developmentService.getProcessInfo = async (params) => {
                     switch (data[i].develop_type) {
                         case '反推推品':
                             result[infoMap[data[i][infoType]]]['ft'] += data[i].count
+                            defaultTmp['ft'] += data[i].count
                             break
                         case '供应商推品':
                             result[infoMap[data[i][infoType]]]['gys'] += data[i].count
+                            defaultTmp['gys'] += data[i].count
                             break
                         case '自研推品':
                             result[infoMap[data[i][infoType]]]['zy'] += data[i].count
+                            defaultTmp['zy'] += data[i].count
                             break
                         case 'IP推品':
                             result[infoMap[data[i][infoType]]]['ip'] += data[i].count
+                            defaultTmp['ip'] += data[i].count
                             break
                         default:                        
                             result[infoMap[data[i][infoType]]]['scfx'] += data[i].count
+                            defaultTmp['scfx'] += data[i].count
                     }
             }
             for (let i = 0; i < result.length; i++) {
