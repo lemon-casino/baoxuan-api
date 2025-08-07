@@ -681,8 +681,6 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
                 const textField_lma827oe= runningFightingFlow.linkId
                 // 问题类型
                 const checkboxField_m11r277t = runningFightingFlow.questionType
-                // 问题难度
-                const  radioField_locg3nxq= '简单'
 
                 const variables = ({
                     textField_lma827od,
@@ -690,7 +688,6 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
                     textField_lma827oe,
                     selectField_lma827of,
                     checkboxField_m11r277t,
-                    radioField_locg3nxq
                 });
                 await commonReq.createJDProcess(269, processDefinitionId, variables,aa.data.refreshToken)
                 // await commonReq.createJDProcess(144, "fdvfdgbnfg:1:94d56ff2-4765-11f0-b865-d8bbc176bad5", variables)
