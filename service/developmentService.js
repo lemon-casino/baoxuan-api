@@ -3969,6 +3969,8 @@ developmentService.getProcessInfo = async (params) => {
                 let index = `${data[i].division}_${data[i].develop_type}`
                 if (dataMap[index] == undefined) {
                     dataMap[index] = result.length
+                    tmp['id'] = result.length.toString()
+                    tmp['parent_id'] = null
                     result.push(JSON.parse(JSON.stringify(tmp)))
                     result[dataMap[index]]['division'] = data[i].division
                     result[dataMap[index]]['develop_type'] = data[i].develop_type                 
@@ -4046,6 +4048,8 @@ developmentService.getProcessInfo = async (params) => {
                     }
                 }
             }
+            defaultTmp['id'] = result.length
+            defaultTmp['parent_id'] = null
             result.push(defaultTmp)
             break
         case '1':
@@ -4057,6 +4061,8 @@ developmentService.getProcessInfo = async (params) => {
             for (let i = 0; i < typeList.length; i++) {
                 tmp[typeList[i]] = 0
             }
+            tmp['id'] = result.length.toString()
+            tmp['parent_id'] = null
             result.push(tmp)
             for (let i = 0; i < data.length; i++) {
                 result[0][data[i].type] += data[i].count
@@ -4070,6 +4076,8 @@ developmentService.getProcessInfo = async (params) => {
             for (let i = 0; i < typeList.length; i++) {
                 tmp[typeList[i]] = 0
             }
+            tmp['id'] = result.length.toString()
+            tmp['parent_id'] = null
             result.push(tmp)
             for (let i = 0; i < data.length; i++) {
                 result[0][data[i].type] += data[i].count
@@ -4166,6 +4174,8 @@ developmentService.getProcessInfo = async (params) => {
                     result[infoMap[data[i][infoType]]][data[i].type] += data[i].count
                 } else {
                     infoMap[data[i][infoType]] = result.length
+                    tmp['id'] = result.length.toString()                  
+                    tmp['parent_id'] = null
                     result.push(JSON.parse(JSON.stringify(tmp)))
                     result[result.length-1][infoType] = data[i][infoType]
                     result[result.length-1][data[i].type] += data[i].count
@@ -4264,17 +4274,19 @@ developmentService.getProcessInfo = async (params) => {
                     }
                 }
             }
+            defaultTmp['parent_id'] = null
+            defaultTmp['id'] = result.length
             result.push(defaultTmp)
             break
         case '4':
             let info = await actHiProcinstRepo.getProcessSelectedCount(start, end)
             defaultTmp = {select_division: '合计', first: 0, second: 0, third: 0, total: 0}
             result = [
-                {select_division: '否', first: 0, second: 0, third: 0, total: 0},
-                {select_division: '刘+陆', first: 0, second: 0, third: 0, total: 0},
-                {select_division: '陆+王', first: 0, second: 0, third: 0, total: 0},
-                {select_division: '刘+王', first: 0, second: 0, third: 0, total: 0},
-                {select_division: '三个', first: 0, second: 0, third: 0, total: 0},
+                {id: '0', parent_id: null, select_division: '否', first: 0, second: 0, third: 0, total: 0},
+                {id: '1', parent_id: null, select_division: '刘+陆', first: 0, second: 0, third: 0, total: 0},
+                {id: '2', parent_id: null, select_division: '陆+王', first: 0, second: 0, third: 0, total: 0},
+                {id: '3', parent_id: null, select_division: '刘+王', first: 0, second: 0, third: 0, total: 0},
+                {id: '4', parent_id: null, select_division: '三个', first: 0, second: 0, third: 0, total: 0},
             ]
             let type = 0, first = 0, second = 0, third = 0
             for (let i = 0; i < info.length; i++) {
@@ -4311,6 +4323,8 @@ developmentService.getProcessInfo = async (params) => {
             defaultTmp.second = result[0].second + result[1].second + result[2].second + result[3].second + result[4].second
             defaultTmp.third = result[0].third + result[1].third + result[2].third + result[3].third + result[4].third
             defaultTmp.total = result[0].total + result[1].total + result[2].total + result[3].total + result[4].total
+            defaultTmp['id'] = '5'
+            defaultTmp['parent_id'] = null
             result.push(defaultTmp)
             break
         default:
@@ -4693,6 +4707,78 @@ developmentService.getProcessDetail = async (params) => {
             }
             if (result[i].image.length) result[i].image = result[i].image.replace(':9000/', ':9003/').replace('http:', 'https:')
         }
+    }
+    return result
+}
+
+developmentService.getProcessRunningTask = async (params) => {
+    let result = [], resultMap = {}, tmp = {}, info = []
+    let start = moment(params.start).format('YYYY-MM-DD')
+    let end = moment(params.end).format('YYYY-MM-DD') + ' 23:59'
+    let defaultTmp = {id: null, parent_id: null, num: 0, average_day: 0, max_day: 0, info: '', list: []}
+    if (params.type == 0) {
+        info = await actHiProcinstRepo.getRunning(start, end)
+    } else {
+        info = await actHiProcinstRepo.getOverDue(start, end)
+    }
+    if (info?.length) {
+        let totalTmp = JSON.parse(JSON.stringify(defaultTmp))
+        totalTmp.id = ''
+        totalTmp.info = '合计'
+        for (let i = 0; i < info.length; i++) {
+            if (resultMap[info[i].dept] == undefined) {
+                resultMap[info[i].dept] = { index: result.length.toString(), children: {} }
+                tmp = JSON.parse(JSON.stringify(defaultTmp))
+                tmp.id = result.length.toString()
+                tmp.info = info[i].dept
+                result.push(tmp)
+            }            
+            let dept_index = resultMap[info[i].dept].index
+            if (resultMap[info[i].dept].children[info[i].operator] == undefined) {
+                resultMap[info[i].dept].children[info[i].operator] = {
+                    index: result.length.toString(),
+                    children: {}
+                }
+                tmp = JSON.parse(JSON.stringify(defaultTmp))
+                tmp.id = result.length.toString()
+                tmp.parent_id = dept_index
+                tmp.info = info[i].operator
+                result.push(tmp)
+            }
+            let operator_index = resultMap[info[i].dept].children[info[i].operator].index
+            if (resultMap[info[i].dept].children[info[i].operator].children[info[i].node] == undefined) {
+                resultMap[info[i].dept].children[info[i].operator].children[info[i].node] = result.length.toString()
+                tmp = JSON.parse(JSON.stringify(defaultTmp))
+                tmp.id = result.length.toString()
+                tmp.parent_id = operator_index
+                tmp.info = info[i].node
+                result.push(tmp)
+            }
+            let node_index = resultMap[info[i].dept].children[info[i].operator].children[info[i].node]
+            result[dept_index].average_day = result[dept_index].num > 0 ? 
+                ((result[dept_index].average_day * result[dept_index].num + info[i].due_date) / (result[dept_index].num + 1)).toFixed(2) : info[i].due_date
+            result[dept_index].num += 1
+            result[dept_index].max_day = result[dept_index].max_day < info[i].due_date ? 
+                info[i].due_date : result[dept_index].max_day
+            result[dept_index].list.push(info[i])
+            result[operator_index].average_day = result[operator_index].num > 0 ? 
+                ((result[operator_index].average_day * result[operator_index].num + info[i].due_date) / (result[operator_index].num + 1)).toFixed(2) : info[i].due_date
+            result[operator_index].num += 1
+            result[operator_index].max_day = result[operator_index].max_day < info[i].due_date ? 
+                info[i].due_date : result[operator_index].max_day
+            result[operator_index].list.push(info[i])
+            result[node_index].average_day = result[node_index].num > 0 ? 
+                ((result[node_index].average_day * result[node_index].num + info[i].due_date) / (result[node_index].num + 1)).toFixed(2) : info[i].due_date
+            result[node_index].num += 1
+            result[node_index].max_day = result[node_index].max_day < info[i].due_date ? 
+                info[i].due_date : result[node_index].max_day
+            result[node_index].list.push(info[i])
+            totalTmp.average_day = ((totalTmp.average_day * totalTmp.num + info[i].due_date) / (totalTmp.num + 1)).toFixed(2)
+            totalTmp.num += 1
+            totalTmp.max_day = totalTmp.max_day < info[i].due_date ? info[i].due_date : totalTmp.max_day
+        }
+        totalTmp.id = result.length.toString()
+        result.push(totalTmp)
     }
     return result
 }
