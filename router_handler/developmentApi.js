@@ -550,6 +550,15 @@ const getProcessDetail = async (req, res, next) => {
     }
 }
 
+const getProcessRunningTask = async (req, res, next) => {
+    try {
+        let result = await developmentService.getProcessRunningTask(req.query)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getWorkPannel, 
     getWorkDetail,
@@ -581,5 +590,6 @@ module.exports = {
     getfirst,
     getfirstInfo,
     getProcessInfo,
-    getProcessDetail
+    getProcessDetail,
+    getProcessRunningTask
 }

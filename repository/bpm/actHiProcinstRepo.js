@@ -70,6 +70,85 @@ actHiProcinstRepo.getRunning = async (start, end) => {
     return result
 }
 
+actHiProcinstRepo.getOverDue = async (start, end) => {
+    let sql = `SELECT p.START_TIME_ AS create_time, p.NAME_ AS title,  
+            CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail\?id=', p.ID_) AS link,
+            t.NAME_ AS node, u.nickname AS operator, u1.nickname, 
+            (CASE WHEN u.nickname = '陆瑶' THEN '事业二部' 
+                WHEN u.nickname = '刘海涛' THEN '事业一部' 
+                WHEN u.nickname = '王洪彬' THEN '事业三部' 
+                WHEN u.nickname = '郑艳艳' THEN '企划部' 
+                WHEN u.nickname = '鲁红旺' THEN '货品部' 
+                WHEN u.nickname = '杨利强' THEN '货品部' 
+                WHEN u.nickname IN ('郑河', '崔竹') THEN '管理中台' 
+                WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' OR dp.name LIKE '%小红书%' THEN '事业三部' 
+                WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
+                WHEN dp.name LIKE '%拼多多%' OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%' THEN '事业一部' 
+                WHEN dp.name LIKE '%开发%' OR dp.name LIKE '%企划%' OR dp.name LIKE '%市场%' THEN '企划部' 
+                WHEN dp.name LIKE '%采购%' OR dp.name LIKE '%物流%' OR dp.name LIKE '%库房%' OR dp.name LIKE '%品控%' THEN '货品部' 
+                WHEN dp.name LIKE '%客服%' THEN '客服部' 
+                WHEN dp.name LIKE '%摄影%' OR dp.name LIKE '%视觉%' OR dp.name LIKE '%设计%' THEN '视觉部' 
+                WHEN dp.name LIKE '%人事%' THEN '人事部' 
+                WHEN dp.name LIKE '%数据%' THEN '数据中台' 
+                WHEN dp.name LIKE '%财务%' THEN '财务部' ELSE '未拉取到部门' END) AS dept, 
+            IFNULL(u2.nickname, IF(d.KEY_ IN ('fttplc', 'fantuituipin'), '', u1.nickname)) AS developer, 
+            CASE WHEN d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') THEN '市场分析推品' 
+                WHEN d.KEY_ IN ('iptplc', 'iptplcxb') THEN 'IP推品' 
+                WHEN d.KEY_ IN ('zytplc', 'ziyantuipin') THEN '自研推品' 
+                WHEN d.KEY_ IN ('gystplc', 'gongyingshangtuipin') THEN '供应商推品' 
+                ELSE '反推推品' END AS type, t.START_TIME_ AS start_time, IFNULL(t.END_TIME_, NOW()) AS end_time, 
+            IFNULL(v2.TEXT_, '') AS task_reason, (CASE v5.LONG_ WHEN 1 THEN '审批中' WHEN 2 THEN '审批通过' 
+                WHEN 3 THEN '审批不通过' ELSE '已取消' END) AS task_status, IFNULL(v3.TEXT_, '') AS platform, 
+            DATEDIFF(IFNULL(t.END_TIME_, NOW()), t.START_TIME_) AS due_date 
+        FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_ 
+        JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ AND v.NAME_ = 'PROCESS_STATUS' 
+            AND v.LONG_ NOT IN (-1, 4)
+			AND v.LAST_UPDATED_TIME_ = (SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+				WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ AND vv.NAME_ = v.NAME_)
+        JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+        JOIN ACT_HI_VARINST v4 ON v4.PROC_INST_ID_ = p.PROC_INST_ID_ AND v4.NAME_ = 'WORK_DUE_DATE' 
+			AND v4.TASK_ID_ = t.ID_ 
+        JOIN ACT_HI_VARINST v5 ON v5.PROC_INST_ID_ = p.PROC_INST_ID_ AND v5.NAME_ = 'TASK_STATUS' 
+            AND v5.TASK_ID_ = t.ID_ 
+			AND v5.LAST_UPDATED_TIME_ = (SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+				WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ AND vv.TASK_ID_ = t.ID_ AND vv.NAME_ = v5.NAME_)
+        LEFT JOIN system_users u ON u.id = t.ASSIGNEE_ 
+        LEFT JOIN system_dept dp ON dp.id = u.dept_id 
+        JOIN system_users u1 ON u1.id = p.START_USER_ID_ 
+        LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
+            AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
+                SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+                WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                    AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v1.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
+            AND v1.LAST_UPDATED_TIME_ = (
+                SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                    AND vv.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963'))         
+        LEFT JOIN ACT_HI_VARINST v3 ON v3.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v3.NAME_ = 'Fj1ama2csbpoabc' 
+            AND v3.LAST_UPDATED_TIME_ = (
+                SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ AND vv.NAME_ = v3.NAME_) 
+        LEFT JOIN system_users u2 ON u2.id = IFNULL(tx.ASSIGNEE_, v1.TEXT_) 
+        LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ AND v2.TASK_ID_ = t.ID_ 
+            AND v2.NAME_ = 'TASK_REASON' AND v2.LAST_UPDATED_TIME_ = (
+                SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ AND vv.TASK_ID_ = t.ID_ AND vv.NAME_ = v2.NAME_)
+        WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin', 
+            'iptplc', 'iptplcxb', 
+            'zytplc', 'ziyantuipin', 
+            'gystplc', 'gongyingshangtuipin', 
+            'fttplc', 'fantuituipin') 
+            AND p.START_TIME_ BETWEEN "${start}" AND "${end}" 
+            AND DATE_ADD(FROM_UNIXTIME(v4.LONG_ / 1000), INTERVAL 8 HOUR) < IFNULL(t.END_TIME_, NOW())
+            AND d.CATEGORY_ != 'ceshi'`
+    let result = await query(sql)
+    return result
+}
+
 actHiProcinstRepo.getFinish = async (start, end) => {
     let sql = `SELECT D.NAME_ AS name, P.NAME_ AS title, P.START_TIME_ AS create_time, 
             CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail\?id=', P.ID_) AS link,
