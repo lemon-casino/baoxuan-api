@@ -231,22 +231,34 @@ const importGoodsSku = async (rows) => {
             rows[i].getCell(sku_id_row).value.trim() : 
             rows[i].getCell(sku_id_row).value
         let on_goods_id = typeof(rows[i].getCell(on_goods_id_row).value) == 'string' ? 
-            rows[i].getCell(on_goods_id_row).value.trim() : 
+            rows[i].getCell(on_goods_id_row).value.trim().replace(/_x([0-9A-F]{4})_/g, (m, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+          }) : 
             rows[i].getCell(on_goods_id_row).value
         let on_sku_id = typeof(rows[i].getCell(on_sku_id_row).value) == 'string' ? 
-            rows[i].getCell(on_sku_id_row).value.trim() : 
+            rows[i].getCell(on_sku_id_row).value.trim().replace(/_x([0-9A-F]{4})_/g, (m, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+          }) : 
             rows[i].getCell(on_sku_id_row).value
         let or_sku_id = typeof(rows[i].getCell(or_sku_id_row).value) == 'string' ? 
-            rows[i].getCell(or_sku_id_row).value.trim() : 
+            rows[i].getCell(or_sku_id_row).value.trim().replace(/_x([0-9A-F]{4})_/g, (m, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+          }) : 
             rows[i].getCell(or_sku_id_row).value
         let on_sku_code = typeof(rows[i].getCell(on_sku_code_row).value) == 'string' ? 
-            rows[i].getCell(on_sku_code_row).value.trim() : 
+            rows[i].getCell(on_sku_code_row).value.trim().replace(/_x([0-9A-F]{4})_/g, (m, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+          }) : 
             rows[i].getCell(on_sku_code_row).value        
         let sys_goods_id = typeof(rows[i].getCell(sys_goods_id_row).value) == 'string' ? 
-            rows[i].getCell(sys_goods_id_row).value.trim() : 
+            rows[i].getCell(sys_goods_id_row).value.trim().replace(/_x([0-9A-F]{4})_/g, (m, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+          }) : 
             rows[i].getCell(sys_goods_id_row).value       
         let sys_sku_id = typeof(rows[i].getCell(sys_sku_id_row).value) == 'string' ? 
-            rows[i].getCell(sys_sku_id_row).value.trim() : 
+            rows[i].getCell(sys_sku_id_row).value.trim().replace(/_x([0-9A-F]{4})_/g, (m, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+          }) : 
             rows[i].getCell(sys_sku_id_row).value     
         let is_shelf = typeof(rows[i].getCell(is_shelf_row).value) == 'string' ? 
             rows[i].getCell(is_shelf_row).value.trim() : 

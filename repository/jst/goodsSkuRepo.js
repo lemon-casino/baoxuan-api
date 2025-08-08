@@ -155,14 +155,20 @@ goodsSkuRepo.getSalesBySysSkuId1 = async (start, end, type) => {
         FROM (SELECT a2.goods_id, IF(pc.\`商品编码\` IS NOT NULL, 
             pc.\`商品编码\`, a2.sys_sku_id) AS sku_id, a1.create_time FROM (
             SELECT sys_sku_id, MIN(create_time) AS create_time 
-            FROM jst_goods_sku GROUP BY sys_sku_id
+            FROM jst_goods_sku GROUP BY sys_sku_id 
         ) a1 LEFT JOIN jst_goods_sku a2 ON a1.sys_sku_id = a2.sys_sku_id
-        LEFT JOIN danpin.combination_product_code pc ON pc.\`组合商品编码\` = a1.sys_sku_id
-        WHERE a1.create_time BETWEEN ? AND ?  
+        LEFT JOIN danpin.combination_product_code pc ON pc.\`组合商品编码\` = a1.sys_sku_id 
+        WHERE a1.create_time >= DATE_SUB("${start}", INTERVAL ${time1} DAY) 
         GROUP BY a2.goods_id, IF(pc.\`商品编码\` IS NOT NULL, 
-            pc.\`商品编码\`, a2.sys_sku_id), a1.create_time) s1
+            pc.\`商品编码\`, a2.sys_sku_id), a1.create_time        
+		UNION ALL 
+        SELECT d.brief_name AS goods_id, d.code AS sku_id, d.onsale_date AS create_time FROM  
+        dianshang_operation_attribute d WHERE d.platform = '自营' AND d.code IS NOT NULL 
+            AND d.onsale_date >= DATE_SUB("${start}", INTERVAL ${time1} DAY)) s1
         JOIN danpin.goods_info gi ON gi.\`商品编码\` = s1.sku_id
-        JOIN goods_sale_info s2 ON s2.goods_id = s1.goods_id AND s2.sku_code = s1.sku_id
+        JOIN goods_sale_info s2 ON s2.goods_id = s1.goods_id 
+            AND (s2.sku_code = s1.sku_id OR s2.sku_id = s1.sku_id)  
+            AND s2.date BETWEEN ? AND ? 
             AND s2.date >= DATE_ADD(s1.create_time, INTERVAL ${time} DAY) 
             AND s2.date < DATE_ADD(s1.create_time, INTERVAL ${time1} DAY) 
         JOIN shop_info si ON si.shop_name = s2.shop_name

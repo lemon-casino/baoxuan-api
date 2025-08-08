@@ -198,21 +198,29 @@ const getRunningProcessInfo = async (req, res, next) => {
         let result           
         const workbook = new ExcelJS.Workbook()
         const worksheet = workbook.addWorksheet()
-        result = await developmentService.getRunningProcessInfo()
+        result = await developmentService.getRunningProcessInfo(req.query)
         worksheet.columns = [
-            {header: '流程名称', key: 'title'},
+            {header: '日期', key: 'create_time'},
             {header: '链接', key: 'link'},
-            {header: '流程标题', key: 'name'},
-            {header: '流程创建时间', key: 'create_time'},
-            {header: '卡滞节点', key: 'node'},
-            {header: '操作人', key: 'operator'},
+            {header: '推品类型', key: 'type'},
+            {header: '流程名称', key: 'title'},
+            {header: '发起人', key: 'nickname'},
+            {header: '开发人', key: 'developer'},
+            {header: '渠道', key: 'platform'},
+            {header: '卡滞部门', key: 'dept'},
+            {header: '目前卡滞人', key: 'operator'},
+            {header: '目前卡滞节点', key: 'node'},
+            {header: '开始时间', key: 'start_time'},
+            {header: '审批状态', key: 'task_status'},
+            {header: '审批建议', key: 'task_reason'},
+            {header: '卡滞天数', key: 'due_date'},
         ]
         for (let i = 0; i < result.length; i++) {                           
             worksheet.addRow(result[i])
         }
         const buffer = await workbook.xlsx.writeBuffer()
-        let start = moment().subtract(14, 'day').format('YYYY-MM-DD')
-        let end = moment().format('YYYY-MM-DD')
+        let start = moment(req.query.start_time).format('YYYY-MM-DD') || moment().format('YYYY-MM-DD')
+        let end = moment(req.query.end_time).format('YYYY-MM-DD') || moment().format('YYYY-MM-DD')
         res.setHeader('Content-Disposition', `attachment; filename="${start}~${end}~running-process.xlsx"`)
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')        
         return res.send(buffer)
@@ -542,6 +550,15 @@ const getProcessDetail = async (req, res, next) => {
     }
 }
 
+const getProcessRunningTask = async (req, res, next) => {
+    try {
+        let result = await developmentService.getProcessRunningTask(req.query)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getWorkPannel, 
     getWorkDetail,
@@ -573,5 +590,6 @@ module.exports = {
     getfirst,
     getfirstInfo,
     getProcessInfo,
-    getProcessDetail
+    getProcessDetail,
+    getProcessRunningTask
 }
