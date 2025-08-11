@@ -7,9 +7,23 @@ goodsMonthSalesTarget.getInfo = async (goods_id, month) => {
     const result = await query(sql, [goods_id, month])
     return result || []
 }
+goodsMonthSalesTarget.getInfo = async (goods_id, month) => {
+    const sql = `SELECT * FROM goods_monthly_sales_target WHERE goods_id = ? 
+        AND month = ?`
+    const result = await query(sql, [goods_id, month])
+    return result || []
+}
 
-goodsMonthSalesTarget.batchInsert = async (count, data) => {
-    let sql = `INSERT INTO goods_monthly_sales_target(goods_id, month, amount) VALUES`
+goodsMonthSalesTarget.getIdInfo = async (goods_id) => {
+    const sql = `SELECT * FROM dianshang_operation_attribute WHERE goods_id = ? `
+    const result = await query(sql, [goods_id])
+    return result || []
+}
+
+goodsMonthSalesTarget.batchInsert = async (count, data, tag) => {
+    if (tag ==1){column = 'goods_id'}
+    else{column = 'sku_id'}
+    let sql = `INSERT INTO goods_monthly_sales_target(${column}, month, amount) VALUES`
     for (let i = 0; i < count; i++) {
         sql = `${sql}(?,?,?),`
     }
@@ -18,8 +32,10 @@ goodsMonthSalesTarget.batchInsert = async (count, data) => {
     return result?.affectedRows ? true : false
 }
 
-goodsMonthSalesTarget.update = async (goods_id, month, amount) => {
-    const sql = `UPDATE goods_monthly_sales_target SET amount = ? WHERE goods_id = ? 
+goodsMonthSalesTarget.update = async (goods_id, month, amount,tag) => {
+    if (tag ==1){column = 'goods_id'}
+    else{column = 'sku_id'}
+    const sql = `UPDATE goods_monthly_sales_target SET amount = ? WHERE ${column} = ? 
         AND month = ?`
     const result = await query(sql, [amount, goods_id, month])
     return result?.affectedRows ? true : false

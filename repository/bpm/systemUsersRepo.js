@@ -8,7 +8,7 @@ systemUsersRepo.getRefreshToken = async (mobile) => {
     return result
 }
 systemUsersRepo.getID = async (nickname) => {
-    let sql = `SELECT id FROM system_users WHERE nickname = ?`
+    let sql = `SELECT id FROM system_users WHERE nickname = ? AND status = 0 `
     let result = await query(sql, [nickname])
     return result
 }

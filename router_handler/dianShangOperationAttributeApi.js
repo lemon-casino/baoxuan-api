@@ -606,7 +606,7 @@ const updatetGoodsMonthlySalesTarget = async (req, res, next) => {
             month: {value: month, schema: joiUtil.commonJoiSchemas.strNumRequired},
             amount: {value: amount, schema: joiUtil.commonJoiSchemas.strNumRequired}
         })
-        const result = await goodsMonthlySalesTargetService.goodsUpdate (goods_id,month,amount)
+        const result = await goodsMonthlySalesTargetService.goodsUpdate(goods_id,month,amount)
         if (result) return res.send(biResponse.success(result))
         return res.send(biResponse.createFailed())
     } catch (e) {
