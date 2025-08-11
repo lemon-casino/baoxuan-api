@@ -42,10 +42,12 @@ goodsMonthSalesTargetService.import = async (rows) => {
 }
 
 goodsMonthSalesTargetService.goodsUpdate = async (goods_id,month,amount) => {
-    let result= null,data = []
+    let result= null,data = [],tag=0
     let info = await goodsMonthSalesTarget.getInfo(goods_id,month)
+    let info1 = await goodsMonthSalesTarget.getIdInfo(goods_id)
+    if (info1.length) tag = 1
     if (info?.length){
-        result = await goodsMonthSalesTarget.update(goods_id, month, amount)
+        result = await goodsMonthSalesTarget.update(goods_id, month, amount,tag)
     }else{
         data.push(
             goods_id,
@@ -53,7 +55,7 @@ goodsMonthSalesTargetService.goodsUpdate = async (goods_id,month,amount) => {
             amount
         )
         count = 1
-        result = await goodsMonthSalesTarget.batchInsert(count, data)
+        result = await goodsMonthSalesTarget.batchInsert(count, data,tag)
     }
     return result
 }

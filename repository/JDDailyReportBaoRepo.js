@@ -31,13 +31,13 @@ const inquiryTodayjdDailyReport = async () => {
                 ELSE '老品'
             END) AS listing_Info
         FROM jd_daily_report 
-        WHERE report_time BETWEEN DATE_SUB(CURRENT_DATE,INTERVAL 14 DAY) AND DATE_SUB(CURRENT_DATE,INTERVAL 8 DAY) 
+        WHERE report_time BETWEEN DATE_SUB(CURRENT_DATE,INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE,INTERVAL 1 DAY) 
         GROUP BY code
         )AS a
         LEFT JOIN (
                 SELECT code,SUM(transaction_amount) AS s_sale_amount 
                 FROM jd_daily_report 
-                WHERE report_time BETWEEN DATE_SUB(CURRENT_DATE,INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE,INTERVAL 1 DAY) 
+                WHERE report_time BETWEEN DATE_SUB(CURRENT_DATE,INTERVAL 14 DAY) AND DATE_SUB(CURRENT_DATE,INTERVAL 8 DAY) 
                 GROUP BY code
         )AS b
         ON a.code = b.code) AS a 
