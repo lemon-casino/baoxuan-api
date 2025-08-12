@@ -4544,7 +4544,7 @@ developmentService.getProcessDetail = async (params) => {
                     result[i].image = content[j]
                 }
             }
-            if (result[i].image.length) result[i].image = result[i].image.replace(':9000/', ':9003/').replace('http:', 'https:')
+            if (result[i].image.length) result[i].image = result[i].image.replace(':9000/', ':9003/').replace('http:', 'https:').replace('//bpm.', '//minio.')
             if (result[i].info) {
                 result[i]['pre_purchase_num'] = 0
                 result[i]['first_purchase'] = '否'
@@ -4705,7 +4705,7 @@ developmentService.getProcessDetail = async (params) => {
             if (result[i].end_time) {
                 result[i]['total_duration'] = moment(result[i].end_time).diff(moment(result[i].start_time), 'd')
             }
-            if (result[i].image.length) result[i].image = result[i].image.replace(':9000/', ':9003/').replace('http:', 'https:')
+            if (result[i].image.length) result[i].image = result[i].image.replace(':9000/', ':9003/').replace('http:', 'https:').replace('//bpm.', '//minio.')
         }
     }
     return result
