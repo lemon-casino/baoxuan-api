@@ -292,10 +292,12 @@ const getOperateAttributesMaintainer = async (skuId) => {
 };
 
 const updateAttribute =async()=>{
+    // 更新新老品
     let sql = `update dianshang_operation_attribute 
     set link_attribute = (CASE WHEN DATE_SUB(DATE(NOW()), INTERVAL 60 DAY) <= onsale_date THEN '新品' ELSE '老品' END)
     WHERE platform ='天猫部'`
     await query(sql)
+    // 链接定义['爆款','动销以上','动销以下' ] 打标签
     sql = `UPDATE dianshang_operation_attribute a
             LEFT JOIN(
             select a.goods_id
@@ -317,12 +319,14 @@ const updateAttribute =async()=>{
             on a.goods_id =b.goods_id
             set a.userDef5= b.userDef5`
     await query(sql)
+    // 更新链接动作
     sql = `UPDATE dianshang_operation_attribute set userDef7 ='计划打爆' where platform = '天猫部' AND (userDef5 ='动销以上' OR link_attribute ='新品')`
     await query(sql)
+    // 更新京东链接状态
     sql = `UPDATE dianshang_operation_attribute set userDef1 = '下柜'
             WHERE sku_id in (
                 select SKU from danpin.inventory_jdzz 
-                where 时间 BETWEEN '2025-08-07' and '2025-08-11' and 上下柜状态='下柜' and 全国现货库存 = 0
+                where 时间 DATE_SUB(DATE(NOW()), INTERVAL 1 DAY) and 上下柜状态='下柜' and 全国现货库存 = 0
             ) and userDef1 = '销完下架'`
     const result = await query(sql)
     return result
