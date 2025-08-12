@@ -291,6 +291,42 @@ const getOperateAttributesMaintainer = async (skuId) => {
     }
 };
 
+const updateAttribute =async()=>{
+    let sql = `update dianshang_operation_attribute 
+    set link_attribute = (CASE WHEN DATE_SUB(DATE(NOW()), INTERVAL 60 DAY) <= onsale_date THEN '新品' ELSE '老品' END)
+    WHERE platform ='天猫部'`
+    await query(sql)
+    sql = `UPDATE dianshang_operation_attribute a
+            LEFT JOIN(
+            select a.goods_id
+                    ,(case 
+                        WHEN b.tag >=1500 THEN '爆款'	
+                        WHEN b.tag <1500 and b.tag>=400 THEN '动销以上'
+                        WHEN b.tag <400  THEN '动销以下' 
+                        END) as userDef5
+            from dianshang_operation_attribute a 
+            LEFT JOIN(
+            select goods_id,sum(sale_amount)/7 as tag 
+            from goods_sales_stats 
+            WHERE date BETWEEN DATE_SUB(DATE(NOW()), INTERVAL 7 DAY) and DATE_SUB(DATE(NOW()), INTERVAL 1 DAY) 
+            and shop_name = 'pakchoice旗舰店（天猫）' 
+            GROUP BY goods_id ) b
+            on a.goods_id = b.goods_id
+            HAVING userDef5 is not null
+            ) b
+            on a.goods_id =b.goods_id
+            set a.userDef5= b.userDef5`
+    await query(sql)
+    sql = `UPDATE dianshang_operation_attribute set userDef7 ='计划打爆' where platform = '天猫部' AND (userDef5 ='动销以上' OR link_attribute ='新品')`
+    await query(sql)
+    sql = `UPDATE dianshang_operation_attribute set userDef1 = '下柜'
+            WHERE sku_id in (
+                select SKU from danpin.inventory_jdzz 
+                where 时间 BETWEEN '2025-08-07' and '2025-08-11' and 上下柜状态='下柜' and 全国现货库存 = 0
+            ) and userDef1 = '销完下架'`
+    const result = await query(sql)
+    return result
+}
 
 module.exports = {
     getProductAttrDetails,
@@ -306,6 +342,7 @@ module.exports = {
     bulkCreateTable,
     getOperateAttributesMaintainer,
     savelog,
-    saveupdatelog
+    saveupdatelog,
+    updateAttribute
 }
 

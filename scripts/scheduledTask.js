@@ -29,6 +29,7 @@ let syncRunningFlowsCron = "0 0 8 * * ?"
 let tmallLinkData = "45 13 * * 1-6"
 let jdLinkData  = "45 15 * * 1,4"
 let caigouLinkData  = "*/5 * * * 1-6"
+let attributeData = "0 8 * * 1-7"
 //转正通知 周一到周六  每天9点半触发流程
 let confirmationNotice = "0 30 9 * * 1-6"
 if (process.env.NODE_ENV === "dev") {
@@ -262,4 +263,14 @@ schedule.scheduleJob("0 0 0 * * ?", async function () {
     }
 })
 
+schedule.scheduleJob(attributeData, async function () {
+    try {
+        if (process.env.NODE_ENV === "prod") {
+            await taskService.updateAttribute()
+        }
+    } catch (error) {
+        console.error("执行任务时出错:", error);
+    } finally {
 
+    }
+});
