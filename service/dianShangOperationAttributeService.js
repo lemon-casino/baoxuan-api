@@ -1,3 +1,4 @@
+const moment = require('moment')
 const dianShangOperationAttributeRepo = require("../repository/dianShangOperationAttributeRepo")
 
 const getPagingOperateAttributes = async (deptId,
@@ -140,6 +141,13 @@ const uploadtmBulkUploadsTable = async (translatedData) => {
 
 };
 
+const updateAttribute = async()=>{
+    let date = moment().format('YYYY-MM-DD')
+    let result = await dianShangOperationAttributeRepo.updateAttribute()
+    logger.info(`${date}商品属性维护刷新成功`)
+    return result
+}
+
 module.exports = {
     getPagingOperateAttributes,
     getProductAttrDetails,
@@ -150,5 +158,6 @@ module.exports = {
     uploadBulkUploadsTable,
     uploadtmBulkUploadsTable,
     savelog,
-    saveupdatelog
+    saveupdatelog,
+    updateAttribute
 }

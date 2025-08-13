@@ -1877,7 +1877,7 @@ const importGoodsDSR = async (rows, time) => {
         let dsr = rows[i].getCell(6).value
         if (typeof(dsr) == 'string' && dsr.indexOf('分') != -1) {
             dsr = dsr.replace('分', '')
-        } else if (typeof(dsr) == 'string' && dsr.indexOf('未诊断') != -1) {
+        } else if (typeof(dsr) == 'string' && (dsr.indexOf('未诊断') != -1 || dsr.indexOf('无') != -1)) {
             dsr = 0
         }
         dsr = parseInt(dsr)
@@ -3378,45 +3378,41 @@ const getReportInfo = async (lstart, lend,preStart,preEnd,goodsinfo) =>{
     }).flat()
     // 组内人效=组发货金额/人数
     // 租金额占比=个人发货金额/汇总发货金额
-    // const sortOrder = {
-    //     "一组": 1,
-    //     "二组": 2,
-    //     "三组": 3,
-    //     "四组": 4,
-    //     "无操作": 5 
-    // }
+    const sortOrder = {
+        "孙文涛组": 1,
+        "朱梦婷组": 2,
+        "无操作": 3 
+    }
     
     // 提取组别名称
-    // const extractGroupName = (teamName) => {
-    //     if (teamName.includes("一组")) return "一组";
-    //     if (teamName.includes("二组")) return "二组";
-    //     if (teamName.includes("三组")) return "三组";
-    //     if (teamName.includes("四组")) return "四组";
-    //     return "无操作" // 默认返回 "无操作"
-    // }
+    const extractGroupName = (teamName) => {
+        if (teamName.includes("孙文涛组")) return "孙文涛组";
+        if (teamName.includes("朱梦婷组")) return "朱梦婷组";
+        return "无操作" // 默认返回 "无操作"
+    }
     
     // 排序函数
-    // const sortedData = result.sort((a, b) => {
-    //     const groupA = extractGroupName(a.team_name)
-    //     const groupB = extractGroupName(b.team_name)
-    //     return sortOrder[groupA] - sortOrder[groupB]
-    // })
     const sortedData = result.sort((a, b) => {
-        const specialOperators = [
-            "天猫组汇总", "天猫组环比",
-            "无操作", "无操作汇总", "无操作环比",
-            "总计", "总计汇总", "总计环比",
-          ];
-        
-          const aIsSpecial = specialOperators.includes(a.operator);
-          const bIsSpecial = specialOperators.includes(b.operator);
-          if (aIsSpecial && bIsSpecial) {
-            return specialOperators.indexOf(a.operator) - specialOperators.indexOf(b.operator);
-          }
-          if (aIsSpecial) return 1;
-          if (bIsSpecial) return -1;
-          return a.operator.localeCompare(b.operator, 'zh-CN');
+        const groupA = extractGroupName(a.team_name)
+        const groupB = extractGroupName(b.team_name)
+        return sortOrder[groupA] - sortOrder[groupB]
     })
+    // const sortedData = result.sort((a, b) => {
+    //     const specialOperators = [
+    //         "天猫组汇总", "天猫组环比",
+    //         "无操作", "无操作汇总", "无操作环比",
+    //         "总计", "总计汇总", "总计环比",
+    //       ];
+        
+    //       const aIsSpecial = specialOperators.includes(a.operator);
+    //       const bIsSpecial = specialOperators.includes(b.operator);
+    //       if (aIsSpecial && bIsSpecial) {
+    //         return specialOperators.indexOf(a.operator) - specialOperators.indexOf(b.operator);
+    //       }
+    //       if (aIsSpecial) return 1;
+    //       if (bIsSpecial) return -1;
+    //       return a.operator.localeCompare(b.operator, 'zh-CN');
+    // })
 
     const filteredData = sortedData.filter(item => !["无操作汇总", "总计汇总"].some(group => item.team_name.includes(group)))
     data.data = []
@@ -3477,44 +3473,42 @@ const getTMPromotion = async (lstart, lend) =>{
     ]}
     let result = await goodsSaleInfoRepo.getTMPromotion(lstart, lend)
     // 按组排序
-    // const sortOrder = {
-    //     "一组": 1,
-    //     "二组": 2,
-    //     "三组": 3,
-    //     "四组": 4,
-    //     "无操作": 5 
-    // }
-    // // 提取组别名称
-    // const extractGroupName = (teamName) => {
-    //     if (teamName.includes("一组")) return "一组";
-    //     if (teamName.includes("二组")) return "二组";
-    //     if (teamName.includes("三组")) return "三组";
-    //     if (teamName.includes("四组")) return "四组";
-    //     return "无操作" // 默认返回 "无操作"
-    // }
-    // // 排序函数
-    // const sortedData = result.sort((a, b) => {
-    //     const groupA = extractGroupName(a.team_name)
-    //     const groupB = extractGroupName(b.team_name)
-    //     return sortOrder[groupA] - sortOrder[groupB]
-    // })
-    // 按人排序
+    const sortOrder = {
+        "孙文涛组": 1,
+        "朱梦婷组": 2,
+        "无操作": 3 
+    }
+    
+    // 提取组别名称
+    const extractGroupName = (teamName) => {
+        if (teamName.includes("孙文涛组")) return "孙文涛组";
+        if (teamName.includes("朱梦婷组")) return "朱梦婷组";
+        return "无操作" // 默认返回 "无操作"
+    }
+    
+    // 排序函数
     const sortedData = result.sort((a, b) => {
-        const specialOperators = [
-            "天猫组汇总", "天猫组环比",
-            "无操作", "无操作汇总", "无操作环比",
-            "总计", "总计汇总", "总计环比",
-          ];
-        
-          const aIsSpecial = specialOperators.includes(a.operator);
-          const bIsSpecial = specialOperators.includes(b.operator);
-          if (aIsSpecial && bIsSpecial) {
-            return specialOperators.indexOf(a.operator) - specialOperators.indexOf(b.operator);
-          }
-          if (aIsSpecial) return 1;
-          if (bIsSpecial) return -1;
-          return a.operator.localeCompare(b.operator, 'zh-CN');
+        const groupA = extractGroupName(a.team_name)
+        const groupB = extractGroupName(b.team_name)
+        return sortOrder[groupA] - sortOrder[groupB]
     })
+    // 按人排序
+    // const sortedData = result.sort((a, b) => {
+    //     const specialOperators = [
+    //         "天猫组汇总", "天猫组环比",
+    //         "无操作", "无操作汇总", "无操作环比",
+    //         "总计", "总计汇总", "总计环比",
+    //       ];
+        
+    //       const aIsSpecial = specialOperators.includes(a.operator);
+    //       const bIsSpecial = specialOperators.includes(b.operator);
+    //       if (aIsSpecial && bIsSpecial) {
+    //         return specialOperators.indexOf(a.operator) - specialOperators.indexOf(b.operator);
+    //       }
+    //       if (aIsSpecial) return 1;
+    //       if (bIsSpecial) return -1;
+    //       return a.operator.localeCompare(b.operator, 'zh-CN');
+    // })
     const filteredData = sortedData.filter(item => !["无操作汇总"].some(group => item.team_name.includes(group)))
     data.data = []
     data.data = filteredData

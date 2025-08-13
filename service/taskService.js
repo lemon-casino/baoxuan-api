@@ -52,6 +52,7 @@ const commonReq = require('@/core/bpmReq/commonReq')
 const systemUsersRepo = require('@/repository/bpm/systemUsersRepo')
 const credentialsReq = require("../core/dingDingReq/credentialsReq")
 const actReProcdefRepo = require('../repository/bpm/actReProcdefRepo')
+const dianShangOperationAttributeService = require('./dianShangOperationAttributeService')
 const writeFile = util.promisify(fs.writeFile);
 const readFile = util.promisify(fs.readFile);
 const syncWorkingDay = async () => {
@@ -781,7 +782,10 @@ async function executeTask(type) {
     }
 }
 
-
+async function updateAttribute() {
+    let result = await dianShangOperationAttributeService.updateAttribute()
+    return result
+}
 
 module.exports = {
     syncOaProcessTemplates,
@@ -807,5 +811,6 @@ module.exports = {
     purchaseSelectionMeetingInitiated,
     saveFlowsToRedisFromFile,
     confirmationNotice,
-    executeTask
+    executeTask,
+    updateAttribute
 }

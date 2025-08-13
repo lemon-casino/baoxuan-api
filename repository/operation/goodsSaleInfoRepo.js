@@ -1555,7 +1555,7 @@ goodsSaleInfoRepo.deleteByDate = async (date, column, except,shop_name) => {
     let sql = `DELETE FROM goods_sale_info WHERE \`date\` = ? 
         AND ${column} IS NULL`
     if (except) sql = `${sql} AND shop_name = '${shop_name}'`
-    else sql = `${sql} AND shop_name != '京东自营-厨具' AND shop_name != '京东自营-自营'`
+    else sql = `${sql} AND shop_name != '京东自营-厨具' AND shop_name != '京东自营-日用'`
     const result = await query(sql, [date])
     return result?.affectedRows ? true : false
 }
