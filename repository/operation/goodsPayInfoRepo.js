@@ -1611,23 +1611,7 @@ goodsPayInfoRepo.getDataDetailByTime = async (column, goods_id, start, end) => {
 }
 
 goodsPayInfoRepo.getDataDetailByTime1 = async (goods_id, start, end) => {
-    const sql = `SELECT IFNULL(SUM(sale_amount), 0) AS real_sale_amount, \`date\` 
-        FROM goods_pay_info WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
-        GROUP BY \`date\``
-    const result = await query(sql, [start, end, goods_id])
-    return result || []
-}
-
-goodsPayInfoRepo.getDataDetailByTime2 = async (goods_id, start, end) => {
     const sql = `SELECT IFNULL(SUM(sale_qty), 0) AS real_sale_qty, \`date\` 
-        FROM goods_pay_info WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
-        GROUP BY \`date\``
-    const result = await query(sql, [start, end, goods_id])
-    return result || []
-}
-
-goodsPayInfoRepo.getDataDetailByTime3 = async (goods_id, start, end) => {
-    const sql = `SELECT IFNULL(SUM(gross_profit), 0) AS real_gross_profit, \`date\` 
         FROM goods_pay_info WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
         GROUP BY \`date\``
     const result = await query(sql, [start, end, goods_id])
