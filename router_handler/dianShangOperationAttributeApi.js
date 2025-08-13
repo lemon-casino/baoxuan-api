@@ -191,7 +191,10 @@ const uploadTable = async (req, res, next) => {
             '自定义7': 'userDef7',
             '自定义8': 'userDef8',
             '自定义9': 'userDef9',
-            '自定义10': 'userDef10'
+            '自定义10': 'userDef10',
+            '体量目标': 'VolumeTarget',
+            '产品阶段': 'ProductStage',
+            '是否流转': 'IsCirculation',
         };
 
         // 错误收集数组
@@ -343,7 +346,11 @@ const uploadtmTable = async (req, res, next) => {
             '品牌':'brand',
             '产品线管理人':'lineManager',
             '款式编码(参考)':'code',
-            '是否比价链接':'IsPriceComparison'
+            '是否比价链接':'IsPriceComparison',
+            '体量目标': 'VolumeTarget',
+            '产品阶段': 'ProductStage',
+            '玩法':'Play',
+            '是否流转': 'IsCirculation',
 
         };
 
@@ -485,8 +492,10 @@ const uploadpddTable = async (req, res, next) => {
             '产品设计属性':'productDesignAttr',
             '品牌':'brand',
             '产品线管理人':'lineManager',
-            '款式编码(参考)':'code'
-
+            '款式编码(参考)':'code',
+            '体量目标': 'VolumeTarget',
+            '产品阶段': 'ProductStage',
+            '是否流转': 'IsCirculation',
         };
 
         // 错误收集数组

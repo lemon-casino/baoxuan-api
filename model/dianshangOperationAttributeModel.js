@@ -461,6 +461,42 @@ module.exports = sequelize => {
             autoIncrement: false,
             comment: "是否比价链接",
             field: "is_price_comparison"
+        },
+        VolumeTarget: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "体量目标",
+            field: "volume_target"
+        },
+        ProductStage: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "产品阶段",
+            field: "product_stage"
+        },
+        Play: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "玩法",
+            field: "play"
+        },
+        IsCirculation: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "是否流转",
+            field: "is_circulation"
         }
     };
     const options = {
