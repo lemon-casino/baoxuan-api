@@ -1327,21 +1327,21 @@ const getGoodsInfoDetail = async (column, goods_id, shop_name, start, end, stats
     let setting = []
     let func = stats == 'verified' ? goodsSaleVerifiedRepo : 
         (stats == 'info') ? goodsSaleInfoRepo : goodsPayInfoRepo
-    if (['sale_amount', 'cost_amount', 'operation_amount', 'promotion_amount', 'express_fee', 'profit'].includes(column))
+    if (['real_sale_amount'].includes(column)) //京仓发货金额(成交金额) 只在发货中存储
+        data = await goodsSaleInfoRepo.getDataDetailByTime(column, goods_id, start, end)        
+    else if (['real_sale_qty'].includes(column) && stats == 'pay') //发货商品件数 支付数据读取 sale_qy
+        data = await goodsPayInfoRepo.getDataDetailByTime1(goods_id, start, end)
+    else if (['real_gross_profit'].includes(column)) //实际棕毛 只在发货中存储
+        data = await goodsSaleInfoRepo.getDataDetailByTime(column, goods_id, start, end)
+    else if (['sale_amount', 'cost_amount', 'operation_amount', 'promotion_amount', 'express_fee', 'profit', 'real_sale_qty'].includes(column))
         data = await func.getDataDetailByTime(column, goods_id, start, end)
-    else if (['real_sale_amount'].includes(column)) 
-        data = await func.getDataDetailByTime1(goods_id, start, end)
-    else if (['real_sale_qty'].includes(column)) 
-        data = await func.getDataDetailByTime2(goods_id, start, end)
-    else if (['real_gross_profit'].includes(column)) 
-        data = await func.getDataDetailByTime3(goods_id, start, end)
     else if (column == 'operation_rate')
         data = await func.getDataRateByTime('sale_amount', 'operation_amount', column, goods_id, start, end, 100)
     else if (column == 'roi')
         data = await func.getDataRateByTime('promotion_amount', 'sale_amount', column, goods_id, start, end, 1)
     else if (column == 'refund_rate')
         data = await func.getDataRateByTime('order_num', 'refund_num', column, goods_id, start, end, 100)
-    else if (['profit_rate','profit_rate_gmv'].includes(column))
+    else if (['profit_rate', 'profit_rate_gmv'].includes(column))
         data = await func.getDataRateByTime('sale_amount', 'profit', column, goods_id, start, end, 100)
     else if (column == 'dsr')
         data = await goodsOtherInfoRepo.getDataDetailByTime(column, goods_id, start, end)
@@ -1357,26 +1357,24 @@ const getGoodsInfoDetail = async (column, goods_id, shop_name, start, end, stats
         data = await goodsPayInfoRepo.getRealPayAmountByTime(goods_id, start, end)
     else if (column == 'real_pay_amount_qoq')
         data = await goodsPayInfoRepo.getRealPayAmountQOQByTime(goods_id, start, end)
-    else if (column == 'composite_info'){
+    else if (column == 'composite_info') {
         data = await goodsCompositeRepo.getDataDetailByTime(goods_id, start, end)
         setting = await userSettingRepo.getByType(id, 4)
-    }
-    else if (column == 'promotion_info') {
+    } else if (column == 'promotion_info') {
         data = await goodsPromotionRepo.getDataDetailByTime(goods_id, shop_name, start, end)
         setting = await userSettingRepo.getByType(id, 5)
-    }
-    else if (column == 'bill_info'){
+    } else if (column == 'bill_info') {
         data = await goodsBillRepo.getDataDetailByTime(goods_id, start, end)
         setting = await userSettingRepo.getByType(id, 6)
-    }
-    else if(['full_site_promotion','multi_objective_promotion','targeted_audience_promotion','product_operation_promotion',
-        'keyword_promotion','daily_promotion','scene_promotion','jd_express_promotion','total_promotion'].includes(column)){
-            data = await func.getpromotionByTime(column,goods_id, start, end)
-    }else if(['full_site_promotion_roi','multi_objective_promotion_roi','targeted_audience_promotion_roi',
-        'product_operation_promotion_roi','keyword_promotion_roi',].includes(column)){
-            data = await func.getpromotionroiByTime(column,goods_id, start, end)
-    }
-    else if (column == 'promotion_amount_qoq')
+    } else if (['gross_standard', 'other_cost'].includes(column)) { //综毛标准,需补综毛 只在发货中有方法
+        data = await goodsSaleInfoRepo.getGrossStandardByTime(column, goods_id, start, end)
+    } else if(['full_site_promotion','multi_objective_promotion','targeted_audience_promotion','product_operation_promotion',
+        'keyword_promotion','daily_promotion','scene_promotion','jd_express_promotion','total_promotion'].includes(column)) {
+        data = await func.getpromotionByTime(column, goods_id, start, end)
+    } else if(['full_site_promotion_roi','multi_objective_promotion_roi','targeted_audience_promotion_roi',
+        'product_operation_promotion_roi','keyword_promotion_roi',].includes(column)) {
+        data = await func.getpromotionroiByTime(column, goods_id, start, end)
+    } else if (column == 'promotion_amount_qoq')
         result = await func.getDataPromotionQOQByTime(goods_id, start, end)
     result.data = data
     if (setting?.length) result.setting = JSON.parse(setting[0].attributes) || []
