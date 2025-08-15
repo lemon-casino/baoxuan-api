@@ -781,6 +781,24 @@ goodsPayInfoRepo.getData = async (start, end, params, shopNames, linkIds) => {
                     row[i].total_trans_users_num = row3[j].total_trans_users_num
                     row[i].total_users_num = row3[j].total_users_num
                 }
+                sql = `SELECT SUM(real_sale_qty) AS real_sale_qty
+                            ,SUM(real_sale_amount) AS real_sale_amount
+                            ,SUM(real_gross_profit) AS real_gross_profit, goods_id 
+                        FROM goods_sales 
+                        WHERE goods_id IN (${goods_ids})
+                        AND date BETWEEN '${start}' AND '${end}' GROUP BY goods_id`
+                let row4 = await query(sql)
+                if(row4?.length){
+                    for (let j = 0; j < row4.length; j++) {
+                        let i = goodsMap[row4[j].goods_id]
+                        row[i].real_sale_qty = row4[j].real_sale_qty
+                        row[i].real_sale_amount = row4[j].real_sale_amount
+                        row[i].real_gross_profit = row4[j].real_gross_profit
+                        row[i].gross_standard = row4[j].real_sale_amount!=null ? (row4[j].real_sale_amount * 0.28).toFixed(2) : null
+                        row[i].other_cost = row4[j].real_gross_profit!=null ? (row[i].gross_standard - row4[j].real_gross_profit).toFixed(2) : null
+                        row[i].profit_rate_gmv = row4[j].real_sale_amount>0 ? (row[i].profit/row4[j].real_sale_amount*100).toFixed(2) : null
+                    }
+                }
             }
             result.data = row
         }
