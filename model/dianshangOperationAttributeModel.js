@@ -497,6 +497,15 @@ module.exports = sequelize => {
             autoIncrement: false,
             comment: "是否流转",
             field: "is_circulation"
+        },
+        LinkState: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "链接状态",
+            field: "link_state"
         }
     };
     const options = {
