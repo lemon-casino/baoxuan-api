@@ -338,7 +338,7 @@ const uploadtmTable = async (req, res, next) => {
             '产品阶段': 'ProductStage',
             '玩法':'Play',
             '是否流转': 'IsCirculation',
-            '链接状态': 'Link_state'
+            '链接状态': 'LinkState'
         };
 
         // 错误收集数组
