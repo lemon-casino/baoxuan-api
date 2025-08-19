@@ -1484,44 +1484,6 @@ const importTmallpromotioninfo = async (req, res, next) => {
     }
 }
 
-const importGhyxpromotioninfo = async (req, res, next) => {
-    try {
-        let form = new formidable.IncomingForm()
-        form.uploadDir = "./public/excel"
-        fs.mkdirSync(form.uploadDir, { recursive: true })
-        form.keepExtensions = true
-        form.parse(req, async function (error, fields, files) {
-            if (error) {
-                return res.send(biResponse.canTFindIt)
-            }
-            
-            const file = files.file
-            const date = file.originalFilename.split('.')[0].split('_')
-            const time = date[1]
-            const promotion_name = date[0]
-            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
-            fs.renameSync(file.filepath, newPath, (err) => {  
-                if (err) throw err
-            })
-            const workbook = new ExcelJS.Workbook()
-            let readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
-            if (readRes) {
-                const worksheet = workbook.getWorksheet(1)
-                let rows = worksheet.getRows(1, worksheet.rowCount)
-                let result = await operationService.importGhyxpromotioninfo(rows, time,promotion_name)
-                if (result) {
-                    fs.rmSync(newPath)
-                } else {
-                    return res.send(biResponse.createFailed())
-                }
-            }
-            return res.send(biResponse.success())
-        })
-    } catch (e) {
-        next(e)
-    }
-}
-
 const updateInventory = async(req, res,next) => {
     try {
         await operationService.updateInventory()
@@ -1628,7 +1590,6 @@ module.exports = {
     getProjectSaleQtyData,
     getShopSaleData,
     getShopSaleQtyData,
-    importGhyxpromotioninfo,
     updateInventory,
     importGoodsOrderPayStat,
     importPromotionPlan

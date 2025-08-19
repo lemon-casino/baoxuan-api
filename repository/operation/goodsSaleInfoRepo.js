@@ -1560,13 +1560,6 @@ goodsSaleInfoRepo.deleteByDate = async (date, column, except,shop_name) => {
     return result?.affectedRows ? true : false
 }
 
-goodsSaleInfoRepo.deleteByDateId = async (date, goods_id) => {
-    let sql = `DELETE FROM goods_sale_info WHERE \`date\` = ? 
-        AND goods_id = ?`
-    const result = await query(sql, [date, goods_id])
-    return result?.affectedRows ? true : false
-}
-
 goodsSaleInfoRepo.getDataDetailByTime = async(column, goods_id, start, end) => {
     const sql = `SELECT IFNULL(SUM(${column}), 0) AS ${column}, \`date\` 
         FROM goods_sale_info WHERE \`date\` >= ? AND \`date\` <= ? AND goods_id = ?
