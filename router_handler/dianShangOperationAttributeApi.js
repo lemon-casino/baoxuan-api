@@ -83,7 +83,7 @@ const updateProductAttrDetails = async (req, res, next) => {
         const username = req.user.username
         const currentTime = moment(req._startTime).format('YYYY-MM-DD HH:mm:ss')
         const type='updete'
-        await dianShangOperationAttributeService.saveupdatelog(result,body,userId,user,username,currentTime,type)
+        await dianShangOperationAttributeService.saveupdatelog(result,body,req.user.id)
         return res.send(biResponse.success())
     } catch (e) {
         next(e)
@@ -99,14 +99,7 @@ const saveProductAttrDetails = async (req, res, next) => {
             body.skuId = body.skuId.trim()
         }
         await dianShangOperationAttributeService.saveProductAttr(body)
-        const userId = req.user.userId
-        const user = req.user.id
-        const username = req.user.username
-        const currentTime = moment(req._startTime).format('YYYY-MM-DD HH:mm:ss')
-        const type='insert'
-        const old = null
-        const jsonString = JSON.stringify(body);
-        await dianShangOperationAttributeService.savelog(old,jsonString,userId,user,username,currentTime,type)
+        await dianShangOperationAttributeService.savelog(null,body,req.user.id)
         return res.send(biResponse.success())
     } catch (e) {
         next(e)
@@ -118,13 +111,7 @@ const deleteProductAttr = async (req, res, next) => {
         const {id} = req.query
         joiUtil.validate({id})
         const result = await dianShangOperationAttributeService.getProductAttrDetails(id)
-        const userId = req.user.userId
-        const user = req.user.id
-        const username = req.user.username
-        const currentTime = moment(req._startTime).format('YYYY-MM-DD HH:mm:ss')
-        const type='delete'
-        const old = JSON.stringify(result)
-        await dianShangOperationAttributeService.savelog(old,id,userId,user,username,currentTime,type)
+        await dianShangOperationAttributeService.savelog(result,null,req.user.id)
         await dianShangOperationAttributeService.deleteProductAttr(id)
         return res.send(biResponse.success())
     } catch (e) {
@@ -251,7 +238,7 @@ const uploadTable = async (req, res, next) => {
 
             // 上传数据，使用 Promise.all 等待所有上传完成
             try {
-                await dianShangOperationAttributeService.uploadBulkUploadsTable(translatedData);
+                await dianShangOperationAttributeService.uploadBulkUploadsTable(translatedData,req.user.id);
                 console.log(`Sheet ${sheetName} uploaded successfully`);
             } catch (e) {
                 errorMessages.push(`文件解析失败: ${e.message}`);
@@ -351,7 +338,7 @@ const uploadtmTable = async (req, res, next) => {
             '产品阶段': 'ProductStage',
             '玩法':'Play',
             '是否流转': 'IsCirculation',
-
+            '链接状态': 'Link_state'
         };
 
         // 错误收集数组
@@ -408,7 +395,7 @@ const uploadtmTable = async (req, res, next) => {
 
             // 上传数据，使用 Promise.all 等待所有上传完成
             try {
-                await dianShangOperationAttributeService.uploadtmBulkUploadsTable(translatedData);
+                await dianShangOperationAttributeService.uploadtmBulkUploadsTable(translatedData,req.user.id);
                 console.log(`Sheet ${sheetName} uploaded successfully`);
             } catch (e) {
                 errorMessages.push(`文件解析失败: ${e.message}`);
@@ -552,7 +539,7 @@ const uploadpddTable = async (req, res, next) => {
 
             // 上传数据，使用 Promise.all 等待所有上传完成
             try {
-                await dianShangOperationAttributeService.uploadtmBulkUploadsTable(translatedData);
+                await dianShangOperationAttributeService.uploadtmBulkUploadsTable(translatedData,req.user.id ? req.user.id : null);
                 console.log(`Sheet ${sheetName} uploaded successfully`);
             } catch (e) {
                 errorMessages.push(`文件解析失败: ${e.message}`);
@@ -593,7 +580,7 @@ const importGoodsMonthlySalesTarget = async (req, res, next) => {
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
-                let result = await goodsMonthlySalesTargetService.import(rows)
+                let result = await goodsMonthlySalesTargetService.import(rows,req.user.id)
                 if (result) {
                     fs.rmSync(newPath)
                 } else {
@@ -615,7 +602,7 @@ const updatetGoodsMonthlySalesTarget = async (req, res, next) => {
             month: {value: month, schema: joiUtil.commonJoiSchemas.strNumRequired},
             amount: {value: amount, schema: joiUtil.commonJoiSchemas.strNumRequired}
         })
-        const result = await goodsMonthlySalesTargetService.goodsUpdate(goods_id,month,amount)
+        const result = await goodsMonthlySalesTargetService.goodsUpdate(goods_id,month,amount,req.user.id)
         if (result) return res.send(biResponse.success(result))
         return res.send(biResponse.createFailed())
     } catch (e) {

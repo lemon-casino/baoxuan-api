@@ -29,7 +29,7 @@ let syncRunningFlowsCron = "0 0 8 * * ?"
 let tmallLinkData = "45 13 * * 1-6"
 let jdLinkData  = "30 10 * * 1,4"
 let caigouLinkData  = "*/5 * * * 1-6"
-let attributeData = "0 8 * * 1-7"
+let attributeData = "0 9/10 * * 1-7"
 //转正通知 周一到周六  每天9点半触发流程
 let confirmationNotice = "0 30 9 * * 1-6"
 if (process.env.NODE_ENV === "dev") {
