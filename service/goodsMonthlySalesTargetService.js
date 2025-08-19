@@ -1,8 +1,10 @@
 const goodsMonthSalesTarget = require('@/repository/operation/goodsMonthlySalesTarget')
 const moment = require('moment')
+const userOperationRepo = require('../repository/operation/userOperationRepo')
+const dianShangOperationAttributeService = require("../service/dianShangOperationAttributeService")
 const goodsMonthSalesTargetService = {}
 
-goodsMonthSalesTargetService.import = async (rows) => {
+goodsMonthSalesTargetService.import = async (rows,user) => {
     let result = false, count = 0, data = []
     let columns = rows[0].values,
         goods_id_row = null,
@@ -13,6 +15,9 @@ goodsMonthSalesTargetService.import = async (rows) => {
         if (columns[i] == '年月') {month_row = i; continue}
         if (columns[i] == '目标') {amount_row = i; continue}
     }
+    const changes = []
+    let users = await userOperationRepo.getUserById(user)
+    let name = users[0].nickname
     for (let i = 1; i < rows.length; i++) {
         if (!rows[i].getCell(1).value) continue
         let goods_id = typeof(rows[i].getCell(goods_id_row).value) == 'string' ? 
@@ -24,6 +29,19 @@ goodsMonthSalesTargetService.import = async (rows) => {
         let amount = rows[i].getCell(amount_row).value
         let info = await goodsMonthSalesTarget.getInfo(goods_id, month)
         if (info?.length) {
+            changes.push({
+                goods_id: goods_id, 
+                sku_id:null,
+                type:'update',
+                subtype: '销售目标', 
+                oldValue: month+':'+info[0].amount, 
+                newValue: month+':'+amount,
+                source: '销售目标导入',
+                old_json:null,
+                new_json:null,
+                user:name,
+                date:moment().format('YYYY-MM-DD HH:mm:ss')
+            })
             result = await goodsMonthSalesTarget.update(goods_id, month, amount)
             logger.info(`[销售目标更新], 链接ID:${goods_id}, 年月:${month}, 原目标:${info[0].amount}, 现目标:${amount}`)
         } else {
@@ -32,31 +50,75 @@ goodsMonthSalesTargetService.import = async (rows) => {
                 month,
                 amount
             )
+            changes.push({
+                goods_id: goods_id, 
+                sku_id:null,
+                type:'insert',
+                subtype: '销售目标', 
+                oldValue: null, 
+                newValue: month+':'+amount,
+                source: '销售目标导入',
+                old_json:null,
+                new_json:null,
+                user:name,
+                date:moment().format('YYYY-MM-DD HH:mm:ss')
+            })
             count += 1
         }
     }
     if (count > 0)
         result = await goodsMonthSalesTarget.batchInsert(count, data)
+    await dianShangOperationAttributeService.Insertlog(changes)
     logger.info(`[销售目标导入], 总计数量:${count}`)
     return result
 }
 
-goodsMonthSalesTargetService.goodsUpdate = async (goods_id,month,amount) => {
-    let result= null,data = [],tag=0
-    let info = await goodsMonthSalesTarget.getInfo(goods_id,month)
+goodsMonthSalesTargetService.goodsUpdate = async (goods_id,month,amount,user) => {
+    let result= null,data = []
+    const changes = []
+    let users = await userOperationRepo.getUserById(user)
+    let name = users[0].nickname
     let info1 = await goodsMonthSalesTarget.getIdInfo(goods_id)
-    if (info1.length) tag = 1
+    if (info1) goods_id = info1[0].brief_name
+    let info = await goodsMonthSalesTarget.getInfo(goods_id,month)
     if (info?.length){
-        result = await goodsMonthSalesTarget.update(goods_id, month, amount,tag)
+        changes.push({
+            goods_id: goods_id, 
+            sku_id:null,
+            type:'update',
+            subtype: '销售目标', 
+            oldValue: month+':'+info[0].amount, 
+            newValue: month+':'+amount,
+            source: '销售目标编辑',
+            old_json:null,
+            new_json:null,
+            user:name,
+            date:moment().format('YYYY-MM-DD HH:mm:ss')
+        })
+        result = await goodsMonthSalesTarget.update(goods_id, month, amount)
     }else{
         data.push(
             goods_id,
             month,
             amount
         )
+        changes.push({
+            goods_id: goods_id, 
+            sku_id:null,
+            type:'insert',
+            subtype: '销售目标', 
+            oldValue: null, 
+            newValue: month+':'+amount,
+            source: '销售目标编辑',
+            old_json:null,
+            new_json:null,
+            user:name,
+            date:moment().format('YYYY-MM-DD HH:mm:ss')
+        })
         count = 1
-        result = await goodsMonthSalesTarget.batchInsert(count, data,tag)
+        result = await goodsMonthSalesTarget.batchInsert(count, data)
     }
+    await dianShangOperationAttributeService.Insertlog(changes)
     return result
 }
 

@@ -51,6 +51,22 @@ const getOperateAttributes = async (deptId,
     return pagingUtil.paging(Math.ceil(result.count / pageSize), result.count, result.rows)
 }
 
+const getskuId = async(skuId) => {
+    const result = await dianShangOperationAttributeModel.findAll({
+        where: { skuId: skuId },
+        logging:true
+    })
+    return result 
+}
+
+const getgoodsId = async(goodsId) => {
+    const result = await dianShangOperationAttributeModel.findAll({
+        where: { goodsId: goodsId },
+        logging:true
+    })
+    return result 
+}
+
 const getProductAttrDetails = async (id) => {
     const details = await dianShangOperationAttributeModel.findOne({
         where: {id}
@@ -291,47 +307,70 @@ const getOperateAttributesMaintainer = async (skuId) => {
     }
 };
 
-const updateAttribute =async()=>{
-    // 更新新老品
-    let sql = `update dianshang_operation_attribute 
-    set link_attribute = (CASE WHEN DATE_SUB(DATE(NOW()), INTERVAL 60 DAY) <= onsale_date THEN '新品' ELSE '老品' END)
-    WHERE platform ='天猫部'`
-    await query(sql)
-    // 链接定义['爆款','动销以上','动销以下' ] 打标签
-    sql = `UPDATE dianshang_operation_attribute a
-            LEFT JOIN(
-            select a.goods_id
-                    ,(case 
-                        WHEN b.tag >=1500 THEN '爆款'	
-                        WHEN b.tag <1500 and b.tag>=400 THEN '动销以上'
-                        WHEN b.tag <400  THEN '动销以下' 
-                        END) as userDef5
-            from dianshang_operation_attribute a 
-            LEFT JOIN(
-            select goods_id,sum(sale_amount)/7 as tag 
-            from goods_sales_stats 
-            WHERE date BETWEEN DATE_SUB(DATE(NOW()), INTERVAL 7 DAY) and DATE_SUB(DATE(NOW()), INTERVAL 1 DAY) 
-            and shop_name = 'pakchoice旗舰店（天猫）' 
-            GROUP BY goods_id ) b
-            on a.goods_id = b.goods_id
-            HAVING userDef5 is not null
-            ) b
-            on a.goods_id =b.goods_id
-            set a.userDef5= b.userDef5`
-    await query(sql)
-    // 更新链接动作
-    sql = `UPDATE dianshang_operation_attribute set userDef7 ='计划打爆' where platform = '天猫部' AND (userDef5 ='动销以上' OR link_attribute ='新品')`
-    await query(sql)
-    // 更新京东链接状态
-    sql = `UPDATE dianshang_operation_attribute set userDef1 = '下柜'
-            WHERE sku_id in (
-                select SKU from danpin.inventory_jdzz 
-                where 时间 DATE_SUB(DATE(NOW()), INTERVAL 1 DAY) and 上下柜状态='下柜' and 全国现货库存 = 0
-            ) and userDef1 = '销完下架'`
-    const result = await query(sql)
+const updateAttribute = async(column,value,dept,column1,goods_id)=>{
+    let sql = `UPDATE dianshang_operation_attribute set ${column} = ? where platform = ? and ${column1} = ?`
+    const result  = await query(sql,[value,dept,goods_id])
     return result
 }
 
+const getTMLinkAttribute = async()=>{
+    const sql = `SELECT goods_id,(CASE WHEN DATE_SUB(DATE(NOW()), INTERVAL 60 DAY) <= onsale_date THEN '新品' ELSE '老品' END) AS attribute,link_attribute
+    FROM dianshang_operation_attribute WHERE platform ='天猫部' HAVING attribute!=link_attribute`
+    const result  = await query(sql)
+    return result
+}
+
+const getTMUserDef5 = async()=>{
+    const sql = `SELECT a.goods_id
+			,a.userDef5
+            ,(case 
+            WHEN b.tag >=1500 THEN '爆款'	
+            WHEN b.tag <1500 AND b.tag>=400 THEN '动销以上'
+            WHEN b.tag <400  THEN '动销以下' 
+            END) AS duserDef5
+        FROM dianshang_operation_attribute a 
+        LEFT JOIN(
+        SELECT goods_id,sum(sale_amount)/7 AS tag 
+        FROM goods_sales_stats 
+        WHERE date BETWEEN DATE_SUB(DATE(NOW()), INTERVAL 7 DAY) AND DATE_SUB(DATE(NOW()), INTERVAL 1 DAY) 
+        AND shop_name = 'pakchoice旗舰店（天猫）' 
+        GROUP BY goods_id ) b
+        ON a.goods_id = b.goods_id
+        HAVING duserDef5 != userDef5`
+    const result  = await query(sql)
+    return result
+}
+
+const getTMUserDef7 = async()=>{
+    const sql = `SELECT goods_id,userDef7 FROM dianshang_operation_attribute WHERE platform = '天猫部' 
+    AND (userDef5 ='动销以上' OR link_attribute ='新品') HAVING userDef7 != '计划打爆'`
+    const result  = await query(sql)
+    return result
+}
+
+const getjdzzUserDef1 = async() =>{
+    const sql = `SELECT brief_name,sku_id,userDef1 FROM dianshang_operation_attribute
+	WHERE sku_id in (
+			SELECT SKU FROM danpin.inventory_jdzz 
+			WHERE 时间 = DATE_SUB(DATE(NOW()), INTERVAL 1 DAY) AND 上下柜状态='下柜' AND 全国现货库存 = 0
+	) AND userDef1 = '销完下架'`
+    const result  = await query(sql)
+    return result
+}
+const Insertlog = async(data)=>{
+    const sql = `INSERT INTO operate_log (goods_id,sku_id,type,subtype,old_value,new_value,source,old_json,new_json,user,operate_date) 
+                VALUES(?,?,?,?,?,?,?,?,?,?,?)`
+    const result = query(sql,[data.goods_id,data.sku_id,data.type,data.subtype,
+        data.oldValue,data.newValue,data.source,data.old_json,data.new_json,
+        data.user,data.date])
+    return result
+}
+
+const getTitle = async(field,tag)=>{
+    const sql = `SELECT title FROM user_table_structure WHERE field = ? AND tableType = ?`
+    const result = query(sql,[field,tag])
+    return result
+}
 module.exports = {
     getProductAttrDetails,
     getShopNameAttrDetails,
@@ -347,6 +386,15 @@ module.exports = {
     getOperateAttributesMaintainer,
     savelog,
     saveupdatelog,
+    updateAttribute,
+    getskuId,
+    getgoodsId,
+    Insertlog,
+    getTitle,
+    getTMLinkAttribute,
+    getTMUserDef5,
+    getTMUserDef7,
+    getjdzzUserDef1,
     updateAttribute
 }
 
