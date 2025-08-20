@@ -24,11 +24,21 @@ const createFailed = (message = errorMessages.createFailed) => {
     return format(errorCodes.canTFindIt, message)
 }
 
+const updateFailed = (message = errorMessages.updateFailed) => {
+    return format(errorCodes.canTFindIt, message)
+}
+
+const deleteFailed = (message = errorMessages.deleteFailed) => {
+    return format(errorCodes.canTFindIt, message)
+}
+
 module.exports = {
     format,
     simpleSuccess,
     success,
     serverError,
     canTFindIt,
-    createFailed
+    createFailed,
+    updateFailed,
+    deleteFailed
 }

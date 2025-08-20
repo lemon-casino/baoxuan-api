@@ -2,6 +2,7 @@ const express = require('express')
 // 创建路由对象
 const router = express.Router()
 const operationApi = require('../router_handler/operationApi')
+const analysisPlanApi = require('../router_handler/analysisPlanApi')
 
 // 数据面板
 router.get('/data-pannel', operationApi.getDataStats)
@@ -81,4 +82,25 @@ router.post('/inventory_attributes/update',operationApi.updateInventory)
 
 //推广计划导入
 router.post('/promotion-plan/import', operationApi.importPromotionPlan)
+
+//分析方案
+router.get('/analysis-plan', analysisPlanApi.getAnalysisPlan)
+router.post('/analysis-plan/create', analysisPlanApi.createAnalysisPlan)
+router.put('/analysis-plan/update', analysisPlanApi.updateAnalysisPlan)
+router.post('/analysis-plan/delete', analysisPlanApi.deleteAnalysisPlan)
+//市场分析（分组）
+router.get('/analysis-plan/group', analysisPlanApi.getGroup)
+router.post('/analysis-plan/group/create', analysisPlanApi.createGroup)
+//市场统计(总)
+router.get('/analysis-plan/rivals', analysisPlanApi.getRivals)
+router.post('/analysis-plan/rivals/create', analysisPlanApi.createRivals)
+//竞品信息
+router.get('/analysis-plan/rivals-specific', analysisPlanApi.getSpecificRivals)
+router.post('/analysis-plan/rivals-specific/create', analysisPlanApi.createSpecificRivals)
+//产品的信息和价格
+router.get('/analysis-plan/rivals-sku', analysisPlanApi.getSku)
+router.post('/analysis-plan/rivals-sku/create', analysisPlanApi.createSku)
+
+//文件上传至bpm
+router.post('/file-upload', analysisPlanApi.fileUpload)
 module.exports = router
