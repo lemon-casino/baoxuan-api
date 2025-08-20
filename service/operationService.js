@@ -4,6 +4,8 @@ const divisionInfoRepo = require('../repository/operation/divisionInfoRepo')
 const projectInfoRepo = require('../repository/operation/projectInfoRepo')
 const shopInfoRepo = require('../repository/operation/shopInfoRepo')
 const teamInfoRepo = require('../repository/operation/teamInfoRepo')
+const dianShangOperationAttributeRepo = require('../repository/dianShangOperationAttributeRepo')
+const dianShangOperationAttributeService = require("../service/dianShangOperationAttributeService")
 const {
     typeList, 
     operationDefaultItem, 
@@ -1774,6 +1776,51 @@ const batchInsertGoodsPays = async (date) => {
 const batchInsertGoodsPaysStats = async (date) => {
     let result = await goodsPaysStats.batchInsert(date)
     logger.info(`[聚水潭支付单品表数据刷新]：时间:${date}, ${result}`)
+    const changes=[]
+    let pdd = await goodsPaysStats.getVolumeTargetPDD()
+    let tm = await goodsPaysStats.getVolumeTargetTM()
+    for (let i =0;i<pdd.length;i++){
+        if(!pdd[i].goods_id) continue
+        let info  = await goodsPaysStats.getVolumeTargetInfo('goods_id',pdd[i].goods_id)
+        if(info.length === 0) continue
+        if (pdd[i].volume_target != info[0].volume_target){
+            changes.push({
+                goods_id: pdd[i].goods_id, 
+                sku_id:null,
+                type:'update',
+                subtype: '体量目标', 
+                oldValue: info[0].volume_target, 
+                newValue: pdd[i].volume_target,
+                source: '自动更新',
+                old_json:null,
+                new_json:null,
+                user:null,
+                date:moment().format('YYYY-MM-DD HH:mm:ss')
+            })
+            await dianShangOperationAttributeRepo.updateAttribute('volume_target',pdd[i].volume_target,'拼多多部','goods_id',pdd[i].goods_id)
+        }
+    }
+    for (let i =0;i<tm.length;i++){
+        let info  = await goodsPaysStats.getVolumeTargetInfo('goods_id',tm[i].goods_id)
+        if(info.length === 0) continue
+        if (tm[i].volume_target != info[0].volume_target){
+            changes.push({
+                goods_id: tm[i].goods_id, 
+                sku_id:null,
+                type:'update',
+                subtype: '体量目标', 
+                oldValue: info[0].volume_target, 
+                newValue: tm[i].volume_target,
+                source: '自动更新',
+                old_json:null,
+                new_json:null,
+                user:null,
+                date:moment().format('YYYY-MM-DD HH:mm:ss')
+            })
+            await dianShangOperationAttributeRepo.updateAttribute('volume_target',tm[i].volume_target,'天猫部','goods_id',tm[i].goods_id)
+        }
+    }
+    await dianShangOperationAttributeService.Insertlog(changes)
 }
 
 const batchInsertJDGoodsPays = async (date,shop_name) => {
@@ -1785,7 +1832,32 @@ const batchInsertJDGoodsPays = async (date,shop_name) => {
 const batchInsertJDGoodsPaysStats = async (date,shop_name) => {
     let result = await goodsPaysStats.batchInsertJD(date,shop_name)
     logger.info(`[京东支付单品表数据刷新]：时间:${date}, ${result}`)
+    const changes=[]
+    let data = await goodsPaysStats.getVolumeTargetJD()
+    for (let i =0;i<data.length;i++){
+        if(!data[i].goods_id) continue
+        let info  = await goodsPaysStats.getVolumeTargetInfo('brief_name',data[i].goods_id)
+        if(info.length === 0) continue
+        if (data[i].volume_target != info[0].volume_target){
+            changes.push({
+                goods_id: data[i].goods_id, 
+                sku_id:null,
+                type:'update',
+                subtype: '体量目标', 
+                oldValue: info[0].volume_target, 
+                newValue: data[i].volume_target,
+                source: '自动更新',
+                old_json:null,
+                new_json:null,
+                user:null,
+                date:moment().format('YYYY-MM-DD HH:mm:ss')
+            })
+            await dianShangOperationAttributeRepo.updateAttribute('volume_target',data[i].volume_target,'自营','brief_name',data[i].goods_id)
+        }
+    }
+    await dianShangOperationAttributeService.Insertlog(changes)
 }
+    
 
 const importGoodsKeyWords = async (rows, time) => {
     let count = 0, data = [], result = false
@@ -4766,5 +4838,8 @@ module.exports = {
     updateInventory,
     importGoodsOrderPayStat,
     PaysUpdateSaleMonth,
-    importPromotionPlan
+    importPromotionPlan,
+    batchInsertJDGoodsPays,
+    batchInsertJDGoodsPaysStats,
+    batchInsertGoodsPaysStats,
 }

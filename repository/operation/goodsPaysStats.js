@@ -255,4 +255,59 @@ goodsPaysStats.deleteByDate = async (date) => {
     return result?.affectedRows ? true : false
 }
 
+goodsPaysStats.getVolumeTargetJD = async () =>{
+    let sql = `select goods_id,SUM(sale_amount) as sale_amount,(CASE 
+            WHEN SUM(sale_amount)>=90000 THEN '超大'
+            WHEN SUM(sale_amount) >= 30000  and SUM(sale_amount) < 90000 THEN '大'
+            WHEN SUM(sale_amount) < 30000 AND SUM(sale_amount) >=15000 THEN '中'
+            WHEN SUM(sale_amount) < 15000 AND SUM(sale_amount) >=8000 THEN '小'
+            ELSE NULL
+        END) as volume_target
+        from goods_pays_stats 
+        WHERE date BETWEEN DATE_SUB(CURRENT_DATE,INTERVAL 30 DAY) AND DATE_SUB(CURRENT_DATE,INTERVAL 1 DAY) 
+        AND shop_name in ('京东自营-厨具','京东自营-日用')
+        GROUP BY goods_id`
+    let result = await query(sql)
+    return result
+}
+
+goodsPaysStats.getVolumeTargetPDD = async () =>{
+    let sql = `select goods_id,SUM(sale_amount) as sale_amount,(CASE 
+            WHEN SUM(sale_amount)>=60000 THEN '超大'
+            WHEN SUM(sale_amount) >= 30000  and SUM(sale_amount) < 60000 THEN '大'
+            WHEN SUM(sale_amount) < 30000 AND SUM(sale_amount) >=15000 THEN '中'
+            WHEN SUM(sale_amount) < 15000 AND SUM(sale_amount) >=9000 THEN '小'
+            ELSE NULL
+        END) as volume_target
+        from goods_pays_stats 
+        WHERE date BETWEEN DATE_SUB(CURRENT_DATE,INTERVAL 30 DAY) AND DATE_SUB(CURRENT_DATE,INTERVAL 1 DAY) 
+        AND shop_name like '%拼多多%'
+        GROUP BY goods_id`
+    let result = await query(sql)
+    return result
+}
+
+goodsPaysStats.getVolumeTargetTM = async () =>{
+    let sql = `select goods_id,avg(sale_amount) as sale_amount,(CASE 
+                WHEN avg(sale_amount) >= 5000 THEN '超大'
+                WHEN avg(sale_amount) >= 3000 AND avg(sale_amount) < 5000 THEN '大'
+                WHEN avg(sale_amount) < 3000 AND avg(sale_amount) >=1000 THEN '中'
+                WHEN avg(sale_amount) < 1000 AND avg(sale_amount) >=400 THEN '小'
+                ELSE NULL
+            END) as volume_target
+            from goods_pays_stats 
+            WHERE date BETWEEN DATE_SUB(CURRENT_DATE,INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE,INTERVAL 1 DAY) 
+            AND shop_name = 'pakchoice旗舰店（天猫）'
+            GROUP BY goods_id`
+    let result = await query(sql)
+    return result
+}
+
+goodsPaysStats.getVolumeTargetInfo = async(column,goods_id)=>{
+    let sql = `select * from dianshang_operation_attribute where ${column} = ?`
+    let result = await query(sql,[goods_id])
+    return result
+}
+
+
 module.exports = goodsPaysStats
