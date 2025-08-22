@@ -80,24 +80,40 @@ rivalsKeywordsService.create = async (params) => {
         if (!count?.length) {
             rival_id = await rivalsRepo.create([
                 params.plan_id, 
-                insertNames[index][i][0], 
-                insertNames[index][i][1], 
-                insertNames[index][i][2], 
-                insertNames[index][i][3], 
-                insertNames[index][i][4], 
-                insertNames[index][i][5], 
-                insertNames[index][i][6], 
-                insertNames[index][i][7], 
-                insertNames[index][i][8], 
-                insertNames[index][i][9], 
-                insertNames[index][i][10], 
+                insertNames[index][0][0], 
+                insertNames[index][0][1], 
+                insertNames[index][0][2], 
+                insertNames[index][0][3], 
+                insertNames[index][0][4], 
+                insertNames[index][0][5], 
+                insertNames[index][0][6], 
+                insertNames[index][0][7], 
+                insertNames[index][0][8], 
+                insertNames[index][0][9], 
+                insertNames[index][0][10], 
                 null,
                 0, 
                 null, 
-                insertNames[index][i][14], 
+                insertNames[index][0][14], 
                 null
             ])            
-        } else rival_id = count[0].id
+        } else {
+            rival_id = count[0].id
+            await rivalsRepo.updateByPlanIdAndGoodsId2([
+                insertNames[index][0][0], 
+                insertNames[index][0][1],             
+                insertNames[index][0][3], 
+                insertNames[index][0][4], 
+                insertNames[index][0][5], 
+                insertNames[index][0][6], 
+                insertNames[index][0][7], 
+                insertNames[index][0][8], 
+                insertNames[index][0][9], 
+                insertNames[index][0][10], 
+                insertNames[index][0][14],
+                params.plan_id, 
+                insertNames[index][0][2]])
+        }
         for (let i = 0; i < insertNames[index].length; i++) {
             let keywords = await rivalsKeywordsRepo.getByPlanIdAndKeywords(params.plan_id, rival_id, insertNames[index][i][11])
             if (!keywords?.length) await rivalsKeywordsRepo.create([
@@ -117,19 +133,19 @@ rivalsKeywordsService.create = async (params) => {
     }
     for (let index in updateNames) {
         await rivalsRepo.updateByPlanIdAndGoodsId2([
-            updateNames[index][i][0], 
-            updateNames[index][i][1],             
-            updateNames[index][i][3], 
-            updateNames[index][i][4], 
-            updateNames[index][i][5], 
-            updateNames[index][i][6], 
-            updateNames[index][i][7], 
-            updateNames[index][i][8], 
-            updateNames[index][i][9], 
-            updateNames[index][i][10], 
-            updateNames[index][i][14],
+            updateNames[index][0][0], 
+            updateNames[index][0][1],             
+            updateNames[index][0][3], 
+            updateNames[index][0][4], 
+            updateNames[index][0][5], 
+            updateNames[index][0][6], 
+            updateNames[index][0][7], 
+            updateNames[index][0][8], 
+            updateNames[index][0][9], 
+            updateNames[index][0][10], 
+            updateNames[index][0][14],
             params.plan_id, 
-            updateNames[index][i][2]])
+            updateNames[index][0][2]])
         for (let i = 0; i < updateNames[index].length; i++) {
             await rivalsKeywordsRepo.updateByPlanIdAndKeywords([
                 updateNames[index][i][12], 

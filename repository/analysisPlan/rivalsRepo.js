@@ -49,6 +49,12 @@ rivalsRepo.updateIsSpecific = async (plan_id, rival_id) => {
     return result.affectedRows ? true:false
 }
 
+rivalsRepo.updateSort2 = async (plan_id, goods_id, sort) => {
+    let sql = `UPDATE rivals SET sort2 = ? WHERE plan_id = ? AND goods_id = ?`
+    const result = await query(sql, [sort, plan_id, goods_id])
+    return result.affectedRows ? true:false
+}
+
 rivalsRepo.deleteByPlanId = async (plan_id) => {
     let sql = `DELETE FROM rivals WHERE plan_id = ?`
     const result = await query(sql, [plan_id])

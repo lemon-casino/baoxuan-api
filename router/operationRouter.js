@@ -87,7 +87,7 @@ router.post('/promotion-plan/import', operationApi.importPromotionPlan)
 router.get('/analysis-plan', analysisPlanApi.getAnalysisPlan)
 router.post('/analysis-plan/create', analysisPlanApi.createAnalysisPlan)
 router.put('/analysis-plan/update', analysisPlanApi.updateAnalysisPlan)
-router.post('/analysis-plan/delete', analysisPlanApi.deleteAnalysisPlan)
+router.delete('/analysis-plan/delete', analysisPlanApi.deleteAnalysisPlan)
 //市场分析（分组）
 router.get('/analysis-plan/group', analysisPlanApi.getGroup)
 router.post('/analysis-plan/group/create', analysisPlanApi.createGroup)

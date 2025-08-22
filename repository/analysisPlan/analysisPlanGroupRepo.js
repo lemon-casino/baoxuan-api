@@ -55,6 +55,12 @@ analysisPlanGroupRepo.deleteRivals = async (plan_id, group_id) => {
     return result.affectedRows ? true:false
 }
 
+analysisPlanGroupRepo.deleteRivalByPlanId = async (plan_id) => {
+    let sql = `DELETE FROM rivals_group WHERE plan_id = ?`
+    const result = await query(sql, [plan_id])
+    return result.affectedRows ? true:false
+}
+
 analysisPlanGroupRepo.deleteRivalByGoodsId = async (plan_id, group_id, goods_id) => {
     let sql = `DELETE FROM rivals_group WHERE plan_id = ? AND group_id = ? AND EXISTS(
         SELECT id FROM rivals WHERE id = rival_id AND goods_id = ?)`

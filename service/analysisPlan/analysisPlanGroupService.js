@@ -80,13 +80,21 @@ analysisPlanGroupService.create = async (params) => {
                 params.plan_id,
                 insertNames[index][0][10]
             ])            
-        } else group_id = count[0].id
+        } else {
+            group_id = count[0].id
+            await analysisPlanGroupRepo.updateByPlanIdAndName([
+                insertNames[index][0][1],
+                insertNames[index][0][10],
+                params.plan_id,
+                insertNames[index][0][0],
+            ])
+        }
         for (let i = 0; i < insertNames[index].length; i++) {
             let rival = await rivalsRepo.getByPlanIdAndGoodsId(params.plan_id, insertNames[index][i][3])
             let rival_id
             if (!rival?.length) rival_id = await rivalsRepo.create([
                 params.plan_id, 
-                insertNames[index][i][2] ? insertNames[index][i][2] : null, 
+                insertNames[index][i][2], 
                 null, 
                 insertNames[index][i][3], 
                 insertNames[index][i][4], 

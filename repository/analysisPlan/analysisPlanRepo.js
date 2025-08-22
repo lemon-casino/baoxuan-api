@@ -1,13 +1,23 @@
 const { query } = require('../../model/dbConn')
 const analysisPlanRepo = {}
 
-analysisPlanRepo.get = async (user_id, title, offset, limit) => {
+analysisPlanRepo.get = async (user_id, title, id, offset, limit) => {
     let subsql = ''
-    if (title) subsql = `AND title = "${title}"`
+    if (title) subsql = `AND title LIKE "%${title}%"`
+    if (id) subsql = `AND id = ${id}`
     let sql = `SELECT *, (SELECT nickname FROM users WHERE user_id = p.user_id) AS username 
         FROM analysis_plans p WHERE user_id = ? ${subsql} ORDER BY id DESC LIMIT ?,?`
     const result = await query(sql, [user_id, offset, limit])
     return result || []
+}
+
+analysisPlanRepo.getCount = async (user_id, title, id) => {
+    let subsql = ''
+    if (title) subsql = `AND title = "${title}"`
+    if (id) subsql = `AND id = ${id}`
+    let sql = `SELECT COUNT(1) AS count FROM analysis_plans p WHERE user_id = ? ${subsql}`
+    const result = await query(sql, [user_id])
+    return result
 }
 
 analysisPlanRepo.getById = async (id) => {

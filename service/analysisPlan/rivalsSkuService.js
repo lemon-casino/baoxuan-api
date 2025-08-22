@@ -107,6 +107,11 @@ rivalsSkuService.create = async (params) => {
         else updateNames[updates[i][0]].push(updates[i])
     }
     for (let index in updateNames) {
+        await rivalsRepo.updateSort2([
+            updateNames[index][0][10],
+            params.plan_id,
+            updateNames[index][0][0]
+        ])
         for (let i = 0; i < updateNames[index].length; i++) {
             await rivalsSkusRepo.updateByGoodsIdAndName([
                 updateNames[index][i][2], 

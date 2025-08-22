@@ -6,11 +6,15 @@ const rivalsSkuRepo = require('@/repository/analysisPlan/rivalsSkuRepo')
 const analysisPlanService = {}
 
 analysisPlanService.get = async (params, user_id) => {
-    let result = [], offset = 0, limit = 0
+    let data = [], offset = 0, limit = 0, total
     offset = (parseInt(params.page) - 1) * parseInt(params.pageSize)
     limit = parseInt(params.pageSize)
-    result = await analysisPlanRepo.get(user_id, params.title, offset, limit)
-    return result
+    let count = await analysisPlanRepo.getCount(user_id, params.title, params.id)
+    if (count?.length && count[0].count) {
+        total = count[0].count   
+        data = await analysisPlanRepo.get(user_id, params.title, params.id, offset, limit)
+    }
+    return {total, data}
 }
 
 analysisPlanService.create = async (params, user_id) => {
@@ -39,6 +43,7 @@ analysisPlanService.delete = async (params) => {
         rivalsSkuRepo.deleteByPlanId(params.id)
         rivalsRepo.deleteByPlanId(params.id)
         analysisPlanGroupRepo.deleteByPlanId(params.id)
+        analysisPlanGroupRepo.deleteRivalByPlanId(params.id)
         result = await analysisPlanRepo.deleteById(params.id)
     }
     return result
