@@ -371,6 +371,20 @@ const getTitle = async(field,tag)=>{
     const result = query(sql,[field,tag])
     return result
 }
+
+const Insertcalculate = async(data)=>{
+    let sql = `INSERT INTO spiral_target (goods_id,day,sale_amount,sale_num,order_num,num,date,user) 
+                VALUES(?,?,?,?,?,?,?,?)`
+    const result = query(sql,[data.goods_id,data.day,data.sale_amount,data.num1,
+        data.sale_qty,data.num2,data.date,data.user])
+    return result
+}
+
+const getspiral = async(goods_id)=>{
+    let sql = `SELECT goods_id,day,sale_amount,sale_num as num1,order_num as sale_qty,num as num2 FROM spiral_target WHERE goods_id = ?`
+    const result = query(sql,[goods_id])
+    return result
+}
 module.exports = {
     getProductAttrDetails,
     getShopNameAttrDetails,
@@ -395,6 +409,8 @@ module.exports = {
     getTMUserDef5,
     getTMUserDef7,
     getjdzzUserDef1,
-    updateAttribute
+    updateAttribute,
+    Insertcalculate,
+    getspiral
 }
 
