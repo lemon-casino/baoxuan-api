@@ -40,4 +40,8 @@ router.post('/goods-monthly-sales-target/import', dianShangOperationAttributeApi
 router.get('/goods-monthly-sales-target', dianShangOperationAttributeApi.getGoodsMonthlySalesTarget)
 router.post('/goods-monthly-sales-target/export', dianShangOperationAttributeApi.exportGoodsMonthlySalesTarget)
 router.post('/goods-monthly-sales-update',dianShangOperationAttributeApi.updatetGoodsMonthlySalesTarget)
+
+// 螺旋目标保存
+router.post('/save_calculate',dianShangOperationAttributeApi.Insertcalculate)
+router.get('/get_spiral',dianShangOperationAttributeApi.getspiral)
 module.exports = router

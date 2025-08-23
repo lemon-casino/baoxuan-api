@@ -610,6 +610,32 @@ const updatetGoodsMonthlySalesTarget = async (req, res, next) => {
     }
 }
 
+const Insertcalculate  = async (req, res, next) => {
+    try{
+        const data = req.body._value
+        const id = req.user.id
+        const result = await dianShangOperationAttributeService.Insertcalculate(data,id)
+        if (result) return res.send(biResponse.success(result))
+        return res.send(biResponse.createFailed())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getspiral = async(req, res, next) =>{
+    try {
+        const {goods_id} = req.query
+        joiUtil.validate({
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        const result = await dianShangOperationAttributeService.getspiral(goods_id)
+        if (result) return res.send(biResponse.success(result))
+        return res.send(biResponse.createFailed())
+    } catch (e) {
+        next(e)
+    }
+}
+
 const getGoodsMonthlySalesTarget = async (req, res, next) => {
     try {
         const {goods_id, currentPage, pageSize} = req.query
@@ -672,5 +698,7 @@ module.exports = {
     importGoodsMonthlySalesTarget,
     getGoodsMonthlySalesTarget,
     exportGoodsMonthlySalesTarget,
-    updatetGoodsMonthlySalesTarget
+    updatetGoodsMonthlySalesTarget,
+    Insertcalculate,
+    getspiral
 }

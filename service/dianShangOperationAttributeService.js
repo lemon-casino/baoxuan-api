@@ -299,7 +299,6 @@ const uploadtmBulkUploadsTable = async (translatedData,user) => {
 const updateAttribute = async()=>{
     let date = moment().format('YYYY-MM-DD HH:mm:ss')
     let changes = []
-    console.log(date)
     // let result = await dianShangOperationAttributeRepo.updateAttribute()
     let result1 = await dianShangOperationAttributeRepo.getTMLinkAttribute()
     for (i=0;i<result1.length;i++){
@@ -369,7 +368,6 @@ const updateAttribute = async()=>{
         })
         await dianShangOperationAttributeRepo.updateAttribute('userDef1','下柜','自营','sku_id',result4[i].sku_id)
     }
-    console.log(changes)
     await Insertlog(changes)
     logger.info(`${date}商品属性维护刷新成功`)
     return result1
@@ -380,6 +378,22 @@ const Insertlog = async(data)=>{
     for(let i=0;i<data.length;i++){
         result = await dianShangOperationAttributeRepo.Insertlog(data[i])
     }
+    return result
+}
+
+const Insertcalculate = async(data,id)=>{
+    let result = await userOperationRepo.getUserById(id)
+    let name = result[0].nickname
+    for(let i=0;i<data.length;i++){
+        data[i].date = moment().format('YYYY-MM-DD HH:mm:ss')
+        data[i].user = name
+        result = await dianShangOperationAttributeRepo.Insertcalculate(data[i])
+    }
+    return result
+}
+
+const getspiral = async(goods_id)=>{
+    result = await dianShangOperationAttributeRepo.getspiral(goods_id)
     return result
 }
 
@@ -395,5 +409,7 @@ module.exports = {
     savelog,
     saveupdatelog,
     updateAttribute,
-    Insertlog
+    Insertlog,
+    Insertcalculate,
+    getspiral
 }
