@@ -3,6 +3,7 @@ const express = require('express')
 const router = express.Router()
 const operationApi = require('../router_handler/operationApi')
 const analysisPlanApi = require('../router_handler/analysisPlanApi')
+const specificPlanApi = require('../router_handler/specificPlanApi')
 
 // 数据面板
 router.get('/data-pannel', operationApi.getDataStats)
@@ -100,6 +101,39 @@ router.post('/analysis-plan/rivals-specific/create', analysisPlanApi.createSpeci
 //产品的信息和价格
 router.get('/analysis-plan/rivals-sku', analysisPlanApi.getSku)
 router.post('/analysis-plan/rivals-sku/create', analysisPlanApi.createSku)
+
+//爆款方案
+router.get('/specific-plan', specificPlanApi.getSpecificPlan)
+router.post('/specific-plan/create', specificPlanApi.createSpecificPlan)
+router.put('/specific-plan/update', specificPlanApi.updateSpecificPlan)
+router.delete('/specific-plan/delete', specificPlanApi.deleteSpecificPlan)
+//关键词
+router.get('/specific-plan/keywords', specificPlanApi.getKeywords)
+router.post('/specific-plan/keywords/create', specificPlanApi.createKeywords)
+//sku
+router.get('/specific-plan/sku', specificPlanApi.getSku)
+router.post('/specific-plan/sku/create', specificPlanApi.createSku)
+//视觉
+router.get('/specific-plan/vision', specificPlanApi.getVision)
+router.post('/specific-plan/vision/create', specificPlanApi.createVision)
+//主图
+router.get('/specific-plan/main-pic', specificPlanApi.getMainPic)
+router.post('/specific-plan/main-pic/create', specificPlanApi.createMainPic)
+//车图
+router.get('/specific-plan/direct-pic', specificPlanApi.getDirectPic)
+router.post('/specific-plan/direct-pic/create', specificPlanApi.createDirectPic)
+//详情页
+router.get('/specific-plan/detail-pic', specificPlanApi.getDetailPic)
+router.post('/specific-plan/detail-pic/create', specificPlanApi.createDetailPic)
+//主图视频
+router.get('/specific-plan/main-video', specificPlanApi.getMainVideo)
+router.post('/specific-plan/main-video/create', specificPlanApi.createMainVideo)
+//数据
+router.get('/specific-plan/analysis', specificPlanApi.getAnalysis)
+router.post('/specific-plan/analysis/create', specificPlanApi.createAnalysis)
+//螺旋表
+router.get('/specific-plan/sales', specificPlanApi.getSales)
+router.post('/specific-plan/sales/create', specificPlanApi.createSales)
 
 //文件上传至bpm
 router.post('/file-upload', analysisPlanApi.fileUpload)

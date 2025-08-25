@@ -1,3 +1,4 @@
+const commonReq = require('@/core/bpmReq/commonReq')
 const analysisPlanGroupRepo = require('@/repository/analysisPlan/analysisPlanGroupRepo')
 const analysisPlanRepo = require('@/repository/analysisPlan/analysisPlanRepo')
 const rivalsKeywordsRepo = require('@/repository/analysisPlan/rivalsKeywordsRepo')
@@ -50,8 +51,9 @@ analysisPlanService.delete = async (params) => {
 }
 
 analysisPlanService.fileUpload = async (file) => {
-    let result = null
-    return result
+    let result = await commonReq.fileUpload(file)
+    if (result.data) result.data = result.data.replace(':9000/', ':9003/').replace('http:', 'https:').replace('//bpm.', '//minio.')
+    return result.data
 }
 
 module.exports = analysisPlanService

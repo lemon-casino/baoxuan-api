@@ -39,7 +39,7 @@ analysisPlanRepo.create = async (data) => {
 }
 
 analysisPlanRepo.updateById = async (id, title, remark, status) => {
-    let sql = `UPDATE analysis_plans SET title = ?, remark = ?, \`status\` = ? WHERE id = ?`
+    let sql = `UPDATE analysis_plans SET title = ?, remark = ?, \`status\` = ?, update_time = NOW() WHERE id = ?`
     const result = await query(sql, [title, remark, status, id])
     return result.affectedRows ? true:false
 }
