@@ -11,6 +11,7 @@ const bpmConst = {
     link: {
         refreshToken: '/admin-api/system/auth/refresh-token',
         createProcessInstance: '/admin-api/bpm/process-instance/create',
+        uploadFile: '/admin-api/infra/file/upload'
     },
     params: {
         createProcessInstance: {

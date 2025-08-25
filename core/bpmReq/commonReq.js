@@ -1,6 +1,9 @@
 const httpUtil = require("@/utils/httpUtil")
 const bpmConst = require('../../const/bpmConst')
 const defaultConst = require('../../const/development/defaultConst')
+const credentialsReq = require('../dingDingReq/credentialsReq')
+const fs = require('fs')
+const FormData = require('form-data')
 const commonReq = {}
 commonReq.createProcessInstance = async (refreshToken, processDefinitionId, type, params) => {
     const url = `${bpmConst.host}${bpmConst.link.createProcessInstance}`
@@ -54,6 +57,23 @@ commonReq.createJDProcess = async (refreshToken, processDefinitionId, variables,
     let result = await httpUtil.post(url, body, headers)
     // console.log(result)
     return false
+}
+
+commonReq.fileUpload = async (file) => {    
+    let refresh_token = await credentialsReq.getBpmgAccessToken()
+    const token = refresh_token.data.accessToken
+    const url = `${bpmConst.webHost}${bpmConst.link.uploadFile}`
+    const body = new FormData()
+    body.append('file', fs.createReadStream(file.filepath), {
+        filename: Math.random().toString(12).substr(2) + '-' + file.originalFilename
+    })
+    let headers = {
+        Authorization:'Bearer ' + token, 
+        'Tenant-Id': 1, 
+        ...body.getHeaders()
+    }
+    let result = await httpUtil.post(url, body, headers)
+    return result
 }
 
 module.exports = commonReq
