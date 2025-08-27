@@ -1127,7 +1127,7 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             {title: '二级类目', field_id: 'second_category', type: 'input', show: true},
             {title: '坑产目标', field_id: 'pit_target', type: 'input', show: true},
             {
-                title: params.stats == 'verified' ? '核销金额' : '减退发货金额', 
+                title: params.stats == 'verified' ? '核销金额' : (params.stats == 'pay' ? '实际支付金额':'减退发货金额'), 
                 field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
             },{
                 title: '总供货价', 
@@ -1160,7 +1160,7 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: '月销目标达成率(%)', field_id: 'sale_amount_profit_month', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '实际支付金额', field_id: 'pay_amount', type: 'number', 
+                title: '显示支付金额', field_id: 'pay_amount', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: '刷单金额', field_id: 'brushing_amount', type: 'number', 
@@ -1169,13 +1169,13 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: '刷单笔数', field_id: 'brushing_qty', type: 'number', 
                 min: 0, max: 10, show: true
             }, {
-                title: '显示支付金额', field_id: 'real_pay_amount', type: 'number', 
+                title: '实际支付金额', field_id: 'real_pay_amount', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: '退款', field_id: 'refund_amount', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '显示支付金额环比(%)', field_id: 'real_pay_amount_qoq', type: 'number', 
+                title: '实际支付金额环比(%)', field_id: 'real_pay_amount_qoq', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: '支付运费', field_id: 'pay_express_fee', type: 'number', 
@@ -1326,7 +1326,16 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
     params.search = JSON.parse(params.search)
     result.setting = []
     let setting = await userSettingRepo.getByType(id, 1)
-    if (setting?.length) result.setting = JSON.parse(setting[0].attributes)
+    if (setting?.length) {
+        result.setting = JSON.parse(setting[0].attributes)
+        if( params.stats == 'pay') result.setting = result.setting.map(item => {
+            if (item.field_id === 'real_pay_amount') {
+                return { ...item, show: false }
+            }
+            return item
+        })
+        console.log(result.setting)
+    }
     let func = params.stats == 'verified' ? goodsSaleVerifiedRepo : 
         (params.stats == 'info') ? goodsSaleInfoRepo : goodsPayInfoRepo
     if (params.infoType == 1)
