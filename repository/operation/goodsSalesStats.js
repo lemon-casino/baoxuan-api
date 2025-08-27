@@ -97,7 +97,8 @@ goodsSalesStats.batchInsertJD = async (date) => {
             a1.operation_amount, a1.order_num, a1.refund_num, a1.profit, a3.pay_amount, 
             a3.brushing_amount, a3.brushing_qty, a3.refund_amount, a3.pay_express_fee, 
             IFNULL(a3.pay_amount, 0) - IFNULL(a3.brushing_amount, 0) - IFNULL(a3.refund_amount, 0) 
-                AS real_pay_amount, a3.bill, a4.words_market_vol, a4.words_vol, a4.dsr
+                AS real_pay_amount, a3.bill, a4.words_market_vol, a4.words_vol, a4.dsr,
+            a1.gross_standard,a1.other_cost
         FROM goods_sales a1 LEFT JOIN goods_other_info a4 ON a4.goods_id = a1.goods_id 
 		    AND a4.date = ?
         LEFT JOIN goods_payments a3 ON a1.goods_id = a3.goods_id AND a3.date = ?
@@ -134,10 +135,12 @@ goodsSalesStats.batchInsertJD = async (date) => {
             dsr, 
             order_num, 
             refund_num, 
-            profit) VALUES`, start = i * 500, data = [], 
+            profit,
+            gross_standard,
+            other_cost) VALUES`, start = i * 500, data = [], 
             end = (i + 1) * 500 <= rows.length ? (i + 1) * 500 : rows.length
         for (let j = start; j < end; j++) {
-            sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+            sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
             data.push(
                 rows[j].goods_id, 
                 rows[j].shop_name, 
@@ -163,7 +166,9 @@ goodsSalesStats.batchInsertJD = async (date) => {
                 rows[j].dsr, 
                 rows[j].order_num, 
                 rows[j].refund_num, 
-                rows[j].profit
+                rows[j].profit,
+                rows[j].gross_standard,
+                rows[j].other_cost
             )
         }
         sql = sql.substring(0, sql.length - 1)
