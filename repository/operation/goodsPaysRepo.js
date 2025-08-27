@@ -80,7 +80,9 @@ goodsPaysRepo.batchInsertJD = async (date,shop_name) => {
             IFNULL(SUM(refund_qty), 0) AS refund_qty, 
             IFNULL(SUM(sale_qty), 0) AS sale_qty, 
             IFNULL(SUM(express_fee), 0) AS express_fee, 
-            IFNULL(SUM(packing_fee), 0) AS packing_fee 
+            IFNULL(SUM(packing_fee), 0) AS packing_fee,
+            IFNULL(SUM(gross_standard), 0) AS gross_standard,
+            IFNULL(SUM(IF(other_cost>0,other_cost,0)),0) AS other_cost
         FROM goods_pay_info WHERE \`date\` = ? AND shop_name = '${shop_name}'
         GROUP BY goods_id, shop_name, shop_id, \`date\``
     let rows = await query(sql, [date,shop_name])
@@ -89,9 +91,9 @@ goodsPaysRepo.batchInsertJD = async (date,shop_name) => {
     sql = `INSERT INTO goods_pays(goods_id, shop_name, shop_id, \`date\`, pay_amount, 
         brushing_amount, brushing_qty, refund_amount, bill_amount, sale_amount, 
         cost_amount, gross_profit, profit, promotion_amount, operation_amount, 
-        refund_qty, sale_qty, express_fee, packing_fee) VALUES`
+        refund_qty, sale_qty, express_fee, packing_fee,gross_standard,other_cost) VALUES`
     for (let i = 0; i < rows.length; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
         data.push(
             rows[i].goods_id, 
             rows[i].shop_name,
@@ -111,7 +113,9 @@ goodsPaysRepo.batchInsertJD = async (date,shop_name) => {
             rows[i].refund_qty, 
             rows[i].sale_qty, 
             rows[i].express_fee, 
-            rows[i].packing_fee)
+            rows[i].packing_fee,
+            rows[i].gross_standard,
+            rows[i].other_cost)
     }
     sql = sql.substring(0, sql.length - 1)
     sqls = [

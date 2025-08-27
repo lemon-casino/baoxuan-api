@@ -21,7 +21,9 @@ goodsSalesRepo.batchInsert = async (date) => {
             IFNULL(SUM(real_gross_profit), 0) AS real_gross_profit,
             IFNULL(SUM(bill_amount), 0) AS bill_amount,
             IFNULL(SUM(order_num), 0) AS order_num,
-            IFNULL(SUM(refund_num), 0) AS refund_num
+            IFNULL(SUM(refund_num), 0) AS refund_num,
+            IFNULL(SUM(gross_standard), 0) AS gross_standard,
+            IFNULL(SUM(IF(other_cost>0,other_cost,0)),0) AS other_cost
         FROM goods_sale_info WHERE date = ? GROUP BY goods_id, shop_name, shop_id`
     let rows = await query(sql, [date]), data = []
     if (!rows?.length) return false
@@ -45,9 +47,11 @@ goodsSalesRepo.batchInsert = async (date) => {
             real_gross_profit, 
             bill_amount, 
             order_num, 
-            refund_num) VALUES`
+            refund_num,
+            gross_standard,
+            other_cost) VALUES`
     for (let i = 0; i < rows.length; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
         data.push(
             rows[i].goods_id, 
             rows[i].shop_name, 
@@ -68,7 +72,9 @@ goodsSalesRepo.batchInsert = async (date) => {
             rows[i].real_gross_profit, 
             rows[i].bill_amount, 
             rows[i].order_num, 
-            rows[i].refund_num
+            rows[i].refund_num,
+            rows[i].gross_standard,
+            rows[i].other_cost
         )
     }
     sql = sql.substring(0, sql.length - 1)
