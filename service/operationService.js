@@ -1779,6 +1779,34 @@ const batchInsertGoodsPaysStats = async (date) => {
     const changes=[]
     let pdd = await goodsPaysStats.getVolumeTargetPDD()
     let tm = await goodsPaysStats.getVolumeTargetTM()
+    let weekSales = await goodsPaysStats.getWeekSalesAmount()
+    for (let i = 0; i < weekSales.length; i++) {
+        let column = 'goods_id', value = weekSales[i].goods_id, state = null
+        if (weekSales[i].platform == '自营') {
+            column = 'sku_id'
+            value = weekSales[i].sku_id
+        }
+        if (weekSales[i].target4 && weekSales[i].sale_amount >= weekSales[i].target4 && 
+            weekSales[i].profit / weekSales[i].sale_amount >= 0.18) {
+            state = '维护'
+        } else if (weekSales[i].target3 && weekSales[i].sale_amount >= weekSales[i].target3 && 
+            weekSales[i].profit / weekSales[i].sale_amount >= 0.1) {
+            state = '控'
+        } else if (weekSales[i].target2 && weekSales[i].sale_amount >= weekSales[i].target2) {
+            state = '稳'
+        } else if (weekSales[i].target1 && weekSales[i].sale_amount >= weekSales[i].target1 * 0.1) {
+            state = '起'
+        } else if ((weekSales[i].plaform == '自营' && weekSales[i].userDef1 != '下柜') || 
+            (weekSales[i].plaform == '天猫部' && weekSales[i].link_state != '下架')){
+            state = '未起'
+        }
+        await dianShangOperationAttributeRepo.updateAttribute(
+            'product_stage', 
+            state, 
+            weekSales[i].platform, 
+            column,
+            value)
+    } 
     for (let i =0;i<pdd.length;i++){
         if(!pdd[i].goods_id) continue
         let info  = await goodsPaysStats.getVolumeTargetInfo('goods_id',pdd[i].goods_id)

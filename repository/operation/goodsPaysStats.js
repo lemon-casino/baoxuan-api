@@ -309,5 +309,48 @@ goodsPaysStats.getVolumeTargetInfo = async(column,goods_id)=>{
     return result
 }
 
+goodsPaysStats.getWeekSalesAmount = async() => {
+    let month1 = moment().format('YYYYMM'), 
+        days1 = moment().format('YYYYMM') == moment().subtract(1, 'day').format('YYYYMM') ? 
+            moment().subtract(1, 'day').date() : 0, 
+        total1 = moment().daysInMonth(), 
+        month2 = moment().subtract(1, 'month').format('YYYYMM'), 
+        days2 = 7 - days1, 
+        total2 = moment().subtract(1, 'month').daysInMonth()
+    
+    let sql = `SELECT g.goods_id, g.sku_id, g.platform, g.userDef1, g.link_state, a.sale_amount, a.profit, 
+            b.sale_amount AS target1, c.sale_amount AS target2, d.sale_amount AS target3, t.amount AS target4 
+        FROM (SELECT IF(platform = '自营', brief_name, goods_id) AS goods_id, sku_id, platform, userDef1, link_state 
+            FROM dianshang_operation_attribute WHERE platform IN ('自营', 'fcs+pop', '拼多多部', '天猫部')) g 
+        LEFT JOIN (SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, IFNULL(SUM(profit), 0) AS profit, goods_id 
+            FROM goods_pays_stats WHERE date BETWEEN DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY) 
+                AND DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) 
+            GROUP BY goods_id) a ON a.goods_id = g.goods_id 
+        LEFT JOIN (SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id FROM spiral_target 
+            WHERE date BETWEEN DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY) 
+                AND DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) 
+                AND day IN ('第7天', '第6天', '第5天', '第4天', '第3天', '第2天', '第1天')
+            GROUP BY goods_id) b ON a.goods_id = g.goods_id
+        LEFT JOIN (SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id FROM spiral_target 
+            WHERE date BETWEEN DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY) 
+                AND DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) 
+                AND day IN ('第11天', '第10天', '第9天', '第8天', '第7天', '第6天', '第5天') 
+            GROUP BY goods_id) c ON c.goods_id = g.goods_id 
+        LEFT JOIN (SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, goods_id FROM spiral_target 
+            WHERE date BETWEEN DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY) 
+                AND DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) 
+                AND day IN ('第20天', '第19天', '第18天', '第17天', '第16天', '第15天', '第14天') 
+            GROUP BY goods_id) d ON d.goods_id = g.goods_id 
+        LEFT JOIN (SELECT SUM(amount) AS amount, goods_id FROM (
+            SELECT FORMAT(amount * ${days1}/${total1}, 2) AS amount, goods_id 
+            FROM goods_monthly_sales_target WHERE month = "${month1}"
+			UNION ALL 
+            SELECT FORMAT(amount * ${days2}/${total2}, 2) AS amount, goods_id 
+            FROM goods_monthly_sales_target WHERE month = "${month2}"
+        ) t1 GROUP BY goods_id) t ON t.goods_id = g.goods_id 
+        WHERE g.goods_id IS NOT NULL`
+    const result = await query(sql)
+    return result
+}
 
 module.exports = goodsPaysStats
