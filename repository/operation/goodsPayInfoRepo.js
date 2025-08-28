@@ -7,6 +7,7 @@ goodsPayInfoRepo.getPaymentByShopNamesAndTime = async (shopNames, start, end) =>
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.packing_fee), 0) AS packing_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
+            IFNULL(SUM(a1.bill_amount), 0) AS bill_amount, 
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
             IFNULL(SUM(a2.words_vol), 0) AS words_vol, 
@@ -107,6 +108,7 @@ goodsPayInfoRepo.getChildPaymentByShopNamesAndTime = async (shopNames, start, en
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.packing_fee), 0) AS packing_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
+            IFNULL(SUM(a1.bill_amount), 0) AS bill_amount, 
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
             IFNULL(SUM(a2.words_vol), 0) AS words_vol, 
@@ -154,6 +156,7 @@ goodsPayInfoRepo.getPaymentByLinkIdsAndTime = async (linkIds, start, end) => {
             IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
             IFNULL(SUM(a1.packing_fee), 0) AS packing_fee, 
             IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
+            IFNULL(SUM(a1.bill_amount), 0) AS bill_amount, 
             IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
             IFNULL(SUM(a2.words_market_vol), 0) AS words_market_vol, 
             IFNULL(SUM(a2.words_vol), 0) AS words_vol, 
@@ -1552,9 +1555,11 @@ goodsPayInfoRepo.batchInsert = async (count, data) => {
             operation_amount,
             packing_fee,
             sale_qty,
-            refund_qty) VALUES`
+            refund_qty,
+            gross_standard,
+            other_cost) VALUES`
     for (let i = 0; i < count; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, data)

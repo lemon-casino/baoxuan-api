@@ -90,7 +90,7 @@ goodsPaysStats.batchInsertJD = async (date,shop_name) => {
 	        a1.cost_amount, a1.express_fee, a1.packing_fee, a2.labor_cost, a1.promotion_amount, 
             a1.operation_amount, a1.order_num, a1.refund_num, a1.profit, a1.pay_amount, 
             a1.brushing_amount, a1.brushing_qty, a1.refund_amount, a1.bill_amount, 
-            a4.words_market_vol, a4.words_vol, a4.dsr
+            a4.words_market_vol, a4.words_vol, a4.dsr,a1.gross_standard,a1.other_cost
         FROM goods_pays a1 LEFT JOIN goods_other_info a4 ON a4.goods_id = a1.goods_id 
 		    AND a4.date = ? 
         LEFT JOIN (SELECT SUM(rate) AS labor_cost, goods_id, shop_id FROM orders_goods_pays 
@@ -124,10 +124,12 @@ goodsPaysStats.batchInsertJD = async (date,shop_name) => {
             order_num, 
             refund_num, 
             profit, 
-            sale_qty) VALUES`, start = i * 500, data = [], 
+            sale_qty,
+            gross_standard,
+            other_cost) VALUES`, start = i * 500, data = [], 
             end = (i + 1) * 500 <= rows.length ? (i + 1) * 500 : rows.length
         for (let j = start; j < end; j++) {
-            sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+            sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
             data.push(
                 rows[j].goods_id, 
                 rows[j].shop_name, 
@@ -151,7 +153,9 @@ goodsPaysStats.batchInsertJD = async (date,shop_name) => {
                 rows[j].order_num, 
                 rows[j].refund_num, 
                 rows[j].profit,
-                rows[j].sale_qty
+                rows[j].sale_qty,
+                rows[j].gross_standard,
+                rows[j].other_cost
             )
         }
         sql = sql.substring(0, sql.length - 1)

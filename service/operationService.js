@@ -92,7 +92,7 @@ const getDataStats = async (id, start, end, params) => {
     let sale_amount = 0, promotion_amount = 0, express_fee = 0, profit = 0, 
         oriType, type = '', except = false, operation_amount = 0, promotion_rate = 0,
         words_market_vol = 0, words_vol = 0, order_num = 0, refund_num = 0,
-        children = [{}, {}, {}], warning = 0, packing_fee = 0, 
+        children = [{}, {}, {}], warning = 0, packing_fee = 0, bill_amount = 0
         start_year = parseInt(moment(start).format('YYYY')),
         end_year = parseInt(moment(end).format('YYYY')),
         start_month = parseInt(moment(start).format('MM')),
@@ -110,7 +110,7 @@ const getDataStats = async (id, start, end, params) => {
     }
     let columnInfo = JSON.parse(JSON.stringify(columnList))
     if (params.stats == 'verified') columnInfo[1].label = '核销金额'
-    if (params.stats == 'pay') columnInfo[1].label = '支付金额'
+    if (params.stats == 'pay') columnInfo[1].label = '实际支付金额'
     if (params.type) {
         // jump permission, high level => low level
         oriType = typeList[params.type].map[0]
@@ -174,6 +174,7 @@ const getDataStats = async (id, start, end, params) => {
         result[type].data[i].id += i
         sale_amount += parseFloat(result[type].data[i].sale_amount)
         promotion_amount += parseFloat(result[type].data[i].promotion_amount)
+        bill_amount += parseFloat(result[type].data[i].bill_amount)
         operation_amount += parseFloat(result[type].data[i].operation_amount)
         words_market_vol += parseFloat(result[type].data[i].words_market_vol)
         words_vol += parseFloat(result[type].data[i].words_vol)
@@ -232,6 +233,7 @@ const getDataStats = async (id, start, end, params) => {
     result.total.column = columnInfo
     result.total.data[0].sale_amount = sale_amount.toFixed(2)
     result.total.data[0].promotion_amount = promotion_amount.toFixed(2)
+    result.total.data[0].bill_amount = bill_amount.toFixed(2)
     result.total.data[0].promotion_rate = sale_amount > 0 ? (promotion_amount / sale_amount * 100).toFixed(2) : '0.00'
     result.total.data[0].express_fee = express_fee.toFixed(2)
     result.total.data[0].packing_fee = packing_fee.toFixed(2)
@@ -509,7 +511,7 @@ const getQueryInfo = async (type, oriType, id, oriName) => {
 }
 
 const queryShopInfo = async (shops, result, type, start, end, months, timeline, func) => {
-    let sale_amount = 0, info, promotion_amount = 0, promotion_rate = 0,
+    let sale_amount = 0, info, promotion_amount = 0,bill_amount = 0, promotion_rate = 0,
         packing_fee = 0, express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
         order_num = 0, refund_num = 0, words_market_vol = 0, words_vol = 0
@@ -541,6 +543,7 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
         if (info?.length) {
             sale_amount = parseFloat(info[0].sale_amount || 0).toFixed(2)
             promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)
+            bill_amount = parseFloat(info[0].bill_amount || 0).toFixed(2)
             operation_rate = parseFloat(info[0].operation_rate || 0).toFixed(2)
             promotion_rate = parseFloat(info[0].promotion_rate || 0).toFixed(2)
             roi = parseFloat(info[0].roi || 0).toFixed(2)
@@ -571,6 +574,7 @@ const queryShopInfo = async (shops, result, type, start, end, months, timeline, 
             name: shopName[i].name,
             sale_amount,
             promotion_amount,
+            bill_amount,
             operation_rate,
             promotion_rate,
             roi,
@@ -787,7 +791,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
 
 const queryUserInfo = async (users, result, type, start, end, months, timeline, func) => {
     let sale_amount = 0, info, links, promotion_amount = 0, packing_fee = 0, promotion_rate = 0,
-        express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, 
+        express_fee = 0, profit = 0, profit_rate = 0, operation_rate = 0, bill_amount = 0,
         roi = 0, market_rate = 0, refund_rate = 0, operation_amount = 0,
         order_num = 0, refund_num = 0, words_market_vol = 0, words_vol = 0
     let userName = [], j = -1, except = false
@@ -829,7 +833,8 @@ const queryUserInfo = async (users, result, type, start, end, months, timeline, 
         let children = await func.getChildPaymentByLinkIdsAndTime(linkIds, start, end)
         if (info?.length) {
             sale_amount = parseFloat(info[0].sale_amount || 0).toFixed(2)
-            promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)            
+            promotion_amount = parseFloat(info[0].promotion_amount || 0).toFixed(2)   
+            bill_amount = parseFloat(info[0].bill_amount || 0).toFixed(2)            
             operation_rate = parseFloat(info[0].operation_rate || 0).toFixed(2)
             promotion_rate = parseFloat(info[0].promotion_rate || 0).toFixed(2)
             roi = parseFloat(info[0].roi || 0).toFixed(2)
@@ -858,6 +863,7 @@ const queryUserInfo = async (users, result, type, start, end, months, timeline, 
             name: userName[i].name,
             sale_amount,
             promotion_amount,
+            bill_amount,
             operation_rate,
             promotion_rate,
             roi,
@@ -1121,7 +1127,10 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             {title: '二级类目', field_id: 'second_category', type: 'input', show: true},
             {title: '坑产目标', field_id: 'pit_target', type: 'input', show: true},
             {
-                title: params.stats == 'verified' ? '核销金额' : '发货金额(总供货价)', 
+                title: params.stats == 'verified' ? '核销金额' : (params.stats == 'pay' ? '实际支付金额':'减退发货金额'), 
+                field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
+            },{
+                title: '总供货价', 
                 field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
             }, {
                 title: '发货商品件数', field_id: 'real_sale_qty', type: 'number', 
@@ -1151,7 +1160,7 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: '月销目标达成率(%)', field_id: 'sale_amount_profit_month', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '支付金额', field_id: 'pay_amount', type: 'number', 
+                title: '显示支付金额', field_id: 'pay_amount', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: '刷单金额', field_id: 'brushing_amount', type: 'number', 
@@ -1181,10 +1190,13 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: '利润额', field_id: 'profit', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '利润率(供货价)(%)', field_id: 'profit_rate', type: 'number', 
+                title: '利润率(gmv)(%)', field_id: 'profit_rate', type: 'number', 
+                min: 0, max: 15, show: true
+            },{
+                title: '京利润率(供货价)(%)', field_id: 'profit_rate', type: 'number', 
                 min: 0, max: 15, show: true
             }, {
-                title: '利润率(gmv)(%)', field_id: 'profit_rate_gmv', type: 'number', 
+                title: '京利润率(gmv)(%)', field_id: 'profit_rate_gmv', type: 'number', 
                 min: 0, max: 15, show: true
             }, {
                 title: '扣点(账单费用)', field_id: 'bill', type: 'number', 
@@ -1314,7 +1326,16 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
     params.search = JSON.parse(params.search)
     result.setting = []
     let setting = await userSettingRepo.getByType(id, 1)
-    if (setting?.length) result.setting = JSON.parse(setting[0].attributes)
+    if (setting?.length) {
+        result.setting = JSON.parse(setting[0].attributes)
+        if( params.stats == 'pay') result.setting = result.setting.map(item => {
+            if (item.field_id === 'real_pay_amount') {
+                return { ...item, show: false }
+            }
+            return item
+        })
+        console.log(result.setting)
+    }
     let func = params.stats == 'verified' ? goodsSaleVerifiedRepo : 
         (params.stats == 'info') ? goodsSaleInfoRepo : goodsPayInfoRepo
     if (params.infoType == 1)
@@ -1594,6 +1615,8 @@ const importGoodsInfo = async (rows, time) => {
             rows[i].getCell(packing_fee_row).value,
             rows[i].getCell(bill_amount_row).value,
             null,
+            null,
+            null
         )
         count += 1
         saveAmount += parseFloat(rows[i].getCell(sale_amount_row).value)
@@ -2028,7 +2051,7 @@ const getGoodsLineInfo = async (startDate, endDate, params, id) => {
             {title: '三级类目', field_id: 'level_3_category', type: 'input', show: true},
             {title: '产品线简称', field_id: 'brief_product_line', type: 'input', show: true},
             {
-                title: params.stats == 'verified' ? '核销金额' : '发货金额', 
+                title: params.stats == 'verified' ? '核销金额' : '减退发货金额', 
                 field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
             }, {
                 title: '推广费', field_id: 'promotion_amount', type: 'number', 
@@ -2396,7 +2419,9 @@ const importGoodsPayInfo = async (rows, time) => {
             operation_amount,
             packing_fee,
             sale_qty,
-            refund_qty
+            refund_qty,
+            null,
+            null,
         )
         dataMap[goods_id] = true
     }
@@ -2563,6 +2588,7 @@ const importJDZYInfo = async (rows, time,name) => {
             const cate = await userOperationRepo.getDetailBycategory(sku_id)
             category = cate[0].second_category
             tax = sale_amount * 0.07
+            // 综毛标准
             if (['餐具','茶具'].includes(category)){
                 jd_gross_profit_std = supplier_amount * 0.25
             }else if(['厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具'].includes(category)){
@@ -2572,6 +2598,7 @@ const importJDZYInfo = async (rows, time,name) => {
             }
         }else if(shop_name == '京东自营-日用'){
             tax = sale_amount * 0.07 + supplier_amount *0.02
+            // 综毛标准
             jd_gross_profit_std = supplier_amount * 0.25
         }
         //实际棕毛
@@ -2604,7 +2631,9 @@ const importJDZYInfo = async (rows, time,name) => {
             supplier_amount,
             null,
             null,
-            real_gross_profit
+            real_gross_profit,
+            jd_gross_profit_std,
+            other_cost
         )
         data2.push(
             goods_id,
@@ -2634,7 +2663,9 @@ const importJDZYInfo = async (rows, time,name) => {
             other_cost>0? tax + other_cost : tax,
             null,
             qty,
-            null
+            null,
+            jd_gross_profit_std,
+            other_cost
         )
         count += 1
         saveAmount += parseFloat(rows[i].getCell(sale_amount_row).value)
@@ -2863,7 +2894,9 @@ const importJDZYcompositeInfo = async (rows, time,name) => {
             supplier_amount,
             null,
             null,
-            real_gross_profit
+            real_gross_profit,
+            jd_gross_profit_std,
+            other_cost
         )
         data2.push(
             goods_id,
@@ -2893,7 +2926,9 @@ const importJDZYcompositeInfo = async (rows, time,name) => {
             other_cost>0? tax + other_cost : tax,
             null,
             qty,
-            null
+            null,
+            jd_gross_profit_std,
+            other_cost
         )
         count += 1
         amount +=supplier_amount
