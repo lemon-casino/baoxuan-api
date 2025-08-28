@@ -1193,10 +1193,10 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 title: '利润率(gmv)(%)', field_id: 'profit_rate', type: 'number', 
                 min: 0, max: 15, show: true
             },{
-                title: '京利润率(供货价)(%)', field_id: 'profit_rate', type: 'number', 
+                title: '(京)利润率(供货价)(%)', field_id: 'profit_rate', type: 'number', 
                 min: 0, max: 15, show: true
             }, {
-                title: '京利润率(gmv)(%)', field_id: 'profit_rate_gmv', type: 'number', 
+                title: '(京)利润率(gmv)(%)', field_id: 'profit_rate_gmv', type: 'number', 
                 min: 0, max: 15, show: true
             }, {
                 title: '扣点(账单费用)', field_id: 'bill', type: 'number', 
