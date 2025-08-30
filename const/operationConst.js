@@ -62,11 +62,13 @@ const columnList1 = [
 	{ label: "无推广", key: "none_promotion", show: true },
 	{ label: "低推广", key: "low_promotion", show: true },
 	{ label: "链接总投产不合格", key: "low_roi", show: true },
-	{ label: "链接计划投产不合格", key: "low_plan_roi", show: true },
-	{ label: "目标未达成", key: "goal_not_achieve", show: true },
-	{ label: "无效链接", key: "invalid_link", show: true },
+	{ label: "链接计划投产不合格1", key: "low_plan_roi", show: true },
+	{ label: "链接计划投产不合格2", key: "low_plan_roi1", show: true },
+	{ label: "无效链接", key: "invalid", show: true },
 	{ label: "重点关注", key: "important_link", show: true },
 	{ label: "低定价毛利", key: "low_gross_profit", show: true },
+	{ label: "重新激活", key: "unsalable_code", show: true },
+	{ label: "IP", key: "ip", show: true },
 	{ label: "清滞销", key: "unsalable_link", show: true }
 ]
 
