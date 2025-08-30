@@ -4146,7 +4146,7 @@ goodsSaleInfoRepo.getLowROIByShopNamesAndTime = async (shopNames) => {
                 a.promotion_amount * a.cost_amount < a.sale_amount * 
                 (2.67 * a.promotion_amount + 2 * a.cost_amount - 1.34 * a.sale_amount), 
                 a.sale_amount < a.promotion_amount + a.cost_amount) AND d.id IS NULL`
-    const result = await query(sql, [start, end])
+    const result = await query(sql)
     return result
 }
 
@@ -4257,7 +4257,7 @@ goodsSaleInfoRepo.getLowROIByLinksAndTime = async (links) => {
                 a.promotion_amount * a.cost_amount < a.sale_amount * 
                 (2.67 * a.promotion_amount + 2 * a.cost_amount - 1.34 * a.sale_amount), 
                 a.sale_amount < a.promotion_amount + a.cost_amount) AND d.id IS NULL`
-    const result = await query(sql, [start, end])
+    const result = await query(sql)
     return result
 }
 
@@ -4401,7 +4401,7 @@ goodsSaleInfoRepo.getLowPlanROIByShopNamesAndTime = async (shopNames, days1, day
         WHERE s1.create_time >= DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND s.trans_amount * a.sale_amount < a.cost_amount * (s.pay_amount + s.trans_amount)
             AND d.id IS NULL) b`
-    const result = await query(sql, [start, end, start, end])
+    const result = await query(sql)
     return result
 }
 

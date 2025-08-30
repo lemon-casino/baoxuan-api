@@ -270,8 +270,8 @@ const getPromotionStats = async (id, start, end, params) => {
     let info = `${id}-${start}-${end}-${JSON.stringify(params)}`
     let key = crypto.createHash('md5').update(info).digest('hex')
     key = `${redisKeys.operation}:promotion:${params.stats}:${key}`
-    // result = await redisUtil.get(key)
-    // if (result) return JSON.parse(result)
+    result = await redisUtil.get(key)
+    if (result) return JSON.parse(result)
     result = JSON.parse(JSON.stringify(operationDefaultItem))
     let func = params.stats == 'verified' ? goodsSaleVerifiedRepo : 
         params.stats == 'info' ? goodsSaleInfoRepo : goodsPayInfoRepo
@@ -694,91 +694,91 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         if (division_info?.length) {
             if (division_info[0].division_name == '事业部2') {
                 promotion_rate = 0.06
-                // roi = await func.getLowROIByShopNamesAndTime2(shopName[i].shop_name, otherName[i])
-                // plan = await func.getLowPlanROIByShopNamesAndTime2(shopName[i].shop_name, 3, 7, otherName[i])
-                // plan1 = await func.getLowPlanROIByShopNamesAndTime2(shopName[i].shop_name, 7, 14, otherName[i])                
-                // important = await func.getImportByShopNames1(shopName[i].shop_name, otherName[i])
-                // gross = await goodsSaleVerifiedRepo.getLowGrossProfitByShopNamesAndTime1(shopName[i].shop_name, start, end, 0.55, 0.21, otherName[i])
+                roi = await func.getLowROIByShopNamesAndTime2(shopName[i].shop_name, otherName[i])
+                plan = await func.getLowPlanROIByShopNamesAndTime2(shopName[i].shop_name, 3, 7, otherName[i])
+                plan1 = await func.getLowPlanROIByShopNamesAndTime2(shopName[i].shop_name, 7, 14, otherName[i])                
+                important = await func.getImportByShopNames1(shopName[i].shop_name, otherName[i])
+                gross = await goodsSaleVerifiedRepo.getLowGrossProfitByShopNamesAndTime1(shopName[i].shop_name, start, end, 0.55, 0.21, otherName[i])
             } else if (division_info[0].division_name == '事业部3') {
                 promotion_rate = 0.1
-                // roi = await func.getLowROIByShopNamesAndTime(shopName[i].shop_name)
-                // plan = await func.getLowPlanROIByShopNamesAndTime(shopName[i].shop_name, 3, 7)
-                // plan1 = await func.getLowPlanROIByShopNamesAndTime(shopName[i].shop_name, 7, 14)          
-                // important = await func.getImportByShopNames(shopName[i].shop_name)
-                // gross = await goodsSaleVerifiedRepo.getLowGrossProfitByShopNamesAndTime(shopName[i].shop_name, start, end, 0.55)
+                roi = await func.getLowROIByShopNamesAndTime(shopName[i].shop_name)
+                plan = await func.getLowPlanROIByShopNamesAndTime(shopName[i].shop_name, 3, 7)
+                plan1 = await func.getLowPlanROIByShopNamesAndTime(shopName[i].shop_name, 7, 14)          
+                important = await func.getImportByShopNames(shopName[i].shop_name)
+                gross = await goodsSaleVerifiedRepo.getLowGrossProfitByShopNamesAndTime(shopName[i].shop_name, start, end, 0.55)
             } else {
                 promotion_rate = 0.08
-                // roi = await func.getLowROIByShopNamesAndTime1(shopName[i].shop_name)
-                // plan = await func.getLowPlanROIByShopNamesAndTime1(shopName[i].shop_name, 3, 7)
-                // plan1 = await func.getLowPlanROIByShopNamesAndTime1(shopName[i].shop_name, 7, 14)                
-                // important = await func.getImportByShopNames2(shopName[i].shop_name)
-                // gross = await goodsSaleVerifiedRepo.getLowGrossProfitByShopNamesAndTime(shopName[i].shop_name, start, end, 0.45)
+                roi = await func.getLowROIByShopNamesAndTime1(shopName[i].shop_name)
+                plan = await func.getLowPlanROIByShopNamesAndTime1(shopName[i].shop_name, 3, 7)
+                plan1 = await func.getLowPlanROIByShopNamesAndTime1(shopName[i].shop_name, 7, 14)                
+                important = await func.getImportByShopNames2(shopName[i].shop_name)
+                gross = await goodsSaleVerifiedRepo.getLowGrossProfitByShopNamesAndTime(shopName[i].shop_name, start, end, 0.45)
             }
         }
-        // let negative = await func.getNegativeProfitByShopNamesAndTime(
-        //     shopName[i].shop_name, 
-        //     start, 
-        //     end,
-        //     otherName[i])
-        // if (negative?.length) negative_profit = parseInt(negative[0].count)
-        // let low = await func.getLowProfitByShopNamesAndTime(
-        //     shopName[i].shop_name, 
-        //     otherName[i])
-        // if (low?.length) low_profit = parseInt(low[0].count)
-        // let none = await func.getNullPromotionByShopNamesAndTime(            
-        //     shopName[i].shop_name, 
-        //     start, 
-        //     end, 
-        //     otherName[i])
-        // if (none?.length) none_promotion = parseInt(none[0].count)
-        // let lowp = await func.getLowPromotionByShopNamesAndTime(          
-        //     shopName[i].shop_name, 
-        //     start, 
-        //     end, 
-        //     promotion_rate, 
-        //     otherName[i])
-        // if (lowp?.length) low_promotion = parseInt(lowp[0].count)
-        // if (roi?.length) low_roi = parseInt(roi[0].count)
-        // if (plan?.length) low_plan_roi = parseInt(plan[0].count)
-        // if (plan1?.length) low_plan_roi1 = parseInt(plan1[0].count)
-        // let invalid_info = await func.getInvalidByShopNamesAndTime(
-        //     shopName[i].shop_name, 
-        //     start, 
-        //     end,
-        //     otherName[i])
-        // if (invalid_info?.length) {
-        //     invalid_link = parseInt(invalid_info[0].count)
-        //     invalid_sale_amount = parseFloat(invalid_info[0].sale_amount).toFixed(2)
-        //     invalid_profit = parseFloat(invalid_info[0].profit).toFixed(2)
-        //     invalid_profit_percent = parseFloat(invalid_info[0].sale_amount) > 0 ? 
-        //         parseFloat(invalid_info[0].profit / invalid_info[0].sale_amount * 100).toFixed(2) : 0
-        // }
-        // invalid = `链接数量:${invalid_link}\n销售额:${invalid_sale_amount}\n利润率:${invalid_profit_percent}%`
-        // if (important?.length) important_link = parseInt(important[0].count)
-        // if (gross?.length) low_gross_profit = parseInt(gross[0].count)        
-        // let unsalable_info = await func.getUnsalableCodeByShopNames(shopName[i].shop_name,
-        // start, end, otherName[i])
-        // if (unsalable_info) {
-        //     unsalable_cost_amount = parseFloat(unsalable_info.cost_amount).toFixed(2)
-        //     unsalable_amount = parseFloat(unsalable_info.amount).toFixed(2)
-        //     unsalable_sale_amount = parseFloat(unsalable_info.sale_amount).toFixed(2)
-        //     unsalable_profit = parseFloat(unsalable_info.profit).toFixed(2)
-        //     unsalable_profit_percent = parseFloat(unsalable_info.sale_amount) > 0 ? 
-        //         parseFloat(unsalable_info.profit / unsalable_info.sale_amount * 100).toFixed(2) : 0
-        // }
-        // unsalable_code = `销售成本:${unsalable_cost_amount}\n总成本:${unsalable_amount}\n利润率:${unsalable_profit_percent}%`
-        // let ip_info = await func.getIpByShopNames(shopName[i].shop_name, months, start, end)
-        // if (ip_info?.length) {
-        //     ip_link = parseInt(ip_info[0].count)
-        //     ip_sale_amount = parseFloat(ip_info[0].sale_amount).toFixed(2)
-        //     ip_amount = parseFloat(ip_info[0].amount).toFixed(2)
-        //     ip_profit = parseFloat(ip_info[0].profit).toFixed(2)
-        //     ip_goal_achieve_percent = parseFloat(ip_info[0].amount) > 0 ? 
-        //         parseFloat(ip_info[0].sale_amount / ip_info[0].amount * 100).toFixed(2) : 0
-        //     ip_profit_percent = parseFloat(ip_info[0].sale_amount) > 0 ? 
-        //         parseFloat(ip_info[0].profit / ip_info[0].sale_amount * 100).toFixed(2) : 0
-        // }
-        // ip = `未达成数量:${ip_link}\n销售目标率:${ip_goal_achieve_percent}\n利润率:${ip_profit_percent}%`
+        let negative = await func.getNegativeProfitByShopNamesAndTime(
+            shopName[i].shop_name, 
+            start, 
+            end,
+            otherName[i])
+        if (negative?.length) negative_profit = parseInt(negative[0].count)
+        let low = await func.getLowProfitByShopNamesAndTime(
+            shopName[i].shop_name, 
+            otherName[i])
+        if (low?.length) low_profit = parseInt(low[0].count)
+        let none = await func.getNullPromotionByShopNamesAndTime(            
+            shopName[i].shop_name, 
+            start, 
+            end, 
+            otherName[i])
+        if (none?.length) none_promotion = parseInt(none[0].count)
+        let lowp = await func.getLowPromotionByShopNamesAndTime(          
+            shopName[i].shop_name, 
+            start, 
+            end, 
+            promotion_rate, 
+            otherName[i])
+        if (lowp?.length) low_promotion = parseInt(lowp[0].count)
+        if (roi?.length) low_roi = parseInt(roi[0].count)
+        if (plan?.length) low_plan_roi = parseInt(plan[0].count)
+        if (plan1?.length) low_plan_roi1 = parseInt(plan1[0].count)
+        let invalid_info = await func.getInvalidByShopNamesAndTime(
+            shopName[i].shop_name, 
+            start, 
+            end,
+            otherName[i])
+        if (invalid_info?.length) {
+            invalid_link = parseInt(invalid_info[0].count)
+            invalid_sale_amount = parseFloat(invalid_info[0].sale_amount).toFixed(2)
+            invalid_profit = parseFloat(invalid_info[0].profit).toFixed(2)
+            invalid_profit_percent = parseFloat(invalid_info[0].sale_amount) > 0 ? 
+                parseFloat(invalid_info[0].profit / invalid_info[0].sale_amount * 100).toFixed(2) : 0
+        }
+        invalid = `链接数量:${invalid_link}\n销售额:${invalid_sale_amount}\n利润率:${invalid_profit_percent}%`
+        if (important?.length) important_link = parseInt(important[0].count)
+        if (gross?.length) low_gross_profit = parseInt(gross[0].count)        
+        let unsalable_info = await func.getUnsalableCodeByShopNames(shopName[i].shop_name,
+        start, end, otherName[i])
+        if (unsalable_info) {
+            unsalable_cost_amount = parseFloat(unsalable_info.cost_amount).toFixed(2)
+            unsalable_amount = parseFloat(unsalable_info.amount).toFixed(2)
+            unsalable_sale_amount = parseFloat(unsalable_info.sale_amount).toFixed(2)
+            unsalable_profit = parseFloat(unsalable_info.profit).toFixed(2)
+            unsalable_profit_percent = parseFloat(unsalable_info.sale_amount) > 0 ? 
+                parseFloat(unsalable_info.profit / unsalable_info.sale_amount * 100).toFixed(2) : 0
+        }
+        unsalable_code = `销售成本:${unsalable_cost_amount}\n总成本:${unsalable_amount}\n利润率:${unsalable_profit_percent}%`
+        let ip_info = await func.getIpByShopNames(shopName[i].shop_name, months, start, end)
+        if (ip_info?.length) {
+            ip_link = parseInt(ip_info[0].count)
+            ip_sale_amount = parseFloat(ip_info[0].sale_amount).toFixed(2)
+            ip_amount = parseFloat(ip_info[0].amount).toFixed(2)
+            ip_profit = parseFloat(ip_info[0].profit).toFixed(2)
+            ip_goal_achieve_percent = parseFloat(ip_info[0].amount) > 0 ? 
+                parseFloat(ip_info[0].sale_amount / ip_info[0].amount * 100).toFixed(2) : 0
+            ip_profit_percent = parseFloat(ip_info[0].sale_amount) > 0 ? 
+                parseFloat(ip_info[0].profit / ip_info[0].sale_amount * 100).toFixed(2) : 0
+        }
+        ip = `未达成数量:${ip_link}\n销售目标率:${ip_goal_achieve_percent}\n利润率:${ip_profit_percent}%`
         let unsalable = await func.getUnsalableByShopNames(shopName[i].shop_name)
         if (unsalable?.length) unsalable_link = parseInt(unsalable[0].count)
         result[type].data.push({
