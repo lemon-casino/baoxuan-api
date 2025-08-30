@@ -322,10 +322,12 @@ goodsPaysStats.getWeekSalesAmount = async() => {
         days2 = 7 - days1, 
         total2 = moment().subtract(1, 'month').daysInMonth()
     
-    let sql = `SELECT g.goods_id, g.sku_id, g.platform, g.userDef1, g.link_state, a.sale_amount, a.profit, 
-            b.sale_amount AS target1, c.sale_amount AS target2, d.sale_amount AS target3, t.amount AS target4 
-        FROM (SELECT IF(platform = '自营', brief_name, goods_id) AS goods_id, sku_id, platform, userDef1, link_state 
-            FROM dianshang_operation_attribute WHERE platform IN ('自营', 'fcs+pop', '拼多多部', '天猫部')) g 
+    let sql = `SELECT g.goods_id, g.sku_id, g.platform, g.userDef1, g.link_state, g.onsale_date, 
+            a.sale_amount, a.profit, b.sale_amount AS target1, c.sale_amount AS target2, 
+            d.sale_amount AS target3, t.amount AS target4 
+        FROM (SELECT IF(platform = '自营', brief_name, goods_id) AS goods_id, sku_id, platform, userDef1, 
+                link_state, onsale_date FROM dianshang_operation_attribute 
+            WHERE platform IN ('自营', 'fcs+pop', '拼多多部', '天猫部')) g 
         LEFT JOIN (SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, IFNULL(SUM(profit), 0) AS profit, goods_id 
             FROM goods_pays_stats WHERE date BETWEEN DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY) 
                 AND DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) 
