@@ -1,5 +1,4 @@
 const { query } = require('../../model/dbConn')
-const mysql = require('mysql2')
 const shopInfoRepo = {}
 
 shopInfoRepo.getInfo = async () => {
