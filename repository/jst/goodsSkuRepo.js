@@ -243,8 +243,7 @@ goodsSkuRepo.getSales = async (skuids, start, end, goods_id) => {
 }
 
 goodsSkuRepo.getDatesBySpu = async (spu, start, end) => {
-    let sql = `SELECT s1.* FROM (SELECT IF(pc.\`商品编码\` IS NOT NULL, 
-                pc.\`组合商品编码\`, s.sys_sku_id) AS sku_id,
+    let sql = `SELECT s1.* FROM (SELECT IFNULL(pc.\`商品编码\`, s.sys_sku_id) AS sku_id,
                 s.goods_id, s.create_time FROM jst_goods_sku s 
             LEFT JOIN danpin.combination_product_code pc ON s.sys_sku_id = pc.\`组合商品编码\`
         ) s1 JOIN danpin.goods_info gi ON gi.\`商品编码\` = s1.sku_id 
@@ -278,8 +277,7 @@ goodsSkuRepo.getDatesBySpu = async (spu, start, end) => {
 }
 
 goodsSkuRepo.getDatesByGoodsId = async (goods_id, start, end) => {
-    let sql = `SELECT IF(pc.\`商品编码\` IS NOT NULL, 
-                pc.\`组合商品编码\`, s.sys_sku_id) AS sku_id,
+    let sql = `SELECT IFNULL(pc.\`商品编码\`, s.sys_sku_id) AS sku_id,
                 s.goods_id, s.create_time FROM jst_goods_sku s 
             LEFT JOIN danpin.combination_product_code pc ON s.sys_sku_id = pc.\`组合商品编码\`
             WHERE s.goods_id = ? AND s.create_time BETWEEN ? and ?`
