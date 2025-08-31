@@ -1094,26 +1094,35 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
     return result
 }
 
-const getGoodsInfo = async (startDate, endDate, params, id) => {
+const getGoodsInfo = async (startDate, endDate, params, id,tab) => {
     let result = {
-        column: [
+        data: {},
+        tmcolumn:[
             {title: '链接ID', field_id: 'goods_id', type: 'input', show: true},
-            {title: '订价毛利', field_id: '', show: true, sub: [
-                {
-                    title: '定价毛利', field_id: 'gross_profit', show: true, 
-                    hasChild: true, type: 'number', min: 0, max: 100
-                },
-                {title: '主销编码', field_id: 'sku_id', type: 'input', show: true},
-                {title: '次销编码', field_id: 'sku_sid', type: 'input', show: true}
-            ]},
-            {title: '店铺名称', field_id: 'shop_name', type: 'input', show: true},
-            {title: '店铺编码', field_id: 'shop_id', type: 'input', show: true},
-            {title: '商品名称', field_id: 'goods_name', type: 'input', show: true},
-            {title: '商品简称', field_id: 'brief_name', type: 'input', show: true},
+            {
+                title: '定价毛利', field_id: 'gross_profit', show: true, 
+                hasChild: true, type: 'number', min: 0, max: 100
+            },{
+                title: '滞销总成本', field_id: 'unsalable_cost_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            },
+            {title: '坑产目标', field_id: 'goal', type: 'input', show: true},
+            {title: '周期目标', field_id: 'period_target', type: 'input', show: true},
+            {title: '周期坑产目标达成率(%)', field_id: 'goal_rate', type: 'input', show: true},
+            {
+                title: '利润额', field_id: 'profit', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '推广合计', field_id: 'promotion_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '利润率(gmv)(%)', field_id: 'profit_rate', type: 'number', 
+                min: 0, max: 15, show: true
+            },{
+                title: params.stats == 'verified' ? '核销金额' : (params.stats == 'pay' ? '实际支付金额':'减退发货金额'), 
+                field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
+            },{title: '商品简称', field_id: 'brief_name', type: 'input', show: true},
             {title: '运营负责人', field_id: 'operator', type: 'input', show: true},
-            {title: '产品线简称', field_id: 'brief_product_line', type: 'input', show: true},
-            {title: '产品线负责人', field_id: 'line_director', type: 'input', show: true},
-            {title: '采购负责人', field_id: 'purchase_director', type: 'input', show: true},
             {title: '上架日期', field_id: 'onsale_date', type: 'date', show: true},
             {title: '上架信息', field_id: 'onsale_info', type: 'select', select: [
                 {key: '30', value: '新品30'},
@@ -1121,156 +1130,76 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
                 {key: '90', value: '新品90'},
                 {key: 'old', value: '老品'}
             ], show: true},
-            {title: '链接属性', field_id: 'link_attribute', type: 'input', show: true},
-            {title: '链接属性2', field_id: 'important_attribute', type: 'input', show: true},
+            {title: '玩法', field_id: 'play', type: 'select', select: [
+                {key: '微付费', value: '微付费'},
+                {key: '中付费', value: '中付费'},
+                {key: '高付费', value: '高付费'}],show: true},
+            {title: '产品阶段', field_id: 'product_stage', type: 'select',select: [
+                {key: '未起', value: '未起'},{key: '起', value: '起'},{key: '稳', value: '稳'},
+                {key: '控', value: '控'},{key: '维护', value: '维护'}], show: true},
+            {title: '活动名称', field_id: 'activity', type: 'input', show: true},
+            {title: '产品线简称', field_id: 'brief_product_line', type: 'input', show: true},
+            {title: '产品线负责人', field_id: 'line_director', type: 'input', show: true},
+            {title: '采购负责人', field_id: 'purchase_director', type: 'input', show: true},
             {title: '一级类目', field_id: 'first_category', type: 'input', show: true},
             {title: '二级类目', field_id: 'second_category', type: 'input', show: true},
-            {title: '坑产目标', field_id: 'pit_target', type: 'input', show: true},
+            {title: '三级类目', field_id: 'level_3_category', type: 'input', show: true},
             {
-                title: params.stats == 'verified' ? '核销金额' : (params.stats == 'pay' ? '实际支付金额':'减退发货金额'), 
-                field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
-            },{
-                title: '总供货价', 
-                field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
-            }, {
-                title: '发货商品件数', field_id: 'real_sale_qty', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '京仓发货金额', field_id: 'real_sale_amount', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '日销目标', field_id: 'pit_target_day', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '综毛标准', field_id: 'gross_standard', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '实际综毛', field_id: 'real_gross_profit', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '需补综毛', field_id: 'other_cost', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '日销目标达成率(%)', field_id: 'sale_amount_profit_day', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '月销目标', field_id: 'pit_target_month', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '月销目标达成率(%)', field_id: 'sale_amount_profit_month', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '显示支付金额', field_id: 'pay_amount', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
                 title: '刷单金额', field_id: 'brushing_amount', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: '刷单笔数', field_id: 'brushing_qty', type: 'number', 
                 min: 0, max: 10, show: true
-            }, {
-                title: '实际支付金额', field_id: 'real_pay_amount', type: 'number', 
+            },{
+                title: '运费', field_id: 'express_fee', type: 'number', 
                 min: 0, max: 100, show: true
-            }, {
-                title: '退款', field_id: 'refund_amount', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '实际支付金额环比(%)', field_id: 'real_pay_amount_qoq', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '支付运费', field_id: 'pay_express_fee', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '费用', field_id: 'operation_amount', type: 'number', 
+            },{
+                title: '总费用', field_id: 'operation_amount', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: '费比(%)', field_id: 'operation_rate', type: 'number', 
                 min: 80, max: 100, show: true
             }, {
-                title: '利润额', field_id: 'profit', type: 'number', 
+                title: '扣点', field_id: 'bill', type: 'number', 
+                min: 0, max: 100, show: true
+            },{title: '链接目标投产', field_id: 'target_roi', type: 'input', show: true},
+            {
+                title: '全站费用', field_id: 'full_site_promotion', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '利润率(gmv)(%)', field_id: 'profit_rate', type: 'number', 
-                min: 0, max: 15, show: true
+                title: '全站实际投产', field_id: 'full_site_promotion_roi', type: 'number', 
+                min: 0, max: 100, show: true
             },{
-                title: '(京)利润率(供货价)(%)', field_id: 'profit_rate', type: 'number', 
-                min: 0, max: 15, show: true
-            }, {
-                title: '(京)利润率(gmv)(%)', field_id: 'profit_rate_gmv', type: 'number', 
-                min: 0, max: 15, show: true
-            }, {
-                title: '扣点(账单费用)', field_id: 'bill', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '总成本', field_id: 'cost_amount', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '全站推广', field_id: 'full_site_promotion', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '全站推广ROI', field_id: 'full_site_promotion_roi', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '多目标直投', field_id: 'multi_objective_promotion', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '多目标直投ROI', field_id: 'multi_objective_promotion_roi', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '精准人群推广', field_id: 'targeted_audience_promotion', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '精准人群推广ROI', field_id: 'targeted_audience_promotion_roi', type: 'number', 
+                title: '关键词费用', field_id: 'keyword_promotion', type: 'number', 
                 min: 0, max: 100, show: true
             },  {
-                title: '货品运营', field_id: 'product_operation_promotion', type: 'number', 
+                title: '关键词投产', field_id: 'keyword_promotion_roi', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '精准人群费用', field_id: 'targeted_audience_promotion', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '货品运营ROI', field_id: 'product_operation_promotion_roi', type: 'number', 
+                title: '精准人群投产', field_id: 'targeted_audience_promotion_roi', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '关键词推广', field_id: 'keyword_promotion', type: 'number', 
+                title: '超短费用', field_id: 'super_short_video', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '关键词推广ROI', field_id: 'keyword_promotion_roi', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '日常推广', field_id: 'daily_promotion', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '场景推广', field_id: 'scene_promotion', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '京东快车', field_id: 'jd_express_promotion', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '全站营销', field_id: 'total_promotion', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '推广合计', field_id: 'promotion_amount', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '搜索访客数', field_id: 'users_num', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '搜索支付买家数', field_id: 'trans_users_num', type: 'number', 
+                title: '超短投产', field_id: 'super_short_video_roi', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
                 title: '真实转化率', field_id: 'real_pay_rate', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
+                title: '总访客', field_id: 'total_users_num', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '搜索访客', field_id: 'users_num', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
                 title: '总支付买家数', field_id: 'total_trans_users_num', type: 'number', 
                 min: 0, max: 100, show: true
-            }, {
-                title: '总访客数', field_id: 'total_users_num', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: '推广费环比(%)', field_id: 'promotion_amount_qoq', type: 'number', 
-                min: 0, max: 100, show: true
-            }, {
-                title: 'ROI', field_id: 'roi', type: 'number', 
-                min: 1, max: 3, show: true
-            }, {
+            },{
                 title: '市占率(%)', field_id: 'market_rate', type: 'number', 
                 min: 0, max: 10, show: true
             }, {
@@ -1279,17 +1208,227 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             }, {
                 title: 'DSR评分', field_id: 'dsr', type: 'number', 
                 min: 0, max: 90, show: true
-            }, {
-                title: '运费', field_id: 'express_fee', type: 'number', 
+            }, 
+            {title: '店铺名称', field_id: 'shop_name', type: 'input', show: true},
+            {title: '商品名称', field_id: 'goods_name', type: 'input', show: false},
+            {title: '链接属性', field_id: 'link_attribute', type: 'input', show: false},
+            {title: '链接属性2', field_id: 'important_attribute', type: 'input', show: false},
+            {title: '操作', field_id: 'operate', show: true}],
+        pddcolumn:[
+            {title: '链接ID', field_id: 'goods_id', type: 'input', show: true},
+            {
+                title: '定价毛利', field_id: 'gross_profit', show: true, 
+                hasChild: true, type: 'number', min: 0, max: 100
+            },
+            {
+                title: '滞销总成本', field_id: 'unsalable_cost_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            },
+            {title: '坑产目标', field_id: 'goal', type: 'input', show: true},
+            {title: '周期目标', field_id: 'period_target', type: 'input', show: true},
+            {title: '周期坑产目标达成率(%)', field_id: 'pit_target_rate', type: 'input', show: true},
+            {
+                title: '利润额', field_id: 'profit', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '推广合计', field_id: 'promotion_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '利润率(gmv)(%)', field_id: 'profit_rate', type: 'number', 
+                min: 0, max: 15, show: true
+            },{
+                title: params.stats == 'verified' ? '核销金额' : (params.stats == 'pay' ? '实际支付金额':'减退发货金额'), 
+                field_id: 'sale_amount', type: 'number', min: 0, max: 100, show: true
+            },{title: '商品简称', field_id: 'brief_name', type: 'input', show: true},
+            {title: '运营负责人', field_id: 'operator', type: 'input', show: true},
+            {title: '上架日期', field_id: 'onsale_date', type: 'date', show: true},
+            {title: '上架信息', field_id: 'onsale_info', type: 'select', select: [
+                {key: '30', value: '新品30'},
+                {key: '60', value: '新品60'},
+                {key: '90', value: '新品90'},
+                {key: 'old', value: '老品'}
+            ], show: true},
+            {title: '产品阶段', field_id: 'product_stage', type: 'select',select: [
+                {key: '未起', value: '未起'},{key: '起', value: '起'},{key: '稳', value: '稳'},
+                {key: '控', value: '控'},{key: '维护', value: '维护'}], show: true},
+            {title: '活动名称', field_id: 'activity', type: 'input', show: true},
+            {title: '产品线简称', field_id: 'brief_product_line', type: 'input', show: true},
+            {title: '采购负责人', field_id: 'purchase_director', type: 'input', show: true},
+            {title: '一级类目', field_id: 'first_category', type: 'input', show: true},
+            {title: '二级类目', field_id: 'second_category', type: 'input', show: true},
+            {title: '三级类目', field_id: 'level_3_category', type: 'input', show: true},
+            {
+                title: '刷单金额', field_id: 'brushing_amount', type: 'number', 
                 min: 0, max: 100, show: true
             }, {
-                title: '销售目标', field_id: 'goal', type: 'text', show: true
+                title: '刷单笔数', field_id: 'brushing_qty', type: 'number', 
+                min: 0, max: 10, show: true
+            },{
+                title: '运费', field_id: 'express_fee', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '总费用', field_id: 'operation_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '费比(%)', field_id: 'operation_rate', type: 'number', 
+                min: 80, max: 100, show: true
+            }, {
+                title: '扣点', field_id: 'bill', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '商品托管费用', field_id: 'product_custody_promotion', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '商品托管投产', field_id: 'product_custody_promotion_roi', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '稳定成本费用', field_id: 'stable_cost_promotion', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '稳定成本投产', field_id: 'stable_cost_promotion_roi', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '稳定成本投产目标', field_id: 'stable_cost_goal', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '稳定成本投产目标差异', field_id: 'targeted_audience_promotion_difference', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '总访客', field_id: 'total_users_num', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '搜索访客', field_id: 'users_num', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '总支付买家数', field_id: 'total_trans_users_num', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '市占率(%)', field_id: 'market_rate', type: 'number', 
+                min: 0, max: 10, show: true
+            }, {
+                title: '退货率(%)', field_id: 'refund_rate', type: 'number', 
+                min: 10, max: 30, show: true
+            }, {
+                title: 'DSR评分', field_id: 'dsr', type: 'number', 
+                min: 0, max: 90, show: true
             }, 
-            {title: '操作', field_id: 'operate', show: true}
-        ],
-        data: {}
+            {title: '店铺名称', field_id: 'shop_name', type: 'input', show: false},
+            {title: '商品名称', field_id: 'goods_name', type: 'input', show: false},
+            {title: '商品简称', field_id: 'brief_name', type: 'input', show: false},
+            {title: '链接属性', field_id: 'link_attribute', type: 'input', show: false},
+            {title: '链接属性2', field_id: 'important_attribute', type: 'input', show: false},
+            {title: '操作', field_id: 'operate', show: true}],
+        zycolumn:[
+            {title: '简称', field_id: 'goods_id', type: 'input', show: true},
+            {
+                title: '定价毛利', field_id: 'jgross_profit', show: true, 
+                hasChild: true, type: 'number', min: 0, max: 100
+            },
+            {
+                title: '滞销总成本', field_id: 'unsalable_cost_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            },
+            {title: '坑产目标', field_id: 'pit_target', type: 'input', show: true},
+            {title: '周期目标', field_id: 'period_target', type: 'input', show: true},
+            {title: '周期坑产目标达成率(%)', field_id: 'pit_target_rate', type: 'input', show: true},
+            {title: '产品阶段', field_id: 'product_stage', type: 'select',select: [
+                {key: '未起', value: '未起'},{key: '起', value: '起'},{key: '稳', value: '稳'},
+                {key: '控', value: '控'},{key: '维护', value: '维护'}], show: true
+            },{
+                title: '利润额', field_id: 'profit', type: 'number', 
+                min: 0, max: 100, show: true
+            },{title: 'SKU', field_id: 'sku_id', type: 'input', show: true},
+            {title: '时间', field_id: 'date', type: 'input', show: true},
+            {title: '品牌', field_id: 'brand', type: 'brand', show: true},
+            {title: '二级类目', field_id: 'second_category', type: 'input', show: true},
+            {title: '运营负责人', field_id: 'operator', type: 'input', show: true},
+            {title: '上架日期', field_id: 'onsale_date', type: 'date', show: true},
+            {title: '店铺名称', field_id: 'shop_name', type: 'date', show: false},
+            {title: '上架信息', field_id: 'onsale_info', type: 'select', select: [
+                    {key: '30', value: '新品30'},
+                    {key: '60', value: '新品60'},
+                    {key: '90', value: '新品90'},
+                    {key: 'old', value: '老品'}
+                ], show: true
+            },{
+                title: '访客数', field_id: 'total_users_num', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '成交人数', field_id: 'total_trans_users_num', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '成交转化率', field_id: 'real_pay_rate', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '发货商品件数', field_id: 'sale_qty', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '京仓发货金额', field_id: 'real_sale_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            },  {
+                title: '快车花费', field_id: 'jd_express_promotion', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '快车投产比', field_id: 'jd_express_promotion_roi', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '场景花费', field_id: 'scene_promotion', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '场景投产比', field_id: 'scene_promotion_roi', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '海投花费', field_id: 'daily_promotion', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '海投投产比', field_id: 'daily_promotion_roi', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '非全站保本roi', field_id: 'no_total_roi', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '全站花费', field_id: 'total_promotion', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '全站投产比', field_id: 'total_promotion_roi', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '全站保本roi', field_id: 'total_roi', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '推广合计', field_id: 'promotion_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            }, {
+                title: '推广费比', field_id: 'promotion_rate', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '总成本', field_id: 'cost_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '总供货价', field_id: 'sale_amount', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '总供货价', field_id: 'gross_standard', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '实际综毛', field_id: 'real_gross_profit', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '需补综毛', field_id: 'other_cost', type: 'number', 
+                min: 0, max: 100, show: true
+            },{
+                title: '利润', field_id: 'profit', type: 'number', 
+                min: 0, max: 15, show: true
+            },{
+                title: '税点', field_id: 'tax', type: 'number', 
+                min: 0, max: 15, show: true
+            },{
+                title: '利润率(gmv)(%)', field_id: 'jprofit_rate_gmv', type: 'number', 
+                min: 0, max: 15, show: true
+            },{title: '操作', field_id: 'operate', show: true}]
     }
-    let userNames = null, shopNames = null, linkIds = null, shopInfo = [], userInfo = []
+    let userNames = null, shopNames = null, linkIds = null, shopInfo = [], userInfo = [],
+        shop=[],shopNames1=null
     if (params.type) {
         const { shops, users } = await getQueryInfo(
             typeList[params.type].map[0],
@@ -1317,12 +1456,14 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
     if (params.type == typeList.shop.value) {
         shopInfo.push({shop_name: params.name})
     }
-    if (shopInfo?.length) shopNames = shopInfo.map((item) => item.shop_name).join('","')
+    if (shopInfo?.length){
+        shopNames = shopInfo.map((item) => item.shop_name).join('","')
+    }
     if (userInfo?.length) {
         userNames = userInfo.map((item) => item.nickname).join('","')
         let links = await userOperationRepo.getLinkIdsByUserNames(userNames, shopNames)
         linkIds = links.map((item) => item.goods_id).join('","')
-    }    
+    }   
     params.search = JSON.parse(params.search)
     result.setting = []
     let setting = await userSettingRepo.getByType(id, 1)
@@ -1334,13 +1475,14 @@ const getGoodsInfo = async (startDate, endDate, params, id) => {
             }
             return item
         })
-        console.log(result.setting)
     }
+    shop = await shopInfoRepo.getTable(tab)
+    shopNames1 = shop.map((item) => item.shop_name).join('","')
     let func = params.stats == 'verified' ? goodsSaleVerifiedRepo : 
         (params.stats == 'info') ? goodsSaleInfoRepo : goodsPayInfoRepo
     if (params.infoType == 1)
         result.data = await func.getPromotionData(startDate, endDate, params, shopNames, linkIds)
-    else result.data = await func.getData(startDate, endDate, params, shopNames, linkIds)
+    else result.data = await func.getData(startDate, endDate, params, shopNames, linkIds,shopNames1)
     return result
 }
 

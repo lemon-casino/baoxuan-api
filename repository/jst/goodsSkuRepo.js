@@ -358,4 +358,9 @@ goodsSkuRepo.getGoodsIdBySkuId = async (sku_id) => {
     return result
 }
 
+goodsSkuRepo.getShopName = async (linkIds) => {
+    let sql = `SELECT distinct shop_name FROM jst_goods_sku WHERE goods_id IN ("${linkIds}")`
+    const result = await query(sql)
+    return result || []
+}
 module.exports = goodsSkuRepo
