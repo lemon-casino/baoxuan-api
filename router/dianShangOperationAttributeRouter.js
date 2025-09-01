@@ -7,6 +7,7 @@ const path = require("path");
 const fs = require("fs");
 
 router.get("/", dianShangOperationAttributeApi.getPagingOperateAttributes)
+router.get("/info", dianShangOperationAttributeApi.getOperateAttributes)
 router.post("/", dianShangOperationAttributeApi.saveProductAttrDetails)
 router.put("/", dianShangOperationAttributeApi.updateProductAttrDetails)
 router.delete("/", dianShangOperationAttributeApi.deleteProductAttr)
