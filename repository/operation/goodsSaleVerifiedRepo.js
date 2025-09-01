@@ -903,7 +903,7 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds,sh
     return result
 }
 
-goodsSaleVerifiedRepo.getPromotionData = async (start, end, params, shopNames, linkIds) => {
+goodsSaleVerifiedRepo.getPromotionData = async (start, end, params, shopNames, linkIds,shopNames1) => {
     let page = parseInt(params.currentPage)
     let size = parseInt(params.pageSize)
     let offset = (page - 1) * size
@@ -1455,6 +1455,11 @@ goodsSaleVerifiedRepo.getPromotionData = async (start, end, params, shopNames, l
         if (linkIds.length == 0) return result
         subsql = `${subsql}
                 AND s.goods_id IN ("${linkIds}") `
+    }
+    if (shopNames1 != null) {
+        if (shopNames1.length == 0) return result
+        subsql = `${subsql}
+                AND s.shop_name NOT IN ("${shopNames1}") `
     }
     let sql1 = `GROUP BY s.goods_id, si.shop_id, s.shop_name`
     sql = `SELECT COUNT(1) AS count, SUM(sale_amount) AS sale_amount FROM (
