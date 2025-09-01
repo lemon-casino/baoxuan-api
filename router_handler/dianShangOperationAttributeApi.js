@@ -46,6 +46,19 @@ const getPagingOperateAttributes = async (req, res, next) => {
     }
 }
 
+const getOperateAttributes = async (req, res, next) => {
+    try {
+        const { goodsId } = req.query
+        joiUtil.validate({
+            goodsId: {value: goodsId, schema: joiUtil.commonJoiSchemas.required},
+        })
+        const result = await dianShangOperationAttributeService.getGoods(goodsId)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const getShopNameAttrDetails = async (req, res, next) => {
     try {
         const {id} = req.query
@@ -700,5 +713,6 @@ module.exports = {
     exportGoodsMonthlySalesTarget,
     updatetGoodsMonthlySalesTarget,
     Insertcalculate,
+    getOperateAttributes,
     getspiral
 }

@@ -31,6 +31,10 @@ const getProductAttrDetails = async (id) => {
     return await dianShangOperationAttributeRepo.getProductAttrDetails(id)
 }
 
+const getGoods = async (id) => {
+    return await dianShangOperationAttributeRepo.getgoodsId(id)
+}
+
 const getShopNameAttrDetails = async (id) => {
     return await dianShangOperationAttributeRepo.getShopNameAttrDetails(id)
 }
@@ -411,5 +415,6 @@ module.exports = {
     updateAttribute,
     Insertlog,
     Insertcalculate,
-    getspiral
+    getspiral,
+    getGoods
 }
