@@ -1464,7 +1464,7 @@ const getGoodsInfo = async (startDate, endDate, params, id,tab) => {
     let func = params.stats == 'verified' ? goodsSaleVerifiedRepo : 
         (params.stats == 'info') ? goodsSaleInfoRepo : goodsPayInfoRepo
     if (params.infoType == 1)
-        result.data = await func.getPromotionData(startDate, endDate, params, shopNames, linkIds)
+        result.data = await func.getPromotionData(startDate, endDate, params, shopNames, linkIds,shopNames1)
     else result.data = await func.getData(startDate, endDate, params, shopNames, linkIds,shopNames1)
     return result
 }
