@@ -50,4 +50,9 @@ shopInfoRepo.getDivisionByShopName = async (name) => {
     return result
 }
 
+shopInfoRepo.getTable= async(tab) =>{
+    const sql = `SELECT DISTINCT shop_name FROM shop_info WHERE tab != ?`
+    const result = await query(sql,tab)
+    return result
+}
 module.exports = shopInfoRepo

@@ -60,6 +60,7 @@ const getGoodsInfo = async (req, res, next) => {
         joiUtil.clarityValidate(operationSchema.requiredDataSchema, req.query)
         const startDate = moment(req.query.startDate).format('YYYY-MM-DD')
         const endDate = moment(req.query.endDate).format('YYYY-MM-DD')
+        const tab = req.query.tab
         let result
         if (req.query.export) {            
             const uploadDir = `./public/excel/${req.user.id}`
@@ -73,7 +74,7 @@ const getGoodsInfo = async (req, res, next) => {
                 const workbook = new ExcelJS.Workbook('Sheet1')
                 const worksheet = workbook.addWorksheet()
                 logger.info(`user: ${req.user.id}, file: ${path} start`)
-                result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id)
+                result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id,tab)
                 let columns = []
                 for (let i = 0; i < result.column.length; i++) {
                     if (result.column[i].sub?.length) {
@@ -101,7 +102,7 @@ const getGoodsInfo = async (req, res, next) => {
             })     
             return res.send(biResponse.success())
         } else {
-            result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id)
+            result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id,tab)
         }
         return res.send(biResponse.success(result))
     } catch (e) {
