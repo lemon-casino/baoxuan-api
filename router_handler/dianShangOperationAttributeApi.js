@@ -182,6 +182,7 @@ const uploadTable = async (req, res, next) => {
             '体量目标': 'VolumeTarget',
             '产品阶段': 'ProductStage',
             '是否流转': 'IsCirculation',
+            '是否IP':'IsIp'
         };
 
         // 错误收集数组
@@ -333,12 +334,13 @@ const uploadtmTable = async (req, res, next) => {
             '品牌':'brand',
             '产品线管理人':'lineManager',
             '款式编码(参考)':'code',
-            '是否比价链接':'IsPriceComparison',
+            '链接定义1':'IsPriceComparison',
             '体量目标': 'VolumeTarget',
             '产品阶段': 'ProductStage',
             '玩法':'Play',
             '是否流转': 'IsCirculation',
-            '链接状态': 'LinkState'
+            '链接状态': 'LinkState',
+            '是否IP':'IsIp'
         };
 
         // 错误收集数组
@@ -483,6 +485,7 @@ const uploadpddTable = async (req, res, next) => {
             '体量目标': 'VolumeTarget',
             '产品阶段': 'ProductStage',
             '是否流转': 'IsCirculation',
+            '是否IP':'IsIp'
         };
 
         // 错误收集数组
