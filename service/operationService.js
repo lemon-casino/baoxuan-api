@@ -1094,7 +1094,9 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
                 roi = await func.getLowROIByLinksAndTime2(linkIds, linkIds1)
                 child1 = await func.getChildLowROIByLinksAndTime2(linkIds, linkIds1)
                 plan = await func.getLowPlanROIByLinksAndTime2(linkIds, 3, 7, linkIds1)
-                plan1 = await func.getLowPlanROIByLinksAndTime2(linkIds, 7, 14, linkIds1)                
+                child2 = await func.getChildLowPlanROIByLinksAndTime2(linkIds, 3, 7, linkIds1)
+                plan1 = await func.getLowPlanROIByLinksAndTime2(linkIds, 7, 14, linkIds1) 
+                child3 = await func.getChildLowPlanROIByLinksAndTime2(linkIds, 7, 14, linkIds1)                
                 important = await func.getImportByLinks1(linkIds, linkIds1)
                 gross = await goodsSaleVerifiedRepo.getLowGrossProfitByLinksAndTime1(linkIds, start, end, 0.55, 0.21, linkIds1)
                 child4 = await goodsSaleVerifiedRepo.getChildLowGrossProfitByLinksAndTime1(linkIds, start, end, 0.55, 0.21, linkIds1)
@@ -1103,7 +1105,9 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
                 roi = await func.getLowROIByLinksAndTime(linkIds)
                 child1 = await func.getChildLowROIByLinksAndTime(linkIds, linkIds1)
                 plan = await func.getLowPlanROIByLinksAndTime(linkIds, 3, 7)
-                plan1 = await func.getLowPlanROIByLinksAndTime(linkIds, 7, 14)          
+                child2 = await func.getChildLowPlanROIByLinksAndTime(linkIds, 3, 7)
+                plan1 = await func.getLowPlanROIByLinksAndTime(linkIds, 7, 14)   
+                child3 = await func.getChildLowPlanROIByLinksAndTime(linkIds, 7, 14)       
                 important = await func.getImportByLinks(linkIds)
                 gross = await goodsSaleVerifiedRepo.getLowGrossProfitByLinksAndTime(linkIds, start, end, 0.55)
                 child4 = await goodsSaleVerifiedRepo.getChildLowGrossProfitByLinksAndTime(linkIds, start, end, 0.55)
@@ -1112,7 +1116,9 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
                 roi = await func.getLowROIByLinksAndTime1(linkIds)
                 child1 = await func.getChildLowROIByLinksAndTime1(linkIds, linkIds1)
                 plan = await func.getLowPlanROIByLinksAndTime1(linkIds, 3, 7)
-                plan1 = await func.getLowPlanROIByLinksAndTime1(linkIds, 7, 14)                
+                child2 = await func.getChildLowPlanROIByLinksAndTime1(linkIds, 3, 7)
+                plan1 = await func.getLowPlanROIByLinksAndTime1(linkIds, 7, 14)   
+                child3 = await func.getChildLowPlanROIByLinksAndTime1(linkIds, 7, 14)                
                 important = await func.getImportByLinks2(linkIds)
                 gross = await goodsSaleVerifiedRepo.getLowGrossProfitByLinksAndTime(linkIds, start, end, 0.45)
                 child4 = await goodsSaleVerifiedRepo.getChildLowGrossProfitByLinksAndTime(linkIds, start, end, 0.45)
@@ -1148,7 +1154,7 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
         if (none?.length) {
             none_promotion = parseInt(none[0].count)
             if (none[0].count > 0) {
-                child = await func.getChildNullPromotionByLinksAndTime(shopName[i].shop_name, 
+                child = await func.getChildNullPromotionByLinksAndTime(userName[i].shopNames, 
                     start, 
                     end, 
                     otherName[i])
@@ -1182,8 +1188,24 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
                 low_roi_child[child1[j].type][child1[j].volume_target] = child1[j].count
             }
         }
-        if (plan?.length) low_plan_roi = parseInt(plan[0].count)
-        if (plan1?.length) low_plan_roi1 = parseInt(plan1[0].count)
+        if (plan?.length) {
+            low_plan_roi = parseInt(plan[0].count)
+            for (let j = 0; j < child2.length; j++) {
+                if (low_plan_roi_child[child2[j].type] == undefined) {
+                    low_plan_roi_child[child2[j].type] = {}                        
+                }
+                low_plan_roi_child[child2[j].type][child2[j].volume_target] = child2[j].count
+            }
+        }
+        if (plan1?.length) {
+            low_plan_roi1 = parseInt(plan1[0].count)
+            for (let j = 0; j < child3.length; j++) {
+                if (low_plan_roi1_child[child3[j].type] == undefined) {
+                    low_plan_roi1_child[child3[j].type] = {}                        
+                }
+                low_plan_roi1_child[child3[j].type][child3[j].volume_target] = child3[j].count
+            }
+        }
         let invalid_info = await func.getInvalidByLinksAndTime(linkIds, start, end, linkIds1)
         if (invalid_info?.length) {
             invalid_link = parseInt(invalid_info[0].count)
