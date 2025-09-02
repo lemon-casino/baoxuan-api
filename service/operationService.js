@@ -77,7 +77,7 @@ const getDataStats = async (id, start, end, params) => {
     let key = crypto.createHash('md5').update(info).digest('hex')
     key = `${redisKeys.operation}:${params.stats}:${key}`
     result = await redisUtil.get(key)
-    let setting = await userSettingRepo.getByType(id, 3)
+    let setting = await userSettingRepo.getByType(id, 3,1)
     if (result) {
         result = JSON.parse(result)
         if (setting.length > 0) {
@@ -742,7 +742,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
                     start, 
                     end,
                     otherName[i])
-                for (let j = 0; j < child.length; j++) {
+                for (let j = 0; j < child?.length; j++) {
                     if (negative_profit_child[child[j].type] == undefined) {
                         negative_profit_child[child[j].type] = {}                        
                     }
@@ -755,7 +755,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
             low_profit = parseInt(low[0].count)
             if (low[0].count > 0) {
                 child = await func.getChildLowProfitByShopNamesAndTime(shopName[i].shop_name, otherName[i])
-                for (let j = 0; j < child.length; j++) {
+                for (let j = 0; j < child?.length; j++) {
                     if (low_profit_child[child[j].type] == undefined) {
                         low_profit_child[child[j].type] = {}                        
                     }
@@ -775,7 +775,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
                     start, 
                     end, 
                     otherName[i])
-                for (let j = 0; j < child.length; j++) {
+                for (let j = 0; j < child?.length; j++) {
                     if (none_promotion_child[child[j].type] == undefined) {
                         none_promotion_child[child[j].type] = {}                        
                     }
@@ -798,7 +798,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
                     end, 
                     promotion_rate, 
                     otherName[i])
-                for (let j = 0; j < child.length; j++) {
+                for (let j = 0; j < child?.length; j++) {
                     if (low_promotion_child[child[j].type] == undefined) {
                         low_promotion_child[child[j].type] = {}                        
                     }
@@ -808,7 +808,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         }
         if (roi?.length) {
             low_roi = parseInt(roi[0].count)
-            for (let j = 0; j < child1.length; j++) {
+            for (let j = 0; j < child1?.length; j++) {
                 if (low_roi_child[child1[j].type] == undefined) {
                     low_roi_child[child1[j].type] = {}                        
                 }
@@ -817,7 +817,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         }
         if (plan?.length) {
             low_plan_roi = parseInt(plan[0].count)
-            for (let j = 0; j < child2.length; j++) {
+            for (let j = 0; j < child2?.length; j++) {
                 if (low_plan_roi_child[child2[j].type] == undefined) {
                     low_plan_roi_child[child2[j].type] = {}                        
                 }
@@ -826,7 +826,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         }
         if (plan1?.length) {
             low_plan_roi1 = parseInt(plan1[0].count)
-            for (let j = 0; j < child3.length; j++) {
+            for (let j = 0; j < child3?.length; j++) {
                 if (low_plan_roi1_child[child3[j].type] == undefined) {
                     low_plan_roi1_child[child3[j].type] = {}                        
                 }
@@ -849,7 +849,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         if (important?.length) important_link = parseInt(important[0].count)
         if (gross?.length) {
             low_gross_profit = parseInt(gross[0].count)
-            for (let j = 0; j < child4.length; j++) {
+            for (let j = 0; j < child4?.length; j++) {
                 if (low_gross_profit_child[child4[j].type] == undefined) {
                     low_gross_profit_child[child4[j].type] = {}                        
                 }
@@ -1129,7 +1129,7 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
             negative_profit = parseInt(negative[0].count)
             if (negative[0].count > 0) {
                 child = await func.getChildNegativeProfitByLinksAndTime(linkIds, start, end, linkIds1)
-                for (let j = 0; j < child.length; j++) {
+                for (let j = 0; j < child?.length; j++) {
                     if (negative_profit_child[child[j].type] == undefined) {
                         negative_profit_child[child[j].type] = {}                        
                     }
@@ -1142,7 +1142,7 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
             low_profit = parseInt(low[0].count)
             if (low[0].count > 0) {
                 child = await func.getChildLowProfitByLinksAndTime(linkIds, linkIds1)
-                for (let j = 0; j < child.length; j++) {
+                for (let j = 0; j < child?.length; j++) {
                     if (low_profit_child[child[j].type] == undefined) {
                         low_profit_child[child[j].type] = {}                        
                     }
@@ -1158,7 +1158,7 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
                     start, 
                     end, 
                     otherName[i])
-                for (let j = 0; j < child.length; j++) {
+                for (let j = 0; j < child?.length; j++) {
                     if (none_promotion_child[child[j].type] == undefined) {
                         none_promotion_child[child[j].type] = {}                        
                     }
@@ -1171,7 +1171,7 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
             low_promotion = parseInt(lowp[0].count)
             if (lowp[0].count > 0) {
                 child = await func.getChildLowPromotionByLinksAndTime(linkIds, start, end, promotion_rate, linkIds1)
-                for (let j = 0; j < child.length; j++) {
+                for (let j = 0; j < child?.length; j++) {
                     if (low_promotion_child[child[j].type] == undefined) {
                         low_promotion_child[child[j].type] = {}                        
                     }
@@ -1181,7 +1181,7 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
         }
         if (roi?.length) {
             low_roi = parseInt(roi[0].count)
-            for (let j = 0; j < child1.length; j++) {
+            for (let j = 0; j < child1?.length; j++) {
                 if (low_roi_child[child1[j].type] == undefined) {
                     low_roi_child[child1[j].type] = {}                        
                 }
@@ -1190,7 +1190,7 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
         }
         if (plan?.length) {
             low_plan_roi = parseInt(plan[0].count)
-            for (let j = 0; j < child2.length; j++) {
+            for (let j = 0; j < child2?.length; j++) {
                 if (low_plan_roi_child[child2[j].type] == undefined) {
                     low_plan_roi_child[child2[j].type] = {}                        
                 }
@@ -1199,7 +1199,7 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
         }
         if (plan1?.length) {
             low_plan_roi1 = parseInt(plan1[0].count)
-            for (let j = 0; j < child3.length; j++) {
+            for (let j = 0; j < child3?.length; j++) {
                 if (low_plan_roi1_child[child3[j].type] == undefined) {
                     low_plan_roi1_child[child3[j].type] = {}                        
                 }
@@ -1662,7 +1662,7 @@ const getGoodsInfo = async (startDate, endDate, params, id,tab) => {
     }   
     params.search = JSON.parse(params.search)
     result.setting = []
-    let setting = await userSettingRepo.getByType(id, 1)
+    let setting = await userSettingRepo.getByType(id, 1,tab)
     if (setting?.length) {
         result.setting = JSON.parse(setting[0].attributes)
         if( params.stats == 'pay') result.setting = result.setting.map(item => {
@@ -1720,13 +1720,13 @@ const getGoodsInfoDetail = async (column, goods_id, shop_name, start, end, stats
         data = await goodsPayInfoRepo.getRealPayAmountQOQByTime(goods_id, start, end)
     else if (column == 'composite_info') {
         data = await goodsCompositeRepo.getDataDetailByTime(goods_id, start, end)
-        setting = await userSettingRepo.getByType(id, 4)
+        setting = await userSettingRepo.getByType(id, 4, 1)
     } else if (column == 'promotion_info') {
         data = await goodsPromotionRepo.getDataDetailByTime(goods_id, shop_name, start, end)
-        setting = await userSettingRepo.getByType(id, 5)
+        setting = await userSettingRepo.getByType(id, 5, 1)
     } else if (column == 'bill_info') {
         data = await goodsBillRepo.getDataDetailByTime(goods_id, start, end)
-        setting = await userSettingRepo.getByType(id, 6)
+        setting = await userSettingRepo.getByType(id, 6, 1)
     } else if (['gross_standard', 'other_cost'].includes(column)) { //综毛标准,需补综毛 只在发货中有方法
         data = await goodsSaleInfoRepo.getGrossStandardByTime(column, goods_id, start, end)
     } else if(['full_site_promotion','multi_objective_promotion','targeted_audience_promotion','product_operation_promotion',
@@ -1747,7 +1747,7 @@ const getJDskuInfoDetail = async (goods_id, start, end, stats,id) => {
     let data=[]
     let setting = []
     data = await goodsSaleInfoRepo.getJDskuInfoDetail(goods_id, start, end, stats)
-    setting = await userSettingRepo.getByType(id, 7)
+    setting = await userSettingRepo.getByType(id, 7, 1)
     result.data = data
     if (setting?.length) result.setting = JSON.parse(setting[0].attributes) || []
     return result 
@@ -3597,11 +3597,12 @@ const insertGrossProfit = async (date) => {
     if (info?.length) await goodsGrossProfit.batchInsert(info.length, data)
 }
 
-const setPannelSetting = async (user_id, type, attribute) => {
-    let setting = await userSettingRepo.getByType(user_id, type), result = false
+const setPannelSetting = async (user_id, type, subtype, attribute) => {
+    subtype = parseInt(subtype)
+    let setting = await userSettingRepo.getByType(user_id, type, subtype), result = false
     if (setting?.length) {
-        result = await userSettingRepo.updateByUserIdAndType(user_id, type, attribute)
-    } else result = await userSettingRepo.insert(user_id, type, attribute)
+        result = await userSettingRepo.updateByUserIdAndType(user_id, type, subtype, attribute)
+    } else result = await userSettingRepo.insert(user_id, type, subtype, attribute)
     return result
 }
 
