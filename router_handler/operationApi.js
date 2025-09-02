@@ -75,19 +75,23 @@ const getGoodsInfo = async (req, res, next) => {
                 const worksheet = workbook.addWorksheet()
                 logger.info(`user: ${req.user.id}, file: ${path} start`)
                 result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id,tab)
+                let columns1 
+                if(tab == 0){columns1 = result.tmcolumn}
+                else if(tab == 1){columns1 = result.pddcolumn}
+                else if(tab == 2){columns1 = result.zycolumn}
                 let columns = []
-                for (let i = 0; i < result.column.length; i++) {
-                    if (result.column[i].sub?.length) {
-                        for (let j = 0; j < result.column[i].sub.length; j++) {
+                for (let i = 0; i < columns1.length; i++) {
+                    if (columns1[i].sub?.length) {
+                        for (let j = 0; j < columns1[i].sub.length; j++) {
                             columns.push({
-                                header: result.column[i].sub[j].title,
-                                key: result.column[i].sub[j].field_id,
+                                header: columns1[i].sub[j].title,
+                                key: columns1[i].sub[j].field_id,
                             })
                         }
-                    } else if (result.column[i].field_id != 'operate')
+                    } else if (columns1[i].field_id != 'operate')
                         columns.push({
-                            header: result.column[i].title,
-                            key: result.column[i].field_id,
+                            header: columns1[i].title,
+                            key: columns1[i].field_id,
                         })
                 }
                 worksheet.columns = columns
