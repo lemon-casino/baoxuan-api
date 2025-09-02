@@ -77,7 +77,7 @@ const getDataStats = async (id, start, end, params) => {
     let key = crypto.createHash('md5').update(info).digest('hex')
     key = `${redisKeys.operation}:${params.stats}:${key}`
     result = await redisUtil.get(key)
-    let setting = await userSettingRepo.getByType(id, 3)
+    let setting = await userSettingRepo.getByType(id, 3,1)
     if (result) {
         result = JSON.parse(result)
         if (setting.length > 0) {
@@ -1449,7 +1449,7 @@ const getGoodsInfo = async (startDate, endDate, params, id,tab) => {
     }   
     params.search = JSON.parse(params.search)
     result.setting = []
-    let setting = await userSettingRepo.getByType(id, 1)
+    let setting = await userSettingRepo.getByType(id, 1,tab)
     if (setting?.length) {
         result.setting = JSON.parse(setting[0].attributes)
         if( params.stats == 'pay') result.setting = result.setting.map(item => {
@@ -1507,13 +1507,13 @@ const getGoodsInfoDetail = async (column, goods_id, shop_name, start, end, stats
         data = await goodsPayInfoRepo.getRealPayAmountQOQByTime(goods_id, start, end)
     else if (column == 'composite_info') {
         data = await goodsCompositeRepo.getDataDetailByTime(goods_id, start, end)
-        setting = await userSettingRepo.getByType(id, 4)
+        setting = await userSettingRepo.getByType(id, 4, 1)
     } else if (column == 'promotion_info') {
         data = await goodsPromotionRepo.getDataDetailByTime(goods_id, shop_name, start, end)
-        setting = await userSettingRepo.getByType(id, 5)
+        setting = await userSettingRepo.getByType(id, 5, 1)
     } else if (column == 'bill_info') {
         data = await goodsBillRepo.getDataDetailByTime(goods_id, start, end)
-        setting = await userSettingRepo.getByType(id, 6)
+        setting = await userSettingRepo.getByType(id, 6, 1)
     } else if (['gross_standard', 'other_cost'].includes(column)) { //综毛标准,需补综毛 只在发货中有方法
         data = await goodsSaleInfoRepo.getGrossStandardByTime(column, goods_id, start, end)
     } else if(['full_site_promotion','multi_objective_promotion','targeted_audience_promotion','product_operation_promotion',
@@ -1534,7 +1534,7 @@ const getJDskuInfoDetail = async (goods_id, start, end, stats,id) => {
     let data=[]
     let setting = []
     data = await goodsSaleInfoRepo.getJDskuInfoDetail(goods_id, start, end, stats)
-    setting = await userSettingRepo.getByType(id, 7)
+    setting = await userSettingRepo.getByType(id, 7, 1)
     result.data = data
     if (setting?.length) result.setting = JSON.parse(setting[0].attributes) || []
     return result 
@@ -3384,11 +3384,12 @@ const insertGrossProfit = async (date) => {
     if (info?.length) await goodsGrossProfit.batchInsert(info.length, data)
 }
 
-const setPannelSetting = async (user_id, type, attribute) => {
-    let setting = await userSettingRepo.getByType(user_id, type), result = false
+const setPannelSetting = async (user_id, type, subtype, attribute) => {
+    subtype = parseInt(subtype)
+    let setting = await userSettingRepo.getByType(user_id, type, subtype), result = false
     if (setting?.length) {
-        result = await userSettingRepo.updateByUserIdAndType(user_id, type, attribute)
-    } else result = await userSettingRepo.insert(user_id, type, attribute)
+        result = await userSettingRepo.updateByUserIdAndType(user_id, type, subtype, attribute)
+    } else result = await userSettingRepo.insert(user_id, type, subtype, attribute)
     return result
 }
 

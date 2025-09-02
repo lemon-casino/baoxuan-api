@@ -782,12 +782,13 @@ const importGoodsOrderInfo = async (req, res, next) => {
 
 const setPannelSetting = async (req, res, next) => {
     try {
-        const {type, attribute} = req.body
+        const {type, subtype, attribute} = req.body
         joiUtil.validate({
             type: {value: type, schema: joiUtil.commonJoiSchemas.numberRequired},
+            subtype: {value: type, schema: joiUtil.commonJoiSchemas.numberRequired},
             attribute: {value: attribute, schema: joiUtil.commonJoiSchemas.strRequired}
         })
-        const result = await operationService.setPannelSetting(req.user.id, type, attribute)
+        const result = await operationService.setPannelSetting(req.user.id, type, subtype, attribute)
         if (result) return res.send(biResponse.success())
         return res.send(biResponse.createFailed())
     } catch (e) {
