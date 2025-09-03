@@ -439,7 +439,6 @@ const uploadpddTable = async (req, res, next) => {
         // 读取Excel文件
         const filePath = req.file.path;
         const workbook = XLSX.readFile(filePath);
-
         // Excel日期转换函数
         function excelDateToJSDate(excelDate) {
             if (typeof excelDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(excelDate)) {
@@ -552,10 +551,9 @@ const uploadpddTable = async (req, res, next) => {
                 translatedItem['platform'] = sheetName;
                 translatedData.push(translatedItem);
             }
-
             // 上传数据，使用 Promise.all 等待所有上传完成
             try {
-                await dianShangOperationAttributeService.uploadtmBulkUploadsTable(translatedData,req.user.id ? req.user.id : null);
+                await dianShangOperationAttributeService.uploadtmBulkUploadsTable(translatedData,req.user !=undefined ?req.user.id:null);
                 console.log(`Sheet ${sheetName} uploaded successfully`);
             } catch (e) {
                 errorMessages.push(`文件解析失败: ${e.message}`);
