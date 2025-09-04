@@ -85,6 +85,8 @@ router.post('/inventory_attributes/update',operationApi.updateInventory)
 router.post('/promotion-plan/import', operationApi.importPromotionPlan)
 
 //分析方案
+router.get('/analysis-plan/goods-relation', analysisPlanApi.getAnalysisPlanRelationByGoods)
+router.post('/analysis-plan/goods-relation/create', analysisPlanApi.createAnalysisPlanRelationByGoods)
 router.get('/analysis-plan', analysisPlanApi.getAnalysisPlan)
 router.post('/analysis-plan/create', analysisPlanApi.createAnalysisPlan)
 router.put('/analysis-plan/update', analysisPlanApi.updateAnalysisPlan)

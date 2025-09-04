@@ -18,6 +18,22 @@ const newMap = function(datum) {
 }
 const analysisPlanApi = {}
 
+analysisPlanApi.getAnalysisPlanRelationByGoods = async (req, res, next) => {
+    try {
+        result = await analysisPlanService.getRelationByGoodsId(req.query, req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+analysisPlanApi.createAnalysisPlanRelationByGoods = async (req, res, next) => {
+    try {
+        result = await analysisPlanService.createRelationByGoodsId(req.query)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
 analysisPlanApi.getAnalysisPlan = async (req, res, next) => {
     try {
         result = await analysisPlanService.get(req.query, req.user.id)

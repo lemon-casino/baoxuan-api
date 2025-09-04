@@ -107,28 +107,28 @@ schedule.scheduleJob(syncWorkingDayCron, async function () {
 schedule.scheduleJob(syncTodayRunningAndFinishedFlowsCron, async function () {
      if (process.env.NODE_ENV !== "prod") return;
 
-    let taskStatus;
-    try {
-        taskStatus = JSON.parse(await redisUtil.get(redisKeys.synchronizedState));
-        if (taskStatus.syncTodayRunning) {
-            console.log(`同步任务正在执行跳过本次调用`);
-            return;
-        }
-        taskStatus.syncTodayRunning = true;
-        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
-        await taskService.syncTodayRunningAndFinishedFlows();
-        taskStatus.syncTodayRunning = false;
-    } catch (error) {
-        if (taskStatus) {
-            taskStatus.syncTodayRunning = false;
-            await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
-        }
-        logger.error(`同步任务执行时出错:`, error);
-    } finally {
-        if (taskStatus) {
-            await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
-        }
-    }
+    // let taskStatus;
+    // try {
+    //     taskStatus = JSON.parse(await redisUtil.get(redisKeys.synchronizedState));
+    //     if (taskStatus.syncTodayRunning) {
+    //         console.log(`同步任务正在执行跳过本次调用`);
+    //         return;
+    //     }
+    //     taskStatus.syncTodayRunning = true;
+    //     await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+    //     await taskService.syncTodayRunningAndFinishedFlows();
+    //     taskStatus.syncTodayRunning = false;
+    // } catch (error) {
+    //     if (taskStatus) {
+    //         taskStatus.syncTodayRunning = false;
+    //         await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+    //     }
+    //     logger.error(`同步任务执行时出错:`, error);
+    // } finally {
+    //     if (taskStatus) {
+    //         await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+    //     }
+    // }
 });
 
 
@@ -137,7 +137,7 @@ schedule.scheduleJob(syncTodayRunningAndFinishedFlowsCron, async function () {
  */
 schedule.scheduleJob(syncMissingCompletedFlowsCron, async function () {
     if (process.env.NODE_ENV === "prod") {
-        await taskService.syncMissingCompletedFlows()
+        // await taskService.syncMissingCompletedFlows()
     }
 })
 
@@ -216,7 +216,7 @@ schedule.scheduleJob(syncResignEmployeeCron, async function () {
  */
 schedule.scheduleJob(syncRunningFlowsCron, async function () {
     if (process.env.NODE_ENV === "prod") {
-        await taskService.syncRunningProcess()
+        // await taskService.syncRunningProcess()
     }
 })
 
@@ -243,7 +243,7 @@ schedule.scheduleJob(jdLinkData, async function () {
 
 schedule.scheduleJob(caigouLinkData, async function () {
     if (process.env.NODE_ENV === "prod") {
-        await taskService.purchaseSelectionMeetingInitiated()
+        // await taskService.purchaseSelectionMeetingInitiated()
     }
 })
 // 转正通知 触发流程
@@ -255,11 +255,11 @@ schedule.scheduleJob(confirmationNotice, async function () {
 // 每天晚上 12点 重置redis中的synchronizedState 中的 syncTodayRunning 为false 防止同步任务出错 第二天不同步
 schedule.scheduleJob("0 0 0 * * ?", async function () {
     if (process.env.NODE_ENV === "prod") {
-        let taskStatus = JSON.parse(await redisUtil.get(redisKeys.synchronizedState));
-        taskStatus.syncTodayRunning = false;
-        taskStatus.isRunningTianMao = false;
-        taskStatus.isRunningJD = false;
-        await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
+        // let taskStatus = JSON.parse(await redisUtil.get(redisKeys.synchronizedState));
+        // taskStatus.syncTodayRunning = false;
+        // taskStatus.isRunningTianMao = false;
+        // taskStatus.isRunningJD = false;
+        // await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
     }
 })
 
