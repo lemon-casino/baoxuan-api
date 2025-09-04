@@ -3949,7 +3949,7 @@ developmentService.getfirstInfo = async(type,first,second,third) =>{
 developmentService.getProcessInfo = async (params) => {
     let start = moment(params.start).format('YYYY-MM-DD')
     let end = moment(params.end).format('YYYY-MM-DD') + ' 23:59:59'
-    let typeList = [], data, result = [], tmp = {}, defaultTmp = {}
+    let typeList = [], data, result = [], tmp = {}, defaultTmp = {}, info = [], resultMap = {}
     switch (params.type) {
         case '0':
             typeList = [
@@ -3978,32 +3978,41 @@ developmentService.getProcessInfo = async (params) => {
                 result[dataMap[index]][data[i].type] += data[i].count
                 defaultTmp[data[i].type] += data[i].count
             }
+            defaultTmp['purchase'] = 0
+            defaultTmp['warehouse'] = 0
+            defaultTmp['shelfing'] = 0
+            defaultTmp['shelf'] = 0
             for (let i = 0; i < result.length; i++) {
                 result[i]['purchase'] = 0
                 result[i]['warehouse'] = 0
                 result[i]['shelfing'] = 0
                 result[i]['shelf'] = 0
-                defaultTmp['purchase'] = 0
-                defaultTmp['warehouse'] = 0
-                defaultTmp['shelfing'] = 0
-                defaultTmp['shelf'] = 0
+                resultMap[`${result[i]['division']}_${result[i]['develop_type']}`] = i
+            }
+            info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end)
+            for (let i = 0; i < info.length; i++) {
+                let index = resultMap[`${info[i]['division']}_${info[i]['develop_type']}`]
                 let skuids = '', skuMap = {}, infoMap = {}, infoMap1 = {}, infoMap2 = {}, infoMap3 = {}
-                let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end)
-                for (let j = 0; j < info.length; j++) {
-                    if (info[j].info) {
-                        let content = new ObjectInputStream(info[j].info), skuids = ''
-                        content = content.readObject()
-                        content?.annotations.splice(0, 1)
-                        content = content?.annotations
-                        skuMap[info[j].id] = ''
-                        for (let j = 0; j < content?.length; j++) {
-                            for (let k = 0; k < content[j].annotations.length; k++) {
-                                if (['Fxx1ma3pg5efdec', 'F1ujma2exiosbcc', 'Fssama252xmjbzc']
-                                    .includes(content[j].annotations[k])) {
-                                    skuids = `${skuids}${content[j].annotations[k+1]}","`
-                                    skuMap[content[j].annotations[k+1]] = info[j].id
-                                }
+                if (info[i].info) {
+                    let content = new ObjectInputStream(info[i].info)
+                    content = content.readObject()
+                    content?.annotations.splice(0, 1)
+                    content = content?.annotations
+                    skuMap[info[i].id] = ''
+                    for (let j = 0; j < content?.length; j++) {
+                        let sku = '', flag = 0
+                        for (let k = 0; k < content[j].annotations.length; k++) {
+                            if (['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
+                                .includes(content[j].annotations[k])) {
+                                sku = content[j].annotations[k+1]
+                            } else if (!['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
+                            .includes(content[j].annotations[k]) && content[j].annotations[k+1] != 0) {
+                                flag = 1
                             }
+                        }
+                        if (flag) {
+                            skuids = `${skuids}${sku}","`
+                            skuMap[sku] = info[i].id
                         }
                     }
                 }
@@ -4012,7 +4021,7 @@ developmentService.getProcessInfo = async (params) => {
                     let purchase = await purchaseRepo.getOrderingBySkuCode(skuids)
                     for (let j = 0; j < purchase.length; j++) {
                         if (!infoMap[skuMap[purchase[j].sku_id]]) {
-                            result[i]['purchase'] += 1                            
+                            result[index]['purchase'] += 1                            
                             defaultTmp['purchase'] += 1
                             infoMap[skuMap[purchase[j].sku_id]] = true
                         }
@@ -4020,34 +4029,33 @@ developmentService.getProcessInfo = async (params) => {
                     let warehouse = await purchaseRepo.getBySkuCode(skuids)
                     let skuids1 = ''
                     for (let j = 0; j < warehouse.length; j++) {
-                        if (!infoMap1[skuMap[warehouse[j].sku_code]]) {
-                            result[i]['warehouse'] += 1                           
-                            defaultTmp['warehouse'] += 1
-                            infoMap1[skuMap[warehouse[j].sku_code]] = true
-                        }
                         skuids1 = `${skuids1}${warehouse[j].sku_code}","`
                     }
                     let shelf = await goodsSkuRepo.getBySysSkuId(skuids)
                     for (let j = 0; j < shelf.length; j++) {
                         if (!infoMap2[skuMap[shelf[j].sku_code]]) {
-                            result[i]['shelf'] += 1                       
+                            result[index]['shelf'] += 1                       
                             defaultTmp['shelf'] += 1
                             infoMap2[skuMap[shelf[j].sku_code]] = true
                         }
                     }
                     if (skuids1?.length) {
-                        skuids1 = skuids1.substring(0, skuids1.length - 2)
-                        let shelfing = await purchaseRepo.getShelfingBySkuCode(skuids1)
-                        for (let j = 0; j < shelfing.length; j++) {
-                        if (!infoMap3[skuMap[shelfing[j].sku_code]]) {
-                            result[i]['shelfing'] += 1                   
-                            defaultTmp['shelfing'] += 1
-                            infoMap3[skuMap[shelfing[j].sku_code]] = true
+                        skuids1 = skuids1.substring(0, skuids1.length - 3)
+                        if (skuids1.length == skuids.length) {
+                            result[index]['warehouse'] += 1                           
+                            defaultTmp['warehouse'] += 1
+                            let shelfing = await purchaseRepo.getShelfingBySkuCode(skuids1)
+                            for (let j = 0; j < shelfing.length; j++) {
+                                if (!infoMap3[skuMap[shelfing[j].sku_code]]) {
+                                    result[index]['shelfing'] += 1                   
+                                    defaultTmp['shelfing'] += 1
+                                    infoMap3[skuMap[shelfing[j].sku_code]] = true
+                                }
+                            }
                         }
                     }
-                    }
                 }
-            }
+            }            
             defaultTmp['id'] = result.length
             defaultTmp['parent_id'] = null
             result.push(defaultTmp)
@@ -4087,23 +4095,32 @@ developmentService.getProcessInfo = async (params) => {
                 result[i]['warehouse'] = 0
                 result[i]['shelfing'] = 0
                 result[i]['shelf'] = 0
+                resultMap[`${result[i]['division']}_${result[i]['develop_type']}`] = i
+            }
+            info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end)
+            for (let i = 0; i < info.length; i++) {
+                let index = resultMap[`${info[i]['division']}_${info[i]['develop_type']}`]
                 let skuids = '', skuMap = {}, infoMap = {}, infoMap1 = {}, infoMap2 = {}, infoMap3 = {}
-                let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end)
-                for (let j = 0; j < info.length; j++) {
-                    if (info[j].info) {
-                        let content = new ObjectInputStream(info[j].info), skuids = ''
-                        content = content.readObject()
-                        content?.annotations.splice(0, 1)
-                        content = content?.annotations
-                        skuMap[info[j].id] = ''
-                        for (let j = 0; j < content?.length; j++) {
-                            for (let k = 0; k < content[j].annotations.length; k++) {
-                                if (['Fxx1ma3pg5efdec', 'F1ujma2exiosbcc', 'Fssama252xmjbzc']
-                                    .includes(content[j].annotations[k])) {
-                                    skuids = `${skuids}${content[j].annotations[k+1]}","`
-                                    skuMap[content[j].annotations[k+1]] = info[j].id
-                                }
+                if (info[i].info) {
+                    let content = new ObjectInputStream(info[i].info)
+                    content = content.readObject()
+                    content?.annotations.splice(0, 1)
+                    content = content?.annotations
+                    skuMap[info[i].id] = ''
+                    for (let j = 0; j < content?.length; j++) {
+                        let sku = '', flag = 0
+                        for (let k = 0; k < content[j].annotations.length; k++) {
+                            if (['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
+                                .includes(content[j].annotations[k])) {
+                                sku = content[j].annotations[k+1]
+                            } else if (!['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
+                            .includes(content[j].annotations[k]) && content[j].annotations[k+1] != 0) {
+                                flag = 1
                             }
+                        }
+                        if (flag) {
+                            skuids = `${skuids}${sku}","`
+                            skuMap[sku] = info[i].id
                         }
                     }
                 }
@@ -4112,35 +4129,38 @@ developmentService.getProcessInfo = async (params) => {
                     let purchase = await purchaseRepo.getOrderingBySkuCode(skuids)
                     for (let j = 0; j < purchase.length; j++) {
                         if (!infoMap[skuMap[purchase[j].sku_id]]) {
-                            result[i]['purchase'] += 1
+                            result[index]['purchase'] += 1                            
+                            defaultTmp['purchase'] += 1
                             infoMap[skuMap[purchase[j].sku_id]] = true
                         }
                     }
                     let warehouse = await purchaseRepo.getBySkuCode(skuids)
                     let skuids1 = ''
                     for (let j = 0; j < warehouse.length; j++) {
-                        if (!infoMap1[skuMap[warehouse[j].sku_code]]) {
-                            result[i]['warehouse'] += 1
-                            infoMap1[skuMap[warehouse[j].sku_code]] = true
-                        }
                         skuids1 = `${skuids1}${warehouse[j].sku_code}","`
                     }
                     let shelf = await goodsSkuRepo.getBySysSkuId(skuids)
                     for (let j = 0; j < shelf.length; j++) {
                         if (!infoMap2[skuMap[shelf[j].sku_code]]) {
-                            result[i]['shelf'] += 1
+                            result[index]['shelf'] += 1                       
+                            defaultTmp['shelf'] += 1
                             infoMap2[skuMap[shelf[j].sku_code]] = true
                         }
                     }
                     if (skuids1?.length) {
-                        skuids1 = skuids1.substring(0, skuids1.length - 2)
-                        let shelfing = await purchaseRepo.getShelfingBySkuCode(skuids1)
-                        for (let j = 0; j < shelfing.length; j++) {
-                        if (!infoMap3[skuMap[shelfing[j].sku_code]]) {
-                            result[i]['shelfing'] += 1
-                            infoMap3[skuMap[shelfing[j].sku_code]] = true
+                        skuids1 = skuids1.substring(0, skuids1.length - 3)
+                        if (skuids1.length == skuids.length) {
+                            result[index]['warehouse'] += 1                           
+                            defaultTmp['warehouse'] += 1
+                            let shelfing = await purchaseRepo.getShelfingBySkuCode(skuids1)
+                            for (let j = 0; j < shelfing.length; j++) {
+                                if (!infoMap3[skuMap[shelfing[j].sku_code]]) {
+                                    result[index]['shelfing'] += 1                   
+                                    defaultTmp['shelfing'] += 1
+                                    infoMap3[skuMap[shelfing[j].sku_code]] = true
+                                }
+                            }
                         }
-                    }
                     }
                 }
             }
@@ -4204,32 +4224,41 @@ developmentService.getProcessInfo = async (params) => {
                             defaultTmp['scfx'] += data[i].count
                     }
             }
+            defaultTmp['purchase'] = 0
+            defaultTmp['warehouse'] = 0
+            defaultTmp['shelfing'] = 0
+            defaultTmp['shelf'] = 0
             for (let i = 0; i < result.length; i++) {
                 result[i]['purchase'] = 0
                 result[i]['warehouse'] = 0
                 result[i]['shelfing'] = 0
                 result[i]['shelf'] = 0
-                defaultTmp['purchase'] = 0
-                defaultTmp['warehouse'] = 0
-                defaultTmp['shelfing'] = 0
-                defaultTmp['shelf'] = 0
+                resultMap[`${result[i]['division']}_${result[i]['develop_type']}`] = i
+            }
+            info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end)
+            for (let i = 0; i < info.length; i++) {
+                let index = resultMap[`${info[i]['division']}_${info[i]['develop_type']}`]
                 let skuids = '', skuMap = {}, infoMap = {}, infoMap1 = {}, infoMap2 = {}, infoMap3 = {}
-                let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end)
-                for (let j = 0; j < info.length; j++) {
-                    if (info[j].info) {
-                        let content = new ObjectInputStream(info[j].info), skuids = ''
-                        content = content.readObject()
-                        content?.annotations.splice(0, 1)
-                        content = content?.annotations
-                        skuMap[info[j].id] = ''
-                        for (let j = 0; j < content?.length; j++) {
-                            for (let k = 0; k < content[j].annotations.length; k++) {
-                                if (['Fxx1ma3pg5efdec', 'F1ujma2exiosbcc', 'Fssama252xmjbzc']
-                                    .includes(content[j].annotations[k])) {
-                                    skuids = `${skuids}${content[j].annotations[k+1]}","`
-                                    skuMap[content[j].annotations[k+1]] = info[j].id
-                                }
+                if (info[i].info) {
+                    let content = new ObjectInputStream(info[i].info)
+                    content = content.readObject()
+                    content?.annotations.splice(0, 1)
+                    content = content?.annotations
+                    skuMap[info[i].id] = ''
+                    for (let j = 0; j < content?.length; j++) {
+                        let sku = '', flag = 0
+                        for (let k = 0; k < content[j].annotations.length; k++) {
+                            if (['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
+                                .includes(content[j].annotations[k])) {
+                                sku = content[j].annotations[k+1]
+                            } else if (!['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
+                            .includes(content[j].annotations[k]) && content[j].annotations[k+1] != 0) {
+                                flag = 1
                             }
+                        }
+                        if (flag) {
+                            skuids = `${skuids}${sku}","`
+                            skuMap[sku] = info[i].id
                         }
                     }
                 }
@@ -4238,7 +4267,7 @@ developmentService.getProcessInfo = async (params) => {
                     let purchase = await purchaseRepo.getOrderingBySkuCode(skuids)
                     for (let j = 0; j < purchase.length; j++) {
                         if (!infoMap[skuMap[purchase[j].sku_id]]) {
-                            result[i]['purchase'] += 1
+                            result[index]['purchase'] += 1                            
                             defaultTmp['purchase'] += 1
                             infoMap[skuMap[purchase[j].sku_id]] = true
                         }
@@ -4246,31 +4275,30 @@ developmentService.getProcessInfo = async (params) => {
                     let warehouse = await purchaseRepo.getBySkuCode(skuids)
                     let skuids1 = ''
                     for (let j = 0; j < warehouse.length; j++) {
-                        if (!infoMap1[skuMap[warehouse[j].sku_code]]) {
-                            result[i]['warehouse'] += 1
-                            defaultTmp['warehouse'] += 1
-                            infoMap1[skuMap[warehouse[j].sku_code]] = true
-                        }
                         skuids1 = `${skuids1}${warehouse[j].sku_code}","`
                     }
                     let shelf = await goodsSkuRepo.getBySysSkuId(skuids)
                     for (let j = 0; j < shelf.length; j++) {
                         if (!infoMap2[skuMap[shelf[j].sku_code]]) {
-                            result[i]['shelf'] += 1
+                            result[index]['shelf'] += 1                       
                             defaultTmp['shelf'] += 1
                             infoMap2[skuMap[shelf[j].sku_code]] = true
                         }
                     }
                     if (skuids1?.length) {
-                        skuids1 = skuids1.substring(0, skuids1.length - 2)
-                        let shelfing = await purchaseRepo.getShelfingBySkuCode(skuids1)
-                        for (let j = 0; j < shelfing.length; j++) {
-                        if (!infoMap3[skuMap[shelfing[j].sku_code]]) {
-                            result[i]['shelfing'] += 1
-                            defaultTmp['shelfing'] += 1
-                            infoMap3[skuMap[shelfing[j].sku_code]] = true
+                        skuids1 = skuids1.substring(0, skuids1.length - 3)
+                        if (skuids1.length == skuids.length) {
+                            result[index]['warehouse'] += 1                           
+                            defaultTmp['warehouse'] += 1
+                            let shelfing = await purchaseRepo.getShelfingBySkuCode(skuids1)
+                            for (let j = 0; j < shelfing.length; j++) {
+                                if (!infoMap3[skuMap[shelfing[j].sku_code]]) {
+                                    result[index]['shelfing'] += 1                   
+                                    defaultTmp['shelfing'] += 1
+                                    infoMap3[skuMap[shelfing[j].sku_code]] = true
+                                }
+                            }
                         }
-                    }
                     }
                 }
             }
@@ -4279,7 +4307,7 @@ developmentService.getProcessInfo = async (params) => {
             result.push(defaultTmp)
             break
         case '4':
-            let info = await actHiProcinstRepo.getProcessSelectedCount(start, end)
+            info = await actHiProcinstRepo.getProcessSelectedCount(start, end)
             defaultTmp = {select_division: '合计', first: 0, second: 0, third: 0, total: 0}
             result = [
                 {id: '0', parent_id: null, select_division: '否', first: 0, second: 0, third: 0, total: 0},
@@ -4550,8 +4578,7 @@ developmentService.getProcessDetail = async (params) => {
                 result[i]['first_purchase'] = '否'
                 result[i]['second_purchase'] = '否'
                 result[i]['third_purchase'] = '否'
-                let content = new ObjectInputStream(result[i].info), skuids = '', 
-                    first_purchase = 0, second_purchase = 0, third_purchase = 0
+                let content = new ObjectInputStream(result[i].info), skuids = '', skuids1 = ''
                 content = content.readObject()
                 content?.annotations.splice(0, 1)
                 content = content?.annotations
@@ -4559,18 +4586,18 @@ developmentService.getProcessDetail = async (params) => {
                     for (let k = 0; k < content[j].annotations.length; k++) {
                         if (['F5t4ma3ptwn0ftc', 'Fbogma3jgfn4gfc', 'Fi0sma263vtqhkc']
                             .includes(content[j].annotations[k])) {                            
-                            result[i].pre_purchase_num += parseInt(content[j].annotations[k+1])
-                            first_purchase += parseInt(content[j].annotations[k+1])
+                            result[i].pre_purchase_num += parseInt(content[j].annotations[k+1]) || 0
+                            if (content[j].annotations[k+1] != 0) result[i]['first_purchase'] = '是'
                         }
                         if (['Frhbma3pulstg5c', 'Fwmjmakutsrdisc', 'Fj3tma2643p9hqc']
                             .includes(content[j].annotations[k])) {                            
-                            result[i].pre_purchase_num += parseInt(content[j].annotations[k+1])
-                            second_purchase += parseInt(content[j].annotations[k+1])
+                            result[i].pre_purchase_num += parseInt(content[j].annotations[k+1]) || 0
+                            if (content[j].annotations[k+1] != 0) result[i]['second_purchase'] = '是'
                         }
                         if (['Ffmgma3pv8zxgkc', 'Fkpmmakutu40ivc', 'Fo95ma264bhphxc']
                             .includes(content[j].annotations[k])) {                            
-                            result[i].pre_purchase_num += parseInt(content[j].annotations[k+1])
-                            third_purchase += parseInt(content[j].annotations[k+1])
+                            result[i].pre_purchase_num += parseInt(content[j].annotations[k+1]) || 0
+                            if (content[j].annotations[k+1] != 0) result[i]['third_purchase'] = '是'
                         }
                         if (['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
                             .includes(content[j].annotations[k])) {
@@ -4578,17 +4605,22 @@ developmentService.getProcessDetail = async (params) => {
                         }
                     }
                 }
-                if (first_purchase) result[i]['first_purchase'] = '是'
-                if (second_purchase) result[i]['second_purchase'] = '是'
-                if (third_purchase) result[i]['third_purchase'] = '是'
                 if (skuids?.length) {
                     skuids = skuids.substring(0, skuids.length - 3)
                     result[i]['is_purchase'] = '否'
                     result[i]['is_warehouse'] = '否'
                     let purchase = await purchaseRepo.getOrderBySkuCode(skuids)
-                    if (purchase?.length) result[i]['is_purchase'] = '是'
+                    if (purchase?.length) result[i]['is_purchase'] = '是'                    
                     let warehouse = await purchaseRepo.getBySkuCode(skuids)
-                    if (warehouse?.length) result[i]['is_warehouse'] = '是'
+                    if (warehouse?.length) {
+                        for (let j = 0; j < warehouse.length; j++) {
+                            skuids1 = `${skuids1}${warehouse[j].sku_code}","`
+                        }
+                        if (skuids1?.length) {
+                            skuids1 = skuids1.substring(0, skuids1.length - 3)
+                            if (skuids1.length == skuids.length) result[i]['is_warehouse'] = '是'
+                        }
+                    }                    
                     result[i]['first_shelf'] = '否'
                     let shelf1 = await goodsSkuRepo.getBySysSkuId(skuids)
                     if (shelf1?.length) result[i]['first_shelf'] = '是'
@@ -4597,8 +4629,30 @@ developmentService.getProcessDetail = async (params) => {
                     if (shelf2?.length) result[i]['second_shelf'] = '是'
                     result[i]['third_shelf'] = '否'
                     let shelf3 = await goodsSkuRepo.getBySysSkuId(skuids)
-                    if (shelf3?.length) result[i]['third_shelf'] = '是'
+                    if (shelf3?.length) result[i]['third_shelf'] = '是'                    
                 }
+            }
+            if (params.type == 'purchase' && result[i]['is_purchase'] != '是') {
+                result.splice(i, 1)
+                i--
+                continue
+            } else if (params.type == 'warehouse' && result[i]['is_warehouse'] != '是') {
+                result.splice(i, 1)
+                i--
+                continue
+            } else if (params.type == 'shelfing' && !(result[i]['is_warehouse'] == '是' && 
+                ((result[i]['first_purchase'] == '是' && result[i]['first_shelf'] == '否') || 
+                (result[i]['second_purchase'] == '是' && result[i]['second_shelf'] == '否') || 
+                (result[i]['third_purchase'] == '是' && result[i]['third_shelf'] == '否'))
+            )) {
+                result.splice(i, 1)
+                i--
+                continue
+            } else if (params.type == 'shelf' && ((result[i]['first_shelf'] != '是') && 
+                (result[i]['second_shelf'] != '是') && (result[i]['third_shelf'] != '是'))) {
+                result.splice(i, 1)
+                i--
+                continue
             }
             if (result[i].first_time && result[i].dept == '事业一部') {
                 let info = await actHiProcinstRepo.getFirstSelect1(result[i].id)

@@ -544,6 +544,48 @@ const getProcessInfo = async (req, res, next) => {
 const getProcessDetail = async (req, res, next) => {
     try {
         let result = await developmentService.getProcessDetail(req.query)
+        if (req.query.is_export) {
+            const workbook = new ExcelJS.Workbook()
+            const sheet = workbook.addWorksheet()
+            sheet.columns = [
+                { header: '推品流程', key: 'title' },
+                { header: '流程链接', key: 'link' },
+                { header: '流程图片', key: 'image' },
+                { header: 'SPU', key: 'spu' },
+                { header: '开发性质', key: 'type' },
+                { header: '开发人', key: 'developer' },
+                { header: '流程发起人（人名）', key: 'nickname' },
+                { header: '发起人所在平台', key: 'platform' },
+                { header: '发起人部门', key: 'dept' },
+                { header: '流程状态', key: 'process_status' },
+                { header: '事业部1选中未选中结果', key: 'first_select' },
+                { header: '事业部2选中未选中结果', key: 'second_select' },
+                { header: '事业部3选中未选中结果', key: 'third_select' },
+                { header: '事业部1是否订货', key: 'first_purchase' },
+                { header: '事业部2是否订货', key: 'second_purchase' },
+                { header: '事业部3是否订货', key: 'third_purchase' },
+                { header: '选中后是否采购', key: 'is_purchase' },
+                { header: '是否入仓', key: 'is_warehouse' },
+                { header: '事业部1是否上架', key: 'first_shelf' },
+                { header: '事业部2是否上架', key: 'second_shelf' },
+                { header: '事业部3是否上架', key: 'third_shelf' },
+                { header: 'IP/市场分析/自研流程状态', key: 'other_status' },
+                { header: '预计采购数量', key: 'pre_purchase_num' },
+                { header: '视觉状态', key: 'vision_status' },
+                { header: '实时卡滞节点', key: 'node' },
+                { header: '目前卡滞部门', key: 'node_dept' },
+                { header: '目前卡滞人', key: 'user' },
+                { header: '卡滞天数', key: 'duration' },
+                { header: '全流程周期', key: 'total_duration' },
+            ]
+            for (let i = 0; i < result.length; i++) {
+                sheet.addRow(result[i])
+            }
+            const buffer = await workbook.xlsx.writeBuffer()
+            res.setHeader('Content-Disposition', `attachment; filename="whole-process-info.xlsx"`)
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            return res.end(buffer)
+        }
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
