@@ -105,6 +105,8 @@ router.get('/analysis-plan/rivals-sku', analysisPlanApi.getSku)
 router.post('/analysis-plan/rivals-sku/create', analysisPlanApi.createSku)
 
 //爆款方案
+router.get('/specific-plan/goods-relation', specificPlanApi.getSpecificPlanRelationByGoods)
+router.post('/specific-plan/goods-relation/create', specificPlanApi.createSpecificPlanRelationByGoods)
 router.get('/specific-plan', specificPlanApi.getSpecificPlan)
 router.post('/specific-plan/create', specificPlanApi.createSpecificPlan)
 router.put('/specific-plan/update', specificPlanApi.updateSpecificPlan)

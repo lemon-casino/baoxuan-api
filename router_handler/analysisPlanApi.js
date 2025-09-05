@@ -28,7 +28,7 @@ analysisPlanApi.getAnalysisPlanRelationByGoods = async (req, res, next) => {
 }
 analysisPlanApi.createAnalysisPlanRelationByGoods = async (req, res, next) => {
     try {
-        result = await analysisPlanService.createRelationByGoodsId(req.query)
+        result = await analysisPlanService.createRelationByGoodsId(req.body)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)

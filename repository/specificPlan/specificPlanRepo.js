@@ -12,6 +12,22 @@ specificPlanRepo.get = async (user_id, title, id, offset, limit) => {
     return result || []
 }
 
+specificPlanRepo.getByGoodsId = async (goods_id) => {
+    let sql = `SELECT p.id, p.title, p.create_time, (SELECT nickname FROM users WHERE user_id = p.user_id) 
+            AS username, r.create_time AS add_time FROM specific_plans_relation r JOIN specific_plans p 
+            ON r.plan_id = p.id WHERE r.goods_id = ? ORDER BY r.create_time DESC`
+    const result = await query(sql, [goods_id])
+    return result || []
+}
+
+specificPlanRepo.getList = async (goods_id, user_id) => {
+    let sql = `SELECT p.id, p.title FROM specific_plans p 
+        WHERE NOT EXISTS(SELECT * FROM specific_plans_relation r WHERE r.plan_id = p.id AND r.goods_id = ?) 
+            AND p.user_id = ? AND p.status = 1`
+    const result = await query(sql, [goods_id, user_id])
+    return result || []
+}
+
 specificPlanRepo.getCount = async (user_id, title, id) => {
     let subsql = ''
     if (title) subsql = `AND title = "${title}"`

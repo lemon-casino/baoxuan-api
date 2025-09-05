@@ -23,6 +23,22 @@ const newMap = function(datum) {
 }
 const specificPlanApi = {}
 
+specificPlanApi.getSpecificPlanRelationByGoods = async (req, res, next) => {
+    try {
+        result = await specificPlanService.getRelationByGoodsId(req.query, req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+specificPlanApi.createSpecificPlanRelationByGoods = async (req, res, next) => {
+    try {
+        result = await specificPlanService.createRelationByGoodsId(req.body)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
 specificPlanApi.getSpecificPlan = async (req, res, next) => {
     try {
         result = await specificPlanService.get(req.query, req.user.id)

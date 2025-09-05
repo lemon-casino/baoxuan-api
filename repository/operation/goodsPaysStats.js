@@ -322,12 +322,16 @@ goodsPaysStats.getWeekSalesAmount = async() => {
         days2 = 7 - days1, 
         total2 = moment().subtract(1, 'month').daysInMonth()
     
-    let sql = `SELECT g.goods_id, g.sku_id, g.platform, g.userDef1, g.link_state, g.onsale_date, 
+    let sql = `SELECT g.goods_id, g.platform, g.userDef1, g.link_state, 
+            IF(g.platform = '自营', g.onsale_date, s.create_time) AS onsale_date, 
             a.sale_amount, a.profit, b.sale_amount AS target1, c.sale_amount AS target2, 
-            d.sale_amount AS target3, t.amount AS target4 
-        FROM (SELECT IF(platform = '自营', brief_name, goods_id) AS goods_id, sku_id, platform, userDef1, 
-                link_state, onsale_date FROM dianshang_operation_attribute 
-            WHERE platform IN ('自营', 'fcs+pop', '拼多多部', '天猫部')) g 
+            d.sale_amount AS target3, t.amount AS target4, g.product_stage 
+        FROM (SELECT IF(platform = '自营', brief_name, goods_id) AS goods_id, platform, userDef1, 
+                link_state, onsale_date, product_stage FROM dianshang_operation_attribute 
+            WHERE platform IN ('自营', 'fcs+pop', '拼多多部', '天猫部') 
+            GROUP BY brief_name, goods_id, platform, userDef1, link_state, onsale_date, product_stage) g 
+        LEFT JOIN (SELECT goods_id, MIN(create_time) AS create_time FROM jst_goods_sku GROUP BY goods_id) s 
+            ON g.goods_id = s.goods_id 
         LEFT JOIN (SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, IFNULL(SUM(profit), 0) AS profit, goods_id 
             FROM goods_pays_stats WHERE date BETWEEN DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY) 
                 AND DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) 
