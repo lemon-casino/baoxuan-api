@@ -177,7 +177,7 @@ exports.getUserInfo = async (req, res) => {
     const userInfo = await contactsReq.getUserInfoByUserIdAndToken(token.access_token, info.result.userid)
     if (userInfo.errmsg === "ok") {
         const is_userId = await UsersModel.findOne({
-            where: {dingding_user_id: info.result.userid},
+            where: {dingding_user_id: info.result.userid, status: 1},
         })
         if (is_userId) {
             const token = "Bearer " +
