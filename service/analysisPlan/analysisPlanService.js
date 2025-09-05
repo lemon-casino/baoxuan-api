@@ -7,16 +7,9 @@ const rivalsSkuRepo = require('@/repository/analysisPlan/rivalsSkuRepo')
 const analysisPlanService = {}
 
 analysisPlanService.getRelationByGoodsId = async (params, user_id) => {
-    let data = [], offset = 0, limit = 0, total = 0, info = []
-    offset = (parseInt(params.page) - 1) * parseInt(params.pageSize)
-    limit = parseInt(params.pageSize)
-    let count = await analysisPlanRepo.getCountByGoodsId(params.goods_id)
-    if (count?.length && count[0].count) {
-        total = count[0].count   
-        data = await analysisPlanRepo.getByGoodsId(goods_id, offset, limit)
-    }
-    info = await analysisPlanRepo.getList(params.goods_id, user_id)
-    return {total, data, info}
+    const data = await analysisPlanRepo.getByGoodsId(params.goods_id)
+    const info = await analysisPlanRepo.getList(params.goods_id, user_id)
+    return {data, info}
 }
 
 analysisPlanService.createRelationByGoodsId = async (params) => {

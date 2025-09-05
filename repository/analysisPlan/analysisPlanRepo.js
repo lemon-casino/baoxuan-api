@@ -12,26 +12,19 @@ analysisPlanRepo.get = async (user_id, title, id, offset, limit) => {
     return result || []
 }
 
-analysisPlanRepo.getByGoodsId = async (goods_id, offset, limit) => {
-    let sql = `SELECT p.title, p.create_time, (SELECT nickname FROM users WHERE user_id = p.user_id) 
-            AS username, r.create_time FROM analysis_plans_relation r JOIN analysis_plans p 
-            ON r.plan_id = p.id WHERE r.goods_id = ? ORDER BY r.create_time DESC LIMIT ?,?`
-    const result = await query(sql, [goods_id, offset, limit])
+analysisPlanRepo.getByGoodsId = async (goods_id) => {
+    let sql = `SELECT p.id, p.title, p.create_time, (SELECT nickname FROM users WHERE user_id = p.user_id) 
+            AS username, r.create_time AS add_time FROM analysis_plans_relation r JOIN analysis_plans p 
+            ON r.plan_id = p.id WHERE r.goods_id = ? ORDER BY r.create_time DESC`
+    const result = await query(sql, [goods_id])
     return result || []
 }
 
 analysisPlanRepo.getList = async (goods_id, user_id) => {
-    let sql = `SELECT p.title, p.create_time FROM analysis_plans p 
+    let sql = `SELECT p.id, p.title FROM analysis_plans p 
         WHERE NOT EXISTS(SELECT * FROM analysis_plans_relation r WHERE r.plan_id = p.id AND r.goods_id = ?) 
-            AND p.user_id = ?`
+            AND p.user_id = ? AND p.status = 1`
     const result = await query(sql, [goods_id, user_id])
-    return result || []
-}
-
-analysisPlanRepo.getCountByGoodsId = async (goods_id) => {
-    let sql = `SELECT COUNT(1) AS count FROM analysis_plans_relation r JOIN analysis_plans p ON r.plan_id = p.id 
-        WHERE r.goods_id = ?`
-    const result = await query(sql, [goods_id])
     return result || []
 }
 

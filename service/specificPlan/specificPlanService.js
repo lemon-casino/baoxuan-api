@@ -11,6 +11,17 @@ const spVisionRepo = require("@/repository/specificPlan/spVisionRepo")
 
 const specificPlanService = {}
 
+specificPlanService.getRelationByGoodsId = async (params, user_id) => {
+    const data = await specificPlanRepo.getByGoodsId(params.goods_id)
+    const info = await specificPlanRepo.getList(params.goods_id, user_id)
+    return {data, info}
+}
+
+specificPlanService.createRelationByGoodsId = async (params) => {
+    const result = await specificPlanRepo.createRelations(params.plan_id, 'goods', params.goods_id, null)
+    return result
+}
+
 specificPlanService.get = async (params, user_id) => {
     let data = [], offset = 0, limit = 0, total = 0
     offset = (parseInt(params.page) - 1) * parseInt(params.pageSize)
