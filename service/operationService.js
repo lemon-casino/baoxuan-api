@@ -682,37 +682,51 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         })
     for (let i = 0; i < shopName.length; i++) {
         let division_info = await shopInfoRepo.getDivisionByShopName(shopName[i].shop_name)
-        let negative_profit = 0, low_profit = 0, none_promotion = 0, low_promotion = 0, 
-            low_roi = 0, low_plan_roi = 0, low_plan_roi1 = 0, invalid = '', invalid_link = 0,
-            invalid_sale_amount = 0, invalid_profit = 0, invalid_profit_percent = 0, important_link = 0, 
-            low_gross_profit = 0, unsalable_code = '', unsalable_cost_amount = 0, unsalable_amount = 0, 
-            unsalable_sale_amount = 0, unsalable_profit = 0, unsalable_profit_percent = 0, ip = 0, 
-            ip_link = 0, ip_sale_amount = 0, ip_amount = 0, ip_profit = 0, ip_goal_achieve_percent = 0, 
-            ip_profit_percent = 0, unsalable_link = 0 
+        let negative_profit = 0, negative_profit_child = {}, low_profit = 0, low_profit_child = {}, 
+            none_promotion = 0, none_promotion_child = {}, low_promotion = 0, low_promotion_child = {}, 
+            low_roi = 0, low_roi_child = {}, low_plan_roi = 0, low_plan_roi_child = {}, low_plan_roi1 = 0, 
+            low_plan_roi1_child = {}, invalid = '', invalid_link = 0, invalid_sale_amount = 0, 
+            invalid_profit = 0, invalid_profit_percent = 0, important_link = 0, low_gross_profit = 0, 
+            low_gross_profit_child = {}, unsalable_code = '', unsalable_code_child = {}, unsalable_cost_amount = 0, 
+            unsalable_amount = 0, unsalable_sale_amount = 0, unsalable_profit = 0, unsalable_profit_percent = 0, 
+            ip = 0, ip_child = {}, ip_link = 0, ip_sale_amount = 0, ip_amount = 0, ip_profit = 0, 
+            ip_goal_achieve_percent = 0, ip_profit_percent = 0, unsalable_link = 0 
 
-        let promotion_rate, roi, plan, plan1, gross, important
+        let promotion_rate, roi, plan, plan1, gross, important, child, child1, child2, child3, child4
         if (division_info?.length) {
             if (division_info[0].division_name == '事业部2') {
                 promotion_rate = 0.06
                 roi = await func.getLowROIByShopNamesAndTime2(shopName[i].shop_name, otherName[i])
+                child1 = await func.getChildLowROIByShopNamesAndTime2(shopName[i].shop_name, otherName[i])
                 plan = await func.getLowPlanROIByShopNamesAndTime2(shopName[i].shop_name, 3, 7, otherName[i])
-                plan1 = await func.getLowPlanROIByShopNamesAndTime2(shopName[i].shop_name, 7, 14, otherName[i])                
+                child2 = await func.getChildLowPlanROIByShopNamesAndTime2(shopName[i].shop_name, 3, 7, otherName[i])
+                plan1 = await func.getLowPlanROIByShopNamesAndTime2(shopName[i].shop_name, 7, 14, otherName[i])
+                child3 = await func.getChildLowPlanROIByShopNamesAndTime2(shopName[i].shop_name, 7, 14, otherName[i])                
                 important = await func.getImportByShopNames1(shopName[i].shop_name, otherName[i])
                 gross = await goodsSaleVerifiedRepo.getLowGrossProfitByShopNamesAndTime1(shopName[i].shop_name, start, end, 0.55, 0.21, otherName[i])
+                child4 = await goodsSaleVerifiedRepo.getChildLowGrossProfitByShopNamesAndTime1(shopName[i].shop_name, start, end, 0.55, 0.21, otherName[i])
             } else if (division_info[0].division_name == '事业部3') {
                 promotion_rate = 0.1
                 roi = await func.getLowROIByShopNamesAndTime(shopName[i].shop_name)
+                child1 = await func.getChildLowROIByShopNamesAndTime(shopName[i].shop_name, otherName[i])
                 plan = await func.getLowPlanROIByShopNamesAndTime(shopName[i].shop_name, 3, 7)
-                plan1 = await func.getLowPlanROIByShopNamesAndTime(shopName[i].shop_name, 7, 14)          
+                child2 = await func.getChildLowPlanROIByShopNamesAndTime(shopName[i].shop_name, 3, 7)
+                plan1 = await func.getLowPlanROIByShopNamesAndTime(shopName[i].shop_name, 7, 14)
+                child3 = await func.getChildLowPlanROIByShopNamesAndTime2(shopName[i].shop_name, 7, 14)         
                 important = await func.getImportByShopNames(shopName[i].shop_name)
                 gross = await goodsSaleVerifiedRepo.getLowGrossProfitByShopNamesAndTime(shopName[i].shop_name, start, end, 0.55)
+                child4 = await goodsSaleVerifiedRepo.getChildLowGrossProfitByShopNamesAndTime(shopName[i].shop_name, start, end, 0.55)
             } else {
                 promotion_rate = 0.08
                 roi = await func.getLowROIByShopNamesAndTime1(shopName[i].shop_name)
-                plan = await func.getLowPlanROIByShopNamesAndTime1(shopName[i].shop_name, 3, 7)
-                plan1 = await func.getLowPlanROIByShopNamesAndTime1(shopName[i].shop_name, 7, 14)                
+                child1 = await func.getChildLowROIByShopNamesAndTime1(shopName[i].shop_name, otherName[i])
+                plan = await func.getLowPlanROIByShopNamesAndTime1(shopName[i].shop_name, 3, 7)                
+                child2 = await func.getChildLowPlanROIByShopNamesAndTime1(shopName[i].shop_name, 3, 7)
+                plan1 = await func.getLowPlanROIByShopNamesAndTime1(shopName[i].shop_name, 7, 14)
+                child3 = await func.getChildLowPlanROIByShopNamesAndTime2(shopName[i].shop_name, 7, 14)              
                 important = await func.getImportByShopNames2(shopName[i].shop_name)
                 gross = await goodsSaleVerifiedRepo.getLowGrossProfitByShopNamesAndTime(shopName[i].shop_name, start, end, 0.45)
+                child4 = await goodsSaleVerifiedRepo.getChildLowGrossProfitByShopNamesAndTime(shopName[i].shop_name, start, end, 0.45)
             }
         }
         let negative = await func.getNegativeProfitByShopNamesAndTime(
@@ -720,27 +734,105 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
             start, 
             end,
             otherName[i])
-        if (negative?.length) negative_profit = parseInt(negative[0].count)
-        let low = await func.getLowProfitByShopNamesAndTime(
-            shopName[i].shop_name, 
-            otherName[i])
-        if (low?.length) low_profit = parseInt(low[0].count)
+        if (negative?.length) {
+            negative_profit = parseInt(negative[0].count)
+            if (negative[0].count > 0) {
+                child = await func.getChildNegativeProfitByShopNamesAndTime(
+                    shopName[i].shop_name, 
+                    start, 
+                    end,
+                    otherName[i])
+                for (let j = 0; j < child?.length; j++) {
+                    if (negative_profit_child[child[j].type] == undefined) {
+                        negative_profit_child[child[j].type] = {}                        
+                    }
+                    negative_profit_child[child[j].type][child[j].volume_target] = child[j].count
+                }
+            }
+        }
+        let low = await func.getLowProfitByShopNamesAndTime(shopName[i].shop_name, otherName[i])
+        if (low?.length) {
+            low_profit = parseInt(low[0].count)
+            if (low[0].count > 0) {
+                child = await func.getChildLowProfitByShopNamesAndTime(shopName[i].shop_name, otherName[i])
+                for (let j = 0; j < child?.length; j++) {
+                    if (low_profit_child[child[j].type] == undefined) {
+                        low_profit_child[child[j].type] = {}                        
+                    }
+                    low_profit_child[child[j].type][child[j].volume_target] = child[j].count
+                }
+            }
+        }
         let none = await func.getNullPromotionByShopNamesAndTime(            
             shopName[i].shop_name, 
             start, 
             end, 
             otherName[i])
-        if (none?.length) none_promotion = parseInt(none[0].count)
+        if (none?.length) {
+            none_promotion = parseInt(none[0].count)
+            if (none[0].count > 0) {
+                child = await func.getChildNullPromotionByShopNamesAndTime(shopName[i].shop_name, 
+                    start, 
+                    end, 
+                    otherName[i])
+                for (let j = 0; j < child?.length; j++) {
+                    if (none_promotion_child[child[j].type] == undefined) {
+                        none_promotion_child[child[j].type] = {}                        
+                    }
+                    none_promotion_child[child[j].type][child[j].volume_target] = child[j].count
+                }
+            }
+        }
         let lowp = await func.getLowPromotionByShopNamesAndTime(          
             shopName[i].shop_name, 
             start, 
             end, 
             promotion_rate, 
             otherName[i])
-        if (lowp?.length) low_promotion = parseInt(lowp[0].count)
-        if (roi?.length) low_roi = parseInt(roi[0].count)
-        if (plan?.length) low_plan_roi = parseInt(plan[0].count)
-        if (plan1?.length) low_plan_roi1 = parseInt(plan1[0].count)
+        if (lowp?.length) {
+            low_promotion = parseInt(lowp[0].count)
+            if (lowp[0].count > 0) {
+                child = await func.getChildLowPromotionByShopNamesAndTime(
+                    shopName[i].shop_name, 
+                    start, 
+                    end, 
+                    promotion_rate, 
+                    otherName[i])
+                for (let j = 0; j < child?.length; j++) {
+                    if (low_promotion_child[child[j].type] == undefined) {
+                        low_promotion_child[child[j].type] = {}                        
+                    }
+                    low_promotion_child[child[j].type][child[j].volume_target] = child[j].count
+                }
+            }
+        }
+        if (roi?.length) {
+            low_roi = parseInt(roi[0].count)
+            for (let j = 0; j < child1?.length; j++) {
+                if (low_roi_child[child1[j].type] == undefined) {
+                    low_roi_child[child1[j].type] = {}                        
+                }
+                low_roi_child[child1[j].type][child1[j].volume_target] = child1[j].count
+            }
+        }
+        if (plan?.length) {
+            low_plan_roi = parseInt(plan[0].count)
+            for (let j = 0; j < child2?.length; j++) {
+                if (low_plan_roi_child[child2[j].type] == undefined) {
+                    low_plan_roi_child[child2[j].type] = {}                        
+                }
+                low_plan_roi_child[child2[j].type][child2[j].volume_target] = child2[j].count
+            }
+        }
+        if (plan1?.length) {
+            low_plan_roi1 = parseInt(plan1[0].count)
+            for (let j = 0; j < child3?.length; j++) {
+                if (low_plan_roi1_child[child3[j].type] == undefined) {
+                    low_plan_roi1_child[child3[j].type] = {}                        
+                }
+                low_plan_roi1_child[child3[j].type][child3[j].volume_target] = child3[j].count
+            }
+        }
         let invalid_info = await func.getInvalidByShopNamesAndTime(
             shopName[i].shop_name, 
             start, 
@@ -755,7 +847,15 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         }
         invalid = `链接数量:${invalid_link}\n销售额:${invalid_sale_amount}\n利润率:${invalid_profit_percent}%`
         if (important?.length) important_link = parseInt(important[0].count)
-        if (gross?.length) low_gross_profit = parseInt(gross[0].count)        
+        if (gross?.length) {
+            low_gross_profit = parseInt(gross[0].count)
+            for (let j = 0; j < child4?.length; j++) {
+                if (low_gross_profit_child[child4[j].type] == undefined) {
+                    low_gross_profit_child[child4[j].type] = {}                        
+                }
+                low_gross_profit_child[child4[j].type][child4[j].volume_target] = child4[j].count
+            }
+        }     
         let unsalable_info = await func.getUnsalableCodeByShopNames(shopName[i].shop_name,
         start, end, otherName[i])
         if (unsalable_info) {
@@ -784,24 +884,34 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         result[type].data.push({
             name: shopName[i].name,
             negative_profit, 
+            negative_profit_child,
             low_profit, 
+            low_profit_child, 
             none_promotion, 
+            none_promotion_child, 
             low_promotion, 
+            low_promotion_child, 
             low_roi, 
+            low_roi_child, 
             low_plan_roi, 
+            low_plan_roi_child, 
             low_plan_roi1, 
+            low_plan_roi1_child, 
             invalid,
             invalid_link, 
             invalid_sale_amount,
             invalid_profit,
             important_link, 
             low_gross_profit, 
+            low_gross_profit_child, 
             unsalable_cost_amount, 
             unsalable_amount, 
             unsalable_sale_amount, 
             unsalable_profit, 
             unsalable_code, 
+            unsalable_code_child, 
             ip, 
+            ip_child, 
             ip_link, 
             ip_sale_amount, 
             ip_amount,
@@ -967,50 +1077,135 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
             linkIds1 = links.map((item) => item.goods_id).join('","')
         }
         let division_info = await shopInfoRepo.getDivisionByShopName(userName[i].shopNames)
-        let negative_profit = 0, low_profit = 0, none_promotion = 0, low_promotion = 0, 
-            low_roi = 0, low_plan_roi = 0, low_plan_roi1 = 0, invalid = '', invalid_link = 0,
-            invalid_sale_amount = 0, invalid_profit = 0, invalid_profit_percent = 0, important_link = 0, 
-            low_gross_profit = 0, unsalable_code = '', unsalable_cost_amount = 0, unsalable_amount = 0, 
-            unsalable_sale_amount = 0, unsalable_profit = 0, unsalable_profit_percent = 0, ip = 0, 
-            ip_link = 0, ip_sale_amount = 0, ip_amount = 0, ip_profit = 0, ip_goal_achieve_percent = 0, 
-            ip_profit_percent = 0, unsalable_link = 0
+        let negative_profit = 0, negative_profit_child = {}, low_profit = 0, low_profit_child = {}, 
+            none_promotion = 0, none_promotion_child = {}, low_promotion = 0, low_promotion_child = {}, 
+            low_roi = 0, low_roi_child = {}, low_plan_roi = 0, low_plan_roi_child = {}, low_plan_roi1 = 0, 
+            low_plan_roi1_child = {}, invalid = '', invalid_link = 0, invalid_sale_amount = 0, 
+            invalid_profit = 0, invalid_profit_percent = 0, important_link = 0, low_gross_profit = 0, 
+            low_gross_profit_child = {}, unsalable_code = '', unsalable_code_child = {}, unsalable_cost_amount = 0, 
+            unsalable_amount = 0, unsalable_sale_amount = 0, unsalable_profit = 0, unsalable_profit_percent = 0, 
+            ip = 0, ip_child = {}, ip_link = 0, ip_sale_amount = 0, ip_amount = 0, ip_profit = 0, 
+            ip_goal_achieve_percent = 0, ip_profit_percent = 0, unsalable_link = 0 
 
-        let promotion_rate, roi, plan, plan1, gross, important
+        let promotion_rate, roi, plan, plan1, gross, important, child, child1, child2, child3, child4
         if (division_info?.length) {
             if (division_info[0].division_name == '事业部2') {
                 promotion_rate = 0.06
                 roi = await func.getLowROIByLinksAndTime2(linkIds, linkIds1)
+                child1 = await func.getChildLowROIByLinksAndTime2(linkIds, linkIds1)
                 plan = await func.getLowPlanROIByLinksAndTime2(linkIds, 3, 7, linkIds1)
-                plan1 = await func.getLowPlanROIByLinksAndTime2(linkIds, 7, 14, linkIds1)                
+                child2 = await func.getChildLowPlanROIByLinksAndTime2(linkIds, 3, 7, linkIds1)
+                plan1 = await func.getLowPlanROIByLinksAndTime2(linkIds, 7, 14, linkIds1) 
+                child3 = await func.getChildLowPlanROIByLinksAndTime2(linkIds, 7, 14, linkIds1)                
                 important = await func.getImportByLinks1(linkIds, linkIds1)
                 gross = await goodsSaleVerifiedRepo.getLowGrossProfitByLinksAndTime1(linkIds, start, end, 0.55, 0.21, linkIds1)
+                child4 = await goodsSaleVerifiedRepo.getChildLowGrossProfitByLinksAndTime1(linkIds, start, end, 0.55, 0.21, linkIds1)
             } else if (division_info[0].division_name == '事业部3') {
                 promotion_rate = 0.1
                 roi = await func.getLowROIByLinksAndTime(linkIds)
+                child1 = await func.getChildLowROIByLinksAndTime(linkIds, linkIds1)
                 plan = await func.getLowPlanROIByLinksAndTime(linkIds, 3, 7)
-                plan1 = await func.getLowPlanROIByLinksAndTime(linkIds, 7, 14)          
+                child2 = await func.getChildLowPlanROIByLinksAndTime(linkIds, 3, 7)
+                plan1 = await func.getLowPlanROIByLinksAndTime(linkIds, 7, 14)   
+                child3 = await func.getChildLowPlanROIByLinksAndTime(linkIds, 7, 14)       
                 important = await func.getImportByLinks(linkIds)
                 gross = await goodsSaleVerifiedRepo.getLowGrossProfitByLinksAndTime(linkIds, start, end, 0.55)
+                child4 = await goodsSaleVerifiedRepo.getChildLowGrossProfitByLinksAndTime(linkIds, start, end, 0.55)
             } else {
                 promotion_rate = 0.08
                 roi = await func.getLowROIByLinksAndTime1(linkIds)
+                child1 = await func.getChildLowROIByLinksAndTime1(linkIds, linkIds1)
                 plan = await func.getLowPlanROIByLinksAndTime1(linkIds, 3, 7)
-                plan1 = await func.getLowPlanROIByLinksAndTime1(linkIds, 7, 14)                
+                child2 = await func.getChildLowPlanROIByLinksAndTime1(linkIds, 3, 7)
+                plan1 = await func.getLowPlanROIByLinksAndTime1(linkIds, 7, 14)   
+                child3 = await func.getChildLowPlanROIByLinksAndTime1(linkIds, 7, 14)                
                 important = await func.getImportByLinks2(linkIds)
                 gross = await goodsSaleVerifiedRepo.getLowGrossProfitByLinksAndTime(linkIds, start, end, 0.45)
+                child4 = await goodsSaleVerifiedRepo.getChildLowGrossProfitByLinksAndTime(linkIds, start, end, 0.45)
             }
         }
         let negative = await func.getNegativeProfitByLinksAndTime(linkIds, start, end, linkIds1)
-        if (negative?.length) negative_profit = parseInt(negative[0].count)
+        if (negative?.length) {
+            negative_profit = parseInt(negative[0].count)
+            if (negative[0].count > 0) {
+                child = await func.getChildNegativeProfitByLinksAndTime(linkIds, start, end, linkIds1)
+                for (let j = 0; j < child?.length; j++) {
+                    if (negative_profit_child[child[j].type] == undefined) {
+                        negative_profit_child[child[j].type] = {}                        
+                    }
+                    negative_profit_child[child[j].type][child[j].volume_target] = child[j].count
+                }
+            }
+        }
         let low = await func.getLowProfitByLinksAndTime(linkIds, linkIds1)
-        if (low?.length) low_profit = parseInt(low[0].count)
+        if (low?.length) {
+            low_profit = parseInt(low[0].count)
+            if (low[0].count > 0) {
+                child = await func.getChildLowProfitByLinksAndTime(linkIds, linkIds1)
+                for (let j = 0; j < child?.length; j++) {
+                    if (low_profit_child[child[j].type] == undefined) {
+                        low_profit_child[child[j].type] = {}                        
+                    }
+                    low_profit_child[child[j].type][child[j].volume_target] = child[j].count
+                }
+            }
+        }
         let none = await func.getNullPromotionByLinksAndTime(linkIds, start, end, linkIds1)
-        if (none?.length) none_promotion = parseInt(none[0].count)
+        if (none?.length) {
+            none_promotion = parseInt(none[0].count)
+            if (none[0].count > 0) {
+                child = await func.getChildNullPromotionByLinksAndTime(userName[i].shopNames, 
+                    start, 
+                    end, 
+                    otherName[i])
+                for (let j = 0; j < child?.length; j++) {
+                    if (none_promotion_child[child[j].type] == undefined) {
+                        none_promotion_child[child[j].type] = {}                        
+                    }
+                    none_promotion_child[child[j].type][child[j].volume_target] = child[j].count
+                }
+            }
+        }
         let lowp = await func.getLowPromotionByLinksAndTime(linkIds, start, end, promotion_rate, linkIds1)
-        if (lowp?.length) low_promotion = parseInt(lowp[0].count)
-        if (roi?.length) low_roi = parseInt(roi[0].count)
-        if (plan?.length) low_plan_roi = parseInt(plan[0].count)
-        if (plan1?.length) low_plan_roi1 = parseInt(plan1[0].count)
+        if (lowp?.length) {
+            low_promotion = parseInt(lowp[0].count)
+            if (lowp[0].count > 0) {
+                child = await func.getChildLowPromotionByLinksAndTime(linkIds, start, end, promotion_rate, linkIds1)
+                for (let j = 0; j < child?.length; j++) {
+                    if (low_promotion_child[child[j].type] == undefined) {
+                        low_promotion_child[child[j].type] = {}                        
+                    }
+                    low_promotion_child[child[j].type][child[j].volume_target] = child[j].count
+                }
+            }
+        }
+        if (roi?.length) {
+            low_roi = parseInt(roi[0].count)
+            for (let j = 0; j < child1?.length; j++) {
+                if (low_roi_child[child1[j].type] == undefined) {
+                    low_roi_child[child1[j].type] = {}                        
+                }
+                low_roi_child[child1[j].type][child1[j].volume_target] = child1[j].count
+            }
+        }
+        if (plan?.length) {
+            low_plan_roi = parseInt(plan[0].count)
+            for (let j = 0; j < child2?.length; j++) {
+                if (low_plan_roi_child[child2[j].type] == undefined) {
+                    low_plan_roi_child[child2[j].type] = {}                        
+                }
+                low_plan_roi_child[child2[j].type][child2[j].volume_target] = child2[j].count
+            }
+        }
+        if (plan1?.length) {
+            low_plan_roi1 = parseInt(plan1[0].count)
+            for (let j = 0; j < child3?.length; j++) {
+                if (low_plan_roi1_child[child3[j].type] == undefined) {
+                    low_plan_roi1_child[child3[j].type] = {}                        
+                }
+                low_plan_roi1_child[child3[j].type][child3[j].volume_target] = child3[j].count
+            }
+        }
         let invalid_info = await func.getInvalidByLinksAndTime(linkIds, start, end, linkIds1)
         if (invalid_info?.length) {
             invalid_link = parseInt(invalid_info[0].count)
@@ -1021,7 +1216,15 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
         }
         invalid = `链接数量:${invalid_link}\n销售额:${invalid_sale_amount}\n利润率:${invalid_profit_percent}%`
         if (important?.length) important_link = parseInt(important[0].count)
-        if (gross?.length) low_gross_profit = parseInt(gross[0].count)        
+        if (gross?.length) {
+            low_gross_profit = parseInt(gross[0].count)
+            for (let j = 0; j < child4.length; j++) {
+                if (low_gross_profit_child[child4[j].type] == undefined) {
+                    low_gross_profit_child[child4[j].type] = {}                        
+                }
+                low_gross_profit_child[child4[j].type][child4[j].volume_target] = child4[j].count
+            }
+        }       
         let unsalable_info = await func.getUnsalableCodeByLinks(linkIds, start, end, linkIds1)
         if (unsalable_info) {
             unsalable_cost_amount = parseFloat(unsalable_info.cost_amount).toFixed(2)
@@ -1049,24 +1252,34 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
         result[type].data.push({
             name: userName[i].name,
             negative_profit, 
+            negative_profit_child,
             low_profit, 
+            low_profit_child, 
             none_promotion, 
+            none_promotion_child, 
             low_promotion, 
+            low_promotion_child, 
             low_roi, 
+            low_roi_child, 
             low_plan_roi, 
+            low_plan_roi_child, 
             low_plan_roi1, 
+            low_plan_roi1_child, 
             invalid,
             invalid_link, 
             invalid_sale_amount,
             invalid_profit,
             important_link, 
             low_gross_profit, 
+            low_gross_profit_child, 
             unsalable_cost_amount, 
             unsalable_amount, 
             unsalable_sale_amount, 
             unsalable_profit, 
             unsalable_code, 
+            unsalable_code_child, 
             ip, 
+            ip_child, 
             ip_link, 
             ip_sale_amount, 
             ip_amount,

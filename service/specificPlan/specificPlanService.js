@@ -12,7 +12,7 @@ const spVisionRepo = require("@/repository/specificPlan/spVisionRepo")
 const specificPlanService = {}
 
 specificPlanService.get = async (params, user_id) => {
-    let data = [], offset = 0, limit = 0, total
+    let data = [], offset = 0, limit = 0, total = 0
     offset = (parseInt(params.page) - 1) * parseInt(params.pageSize)
     limit = parseInt(params.pageSize)
     let count = await specificPlanRepo.getCount(user_id, params.title, params.id)

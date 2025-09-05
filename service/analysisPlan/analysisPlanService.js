@@ -6,8 +6,26 @@ const rivalsRepo = require('@/repository/analysisPlan/rivalsRepo')
 const rivalsSkuRepo = require('@/repository/analysisPlan/rivalsSkuRepo')
 const analysisPlanService = {}
 
+analysisPlanService.getRelationByGoodsId = async (params, user_id) => {
+    let data = [], offset = 0, limit = 0, total = 0, info = []
+    offset = (parseInt(params.page) - 1) * parseInt(params.pageSize)
+    limit = parseInt(params.pageSize)
+    let count = await analysisPlanRepo.getCountByGoodsId(params.goods_id)
+    if (count?.length && count[0].count) {
+        total = count[0].count   
+        data = await analysisPlanRepo.getByGoodsId(goods_id, offset, limit)
+    }
+    info = await analysisPlanRepo.getList(params.goods_id, user_id)
+    return {total, data, info}
+}
+
+analysisPlanService.createRelationByGoodsId = async (params) => {
+    const result = await analysisPlanRepo.createRelations(params.plan_id, 'goods', params.goods_id, null)
+    return result
+}
+
 analysisPlanService.get = async (params, user_id) => {
-    let data = [], offset = 0, limit = 0, total
+    let data = [], offset = 0, limit = 0, total = 0
     offset = (parseInt(params.page) - 1) * parseInt(params.pageSize)
     limit = parseInt(params.pageSize)
     let count = await analysisPlanRepo.getCount(user_id, params.title, params.id)

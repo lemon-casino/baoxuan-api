@@ -39,10 +39,10 @@ actHiProcinstRepo.getRunning = async (start, end) => {
         JOIN system_users u1 ON u1.id = p.START_USER_ID_ 
         LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-            AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+            AND tx.START_TIME_ = (
+                SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                 WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                    AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                    AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
         LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND v1.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
             AND v1.LAST_UPDATED_TIME_ = (
@@ -117,10 +117,10 @@ actHiProcinstRepo.getOverDue = async (start, end) => {
         JOIN system_users u1 ON u1.id = p.START_USER_ID_ 
         LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-            AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+            AND tx.START_TIME_ = (
+                SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                 WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                    AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                    AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
         LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND v1.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
             AND v1.LAST_UPDATED_TIME_ = (
@@ -1117,10 +1117,10 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                     JOIN system_dept dp ON dp.id = u.dept_id 
                     LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-                        AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                            SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+                        AND tx.START_TIME_ = (
+                            SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                             WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
                     LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
                         AND vx.LAST_UPDATED_TIME_ = (
@@ -1172,10 +1172,10 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                     JOIN system_dept dp ON dp.id = u.dept_id 
                     LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-                        AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                            SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+                        AND tx.START_TIME_ = (
+                            SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                             WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
                     LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
                         AND vx.LAST_UPDATED_TIME_ = (
@@ -1220,10 +1220,10 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                     JOIN system_dept dp ON dp.id = u.dept_id 
                     LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-                        AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                            SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+                        AND tx.START_TIME_ = (
+                            SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                             WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
                     LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
                         AND vx.LAST_UPDATED_TIME_ = (
@@ -1276,10 +1276,10 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                     JOIN system_dept dp ON dp.id = u.dept_id 
                     LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-                        AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                            SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+                        AND tx.START_TIME_ = (
+                            SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                             WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
                     LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
                         AND vx.LAST_UPDATED_TIME_ = (
@@ -1464,10 +1464,10 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                     JOIN system_dept dp ON dp.id = u.dept_id 
                     LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-                        AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                            SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+                        AND tx.START_TIME_ = (
+                            SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                             WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
                     LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
                         AND vx.LAST_UPDATED_TIME_ = (
@@ -1518,10 +1518,10 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                     JOIN system_dept dp ON dp.id = u.dept_id 
                     LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-                        AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                            SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+                        AND tx.START_TIME_ = (
+                            SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                             WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
                     LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
                         AND vx.LAST_UPDATED_TIME_ = (
@@ -1570,10 +1570,10 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                     JOIN system_dept dp ON dp.id = u.dept_id 
                     LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-                        AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                            SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+                        AND tx.START_TIME_ = (
+                            SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                             WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
                     LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
                         AND vx.LAST_UPDATED_TIME_ = (
@@ -1632,10 +1632,10 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                     JOIN system_dept dp ON dp.id = u.dept_id 
                     LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-                        AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                            SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+                        AND tx.START_TIME_ = (
+                            SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                             WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
                     LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
                         AND vx.LAST_UPDATED_TIME_ = (
@@ -1688,10 +1688,10 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                     JOIN system_dept dp ON dp.id = u.dept_id 
                     LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-                        AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                            SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+                        AND tx.START_TIME_ = (
+                            SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                             WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
                     LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
                         AND vx.LAST_UPDATED_TIME_ = (
@@ -1760,10 +1760,10 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                     JOIN system_dept dp ON dp.id = u.dept_id 
                     LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-                        AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                            SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+                        AND tx.START_TIME_ = (
+                            SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                             WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
                     LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
                         AND vx.LAST_UPDATED_TIME_ = (
@@ -1821,10 +1821,10 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                     JOIN system_dept dp ON dp.id = u.dept_id 
                     LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-                        AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                            SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+                        AND tx.START_TIME_ = (
+                            SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                             WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
                     LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
                         AND vx.LAST_UPDATED_TIME_ = (
@@ -1887,10 +1887,10 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                     JOIN system_dept dp ON dp.id = u.dept_id 
                     LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-                        AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                            SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+                        AND tx.START_TIME_ = (
+                            SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                             WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                                AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
                     LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
                         AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
                         AND vx.LAST_UPDATED_TIME_ = (
@@ -1962,15 +1962,20 @@ actHiProcinstRepo.getSelectedProcessSkuInfo = async (start, end, selectType, inf
                     'Fkyuma25az2ud8c', 'Fexembuihiymqvc', 
                     'Fnixma3nox6onmc', 'F34mma3pf0egd0c', 
                     'Fiaama25b6zidec', 'F8y4mbuii8dtqyc', 'Fwtjma3np5o0nuc') 
-                AND vv.TEXT_ IN ('是', '选中'))
+                AND vv.TEXT_ IN ('是', '选中')) 
+        LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_ 
+            AND v1.NAME_ IN ('Fyf1ma3jfyi7fuc', 'Fnt5ma3psjitfcc', 'Fo5uma263lluhdc') 
+            AND v1.LAST_UPDATED_TIME_ = (SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND vv.NAME_ = v1.NAME_) 
         JOIN system_users u ON u.id = p.START_USER_ID_ 
         JOIN system_dept dp ON dp.id = u.dept_id 
         LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-            AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+            AND tx.START_TIME_ = (
+                SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                 WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                    AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                    AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
         LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
             AND vx.LAST_UPDATED_TIME_ = (
@@ -1978,7 +1983,7 @@ actHiProcinstRepo.getSelectedProcessSkuInfo = async (start, end, selectType, inf
                 WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ 
                     AND vv.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963')) 
         LEFT JOIN system_users u1 ON u1.id = IFNULL(tx.ASSIGNEE_, vx.TEXT_) 
-		LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v.BYTEARRAY_ID_
+		LEFT JOIN ACT_GE_BYTEARRAY b ON b.ID_ = v1.BYTEARRAY_ID_
         WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin', 
             'iptplc', 'iptplcxb', 
             'zytplc', 'ziyantuipin', 
@@ -2194,10 +2199,10 @@ actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info, se
                 WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ AND vv.NAME_ = v.NAME_) 
         LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-            AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+            AND tx.START_TIME_ = (
+                SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                 WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                    AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                    AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
         LEFT JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND v1.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
             AND v1.LAST_UPDATED_TIME_ = (
@@ -2525,10 +2530,10 @@ actHiProcinstRepo.getProcessInfo1 = async (type, ids) => {
         JOIN system_dept dp2 ON dp2.id = u2.dept_id 
         LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-            AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+            AND tx.START_TIME_ = (
+                SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                 WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                    AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                    AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
         LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
             AND vx.LAST_UPDATED_TIME_ = (
@@ -2626,10 +2631,10 @@ actHiProcinstRepo.getProcessInfo2 = async (type, ids) => {
         JOIN system_dept dp2 ON dp2.id = u2.dept_id 
         LEFT JOIN ACT_HI_TASKINST tx ON tx.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND tx.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
-            AND IF(tx.END_TIME_ IS NULL, 1, tx.END_TIME_ = (
-                SELECT MAX(tt.END_TIME_) FROM ACT_HI_TASKINST tt 
+            AND tx.START_TIME_ = (
+                SELECT MAX(tt.START_TIME_) FROM ACT_HI_TASKINST tt 
                 WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ 
-                    AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到'))) 
+                    AND tt.NAME_ IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
         LEFT JOIN ACT_HI_VARINST vx ON vx.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND vx.NAME_ IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
             AND vx.LAST_UPDATED_TIME_ = (

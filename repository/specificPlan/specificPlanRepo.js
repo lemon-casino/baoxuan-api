@@ -3,9 +3,9 @@ const specificPlanRepo = {}
 
 specificPlanRepo.get = async (user_id, title, id, offset, limit) => {
     let subsql = ''
-    if (title) subsql = `AND title LIKE "%${title}%"`
-    if (id) subsql = `AND id = ${id}`
-    else subsql = `AND user_id = ${user_id}`
+    if (title) subsql = `AND title LIKE "%${title}%" `
+    if (id) subsql = `${subsql}AND id = ${id}`
+    else subsql = `${subsql}AND user_id = ${user_id}`
     let sql = `SELECT *, (SELECT nickname FROM users WHERE user_id = p.user_id) AS username 
         FROM specific_plans p WHERE 1=1 ${subsql} ORDER BY id DESC LIMIT ?,?`
     const result = await query(sql, [offset, limit])
@@ -16,7 +16,8 @@ specificPlanRepo.getCount = async (user_id, title, id) => {
     let subsql = ''
     if (title) subsql = `AND title = "${title}"`
     if (id) subsql = `AND id = ${id}`
-    let sql = `SELECT COUNT(1) AS count FROM specific_plans p WHERE user_id = ? ${subsql}`
+    else subsql = `${subsql}AND user_id = ${user_id}`
+    let sql = `SELECT COUNT(1) AS count FROM specific_plans p WHERE 1=1 ${subsql}`
     const result = await query(sql, [user_id])
     return result
 }
