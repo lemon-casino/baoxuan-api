@@ -471,7 +471,7 @@ const getDataStatsDetail = async (type, name, column, start, end, stats, user) =
             shopNames = `${shopNames}${shops[i].shop_name}","`
         }
         shopNames = shopNames.substring(0, shopNames.length - 3)
-        if (['sale_amount', 'promotion_amount', 'express_fee', 'packing_fee', 'profit', 'operation_amount', 'order_num', 'refund_num'].includes(column))
+        if (['sale_amount', 'promotion_amount', 'express_fee', 'packing_fee', 'profit', 'operation_amount', 'order_num', 'refund_num','bill_amount'].includes(column))
             result = await func.getDetailByShopNamesAndTme(shopNames, column, start, end)
         else if (column == 'operation_rate')
             result = await func.getRateByShopNamesAndTme(shopNames, 'sale_amount', 'operation_amount', column, start, end, 100)
@@ -498,7 +498,7 @@ const getDataStatsDetail = async (type, name, column, start, end, stats, user) =
         userNames = userNames.substring(0, userNames.length - 3)
         let links = await userOperationRepo.getLinkIdsByUserNames(userNames, shopNames)
         let linkIds = links.map((item) => item.goods_id).join('","')
-        if (['sale_amount', 'promotion_amount', 'express_fee', 'packing_fee', 'profit', 'operation_amount', 'order_num', 'refund_num'].includes(column))
+        if (['sale_amount', 'promotion_amount', 'express_fee', 'packing_fee', 'profit', 'operation_amount', 'order_num', 'refund_num','bill_amount'].includes(column))
             result = await func.getDetailByLinkIdsAndTme(linkIds, column, start, end)
         else if (column == 'operation_rate')
             result = await func.getRateByLinkIdsAndTme(linkIds, 'sale_amount', 'operation_amount', column, start, end, 100)
