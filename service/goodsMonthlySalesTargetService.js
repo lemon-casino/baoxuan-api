@@ -11,7 +11,7 @@ goodsMonthSalesTargetService.import = async (rows,user) => {
         month_row = null,
         amount_row = null
     for (let i = 1; i < columns.length; i++) {
-        if (columns[i] == '链接ID') {goods_id_row = i;  continue}
+        if (columns[i] == '链接ID' || columns[i] == '商品简称') {goods_id_row = i;  continue}
         if (columns[i] == '年月') {month_row = i; continue}
         if (columns[i] == '目标') {amount_row = i; continue}
     }
