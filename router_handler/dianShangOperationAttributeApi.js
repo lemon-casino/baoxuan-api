@@ -654,7 +654,7 @@ const getGoodsMonthlySalesTarget = async (req, res, next) => {
     try {
         const {goods_id, currentPage, pageSize} = req.query
         joiUtil.validate({
-            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strNumRequired},
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
             currentPage: {value: currentPage, schema: joiUtil.commonJoiSchemas.strRequired},
             pageSize: {value: pageSize, schema: joiUtil.commonJoiSchemas.strRequired}
         })
