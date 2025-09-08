@@ -626,7 +626,7 @@ const updatetGoodsMonthlySalesTarget = async (req, res, next) => {
 
 const Insertcalculate  = async (req, res, next) => {
     try{
-        const data = req.body._value
+        const data = req.body
         const id = req.user.id
         const result = await dianShangOperationAttributeService.Insertcalculate(data,id)
         if (result) return res.send(biResponse.success(result))
