@@ -612,7 +612,7 @@ const updatetGoodsMonthlySalesTarget = async (req, res, next) => {
     try {
         const {goods_id,month,amount} = req.query
         joiUtil.validate({
-            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strNumRequired},
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
             month: {value: month, schema: joiUtil.commonJoiSchemas.strNumRequired},
             amount: {value: amount, schema: joiUtil.commonJoiSchemas.strNumRequired}
         })
