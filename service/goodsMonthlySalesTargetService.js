@@ -78,8 +78,6 @@ goodsMonthSalesTargetService.goodsUpdate = async (goods_id,month,amount,user) =>
     const changes = []
     let users = await userOperationRepo.getUserById(user)
     let name = users[0].nickname
-    let info1 = await goodsMonthSalesTarget.getIdInfo(goods_id)
-    if (info1?.length) goods_id = info1[0].brief_name
     let info = await goodsMonthSalesTarget.getInfo(goods_id,month)
     if (info?.length){
         changes.push({
