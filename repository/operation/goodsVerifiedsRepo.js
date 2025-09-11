@@ -79,4 +79,19 @@ goodsVerifiedsRepo.delete = async (date) => {
     return result?.affectedRows ? true : false
 }
 
+goodsVerifiedsRepo.getnegativeProfit =async(goods_id) =>{
+    const sql = `SELECT DATE_FORMAT(date,'%Y-%m-%d') AS date
+			,sale_amount
+			,promotion_amount
+			,operation_amount
+			,cost_amount
+			,profit
+			,profit
+			,CONCAT(ROUND(profit/sale_amount*100,2),'%') as profit_rate
+        FROM goods_pays
+        WHERE profit<0 AND goods_id = ?
+        AND date BETWEEN DATE_SUB(CURRENT_DATE,INTERVAL 30 DAY) and DATE_SUB(CURRENT_DATE,INTERVAL 1 DAY)`
+    const result = await query(sql,[goods_id])
+    return result
+}
 module.exports = goodsVerifiedsRepo

@@ -1409,7 +1409,7 @@ const getGoodsInfo = async (startDate, endDate, params, id,tab) => {
             {title: '商品名称', field_id: 'goods_name', type: 'input', show: false},
             {title: '链接属性', field_id: 'link_attribute', type: 'input', show: false},
             {title: '链接属性2', field_id: 'important_attribute', type: 'input', show: false},
-            {title: '操作', field_id: 'operate', show: true}],
+            {title: '操作', field_id: 'operate', show: false}],
         pddcolumn:[
             {title: '链接ID', field_id: 'goods_id', type: 'input', show: true},
             {
@@ -1513,7 +1513,7 @@ const getGoodsInfo = async (startDate, endDate, params, id,tab) => {
             {title: '商品简称', field_id: 'brief_name', type: 'input', show: false},
             {title: '链接属性', field_id: 'link_attribute', type: 'input', show: false},
             {title: '链接属性2', field_id: 'important_attribute', type: 'input', show: false},
-            {title: '操作', field_id: 'operate', show: true}],
+            {title: '操作', field_id: 'operate', show: false}],
         zycolumn:[
             {title: '简称', field_id: 'goods_id', type: 'input', show: true},
             {
@@ -1621,7 +1621,7 @@ const getGoodsInfo = async (startDate, endDate, params, id,tab) => {
             },{
                 title: '利润率(gmv)(%)', field_id: 'jprofit_rate_gmv', type: 'number', 
                 min: 0, max: 15, show: true
-            },{title: '操作', field_id: 'operate', show: true}]
+            },{title: '操作', field_id: 'operate', show: false}]
     }
     let userNames = null, shopNames = null, linkIds = null, shopInfo = [], userInfo = [],
         shop=[],shopNames1=null
@@ -5234,6 +5234,25 @@ const importPromotionPlan = async (rows, project, shop_name, promotion_name, dat
     return result
 }
 
+const getskuCodeInfo = async (goods_id, start, end, stats) => {
+    let func = stats == 'verified' ? goodsSaleVerifiedRepo : 
+        (stats == 'info') ? goodsSaleInfoRepo : goodsPayInfoRepo
+    let result = await func.getskuCodeInfo(goods_id, start, end)
+    return result
+}
+
+const getnegativeProfit = async (goods_id, stats) => {
+    let func = stats == 'verified' ? goodsVerifiedsRepo : 
+        (stats == 'info') ? goodsSalesRepo : goodsPaysRepo
+    let result = await func.getnegativeProfit(goods_id)
+    return result
+}
+
+const goodspromotionPlan = async (goods_id, start, end) => {
+    let result = await goodsPromotionPlanRepo.goodspromotionPlan(goods_id, start, end)
+    return result
+}
+
 module.exports = {
     getDataStats,
     getPromotionStats,
@@ -5300,4 +5319,7 @@ module.exports = {
     batchInsertJDGoodsPays,
     batchInsertJDGoodsPaysStats,
     batchInsertGoodsPaysStats,
+    getskuCodeInfo,
+    getnegativeProfit,
+    goodspromotionPlan
 }

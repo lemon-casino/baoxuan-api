@@ -846,7 +846,7 @@ goodsSaleVerifiedRepo.getData = async (start, end, params, shopNames, linkIds,sh
                         ,SUM(IF(promotion_name='超级短视频',trans_amount,null)) AS super_short_video_amount
                         ,goods_id
                     FROM tmall_promotion_info 
-                    WHERE \`date\` BETWEEN '${start}' AND '${end}'  AND period = 1 AND goods_id IN (${goods_ids})
+                    WHERE pay_time BETWEEN '${start}' AND '${end}'  AND period = 1 AND goods_id IN (${goods_ids})
                     GROUP BY goods_id`
                 let row2 = await query(sql)
                 if(row2?.length){
@@ -1857,20 +1857,25 @@ goodsSaleVerifiedRepo.getDataDetailTotalByTime = async(goods_id, start, end) => 
             FORMAT(IFNULL(a4.real_sale_amount,0),2) AS real_sale_amount,
             FORMAT(IFNULL(a4.real_gross_profit,0),2) AS real_gross_profit,
             FORMAT(IFNULL(a1.profit/a4.real_sale_amount*100,0),2) AS profit_rate_gmv,
-            FORMAT(IFNULL(a5.targeted_audience_promotion,0),2) AS targeted_audience_promotion,
-            FORMAT(IFNULL(a5.full_site_promotion,0),2) AS full_site_promotion,
-            FORMAT(IFNULL(a5.multi_objective_promotion,0),2) AS multi_objective_promotion,
-            FORMAT(IFNULL(a5.keyword_promotion,0),2) AS keyword_promotion,
-            FORMAT(IFNULL(a5.product_operation_promotion,0),2) AS product_operation_promotion,
             FORMAT(IFNULL(a5.daily_promotion,0),2) AS daily_promotion,
+            FORMAT(IFNULL(a5.daily_promotion_amount,0)/IFNULL(a5.daily_promotion,0),2) AS daily_promotion_roi,
             FORMAT(IFNULL(a5.scene_promotion,0),2) AS scene_promotion,
+            FORMAT(IFNULL(a5.scene_promotion_amount,0)/IFNULL(a5.scene_promotion,0),2) AS scene_promotion_roi,
             FORMAT(IFNULL(a5.jd_express_promotion,0),2) AS jd_express_promotion,
+            FORMAT(IFNULL(a5.jd_express_promotion_amount,0)/IFNULL(a5.jd_express_promotion,0),2) AS jd_express_promotion_roi,
             FORMAT(IFNULL(a5.total_promotion,0),2) AS total_promotion,
-            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.targeted_audience_promotion,0),2) AS targeted_audience_promotion_roi,
-            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.full_site_promotion,0),2) AS full_site_promotion_roi,
-            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.multi_objective_promotion,0),2) AS multi_objective_promotion_roi,
-            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.keyword_promotion,0),2) AS keyword_promotion_roi,
-            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.product_operation_promotion,0),2) AS product_operation_promotion_roi,
+            FORMAT(IFNULL(a5.total_promotion_amount,0)/IFNULL(a5.total_promotion,0),2) AS total_promotion_roi,
+            FORMAT(IFNULL(a5.stable_cost_promotion,0),2) AS stable_cost_promotion,
+            FORMAT(IFNULL(a5.stable_cost_promotion_amount,0)/IFNULL(a5.stable_cost_promotion,0),2) AS stable_cost_promotion_roi,
+            FORMAT(IFNULL(a5.stable_cost_promotion_amount,0)/IFNULL(a5.stable_cost_promotion,0) - IFNULL(a5.stable_cost_goal,0),2) AS targeted_audience_promotion_difference,
+            FORMAT(IFNULL(a5.full_site_promotion,0),2) AS full_site_promotion,
+            FORMAT(IFNULL(a5.full_site_promotion_amount,0)/IFNULL(a5.full_site_promotion,0),2) AS full_site_promotion_roi,
+            FORMAT(IFNULL(a5.keyword_promotion,0),2) AS keyword_promotion,
+            FORMAT(IFNULL(a5.keyword_promotion_amount,0)/IFNULL(a5.keyword_promotion,0),2) AS keyword_promotion_roi,
+            FORMAT(IFNULL(a5.targeted_audience_promotion,0),2) AS targeted_audience_promotion,
+            FORMAT(IFNULL(a5.targeted_audience_promotion_amount,0)/IFNULL(a5.targeted_audience_promotion,0),2) AS targeted_audience_promotion_roi,
+            FORMAT(IFNULL(a5.super_short_video,0),2) AS super_short_video,
+            FORMAT(IFNULL(a5.super_short_video_amount,0)/IFNULL(a5.super_short_video,0),2) AS super_short_video_roi,
             DATE_FORMAT(a1.date, '%Y-%m-%d') as \`date\` 
         FROM goods_verifieds_stats a1 
         LEFT JOIN(
@@ -5453,6 +5458,19 @@ goodsSaleVerifiedRepo.getUnsalableByLinks = async (links, links1) => {
                 AND (d.goods_id IN ("${links}") ${subsql})
             GROUP BY IF(d.platform = '自营', d.brief_name, d.goods_id), d.volume_target) b`
     const result = await query(sql)
+    return result
+}
+
+goodsSaleVerifiedRepo.getskuCodeInfo = async(goods_id, start, end) => {
+    const sql =`SELECT sku_code
+			,SUM(cost_amount) AS cost_amount
+			,SUM(sale_amount) AS sale_amount
+			,SUM(profit) AS profit
+			,CONCAT(ROUND(SUM(profit)/SUM(sale_amount)*100,2),'%') as profit_rate 
+        FROM goods_sale_verified 
+        WHERE goods_id = ? AND date BETWEEN ? AND ?
+        GROUP BY sku_code`
+    const result = await query(sql,[goods_id, start, end]) 
     return result
 }
 
