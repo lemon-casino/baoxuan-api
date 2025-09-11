@@ -1717,7 +1717,7 @@ const getOperateAnalysis = async (start, end, user_id, params) => {
         }
     }
     let info = await actHiProcinstRepo.getAnalysisInfo(start, end, type, params.name, params.typeName)
-    for (let i = 0; i < info.length; i++) {
+    for (let i = 0; i < info?.length; i++) {
         let index = resultMap[`${info[i].name}_${info[i].type}`]
         if (info[i].info == 0) result[index].assigning = parseInt(info[i].count)
         else if (info[i].info == 1) result[index].running = parseInt(info[i].count)
@@ -1829,7 +1829,7 @@ const getOperateSpecific = async (start, end, user_id, params) => {
         }
     }
     let info = await actHiProcinstRepo.getSpecificInfo(start, end, type, params.name, params.typeName)
-    for (let i = 0; i < info.length; i++) {
+    for (let i = 0; i < info?.length; i++) {
         let index = resultMap[`${info[i].name}_${info[i].type}`]
         if (info[i].info == 0) result[index].overdue = parseInt(info[i].count)
         else if (info[i].info == 1) result[index].running = parseInt(info[i].count)
