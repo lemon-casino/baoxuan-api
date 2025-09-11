@@ -548,6 +548,7 @@ const getProcessDetail = async (req, res, next) => {
             const workbook = new ExcelJS.Workbook()
             const sheet = workbook.addWorksheet()
             sheet.columns = [
+                { header: '日期', key: 'start_time' },
                 { header: '推品流程', key: 'title' },
                 { header: '流程链接', key: 'link' },
                 { header: '流程图片', key: 'image' },

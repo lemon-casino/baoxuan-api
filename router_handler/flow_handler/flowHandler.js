@@ -433,6 +433,38 @@ const getOperateSelectionHeader = async (req, res, next) => {
         next(e)
     }
 }
+//市场分析
+const getOperateAnalysis = async (req, res, next) => {
+    try {
+        const { startDate, endDate } = req.query
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        let start = moment(startDate).format('YYYY-MM-DD')
+        let end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
+        const result = await flowService.getOperateAnalysis(start, end, req.user.id, req.query)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+//爆款方案
+const getOperateSpecific = async (req, res, next) => {
+    try {
+        const { startDate, endDate } = req.query
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        let start = moment(startDate).format('YYYY-MM-DD')
+        let end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
+        const result = await flowService.getOperateSpecific(start, end, req.user.id, req.query)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
 
 const createOperateAnalysis = async (req, res, next) => {
     try {
@@ -470,6 +502,8 @@ module.exports = {
     getVisionUsersDetails,
     getOperateSelection,
     getOperateSelectionHeader,
+    getOperateAnalysis,
+    getOperateSpecific,
     createOperateAnalysis,
     getVisionNewPannel
 }

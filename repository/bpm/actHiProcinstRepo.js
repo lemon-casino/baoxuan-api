@@ -12,7 +12,7 @@ actHiProcinstRepo.getRunning = async (start, end) => {
                 WHEN u.nickname = '鲁红旺' THEN '货品部' 
                 WHEN u.nickname = '杨利强' THEN '货品部' 
                 WHEN u.nickname IN ('郑河', '崔竹') THEN '管理中台' 
-                WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' OR dp.name LIKE '%小红书%' THEN '事业三部' 
+                WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' OR dp.name LIKE '%小红书%' THEN '事业三部' 
                 WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
                 WHEN dp.name LIKE '%拼多多%' OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%' THEN '事业一部' 
                 WHEN dp.name LIKE '%开发%' OR dp.name LIKE '%企划%' OR dp.name LIKE '%市场%' THEN '企划部' 
@@ -81,7 +81,7 @@ actHiProcinstRepo.getOverDue = async (start, end) => {
                 WHEN u.nickname = '鲁红旺' THEN '货品部' 
                 WHEN u.nickname = '杨利强' THEN '货品部' 
                 WHEN u.nickname IN ('郑河', '崔竹') THEN '管理中台' 
-                WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' OR dp.name LIKE '%小红书%' THEN '事业三部' 
+                WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' OR dp.name LIKE '%小红书%' THEN '事业三部' 
                 WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
                 WHEN dp.name LIKE '%拼多多%' OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%' THEN '事业一部' 
                 WHEN dp.name LIKE '%开发%' OR dp.name LIKE '%企划%' OR dp.name LIKE '%市场%' THEN '企划部' 
@@ -958,7 +958,7 @@ actHiProcinstRepo.getAdviseInfo = async (start, end) => {
                 WHEN u.nickname = '王洪彬' THEN '事业三部' 
                 WHEN u.nickname = '郑艳艳' THEN '企划部' 
                 WHEN u.nickname = '鲁红旺' THEN '货品部' 
-                WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' OR dp.name LIKE '%小红书%' THEN '事业三部' 
+                WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' OR dp.name LIKE '%小红书%' THEN '事业三部' 
                 WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                     OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
                 WHEN dp.name LIKE '%拼多多%' OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%' THEN '事业一部' 
@@ -1103,7 +1103,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1149,7 +1149,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1204,7 +1204,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1252,7 +1252,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1309,7 +1309,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1348,7 +1348,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1389,7 +1389,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1430,7 +1430,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1496,7 +1496,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1550,7 +1550,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1602,7 +1602,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1665,7 +1665,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1731,7 +1731,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1798,7 +1798,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1864,7 +1864,7 @@ actHiProcinstRepo.getProcessNodeCount = async (typeList, start, end) => {
                             WHEN u.nickname = '刘海涛' THEN '事业一部' 
                             WHEN u.nickname = '王洪彬' THEN '事业三部' 
                             WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                            WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                                 OR dp.name LIKE '%小红书%' THEN '事业三部' 
                             WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                                 OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -1935,7 +1935,7 @@ actHiProcinstRepo.getSelectedProcessSkuInfo = async (start, end, selectType, inf
                 WHEN u.nickname = '刘海涛' THEN '事业一部' 
                 WHEN u.nickname = '王洪彬' THEN '事业三部' 
                 WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                     OR dp.name LIKE '%小红书%' THEN '事业三部' 
                 WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                     OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -2000,7 +2000,7 @@ actHiProcinstRepo.getSelectedProcessSkuInfo = async (start, end, selectType, inf
                     WHEN u.nickname = '刘海涛' THEN '事业一部' 
                     WHEN u.nickname = '王洪彬' THEN '事业三部' 
                     WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                    WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                    WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                         OR dp.name LIKE '%小红书%' THEN '事业三部' 
                     WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                         OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -2032,7 +2032,7 @@ actHiProcinstRepo.getProcessSelectedCount = async (start, end) => {
                     WHEN u.nickname = '刘海涛' THEN '事业一部' 
                     WHEN u.nickname = '王洪彬' THEN '事业三部' 
                     WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                    WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                    WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                         OR dp.name LIKE '%小红书%' THEN '事业三部' 
                     WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                         OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -2116,7 +2116,7 @@ actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info, se
                     WHEN u.nickname = '刘海涛' THEN '事业一部' 
                     WHEN u.nickname = '王洪彬' THEN '事业三部' 
                     WHEN u.nickname = '郑艳艳' THEN '企划部' 
-                    WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' 
+                    WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
                         OR dp.name LIKE '%小红书%' THEN '事业三部' 
                     WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                         OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
@@ -2151,7 +2151,7 @@ actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info, se
                 WHEN u.nickname = '王洪彬' THEN '事业三部' 
                 WHEN u.nickname = '郑艳艳' THEN '企划部' 
                 WHEN u.nickname = '鲁红旺' THEN '货品部' 
-                WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' OR dp.name LIKE '%小红书%' THEN '事业三部' 
+                WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' OR dp.name LIKE '%小红书%' THEN '事业三部' 
                 WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                     OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
                 WHEN dp.name LIKE '%拼多多%' OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%' THEN '事业一部' 
@@ -2173,7 +2173,7 @@ actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info, se
                 WHEN u2.nickname = '王洪彬' THEN '事业三部' 
                 WHEN u2.nickname = '郑艳艳' THEN '企划部' 
                 WHEN u2.nickname = '鲁红旺' THEN '货品部' 
-                WHEN dp2.name LIKE '%天猫%' OR dp2.name LIKE '%国货%' OR dp2.name LIKE '%小红书%' THEN '事业三部' 
+                WHEN dp2.name LIKE '%天猫%' OR dp2.name LIKE '%淘工厂%' OR dp2.name LIKE '%小红书%' THEN '事业三部' 
                 WHEN dp2.name LIKE '%京东%' OR dp2.name LIKE '%抖音%' OR dp2.name LIKE '%1688%' 
                     OR dp2.name LIKE '%唯品会%' OR dp2.name LIKE '%得物%' THEN '事业二部' 
                 WHEN dp2.name LIKE '%拼多多%' OR dp2.name LIKE '%跨境%' OR dp2.name LIKE '%猫超%' THEN '事业一部' 
@@ -2262,7 +2262,7 @@ actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info, se
                         t2.NAME_ IN ('事业部三是否订货1', '事业部三是否订货2'), 
                         IF(d.KEY_ IN ('gystplc', 'gongyingshangtuipin'), t2.NAME_ = '事业部三审核市场分析', 
                             t2.NAME_ IN ('事业部三是否选中', '事业部三是否加单', '事业部三样品是否选中') 
-                            OR ((dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' OR dp.name LIKE '%小红书%') 
+                            OR ((dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' OR dp.name LIKE '%小红书%') 
                                 AND t2.NAME_ IN ('运营是否选中', '反选运营确认样品是否选中')))))) 
             AND t2.LAST_UPDATED_TIME_ = (
                 SELECT MAX(tt.LAST_UPDATED_TIME_) FROM ACT_HI_TASKINST tt 
@@ -2273,7 +2273,7 @@ actHiProcinstRepo.getProcessInfo = async (start, end, type, selectType, info, se
                                 tt.NAME_ IN ('事业部三是否订货1', '事业部三是否订货2'), 
                                 IF(d.KEY_ IN ('gystplc', 'gongyingshangtuipin'), tt.NAME_ = '事业部三审核市场分析', 
                                     tt.NAME_ IN ('事业部三是否选中', '事业部三是否加单', '事业部三样品是否选中') 
-                                        OR ((dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' OR dp.name LIKE '%小红书%') 
+                                        OR ((dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' OR dp.name LIKE '%小红书%') 
                                             AND tt.NAME_ IN ('运营是否选中', '反选运营确认样品是否选中'))))))) 
         LEFT JOIN ACT_HI_VARINST v2 on v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
             AND v2.NAME_ = 'TASK_STATUS' AND v2.TEXT_ = '1' 
@@ -2464,7 +2464,7 @@ actHiProcinstRepo.getProcessInfo1 = async (type, ids) => {
                 'http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=', p1.PROC_INST_ID_) 
             AS vision_link, v16.TEXT_ AS image, b1.BYTES_ AS info1, IFNULL(v15.TEXT_, '') AS spu, 
             u.nickname, (CASE WHEN dp.name LIKE '%天猫%' THEN '王洪彬事业部-天猫' 
-                WHEN dp.name LIKE '%国货%' THEN '王洪彬事业部-淘工厂' 
+                WHEN dp.name LIKE '%淘工厂%' THEN '王洪彬事业部-淘工厂' 
                 WHEN dp.name LIKE '%小红书%' THEN '王洪彬事业部-天猫垂类店、小红书' 
                 WHEN dp.name LIKE '%京东%' THEN '陆瑶事业部-京东' 
                 WHEN dp.name LIKE '%抖音%' THEN '陆瑶事业部-抖音、快手' 
@@ -2473,7 +2473,7 @@ actHiProcinstRepo.getProcessInfo1 = async (type, ids) => {
                 WHEN dp.name LIKE '%拼多多%' THEN '刘海涛事业部-拼多多' 
                 WHEN dp.name LIKE '%跨境%' THEN '刘海涛事业部-coupang' 
                 WHEN dp.name LIKE '%猫超%' THEN '刘海涛事业部-天猫超市' ELSE '' END) AS platform, 
-            (CASE WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%国货%' OR dp.name LIKE '%小红书%' THEN '事业三部' 
+            (CASE WHEN dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' OR dp.name LIKE '%小红书%' THEN '事业三部' 
                 WHEN dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
                     OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%' THEN '事业二部' 
                 WHEN dp.name LIKE '%拼多多%' OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%' THEN '事业一部' 
@@ -2483,7 +2483,7 @@ actHiProcinstRepo.getProcessInfo1 = async (type, ids) => {
             (CASE WHEN u1.nickname = '陆瑶' THEN '事业二部' 
                 WHEN u1.nickname = '刘海涛' THEN '事业一部' 
                 WHEN u1.nickname = '王洪彬' THEN '事业三部' 
-                WHEN dp1.name LIKE '%天猫%' OR dp1.name LIKE '%国货%' OR dp1.name LIKE '%小红书%' THEN '事业三部' 
+                WHEN dp1.name LIKE '%天猫%' OR dp1.name LIKE '%淘工厂%' OR dp1.name LIKE '%小红书%' THEN '事业三部' 
                 WHEN dp1.name LIKE '%京东%' OR dp1.name LIKE '%抖音%' OR dp1.name LIKE '%1688%' 
                     OR dp1.name LIKE '%唯品会%' OR dp1.name LIKE '%得物%' THEN '事业二部' 
                 WHEN dp1.name LIKE '%拼多多%' OR dp1.name LIKE '%跨境%' OR dp1.name LIKE '%猫超%' THEN '事业一部' 
@@ -2578,7 +2578,7 @@ actHiProcinstRepo.getProcessInfo2 = async (type, ids) => {
             (CASE WHEN u1.nickname = '陆瑶' THEN '事业二部' 
                 WHEN u1.nickname = '刘海涛' THEN '事业一部' 
                 WHEN u1.nickname = '王洪彬' THEN '事业三部' 
-                WHEN dp1.name LIKE '%天猫%' OR dp1.name LIKE '%国货%' OR dp1.name LIKE '%小红书%' THEN '事业三部' 
+                WHEN dp1.name LIKE '%天猫%' OR dp1.name LIKE '%淘工厂%' OR dp1.name LIKE '%小红书%' THEN '事业三部' 
                 WHEN dp1.name LIKE '%京东%' OR dp1.name LIKE '%抖音%' OR dp1.name LIKE '%1688%' 
                     OR dp1.name LIKE '%唯品会%' OR dp1.name LIKE '%得物%' THEN '事业二部' 
                 WHEN dp1.name LIKE '%拼多多%' OR dp1.name LIKE '%跨境%' OR dp1.name LIKE '%猫超%' THEN '事业一部' 
@@ -2700,6 +2700,480 @@ actHiProcinstRepo.getThirdSelect1 = async (id) => {
                 'F34mma3pf0egd0c', 'Fiaama25b6zidec', 'F8y4mbuii8dtqyc', 'Fwtjma3np5o0nuc', 'Fy6xma3jakboekc') 
             OR (v.NAME_ IN ('Fxfrma3j75fse7c', 'Fxkxmbuiecz2qpc') AND v.TEXT_ = '未选中'))`
     const result = await query(sql, [id])
+    return result
+}
+
+actHiProcinstRepo.getAnalysisInfo = async (start, end, type, info, type_name) => {
+    let groupBy = 'division', subsql = 'WHERE 1=1'
+    if (type == 2) {
+        groupBy = 'project'
+        subsql = `${subsql} AND division = "${info}"`
+    } else if (type == 5) {
+        groupBy = 'nickname'
+        subsql = `${subsql} AND project = "${info}"`
+    }
+    if (type_name)  subsql = `${subsql} AND type = "${type_name}"`
+    const sql = `SELECT COUNT(1) AS count, ${groupBy} AS name, type, 0 AS info FROM (
+            SELECT u.nickname, CASE t.NAME_ WHEN '事业部一分配运营执行人' THEN '事业部1' 
+                WHEN '事业部二分配运营执行人' THEN '事业部2' ELSE '事业部3' END AS division, 
+                CASE t.NAME_ WHEN '事业部一分配运营执行人' THEN '拼多多' 
+                WHEN '事业部二分配运营执行人' THEN '京东' ELSE '宝选天猫' END AS project, 
+                CASE WHEN d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') THEN '市场分析推品'
+                WHEN d.KEY_ IN ('iptplc', 'iptplcxb') THEN 'IP推品' 
+                WHEN d.KEY_ IN ('zytplc', 'ziyantuipin') THEN '自研推品' 
+                WHEN d.KEY_ IN ('gystplc', 'gongyingshangtuipin') THEN '供应商推品' 
+                ELSE '反推推品' END AS type 
+            FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_ 
+            JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND t.NAME_ IN ('事业部一分配运营执行人', '事业部二分配运营执行人', '事业部三分配运营执行人')
+                AND t.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(tt.LAST_UPDATED_TIME_) FROM ACT_HI_TASKINST tt 
+                    WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ AND tt.NAME_ = t.NAME_)
+            JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND v.TASK_ID_ = t.ID_ AND v.NAME_ = 'TASK_STATUS' AND v.LONG_ = 1 
+            JOIN system_users u ON t.ASSIGNEE_ = u.id 
+            WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin', 
+                    'iptplc', 'iptplcxb', 
+                    'zytplc', 'ziyantuipin', 
+                    'gystplc', 'gongyingshangtuipin', 
+                    'fttplc', 'fantuituipin') 
+                AND p.START_TIME_ BETWEEN ? AND ?) a ${subsql} GROUP BY ${groupBy}, type
+            
+        UNION ALL 
+
+        SELECT COUNT(1) AS count, ${groupBy} AS name, type, 1 AS info FROM (
+            SELECT CASE WHEN t.NAME_ like '%事业部一%' OR t.NAME_ like '%事业部1%' THEN '事业部1' 
+                WHEN t.NAME_ like '%事业部二%' OR t.NAME_ like '%事业部2%' THEN '事业部2' 
+                ELSE '事业部3' END AS division, u.nickname, 
+                CASE WHEN dp.name LIKE '%拼多多%' THEN '拼多多' 
+                WHEN dp.name LIKE '%跨境%' THEN 'COUPANG' 
+                WHEN dp.name LIKE '%猫超%' THEN '天猫超市' 
+                WHEN dp.name LIKE '%京东%' OR u.nickname = '陆瑶' THEN '京东' 
+                WHEN dp.name LIKE '%抖音%' THEN '抖音' 
+                WHEN dp.name LIKE '%1688%' THEN '1688' 
+                WHEN dp.name LIKE '%唯品会%' THEN '唯品会' 
+                WHEN dp.name LIKE '%天猫%' OR u.nickname = '王洪彬' THEN '宝选天猫' 
+                WHEN dp.name LIKE '%淘工厂%' THEN '淘工厂' 
+                WHEN dp.name LIKE '%小红书%' THEN 'TEOTM' ELSE '' END AS project, 
+                CASE WHEN d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') THEN '市场分析推品'
+                WHEN d.KEY_ IN ('iptplc', 'iptplcxb') THEN 'IP推品' 
+                WHEN d.KEY_ IN ('zytplc', 'ziyantuipin') THEN '自研推品' 
+                WHEN d.KEY_ IN ('gystplc', 'gongyingshangtuipin') THEN '供应商推品' 
+                ELSE '反推推品' END AS type 
+            FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_ 
+            JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND t.NAME_ IN ('事业部一是否选中', '事业部二是否选中', '事业部三是否选中', 
+                    '事业部一是否加单', '事业部二是否加单', '事业部三是否加单', 
+                    '事业部一提交市场分析', '事业部二提交市场分析', '事业部三提交市场分析', 
+                    '事业部1负责人审核样品', '事业部2负责人审核样品', '事业部3负责人审核样品', 
+                    '事业部一是否订货', '事业部二是否订货', '事业部三是否订货', 
+                    '事业部一是否订货1', '事业部二是否订货1', '事业部三是否订货1', 
+                    '事业部一是否订货2', '事业部二是否订货2', '事业部三是否订货3')
+                AND t.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(tt.LAST_UPDATED_TIME_) FROM ACT_HI_TASKINST tt 
+                    WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ AND tt.NAME_ = t.NAME_)
+            JOIN system_users u ON t.ASSIGNEE_ = u.id 
+            JOIN system_dept dp ON dp.id = u.dept_id 
+            JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND v.TASK_ID_ = t.ID_ AND v.NAME_ = 'TASK_STATUS' AND v.LONG_ = 1
+            WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin', 
+                    'iptplc', 'iptplcxb', 
+                    'zytplc', 'ziyantuipin', 
+                    'gystplc', 'gongyingshangtuipin', 
+                    'fttplc', 'fantuituipin') 
+                AND p.START_TIME_ BETWEEN ? AND ?) a ${subsql} GROUP BY ${groupBy}, type
+            
+        UNION ALL 
+
+        SELECT COUNT(1) AS count, ${groupBy} AS name, type, 2 AS info FROM (
+            SELECT CASE WHEN t.NAME_ like '%事业部一%' OR t.NAME_ like '%事业部1%' THEN '事业部1' 
+                WHEN t.NAME_ like '%事业部二%' OR t.NAME_ like '%事业部2%' THEN '事业部2' 
+                ELSE '事业部3' END AS division, u.nickname, 
+                CASE WHEN dp.name LIKE '%拼多多%' THEN '拼多多' 
+                WHEN dp.name LIKE '%跨境%' THEN 'COUPANG' 
+                WHEN dp.name LIKE '%猫超%' THEN '天猫超市' 
+                WHEN dp.name LIKE '%京东%' OR u.nickname = '陆瑶' THEN '京东' 
+                WHEN dp.name LIKE '%抖音%' THEN '抖音' 
+                WHEN dp.name LIKE '%1688%' THEN '1688' 
+                WHEN dp.name LIKE '%唯品会%' THEN '唯品会' 
+                WHEN dp.name LIKE '%天猫%' OR u.nickname = '王洪彬' THEN '宝选天猫' 
+                WHEN dp.name LIKE '%淘工厂%' THEN '淘工厂' 
+                WHEN dp.name LIKE '%小红书%' THEN 'TEOTM' ELSE '' END AS project, 
+                CASE WHEN d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') THEN '市场分析推品'
+                WHEN d.KEY_ IN ('iptplc', 'iptplcxb') THEN 'IP推品' 
+                WHEN d.KEY_ IN ('zytplc', 'ziyantuipin') THEN '自研推品' 
+                WHEN d.KEY_ IN ('gystplc', 'gongyingshangtuipin') THEN '供应商推品' 
+                ELSE '反推推品' END AS type 
+            FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_ 
+            JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND t.NAME_ IN ('事业部一是否选中', '事业部二是否选中', '事业部三是否选中', 
+                    '事业部一是否加单', '事业部二是否加单', '事业部三是否加单', 
+                    '事业部一提交市场分析', '事业部二提交市场分析', '事业部三提交市场分析', 
+                    '事业部1负责人审核样品', '事业部2负责人审核样品', '事业部3负责人审核样品', 
+                    '事业部一是否订货', '事业部二是否订货', '事业部三是否订货', 
+                    '事业部一是否订货1', '事业部二是否订货1', '事业部三是否订货1', 
+                    '事业部一是否订货2', '事业部二是否订货2', '事业部三是否订货3')
+                AND t.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(tt.LAST_UPDATED_TIME_) FROM ACT_HI_TASKINST tt 
+                    WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ AND tt.NAME_ = t.NAME_)
+            JOIN system_users u ON t.ASSIGNEE_ = u.id 
+            JOIN system_dept dp ON dp.id = u.dept_id 
+            JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND v.TASK_ID_ = t.ID_ AND v.NAME_ = 'TASK_STATUS' AND v.LONG_ = 2
+            WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin', 
+                    'iptplc', 'iptplcxb', 
+                    'zytplc', 'ziyantuipin', 
+                    'gystplc', 'gongyingshangtuipin', 
+                    'fttplc', 'fantuituipin') 
+                AND p.START_TIME_ BETWEEN ? AND ?) a ${subsql} GROUP BY ${groupBy}, type
+            
+        UNION ALL 
+
+        SELECT COUNT(1) AS count, ${groupBy} AS name, type, info FROM (
+            SELECT IF(v.TEXT_ IN ('是', '选中'), 3, 4) AS info, '事业部1' AS division, 
+                CASE WHEN dp.name LIKE '%跨境%' THEN 'COUPANG' WHEN dp.name LIKE '%猫超%' THEN '天猫超市' 
+                ELSE '拼多多' END AS project, IF(dp.name LIKE '%拼多多%' OR dp.name LIKE '%跨境%' 
+                    OR dp.name LIKE '%猫超%', u.nickname, '刘海涛') AS nickname, 
+                CASE WHEN d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') THEN '市场分析推品'
+                WHEN d.KEY_ IN ('iptplc', 'iptplcxb') THEN 'IP推品' 
+                WHEN d.KEY_ IN ('zytplc', 'ziyantuipin') THEN '自研推品' 
+                WHEN d.KEY_ IN ('gystplc', 'gongyingshangtuipin') THEN '供应商推品' 
+                ELSE '反推推品' END AS type 
+            FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_ 
+            JOIN system_users u ON u.id = p.START_USER_ID_ 
+            JOIN system_dept dp ON dp.id = u.dept_id 
+            JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND (v.NAME_ IN ('Fzmjma3pe3tnclc', 'Fmtama25a3lrcwc', 'Flp9mbuigrxjqsc', 'Ffwtma3nntxjn9c') 
+                    OR (v.NAME_ IN ('F6c5mbuidfzfqjc') AND v.TEXT_ = '未选中') 
+                    OR (d.KEY_ IN ('fttplc', 'fantuituipin') 
+                        AND (dp.name LIKE '%拼多多%' OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%') 
+                        AND (v.NAME_ = 'Fy6xma3jakboekc' OR (v.NAME_ = 'Fxfrma3j75fse7c' AND v.TEXT_ = '未选中'))))
+                AND v.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                    WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                        AND (vv.NAME_ IN ('Fzmjma3pe3tnclc', 'Fmtama25a3lrcwc', 'Flp9mbuigrxjqsc', 'Ffwtma3nntxjn9c') 
+                            OR (vv.NAME_ IN ('F6c5mbuidfzfqjc') AND vv.TEXT_ = '未选中')
+                            OR (d.KEY_ IN ('fttplc', 'fantuituipin') 
+                                AND (dp.name LIKE '%拼多多%' OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%') 
+                                AND (v.NAME_ = 'Fy6xma3jakboekc' 
+                                    OR (v.NAME_ = 'Fxfrma3j75fse7c' AND v.TEXT_ = '未选中')))))
+            WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin', 
+                    'iptplc', 'iptplcxb', 
+                    'zytplc', 'ziyantuipin', 
+                    'gystplc', 'gongyingshangtuipin', 
+                    'fttplc', 'fantuituipin') 
+                AND p.START_TIME_ BETWEEN ? AND ?) a ${subsql} GROUP BY ${groupBy}, type, info 
+            
+        UNION ALL 
+
+        SELECT COUNT(1) AS count, ${groupBy} AS name, type, info FROM (
+            SELECT IF(v.TEXT_ IN ('是', '选中'), 3, 4) AS info, '事业部2' AS division, 
+                CASE WHEN dp.name LIKE '%抖音%' THEN '抖音' WHEN dp.name LIKE '%1688%' THEN '1688' 
+                WHEN dp.name LIKE '%唯品会%' THEN '唯品会' WHEN dp.name LIKE '%得物%' THEN '得物' 
+                ELSE '京东' END AS project, IF(dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' 
+                    OR dp.name LIKE '%1688%' OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%', 
+                    u.nickname, '陆瑶') AS nickname, 
+                CASE WHEN d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') THEN '市场分析推品'
+                WHEN d.KEY_ IN ('iptplc', 'iptplcxb') THEN 'IP推品' 
+                WHEN d.KEY_ IN ('zytplc', 'ziyantuipin') THEN '自研推品' 
+                WHEN d.KEY_ IN ('gystplc', 'gongyingshangtuipin') THEN '供应商推品' 
+                ELSE '反推推品' END AS type 
+            FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_ 
+            JOIN system_users u ON u.id = p.START_USER_ID_ 
+            JOIN system_dept dp ON dp.id = u.dept_id 
+            JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND (v.NAME_ IN ('F2lmma3petqpcwc', 'Fkyuma25az2ud8c', 'Fexembuihiymqvc', 'Fnixma3nox6onmc') 
+                    OR (v.NAME_ IN ('F64jmbuie9olqmc') AND v.TEXT_ = '未选中')
+                    OR (d.KEY_ IN ('fttplc', 'fantuituipin') 
+                        AND (dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
+                            OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%') 
+                        AND (v.NAME_ = 'Fy6xma3jakboekc' OR (v.NAME_ = 'Fxfrma3j75fse7c' AND v.TEXT_ = '未选中'))))
+                AND v.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                    WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                        AND (vv.NAME_ IN ('F2lmma3petqpcwc', 'Fkyuma25az2ud8c', 'Fexembuihiymqvc', 'Fnixma3nox6onmc') 
+                            OR (vv.NAME_ IN ('F64jmbuie9olqmc') AND vv.TEXT_ = '未选中')
+                            OR (d.KEY_ IN ('fttplc', 'fantuituipin') 
+                                AND (dp.name LIKE '%京东%' OR dp.name LIKE '%抖音%' OR dp.name LIKE '%1688%' 
+                                    OR dp.name LIKE '%唯品会%' OR dp.name LIKE '%得物%') 
+                                AND (v.NAME_ = 'Fy6xma3jakboekc' 
+                                    OR (v.NAME_ = 'Fxfrma3j75fse7c' AND v.TEXT_ = '未选中')))))
+            WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin', 
+                    'iptplc', 'iptplcxb', 
+                    'zytplc', 'ziyantuipin', 
+                    'gystplc', 'gongyingshangtuipin', 
+                    'fttplc', 'fantuituipin') 
+                AND p.START_TIME_ BETWEEN ? AND ?) a ${subsql} GROUP BY ${groupBy}, type, info 
+            
+        UNION ALL 
+
+        SELECT COUNT(1) AS count, ${groupBy} AS name, type, info FROM (
+            SELECT IF(v.TEXT_ IN ('是', '选中'), 3, 4) AS info, '事业部3' AS division, 
+                CASE WHEN dp.name LIKE '%淘工厂%' THEN '淘工厂' WHEN dp.name LIKE '%小红书%' THEN 'TEOTM' 
+                ELSE '宝选天猫' END AS project, IF(dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' 
+                    OR dp.name LIKE '%小红书%', u.nickname, '王洪彬') AS nickname, 
+                CASE WHEN d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') THEN '市场分析推品'
+                WHEN d.KEY_ IN ('iptplc', 'iptplcxb') THEN 'IP推品' 
+                WHEN d.KEY_ IN ('zytplc', 'ziyantuipin') THEN '自研推品' 
+                WHEN d.KEY_ IN ('gystplc', 'gongyingshangtuipin') THEN '供应商推品' 
+                ELSE '反推推品' END AS type 
+            FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_ 
+            JOIN system_users u ON u.id = p.START_USER_ID_ 
+            JOIN system_dept dp ON dp.id = u.dept_id 
+            JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND (v.NAME_ IN ('F34mma3pf0egd0c', 'Fiaama25b6zidec', 'F8y4mbuii8dtqyc', 'Fwtjma3np5o0nuc') 
+                    OR (v.NAME_ IN ('Fxkxmbuiecz2qpc') AND v.TEXT_ = '未选中')
+                    OR (d.KEY_ IN ('fttplc', 'fantuituipin') 
+                        AND (dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' OR dp.name LIKE '%小红书%') 
+                        AND (v.NAME_ = 'Fy6xma3jakboekc' OR (v.NAME_ = 'Fxfrma3j75fse7c' AND v.TEXT_ = '未选中'))))
+                AND v.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                    WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                        AND (vv.NAME_ IN ('F34mma3pf0egd0c', 'Fiaama25b6zidec', 'F8y4mbuii8dtqyc', 'Fwtjma3np5o0nuc') 
+                            OR (vv.NAME_ IN ('Fxkxmbuiecz2qpc') AND vv.TEXT_ = '未选中')
+                            OR (d.KEY_ IN ('fttplc', 'fantuituipin') 
+                                AND (dp.name LIKE '%天猫%' OR dp.name LIKE '%淘工厂%' OR dp.name LIKE '%小红书%') 
+                                AND (v.NAME_ = 'Fy6xma3jakboekc' 
+                                    OR (v.NAME_ = 'Fxfrma3j75fse7c' AND v.TEXT_ = '未选中')))))
+            WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin', 
+                    'iptplc', 'iptplcxb', 
+                    'zytplc', 'ziyantuipin', 
+                    'gystplc', 'gongyingshangtuipin', 
+                    'fttplc', 'fantuituipin') 
+                AND p.START_TIME_ BETWEEN ? AND ?) a ${subsql} GROUP BY ${groupBy}, type, info 
+        
+        UNION ALL 
+        
+        SELECT COUNT(1) AS count, ${groupBy} AS name, type, 5 AS info FROM (
+            SELECT CASE WHEN t.NAME_ like '%事业部一%' OR t.NAME_ like '%事业部1%' THEN '事业部1' 
+                WHEN t.NAME_ like '%事业部二%' OR t.NAME_ like '%事业部2%' THEN '事业部2' 
+                ELSE '事业部3' END AS division, u.nickname, 
+                CASE WHEN dp.name LIKE '%拼多多%' THEN '拼多多' 
+                WHEN dp.name LIKE '%跨境%' THEN 'COUPANG' 
+                WHEN dp.name LIKE '%猫超%' THEN '天猫超市' 
+                WHEN dp.name LIKE '%京东%' OR u.nickname = '陆瑶' THEN '京东' 
+                WHEN dp.name LIKE '%抖音%' THEN '抖音' 
+                WHEN dp.name LIKE '%1688%' THEN '1688' 
+                WHEN dp.name LIKE '%唯品会%' THEN '唯品会' 
+                WHEN dp.name LIKE '%天猫%' OR u.nickname = '王洪彬' THEN '宝选天猫' 
+                WHEN dp.name LIKE '%淘工厂%' THEN '淘工厂' 
+                WHEN dp.name LIKE '%小红书%' THEN 'TEOTM' ELSE '' END AS project, 
+                CASE WHEN d.KEY_ IN ('sctgtplc', 'shichangfenxituipin') THEN '市场分析推品'
+                WHEN d.KEY_ IN ('iptplc', 'iptplcxb') THEN 'IP推品' 
+                WHEN d.KEY_ IN ('zytplc', 'ziyantuipin') THEN '自研推品' 
+                WHEN d.KEY_ IN ('gystplc', 'gongyingshangtuipin') THEN '供应商推品' 
+                ELSE '反推推品' END AS type 
+            FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_ 
+            JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND t.NAME_ IN ('事业部一是否选中', '事业部二是否选中', '事业部三是否选中', 
+                    '事业部一是否加单', '事业部二是否加单', '事业部三是否加单', 
+                    '事业部一提交市场分析', '事业部二提交市场分析', '事业部三提交市场分析', 
+                    '事业部1负责人审核样品', '事业部2负责人审核样品', '事业部3负责人审核样品', 
+                    '事业部一是否订货', '事业部二是否订货', '事业部三是否订货', 
+                    '事业部一是否订货1', '事业部二是否订货1', '事业部三是否订货1', 
+                    '事业部一是否订货2', '事业部二是否订货2', '事业部三是否订货3', 
+                    '事业部一分配运营执行人', '事业部二分配运营执行人', '事业部三分配运营执行人')
+                AND t.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(tt.LAST_UPDATED_TIME_) FROM ACT_HI_TASKINST tt 
+                    WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ AND tt.NAME_ = t.NAME_) 
+            JOIN system_users u ON t.ASSIGNEE_ = u.id 
+            JOIN system_dept dp ON dp.id = u.dept_id 
+            JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND v.TASK_ID_ = t.ID_ AND v.NAME_ = 'TASK_STATUS' AND v.LONG_ = 1 
+            JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND v1.TASK_ID_ = t.ID_ AND v1.NAME_ = 'WORK_DUE_DATE'
+            WHERE d.KEY_ IN ('sctgtplc', 'shichangfenxituipin', 
+                    'iptplc', 'iptplcxb', 
+                    'zytplc', 'ziyantuipin', 
+                    'gystplc', 'gongyingshangtuipin', 
+                    'fttplc', 'fantuituipin') 
+                AND DATE_ADD(FROM_UNIXTIME(v1.LONG_ / 1000), INTERVAL 8 HOUR) < NOW()
+                AND p.START_TIME_ BETWEEN ? AND ?) a ${subsql} GROUP BY ${groupBy}, type`
+    const result = await query(sql, [start, end, start, end, start, end, start, end, start, end, start, end, start, end])
+    return result
+}
+
+actHiProcinstRepo.getSpecificInfo = async (start, end, type, info, type_name) => {
+    let groupBy = 'division', subsql = 'WHERE 1=1'
+    if (type == 2) {
+        groupBy = 'project'
+        subsql = `${subsql} AND division = "${info}"`
+    } else if (type == 5) {
+        groupBy = 'nickname'
+        subsql = `${subsql} AND project = "${info}"`
+    }
+    if (type_name)  subsql = `${subsql} AND type = "${type_name}"`
+    const sql = `SELECT COUNT(1) AS count, ${groupBy} AS name, type, info FROM (
+            SELECT u.nickname, CASE t.NAME_ WHEN '事业一部上传爆款方案' THEN '事业部1' 
+                WHEN '事业二部上传爆款方案' THEN '事业部2' ELSE '事业部3' END AS division, 
+                CASE WHEN dp.name LIKE '%拼多多%' THEN '拼多多' 
+                    WHEN dp.name LIKE '%跨境%' THEN 'COUPANG' 
+                    WHEN dp.name LIKE '%猫超%' THEN '天猫超市' 
+                    WHEN dp.name LIKE '%京东%' OR u.nickname = '陆瑶' THEN '京东' 
+                    WHEN dp.name LIKE '%抖音%' THEN '抖音' 
+                    WHEN dp.name LIKE '%1688%' THEN '1688' 
+                    WHEN dp.name LIKE '%唯品会%' THEN '唯品会' 
+                    WHEN dp.name LIKE '%天猫%' OR u.nickname = '王洪彬' THEN '宝选天猫' 
+                    WHEN dp.name LIKE '%淘工厂%' THEN '淘工厂' 
+                    WHEN dp.name LIKE '%小红书%' THEN 'TEOTM' ELSE '' END AS project, 
+                v1.TEXT_ AS type, v.LONG_ AS info 
+            FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_ 
+            JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND t.NAME_ IN ('事业一部上传爆款方案', '事业二部上传爆款方案', '事业三部上传爆款方案')
+                AND t.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(tt.LAST_UPDATED_TIME_) FROM ACT_HI_TASKINST tt 
+                    WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ AND tt.NAME_ = t.NAME_)
+            JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND v.TASK_ID_ = t.ID_ AND v.NAME_ = 'TASK_STATUS' AND v.LONG_ IN (1,2) 
+            JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND v1.NAME_ = 'Fx52mdwpoarvabc'
+                AND v1.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                    WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ AND vv.NAME_ = v1.NAME_) 
+            JOIN system_users u ON t.ASSIGNEE_ = u.id 
+            JOIN system_dept dp ON dp.id = u.dept_id 
+            WHERE d.KEY_ IN ('bkfalc', 'baokuanliuchengxb') 
+                AND p.START_TIME_ BETWEEN ? AND ?) a ${subsql} GROUP BY ${groupBy}, info, type
+            
+        UNION ALL 
+        
+        SELECT COUNT(1) AS count, ${groupBy} AS name, type, 0 AS info FROM (
+            SELECT u.nickname, CASE t.NAME_ WHEN '事业一部上传爆款方案' THEN '事业部1' 
+                WHEN '事业二部上传爆款方案' THEN '事业部2' ELSE '事业部3' END AS division, 
+                CASE WHEN dp.name LIKE '%拼多多%' THEN '拼多多' 
+                WHEN dp.name LIKE '%跨境%' THEN 'COUPANG' 
+                WHEN dp.name LIKE '%猫超%' THEN '天猫超市' 
+                WHEN dp.name LIKE '%京东%' OR u.nickname = '陆瑶' THEN '京东' 
+                WHEN dp.name LIKE '%抖音%' THEN '抖音' 
+                WHEN dp.name LIKE '%1688%' THEN '1688' 
+                WHEN dp.name LIKE '%唯品会%' THEN '唯品会' 
+                WHEN dp.name LIKE '%天猫%' OR u.nickname = '王洪彬' THEN '宝选天猫' 
+                WHEN dp.name LIKE '%淘工厂%' THEN '淘工厂' 
+                WHEN dp.name LIKE '%小红书%' THEN 'TEOTM' ELSE '' END AS project, v2.TEXT_ AS type 
+            FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_ 
+            JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND t.NAME_ IN ('事业一部上传爆款方案', '事业二部上传爆款方案', '事业三部上传爆款方案')
+                AND t.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(tt.LAST_UPDATED_TIME_) FROM ACT_HI_TASKINST tt 
+                    WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ AND tt.NAME_ = t.NAME_) 
+            JOIN system_users u ON t.ASSIGNEE_ = u.id 
+            JOIN system_dept dp ON dp.id = u.dept_id 
+            JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND v.TASK_ID_ = t.ID_ AND v.NAME_ = 'TASK_STATUS' AND v.LONG_ = 1 
+            JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND v1.TASK_ID_ = t.ID_ AND v1.NAME_ = 'WORK_DUE_DATE' 
+            JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND v2.NAME_ = 'Fx52mdwpoarvabc'
+                AND v2.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                    WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ AND vv.NAME_ = v2.NAME_) 
+            WHERE d.KEY_ IN ('bkfalc', 'baokuanliuchengxb') 
+                AND DATE_ADD(FROM_UNIXTIME(v1.LONG_ / 1000), INTERVAL 8 HOUR) < NOW()
+                AND p.START_TIME_ BETWEEN ? AND ?) a ${subsql} GROUP BY ${groupBy}, type 
+        
+        UNION ALL 
+        
+        SELECT COUNT(1) AS count, ${groupBy} AS name, type, info FROM (
+            SELECT u.nickname, CASE t.NAME_ WHEN '事业一部上传爆款方案' THEN '事业部1' 
+                WHEN '事业二部上传爆款方案' THEN '事业部2' ELSE '事业部3' END AS division, 
+                CASE WHEN dp.name LIKE '%拼多多%' THEN '拼多多' 
+                WHEN dp.name LIKE '%跨境%' THEN 'COUPANG' 
+                WHEN dp.name LIKE '%猫超%' THEN '天猫超市' 
+                WHEN dp.name LIKE '%京东%' OR u.nickname = '陆瑶' THEN '京东' 
+                WHEN dp.name LIKE '%抖音%' THEN '抖音' 
+                WHEN dp.name LIKE '%1688%' THEN '1688' 
+                WHEN dp.name LIKE '%唯品会%' THEN '唯品会' 
+                WHEN dp.name LIKE '%天猫%' OR u.nickname = '王洪彬' THEN '宝选天猫' 
+                WHEN dp.name LIKE '%淘工厂%' THEN '淘工厂' 
+                WHEN dp.name LIKE '%小红书%' THEN 'TEOTM' ELSE '' END AS project, 
+                v2.TEXT_ AS type, IF(t.ID_ IS NULL, 3, 4) AS info 
+            FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_ 
+            LEFT JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND t.NAME_ IN ('运营收图', '发起人收图')
+                AND t.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(tt.LAST_UPDATED_TIME_) FROM ACT_HI_TASKINST tt 
+                    WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ AND tt.NAME_ = t.NAME_) 
+            LEFT JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND v.NAME_ IN ('Cfidclaxyqgv7', 'Cfidvgpftflr5') 
+                AND v.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                    WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ AND vv.NAME_ = v.NAME_) 
+            JOIN system_users u ON IFNULL(t.ASSIGNEE_, IFNULL(v.TEXT_, p.START_USER_ID_)) = u.id 
+            JOIN system_dept dp ON dp.id = u.dept_id 
+            JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+				AND v1.NAME_ IN ('Faggmdwumtqofbc', 'Fb94mdwunfwhhoc') 
+                AND v1.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                    WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ AND vv.NAME_ = v1.NAME_) 
+            JOIN ACT_HI_PROCINST p1 ON p1.PROC_INST_ID_ = SUBSTRING_INDEX(v1.TEXT_, "id=", -1) 
+            JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p1.PROC_INST_ID_ 
+                AND v2.NAME_ = 'Fx52mdwpoarvabc' 
+                AND v2.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                    WHERE vv.PROC_INST_ID_ = p1.PROC_INST_ID_ AND vv.NAME_ = v2.NAME_) 
+            WHERE d.KEY_ IN ('xbsjlc', 'form-110') 
+                AND p.START_TIME_ BETWEEN ? AND ?) a ${subsql} GROUP BY ${groupBy}, info, type 
+        
+        UNION ALL 
+        
+        SELECT COUNT(1) AS count, ${groupBy} AS name, type, info FROM (
+            SELECT u.nickname, CASE t.NAME_ WHEN '事业一部上传爆款方案' THEN '事业部1' 
+                WHEN '事业二部上传爆款方案' THEN '事业部2' ELSE '事业部3' END AS division, 
+                CASE WHEN dp.name LIKE '%拼多多%' THEN '拼多多' 
+                WHEN dp.name LIKE '%跨境%' THEN 'COUPANG' 
+                WHEN dp.name LIKE '%猫超%' THEN '天猫超市' 
+                WHEN dp.name LIKE '%京东%' OR u.nickname = '陆瑶' THEN '京东' 
+                WHEN dp.name LIKE '%抖音%' THEN '抖音' 
+                WHEN dp.name LIKE '%1688%' THEN '1688' 
+                WHEN dp.name LIKE '%唯品会%' THEN '唯品会' 
+                WHEN dp.name LIKE '%天猫%' OR u.nickname = '王洪彬' THEN '宝选天猫' 
+                WHEN dp.name LIKE '%淘工厂%' THEN '淘工厂' 
+                WHEN dp.name LIKE '%小红书%' THEN 'TEOTM' ELSE '' END AS project, 
+                v.TEXT_ AS type, IF(v2.ID_ IS NULL, 6, IF(v2.LONG_ = 1, 5, 7)) AS info 
+            FROM ACT_HI_PROCINST p LEFT JOIN ACT_RE_PROCDEF d ON p.PROC_DEF_ID_ = d.ID_ 
+            JOIN ACT_HI_VARINST v ON v.PROC_INST_ID_ = p.PROC_INST_ID_ 
+                AND v.NAME_ = 'Fx52mdwpoarvabc'
+                AND v.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                    WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ AND vv.NAME_ = v.NAME_) 
+            JOIN ACT_HI_VARINST v1 ON v1.PROC_INST_ID_ = p.PROC_INST_ID_
+				AND v1.NAME_ = 'Frd7mdi5wj7jabc' 
+                AND v1.LAST_UPDATED_TIME_ = (
+                    SELECT MAX(vv.LAST_UPDATED_TIME_) FROM ACT_HI_VARINST vv 
+                    WHERE vv.PROC_INST_ID_ = p.PROC_INST_ID_ AND vv.NAME_ = v1.NAME_) 
+			JOIN ACT_HI_TASKINST t ON t.PROC_INST_ID_ = p.PROC_INST_ID_ 
+				AND t.NAME_ IN ('事业一部上传爆款方案', '事业二部上传爆款方案', '事业三部上传爆款方案')
+				AND t.LAST_UPDATED_TIME_ = (
+					SELECT MAX(tt.LAST_UPDATED_TIME_) FROM ACT_HI_TASKINST tt 
+					WHERE tt.PROC_INST_ID_ = p.PROC_INST_ID_ AND tt.NAME_ = t.NAME_)
+			JOIN system_users u ON t.ASSIGNEE_ = u.id 
+			JOIN system_dept dp ON dp.id = u.dept_id 
+            JOIN ACT_HI_PROCINST p1 ON p1.PROC_INST_ID_ = SUBSTRING_INDEX(v1.TEXT_, "id=", -1) 
+            LEFT JOIN ACT_HI_TASKINST t1 ON t1.PROC_INST_ID_ = p1.PROC_INST_ID_ 
+				AND IF(t.NAME_ = '事业一部上传爆款方案', t1.NAME_ IN ('事业部一负责人填写上架链接', 
+					'事业部一填写上架链接ID', 
+                    '事业部一填写上架ID', '事业部一填写上架ID1', 
+                    '事业部一填写上架ID2', 
+                    '事业部1填写上架ID'), 
+                    IF(t.NAME_ = '事业二部上传爆款方案', 
+                        t1.NAME_ IN ('事业部二负责人填写上架ID', 
+                            '事业部二填写上架ID', 
+                            '事业部二填写上架ID1', 
+                            '事业部二填写上架ID2', 
+                            '事业部2填写上架ID'), 
+                        t1.NAME_ IN ('事业部三负责人填写上架ID', 
+                            '事业部三填写上架ID', 
+                            '事业部三填写上架ID1', 
+                            '事业部三填写上架ID2', 
+                            '事业部3填写上架ID')))
+                    AND t1.LAST_UPDATED_TIME_ = (
+					SELECT MAX(tt.LAST_UPDATED_TIME_) FROM ACT_HI_TASKINST tt 
+					WHERE tt.PROC_INST_ID_ = p1.PROC_INST_ID_ AND tt.NAME_ = t1.NAME_)
+			LEFT JOIN ACT_HI_VARINST v2 ON v2.PROC_INST_ID_ = p1.PROC_INST_ID_ 
+				AND v2.TASK_ID_ = t1.ID_ AND v2.NAME_ = 'TASK_STATUS' AND v2.LONG_ IN (1,2)
+            WHERE d.KEY_ IN ('bkfalc', 'baokuanliuchengxb') 
+                AND p.START_TIME_ BETWEEN ? AND ?) a ${subsql} GROUP BY ${groupBy}, info, type`
+    const result = await query(sql, [start, end, start, end, start, end, start, end])
     return result
 }
 
