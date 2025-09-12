@@ -59,6 +59,11 @@ router.get("/vision-action-details", flowHandler.getVisionUsersDetails)
  */
 router.get("/operate-selection", flowHandler.getOperateSelection)
 router.get("/operate-selection-header", flowHandler.getOperateSelectionHeader)
+router.get("/operate-analysis", flowHandler.getOperateAnalysis)
 router.post("/operate-analysis/create", flowHandler.createOperateAnalysis)
+/**
+ * 爆款方案
+ */
+router.get('/operate-specific', flowHandler.getOperateSpecific)
 
 module.exports = router;

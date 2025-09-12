@@ -187,6 +187,9 @@ const optimizeRankMap = ["正常", "紧急"]
 const optimizeBpmProcessName = '运营优化方案流程（全平台）'
 const optimizeBpmProcessKey = 'form-86'
 
+const processTypeList = ['反推推品', '供应商推品', 'IP推品', '自研推品', '市场分析推品']
+const specificTypeList = ['简单', '复杂']
+
 module.exports = {
 	typeList,
 	operationDefaultItem,
@@ -211,5 +214,7 @@ module.exports = {
 	optimizeRankMap,
 	productManageFlowUUid,
 	optimizeBpmProcessName,
-	optimizeBpmProcessKey
+	optimizeBpmProcessKey,
+	processTypeList,
+	specificTypeList
 }
