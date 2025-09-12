@@ -5160,7 +5160,7 @@ const importPromotionPlan = async (rows, project, shop_name, promotion_name, dat
             break
         case '京东':
             for (let i = 1; i <= columns.length; i++) {
-                if (columns[i] == 'ID') {goods_id_row = i; continue}
+                if (columns[i] == 'ID' || columns[i] == '跟单SKU ID') {goods_id_row = i; continue}
                 if (columns[i] == '智能投放推广SKU ID' || columns[i] == 'SKU ID') {sku_id_row = i; continue}
                 if (columns[i] == '智能投放推广SKU名称' || columns[i] == '商品名称' || columns[i] == '商品计划名称') {plan_name_row = i; continue}
                 if (columns[i] == '花费') {pay_amount_row = i; continue}
