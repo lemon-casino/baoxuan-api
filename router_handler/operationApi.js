@@ -1543,6 +1543,53 @@ const importPromotionPlan = async (req, res, next) => {
     }
 }
 
+const getskuCodeInfo = async (req, res, next) => {
+    try {
+        const {goods_id, startDate, endDate, stats} = req.query
+        joiUtil.validate({
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const start = moment(req.query.startDate).format('YYYY-MM-DD')
+        const end = moment(req.query.endDate).format('YYYY-MM-DD')
+        const result = await operationService.getskuCodeInfo(goods_id, start, end, stats)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getnegativeProfit = async (req, res, next) => {
+    try {
+        const {goods_id, stats} = req.query
+        joiUtil.validate({
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        const result = await operationService.getnegativeProfit(goods_id, stats)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const goodspromotionPlan = async (req, res, next) => {
+    try {
+        const {goods_id, startDate, endDate} = req.query
+        joiUtil.validate({
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const start = moment(req.query.startDate).format('YYYY-MM-DD')
+        const end = moment(req.query.endDate).format('YYYY-MM-DD')
+        const result = await operationService.goodspromotionPlan(goods_id, start, end)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -1598,5 +1645,8 @@ module.exports = {
     getShopSaleQtyData,
     updateInventory,
     importGoodsOrderPayStat,
-    importPromotionPlan
+    importPromotionPlan,
+    getskuCodeInfo,
+    getnegativeProfit,
+    goodspromotionPlan
 }

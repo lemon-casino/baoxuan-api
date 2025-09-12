@@ -814,7 +814,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds,shopNa
                         ,SUM(IF(promotion_name='超级短视频',trans_amount,null)) AS super_short_video_amount
                         ,goods_id
                     FROM tmall_promotion_info 
-                    WHERE \`date\` BETWEEN '${start}' AND '${end}'  AND period = 1 AND goods_id IN (${goods_ids})
+                    WHERE pay_time BETWEEN '${start}' AND '${end}'  AND period = 1 AND goods_id IN (${goods_ids})
                     GROUP BY goods_id`
                 let row2 = await query(sql)
                 if(row2?.length){
@@ -880,6 +880,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds,shopNa
             result.data = row
         }
     }
+    console.log(result)
     return result
 }
 
@@ -1939,91 +1940,101 @@ goodsSaleInfoRepo.gettarget = async (column,goods_id, start, end) =>{
 }
 goodsSaleInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
     const sql = `SELECT IFNULL(a1.sale_amount, 0) AS sale_amount, 
-            IFNULL(a1.cost_amount, 0) AS cost_amount, 
-            IFNULL(a1.operation_amount, 0) AS operation_amount, 
-            IFNULL(a1.promotion_amount, 0) AS promotion_amount, 
-            IFNULL(a1.express_fee, 0) AS express_fee, 
-            IFNULL(a1.profit, 0) AS profit, 
-            IFNULL(a1.shop_name,'') AS shop_name, 
-            FORMAT(IF(IFNULL(a1.sale_amount, 0) > 0, 
-                IFNULL(a1.operation_amount, 0) / a1.sale_amount, 0) * 100, 2) AS operation_rate, 
-            FORMAT(IF(IFNULL(a1.promotion_amount, 0) > 0, 
-                IFNULL(a1.sale_amount, 0) / a1.promotion_amount, 0), 2) AS roi, 
-            FORMAT(IF(IFNULL(a1.order_num, 0) > 0, 
-                IFNULL(a1.refund_num, 0) / a1.order_num, 0) * 100, 2) AS refund_rate, 
-            FORMAT(IF(IFNULL(a1.sale_amount, 0) > 0, 
-                IFNULL(a1.profit, 0) / a1.sale_amount, 0) * 100, 2) AS profit_rate, 
-            FORMAT(IF(a2.sale_amount > 0, 
-                (1 - a2.cost_amount / a2.sale_amount) * 100, 0), 2) AS gross_profit, 
+            IFNULL(a1.cost_amount, 0) AS cost_amount,
+            IFNULL(a1.operation_amount, 0) AS operation_amount,
+            IFNULL(a1.promotion_amount, 0) AS promotion_amount,
+            IFNULL(a1.express_fee, 0) AS express_fee,
+            IFNULL(a1.profit, 0) AS profit,
+            IFNULL(a1.shop_name,'') AS shop_name,
+            FORMAT(IF(IFNULL(a1.sale_amount, 0) > 0,
+                IFNULL(a1.operation_amount, 0) / a1.sale_amount, 0) * 100, 2) AS operation_rate,
+            FORMAT(IF(IFNULL(a1.promotion_amount, 0) > 0,
+                IFNULL(a1.sale_amount, 0) / a1.promotion_amount, 0), 2) AS roi,
+            FORMAT(IF(IFNULL(a1.order_num, 0) > 0,
+                IFNULL(a1.refund_num, 0) / a1.order_num, 0) * 100, 2) AS refund_rate,
+            FORMAT(IF(IFNULL(a1.sale_amount, 0) > 0,
+                IFNULL(a1.profit, 0) / a1.sale_amount, 0) * 100, 2) AS profit_rate,
+            FORMAT(IF(a2.sale_amount > 0,
+                (1 - a2.cost_amount / a2.sale_amount) * 100, 0), 2) AS gross_profit,
             FORMAT(IFNULL(a4.real_sale_qty,0),2) AS real_sale_qty,
             FORMAT(IFNULL(a4.real_sale_amount,0),2) AS real_sale_amount,
             FORMAT(IFNULL(a4.real_gross_profit,0),2) AS real_gross_profit,
-            FORMAT(IFNULL(a6.gross_standard,0),2) AS gross_standard,
-            FORMAT(IFNULL(a6.gross_standard,0)-IFNULL(a4.real_gross_profit,0),2) AS other_cost,
+            FORMAT(IFNULL(a1.gross_standard,0),2) AS gross_standard,
+            FORMAT(IFNULL(a1.other_cost,0),2) AS other_cost,
+			FORMAT(IF(a1.shop_name='京东自营-厨具',IFNULL(a1.sale_amount, 0)*0.07, 
+                IFNULL(a1.sale_amount, 0)*0.07 +IFNULL(a1.pay_amount, 0)*0.02),2) AS tax,
             FORMAT(IFNULL(a1.profit/a4.real_sale_amount*100,0),2) AS profit_rate_gmv,
-            FORMAT(IFNULL(a5.targeted_audience_promotion,0),2) AS targeted_audience_promotion,
-            FORMAT(IFNULL(a5.full_site_promotion,0),2) AS full_site_promotion,
-            FORMAT(IFNULL(a5.multi_objective_promotion,0),2) AS multi_objective_promotion,
-            FORMAT(IFNULL(a5.keyword_promotion,0),2) AS keyword_promotion,
-            FORMAT(IFNULL(a5.product_operation_promotion,0),2) AS product_operation_promotion,
             FORMAT(IFNULL(a5.daily_promotion,0),2) AS daily_promotion,
+            FORMAT(IFNULL(a5.daily_promotion_amount,0)/IFNULL(a5.daily_promotion,0),2) AS daily_promotion_roi,
             FORMAT(IFNULL(a5.scene_promotion,0),2) AS scene_promotion,
+            FORMAT(IFNULL(a5.scene_promotion_amount,0)/IFNULL(a5.scene_promotion,0),2) AS scene_promotion_roi,
             FORMAT(IFNULL(a5.jd_express_promotion,0),2) AS jd_express_promotion,
+            FORMAT(IFNULL(a5.jd_express_promotion_amount,0)/IFNULL(a5.jd_express_promotion,0),2) AS jd_express_promotion_roi,
             FORMAT(IFNULL(a5.total_promotion,0),2) AS total_promotion,
-            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.targeted_audience_promotion,0),2) AS targeted_audience_promotion_roi,
-            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.full_site_promotion,0),2) AS full_site_promotion_roi,
-            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.multi_objective_promotion,0),2) AS multi_objective_promotion_roi,
-            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.keyword_promotion,0),2) AS keyword_promotion_roi,
-            FORMAT(IFNULL(a1.sale_amount, 0)/IFNULL(a5.product_operation_promotion,0),2) AS product_operation_promotion_roi,
-            DATE_FORMAT(a1.date, '%Y-%m-%d') as \`date\` 
-        FROM goods_sales_stats a1 LEFT JOIN goods_verifieds_stats a2 ON a1.goods_id = a2.goods_id 
-            AND a2.date = DATE_SUB(a1.date, INTERVAL 1 DAY) 
+            FORMAT(IFNULL(a5.total_promotion_amount,0)/IFNULL(a5.total_promotion,0),2) AS total_promotion_roi,
+            FORMAT(IFNULL(a5.stable_cost_promotion,0),2) AS stable_cost_promotion,
+            FORMAT(IFNULL(a5.stable_cost_promotion_amount,0)/IFNULL(a5.stable_cost_promotion,0),2) AS stable_cost_promotion_roi,
+            FORMAT(IFNULL(a5.stable_cost_promotion_amount,0)/IFNULL(a5.stable_cost_promotion,0) - IFNULL(a5.stable_cost_goal,0),2) AS targeted_audience_promotion_difference,
+            FORMAT(IFNULL(a5.full_site_promotion,0),2) AS full_site_promotion,
+            FORMAT(IFNULL(a5.full_site_promotion_amount,0)/IFNULL(a5.full_site_promotion,0),2) AS full_site_promotion_roi,
+            FORMAT(IFNULL(a5.keyword_promotion,0),2) AS keyword_promotion,
+            FORMAT(IFNULL(a5.keyword_promotion_amount,0)/IFNULL(a5.keyword_promotion,0),2) AS keyword_promotion_roi,
+            FORMAT(IFNULL(a5.targeted_audience_promotion,0),2) AS targeted_audience_promotion,
+            FORMAT(IFNULL(a5.targeted_audience_promotion_amount,0)/IFNULL(a5.targeted_audience_promotion,0),2) AS targeted_audience_promotion_roi,
+            FORMAT(IFNULL(a5.super_short_video,0),2) AS super_short_video,
+            FORMAT(IFNULL(a5.super_short_video_amount,0)/IFNULL(a5.super_short_video,0),2) AS super_short_video_roi,
+            DATE_FORMAT(a1.date, '%Y-%m-%d') as \`date\`
+        FROM goods_sales_stats a1 LEFT JOIN goods_verifieds_stats a2 ON a1.goods_id = a2.goods_id
+            AND a2.date = DATE_SUB(a1.date, INTERVAL 1 DAY)
         LEFT JOIN(
             SELECT goods_id,date
-                    ,SUM(real_sale_qty) as real_sale_qty
-                    ,SUM(real_sale_amount) as real_sale_amount
-                    ,SUM(real_gross_profit) as real_gross_profit
-                    FROM goods_sales 
-                    WHERE goods_id= ?
-                    AND date BETWEEN '${start}' AND '${end}'
+                ,SUM(real_sale_qty) as real_sale_qty
+                ,SUM(real_sale_amount) as real_sale_amount
+                ,SUM(real_gross_profit) as real_gross_profit
+                FROM goods_sales
+                WHERE goods_id= ?
+                AND date BETWEEN ? AND ?
             GROUP BY goods_id, date
-        )as a4 
+        )as a4
         ON a1.goods_id = a4.goods_id AND a1.date = a4.date
         LEFT JOIN(
-            select date
-                    ,SUM(IF(promotion_name='6003416精准人群推广',amount,null)) as targeted_audience_promotion
-                    ,SUM(IF(promotion_name='6003431万相台无界-全站推广',amount,null)) as full_site_promotion
-                    ,SUM(IF(promotion_name='6003414多目标直投',amount,null)) as multi_objective_promotion
-                    ,SUM(IF(promotion_name='60030412关键词推广',amount,null)) as keyword_promotion
-                    ,SUM(IF(promotion_name='6003432万相台无界-货品运营',amount,null)) as product_operation_promotion
-                    ,SUM(IF(promotion_name='日常推广',amount,null)) AS daily_promotion
-                    ,SUM(IF(promotion_name='场景推广',amount,null)) AS scene_promotion
-                    ,SUM(IF(promotion_name='京东快车1' OR promotion_name='京东快车2' OR promotion_name='京东快车3',amount,null)) AS jd_express_promotion
-                    ,SUM(IF(promotion_name='全站营销' OR promotion_name='新品全站营销',amount,null)) AS total_promotion,goods_id
-            from goods_promotion_info 
-            where date BETWEEN ? AND ? AND goods_id = ?
-            GROUP BY date,goods_id
+            SELECT SUM(IF(promotion_name='日常推广',pay_amount,null)) AS daily_promotion
+                ,SUM(IF(promotion_name='日常推广',trans_amount,null)) AS daily_promotion_amount
+                ,SUM(IF(promotion_name='场景推广',pay_amount,null)) AS scene_promotion
+                ,SUM(IF(promotion_name='场景推广',trans_amount,null)) AS scene_promotion_amount
+                ,SUM(IF(promotion_name='京东快车1' OR promotion_name='京东快车2' OR promotion_name='京东快车3',pay_amount,null)) AS jd_express_promotion
+                ,SUM(IF(promotion_name='京东快车1' OR promotion_name='京东快车2' OR promotion_name='京东快车3',trans_amount,null)) AS jd_express_promotion_amount
+                ,SUM(IF(promotion_name='全站营销' OR promotion_name='新品全站营销',pay_amount,null)) AS total_promotion
+                ,SUM(IF(promotion_name='全站营销' OR promotion_name='新品全站营销',trans_amount,null)) AS total_promotion_amount
+                ,SUM(IF(promotion_name='稳定成本推广',pay_amount,null)) AS stable_cost_promotion
+                ,SUM(IF(promotion_name='稳定成本推广',trans_amount,null)) AS stable_cost_promotion_amount
+                ,SUM(IF(promotion_name='稳定成本推广',plan_goal,null)) AS stable_cost_goal
+                ,'' as full_site_promotion,'' as full_site_promotion_amount,'' as keyword_promotion,'' as keyword_promotion_amount
+                ,'' as targeted_audience_promotion,'' as targeted_audience_promotion_amount,'' as super_short_video,'' as super_short_video_amount,date 
+        FROM goods_promotion_plan
+        WHERE date BETWEEN ? AND ?  AND goods_id = ? 
+        AND shop_name not in ("pakchoice旗舰店（天猫）","八千行旗舰店（天猫）","宝厨行（淘宝）","八千行（淘宝）","北平商号（淘宝）","天猫teotm旗舰店")
+        GROUP BY date
+        UNION ALL
+        SELECT '' AS daily_promotion,'' AS daily_promotion_amount,'' AS scene_promotion,'' AS scene_promotion_amount,'' AS jd_express_promotion
+                ,'' AS jd_express_promotion_amount,'' AS total_promotion,'' AS total_promotion_amount,'' AS stable_cost_promotion
+                ,'' AS stable_cost_promotion_amount,'' AS stable_cost_goal
+                ,SUM(IF(promotion_name='货品全站推' OR promotion_name='全站推广',pay_amount,null)) AS full_site_promotion
+                ,SUM(IF(promotion_name='货品全站推' OR promotion_name='货品全站推',trans_amount,null)) AS full_site_promotion_amount
+                ,SUM(IF(promotion_name='关键词推广',pay_amount,null)) AS keyword_promotion
+                ,SUM(IF(promotion_name='关键词推广',trans_amount,null)) AS keyword_promotion_amount
+                ,SUM(IF(promotion_name='人群推广',pay_amount,null)) AS targeted_audience_promotion
+                ,SUM(IF(promotion_name='人群推广',trans_amount,null)) AS targeted_audience_promotion_amount
+                ,SUM(IF(promotion_name='超级短视频',pay_amount,null)) AS super_short_video
+                ,SUM(IF(promotion_name='超级短视频',trans_amount,null)) AS super_short_video_amount
+                ,pay_time
+        FROM tmall_promotion_info 
+        WHERE pay_time BETWEEN ? AND ? AND period = 1 AND goods_id = ?
+        GROUP BY goods_id,pay_time
         ) as a5
-        ON a1.goods_id = a5.goods_id AND a1.date = a5.date
-        LEFT JOIN(
-                SELECT date
-            ,(CASE 
-            WHEN MAX(b.second_category) in('水具', '酒杯/酒具','咖啡具','烹饪锅具','刀剪菜板','酒店用品','菜板/砧板') THEN SUM(real_sale_amount)*0.28
-            WHEN MAX(b.second_category) in('餐具', '茶具') THEN SUM(real_sale_amount)*0.25
-            WHEN MAX(b.second_category) in('厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具') THEN SUM(real_sale_amount)*0.26
-            END ) AS gross_standard,goods_id
-        FROM goods_sales AS a
-        LEFT JOIN (
-            SELECT DISTINCT brief_name,second_category 
-            FROM dianshang_operation_attribute WHERE brief_name = ? and platform ='自营'
-        ) AS b
-        ON a.goods_id=b.brief_name
-        WHERE goods_id = ? AND date BETWEEN ? AND ?
-                    GROUP BY date,goods_id
-        )as a6
-        ON a1.goods_id = a6.goods_id AND a1.date = a6.date
+        ON a1.date = a5.date
         WHERE a1.date BETWEEN ? AND ? AND a1.goods_id = ?`
-    const result = await query(sql, [goods_id,goods_id,start, end, goods_id ,goods_id,goods_id,start, end ,start, end, goods_id])
+    const result = await query(sql, [goods_id,start,end,start,end,goods_id,start,end,goods_id,start,end,goods_id])
     return result || []
 }
 
@@ -6775,6 +6786,30 @@ goodsSaleInfoRepo.getUnsalableByLinks = async (links, links1) => {
                 AND (d.goods_id IN ("${links}") ${subsql})
             GROUP BY IF(d.platform = '自营', d.brief_name, d.goods_id), d.volume_target) b`
     const result = await query(sql)
+    return result
+}
+
+goodsSaleInfoRepo.getskuCodeInfo = async(goods_id, start, end) => {
+    const sql =`SELECT sku_code
+			,SUM(cost_amount) AS cost_amount
+			,SUM(sale_amount) AS sale_amount
+			,SUM(profit) AS profit
+			,CONCAT(ROUND(SUM(profit)/SUM(sale_amount)*100,2),'%') as profit_rate 
+        FROM goods_sale_info 
+        WHERE goods_id = ? AND date BETWEEN ? AND ?
+        AND shop_name NOT IN ('京东自营-厨具','京东自营-日用') 
+        GROUP BY sku_code
+        UNION ALL
+        SELECT sku_id
+            ,SUM(cost_amount) AS cost_amount
+            ,SUM(sale_amount) AS sale_amount
+            ,SUM(profit) AS profit
+            ,CONCAT(ROUND(SUM(profit)/SUM(sale_amount)*100,2),'%') as profit_rate 
+        FROM goods_sale_info
+        WHERE goods_id = ? AND date BETWEEN ? AND ?
+        AND shop_name IN ('京东自营-厨具','京东自营-日用')
+        GROUP BY sku_id`
+    const result = await query(sql,[goods_id, start, end,goods_id, start, end]) 
     return result
 }
 

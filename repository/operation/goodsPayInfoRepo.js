@@ -836,7 +836,7 @@ goodsPayInfoRepo.getData = async (start, end, params, shopNames, linkIds,shopNam
                         ,SUM(IF(promotion_name='超级短视频',trans_amount,null)) AS super_short_video_amount
                         ,goods_id
                     FROM tmall_promotion_info 
-                    WHERE \`date\` BETWEEN '${start}' AND '${end}'  AND period = 1 AND goods_id IN (${goods_ids})
+                    WHERE pay_time BETWEEN '${start}' AND '${end}'  AND period = 1 AND goods_id IN (${goods_ids})
                     GROUP BY goods_id`
                 let row2 = await query(sql)
                 if(row2?.length){
@@ -857,7 +857,7 @@ goodsPayInfoRepo.getData = async (start, end, params, shopNames, linkIds,shopNam
                         row[i].jd_express_promotion_roi = row2[j].jd_express_promotion >0 ? (row2[j].jd_express_promotion_amount/row2[j].jd_express_promotion).toFixed(2) : null
                         row[i].total_promotion_roi = row2[j].total_promotion >0 ? (row2[j].total_promotion_amount/row2[j].total_promotion).toFixed(2) : null
                         row[i].stable_cost_promotion_roi = row2[j].stable_cost_promotion >0 ? (row2[j].stable_cost_promotion_amount/row2[j].stable_cost_promotion).toFixed(2) : null
-                        row[i].targeted_audience_promotion_difference = row2[j].stable_cost_promotion >0 ? (row2[j].stable_cost_promotion_amount/row2[j].stable_cost_promotion-row2[j].stable_cost_goal).toFixed(2) : -row2[j].stable_cost_goal
+                        row[i].targeted_audience_promotion_difference = row2[j].stable_cost_promotion >0 ? (row2[j].stable_cost_promotion_amount/row2[j].stable_cost_promotion - row2[j].stable_cost_goal).toFixed(2) : -row2[j].stable_cost_goal
                         row[i].full_site_promotion_roi = row2[j].full_site_promotion >0 ? (row2[j].full_site_promotion_amount/row2[j].full_site_promotion).toFixed(2) : null
                         row[i].keyword_promotion_roi = row2[j].keyword_promotion >0 ? (row2[j].keyword_promotion_amount/row2[j].keyword_promotion).toFixed(2) : null
                         row[i].targeted_audience_promotion_roi = row2[j].targeted_audience_promotion >0 ? (row2[j].targeted_audience_promotion_amount/row2[j].targeted_audience_promotion).toFixed(2) : null
@@ -4972,6 +4972,30 @@ goodsPayInfoRepo.getUnsalableByLinks = async (links, links1) => {
                 AND (d.goods_id IN ("${links}") ${subsql})
             GROUP BY IF(d.platform = '自营', d.brief_name, d.goods_id), d.volume_target) b`
     const result = await query(sql)
+    return result
+}
+
+goodsPayInfoRepo.getskuCodeInfo = async(goods_id, start, end) => {
+    const sql =`SELECT sku_code
+			,SUM(cost_amount) AS cost_amount
+			,SUM(sale_amount) AS sale_amount
+			,SUM(profit) AS profit
+			,CONCAT(ROUND(SUM(profit)/SUM(sale_amount)*100,2),'%') as profit_rate 
+        FROM goods_sale_info 
+        WHERE goods_id = ? AND date BETWEEN ? AND ?
+        AND shop_name NOT IN ('京东自营-厨具','京东自营-日用') 
+        GROUP BY sku_code
+        UNION ALL
+        SELECT sku_id
+            ,SUM(cost_amount) AS cost_amount
+            ,SUM(sale_amount) AS sale_amount
+            ,SUM(profit) AS profit
+            ,CONCAT(ROUND(SUM(profit)/SUM(sale_amount)*100,2),'%') as profit_rate 
+        FROM goods_sale_info
+        WHERE goods_id = ? AND date BETWEEN ? AND ?
+        AND shop_name IN ('京东自营-厨具','京东自营-日用')
+        GROUP BY sku_id`
+    const result = await query(sql,[goods_id, start, end,goods_id, start, end]) 
     return result
 }
 
