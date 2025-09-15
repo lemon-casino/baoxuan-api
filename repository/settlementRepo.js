@@ -1,4 +1,4 @@
-const { query } = require('../model/dbConn')
+const { query } = require('../model/localDbConn')
 const settlementRepo = {}
 
 settlementRepo.getAmount = async (start, end, shopNames, linkIds, except) => {
