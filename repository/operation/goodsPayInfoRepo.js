@@ -64,7 +64,7 @@ goodsPayInfoRepo.getTargetsByShopNames = async (shopNames, months) => {
         IFNULL(SUM(a1.amount), 0) AS amount1, 
         IFNULL(SUM(a2.amount), 0) AS amount2, a2.month FROM 
         goods_monthly_sales_target a2 JOIN dianshang_operation_attribute doa 
-            ON a2.goods_id = doa.goods_id 
+            ON a2.goods_id = doa.goods_id OR (doa.platform = '自营' AND a2.goods_id = doa.brief_name) 
         LEFT JOIN (SELECT IFNULL(sum(sale_amount), 0) AS amount, `
     let search = ''
     for (let i = 0; i < months.length; i++) {
