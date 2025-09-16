@@ -794,6 +794,8 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds,shopNa
                         ,SUM(IF(promotion_name='稳定成本推广',pay_amount,null)) AS stable_cost_promotion
                         ,SUM(IF(promotion_name='稳定成本推广',trans_amount,null)) AS stable_cost_promotion_amount
                         ,SUM(IF(promotion_name='稳定成本推广',plan_goal,null)) AS stable_cost_goal
+                        ,SUM(IF(promotion_name='全店托管',pay_amount,null)) AS product_custody_promotion
+                        ,SUM(IF(promotion_name='全店托管',trans_amount,null)) AS product_custody_promotion_amount
                         ,'' as full_site_promotion,'' as full_site_promotion_amount,'' as keyword_promotion,'' as keyword_promotion_amount
                         ,'' as targeted_audience_promotion,'' as targeted_audience_promotion_amount,'' as super_short_video,'' as super_short_video_amount,goods_id 
                     FROM goods_promotion_plan
@@ -803,7 +805,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds,shopNa
                     UNION ALL
                     SELECT '' AS daily_promotion,'' AS daily_promotion_amount,'' AS scene_promotion,'' AS scene_promotion_amount,'' AS jd_express_promotion
                         ,'' AS jd_express_promotion_amount,'' AS total_promotion,'' AS total_promotion_amount,'' AS stable_cost_promotion
-                        ,'' AS stable_cost_promotion_amount,'' AS stable_cost_goal
+                        ,'' AS stable_cost_promotion_amount,'' AS stable_cost_goal,'' AS product_custody_promotion,''AS product_custody_promotion_amount
                         ,SUM(IF(promotion_name='货品全站推' OR promotion_name='全站推广',pay_amount,null)) AS full_site_promotion
                         ,SUM(IF(promotion_name='货品全站推' OR promotion_name='货品全站推',trans_amount,null)) AS full_site_promotion_amount
                         ,SUM(IF(promotion_name='关键词推广',pay_amount,null)) AS keyword_promotion
@@ -830,6 +832,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds,shopNa
                         row[i].targeted_audience_promotion = row2[j].targeted_audience_promotion
                         row[i].super_short_video = row2[j].super_short_video
                         row[i].stable_cost_goal = row2[j].stable_cost_goal
+                        row[i].product_custody_promotion = row2[j].product_custody_promotion
                         row[i].daily_promotion_roi = row2[j].daily_promotion >0 ? (row2[j].daily_promotion_amount/row2[j].daily_promotion).toFixed(2) : null
                         row[i].scene_promotion_roi = row2[j].scene_promotion >0 ? (row2[j].scene_promotion_amount/row2[j].scene_promotion).toFixed(2) : null
                         row[i].jd_express_promotion_roi = row2[j].jd_express_promotion >0 ? (row2[j].jd_express_promotion_amount/row2[j].jd_express_promotion).toFixed(2) : null
@@ -840,6 +843,7 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds,shopNa
                         row[i].keyword_promotion_roi = row2[j].keyword_promotion >0 ? (row2[j].keyword_promotion_amount/row2[j].keyword_promotion).toFixed(2) : null
                         row[i].targeted_audience_promotion_roi = row2[j].targeted_audience_promotion >0 ? (row2[j].targeted_audience_promotion_amount/row2[j].targeted_audience_promotion).toFixed(2) : null
                         row[i].super_short_video_roi = row2[j].super_short_video >0 ? (row2[j].super_short_video_amount/row2[j].super_short_video).toFixed(2) : null
+                        row[i].product_custody_promotion_roi = row2[j].product_custody_promotion > 0 ? (row2[j].product_custody_promotion_amount/row2[j].product_custody_promotion).toFixed(2) : null
                     }
                 }
                 sql=`SELECT IFNULL(SUM(a1.users_num), 0) AS users_num, 
@@ -880,7 +884,6 @@ goodsSaleInfoRepo.getData = async (start, end, params, shopNames, linkIds,shopNa
             result.data = row
         }
     }
-    console.log(result)
     return result
 }
 
@@ -1983,6 +1986,9 @@ goodsSaleInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
             FORMAT(IFNULL(a5.targeted_audience_promotion_amount,0)/IFNULL(a5.targeted_audience_promotion,0),2) AS targeted_audience_promotion_roi,
             FORMAT(IFNULL(a5.super_short_video,0),2) AS super_short_video,
             FORMAT(IFNULL(a5.super_short_video_amount,0)/IFNULL(a5.super_short_video,0),2) AS super_short_video_roi,
+            FORMAT(IFNULL(a5.product_custody_promotion,0),2) AS product_custody_promotion,
+            FORMAT(IFNULL(a5.product_custody_promotion_amount,0)/IFNULL(a5.product_custody_promotion,0),2) AS product_custody_promotion_roi,
+            a6.users_num,a6.trans_users_num,a6.real_pay_rate,a6.total_users_num,a6.total_trans_users_num,
             DATE_FORMAT(a1.date, '%Y-%m-%d') as \`date\`
         FROM goods_sales_stats a1 LEFT JOIN goods_verifieds_stats a2 ON a1.goods_id = a2.goods_id
             AND a2.date = DATE_SUB(a1.date, INTERVAL 1 DAY)
@@ -2009,6 +2015,8 @@ goodsSaleInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
                 ,SUM(IF(promotion_name='稳定成本推广',pay_amount,null)) AS stable_cost_promotion
                 ,SUM(IF(promotion_name='稳定成本推广',trans_amount,null)) AS stable_cost_promotion_amount
                 ,SUM(IF(promotion_name='稳定成本推广',plan_goal,null)) AS stable_cost_goal
+                ,SUM(IF(promotion_name='全店托管',pay_amount,null)) AS product_custody_promotion
+                ,SUM(IF(promotion_name='全店托管',trans_amount,null)) AS product_custody_promotion_amount
                 ,'' as full_site_promotion,'' as full_site_promotion_amount,'' as keyword_promotion,'' as keyword_promotion_amount
                 ,'' as targeted_audience_promotion,'' as targeted_audience_promotion_amount,'' as super_short_video,'' as super_short_video_amount,date 
         FROM goods_promotion_plan
@@ -2018,7 +2026,7 @@ goodsSaleInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
         UNION ALL
         SELECT '' AS daily_promotion,'' AS daily_promotion_amount,'' AS scene_promotion,'' AS scene_promotion_amount,'' AS jd_express_promotion
                 ,'' AS jd_express_promotion_amount,'' AS total_promotion,'' AS total_promotion_amount,'' AS stable_cost_promotion
-                ,'' AS stable_cost_promotion_amount,'' AS stable_cost_goal
+                ,'' AS stable_cost_promotion_amount,'' AS stable_cost_goal,'' AS product_custody_promotion,''AS product_custody_promotion_amount
                 ,SUM(IF(promotion_name='货品全站推' OR promotion_name='全站推广',pay_amount,null)) AS full_site_promotion
                 ,SUM(IF(promotion_name='货品全站推' OR promotion_name='货品全站推',trans_amount,null)) AS full_site_promotion_amount
                 ,SUM(IF(promotion_name='关键词推广',pay_amount,null)) AS keyword_promotion
@@ -2033,8 +2041,24 @@ goodsSaleInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
         GROUP BY goods_id,pay_time
         ) as a5
         ON a1.date = a5.date
+        LEFT JOIN (      
+            SELECT IFNULL(SUM(a1.users_num), 0) AS users_num, 
+                IFNULL(SUM(a1.trans_users_num), 0) AS trans_users_num,
+                IF(IFNULL(SUM(a1.users_num), 0) > 0, FORMAT(
+                    (IFNULL(SUM(a1.trans_users_num), 0) - 
+                    IFNULL(SUM(a2.brushing_qty), 0)) / 
+                    IFNULL(SUM(a1.users_num), 0) * 100, 2), 0) AS real_pay_rate,
+                    IFNULL(SUM(a1.total_users_num), 0) AS total_users_num, 
+                    IFNULL(SUM(a1.total_trans_users_num), 0) AS total_trans_users_num,
+                    a1.date 
+            FROM goods_composite_info a1 
+            LEFT JOIN goods_pays a2 
+            ON a1.date = a2.date AND a1.goods_id = a2.goods_id
+            WHERE a1.date BETWEEN ? AND ? AND a1.goods_id = ?
+            GROUP BY a1.date
+        ) as a6 ON a1.date = a6.date 
         WHERE a1.date BETWEEN ? AND ? AND a1.goods_id = ?`
-    const result = await query(sql, [goods_id,start,end,start,end,goods_id,start,end,goods_id,start,end,goods_id])
+    const result = await query(sql, [goods_id,start,end,start,end,goods_id,start,end,goods_id,start,end,goods_id,start,end,goods_id])
     return result || []
 }
 
