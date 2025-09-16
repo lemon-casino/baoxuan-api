@@ -1917,6 +1917,7 @@ goodsPayInfoRepo.getDataDetailByTime1 = async (goods_id, start, end) => {
 goodsPayInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
     const sql = `SELECT IFNULL(a1.sale_amount, 0) AS sale_amount, 
             IFNULL(a1.cost_amount, 0) AS cost_amount, 
+            IFNULL(a1.sale_qty, 0) AS sale_qty, 
             IFNULL(a1.operation_amount, 0) AS operation_amount, 
             IFNULL(a1.promotion_amount, 0) AS promotion_amount, 
             IFNULL(a1.express_fee, 0) AS express_fee, 
@@ -1934,6 +1935,10 @@ goodsPayInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
                 (1 - a2.cost_amount / a2.sale_amount) * 100, 0), 2) AS gross_profit, 
             FORMAT(IF(IFNULL(a1.sale_amount, 0) > 0, 
                 IFNULL(a1.profit, 0) / a1.sale_amount, 0) * 100, 2) AS profit_rate_gmv, 
+            FORMAT(IFNULL(a4.real_gross_profit,0),2) AS real_gross_profit,
+            FORMAT(IFNULL(a4.real_sale_amount,0),2) AS real_sale_amount,
+            FORMAT(IFNULL(a1.gross_standard,0),2) AS gross_standard,
+            FORMAT(IFNULL(a1.other_cost,0),2) AS other_cost,
             FORMAT(IFNULL(a5.daily_promotion,0),2) AS daily_promotion,
             FORMAT(IFNULL(a5.daily_promotion_amount,0)/IFNULL(a5.daily_promotion,0),2) AS daily_promotion_roi,
             FORMAT(IFNULL(a5.scene_promotion,0),2) AS scene_promotion,
@@ -1959,6 +1964,17 @@ goodsPayInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
             DATE_FORMAT(a1.date, '%Y-%m-%d') as \`date\` 
         FROM goods_pays_stats a1 LEFT JOIN goods_verifieds_stats a2 ON a1.goods_id = a2.goods_id 
             AND a2.date = DATE_SUB(a1.date, INTERVAL 1 DAY) 
+        LEFT JOIN(
+            SELECT goods_id,date
+                ,SUM(real_sale_qty) as real_sale_qty
+                ,SUM(real_sale_amount) as real_sale_amount
+                ,SUM(real_gross_profit) as real_gross_profit
+                FROM goods_sales
+                WHERE goods_id= ?
+                AND date BETWEEN ? AND ?
+            GROUP BY goods_id, date
+        )as a4
+        ON a1.goods_id = a4.goods_id AND a1.date = a4.date
         LEFT JOIN(
             SELECT SUM(IF(promotion_name='日常推广',pay_amount,null)) AS daily_promotion
                 ,SUM(IF(promotion_name='日常推广',trans_amount,null)) AS daily_promotion_amount
@@ -2013,7 +2029,7 @@ goodsPayInfoRepo.getDataDetailTotalByTime = async(goods_id, start, end) => {
             GROUP BY a1.date
         ) as a6 ON a1.date = a6.date 
         WHERE a1.date BETWEEN ? AND ? AND a1.goods_id = ?`
-    const result = await query(sql, [start, end, goods_id, start, end, goods_id, start, end, goods_id, start, end, goods_id])
+    const result = await query(sql, [goods_id,start,end,start, end, goods_id, start, end, goods_id, start, end, goods_id, start, end, goods_id])
     return result || []
 }
 

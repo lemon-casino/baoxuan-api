@@ -1604,7 +1604,7 @@ const getGoodsInfo = async (startDate, endDate, params, id,tab) => {
                 title: '总供货价', field_id: 'sale_amount', type: 'number', 
                 min: 0, max: 100, show: true
             },{
-                title: '总供货价', field_id: 'gross_standard', type: 'number', 
+                title: '综毛标准', field_id: 'gross_standard', type: 'number', 
                 min: 0, max: 100, show: true
             },{
                 title: '实际综毛', field_id: 'real_gross_profit', type: 'number', 
@@ -1766,6 +1766,7 @@ const getGoodsInfoDetailTotal = async (goods_id, start, end, stats) => {
             parent_id: goods_id,
             shop_name: info[i].shop_name,
             sale_amount: info[i].sale_amount,
+            sale_qty: info[i].sale_qty,
             cost_amount: info[i].cost_amount,
             operation_amount: info[i].operation_amount,
             promotion_amount: info[i].promotion_amount,
