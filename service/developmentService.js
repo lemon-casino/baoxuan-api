@@ -32,6 +32,7 @@ const goodsSalesRepo = require('@/repository/operation/goodsSalesRepo')
 const combinationProductCodeRepo = require('@/repository/danpin/combinationProductCodeRepo')
 const { getRealDepartment, getRealProject } = require('@/service/departmentService')
 const userSettingRepo = require('@/repository/userSettingRepo')
+const processesRepo = require('@/repository/process/processesRepo')
 
 developmentService.getDataStats = async (type, start, end, month, timeType, project, process) => {
     let result = []
@@ -3958,7 +3959,7 @@ developmentService.getProcessInfo = async (params) => {
                 'order', 'purchase_order', 'pre_vision', 'vision_running', 
                 'vision_completed', 'plan_running', 'plan_completed'
             ]
-            data = await actHiProcinstRepo.getProcessNodeCount(typeList, start, end)
+            data = await processesRepo.getProcessNodeCount(typeList, start, end)
             for (let i = 0; i < typeList.length; i++) {
                 tmp[typeList[i]] = 0
             }
@@ -3989,30 +3990,21 @@ developmentService.getProcessInfo = async (params) => {
                 result[i]['shelf'] = 0
                 resultMap[`${result[i]['division']}_${result[i]['develop_type']}`] = i
             }
-            info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end)
+            info = await processesRepo.getSelectedProcessSkuInfo(start, end)
             for (let i = 0; i < info.length; i++) {
                 let index = resultMap[`${info[i]['division']}_${info[i]['develop_type']}`]
                 let skuids = '', skuMap = {}, infoMap = {}, infoMap1 = {}, infoMap2 = {}, infoMap3 = {}
-                if (info[i].info) {
-                    let content = new ObjectInputStream(info[i].info)
-                    content = content.readObject()
-                    content?.annotations.splice(0, 1)
-                    content = content?.annotations
+                if (info[i].info) {                    
+                    let content = JSON.parse(info[i].info)
                     skuMap[info[i].id] = ''
                     for (let j = 0; j < content?.length; j++) {
-                        let sku = '', flag = 0
-                        for (let k = 0; k < content[j].annotations.length; k++) {
-                            if (['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
-                                .includes(content[j].annotations[k])) {
-                                sku = content[j].annotations[k+1]
-                            } else if (!['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
-                            .includes(content[j].annotations[k]) && content[j].annotations[k+1] != 0) {
-                                flag = 1
-                            }
-                        }
-                        if (flag) {
-                            skuids = `${skuids}${sku}","`
-                            skuMap[sku] = info[i].id
+                        let noneDigit = /^\D/
+                        let first = noneDigit.test(content[j]['事业部一订货量']) ? 0:parseInt(content[j]['事业部一订货量'])
+                        let second = noneDigit.test(content[j]['事业部二订货量']) ? 0:parseInt(content[j]['事业部二订货量'])
+                        let third = noneDigit.test(content[j]['事业部三订货量']) ? 0:parseInt(content[j]['事业部三订货量'])
+                        if (content[j]['商品编码'] && first + second + third > 0) {
+                            skuids = `${skuids}${content[j]['商品编码']}","`
+                            skuMap[content[j]['商品编码']] = info[i].id
                         }
                     }
                 }
@@ -4065,7 +4057,7 @@ developmentService.getProcessInfo = async (params) => {
                 'choose', 'pre_vision', 'vision_running', 
                 'vision_completed'
             ]
-            data = await actHiProcinstRepo.getProcessNodeCount(typeList, start, end)
+            data = await processesRepo.getProcessNodeCount(typeList, start, end)
             for (let i = 0; i < typeList.length; i++) {
                 tmp[typeList[i]] = 0
             }
@@ -4080,7 +4072,7 @@ developmentService.getProcessInfo = async (params) => {
             typeList = [
                 'preorder', 'order', 'purchase_order'
             ]
-            data = await actHiProcinstRepo.getProcessNodeCount(typeList, start, end)
+            data = await processesRepo.getProcessNodeCount(typeList, start, end)
             for (let i = 0; i < typeList.length; i++) {
                 tmp[typeList[i]] = 0
             }
@@ -4097,30 +4089,21 @@ developmentService.getProcessInfo = async (params) => {
                 result[i]['shelf'] = 0
                 resultMap[`${result[i]['division']}_${result[i]['develop_type']}`] = i
             }
-            info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end)
+            info = await processesRepo.getSelectedProcessSkuInfo(start, end)
             for (let i = 0; i < info.length; i++) {
                 let index = resultMap[`${info[i]['division']}_${info[i]['develop_type']}`]
                 let skuids = '', skuMap = {}, infoMap = {}, infoMap1 = {}, infoMap2 = {}, infoMap3 = {}
                 if (info[i].info) {
-                    let content = new ObjectInputStream(info[i].info)
-                    content = content.readObject()
-                    content?.annotations.splice(0, 1)
-                    content = content?.annotations
+                    let content = JSON.parse(info[i].info)
                     skuMap[info[i].id] = ''
                     for (let j = 0; j < content?.length; j++) {
-                        let sku = '', flag = 0
-                        for (let k = 0; k < content[j].annotations.length; k++) {
-                            if (['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
-                                .includes(content[j].annotations[k])) {
-                                sku = content[j].annotations[k+1]
-                            } else if (!['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
-                            .includes(content[j].annotations[k]) && content[j].annotations[k+1] != 0) {
-                                flag = 1
-                            }
-                        }
-                        if (flag) {
-                            skuids = `${skuids}${sku}","`
-                            skuMap[sku] = info[i].id
+                        let noneDigit = /^\D/
+                        let first = noneDigit.test(content[j]['事业部一订货量']) ? 0:parseInt(content[j]['事业部一订货量'])
+                        let second = noneDigit.test(content[j]['事业部二订货量']) ? 0:parseInt(content[j]['事业部二订货量'])
+                        let third = noneDigit.test(content[j]['事业部三订货量']) ? 0:parseInt(content[j]['事业部三订货量'])
+                        if (content[j]['商品编码'] && first + second + third > 0) {
+                            skuids = `${skuids}${content[j]['商品编码']}","`
+                            skuMap[content[j]['商品编码']] = info[i].id
                         }
                     }
                 }
@@ -4172,7 +4155,7 @@ developmentService.getProcessInfo = async (params) => {
                 'order', 'purchase_order', 'pre_vision', 'vision_running', 
                 'vision_completed', 'plan_running', 'plan_completed'
             ]
-            data = await actHiProcinstRepo.getProcessNodeCount(typeList, start, end)
+            data = await processesRepo.getProcessNodeCount(typeList, start, end)
             for (let i = 0; i < typeList.length; i++) {
                 tmp[typeList[i]] = 0
             }
@@ -4235,30 +4218,21 @@ developmentService.getProcessInfo = async (params) => {
                 result[i]['shelf'] = 0
                 resultMap[`${result[i]['division']}_${result[i]['develop_type']}`] = i
             }
-            info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end)
+            info = await processesRepo.getSelectedProcessSkuInfo(start, end)
             for (let i = 0; i < info.length; i++) {
                 let index = resultMap[`${info[i]['division']}_${info[i]['develop_type']}`]
                 let skuids = '', skuMap = {}, infoMap = {}, infoMap1 = {}, infoMap2 = {}, infoMap3 = {}
                 if (info[i].info) {
-                    let content = new ObjectInputStream(info[i].info)
-                    content = content.readObject()
-                    content?.annotations.splice(0, 1)
-                    content = content?.annotations
+                    let content = JSON.parse(info[i].info)
                     skuMap[info[i].id] = ''
                     for (let j = 0; j < content?.length; j++) {
-                        let sku = '', flag = 0
-                        for (let k = 0; k < content[j].annotations.length; k++) {
-                            if (['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
-                                .includes(content[j].annotations[k])) {
-                                sku = content[j].annotations[k+1]
-                            } else if (!['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
-                            .includes(content[j].annotations[k]) && content[j].annotations[k+1] != 0) {
-                                flag = 1
-                            }
-                        }
-                        if (flag) {
-                            skuids = `${skuids}${sku}","`
-                            skuMap[sku] = info[i].id
+                        let noneDigit = /^\D/
+                        let first = noneDigit.test(content[j]['事业部一订货量']) ? 0:parseInt(content[j]['事业部一订货量'])
+                        let second = noneDigit.test(content[j]['事业部二订货量']) ? 0:parseInt(content[j]['事业部二订货量'])
+                        let third = noneDigit.test(content[j]['事业部三订货量']) ? 0:parseInt(content[j]['事业部三订货量'])
+                        if (content[j]['商品编码'] && first + second + third > 0) {
+                            skuids = `${skuids}${content[j]['商品编码']}","`
+                            skuMap[content[j]['商品编码']] = info[i].id
                         }
                     }
                 }
@@ -4307,7 +4281,7 @@ developmentService.getProcessInfo = async (params) => {
             result.push(defaultTmp)
             break
         case '4':
-            info = await actHiProcinstRepo.getProcessSelectedCount(start, end)
+            info = await processesRepo.getProcessSelectedCount(start, end, params.removeCoupang)
             defaultTmp = {select_division: '合计', first: 0, second: 0, third: 0, total: 0}
             result = [
                 {id: '0', parent_id: null, select_division: '否', first: 0, second: 0, third: 0, total: 0},
@@ -4365,35 +4339,37 @@ developmentService.getProcessDetail = async (params) => {
     let start = moment(params.start).format('YYYY-MM-DD')
     let end = moment(params.end).format('YYYY-MM-DD') + ' 23:59:59'
     if (params.selectType == 'select_division') {
-        let info = await actHiProcinstRepo.getProcessSelectedCount(start, end)
+        let info = await processesRepo.getProcessSelectedCount(start, end, params.removeCoupang)
         let ids = '', infoMap = [], infoType = 0
         for (let i = 0; i < info?.length; i++) {
-            if (i > 0 && info[i].id != info[i-1].id) {
-                if ((params.infoType == '刘+陆' && infoType == 1) || 
-                    (params.infoType == '陆+王' && infoType == 2) || 
-                    (params.infoType == '刘+王' && infoType == 3) || 
-                    (params.infoType == '三个' && infoType == 4)) 
-                    ids = `${ids}${info[i-1].id}","` 
-                else if ((params.infoType == '否' && infoType == 0)) {
-                    if ((params.type == 'first' && info[i-1].type == 1) || 
-                        (params.type == 'second' && info[i-1].type == 2) || 
-                        (params.type == 'third' && info[i-1].type == 3) || (params.type == 'total'))
+            if (params.infoType)
+                if (i > 0 && info[i].id != info[i-1].id) {
+                    if ((params.infoType == '刘+陆' && infoType == 1) || 
+                        (params.infoType == '陆+王' && infoType == 2) || 
+                        (params.infoType == '刘+王' && infoType == 3) || 
+                        (params.infoType == '三个' && infoType == 4)) 
                         ids = `${ids}${info[i-1].id}","` 
-                }             
-                infoType = 0
-                infoMap = [info[i].type]
-            } else {
-                infoMap.push(info[i].type)
-                if (infoMap.includes(1) && infoMap.includes(2) && infoMap.includes(3)) {
-                    infoType = 4
-                } else if (infoMap.includes(1) && infoMap.includes(2)) {
-                    infoType = 1
-                } else if (infoMap.includes(2) && infoMap.includes(3)) {
-                    infoType = 2
-                } else if (infoMap.includes(1) && infoMap.includes(3)) {
-                    infoType = 3
+                    else if ((params.infoType == '否' && infoType == 0)) {
+                        if ((params.type == 'first' && info[i-1].type == 1) || 
+                            (params.type == 'second' && info[i-1].type == 2) || 
+                            (params.type == 'third' && info[i-1].type == 3) || (params.type == 'total'))
+                            ids = `${ids}${info[i-1].id}","` 
+                    }             
+                    infoType = 0
+                    infoMap = [info[i].type]
+                } else {
+                    infoMap.push(info[i].type)
+                    if (infoMap.includes(1) && infoMap.includes(2) && infoMap.includes(3)) {
+                        infoType = 4
+                    } else if (infoMap.includes(1) && infoMap.includes(2)) {
+                        infoType = 1
+                    } else if (infoMap.includes(2) && infoMap.includes(3)) {
+                        infoType = 2
+                    } else if (infoMap.includes(1) && infoMap.includes(3)) {
+                        infoType = 3
+                    }
                 }
-            }      
+            else ids = `${ids}${info[i].id}","`
         }
         if (info?.length) {
             if ((params.infoType == '刘+陆' && infoType == 1) || 
@@ -4410,41 +4386,41 @@ developmentService.getProcessDetail = async (params) => {
         }
         if (ids?.length) {
             ids = ids.substring(0, ids?.length - 3)
-            result = await actHiProcinstRepo.getProcessInfo(start, end, 'choose', 'select_division', ids)
+            result = await processesRepo.getProcessInfo(params.removeCoupang, start, end, 'choose', 'select_division', ids)
         }
         type = 0
     } else if (params.type == 'total') {
         if (params.selectType)
-            result = await actHiProcinstRepo.getProcessInfo(start, end, params.type, params.selectType, params.infoType, params.selectType1, params.infoType1)
-        else result = await actHiProcinstRepo.getProcessInfo(start, end)
+            result = await processesRepo.getProcessInfo(params.removeCoupang, start, end, params.type, params.selectType, params.infoType, params.selectType1, params.infoType1)
+        else result = await processesRepo.getProcessInfo(params.removeCoupang, start, end)
         type = 0
     } else if (['choose', 'purchase', 'warehouse', 'shelfing', 'shelf', 'reject', 
         'select', 'ip_review', 'ip_design', 'sample', 'preorder', 'order', 
         'purchase_order', 'pre_vision'].includes(params.type)) {
         if (params.selectType) 
-            result = await actHiProcinstRepo.getProcessInfo(start, end, params.type, params.selectType, params.infoType, params.selectType1, params.infoType1)
-        else result = await actHiProcinstRepo.getProcessInfo(start, end, params.type)
+            result = await processesRepo.getProcessInfo(params.removeCoupang, start, end, params.type, params.selectType, params.infoType, params.selectType1, params.infoType1)
+        else result = await processesRepo.getProcessInfo(params.removeCoupang, start, end, params.type)
         type = 0
     } else if (['vision_running', 'vision_completed'].includes(params.type)) {
-        let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end, params.selectType, params.infoType, params.selectType1, params.infoType1)
+        let info = await processesRepo.getSelectedProcessSkuInfo(params.removeCoupang, start, end, params.selectType, params.infoType, params.selectType1, params.infoType1)
         let ids = ''
         for (let i = 0; i < info.length; i++) {
             ids = `${ids}${info[i].id}","`
         }
         if (ids?.length) {
             ids = ids.substring(0, ids.length - 3)
-            result = await actHiProcinstRepo.getProcessInfo1(params.type, ids)
+            result = await processesRepo.getProcessInfo1(params.removeCoupang, params.type, ids)
         }
         type = 1
     } else if (['plan_running', 'plan_completed'].includes(params.type)) {
-        let info = await actHiProcinstRepo.getSelectedProcessSkuInfo(start, end, params.selectType, params.infoType, params.selectType1, params.infoType1)
+        let info = await processesRepo.getSelectedProcessSkuInfo(params.removeCoupang, start, end, params.selectType, params.infoType, params.selectType1, params.infoType1)
         let ids = ''
         for (let i = 0; i < info.length; i++) {
             ids = `${ids}${info[i].id}","`
         }
         if (ids?.length) {
             ids = ids.substring(0, ids.length - 3)
-            result = await actHiProcinstRepo.getProcessInfo2(params.type, ids)
+            result = await processesRepo.getProcessInfo2(params.removeCoupang, params.type, ids)
         }
         type = 2
     }
@@ -4563,14 +4539,9 @@ developmentService.getProcessDetail = async (params) => {
             if (result[i].end_time) {
                 result[i].total_duration = moment(result[i].end_time).diff(moment(result[i].start_time), 'd')
             }
-            if (result[i].info1 && (result[i].image == null || result[i].image == '2')) {
-                let content = new ObjectInputStream(result[i].info1)
-                content = content.readObject()
-                content?.annotations.splice(0, 1)
-                content = content?.annotations
-                for (let j = 0; j < content?.length; j++) {
-                    result[i].image = content[j]
-                }
+            if (result[i].image != null && result[i].image.indexOf('[') != -1) {
+                let content = JSON.parse(result[i].image)
+                result[i].image = content[0]
             }
             if (result[i].image?.length) result[i].image = result[i].image.replace(':9000/', ':9003/').replace('http:', 'https:').replace('//bpm.', '//minio.')
             if (result[i].info) {
@@ -4578,31 +4549,23 @@ developmentService.getProcessDetail = async (params) => {
                 result[i]['first_purchase'] = '否'
                 result[i]['second_purchase'] = '否'
                 result[i]['third_purchase'] = '否'
-                let content = new ObjectInputStream(result[i].info), skuids = '', skuids1 = ''
-                content = content.readObject()
-                content?.annotations.splice(0, 1)
-                content = content?.annotations
+                let content = JSON.parse(result[i].info), skuids = '', skuids1 = ''
                 for (let j = 0; j < content?.length; j++) {
-                    for (let k = 0; k < content[j].annotations.length; k++) {
-                        if (['F5t4ma3ptwn0ftc', 'Fbogma3jgfn4gfc', 'Fi0sma263vtqhkc']
-                            .includes(content[j].annotations[k])) {                            
-                            result[i].pre_purchase_num += parseInt(content[j].annotations[k+1]) || 0
-                            if (content[j].annotations[k+1] != 0) result[i]['first_purchase'] = '是'
-                        }
-                        if (['Frhbma3pulstg5c', 'Fwmjmakutsrdisc', 'Fj3tma2643p9hqc']
-                            .includes(content[j].annotations[k])) {                            
-                            result[i].pre_purchase_num += parseInt(content[j].annotations[k+1]) || 0
-                            if (content[j].annotations[k+1] != 0) result[i]['second_purchase'] = '是'
-                        }
-                        if (['Ffmgma3pv8zxgkc', 'Fkpmmakutu40ivc', 'Fo95ma264bhphxc']
-                            .includes(content[j].annotations[k])) {                            
-                            result[i].pre_purchase_num += parseInt(content[j].annotations[k+1]) || 0
-                            if (content[j].annotations[k+1] != 0) result[i]['third_purchase'] = '是'
-                        }
-                        if (['Fz3jma3psq0dfhc', 'Ffntma3jg6vyg2c', 'Fjwwma263o2uhfc']
-                            .includes(content[j].annotations[k])) {
-                            skuids = `${skuids}${content[j].annotations[k+1]}","`
-                        }
+                    let noneDigit = /^\D/
+                    if (!noneDigit.test(content[j]['事业部一订货量']) && parseInt(content[j]['事业部一订货量']) > 0) {
+                        result[i]['first_purchase'] = '是'
+                        result[i]['pre_purchase_num'] += parseInt(content[j]['事业部一订货量'])
+                    }
+                    if (!noneDigit.test(content[j]['事业部二订货量']) && parseInt(content[j]['事业部二订货量']) > 0) {
+                        result[i]['second_purchase'] = '是'
+                        result[i]['pre_purchase_num'] += parseInt(content[j]['事业部二订货量'])
+                    }
+                    if (!noneDigit.test(content[j]['事业部三订货量']) && parseInt(content[j]['事业部三订货量']) > 0) {
+                        result[i]['third_purchase'] = '是'
+                        result[i]['pre_purchase_num'] += parseInt(content[j]['事业部三订货量'])
+                    }
+                    if (content[j]['商品编码'] && result[i]['pre_purchase_num'] > 0) {
+                        skuids = `${skuids}${content[j]['商品编码']}","`
                     }
                 }
                 if (skuids?.length) {
@@ -4744,14 +4707,9 @@ developmentService.getProcessDetail = async (params) => {
         }
     } else if (type == 1 || type == 2) {
         for (let i = 0; i < result.length; i++) {
-            if (result[i].info1 && (result[i].image == null || result[i].image == '2')) {
-                let content = new ObjectInputStream(result[i].info1)
-                content = content.readObject()
-                content?.annotations.splice(0, 1)
-                content = content?.annotations
-                for (let j = 0; j < content?.length; j++) {
-                    result[i].image = content[j]
-                }
+            if (result[i].image != null && result[i].image.indexOf('[') != -1) {
+                let content = JSON.parse(result[i].image)
+                result[i].image = content[0]
             }
             if (result[i].node) {
                 result[i]['duration'] = moment().diff(moment(result[i].due_start), 'd')
