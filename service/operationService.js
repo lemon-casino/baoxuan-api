@@ -1604,7 +1604,7 @@ const getGoodsInfo = async (startDate, endDate, params, id,tab) => {
                 title: '总供货价', field_id: 'sale_amount', type: 'number', 
                 min: 0, max: 100, show: true
             },{
-                title: '总供货价', field_id: 'gross_standard', type: 'number', 
+                title: '综毛标准', field_id: 'gross_standard', type: 'number', 
                 min: 0, max: 100, show: true
             },{
                 title: '实际综毛', field_id: 'real_gross_profit', type: 'number', 
@@ -1766,6 +1766,7 @@ const getGoodsInfoDetailTotal = async (goods_id, start, end, stats) => {
             parent_id: goods_id,
             shop_name: info[i].shop_name,
             sale_amount: info[i].sale_amount,
+            sale_qty: info[i].sale_qty,
             cost_amount: info[i].cost_amount,
             operation_amount: info[i].operation_amount,
             promotion_amount: info[i].promotion_amount,
@@ -1782,20 +1783,32 @@ const getGoodsInfoDetailTotal = async (goods_id, start, end, stats) => {
             gross_standard: info[i].gross_standard,
             other_cost: info[i].other_cost,
             profit_rate_gmv: info[i].profit_rate_gmv,
-            targeted_audience_promotion: info[i].targeted_audience_promotion,
-            full_site_promotion: info[i].full_site_promotion,
-            targeted_audience_promotion: info[i].targeted_audience_promotion,
-            keyword_promotion: info[i].keyword_promotion,
-            product_operation_promotion: info[i].product_operation_promotion,
             daily_promotion: info[i].daily_promotion,
+            daily_promotion_roi: info[i].daily_promotion_roi,
             scene_promotion: info[i].scene_promotion,
+            scene_promotion_roi: info[i].scene_promotion_roi,
             jd_express_promotion: info[i].jd_express_promotion,
+            jd_express_promotion_roi: info[i].jd_express_promotion_roi,
             total_promotion: info[i].total_promotion,
-            targeted_audience_promotion_roi: info[i].targeted_audience_promotion_roi,
+            total_promotion_roi: info[i].total_promotion_roi,
+            stable_cost_promotion: info[i].stable_cost_promotion,
+            stable_cost_promotion_roi: info[i].stable_cost_promotion_roi,
+            targeted_audience_promotion_difference: info[i].targeted_audience_promotion_difference,
+            full_site_promotion: info[i].full_site_promotion,
             full_site_promotion_roi: info[i].full_site_promotion_roi,
-            targeted_audience_promotion_roi: info[i].targeted_audience_promotion_roi,
+            keyword_promotion: info[i].keyword_promotion,
             keyword_promotion_roi: info[i].keyword_promotion_roi,
-            product_operation_promotion_roi: info[i].product_operation_promotion_roi,
+            targeted_audience_promotion: info[i].targeted_audience_promotion,
+            targeted_audience_promotion_roi: info[i].targeted_audience_promotion_roi,
+            super_short_video: info[i].super_short_video,
+            super_short_video_roi: info[i].super_short_video_roi,
+            product_custody_promotion: info[i].product_custody_promotion,
+            product_custody_promotion_roi: info[i].product_custody_promotion_roi,
+            users_num: info[i].users_num,
+            trans_users_num: info[i].trans_users_num,
+            real_pay_rate: info[i].real_pay_rate,
+            total_users_num: info[i].total_users_num,
+            total_trans_users_num: info[i].total_trans_users_num,
             hasChild: false
         })
         dateMap[info[i].date] = i
@@ -5148,7 +5161,8 @@ const updateInventory = async () =>{
 
 const importPromotionPlan = async (rows, project, shop_name, promotion_name, date) => {
     let columns = rows[0].values, goods_id_row, sku_id_row, plan_name_row, plan_goal_row, 
-        pay_amount_row, trans_amount_row, date_row, data = [], count = 0, result = false
+        pay_amount_row, trans_amount_row, date_row, data = [], count = 0, result = false,
+        total_rans_amount = 0,goods_name_row
     switch (project) {
         case '宝选天猫':            
             for (let i = 1; i <= columns.length; i++) {
@@ -5179,6 +5193,7 @@ const importPromotionPlan = async (rows, project, shop_name, promotion_name, dat
         case '拼多多':
             for (let i = 1; i <= columns.length; i++) {
                 if (columns[i] == '商品ID') {goods_id_row = i; continue}
+                if (columns[i] == '商品名称') {goods_name_row = i; continue}
                 if (columns[i] == '推广名称') {plan_name_row = i; continue}
                 if (columns[i] == '出价方式') {plan_goal_row = i; continue}
                 if (columns[i] == '总花费(元)') {pay_amount_row = i; continue}
@@ -5189,6 +5204,11 @@ const importPromotionPlan = async (rows, project, shop_name, promotion_name, dat
             break
     }
     let flag = 1
+    if(promotion_name == '全店托管'){
+        for (let j = 1; j <rows.length-1 ; j++) {
+            total_rans_amount += parseFloat(rows[j].getCell(trans_amount_row).value || 0)
+        }
+    }
     for (let i = 1; i < rows.length; i++) {
         let goods_id, sku_id, plan_name, plan_goal, pay_amount, trans_amount
         if (date_row && rows[i].getCell(date_row).value == '全部') continue
@@ -5211,8 +5231,13 @@ const importPromotionPlan = async (rows, project, shop_name, promotion_name, dat
         plan_goal = plan_goal_row && rows[i].getCell(plan_goal_row).value?.length > 1 ? 
             parseFloat(rows[i].getCell(plan_goal_row).value.substring(7, 
                 rows[i].getCell(plan_goal_row).value.length - 1)) : null
-        pay_amount = parseFloat(rows[i].getCell(pay_amount_row).value || 0)
         trans_amount = parseFloat(rows[i].getCell(trans_amount_row).value || 0)
+        if(promotion_name == '全店托管'){
+            pay_amount = parseFloat(rows[i].getCell(trans_amount_row).value || 0)/total_rans_amount*parseFloat(rows[i].getCell(pay_amount_row).value || 0)
+
+        }else{
+            pay_amount = parseFloat(rows[i].getCell(pay_amount_row).value || 0)
+        }
         data.push(
             goods_id,
             sku_id,
