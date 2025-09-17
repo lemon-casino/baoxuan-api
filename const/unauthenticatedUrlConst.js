@@ -57,5 +57,8 @@ module.exports = [
     '/hr/recruit/advise-output',
     '/operation/goods-order-pay-stat/import',
     '/operation/promotion-plan/import',
+    '/operation/tmall-new-goods',
+    '/operation/tmall-new-goods/update-new-tag',
+    '/operation/tmall-new-goods/import-activity',
     /^\/download\/.*/,
 ]

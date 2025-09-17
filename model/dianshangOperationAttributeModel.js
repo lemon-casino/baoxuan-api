@@ -506,6 +506,24 @@ module.exports = sequelize => {
             autoIncrement: false,
             comment: "链接状态",
             field: "link_state"
+        },
+        IsIp: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "是否IP",
+            field: "is_ip"
+        },
+        NewTag: {
+            type: DataTypes.TINYINT,
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "新品标签",
+            field: "new_tag"
         }
     };
     const options = {

@@ -1590,6 +1590,94 @@ const goodspromotionPlan = async (req, res, next) => {
     }
 }
 
+const getTMNewGoods = async (req, res, next) => {
+    try {
+        const workbook = new ExcelJS.Workbook()
+        const sheet = workbook.addWorksheet()
+        sheet.columns = [{ header: "链接ID", key: 'goods_id' }]
+        const data = await operationService.getTMNewGoods()
+        for (let i = 0; i < data.length; i++) {
+            sheet.addRow([data[i].goods_id])
+        }
+        const buffer = await workbook.xlsx.writeBuffer()
+        res.setHeader('Content-Disposition', `attachment; filename="tmall-new-goods.xlsx"`)
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        return res.end(buffer)
+    } catch (e) {
+        next(e)
+    }
+}
+
+const updateTMNewTag = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.updateTMNewTag(rows)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importTMNewActivity = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importTMNewActivity(rows)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -1648,5 +1736,8 @@ module.exports = {
     importPromotionPlan,
     getskuCodeInfo,
     getnegativeProfit,
-    goodspromotionPlan
+    goodspromotionPlan,
+    getTMNewGoods,
+    updateTMNewTag,
+    importTMNewActivity
 }
