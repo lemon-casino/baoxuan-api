@@ -46,6 +46,7 @@ if (process.env.NODE_ENV === "dev") {
 let jstOrderCron = "0 0 7 * * ?"
 let jstPurchaseCron = "0 36 */1 * * ?"
 let saleCron = "0 30 9/12 * * ?"
+let pddNewTagCron = "0 30 8 * * ?"
 schedule.scheduleJob(saleCron, async function () {
     if (process.env.NODE_ENV === "prod") {
         await operationService.updateInventory()
@@ -73,6 +74,13 @@ schedule.scheduleJob(jstOrderCron, async function () {
 schedule.scheduleJob(jstPurchaseCron, async function () {
     if (process.env.NODE_ENV === "prod") {
         await purchaseService.syncPurchase()
+    }
+})
+
+//每日早上8:30给拼多多新品打标签
+schedule.scheduleJob(pddNewTagCron, async function () {
+    if (process.env.NODE_ENV === "prod") {
+        await operationService.updatePDDNewTag()
     }
 })
 
