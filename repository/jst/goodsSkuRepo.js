@@ -372,4 +372,14 @@ goodsSkuRepo.getTMNewGoods = async () => {
     return result || []
 }
 
+goodsSkuRepo.getPDDNewGoods = async () => {
+    const sql = `SELECT goods_id, new_tag FROM (
+        SELECT s.goods_id, d.new_tag, MIN(s.create_time) AS create_time FROM jst_goods_sku s 
+        JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
+        WHERE d.platform = '拼多多部' GROUP BY s.goods_id, d.new_tag) a 
+        WHERE create_time >= DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY)`
+    const result = await query(sql)
+    return result || []
+}
+
 module.exports = goodsSkuRepo

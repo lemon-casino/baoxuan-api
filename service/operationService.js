@@ -63,6 +63,7 @@ const goodsPaysStats = require('@/repository/operation/goodsPaysStats')
 const goodsPromotionPlanRepo = require('@/repository/operation/goodsPromotionPlanRepo')
 const goodsSkuRepo = require('@/repository/jst/goodsSkuRepo')
 const tmallNewActivityRepo = require('@/repository/operation/tmallNewActivityRepo')
+const activityRepo = require('@/repository/danpin/activityRepo')
 /**
  * get operation data pannel data stats
  * division > project > shop / team > user
@@ -5361,6 +5362,83 @@ const updateTMNewTag = async (rows) => {
     return true
 }
 
+const updatePDDNewTag = async () => {
+    let goods = await goodsSkuRepo.getPDDNewGoods()
+    let ids = '', ids0 = '', ids1 = '', ids2 = '', idsMap = {}, changes = []
+    for (let i = 0; i < goods.length; i++) {
+        ids = `${ids}"${goods[i].goods_id}",`
+        idsMap[goods[i].goods_id] = i
+        if (goods[i].new_tag != null) {
+            ids0 = `${ids0}"${goods[i].goods_id}",`
+            changes.push({
+                goods_id: goods[i].goods_id, 
+                sku_id: null,
+                type: 'update',
+                subtype: '新品标签', 
+                oldValue: goods[i].new_tag, 
+                newValue: null,
+                source: '自动更新',
+                old_json: null,
+                new_json: null,
+                user: null,
+                date: moment().format('YYYY-MM-DD HH:mm:ss')
+            })
+        }
+    }
+    if (ids?.length) {
+        ids = ids.substring(0, ids.length - 1)
+        let activity_goods = await activityRepo.getByIds(ids)
+        for (let i = 0; i < activity_goods.length; i++) {
+            delete idsMap[activity_goods[i].goods_id]
+            ids1 = `${ids1}"${activity_goods[i].goods_id}"`
+            changes.push({
+                goods_id: activity_goods[i].goods_id, 
+                sku_id: null,
+                type: 'update',
+                subtype: '新品标签', 
+                oldValue: null, 
+                newValue: 1,
+                source: '自动更新',
+                old_json: null,
+                new_json: null,
+                user: null,
+                date: moment().format('YYYY-MM-DD HH:mm:ss')
+            })
+        }
+        for (let index in idsMap) {
+            ids2 = `${ids2}"${index}",`
+            changes.push({
+                goods_id: index, 
+                sku_id: null,
+                type: 'update',
+                subtype: '新品标签', 
+                oldValue: null, 
+                newValue: 0,
+                source: '自动更新',
+                old_json: null,
+                new_json: null,
+                user: null,
+                date: moment().format('YYYY-MM-DD HH:mm:ss')
+            })
+        }
+    }
+    logger.info(`[拼多多新品标签更新]: 时间:${moment().format('YYYY-MM-DD HH:mm:ss')}`)
+    if (ids0?.length) {
+        ids0 = ids0.substring(0, ids.length - 1)
+        await dianShangOperationAttributeRepo.batchUpdate('new_tag', ids0, null)
+    }
+    if (ids1?.length) {
+        ids1 = ids1.substring(0, ids1.length - 1)
+        await dianShangOperationAttributeRepo.batchUpdate('new_tag', ids1, 1)
+    }
+    if (ids2?.length) {
+        ids2 = ids2.substring(0, ids2.length - 1)
+        await dianShangOperationAttributeRepo.batchUpdate('new_tag', ids2, 0)
+    }
+    await dianShangOperationAttributeService.Insertlog(changes)
+    return true
+}
+
 const importTMNewActivity = async (rows) => {
     let columns = rows[0].values, goods_row = null, 
         shop_name_row = null, date_row = null, status_row = null
@@ -5471,5 +5549,6 @@ module.exports = {
     goodspromotionPlan,
     getTMNewGoods,
     updateTMNewTag,
+    updatePDDNewTag,
     importTMNewActivity
 }
