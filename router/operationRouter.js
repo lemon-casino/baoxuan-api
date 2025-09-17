@@ -144,4 +144,9 @@ router.post('/specific-plan/sales/create', specificPlanApi.createSales)
 
 //文件上传至bpm
 router.post('/file-upload', analysisPlanApi.fileUpload)
+
+//获取天猫的新品数据
+router.get('/tmall-new-goods', operationApi.getTMNewGoods)
+router.post('/tmall-new-goods/update-new-tag', operationApi.updateTMNewTag)
+router.post('/tmall-new-goods/import-activity', operationApi.importTMNewActivity)
 module.exports = router

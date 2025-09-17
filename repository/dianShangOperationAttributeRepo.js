@@ -385,6 +385,13 @@ const getspiral = async(goods_id)=>{
     const result = query(sql,[goods_id])
     return result
 }
+
+const batchUpdate = async (column, ids, value) => {
+    const sql = `UPDATE dianshang_operation_attribute SET ${column} = ? WHERE goods_id IN (${ids})`
+    const result = await query(sql, [value])
+    return result
+}
+
 module.exports = {
     getProductAttrDetails,
     getShopNameAttrDetails,
@@ -411,6 +418,7 @@ module.exports = {
     getjdzzUserDef1,
     updateAttribute,
     Insertcalculate,
-    getspiral
+    getspiral,
+    batchUpdate
 }
 

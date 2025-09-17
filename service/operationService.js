@@ -62,6 +62,7 @@ const credentialsReq = require("@/core/dingDingReq/credentialsReq")
 const goodsPaysStats = require('@/repository/operation/goodsPaysStats')
 const goodsPromotionPlanRepo = require('@/repository/operation/goodsPromotionPlanRepo')
 const goodsSkuRepo = require('@/repository/jst/goodsSkuRepo')
+const tmallNewActivityRepo = require('@/repository/operation/tmallNewActivityRepo')
 /**
  * get operation data pannel data stats
  * division > project > shop / team > user
@@ -4589,7 +4590,6 @@ const updateOrderGoodsVerified = async (date) => {
     logger.info(`[核销人工费刷新]：时间:${date}, ${result}`)
 }
 
-
 const importTmallpromotioninfo = async (rows,shopname, paytime, day, date) => {
     let summaryMap = {};
     let columns = rows[0].values,
@@ -5278,6 +5278,128 @@ const goodspromotionPlan = async (goods_id, start, end) => {
     return result
 }
 
+const getTMNewGoods = async () => {
+    let result = await goodsSkuRepo.getTMNewGoods()
+    return result
+}
+
+const updateTMNewTag = async (rows) => {
+    let columns = rows[0].values, goods_row = null, check_row = null
+    for (let i = 1; i <= columns.length; i++) {  
+        if (columns[i] == '链接ID') {goods_row = i; continue}      
+        if (columns[i] == '是否含新品标') {check_row = i; continue}
+    }
+    let ids = '', ids1 = '', ids2 = '', changes = []
+    let goods = await goodsSkuRepo.getTMNewGoods()
+    for (let i = 0; i < goods.length; i++) {
+        if (goods[i].new_tag != null) {
+            ids = `${ids}"${goods[i].goods_id}",`
+            changes.push({
+                goods_id: goods[i].goods_id, 
+                sku_id: null,
+                type: 'update',
+                subtype: '新品标签', 
+                oldValue: goods[i].new_tag, 
+                newValue: null,
+                source: '自动更新',
+                old_json: null,
+                new_json: null,
+                user: null,
+                date: moment().format('YYYY-MM-DD HH:mm:ss')
+            })
+        }
+    }
+    for(let i = 1; i < rows.length; i++) {
+        const goods_id = rows[i].getCell(goods_row).value
+        const check = rows[i].getCell(check_row).value
+        if (check == '是') {
+            ids1 = `${ids1}"${goods_id}",`
+            changes.push({
+                goods_id: goods_id, 
+                sku_id: null,
+                type: 'update',
+                subtype: '新品标签', 
+                oldValue: null, 
+                newValue: 1,
+                source: '自动更新',
+                old_json: null,
+                new_json: null,
+                user: null,
+                date: moment().format('YYYY-MM-DD HH:mm:ss')
+            })
+        } else {
+            ids2 = `${ids2}"${goods_id}",`
+            changes.push({
+                goods_id: goods_id, 
+                sku_id: null,
+                type: 'update',
+                subtype: '新品标签', 
+                oldValue: null, 
+                newValue: 0,
+                source: '自动更新',
+                old_json: null,
+                new_json: null,
+                user: null,
+                date: moment().format('YYYY-MM-DD HH:mm:ss')
+            })
+        }
+    }
+    logger.info(`[天猫新品标签更新]: 时间:${moment().format('YYYY-MM-DD HH:mm:ss')}`)
+    if (ids?.length) {
+        ids = ids.substring(0, ids.length - 1)
+        await dianShangOperationAttributeRepo.batchUpdate('new_tag', ids, null)
+    }
+    if (ids1?.length) {
+        ids1 = ids1.substring(0, ids1.length - 1)
+        await dianShangOperationAttributeRepo.batchUpdate('new_tag', ids1, 1)
+    }
+    if (ids2?.length) {
+        ids2 = ids2.substring(0, ids2.length - 1)
+        await dianShangOperationAttributeRepo.batchUpdate('new_tag', ids2, 0)
+    }
+    await dianShangOperationAttributeService.Insertlog(changes)
+    return true
+}
+
+const importTMNewActivity = async (rows) => {
+    let columns = rows[0].values, goods_row = null, 
+        shop_name_row = null, date_row = null, status_row = null
+    for (let i = 1; i <= columns.length; i++) {
+        if (columns[i] == '链接ID') {goods_row = i; continue}
+        if (columns[i] == '店铺') {shop_name_row = i; continue}
+        if (columns[i] == '日期') {date_row = i; continue}
+        if (columns[i] == '状态') {status_row = i; continue}
+    }
+    let dateMap = {}, shopMap = {}, dates = '', shopNames = '', 
+        data = [], count = 0
+    for (let i = 1; i < rows.length; i++) {
+        const goods_id = rows[i].getCell(goods_row).value
+        if (!goods_id) break
+        const shop_name = rows[i].getCell(shop_name_row).value
+        const date = moment(rows[i].getCell(date_row).value).format('YYYY-MM-DD')
+        const status = rows[i].getCell(status_row).value
+        if (!dateMap[date]) {
+            dateMap[date] = true
+            dates = `${dates}"${date}",`
+        }
+        if (!shopMap[shop_name]) {
+            shopMap[shop_name] = true
+            shopNames = `${shopNames}"${shop_name}",`
+        }
+        count += 1
+        data.push(goods_id, shop_name, date, status)
+    }
+    if (dates?.length && shopNames?.length) {
+        dates = dates.substring(0, dates.length - 1)
+        shopNames = shopNames.substring(0, shopNames.length - 1)
+        await tmallNewActivityRepo.deleteByDateAndShopName(dates, shopNames)
+    }
+    if (count > 0) {
+        await tmallNewActivityRepo.batchInsert(count, data)
+    }
+    return true
+}
+
 module.exports = {
     getDataStats,
     getPromotionStats,
@@ -5346,5 +5468,8 @@ module.exports = {
     batchInsertGoodsPaysStats,
     getskuCodeInfo,
     getnegativeProfit,
-    goodspromotionPlan
+    goodspromotionPlan,
+    getTMNewGoods,
+    updateTMNewTag,
+    importTMNewActivity
 }
