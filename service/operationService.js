@@ -5390,7 +5390,7 @@ const updatePDDNewTag = async () => {
         let activity_goods = await activityRepo.getByIds(ids)
         for (let i = 0; i < activity_goods.length; i++) {
             delete idsMap[activity_goods[i].goods_id]
-            ids1 = `${ids1}"${activity_goods[i].goods_id}"`
+            ids1 = `${ids1}"${activity_goods[i].goods_id}",`
             changes.push({
                 goods_id: activity_goods[i].goods_id, 
                 sku_id: null,
@@ -5424,7 +5424,7 @@ const updatePDDNewTag = async () => {
     }
     logger.info(`[拼多多新品标签更新]: 时间:${moment().format('YYYY-MM-DD HH:mm:ss')}`)
     if (ids0?.length) {
-        ids0 = ids0.substring(0, ids.length - 1)
+        ids0 = ids0.substring(0, ids0.length - 1)
         await dianShangOperationAttributeRepo.batchUpdate('new_tag', ids0, null)
     }
     if (ids1?.length) {
@@ -5475,6 +5475,61 @@ const importTMNewActivity = async (rows) => {
     if (count > 0) {
         await tmallNewActivityRepo.batchInsert(count, data)
     }
+    return true
+}
+
+const updateTMLinkStage = async (rows) => {
+    let columns = rows[0].values, goods_row = null, 
+        link_stage_row = null
+    for (let i = 1; i <= columns.length; i++) {
+        if (columns[i] == '链接ID') {goods_row = i; continue}
+        if (columns[i] == '链接层级') {link_stage_row = i; continue}
+    }
+    let ids = '', changes = []
+    let goods = await dianShangOperationAttributeRepo.getTMLinkStage()
+    for (let i = 0; i < goods.length; i++) {
+        if (goods[i].link_stage != null) {
+            ids = `${ids}"${goods[i].goods_id}",`
+            changes.push({
+                goods_id: goods[i].goods_id, 
+                sku_id: null,
+                type: 'update',
+                subtype: '链接层级', 
+                oldValue: goods[i].link_stage, 
+                newValue: null,
+                source: '自动更新',
+                old_json: null,
+                new_json: null,
+                user: null,
+                date: moment().format('YYYY-MM-DD HH:mm:ss')
+            })
+        }
+    }
+    logger.info(`[天猫链接层级更新]: 时间:${moment().format('YYYY-MM-DD HH:mm:ss')}`)
+    if (ids?.length) {
+        ids = ids.substring(0, ids.length - 1)
+        await dianShangOperationAttributeRepo.batchUpdate('link_stage', ids, null)
+    }
+    for (let i = 1; i < rows.length; i++) {
+        const goods_id = rows[i].getCell(goods_row).value
+        if (!goods_id) break
+        const link_stage = rows[i].getCell(link_stage_row).value
+        await dianShangOperationAttributeRepo.batchUpdate('link_stage', `"${goods_id}"`, link_stage)
+        changes.push({
+            goods_id: goods_id, 
+            sku_id: null,
+            type: 'update',
+            subtype: '链接层级', 
+            oldValue: null, 
+            newValue: link_stage,
+            source: '自动更新',
+            old_json: null,
+            new_json: null,
+            user: null,
+            date: moment().format('YYYY-MM-DD HH:mm:ss')
+        })
+    }
+    await dianShangOperationAttributeService.Insertlog(changes)
     return true
 }
 
@@ -5550,5 +5605,6 @@ module.exports = {
     getTMNewGoods,
     updateTMNewTag,
     updatePDDNewTag,
-    importTMNewActivity
+    importTMNewActivity,
+    updateTMLinkStage
 }
