@@ -392,6 +392,12 @@ const batchUpdate = async (column, ids, value) => {
     return result
 }
 
+const getTMLinkStage = async () => {
+    const sql = `SELECT goods_id, link_stage FROM dianshang_operation_attribute WHERE platform = '天猫部'`
+    const result = await query(sql)
+    return result
+}
+
 module.exports = {
     getProductAttrDetails,
     getShopNameAttrDetails,
@@ -419,6 +425,7 @@ module.exports = {
     updateAttribute,
     Insertcalculate,
     getspiral,
-    batchUpdate
+    batchUpdate,
+    getTMLinkStage
 }
 

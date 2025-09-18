@@ -524,6 +524,15 @@ module.exports = sequelize => {
             autoIncrement: false,
             comment: "新品标签",
             field: "new_tag"
+        },
+        LinkStage: {
+            type: DataTypes.STRING(5),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "链接层级",
+            field: "link_stage"
         }
     };
     const options = {

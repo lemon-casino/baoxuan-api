@@ -149,4 +149,5 @@ router.post('/file-upload', analysisPlanApi.fileUpload)
 router.get('/tmall-new-goods', operationApi.getTMNewGoods)
 router.post('/tmall-new-goods/update-new-tag', operationApi.updateTMNewTag)
 router.post('/tmall-new-goods/import-activity', operationApi.importTMNewActivity)
+router.post('/tmall-goods/update-link-stage', operationApi.updateTMLinkStage)
 module.exports = router
