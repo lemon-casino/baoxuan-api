@@ -5390,7 +5390,7 @@ const updatePDDNewTag = async () => {
         let activity_goods = await activityRepo.getByIds(ids)
         for (let i = 0; i < activity_goods.length; i++) {
             delete idsMap[activity_goods[i].goods_id]
-            ids1 = `${ids1}"${activity_goods[i].goods_id}"`
+            ids1 = `${ids1}"${activity_goods[i].goods_id}",`
             changes.push({
                 goods_id: activity_goods[i].goods_id, 
                 sku_id: null,
@@ -5424,7 +5424,7 @@ const updatePDDNewTag = async () => {
     }
     logger.info(`[拼多多新品标签更新]: 时间:${moment().format('YYYY-MM-DD HH:mm:ss')}`)
     if (ids0?.length) {
-        ids0 = ids0.substring(0, ids.length - 1)
+        ids0 = ids0.substring(0, ids0.length - 1)
         await dianShangOperationAttributeRepo.batchUpdate('new_tag', ids0, null)
     }
     if (ids1?.length) {
