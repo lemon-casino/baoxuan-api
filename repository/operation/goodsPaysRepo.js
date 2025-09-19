@@ -2,6 +2,9 @@ const { query, transaction } = require('../../model/dbConn')
 const goodsPaysRepo = {}
 
 goodsPaysRepo.batchInsert = async (date) => {
+    let sqls = [], params = []
+    sqls.push(`DELETE FROM goods_pays WHERE \`date\` = ? AND shop_name !='京东自营-厨具' AND shop_name !='京东自营-日用'`)
+    params.push([date])
     let sql = `SELECT goods_id, shop_name, shop_id, \`date\`, 
             IFNULL(SUM(pay_amount), 0) AS pay_amount, 
             IFNULL(SUM(brushing_amount), 0) AS brushing_amount, 
@@ -22,49 +25,53 @@ goodsPaysRepo.batchInsert = async (date) => {
             IFNULL(SUM(refund_num), 0) AS refund_num  
         FROM goods_pay_info WHERE \`date\` = ? AND shop_name !='京东自营-厨具' AND shop_name !='京东自营-日用'
         GROUP BY goods_id, shop_name, shop_id, \`date\``
-    let rows = await query(sql, [date])
+    let rows = await query(sql, [date]), start, end
     if (!rows?.length) return false
-    let sqls = [], params = [], data = []
-    sql = `INSERT INTO goods_pays(goods_id, shop_name, shop_id, \`date\`, pay_amount, 
+    let chunk = Math.ceil(rows.length / 500)
+    for (let i = 0; i < chunk; i++) {
+        sql = `INSERT INTO goods_pays(goods_id, shop_name, shop_id, \`date\`, pay_amount, 
         brushing_amount, brushing_qty, refund_amount, bill_amount, sale_amount, 
         cost_amount, gross_profit, profit, promotion_amount, operation_amount, 
-        refund_qty, sale_qty, express_fee, packing_fee, order_num, refund_num) VALUES`
-    for (let i = 0; i < rows.length; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
-        data.push(
-            rows[i].goods_id, 
-            rows[i].shop_name,
-            rows[i].shop_id,
-            date, 
-            rows[i].pay_amount, 
-            rows[i].brushing_amount, 
-            rows[i].brushing_qty, 
-            rows[i].refund_amount, 
-            rows[i].bill_amount,
-            rows[i].sale_amount,
-            rows[i].cost_amount,
-            rows[i].gross_profit,
-            rows[i].profit,
-            rows[i].promotion_amount,
-            rows[i].operation_amount,
-            rows[i].refund_qty, 
-            rows[i].sale_qty, 
-            rows[i].express_fee, 
-            rows[i].packing_fee, 
-            rows[i].order_num, 
-            rows[i].refund_num)
+        refund_qty, sale_qty, express_fee, packing_fee, order_num, refund_num) VALUES`, 
+        start = i * 500, data = [], 
+        end = (i + 1) * 500 <= rows.length ? (i + 1) * 500 : rows.length
+        for (let j = start; j < end; j++) {
+            sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+            data.push(
+                rows[j].goods_id, 
+                rows[j].shop_name,
+                rows[j].shop_id,
+                date, 
+                rows[j].pay_amount, 
+                rows[j].brushing_amount, 
+                rows[j].brushing_qty, 
+                rows[j].refund_amount, 
+                rows[j].bill_amount,
+                rows[j].sale_amount,
+                rows[j].cost_amount,
+                rows[j].gross_profit,
+                rows[j].profit,
+                rows[j].promotion_amount,
+                rows[j].operation_amount,
+                rows[j].refund_qty, 
+                rows[j].sale_qty, 
+                rows[j].express_fee, 
+                rows[j].packing_fee, 
+                rows[j].order_num, 
+                rows[j].refund_num)
+        }
+        sql = sql.substring(0, sql.length - 1)
+        sqls.push(sql)
+        params.push(data)
     }
-    sql = sql.substring(0, sql.length - 1)
-    sqls = [
-        `DELETE FROM goods_pays WHERE \`date\` = ? AND shop_name !='京东自营-厨具' AND shop_name !='京东自营-日用'`,
-        sql
-    ].concat(sqls)
-    params = [[date], data].concat(params)
     const result = await transaction(sqls, params)
     return result
 }
 
 goodsPaysRepo.batchInsertJD = async (date,shop_name) => {
+    let sqls = [], params = []
+    sqls.push(`DELETE FROM goods_pays WHERE \`date\` = ? AND shop_name = '${shop_name}'`)
+    params.push([date])
     let sql = `SELECT goods_id, shop_name, shop_id, \`date\`, 
             IFNULL(SUM(pay_amount), 0) AS pay_amount, 
             IFNULL(SUM(brushing_amount), 0) AS brushing_amount, 
@@ -85,44 +92,45 @@ goodsPaysRepo.batchInsertJD = async (date,shop_name) => {
             IFNULL(SUM(IF(other_cost>0,other_cost,0)),0) AS other_cost
         FROM goods_pay_info WHERE \`date\` = ? AND shop_name = '${shop_name}'
         GROUP BY goods_id, shop_name, shop_id, \`date\``
-    let rows = await query(sql, [date,shop_name])
+    let rows = await query(sql, [date,shop_name]), start, end
     if (!rows?.length) return false
-    let sqls = [], params = [], data = []
-    sql = `INSERT INTO goods_pays(goods_id, shop_name, shop_id, \`date\`, pay_amount, 
+    let chunk = Math.ceil(rows.length / 500)
+    for (let i = 0; i < chunk; i++) {
+        sql = `INSERT INTO goods_pays(goods_id, shop_name, shop_id, \`date\`, pay_amount, 
         brushing_amount, brushing_qty, refund_amount, bill_amount, sale_amount, 
         cost_amount, gross_profit, profit, promotion_amount, operation_amount, 
-        refund_qty, sale_qty, express_fee, packing_fee,gross_standard,other_cost) VALUES`
-    for (let i = 0; i < rows.length; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
-        data.push(
-            rows[i].goods_id, 
-            rows[i].shop_name,
-            rows[i].shop_id,
-            date, 
-            rows[i].pay_amount, 
-            rows[i].brushing_amount, 
-            rows[i].brushing_qty, 
-            rows[i].refund_amount, 
-            rows[i].bill_amount,
-            rows[i].sale_amount,
-            rows[i].cost_amount,
-            rows[i].gross_profit,
-            rows[i].profit,
-            rows[i].promotion_amount,
-            rows[i].operation_amount,
-            rows[i].refund_qty, 
-            rows[i].sale_qty, 
-            rows[i].express_fee, 
-            rows[i].packing_fee,
-            rows[i].gross_standard,
-            rows[i].other_cost)
+        refund_qty, sale_qty, express_fee, packing_fee,gross_standard,other_cost) VALUES`,
+        start = i * 500, data = [], 
+        end = (i + 1) * 500 <= rows.length ? (i + 1) * 500 : rows.length
+        for (let j = start; j < end; j++) {
+            sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+            data.push(
+                rows[j].goods_id, 
+                rows[j].shop_name,
+                rows[j].shop_id,
+                date, 
+                rows[j].pay_amount, 
+                rows[j].brushing_amount, 
+                rows[j].brushing_qty, 
+                rows[j].refund_amount, 
+                rows[j].bill_amount,
+                rows[j].sale_amount,
+                rows[j].cost_amount,
+                rows[j].gross_profit,
+                rows[j].profit,
+                rows[j].promotion_amount,
+                rows[j].operation_amount,
+                rows[j].refund_qty, 
+                rows[j].sale_qty, 
+                rows[j].express_fee, 
+                rows[j].packing_fee,
+                rows[j].gross_standard,
+                rows[j].other_cost)
+        }
+        sql = sql.substring(0, sql.length - 1)
+        sqls.push(sql)
+        params.push(data)
     }
-    sql = sql.substring(0, sql.length - 1)
-    sqls = [
-        `DELETE FROM goods_pays WHERE \`date\` = ? AND shop_name = '${shop_name}'`,
-        sql
-    ].concat(sqls)
-    params = [[date], data].concat(params)
     const result = await transaction(sqls, params)
     return result
 }
