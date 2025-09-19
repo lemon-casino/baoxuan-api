@@ -2181,7 +2181,7 @@ const batchInsertGoodsPaysStats = async (date) => {
                 'product_stage', 
                 state, 
                 weekSales[i].platform, 
-                'goods_id',
+                weekSales[i].platform == '自营' ? 'brief_name' : 'goods_id',
                 weekSales[i].goods_id)
             changes.push({
                 goods_id: weekSales[i].goods_id, 
@@ -2319,7 +2319,6 @@ const batchInsertJDGoodsPaysStats = async (date,shop_name) => {
     }
     await dianShangOperationAttributeService.Insertlog(changes)
 }
-    
 
 const importGoodsKeyWords = async (rows, time) => {
     let count = 0, data = [], result = false
@@ -2684,6 +2683,10 @@ const getWorkStats = async (user, start, end, params) => {
         }
     }
     return result
+}
+
+const getNewGoodsInfo = async (user, params) => {
+    
 }
 
 const importGoodsPayInfo = async (rows, time) => {
@@ -3357,6 +3360,7 @@ const importJDZYcompositeInfo = async (rows, time,name) => {
     }
     return result
 }
+
 const importGoodsSYCMInfo = async (rows, time) => {
     let count = 0, data = [], result = false
     let columns = rows[1],
