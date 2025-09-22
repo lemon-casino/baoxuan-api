@@ -1678,6 +1678,27 @@ const importTMNewActivity = async (req, res, next) => {
     }
 }
 
+const saveOperatelog = async(req, res, next) =>{
+    try{
+        const articleModel = req.body.articleModel
+        const result = await operationService.saveOperatelog(articleModel,req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const initiateprocess  = async(req, res, next) =>{
+    try{
+        const data = req.body
+        console.log(data)
+        const result = await operationService.initiateprocess(data,req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e){
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -1739,5 +1760,7 @@ module.exports = {
     goodspromotionPlan,
     getTMNewGoods,
     updateTMNewTag,
-    importTMNewActivity
+    importTMNewActivity,
+    saveOperatelog,
+    initiateprocess
 }

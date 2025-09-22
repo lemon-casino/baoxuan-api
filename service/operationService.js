@@ -5478,6 +5478,87 @@ const importTMNewActivity = async (rows) => {
     return true
 }
 
+const saveOperatelog = async (articleModel,user_id) =>{
+    let user = await userOperationRepo.getUserById(user_id)
+    let changes = []
+    changes.push({
+        goods_id: articleModel.goods_id, 
+        sku_id:null,
+        type:'update',
+        subtype: articleModel.title, 
+        oldValue: null, 
+        newValue: articleModel.content,
+        source: '数据面板操作日志',
+        old_json:null,
+        new_json:null,
+        user:user[0].nickname,
+        date:moment().format('YYYY-MM-DD HH:mm:ss')
+    })
+    await dianShangOperationAttributeService.Insertlog(changes)
+}
+
+const initiateprocess = async (data,user) =>{
+    let variables
+    let processDefinitionId
+    let aa = await credentialsReq.getBpmgAccessToken()
+    // 发起人
+    let initiator = await userOperationRepo.getUserById(user)
+    let bpmid = await systemUsersRepo.getID(initiator[0].nickname)
+    // 运营负责人id
+    const operator = await systemUsersRepo.getID(data.operator)
+    if (data.tab ==0 || data.tab ==1){
+        processDefinitionId =await actReProcdefRepo.getProcessDefinitionId('运营优化方案流程（全平台）','form-86')
+        // 链接名称
+        let textField_liihs7kv = data.brief_name
+        // 运营负责人
+        let employeeField_liihs7l0 = operator[0].id
+        // 链接Id
+        let textField_liihs7kw = data.goods_id
+        // 平台
+        let radioField_lxlncgm1 = data.platfrom
+        // 新老品
+        let radioField_m6072fu6 = data.link
+        // 链接级别
+        let radioField_m4s69d9s = data.goods_level
+        // 优化等级
+        let radioField_m6072fu7 = data.level
+        // 优化类型
+        let selectField_liihs7kz = data.category
+        // 链接优化内容
+        let multiSelectField_lwufb7oy = data.text
+        variables = ({
+            textField_liihs7kv,
+            employeeField_liihs7l0,
+            textField_liihs7kw,
+            radioField_lxlncgm1,
+            radioField_m6072fu6,
+            radioField_m4s69d9s,
+            radioField_m6072fu7,
+            selectField_liihs7kz,
+            multiSelectField_lwufb7oy
+        })
+    }else{
+        processDefinitionId =await actReProcdefRepo.getProcessDefinitionId('京东链接优化流程','form-42')
+        // 流程名称
+        const textField_lma827od = data.spu
+        // 链接负责人
+        const employeeField_lma827ok= operator[0].id
+        // 链接ID
+        const textField_lma827oe= data.sku
+        // 问题类型
+        const checkboxField_m11r277t = data.text
+        // 
+        let selectField_lma827of = data.link
+        variables = ({
+            textField_lma827od,
+            employeeField_lma827ok,
+            textField_lma827oe,
+            selectField_lma827of,
+            checkboxField_m11r277t,
+        })
+    }
+    await commonReq.createJDProcess(bpmid[0].id,processDefinitionId, variables,aa.data.refreshToken)
+}
 module.exports = {
     getDataStats,
     getPromotionStats,
@@ -5550,5 +5631,7 @@ module.exports = {
     getTMNewGoods,
     updateTMNewTag,
     updatePDDNewTag,
-    importTMNewActivity
+    importTMNewActivity,
+    saveOperatelog,
+    initiateprocess
 }
