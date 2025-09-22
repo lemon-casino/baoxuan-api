@@ -2181,7 +2181,7 @@ const batchInsertGoodsPaysStats = async (date) => {
                 'product_stage', 
                 state, 
                 weekSales[i].platform, 
-                'goods_id',
+                weekSales[i].platform == '自营' ? 'brief_name' : 'goods_id',
                 weekSales[i].goods_id)
             changes.push({
                 goods_id: weekSales[i].goods_id, 
@@ -2319,7 +2319,6 @@ const batchInsertJDGoodsPaysStats = async (date,shop_name) => {
     }
     await dianShangOperationAttributeService.Insertlog(changes)
 }
-    
 
 const importGoodsKeyWords = async (rows, time) => {
     let count = 0, data = [], result = false
@@ -2684,6 +2683,10 @@ const getWorkStats = async (user, start, end, params) => {
         }
     }
     return result
+}
+
+const getNewGoodsInfo = async (user, params) => {
+    
 }
 
 const importGoodsPayInfo = async (rows, time) => {
@@ -3357,6 +3360,7 @@ const importJDZYcompositeInfo = async (rows, time,name) => {
     }
     return result
 }
+
 const importGoodsSYCMInfo = async (rows, time) => {
     let count = 0, data = [], result = false
     let columns = rows[1],
@@ -5390,7 +5394,7 @@ const updatePDDNewTag = async () => {
         let activity_goods = await activityRepo.getByIds(ids)
         for (let i = 0; i < activity_goods.length; i++) {
             delete idsMap[activity_goods[i].goods_id]
-            ids1 = `${ids1}"${activity_goods[i].goods_id}"`
+            ids1 = `${ids1}"${activity_goods[i].goods_id}",`
             changes.push({
                 goods_id: activity_goods[i].goods_id, 
                 sku_id: null,
@@ -5424,7 +5428,7 @@ const updatePDDNewTag = async () => {
     }
     logger.info(`[拼多多新品标签更新]: 时间:${moment().format('YYYY-MM-DD HH:mm:ss')}`)
     if (ids0?.length) {
-        ids0 = ids0.substring(0, ids.length - 1)
+        ids0 = ids0.substring(0, ids0.length - 1)
         await dianShangOperationAttributeRepo.batchUpdate('new_tag', ids0, null)
     }
     if (ids1?.length) {
@@ -5559,6 +5563,61 @@ const initiateprocess = async (data,user) =>{
     }
     await commonReq.createJDProcess(bpmid[0].id,processDefinitionId, variables,aa.data.refreshToken)
 }
+const updateTMLinkStage = async (rows) => {
+    let columns = rows[0].values, goods_row = null, 
+        link_stage_row = null
+    for (let i = 1; i <= columns.length; i++) {
+        if (columns[i] == '链接ID') {goods_row = i; continue}
+        if (columns[i] == '链接层级') {link_stage_row = i; continue}
+    }
+    let ids = '', changes = []
+    let goods = await dianShangOperationAttributeRepo.getTMLinkStage()
+    for (let i = 0; i < goods.length; i++) {
+        if (goods[i].link_stage != null) {
+            ids = `${ids}"${goods[i].goods_id}",`
+            changes.push({
+                goods_id: goods[i].goods_id, 
+                sku_id: null,
+                type: 'update',
+                subtype: '链接层级', 
+                oldValue: goods[i].link_stage, 
+                newValue: null,
+                source: '自动更新',
+                old_json: null,
+                new_json: null,
+                user: null,
+                date: moment().format('YYYY-MM-DD HH:mm:ss')
+            })
+        }
+    }
+    logger.info(`[天猫链接层级更新]: 时间:${moment().format('YYYY-MM-DD HH:mm:ss')}`)
+    if (ids?.length) {
+        ids = ids.substring(0, ids.length - 1)
+        await dianShangOperationAttributeRepo.batchUpdate('link_stage', ids, null)
+    }
+    for (let i = 1; i < rows.length; i++) {
+        const goods_id = rows[i].getCell(goods_row).value
+        if (!goods_id) break
+        const link_stage = rows[i].getCell(link_stage_row).value
+        await dianShangOperationAttributeRepo.batchUpdate('link_stage', `"${goods_id}"`, link_stage)
+        changes.push({
+            goods_id: goods_id, 
+            sku_id: null,
+            type: 'update',
+            subtype: '链接层级', 
+            oldValue: null, 
+            newValue: link_stage,
+            source: '自动更新',
+            old_json: null,
+            new_json: null,
+            user: null,
+            date: moment().format('YYYY-MM-DD HH:mm:ss')
+        })
+    }
+    await dianShangOperationAttributeService.Insertlog(changes)
+    return true
+}
+
 module.exports = {
     getDataStats,
     getPromotionStats,
@@ -5633,5 +5692,6 @@ module.exports = {
     updatePDDNewTag,
     importTMNewActivity,
     saveOperatelog,
-    initiateprocess
+    initiateprocess,
+    updateTMLinkStage
 }

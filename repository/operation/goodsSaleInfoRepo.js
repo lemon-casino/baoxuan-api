@@ -1331,10 +1331,10 @@ goodsSaleInfoRepo.getPromotionData = async (start, end, params, shopNames, linkI
             subsql = `${subsql} AND IF(pi.division_id = 1, IF(s.onsale_date < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY), 
                     1.34 * b3.trans_amount * b1.sale_amount + b3.pay_amount * b1.cost_amount < 
                     2 * b1.sale_amount * b3.pay_amount + 0.67 * b3.pay_amount * b1.cost_amount + 
-                        0.67 * b3.trans_amount * b1.cost_amount, 
+                        2 * b3.trans_amount * b1.cost_amount, 
                     (1.34 * b5.trans_amount * b7.sale_amount + b5.pay_amount * b7.cost_amount < 
                     2 * b7.sale_amount * b5.pay_amount + 0.67 * b5.pay_amount * b7.cost_amount + 
-                        0.67 * b5.trans_amount * b7.cost_amount) AND d.product_stage IN ('稳', '控')), 
+                        2 * b5.trans_amount * b7.cost_amount) AND d.product_stage IN ('稳', '控')), 
                     IF(pi.division_id = 2, IF(d.platform = '自营', IF(s.onsale_date < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY), 
                         IF(b3.promotion_name = '全站营销', 
                             b3.trans_amount * (2 * c2.profit + 2 * c2.promotion_amount - 0.3 * c2.real_sale_amount) < 
@@ -1349,15 +1349,15 @@ goodsSaleInfoRepo.getPromotionData = async (start, end, params, shopNames, linkI
                         AND d.product_stage IN ('稳', '控'))), 
                         IF(s.onsale_date < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY), 
                             1.34 * b3.trans_amount * b1.sale_amount + b3.pay_amount * b1.cost_amount < 
-                            2 * b1.sale_amount * b3.pay_amount + 0.67 * b3.pay_amount * b1.cost_amount + 0.67 * b3.trans_amount * b1.cost_amount, 
+                            2 * b1.sale_amount * b3.pay_amount + 0.67 * b3.pay_amount * b1.cost_amount + 2 * b3.trans_amount * b1.cost_amount, 
                             (1.34 * b5.trans_amount * b7.sale_amount + b5.pay_amount * b7.cost_amount < 
-                            2 * b7.sale_amount * b5.pay_amount + 0.67 * b5.pay_amount * b7.cost_amount + 0.67 * b5.trans_amount * b7.cost_amount) 
+                            2 * b7.sale_amount * b5.pay_amount + 0.67 * b5.pay_amount * b7.cost_amount + 2 * b5.trans_amount * b7.cost_amount) 
                         AND d.product_stage IN ('稳', '控'))), 
                         IF(s.onsale_date < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY), 
                             1.34 * b3.trans_amount * b1.sale_amount + b3.pay_amount * b1.cost_amount < 
-                            2 * b1.sale_amount * b3.pay_amount + 0.67 * b3.pay_amount * b1.cost_amount + 0.67 * b3.trans_amount * b1.cost_amount, 
+                            2 * b1.sale_amount * b3.pay_amount + 0.67 * b3.pay_amount * b1.cost_amount + 2 * b3.trans_amount * b1.cost_amount, 
                             (1.34 * b5.trans_amount * b7.sale_amount + b5.pay_amount * b7.cost_amount < 
-                            2 * b7.sale_amount * b5.pay_amount + 0.67 * b5.pay_amount * b7.cost_amount + 0.67 * b5.trans_amount * b7.cost_amount) 
+                            2 * b7.sale_amount * b5.pay_amount + 0.67 * b5.pay_amount * b7.cost_amount + 2 * b5.trans_amount * b7.cost_amount) 
                         AND d.product_stage IN ('稳', '控'))))
                 AND (d.id IS NULL OR ((d.userDef1 != '滞销' OR d.userDef1 IS NULL) AND (d.userDef7 != '滞销' OR d.userDef7 IS NULL) AND (d.link_attribute != '滞销' OR d.link_attribute IS NULL)))`
             break
@@ -1365,10 +1365,10 @@ goodsSaleInfoRepo.getPromotionData = async (start, end, params, shopNames, linkI
             subsql = `${subsql} AND IF(pi.division_id = 1, IF(s.onsale_date < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY), 
                     1.34 * b6.trans_amount * b8.sale_amount + b6.pay_amount * b8.cost_amount < 
                     2 * b8.sale_amount * b6.pay_amount + 0.67 * b6.pay_amount * b8.cost_amount + 
-                        0.67 * b6.trans_amount * b8.cost_amount, 
+                        2 * b6.trans_amount * b8.cost_amount, 
                     (1.34 * b3.trans_amount * b1.sale_amount + b3.pay_amount * b1.cost_amount < 
                     2 * b1.sale_amount * b3.pay_amount + 0.67 * b3.pay_amount * b1.cost_amount + 
-                        0.67 * b3.trans_amount * b1.cost_amount) AND d.product_stage IN ('稳', '控')), 
+                        2 * b3.trans_amount * b1.cost_amount) AND d.product_stage IN ('稳', '控')), 
                     IF(pi.division_id = 2, IF(d.platform = '自营', IF(s.onsale_date < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY), 
                         IF(b6.promotion_name = '全站营销', 
                             b6.trans_amount * (2 * c2.profit + 2 * c2.promotion_amount - 0.3 * c2.real_sale_amount) < 
@@ -1383,15 +1383,15 @@ goodsSaleInfoRepo.getPromotionData = async (start, end, params, shopNames, linkI
                         AND d.product_stage IN ('稳', '控'))), 
                         IF(s.onsale_date < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY), 
                             1.34 * b6.trans_amount * b8.sale_amount + b6.pay_amount * b8.cost_amount < 
-                            2 * b8.sale_amount * b6.pay_amount + 0.67 * b6.pay_amount * b8.cost_amount + 0.67 * b6.trans_amount * b8.cost_amount, 
+                            2 * b8.sale_amount * b6.pay_amount + 0.67 * b6.pay_amount * b8.cost_amount + 2 * b6.trans_amount * b8.cost_amount, 
                             (1.34 * b3.trans_amount * b1.sale_amount + b3.pay_amount * b1.cost_amount < 
-                            2 * b1.sale_amount * b3.pay_amount + 0.67 * b3.pay_amount * b1.cost_amount + 0.67 * b3.trans_amount * b1.cost_amount) 
+                            2 * b1.sale_amount * b3.pay_amount + 0.67 * b3.pay_amount * b1.cost_amount + 2 * b3.trans_amount * b1.cost_amount) 
                         AND d.product_stage IN ('稳', '控'))), 
                         IF(s.onsale_date < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY), 
                             1.34 * b6.trans_amount * b8.sale_amount + b6.pay_amount * b8.cost_amount < 
-                            2 * b8.sale_amount * b6.pay_amount + 0.67 * b6.pay_amount * b8.cost_amount + 0.67 * b6.trans_amount * b8.cost_amount, 
+                            2 * b8.sale_amount * b6.pay_amount + 0.67 * b6.pay_amount * b8.cost_amount + 2 * b6.trans_amount * b8.cost_amount, 
                             (1.34 * b3.trans_amount * b1.sale_amount + b3.pay_amount * b1.cost_amount < 
-                            2 * b1.sale_amount * b3.pay_amount + 0.67 * b3.pay_amount * b1.cost_amount + 0.67 * b3.trans_amount * b1.cost_amount) 
+                            2 * b1.sale_amount * b3.pay_amount + 0.67 * b3.pay_amount * b1.cost_amount + 2 * b3.trans_amount * b1.cost_amount) 
                         AND d.product_stage IN ('稳', '控'))))
                 AND (d.id IS NULL OR ((d.userDef1 != '滞销' OR d.userDef1 IS NULL) AND (d.userDef7 != '滞销' OR d.userDef7 IS NULL) AND (d.link_attribute != '滞销' OR d.link_attribute IS NULL)))`
             break
@@ -5132,7 +5132,7 @@ goodsSaleInfoRepo.getLowPlanROIByShopNamesAndTime = async (shopNames, days1, day
         WHERE s1.create_time < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.id IS NULL 
+                    2 * s.trans_amount * a.cost_amount AND d.id IS NULL 
         UNION ALL
         SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
             SELECT IFNULL(SUM(pay_amount), 0) AS pay_amount, promotion_name, 
@@ -5198,7 +5198,7 @@ goodsSaleInfoRepo.getChildLowPlanROIByShopNamesAndTime = async (shopNames, days1
         WHERE s1.create_time < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL 
+                    2 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL 
         GROUP BY s.goods_id, d.volume_target) a1 GROUP BY volume_target, type
         UNION ALL
         SELECT COUNT(1) AS count, type, volume_target FROM (
@@ -5264,7 +5264,7 @@ goodsSaleInfoRepo.getLowPlanROIByShopNamesAndTime1 = async (shopNames, days1, da
         WHERE s1.create_time < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.id IS NULL 
+                    2 * s.trans_amount * a.cost_amount AND d.id IS NULL 
         UNION ALL
         SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
             SELECT IFNULL(SUM(pay_amount), 0) AS pay_amount, promotion_name, 
@@ -5291,7 +5291,7 @@ goodsSaleInfoRepo.getLowPlanROIByShopNamesAndTime1 = async (shopNames, days1, da
         WHERE s1.create_time >= DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.id IS NULL) b`
+                    2 * s.trans_amount * a.cost_amount AND d.id IS NULL) b`
     const result = await query(sql)
     return result
 }
@@ -5330,7 +5330,7 @@ goodsSaleInfoRepo.getChildLowPlanROIByShopNamesAndTime1 = async (shopNames, days
         WHERE s1.create_time < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL 
+                    2 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL 
         GROUP BY s.goods_id, d.volume_target) a1 GROUP BY volume_target, type 
         UNION ALL
         SELECT COUNT(1) AS count, type, volume_target FROM (
@@ -5359,7 +5359,7 @@ goodsSaleInfoRepo.getChildLowPlanROIByShopNamesAndTime1 = async (shopNames, days
         WHERE s1.create_time >= DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL
+                    2 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL
         GROUP BY s.goods_id, d.volume_target) b1 GROUP BY volume_target, type) b GROUP BY volume_target, type`
     const result = await query(sql)
     return result
@@ -5403,7 +5403,7 @@ goodsSaleInfoRepo.getLowPlanROIByShopNamesAndTime2 = async (shopNames, days1, da
         WHERE s1.create_time < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.id IS NULL 
+                    2 * s.trans_amount * a.cost_amount AND d.id IS NULL 
         UNION ALL
         SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
             SELECT IFNULL(SUM(pay_amount), 0) AS pay_amount, promotion_name, 
@@ -5430,7 +5430,7 @@ goodsSaleInfoRepo.getLowPlanROIByShopNamesAndTime2 = async (shopNames, days1, da
         WHERE s1.create_time >= DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.id IS NULL`
+                    2 * s.trans_amount * a.cost_amount AND d.id IS NULL`
     if (shopNames1) {
         sql = `${sql}
             UNION ALL 
@@ -5534,7 +5534,7 @@ goodsSaleInfoRepo.getChildLowPlanROIByShopNamesAndTime2 = async (shopNames, days
         WHERE s1.create_time < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL 
+                    2 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL 
         GROUP BY s.goods_id, d.volume_target) a1 GROUP BY volume_target, type 
         UNION ALL
         SELECT COUNT(1) AS count, type, volume_target FROM (
@@ -5563,7 +5563,7 @@ goodsSaleInfoRepo.getChildLowPlanROIByShopNamesAndTime2 = async (shopNames, days
         WHERE s1.create_time >= DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL
+                    2 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL
         GROUP BY s.goods_id, d.volume_target) b1 GROUP BY volume_target, type`
     if (shopNames1) {
         sql = `${sql}
@@ -5665,7 +5665,7 @@ goodsSaleInfoRepo.getLowPlanROIByLinksAndTime = async (links, days1, days2) => {
         WHERE s1.create_time < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.id IS NULL 
+                    2 * s.trans_amount * a.cost_amount AND d.id IS NULL 
         UNION ALL
         SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
             SELECT IFNULL(SUM(pay_amount), 0) AS pay_amount, promotion_name, 
@@ -5731,7 +5731,7 @@ goodsSaleInfoRepo.getChildLowPlanROIByLinksAndTime = async (links, days1, days2)
         WHERE s1.create_time < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL 
+                    2 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL 
         GROUP BY s.goods_id, d.volume_target) a1 GROUP BY volume_target, type
         UNION ALL
         SELECT COUNT(1) AS count, type, volume_target FROM (
@@ -5797,7 +5797,7 @@ goodsSaleInfoRepo.getLowPlanROIByLinksAndTime1 = async (links, days1, days2) => 
         WHERE s1.create_time < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.id IS NULL 
+                    2 * s.trans_amount * a.cost_amount AND d.id IS NULL 
         UNION ALL
         SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
             SELECT IFNULL(SUM(pay_amount), 0) AS pay_amount, promotion_name, 
@@ -5824,7 +5824,7 @@ goodsSaleInfoRepo.getLowPlanROIByLinksAndTime1 = async (links, days1, days2) => 
         WHERE s1.create_time >= DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.id IS NULL) b`
+                    2 * s.trans_amount * a.cost_amount AND d.id IS NULL) b`
     const result = await query(sql)
     return result
 }
@@ -5839,7 +5839,7 @@ goodsSaleInfoRepo.getLowPlanROIByLinksAndTime1 = async (links, days1, days2) => 
  * @param {*} days2 
  * @returns 
  */
-goodsSaleInfoRepo.getLowPlanROIByLinksAndTime1 = async (links, days1, days2) => {
+goodsSaleInfoRepo.getChildLowPlanROIByLinksAndTime1 = async (links, days1, days2) => {
     const sql = `SELECT SUM(count) AS count, type, volume_target FROM (
         SELECT COUNT(1) AS count, type, volume_target FROM (
             SELECT '老品' AS type, s.goods_id, d.volume_target FROM (
@@ -5863,7 +5863,7 @@ goodsSaleInfoRepo.getLowPlanROIByLinksAndTime1 = async (links, days1, days2) => 
         WHERE s1.create_time < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL 
+                    2 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL 
         GROUP BY s.goods_id, d.volume_target) a1 GROUP BY volume_target, type 
         UNION ALL
         SELECT COUNT(1) AS count, type, volume_target FROM (
@@ -5892,7 +5892,7 @@ goodsSaleInfoRepo.getLowPlanROIByLinksAndTime1 = async (links, days1, days2) => 
         WHERE s1.create_time >= DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL
+                    2 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL
         GROUP BY s.goods_id, d.volume_target) b1 GROUP BY volume_target, type) b GROUP BY volume_target, type`
     const result = await query(sql)
     return result
@@ -5900,7 +5900,8 @@ goodsSaleInfoRepo.getLowPlanROIByLinksAndTime1 = async (links, days1, days2) => 
 
 /**
  * jd low plan roi count without unsalable link
- * s = sale_amount, c = cost_amount, p = pay_amount, t = trans_amount, rs = real_sale_amount, p1 = profit
+ * s = sale_amount, c = cost_amount, p = pay_amount, t = trans_amount, rs = real_sale_amount, 
+ * p1 = profit, p2 = promotion_amount 
  * normal: t / p < s / (0.67 * s - c) + 0.5 ===> t * (0.67 * s - c) < s * p + 0.5 * p * (0.67 * s - c)
  *         ===> 1.34 * t * s + p * c < 2 * s * p + 0.67 * p * c + 2 * t * c 
  * jdzy qz: t / p < rs / (p1 + p2 - 0.15 * rs) + 0.5 
@@ -5935,7 +5936,7 @@ goodsSaleInfoRepo.getLowPlanROIByLinksAndTime2 = async (links, days1, days2, lin
         WHERE s1.create_time < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.id IS NULL 
+                    2 * s.trans_amount * a.cost_amount AND d.id IS NULL 
         UNION ALL
         SELECT COUNT(DISTINCT s.goods_id) AS count FROM (
             SELECT IFNULL(SUM(pay_amount), 0) AS pay_amount, promotion_name, 
@@ -5962,7 +5963,7 @@ goodsSaleInfoRepo.getLowPlanROIByLinksAndTime2 = async (links, days1, days2, lin
         WHERE s1.create_time >= DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.id IS NULL`
+                    2 * s.trans_amount * a.cost_amount AND d.id IS NULL`
     if (links1) {
         sql = `${sql}
             UNION ALL 
@@ -6065,7 +6066,7 @@ goodsSaleInfoRepo.getChildLowPlanROIByLinksAndTime2 = async (links, days1, days2
         WHERE s1.create_time < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL 
+                    2 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL 
         GROUP BY s.goods_id, d.volume_target) a1 GROUP BY volume_target, type 
         UNION ALL
         SELECT COUNT(1) AS count, type, volume_target FROM (
@@ -6094,7 +6095,7 @@ goodsSaleInfoRepo.getChildLowPlanROIByLinksAndTime2 = async (links, days1, days2
         WHERE s1.create_time >= DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) 
             AND 1.34 * s.trans_amount * a.sale_amount + s.pay_amount * a.cost_amount < 
                 2 * a.sale_amount * s.pay_amount + 0.67 * s.pay_amount * a.cost_amount + 
-                    0.67 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL
+                    2 * s.trans_amount * a.cost_amount AND d.volume_target IS NOT NULL
         GROUP BY s.goods_id, d.volume_target) b1 GROUP BY volume_target, type`
     if (links1) {
         sql = `${sql}

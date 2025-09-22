@@ -156,4 +156,5 @@ router.post('/Operatelog', operationApi.saveOperatelog)
 
 // 优化流程发起
 router.post('/initiateprocess',operationApi.initiateprocess)
+router.post('/tmall-goods/update-link-stage', operationApi.updateTMLinkStage)
 module.exports = router

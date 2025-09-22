@@ -61,5 +61,6 @@ module.exports = [
     '/operation/tmall-new-goods/update-new-tag',
     '/operation/tmall-new-goods/import-activity',
     '/operation/wangEditorUpload',
+    '/operation/tmall-goods/update-link-stage',
     /^\/download\/.*/,
 ]
