@@ -3990,7 +3990,7 @@ developmentService.getProcessInfo = async (params) => {
                 result[i]['shelf'] = 0
                 resultMap[`${result[i]['division']}_${result[i]['develop_type']}`] = i
             }
-            info = await processesRepo.getSelectedProcessSkuInfo(start, end)
+            info = await processesRepo.getSelectedProcessSkuInfo(0, start, end)
             for (let i = 0; i < info.length; i++) {
                 let index = resultMap[`${info[i]['division']}_${info[i]['develop_type']}`]
                 let skuids = '', skuMap = {}, infoMap = {}, infoMap1 = {}, infoMap2 = {}, infoMap3 = {}
@@ -4089,7 +4089,7 @@ developmentService.getProcessInfo = async (params) => {
                 result[i]['shelf'] = 0
                 resultMap[`${result[i]['division']}_${result[i]['develop_type']}`] = i
             }
-            info = await processesRepo.getSelectedProcessSkuInfo(start, end)
+            info = await processesRepo.getSelectedProcessSkuInfo(0, start, end)
             for (let i = 0; i < info.length; i++) {
                 let index = resultMap[`${info[i]['division']}_${info[i]['develop_type']}`]
                 let skuids = '', skuMap = {}, infoMap = {}, infoMap1 = {}, infoMap2 = {}, infoMap3 = {}
@@ -4218,7 +4218,7 @@ developmentService.getProcessInfo = async (params) => {
                 result[i]['shelf'] = 0
                 resultMap[`${result[i]['division']}_${result[i]['develop_type']}`] = i
             }
-            info = await processesRepo.getSelectedProcessSkuInfo(start, end)
+            info = await processesRepo.getSelectedProcessSkuInfo(0, start, end)
             for (let i = 0; i < info.length; i++) {
                 let index = resultMap[`${info[i]['division']}_${info[i]['develop_type']}`]
                 let skuids = '', skuMap = {}, infoMap = {}, infoMap1 = {}, infoMap2 = {}, infoMap3 = {}

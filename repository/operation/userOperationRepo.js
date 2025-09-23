@@ -236,6 +236,26 @@ userOperationRepo.getPermissionLimit = async (user_id) => {
     return result || []
 }
 
+userOperationRepo.getPermissionList = async (user_id) => {
+    const sql = `SELECT uo.type, si.shop_name, u.nickname FROM user_operation uo 
+        LEFT JOIN division_info di ON di.id = uo.detail_id AND uo.type = 1
+        LEFT JOIN project_info pi ON 
+            ((pi.id = uo.detail_id AND uo.type = 2) OR pi.division_id = di.id) 
+            AND pi.id IN (1,5,14)
+        LEFT JOIN shop_info si ON 
+            (si.id = uo.detail_id AND uo.type = 3 AND si.project_id IN (1,5,14))
+            OR pi.id = si.project_id
+        LEFT JOIN team_info ti ON ti.id = uo.detail_id AND uo.type = 4
+        LEFT JOIN team_member tm ON tm.team_id = ti.id
+        LEFT JOIN users u ON 
+            ((u.user_id = uo.detail_id AND uo.type = 5) OR tm.user_id = u.user_id) 
+            AND u.status = 1
+        WHERE (si.id IS NOT NULL OR u.user_id IS NOT NULL) AND uo.user_id = ?
+        ORDER BY uo.type`
+    const result = await query(sql, user_id)
+    return result || []
+}
+
 userOperationRepo.getLinkIdsByUserNames = async (userNames, shopNames) => {
     let sql = `SELECT IFNULL(goods_id,brief_name) AS goods_id FROM dianshang_operation_attribute 
         WHERE operator IN ("${userNames}")`

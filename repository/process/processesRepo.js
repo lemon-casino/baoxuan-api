@@ -1222,4 +1222,211 @@ processesRepo.getSelectedProcessSkuInfo = async (removeCoupang, start, end, sele
     return result
 }
 
+processesRepo.getGoodsOptimizeInfo = async (shopNames, userNames, is_new) => {
+    let subsql = shopNames?.length ? `AND d.shop_name IN (${shopNames})` : `AND d.operator IN (${userNames})`
+    subsql = is_new ? `${subsql} 
+        AND IFNULL(s.create_time, d.onsale_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY)` : 
+        `${subsql} 
+        AND IFNULL(s.create_time, d.onsale_date) < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY)`
+    const sql = `SELECT IFNULL(SUM(count), 0) AS count, product_stage, type FROM (
+        SELECT COUNT(1) AS count, IF(d.is_circulation = '是', '流转', d.product_stage) AS product_stage, 
+            'running_num' AS type FROM processes p 
+        JOIN process_tasks t ON t.process_id = p.process_id AND t.title = '天猫优化动作完成确认' AND t.status = 1
+        JOIN process_info pi ON pi.process_id = p.process_id AND pi.field = 'textField_liihs7kw'
+        JOIN dianshang_operation_attribute d ON d.goods_id = pi.content 
+            AND d.platform = '天猫部' AND d.goods_id IS NOT NULL
+            AND (d.link_state != '下架' OR d.link_state IS NULL)
+        LEFT JOIN (SELECT goods_id, MIN(create_time) AS create_time 
+            FROM jst_goods_sku WHERE is_shelf = '是' GROUP BY goods_id) s ON s.goods_id = d.goods_id
+        WHERE p.process_code = 'form-86' ${subsql} 
+            AND p.start_time BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY) AND NOW() 
+        GROUP BY IF(d.is_circulation = '是', '流转', d.product_stage)
+        UNION ALL
+        SELECT COUNT(1) AS count, IF(d.is_circulation = '是', '流转', d.product_stage) AS product_stage, 
+            'success_num' AS type FROM processes p 
+        JOIN process_tasks t ON t.process_id = p.process_id AND t.title = '天猫项目负责人审核' AND t.status = 2 
+        JOIN process_info pi ON pi.process_id = p.process_id AND pi.field = 'textField_liihs7kw'
+        JOIN dianshang_operation_attribute d ON d.goods_id = pi.content
+            AND d.platform = '天猫部' AND d.goods_id IS NOT NULL
+            AND (d.link_state != '下架' OR d.link_state IS NULL)
+        LEFT JOIN (SELECT goods_id, MIN(create_time) AS create_time 
+            FROM jst_goods_sku WHERE is_shelf = '是' GROUP BY goods_id) s ON s.goods_id = d.goods_id
+        WHERE p.process_code = 'form-86' ${subsql} 
+            AND p.start_time BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY) AND NOW()
+        GROUP BY IF(d.is_circulation = '是', '流转', d.product_stage)
+        UNION ALL 
+        SELECT COUNT(1) AS count, IF(d.is_circulation = '是', '流转', d.product_stage) AS product_stage, 
+            'failed_num' AS type FROM processes p
+        JOIN process_tasks t ON t.process_id = p.process_id AND t.title = '天猫项目负责人审核' AND t.status IN (3,5)
+        JOIN process_info pi ON pi.process_id = p.process_id AND pi.field = 'textField_liihs7kw'
+        JOIN dianshang_operation_attribute d ON d.goods_id = pi.content
+            AND d.platform = '天猫部' AND d.goods_id IS NOT NULL
+            AND (d.link_state != '下架' OR d.link_state IS NULL)
+        LEFT JOIN (SELECT goods_id, MIN(create_time) AS create_time 
+            FROM jst_goods_sku WHERE is_shelf = '是' GROUP BY goods_id) s ON s.goods_id = d.goods_id
+        WHERE p.process_code = 'form-86' ${subsql}
+            AND p.start_time BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY) AND NOW()
+        GROUP BY IF(d.is_circulation = '是', '流转', d.product_stage)
+        UNION ALL
+        SELECT COUNT(1) AS count, IF(d.is_circulation = '是', '流转', d.product_stage) AS product_stage, 
+            'running_num' AS type FROM processes p 
+        JOIN process_tasks t ON t.process_id = p.process_id AND t.title = '审批人' AND t.status = 1
+        JOIN process_info pi ON pi.process_id = p.process_id AND pi.field = 'textField_lma827od'
+        JOIN dianshang_operation_attribute d ON d.brief_name = pi.content
+            AND platform = '自营' AND d.brief_name IS NOT NULL
+            AND (d.userDef1 != '下柜' OR d.userDef1 IS NULL)
+        LEFT JOIN (SELECT goods_id, MIN(create_time) AS create_time 
+            FROM jst_goods_sku WHERE is_shelf = '是' GROUP BY goods_id) s ON s.goods_id = d.brief_name
+        WHERE p.process_code = 'form-42' ${subsql}
+            AND p.start_time BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY) AND NOW()
+        GROUP BY IF(d.is_circulation = '是', '流转', d.product_stage)
+        UNION ALL
+        SELECT COUNT(1) AS count, product_stage, 'success_num' AS type FROM (
+            SELECT pi.content, pi2.content AS content1, IF(d.is_circulation = '是', '流转', d.product_stage) 
+                AS product_stage, MIN(p.start_time) AS start_time FROM processes p 
+            JOIN process_info pi ON pi.process_id = p.process_id AND pi.field = 'textField_lma827od'
+            JOIN dianshang_operation_attribute d ON d.brief_name = pi.content
+                AND platform = '自营' AND d.brief_name IS NOT NULL
+                AND (d.userDef1 != '下柜' OR d.userDef1 IS NULL)
+            LEFT JOIN (SELECT goods_id, MIN(create_time) AS create_time 
+                FROM jst_goods_sku WHERE is_shelf = '是' GROUP BY goods_id) s ON s.goods_id = d.brief_name
+            JOIN process_info pi1 ON pi1.process_id = p.process_id AND pi1.field = 'radioField_m11ru702'
+                AND pi1.content = '是'
+            JOIN process_info pi2 ON pi2.process_id = p.process_id AND pi2.field = 'checkboxField_m11r277t' 
+            JOIN process_tasks t ON t.process_id = p.process_id AND t.title = '审批人' AND t.status = 2
+            WHERE p.process_code = 'form-42' ${subsql}
+                AND p.start_time BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY) AND NOW()
+            GROUP BY IF(d.is_circulation = '是', '流转', d.product_stage), pi.content, pi2.content HAVING COUNT(1) = 1
+        ) a WHERE start_time <= DATE_SUB(NOW(), INTERVAL 4 DAY) GROUP BY product_stage
+        UNION ALL
+        SELECT COUNT(1) AS count, product_stage, 'failed_num' AS type FROM (
+            SELECT pi.content, pi2.content AS content1, IF(d.is_circulation = '是', '流转', d.product_stage) 
+                AS product_stage FROM processes p 
+            JOIN process_info pi ON pi.process_id = p.process_id AND pi.field = 'textField_lma827od'
+            JOIN dianshang_operation_attribute d ON d.goods_id = pi.content
+                AND platform = '自营' AND d.brief_name IS NOT NULL
+                AND (d.userDef1 != '下柜' OR d.userDef1 IS NULL)
+            LEFT JOIN (SELECT goods_id, MIN(create_time) AS create_time 
+                FROM jst_goods_sku WHERE is_shelf = '是' GROUP BY goods_id) s ON s.goods_id = d.brief_name
+            JOIN process_info pi1 ON pi1.process_id = p.process_id AND pi1.field = 'radioField_m11ru702'
+                AND pi1.content = '是'
+            JOIN process_info pi2 ON pi2.process_id = p.process_id AND pi2.field = 'checkboxField_m11r277t' 
+            JOIN process_tasks t ON t.process_id = p.process_id AND t.title = '审批人' AND t.status = 2
+            WHERE p.process_code = 'form-42' ${subsql}
+                AND p.start_time BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY) AND NOW()
+            GROUP BY IF(d.is_circulation = '是', '流转', d.product_stage), pi.content, pi2.content 
+            HAVING COUNT(1) > 1) a GROUP BY product_stage) b GROUP BY type, product_stage`
+    const result = await query(sql)
+    return result
+}
+
+processesRepo.getGoodsOptimizeDetail = async (shopNames, userNames, is_new, product_stage, type) => {
+    let subsql = shopNames?.length ? `AND d.shop_name IN (${shopNames})` : `AND d.operator IN (${userNames})`
+    subsql = is_new == '1' ? `${subsql} 
+        AND IFNULL(s.create_time, d.onsale_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY)` : 
+        `${subsql} 
+        AND IFNULL(s.create_time, d.onsale_date) < DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY)`
+    subsql = product_stage != '流转' ? `${subsql} 
+        AND d.product_stage = "${product_stage}" AND (d.is_circulation = '否' OR d.is_circulation IS NULL)` : 
+        `${subsql} 
+        AND d.is_circualtion = '是'`
+    let sql = ''
+    switch (type) {
+        case 'running_num':
+            sql = `SELECT p.title, p.process_id, p.start_time, p.status, p.username, p.dept, t.title AS task, 
+                    t.username AS user, t.dept AS user_dept FROM processes p 
+                JOIN process_tasks t ON t.process_id = p.process_id AND t.title = '天猫优化动作完成确认' AND t.status = 1
+                JOIN process_info pi ON pi.process_id = p.process_id AND pi.field = 'textField_liihs7kw'
+                JOIN dianshang_operation_attribute d ON d.goods_id = pi.content 
+                    AND d.platform = '天猫部' AND d.goods_id IS NOT NULL
+                    AND (d.link_state != '下架' OR d.link_state IS NULL)
+                LEFT JOIN (SELECT goods_id, MIN(create_time) AS create_time 
+                    FROM jst_goods_sku WHERE is_shelf = '是' GROUP BY goods_id) s ON s.goods_id = d.goods_id
+                WHERE p.process_code = 'form-86' ${subsql} 
+                    AND p.start_time BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY) AND NOW() 
+                UNION ALL
+                SELECT p.title, p.process_id, p.start_time, p.status, p.username, p.dept, t.title AS task, 
+                    t.username AS user, t.dept AS user_dept FROM processes p 
+                JOIN process_tasks t ON t.process_id = p.process_id AND t.title = '审批人' AND t.status = 1
+                JOIN process_info pi ON pi.process_id = p.process_id AND pi.field = 'textField_lma827od'
+                JOIN dianshang_operation_attribute d ON d.brief_name = pi.content
+                    AND platform = '自营' AND d.brief_name IS NOT NULL
+                    AND (d.userDef1 != '下柜' OR d.userDef1 IS NULL)
+                LEFT JOIN (SELECT goods_id, MIN(create_time) AS create_time 
+                    FROM jst_goods_sku WHERE is_shelf = '是' GROUP BY goods_id) s ON s.goods_id = d.brief_name
+                WHERE p.process_code = 'form-42' ${subsql} 
+                    AND p.start_time BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY) AND NOW()`
+            break
+        case 'success_num':
+            sql = `SELECT p.title, p.process_id, p.start_time, p.status, p.username, p.dept, t1.title AS task, 
+                    t1.username AS user, t1.dept AS user_dept FROM processes p 
+                JOIN process_tasks t ON t.process_id = p.process_id AND t.title = '天猫项目负责人审核' AND t.status = 2 
+                LEFT JOIN process_tasks t1 ON t1.process_id = p.process_id AND t1.status = 1
+                JOIN process_info pi ON pi.process_id = p.process_id AND pi.field = 'textField_liihs7kw'
+                JOIN dianshang_operation_attribute d ON d.goods_id = pi.content
+                    AND d.platform = '天猫部' AND d.goods_id IS NOT NULL
+                    AND (d.link_state != '下架' OR d.link_state IS NULL)
+                LEFT JOIN (SELECT goods_id, MIN(create_time) AS create_time 
+                    FROM jst_goods_sku WHERE is_shelf = '是' GROUP BY goods_id) s ON s.goods_id = d.goods_id
+                WHERE p.process_code = 'form-86' ${subsql} 
+                    AND p.start_time BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY) AND NOW()
+                UNION ALL
+                SELECT title, process_id, start_time, status, username, dept, task, user, user_dept FROM (
+                    SELECT pi.content, pi2.content AS content1, p.title, p.process_id, p.status, p.username, p.dept, 
+                        t1.title AS task, t1.username AS user, t1.dept AS user_dept, MIN(p.start_time) AS start_time 
+                    FROM processes p JOIN process_info pi ON pi.process_id = p.process_id AND pi.field = 'textField_lma827od'
+                    JOIN dianshang_operation_attribute d ON d.brief_name = pi.content
+                        AND platform = '自营' AND d.brief_name IS NOT NULL
+                        AND (d.userDef1 != '下柜' OR d.userDef1 IS NULL)
+                    LEFT JOIN (SELECT goods_id, MIN(create_time) AS create_time 
+                        FROM jst_goods_sku WHERE is_shelf = '是' GROUP BY goods_id) s ON s.goods_id = d.brief_name
+                    JOIN process_info pi1 ON pi1.process_id = p.process_id AND pi1.field = 'radioField_m11ru702'
+                        AND pi1.content = '是'
+                    JOIN process_info pi2 ON pi2.process_id = p.process_id AND pi2.field = 'checkboxField_m11r277t'     
+                    JOIN process_tasks t ON t.process_id = p.process_id AND t.title = '审批人' AND t.status = 2
+                    LEFT JOIN process_tasks t1 ON t1.process_id = p.process_id and t1.status = 1
+                    WHERE p.process_code = 'form-42' ${subsql} 
+                        AND p.start_time BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY) AND NOW()
+                    GROUP BY pi.content, pi2.content, p.title, p.process_id, p.status, p.username, p.dept, t1.title, 
+                        t1.username, t1.dept HAVING COUNT(1) = 1) a WHERE start_time <= DATE_SUB(NOW(), INTERVAL 4 DAY)`
+            break
+        case 'failed_num':
+            sql = `SELECT p.title, p.process_id, p.start_time, p.status, p.username, p.dept, t1.title AS task, 
+                    t1.username AS user, t1.dept AS user_dept FROM processes p
+                JOIN process_tasks t ON t.process_id = p.process_id AND t.title = '天猫项目负责人审核' AND t.status IN (3,5)
+                LEFT JOIN process_tasks t1 ON t1.process_id = p.process_id AND t1.status = 1
+                JOIN process_info pi ON pi.process_id = p.process_id AND pi.field = 'textField_liihs7kw'
+                JOIN dianshang_operation_attribute d ON d.goods_id = pi.content
+                    AND d.platform = '天猫部' AND d.goods_id IS NOT NULL
+                    AND (d.link_state != '下架' OR d.link_state IS NULL)
+                LEFT JOIN (SELECT goods_id, MIN(create_time) AS create_time 
+                    FROM jst_goods_sku WHERE is_shelf = '是' GROUP BY goods_id) s ON s.goods_id = d.goods_id
+                WHERE p.process_code = 'form-86' ${subsql} 
+                    AND p.start_time BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY) AND NOW()
+                UNION ALL
+                SELECT title, process_id, start_time, status, username, dept, task, user, user_dept FROM (
+                    SELECT pi.content, pi2.content AS content1, p.title, p.process_id, p.status, p.username, p.dept, 
+                        t1.title AS task, t1.username AS user, t1.dept AS user_dept, p.start_time FROM processes p 
+                    JOIN process_info pi ON pi.process_id = p.process_id AND pi.field = 'textField_lma827od'
+                    JOIN dianshang_operation_attribute d ON d.goods_id = pi.content
+                        AND platform = '自营' AND d.brief_name IS NOT NULL
+                        AND (d.userDef1 != '下柜' OR d.userDef1 IS NULL)
+                    LEFT JOIN (SELECT goods_id, MIN(create_time) AS create_time 
+                        FROM jst_goods_sku WHERE is_shelf = '是' GROUP BY goods_id) s ON s.goods_id = d.brief_name
+                    JOIN process_info pi1 ON pi1.process_id = p.process_id AND pi1.field = 'radioField_m11ru702'
+                        AND pi1.content = '是'
+                    JOIN process_info pi2 ON pi2.process_id = p.process_id AND pi2.field = 'checkboxField_m11r277t' 
+                    JOIN process_tasks t ON t.process_id = p.process_id AND t.title = '审批人' AND t.status = 2
+                    LEFT JOIN process_tasks t1 ON t1.process_id = p.process_id and t1.status = 1
+                    WHERE p.process_code = 'form-42' ${subsql} 
+                        AND p.start_time BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 6 DAY) AND NOW()
+                    GROUP BY pi.content, pi2.content, p.title, p.process_id, p.status, p.username, p.dept, t1.title, 
+                        t1.username, t1.dept, p.start_time HAVING COUNT(1) > 1) a`
+            break
+        default:
+    }
+    const result = await query(sql)
+    return result
+}
+
 module.exports = processesRepo

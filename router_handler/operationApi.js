@@ -376,6 +376,33 @@ const getWorkStats = async (req, res, next) => {
     }
 }
 
+const getNewGoodsInfo = async (req, res, next) => {
+    try {
+        const result = await operationService.getNewGoodsInfo(req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getOldGoodsInfo = async (req, res, next) => {
+    try {
+        const result = await operationService.getOldGoodsInfo(req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getGoodsOptimizeDetail = async (req, res, next) => {
+    try {
+        const result = await operationService.getGoodsOptimizeDetail(req.user.id, req.query)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const importGoodsPayInfo = async (req, res, next) => {
     try {
         let form = new formidable.IncomingForm()
@@ -705,7 +732,6 @@ const importJDZYcompositeInfo = async (req, res, next) => {
         next(e)
     }
 }
-
 
 const importGoodsPDDInfo = async (req, res, next) => {
     try {
@@ -1746,6 +1772,9 @@ module.exports = {
     getGoodsInfoDetailTotal,
     getGoodsInfoSubDetail,
     getWorkStats,
+    getNewGoodsInfo,
+    getOldGoodsInfo,
+    getGoodsOptimizeDetail,
     importGoodsPayInfo,
     importGoodsCompositeInfo,
     importGoodsSYCMInfo,
