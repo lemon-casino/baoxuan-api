@@ -1760,6 +1760,8 @@ const getOperateSpecific = async (start, end, user_id, params) => {
                 }
                 if (['宝选天猫', 'TEOTM', '淘工厂'].includes(params.name)) permissions = permissions.concat([{name: '王洪彬', type: 5, detail_id: 98}])
                 else if (params.name == '拼多多') permissions = permissions.concat([{name: '邓健康', type: 5, detail_id: 71}])
+                else if (params.name == '京东') permissions = permissions.concat([{name: '哈默德', type: 5, detail_id: 316}])
+                else if (params.name == 'COUPANG') permissions = permissions.concat([{name: '廖泽涛', type: 5, detail_id: 365}, {name: '杨君怡', type: 5, detail_id: 377}])
                 type = typeList.user.key
                 break
             default:
