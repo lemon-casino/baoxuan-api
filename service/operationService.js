@@ -64,6 +64,7 @@ const goodsPromotionPlanRepo = require('@/repository/operation/goodsPromotionPla
 const goodsSkuRepo = require('@/repository/jst/goodsSkuRepo')
 const tmallNewActivityRepo = require('@/repository/operation/tmallNewActivityRepo')
 const activityRepo = require('@/repository/danpin/activityRepo')
+const processesRepo = require('@/repository/process/processesRepo')
 /**
  * get operation data pannel data stats
  * division > project > shop / team > user
@@ -2685,8 +2686,143 @@ const getWorkStats = async (user, start, end, params) => {
     return result
 }
 
-const getNewGoodsInfo = async (user, params) => {
-    
+const getNewGoodsInfo = async (id) => {
+    let result = []
+    const permission = await userOperationRepo.getPermissionList(id)
+    let shopNames = '', userNames = ''
+    for (let i = 0; i < permission.length; i++) {
+        if (i > 0 && permission[i].type != permission[i-1].type) break
+        if (permission[i].shop_name) shopNames = `${shopNames}"${permission[i].shop_name}",`
+        else if (permission[i].nickname) userNames = `${userNames}"${permission[i].nickname}",`
+    }
+    const month1 = moment().format('YYYYMM'), month2 = moment().subtract(1, 'month').format('YYYYMM')
+    const days1 = moment().daysInMonth(), days2 = moment().subtract(1, 'month').daysInMonth()
+    const d1 = moment().days() > 7 ? 7 : moment().subtract(1, 'day').days()
+    const d2 = 7 - d1
+    const percent1 = (d1 / days1).toFixed(2), percent2 = (d2 / days2).toFixed(2)
+    if (shopNames?.length) {
+        shopNames = shopNames.substring(0, shopNames.length - 1)
+    } else if (userNames?.length) {
+        userNames = userNames.substring(0, userNames.length - 1)
+    }
+    result = await goodsPayInfoRepo.getProductStage(shopNames, userNames, month1, month2, percent1, percent2, 1)
+    let process = await processesRepo.getGoodsOptimizeInfo(shopNames, userNames, 1)
+    let promotion = await goodsPayInfoRepo.getGoodsLowROI(shopNames, userNames, 1)
+    let plan = await goodsPayInfoRepo.getGoodsLowROIPlan(shopNames, userNames, 1)
+    let stage1 = 0, stage2 = 0, stage_index = null
+    for (let i = 0; i < result.length; i++) {
+        for (let j = 0; j < process.length; j++) {
+            if (result[i].product_stage == process[j].product_stage) {
+                result[i][process[j].type] = process[j].count
+                process.splice(j, 1)
+                j--
+            }
+        }
+        let success = parseInt(result[i]['success_num'] || 0)
+        let failed = parseInt(result[i]['failed_num'] || 0)
+        result[i]['success_profit'] = success + failed > 0 ? (success / (success + failed) * 100).toFixed(2) : 0 
+        for (let j = 0; j < promotion.length; j++) {
+            if (result[i].product_stage == promotion[j].product_stage) {
+                result[i]['low_roi'] = promotion[j].count
+                promotion.splice(j, 1)
+                j--
+            }
+        }
+        for (let j = 0; j < plan.length; j++) {
+            if (result[i].product_stage == plan[j].product_stage) {
+                result[i]['low_roi_plan'] = plan[j].count
+                plan.splice(j, 1)
+                j--
+            }
+        }
+        if (result[i].product_stage == '未起') stage1 = result[i].count
+        if (result[i].product_stage == '起') {
+            stage2 = result[i].count
+            stage_index = i
+        }
+    }
+    if (stage_index != null) 
+        result[stage_index]['active'] = stage1 + stage2 > 0 ? (stage2 / (stage1 + stage2) * 100).toFixed(2) : 0
+    return result
+}
+
+const getOldGoodsInfo = async (id) => {
+    let result = []
+    const permission = await userOperationRepo.getPermissionList(id)
+    let shopNames = '', userNames = ''
+    for (let i = 0; i < permission.length; i++) {
+        if (i > 0 && permission[i].type != permission[i-1].type) break
+        if (permission[i].shop_name) shopNames = `${shopNames}"${permission[i].shop_name}",`
+        else if (permission[i].nickname) userNames = `${userNames}"${permission[i].nickname}",`
+    }
+    if (shopNames?.length) {
+        shopNames = shopNames.substring(0, shopNames.length - 1)
+    } else if (userNames?.length) {
+        userNames = userNames.substring(0, userNames.length - 1)
+    }
+    const month1 = moment().format('YYYYMM'), month2 = moment().subtract(1, 'month').format('YYYYMM')
+    const days1 = moment().daysInMonth(), days2 = moment().subtract(1, 'month').daysInMonth()
+    const d1 = moment().days() > 7 ? 7 : moment().subtract(1, 'day').days()
+    const d2 = 7 - d1
+    const percent1 = (d1 / days1).toFixed(2), percent2 = (d2 / days2).toFixed(2)
+    result = await goodsPayInfoRepo.getProductStage(shopNames, userNames, month1, month2, percent1, percent2, 0)
+    let process = await processesRepo.getGoodsOptimizeInfo(shopNames, userNames, 0)
+    let promotion = await goodsPayInfoRepo.getGoodsLowROI(shopNames, userNames, 0)
+    let plan = await goodsPayInfoRepo.getGoodsLowROIPlan(shopNames, userNames, 0)
+    let stage1 = 0, stage2 = 0, stage_index = null
+    for (let i = 0; i < result.length; i++) {
+        for (let j = 0; j < process.length; j++) {
+            if (result[i].product_stage == process[j].product_stage) {
+                result[i][process[j].type] = process[j].count
+                process.splice(j, 1)
+                j--
+            }
+        }
+        let success = parseInt(result[i]['success_num'] || 0)
+        let failed = parseInt(result[i]['failed_num'] || 0)
+        result[i]['success_profit'] = success + failed > 0 ? (success / (success + failed) * 100).toFixed(2) : 0
+        for (let j = 0; j < promotion.length; j++) {
+            if (result[i].product_stage == promotion[j].product_stage) {
+                result[i]['low_roi'] = promotion[j].count
+                promotion.splice(j, 1)
+                j--
+            }
+        }
+        for (let j = 0; j < plan.length; j++) {
+            if (result[i].product_stage == plan[j].product_stage) {
+                result[i]['low_roi_plan'] = plan[j].count
+                plan.splice(j, 1)
+                j--
+            }
+        }
+        if (result[i].product_stage == '未起') stage1 = result[i].count
+        if (result[i].product_stage == '起') {
+            stage2 = result[i].count
+            stage_index = i
+        }
+    }
+    if (stage_index != null) 
+        result[stage_index]['active'] = stage1 + stage2 > 0 ? (stage2 / (stage1 + stage2) * 100).toFixed(2) : 0
+    return result
+}
+
+const getGoodsOptimizeDetail = async (id, params) => {
+    let result = []
+    const permission = await userOperationRepo.getPermissionList(id)
+    let shopNames = '', userNames = ''
+    for (let i = 0; i < permission.length; i++) {
+        if (i > 0 && permission[i].type != permission[i-1].type) break
+        if (permission[i].shop_name) shopNames = `${shopNames}"${permission[i].shop_name}",`
+        else if (permission[i].nickname) userNames = `${userNames}"${permission[i].nickname}",`
+    }
+    if (shopNames?.length) {
+        shopNames = shopNames.substring(0, shopNames.length - 1)
+    } else if (userNames?.length) {
+        userNames = userNames.substring(0, userNames.length - 1)
+    }
+    result = await processesRepo.getGoodsOptimizeDetail(
+        shopNames, userNames, params.is_new, params.product_stage, params.type)
+    return result
 }
 
 const importGoodsPayInfo = async (rows, time) => {
@@ -5551,6 +5687,9 @@ module.exports = {
     getGoodsInfoDetailTotal,
     getGoodsInfoSubDetail,
     getWorkStats,
+    getNewGoodsInfo,
+    getOldGoodsInfo,
+    getGoodsOptimizeDetail,
     importGoodsPayInfo,
     importGoodsCompositeInfo,
     importGoodsSYCMInfo,

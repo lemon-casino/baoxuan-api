@@ -49,8 +49,11 @@ router.post('/jdzz-composite-info/import', operationApi.importJDZYcompositeInfo)
 
 // 工作面板
 router.get('/work-pannel', operationApi.getWorkStats)
+router.get('/work-pannel-new', operationApi.getNewGoodsInfo)
+router.get('/work-pannel-old', operationApi.getOldGoodsInfo)
 router.get('/new-on-sale', operationApi.getNewOnSaleInfo)
 router.get('/optimize', operationApi.getOptimizeInfo)
+router.get('/optimize-detail', operationApi.getGoodsOptimizeDetail)
 router.get('/report', operationApi.getReportInfo)
 router.get('/report/download', operationApi.ReportDownload)
 
