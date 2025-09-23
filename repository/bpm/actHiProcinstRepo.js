@@ -3074,8 +3074,11 @@ actHiProcinstRepo.getSpecificInfo = async (start, end, type, info, type_name) =>
         UNION ALL 
         
         SELECT COUNT(1) AS count, ${groupBy} AS name, type, info FROM (
-            SELECT u.nickname, CASE t.NAME_ WHEN '事业一部上传爆款方案' THEN '事业部1' 
-                WHEN '事业二部上传爆款方案' THEN '事业部2' ELSE '事业部3' END AS division, 
+            SELECT u.nickname, CASE WHEN dp.name LIKE '%拼多多%' 
+                    OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%' THEN '事业部1' 
+                WHEN dp.name LIKE '%京东%' OR u.nickname = '陆瑶' OR dp.name LIKE '%抖音%' 
+                    OR dp.name LIKE '%1688%' OR dp.name LIKE '%唯品会%' THEN '事业部2' 
+                ELSE '事业部3' END AS division, 
                 CASE WHEN dp.name LIKE '%拼多多%' THEN '拼多多' 
                 WHEN dp.name LIKE '%跨境%' THEN 'COUPANG' 
                 WHEN dp.name LIKE '%猫超%' THEN '天猫超市' 
@@ -3117,8 +3120,11 @@ actHiProcinstRepo.getSpecificInfo = async (start, end, type, info, type_name) =>
         UNION ALL 
         
         SELECT COUNT(1) AS count, ${groupBy} AS name, type, info FROM (
-            SELECT u.nickname, CASE t.NAME_ WHEN '事业一部上传爆款方案' THEN '事业部1' 
-                WHEN '事业二部上传爆款方案' THEN '事业部2' ELSE '事业部3' END AS division, 
+            SELECT u.nickname, CASE WHEN dp.name LIKE '%拼多多%' 
+                    OR dp.name LIKE '%跨境%' OR dp.name LIKE '%猫超%' THEN '事业部1' 
+                WHEN dp.name LIKE '%京东%' OR u.nickname = '陆瑶' OR dp.name LIKE '%抖音%' 
+                    OR dp.name LIKE '%1688%' OR dp.name LIKE '%唯品会%' THEN '事业部2' 
+                ELSE '事业部3' END AS division, 
                 CASE WHEN dp.name LIKE '%拼多多%' THEN '拼多多' 
                 WHEN dp.name LIKE '%跨境%' THEN 'COUPANG' 
                 WHEN dp.name LIKE '%猫超%' THEN '天猫超市' 
