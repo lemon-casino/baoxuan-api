@@ -5110,7 +5110,7 @@ goodsPayInfoRepo.getProductStage = async (shopNames, userNames, month1, month2, 
                 AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) GROUP BY goods_id) a ON a.goods_id = d.goods_id 
         LEFT JOIN (SELECT goods_id FROM danpin.activity WHERE \`date\` = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
             GROUP BY goods_id) da ON da.goods_id = d.goods_id
-        LEFT JOIN (SELECT goods_id, SUM(amount) AS amount FROM(
+        LEFT JOIN (SELECT goods_id, FORMAT(SUM(amount), 2) AS amount FROM(
                 SELECT goods_id, amount * ${percent1} AS amount FROM goods_monthly_sales_target 
                 WHERE month = "${month1}"
                 UNION ALL 

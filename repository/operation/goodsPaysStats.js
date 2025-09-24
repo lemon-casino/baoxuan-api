@@ -315,8 +315,8 @@ goodsPaysStats.getVolumeTargetInfo = async(column,goods_id)=>{
 
 goodsPaysStats.getWeekSalesAmount = async() => {
     let month1 = moment().format('YYYYMM'), 
-        days1 = moment().format('YYYYMM') == moment().subtract(1, 'day').format('YYYYMM') ? 
-            moment().subtract(1, 'day').date() : 0, 
+        days1 = moment().subtract(1, 'day').date() >= 7 ? 7 : 
+            moment().subtract(1, 'day').date(), 
         total1 = moment().daysInMonth(), 
         month2 = moment().subtract(1, 'month').format('YYYYMM'), 
         days2 = 7 - days1, 
@@ -351,11 +351,11 @@ goodsPaysStats.getWeekSalesAmount = async() => {
                 AND DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) 
                 AND day IN ('第20天', '第19天', '第18天', '第17天', '第16天', '第15天', '第14天') 
             GROUP BY goods_id) d ON d.goods_id = g.goods_id 
-        LEFT JOIN (SELECT SUM(amount) AS amount, goods_id FROM (
-            SELECT FORMAT(amount * ${days1}/${total1}, 2) AS amount, goods_id 
+        LEFT JOIN (SELECT FORMAT(SUM(amount), 2) AS amount, goods_id FROM (
+            SELECT amount * ${days1}/${total1} AS amount, goods_id 
             FROM goods_monthly_sales_target WHERE month = "${month1}"
 			UNION ALL 
-            SELECT FORMAT(amount * ${days2}/${total2}, 2) AS amount, goods_id 
+            SELECT amount * ${days2}/${total2} AS amount, goods_id 
             FROM goods_monthly_sales_target WHERE month = "${month2}"
         ) t1 GROUP BY goods_id) t ON t.goods_id = g.goods_id 
         WHERE g.goods_id IS NOT NULL`
