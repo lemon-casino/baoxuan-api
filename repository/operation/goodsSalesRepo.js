@@ -922,11 +922,11 @@ goodsSalesRepo.updateTags = async() =>{
     const result1 = await query(sql1)
     const sql2 = `UPDATE inventory_attributes set tags = (CASE 
                 WHEN day30_sale_qty <=0 THEN '30天内零动销'
-                WHEN sale_days > 90 THEN '大于90天'
-                WHEN sale_days >= 60 and sale_days <=90 THEN '60-90天'
-                WHEN sale_days >= 30 and sale_days <60 THEN '30-60天'
-                WHEN sale_days >= 15 and sale_days <30 THEN '小于30天'
-                ELSE '小于15天' END ),update_time = CURRENT_TIMESTAMP`
+                WHEN sale_days > 90 THEN '支撑大于90天'
+                WHEN sale_days >= 60 and sale_days <=90 THEN '支撑60-90天'
+                WHEN sale_days >= 30 and sale_days <60 THEN '支撑30-60天'
+                WHEN sale_days >= 15 and sale_days <30 THEN '支撑15-30天'
+                ELSE '支撑小于15天' END ),update_time = CURRENT_TIMESTAMP`
     const result2 = await query(sql2)
     const sql3 = `UPDATE inventory_attributes a LEFT join (
             select sku_code,SUM(qty) as qty 
