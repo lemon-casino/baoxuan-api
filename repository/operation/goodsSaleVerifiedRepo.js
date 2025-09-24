@@ -44,9 +44,11 @@ goodsSaleVerifiedRepo.getTargetsByShopNames = async (shopNames, months) => {
     let presql = `SELECT FORMAT(IF(IFNULL(SUM(a2.amount), 0) > 0, 
             IFNULL(SUM(a1.amount), 0) / SUM(a2.amount) * 100, 0), 2) AS target, 
             IFNULL(SUM(a1.amount), 0) AS amount1, 
-            IFNULL(SUM(a2.amount), 0) AS amount2, a2.month FROM 
-        goods_monthly_sales_target a2 JOIN dianshang_operation_attribute doa 
-            ON a2.goods_id = doa.goods_id OR (doa.platform = '自营' AND a2.goods_id = doa.brief_name) 
+            IFNULL(SUM(a2.amount), 0) AS amount2, a2.month FROM goods_monthly_sales_target a2 JOIN (
+            SELECT IF(platform = '自营', brief_name, goods_id) AS goods_id, shop_name 
+            FROM dianshang_operation_attribute 
+            GROUP BY IF(platform = '自营', brief_name, goods_id), shop_name) doa 
+            ON a2.goods_id = doa.goods_id  
         LEFT JOIN (SELECT IFNULL(sum(sale_amount), 0) AS amount, `
     let search = ''
     for (let i = 0; i < months.length; i++) {
