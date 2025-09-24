@@ -2159,7 +2159,10 @@ const batchInsertGoodsPaysStats = async (date) => {
     let weekSales = await goodsPaysStats.getWeekSalesAmount()
     for (let i = 0; i < weekSales.length; i++) {
         let state = '起'
-        if (weekSales[i].target4 && weekSales[i].sale_amount >= weekSales[i].target4 && 
+        if ((weekSales[i].platform == '自营' && weekSales[i].userDef1 == '下柜') || 
+            (weekSales[i].platform == '天猫部' && weekSales[i].link_state == '下架')) {
+            state = null
+        } else if (weekSales[i].target4 && weekSales[i].sale_amount >= weekSales[i].target4 && 
             weekSales[i].profit / weekSales[i].sale_amount >= 0.18) {
             state = '维护'
         } else if (weekSales[i].target3 && weekSales[i].sale_amount >= weekSales[i].target3 && 
@@ -2169,14 +2172,11 @@ const batchInsertGoodsPaysStats = async (date) => {
             state = '稳'
         } else if (weekSales[i].target1 && weekSales[i].sale_amount >= weekSales[i].target1 * 0.1) {
             state = '起'
-        } else if (moment(weekSales[i].onsale_date).valueOf() < moment().subtract(60, 'day').valueOf() && 
-            !((weekSales[i].plaform == '自营' && weekSales[i].userDef1 == '下柜') || 
-            (weekSales[i].plaform == '天猫部' && weekSales[i].link_state == '下架'))) {
+        } else if (moment(weekSales[i].onsale_date).valueOf() < moment().subtract(60, 'day').valueOf()) {
             state = '控'
-        } else if (!((weekSales[i].plaform == '自营' && weekSales[i].userDef1 == '下柜') || 
-            (weekSales[i].plaform == '天猫部' && weekSales[i].link_state == '下架'))) {
+        } else {
             state = '未起'
-        } else state = null
+        }
         if (weekSales[i].product_stage != state) {
             await dianShangOperationAttributeRepo.updateAttribute(
                 'product_stage', 
@@ -2257,7 +2257,10 @@ const batchInsertJDGoodsPaysStats = async (date,shop_name) => {
     let weekSales = await goodsPaysStats.getWeekSalesAmount()
     for (let i = 0; i < weekSales.length; i++) {
         let state = '起'
-        if (weekSales[i].target4 && weekSales[i].sale_amount >= weekSales[i].target4 && 
+        if ((weekSales[i].platform == '自营' && weekSales[i].userDef1 == '下柜') || 
+            (weekSales[i].platform == '天猫部' && weekSales[i].link_state == '下架')) {
+            state = null
+        } else if (weekSales[i].target4 && weekSales[i].sale_amount >= weekSales[i].target4 && 
             weekSales[i].profit / weekSales[i].sale_amount >= 0.18) {
             state = '维护'
         } else if (weekSales[i].target3 && weekSales[i].sale_amount >= weekSales[i].target3 && 
@@ -2267,20 +2270,17 @@ const batchInsertJDGoodsPaysStats = async (date,shop_name) => {
             state = '稳'
         } else if (weekSales[i].target1 && weekSales[i].sale_amount >= weekSales[i].target1 * 0.1) {
             state = '起'
-        } else if (moment(weekSales[i].onsale_date).valueOf() < moment().subtract(60, 'day').valueOf() && 
-            !((weekSales[i].plaform == '自营' && weekSales[i].userDef1 == '下柜') || 
-            (weekSales[i].plaform == '天猫部' && weekSales[i].link_state == '下架'))) {
+        } else if (moment(weekSales[i].onsale_date).valueOf() < moment().subtract(60, 'day').valueOf()) {
             state = '控'
-        } else if (!((weekSales[i].plaform == '自营' && weekSales[i].userDef1 == '下柜') || 
-            (weekSales[i].plaform == '天猫部' && weekSales[i].link_state == '下架'))) {
+        } else {
             state = '未起'
-        } else state = null
+        }
         if (weekSales[i].product_stage != state) {
             await dianShangOperationAttributeRepo.updateAttribute(
                 'product_stage', 
                 state, 
                 weekSales[i].platform, 
-                'goods_id',
+                weekSales[i].platform == '自营' ? 'brief_name' : 'goods_id',
                 weekSales[i].goods_id)
             changes.push({
                 goods_id: weekSales[i].goods_id, 
