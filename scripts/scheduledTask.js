@@ -27,7 +27,7 @@ let syncUserLoginCron = "0 0/5 * * * ?"
 let syncResignEmployeeCron = "0 0 18 * * ?"
 let syncRunningFlowsCron = "0 0 8 * * ?"
 let tmallLinkData = "45 13 * * 1-6"
-let jdLinkData  = "50 16 * * 3"
+let jdLinkData  = "00 15 * * 1,4"
 let caigouLinkData  = "*/5 * * * 1-6"
 let attributeData = "0 9/10 * * 1-7"
 //转正通知 周一到周六  每天9点半触发流程

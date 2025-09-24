@@ -724,7 +724,7 @@ goodsSalesRepo.updatemonth6 = async (day,type,column) =>{
             SELECT sku_code,SUM(sale_qty) as sale_qty  
             FROM goods_sale_info 
             WHERE date >= DATE_SUB(DATE(NOW()),INTERVAL ${day} ${type}) 
-            AND shop_name != '京东自营-厨具' 
+            AND shop_name not in ('京东自营-厨具' ,'京东自营-日用')
             GROUP BY sku_code  
             UNION ALL
             select a.商品编码 as sku_code ,SUM(a.数量) as sale_qty  from (
@@ -745,10 +745,46 @@ goodsSalesRepo.updatemonth6 = async (day,type,column) =>{
             GROUP BY a.商品编码
         )as a GROUP BY sku_code) b
         on a.sku_code = b.sku_code
-        SET a.${column} = b.sale_qty`
-    let sql1 = `update inventory_attributes set ${column}=0 where ${column} is null`
+        SET a.${column} = IFNULL(b.sale_qty,0),a.update_time = CURRENT_TIMESTAMP`
     const result = await query(sql)
-    const result1 = await query(sql1)
+    return result
+}
+
+
+goodsSalesRepo.updateNJsaleqty = async (day,column) =>{
+    let sql = `UPDATE inventory_attributes as a left JOIN(
+        SELECT sku_code,SUM(sale_qty) as sale_qty  
+        FROM goods_sale_info 
+        WHERE date >= DATE_SUB(DATE(NOW()),INTERVAL ? DAY) 
+        AND shop_name not in ('京东自营-厨具' ,'京东自营-日用')
+        GROUP BY sku_code  ) as b
+            ON a.sku_code = b.sku_code
+        SET ${column} = IFNULL(b.sale_qty,0),a.update_time = CURRENT_TIMESTAMP`
+    const result = await query(sql,[day])
+    return result
+}
+
+goodsSalesRepo.updateJDsaleqty = async (day,column) =>{
+    let sql = `UPDATE inventory_attributes as a left JOIN(
+        select a.商品编码 as sku_code ,SUM(a.数量) as sale_qty  from (
+        select IFNULL(c.商品编码,a.编码) as '商品编码'
+                ,IF(c.数量 is not NULL,a.数量*c.数量,a.数量) as '数量' 
+        from (
+                select 编码 ,成交商品件数 as '数量',时间 from danpin.jb_ziying 
+                where 时间  >= DATE_SUB(DATE(NOW()),INTERVAL ? DAY)
+                UNION ALL
+                select 编码 ,成交商品件数 as '数量',时间 from danpin.jb_ziying_everday
+                where 时间  >= DATE_SUB(DATE(NOW()),INTERVAL ? DAY)
+        ) as a
+        LEFT JOIN
+        (select 组合商品编码,商品编码,数量,(数量*子商品成本价)/组合成本价 as '占比' from danpin.combination_product_code) as c
+        on a.编码 = c.组合商品编码
+        )as a
+        where a.商品编码 is not null  and 数量 is not null
+        GROUP BY a.商品编码) as b
+            ON a.sku_code = b.sku_code
+        SET ${column} = IFNULL(b.sale_qty,0),a.update_time = CURRENT_TIMESTAMP`
+    const result = await query(sql,[day,day])
     return result
 }
 
@@ -769,7 +805,7 @@ goodsSalesRepo.updateinventory = async(day,num,total_num) =>{
             ,SUM(订单占有数) as '订单占有数'
             ,SUM(进货仓库存) as '进货仓库存'
         from danpin.goods_kucun 
-        where 统计日期 =  DATE_SUB(DATE(NOW()),INTERVAL 1 DAY) and 仓储方='北京超速树懒科技有限公司'
+        where 统计日期 =  DATE_SUB(DATE(NOW()),INTERVAL ? DAY) and 仓储方='北京超速树懒科技有限公司'
         GROUP BY 商品编码
         )as a
         LEFT JOIN(
@@ -811,8 +847,65 @@ goodsSalesRepo.updateinventory = async(day,num,total_num) =>{
         ) as b
         on a.sku_code = b.商品编码
         SET ${num} = IF(在仓库存 is not null,在仓库存,0) , 
-        ${total_num}= IF(总库存 is not null,总库存,0)`
-    const result = await query(sql,[day,day])
+        ${total_num}= IF(总库存 is not null,总库存,0) ,update_time = CURRENT_TIMESTAMP`
+    const result = await query(sql,[day,day,day])
+    const sql1 = `UPDATE inventory_attributes as a left JOIN(
+        select a.商品编码
+            ,sum(京东仓库存) as '在仓库存'
+            ,sum(京东仓库存) + sum(京东在途库存) as '总库存' 
+        from(
+        select IFNULL(c.商品编码,a.商品编码) as '商品编码'
+            ,IFNULL(IF(c.数量 is NULL,a.京东仓库存,a.京东仓库存*c.数量),0) as '京东仓库存'
+            ,IFNULL(IF(c.数量 is NULL,a.京东在途库存,a.京东在途库存*c.数量),0) as '京东在途库存' from (
+            select b.code as '商品编码',a.* FROM(
+                select SKU
+                    ,全国现货库存 as '京东仓库存'
+                    ,全国采购在途数量 as '京东在途库存' 
+                from danpin.inventory_jdzz 
+                where 时间 =  DATE_SUB(DATE(NOW()),INTERVAL 1 DAY)
+                ) as a
+                LEFT JOIN bi_serve.dianshang_operation_attribute as b
+                on a.SKU=b.sku_id
+            ) as a
+            LEFT JOIN danpin.combination_product_code as c
+            on a.商品编码 = c.组合商品编码
+            WHERE a.商品编码 is not null
+        ) as a
+        where a.商品编码 is not null
+        GROUP BY a.商品编码) as b
+        ON a.sku_code = b.商品编码
+        SET a.jdtotal_num = IFNULL(b.总库存,0),update_time = CURRENT_TIMESTAMP`
+    const result1 = await query(sql1)
+    const sql2 = `UPDATE inventory_attributes as a left JOIN(
+    SELECT a.商品编码
+            ,IFNULL(a.主仓实际库存数,0) - IFNULL(a.订单占有数,0)- IFNULL(a.进货仓库存,0)- IFNULL(c.\`COUPANG/猫超南京仓\`,0)  as '在仓库存'
+            , IFNULL(a.采购在途数,0) as '采购在途'
+        FROM (
+        select 商品编码
+            ,SUM(主仓实际库存数) as '主仓实际库存数'
+            ,SUM(公有可用数) as '公有可用数'
+            ,sum(采购在途数) as '采购在途数'
+            ,sum(调拨在途数)as '调拨在途数'
+            ,SUM(订单占有数) as '订单占有数'
+            ,SUM(进货仓库存) as '进货仓库存'
+        from danpin.goods_kucun 
+        where 统计日期 =  DATE_SUB(DATE(NOW()),INTERVAL 1 DAY) and 仓储方='北京超速树懒科技有限公司'
+        GROUP BY 商品编码
+        )as a
+        LEFT JOIN(
+        select 商品编码
+            ,sum(IF(运营云仓名称='南京仓京东自备',运营云仓可用数,0)) as '南京仓京东自备'
+            ,sum(IF(运营云仓名称='事业三部（天猫/小红书/TEOTM)',运营云仓可用数,0)) as '事业三部'
+            ,sum(IF(运营云仓名称='事业一部（PDD/淘工厂/猫超/COUPANG）',运营云仓可用数,0)) AS '事业一部'
+            ,sum(IF(运营云仓名称='事业二部（京东/抖音/唯品会/得物/1688）',运营云仓可用数,0)) AS '事业二部'
+            ,sum(IF(运营云仓名称='COUPANG/猫超南京仓',运营云仓可用数,0)) AS 'COUPANG/猫超南京仓'
+        FROM danpin.goods_kucun_fen WHERE 统计日期 =  DATE_SUB(DATE(NOW()),INTERVAL 1 DAY)
+        GROUP BY 商品编码
+        ) as c
+        on a.商品编码=c.商品编码) as b
+    ON a.sku_code = b.商品编码
+    SET a.transit = IFNULL(b.采购在途,0),a.nj_num = IFNULL(b.在仓库存,0),update_time = CURRENT_TIMESTAMP`
+    const result2 = await query(sql2)
     return result
 }
 
@@ -823,17 +916,17 @@ goodsSalesRepo.updateTags = async() =>{
             WHERE DATE_FORMAT(io_date,'%Y-%m-%d') BETWEEN DATE_SUB(DATE(NOW()),INTERVAL 30 day) and DATE_SUB(DATE(NOW()),INTERVAL 1 day) 
             GROUP BY sku_code) as b
             on a.sku_code = b.sku_code 
-            set a.io_qty = IF(b.io_qty is not null,b.io_qty,0)`
+            set a.io_qty = IF(b.io_qty is not null,b.io_qty,0),a.update_time = CURRENT_TIMESTAMP`
     const result = await query(sql)   
-    const sql1 =`UPDATE inventory_attributes SET sale_days = IF(day30_sale_qty!=0,ROUND(num/(day30_sale_qty/30),0),0) WHERE day30_sale_qty != 0`
+    const sql1 =`UPDATE inventory_attributes SET sale_days = IF(day30_sale_qty!=0,ROUND(num/(day30_sale_qty/30),0),0),update_time = CURRENT_TIMESTAMP WHERE day30_sale_qty != 0`
     const result1 = await query(sql1)
-    const sql2 = `UPDATE inventory_attributes set attribute = (CASE
-            WHEN (sale_days >90 and month6_sale_qty<=10) OR day30_sale_qty <= 10 THEN '零动销'
-            WHEN (sale_days >90 and month6_sale_qty>10) OR ps like '%滞销%' OR ps like '%销完下架%' THEN '滞销'
-            WHEN sale_days >60 and sale_days <= 90 THEN '低周转'
-            WHEN sale_days >30 and sale_days <= 60  THEN '正常周转'
-            WHEN sale_days <=30 THEN '高周转'
-            END)`
+    const sql2 = `UPDATE inventory_attributes set tags = (CASE 
+                WHEN day30_sale_qty <=0 THEN '30天内零动销'
+                WHEN sale_days > 90 THEN '大于90天'
+                WHEN sale_days >= 60 and sale_days <=90 THEN '60-90天'
+                WHEN sale_days >= 30 and sale_days <60 THEN '30-60天'
+                WHEN sale_days >= 15 and sale_days <30 THEN '小于30天'
+                ELSE '小于15天' END ),update_time = CURRENT_TIMESTAMP`
     const result2 = await query(sql2)
     const sql3 = `UPDATE inventory_attributes a LEFT join (
             select sku_code,SUM(qty) as qty 
@@ -841,8 +934,26 @@ goodsSalesRepo.updateTags = async() =>{
             WHERE DATE_FORMAT(return_date,'%Y-%m-%d') BETWEEN DATE_SUB(DATE(NOW()),INTERVAL 30 day) and DATE_SUB(DATE(NOW()),INTERVAL 1 day) 
             GROUP BY sku_code) as b
             on a.sku_code = b.sku_code 
-            set a.fund_num = IF(b.qty is not null,b.qty,0)`
+            set a.fund_num = IF(b.qty is not null,b.qty,0),a.update_time = CURRENT_TIMESTAMP`
     const result3 = await query(sql3)
+    const sql4 = `UPDATE inventory_attributes a LEFT join danpin.goods_info as b
+            on a.sku_code = b.商品编码 
+            set a.ps = b.备注标签,a.first_category = b.一级类目,
+            a.second_category = b.二级类目,a.third_category = b.三级类目,
+            a.spu_name=b.spu简称,a.update_time = CURRENT_TIMESTAMP`
+    const result4 = await query(sql4)
+    const sql5 = `UPDATE inventory_attributes as a LEFT JOIN(
+                select sku_code,min(onsale_date) as onsale_date from (
+                select IFNULL(b.商品编码,a.code) as sku_code,min(onsale_date) as onsale_date  from dianshang_operation_attribute AS a
+                LEFT JOIN danpin.combination_product_code as b
+                ON upper(a.code)=upper(b.组合商品编码) 	GROUP BY sku_code
+                UNION ALL 
+                select sys_sku_id,min(create_time) from jst_goods_sku GROUP BY sys_sku_id
+                ) as a GROUP BY sku_code) as b
+                on upper(a.sku_code) = upper(b.sku_code)
+                SET a.create_time = b.onsale_date 
+                WHERE a.create_time is null`
+    const result5 = await query(sql5)
     return result3
 }
 
