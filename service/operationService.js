@@ -2697,7 +2697,7 @@ const getNewGoodsInfo = async (id) => {
     }
     const month1 = moment().format('YYYYMM'), month2 = moment().subtract(1, 'month').format('YYYYMM')
     const days1 = moment().daysInMonth(), days2 = moment().subtract(1, 'month').daysInMonth()
-    const d1 = moment().date()() > 7 ? 7 : moment().subtract(1, 'day').date()
+    const d1 = moment().date() > 7 ? 7 : moment().subtract(1, 'day').date()
     const d2 = 7 - d1
     const percent1 = (d1 / days1).toFixed(2), percent2 = (d2 / days2).toFixed(2)
     if (shopNames?.length) {
