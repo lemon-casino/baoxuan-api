@@ -271,6 +271,45 @@ const getVisionUsersDetails = async (req, res, next) => {
     }
 }
 
+const getVisionDetail = async (req, res, next) => {
+    try {
+        const {startDate, endDate, is_export} = req.query
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+        })
+        
+        const start = moment(startDate).format('YYYY-MM-DD')
+        const end = moment(endDate).format('YYYY-MM-DD')
+        const result = await flowService.getVisionDetail(start, end)
+        if (is_export == '1') {
+            const workbook = new ExcelJS.Workbook()
+            const sheet = workbook.addWorksheet()
+            sheet.columns = [
+                { header: "name", key: 'name' },
+                { header: "previous", key: 'previous' },
+                { header: "title", key: 'title' },
+                { header: "platform", key: 'platform' },
+                { header: "num", key: 'num' },
+                { header: "score", key: 'score' },
+                { header: "start", key: 'start' },
+                { header: "form_title", key: 'form_title' },
+                { header: "process_title", key: 'process_title' },
+                { header: "link_id", key: 'link_id' },
+            ]
+            for (let i = 0; i < result.length; i++) {
+                sheet.addRow(result[i])
+            }
+            const buffer = await workbook.xlsx.writeBuffer()
+            res.setHeader('Content-Disposition', `attachment; filename="vision-${start}_${end}.xlsx"`)
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            return res.end(buffer)
+        } else return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 const getUniversalCoreActionStat = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(flowSchema.getCoreActionsSchema, req.body)
@@ -505,5 +544,6 @@ module.exports = {
     getOperateAnalysis,
     getOperateSpecific,
     createOperateAnalysis,
-    getVisionNewPannel
+    getVisionNewPannel,
+    getVisionDetail
 }
