@@ -3,7 +3,7 @@ const goodsSalesRepo = {}
 const moment = require('moment')
 goodsSalesRepo.batchInsert = async (date) => {
     let sqls = [], params = []
-    sqls.push(`DELETE FROM goods_sales WHERE \`date\` = ?`)
+    sqls.push(`DELETE FROM goods_sales WHERE \`date\` = ? AND shop_name !='京东自营-厨具' AND shop_name !='京东自营-日用'` )
     params.push([date])
     let sql = `SELECT goods_id, shop_name, shop_id,
             IFNULL(SUM(sale_qty), 0) AS sale_qty, 
@@ -24,7 +24,96 @@ goodsSalesRepo.batchInsert = async (date) => {
             IFNULL(SUM(refund_num), 0) AS refund_num,
             IFNULL(SUM(gross_standard), 0) AS gross_standard,
             IFNULL(SUM(IF(other_cost>0,other_cost,0)),0) AS other_cost
-        FROM goods_sale_info WHERE date = ? GROUP BY goods_id, shop_name, shop_id`
+        FROM goods_sale_info WHERE date = ? AND shop_name !='京东自营-厨具' AND shop_name !='京东自营-日用'
+        GROUP BY goods_id, shop_name, shop_id`
+    let rows = await query(sql, [date]), data = []
+    if (!rows?.length) return false
+    let chunk = Math.ceil(rows.length / 500)
+    for (let i = 0; i < chunk; i++) {
+        sql = `INSERT INTO goods_sales(
+            goods_id, 
+            shop_name, 
+            shop_id, 
+            \`date\`, 
+            sale_qty,
+            sale_amount, 
+            cost_amount, 
+            gross_profit, 
+            profit, 
+            promotion_amount, 
+            express_fee, 
+            operation_amount, 
+            real_sale_qty, 
+            refund_qty, 
+            real_sale_amount, 
+            packing_fee, 
+            real_gross_profit, 
+            bill_amount, 
+            order_num, 
+            refund_num,
+            gross_standard,
+            other_cost) VALUES`, start = i * 500, data = [], 
+            end = (i + 1) * 500 <= rows.length ? (i + 1) * 500 : rows.length
+        for (let j = start; j < end; j++) {
+            sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+            data.push(
+                rows[j].goods_id, 
+                rows[j].shop_name, 
+                rows[j].shop_id, 
+                date, 
+                rows[j].sale_qty,
+                rows[j].sale_amount, 
+                rows[j].cost_amount, 
+                rows[j].gross_profit, 
+                rows[j].profit, 
+                rows[j].promotion_amount, 
+                rows[j].express_fee, 
+                rows[j].operation_amount, 
+                rows[j].real_sale_qty, 
+                rows[j].refund_qty, 
+                rows[j].real_sale_amount, 
+                rows[j].packing_fee, 
+                rows[j].real_gross_profit, 
+                rows[j].bill_amount, 
+                rows[j].order_num, 
+                rows[j].refund_num,
+                rows[j].gross_standard,
+                rows[j].other_cost
+            )
+        }
+        sql = sql.substring(0, sql.length - 1)
+        sqls.push(sql)
+        params.push(data)
+    }
+    const result = await transaction(sqls, params)
+    return result
+}
+
+goodsSalesRepo.batchInsertJD = async (date) => {
+    let sqls = [], params = []
+    sqls.push(`DELETE FROM goods_sales WHERE \`date\` = ? AND shop_name ='京东自营-厨具' OR shop_name ='京东自营-日用'` )
+    params.push([date])
+    let sql = `SELECT goods_id, shop_name, shop_id,
+            IFNULL(SUM(sale_qty), 0) AS sale_qty, 
+            IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+            IFNULL(SUM(cost_amount), 0) AS cost_amount,
+            IFNULL(SUM(gross_profit), 0) AS gross_profit,
+            IFNULL(SUM(profit), 0) AS profit,
+            IFNULL(SUM(promotion_amount), 0) AS promotion_amount,
+            IFNULL(SUM(express_fee), 0) AS express_fee,
+            IFNULL(SUM(operation_amount), 0) AS operation_amount,
+            IFNULL(SUM(real_sale_qty), 0) AS real_sale_qty,
+            IFNULL(SUM(refund_qty), 0) AS refund_qty,
+            IFNULL(SUM(real_sale_amount), 0) AS real_sale_amount,
+            IFNULL(SUM(packing_fee), 0) AS packing_fee,
+            IFNULL(SUM(real_gross_profit), 0) AS real_gross_profit,
+            IFNULL(SUM(bill_amount), 0) AS bill_amount,
+            IFNULL(SUM(order_num), 0) AS order_num,
+            IFNULL(SUM(refund_num), 0) AS refund_num,
+            IFNULL(SUM(gross_standard), 0) AS gross_standard,
+            IFNULL(SUM(IF(other_cost>0,other_cost,0)),0) AS other_cost
+        FROM goods_sale_info WHERE date = ? AND shop_name ='京东自营-厨具' OR shop_name ='京东自营-日用'
+        GROUP BY goods_id, shop_name, shop_id`
     let rows = await query(sql, [date]), data = []
     if (!rows?.length) return false
     let chunk = Math.ceil(rows.length / 500)

@@ -82,10 +82,10 @@ goodsPaysStats.batchInsert = async (date) => {
     return result
 }
 
-goodsPaysStats.batchInsertJD = async (date,shop_name) => {
+goodsPaysStats.batchInsertJD = async (date) => {
     let sqls = [], params = []
-    sqls.push(`DELETE FROM goods_pays_stats WHERE \`date\` = ? AND shop_name = ? `)
-    params.push([date,shop_name])
+    sqls.push(`DELETE FROM goods_pays_stats WHERE \`date\` = ? AND shop_name ='京东自营-厨具' OR shop_name ='京东自营-日用' `)
+    params.push([date])
     let sql = `SELECT a1.goods_id, a1.shop_name, a1.shop_id, a1.date, a1.sale_qty, a1.sale_amount, 
 	        a1.cost_amount, a1.express_fee, a1.packing_fee, a2.labor_cost, a1.promotion_amount, 
             a1.operation_amount, a1.order_num, a1.refund_num, a1.profit, a1.pay_amount, 
@@ -96,8 +96,8 @@ goodsPaysStats.batchInsertJD = async (date,shop_name) => {
         LEFT JOIN (SELECT SUM(rate) AS labor_cost, goods_id, shop_id FROM orders_goods_pays 
             WHERE \`date\` = ? GROUP BY goods_id, shop_id) a2 ON a1.goods_id = a2.goods_id 
             AND a1.shop_id = a2.shop_id 
-        WHERE a1.date = ? AND shop_name = ?`
-    let rows = await query(sql, [date, date, date, shop_name]), data = [], start, end
+        WHERE a1.date = ? AND shop_name ='京东自营-厨具' OR shop_name ='京东自营-日用'`
+    let rows = await query(sql, [date, date, date]), data = [], start, end
     if (!rows?.length) return false
     let chunk = Math.ceil(rows.length / 500)
     for (let i = 0; i < chunk; i++) {
