@@ -1375,6 +1375,7 @@ const refreshGoodsPaysStats = async (req, res, next) => {
             date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
         })
         await operationService.batchInsertGoodsPays(date)
+        await operationService.batchInsertJDGoodsPays(date)
         return res.send(biResponse.success())
     } catch (e) {
         next(e)

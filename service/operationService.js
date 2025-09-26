@@ -2061,7 +2061,7 @@ const batchInsertGoodsSales = async (date) => {
 }
 
 const batchInsertJDGoodsSales = async (date) => {
-    let result = await goodsSalesRepo.batchInsert(date)
+    let result = await goodsSalesRepo.batchInsertJD(date)
     logger.info(`[京东发货数据刷新]：时间:${date}, ${result}`)
     if (result) await batchInsertJDGoodsSalesStats(date)
 }
@@ -2244,14 +2244,14 @@ const batchInsertGoodsPaysStats = async (date) => {
     await dianShangOperationAttributeService.Insertlog(changes)
 }
 
-const batchInsertJDGoodsPays = async (date,shop_name) => {
-    let result = await goodsPaysRepo.batchInsertJD(date,shop_name)
+const batchInsertJDGoodsPays = async (date) => {
+    let result = await goodsPaysRepo.batchInsertJD(date)
     logger.info(`[京东支付数据刷新]：时间:${date}, ${result}`)
-    if (result) await batchInsertJDGoodsPaysStats(date,shop_name)
+    if (result) await batchInsertJDGoodsPaysStats(date)
 }
 
-const batchInsertJDGoodsPaysStats = async (date,shop_name) => {
-    let result = await goodsPaysStats.batchInsertJD(date,shop_name)
+const batchInsertJDGoodsPaysStats = async (date) => {
+    let result = await goodsPaysStats.batchInsertJD(date)
     logger.info(`[京东支付单品表数据刷新]：时间:${date}, ${result}`)
     const changes=[]
     let data = await goodsPaysStats.getVolumeTargetJD()
@@ -3194,7 +3194,7 @@ const importJDZYPromotionInfo = async (rows, name, time,tag) => {
     }
     await batchInsertJDGoodsSales(date)
     await updateGoodsPayments(date)
-    await batchInsertJDGoodsPays(date,shop_name)
+    await batchInsertJDGoodsPays(date)
     return result
 }
 
@@ -3349,7 +3349,7 @@ const importJDZYcompositeInfo = async (rows, time,name) => {
         saveAmount += parseFloat(sale_amount)
     }
     logger.info(`[${shop_name}]：时间:${date}, 总计数量:${count}`)
-    logger.info(`[京东自营支付发货数据导入]：时间:${date}, 总计金额:${amount}, 存储金额:${saveAmount}`)
+    logger.info(`[${shop_name}支付发货数据导入]：时间:${date}, 总计金额:${amount}, 存储金额:${saveAmount}`)
     if (count > 0) {
         await goodsCompositeRepo.deleteByDateShop(date, shop_name)
         result1 = await goodsCompositeRepo.batchInsertJDZY(count, data, shop_name)
