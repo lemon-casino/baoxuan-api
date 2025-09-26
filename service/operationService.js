@@ -1713,6 +1713,8 @@ const getGoodsInfoDetail = async (column, goods_id, shop_name, start, end, stats
         data = await goodsOtherInfoRepo.getDataRateByTime('words_market_vol', 'words_vol', column, goods_id, start, end, 100)
     else if (column == 'gross_profit')
         data = await func.getDataGrossProfitByTime(goods_id, start, end)
+    else if (column == 'jgross_profit') //京东自营只有一个维度的数据
+        data = await goodsSaleInfoRepo.getDataJGrossProfitByTime(goods_id, start, end)
     else if (['pay_amount', 'brushing_amount', 'brushing_qty', 'refund_amount', 'bill'].includes(column))
         data = await goodsPayInfoRepo.getDataDetailByTime(column, goods_id, start, end)
     else if (column == 'pay_express_fee')
@@ -5758,6 +5760,12 @@ const updateTMLinkStage = async (rows) => {
     return true
 }
 
+const goodslog = async(goods_id, startDate, endDate)=>{
+    let start = startDate + ' 00:00:00'
+    let end = endDate + ' 23:59:59'
+    let result = goodsOtherInfoRepo.goodslog(goods_id, start, end)
+    return result 
+}
 module.exports = {
     getDataStats,
     getPromotionStats,
@@ -5836,5 +5844,6 @@ module.exports = {
     importTMNewActivity,
     saveOperatelog,
     initiateprocess,
-    updateTMLinkStage
+    updateTMLinkStage,
+    goodslog
 }

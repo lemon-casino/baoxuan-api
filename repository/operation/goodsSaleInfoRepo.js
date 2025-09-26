@@ -2193,6 +2193,19 @@ goodsSaleInfoRepo.getDataGrossProfitByTime = async(goods_id, start, end) => {
     return result || []
 }
 
+goodsSaleInfoRepo.getDataJGrossProfitByTime = async(goods_id, start, end) => {
+    const sql = `SELECT FORMAT(IF(SUM(g.real_sale_amount) > 0, 
+                ((SUM(g.profit)+SUM(promotion_amount)) / SUM(g.real_sale_amount)), 0) * 100, 2) AS jgross_profit, g.date
+        FROM goods_sales g  
+        WHERE g.date BETWEEN ? AND ? AND g.goods_id = ? 
+        GROUP BY g.date`
+    const result = await query(sql, [
+        moment(start).subtract(1, 'day').format('YYYY-MM-DD'),
+        moment(end).subtract(1, 'day').format('YYYY-MM-DD'),
+        goods_id])
+    return result || []
+}
+
 goodsSaleInfoRepo.getDataPromotionQOQByTime = async(goods_id, start, end) => {
     const sql = `SELECT FORMAT(IF(IFNULL(SUM(a2.promotion_amount), 0) > 0, 
                 (IFNULL(SUM(a1.promotion_amount), 0) - SUM(a2.promotion_amount)) / 
