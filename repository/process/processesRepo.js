@@ -1429,4 +1429,38 @@ processesRepo.getGoodsOptimizeDetail = async (shopNames, userNames, is_new, prod
     return result
 }
 
+processesRepo.getVisionDetail = async (start, end) => {
+    const sql = `SELECT pi2.content AS vision_type, (CASE pi.field WHEN 'tableField_m4mikq2r' 
+                THEN '原创-店铺+创意+全套' WHEN 'Faazmbrscjtcfac' THEN '原创-全套' 
+            WHEN 'tableField_m4mikq2h' THEN '原创-全套详情' WHEN 'tableField_m4mikq3b' THEN '半原创' 
+            WHEN 'tableField_m72psn81' THEN '基础修改' WHEN 'tableField_m4mikq31' THEN '摄影' 
+            ELSE '视频剪辑' END) AS previous, pi.content, pi1.content AS platform, p.process_id, 
+            IFNULL(t1.username, IF(p.username = '机器人', pi3.content, p.username)) AS start, 
+            (CASE p.process_code WHEN 'form-108' THEN '新版视觉爆款全平台流程' WHEN 'form-110' 
+            THEN '新版运营美编修图流程' ELSE '新版-视觉流程' END) AS form_title, p.title AS process_title 
+        FROM processes p LEFT JOIN process_tasks t ON t.process_id = p.process_id AND t.status = 2 
+            AND t.title IN ('拍摄图片', '拍摄视频', '视频剪辑', '项目负责人填写视觉作图信息', '基础修改') 
+            AND t.end_time = (SELECT MAX(tt.end_time) FROM process_tasks tt 
+                WHERE tt.title = t.title AND tt.process_id = p.process_id) 
+        LEFT JOIN process_info pi ON pi.process_id = p.process_id 
+            AND (CASE WHEN t.title IN ('项目负责人填写视觉作图信息', '基础修改') 
+                THEN pi.field IN ('tableField_m4mikq2r', 'tableField_m4mikq2h', 'tableField_m4mikq3b', 
+                    'tableField_m72psn81', 'Faazmbrscjtcfac') WHEN t.title IN ('拍摄图片', '拍摄视频') 
+                THEN pi.field = 'tableField_m4mikq31' ELSE pi.field = 'Fnnsmauybz1o14pc' END) 
+        LEFT JOIN process_info pi1 ON pi1.process_id = p.process_id 
+            AND pi1.field IN ('radioField_lxkb9f93', 'radioField_lx5phs8j') 
+        LEFT JOIN process_info pi2 ON pi2.process_id = p.process_id AND pi2.field = 'F4rzmbrlo5rsjqc'
+        LEFT JOIN process_info pi3 ON pi3.process_id = p.process_id 
+            AND pi3.title IN ('Cfidvgpftflr5', 'Cfidclaxyqgv7') 
+        LEFT JOIN process_tasks t1 ON t1.process_id = p.process_id AND t1.title IN ('运营收图', '发起人收图') 
+            AND t1.start_time = (SELECT MAX(tt.start_time) FROM process_tasks tt 
+                WHERE tt.title = t1.title AND tt.process_id = p.process_id) 
+        WHERE p.process_code IN ('form-108', 'form-110', 'xbsjlc') AND p.status IN (1,2)
+            AND t.end_time BETWEEN ? AND ? AND pi.content IS NOT NULL 
+        GROUP BY pi.field, pi.content, pi1.content, p.process_id, p.username, pi2.content, t1.username, 
+            pi3.content, p.process_code, p.title`
+    const result = await query(sql, [start, end])
+    return result
+}
+
 module.exports = processesRepo

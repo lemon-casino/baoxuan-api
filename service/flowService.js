@@ -39,6 +39,7 @@ const teamInfoRepo = require('../repository/operation/teamInfoRepo')
 const moment = require('moment')
 const { createProcess } =  require('./dingDingService')
 const actHiProcinstRepo = require("@/repository/bpm/actHiProcinstRepo")
+const processesRepo = require("@/repository/process/processesRepo")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -1493,6 +1494,40 @@ const getVisionNewPannel = async (params) => {
     return {columns, data}
 }
 
+const getVisionDetail = async (start, end) => {
+    let result = []
+    let info = await processesRepo.getVisionDetail(start, end)
+    for (let i = 0; i < info.length; i++) {
+        info[i]['link_id'] = `http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=${info[i].process_id}`
+        let vision_type = JSON.parse(info[i]['vision_type'])
+        let vision = JSON.parse(info[i]['content'])
+        for (let j = 0; j < vision.length; j++) {
+            if (vision_type != null && !vision_type.includes(info[i]['previous']) && 
+                ['原创-全套', '原创-全套详情', '半原创', '基础修改'].includes(info[i]['previous'])) continue
+            let tmp = {
+                name: '',
+                previous: info[i]['previous'],
+                title: '',
+                platform: info[i]['platform'],
+                num: '',
+                score: '',
+                start: info[i]['start'],
+                form_title: info[i]['form_title'],
+                process_title: info[i]['process_title'],
+                link_id: info[i]['link_id']
+            }
+            for (let index in vision[j]) {
+                if (index.indexOf('-视觉类型') != -1 || index == '原创-全套') tmp.title = vision[j][index]
+                else if (['视觉执行人', '视觉负责人'].includes(index)) tmp.name = vision[j][index]
+                else if (index == '数量') tmp.num = vision[j][index]
+                else if (index == '分值') tmp.score = vision[j][index]
+            }
+            result.push(tmp)
+        }
+    }
+    return result
+}
+
 const getOperateSelection = async (params, userId) => {
     let result = {
         currentPage: parseInt(params.currentPage),
@@ -1908,6 +1943,7 @@ module.exports = {
     getFlowsActions,
     getVisionReview,
     getVisionPlan,
+    getVisionDetail,
     getOperateSelection,
     getOperateSelectionHeader,
     getOperateAnalysis,

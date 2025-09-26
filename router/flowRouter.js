@@ -54,6 +54,7 @@ router.get("/vision-plan", flowHandler.getVisionPlan)
  */
 router.get('/vision-new-pannel', flowHandler.getVisionNewPannel)
 router.get("/vision-action-details", flowHandler.getVisionUsersDetails)
+router.get('/vision/detail', flowHandler.getVisionDetail)
 /**
  * 运营选品池
  */
