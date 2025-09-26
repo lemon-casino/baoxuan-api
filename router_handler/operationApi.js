@@ -1725,8 +1725,17 @@ const updateTMLinkStage = async (req, res, next) => {
 const initiateprocess  = async(req, res, next) =>{
     try{
         const data = req.body
-        console.log(data)
         const result = await operationService.initiateprocess(data,req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e){
+        next(e)
+    }
+}
+
+const goodslog  = async(req, res, next) =>{
+    try{
+        const {goods_id, startDate, endDate} = req.query
+        const result = await operationService.goodslog(goods_id, startDate, endDate)
         return res.send(biResponse.success(result))
     } catch (e){
         next(e)
@@ -1797,5 +1806,6 @@ module.exports = {
     importTMNewActivity,
     saveOperatelog,
     initiateprocess,
-    updateTMLinkStage
+    updateTMLinkStage,
+    goodslog
 }

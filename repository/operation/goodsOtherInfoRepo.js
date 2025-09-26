@@ -1,5 +1,4 @@
 const { query } = require('../../model/dbConn')
-
 const goodsOtherInfoRepo = {}
 
 goodsOtherInfoRepo.batchInsert = async (count, data) => {
@@ -105,4 +104,59 @@ goodsOtherInfoRepo.getRateByLinkIdsAndTme = async (linkIds, col1, col2, column, 
     return  result || []
 }
 
+goodsOtherInfoRepo.goodslog = async (goods_id, start, end) =>{
+    let sql = `SELECT date,GROUP_CONCAT(log SEPARATOR '</br>') AS log FROM (
+        SELECT '${goods_id}' AS goods_id
+            ,CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail\?id=',process_id) AS source
+            ,DATE_FORMAT(min(create_time),'%Y-%m-%d') AS date
+            ,CONCAT('优化流程</br>',GROUP_CONCAT(CONCAT(title,'：',content) SEPARATOR '</br>')) AS log
+        FROM process_info 
+        WHERE field IN ('checkboxField_m11r277t','textareaField_m11spnq2')
+        AND process_id IN (
+            SELECT DISTINCT process_id
+            FROM process_info
+            WHERE field ='textField_lma827od'
+            AND content  = '${goods_id}' 
+            AND create_time BETWEEN '${start}' AND '${end}'
+        )
+        GROUP BY process_id
+        UNION ALL
+        SELECT '${goods_id}' AS goods_id
+            ,CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail\?id=',process_id) AS source
+            ,DATE_FORMAT(min(create_time),'%Y-%m-%d')
+            ,CONCAT('优化流程</br>',GROUP_CONCAT(CONCAT(title,'：',content) SEPARATOR '</br>')) AS log
+        FROM process_info 
+        WHERE field IN ('radioField_lx30hv7y','radioField_lwuecm6c','employeeField_lx30qkbt','textareaField_lx30jx3p','selectField_liihs7kz',
+        'multiSelectField_lwufb7oy','textareaField_m6072fua','dateField_m6072fu9','imageField_liihs7l2','textareaField_lxmkr1u0')
+        AND process_id IN (
+            SELECT DISTINCT process_id
+            FROM process_info
+            WHERE field ='textField_liihs7kw'
+            AND content  = '${goods_id}'
+            AND create_time BETWEEN '${start}' AND '${end}'
+        )
+        GROUP BY process_id
+        UNION ALL
+        SELECT DISTINCT * FROM (
+        SELECT goods_id
+            ,source
+            ,date_format(operate_date,'%Y-%m-%d') AS date
+            ,CONCAT('操作日志</br>',IFNULL(subtype,'(空)'),':',IFNULL(old_value,'(空)'),'->',IFNULL(new_value,'(空)'),'(',IFNULL(user,'无'),')') AS log
+        FROM operate_log
+        WHERE operate_date BETWEEN '${start}' AND '${end}' AND source != '数据面板操作日志'
+        AND goods_id ='${goods_id}'
+        UNION ALL
+        SELECT goods_id
+            ,source
+            ,operate_date
+            ,CONCAT('操作日志</br>',subtype,'(',IFNULL(user,'无'),')') AS log
+        FROM operate_log
+        WHERE operate_date BETWEEN '${start}' AND '${end}' AND source = '数据面板操作日志'
+        AND goods_id ='${goods_id}'
+        )AS a
+    )AS a
+    GROUP BY date`
+    let result = await query(sql)
+    return result
+}
 module.exports = goodsOtherInfoRepo
