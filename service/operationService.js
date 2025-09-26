@@ -843,9 +843,9 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
             otherName[i])
         if (invalid_info?.length) {
             invalid_link = parseInt(invalid_info[0].count)
-            invalid_sale_amount = parseFloat(invalid_info[0].sale_amount).toFixed(2)
-            invalid_profit = parseFloat(invalid_info[0].profit).toFixed(2)
-            invalid_profit_percent = parseFloat(invalid_info[0].sale_amount) > 0 ? 
+            invalid_sale_amount = parseFloat(invalid_info[0].sale_amount || 0).toFixed(2)
+            invalid_profit = parseFloat(invalid_info[0].profit || 0).toFixed(2)
+            invalid_profit_percent = parseFloat(invalid_info[0].sale_amount || 0) > 0 ? 
                 parseFloat(invalid_info[0].profit / invalid_info[0].sale_amount * 100).toFixed(2) : 0
         }
         invalid = `链接数量:${invalid_link}\n销售额:${invalid_sale_amount}\n利润率:${invalid_profit_percent}%`
@@ -862,23 +862,23 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         let unsalable_info = await func.getUnsalableCodeByShopNames(shopName[i].shop_name,
         start, end, otherName[i])
         if (unsalable_info) {
-            unsalable_cost_amount = parseFloat(unsalable_info.cost_amount).toFixed(2)
-            unsalable_amount = parseFloat(unsalable_info.amount).toFixed(2)
-            unsalable_sale_amount = parseFloat(unsalable_info.sale_amount).toFixed(2)
-            unsalable_profit = parseFloat(unsalable_info.profit).toFixed(2)
-            unsalable_profit_percent = parseFloat(unsalable_info.sale_amount) > 0 ? 
+            unsalable_cost_amount = parseFloat(unsalable_info.cost_amount || 0).toFixed(2)
+            unsalable_amount = parseFloat(unsalable_info.amount || 0).toFixed(2)
+            unsalable_sale_amount = parseFloat(unsalable_info.sale_amount || 0).toFixed(2)
+            unsalable_profit = parseFloat(unsalable_info.profit || 0).toFixed(2)
+            unsalable_profit_percent = parseFloat(unsalable_info.sale_amount || 0) > 0 ? 
                 parseFloat(unsalable_info.profit / unsalable_info.sale_amount * 100).toFixed(2) : 0
         }
         unsalable_code = `销售成本:${unsalable_cost_amount}\n总成本:${unsalable_amount}\n利润率:${unsalable_profit_percent}%`
         let ip_info = await func.getIpByShopNames(shopName[i].shop_name, months, start, end)
         if (ip_info?.length) {
             ip_link = parseInt(ip_info[0].count)
-            ip_sale_amount = parseFloat(ip_info[0].sale_amount).toFixed(2)
-            ip_amount = parseFloat(ip_info[0].amount).toFixed(2)
-            ip_profit = parseFloat(ip_info[0].profit).toFixed(2)
-            ip_goal_achieve_percent = parseFloat(ip_info[0].amount) > 0 ? 
+            ip_sale_amount = parseFloat(ip_info[0].sale_amount || 0).toFixed(2)
+            ip_amount = parseFloat(ip_info[0].amount || 0).toFixed(2)
+            ip_profit = parseFloat(ip_info[0].profit || 0).toFixed(2)
+            ip_goal_achieve_percent = parseFloat(ip_info[0].amount || 0) > 0 ? 
                 parseFloat(ip_info[0].sale_amount / ip_info[0].amount * 100).toFixed(2) : 0
-            ip_profit_percent = parseFloat(ip_info[0].sale_amount) > 0 ? 
+            ip_profit_percent = parseFloat(ip_info[0].sale_amount || 0) > 0 ? 
                 parseFloat(ip_info[0].profit / ip_info[0].sale_amount * 100).toFixed(2) : 0
         }
         ip = `未达成数量:${ip_link}\n销售目标率:${ip_goal_achieve_percent}\n利润率:${ip_profit_percent}%`
@@ -1212,9 +1212,9 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
         let invalid_info = await func.getInvalidByLinksAndTime(linkIds, start, end, linkIds1)
         if (invalid_info?.length) {
             invalid_link = parseInt(invalid_info[0].count)
-            invalid_sale_amount = parseFloat(invalid_info[0].sale_amount).toFixed(2)
-            invalid_profit = parseFloat(invalid_info[0].profit).toFixed(2)
-            invalid_profit_percent = parseFloat(invalid_info[0].sale_amount) > 0 ? 
+            invalid_sale_amount = parseFloat(invalid_info[0].sale_amount || 0).toFixed(2)
+            invalid_profit = parseFloat(invalid_info[0].profit || 0).toFixed(2)
+            invalid_profit_percent = parseFloat(invalid_info[0].sale_amount || 0) > 0 ? 
                 parseFloat(invalid_info[0].profit / invalid_info[0].sale_amount * 100).toFixed(2) : 0
         }
         invalid = `链接数量:${invalid_link}\n销售额:${invalid_sale_amount}\n利润率:${invalid_profit_percent}%`
@@ -1230,23 +1230,23 @@ const queryUserPromotion = async (users, result, type, start, end, func) => {
         }       
         let unsalable_info = await func.getUnsalableCodeByLinks(linkIds, start, end, linkIds1)
         if (unsalable_info) {
-            unsalable_cost_amount = parseFloat(unsalable_info.cost_amount).toFixed(2)
-            unsalable_amount = parseFloat(unsalable_info.amount).toFixed(2)
-            unsalable_sale_amount = parseFloat(unsalable_info.sale_amount).toFixed(2)
-            unsalable_profit = parseFloat(unsalable_info.profit).toFixed(2)
-            unsalable_profit_percent = parseFloat(unsalable_info.sale_amount) ? 
+            unsalable_cost_amount = parseFloat(unsalable_info.cost_amount || 0).toFixed(2)
+            unsalable_amount = parseFloat(unsalable_info.amount || 0).toFixed(2)
+            unsalable_sale_amount = parseFloat(unsalable_info.sale_amount || 0).toFixed(2)
+            unsalable_profit = parseFloat(unsalable_info.profit || 0).toFixed(2)
+            unsalable_profit_percent = parseFloat(unsalable_info.sale_amount || 0) ? 
                 parseFloat(unsalable_info.profit / unsalable_info.sale_amount * 100).toFixed(2) : 0
         }
         unsalable_code = `销售成本:${unsalable_cost_amount}\n总成本:${unsalable_amount}\n利润率:${unsalable_profit_percent}%`
         let ip_info = await func.getIpByLinks(linkIds, months, start, end, linkIds1)
         if (ip_info?.length) {
             ip_link = parseInt(ip_info[0].count)
-            ip_sale_amount = parseFloat(ip_info[0].sale_amount).toFixed(2)
-            ip_amount = parseFloat(ip_info[0].amount).toFixed(2)
-            ip_profit = parseFloat(ip_info[0].profit).toFixed(2)
-            ip_goal_achieve_percent = parseFloat(ip_info[0].amount) > 0 ? 
+            ip_sale_amount = parseFloat(ip_info[0].sale_amount || 0).toFixed(2)
+            ip_amount = parseFloat(ip_info[0].amount || 0).toFixed(2)
+            ip_profit = parseFloat(ip_info[0].profit || 0).toFixed(2)
+            ip_goal_achieve_percent = parseFloat(ip_info[0].amount || 0) > 0 ? 
                 parseFloat(ip_info[0].sale_amount / ip_info[0].amount * 100).toFixed(2) : 0
-            ip_profit_percent = parseFloat(ip_info[0].sale_amount) > 0 ? 
+            ip_profit_percent = parseFloat(ip_info[0].sale_amount || 0) > 0 ? 
                 parseFloat(ip_info[0].profit / ip_info[0].sale_amount * 100).toFixed(2) : 0
         }
         ip = `未达成数量:${ip_link}\n销售目标率:${ip_goal_achieve_percent}\n利润率:${ip_profit_percent}%`

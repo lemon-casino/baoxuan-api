@@ -964,15 +964,18 @@ goodsPayInfoRepo.getPromotionData = async (start, end, params, shopNames, linkId
     }    
     presql = presql.substring(0, presql.length - 10)
     presql = `${presql}) t1 GROUP BY t1.goods_id) t ON t.goods_id = s.goods_id `
-    let sql = `SELECT IFNULL(SUM(a1.sale_amount), 0) AS sale_amount, s.goods_id FROM 
+    let sql = `SELECT a1.sale_amount, s.goods_id FROM 
         (SELECT goods_id, MIN(create_time) AS onsale_date, shop_name FROM jst_goods_sku 
             WHERE is_shelf = '是' AND create_time IS NOT NULL GROUP BY goods_id, shop_name 
             UNION ALL 
             SELECT brief_name AS goods_id, onsale_date, shop_name 
             FROM dianshang_operation_attribute WHERE platform = '自营') s 
-        LEFT JOIN goods_pays a1 ON a1.goods_id = s.goods_id
-            AND a1.date BETWEEN ? AND ? 
-            AND a1.goods_id NOT IN ('', '【无法匹配到商品】')
+        LEFT JOIN (SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+                IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
+                IFNULL(SUM(profit), 0) AS profit, goods_id, shop_name 
+            FROM goods_pays WHERE \`date\` BETWEEN ? AND ? 
+                AND goods_id NOT IN ('', '【无法匹配到商品】') GROUP BY goods_id, shop_name) a1 
+            ON a1.goods_id = s.goods_id AND a1.shop_name = s.shop_name 
         LEFT JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, 
                 IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
                 IFNULL(SUM(cost_amount), 0) AS cost_amount, 
@@ -1465,70 +1468,61 @@ goodsPayInfoRepo.getPromotionData = async (start, end, params, shopNames, linkId
         subsql = `${subsql}
                 AND s.shop_name NOT IN ("${shopNames1}") `
     }
-    let sql1 = `GROUP BY s.goods_id, si.shop_id, s.shop_name`
     sql = `SELECT COUNT(1) AS count, SUM(sale_amount) AS sale_amount FROM (
-        ${sql}${subsql} GROUP BY s.goods_id) aa`
+        ${sql}${subsql} GROUP BY s.goods_id, a1.sale_amount) aa`
     let row = await query(sql, p)
     if (row?.length && row[0].count) {
         result.total = row[0].count
         result.sum = row[0].sale_amount        
-        sql = `SELECT s.goods_id, s.shop_name, si.shop_id, 
-            IFNULL(SUM(a1.pay_amount), 0) AS pay_amount, 
-            IFNULL(SUM(a1.brushing_amount), 0) AS brushing_amount, 
-            IFNULL(SUM(a1.brushing_qty), 0) AS brushing_qty, 
-            IFNULL(SUM(a1.refund_amount), 0) AS refund_amount, 
-            IFNULL(SUM(a1.express_fee), 0) AS pay_express_fee, 
-            IFNULL(SUM(a1.sale_amount), 0) AS real_pay_amount, 
-            IF(IFNULL(SUM(a2.sale_amount), 0) > 0, 
-                FORMAT((IFNULL(SUM(a1.sale_amount), 0) - IFNULL(SUM(a2.sale_amount), 0)) / 
-                SUM(a2.sale_amount) * 100, 2), 0) AS real_pay_amount_qoq, 
-            IFNULL(SUM(a1.bill), 0) AS bill,
-            IFNULL(SUM(a1.sale_amount), 0) AS sale_amount,
-            IFNULL(SUM(a1.cost_amount), 0) AS cost_amount, 
-            IFNULL(SUM(a1.express_fee), 0) AS express_fee, 
-            IFNULL(SUM(a1.packing_fee), 0) AS packing_fee, 
-            IFNULL(SUM(a1.promotion_amount), 0) AS promotion_amount, 
-            FORMAT(IF(IFNULL(SUM(a2.promotion_amount), 0) > 0, 
-                (IFNULL(SUM(a1.promotion_amount), 0) - SUM(a2.promotion_amount)) /
-                SUM(a2.promotion_amount) * 100, 0 
-            ), 2) AS promotion_amount_qoq,
-            IFNULL(SUM(a1.operation_amount), 0) AS operation_amount, 
-            IFNULL(SUM(a1.words_market_vol), 0) AS words_market_vol, 
-            IFNULL(SUM(a1.words_vol), 0) AS words_vol, 
-            FORMAT(IFNULL(SUM(a1.dsr), 0) / COUNT(1), 2) AS dsr, 
-            IFNULL(SUM(a1.order_num), 0) AS order_num, 
-            IFNULL(SUM(a1.refund_num), 0) AS refund_num, 
-            FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
-                IFNULL(SUM(a1.operation_amount), 0) / SUM(a1.sale_amount) * 100, 
-                0), 2) AS operation_rate, 
-            FORMAT(IF(IFNULL(SUM(a1.promotion_amount), 0) > 0, 
-                IFNULL(SUM(a1.sale_amount), 0) / SUM(a1.promotion_amount), 
-                0), 2) AS roi, 
-            FORMAT(IF(IFNULL(SUM(a1.words_market_vol), 0) > 0, 
-                IFNULL(SUM(a1.words_vol), 0) / SUM(a1.words_market_vol) * 100, 
-                0), 2) AS market_rate, 
-            FORMAT(IF(IFNULL(SUM(a1.order_num), 0) > 0, 
-                IFNULL(SUM(a1.refund_num), 0) / SUM(a1.order_num) * 100, 
-                0), 2) AS refund_rate, 
-            IFNULL(SUM(a1.profit), 0) AS profit, 
-            FORMAT(IF(IFNULL(SUM(a1.sale_amount), 0) > 0, 
-                IFNULL(SUM(a1.profit), 0) / SUM(a1.sale_amount) * 100, 
-                0), 2) AS profit_rate, 
-            FORMAT(IF(SUM(a4.sale_amount) > 0, 
-                1 - SUM(a4.cost_amount) / SUM(a4.sale_amount), 0) * 100, 2) AS gross_profit 
-            FROM (
-                SELECT goods_id, MIN(create_time) AS onsale_date, shop_name FROM jst_goods_sku 
+        sql = `SELECT s.goods_id, s.shop_name, si.shop_id, a1.pay_amount, a1.brushing_amount, 
+            a1.brushing_qty, a1.refund_amount, a1.express_fee AS pay_express_fee, 
+            a1.sale_amount AS real_pay_amount, FORMAT(IF(a2.sale_amount > 0, 
+                (a1.sale_amount - a2.sale_amount) / a2.sale_amount * 100, 0), 2) AS real_pay_amount_qoq, 
+            a1.bill, a1.sale_amount, a1.cost_amount, a1.express_fee, a1.packing_fee, a1.promotion_amount, 
+            FORMAT(IF(a2.promotion_amount > 0, (a1.promotion_amount - a2.promotion_amount) / 
+                a2.promotion_amount * 100, 0), 2) AS promotion_amount_qoq, a1.operation_amount, 
+            a1.words_market_vol, a1.words_vol, a1.dsr, a1.order_num, a1.refund_num, 
+            FORMAT(IF(a1.sale_amount > 0, a1.operation_amount / a1.sale_amount * 100, 0), 2) AS operation_rate, 
+            FORMAT(IF(a1.promotion_amount > 0, a1.sale_amount / a1.promotion_amount, 0), 2) AS roi, 
+            FORMAT(IF(a1.words_market_vol > 0, a1.words_vol / a1.words_market_vol * 100, 0), 2) AS market_rate, 
+            FORMAT(IF(a1.order_num > 0, a1.refund_num / a1.order_num * 100, 0), 2) AS refund_rate, 
+            a1.profit, FORMAT(IF(a1.sale_amount > 0, a1.profit / a1.sale_amount * 100, 0), 2) AS profit_rate, 
+            FORMAT(IF(a4.sale_amount > 0, (1 - a4.cost_amount / a4.sale_amount) * 100, 0), 2) AS gross_profit 
+            FROM (SELECT goods_id, MIN(create_time) AS onsale_date, shop_name FROM jst_goods_sku 
                 WHERE is_shelf = '是' AND create_time IS NOT NULL GROUP BY goods_id, shop_name
                 UNION ALL
                 SELECT brief_name AS goods_id, onsale_date, shop_name 
                 FROM dianshang_operation_attribute WHERE platform = '自营'
-            ) s LEFT JOIN goods_pays_stats a1 ON a1.goods_id = s.goods_id 
-                AND a1.date BETWEEN ? AND ? 
-                AND a1.goods_id NOT IN ('', '【无法匹配到商品】')
-            LEFT JOIN goods_pays_stats a2 ON a2.goods_id = a1.goods_id 
-                AND a2.date = DATE_SUB(a1.date, INTERVAL 1 DAY) 
-            LEFT JOIN goods_verifieds_stats a4 ON a1.goods_id = a4.goods_id 
-                AND a4.date = DATE_SUB(a1.date, INTERVAL 1 DAY)
+            ) s LEFT JOIN (SELECT IFNULL(SUM(pay_amount), 0) AS pay_amount, 
+                    IFNULL(SUM(brushing_amount), 0) AS brushing_amount, 
+                    IFNULL(SUM(brushing_qty), 0) AS brushing_qty, 
+                    IFNULL(SUM(refund_amount), 0) AS refund_amount, 
+                    IFNULL(SUM(express_fee), 0) AS express_fee, 
+                    IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+                    IFNULL(SUM(bill), 0) AS bill, 
+                    IFNULL(SUM(cost_amount), 0) AS cost_amount, 
+                    IFNULL(SUM(packing_fee), 0) AS packing_fee, 
+                    IFNULL(SUM(promotion_amount), 0) AS promotion_amount, 
+                    IFNULL(SUM(operation_amount), 0) AS operation_amount, 
+                    IFNULL(SUM(words_market_vol), 0) AS words_market_vol, 
+                    IFNULL(SUM(words_vol), 0) AS words_vol, 
+                    FORMAT(IFNULL(SUM(dsr), 0) / COUNT(1), 2) AS dsr, 
+                    IFNULL(SUM(order_num), 0) AS order_num, 
+                    IFNULL(SUM(refund_num), 0) AS refund_num, 
+                    IFNULL(SUM(profit), 0) AS profit, goods_id, shop_name 
+                FROM goods_pays_stats WHERE \`date\` BETWEEN ? AND ? 
+                    AND goods_id NOT IN ('', '【无法匹配到商品】') GROUP BY goods_id, shop_name) a1 
+                ON a1.goods_id = s.goods_id AND a1.shop_name = s.shop_name 
+            LEFT JOIN (SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+                    IFNULL(SUM(promotion_amount), 0) AS promotion_amount, goods_id, shop_name 
+                FROM goods_pays_stats WHERE \`date\` BETWEEN "${preStart}" AND "${preEnd}" 
+                GROUP BY goods_id, shop_name) a2 
+                ON a2.goods_id = a1.goods_id AND a2.shop_name = a1.shop_name 
+            LEFT JOIN (SELECT IFNULL(SUM(sale_amount), 0) AS sale_amount, 
+                    IFNULL(SUM(cost_amount), 0) AS cost_amount, goods_id, shop_name 
+                FROM goods_verifieds_stats WHERE \`date\` BETWEEN "${preStart}" AND "${preEnd}" 
+                GROUP BY goods_id, shop_name) a4 
+                ON a1.goods_id = a4.goods_id AND a1.shop_name = a4.shop_name 
             JOIN shop_info si ON s.shop_name = si.shop_name
             JOIN project_info pi ON pi.id = si.project_id 
             LEFT JOIN (SELECT IFNULL(SUM(profit), 0) AS profit, 
@@ -1614,7 +1608,12 @@ goodsPayInfoRepo.getPromotionData = async (start, end, params, shopNames, linkId
             LEFT JOIN dianshang_operation_attribute d ON d.goods_id = s.goods_id 
                 OR d.brief_name = s.goods_id 
             ${presql}`
-        sql1 = `GROUP BY s.goods_id, s.shop_name, si.shop_id`
+        let sql1 = `GROUP BY s.goods_id, s.shop_name, si.shop_id, a1.pay_amount, 
+            a1.brushing_amount, a1.brushing_qty, a1.refund_amount, a1.express_fee, 
+            a1.sale_amount, a2.sale_amount, a1.bill, a1.cost_amount, a1.packing_fee, 
+            a1.promotion_amount, a2.promotion_amount, a1.operation_amount, 
+            a1.words_market_vol, a1.words_vol, a1.dsr, a1.order_num, a1.refund_num, 
+            a1.profit, a4.cost_amount, a4.sale_amount`
         sql = `SELECT aa.* FROM (${sql}${subsql}${sql1}) aa`
         if (params.sort) sql = `${sql} ORDER BY aa.${params.sort}`
         if (!params.export)
