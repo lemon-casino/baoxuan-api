@@ -1919,8 +1919,8 @@ const importGoodsInfo = async (rows, time) => {
         if (columns[i] == '利润-销售数量(扣退)') {sale_qty_row = i; continue}
         if (columns[i] == '利润-销售金额(扣退)') {sale_amount_row = i; continue}
         if (columns[i] == '利润-销售成本(扣退)') {cost_amount_row = i; continue}
-        if (columns[i] == '利润-毛利') {gross_profit_row = i; continue}
-        if (columns[i] == '利润-利润') {profit_row = i; continue}
+        if (columns[i] == '利润-毛利额') {gross_profit_row = i; continue}
+        if (columns[i] == '利润-经营利润') {profit_row = i; continue}
         if (columns[i] == '利润-其中：推广费') {promotion_amount_row = i; continue}
         if (columns[i] == '订单费用-快递费（自动匹配）') {express_fee_row = i; continue}
         if (columns[i] == '利润-费用') {operation_amount_row = i; continue}
@@ -2730,8 +2730,8 @@ const importGoodsPayInfo = async (rows, time) => {
         if (columns[i] == '订单费用-账单费用（自动匹配）') {bill_row = i; continue}
         if (columns[i] == '利润-销售金额(扣退)') {sale_amount_row = i; continue}
         if (columns[i] == '利润-销售成本(扣退)') {cost_amount_row = i; continue}
-        if (columns[i] == '利润-毛利') {gross_profit_row = i; continue}
-        if (columns[i] == '利润-利润') {profit_row = i; continue}
+        if (columns[i] == '利润-毛利额') {gross_profit_row = i; continue}
+        if (columns[i] == '利润-经营利润') {profit_row = i; continue}
         if (columns[i] == '利润-其中：推广费') {promotion_amount_row = i; continue}
         if (columns[i] == '利润-费用') {operation_amount_row = i; continue}
         if (columns[i] == '订单费用-包材费（自动匹配）') {packing_fee_row = i; continue}
@@ -4159,8 +4159,8 @@ const importGoodsVerified = async (rows, time) => {
         if (columns[i] == '利润-销售数量(扣退)') {sale_qty_row = i; continue}
         if (columns[i] == '利润-销售金额(扣退)') {sale_amount_row = i; continue}
         if (columns[i] == '利润-销售成本(扣退)') {cost_amount_row = i; continue}
-        if (columns[i] == '利润-毛利') {gross_profit_row = i; continue}
-        if (columns[i] == '利润-利润') {profit_row = i; continue}
+        if (columns[i] == '利润-毛利额') {gross_profit_row = i; continue}
+        if (columns[i] == '利润-经营利润') {profit_row = i; continue}
         if (columns[i] == '利润-其中：推广费') {promotion_amount_row = i; continue}
         if (columns[i] == '订单费用-快递费（自动匹配）') {express_fee_row = i; continue}
         if (columns[i] == '利润-费用') {operation_amount_row = i; continue}
