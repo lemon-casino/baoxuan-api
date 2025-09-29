@@ -70,7 +70,7 @@ goodsPaysRepo.batchInsert = async (date) => {
 
 goodsPaysRepo.batchInsertJD = async (date,shop_name) => {
     let sqls = [], params = []
-    sqls.push(`DELETE FROM goods_pays WHERE \`date\` = ? AND shop_name ='京东自营-厨具' OR shop_name ='京东自营-日用'`)
+    sqls.push(`DELETE FROM goods_pays WHERE \`date\` = ? AND shop_name IN ('京东自营-厨具','京东自营-日用')`)
     params.push([date])
     let sql = `SELECT goods_id, shop_name, shop_id, \`date\`, 
             IFNULL(SUM(pay_amount), 0) AS pay_amount, 
@@ -90,7 +90,7 @@ goodsPaysRepo.batchInsertJD = async (date,shop_name) => {
             IFNULL(SUM(packing_fee), 0) AS packing_fee,
             IFNULL(SUM(gross_standard), 0) AS gross_standard,
             IFNULL(SUM(IF(other_cost>0,other_cost,0)),0) AS other_cost
-        FROM goods_pay_info WHERE \`date\` = ? AND shop_name ='京东自营-厨具' OR shop_name ='京东自营-日用'
+        FROM goods_pay_info WHERE \`date\` = ? AND shop_name IN ('京东自营-厨具','京东自营-日用')
         GROUP BY goods_id, shop_name, shop_id, \`date\``
     let rows = await query(sql, [date]), start, end
     if (!rows?.length) return false
