@@ -25,7 +25,12 @@ goodsPaymentsRepo.batchInsert = async (date) => {
             rows[i].refund_amount, 
             rows[i].pay_express_fee, 
             rows[i].bill)
-        
+        sqls.push(`UPDATE goods_pays_stats SET brushing_qty = ? WHERE goods_id = ? AND \`date\` = ?`)
+        params.push([
+            rows[i].brushing_qty, 
+            rows[i].goods_id, 
+            date
+        ])
         sqls.push(`UPDATE goods_sales_stats SET pay_amount = ?, brushing_amount = ?, 
                 brushing_qty = ?, refund_amount = ?, pay_express_fee = ?, bill = ? 
             WHERE goods_id = ? AND \`date\` = ?`)
