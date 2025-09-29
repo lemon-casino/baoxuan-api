@@ -97,7 +97,7 @@ const saveupdatelog = async (oldbody,body,user) => {
     const allKeys = new Set([...Object.keys(oldbody), ...Object.keys(body)])
     for (const key of allKeys) {
         // 忽略第二个对象新增的 _X_ROW_KEY
-        if (['_X_ROW_KEY','deptId'].includes(key)) continue;
+        if (['_X_ROW_KEY','deptId','createTime','updateTime'].includes(key)) continue;
         let value = await dianShangOperationAttributeRepo.getTitle(key,tag)
         const val1 = oldbody[key];
         const val2 = body[key];
