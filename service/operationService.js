@@ -2992,9 +2992,9 @@ const importGoodsPayInfo = async (rows, time) => {
     return result
 }
 
-const updateGoodsPayments = async (date) => {
-    let result = await goodsPaymentsRepo.batchInsert(date)
-    result = await goodsPaysRepo.batchInsert(date)
+const updateGoodsPayments = async (date) => {    
+    let result = await goodsPaysRepo.batchInsert(date)
+    result = await goodsPaymentsRepo.batchInsert(date)
     logger.info(`[单品表支付数据刷新]：时间:${date}, ${result}`)
 }
 
