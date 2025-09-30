@@ -8,7 +8,7 @@ rivalsSkuRepo.get = async (plan_id) => {
 }
 
 rivalsSkuRepo.getByName = async (plan_id, rival_id, name) => {
-    let sql = `SELECT * FROM rivals_sku WHERE plan_id = ? AND rival_id = ? AND name = ?`
+    let sql = `SELECT * FROM rivals_sku WHERE plan_id = ? AND rival_id = ? AND sku = ?`
     const result = await query(sql, [plan_id, rival_id, name])
     return result || []
 }
@@ -23,7 +23,7 @@ rivalsSkuRepo.create = async (data) => {
 
 rivalsSkuRepo.updateByGoodsIdAndName = async (data) => {
     let sql = `UPDATE rivals_sku SET picture = ?, price = ?, ratio = ?, cost_price = ?,
-        exppress_fee = ?, bill_amount = ?, profit = ?, profit_percent = ?, other_info = ?, 
+        express_fee = ?, bill_amount = ?, profit = ?, profit_percent = ?, other_info = ?, 
         sort = ? WHERE plan_id = ? AND goods_id = ? AND sku = ?`
     const result = await query(sql, data)
     return result.affectedRows ? true:false

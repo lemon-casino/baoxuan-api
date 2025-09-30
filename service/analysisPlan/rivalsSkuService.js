@@ -5,6 +5,9 @@ const rivalsSkuService = {}
 rivalsSkuService.get = async (params) => {
     let result = []
     result = await rivalsSkusRepo.get(params.plan_id)
+    for (let i = 0; i < result.length; i++) {
+        result[i].other_info = result[i].other_info ? JSON.parse(result[i].other_info) : null
+    }
     return result
 }
 
@@ -34,7 +37,7 @@ rivalsSkuService.create = async (params) => {
             if (params.data[i][j] instanceof String)
                 params.data[i][j] = params.data[i][j].trim()
         }
-        params.data[i][10] = i
+        params.data[i][params.data[i].length] = i
         for (let j = 0; j < info.length; j++) {
             if (params.data[i][0] == info[j][0] && params.data[i][1] == info[j][1]) {
                 updates.push(params.data[i])
@@ -54,6 +57,17 @@ rivalsSkuService.create = async (params) => {
     //新增竞品SKU数据
     let insertNames = {}
     for (let i = 0; i < inserts.length; i++) {
+        let other_info = []
+        for (let j = 10; j < inserts[i].length - 1; j++) {
+            other_info.push({
+                label: params.data[0][j],
+                value: inserts[i][j],
+                field: `field${j}`
+            })
+        }
+        inserts[i][10] = inserts[i][inserts[i].length - 1]
+        inserts[i].splice(11, inserts[i].length - 11)
+        inserts[i][11] = JSON.stringify(other_info)
         if (!insertNames[inserts[i][0]]) insertNames[inserts[i][0]] = [inserts[i]]
         else insertNames[inserts[i][0]].push(inserts[i])
     }
@@ -65,7 +79,7 @@ rivalsSkuService.create = async (params) => {
                 params.plan_id, 
                 null, 
                 null, 
-                insertNames[index][i][0], 
+                insertNames[index][0][0], 
                 null, 
                 null, 
                 null, 
@@ -78,7 +92,7 @@ rivalsSkuService.create = async (params) => {
                 0, 
                 null, 
                 null, 
-                insertNames[index][i][10]
+                insertNames[index][0][10]
             ])            
         } else rival_id = count[0].id
         for (let i = 0; i < insertNames[index].length; i++) {
@@ -96,22 +110,33 @@ rivalsSkuService.create = async (params) => {
                 insertNames[index][i][7], 
                 insertNames[index][i][8], 
                 insertNames[index][i][9], 
-                null, 
+                insertNames[index][i][11], 
                 insertNames[index][i][10]])
         }
     }
     //更新竞品SKU数据
     let updateNames = {}
     for (let i = 0; i < updates.length; i++) {
+        let other_info = []
+        for (let j = 10; j < updates[i].length - 1; j++) {
+            other_info.push({
+                label: params.data[0][j],
+                value: updates[i][j],
+                field: `field${j}`
+            })
+        }
+        updates[i][10] = updates[i][updates[i].length - 1]
+        updates[i].splice(11, updates[i].length - 11)
+        updates[i][11] = JSON.stringify(other_info)
         if (!updateNames[updates[i][0]]) updateNames[updates[i][0]] = [updates[i]]
         else updateNames[updates[i][0]].push(updates[i])
     }
     for (let index in updateNames) {
-        await rivalsRepo.updateSort2([
+        await rivalsRepo.updateSort2(
             updateNames[index][0][10],
             params.plan_id,
             updateNames[index][0][0]
-        ])
+        )
         for (let i = 0; i < updateNames[index].length; i++) {
             await rivalsSkusRepo.updateByGoodsIdAndName([
                 updateNames[index][i][2], 
@@ -122,6 +147,7 @@ rivalsSkuService.create = async (params) => {
                 updateNames[index][i][7], 
                 updateNames[index][i][8], 
                 updateNames[index][i][9],  
+                updateNames[index][i][11],  
                 updateNames[index][i][10], 
                 params.plan_id,
                 updateNames[index][i][0], 

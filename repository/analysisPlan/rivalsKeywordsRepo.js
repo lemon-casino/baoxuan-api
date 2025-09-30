@@ -2,7 +2,7 @@ const { query } = require('../../model/dbConn')
 const rivalsKeywordsRepo = {}
 
 rivalsKeywordsRepo.get = async (plan_id) => {
-    let sql = `SELECT k.id, k.rival_id, r.name, r.link, r.goods_id, r.category, r.shop_name, 
+    let sql = `SELECT k.id, k.rival_id, k.other_info, r.name, r.link, r.goods_id, r.category, r.shop_name, 
             r.shop_type, r.monthly_sales, r.price, r.picture, r.keywords_trend_pic, r.customer_segmentation, 
             k.name AS keywords, k.visitors, k.pay_visitors FROM rivals r 
         LEFT JOIN rivals_keywords k ON r.id = k.rival_id WHERE r.plan_id = ? AND r.is_specific = 1 
@@ -25,8 +25,8 @@ rivalsKeywordsRepo.getByPlanIdAndKeywords = async (plan_id, rival_id, keywords) 
 }
 
 rivalsKeywordsRepo.create = async (data) => {
-    let sql = `INSERT INTO rivals_keywords(plan_id, rival_id, name, visitors, pay_visitors, sort) 
-        VALUES(?,?,?,?,?,?)`
+    let sql = `INSERT INTO rivals_keywords(plan_id, rival_id, name, visitors, pay_visitors, sort, other_info) 
+        VALUES(?,?,?,?,?,?,?)`
     const result = await query(sql, data)
     return result.affectedRows ? true:false
 }
@@ -39,7 +39,7 @@ rivalsKeywordsRepo.updateById = async (data) => {
 }
 
 rivalsKeywordsRepo.updateByPlanIdAndKeywords = async (data) => {
-    let sql = `UPDATE rivals_keywords SET visitors = ?, pay_visitors = ?, sort = ? 
+    let sql = `UPDATE rivals_keywords SET visitors = ?, pay_visitors = ?, sort = ?, other_info = ?  
         WHERE plan_id = ? AND name = ? AND EXISTS(
             SELECT id FROM rivals WHERE id = rival_id AND plan_id = ? AND goods_id = ?)`
     const result = await query(sql, data)
