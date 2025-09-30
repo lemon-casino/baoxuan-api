@@ -4795,4 +4795,270 @@ developmentService.getProcessRunningTask = async (params) => {
     return result
 }
 
+developmentService.getDevelopProcess = async (start, end) => {
+    let info = await processesRepo.getDevelopProcess(start, end)
+    let data1 = [], data2 = []
+    for (let i = 0; i < info.length; i++) {
+        let select1, select2, select3
+        info[i].image = info[i].image ? (info[i].image.indexOf('[') != -1 ? JSON.parse(info[i].image)[0] : info[i].image) : null
+        info[i].link = `http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=${info[i].process_id}`
+        if (info[i].categories) {
+            info[i].categories = JSON.parse(info[i].categories)
+            info[i]['first_category'] = info[i].categories[0]
+            info[i]['second_category'] = info[i].categories[1]
+            info[i]['third_category'] = info[i].categories[2]
+        }
+        if (['事业一部', '事业二部', '事业三部'].includes(info[i].node_dept)) {
+            info[i]['process_node'] = '运营节点中'
+        } else if (info[i].node_dept == '企划部') {
+            info[i]['process_node'] = '开发节点中'
+        } else if (info[i].node_dept == '货品部') {
+            info[i]['process_node'] = '货品节点中'
+        } else if (info[i].node_dept == '采购部') {
+            info[i]['process_node'] = '采购节点中'
+        } else if (info[i].node_dept == '视觉部') {
+            info[i]['process_node'] = '视觉节点中'
+        } else if (info[i].process_status == '审批通过') {
+            info[i]['process_node'] = '完成'
+        }
+        if (['已取消', '审批不通过'].includes(info[i].process_status)) {
+            info[i]['process_node'] = '流程终止'
+            info[i]['first_select'] = '流程终止'
+            info[i]['second_select'] = '流程终止'
+            info[i]['third_select'] = '流程终止'
+            info[i]['first_time'] = ''
+            info[i]['second_time'] = ''
+            info[i]['third_time'] = ''
+        } else {
+            if (info[i].first_time && info[i].dept == '事业一部') {
+                select1 = await processesRepo.getFirstDivisionSelection1(info[i].process_id)
+                let flag = 0
+                for (let j = 0; j < select1?.length; j++) {
+                    if (['是', '选中'].includes(select1[j].content) && 
+                        !['F6c5mbuidfzfqjc', 'Fxfrma3j75fse7c'].includes(select1[j].field)) {
+                        flag = 1
+                        break
+                    }
+                }
+                if (select1?.length) {
+                    if (flag) info[i]['first_select'] = '选中'
+                    else info[i]['first_select'] = '未选中'
+                } else {
+                    info[i]['first_select'] = '流程中'
+                    info[i]['first_time'] = ''
+                }
+            } else if (info[i].first_time) {
+                select1 = await processesRepo.getFirstDivisionSelection(info[i].process_id)
+                let flag = 0
+                for (let j = 0; j < select1?.length; j++) {
+                    if (['是', '选中'].includes(select1[j].content) && 
+                        !['F6c5mbuidfzfqjc'].includes(select1[j].field)) {
+                        flag = 1
+                        break
+                    }
+                }
+                if (select1?.length) {
+                    if (flag) info[i]['first_select'] = '选中'
+                    else info[i]['first_select'] = '未选中'
+                } else {
+                    info[i]['first_select'] = '流程中'
+                    info[i]['first_time'] = ''
+                }
+            } else if (info[i].process_status == '审批通过') info[i]['first_select'] = '未选中'
+            else {
+                info[i]['first_select'] = '流程中'
+                info[i]['first_time'] = ''
+            }
+
+            if (info[i].second_time && info[i].dept == '事业二部') {
+                select2 = await processesRepo.getSecondDivisionSelection1(info[i].process_id)
+                let flag = 0
+                for (let j = 0; j < select2?.length; j++) {
+                    if (['是', '选中'].includes(select2[j].content) && 
+                        !['F64jmbuie9olqmc', 'Fxfrma3j75fse7c'].includes(select2[j].field)) {
+                        flag = 1
+                        break
+                    }
+                }
+                if (select2?.length) {
+                    if (flag) info[i]['second_select'] = '选中'
+                    else info[i]['second_select'] = '未选中'
+                } else {
+                    info[i]['second_select'] = '流程中'
+                    info[i]['second_time'] = ''
+                }
+            } else if (info[i].second_time) {
+                select2 = await processesRepo.getSecondDivisionSelection(info[i].process_id)
+                let flag = 0
+                for (let j = 0; j < select2?.length; j++) {
+                    if (['是', '选中'].includes(select2[j].content) && 
+                        !['F64jmbuie9olqmc'].includes(select2[j].field)) {
+                        flag = 1
+                        break
+                    }
+                }
+                if (select2?.length) {
+                    if (flag) info[i]['second_select'] = '选中'
+                    else info[i]['second_select'] = '未选中'
+                } else {
+                    info[i]['second_select'] = '流程中'
+                    info[i]['second_time'] = ''
+                }
+            } else if (info[i].process_status == '审批通过') info[i]['second_select'] = '未选中'
+            else {
+                info[i]['second_select'] = '流程中'
+                info[i]['second_time'] = ''
+            }
+
+            if (info[i].third_time && info[i].dept == '事业三部') {
+                select3 = await processesRepo.getThirdDivisionSelection1(info[i].process_id)
+                let flag = 0
+                for (let j = 0; j < select3?.length; j++) {
+                    if (['是', '选中'].includes(select3[j].content) && 
+                        !['Fxkxmbuiecz2qpc', 'Fxfrma3j75fse7c'].includes(select3[j].field)) {
+                        flag = 1
+                        break
+                    }
+                }
+                if (select3?.length) {
+                    if (flag) info[i]['third_select'] = '选中'
+                    else info[i]['third_select'] = '未选中'
+                } else {
+                    info[i]['third_select'] = '流程中'
+                    info[i]['third_time'] = ''
+                }
+            } else if (info[i].third_time) {
+                select3 = await processesRepo.getThirdDivisionSelection(info[i].process_id)
+                let flag = 0
+                for (let j = 0; j < select3?.length; j++) {
+                    if (['是', '选中'].includes(select3[j].content) && 
+                        !['Fxkxmbuiecz2qpc'].includes(select3[j].field)) {
+                        flag = 1
+                        break
+                    }
+                }
+                if (select3?.length) {
+                    if (flag) info[i]['third_select'] = '选中'
+                    else info[i]['third_select'] = '未选中'
+                } else {
+                    info[i]['third_select'] = '流程中'
+                    info[i]['third_time'] = ''
+                }
+            } else if (info[i].process_status == '审批通过') info[i]['third_select'] = '未选中'
+            else {
+                info[i]['third_select'] = '流程中'
+                info[i]['third_time'] = ''
+            }
+        }
+        data1.push({
+            start_time: info[i].start_time,
+            month: info[i].month,
+            image: info[i].image,
+            type: info[i].type,
+            link: info[i].link,
+            first_category: info[i].first_category,
+            second_category: info[i].second_category,
+            third_category: info[i].third_category,
+            spu: info[i].spu,
+            start: info[i].start,
+            developer: info[i].developer,
+            project: info[i].project,
+            dept: info[i].dept,
+            process_status: info[i].process_status,
+            process_node: info[i].process_node,
+            first_select: info[i].first_select,
+            second_select: info[i].second_select,
+            third_select: info[i].third_select,
+            is_select: info[i].is_select,
+            first_time: info[i].first_time,
+            second_time: info[i].second_time,
+            third_time: info[i].third_time,
+            first_shelf_time: info[i].first_shelf_time,
+            second_shelf_time: info[i].second_shelf_time,
+            third_shelf_time: info[i].third_shelf_time,
+            user: info[i].user,
+            node: info[i].node,
+            node_dept: info[i].node_dept,
+            duration: info[i].duration,
+            total_duration: info[i].total_duration,
+        })        
+        data2.push({
+            start_time: info[i].start_time,
+            image: info[i].image,
+            type: info[i].type,
+            link: info[i].link,
+            first_category: info[i].first_category,
+            second_category: info[i].second_category,
+            third_category: info[i].third_category,
+            spu: info[i].spu,
+            start: info[i].start,
+            developer: info[i].developer,
+            project: info[i].project,
+            dept: info[i].dept,
+            process_status: info[i].process_status,
+            process_node: info[i].process_node,
+            division: '事业一部',
+            is_select: info[i].first_select,
+            select_time: info[i].first_time,
+            shelf_time: info[i].first_shelf_time,
+            user: info[i].user,
+            node: info[i].node,
+            node_dept: info[i].node_dept,
+            duration: info[i].duration,
+            total_duration: info[i].total_duration,
+        })       
+        data2.push({
+            start_time: info[i].start_time,
+            image: info[i].image,
+            type: info[i].type,
+            link: info[i].link,
+            first_category: info[i].first_category,
+            second_category: info[i].second_category,
+            third_category: info[i].third_category,
+            spu: info[i].spu,
+            start: info[i].start,
+            developer: info[i].developer,
+            project: info[i].project,
+            dept: info[i].dept,
+            process_status: info[i].process_status,
+            process_node: info[i].process_node,
+            division: '事业二部',
+            is_select: info[i].second_select,
+            select_time: info[i].second_time,
+            shelf_time: info[i].second_shelf_time,
+            user: info[i].user,
+            node: info[i].node,
+            node_dept: info[i].node_dept,
+            duration: info[i].duration,
+            total_duration: info[i].total_duration,
+        })       
+        data2.push({
+            start_time: info[i].start_time,
+            image: info[i].image,
+            type: info[i].type,
+            link: info[i].link,
+            first_category: info[i].first_category,
+            second_category: info[i].second_category,
+            third_category: info[i].third_category,
+            spu: info[i].spu,
+            start: info[i].start,
+            developer: info[i].developer,
+            project: info[i].project,
+            dept: info[i].dept,
+            process_status: info[i].process_status,
+            process_node: info[i].process_node,
+            division: '事业三部',
+            is_select: info[i].third_select,
+            select_time: info[i].third_time,
+            shelf_time: info[i].third_shelf_time,
+            user: info[i].user,
+            node: info[i].node,
+            node_dept: info[i].node_dept,
+            duration: info[i].duration,
+            total_duration: info[i].total_duration,
+        })
+    }
+    return {data1, data2}
+}
+
 module.exports = developmentService

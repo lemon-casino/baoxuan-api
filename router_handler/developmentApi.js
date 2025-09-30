@@ -602,6 +602,91 @@ const getProcessRunningTask = async (req, res, next) => {
     }
 }
 
+const getDevelopProcess = async (req, res, next) => {
+    try {
+        const {startDate, endDate} = req.query
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.strRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const start = moment(startDate).format('YYYY-MM-DD') + ' 00:00'
+        const end = moment(endDate).format('YYYY-MM-DD') + ' 23:59'
+        let result = await developmentService.getDevelopProcess(start, end)
+        const workbook = new ExcelJS.Workbook()
+        const sheet = workbook.addWorksheet('流程汇总数据')
+        sheet.columns = [
+            { header: '日期', key: 'start_time' },
+            { header: '月份', key: 'month' },
+            { header: '图片', key: 'image' },
+            { header: '开发性质', key: 'type' },
+            { header: '流程链接', key: 'link' },
+            { header: '一级类目', key: 'first_category' },
+            { header: '二级类目', key: 'second_category' },
+            { header: '三级类目', key: 'third_category' },
+            { header: '推品名称spu编码', key: 'spu' },
+            { header: '发起人', key: 'start' },
+            { header: '开发人', key: 'developer' },
+            { header: '渠道', key: 'project' },
+            { header: '发起部门', key: 'dept' },
+            { header: '流程状态', key: 'process_status' },
+            { header: '流程进度', key: 'process_node' },
+            { header: '事业部一是否选中', key: 'first_select' },
+            { header: '事业部二是否选中', key: 'second_select' },
+            { header: '事业部三是否选中', key: 'third_select' },
+            { header: '是否选中', key: 'is_select' },
+            { header: '事业部一选中未选中时间', key: 'first_time' },
+            { header: '事业部二选中未选中时间', key: 'second_time' },
+            { header: '事业部三选中未选中时间', key: 'third_time' },
+            { header: '事业部一填写上架ID时间', key: 'first_shelf_time' },
+            { header: '事业部二填写上架ID时间', key: 'second_shelf_time' },
+            { header: '事业部三填写上架ID时间', key: 'third_shelf_time' },
+            { header: '目前卡滞人', key: 'user' },
+            { header: '实时卡滞节点', key: 'node' },
+            { header: '目前卡滞部门', key: 'node_dept' },
+            { header: '卡滞天数', key: 'duration' },
+            { header: '流程完结周期', key: 'total_duration' },
+        ]
+        for (let i = 0; i < result.data1.length; i++) {
+            sheet.addRow(result.data1[i])
+        }
+        const sheet1 = workbook.addWorksheet('流程事业部数据')
+        sheet1.columns = [
+            { header: '日期', key: 'start_time' },
+            { header: '图片', key: 'image' },
+            { header: '开发性质', key: 'type' },
+            { header: '流程链接', key: 'link' },
+            { header: '一级类目', key: 'first_category' },
+            { header: '二级类目', key: 'second_category' },
+            { header: '三级类目', key: 'third_category' },
+            { header: '推品名称spu编码', key: 'spu' },
+            { header: '发起人', key: 'start' },
+            { header: '开发人', key: 'developer' },
+            { header: '渠道', key: 'project' },
+            { header: '发起部门', key: 'dept' },
+            { header: '流程状态', key: 'process_status' },
+            { header: '流程进度', key: 'process_node' },
+            { header: '事业部', key: 'division' },
+            { header: '事业部是否选中', key: 'is_select' },
+            { header: '事业部选中时间', key: 'select_time' },
+            { header: '事业部填写上架时间', key: 'shelf_time' },
+            { header: '目前卡滞人', key: 'user' },
+            { header: '实时卡滞节点', key: 'node' },
+            { header: '目前卡滞部门', key: 'node_dept' },
+            { header: '卡滞天数', key: 'duration' },
+            { header: '流程完结周期', key: 'total_duration' },
+        ]
+        for (let i = 0; i < result.data2.length; i++) {
+            sheet1.addRow(result.data2[i])
+        }
+        const buffer = await workbook.xlsx.writeBuffer()
+        res.setHeader('Content-Disposition', `attachment; filename="develop-process-${moment(startDate).format('YYYY-MM-DD')}_${moment(endDate).format('YYYY-MM-DD')}.xlsx"`)
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        return res.end(buffer)
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getWorkPannel, 
     getWorkDetail,
@@ -634,5 +719,6 @@ module.exports = {
     getfirstInfo,
     getProcessInfo,
     getProcessDetail,
-    getProcessRunningTask
+    getProcessRunningTask,
+    getDevelopProcess
 }
