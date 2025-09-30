@@ -64,5 +64,6 @@ module.exports = [
     '/operation/tmall-goods/update-link-stage',
     '/flow/vision/detail',
     '/development/develop-process',
+    '/operation/tmall-info',
     /^\/download\/.*/,
 ]

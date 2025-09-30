@@ -1769,6 +1769,46 @@ const goodslog  = async(req, res, next) =>{
     }
 }
 
+const getTmallInfo = async (req, res, next) => {
+    try {
+        const {startDate, endDate} = req.query
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.strRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const start = moment(startDate).format('YYYY-MM-DD') + ' 00:00'
+        const end = moment(endDate).format('YYYY-MM-DD') + ' 23:59'
+        let result = await operationService.getTmallInfo(start, end)
+        const workbook = new ExcelJS.Workbook()
+        const sheet = workbook.addWorksheet()
+        sheet.columns = [
+            { header: '链接', key: 'link' },
+            { header: '流程名称', key: 'title' },
+            { header: '类型', key: 'type' },
+            { header: '发起人', key: 'start' },
+            { header: '链接状态', key: 'process_status' },
+            { header: '事业部三执行人', key: 'user' },
+            { header: '供应商推品-产品线简称', key: 'brief_name1' },
+            { header: '运营事业部', key: 'division' },
+            { header: '反推推品-产品线简称', key: 'brief_name2' },
+            { header: '反推运营发起人', key: 'start1' },
+            { header: '动作属性-市场统计(执行发起)', key: 'user1' },
+            { header: '平台', key: 'project' },
+            { header: '任务名称', key: 'task_name' },
+            { header: '运营执行人', key: 'operator' },
+        ]
+        for (let i = 0; i < result.length; i++) {
+            sheet.addRow(result[i])
+        }
+        const buffer = await workbook.xlsx.writeBuffer()
+        res.setHeader('Content-Disposition', `attachment; filename="tmall-${moment(startDate).format('YYYY-MM-DD')}_${moment(endDate).format('YYYY-MM-DD')}.xlsx"`)
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        return res.end(buffer)
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -1837,5 +1877,6 @@ module.exports = {
     saveOperatelog,
     initiateprocess,
     updateTMLinkStage,
-    goodslog
+    goodslog,
+    getTmallInfo
 }
