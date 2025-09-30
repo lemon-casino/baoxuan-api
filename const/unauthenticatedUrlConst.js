@@ -63,5 +63,6 @@ module.exports = [
     '/operation/wangEditorUpload',
     '/operation/tmall-goods/update-link-stage',
     '/flow/vision/detail',
+    '/development/develop-process',
     /^\/download\/.*/,
 ]

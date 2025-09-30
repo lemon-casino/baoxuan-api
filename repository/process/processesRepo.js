@@ -1451,7 +1451,7 @@ processesRepo.getVisionDetail = async (start, end) => {
             AND pi1.field IN ('radioField_lxkb9f93', 'radioField_lx5phs8j') 
         LEFT JOIN process_info pi2 ON pi2.process_id = p.process_id AND pi2.field = 'F4rzmbrlo5rsjqc'
         LEFT JOIN process_info pi3 ON pi3.process_id = p.process_id 
-            AND pi3.title IN ('Cfidvgpftflr5', 'Cfidclaxyqgv7') 
+            AND pi3.field IN ('Cfidvgpftflr5', 'Cfidclaxyqgv7') 
         LEFT JOIN process_tasks t1 ON t1.process_id = p.process_id AND t1.title IN ('运营收图', '发起人收图') 
             AND t1.start_time = (SELECT MAX(tt.start_time) FROM process_tasks tt 
                 WHERE tt.title = t1.title AND tt.process_id = p.process_id) 
@@ -1461,6 +1461,193 @@ processesRepo.getVisionDetail = async (start, end) => {
             pi3.content, p.process_code, p.title`
     const result = await query(sql, [start, end])
     return result
+}
+
+processesRepo.getDevelopProcess = async (start, end) => {
+    const sql = `SELECT p.process_id, p.username AS start, p.start_time, MONTH(p.start_time) AS month, 
+            v16.content AS image, v17.content AS categories, 
+            (CASE WHEN p.process_code IN ('sctgtplc', 'shichangfenxituipin') THEN '市场分析推品' 
+                WHEN p.process_code IN ('iptplc', 'iptplcxb') THEN 'IP推品' 
+                WHEN p.process_code IN ('zytplc', 'ziyantuipin') THEN '自研推品' 
+                WHEN p.process_code IN ('gystplc', 'gongyingshangtuipin') THEN '供应商推品' 
+                ELSE '反推推品' END) AS type,  IFNULL(v15.content, '') AS spu, 
+            IFNULL(t.username, IF(p.process_code IN ('fttplc', 'fantuituipin'), '', p.username)) AS developer, 
+            IFNULL(v12.content, '') AS project, (CASE WHEN p.username = '陆瑶' THEN '事业二部' 
+                WHEN p.username = '刘海涛' THEN '事业一部' WHEN p.username = '王洪彬' THEN '事业三部' 
+                WHEN p.username = '郑艳艳' THEN '企划部' WHEN p.username = '鲁红旺' THEN '货品部' 
+                WHEN p.dept LIKE '%天猫%' OR p.dept LIKE '%淘工厂%' OR p.dept LIKE '%小红书%' THEN '事业三部' 
+                WHEN p.dept LIKE '%京东%' OR p.dept LIKE '%抖音%' OR p.dept LIKE '%1688%' 
+                    OR p.dept LIKE '%唯品会%' OR p.dept LIKE '%得物%' THEN '事业二部' 
+                WHEN p.dept LIKE '%拼多多%' OR p.dept LIKE '%跨境%' OR p.dept LIKE '%猫超%' THEN '事业一部' 
+                WHEN p.dept LIKE '%开发%' OR p.dept LIKE '%企划%' OR p.dept LIKE '%市场%' THEN '企划部' 
+                WHEN p.dept LIKE '%采购%' OR p.dept LIKE '%物流%' THEN '采购部' 
+                WHEN p.dept LIKE '%库房%' OR p.dept LIKE '%品控%' THEN '货品部' 
+                WHEN p.dept LIKE '%客服%' THEN '客服部' WHEN p.dept LIKE '%摄影%' OR p.dept LIKE '%视觉%' 
+                    OR p.dept LIKE '%设计%' THEN '视觉部' WHEN p.dept LIKE '%人事%' THEN '人事部' 
+                WHEN p.dept LIKE '%数据%' THEN '数据中台' ELSE '' END) AS dept, 
+            (CASE p.status WHEN -1 THEN '未开始' WHEN 1 THEN '审批中' WHEN 2 THEN '审批通过' 
+                WHEN 3 THEN '审批不通过' ELSE '已取消' END) AS process_status, 
+            t0.end_time AS first_time, t1.end_time AS second_time, t2.end_time AS third_time, 
+            IFNULL(t5.end_time, '') AS first_shelf_time, IFNULL(t6.end_time, '') AS second_shelf_time, 
+            IFNULL(t7.end_time, '') AS third_shelf_time, IFNULL(t4.username, '') AS user, IFNULL(t4.title, '') AS node, 
+            (CASE WHEN t4.username = '陆瑶' THEN '事业二部' WHEN t4.username = '刘海涛' THEN '事业一部' 
+                WHEN t4.username = '王洪彬' THEN '事业三部' WHEN t4.username = '郑艳艳' THEN '企划部' 
+                WHEN t4.username = '鲁红旺' THEN '货品部' WHEN t4.dept LIKE '%天猫%' OR t4.dept LIKE '%淘工厂%' 
+                    OR t4.dept LIKE '%小红书%' THEN '事业三部' WHEN t4.dept LIKE '%京东%' OR t4.dept LIKE '%抖音%' 
+                    OR t4.dept LIKE '%1688%' OR t4.dept LIKE '%唯品会%' OR t4.dept LIKE '%得物%' THEN '事业二部' 
+                WHEN t4.dept LIKE '%拼多多%' OR t4.dept LIKE '%跨境%' OR t4.dept LIKE '%猫超%' THEN '事业一部' 
+                WHEN t4.dept LIKE '%开发%' OR t4.dept LIKE '%企划%' OR t4.dept LIKE '%市场%' THEN '企划部' 
+                WHEN t4.dept LIKE '%采购%' OR t4.dept LIKE '%物流%' THEN '采购部' 
+                WHEN t4.dept LIKE '%库房%' OR t4.dept LIKE '%品控%' THEN '货品部' 
+                WHEN t4.dept LIKE '%客服%' THEN '客服部' WHEN t4.dept LIKE '%摄影%' OR t4.dept LIKE '%视觉%' 
+                    OR t4.dept LIKE '%设计%' THEN '视觉部' WHEN t4.dept LIKE '%人事%' THEN '人事部' 
+                WHEN t4.dept LIKE '%数据%' THEN '数据中台' ELSE '' END) AS node_dept, 
+            DATEDIFF(DATE_ADD(NOW(), INTERVAL 8 HOUR), t4.start_time) AS duration,
+            IF(p.status IN (2,3,4), DATEDIFF(p.end_time, p.start_time), '') AS total_duration 
+        FROM processes p LEFT JOIN process_tasks t ON t.process_id = p.process_id 
+            AND t.title IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到') 
+            AND t.start_time = (SELECT MAX(t1.start_time) FROM process_tasks t1 WHERE t1.process_id = p.process_id 
+                AND t1.title IN ('反选1是否找到', '反选2是否找到', '反选3是否找到', '反选4是否找到')) 
+        LEFT JOIN process_info v1 ON v1.process_id = p.process_id AND v1.field IN ('Cfidbw9ff40k6', 'Cfidaq7mz3963') 
+        LEFT JOIN process_info v12 ON v12.process_id = p.process_id AND v12.field = 'Fj1ama2csbpoabc' 
+        LEFT JOIN process_tasks t0 ON t0.process_id = p.process_id AND t0.status = 2 
+            AND IF(p.process_code IN ('iptplc', 'iptplcxb'), t0.title = '事业部1是否订货', 
+                IF(p.process_code IN ('zytplc', 'ziyantuipin'), t0.title = '事业部一是否订货', 
+                    IF(p.process_code IN ('sctgtplc', 'shichangfenxituipin'), 
+                        t0.title IN ('事业部一是否订货1', '事业部一是否订货2'), 
+                        IF(p.process_code IN ('gystplc', 'gongyingshangtuipin'), t0.title = '事业部一审核市场分析', 
+                            t0.title IN ('事业部一是否选中', '事业部一是否加单', '事业部一样品是否选中') 
+                            OR ((p.dept LIKE '%拼多多%' OR p.dept LIKE '%跨境%' OR p.dept LIKE '%猫超%') 
+                            AND t0.title IN ('运营是否选中', '反选运营确认样品是否选中')))))) 
+            AND t0.end_time = (SELECT MAX(tt.end_time) FROM process_tasks tt WHERE tt.status = 2 
+                AND tt.process_id = p.process_id AND IF(p.process_code IN ('iptplc', 'iptplcxb'), 
+                    tt.title = '事业部1是否订货', IF(p.process_code IN ('zytplc', 'ziyantuipin'), 
+                        tt.title = '事业部一是否订货', IF(p.process_code IN ('sctgtplc', 'shichangfenxituipin'), 
+                            tt.title IN ('事业部一是否订货1', '事业部一是否订货2'), 
+                            IF(p.process_code IN ('gystplc', 'gongyingshangtuipin'), tt.title = '事业部一审核市场分析', 
+                                tt.title IN ('事业部一是否选中', '事业部一是否加单', '事业部一样品是否选中') 
+                                OR ((p.dept LIKE '%拼多多%' OR p.dept LIKE '%跨境%' OR p.dept LIKE '%猫超%') 
+                                AND tt.title IN ('运营是否选中', '反选运营确认样品是否选中'))))))) 
+        LEFT JOIN process_tasks t1 ON t1.process_id = p.process_id AND t1.status = 2 
+            AND IF(p.process_code IN ('iptplc', 'iptplcxb'), t1.title = '事业部2是否订货', 
+                IF(p.process_code IN ('zytplc', 'ziyantuipin'), t1.title = '事业部二是否订货', 
+                    IF(p.process_code IN ('sctgtplc', 'shichangfenxituipin'), 
+                        t1.title IN ('事业部二是否订货1', '事业部二是否订货2'), 
+                        IF(p.process_code IN ('gystplc', 'gongyingshangtuipin'), t1.title = '事业部二审核市场分析', 
+                            t1.title IN ('事业部二是否选中', '事业部二是否加单', '事业部二样品是否选中') 
+                            OR ((p.dept LIKE '%京东%' OR p.dept LIKE '%抖音%' OR p.dept LIKE '%1688%' 
+                                OR p.dept LIKE '%唯品会%' OR p.dept LIKE '%得物%') 
+                            AND t1.title IN ('运营是否选中', '反选运营确认样品是否选中')))))) 
+            AND t1.end_time = (SELECT MAX(tt.end_time) FROM process_tasks tt 
+                WHERE tt.status = 2 AND tt.process_id = p.process_id 
+                    AND IF(p.process_code IN ('iptplc', 'iptplcxb'), tt.title = '事业部2是否订货', 
+                        IF(p.process_code IN ('zytplc', 'ziyantuipin'), tt.title = '事业部二是否订货', 
+                            IF(p.process_code IN ('sctgtplc', 'shichangfenxituipin'), 
+                                tt.title IN ('事业部二是否订货1', '事业部二是否订货2'), 
+                                IF(p.process_code IN ('gystplc', 'gongyingshangtuipin'), 
+                                    tt.title = '事业部二审核市场分析', 
+                                    tt.title IN ('事业部二是否选中', '事业部二是否加单', '事业部二样品是否选中') 
+                                    OR ((p.dept LIKE '%京东%' OR p.dept LIKE '%抖音%' OR p.dept LIKE '%1688%' 
+                                        OR p.dept LIKE '%唯品会%' OR p.dept LIKE '%得物%') 
+                                    AND tt.title IN ('运营是否选中', '反选运营确认样品是否选中'))))))) 
+        LEFT JOIN process_tasks t2 ON t2.process_id = p.process_id AND t2.status = 2 
+            AND IF(p.process_code IN ('iptplc', 'iptplcxb'), t2.title = '事业部3是否订货', 
+                IF(p.process_code IN ('zytplc', 'ziyantuipin'), t2.title = '事业部三是否订货', 
+                    IF(p.process_code IN ('sctgtplc', 'shichangfenxituipin'), 
+                        t2.title IN ('事业部三是否订货1', '事业部三是否订货2'), 
+                        IF(p.process_code IN ('gystplc', 'gongyingshangtuipin'), t2.title = '事业部三审核市场分析', 
+                            t2.title IN ('事业部三是否选中', '事业部三是否加单', '事业部三样品是否选中') 
+                            OR ((p.dept LIKE '%天猫%' OR p.dept LIKE '%淘工厂%' OR p.dept LIKE '%小红书%') 
+                            AND t2.title IN ('运营是否选中', '反选运营确认样品是否选中')))))) 
+            AND t2.end_time = (SELECT MAX(tt.end_time) FROM process_tasks tt 
+                WHERE tt.status = 2 AND tt.process_id = p.process_id 
+                AND IF(p.process_code IN ('iptplc', 'iptplcxb'), tt.title = '事业部3是否订货', 
+                    IF(p.process_code IN ('zytplc', 'ziyantuipin'), tt.title = '事业部三是否订货', 
+                        IF(p.process_code IN ('sctgtplc', 'shichangfenxituipin'), 
+                            tt.title IN ('事业部三是否订货1', '事业部三是否订货2'), 
+                            IF(p.process_code IN ('gystplc', 'gongyingshangtuipin'), tt.title = '事业部三审核市场分析', 
+                                tt.title IN ('事业部三是否选中', '事业部三是否加单', '事业部三样品是否选中') 
+                                OR ((p.dept LIKE '%天猫%' OR p.dept LIKE '%淘工厂%' OR p.dept LIKE '%小红书%') 
+                                AND tt.title IN ('运营是否选中', '反选运营确认样品是否选中'))))))) 
+        LEFT JOIN process_tasks t4 ON t4.process_id = p.process_id AND  t4.status = 1 
+        LEFT JOIN process_tasks t5 ON t5.process_id = p.process_id AND t5.status = 2 
+            AND t5.title IN ('事业部1填写上架ID', '事业部一负责人填写上架链接', '事业部一填写上架ID', 
+                '事业部一填写上架链接ID', '事业部一填写上架ID1', '事业部一填写上架ID2') 
+            AND t5.end_time = (SELECT MAX(tt.end_time) FROM process_tasks tt 
+                WHERE tt.process_id = p.process_id AND tt.title = t5.title AND tt.status = 2) 
+        LEFT JOIN process_tasks t6 ON t6.process_id = p.process_id AND t6.status = 2
+            AND t6.title IN ('事业部2填写上架ID', '事业部二负责人填写上架ID', '事业部二填写上架ID', '事业部二填写上架ID1', 
+                '事业部二填写上架ID2') 
+            AND t6.end_time = (SELECT MAX(tt.end_time) FROM process_tasks tt 
+                WHERE tt.process_id = p.process_id AND tt.title = t6.title AND tt.status = 2) 
+        LEFT JOIN process_tasks t7 ON t7.process_id = p.process_id AND t7.status = 2
+            AND t7.title IN ('事业部3填写上架ID', '事业部三负责人填写上架ID', '事业部三填写上架ID', '事业部三填写上架ID1', 
+                '事业部三填写上架ID2') 
+            AND t7.end_time = (SELECT MAX(tt.end_time) FROM process_tasks tt 
+                WHERE tt.process_id = p.process_id AND tt.title = t7.title AND tt.status = 2) 
+        LEFT JOIN process_info v15 on v15.process_id = p.process_id 
+            AND v15.field IN ('F0fpmc8rlpolpbc', 'Frwsmc8rphh2rsc', 'Fylnmc8v515dm8c', 'Fwyzmc8v5dpdnxc', 
+                'F6mfmc8v5qefpmc') 
+        LEFT JOIN process_info v16 ON v16.process_id = p.process_id 
+            AND v16.field IN ('Cfidpl3a7e5tm', 'Cfidpj2f10qqm', 'Cfidv84ga4ncy') 
+        LEFT JOIN process_info v17 ON v17.process_id = p.process_id AND v17.field IN ('Foaomaknt8tlbec') 
+        WHERE p.process_code IN ('sctgtplc', 'shichangfenxituipin', 'iptplc', 'iptplcxb', 'zytplc', 'ziyantuipin', 
+            'gystplc', 'gongyingshangtuipin', 'fttplc', 'fantuituipin') 
+            AND p.start_time BETWEEN ? AND ? AND p.title NOT LIKE '%测试%' 
+        GROUP BY p.process_id, p.username, p.start_time, v16.content, v17.content, p.process_code, v15.content, 
+            t.username, v12.content, p.dept, p.status, t0.end_time, t1.end_time, t2.end_time, t5.end_time, 
+            t6.end_time, t7.end_time, t4.title, t4.username, t4.dept, t4.start_time, p.end_time, t.start_time 
+        ORDER BY p.start_time, t.start_time`
+    const result = await query(sql, [start, end])
+    return result || []
+}
+
+processesRepo.getFirstDivisionSelection = async (id) => {
+    const sql = `SELECT content, field FROM process_info WHERE process_id = ? 
+        AND (field IN ('Fzmjma3pe3tnclc', 'Fmtama25a3lrcwc', 'Flp9mbuigrxjqsc', 'Ffwtma3nntxjn9c') 
+            OR (field = 'F6c5mbuidfzfqjc' AND content = '未选中'))`
+    const result = await query(sql, [id])
+    return result || []
+}
+
+processesRepo.getFirstDivisionSelection1 = async (id) => {
+    const sql = `SELECT content, field FROM process_info WHERE process_id = ? 
+        AND (field IN ('Fzmjma3pe3tnclc', 'Fmtama25a3lrcwc', 'Flp9mbuigrxjqsc', 'Ffwtma3nntxjn9c', 'Fy6xma3jakboekc') 
+            OR (field IN ('Fxfrma3j75fse7c', 'F6c5mbuidfzfqjc') AND content = '未选中'))`
+    const result = await query(sql, [id])
+    return result || []
+}
+
+processesRepo.getSecondDivisionSelection = async (id) => {
+    const sql = `SELECT content, field FROM process_info WHERE process_id = ? 
+        AND (field IN ('F2lmma3petqpcwc', 'Fkyuma25az2ud8c', 'Fexembuihiymqvc', 'Fnixma3nox6onmc') 
+            OR (field = 'F64jmbuie9olqmc' AND content = '未选中'))`
+    const result = await query(sql, [id])
+    return result || []
+}
+
+processesRepo.getSecondDivisionSelection1 = async (id) => {
+    const sql = `SELECT content, field FROM process_info WHERE process_id = ? 
+        AND (field IN ('F2lmma3petqpcwc', 'Fkyuma25az2ud8c', 'Fexembuihiymqvc', 'Fnixma3nox6onmc', 'Fy6xma3jakboekc') 
+            OR (field IN ('Fxfrma3j75fse7c', 'F64jmbuie9olqmc') AND content = '未选中'))`
+    const result = await query(sql, [id])
+    return result || []
+}
+
+processesRepo.getThirdDivisionSelection = async (id) => {
+    const sql = `SELECT content, field FROM process_info WHERE process_id = ? 
+        AND (field IN ('F34mma3pf0egd0c', 'Fiaama25b6zidec', 'F8y4mbuii8dtqyc', 'Fwtjma3np5o0nuc') 
+            OR (field = 'Fxkxmbuiecz2qpc' AND content = '未选中'))`
+    const result = await query(sql, [id])
+    return result || []
+}
+
+processesRepo.getThirdDivisionSelection1 = async (id) => {
+    const sql = `SELECT content, field FROM process_info WHERE process_id = ? 
+        AND (field IN ('F34mma3pf0egd0c', 'Fiaama25b6zidec', 'F8y4mbuii8dtqyc', 'Fwtjma3np5o0nuc', 'Fy6xma3jakboekc') 
+            OR (field IN ('Fxfrma3j75fse7c', 'Fxkxmbuiecz2qpc') AND content = '未选中'))`
+    const result = await query(sql, [id])
+    return result || []
 }
 
 module.exports = processesRepo

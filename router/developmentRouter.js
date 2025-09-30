@@ -59,4 +59,6 @@ router.get('/first-info', developmentApi.getfirstInfo)
 router.get('/process/running-task', developmentApi.getProcessRunningTask)
 router.get('/process-info', developmentApi.getProcessInfo)
 router.get('/process-detail', developmentApi.getProcessDetail)
+
+router.get('/develop-process', developmentApi.getDevelopProcess)
 module.exports = router
