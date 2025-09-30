@@ -5,6 +5,9 @@ const rivalsKeywordsService = {}
 rivalsKeywordsService.get = async (params) => {
     let result = []
     result = await rivalsKeywordsRepo.get(params.plan_id)
+    for (let i = 0; i < result.length; i++) {
+        result[i].other_info = result[i].other_info ? JSON.parse(result[i].other_info) : null
+    }
     return result
 }
 
@@ -38,7 +41,7 @@ rivalsKeywordsService.create = async (params) => {
             if (params.data[i][j] instanceof String)
                 params.data[i][j] = params.data[i][j].trim()
         }
-        params.data[i][14] = i
+        params.data[i][params.data[i].length] = i
         for (let j = 0; j < info.length; j++) {
             if (params.data[i][2] == info[j][2] && params.data[i][11] == info[j][11]) {
                 updates.push(params.data[i])
@@ -71,6 +74,17 @@ rivalsKeywordsService.create = async (params) => {
     //新增竞品数据&关键词
     let insertNames = {}
     for (let i = 0; i < inserts.length; i++) {
+        let other_info = []
+        for (let j = 14; j < inserts[i].length - 1; j++) {
+            other_info.push({
+                label: params.data[0][j],
+                value: inserts[i][j],
+                field: `field${j}`
+            })
+        }
+        inserts[i][14] = inserts[i][inserts[i].length - 1]
+        inserts[i].splice(15, inserts[i].length - 15)
+        inserts[i][15] = JSON.stringify(other_info)
         if (!insertNames[inserts[i][2]]) insertNames[inserts[i][2]] = [inserts[i]]
         else insertNames[inserts[i][2]].push(inserts[i])
     }
@@ -122,12 +136,24 @@ rivalsKeywordsService.create = async (params) => {
                 insertNames[index][i][11], 
                 insertNames[index][i][12], 
                 insertNames[index][i][13],                
-                insertNames[index][i][14]])
+                insertNames[index][i][14],
+                insertNames[index][i][15]])
         }
     }
     //更新竞品数据&关键词
     let updateNames = {}
     for (let i = 0; i < updates.length; i++) {
+        let other_info = []
+        for (let j = 14; j < updates[i].length - 1; j++) {
+            other_info.push({
+                label: params.data[0][j],
+                value: updates[i][j],
+                field: `field${j}`
+            })
+        }
+        updates[i][14] = updates[i][updates[i].length - 1]
+        updates[i].splice(15, updates[i].length - 15)
+        updates[i][15] = JSON.stringify(other_info)
         if (!updateNames[updates[i][2]]) updateNames[updates[i][2]] = [updates[i]]
         else updateNames[updates[i][2]].push(updates[i])
     }
@@ -151,6 +177,7 @@ rivalsKeywordsService.create = async (params) => {
                 updateNames[index][i][12], 
                 updateNames[index][i][13], 
                 updateNames[index][i][14], 
+                updateNames[index][i][15], 
                 params.plan_id,
                 updateNames[index][i][11], 
                 params.plan_id,

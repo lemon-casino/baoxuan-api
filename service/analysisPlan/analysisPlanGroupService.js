@@ -5,6 +5,9 @@ const analysisPlanGroupService = {}
 analysisPlanGroupService.get = async (params) => {
     let result = []
     result = await analysisPlanGroupRepo.get(params.plan_id)
+    for (let i = 0; i < result.length; i++) {
+        result[i].other_info = result[i].other_info ? JSON.parse(result[i].other_info) : null
+    }
     return result
 }
 
@@ -34,7 +37,7 @@ analysisPlanGroupService.create = async (params) => {
             if (params.data[i][j] instanceof String)
                 params.data[i][j] = params.data[i][j].trim()
         }
-        params.data[i][10] = i
+        params.data[i][params.data[i].length] = i
         for (let j = 0; j < info.length; j++) {
             if (params.data[i][0] == info[j][0] && params.data[i][3] == info[j][3]) {
                 updates.push(params.data[i])
@@ -67,6 +70,17 @@ analysisPlanGroupService.create = async (params) => {
     //新增分组&关联的竞品数据
     let insertNames = {}
     for (let i = 0; i < inserts.length; i++) {
+        let other_info = []
+        for (let j = 10; j < inserts[i].length - 1; j++) {
+            other_info.push({
+                label: params.data[0][j],
+                value: inserts[i][j],
+                field: `field${j}`
+            })
+        }
+        inserts[i][10] = inserts[i][inserts[i].length - 1]
+        inserts[i].splice(11, inserts[i].length - 11)
+        inserts[i][11] = JSON.stringify(other_info)
         if (!insertNames[inserts[i][0]]) insertNames[inserts[i][0]] = [inserts[i]]
         else insertNames[inserts[i][0]].push(inserts[i])
     }
@@ -82,12 +96,12 @@ analysisPlanGroupService.create = async (params) => {
             ])            
         } else {
             group_id = count[0].id
-            await analysisPlanGroupRepo.updateByPlanIdAndName([
+            await analysisPlanGroupRepo.updateByPlanIdAndName(
+                params.plan_id,
+                index,
                 insertNames[index][0][1],
                 insertNames[index][0][10],
-                params.plan_id,
-                insertNames[index][0][0],
-            ])
+            )
         }
         for (let i = 0; i < insertNames[index].length; i++) {
             let rival = await rivalsRepo.getByPlanIdAndGoodsId(params.plan_id, insertNames[index][i][3])
@@ -111,12 +125,24 @@ analysisPlanGroupService.create = async (params) => {
                 null, 
                 null])
             else rival_id = rival[0].id
-            await analysisPlanGroupRepo.addRivals(params.plan_id, group_id, rival_id)
+            await analysisPlanGroupRepo.addRivals(params.plan_id, group_id, rival_id, 
+                insertNames[index][i][10], insertNames[index][i][11])
         }
     }
     //更新分组&关联的竞品信息
     let updateNames = {}
     for (let i = 0; i < updates.length; i++) {
+        let other_info = []
+        for (let j = 10; j < updates[i].length - 1; j++) {
+            other_info.push({
+                label: params.data[0][j],
+                value: updates[i][j],
+                field: `field${j}`
+            })
+        }
+        updates[i][10] = updates[i][updates[i].length - 1]
+        updates[i].splice(11, updates[i].length - 11)
+        updates[i][11] = JSON.stringify(other_info)
         if (!updateNames[updates[i][0]]) updateNames[updates[i][0]] = [updates[i]]
         else updateNames[updates[i][0]].push(updates[i])
     }
@@ -137,6 +163,8 @@ analysisPlanGroupService.create = async (params) => {
                 updateNames[index][i][9],
                 params.plan_id,
                 updateNames[index][i][3]])
+            await analysisPlanGroupRepo.updateRivals(params.plan_id, group_info[updateNames[index][i][10] - 1].group_id, 
+                group_info[updateNames[index][i][10] - 1].rival_id, updateNames[index][i][11])
         }
     }
     return true

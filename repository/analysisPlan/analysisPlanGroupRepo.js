@@ -2,8 +2,8 @@ const { query } = require('../../model/dbConn')
 const analysisPlanGroupRepo = {}
 
 analysisPlanGroupRepo.get = async (plan_id) => {
-    let sql = `SELECT rg.rival_id, rg.group_id, g.name AS group_name, g.remark, r.name, r.goods_id, 
-            r.category, r.shop_name, r.shop_type, r.monthly_sales, r.price, r.picture 
+    let sql = `SELECT rg.rival_id, rg.group_id, rg.other_info, g.name AS group_name, g.remark, r.name, 
+            r.goods_id, r.category, r.shop_name, r.shop_type, r.monthly_sales, r.price, r.picture 
         FROM analysis_plans_group g LEFT JOIN rivals_group rg ON rg.group_id = g.id 
         LEFT JOIN rivals r ON r.id = rg.rival_id WHERE g.plan_id = ? 
         ORDER BY g.sort, g.id DESC, rg.sort, rg.id DESC`
@@ -43,9 +43,15 @@ analysisPlanGroupRepo.deleteByPlanId = async (plan_id) => {
     return result.affectedRows ? true:false
 }
 
-analysisPlanGroupRepo.addRivals = async (plan_id, group_id, rival_id, sort) => {
-    let sql = `INSERT INTO rivals_group(plan_id, rival_id, group_id, sort) VALUES(?,?,?,?)`
-    const result = await query(sql, [plan_id, rival_id, group_id, sort])
+analysisPlanGroupRepo.addRivals = async (plan_id, group_id, rival_id, sort, other_info) => {
+    let sql = `INSERT INTO rivals_group(plan_id, rival_id, group_id, sort, other_info) VALUES(?,?,?,?,?)`
+    const result = await query(sql, [plan_id, rival_id, group_id, sort, other_info])
+    return result.affectedRows ? true:false
+}
+
+analysisPlanGroupRepo.updateRivals = async (plan_id, group_id, rival_id, other_info) => {
+    let sql = `UPDATE rivals_group SET other_info = ? WHERE plan_id = ? AND group_id = ? AND rival_id = ?`
+    const result = await query(sql, [other_info, plan_id, group_id, rival_id])
     return result.affectedRows ? true:false
 }
 
