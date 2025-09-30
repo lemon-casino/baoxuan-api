@@ -162,4 +162,6 @@ router.post('/initiateprocess',operationApi.initiateprocess)
 router.post('/tmall-goods/update-link-stage', operationApi.updateTMLinkStage)
 router.get('/goods-info-log', operationApi.goodslog)
 
+//天猫执行数据
+router.get('/tmall-info', operationApi.getTmallInfo)
 module.exports = router

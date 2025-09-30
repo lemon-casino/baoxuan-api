@@ -1650,4 +1650,29 @@ processesRepo.getThirdDivisionSelection1 = async (id) => {
     return result || []
 }
 
+processesRepo.getTmallInfo = async (start, end) => {
+    const sql = `SELECT p.process_id, p.title, p.username AS start, pi.content AS user, 
+            (CASE WHEN p.process_code IN ('gystplc', 'gongyingshangtuipin') THEN '供应商推品' 
+                WHEN p.process_code IN ('fantuituipin', 'fttplc') THEN '反推推品' 
+                WHEN p.process_code = 'form-40' THEN '天猫运营执行流程'
+                ELSE '新版-视觉流程' END) AS type, pi1.content AS brief_name1, 
+            (CASE p.status WHEN 1 THEN '运行中' ELSE '已通过' END) AS process_status, 
+            pi2.content AS division, pi3.content AS brief_name2, pi4.content AS start1,
+            pi5.content AS user1, pi6.content AS project, pi7.content AS task_name, pi8.content AS operator
+        FROM processes p LEFT JOIN process_info pi ON pi.process_id = p.process_id AND pi.field = 'Cfidrocr4b21o'
+        LEFT JOIN process_info pi1 ON pi1.process_id = p.process_id AND pi1.field = 'Fncjma23ezl8aec'
+        LEFT JOIN process_info pi2 ON pi2.process_id = p.process_id AND pi2.field = 'Fj1ama2csbpoabc'
+        LEFT JOIN process_info pi3 ON pi3.process_id = p.process_id AND pi3.field = 'F6w0ma2d2mnxakc'
+        LEFT JOIN process_info pi4 ON pi4.process_id = p.process_id AND pi4.field = 'Cfidbxyi2vqjo'
+        LEFT JOIN process_info pi5 ON pi5.process_id = p.process_id AND pi5.field = 'selectField_liigx7wc'
+        LEFT JOIN process_info pi6 ON pi6.process_id = p.process_id AND pi6.field = 'textField_lxkb9f8v'
+        LEFT JOIN process_info pi7 ON pi7.process_id = p.process_id AND pi7.field = 'radioField_lxkb9f93'
+        LEFT JOIN process_info pi8 ON pi8.process_id = p.process_id AND pi8.field = 'employeeField_liigx7wd'
+        WHERE p.status IN (1,2,3) AND p.start_time BETWEEN ? AND ? 
+            AND p.process_code IN ('gystplc', 'gongyingshangtuipin', 'fantuituipin', 'fttplc', 'form-40', 'xbsjlc') 
+        ORDER BY p.start_time DESC`
+    const result = await query(sql, [start, end])
+    return result || []
+}
+
 module.exports = processesRepo

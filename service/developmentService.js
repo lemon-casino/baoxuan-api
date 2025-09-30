@@ -4801,7 +4801,7 @@ developmentService.getDevelopProcess = async (start, end) => {
     for (let i = 0; i < info.length; i++) {
         let select1, select2, select3
         info[i].image = info[i].image ? (info[i].image.indexOf('[') != -1 ? JSON.parse(info[i].image)[0] : info[i].image) : null
-        info[i].link = `http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=${info[i].process_id}`
+        info[i]['link'] = `http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=${info[i].process_id}`
         if (info[i].categories) {
             info[i].categories = JSON.parse(info[i].categories)
             info[i]['first_category'] = info[i].categories[0]

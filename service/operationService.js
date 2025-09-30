@@ -5766,6 +5766,15 @@ const goodslog = async(goods_id, startDate, endDate)=>{
     let result = goodsOtherInfoRepo.goodslog(goods_id, start, end)
     return result 
 }
+
+const getTmallInfo = async (start, end) => {
+    const result = await processesRepo.getTmallInfo(start, end)
+    for (let i = 0; i < result.length; i++) {
+        result[i]['link'] = `http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=${result[i].process_id}`
+    }
+    return result
+}
+
 module.exports = {
     getDataStats,
     getPromotionStats,
@@ -5845,5 +5854,6 @@ module.exports = {
     saveOperatelog,
     initiateprocess,
     updateTMLinkStage,
-    goodslog
+    goodslog,
+    getTmallInfo
 }
