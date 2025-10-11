@@ -401,6 +401,11 @@ const getspiral = async(goods_id)=>{
     return result
 }
 
+const getoperatelog = async(params)=>{
+    result = await dianShangOperationAttributeRepo.getoperatelog(params)
+    return result
+}
+
 module.exports = {
     getPagingOperateAttributes,
     getProductAttrDetails,
@@ -416,5 +421,6 @@ module.exports = {
     Insertlog,
     Insertcalculate,
     getspiral,
-    getGoods
+    getGoods,
+    getoperatelog
 }
