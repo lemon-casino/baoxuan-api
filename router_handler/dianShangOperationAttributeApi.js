@@ -699,6 +699,16 @@ const exportGoodsMonthlySalesTarget = async (req, res, next) => {
     }
 }
 
+const getoperatelog = async(req, res, next) =>{
+    try {
+        const result = await dianShangOperationAttributeService.getoperatelog(req.query)
+        if (result) return res.send(biResponse.success(result))
+        return res.send(biResponse.createFailed())
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getPagingOperateAttributes,
     getProductAttrDetails,
@@ -715,5 +725,6 @@ module.exports = {
     updatetGoodsMonthlySalesTarget,
     Insertcalculate,
     getOperateAttributes,
-    getspiral
+    getspiral,
+    getoperatelog
 }

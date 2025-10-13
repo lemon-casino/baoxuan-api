@@ -45,4 +45,5 @@ router.post('/goods-monthly-sales-update',dianShangOperationAttributeApi.updatet
 // 螺旋目标保存
 router.post('/save_calculate',dianShangOperationAttributeApi.Insertcalculate)
 router.get('/get_spiral',dianShangOperationAttributeApi.getspiral)
+router.get('/get_operate_log',dianShangOperationAttributeApi.getoperatelog)
 module.exports = router

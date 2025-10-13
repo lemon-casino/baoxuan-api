@@ -398,6 +398,74 @@ const getTMLinkStage = async () => {
     return result
 }
 
+const getoperatelog = async(params)=>{
+    let page = parseInt(params.currentPage)
+    let size = parseInt(params.pageSize)
+    let offset = (page - 1) * size
+    let result = {
+        currentPage: params.currentPage,
+        pageSize: params.pageSize,
+        data: [],
+        total: 0,
+        sum: 0
+    }
+    let sql = `select * from (SELECT max(IF(field='textField_lma827od',content,'')) AS goods_id
+		,CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=',process_id) AS operate
+		,DATE_FORMAT(min(create_time),'%Y-%m-%d') AS operate_date
+		,CONCAT('</br>优化流程</br>',GROUP_CONCAT(CONCAT(title,'：',content) SEPARATOR '</br>')) AS operate_log
+		,IF(field='employeeField_lma827ok',CONCAT(title,'：',content),'') as user
+    FROM process_info
+    WHERE field IN ('checkboxField_m11r277t','textareaField_m11spnq2','textField_lma827od')
+    AND create_time BETWEEN '${params.startDate}' AND '${params.endDate}'
+    GROUP BY process_id,user
+    UNION ALL
+    SELECT max(IF(field='textField_liihs7kw',content,'')) AS goods_id
+            ,CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=',process_id) AS operate
+            ,DATE_FORMAT(min(create_time),'%Y-%m-%d') as operate_date
+            ,CONCAT('</br>优化流程</br>',GROUP_CONCAT(CONCAT(title,'：',content) SEPARATOR '</br>')) AS operate_log
+            ,IF(field='employeeField_liihs7l0',CONCAT(title,'：',content),'') as user
+    FROM process_info
+    WHERE field IN ('radioField_lx30hv7y','radioField_lwuecm6c','employeeField_lx30qkbt','textareaField_lx30jx3p','selectField_liihs7kz',
+    'multiSelectField_lwufb7oy','textareaField_m6072fua','dateField_m6072fu9','imageField_liihs7l2','textareaField_lxmkr1u0','textField_liihs7kw')
+    AND create_time BETWEEN '${params.startDate}' AND '${params.endDate}'
+    GROUP BY process_id,user
+    UNION ALL
+    SELECT goods_id
+            ,source AS operate
+            ,date_format(operate_date,'%Y-%m-%d') AS operate_date
+            ,CONCAT(IFNULL(subtype,'(空)'),':',IFNULL(old_value,'(空)'),'->',IFNULL(new_value,'(空)')) AS operate_log
+            ,user
+    FROM operate_log
+    WHERE operate_date BETWEEN '${params.startDate}' AND '${params.endDate}' AND source != '数据面板操作日志'
+    UNION ALL
+    SELECT goods_id
+            ,source AS operate
+            ,operate_date
+            ,CONCAT(subtype,'</br>',new_value) AS operate_log
+            ,user
+    FROM operate_log
+    WHERE operate_date BETWEEN '${params.startDate}' AND '${params.endDate}' AND source = '数据面板操作日志' ) as a 
+    WHERE a.operate is not null`
+
+    let sql1= `select count(1) as count from (${sql} )as a `
+    let data1 = await query(sql1)
+    result.total = data1[0].count
+    if(params.operate != ''){
+        if(params.operate=='优化流程'){
+            sql = `${sql} AND a.operate like '%http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=%'`
+        }else{
+            sql = `${sql} AND a.operate like '%${params.operate}%'`
+        }
+    }
+    if(params.goodsId != ''){
+        sql = `${sql} AND a.goods_id like '%${params.goodsId}%'`
+    }
+    sql = `${sql} LIMIT ${offset}, ${size}`
+    let data = await query(sql)
+    result.data = data
+    return result
+}
+
 module.exports = {
     getProductAttrDetails,
     getShopNameAttrDetails,
@@ -426,6 +494,7 @@ module.exports = {
     Insertcalculate,
     getspiral,
     batchUpdate,
-    getTMLinkStage
+    getTMLinkStage,
+    getoperatelog
 }
 
