@@ -4820,9 +4820,11 @@ developmentService.getDevelopProcess = async (start, end) => {
             info[i]['process_node'] = '视觉节点中'
         } else if (info[i].process_status == '审批通过') {
             info[i]['process_node'] = '完成'
-        }
+        }        
+        info[i]['is_select'] = '流程中'
         if (['已取消', '审批不通过'].includes(info[i].process_status)) {
             info[i]['process_node'] = '流程终止'
+            info[i]['is_select'] = '流程终止'
             info[i]['first_select'] = '流程终止'
             info[i]['second_select'] = '流程终止'
             info[i]['third_select'] = '流程终止'
@@ -4949,6 +4951,10 @@ developmentService.getDevelopProcess = async (start, end) => {
                 info[i]['third_select'] = '流程中'
                 info[i]['third_time'] = ''
             }
+            if (info[i]['first_select'] == '选中' || info[i]['second_select'] == '选中' || 
+                info[i]['third_select'] == '选中') info[i]['is_select'] = '选中'
+            else if (info[i]['first_select'] == '未选中' && info[i]['second_select'] == '未选中' && 
+                info[i]['third_select'] && '未选中') info[i]['is_select'] = '未选中'
         }
         data1.push({
             start_time: info[i].start_time,
