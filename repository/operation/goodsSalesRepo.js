@@ -808,8 +808,8 @@ goodsSalesRepo.getSalesBySpuAndSkuId = async (start, end, productType, addSales,
 }
 
 goodsSalesRepo.updatemonth6 = async (day,type,column) =>{
-    let sql = `UPDATE inventory_attributes a LEFT JOIN (
-        select sku_code,SUM(sale_qty) as sale_qty  from (
+    let result1
+    let sql = `select sku_code,SUM(sale_qty) as sale_qty  from (
             SELECT sku_code,SUM(sale_qty) as sale_qty  
             FROM goods_sale_info 
             WHERE date >= DATE_SUB(DATE(NOW()),INTERVAL ${day} ${type}) 
@@ -832,30 +832,40 @@ goodsSalesRepo.updatemonth6 = async (day,type,column) =>{
             )as a
             where a.商品编码 is not null  and 数量 is not null
             GROUP BY a.商品编码
-        )as a GROUP BY sku_code) b
-        on a.sku_code = b.sku_code
-        SET a.${column} = IFNULL(b.sale_qty,0),a.update_time = CURRENT_TIMESTAMP`
+        )as a GROUP BY sku_code`
     const result = await query(sql)
-    return result
+    for (i=0;i<=result.length;i++){
+        sql = `UPDATE inventory_attributes 
+        SET ${column} = ${result[i].sale_qty},update_time = CURRENT_TIMESTAMP 
+        where upper(sku_code) = upper('${result[i].sku_code}')`
+        result1 = await query(sql)
+    }
+    return result1
 }
 
 
 goodsSalesRepo.updateNJsaleqty = async (day,column) =>{
-    let sql = `UPDATE inventory_attributes as a left JOIN(
-        SELECT sku_code,SUM(sale_qty) as sale_qty  
+    let result1
+    let sql = `SELECT sku_code,SUM(sale_qty) as sale_qty  
         FROM goods_sale_info 
         WHERE date >= DATE_SUB(DATE(NOW()),INTERVAL ? DAY) 
         AND shop_name not in ('京东自营-厨具' ,'京东自营-日用')
-        GROUP BY sku_code  ) as b
-            ON a.sku_code = b.sku_code
-        SET ${column} = IFNULL(b.sale_qty,0),a.update_time = CURRENT_TIMESTAMP`
+        GROUP BY sku_code`
     const result = await query(sql,[day])
+    for (i=0;i<=result.length;i++){
+        sql = `UPDATE inventory_attributes 
+        SET ${column} = ${result[i].sale_qty},update_time = CURRENT_TIMESTAMP
+        where upper(sku_code) = upper('${result[i].sku_code}')`
+        result1 = await query(sql)
+    }
+    let 
+    
     return result
 }
 
 goodsSalesRepo.updateJDsaleqty = async (day,column) =>{
-    let sql = `UPDATE inventory_attributes as a left JOIN(
-        select a.商品编码 as sku_code ,SUM(a.数量) as sale_qty  from (
+    let result1
+    let sql = `select a.商品编码 as sku_code ,SUM(a.数量) as sale_qty  from (
         select IFNULL(c.商品编码,a.编码) as '商品编码'
                 ,IF(c.数量 is not NULL,a.数量*c.数量,a.数量) as '数量' 
         from (
@@ -870,16 +880,20 @@ goodsSalesRepo.updateJDsaleqty = async (day,column) =>{
         on a.编码 = c.组合商品编码
         )as a
         where a.商品编码 is not null  and 数量 is not null
-        GROUP BY a.商品编码) as b
-            ON a.sku_code = b.sku_code
-        SET ${column} = IFNULL(b.sale_qty,0),a.update_time = CURRENT_TIMESTAMP`
+        GROUP BY a.商品编码`
     const result = await query(sql,[day,day])
-    return result
+    for (i=0;i<=result.length;i++){
+        sql = `UPDATE inventory_attributes 
+        SET ${column} = ${result[i].sale_qty},update_time = CURRENT_TIMESTAMP 
+        where upper(sku_code) = upper('${result[i].sku_code}')`
+        result1 = await query(sql)
+    }
+    return result1
 }
 
 goodsSalesRepo.updateinventory = async(day,num,total_num) =>{
-    const sql = `UPDATE inventory_attributes as a LEFT JOIN( 
-        select 商品编码,SUM(在仓库存) as '在仓库存',SUM(总库存) as '总库存' from (
+    let result1
+    let sql = `select 商品编码,SUM(在仓库存) as '在仓库存',SUM(总库存) as '总库存' from (
         SELECT a.商品编码
             ,IFNULL(a.主仓实际库存数,0) - IFNULL(a.订单占有数,0)- IFNULL(a.进货仓库存,0) - IFNULL(c.南京仓京东自备,0) 
             - IFNULL(c.\`COUPANG/猫超南京仓\`,0)  as '在仓库存'
@@ -932,41 +946,57 @@ goodsSalesRepo.updateinventory = async(day,num,total_num) =>{
         ) as a
         where a.商品编码 is not null
         GROUP BY a.商品编码
-        ) as a GROUP BY 商品编码
-        ) as b
-        on a.sku_code = b.商品编码
-        SET ${num} = IF(在仓库存 is not null,在仓库存,0) , 
-        ${total_num}= IF(总库存 is not null,总库存,0) ,update_time = CURRENT_TIMESTAMP`
+        ) as a GROUP BY 商品编码`
     const result = await query(sql,[day,day,day])
-    const sql1 = `UPDATE inventory_attributes as a left JOIN(
-        select a.商品编码
-            ,sum(京东仓库存) as '在仓库存'
-            ,sum(京东仓库存) + sum(京东在途库存) as '总库存' 
+    for (i=0;i<=result.length;i++){
+        sql = `UPDATE inventory_attributes 
+        SET ${num} = ${result[i].在仓库存} , 
+        ${total_num}= ${result[i].在仓库存} ,update_time = CURRENT_TIMESTAMP
+        where upper(sku_code) = upper('${result[i].商品编码}')`
+        result1 = await query(sql)
+    }
+    return result1
+}
+
+goodsSalesRepo.updateinventory1 = async()=>{
+    let result1
+    let sql = `select a.商品编码
+			,sum(京东仓库存) as '在仓库存'
+			,sum(京东仓库存) + sum(京东在途库存) as '总库存'
+			,sum(京东在途库存) as '在途库存'
         from(
         select IFNULL(c.商品编码,a.商品编码) as '商品编码'
-            ,IFNULL(IF(c.数量 is NULL,a.京东仓库存,a.京东仓库存*c.数量),0) as '京东仓库存'
-            ,IFNULL(IF(c.数量 is NULL,a.京东在途库存,a.京东在途库存*c.数量),0) as '京东在途库存' from (
-            select b.code as '商品编码',a.* FROM(
-                select SKU
-                    ,全国现货库存 as '京东仓库存'
-                    ,全国采购在途数量 as '京东在途库存' 
-                from danpin.inventory_jdzz 
-                where 时间 =  DATE_SUB(DATE(NOW()),INTERVAL 1 DAY)
+                ,IFNULL(IF(c.数量 is NULL,a.京东仓库存,a.京东仓库存*c.数量),0) as '京东仓库存'
+                ,IFNULL(IF(c.数量 is NULL,a.京东在途库存,a.京东在途库存*c.数量),0) as '京东在途库存' from (
+                select b.code as '商品编码',a.* FROM(
+                        select SKU
+                                ,全国现货库存 as '京东仓库存'
+                                ,全国采购在途数量 as '京东在途库存' 
+                        from danpin.inventory_jdzz 
+                        where 时间 =  DATE_SUB(DATE(NOW()),INTERVAL 1 DAY)
+                        ) as a
+                        LEFT JOIN bi_serve.dianshang_operation_attribute as b
+                        on a.SKU=b.sku_id
                 ) as a
-                LEFT JOIN bi_serve.dianshang_operation_attribute as b
-                on a.SKU=b.sku_id
-            ) as a
-            LEFT JOIN danpin.combination_product_code as c
-            on a.商品编码 = c.组合商品编码
-            WHERE a.商品编码 is not null
+                LEFT JOIN danpin.combination_product_code as c
+                on a.商品编码 = c.组合商品编码
+                WHERE a.商品编码 is not null
         ) as a
         where a.商品编码 is not null
-        GROUP BY a.商品编码) as b
-        ON a.sku_code = b.商品编码
-        SET a.jdtotal_num = IFNULL(b.总库存,0),update_time = CURRENT_TIMESTAMP`
-    const result1 = await query(sql1)
-    const sql2 = `UPDATE inventory_attributes as a left JOIN(
-    SELECT a.商品编码
+        GROUP BY a.商品编码`
+    const result = await query(sql)
+    for (i=0;i<=result.length;i++){
+        sql = `UPDATE inventory_attributes 
+        SET jd_num = ${result[i].总库存},jd_transit = ${result[i].在途库存},update_time = CURRENT_TIMESTAMP
+        where upper(sku_code) = upper('${result[i].商品编码}')`
+        result1 = await query(sql)
+    }
+    return result1
+}
+
+goodsSalesRepo.updateinventory2 = async()=>{
+    let result1
+    let sql = ` SELECT a.商品编码
             ,IFNULL(a.主仓实际库存数,0) - IFNULL(a.订单占有数,0)- IFNULL(a.进货仓库存,0)- IFNULL(c.\`COUPANG/猫超南京仓\`,0)  as '在仓库存'
             , IFNULL(a.采购在途数,0) as '采购在途'
         FROM (
@@ -991,11 +1021,15 @@ goodsSalesRepo.updateinventory = async(day,num,total_num) =>{
         FROM danpin.goods_kucun_fen WHERE 统计日期 =  DATE_SUB(DATE(NOW()),INTERVAL 1 DAY)
         GROUP BY 商品编码
         ) as c
-        on a.商品编码=c.商品编码) as b
-    ON a.sku_code = b.商品编码
-    SET a.transit = IFNULL(b.采购在途,0),a.nj_num = IFNULL(b.在仓库存,0),update_time = CURRENT_TIMESTAMP`
-    const result2 = await query(sql2)
-    return result
+        on a.商品编码=c.商品编码`
+    const result = await query(sql)
+    for (i=0;i<=result.length;i++){
+        sql = `UPDATE inventory_attributes 
+        SET nj_transit = ${result[i].采购在途},nj_num = ${result[i].在仓库存},update_time = CURRENT_TIMESTAMP
+        where upper(sku_code) = upper('${result[i].商品编码}')`
+        result1 = await query(sql)
+    }
+    return result1
 }
 
 goodsSalesRepo.updateTags = async() =>{
