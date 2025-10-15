@@ -834,7 +834,7 @@ goodsSalesRepo.updatemonth6 = async (day,type,column) =>{
             GROUP BY a.商品编码
         )as a GROUP BY sku_code`
     const result = await query(sql)
-    for (i=0;i<=result.length;i++){
+    for (i=0;i<=result.length -1;i++){
         sql = `UPDATE inventory_attributes 
         SET ${column} = ${result[i].sale_qty},update_time = CURRENT_TIMESTAMP 
         where upper(sku_code) = upper('${result[i].sku_code}')`
@@ -852,14 +852,12 @@ goodsSalesRepo.updateNJsaleqty = async (day,column) =>{
         AND shop_name not in ('京东自营-厨具' ,'京东自营-日用')
         GROUP BY sku_code`
     const result = await query(sql,[day])
-    for (i=0;i<=result.length;i++){
+    for (i=0;i<=result.length -1;i++){
         sql = `UPDATE inventory_attributes 
         SET ${column} = ${result[i].sale_qty},update_time = CURRENT_TIMESTAMP
         where upper(sku_code) = upper('${result[i].sku_code}')`
         result1 = await query(sql)
     }
-    let 
-    
     return result
 }
 
@@ -882,7 +880,7 @@ goodsSalesRepo.updateJDsaleqty = async (day,column) =>{
         where a.商品编码 is not null  and 数量 is not null
         GROUP BY a.商品编码`
     const result = await query(sql,[day,day])
-    for (i=0;i<=result.length;i++){
+    for (i=0;i<=result.length -1;i++){
         sql = `UPDATE inventory_attributes 
         SET ${column} = ${result[i].sale_qty},update_time = CURRENT_TIMESTAMP 
         where upper(sku_code) = upper('${result[i].sku_code}')`
@@ -948,7 +946,7 @@ goodsSalesRepo.updateinventory = async(day,num,total_num) =>{
         GROUP BY a.商品编码
         ) as a GROUP BY 商品编码`
     const result = await query(sql,[day,day,day])
-    for (i=0;i<=result.length;i++){
+    for (i=0;i<=result.length -1;i++){
         sql = `UPDATE inventory_attributes 
         SET ${num} = ${result[i].在仓库存} , 
         ${total_num}= ${result[i].在仓库存} ,update_time = CURRENT_TIMESTAMP
@@ -985,9 +983,9 @@ goodsSalesRepo.updateinventory1 = async()=>{
         where a.商品编码 is not null
         GROUP BY a.商品编码`
     const result = await query(sql)
-    for (i=0;i<=result.length;i++){
+    for (i=0;i<=result.length -1;i++){
         sql = `UPDATE inventory_attributes 
-        SET jd_num = ${result[i].总库存},jd_transit = ${result[i].在途库存},update_time = CURRENT_TIMESTAMP
+        SET jd_num = ${result[i].在仓库存},jd_transit = ${result[i].在途库存},update_time = CURRENT_TIMESTAMP
         where upper(sku_code) = upper('${result[i].商品编码}')`
         result1 = await query(sql)
     }
@@ -999,6 +997,7 @@ goodsSalesRepo.updateinventory2 = async()=>{
     let sql = ` SELECT a.商品编码
             ,IFNULL(a.主仓实际库存数,0) - IFNULL(a.订单占有数,0)- IFNULL(a.进货仓库存,0)- IFNULL(c.\`COUPANG/猫超南京仓\`,0)  as '在仓库存'
             , IFNULL(a.采购在途数,0) as '采购在途'
+            ,IFNULL(c.南京仓京东自备,0) as '京东云仓'
         FROM (
         select 商品编码
             ,SUM(主仓实际库存数) as '主仓实际库存数'
@@ -1023,9 +1022,9 @@ goodsSalesRepo.updateinventory2 = async()=>{
         ) as c
         on a.商品编码=c.商品编码`
     const result = await query(sql)
-    for (i=0;i<=result.length;i++){
+    for (i=0;i<=result.length -1 ;i++){
         sql = `UPDATE inventory_attributes 
-        SET nj_transit = ${result[i].采购在途},nj_num = ${result[i].在仓库存},update_time = CURRENT_TIMESTAMP
+        SET nj_transit = ${result[i].采购在途},nj_num = ${result[i].在仓库存},jd_colud = ${result[i].在仓库存}, update_time = CURRENT_TIMESTAMP
         where upper(sku_code) = upper('${result[i].商品编码}')`
         result1 = await query(sql)
     }
