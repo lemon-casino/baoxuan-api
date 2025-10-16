@@ -21,6 +21,13 @@ module.exports = [
     "/operation/goods-info/import",
     "/settlement/data/import",
     '/workflows-service/purchase-workflow',
+    '/stock/get-week-stats',
+    '/stock/sync-order',
     '/confirmation-notice/confirmNotice',
+    '/operation/goods-key-words/import',
+    '/operation/goods-dsr/import',
+    '/operation/goods-promotion-info/import',
+    '/operation/jdzz-info/import',
+    '/operation/jdzz-promotion-info/import',
     /^\/download\/.*/,
 ]

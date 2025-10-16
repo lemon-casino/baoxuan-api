@@ -1,6 +1,6 @@
 const { query } = require('../../model/dbConn')
 const tmallRepo = {}
-
+const mysql = require('mysql2/promise');
 tmallRepo.getTmallAs = async (servicer, start, end, lastStart, lastEnd, preStart, preEnd) => {
     let sql = `SELECT c1.servicer,
             c1.response_average AS response_average,
@@ -58,12 +58,9 @@ tmallRepo.insertTmallAs = async (count, info) => {
             score_num,
             dissatisfied_num,
             very_dissatisfied_num,
-            work_days) VALUES`
-    for (let i = 0; i < count; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
-    }
-    sql = sql.substring(0, sql.length - 1)
-    const result = await query(sql, info)
+            work_days) 
+            VALUES ?`
+    const result = await query(sql, [info])
     return result
 }
 
@@ -147,12 +144,8 @@ tmallRepo.insertTmallPs = async (count, info) => {
             very_dissatisfied_num,
             servicer_group,
             score_rate,
-            slow_response_num) VALUES`
-    for (let i = 0; i < count; i++) {
-        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
-    }
-    sql = sql.substring(0, sql.length - 1)
-    const result = await query(sql, info)
+            slow_response_num) VALUES ?`
+    const result = await query(sql, [info])
     return result
 }
 
@@ -175,7 +168,7 @@ tmallRepo.updateTmallPs = async (info) => {
             score_rate = ?,
             slow_response_num = ? 
         WHERE start_time = ? AND end_time = ? AND servicer = ?`
-    const result = await query(sql, info)
+    const result = await query(sql, info) 
     return result
 }
 

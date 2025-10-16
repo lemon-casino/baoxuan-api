@@ -29,6 +29,20 @@ settlementRepo.getAmount = async (start, end, shopNames, except) => {
     return result || []
 }
 
+settlementRepo.getAmountDetailByShopNames = async (start, end, shopNames) => {
+    let sql = `SELECT IFNULL(SUM(amount), 0) AS invoice, 
+            DATE_FORMAT(settle_time, '%Y-%m-%d') AS \`date\` FROM settlement 
+        WHERE settle_time >= ? AND settle_time <= ? 
+            AND shop_name IN ("${shopNames}")
+            AND NOT EXISTS (
+                SELECT si.id FROM shop_info si WHERE si.project_id = 4 
+                    AND si.shop_name = settlement.shop_name
+            )
+        GROUP BY DATE_FORMAT(settle_time, '%Y-%m-%d')`
+    let result = await query(sql, [start, end])
+    return result || []
+}
+
 settlementRepo.batchInsert = async (count, info) => {
     let sql = `INSERT INTO settlement(
         settle_time,
@@ -45,6 +59,14 @@ settlementRepo.batchInsert = async (count, info) => {
     }
     sql = sql.substring(0, sql.length - 1)
     const result = await query(sql, info)
+    return result?.affectedRows ? true : false
+}
+
+settlementRepo.delete = async (shop_name, type, settle_time) => {
+    let sql = `DELETE FROM settlement WHERE shop_name = ? 
+        AND type >= ? 
+        AND settle_time >= ?`
+    const result = await query(sql, [shop_name, type, settle_time])
     return result?.affectedRows ? true : false
 }
 
