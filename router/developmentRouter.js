@@ -55,6 +55,7 @@ router.get('/inventory-attribute', developmentApi.getsputags)
 router.get('/inventory-first', developmentApi.getfirst)
 
 router.get('/first-info', developmentApi.getfirstInfo)
+router.get('/not-list', developmentApi.getNotList)
 
 router.get('/process/running-task', developmentApi.getProcessRunningTask)
 router.get('/process-info', developmentApi.getProcessInfo)

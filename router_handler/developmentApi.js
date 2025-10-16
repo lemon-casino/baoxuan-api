@@ -687,6 +687,19 @@ const getDevelopProcess = async (req, res, next) => {
     }
 }
 
+const getNotList = async (req, res, next) => {
+    try {
+        const {type} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        let result = await developmentService.getNotList(type)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getWorkPannel, 
     getWorkDetail,
@@ -720,5 +733,6 @@ module.exports = {
     getProcessInfo,
     getProcessDetail,
     getProcessRunningTask,
-    getDevelopProcess
+    getDevelopProcess,
+    getNotList
 }

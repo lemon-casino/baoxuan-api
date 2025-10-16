@@ -1251,4 +1251,133 @@ goodsSalesRepo.getnegativeProfit =async(goods_id) =>{
     const result = await query(sql,[goods_id])
     return result
 }
+
+goodsSalesRepo.getNotList = async() =>{
+    let sql = `SELECT a.link
+			,a.商品编码 AS sku_code
+			,a.first_order_num
+			,a.second_order_num
+			,a.third_order_num
+			,b.io_date
+			,c.first_onsale_date
+			,c.second_onsale_date
+			,c.third_onsale_date
+        FROM (
+            SELECT CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=',process_id) AS link
+                        ,商品编码
+                        ,IF(first_order_num REGEXP '^[0-9]+$',first_order_num,0) AS first_order_num
+                        ,IF(second_order_num REGEXP '^[0-9]+$',second_order_num,0) AS second_order_num
+                        ,IF(third_order_num REGEXP '^[0-9]+$',third_order_num,0) AS third_order_num
+            FROM (
+                SELECT 
+                        t.process_id,
+                        JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."商品编码"'))) AS 商品编码,
+                        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部二订货量"'))), '0')  AS first_order_num,
+                        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部二订货量(Frhbma3pulstg5c)"')))) AS second_order_num,
+                        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部三订货量"'))), '0') AS third_order_num
+                FROM process_info t
+                JOIN (
+                        SELECT 0 AS seq UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
+                ) n ON n.seq < JSON_LENGTH(t.content)
+                WHERE t.field IN ('Fnt5ma3psjitfcc','Fyf1ma3jfyi7fuc','Fnt5ma3psjitfcc','Fo5uma263lluhdc','Fz3jma3psq0dfhc') 
+                AND t.content IS NOT NULL AND t.process_id IN('030e1938-50ba-11f0-a2a8-2ee6f9618836','07e0ba63-50bb-11f0-a2a8-2ee6f9618836',
+                '10468942-5d6a-11f0-ac83-36752c98d096','85ae191c-4dc9-11f0-bdcb-425a51682946','f5b90e4f-5d5e-11f0-ac83-36752c98d096')
+                UNION ALL
+                SELECT 
+                        t.process_id,
+                        JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."商品编码"'))) AS 商品编码,
+                        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部一订货量"'))), '0')  AS first_order_num,
+                        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部二订货量"'))), '0') AS second_order_num,
+                        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部三订货量"'))), '0') AS third_order_num
+                FROM process_info t
+                JOIN (
+                        SELECT 0 AS seq UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
+                ) n ON n.seq < JSON_LENGTH(t.content)
+                WHERE t.field IN ('Fnt5ma3psjitfcc','Fyf1ma3jfyi7fuc','Fnt5ma3psjitfcc','Fo5uma263lluhdc','Fz3jma3psq0dfhc') 
+                AND t.content IS NOT NULL AND t.process_id IN (SELECT process_id FROM processes WHERE title LIKE '%推品%' 
+                AND process_id NOT IN('030e1938-50ba-11f0-a2a8-2ee6f9618836','07e0ba63-50bb-11f0-a2a8-2ee6f9618836',
+                '10468942-5d6a-11f0-ac83-36752c98d096','85ae191c-4dc9-11f0-bdcb-425a51682946','f5b90e4f-5d5e-11f0-ac83-36752c98d096'))
+            ) AS a 
+            WHERE first_order_num !=0 OR second_order_num !=0 OR third_order_num !=0
+        ) AS a 
+        LEFT JOIN (select sku_code,min(io_date) as io_date FROM jst_purchase_info GROUP BY sku_code) as b
+        ON a.商品编码 = b.sku_code
+        LEFT JOIN(
+            SELECT sys_sku_id
+                        ,max(IF(division_name='事业部1',onsale_date,NULL)) AS first_onsale_date
+                        ,max(IF(division_name='事业部2',onsale_date,NULL)) AS second_onsale_date
+                        ,max(IF(division_name='事业部3',onsale_date,NULL)) AS third_onsale_date
+            FROM(
+                SELECT b.division_name,a.sys_sku_id,min(a.create_time) AS onsale_date FROM(
+                    SELECT IFNULL(pc.商品编码, s.sys_sku_id) AS sys_sku_id
+                                    ,s.shop_name
+                                    ,create_time
+                    FROM jst_goods_sku s 
+                    LEFT JOIN danpin.combination_product_code pc 
+                    ON pc.组合商品编码 = s.sys_sku_id
+                    ) AS a
+                LEFT JOIN (
+                    SELECT s.shop_name
+                            ,d.division_name
+                FROM shop_info AS s 
+                LEFT JOIN project_info AS p 
+                ON s.project_id=p.id
+                LEFT JOIN division_info AS d 
+                ON p.division_id=d.id
+                ) AS b
+                ON a.shop_name=b.shop_name
+                GROUP BY b.division_name,a.sys_sku_id
+            ) AS a 
+            GROUP BY sys_sku_id
+        ) AS c
+        ON a.商品编码 = c.sys_sku_id
+        WHERE b.sku_code IS NOT NULL AND (c.sys_sku_id IS NULL OR c.first_onsale_date IS NULL 
+        OR c.second_onsale_date IS NULL OR c.third_onsale_date IS NULL )`
+    let result = await query(sql)
+    for (i =0;i<result.length-1;i++){
+        let sql1 = `SELECT sku_code
+			,spu_name
+			,first_category
+			,second_category
+			,third_category
+			,image
+			,ps
+			,create_time
+			,IF(DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY) <= create_time ,'新品' ,'老品') AS create_info
+			,(CASE 
+			WHEN \`year\` is not null THEN \`year\`
+			WHEN \`year\` is NULL AND create_time >='2025-04-01'  THEN '25年4月以后新品'
+			ELSE '2024'
+			END) AS 'year'
+			,IFNULL(jd_colud,0) AS jd_colud
+			,IFNULL(nj_num,0) AS nj_num
+			,IFNULL(jd_num,0) AS jd_num
+			,IFNULL(jd_transit,0) AS jd_transit
+			,IFNULL(nj_num,0)+IFNULL(jd_num,0) AS num
+			,IFNULL(jd_transit,0)+IFNULL(nj_transit,0) AS transit
+			,IFNULL(nj_num,0)+IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(nj_transit,0) AS total_num
+            FROM inventory_attributes
+            WHERE sku_code = '${result[i].sku_code}'`
+        let row = await query(sql1)
+        if(row?.length){
+            result[i].spu_name =  row[0].spu_name  ? row[0].spu_name : null
+            result[i].first_category =  row[0].first_category ? row[0].first_category : null
+            result[i].second_category =  row[0].second_category ? row[0].second_category : null
+            result[i].third_category =  row[0].third_category ? row[0].third_category : null
+            result[i].image =  row[0].image ? row[0].image : null
+            result[i].ps =  row[0].ps ? row[0].ps : null
+            result[i].create_time =  row[0].create_time ? row[0].create_time : null
+            result[i].create_info =  row[0].create_info ? row[0].create_info : null
+            result[i].year =  row[0].year ? row[0].year : null
+            result[i].jd_colud =  row[0].jd_colud ? row[0].jd_colud : null
+            result[i].nj_num =  row[0].nj_num ? row[0].nj_num : null
+            result[i].jd_num =  row[0].jd_num ? row[0].jd_num : null
+            result[i].jd_transit =  row[0].jd_transit ? row[0].jd_transit : null
+            result[i].num =  row[0].num ? row[0].num : null
+            result[i].transit =  row[0].transit ? row[0].transit : null
+            result[i].total_num =  row[0].total_num ? row[0].total_num : null
+        }
+    }
+    return result
+}
 module.exports = goodsSalesRepo
