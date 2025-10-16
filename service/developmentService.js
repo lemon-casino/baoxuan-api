@@ -5067,4 +5067,21 @@ developmentService.getDevelopProcess = async (start, end) => {
     return {data1, data2}
 }
 
+developmentService.getNotList = async(type) =>{
+    let result = {
+        data: {},
+        data1:{}}
+    let data = await goodsSalesRepo.getNotList()
+    if (type == 1){
+        data = data.filter(item => item.create_info === '新品')
+    }else if(type == 2){
+        data = data.filter(item => item.create_info === '老品')
+    }
+    const countNonEmpty = (arr) => arr.reduce((acc, obj) => (Object.entries(obj).forEach(([k, v]) => acc[k] = (acc[k] || 0) + (v != null && v !== '' ? 1 : 0)), acc), {})
+    let data1 = countNonEmpty(data)
+    data1.image='SKU汇总计数项'
+    result.data = data
+    result.data1 = [data1]
+    return result
+}
 module.exports = developmentService
