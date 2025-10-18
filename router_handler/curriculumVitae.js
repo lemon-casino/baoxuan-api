@@ -77,11 +77,21 @@ const previewCurriculumVitae = async (req, res) => {
     }
 };
 
+const getCurriculumVitaeFilters = async (req, res) => {
+    try {
+        const filters = await curriculumVitaeService.getFilters();
+        return res.send(success(filters));
+    } catch (error) {
+        return handleError(res, error);
+    }
+};
+
 module.exports = {
     listCurriculumVitae,
     createCurriculumVitae,
     getCurriculumVitae,
     updateCurriculumVitae,
     removeCurriculumVitae,
-    previewCurriculumVitae
+    previewCurriculumVitae,
+    getCurriculumVitaeFilters
 };

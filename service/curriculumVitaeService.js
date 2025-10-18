@@ -201,11 +201,16 @@ const remove = async (id) => {
     return true;
 };
 
+const getFilters = async () => {
+    return curriculumVitaeRepo.getFilterOptions();
+};
+
 module.exports = {
     list,
     create,
     getById,
     update,
     remove,
-    getPdfPreview
+    getPdfPreview,
+    getFilters
 };

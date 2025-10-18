@@ -22,6 +22,7 @@ router.get("/curriculumVitae/records/:id", curriculumVitaeHandler.getCurriculumV
 router.put("/curriculumVitae/records/:id", curriculumVitaeHandler.updateCurriculumVitae);
 router.delete("/curriculumVitae/records/:id", curriculumVitaeHandler.removeCurriculumVitae);
 router.get("/curriculumVitae/preview", curriculumVitaeHandler.previewCurriculumVitae);
+router.get("/curriculumVitae/filters", curriculumVitaeHandler.getCurriculumVitaeFilters);
 
 // 根据用户名 模糊比配
 router.get("/name", hrRecruit.curriculumVitaelikename);

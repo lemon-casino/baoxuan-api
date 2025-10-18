@@ -8,6 +8,41 @@ const toPlain = (modelInstance) => {
     return modelInstance.get ? modelInstance.get({plain: true}) : modelInstance;
 };
 
+const normalizeStringList = (value) => {
+    if (Array.isArray(value)) {
+        return value
+            .map((item) => (typeof item === 'string' ? item.trim() : item))
+            .filter((item) => typeof item === 'string' && item.length > 0);
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        return trimmed ? [trimmed] : [];
+    }
+
+    return [];
+};
+
+const appendLikeFilter = (where, field, value) => {
+    const values = normalizeStringList(value);
+    if (values.length === 0) {
+        return;
+    }
+
+    if (values.length === 1) {
+        where[field] = {[Op.like]: `%${values[0]}%`};
+        return;
+    }
+
+    if (!where[Op.and]) {
+        where[Op.and] = [];
+    }
+
+    where[Op.and].push({
+        [Op.or]: values.map((entry) => ({[field]: {[Op.like]: `%${entry}%`}}))
+    });
+};
+
 const buildWhereClause = (filters = {}) => {
     const where = {};
     const {
@@ -26,15 +61,9 @@ const buildWhereClause = (filters = {}) => {
         dateEnd
     } = filters;
 
-    if (hr) {
-        where.hr = {[Op.like]: `%${hr}%`};
-    }
-    if (name) {
-        where.name = {[Op.like]: `%${name}%`};
-    }
-    if (job) {
-        where.job = {[Op.like]: `%${job}%`};
-    }
+    appendLikeFilter(where, 'hr', hr);
+    appendLikeFilter(where, 'name', name);
+    appendLikeFilter(where, 'job', job);
     if (jobSalary) {
         where.jobSalary = {[Op.like]: `%${jobSalary}%`};
     }
@@ -114,10 +143,45 @@ const deleteById = async (id) => {
     });
 };
 
+const getDistinctValues = async (field) => {
+    const {sequelize} = CurriculumVitaeModel;
+    const records = await CurriculumVitaeModel.findAll({
+        attributes: [[sequelize.fn('DISTINCT', sequelize.col(field)), field]],
+        where: {
+            [field]: {
+                [Op.and]: [
+                    {[Op.ne]: null},
+                    {[Op.ne]: ''}
+                ]
+            }
+        },
+        raw: true
+    });
+
+    const uniqueValues = records
+        .map((record) => record[field])
+        .filter((value) => typeof value === 'string')
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0);
+
+    return Array.from(new Set(uniqueValues)).sort((a, b) => a.localeCompare(b));
+};
+
+const getFilterOptions = async () => {
+    const [hr, job, name] = await Promise.all([
+        getDistinctValues('hr'),
+        getDistinctValues('job'),
+        getDistinctValues('name')
+    ]);
+
+    return {hr, job, name};
+};
+
 module.exports = {
     findAndCountAll,
     create,
     findById,
     updateById,
-    deleteById
+    deleteById,
+    getFilterOptions
 };
