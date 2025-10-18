@@ -1,0 +1,113 @@
+const biResponse = require("@/utils/biResponse")
+const joiUtil = require("@/utils/joiUtil")
+const deptCoreActionService = require('@/service/activity/actionConfig/deptCoreActionService')
+const deptCoreActionSchema = require("@/schema/deptCoreActionSchema")
+
+const getDeptCoreActions = async (req, res, next) => {
+    try {
+        const {deptId} = req.query
+        joiUtil.validate({
+            deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const deptFlowForms = await deptCoreActionService.getDeptCoreActionsWithRules([deptId])
+        return res.send(biResponse.success(deptFlowForms))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const saveDeptCoreAction = async (req, res, next) => {
+    try {
+        const data = req.body
+        joiUtil.clarityValidate(deptCoreActionSchema.saveParamsSchema, data)
+        const deptFlowForms = await deptCoreActionService.saveDeptCoreAction(data)
+        return res.send(biResponse.success(deptFlowForms))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const updateDeptCoreAction = async (req, res, next) => {
+    try {
+        const data = req.body
+        joiUtil.clarityValidate(deptCoreActionSchema.updateParamsSchema, data)
+        const deptFlowForms = await deptCoreActionService.updateDeptCoreAction(data)
+        return res.send(biResponse.success(deptFlowForms))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const delDeptCoreAction = async (req, res, next) => {
+    try {
+        const {id} = req.query
+        joiUtil.validate({id})
+        const deptFlowForms = await deptCoreActionService.delDeptCoreAction(id)
+        return res.send(biResponse.success(deptFlowForms))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getDeptCoreActionForms = async (req, res, next) => {
+    try {
+        const {id} = req.query
+        joiUtil.validate({id})
+        const deptFlowForms = await deptCoreActionService.getDeptCoreActionForms(id)
+        return res.send(biResponse.success(deptFlowForms))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const syncDeptCoreActionsRules = async (req, res, next) => {
+    try {
+        const {deptId} = req.body
+        joiUtil.validate({
+            deptId: {value: deptId, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        await deptCoreActionService.syncDeptCoreActionsRules(deptId)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const copyActionRules = async (req, res, next) => {
+    try {
+        const data = req.body
+        joiUtil.clarityValidate(deptCoreActionSchema.copyCoreActionRules, data)
+        await deptCoreActionService.copyActionRules(
+            Number(data.srcActionId.toString()),
+            Number(data.targetActionId.toString())
+        )
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const copyActions = async (req, res, next) => {
+    try {
+        const data = req.body
+        joiUtil.clarityValidate(deptCoreActionSchema.copyCoreActionRules, data)
+        await deptCoreActionService.copyActions(
+            Number(data.srcActionId.toString()),
+            Number(data.targetActionId.toString())
+        )
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+module.exports = {
+    getDeptCoreActions,
+    updateDeptCoreAction,
+    saveDeptCoreAction,
+    delDeptCoreAction,
+    getDeptCoreActionForms,
+    syncDeptCoreActionsRules,
+    copyActionRules,
+    copyActions
+}

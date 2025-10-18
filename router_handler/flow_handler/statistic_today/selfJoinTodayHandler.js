@@ -1,0 +1,43 @@
+const biResponse = require("@/utils/biResponse")
+const flowJoinedService = require("@/service/flowJoinedService")
+const statusMapProcessorHub = require("./statusMapProcessorHub")
+const userService = require("@/service/userService")
+
+const selfJoinedStatusProcessorMap = {
+    "error": {processor: flowJoinedService.getTodaySelfJoinedFlowsStatisticCountOfFlowStatus, mapStatus: "ERROR"},
+    "terminated": {
+        processor: flowJoinedService.getTodaySelfJoinedFlowsStatisticCountOfFlowStatus,
+        mapStatus: "TERMINATED"
+    },
+
+    "doing": {processor: flowJoinedService.getTodaySelfJoinedFlowsStatisticCountOfReviewType, mapStatus: "TODO"},
+    "completed": {processor: flowJoinedService.getTodaySelfJoinedFlowsStatisticCountOfReviewType, mapStatus: "HISTORY"},
+    "waiting": {processor: flowJoinedService.getTodaySelfJoinedFlowsStatisticCountOfReviewType, mapStatus: "FORCAST"},
+
+    "overdue": {processor: flowJoinedService.getTodaySelfJoinedFlowsStatisticCountOfOverDue}
+}
+
+const getSelfJoinedResult = async (userId, status, importance) => {
+    const ddUserId = await userService.getDingDingUserId(userId);
+    const result = await statusMapProcessorHub.convert(selfJoinedStatusProcessorMap, ddUserId, status, importance)
+    return result;
+}
+
+const todaySelfJoinedFlowsStatisticHub = async (req, res, next) => {
+    try {
+        const status = req.params.status;
+        const {importance} = req.query
+        const result = await getSelfJoinedResult(req.user.id, status, importance)
+        if (result != null) {
+            return res.send(biResponse.success(result))
+        }
+        return res.send(biResponse.serverError(`请求的状态：${status}不可用`))
+    }catch (e){
+        next(e)
+    }
+}
+
+module.exports = {
+    getSelfJoinedResult,
+    todaySelfJoinedFlowsStatisticHub
+}

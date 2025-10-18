@@ -1,0 +1,193 @@
+const singleItemTaoBaoService = require('../service/singleItemTaoBaoService')
+const biResponse = require("../utils/biResponse")
+const joiUtil = require("../utils/joiUtil")
+const {object} = require("joi");
+
+
+const saveSingleItemTaoBao = async (req, res, next) => {
+    try {
+        const item = req.body
+        await singleItemTaoBaoService.saveSingleItemTaoBao(item)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const deleteSingleIteTaoBaoByBatchIdAndLinkId = async (req, res, next) => {
+    try {
+        const {id, batchId, linkId} = req.query
+
+        if (batchId) {
+            await singleItemTaoBaoService.deleteSingleIteTaoBaoByBatchIdAndLinkId(batchId, linkId)
+            return res.send(biResponse.success())
+        }
+        if (id) {
+            // todo:根据需要补充
+            return res.send(biResponse.success())
+        }
+        return res.send(biResponse.serverError("仅提供基于id和batchId的删除操作"))
+    } catch (e) {
+        next(e)
+    }
+}
+
+
+/**
+ * 获取淘宝单品表数据： 同时汇总付费数据、支付数据、市场占有率
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<*>}
+ */
+const getTaoBaoSingleItemsWithStatistic = async (req, res, next) => {
+    try {
+        const {
+            pageIndex,
+            pageSize,
+            productLineLeaders,
+            firstLevelProductLine,
+            secondLevelProductLine,
+            errorItem,
+            linkTypes,
+            linkHierarchies,
+            linkStatus,
+            timeRange,
+            clickingAdditionalParams,
+            jis,
+            problem
+        } = req.query
+        joiUtil.validate({pageIndex, pageSize})
+        //
+        let ces = jis === undefined ? true : JSON.parse(jis)
+        // string 转换为 boolean ces = JSON.parse(jis)
+        // console.log(typeof jis, typeof ces)
+        const state = req.params.state
+        joiUtil.validate({state})
+        const result = await singleItemTaoBaoService.getTaoBaoSingleItemsWithStatistic(
+            parseInt(pageIndex),
+            parseInt(pageSize),
+            JSON.parse(productLineLeaders || "[]"),
+            firstLevelProductLine,
+            secondLevelProductLine,
+            JSON.parse(errorItem || "[]"),
+            JSON.parse(linkTypes || "[]"),
+            JSON.parse(linkHierarchies || "[]"),
+            linkStatus,
+            JSON.parse(timeRange),
+            JSON.parse(clickingAdditionalParams || "[]"),
+            ces,
+            problem,
+            state
+        )
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+/**
+ * 获取淘宝单品表中的查询条件需要的数据
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<{linkStatuses: *[], errorItems: *[], linkTypes: *[], operationLeaders: *[], firstLevelLines: *[], secondLevelLines: *[]}>}
+ */
+const getSearchDataTaoBaoSingleItem = async (req, res, next) => {
+    try {
+        const result = await singleItemTaoBaoService.getSearchDataTaoBaoSingleItem(req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+/**
+ * 获取单品表详情数据
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<*>}
+ */
+const getSingleItemDetails = async (req, res, next) => {
+    try {
+        const id = req.params.id
+        joiUtil.validate({id})
+        const result = await singleItemTaoBaoService.getSingleItemById(id.split(","))
+        const data = singleItemTaoBaoService.attachPercentageTagToField(result)
+        return res.send(biResponse.success(data))
+    } catch (e) {
+        next(e)
+    }
+}
+
+/**
+ * 获取单品表中最新的入库时间
+ * @param req
+ * @param res
+ * @param next
+ * @returns {Promise<*>}
+ */
+const getLatest = async (req, res, next) => {
+    try {
+        const data = await singleItemTaoBaoService.getLatestBatchIdRecords(1)
+        let latestDate = new Date().toDateString()
+        if (data && data.length > 0) {
+            latestDate = data[0].batchId
+        }
+        return res.send(biResponse.success(latestDate))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const updateSingleItemTaoBao = async (req, res, next) => {
+    try {
+        const item = req.body
+        joiUtil.validate({
+            body: {value: item, schema: joiUtil.commonJoiSchemas.required}
+        })
+        await singleItemTaoBaoService.updateSingleItemTaoBao(item)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getidsSatisfiedSingleItems = async (req, res, next) => {
+    try {
+
+        const {
+            ids,
+            pageIndex,
+            pageSize,
+
+        } = req.query
+        let ids_data=[];
+        console.log(pageIndex, pageSize, ids)
+        if (ids !== undefined) {
+
+        const idsArray = Object.values(ids)
+
+        console.log(pageIndex, pageSize, ids)
+
+        if (idsArray.length !== 0) {
+            ids_data = await singleItemTaoBaoService.getidsSatisfiedSingleItems(parseInt(pageIndex), parseInt(pageSize), idsArray)
+        }
+    }
+        return res.send(biResponse.success(ids_data))
+    } catch (e) {
+        next(e)
+    }
+}
+
+module.exports = {
+    saveSingleItemTaoBao,
+    deleteSingleIteTaoBaoByBatchIdAndLinkId,
+    getTaoBaoSingleItemsWithStatistic,
+    getSearchDataTaoBaoSingleItem,
+    getSingleItemDetails,
+    getLatest,
+    updateSingleItemTaoBao,
+    getidsSatisfiedSingleItems
+}
