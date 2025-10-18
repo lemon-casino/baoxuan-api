@@ -21,6 +21,7 @@ router.post("/curriculumVitae/records", curriculumVitaeHandler.createCurriculumV
 router.get("/curriculumVitae/records/:id", curriculumVitaeHandler.getCurriculumVitae);
 router.put("/curriculumVitae/records/:id", curriculumVitaeHandler.updateCurriculumVitae);
 router.delete("/curriculumVitae/records/:id", curriculumVitaeHandler.removeCurriculumVitae);
+router.get("/curriculumVitae/preview", curriculumVitaeHandler.previewCurriculumVitae);
 
 // 根据用户名 模糊比配
 router.get("/name", hrRecruit.curriculumVitaelikename);

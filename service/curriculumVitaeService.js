@@ -1,3 +1,4 @@
+const axios = require('axios');
 const curriculumVitaeRepo = require('../repository/curriculumVitaeRepo');
 
 const allowedFields = [
@@ -122,6 +123,74 @@ const update = async (id, payload) => {
     return record;
 };
 
+const getFilenameFromUrl = (filepath) => {
+    try {
+        const {pathname} = new URL(filepath);
+        const segments = pathname.split('/').filter(Boolean);
+        if (segments.length === 0) {
+            return 'resume.pdf';
+        }
+        return decodeURIComponent(segments[segments.length - 1]);
+    } catch (error) {
+        return 'resume.pdf';
+    }
+};
+
+const getPdfPreview = async (filepath) => {
+    if (!filepath) {
+        const error = new Error('缺少文件路径');
+        error.code = 400;
+        throw error;
+    }
+
+    try {
+        const response = await axios.get(filepath, {
+            responseType: 'stream',
+            timeout: 15000
+        });
+
+        if (response.status !== 200 || !response.data) {
+            const error = new Error('文件获取失败');
+            error.code = response.status || 500;
+            throw error;
+        }
+
+        const contentType = response.headers['content-type'];
+        if (contentType && !contentType.toLowerCase().includes('pdf')) {
+            const error = new Error('文件不是PDF格式');
+            error.code = 415;
+            throw error;
+        }
+
+        return {
+            stream: response.data,
+            filename: getFilenameFromUrl(filepath),
+            length: response.headers['content-length'],
+            contentType: contentType || 'application/pdf'
+        };
+    } catch (error) {
+        if (error.response) {
+            const err = new Error('文件获取失败');
+            err.code = error.response.status;
+            throw err;
+        }
+
+        if (error.code === 'ECONNABORTED') {
+            const timeoutError = new Error('文件获取超时');
+            timeoutError.code = 504;
+            throw timeoutError;
+        }
+
+        if (error.code && typeof error.code === 'number') {
+            throw error;
+        }
+
+        const genericError = new Error('文件获取失败');
+        genericError.code = 500;
+        throw genericError;
+    }
+};
+
 const remove = async (id) => {
     const deleted = await curriculumVitaeRepo.deleteById(id);
     if (!deleted) {
@@ -137,5 +206,6 @@ module.exports = {
     create,
     getById,
     update,
-    remove
+    remove,
+    getPdfPreview
 };
