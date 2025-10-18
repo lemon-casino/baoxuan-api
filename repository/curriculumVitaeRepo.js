@@ -7,6 +7,39 @@ const toPlain = (modelInstance) => {
 	}
 	return modelInstance.get ? modelInstance.get({plain: true}) : modelInstance;
 };
+const normalizeStringList = (value) => {
+	if (Array.isArray(value)) {
+		return value
+			.map((item) => (typeof item === 'string' ? item.trim() : item))
+			.filter((item) => typeof item === 'string' && item.length > 0);
+	}
+
+	if (typeof value === 'string') {
+		const trimmed = value.trim();
+		return trimmed ? [trimmed] : [];
+	}
+
+	return [];
+};
+const appendLikeFilter = (where, field, value) => {
+	const values = normalizeStringList(value);
+	if (values.length === 0) {
+		return;
+	}
+
+	if (values.length === 1) {
+		where[field] = {[Op.like]: `%${values[0]}%`};
+		return;
+	}
+
+	if (!where[Op.and]) {
+		where[Op.and] = [];
+	}
+
+	where[Op.and].push({
+		[Op.or]: values.map((entry) => ({[field]: {[Op.like]: `%${entry}%`}}))
+	});
+};
 
 const buildWhereClause = (filters = {}) => {
 	const where = {};
@@ -18,6 +51,7 @@ const buildWhereClause = (filters = {}) => {
 		latestCorp,
 		latestJob,
 		gender,
+		ship,
 		location,
 		education,
 		seniority,
@@ -26,15 +60,9 @@ const buildWhereClause = (filters = {}) => {
 		dateEnd
 	} = filters;
 
-	if (hr) {
-		where.hr = {[Op.like]: `%${hr}%`};
-	}
-	if (name) {
-		where.name = {[Op.like]: `%${name}%`};
-	}
-	if (job) {
-		where.job = {[Op.like]: `%${job}%`};
-	}
+	appendLikeFilter(where, 'hr', hr);
+	appendLikeFilter(where, 'name', name);
+	appendLikeFilter(where, 'job', job);
 	if (jobSalary) {
 		where.jobSalary = {[Op.like]: `%${jobSalary}%`};
 	}
@@ -44,7 +72,9 @@ const buildWhereClause = (filters = {}) => {
 	if (latestJob) {
 		where.latestJob = {[Op.like]: `%${latestJob}%`};
 	}
-	if (typeof gender === 'number') {
+	if (typeof ship === 'number') {
+		where.ship = ship;
+	} else if (typeof gender === 'number') {
 		where.gender = gender;
 	}
 	if (location) {
@@ -69,24 +99,22 @@ const buildWhereClause = (filters = {}) => {
 
 	return where;
 };
-
 const findAndCountAll = async (filters, pagination) => {
-	const {page, pageSize} = pagination;
-	const where = buildWhereClause(filters);
-	const offset = (page - 1) * pageSize;
+	const { page, pageSize } = pagination
+	const where = buildWhereClause(filters)
+	const offset = (page - 1) * pageSize
 
-	const result = await CurriculumVitaeModel.findAndCountAll({
+	return CurriculumVitaeModel.findAndCountAll({
 		where,
 		order: [
-			['date', 'DESC'],
-			['id', 'DESC']
+			["date", "DESC"],
+			["id", "DESC"],
 		],
 		offset,
 		limit: pageSize,
-		raw: true
-	});
-
-	return result;
+		raw: true,
+		logging: true,
+	})
 };
 
 const create = async (payload) => {

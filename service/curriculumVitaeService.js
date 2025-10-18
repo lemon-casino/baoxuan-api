@@ -9,6 +9,7 @@ const allowedFields = [
 	'latestCorp',
 	'latestJob',
 	'gender',
+	'ship',
 	'age',
 	'location',
 	'education',
@@ -55,12 +56,18 @@ const normalizePayload = (payload = {}) => {
 
 const normalizeFilters = (filters = {}) => {
 	const normalized = {...filters};
-
 	if (normalized.gender !== undefined && normalized.gender !== '') {
 		const genderNumber = Number(normalized.gender);
 		normalized.gender = Number.isNaN(genderNumber) ? undefined : genderNumber;
 	} else {
 		normalized.gender = undefined;
+	}
+
+	if (normalized.ship !== undefined && normalized.ship !== '') {
+		const shipNumber = Number(normalized.ship);
+		normalized.ship = Number.isNaN(shipNumber) ? undefined : shipNumber;
+	} else {
+		normalized.ship = undefined;
 	}
 
 	if (normalized.dateStart) {
@@ -80,7 +87,7 @@ const list = async (query = {}) => {
 	const page = Math.max(parseInt(query.page, 10) || 1, 1);
 	const pageSize = Math.max(parseInt(query.pageSize, 10) || 10, 1);
 	const filters = normalizeFilters(query);
-
+	console.log(filters)
 	const {count, rows} = await curriculumVitaeRepo.findAndCountAll(filters, {page, pageSize});
 
 	return {
