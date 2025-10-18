@@ -79,7 +79,7 @@ const previewCurriculumVitae = async (req, res) => {
 
 const getCurriculumVitaeFilters = async (req, res) => {
     try {
-        const filters = await curriculumVitaeService.getFilters();
+        const filters = await curriculumVitaeService.getFilters(req.query);
         return res.send(success(filters));
     } catch (error) {
         return handleError(res, error);

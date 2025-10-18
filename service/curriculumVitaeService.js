@@ -201,8 +201,8 @@ const remove = async (id) => {
     return true;
 };
 
-const getFilters = async () => {
-    return curriculumVitaeRepo.getFilterOptions();
+const getFilters = async (query = {}) => {
+    return curriculumVitaeRepo.getFilterOptions(query);
 };
 
 module.exports = {

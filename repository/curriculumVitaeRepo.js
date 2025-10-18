@@ -143,18 +143,42 @@ const deleteById = async (id) => {
     });
 };
 
-const getDistinctValues = async (field) => {
+const normalizeSearchValue = (value) => {
+    if (Array.isArray(value)) {
+        for (const entry of value) {
+            if (typeof entry === 'string' && entry.trim().length > 0) {
+                return entry.trim();
+            }
+        }
+        return undefined;
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        return trimmed.length > 0 ? trimmed : undefined;
+    }
+
+    return undefined;
+};
+
+const buildDistinctWhere = (field, keyword) => {
+    const conditions = [
+        {[field]: {[Op.ne]: null}},
+        {[field]: {[Op.ne]: ''}}
+    ];
+
+    if (keyword) {
+        conditions.push({[field]: {[Op.like]: `%${keyword}%`}});
+    }
+
+    return {[Op.and]: conditions};
+};
+
+const getDistinctValues = async (field, keyword) => {
     const {sequelize} = CurriculumVitaeModel;
     const records = await CurriculumVitaeModel.findAll({
         attributes: [[sequelize.fn('DISTINCT', sequelize.col(field)), field]],
-        where: {
-            [field]: {
-                [Op.and]: [
-                    {[Op.ne]: null},
-                    {[Op.ne]: ''}
-                ]
-            }
-        },
+        where: buildDistinctWhere(field, normalizeSearchValue(keyword)),
         raw: true
     });
 
@@ -167,11 +191,11 @@ const getDistinctValues = async (field) => {
     return Array.from(new Set(uniqueValues)).sort((a, b) => a.localeCompare(b));
 };
 
-const getFilterOptions = async () => {
+const getFilterOptions = async (query = {}) => {
     const [hr, job, name] = await Promise.all([
-        getDistinctValues('hr'),
-        getDistinctValues('job'),
-        getDistinctValues('name')
+        getDistinctValues('hr', query.hr),
+        getDistinctValues('job', query.job),
+        getDistinctValues('name', query.name)
     ]);
 
     return {hr, job, name};
