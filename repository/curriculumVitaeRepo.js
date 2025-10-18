@@ -53,6 +53,7 @@ const buildWhereClause = (filters = {}) => {
         latestCorp,
         latestJob,
         gender,
+        ship,
         location,
         education,
         seniority,
@@ -73,7 +74,9 @@ const buildWhereClause = (filters = {}) => {
     if (latestJob) {
         where.latestJob = {[Op.like]: `%${latestJob}%`};
     }
-    if (typeof gender === 'number') {
+    if (typeof ship === 'number') {
+        where.ship = ship;
+    } else if (typeof gender === 'number') {
         where.gender = gender;
     }
     if (location) {

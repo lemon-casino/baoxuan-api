@@ -10,6 +10,7 @@ const allowedFields = [
     'latestCorp',
     'latestJob',
     'gender',
+    'ship',
     'age',
     'location',
     'education',
@@ -38,7 +39,7 @@ const normalizePayload = (payload = {}) => {
                 normalized[field] = null;
                 continue;
             }
-            if (['gender', 'age', 'filesize'].includes(field)) {
+            if (['gender', 'ship', 'age', 'filesize'].includes(field)) {
                 normalized[field] = toNumberOrNull(value);
                 continue;
             }
@@ -62,6 +63,13 @@ const normalizeFilters = (filters = {}) => {
         normalized.gender = Number.isNaN(genderNumber) ? undefined : genderNumber;
     } else {
         normalized.gender = undefined;
+    }
+
+    if (normalized.ship !== undefined && normalized.ship !== '') {
+        const shipNumber = Number(normalized.ship);
+        normalized.ship = Number.isNaN(shipNumber) ? undefined : shipNumber;
+    } else {
+        normalized.ship = undefined;
     }
 
     if (normalized.dateStart) {

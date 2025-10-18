@@ -59,6 +59,13 @@ const CurriculumVitaeModel = sequelize.define('curriculum_vitae', {
         comment: '最近入职岗位',
         field: 'latest_job'
     },
+    ship: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        defaultValue: null,
+        comment: '状态 1是淘汰, 2是进入面试 3是初面 ',
+        field: 'gender'
+    },
     gender: {
         type: Sequelize.TINYINT,
         allowNull: true,
