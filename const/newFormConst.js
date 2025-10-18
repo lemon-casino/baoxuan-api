@@ -20,35 +20,11 @@ const actionItem = {
     actionName: '',
     children: [{
         actionName: '逾期',
-        children: [{
-            actionName: '全套',
-            sum: 0,
-        },{
-            actionName: '半套',
-            sum: 0,
-        },{
-            actionName: '散图',
-            sum: 0,
-        },{
-            actionName: '视频',
-            sum: 0,
-        }],
+        children: [],
         sum: 0
     },{
         actionName: '未逾期',
-        children: [{
-            actionName: '全套',
-            sum: 0,
-        },{
-            actionName: '半套',
-            sum: 0,
-        },{
-            actionName: '散图',
-            sum: 0,
-        },{
-            actionName: '视频',
-            sum: 0,
-        }],
+        children: [],
         sum: 0
     }],
     sum: 0
@@ -60,6 +36,7 @@ const actionItem2 = {
         actionName: '进行中',
         children: [],
         sum: 0,
+        score: 0,
         sumAlone: true,
         tooltip: '该工作量会统计表单中预计的数据',
         uniqueIds: true
@@ -67,10 +44,12 @@ const actionItem2 = {
         actionName: '已完成',
         children: [],
         sum: 0,
+        score: 0,
         sumAlone: true,
         uniqueIds: true
     }],
-    sum: 0
+    sum: 0,
+    score: 0
 }
 const item = {
     actionCode: 'userActStat',
@@ -103,7 +82,8 @@ const statItem = {
     actionCode: '',
     children: [],
     ids: [],
-    sum: 0
+    sum: 0,
+    score: 0
 }
 
 const statItem1 = [
@@ -148,6 +128,26 @@ const statItem2 = [
         name: '散图'
     }, {
         name: '视频'
+    }, {
+        name: '半原创',
+    }, {
+        name: '原创-店铺首页',
+    }, {
+        name: '原创-创意图',
+    }, {
+        name: '原创-全套',
+    }, {
+        name: '基础修改',
+    }, {
+        name: '视频剪辑',
+    }, {
+        name: '换文字/换产品/调色/换背景/ 新增小元素/套图（单位：张）',
+    }, {
+        name: '整套规范存图（单位：套）',
+    }, {
+        name: '主图打标/logo修改（单位：张）',
+    }, {
+        name: '摄影'
     }
 ]
 
@@ -156,7 +156,17 @@ const statItem2Type = {
     2: [1],
     3: [2],
     4: [3],
-    5: [0, 3]
+    5: [0, 3],
+    6: [4],
+    7: [5],
+    8: [6],
+    9: [7],
+    10: [8], 
+    11: [9],
+    12: [10],
+    13: [11],
+    14: [12],
+    15: [13]
 }
 
 const statItem3 = [
@@ -169,6 +179,19 @@ const statItem3 = [
     }, {
         name: '已完成',
         code: 'DONE'
+    }
+]
+    
+const developmentItem = [
+    {
+        name: '进行中',
+        code: 'DOING'
+    }, {
+        name: '已完成',
+        code: 'DONE'
+    }, {
+        name: '已终止',
+        code: 'TERMINATED'
     }
 ]
 
@@ -259,7 +282,17 @@ const typeFilter = {
     '全套': [1, 5],
     '半套': [2],
     '散图': [3],
-    '视频': [4, 5]
+    '视频': [4, 5],
+    '半原创': [6],
+    '原创-店铺首页': [7],
+    '原创-创意图': [8],
+    '原创-全套': [9],
+    '基础修改': [10],
+    '视频剪辑': [11],
+    '换文字/换产品/调色/换背景/ 新增小元素/套图（单位：张）': [12],
+    '整套规范存图（单位：套）': [13],
+    '主图打标/logo修改（单位：张）': [14],
+    '摄影': [15]
 }
 
 const nameFilter = {
@@ -325,7 +358,12 @@ const leaderItemField = {
     '-1': {
         name: '视觉类型',
         display: 1,
-        data: ['全套', '半套', '散图', '视频'],
+        data: [
+            '全套', '半套', '散图', '视频', 
+            '半原创', '原创-店铺首页', '原创-创意图', '原创-全套', '基础修改',
+            '视频剪辑', '换文字/换产品/调色/换背景/ 新增小元素/套图（单位：张）',
+            '整套规范存图（单位：套）', '主图打标/logo修改（单位：张）', '摄影'
+        ],
         map: statItem2Type
     },
     0: {
@@ -503,6 +541,207 @@ const tableHeaderExtra = {
     }]
 }
 
+const newPannelHeader = [
+    {
+        field_id: 'textField_lxkb9f8v', 
+        title: '需求/产品名称',
+        type: 'input'
+    }, {
+        field_id: 'radioField_lxkb9f93', 
+        title: '上架平台',
+        type: 'select',
+        data: [
+            '天猫', '拼多多', '京东', '唯品会', '天猫超市', '1688', '得物',
+            '淘工厂', '天猫垂类店', '小红书', 'Coupang', '抖音', '快手', '人事/行政'
+        ]
+    }, {
+        field_id: 'employeeField_lxkb9f9a', 
+        title: '运营负责人',
+        type: 'input'
+    }, {
+        field_id: 'operation_leader', 
+        title: '运营组长',
+        type: 'input'
+    }, {
+        field_id: 'product_img', 
+        title: '产品图片'
+    }, {
+        field_id: 'radioField_m4s69d9s', 
+        title: '链接级别',
+        type: 'select',
+        data: [
+            'S（月销20w以上）', 'A（月销10-20w）', 'B（月销3-10w）', 'C（月销3w以下）'
+        ]
+    }, {
+        field_id: 'radioField_m82nqz8h', 
+        title: '优先级',
+        type: 'select',
+        data: ['P0', 'P1', 'P2', 'P3']
+    }, {
+        field_id: 'sample_complete', 
+        title: '样品是否齐全',
+        type: 'select',
+        data: ['齐全', '不齐全']
+    }, {
+        field_id: 'operation_vision_type', 
+        title: '运营视觉类别',
+        type: 'select',
+        data: ['原创', '半原创']
+    }, {
+        field_id: 'operation_vision_info', 
+        title: '运营类别细分',
+        type: 'select',
+        data: [
+            '套版详情/套（简单）（单位：套）',
+            '套版详情/套（复杂）（单位：套）',
+            '仿主图/仿车图/仿详情（简单）（单位：张）',
+            '仿主图/仿车图/仿详情（复杂）（单位：屏）',
+            '详情/KV/推广图仅部分原创（单位：屏）',
+            '厂图基础上做设计调整（单位：屏）',
+            '活动首页+日常首页',
+            '原创详情（S级 6天）（单位：屏）',
+            '原创详情（A级 4天）（单位：屏）',
+            '原创详情（B级 3天）（单位：屏）',
+            '原创详情（C级 2天）（单位：屏）',
+            '主图/车图/详情前3屏创意图（重点）（单位：张）',
+            '主图/车图/详情创意图（普通）（单位：张）'
+        ]
+    }, {
+        field_id: 'vision_type', 
+        title: '视觉类别',
+        type: 'select',
+        data: ['原创', '半原创', '基础修改']
+    }, {
+        field_id: 'vision_info', 
+        title: '类别细分',
+        type: 'select',
+        data: [
+            '活动首页+日常首页（4天）',
+            '主图/车图/详情前3屏创意图（重点）',
+            '主图/车图/详情创意图（普通）',
+            '原创详情（S级 6天）',
+            '原创详情（A级 4天）',
+            '原创详情（B级 3天）',
+            '原创详情（C级 2天）',
+            '主图/车图/详情首张（重点）',
+            '详情靠前三张大图/其他推广图（普通）',
+            '换背景 部分修图（简单）',
+            '建模渲染主图/车图/详情(简单）',
+            '建模渲染主图/车图/详情(复杂）',
+            '动态详情/屏',
+            '产品建模（简单）',
+            '产品建模（复杂）',
+            '3D场景库素材',
+            '场景背景AI生成（简单）',
+            '场景AI生成（复杂）',
+            'AI工作流搭建',
+            '套版详情/套（简单）',
+            '套版详情/套（复杂）',
+            '仿主图/仿车图/仿详情（简单）',
+            '仿主图/仿车图/仿详情（复杂）',
+            '详情/KV/推广图仅部分原创',
+            '厂图基础上做设计调整'
+        ]
+    }, {
+        field_id: 'employeeField_m0n7i20u', 
+        title: '视觉负责人',
+        type: 'input'
+    }, {
+        field_id: 'plan_status', 
+        title: '方案',
+        type: 'select',
+        data: ['已过', '未过', '无需过方案', '不做了']
+    }, {
+        field_id: 'checkboxField_m5orks8h', 
+        title: '方案类型',
+        type: 'select',
+        data: ['3D', '拍摄', '修图', 'AI']
+    }, {
+        field_id: 'num', 
+        title: '过方案后需求屏数',
+        children: [
+            {
+                field_id: 'textField_m82nqz8k',
+                title: '重点'
+            }, {
+                field_id: 'textField_m82nqz8l',
+                title: '普通'
+            }, {
+                field_id: 'textField_m82nqz8m',
+                title: '简单'
+            }
+        ]
+    }, {
+        field_id: 'design_start', 
+        title: '设计开始啥时间',
+        type: 'date'
+    }, {
+        field_id: 'photography_progress', 
+        title: '摄影进度',
+        type: 'select',
+        data: ['未开始', '拍摄中', '已拍完', '不需要拍摄']
+    }, {
+        field_id: 'employeeField_lzcfqrh3', 
+        title: '摄影负责人',
+        type: 'input'
+    }, {
+        field_id: 'design_progress', 
+        title: '视觉进度',
+        type: 'select',
+        data: ['未开始', '进行中', '已完成']
+    }, {
+        field_id: 'design_end', 
+        title: '设计完成时间',
+        type: 'date'
+    }, {
+        field_id: 'upload_status', 
+        title: '上传链图云',
+        type: 'select',
+        data: ['未完成', '完成上传', '散图不上传']
+    }
+]
+
+const developmentType = {
+    1: 'supplier_num',
+    2: 're_num',
+    3: 'self_num',
+    4: 'ip_num',
+    5: 'create_num'
+}
+const developmentTypeMap = {
+    supplier_num: 1,
+    re_num: 2,
+    self_num: 3,
+    ip_num: 4,
+    create_num: 5
+}
+const developmentStatusMap = {
+    '进行中': 0,
+    '已完成': 1,
+    '已终止': 2,
+    '选中': 3,
+    '未选中': 4
+}
+const developmentWorkType = {
+    1: 'cost_optimize',
+    2: 'imperfect',
+    3: 'analyse',
+    4: 'quality_control',
+    5: 'property',
+    6: 'valid_supplier'
+}
+
+const developmentWorkProblem = {
+    1: 'nexts',
+    2: 'rollback',
+    3: 'transfer',
+    4: 'reject',
+}
+
+const platformList = [
+    '1688', 'coupang', '京东', '天猫', '天猫超市', '得物、唯品会', '抖音、快手', '拼多多', '淘工厂'
+]
+
 module.exports = {
     action,
     actionItem,
@@ -538,5 +777,13 @@ module.exports = {
     visionFilter,
     retouchList,
     photographerChild,
-    tableHeaderExtra
+    tableHeaderExtra,
+    developmentItem,
+    developmentType,
+    developmentTypeMap,
+    developmentStatusMap,
+    developmentWorkType,
+    developmentWorkProblem,
+    newPannelHeader,
+    platformList
 }

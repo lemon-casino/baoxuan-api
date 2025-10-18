@@ -17,7 +17,6 @@ jdService.getJDKFDataByDate = async (startDate, endDate, servicer) => {
     let start = moment(startDate).format('YYYY-MM-DD')
     let end = moment(endDate).format('YYYY-MM-DD')
     let data = await jdRepo.getJDKFData(start, end,servicer)
-    console.log(start,end)
     return data || []
 }
 jdService.getJDDPDataByDate = async (startDate,endDate,shopname) =>{

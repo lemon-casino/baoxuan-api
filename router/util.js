@@ -12,4 +12,9 @@ router.get('/getDpList', dingdingHandler.getDpList);
 // 根据钉钉部门详情
 router.get('/getDpInfo', dingdingHandler.getDpInfo);
 
+// 获取dingding 登录 config
+router.get('/dingding-config', dingdingHandler.getDDConfig)
+// 通过免登码获取用户信息
+router.get('/getUserInfo', dingdingHandler.getUserInfo)
+
 module.exports = router;

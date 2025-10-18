@@ -13,6 +13,8 @@ const redisKeys = {
     "jstToken": "bases:jst_token",
     "jstRefreshToken": "bases:refresh_token",
     "synchronizedState": "flows:today:synchronizedState",
+    "development": "development",
+    "operation": "operation"
 }
 
 module.exports = {

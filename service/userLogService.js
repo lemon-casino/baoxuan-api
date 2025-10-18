@@ -74,8 +74,8 @@ const durationStatistic = async (userId, timeRange, isOnline) => {
 
     // 按部门统计从未登录过的用户
     const neverLoginUsers = []
-    const loggedUsers = await userLogRepo.getHasLoggedUsers()
-    const loggedUserIds = loggedUsers.map(user => user.userId)
+    // const loggedUsers = await userLogRepo.getHasLoggedUsers()
+    const loggedUserIds = loginStatistic.map(user => user.userId.toString())
     for (const user of allUsers) {
         if (!loggedUserIds.includes(user.userId.toString()) && user.status.toString() === "1" && !user.isResign) {
             neverLoginUsers.push({

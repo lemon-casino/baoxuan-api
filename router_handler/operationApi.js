@@ -1,19 +1,35 @@
 const joiUtil = require("../utils/joiUtil")
 const biResponse = require("../utils/biResponse")
 const operationService = require("../service/operationService")
+const downloadInfoService = require('../service/downloadInfoService')
 const operationSchema = require("../schema/operationSchema")
 const moment = require('moment')
 const ExcelJS = require('exceljs')
+const XLSX = require('xlsx')
 const formidable = require("formidable")
 const fs = require('fs')
 const iconv = require("iconv-lite")
+const crypto = require('crypto')
+const AdmZip = require('adm-zip')
+const path = require('path')
+const newMap = function(datum) {
+    if (datum === '') {
+        return null;
+    }
+    datum = datum.trim()
+    return datum;
+}
 
 const getDataStats = async (req, res, next) => {
     try {
         joiUtil.clarityValidate(operationSchema.requiredDateSchema, req.query)
         const startDate = moment(req.query.startDate).format('YYYY-MM-DD')
         const endDate = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getDataStats(req.user.id, startDate, endDate, req.query)
+        let result
+        if (req.query.infoType == '1') 
+            result = await operationService.getPromotionStats(req.user.id, startDate, endDate, req.query)
+        else 
+            result = await operationService.getDataStats(req.user.id, startDate, endDate, req.query)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -22,17 +38,17 @@ const getDataStats = async (req, res, next) => {
 
 const getDataStatsDetail = async (req, res, next) => {
     try {
-        const {type, name, startDate, endDate} = req.query
+        const {type, name, startDate, endDate, stats} = req.query
         joiUtil.validate({
             column: {value: req.params.column, schema: joiUtil.commonJoiSchemas.strRequired},
             type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
             name: {value: name, schema: joiUtil.commonJoiSchemas.strRequired},
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
-            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired},
         })
         const start = moment(req.query.startDate).format('YYYY-MM-DD')
         const end = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getDataStatsDetail(type, name, req.params.column, start, end)
+        const result = await operationService.getDataStatsDetail(type, name, req.params.column, start, end, stats, req.user)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -44,7 +60,54 @@ const getGoodsInfo = async (req, res, next) => {
         joiUtil.clarityValidate(operationSchema.requiredDataSchema, req.query)
         const startDate = moment(req.query.startDate).format('YYYY-MM-DD')
         const endDate = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id)
+        const tab = req.query.tab
+        let result
+        if (req.query.export) {            
+            const uploadDir = `./public/excel/${req.user.id}`
+            fs.mkdirSync(uploadDir, { recursive: true })
+            let info = `${JSON.stringify(req.query)}`
+            let key = crypto.createHash('md5').update(info).digest('hex')
+            const name = `${startDate}_${endDate}_${key}`
+            const path = `${uploadDir}/${name}.xlsx`
+            await downloadInfoService.insert(req.user.id, name, path, req.query)
+            new Promise(async (resolve, reject) => {
+                const workbook = new ExcelJS.Workbook('Sheet1')
+                const worksheet = workbook.addWorksheet()
+                logger.info(`user: ${req.user.id}, file: ${path} start`)
+                result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id,tab)
+                let columns1 
+                if(tab == 0){columns1 = result.tmcolumn}
+                else if(tab == 1){columns1 = result.pddcolumn}
+                else if(tab == 2){columns1 = result.zycolumn}
+                let columns = []
+                for (let i = 0; i < columns1.length; i++) {
+                    if (columns1[i].sub?.length) {
+                        for (let j = 0; j < columns1[i].sub.length; j++) {
+                            columns.push({
+                                header: columns1[i].sub[j].title,
+                                key: columns1[i].sub[j].field_id,
+                            })
+                        }
+                    } else if (columns1[i].field_id != 'operate')
+                        columns.push({
+                            header: columns1[i].title,
+                            key: columns1[i].field_id,
+                        })
+                }
+                worksheet.columns = columns
+                for (let i = 0; i < result.data.data.length; i++) {                           
+                    worksheet.addRow(result.data.data[i])
+                }
+                const buffer = await workbook.xlsx.writeBuffer()
+                fs.writeFileSync(path, buffer)
+                await downloadInfoService.update(req.user.id, name, 1)
+                logger.info(`user: ${req.user.id}, file: ${path} end`)
+                resolve(true)
+            })     
+            return res.send(biResponse.success())
+        } else {
+            result = await operationService.getGoodsInfo(startDate, endDate, req.query, req.user.id,tab)
+        }
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -70,11 +133,51 @@ const importGoodsInfo = async (req, res, next) => {
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()
-            let readRes = await workbook.csv.readFile(newPath)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
                 let result = await operationService.importGoodsInfo(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsOrderStat = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[2]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsOrderStat(rows, time)
                 if (result) {
                     fs.rmSync(newPath)
                 } else {
@@ -176,16 +279,85 @@ const getGoodsLineInfo = async (req, res, next) => {
 
 const getGoodsInfoDetail = async (req, res, next) => {
     try {
-        const {goods_id, startDate, endDate} = req.query
+        const {goods_id,shop_name, startDate, endDate, stats} = req.query
         joiUtil.validate({
             column: {value: req.params.column, schema: joiUtil.commonJoiSchemas.strRequired},
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            shop_name: {value: shop_name, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const start = moment(req.query.startDate).format('YYYY-MM-DD')
+        const end = moment(req.query.endDate).format('YYYY-MM-DD')
+        const result = await operationService.getGoodsInfoDetail(req.params.column, goods_id, shop_name, start, end, stats, req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getJDskuInfoDetail = async (req, res, next) => {
+    try {
+        const {goods_id, startDate, endDate, stats} = req.query
+        joiUtil.validate({
             goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
             startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
             endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
         })
         const start = moment(req.query.startDate).format('YYYY-MM-DD')
         const end = moment(req.query.endDate).format('YYYY-MM-DD')
-        const result = await operationService.getGoodsInfoDetail(req.params.column, goods_id, start, end)
+        const result = await operationService.getJDskuInfoDetail(goods_id, start, end, stats, req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getGoodsInfoDetailTotal = async (req, res, next) => {
+    try {
+        const {goods_id, startDate, endDate, stats} = req.query
+        joiUtil.validate({
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const start = moment(req.query.startDate).format('YYYY-MM-DD')
+        const end = moment(req.query.endDate).format('YYYY-MM-DD')
+        const result = await operationService.getGoodsInfoDetailTotal(goods_id, start, end, stats)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getskuInfoDetailTotal = async (req, res, next) => {
+    try {
+        const {sku_id, startDate, endDate, stats} = req.query
+        joiUtil.validate({
+            sku_id: {value: sku_id, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const start = moment(req.query.startDate).format('YYYY-MM-DD')
+        const end = moment(req.query.endDate).format('YYYY-MM-DD')
+        const result = await operationService.getskuInfoDetailTotal(sku_id, start, end, stats)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getGoodsInfoSubDetail = async (req, res, next) => {
+    try {
+        const {goods_id, startDate, endDate, stats} = req.query
+        joiUtil.validate({
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const start = moment(req.query.startDate).format('YYYY-MM-DD')
+        const end = moment(req.query.endDate).format('YYYY-MM-DD')
+        const result = await operationService.getGoodsInfoSubDetail(goods_id, start, end, stats)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -204,7 +376,34 @@ const getWorkStats = async (req, res, next) => {
     }
 }
 
-const importGoodsPromotionInfo = async (req, res, next) => {
+const getNewGoodsInfo = async (req, res, next) => {
+    try {
+        const result = await operationService.getNewGoodsInfo(req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getOldGoodsInfo = async (req, res, next) => {
+    try {
+        const result = await operationService.getOldGoodsInfo(req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getGoodsOptimizeDetail = async (req, res, next) => {
+    try {
+        const result = await operationService.getGoodsOptimizeDetail(req.user.id, req.query)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsPayInfo = async (req, res, next) => {
     try {
         let form = new formidable.IncomingForm()
         form.uploadDir = "./public/excel"
@@ -223,11 +422,159 @@ const importGoodsPromotionInfo = async (req, res, next) => {
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()
-            let readRes = await workbook.csv.readFile(newPath)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
-                let result = await operationService.importGoodsPromotionInfo(rows, time)
+                let result = await operationService.importGoodsPayInfo(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsCompositeInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[1]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.xlsx.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsCompositeInfo(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsSYCMInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[date.length - 1]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new XLSX.readFile(newPath)
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+            let data = XLSX.utils.sheet_to_json(worksheet)
+            let result = await operationService.importGoodsSYCMInfo(data, time)
+            if (result) {
+                fs.rmSync(newPath)
+            } else {
+                return res.send(biResponse.createFailed())
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsXHSInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[date.length - 1]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsXHSInfo(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsBrushingInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[date.length - 1]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsBrushingInfo(rows, time)
                 if (result) {
                     fs.rmSync(newPath)
                 } else {
@@ -253,19 +600,28 @@ const importJDZYInfo = async (req, res, next) => {
             }
             
             const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const ext = file.originalFilename.split('.')[1]
+            const name = date[0]
+            const time = date[1]
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
             fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
             })
-            const workbook = new ExcelJS.Workbook()
-            let datainfo = fs.readFileSync(newPath)
-            datainfo = iconv.decode(datainfo, 'GBK')
-            fs.writeFileSync(newPath, datainfo)
-            let readRes = await workbook.csv.readFile(newPath)
+            const workbook = new ExcelJS.Workbook()            
+            let readRes
+            if (ext == 'xlsx') {
+                readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
+            } else {                
+                let datainfo = fs.readFileSync(newPath)
+                datainfo = iconv.decode(datainfo, 'GBK')
+                fs.writeFileSync(newPath, datainfo)
+                readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            }
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
-                let result = await operationService.importJDZYInfo(rows)
+                let result = await operationService.importJDZYInfo(rows, time,name)
                 if (result) {
                     fs.rmSync(newPath)
                 } else {
@@ -291,17 +647,20 @@ const importJDZYPromotionInfo = async (req, res, next) => {
             }
             
             const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const name = date[0]
+            const time = date[1]
+            const tag = date[2]
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
             fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()
-            let readRes = await workbook.csv.readFile(newPath)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
-                let name = file.originalFilename.split('.')
-                let result = await operationService.importJDZYPromotionInfo(rows, name[0])
+                let result = await operationService.importJDZYPromotionInfo(rows, name, time,tag)
                 if (result) {
                     fs.rmSync(newPath)
                 } else {
@@ -315,17 +674,1209 @@ const importJDZYPromotionInfo = async (req, res, next) => {
     }
 }
 
+const importJDZYcompositeInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+
+            const file = files.file
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`    
+            // 将上传的 ZIP 文件移动到指定目录
+            fs.renameSync(file.filepath, newPath, (err) => {
+                if (err) throw err
+            })
+            const name = file.originalFilename.split('_')[0]
+            try {
+                // 解压 ZIP 文件
+                const zip = new AdmZip(newPath)
+                const extractPath = path.join(form.uploadDir, `${name}-${moment().valueOf()}`)
+                fs.mkdirSync(extractPath, { recursive: true })
+                zip.extractAllTo(extractPath, true)
+
+                // 获取解压后的所有文件
+                const extractedFiles = fs.readdirSync(extractPath)
+                for (const extractedFile of extractedFiles) {
+                    const filePath = path.join(extractPath, extractedFile)
+                    const workbook = new ExcelJS.Workbook()
+                    const date = extractedFile.split('.')[0].split('-全部')
+                    const time1 = date[0].split('报-')
+                    const time = time1[1]
+                    let readRes = await workbook.xlsx.readFile(filePath, {map: newMap})
+                    if (readRes) {
+                        const worksheet = workbook.getWorksheet(1)
+                        let rows = worksheet.getRows(1, worksheet.rowCount)
+                        let result = await operationService.importJDZYcompositeInfo(rows, time,name)
+                        if (result) {
+                            fs.rmSync(filePath)
+                        } else {
+                            return res.send(biResponse.createFailed())
+                        }
+                    }
+                }
+                fs.rmSync(extractPath, { recursive: true, force: true })
+                fs.rmSync(newPath)
+                return res.send(biResponse.success())
+            } catch (zipError) {
+                console.error('解压 ZIP 文件时出错:', zipError)
+                return res.send(biResponse.createFailed())
+            }
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsPDDInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[1]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.xlsx.readFile(newPath)
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsPDDInfo(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsOrderInfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[1]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsOrderInfo(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const setPannelSetting = async (req, res, next) => {
+    try {
+        const {type, subtype, attribute} = req.body
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.numberRequired},
+            subtype: {value: type, schema: joiUtil.commonJoiSchemas.numberRequired},
+            attribute: {value: attribute, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const result = await operationService.setPannelSetting(req.user.id, type, subtype, attribute)
+        if (result) return res.send(biResponse.success())
+        return res.send(biResponse.createFailed())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getNewOnSaleInfo = async (req, res, next) => {
+    try {
+        const {currentPage, pageSize} = req.query
+        joiUtil.validate({
+            currentPage: {value: currentPage, schema: joiUtil.commonJoiSchemas.strRequired},
+            pageSize: {value: pageSize, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const sale_date = moment().subtract(59, 'day').format('YYYY-MM-DD')
+        const start = moment().subtract(61, 'day').format('YYYY-MM-DD')
+        const end = moment().subtract(2, 'day').format('YYYY-MM-DD')
+        let limit = parseInt(pageSize)
+        let offset = (currentPage - 1) * pageSize
+        if (limit <= 0 || offset < 0) return res.send(biResponse.canTFindIt())
+        const result = await operationService.getNewOnSaleInfo(sale_date, start, end, limit, offset)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getOptimizeInfo = async (req, res, next) => {
+    try {
+        const {currentPage, pageSize, startDate, endDate} = req.query
+        joiUtil.validate({
+            currentPage: {value: currentPage, schema: joiUtil.commonJoiSchemas.strRequired},
+            pageSize: {value: pageSize, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        req.query.limit = parseInt(pageSize)
+        req.query.offset = (currentPage - 1) * pageSize
+        if (req.query.limit <= 0 || req.query.offset < 0) return res.send(biResponse.canTFindIt())
+        req.query.start = moment(startDate).format('YYYY-MM-DD')
+        req.query.end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
+        const result = await operationService.getOptimizeInfo(req.query, req.user)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getReportInfo = async (req, res, next) => {
+    try {
+        const {startDate, endDate,goodsinfo} = req.query
+        joiUtil.validate({
+            goodsinfo: {value: goodsinfo, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        let lstart = moment(startDate).format('YYYY-MM-DD')
+        let lend = moment(endDate).format('YYYY-MM-DD') 
+        let preStart = moment(startDate).subtract(7, 'day').format('YYYY-MM-DD')
+        let preEnd = moment(endDate).subtract(7, 'day').format('YYYY-MM-DD')
+        let mstart = moment(startDate).startOf('month').format('YYYY-MM-DD')
+        let mend = moment(endDate).endOf('month').format('YYYY-MM-DD')
+        let lmstart = moment(startDate).subtract(1, 'month').startOf('month').format('YYYY-MM-DD')
+        let lmend = moment(endDate).subtract(1, 'month').endOf('month').format('YYYY-MM-DD')
+        let result=[]
+        if(goodsinfo=='推广汇总'){
+            result = await operationService.getTMPromotion(lstart,lend)
+        }else if(goodsinfo=='推广明细'){
+            result = await operationService.getTMPromotioninfo(lstart,lend)
+        }else{
+            if(moment(lstart).isSame(mstart, 'day')&&moment(lend).isSame(mend, 'day')){
+                result = await operationService.getReportInfo(lstart, lend,lmstart,lmend,goodsinfo)
+            }else{
+                result = await operationService.getReportInfo(lstart, lend,preStart,preEnd,goodsinfo)
+                
+            }
+        }
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getSaleData = async (req, res, next) => {
+    try {
+        const {startDate, endDate,value,name} = req.query
+        joiUtil.validate({
+            name: {value: name, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const daysDifference = moment(endDate).diff(startDate, 'days')+1
+        let lstart = moment(startDate).format('YYYY-MM-DD')
+        let lend = moment(endDate).format('YYYY-MM-DD') 
+        let preStart = moment(startDate).subtract(daysDifference, 'day').format('YYYY-MM-DD')
+        let preEnd = moment(endDate).subtract(daysDifference, 'day').format('YYYY-MM-DD')
+        let result=[]
+        result = await operationService.getSaleData(lstart,lend,preStart,preEnd,value,name)
+        
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getInventoryData = async (req, res, next) => {
+    try {
+        const {type} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        result = await operationService.getInventoryData(type)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getDivisionSaleData = async (req, res, next) => {
+    try {
+        const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
+        const day7 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+        const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+        const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
+        result = await operationService.getDivisionSaleData(day,day7,day30,day31)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getProjectSaleData = async (req, res, next) => {
+    try {
+        const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
+        const day7 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+        const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+        const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
+        result = await operationService.getProjectSaleData(day,day7,day30,day31)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getShopSaleData = async (req, res, next) => {
+    try {
+        const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
+        const day7 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+        const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+        const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
+        result = await operationService.getShopSaleData(day,day7,day30,day31)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getDivisionSaleQtyData = async (req, res, next) => {
+    try {
+        const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
+        const day7 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+        const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+        const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
+        result = await operationService.getDivisionSaleQtyData(day,day7,day30,day31)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getProjectSaleQtyData = async (req, res, next) => {
+    try {
+        const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
+        const day7 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+        const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+        const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
+        result = await operationService.getProjectSaleQtyData(day,day7,day30,day31)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getShopSaleQtyData = async (req, res, next) => {
+    try {
+        const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
+        const day7 = moment().subtract(7, 'day').format('YYYY-MM-DD')
+        const day30 = moment().subtract(30, 'day').format('YYYY-MM-DD')
+        const day31 = moment().subtract(31, 'day').format('YYYY-MM-DD')
+        result = await operationService.getShopSaleQtyData(day,day7,day30,day31)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const ReportDownload = async (req, res, next) => {
+    try {
+        const {startDate, endDate} = req.query
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        let lstart = moment(startDate).format('YYYY-MM-DD')
+        let lend = moment(endDate).format('YYYY-MM-DD') 
+        let preStart = moment(startDate).subtract(7, 'day').format('YYYY-MM-DD')
+        let preEnd = moment(endDate).subtract(7, 'day').format('YYYY-MM-DD')
+        let mstart = moment(startDate).startOf('month').format('YYYY-MM-DD')
+        let mend = moment(endDate).endOf('month').format('YYYY-MM-DD')
+        let lmstart = moment(startDate).subtract(1, 'month').startOf('month').format('YYYY-MM-DD')
+        let lmend = moment(endDate).subtract(1, 'month').endOf('month').format('YYYY-MM-DD')
+        const workbook = new ExcelJS.Workbook()
+        const sheet1 = workbook.addWorksheet('汇总')
+        const sheet2 = workbook.addWorksheet('新品')
+        const sheet3 = workbook.addWorksheet('老品')
+        const sheet4 = workbook.addWorksheet('推广明细')
+        const sheet5 = workbook.addWorksheet('推广汇总')
+        if(moment(lstart).isSame(mstart, 'day')&&moment(lend).isSame(mend, 'day')){
+           result1 = await operationService.getReportInfo(lstart, lend,lmstart,lmend,'汇总')
+           result2 = await operationService.getReportInfo(lstart, lend,lmstart,lmend,'新品')
+           result3 = await operationService.getReportInfo(lstart, lend,lmstart,lmend,'老品')
+        }else{
+            result1 = await operationService.getReportInfo(lstart, lend,preStart,preEnd,'汇总')
+            result2 = await operationService.getReportInfo(lstart, lend,preStart,preEnd,'新品')
+            result3 = await operationService.getReportInfo(lstart, lend,preStart,preEnd,'老品')
+        }
+        result4 = await operationService.getTMPromotioninfo(lstart, lend)
+        result5 = await operationService.getTMPromotion(lstart, lend)
+        sheet1.columns = result1.columns
+        sheet2.columns = result2.columns
+        sheet3.columns = result3.columns
+        sheet4.columns = result4.columns
+        sheet5.columns = result5.columns
+        data1 = result1.data
+        data2 = result2.data
+        data3 = result3.data
+        data4 = result4.data
+        data5 = result5.data
+        for (let i = 0; i < data1.length; i++) {
+            data1[i].promotion_rate = data1[i].promotion_rate + '%'
+            data1[i].bill_rate = data1[i].bill_rate + '%'
+            data1[i].profit_rate = data1[i].profit_rate + '%'
+            data1[i].verified_profit_rate = data1[i].verified_profit_rate + '%'
+            data1[i].team_saleamount_rate = data1[i].team_saleamount_rate + '%'
+            sheet1.addRow(data1[i])
+        }
+        for (let i = 0; i < data2.length; i++) {
+            data2[i].promotion_rate = data2[i].promotion_rate + '%'
+            data2[i].bill_rate = data2[i].bill_rate + '%'
+            data2[i].profit_rate = data2[i].profit_rate + '%'
+            data2[i].verified_profit_rate = data2[i].verified_profit_rate + '%'
+            data2[i].team_saleamount_rate = data2[i].team_saleamount_rate + '%'
+            sheet2.addRow(data2[i])
+        }
+        for (let i = 0; i < data3.length; i++) {
+            data3[i].promotion_rate = data3[i].promotion_rate + '%'
+            data3[i].bill_rate = data3[i].bill_rate + '%'
+            data3[i].profit_rate = data3[i].profit_rate + '%'
+            data3[i].verified_profit_rate = data3[i].verified_profit_rate + '%'
+            data3[i].team_saleamount_rate = data3[i].team_saleamount_rate + '%'
+            sheet3.addRow(data3[i])
+        }
+        for (let i = 0; i < data4.length; i++) {
+            sheet4.addRow(data4[i])
+        }
+        for (let i = 0; i < data3.length; i++) {
+            sheet5.addRow(data5[i])
+        }
+        const buffer = await workbook.xlsx.writeBuffer()
+        res.setHeader('Content-Disposition', `attachment; filename="zb-${req.query.startDate}-${req.query.endDate}.xlsx"`)
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        return res.end(buffer)
+    } catch (e) {
+        next(e)
+    }
+}
+
+const checkOperationOptimize = async (req, res, next) => {
+    try {
+        const result = await operationService.checkOperationOptimize()
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsVerified = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[2]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsVerified(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsOrderVerifiedStat = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[2]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsOrderVerifiedStat(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importGoodsOrderPayStat = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[2]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importGoodsOrderPayStat(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const createShopPromotionLog = async (req, res, next) => {
+    try {
+        const {date, shop_name} = req.body
+        joiUtil.validate({
+            date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
+            shop_name: {value: shop_name, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const result = await operationService.createShopPromotionLog(date, shop_name)
+        if (result) return res.send(biResponse.success())
+        return res.send(biResponse.canTFindIt())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importOrdersGoods = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[2]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importOrdersGoods(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importErleiShuadan = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[1]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importErleiShuadan(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importXhsShuadan = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[1]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importXhsShuadan(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importOrdersGoodsVerified = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const time = date[2]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importOrdersGoodsVerified(rows, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const refreshGoodsPaysStats = async (req, res, next) => {
+    try {
+        const {date} = req.body
+        joiUtil.validate({
+            date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        await operationService.batchInsertGoodsPays(date)
+        await operationService.batchInsertJDGoodsPays(date)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const refreshGoodsSalesStats = async (req, res, next) => {
+    try {
+        const {date} = req.body
+        joiUtil.validate({
+            date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        await operationService.batchInsertGoodsSales(date)
+        await operationService.batchInsertJDGoodsSales(date)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const refreshGoodsVerifiedsStats = async (req, res, next) => {
+    try {
+        const {date} = req.body
+        joiUtil.validate({
+            date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        await operationService.batchInsertGoodsVerifieds(date)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const refreshGoodsPayments = async (req, res, next) => {
+    try {
+        const {date} = req.body
+        joiUtil.validate({
+            date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        await operationService.updateGoodsPayments(date)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const refreshLaborCost = async (req, res, next) => {
+    try {
+        const {date} = req.body
+        joiUtil.validate({
+            date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        await operationService.updateOrderGoods(date)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const refreshVerifiedLaborCost = async (req, res, next) => {
+    try {
+        const {date} = req.body
+        joiUtil.validate({
+            date: {value: date, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        await operationService.updateOrderGoodsVerified(date)
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importTmallpromotioninfo = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const filename = file.originalFilename.split('.')[0].split('_')
+            const shopname = filename[0]
+            const paytime = filename[1]
+            const day = filename[2]
+            const date = moment(paytime).add(day-1, 'days').format("YYYY-MM-DD")
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let datainfo = fs.readFileSync(newPath)
+            datainfo = iconv.decode(datainfo, 'GBK')
+            fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importTmallpromotioninfo(rows, shopname,paytime,day,date)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const updateInventory = async(req, res,next) => {
+    try {
+        await operationService.updateInventory()
+        return res.send(biResponse.success())
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importPromotionPlan = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const info = file.originalFilename.split('.')[0].split('_')
+            const ext = file.originalFilename.split('.')[1]
+            const project = info[0]
+            const shop_name = info[1]
+            const promotion_name = info[2]
+            const date = info[3]
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes
+            if (ext == 'csv') {
+                readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            } else readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importPromotionPlan(rows, project, shop_name, promotion_name, date)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getskuCodeInfo = async (req, res, next) => {
+    try {
+        const {goods_id, startDate, endDate, stats} = req.query
+        joiUtil.validate({
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const start = moment(req.query.startDate).format('YYYY-MM-DD')
+        const end = moment(req.query.endDate).format('YYYY-MM-DD')
+        const result = await operationService.getskuCodeInfo(goods_id, start, end, stats)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getnegativeProfit = async (req, res, next) => {
+    try {
+        const {goods_id, stats} = req.query
+        joiUtil.validate({
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
+        })
+        const result = await operationService.getnegativeProfit(goods_id, stats)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const goodspromotionPlan = async (req, res, next) => {
+    try {
+        const {goods_id, startDate, endDate} = req.query
+        joiUtil.validate({
+            goods_id: {value: goods_id, schema: joiUtil.commonJoiSchemas.strRequired},
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        const start = moment(req.query.startDate).format('YYYY-MM-DD')
+        const end = moment(req.query.endDate).format('YYYY-MM-DD')
+        const result = await operationService.goodspromotionPlan(goods_id, start, end)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getTMNewGoods = async (req, res, next) => {
+    try {
+        const workbook = new ExcelJS.Workbook()
+        const sheet = workbook.addWorksheet()
+        sheet.columns = [{ header: "链接ID", key: 'goods_id' }]
+        const data = await operationService.getTMNewGoods()
+        for (let i = 0; i < data.length; i++) {
+            sheet.addRow([data[i].goods_id])
+        }
+        const buffer = await workbook.xlsx.writeBuffer()
+        res.setHeader('Content-Disposition', `attachment; filename="tmall-new-goods.xlsx"`)
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        return res.end(buffer)
+    } catch (e) {
+        next(e)
+    }
+}
+
+const updateTMNewTag = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.updateTMNewTag(rows)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const importTMNewActivity = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importTMNewActivity(rows)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const saveOperatelog = async(req, res, next) =>{
+    try{
+        const articleModel = req.body.articleModel
+        const result = await operationService.saveOperatelog(articleModel,req.user.id)
+        return res.send(biResponse.success(result))
+    }catch (e) {
+        next(e)
+    }
+}
+const updateTMLinkStage = async (req, res, next) => {
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            let readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.updateTMLinkStage(rows)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
+const initiateprocess  = async(req, res, next) =>{
+    try{
+        const data = req.body
+        const result = await operationService.initiateprocess(data,req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e){
+        next(e)
+    }
+}
+
+const goodslog  = async(req, res, next) =>{
+    try{
+        const {goods_id, startDate, endDate} = req.query
+        const result = await operationService.goodslog(goods_id, startDate, endDate)
+        return res.send(biResponse.success(result))
+    } catch (e){
+        next(e)
+    }
+}
+
+const getTmallInfo = async (req, res, next) => {
+    try {
+        const {startDate, endDate} = req.query
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.strRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const start = moment(startDate).format('YYYY-MM-DD') + ' 00:00'
+        const end = moment(endDate).format('YYYY-MM-DD') + ' 23:59'
+        let result = await operationService.getTmallInfo(start, end)
+        const workbook = new ExcelJS.Workbook()
+        const sheet = workbook.addWorksheet()
+        sheet.columns = [
+            { header: '链接', key: 'link' },
+            { header: '流程名称', key: 'title' },
+            { header: '类型', key: 'type' },
+            { header: '发起人', key: 'start' },
+            { header: '链接状态', key: 'process_status' },
+            { header: '事业部三执行人', key: 'user' },
+            { header: '供应商推品-产品线简称', key: 'brief_name1' },
+            { header: '运营事业部', key: 'division' },
+            { header: '反推推品-产品线简称', key: 'brief_name2' },
+            { header: '反推运营发起人', key: 'start1' },
+            { header: '动作属性-市场统计(执行发起)', key: 'user1' },
+            { header: '平台', key: 'project' },
+            { header: '任务名称', key: 'task_name' },
+            { header: '运营执行人', key: 'operator' },
+        ]
+        for (let i = 0; i < result.length; i++) {
+            sheet.addRow(result[i])
+        }
+        const buffer = await workbook.xlsx.writeBuffer()
+        res.setHeader('Content-Disposition', `attachment; filename="tmall-${moment(startDate).format('YYYY-MM-DD')}_${moment(endDate).format('YYYY-MM-DD')}.xlsx"`)
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        return res.end(buffer)
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getDataStats,
     getDataStatsDetail,
     getGoodsInfo,
     getGoodsLineInfo,
     importGoodsInfo,
+    importGoodsOrderStat,
     importGoodsKeyWords,
     importGoodsDSR,
     getGoodsInfoDetail,
+    getGoodsInfoDetailTotal,
+    getGoodsInfoSubDetail,
     getWorkStats,
-    importGoodsPromotionInfo,
+    getNewGoodsInfo,
+    getOldGoodsInfo,
+    getGoodsOptimizeDetail,
+    importGoodsPayInfo,
+    importGoodsCompositeInfo,
+    importGoodsSYCMInfo,
+    importGoodsXHSInfo,
+    importGoodsBrushingInfo,
     importJDZYInfo,
-    importJDZYPromotionInfo
+    importJDZYPromotionInfo,
+    importGoodsPDDInfo,
+    importGoodsOrderInfo,
+    setPannelSetting,
+    getNewOnSaleInfo,
+    getOptimizeInfo,
+    checkOperationOptimize,
+    importGoodsVerified,
+    importGoodsOrderVerifiedStat,
+    createShopPromotionLog,
+    importOrdersGoods,
+    importOrdersGoodsVerified,
+    refreshGoodsPaysStats,
+    refreshGoodsSalesStats,
+    refreshGoodsVerifiedsStats,
+    refreshGoodsPayments,
+    refreshLaborCost,
+    refreshVerifiedLaborCost,
+    importJDZYcompositeInfo,
+    getJDskuInfoDetail,
+    getskuInfoDetailTotal,
+    getReportInfo,
+    importErleiShuadan,
+    importXhsShuadan,
+    ReportDownload,
+    importTmallpromotioninfo,
+    getSaleData,
+    getInventoryData,
+    getDivisionSaleData,
+    getDivisionSaleQtyData,
+    getProjectSaleData,
+    getProjectSaleQtyData,
+    getShopSaleData,
+    getShopSaleQtyData,
+    updateInventory,
+    importGoodsOrderPayStat,
+    importPromotionPlan,
+    getskuCodeInfo,
+    getnegativeProfit,
+    goodspromotionPlan,
+    getTMNewGoods,
+    updateTMNewTag,
+    importTMNewActivity,
+    saveOperatelog,
+    initiateprocess,
+    updateTMLinkStage,
+    goodslog,
+    getTmallInfo
 }

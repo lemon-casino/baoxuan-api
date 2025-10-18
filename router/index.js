@@ -30,6 +30,7 @@ module.exports = {
     "/forms": require("./flowFormRouter"),
     "/operation/tian/linkData": require("./tableStructure"),
     "/product-attrs": require("./dianShangOperationAttributeRouter"),
+    "/product-attrs/shopname": require("./dianShangOperationAttributeRouter"),
     "/attendance": require("./attendanceRouter"),
     "/dept-core-action": require("./deptCoreActionRouter"),
     "/dept-core-action-form-rule": require("./deptCoreActionFormRuleRouter"),
@@ -48,4 +49,6 @@ module.exports = {
     "/workflows-service": require('./workflowServiceRouter'),
     "/stock": require('./stockRouter'),    
     "/confirmation-notice": require('./confirmationNoticeRouter'),
+    "/file-async": require('./downloadInfoRouter'),
+    "/project": require('./projectRouter')
 }

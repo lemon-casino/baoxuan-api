@@ -7,10 +7,11 @@ const path = require("path");
 const fs = require("fs");
 
 router.get("/", dianShangOperationAttributeApi.getPagingOperateAttributes)
+router.get("/info", dianShangOperationAttributeApi.getOperateAttributes)
 router.post("/", dianShangOperationAttributeApi.saveProductAttrDetails)
 router.put("/", dianShangOperationAttributeApi.updateProductAttrDetails)
 router.delete("/", dianShangOperationAttributeApi.deleteProductAttr)
-
+router.get("/shopname", dianShangOperationAttributeApi.getShopNameAttrDetails)
 const uploadDirectory = 'file/excel/causality';
 const uploadFileName = '商品属性维护.xlsx';
 // 设置存储位置和文件命名
@@ -18,6 +19,8 @@ const uploadFileName = '商品属性维护.xlsx';
 const upload = createUploader(uploadDirectory);
 
 router.post("/upload", upload.single('file'),dianShangOperationAttributeApi.uploadTable)
+router.post("/upload-tm", upload.single('file'),dianShangOperationAttributeApi.uploadtmTable)
+router.post("/upload-pdd", upload.single('file'),dianShangOperationAttributeApi.uploadpddTable)
 
 router.get('/download', (req, res) => {
     const filePath = path.join(uploadDirectory, 'template', uploadFileName);
@@ -33,6 +36,14 @@ router.get('/download', (req, res) => {
     }
 });
 
+// 链接月度销售目标导入
+router.post('/goods-monthly-sales-target/import', dianShangOperationAttributeApi.importGoodsMonthlySalesTarget)
+router.get('/goods-monthly-sales-target', dianShangOperationAttributeApi.getGoodsMonthlySalesTarget)
+router.post('/goods-monthly-sales-target/export', dianShangOperationAttributeApi.exportGoodsMonthlySalesTarget)
+router.post('/goods-monthly-sales-update',dianShangOperationAttributeApi.updatetGoodsMonthlySalesTarget)
 
-
+// 螺旋目标保存
+router.post('/save_calculate',dianShangOperationAttributeApi.Insertcalculate)
+router.get('/get_spiral',dianShangOperationAttributeApi.getspiral)
+router.get('/get_operate_log',dianShangOperationAttributeApi.getoperatelog)
 module.exports = router

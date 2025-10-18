@@ -198,9 +198,10 @@ exports.getUserinfo = async (req, res) => {
 
         const departmentTemplate = {}
         departmentTemplate.dept_id = dept.dept_id
-        departmentTemplate.name = dept.dep_detail.name
+        departmentTemplate.name = dept.dep_detail?.name
+        logger.info(dept.dep_detail?.name)
         departmentTemplate.leader = dept.leader
-        departmentTemplate.parent_id = curDeptDetails ? curDeptDetails.parent_id : null;
+        departmentTemplate.parent_id = curDeptDetails?.parent_id
 
         if (dept.leader) {
             const dep_chils = curDeptDetails.dep_chil

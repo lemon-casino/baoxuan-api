@@ -133,6 +133,18 @@ const getUserInfoByToken = async (token) => {
     return await httpUtil.get(url, null, dingDingReqUtil.getDingTalkAccessTokenHeader(token))
 }
 
+/**
+ * 通过免登码获取用户数据
+ * @param {*} access_token 
+ * @param {*} code 
+ * @returns 
+ */
+const getDingDingUserInfo = async (access_token, code) => {
+    const url = `https://oapi.dingtalk.com/topapi/v2/user/getuserinfo?access_token=${access_token}`
+    const data = {code}
+    return await httpUtil.post(url, data)
+}
+
 
 module.exports = {
     getDpInfo,
@@ -144,5 +156,6 @@ module.exports = {
     getDeptUser_def,
     getDeptUserList,
     getUserInfoByUserIdAndToken,
-    getUserInfoByToken
+    getUserInfoByToken,
+    getDingDingUserInfo
 }

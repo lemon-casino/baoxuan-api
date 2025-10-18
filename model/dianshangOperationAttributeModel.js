@@ -452,6 +452,87 @@ module.exports = sequelize => {
             autoIncrement: false,
             comment: "产品线管理人",
             field: "line_manager"
+        },
+        IsPriceComparison: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: '否',
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "是否比价链接",
+            field: "is_price_comparison"
+        },
+        VolumeTarget: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "体量目标",
+            field: "volume_target"
+        },
+        ProductStage: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "产品阶段",
+            field: "product_stage"
+        },
+        Play: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "玩法",
+            field: "play"
+        },
+        IsCirculation: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "是否流转",
+            field: "is_circulation"
+        },
+        LinkState: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "链接状态",
+            field: "link_state"
+        },
+        IsIp: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "是否IP",
+            field: "is_ip"
+        },
+        NewTag: {
+            type: DataTypes.TINYINT,
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "新品标签",
+            field: "new_tag"
+        },
+        LinkStage: {
+            type: DataTypes.STRING(5),
+            allowNull: true,
+            defaultValue: null,
+            primaryKey: false,
+            autoIncrement: false,
+            comment: "链接层级",
+            field: "link_stage"
         }
     };
     const options = {

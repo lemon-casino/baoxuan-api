@@ -150,7 +150,6 @@ const getPddKFDataByDate =async (req, res, next) =>{
     try {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
         const data = await pddService.getPddKFDataByDate(req.query.startDate, req.query.endDate, req.query.servicer)
-        console.log(data)
         const img = await pddService.getPddImgByDate(req.query.startDate, req.query.endDate)
         const options_servicer=await pddService.getServicer(req.query.startDate, req.query.endDate)
         const columns = [
@@ -179,41 +178,40 @@ const getPddKFDataByDate =async (req, res, next) =>{
 
             worksheet.columns = columns
 
-            let tmp = JSON.parse(JSON.stringify(tmpDefault))
-            let j = 0
+            // let tmp = JSON.parse(JSON.stringify(tmpDefault))
+            // let j = 0
 
-            let imageBuffer = fs.readFileSync(img[j].img_url)
-            let image = await workbook.addImage({
-                buffer: imageBuffer,
-                extension: img[j].img_url.split('.')[1]
-            })
-            worksheet.addImage(image, {
-                tl: { col: 10, row: 0 },
-                br: { col: 11, row: 1 },
-                editAs: 'oneCell',
-            })
+            // // let imageBuffer = fs.readFileSync(img[j].img_url)
+            // // let image = await workbook.addImage({
+            // //     buffer: imageBuffer,
+            // //     extension: img[j].img_url.split('.')[1]
+            // // })
+            // // worksheet.addImage(image, {
+            // //     tl: { col: 10, row: 0 },
+            // //     br: { col: 11, row: 1 },
+            // //     editAs: 'oneCell',
+            // // })
 
-            imageBuffer = fs.readFileSync(img[j + 1].img_url)
-            image = await workbook.addImage({
-                buffer: imageBuffer,
-                extension: img[j + 1].img_url.split('.')[1]
-            })
-            worksheet.addImage(image, {
-                tl: { col: 13, row: 0 },
-                br: { col: 14, row: 1 },
-                editAs: 'oneCell',
-            })
-                
-            tmp['date'] = `${req.query.startDate}~${req.query.endDate}`
-            tmp['servicer'] = data[i].servicer
-            tmp['reception_num'] = data[i].reception_num
-            tmp['reception_rate'] = data[i].reception_rate + '%'
-            tmp['amount'] = data[i].amount
-            tmp['answer_in_3_rate'] = data[i].answer_in_3_rate + '%'
-            tmp['response_in_30_rate'] = data[i].response_in_30_rate + '%'
-            tmp['score'] = data[i].score
+            // // imageBuffer = fs.readFileSync(img[j + 1].img_url)
+            // // image = await workbook.addImage({
+            // //     buffer: imageBuffer,
+            // //     extension: img[j + 1].img_url.split('.')[1]
+            // // })
+            // // worksheet.addImage(image, {
+            // //     tl: { col: 13, row: 0 },
+            // //     br: { col: 14, row: 1 },
+            // //     editAs: 'oneCell',
+            // // })
+            // tmp['servicer'] = data[i].servicer
+            // tmp['date'] = `${req.query.startDate}~${req.query.endDate}`
+            // tmp['reception_num'] = data[i].reception_num
+            // tmp['reception_rate'] = data[i].reception_rate + '%'
+            // tmp['amount'] = data[i].amount
+            // tmp['answer_in_3_rate'] = data[i].answer_in_3_rate + '%'
+            // tmp['response_in_30_rate'] = data[i].response_in_30_rate + '%'
+            // tmp['score'] = data[i].score
 
-            worksheet.addRow(data[i])
+            // worksheet.addRow(data[i])
 
             for (let i = 1; i < data.length; i++) {
                 tmp = JSON.parse(JSON.stringify(tmpDefault))
@@ -231,27 +229,27 @@ const getPddKFDataByDate =async (req, res, next) =>{
                         score: '客服服务分'
                     })
 
-                    imageBuffer = fs.readFileSync(img[j].img_url)
-                    image = await workbook.addImage({
-                        buffer: imageBuffer,
-                        extension: img[j].img_url.split('.')[1]
-                    })
-                    worksheet.addImage(image, {
-                        tl: { col: 10, row: i },
-                        br: { col: 11, row: i + 1 },
-                        editAs: 'oneCell',
-                    })
+                    // imageBuffer = fs.readFileSync(img[j].img_url)
+                    // image = await workbook.addImage({
+                    //     buffer: imageBuffer,
+                    //     extension: img[j].img_url.split('.')[1]
+                    // })
+                    // worksheet.addImage(image, {
+                    //     tl: { col: 10, row: i },
+                    //     br: { col: 11, row: i + 1 },
+                    //     editAs: 'oneCell',
+                    // })
 
-                    imageBuffer = fs.readFileSync(img[j + 1].img_url)
-                    image = await workbook.addImage({
-                        buffer: imageBuffer,
-                        extension: img[j + 1].img_url.split('.')[1]
-                    })
-                    worksheet.addImage(image, {
-                        tl: { col: 13, row: i },
-                        br: { col: 14, row: i + 1 },
-                        editAs: 'oneCell',
-                    })
+                    // imageBuffer = fs.readFileSync(img[j + 1].img_url)
+                    // image = await workbook.addImage({
+                    //     buffer: imageBuffer,
+                    //     extension: img[j + 1].img_url.split('.')[1]
+                    // })
+                    // worksheet.addImage(image, {
+                    //     tl: { col: 13, row: i },
+                    //     br: { col: 14, row: i + 1 },
+                    //     editAs: 'oneCell',
+                    // })
                 }
                 tmp['date'] = `${req.query.startDate}~${req.query.endDate}`
                 tmp['servicer'] = data[i].servicer
@@ -271,7 +269,7 @@ const getPddKFDataByDate =async (req, res, next) =>{
             return res.send(buffer)
         } else {
             return res.send(biResponse.success({
-                columns, data, img,options_servicer
+                columns,img, data,options_servicer
                 
             }))
         }
@@ -428,7 +426,7 @@ const importPddData = async (req, res, next) => {
             
             const file = files.file
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
-            fs.rename(file.filepath, newPath, (err) => {  
+            fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()

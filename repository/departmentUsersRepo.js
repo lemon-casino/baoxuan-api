@@ -1,4 +1,5 @@
 const models = require('@/model')
+const { query } = require('../model/dbConn')
 const deptsUsersModel = models.deptsUsersModel
 const sequelizeUtil = require("@/utils/sequelizeUtil")
 
@@ -10,6 +11,15 @@ const save = async (deptId, userId) => {
             throw e
         }
         return true
+    }
+}
+
+const remove = async (deptId, userId) => {
+    try{
+        let sql = `DELETE FROM depts_users WHERE user_id NOT IN (SELECT dingding_user_id FROM users WHERE status=0)`
+        await query(sql)
+    }catch (e) {
+        throw e;
     }
 }
 
@@ -33,5 +43,6 @@ const getByDeptIds = async (deptIds) => {
 module.exports = {
     save,
     updateInvalidInfo,
-    getByDeptIds
+    getByDeptIds,
+    remove
 }

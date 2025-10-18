@@ -45,3 +45,5 @@ router.get("/entryAndResignation", hrRecruit.entryAndResignation);
 // 劳动合同管理
 
 module.exports = router;
+router.get('/advise-output', hrRecruit.dailyAdviseOutput)
+module.exports = router

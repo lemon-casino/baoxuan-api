@@ -13,6 +13,12 @@ goodsRepo.create = async (data, count) => {
     return result
 }
 
+goodsRepo.getByIId = async (i_id) => {
+    let sql = `SELECT * FROM jst_goods_info WHERE i_id = ?`
+    const result = await query(sql, [i_id])
+    return result || []
+}
+
 goodsRepo.getMaxCreateTime = async () => {
     const sql = `SELECT MAX(created) AS created FROM jst_goods_info`
     const result = await query(sql)

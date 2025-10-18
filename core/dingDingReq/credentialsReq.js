@@ -1,8 +1,7 @@
 // accessToken的有效期为7200秒（2小时），有效期内重复获取会返回相同结果并自动续期，过期后获取会返回新的accessToken。
 
 const httpUtil = require("@/utils/httpUtil")
-const {dingDingConfig} = require("@/config");
-
+const {dingDingConfig,bpmlogin} = require("@/config");
 const systemToken = dingDingConfig.systemToken;
 const appType = dingDingConfig.appType;
 const appKey = dingDingConfig.appKey;
@@ -37,6 +36,19 @@ const corpAccessToken = async () => {
 }
 
 /**
+ * 钉钉内部登录-jsapi-ticket
+ * @param {*} access_token 
+ * @returns 
+ */
+const getJsapiTickets = async (access_token) => {
+    const url = "https://api.dingtalk.com/v1.0/oauth2/jsapiTickets"
+    const headers = {
+        'x-acs-dingtalk-access-token': access_token,
+    }
+    return await httpUtil.post(url, {}, headers)
+}
+
+/**
  * 获取企业内部应用的 access_token，用于访问应用中开通的接口
  *
  * @param appKey
@@ -52,9 +64,25 @@ const getDingDingAccessToken = async () => {
     return await httpUtil.get(url, params)
 }
 
+const getBpmgAccessToken = async () => {
+    const url = "http://bpm.pakchoice.cn:48080/admin-api/system/auth/login"
+    const data = {
+        "username":bpmlogin.name,
+        "password":bpmlogin.password
+    }
+    const headers ={
+        'tenant-id': '1', 
+        'Content-Type': 'application/json', 
+        'Host': 'bpm.pakchoice.cn:48080'
+    }
+    return await httpUtil.post(url, data,headers)
+}
+
 module.exports = {
     corpAccessToken,
     getDingDingAccessToken,
-    getUserDingDingAccessToken
+    getUserDingDingAccessToken,
+    getJsapiTickets,
+    getBpmgAccessToken
 }
 
