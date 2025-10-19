@@ -119,7 +119,7 @@ const importTmallAsData = async (req, res, next) => {
             
             const file = files.file
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
-            fs.rename(file.filepath, newPath, (err) => {  
+            fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()
@@ -137,8 +137,7 @@ const importTmallAsData = async (req, res, next) => {
                 const jsonData = xlsx.utils.sheet_to_json(worksheet)
                 if (file.originalFilename.indexOf('有延迟') != -1) {
                     for (const row of jsonData){
-                        console.log(jsonData)
-                        if(row['旺旺']!='汇总'&&row['旺旺']!='均值'){
+                        if(row['客服昵称']!='汇总'&&row['客服昵称']!='均值'){
                             const response_rate=row['回复率'] != null ? Number((row['回复率']*100).toFixed(2)) : null
                             const response_average=row['平均响应(秒)'] != null ? Number(row['平均响应(秒)']) : null
                             const onetime_rate=row['售后一次解决率'] != null ? Number((row['售后一次解决率']*100).toFixed(2)) : null
@@ -155,20 +154,19 @@ const importTmallAsData = async (req, res, next) => {
                             const work_days=row['上班天数']!= null ? Number(row['上班天数']) : null
                             const start_time1=start_time
                             const end_time1=end_time
-                            const servicer=row['旺旺']
+                            const servicer=row['客服昵称']
                             const info=[response_rate,response_average,onetime_rate,transfer_num,reception_num,satisfaction_rate,score
                                 ,service_num,score_rate,display_rate,score_num,dissatisfied_num,very_dissatisfied_num,work_days,start_time1,end_time1,servicer]
-                            console.log(info)
                             insertInfo = await tmallService.updateTmallAs(info)
                         }
                     }
                 } else {
-                    let count = 3                   
+                    let count = 3                 
                     for (const row of jsonData){
-                        if(row['旺旺']!='汇总'&&row['旺旺']!='均值'){
+                        if(row['客服昵称']!='汇总'&&row['客服昵称']!='均值'&&row['客服昵称']!=null){
                             const start_time1=start_time
                             const end_time1=end_time
-                            const servicer=row['旺旺']
+                            const servicer=row['客服昵称']
                             const response_rate=row['回复率'] != null ? Number((row['回复率']*100).toFixed(2)) : null
                             const response_average=row['平均响应(秒)'] != null ? Number(row['平均响应(秒)']) : null
                             const onetime_rate=row['售后一次解决率'] != null ? Number((row['售后一次解决率']*100).toFixed(2)) : null
@@ -338,13 +336,13 @@ const importTmallPsData = async (req, res, next) => {
             
             const file = files.file
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
-            fs.rename(file.filepath, newPath, (err) => {  
+            fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
             })
-            const workbook = new ExcelJS.Workbook()
-            let readRes = xlsx.readFile(newPath)
+            // const workbook = new ExcelJS.Workbook()
+            // let readRes = await workbook.xlsx.readFile(newPath)
             const workbook1 = xlsx.readFile(newPath)
-            if (readRes) {
+            if (workbook1) {
                 const sheet_name_list = workbook1.SheetNames;
                 const worksheet = workbook1.Sheets[sheet_name_list[0]]
                 const date = file.originalFilename.split('.')[0].split('_')
@@ -356,7 +354,7 @@ const importTmallPsData = async (req, res, next) => {
                 
                 if (file.originalFilename.indexOf('有未回复') != -1) {
                     for (const row of jsonData){
-                        if(row['旺旺']!='汇总'&&row['旺旺']!='均值'){
+                        if(row['客服昵称']!='汇总'&&row['客服昵称']!='均值'&&row['客服昵称']!=null){
                             const response_average=row['平均响应(秒)'] != null ? Number(row['平均响应(秒)']) : null
                             const success_rate=row['询单->次日付款成功率'] != null ? Number((row['询单->次日付款成功率']*100).toFixed(2)) : null
                             const satisfaction_rate=row['客户满意率']!=null ? Number((row['客户满意率']*100).toFixed(2)) : null
@@ -370,16 +368,15 @@ const importTmallPsData = async (req, res, next) => {
                             const ave_satisfied_num=row['服务满意度评价一般']!= null ? Number(row['服务满意度评价一般']) : null
                             const dissatisfied_num=row['服务满意度评价不满']!= null ? Number(row['服务满意度评价不满']) : null
                             const very_dissatisfied_num=row['服务满意度评价很不满']!= null ? Number(row['服务满意度评价很不满']) : null
-                            const servicer_group=row['旺旺分组']!= null ? row['旺旺分组'] : null
+                            const servicer_group=row['客服分组']!= null ? row['客服分组'] : null
                             const score_rate=row['服务满意度评价参与率']!= null ? Number((row['服务满意度评价参与率']*100).toFixed(2)) : null
                             const slow_response_num=row['慢接待人数']!= null ? Number(row['慢接待人数']) : null
                             const start_time1=start_time
                             const end_time1=end_time
-                            const servicer=row['旺旺']
+                            const servicer=row['客服昵称']
                             const info=[response_average,success_rate,satisfaction_rate,amount,reception_num,qa_rate,
                                 work_days,price,out_num,unresponse_num,ave_satisfied_num,dissatisfied_num,very_dissatisfied_num,servicer_group,
                                 score_rate,slow_response_num,start_time1,end_time1,servicer]
-                            console.log(info)
                             insertInfo = await tmallService.updateTmallPs(info)
                         }
                         
@@ -388,10 +385,10 @@ const importTmallPsData = async (req, res, next) => {
                 } else {
                     let count = 3                   
                     for (const row of jsonData){
-                        if(row['旺旺']!='汇总'&&row['旺旺']!='均值'){
+                        if(row['客服昵称']!='汇总'&&row['客服昵称']!='均值'){
                             const start_time1=start_time
                             const end_time1=end_time
-                            const servicer=row['旺旺']
+                            const servicer=row['客服昵称']
                             const response_average=row['平均响应(秒)'] != null ? row['平均响应(秒)'] : null
                             const success_rate=row['询单->次日付款成功率'] != null ? Number((row['询单->次日付款成功率']*100).toFixed(2)) : null
                             const satisfaction_rate=row['客户满意率']!=null ? Number((row['客户满意率']*100).toFixed(2)) : null
@@ -405,7 +402,7 @@ const importTmallPsData = async (req, res, next) => {
                             const ave_satisfied_num=row['服务满意度评价一般']!= null ? row['服务满意度评价一般'] : null
                             const dissatisfied_num=row['服务满意度评价不满']!= null ? row['服务满意度评价不满'] : null
                             const very_dissatisfied_num=row['服务满意度评价很不满']!= null ? row['服务满意度评价很不满'] : null
-                            const servicer_group=row['旺旺分组']!= null ? row['旺旺分组'] : null
+                            const servicer_group=row['客服分组']!= null ? row['客服分组'] : null
                             const score_rate=row['服务满意度评价参与率']!= null ? Number((row['服务满意度评价参与率']*100).toFixed(2)) : null
                             const slow_response_num=row['慢接待人数']!= null ? row['慢接待人数'] : null
                             info.push([start_time1,

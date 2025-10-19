@@ -3,21 +3,49 @@ const sequelize = require('../model/init');
 const {QueryTypes, Op,col,fn, literal} = require("sequelize");
 const getJDDailyReport = require("../model/jdDailyReport")
 const JDDailyReport = getJDDailyReport(sequelize)
-
+const { query, transaction } = require('../model/dbConn')
 
 
 const inquiryTodayjdDailyReport = async () => {
 
-    return  JDDailyReport.findAll({
-        where: {
-            reportTime:
-                {
-                    [Op.gte]: fn('DATE_SUB', fn('CURDATE'), literal('INTERVAL 1 DAY'))
-                }
-        },
-        logging:true,
-        raw:true
-    })
+    // return  JDDailyReport.findAll({
+    //     where: {
+    //         reportTime:
+    //             {
+    //                 [Op.gte]: fn('DATE_SUB', fn('CURDATE'), literal('INTERVAL 1 DAY'))
+    //             }
+    //     },
+    //     logging:true,
+    //     raw:true
+    // })
+    let sql = `SELECT a.*,b.userDef1,b.operator FROM (
+        SELECT a.*,(a.sale_amount/b.s_sale_amount-1)*100 AS huanbi,b.s_sale_amount FROM (
+        SELECT code,MAX(sku) as sku
+			,SUM(profit) AS profit
+            ,SUM(total_promotion) AS promotion_amount
+            ,SUM(transaction_amount) AS sale_amount
+            ,SUM(profit)/SUM(transaction_amount)*100 AS profit_rate
+            ,(CASE 
+                WHEN DATEDIFF(CURRENT_DATE,min(listing_date))<=30 THEN '新品30'
+                WHEN DATEDIFF(CURRENT_DATE,min(listing_date))<=60 THEN '新品60'
+                ELSE '老品'
+            END) AS listing_Info
+        FROM jd_daily_report 
+        WHERE report_time BETWEEN DATE_SUB(CURRENT_DATE,INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE,INTERVAL 1 DAY) 
+        GROUP BY code
+        )AS a
+        LEFT JOIN (
+                SELECT code,SUM(transaction_amount) AS s_sale_amount 
+                FROM jd_daily_report 
+                WHERE report_time BETWEEN DATE_SUB(CURRENT_DATE,INTERVAL 14 DAY) AND DATE_SUB(CURRENT_DATE,INTERVAL 8 DAY) 
+                GROUP BY code
+        )AS b
+        ON a.code = b.code) AS a 
+        LEFT JOIN dianshang_operation_attribute AS b
+        ON a.sku = b.sku_id 
+        WHERE b.userDef1 != '下柜'`
+    let result = await query(sql)
+    return result
 }
 
 

@@ -48,6 +48,11 @@ const {getInquiryTodayjdDailyReport} = require("@/service/JDDailyReportBaoServic
 const {getOperateAttributesMaintainer} = require("@/repository/dianShangOperationAttributeRepo");
 const {sendDingReportBao} = require("@/service/dingReportBaoService");
 const {timingSynchronization} = require("@/service/notice/confirmationNoticeService");
+const commonReq = require('@/core/bpmReq/commonReq')
+const systemUsersRepo = require('@/repository/bpm/systemUsersRepo')
+const credentialsReq = require("../core/dingDingReq/credentialsReq")
+const actReProcdefRepo = require('../repository/bpm/actReProcdefRepo')
+const dianShangOperationAttributeService = require('./dianShangOperationAttributeService')
 const writeFile = util.promisify(fs.writeFile);
 const readFile = util.promisify(fs.readFile);
 const syncWorkingDay = async () => {
@@ -114,6 +119,7 @@ const syncDepartmentWithUser = async () => {
     await redisUtil.set(redisKeys.DepartmentsUsers, JSON.stringify(allDepartmentsWithUsers))
     globalSetter.setGlobalUsersOfDepartments(allDepartmentsWithUsers)
     // 保存入库并设置无效关系： 离职、调部门等
+    await departmentUsersRepo.remove()
     await loopSaveDeptUserAndSetInvalidInfo(allDepartmentsWithUsers)
     logger.info("同步完成：syncDepartmentWithUser")
     console.log("同步完成")
@@ -162,6 +168,7 @@ const syncUserWithDepartment = async () => {
         //     user.leader_in_dept.push(...extension.virtualDeps)
         // }
     }
+    logger.info(usersWithDepartment)
     
     await redisUtil.set(redisKeys.Users, JSON.stringify(usersWithDepartment))
     globalSetter.setGlobalUsers(usersWithDepartment)
@@ -638,9 +645,10 @@ const syncProcessVersions = async (cookies) => {
 const jdLinkDataIsAutomaticallyInitiated = async () => {
     logger.info("京东同步进行中...")
     const userList = await userService.getDingDingUserIdAndNickname()
+    let aa = await credentialsReq.getBpmgAccessToken()
+    let processDefinitionId =await actReProcdefRepo.getProcessDefinitionId('京东链接优化流程','form-42')
     const removeDuplicateLinkIds = async () => {
         const runningFightingFlows = await getInquiryTodayjdDailyReport();
-
         // 使用 Set 存储已出现的 linkId
         const seenLinkIds = new Set();
         const uniqueFlows = runningFightingFlows.filter(item => {
@@ -652,8 +660,8 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
         });
         for (const runningFightingFlow of uniqueFlows) {
             const listingInfo = runningFightingFlow.listingInfo;
+            // 链接属性
             const selectField_lma827of = (listingInfo === '新品30' || listingInfo === '新品60') ? '新品' : '老品';
-
             if (selectField_lma827of==='老品'){
                 const maintenance=await  getOperateAttributesMaintainer(runningFightingFlow.linkId)
                 runningFightingFlow.operationsLeader = maintenance.maintenanceLeader
@@ -662,32 +670,35 @@ const jdLinkDataIsAutomaticallyInitiated = async () => {
             if(runningFightingFlow.operationsLeader==="无操作"){
                 logger.info(" 发送通知 ?--->..."+runningFightingFlow.linkId,runningFightingFlow.operationsLeader,runningFightingFlow.questionType)
             }else {
-                const matchingUser = userList.find((user) => user.nickname === runningFightingFlow.operationsLeader);
-                const uuid = matchingUser ? matchingUser.dingding_user_id : null;
-
+                // const matchingUser = userList.find((user) => user.nickname === runningFightingFlow.operationsLeader);
+                // const uuid = matchingUser ? matchingUser.dingding_user_id : null;
+                const ID = await systemUsersRepo.getID(runningFightingFlow.operationsLeader)
+                // 流程名称
                 const textField_lma827od = runningFightingFlow.code
-                const employeeField_lma827ok= uuid
+                // 链接负责人
+                const employeeField_lma827ok= ID[0].id
+                // console.log(employeeField_lma827ok)
+                // 链接ID
                 const textField_lma827oe= runningFightingFlow.linkId
-
-
+                // 问题类型
                 const checkboxField_m11r277t = runningFightingFlow.questionType
-                const  radioField_locg3nxq= '简单'
 
-                const formDataJsonStr = JSON.stringify({
+                const variables = ({
                     textField_lma827od,
                     employeeField_lma827ok,
                     textField_lma827oe,
                     selectField_lma827of,
                     checkboxField_m11r277t,
-                    radioField_locg3nxq
-                }, null, 2);
-                 await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
+                });
+                await commonReq.createJDProcess(269, processDefinitionId, variables,aa.data.refreshToken)
+                // await commonReq.createJDProcess(144, "fdvfdgbnfg:1:94d56ff2-4765-11f0-b865-d8bbc176bad5", variables)
+                // await dingDingService.createProcess('FORM-KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLW', "02353062153726101260", 'TPROC--KW766OD1UJ0E80US7YISQ9TMNX5X36QZ18AMLX', formDataJsonStr);
             }
-            }
-            }
-            await removeDuplicateLinkIds();
+        }
+    }
+    await removeDuplicateLinkIds();
     logger.info("同步完成：京东异常发起")
-    };
+};
 
 const purchaseSelectionMeetingInitiated = async () => {
     await  sendDingReportBao()
@@ -771,7 +782,10 @@ async function executeTask(type) {
     }
 }
 
-
+async function updateAttribute() {
+    let result = await dianShangOperationAttributeService.updateAttribute()
+    return result
+}
 
 module.exports = {
     syncOaProcessTemplates,
@@ -797,5 +811,6 @@ module.exports = {
     purchaseSelectionMeetingInitiated,
     saveFlowsToRedisFromFile,
     confirmationNotice,
-    executeTask
+    executeTask,
+    updateAttribute
 }

@@ -29,12 +29,17 @@ const patchUtil = require("@/patch/patchUtil")
 const userCommonService = require("@/service/common/userCommonService");
 const outUsersRepo = require("@/repository/outUsersRepo");
 const newFormsRepo = require('../repository/newFormsRepo')
-const { designerTags, nameFilter, tableHeaderExtra } = require("../const/newFormConst")
+const { designerTags, nameFilter, tableHeaderExtra, newPannelHeader } = require("../const/newFormConst")
 const userOperationRepo = require("../repository/operation/userOperationRepo")
 const userFlowSettingRepo = require("../repository/userFlowSettingRepo")
-const { typeList, operationSelectionFlow, operationSelectionFlowNode, analysisFieldMap, analysisFlowUUid, analysisLinkPrevious } = require("../const/operationConst")
+const { typeList, operationSelectionFlow, operationSelectionFlowNode, analysisFieldMap, analysisFlowUUid, analysisLinkPrevious, processTypeList, specificTypeList } = require("../const/operationConst")
+const divisionInfoRepo = require('../repository/operation/divisionInfoRepo')
+const projectInfoRepo = require('../repository/operation/projectInfoRepo')
+const teamInfoRepo = require('../repository/operation/teamInfoRepo')
 const moment = require('moment')
 const { createProcess } =  require('./dingDingService')
+const actHiProcinstRepo = require("@/repository/bpm/actHiProcinstRepo")
+const processesRepo = require("@/repository/process/processesRepo")
 
 const filterFlowsByTimesRange = (flows, timesRange) => {
     const satisfiedFlows = []
@@ -1285,6 +1290,7 @@ const getFlowSplitFormfieldKeyAndField = async (formId, fieldKey, selectField, f
 const getFlows = async (params, id) => {
     let result, setting = []
     if (params.tag) result = await newFormsRepo.getFlowInstances(params)
+    else if (params.dept) result = await newFormsRepo.getDevelopmentFlowInstances(params)
     else result = await newFormsRepo.getOperationFlowInstances(params)
     if (result?.length) {
         for (let index = 0; index < result.length; index++) {
@@ -1353,13 +1359,77 @@ const getFlowsProcesses = async (params, offset, limit) => {
 }
 
 const getOperationProcesses = async (user, params, offset, limit) => {
-    let permissions = await userOperationRepo.getPermission(user.id)
-    params.type = 0
-    if (permissions[0].type != typeList.division.key) {
-        params.type = 1
-        params.nickname = params.nickname
+    params.user_type = 1
+    let permissions = []
+    if (params.type) {
+        switch (parseInt(params.type)) {
+            case typeList.division.key:
+                permissions = await divisionInfoRepo.getProjectByDivisionName(params.name)
+                break
+            case typeList.project.key:
+                permissions = await projectInfoRepo.getTeamByProjectName(params.name)
+                if (!permissions?.length)
+                    permissions = await projectInfoRepo.getUserByProjectName(params.name)
+                break
+            case typeList.team.key:
+                permissions = await teamInfoRepo.getUserByTeamName(params.name)
+                break
+            case typeList.user.key:
+                permissions = await userOperationRepo.getUserByName(params.name)
+                break
+            default:
+        }
+    } else {
+        permissions = await userOperationRepo.getPermissionLimit(user.id)
+    }
+    if (permissions.length == 0) return result
+    let users = [] 
+    for (let i = 0; i < permissions.length; i++) {
+        if (i > 0 && permissions[i].type != permissions[i-1].type) break
+        let userList = []
+        switch (permissions[i].type) {
+            case typeList.division.key:
+                userList = await divisionInfoRepo.getUsersById(permissions[i].detail_id)
+                break
+            case typeList.project.key:
+                userList = await projectInfoRepo.getUsersById(permissions[i].detail_id) 
+                break
+            case typeList.team.key:
+                userList = await teamInfoRepo.getUsersById(permissions[i].detail_id)
+                break
+            case typeList.user.key:
+                userList = await userOperationRepo.getUserById(permissions[i].detail_id)
+                break
+            default:
+        }
+        if (userList?.length) users = users.concat(userList)
+    }
+    params.userNames = '', params.names = ''
+    for (let i = 0; i < users.length; i++) {
+        params.userNames = `${params.userNames}"${users[i].nickname}",`
+        params.names = `${params.names}'["${users[i].nickname}"]',`
+    }
+    if (params.userNames?.length > 0) {
+        params.userNames = params.userNames.substring(0, params.userNames.length - 1)
+        params.names = params.names.substring(0, params.names.length - 1)
     }
     let result = await newFormsRepo.getOperationProcessInstances(params, offset, limit)
+    return result
+}
+
+const getDevelopmentProcesses = async (params, offset, limit) => {
+    let users = await userRepo.getUserByDeptName('产品开发部')
+    let userNames = ''
+    for (let i = 0; i < users.length; i++) {
+        if (users[i].nickname != '崔竹') {
+            userNames = `${userNames}"${users[i].nickname}",`
+        }
+    }
+    if (userNames?.length) {
+        if (params.type == 1) userNames = `${userNames}"孙旭东"`
+        else userNames = userNames.substring(0, userNames.length - 1)
+    }
+    let result = await newFormsRepo.getDevelopmentProcessInstances(userNames, params, offset, limit)
     return result
 }
 
@@ -1415,6 +1485,46 @@ const getVisionReview = async () => {
 
 const getVisionPlan = async () => {
     let result = await newFormsRepo.getVisionInfo(1)
+    return result
+}
+
+const getVisionNewPannel = async (params) => {
+    let columns = newPannelHeader;
+    let data = await newFormsRepo.getVisionNewPannel(params)
+    return {columns, data}
+}
+
+const getVisionDetail = async (start, end) => {
+    let result = []
+    let info = await processesRepo.getVisionDetail(start, end)
+    for (let i = 0; i < info.length; i++) {
+        info[i]['link_id'] = `http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=${info[i].process_id}`
+        let vision_type = JSON.parse(info[i]['vision_type'])
+        let vision = JSON.parse(info[i]['content'])
+        for (let j = 0; j < vision.length; j++) {
+            if (vision_type != null && !vision_type.includes(info[i]['previous']) && 
+                ['原创-全套', '原创-全套详情', '半原创', '基础修改'].includes(info[i]['previous'])) continue
+            let tmp = {
+                name: '',
+                previous: info[i]['previous'],
+                title: '',
+                platform: info[i]['platform'],
+                num: '',
+                score: '',
+                start: info[i]['start'],
+                form_title: info[i]['form_title'],
+                process_title: info[i]['process_title'],
+                link_id: info[i]['link_id']
+            }
+            for (let index in vision[j]) {
+                if (index.indexOf('-视觉类型') != -1 || index == '原创-全套') tmp.title = vision[j][index]
+                else if (['视觉执行人', '视觉负责人'].includes(index)) tmp.name = vision[j][index]
+                else if (index == '数量') tmp.num = vision[j][index]
+                else if (index == '分值') tmp.score = vision[j][index]
+            }
+            result.push(tmp)
+        }
+    }
     return result
 }
 
@@ -1544,6 +1654,232 @@ const getOperateSelectionHeader = async (type, id) => {
     return {data: result, permit: permissions?.length && permissions[0].type < 4}
 }
 
+const getOperateAnalysis = async (start, end, user_id, params) => {
+    let result = [], resultMap = {}, type = null, permissions = []
+    params.userNames = []
+    params.names = []
+    let tmp = {
+        name: '',
+        type: '',
+        assigning: 0,
+        running: 0,
+        overdue: 0,
+        complete: 0,
+        choose: 0,
+        unchoose: 0
+    }
+    if (params.type) {
+        switch (parseInt(params.type)) {
+            case typeList.division.key:
+                permissions = await divisionInfoRepo.getProjectByDivisionName(params.name)
+                type = typeList.project.key
+                break
+            case typeList.project.key:
+                permissions = await projectInfoRepo.getUserByProjectName(params.name)
+                let team = await projectInfoRepo.getTeamByProjectName(params.name)
+                for (let i = 0; i < team.length; i++) {
+                    let permit = await teamInfoRepo.getUserByTeamName(team[i].name)
+                    permissions = permissions.concat(permit)
+                }
+                if (['宝选天猫', 'TEOTM', '淘工厂'].includes(params.name)) permissions = permissions.concat([{name: '王洪彬', type: 5, detail_id: 98}])
+                else if (params.name == '拼多多') permissions = permissions.concat([{name: '邓健康', type: 5, detail_id: 71}])
+                type = typeList.user.key
+                break
+            default:
+        }
+    } else {
+        permissions = await userOperationRepo.getPermissionLimit(user_id)
+        if (permissions[0].type == typeList.team.key) {
+            permissions = await userOperationRepo.getUserByTeamName(permissions[0].name)
+            type = typeList.user.key
+        } else if (permissions[0].type < typeList.team.key) {
+            type = permissions[0].type
+        }
+    }
+    
+    if (permissions.length == 0) return result
+    let pMap = {}
+    for (let i = 0; i < permissions.length; i++) {
+        if (!pMap[permissions[i].name]) pMap[permissions[i].name] = i
+        else {
+            permissions.splice(i, 1)
+            i--
+        }
+    }
+    for (let i = 0; i < permissions.length; i++) {
+        if (i > 0 && permissions[i].type != permissions[i-1].type) break
+        let userList = []
+        switch (permissions[i].type) {
+            case typeList.division.key:
+                userList = await divisionInfoRepo.getUsersById(permissions[i].detail_id)
+                break
+            case typeList.project.key:
+                userList = await projectInfoRepo.getUsersById(permissions[i].detail_id) 
+                break
+            case typeList.team.key:
+                userList = await teamInfoRepo.getUsersById(permissions[i].detail_id)
+                break
+            case typeList.user.key:
+                userList = await userOperationRepo.getUserById(permissions[i].detail_id)
+                break
+            default:
+        }
+        if (userList?.length) {
+            let userNames = '', names = ''
+            for (let j = 0; j < userList.length; j++) {
+                userNames = `${userNames}"${userList[j].nickname}",`
+                names = `${names}'["${userList[j].nickname}"]',`
+            }
+            userNames = userNames.substring(0, userNames.length - 1)
+            names = names.substring(0, names.length - 1)
+            params.userNames.push(userNames)
+            params.names.push(names)
+            if (params.typeName) {
+                let item = JSON.parse(JSON.stringify(tmp))
+                item.name = permissions[i].name
+                item.type = params.typeName
+                resultMap[`${item.name}_${params.typeName}`] = result.length
+                result.push(item)
+            } else {
+                for (let j = 0; j < processTypeList.length; j++) {                
+                    let item = JSON.parse(JSON.stringify(tmp))
+                    item.name = permissions[i].name
+                    item.type = processTypeList[j]
+                    resultMap[`${item.name}_${processTypeList[j]}`] = result.length
+                    result.push(item)
+                }
+            }
+        }
+    }
+    let info = await actHiProcinstRepo.getAnalysisInfo(start, end, type, params.name, params.typeName)
+    for (let i = 0; i < info?.length; i++) {
+        let index = resultMap[`${info[i].name}_${info[i].type}`]
+        if (info[i].info == 0) result[index].assigning = parseInt(info[i].count)
+        else if (info[i].info == 1) result[index].running = parseInt(info[i].count)
+        else if (info[i].info == 2) result[index].complete = parseInt(info[i].count)
+        else if (info[i].info == 3) result[index].choose = parseInt(info[i].count)
+        else if (info[i].info == 4) result[index].unchoose = parseInt(info[i].count)
+        else result[index].overdue = parseInt(info[i].count)
+    }
+    return { data: result, type }
+}
+
+const getOperateSpecific = async (start, end, user_id, params) => {
+    let result = [], resultMap = {}, type = null, permissions = []
+    params.userNames = []
+    params.names = []
+    let tmp = {
+        name: '',
+        type: '',
+        running: 0,
+        overdue: 0,
+        complete: 0,
+        vision_running: 0,
+        vision_completed: 0,
+        shelfing: 0,
+        purchase: 0,
+        shelf: 0
+    }
+    if (params.type) {
+        switch (parseInt(params.type)) {
+            case typeList.division.key:
+                permissions = await divisionInfoRepo.getProjectByDivisionName(params.name)
+                type = typeList.project.key
+                break
+            case typeList.project.key:
+                permissions = await projectInfoRepo.getUserByProjectName(params.name)
+                let team = await projectInfoRepo.getTeamByProjectName(params.name)
+                for (let i = 0; i < team.length; i++) {
+                    let permit = await teamInfoRepo.getUserByTeamName(team[i].name)
+                    permissions = permissions.concat(permit)
+                }
+                if (['宝选天猫', 'TEOTM', '淘工厂'].includes(params.name)) permissions = permissions.concat([{name: '王洪彬', type: 5, detail_id: 98}])
+                else if (params.name == '拼多多') permissions = permissions.concat([{name: '邓健康', type: 5, detail_id: 71}])
+                else if (params.name == '京东') permissions = permissions.concat([{name: '哈默德', type: 5, detail_id: 316}])
+                else if (params.name == 'COUPANG') permissions = permissions.concat([{name: '廖泽涛', type: 5, detail_id: 365}, {name: '杨君怡', type: 5, detail_id: 377}])
+                type = typeList.user.key
+                break
+            default:
+        }
+    } else {
+        permissions = await userOperationRepo.getPermissionLimit(user_id)
+        if (permissions[0].type == typeList.team.key) {
+            permissions = await userOperationRepo.getUserByTeamName(permissions[0].name)
+            type = typeList.user.key
+        } else if (permissions[0].type < typeList.team.key) {
+            type = permissions[0].type
+        }
+    }
+    
+    if (permissions.length == 0) return result
+    let pMap = {}
+    for (let i = 0; i < permissions.length; i++) {
+        if (!pMap[permissions[i].name]) pMap[permissions[i].name] = i
+        else {
+            permissions.splice(i, 1)
+            i--
+        }
+    }
+    for (let i = 0; i < permissions.length; i++) {
+        if (i > 0 && permissions[i].type != permissions[i-1].type) break
+        let userList = []
+        switch (permissions[i].type) {
+            case typeList.division.key:
+                userList = await divisionInfoRepo.getUsersById(permissions[i].detail_id)
+                break
+            case typeList.project.key:
+                userList = await projectInfoRepo.getUsersById(permissions[i].detail_id) 
+                break
+            case typeList.team.key:
+                userList = await teamInfoRepo.getUsersById(permissions[i].detail_id)
+                break
+            case typeList.user.key:
+                userList = await userOperationRepo.getUserById(permissions[i].detail_id)
+                break
+            default:
+        }
+        if (userList?.length) {
+            let userNames = '', names = ''
+            for (let j = 0; j < userList.length; j++) {
+                userNames = `${userNames}"${userList[j].nickname}",`
+                names = `${names}'["${userList[j].nickname}"]',`
+            }
+            userNames = userNames.substring(0, userNames.length - 1)
+            names = names.substring(0, names.length - 1)
+            params.userNames.push(userNames)
+            params.names.push(names)
+            if (params.typeName) {
+                let item = JSON.parse(JSON.stringify(tmp))
+                item.name = permissions[i].name
+                item.type = params.typeName
+                resultMap[`${item.name}_${params.typeName}`] = result.length
+                result.push(item)
+            } else {
+                for (let j = 0; j < specificTypeList.length; j++) {                
+                    let item = JSON.parse(JSON.stringify(tmp))
+                    item.name = permissions[i].name
+                    item.type = specificTypeList[j]
+                    resultMap[`${item.name}_${specificTypeList[j]}`] = result.length
+                    result.push(item)
+                }
+            }
+        }
+    }
+    let info = await actHiProcinstRepo.getSpecificInfo(start, end, type, params.name, params.typeName)
+    for (let i = 0; i < info?.length; i++) {
+        let index = resultMap[`${info[i].name}_${info[i].type}`]
+        if (info[i].info == 0) result[index].overdue = parseInt(info[i].count)
+        else if (info[i].info == 1) result[index].running = parseInt(info[i].count)
+        else if (info[i].info == 2) result[index].complete = parseInt(info[i].count)
+        else if (info[i].info == 3) result[index].vision_running = parseInt(info[i].count)
+        else if (info[i].info == 4) result[index].vision_completed = parseInt(info[i].count)
+        else if (info[i].info == 5) result[index].shelfing = parseInt(info[i].count)
+        else if (info[i].info == 6) result[index].purchase = parseInt(info[i].count)
+        else result[index].shelf = parseInt(info[i].count)
+    }
+    return { data: result, type }
+}
+
 const createOperateAnalysis = async (platform, operator, instance_id, id) => {
     const permissions = await userOperationRepo.getPermission(id)
     if (!permissions?.length || permissions[0].type >= 4) return false
@@ -1602,11 +1938,16 @@ module.exports = {
     setFlowHeader,
     getFlowsProcesses,
     getOperationProcesses,
+    getDevelopmentProcesses,
     getVisionProcesses,
     getFlowsActions,
     getVisionReview,
     getVisionPlan,
+    getVisionDetail,
     getOperateSelection,
     getOperateSelectionHeader,
-    createOperateAnalysis
+    getOperateAnalysis,
+    getOperateSpecific,
+    createOperateAnalysis,
+    getVisionNewPannel
 }

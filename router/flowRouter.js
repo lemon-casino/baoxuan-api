@@ -49,12 +49,22 @@ router.get("/vision-review", flowHandler.getVisionReview)
  * 视觉方案
  */
 router.get("/vision-plan", flowHandler.getVisionPlan)
+/**
+ * 新版爆款-视觉画板
+ */
+router.get('/vision-new-pannel', flowHandler.getVisionNewPannel)
 router.get("/vision-action-details", flowHandler.getVisionUsersDetails)
+router.get('/vision/detail', flowHandler.getVisionDetail)
 /**
  * 运营选品池
  */
 router.get("/operate-selection", flowHandler.getOperateSelection)
 router.get("/operate-selection-header", flowHandler.getOperateSelectionHeader)
+router.get("/operate-analysis", flowHandler.getOperateAnalysis)
 router.post("/operate-analysis/create", flowHandler.createOperateAnalysis)
+/**
+ * 爆款方案
+ */
+router.get('/operate-specific', flowHandler.getOperateSpecific)
 
 module.exports = router;

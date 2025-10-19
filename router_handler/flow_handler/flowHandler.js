@@ -80,6 +80,8 @@ const getFlowsProcessByIds = async (req, res, next) => {
         let process = []
         if (req.query?.tag == 'visionLeader') {
             process = await flowService.getVisionProcesses(req.query, offset, limit)
+        } else if (req.query.dept == 'development') {
+            process = await flowService.getDevelopmentProcesses(req.query, offset, limit)
         } else if (req.query?.ids) {
             process = await flowService.getOperationProcesses(req.user, req.query, offset, limit)
         } else {
@@ -110,10 +112,19 @@ const getFlowProcessActions = async (req, res, next) => {
  */
 const exportFlowsProcess = async (req, res, next) => {
     try {
-        joiUtil.clarityValidate(flowSchema.requiredIdSchema, req.body)
+        joiUtil.clarityValidate(flowSchema.getFlowsActionsSchema, req.body)
         const flows = await flowService.getFlows(req.body)
         if (!flows?.length) return res.send(biResponse.canTFindIt)
-        const data = await flowService.getFlowsProcesses(req.body)
+        let data = []
+        if (req.body?.tag == 'visionLeader') {
+            data = await flowService.getVisionProcesses(req.body)
+        } else if (req.body.dept == 'development') {
+            data = await flowService.getDevelopmentProcesses(req.body)
+        } else if (req.body?.ids) {
+            data = await flowService.getOperationProcesses(req.user, req.body)
+        } else {
+            data = await flowService.getFlowsProcesses(req.body)
+        }
         const workbook = new ExcelJS.Workbook()
         const worksheet = workbook.addWorksheet(flows[0].flowFormName)
         let tmpDefault = {
@@ -132,12 +143,14 @@ const exportFlowsProcess = async (req, res, next) => {
             { header: '审批人', key: 'operator', isDefault: true },
         ]
         for (let i = 0; i < flows[0].flowFormDetails.length; i++) {
-            columns.push({
-                header: flows[0].flowFormDetails[i].fieldName,
-                key: flows[0].flowFormDetails[i].fieldId,
-                isDefault: true
-            })
-            tmpDefault[flows[0].flowFormDetails[i].fieldId] = null
+            if (!['processInstanceId', 'creator', 'title'].includes(flows[0].flowFormDetails[i].fieldId)) {
+                columns.push({
+                    header: flows[0].flowFormDetails[i].fieldName,
+                    key: flows[0].flowFormDetails[i].fieldId,
+                    isDefault: true
+                })
+                tmpDefault[flows[0].flowFormDetails[i].fieldId] = null
+            }
         }
 
         worksheet.columns = columns
@@ -153,7 +166,8 @@ const exportFlowsProcess = async (req, res, next) => {
             tmp['action'] = data.data[i].action
             tmp['operator'] = data.data[i].operator
             for (let j = 0; j < data.data[i].data.length; j++) {
-                tmp[data.data[i].data[j].fieldId] = data.data[i].data[j].fieldValue
+                tmp[data.data[i].data[j].fieldId] = data.data[i].data[j].fieldValue.length ? 
+                    data.data[i].data[j].fieldValue.replace(/"/g, '') : null
             }
 
             worksheet.addRow(tmp)
@@ -207,7 +221,7 @@ const getVisionUsersStat = async (req, res, next) => {
                 break
             case coreActionStatTypeConst.StatUser: 
                 result = await visionCoreActionService.getUsersStat(tags, 
-                    ["482162119", "933412643", "962724541", "962893128"], 
+                    ["482162119", "933412643", "962724541", "962893128", "973369955", "973499911", "973568918", "973641822", "973809817"], 
                     userId, userNames, start, end)
                 break
             case coreActionStatTypeConst.StatLeader:
@@ -246,9 +260,51 @@ const getVisionUsersDetails = async (req, res, next) => {
             case coreActionStatTypeConst.StatPhotographer:
                 result = await visionCoreActionService.getPhotographerDetails(JSON.parse(users), action, start, end)
                 break
+            case coreActionStatTypeConst.StatLeader:
+                result = await visionCoreActionService.getLeaderDetails(start, end)
+                break
             default:
         }
         return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getVisionDetail = async (req, res, next) => {
+    try {
+        const {startDate, endDate, is_export} = req.query
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+        })
+        
+        const start = moment(startDate).format('YYYY-MM-DD')
+        const end = moment(endDate).format('YYYY-MM-DD')
+        const result = await flowService.getVisionDetail(start, end)
+        if (is_export == '1') {
+            const workbook = new ExcelJS.Workbook()
+            const sheet = workbook.addWorksheet()
+            sheet.columns = [
+                { header: "name", key: 'name' },
+                { header: "previous", key: 'previous' },
+                { header: "title", key: 'title' },
+                { header: "platform", key: 'platform' },
+                { header: "num", key: 'num' },
+                { header: "score", key: 'score' },
+                { header: "start", key: 'start' },
+                { header: "form_title", key: 'form_title' },
+                { header: "process_title", key: 'process_title' },
+                { header: "link_id", key: 'link_id' },
+            ]
+            for (let i = 0; i < result.length; i++) {
+                sheet.addRow(result[i])
+            }
+            const buffer = await workbook.xlsx.writeBuffer()
+            res.setHeader('Content-Disposition', `attachment; filename="vision-${start}_${end}.xlsx"`)
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            return res.end(buffer)
+        } else return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
     }
@@ -353,7 +409,7 @@ const getFormsFlowsActivitiesStat = async (req, res, next) => {
             deptIds: {value: deptIds, schema: joiUtil.commonJoiSchemas.arrayRequired}
         })
         if (deptIds.includes("933412643")) {
-            deptIds.push("962724541", "962893128")
+            deptIds.push("962724541", "962893128", "973369955", "973499911", "973568918", "973641822", "973809817")
         }
         const result = await flowService.getFormsFlowsActivitiesStat(userId, startDate, endDate, formIds, deptIds)
         return res.send(biResponse.success(result))
@@ -374,6 +430,15 @@ const getVisionReview = async (req, res, next) => {
 const getVisionPlan = async (req, res, next) => {
     try {
         const result = await flowService.getVisionPlan()
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+const getVisionNewPannel = async (req, res, next) => {
+    try {
+        const result = await flowService.getVisionNewPannel(req.query)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -402,6 +467,38 @@ const getOperateSelectionHeader = async (req, res, next) => {
             type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}
         })
         const result = await flowService.getOperateSelectionHeader(parseInt(type), req.user.id)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+//市场分析
+const getOperateAnalysis = async (req, res, next) => {
+    try {
+        const { startDate, endDate } = req.query
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        let start = moment(startDate).format('YYYY-MM-DD')
+        let end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
+        const result = await flowService.getOperateAnalysis(start, end, req.user.id, req.query)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+//爆款方案
+const getOperateSpecific = async (req, res, next) => {
+    try {
+        const { startDate, endDate } = req.query
+        joiUtil.validate({
+            startDate: {value: startDate, schema: joiUtil.commonJoiSchemas.dateRequired},
+            endDate: {value: endDate, schema: joiUtil.commonJoiSchemas.dateRequired}
+        })
+        let start = moment(startDate).format('YYYY-MM-DD')
+        let end = moment(endDate).format('YYYY-MM-DD') + ' 23:59:59'
+        const result = await flowService.getOperateSpecific(start, end, req.user.id, req.query)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -444,5 +541,9 @@ module.exports = {
     getVisionUsersDetails,
     getOperateSelection,
     getOperateSelectionHeader,
-    createOperateAnalysis
+    getOperateAnalysis,
+    getOperateSpecific,
+    createOperateAnalysis,
+    getVisionNewPannel,
+    getVisionDetail
 }

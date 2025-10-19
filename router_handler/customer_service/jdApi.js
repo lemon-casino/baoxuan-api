@@ -16,7 +16,6 @@ const getJDDataByDate = async (req, res, next) => {
         const options_servicer=await jdService.getServicer(req.query.startDate, req.query.endDate)
         const columns = [
             { header: '店铺名', key: 'shopname', isDefault: true },
-            // { header: '日期', key: 'date', isDefault: true },
             { header: '客服', key: 'servicer', isDefault: true },
             { header: '咨询量', key: 'reception_num', isDefault: true },
             { header: '上周咨询量', key: 'reception_num1', isDefault: true },
@@ -130,7 +129,6 @@ const getJDKFDataByDate = async (req, res, next) => {
         joiUtil.clarityValidate(customerServiceSchema.requiredDateSchema, req.query)
         const data = await jdService.getJDKFDataByDate(req.query.startDate, req.query.endDate, req.query.servicer)
         const img = await jdService.getJDImgByDate(req.query.startDate, req.query.endDate)
-        console.log(img)
         const options_servicer=await jdService.getServicer(req.query.startDate, req.query.endDate)
         const columns = [
             { header: '客服', key: 'servicer', isDefault: true },
@@ -146,10 +144,11 @@ const getJDKFDataByDate = async (req, res, next) => {
             const workbook = new ExcelJS.Workbook()
             const worksheet = workbook.addWorksheet('京东')
             let tmpDefault = {
-                shopname: null,
                 date: null,
                 servicer: null,
                 reception_num: null,
+                login_duration:null,
+                reception_duration:null,
                 response_in_30_rate: null,
                 satisfaction_rate: null,
                 amount: null,
@@ -159,19 +158,7 @@ const getJDKFDataByDate = async (req, res, next) => {
             worksheet.columns = columns
 
             let tmp = JSON.parse(JSON.stringify(tmpDefault))
-            let j = 0
-            let imageBuffer = fs.readFileSync(img[j].img_url)
-            let image = await workbook.addImage({
-                buffer: imageBuffer,
-                extension: img[j].img_url.split('.')[1]
-            })
-            worksheet.addImage(image, {
-                tl: { col: 12, row: 0 },
-                br: { col: 13, row: 1 },
-                editAs: 'oneCell',
-            })
-                
-            tmp['shopname'] = data[i].shopname
+            let i = 0
             tmp['date'] = `${req.query.startDate}~${req.query.endDate}`
             tmp['servicer'] = data[i].servicer
             tmp['reception_num'] = data[i].reception_num
@@ -186,7 +173,6 @@ const getJDKFDataByDate = async (req, res, next) => {
                 tmp = JSON.parse(JSON.stringify(tmpDefault))
 
                 if (data[i].shop_name != data[i - 1].shop_name) {
-                    j = j + 1
                     worksheet.addRow(JSON.parse(JSON.stringify(tmpDefault)))
                     worksheet.addRow({
                         shopname: '店铺名',
@@ -199,19 +185,8 @@ const getJDKFDataByDate = async (req, res, next) => {
                         transfer_rate: '24小时下单转化率'
                     })
 
-                    imageBuffer = fs.readFileSync(img[j].img_url)
-                    image = await workbook.addImage({
-                        buffer: imageBuffer,
-                        extension: img[j].img_url.split('.')[1]
-                    })
-                    worksheet.addImage(image, {
-                        tl: { col: 12, row: i },
-                        br: { col: 13, row: i + 1 },
-                        editAs: 'oneCell',
-                    })
                 }
                 
-                tmp['shopname'] = data[i].shopname
                 tmp['date'] = `${req.query.startDate}~${req.query.endDate}`
                 tmp['servicer'] = data[i].servicer
                 tmp['reception_num'] = data[i].reception_num
@@ -258,9 +233,9 @@ const getJDDPDataByDate = async (req, res, next) => {
             const worksheet = workbook.addWorksheet('京东')
             let tmpDefault = {
                 shopname: null,
-                date: null,
-                servicer: null,
                 reception_num: null,
+                login_duration: null,
+                reception_duration: null,
                 response_in_30_rate: null,
                 satisfaction_rate: null,
                 amount: null,
@@ -269,59 +244,8 @@ const getJDDPDataByDate = async (req, res, next) => {
 
             worksheet.columns = columns
 
-            let tmp = JSON.parse(JSON.stringify(tmpDefault))
-            let j = 0
-            let imageBuffer = fs.readFileSync(img[j].img_url)
-            let image = await workbook.addImage({
-                buffer: imageBuffer,
-                extension: img[j].img_url.split('.')[1]
-            })
-            worksheet.addImage(image, {
-                tl: { col: 12, row: 0 },
-                br: { col: 13, row: 1 },
-                editAs: 'oneCell',
-            })
-                
-            tmp['shopname'] = data[i].shopname
-            tmp['date'] = `${req.query.startDate}~${req.query.endDate}`
-            tmp['servicer'] = data[i].servicer
-            tmp['reception_num'] = data[i].reception_num
-            tmp['response_in_30_rate'] = data[i].response_in_30_rate
-            tmp['satisfaction_rate'] = data[i].satisfaction_rate
-            tmp['amount'] = data[i].amount
-            tmp['transfer_rate'] = data[i].transfer_rate
-
-            worksheet.addRow(data[i])
-
-            for (let i = 1; i < data.length; i++) {
-                tmp = JSON.parse(JSON.stringify(tmpDefault))
-
-                if (data[i].shop_name != data[i - 1].shop_name) {
-                    j = j + 1
-                    worksheet.addRow(JSON.parse(JSON.stringify(tmpDefault)))
-                    worksheet.addRow({
-                        shopname: '店铺名',
-                        date: '日期',
-                        servicer: '客服',
-                        reception_num: '咨询量',
-                        response_in_30_rate: '30s应答率',
-                        satisfaction_rate: '满意率',
-                        amount: '24小时下单金额',
-                        transfer_rate: '24小时下单转化率'
-                    })
-
-                    imageBuffer = fs.readFileSync(img[j].img_url)
-                    image = await workbook.addImage({
-                        buffer: imageBuffer,
-                        extension: img[j].img_url.split('.')[1]
-                    })
-                    worksheet.addImage(image, {
-                        tl: { col: 12, row: i },
-                        br: { col: 13, row: i + 1 },
-                        editAs: 'oneCell',
-                    })
-                }
-                
+            for (let i = 0; i < data.length; i++) {
+                let tmp = JSON.parse(JSON.stringify(tmpDefault))
                 tmp['shopname'] = data[i].shopname
                 tmp['date'] = `${req.query.startDate}~${req.query.endDate}`
                 tmp['servicer'] = data[i].servicer
@@ -332,6 +256,19 @@ const getJDDPDataByDate = async (req, res, next) => {
                 tmp['transfer_rate'] = data[i].transfer_rate
 
                 worksheet.addRow(data[i])
+            }
+            
+            for (let i = 0; i < data.length; i++) {
+                let imageBuffer = fs.readFileSync(img[i].img_url)
+                const image = await workbook.addImage({
+                    buffer: imageBuffer,
+                    extension: img[i].img_url.split('.')[1]
+                })
+                worksheet.addImage(image, {
+                    tl: { col: 12, row: i },
+                    br: { col: 13, row: i + 1 },
+                    editAs: 'oneCell',
+                })
             }
 
             const buffer = await workbook.xlsx.writeBuffer()
@@ -362,7 +299,7 @@ const importJDData = async (req, res, next) => {
             
             const file = files.file
             const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
-            fs.rename(file.filepath, newPath, (err) => {  
+            fs.renameSync(file.filepath, newPath, (err) => {  
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()

@@ -1,0 +1,84 @@
+const projectConst = {
+    STATUS: {
+        PENDING: 0, //进行中：立项前
+        SUCCESS: 1, //已完成：成功立项
+        REJECT: -1  //已终止：立项未通过
+    },
+    STATUS_LIST: [
+        {key: 0, value: '进行中：立项前'},
+        {key: 1, value: '已完成：成功立项'},
+        {key: -1, value: '已终止：立项未通过'}
+    ],
+    SEASON_LIST: [
+        {key: '春季3月-5月', value: '春季3月-5月'},
+        {key: '夏季6月-8月', value: '夏季6月-8月'},
+        {key: '秋季9月-12月', value: '秋季9月-12月'},
+        {key: '冬季12月-2月', value: '冬季12月-2月'},
+        {key: '全年', value: '全年'}
+    ],
+    PATENT_BELONGS_LIST: [
+        {key: '工厂', value: '工厂'},
+        {key: '公司', value: '公司'},
+        {key: '无', value: '无'}
+    ],
+    PATENT_TYPE_LIST: [
+        {key: '实用新型', value: '实用新型'},
+        {key: '著作权', value: '著作权'},
+        {key: '发明专利', value: '发明专利'},
+        {key: '外观专利', value: '外观专利'},
+        {key: '无', value: '无'}
+    ],
+    RELATED_LIST: [
+        {key: '过年相关产品', value: '过年相关产品'},
+        {key: '保存产品的相关产品', value: '保存产品的相关产品'},
+        {key: '厨房产品，情人节', value: '厨房产品，情人节'},
+        {key: '春季开学季', value: '春季开学季'},
+        {key: '三八妇女节', value: '三八妇女节'},
+        {key: '春游秋游相关产品', value: '春游秋游相关产品'},
+        {key: '4月热切冷水杯', value: '4月热切冷水杯'},
+        {key: '520节', value: '520节'},
+        {key: '6.1儿童节', value: '6.1儿童节'},
+        {key: '毕业季', value: '毕业季'},
+        {key: '七夕产品', value: '七夕产品'},
+        {key: '准备购买中秋国庆旅游装备', value: '准备购买中秋国庆旅游装备'},
+        {key: '秋季开学产品', value: '秋季开学产品'},
+        {key: '水具换季', value: '水具换季'},
+        {key: '换季产品', value: '换季产品'},
+        {key: '无', value: '无'},
+        {key: '礼品', value: '礼品'},
+        {key: '春夏泡茶类产品', value: '春夏泡茶类产品'}
+    ],
+    DESIGN_TYPE_LIST: [
+        {key: '贴图', value: '贴图'},
+        {key: '缝合', value: '缝合'},
+        {key: '模具创新', value: '模具创新'},
+        {key: 'IP', value: 'IP'},
+        {key: '通货', value: '通货'},
+    ],
+    SALE_PURPOSE_LIST: [
+        {key: '迭代', value: '迭代'},
+        {key: '填补空白', value: '填补空白'}
+    ],
+    EXPLOITATION_FEATURES_LIST: [
+        {key: '通货', value: '通货'},
+        {key: '供应商知识产权', value: '供应商知识产权'},
+        {key: '自研', value: '自研'},
+        {key: 'IP', value: 'IP'}
+    ],
+    PROJECT_STATUS_LIST: [
+        {key: '开模中', value: '开模中'},
+        {key: '已订货', value: '已订货'},
+        {key: '样品有问题需二次打样', value: '样品有问题需二次打样'},
+        {key: '打样中', value: '打样中'},
+        {key: '立项作废', value: '立项作废'},
+        {key: '未开始', value: '未开始'},
+        {key: '作废', value: '作废'},
+        {key: '成本核算中', value: '成本核算中'},
+        {key: '运营分析中', value: '运营分析中'},
+        {key: '流程中', value: '流程中'},
+        {key: '通货上架后根据数据再分析', value: '通货上架后根据数据再分析'},
+        {key: '样品寄杭州', value: '样品寄杭州'}
+    ],
+}
+
+module.exports = projectConst

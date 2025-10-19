@@ -1,5 +1,7 @@
 const Hr_RecruitService = require('../service/hrRecruitService');
 const {success} = require("../utils/biResponse");
+const ExcelJS = require('exceljs')
+const moment = require('moment')
 
 function extracted(timeRange, startDate, endDate) {
     if (timeRange === undefined) {
@@ -246,6 +248,37 @@ const entryAndResignation = async (req, res, next) => {
 
 };
 
+const dailyAdviseOutput = async (req, res, next) => {
+    try {
+        let start = moment(req.query.start).subtract(1, 'day').format('YYYY-MM-DD')
+        let end = moment(req.query.end).format('YYYY-MM-DD')
+        let result = await Hr_RecruitService.adviseOutput(start + ' 18:00', end + ' 18:00')
+        const workbook = new ExcelJS.Workbook()
+        const worksheet = workbook.addWorksheet()
+        worksheet.columns = [
+            {header: '时间', key: 'time'},
+            {header: '意见发起部门', key: 'adviser_dept'},
+            {header: '意见发起人员', key: 'adviser'},
+            {header: '被提意见部门', key: 'solver_dept'},
+            {header: '被提意见人员', key: 'solver'},
+            {header: '被提意见人员领导', key: 'director'},
+            {header: '提意见事由', key: 'problem'},
+            {header: '详细', key: 'detail'},
+            {header: '跨部门意见', key: 'is_trans_dept'},
+            {header: '发起意见数', key: 'advise_num'},
+        ]
+        for (let i = 0; i < result.length; i++) {                           
+            worksheet.addRow(result[i])
+        }
+        const buffer = await workbook.xlsx.writeBuffer()
+        res.setHeader('Content-Disposition', `attachment; filename="daily-advise_${start}_${end}.xlsx"`)
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')        
+        return res.send(buffer)
+    } catch (error) {
+        res.status(500).json({message: error.message});
+    }
+}
+
 module.exports = {
     recruitmentDepartment,
     recruitmentTalent,
@@ -255,5 +288,6 @@ module.exports = {
     curriculumVitae,
     curriculumVitaelikename,
     employeeFiles,
-    entryAndResignation
+    entryAndResignation,
+    dailyAdviseOutput
 }

@@ -228,7 +228,7 @@ const getUsersByTagCodes = async (tagCodes) => {
 const getPagingUsers = async (deptIds, pageIndex, pageSize, nickname, status) => {
     
     const depsUsers = await deptsUsersModel.findAll({
-        where: {deptId: {$in: deptIds}}
+        // where: {deptId: {$in: deptIds}}
     })
     const userIds = depsUsers.map(item => item.userId)
     
@@ -310,6 +310,30 @@ const getUserByDingdingUserId = async (dingding_user_id) => {
     return result
 }
 
+const getUserByDeptName = async (dept_name) => {
+    const sql = `SELECT u.user_id, u.nickname, u.dingding_user_id FROM users u 
+        LEFT JOIN depts_users du ON du.user_id = u.dingding_user_id 
+        LEFT JOIN depts d ON d.dept_id = du.dept_id
+        WHERE d.dept_name = ? AND u.is_resign = 0 AND u.status = 1`
+    const result = await query(sql, [dept_name])
+    return result
+}
+
+const getMobileByUserId = async (user_id) => {
+    const sql = `SELECT username AS mobile FROM users WHERE user_id = ?`
+    const result = await query(sql, [user_id])
+    return result?.length ? result[0].mobile : null
+}
+
+const getUserWithDeptByDingdingUserId = async (user_id) => {
+    const sql = `SELECT u.nickname, d.dept_name FROM users u 
+        JOIN depts_users du ON du.user_id = u.dingding_user_id 
+        JOIN depts d ON d.dept_id = du.dept_id 
+        WHERE u.dingding_user_id = ? LIMIT 1`
+    const result = await query(sql, [user_id])
+    return result?.length ? result[0] : null
+}
+
 module.exports = {
     getUsersByTagCodes,
     getUserWithTags,
@@ -329,5 +353,8 @@ module.exports = {
     undoResign,
     getUsersByTagCodesAndNickname,
     getUsersWithTagsByTagCodes,
-    getUserByDingdingUserId
+    getUserByDingdingUserId,
+    getUserByDeptName,
+    getMobileByUserId,
+    getUserWithDeptByDingdingUserId
 }
