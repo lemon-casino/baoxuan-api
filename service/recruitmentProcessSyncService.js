@@ -4,8 +4,10 @@ const curriculumVitaeRepo = require('@/repository/curriculumVitaeRepo');
 
 const STATUS_TO_SHIP = new Map([
         ['未面试', 1],
-        ['hr面', 2],
+        ['新候选人', 1],
         ['初选通过', 2],
+        ['安排面试', 3],
+        ['hr面', 3],
         ['一面', 3],
         ['二面', 3],
         ['三面', 3],
@@ -13,6 +15,8 @@ const STATUS_TO_SHIP = new Map([
         ['面试通过', 4],
         ['面试通过-候选人考虑中', 6],
         ['offer', 5],
+        ['已发offer', 5],
+        ['待入职', 6],
         ['回绝offer', 7],
         ['候选人拒绝', 7],
         ['终止流程-无法达成候选人预期', 7],
@@ -35,6 +39,8 @@ const SHIP_PRIORITY = {
 
 const normalizeStatus = (status = '') => status.replace(/\s+/g, '').toLowerCase();
 
+const resolveShip = (status) => STATUS_TO_SHIP.get(status) ?? STATUS_TO_SHIP.get(status.toUpperCase()) ?? null;
+
 const extractCandidateEntries = (content, context = {}) => {
         if (!content) {
                 return [];
@@ -53,12 +59,14 @@ const extractCandidateEntries = (content, context = {}) => {
                 return [];
         }
 
-        return parsed.map((entry) => ({
-                name: typeof entry['候选人'] === 'string' ? entry['候选人'].trim() : '',
-                status: typeof entry['面试状态'] === 'string' ? entry['面试状态'].trim() : '',
-                interviewComment: typeof entry['面试评价'] === 'string' ? entry['面试评价'].trim() : '',
-                interviewRemark: typeof entry['备注'] === 'string' ? entry['备注'].trim() : '',
-        })).filter((entry) => entry.name && entry.status);
+        return parsed
+                .map((entry) => ({
+                        name: typeof entry['候选人'] === 'string' ? entry['候选人'].trim() : '',
+                        status: typeof entry['面试状态'] === 'string' ? entry['面试状态'].trim() : '',
+                        interviewComment: typeof entry['面试评价'] === 'string' ? entry['面试评价'].trim() : '',
+                        interviewRemark: typeof entry['备注'] === 'string' ? entry['备注'].trim() : '',
+                }))
+                .filter((entry) => entry.name && entry.status);
 };
 
 const buildCandidateUpdates = (rows) => {
@@ -69,7 +77,7 @@ const buildCandidateUpdates = (rows) => {
                 const candidates = extractCandidateEntries(row.content, {processId: row.processId});
                 candidates.forEach((candidate) => {
                         const normalizedStatus = normalizeStatus(candidate.status);
-                        const ship = STATUS_TO_SHIP.get(normalizedStatus);
+                        const ship = resolveShip(normalizedStatus);
                         if (!ship) {
                                 unknownStatuses.add(candidate.status);
                         }
@@ -84,7 +92,7 @@ const buildCandidateUpdates = (rows) => {
 
                         const existing = candidateMap.get(candidate.name);
                         const currentPriority = SHIP_PRIORITY[resolvedShip] ?? 0;
-                        const existingPriority = existing ? (SHIP_PRIORITY[existing.ship] ?? 0) : -Infinity;
+                        const existingPriority = existing ? SHIP_PRIORITY[existing.ship] ?? 0 : -Infinity;
 
                         if (!existing || currentPriority >= existingPriority) {
                                 candidateMap.set(candidate.name, payload);
@@ -126,10 +134,14 @@ const syncCurriculumVitaeStatus = async () => {
         }
 
         if (unknownStatuses.size > 0) {
-                        logger.warn(`[RecruitmentProcessSync] Encountered unmapped statuses: ${Array.from(unknownStatuses).join(', ')}`);
+                logger.warn(
+                        `[RecruitmentProcessSync] Encountered unmapped statuses: ${Array.from(unknownStatuses).join(', ')}`
+                );
         }
 
-        logger.info(`[RecruitmentProcessSync] processed ${rows.length} processes, prepared ${candidateMap.size} candidate updates, affected ${updated} rows.`);
+        logger.info(
+                `[RecruitmentProcessSync] processed ${rows.length} processes, prepared ${candidateMap.size} candidate updates, affected ${updated} rows.`
+        );
 
         return {
                 totalProcesses: rows.length,
