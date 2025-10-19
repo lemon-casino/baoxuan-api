@@ -137,20 +137,59 @@ const updateById = async (id, payload) => {
 };
 
 const updateShipByName = async (name, ship) => {
-	if (!name || typeof ship !== 'number') {
-		return 0;
-	}
+        if (!name || typeof ship !== 'number') {
+                return 0;
+        }
 
-	const [affectedRows] = await CurriculumVitaeModel.update(
-		{ship},
-		{
-			where: {
-				name
-			}
-		}
-	);
+        const [affectedRows] = await CurriculumVitaeModel.update(
+                {ship},
+                {
+                        where: {
+                                name
+                        }
+                }
+        );
 
-	return affectedRows;
+        return affectedRows;
+};
+
+const SHIP_VALUES = [1, 2, 3, 4, 5, 6, 7, 8];
+
+const getShipCountsByPeriod = async (startDate, endDate) => {
+        const {sequelize} = CurriculumVitaeModel;
+
+        const where = {
+                ship: {
+                        [Op.in]: SHIP_VALUES,
+                },
+        };
+
+        if (startDate || endDate) {
+                where.date = {};
+
+                if (startDate) {
+                        where.date[Op.gte] = startDate;
+                }
+
+                if (endDate) {
+                        where.date[Op.lt] = endDate;
+                }
+        }
+
+        const rows = await CurriculumVitaeModel.findAll({
+                attributes: [
+                        'ship',
+                        [sequelize.fn('COUNT', sequelize.col('id')), 'count'],
+                ],
+                where,
+                group: ['ship'],
+                raw: true,
+        });
+
+        return rows.map((row) => ({
+                ship: typeof row.ship === 'number' ? row.ship : Number(row.ship),
+                count: typeof row.count === 'number' ? row.count : Number(row.count),
+        }));
 };
 
 const deleteById = async (id) => {
@@ -214,11 +253,12 @@ const getFilterOptions = async (query = {}) => {
 	return {hr, job, name};
 };
 module.exports = {
-	findAndCountAll,
-	create,
-	findById,
-	updateById,
-	deleteById,
-	getFilterOptions,
-	updateShipByName
+        findAndCountAll,
+        create,
+        findById,
+        updateById,
+        deleteById,
+        getFilterOptions,
+        updateShipByName,
+        getShipCountsByPeriod,
 };
