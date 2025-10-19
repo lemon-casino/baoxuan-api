@@ -136,6 +136,23 @@ const updateById = async (id, payload) => {
 	return toPlain(record);
 };
 
+const updateShipByName = async (name, ship) => {
+	if (!name || typeof ship !== 'number') {
+		return 0;
+	}
+
+	const [affectedRows] = await CurriculumVitaeModel.update(
+		{ship},
+		{
+			where: {
+				name
+			}
+		}
+	);
+
+	return affectedRows;
+};
+
 const deleteById = async (id) => {
 	return CurriculumVitaeModel.destroy({
 		where: {id}
@@ -202,5 +219,6 @@ module.exports = {
 	findById,
 	updateById,
 	deleteById,
-	getFilterOptions
+	getFilterOptions,
+	updateShipByName
 };
