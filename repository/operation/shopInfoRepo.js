@@ -29,8 +29,7 @@ shopInfoRepo.getUsersByShopName = async (name) => {
 }
 
 shopInfoRepo.getShopIdByName = async (name) =>{
-    const sql = `SELECT shop_id 
-    FROM shop_info WHERE shop_name = ?`
+    const sql = `SELECT shop_id FROM shop_info WHERE shop_name = ?`
     const result = await query(sql, [name])
     return result || []
 }
