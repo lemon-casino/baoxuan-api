@@ -1,29 +1,80 @@
 const {Op} = require('sequelize');
 const RecruitmentPositionModel = require('@/model/recruitmentPosition');
-
+const UPSERT_FIELDS = [
+	'processCode',
+	'version',
+	'department',
+	'jobTitle',
+	'headcount',
+	'owner',
+	'educationRequirement',
+	'experienceRequirement',
+	'jobContent',
+	'status',
+	'startTime',
+	'endTime',
+];
+const normalizeValue = (value) => {
+	if (value === undefined || value === null) {
+		return null;
+	}
+	if (value instanceof Date) {
+		return value.getTime();
+	}
+	return value;
+};
+const hasDifferences = (existing = {}, incoming = {}) =>
+	UPSERT_FIELDS.some((field) => normalizeValue(existing[field]) !== normalizeValue(incoming[field]));
 const upsertRecruitmentPositions = async (positions) => {
-        if (!positions || positions.length === 0) {
-                return 0;
-        }
+	if (!Array.isArray(positions) || positions.length === 0) {
+		return 0;
+	}
 
-        await RecruitmentPositionModel.bulkCreate(positions, {
-                updateOnDuplicate: [
-                        'processCode',
-                        'version',
-                        'department',
-                        'jobTitle',
-                        'headcount',
-                        'owner',
-                        'educationRequirement',
-                        'experienceRequirement',
-                        'jobContent',
-                        'status',
-                        'startTime',
-                        'endTime',
-                ],
-        });
+	const deduped = new Map();
+	positions.forEach((item) => {
+		if (item && item.processId) {
+			deduped.set(item.processId, item);
+		}
+	});
 
-        return positions.length;
+	if (deduped.size === 0) {
+		return 0;
+	}
+
+	const processIds = Array.from(deduped.keys());
+	const existingRows = await RecruitmentPositionModel.findAll({
+		where: {
+			processId: {
+				[Op.in]: processIds,
+			},
+		},
+	});
+
+	const existingMap = new Map();
+	(existingRows || []).forEach((row) => {
+		const plain = row.get({plain: true});
+		if (plain?.processId) {
+			existingMap.set(plain.processId, plain);
+		}
+	});
+
+	const payload = [];
+	deduped.forEach((incoming, processId) => {
+		const existing = existingMap.get(processId);
+		if (!existing || hasDifferences(existing, incoming)) {
+			payload.push(incoming);
+		}
+	});
+
+	if (payload.length === 0) {
+		return 0;
+	}
+
+	await RecruitmentPositionModel.bulkCreate(payload, {
+		updateOnDuplicate: UPSERT_FIELDS,
+	});
+
+	return payload.length;
 };
 
 const buildFilter = ({status, jobTitle, owner}) => {

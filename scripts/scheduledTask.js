@@ -88,7 +88,7 @@ schedule.scheduleJob(pddNewTagCron, async function () {
 })
 
 schedule.scheduleJob(recruitmentProcessSyncCron, async function () {
-    if (process.env.NODE_ENV === "prod") {
+    if (process.env.NODE_ENV === "dev") {
         try {
             await recruitmentProcessSyncService.syncCurriculumVitaeStatus();
         } catch (error) {
