@@ -3,7 +3,6 @@ const ProcessesModel = require('@/model/processes');
 const ProcessInfoModel = require('@/model/processInfo');
 
 const RECRUITMENT_PROCESS_CODE = 'zhaopin';
-
 const FIELD_IDS = {
         department: 'F8srmgrpj4r3aec',
         jobTitle: 'Fpu4mgrpl5euahc',
@@ -30,7 +29,6 @@ if (!ProcessInfoModel.associations?.process) {
                 targetKey: 'processId',
         });
 }
-
 const pickRecruitmentFields = (fieldRows = []) => {
         const fieldMap = {};
         fieldRows.forEach((item) => {

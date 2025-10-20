@@ -43,7 +43,6 @@ const SHIP_PRIORITY = {
 const normalizeStatus = (status = '') => status.replace(/\s+/g, '').toLowerCase();
 
 const resolveShip = (status) => STATUS_TO_SHIP.get(status) ?? STATUS_TO_SHIP.get(status.toUpperCase()) ?? null;
-
 const extractCandidateEntries = (fieldMap = {}, context = {}) => {
         const content = fieldMap[FIELD_IDS.candidateList];
         if (!content) {
@@ -109,7 +108,6 @@ const buildCandidateUpdates = (rows) => {
                 unknownStatuses,
         };
 };
-
 const buildRecruitmentPositions = (rows) =>
         rows.map((row) => {
                 const {fieldMap = {}} = row;
@@ -149,7 +147,6 @@ const syncCurriculumVitaeStatus = async () => {
         } catch (error) {
                 logger.error(`[RecruitmentProcessSync] failed to sync recruitment positions: ${error.message}`, error);
         }
-
         const {candidateMap, unknownStatuses} = buildCandidateUpdates(rows);
 
         let updated = 0;
