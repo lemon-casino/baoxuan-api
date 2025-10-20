@@ -1258,10 +1258,10 @@ goodsSalesRepo.getNotList = async() =>{
 			,a.first_order_num
 			,a.second_order_num
 			,a.third_order_num
-			,b.io_date
-			,c.first_onsale_date
-			,c.second_onsale_date
-			,c.third_onsale_date
+			,DATE_FORMAT(b.io_date,"%Y-%m-%d") AS io_date
+			,DATE_FORMAT(c.first_onsale_date,"%Y-%m-%d") AS first_onsale_date
+			,DATE_FORMAT(c.second_onsale_date,"%Y-%m-%d") AS second_onsale_date
+			,DATE_FORMAT(c.third_onsale_date,"%Y-%m-%d") AS third_onsale_date
         FROM (
             SELECT CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=',process_id) AS link
                         ,商品编码
@@ -1290,6 +1290,8 @@ goodsSalesRepo.getNotList = async() =>{
                         COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部二订货量"'))), '0') AS second_order_num,
                         COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部三订货量"'))), '0') AS third_order_num
                 FROM process_info t
+                LEFT JOIN processes as b
+                ON t.process_id = b.process_id
                 JOIN (
                         SELECT 0 AS seq UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
                 ) n ON n.seq < JSON_LENGTH(t.content)
@@ -1297,6 +1299,7 @@ goodsSalesRepo.getNotList = async() =>{
                 AND t.content IS NOT NULL AND t.process_id IN (SELECT process_id FROM processes WHERE title LIKE '%推品%' 
                 AND process_id NOT IN('030e1938-50ba-11f0-a2a8-2ee6f9618836','07e0ba63-50bb-11f0-a2a8-2ee6f9618836',
                 '10468942-5d6a-11f0-ac83-36752c98d096','85ae191c-4dc9-11f0-bdcb-425a51682946','f5b90e4f-5d5e-11f0-ac83-36752c98d096'))
+                AND b.status != 4
             ) AS a 
             WHERE first_order_num !=0 OR second_order_num !=0 OR third_order_num !=0
         ) AS a 
@@ -1342,7 +1345,7 @@ goodsSalesRepo.getNotList = async() =>{
 			,third_category
 			,image
 			,ps
-			,create_time
+			,DATE_FORMAT(create_time,"%Y-%m-%d") AS create_time
 			,IF(DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY) <= create_time ,'新品' ,'老品') AS create_info
 			,(CASE 
 			WHEN \`year\` is not null THEN \`year\`
