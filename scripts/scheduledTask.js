@@ -6,6 +6,8 @@ const {redisKeys} = require("@/const/redisConst");
 const orderService = require("../service/jst/orderService")
 const purchaseService = require("../service/jst/purchaseService")
 const operationService = require("../service/operationService")
+const recruitmentProcessSyncService = require('@/service/recruitmentProcessSyncService');
+const {logger} = require('@/utils/log');
 const moment = require('moment')
 
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20(貌似不准确)，涉及的宜搭接口暂时没有qps和总调用量的限制
@@ -47,6 +49,7 @@ let jstOrderCron = "0 0 7 * * ?"
 let jstPurchaseCron = "0 36 */1 * * ?"
 let saleCron = "0 30 9/12 * * ?"
 let pddNewTagCron = "0 30 8 * * ?"
+let recruitmentProcessSyncCron = "0 */2 * * * ?"
 schedule.scheduleJob(saleCron, async function () {
     if (process.env.NODE_ENV === "prod") {
         await operationService.updateInventory()
@@ -81,6 +84,16 @@ schedule.scheduleJob(jstPurchaseCron, async function () {
 schedule.scheduleJob(pddNewTagCron, async function () {
     if (process.env.NODE_ENV === "prod") {
         await operationService.updatePDDNewTag()
+    }
+})
+
+schedule.scheduleJob(recruitmentProcessSyncCron, async function () {
+    if (process.env.NODE_ENV === "dev") {
+        try {
+            await recruitmentProcessSyncService.syncCurriculumVitaeStatus();
+        } catch (error) {
+            logger.error(`[RecruitmentProcessSync] job failed: ${error.message}`, error);
+        }
     }
 })
 
