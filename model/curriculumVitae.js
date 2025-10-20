@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize');
-const sequelize = require('./init');
+const sequelize = require('./bpmInit');
 
 const CurriculumVitaeModel = sequelize.define('curriculum_vitae', {
 	id: {
