@@ -1,5 +1,16 @@
 const curriculumVitaeRepo = require('../repository/curriculumVitaeRepo');
 
+const SHIP_SUMMARY_ITEMS = [
+        {label: '新候选人', ship: 1},
+        {label: '初选通过', ship: 2},
+        {label: '安排面试', ship: 3},
+        {label: '面试通过', ship: 4},
+        {label: '已发offer', ship: 5},
+        {label: '待入职', ship: 6},
+        {label: '已淘汰', ship: 7},
+        {label: '未初始', ship: 8},
+];
+
 const allowedFields = [
 	'hr',
 	'date',
@@ -139,13 +150,49 @@ const remove = async (id) => {
 	return true;
 };
 const getFilters = async (query = {}) => {
-	return curriculumVitaeRepo.getFilterOptions(query);
+        return curriculumVitaeRepo.getFilterOptions(query);
+};
+
+const parseMonth = (month) => {
+        if (!month || typeof month !== 'string') {
+                return null;
+        }
+
+        const trimmed = month.trim();
+        if (!/^\d{4}-\d{2}$/.test(trimmed)) {
+                return null;
+        }
+
+        const [yearString, monthString] = trimmed.split('-');
+        const year = Number(yearString);
+        const monthIndex = Number(monthString) - 1;
+
+        if (Number.isNaN(year) || Number.isNaN(monthIndex) || monthIndex < 0 || monthIndex > 11) {
+                return null;
+        }
+
+        return new Date(year, monthIndex, 1);
+};
+
+const getMonthlyShipSummary = async (query = {}) => {
+        const referenceDate = parseMonth(query.month) || new Date();
+        const startDate = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
+        const endDate = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 1);
+
+        const rows = await curriculumVitaeRepo.getShipCountsByPeriod(startDate, endDate);
+        const counts = new Map(rows.map((row) => [row.ship, row.count]));
+
+        return SHIP_SUMMARY_ITEMS.map((item) => ({
+                ...item,
+                count: counts.get(item.ship) ?? 0,
+        }));
 };
 module.exports = {
-	list,
-	create,
-	getById,
-	update,
-	remove,
-	getFilters
+        list,
+        create,
+        getById,
+        update,
+        remove,
+        getFilters,
+        getMonthlyShipSummary,
 };
