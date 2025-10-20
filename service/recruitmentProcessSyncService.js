@@ -1,6 +1,9 @@
 const {logger} = require('@/utils/log');
 const recruitmentProcessRepo = require('@/repository/recruitment/recruitmentProcessRepo');
 const curriculumVitaeRepo = require('@/repository/curriculumVitaeRepo');
+const recruitmentPositionRepo = require('@/repository/recruitment/recruitmentPositionRepo');
+
+const {FIELD_IDS} = recruitmentProcessRepo;
 
 const STATUS_TO_SHIP = new Map([
         ['未面试', 1],
@@ -40,8 +43,8 @@ const SHIP_PRIORITY = {
 const normalizeStatus = (status = '') => status.replace(/\s+/g, '').toLowerCase();
 
 const resolveShip = (status) => STATUS_TO_SHIP.get(status) ?? STATUS_TO_SHIP.get(status.toUpperCase()) ?? null;
-
-const extractCandidateEntries = (content, context = {}) => {
+const extractCandidateEntries = (fieldMap = {}, context = {}) => {
+        const content = fieldMap[FIELD_IDS.candidateList];
         if (!content) {
                 return [];
         }
@@ -50,7 +53,7 @@ const extractCandidateEntries = (content, context = {}) => {
                 parsed = JSON.parse(content);
         } catch (error) {
                 logger.warn(
-                        `[RecruitmentProcessSync] Failed to parse content for process ${context.processId || 'unknown'}: ${error.message}`
+                        `[RecruitmentProcessSync] Failed to parse candidate content for process ${context.processId || 'unknown'}: ${error.message}`
                 );
                 return [];
         }
@@ -74,7 +77,7 @@ const buildCandidateUpdates = (rows) => {
         const unknownStatuses = new Set();
 
         rows.forEach((row) => {
-                const candidates = extractCandidateEntries(row.content, {processId: row.processId});
+                const candidates = extractCandidateEntries(row.fieldMap, {processId: row.processId});
                 candidates.forEach((candidate) => {
                         const normalizedStatus = normalizeStatus(candidate.status);
                         const ship = resolveShip(normalizedStatus);
@@ -105,18 +108,45 @@ const buildCandidateUpdates = (rows) => {
                 unknownStatuses,
         };
 };
+const buildRecruitmentPositions = (rows) =>
+        rows.map((row) => {
+                const {fieldMap = {}} = row;
+                return {
+                        processId: row.processId,
+                        processCode: row.processCode,
+                        version: row.version,
+                        department: fieldMap[FIELD_IDS.department] || null,
+                        jobTitle: fieldMap[FIELD_IDS.jobTitle] || null,
+                        headcount: fieldMap[FIELD_IDS.headcount] || null,
+                        owner: fieldMap[FIELD_IDS.owner] || null,
+                        educationRequirement: fieldMap[FIELD_IDS.educationRequirement] || null,
+                        experienceRequirement: fieldMap[FIELD_IDS.experienceRequirement] || null,
+                        jobContent: fieldMap[FIELD_IDS.jobContent] || null,
+                        status: row.status,
+                        startTime: row.startTime,
+                        endTime: row.endTime,
+                };
+        });
 
 const syncCurriculumVitaeStatus = async () => {
-        const rows = await recruitmentProcessRepo.getRecruitmentProcessCandidates();
+        const rows = await recruitmentProcessRepo.getRecruitmentProcesses();
         if (!rows || rows.length === 0) {
                 return {
                         totalProcesses: 0,
                         candidates: 0,
                         updated: 0,
                         unknownStatuses: [],
+                        positions: 0,
                 };
         }
 
+        const recruitmentPositions = buildRecruitmentPositions(rows);
+        let positionCount = 0;
+        try {
+                positionCount = await recruitmentPositionRepo.upsertRecruitmentPositions(recruitmentPositions);
+        } catch (error) {
+                logger.error(`[RecruitmentProcessSync] failed to sync recruitment positions: ${error.message}`, error);
+        }
         const {candidateMap, unknownStatuses} = buildCandidateUpdates(rows);
 
         let updated = 0;
@@ -140,7 +170,7 @@ const syncCurriculumVitaeStatus = async () => {
         }
 
         logger.info(
-                `[RecruitmentProcessSync] processed ${rows.length} processes, prepared ${candidateMap.size} candidate updates, affected ${updated} rows.`
+                `[RecruitmentProcessSync] processed ${rows.length} processes, prepared ${candidateMap.size} candidate updates, affected ${updated} curriculum vitae rows, synced ${positionCount} recruitment positions.`
         );
 
         return {
@@ -148,6 +178,7 @@ const syncCurriculumVitaeStatus = async () => {
                 candidates: candidateMap.size,
                 updated,
                 unknownStatuses: Array.from(unknownStatuses),
+                positions: positionCount,
         };
 };
 

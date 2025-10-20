@@ -2,11 +2,12 @@ const express = require('express');
 const router = express.Router();
 const hrRecruit = require('../router_handler/Hr_Recruit');
 const curriculumVitaeHandler = require('../router_handler/curriculumVitae');
+const recruitmentPositionHandler = require('../router_handler/recruitmentPosition');
 
 router.get('/RecruitmentDepartmentPositions', hrRecruit.recruitmentDepartment);
 router.get('/RecruitmentTalentDynamic', hrRecruit.recruitmentTalent);
 router.get('/progressMap', hrRecruit.progressMap);
-
+router.get('/recruitmentPositions', recruitmentPositionHandler.listRecruitmentPositions);
 // 人事 员工管理
 router.get('/employeeManagement', hrRecruit.employeeManagement);
 //人事 展示
