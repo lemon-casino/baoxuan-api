@@ -74,7 +74,8 @@ const buildWhereClause = (filters = {}) => {
 	}
 	if (typeof ship === 'number') {
 		where.ship = ship;
-	} else if (typeof gender === 'number') {
+	}
+	if (typeof gender === 'number') {
 		where.gender = gender;
 	}
 	if (location) {
