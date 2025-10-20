@@ -699,6 +699,30 @@ const getNotList = async (req, res, next) => {
         next(e)
     }
 }
+const getSkuCostInfo = async (req, res, next) => {
+    try {
+        // const {type} = req.query
+        // joiUtil.validate({
+        //     type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}
+        // })
+        let result = await developmentService.getSkuCostInfo()
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+const getCostOptimize = async (req, res, next) => {
+    try {
+        // const {type} = req.query
+        // joiUtil.validate({
+        //     type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}
+        // })
+        let result = await developmentService.getCostOptimize()
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
 
 module.exports = {
     getWorkPannel, 
@@ -734,5 +758,7 @@ module.exports = {
     getProcessDetail,
     getProcessRunningTask,
     getDevelopProcess,
-    getNotList
+    getNotList,
+    getSkuCostInfo,
+    getCostOptimize
 }
