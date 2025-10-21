@@ -3079,10 +3079,10 @@ const importJDZYInfo = async (rows, time,name) => {
         supplier_amount_row = null,
         sale_amount_row = null,
         gross_profit_row = null
-    if (name=='日用'){
+    if (name=='日用VC'){
         shop_name = '京东自营-日用'
         shop_id = '18643084'
-    }else if(name=='厨具'){
+    }else if(name=='厨具VC'){
         shop_name = '京东自营-厨具'
         shop_id = '16314655'
     }
@@ -3328,9 +3328,10 @@ const importJDZYPromotionInfo = async (rows, name, time,tag) => {
         await goodsPromotionPlanRepo.deleteByDate(date, shop_name, promotion_name)
         await goodsPromotionPlanRepo.batchInsert(count, data1)
     }
-    await batchInsertJDGoodsSales(date)
-    await updateGoodsPayments(date)
-    await batchInsertJDGoodsPays(date)
+    //使用商智数据时使用
+    // await batchInsertJDGoodsSales(date)
+    // await updateGoodsPayments(date)
+    // await batchInsertJDGoodsPays(date)
     return result
 }
 
@@ -3371,15 +3372,15 @@ const importJDZYcompositeInfo = async (rows, time,name) => {
             rows[i].getCell([sku_id_row]).value.trim() : 
             rows[i].getCell([sku_id_row]).value) : null, goods_id = null,cost_price=0,
             category= null,supply_price=0,tax = 0,jd_gross_profit_std = 0
-        if (sku_id) {
-            let info = await userOperationRepo.getDetailBySkuId(sku_id)
-            if (info?.length) {
-                goods_id = info[0].brief_name
-                cost_price = parseFloat(info[0].cost_price)
-                category = info[0].second_category
-                supply_price = info[0].supply_price
-            }
-        }
+        // if (sku_id) {
+        //     let info = await userOperationRepo.getDetailBySkuId(sku_id)
+        //     if (info?.length) {
+        //         goods_id = info[0].brief_name
+        //         cost_price = parseFloat(info[0].cost_price)
+        //         category = info[0].second_category
+        //         supply_price = info[0].supply_price
+        //     }
+        // }
         // goods_composite_info数据
         data.push(
             goods_id,
@@ -3396,106 +3397,110 @@ const importJDZYcompositeInfo = async (rows, time,name) => {
             rows[i].getCell([trans_users_num_row]).value
         )
         // 支付发货
-        let sale_amount = parseInt(rows[i].getCell([qty_row]).value) * supply_price
-        let qty = parseInt(rows[i].getCell([qty_row]).value || 0)
-        let cost_amount = (cost_price + 0.8 + 1.4) * qty
-        let supplier_amount = parseFloat(rows[i].getCell([supplier_amount_row]).value || 0)
+        // let sale_amount = parseInt(rows[i].getCell([qty_row]).value) * supply_price
+        // let qty = parseInt(rows[i].getCell([qty_row]).value || 0)
+        // let cost_amount = (cost_price + 0.8 + 1.4) * qty
+        // let supplier_amount = parseFloat(rows[i].getCell([supplier_amount_row]).value || 0)
         
-        if (shop_name == '京东自营-厨具'){
-            //税点
-            tax = sale_amount * 0.07
-            if (['餐具','茶具'].includes(category)){
-                jd_gross_profit_std = supplier_amount * 0.25
-            }else if(['厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具'].includes(category)){
-                jd_gross_profit_std = supplier_amount * 0.26
-            }else if(['水具', '酒杯/酒具','咖啡具','烹饪锅具','刀剪菜板','酒店用品','菜板/砧板'].includes(category)){
-                jd_gross_profit_std = supplier_amount * 0.28
-            }
-        }else if(shop_name == '京东自营-日用'){
-            tax = sale_amount * 0.07 + supplier_amount *0.02
-            jd_gross_profit_std = supplier_amount * 0.25
-        }
-        // 实际综毛
-        let real_gross_profit = supplier_amount - sale_amount
-        //需补综毛
-        let other_cost =jd_gross_profit_std - real_gross_profit
-        let profit = other_cost>0 ? sale_amount - cost_amount - tax - other_cost : sale_amount - cost_amount - tax
-        data1.push(
-            goods_id,
-            sku_id,
-            null,
-            null,
-            shop_name,
-            shop_id,
-            null,
-            date,
-            qty,
-            sale_amount,
-            cost_amount,
-            sale_amount - cost_amount,
-            sale_amount ? (sale_amount - cost_amount) / sale_amount : 0,
-            profit,
-            sale_amount ? profit / sale_amount : 0,
-            0,
-            null,
-            other_cost>0? tax + other_cost : tax,
-            qty,
-            null,
-            supplier_amount,
-            null,
-            null,
-            real_gross_profit,
-            jd_gross_profit_std,
-            other_cost
-        )
-        data2.push(
-            goods_id,
-            sku_id,
-            shop_name,
-            '扣点',
-            tax,
-            date
-        )
-        data3.push(
-            goods_id,
-            sku_id,
-            null,
-            shop_name,
-            shop_id,
-            date,
-            supplier_amount,
-            null,
-            null,
-            null,
-            null,
-            sale_amount,
-            cost_amount,
-            sale_amount - cost_amount,
-            profit,
-            0,
-            other_cost>0? tax + other_cost : tax,
-            null,
-            qty,
-            null,
-            jd_gross_profit_std,
-            other_cost
-        )
+        // if (shop_name == '京东自营-厨具'){
+        //     //税点
+        //     tax = sale_amount * 0.07
+        //     if (['餐具','茶具'].includes(category)){
+        //         jd_gross_profit_std = supplier_amount * 0.25
+        //     }else if(['厨房储物','烘焙用具','厨房置物架','一次性用品','厨房小工具'].includes(category)){
+        //         jd_gross_profit_std = supplier_amount * 0.26
+        //     }else if(['水具', '酒杯/酒具','咖啡具','烹饪锅具','刀剪菜板','酒店用品','菜板/砧板'].includes(category)){
+        //         jd_gross_profit_std = supplier_amount * 0.28
+        //     }
+        // }else if(shop_name == '京东自营-日用'){
+        //     tax = sale_amount * 0.07 + supplier_amount *0.02
+        //     jd_gross_profit_std = supplier_amount * 0.25
+        // }
+        // // 实际综毛
+        // let real_gross_profit = supplier_amount - sale_amount
+        // //需补综毛
+        // let other_cost =jd_gross_profit_std - real_gross_profit
+        // let profit = other_cost>0 ? sale_amount - cost_amount - tax - other_cost : sale_amount - cost_amount - tax
+        // data1.push(
+        //     goods_id,
+        //     sku_id,
+        //     null,
+        //     null,
+        //     shop_name,
+        //     shop_id,
+        //     null,
+        //     date,
+        //     qty,
+        //     sale_amount,
+        //     cost_amount,
+        //     sale_amount - cost_amount,
+        //     sale_amount ? (sale_amount - cost_amount) / sale_amount : 0,
+        //     profit,
+        //     sale_amount ? profit / sale_amount : 0,
+        //     0,
+        //     null,
+        //     other_cost>0? tax + other_cost : tax,
+        //     qty,
+        //     null,
+        //     supplier_amount,
+        //     null,
+        //     null,
+        //     real_gross_profit,
+        //     jd_gross_profit_std,
+        //     other_cost
+        // )
+        // data2.push(
+        //     goods_id,
+        //     sku_id,
+        //     shop_name,
+        //     '扣点',
+        //     tax,
+        //     date
+        // )
+        // data3.push(
+        //     goods_id,
+        //     sku_id,
+        //     null,
+        //     shop_name,
+        //     shop_id,
+        //     date,
+        //     supplier_amount,
+        //     null,
+        //     null,
+        //     null,
+        //     null,
+        //     sale_amount,
+        //     cost_amount,
+        //     sale_amount - cost_amount,
+        //     profit,
+        //     0,
+        //     other_cost>0? tax + other_cost : tax,
+        //     null,
+        //     qty,
+        //     null,
+        //     jd_gross_profit_std,
+        //     other_cost
+        // )
         count += 1
-        amount +=supplier_amount
-        saveAmount += parseFloat(sale_amount)
+        // amount +=supplier_amount
+        // saveAmount += parseFloat(sale_amount)
     }
     logger.info(`[${shop_name}]：时间:${date}, 总计数量:${count}`)
-    logger.info(`[${shop_name}支付发货数据导入]：时间:${date}, 总计金额:${amount}, 存储金额:${saveAmount}`)
+    // logger.info(`[${shop_name}支付发货数据导入]：时间:${date}, 总计金额:${amount}, 存储金额:${saveAmount}`)
     if (count > 0) {
         await goodsCompositeRepo.deleteByDateShop(date, shop_name)
-        result1 = await goodsCompositeRepo.batchInsertJDZY(count, data, shop_name)
-        await goodsPayInfoRepo.deleteByDate2(date,shop_name)
-        result2 = await goodsPayInfoRepo.batchInsert(count, data3)
-        await goodsSaleInfoRepo.deleteByDate(date, 'goods_code', 1,shop_name)
-        result3 = await goodsSaleInfoRepo.batchInsert(count, data1)
-        await goodsBillRepo.deleteByDate2(date,shop_name)
-        result = await goodsBillRepo.batchInsert(count, data2)
+        result = await goodsCompositeRepo.batchInsertJDZY(count, data, shop_name)
+        // await goodsPayInfoRepo.deleteByDate2(date,shop_name)
+        // result2 = await goodsPayInfoRepo.batchInsert(count, data3)
+        // await goodsSaleInfoRepo.deleteByDate(date, 'goods_code', 1,shop_name)
+        // result3 = await goodsSaleInfoRepo.batchInsert(count, data1)
+        // await goodsBillRepo.deleteByDate2(date,shop_name)
+        // result = await goodsBillRepo.batchInsert(count, data2)
     }
+    // vc数据时使用
+    await batchInsertJDGoodsSales(date)
+    await updateGoodsPayments(date)
+    await batchInsertJDGoodsPays(date)
     return result
 }
 
@@ -5292,6 +5297,7 @@ const getShopSaleQtyData = async(day,day7,day30,day31) => {
 }
 
 const updateInventory = async () =>{
+    logger.info(`[inventory_attributes开始刷新]：时间:${moment().subtract(1, 'day').format('YYYY-MM-DD')}`)
     await goodsSalesRepo.updatemonth6(6,'month','month6_sale_qty')
     await goodsSalesRepo.updatemonth6(7,'day','day7_sale_qty')
     await goodsSalesRepo.updatemonth6(30,'day','day30_sale_qty')
