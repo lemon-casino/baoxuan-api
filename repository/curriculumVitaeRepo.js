@@ -1,6 +1,89 @@
 const {Op} = require('sequelize');
 const CurriculumVitaeModel = require('../model/curriculumVitae');
 
+const CONTACT_SPLIT_REGEX = /[\s,;；，、|/\\]+/u;
+const MIN_LIKE_TOKEN_LENGTH = 3;
+const MIN_DIGIT_TOKEN_LENGTH = 6;
+
+const escapeLikePattern = (value) => value.replace(/([%_\\])/g, '\\$1');
+
+const toDigits = (value) => value.replace(/\D+/g, '');
+
+const buildDigitRegex = (digits) => digits.split('').map((digit) => `${digit}\\D*`).join('');
+
+const supportsRegexp = () => {
+	const dialect = CurriculumVitaeModel?.sequelize?.getDialect?.();
+	if (!dialect) {
+		return false;
+	}
+	return ['mysql', 'mariadb', 'postgres'].includes(dialect);
+};
+
+const extractContactTokens = (rawValue = '') => {
+	if (typeof rawValue !== 'string') {
+		return [];
+	}
+
+	const trimmed = rawValue.trim();
+	if (!trimmed) {
+		return [];
+	}
+
+	const tokens = new Set([trimmed]);
+	trimmed.split(CONTACT_SPLIT_REGEX).forEach((part) => {
+		const token = part.trim();
+		if (token) {
+			tokens.add(token);
+		}
+	});
+
+	return Array.from(tokens);
+};
+
+const buildContactMatchers = (contact) => {
+	const tokens = extractContactTokens(contact);
+	if (tokens.length === 0) {
+		return [];
+	}
+
+	const likePatterns = new Set();
+	const regexPatterns = new Set();
+
+	tokens.forEach((token) => {
+		const digits = toDigits(token);
+		if (!token.includes('@') && digits.length >= MIN_DIGIT_TOKEN_LENGTH) {
+			regexPatterns.add(buildDigitRegex(digits));
+		}
+
+		if (token.length >= MIN_LIKE_TOKEN_LENGTH) {
+			likePatterns.add(escapeLikePattern(token));
+		}
+	});
+
+	const normalizedContact = typeof contact === 'string' ? contact.trim() : '';
+	if (normalizedContact) {
+		likePatterns.add(escapeLikePattern(normalizedContact));
+	}
+
+	const matchers = Array.from(likePatterns).map((pattern) => ({
+		contact: {
+			[Op.like]: `%${pattern}%`
+		}
+	}));
+
+	if (supportsRegexp()) {
+		regexPatterns.forEach((pattern) => {
+			matchers.push({
+				contact: {
+					[Op.regexp]: pattern
+				}
+			});
+		});
+	}
+
+	return matchers;
+};
+
 const toPlain = (modelInstance) => {
 	if (!modelInstance) {
 		return null;
@@ -139,8 +222,9 @@ const updateById = async (id, payload) => {
 
 const updateShipByContact = async (contact, ship, name) => {
 	if (typeof contact !== 'string' || contact.trim().length === 0 || typeof ship !== 'number') {
-                return 0;
-        }
+		return 0;
+	}
+
 	const normalizedContact = contact.trim();
 	const trimmedName = typeof name === 'string' ? name.trim() : '';
 
@@ -148,57 +232,61 @@ const updateShipByContact = async (contact, ship, name) => {
 	if (trimmedName) {
 		updatePayload.name = trimmedName;
 	}
-        const [affectedRows] = await CurriculumVitaeModel.update(
-			updatePayload,
-                {
-                        where: {
-							contact: {
-								[Op.like]: `%${normalizedContact}%`
-							}
-                        }
-                }
-        );
 
-        return affectedRows;
+	const matchers = buildContactMatchers(normalizedContact);
+	if (matchers.length === 0) {
+		return 0;
+	}
+
+	const [affectedRows] = await CurriculumVitaeModel.update(
+		updatePayload,
+		{
+			where: {
+				[Op.or]: matchers
+			}
+		}
+	);
+
+	return affectedRows;
 };
 
 const SHIP_VALUES = [1, 2, 3, 4, 5, 6, 7, 8];
 
 const getShipCountsByPeriod = async (startDate, endDate) => {
-        const {sequelize} = CurriculumVitaeModel;
+	const {sequelize} = CurriculumVitaeModel;
 
-        const where = {
-                ship: {
-                        [Op.in]: SHIP_VALUES,
-                },
-        };
+	const where = {
+		ship: {
+			[Op.in]: SHIP_VALUES,
+		},
+	};
 
-        if (startDate || endDate) {
-                where.date = {};
+	if (startDate || endDate) {
+		where.date = {};
 
-                if (startDate) {
-                        where.date[Op.gte] = startDate;
-                }
+		if (startDate) {
+			where.date[Op.gte] = startDate;
+		}
 
-                if (endDate) {
-                        where.date[Op.lt] = endDate;
-                }
-        }
+		if (endDate) {
+			where.date[Op.lt] = endDate;
+		}
+	}
 
-        const rows = await CurriculumVitaeModel.findAll({
-                attributes: [
-                        'ship',
-                        [sequelize.fn('COUNT', sequelize.col('id')), 'count'],
-                ],
-                where,
-                group: ['ship'],
-                raw: true,
-        });
+	const rows = await CurriculumVitaeModel.findAll({
+		attributes: [
+			'ship',
+			[sequelize.fn('COUNT', sequelize.col('id')), 'count'],
+		],
+		where,
+		group: ['ship'],
+		raw: true,
+	});
 
-        return rows.map((row) => ({
-                ship: typeof row.ship === 'number' ? row.ship : Number(row.ship),
-                count: typeof row.count === 'number' ? row.count : Number(row.count),
-        }));
+	return rows.map((row) => ({
+		ship: typeof row.ship === 'number' ? row.ship : Number(row.ship),
+		count: typeof row.count === 'number' ? row.count : Number(row.count),
+	}));
 };
 
 const deleteById = async (id) => {
@@ -262,12 +350,12 @@ const getFilterOptions = async (query = {}) => {
 	return {hr, job, name};
 };
 module.exports = {
-        findAndCountAll,
-        create,
-        findById,
-        updateById,
-        deleteById,
-        getFilterOptions,
-	    updateShipByContact,
-        getShipCountsByPeriod,
+	findAndCountAll,
+	create,
+	findById,
+	updateById,
+	deleteById,
+	getFilterOptions,
+	updateShipByContact,
+	getShipCountsByPeriod,
 };
