@@ -45,6 +45,13 @@ const CurriculumVitaeModel = sequelize.define('curriculum_vitae', {
 		comment: '姓名',
 		field: 'name'
 	},
+	contact: {
+		type: Sequelize.STRING(255),
+		allowNull: true,
+		defaultValue: null,
+		comment: '联系方式',
+		field: 'contact'
+	},
 	latestCorp: {
 		type: Sequelize.STRING(255),
 		allowNull: true,
