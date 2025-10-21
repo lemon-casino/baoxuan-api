@@ -38,18 +38,25 @@ const CurriculumVitaeModel = sequelize.define('curriculum_vitae', {
 		comment: '岗位薪资',
 		field: 'job_salary'
 	},
-	name: {
-		type: Sequelize.STRING(64),
-		allowNull: true,
-		defaultValue: null,
-		comment: '姓名',
-		field: 'name'
-	},
-	latestCorp: {
-		type: Sequelize.STRING(255),
-		allowNull: true,
-		defaultValue: null,
-		comment: '最近入职企业',
+        name: {
+                type: Sequelize.STRING(64),
+                allowNull: true,
+                defaultValue: null,
+                comment: '姓名',
+                field: 'name'
+        },
+        contact: {
+                type: Sequelize.STRING(255),
+                allowNull: true,
+                defaultValue: null,
+                comment: '联系方式',
+                field: 'contact'
+        },
+        latestCorp: {
+                type: Sequelize.STRING(255),
+                allowNull: true,
+                defaultValue: null,
+                comment: '最近入职企业',
 		field: 'latest_corp'
 	},
 	latestJob: {

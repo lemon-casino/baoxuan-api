@@ -137,16 +137,26 @@ const updateById = async (id, payload) => {
 	return toPlain(record);
 };
 
-const updateShipByName = async (name, ship) => {
-        if (!name || typeof ship !== 'number') {
+const updateShipByContact = async (contact, ship, name) => {
+        if (typeof contact !== 'string' || contact.trim().length === 0 || typeof ship !== 'number') {
                 return 0;
         }
 
+        const normalizedContact = contact.trim();
+        const trimmedName = typeof name === 'string' ? name.trim() : '';
+
+        const updatePayload = {ship};
+        if (trimmedName) {
+                updatePayload.name = trimmedName;
+        }
+
         const [affectedRows] = await CurriculumVitaeModel.update(
-                {ship},
+                updatePayload,
                 {
                         where: {
-                                name
+                                contact: {
+                                        [Op.like]: `%${normalizedContact}%`
+                                }
                         }
                 }
         );
@@ -260,6 +270,6 @@ module.exports = {
         updateById,
         deleteById,
         getFilterOptions,
-        updateShipByName,
+        updateShipByContact,
         getShipCountsByPeriod,
 };
