@@ -63,13 +63,18 @@ const extractCandidateEntries = (fieldMap = {}, context = {}) => {
         }
 
         return parsed
-                .map((entry) => ({
-                        name: typeof entry['候选人'] === 'string' ? entry['候选人'].trim() : '',
-                        contact: typeof entry['联系方式'] === 'string' ? entry['联系方式'].trim() : '',
-                        status: typeof entry['面试状态'] === 'string' ? entry['面试状态'].trim() : '',
-                        interviewComment: typeof entry['面试评价'] === 'string' ? entry['面试评价'].trim() : '',
-                        interviewRemark: typeof entry['备注'] === 'string' ? entry['备注'].trim() : '',
-                }))
+                .map((entry) => {
+                        const interviewRemark = typeof entry['备注'] === 'string' ? entry['备注'].trim() : '';
+                        const candidateName = typeof entry['候选人'] === 'string' ? entry['候选人'].trim() : '';
+
+                        return {
+                                name: candidateName || interviewRemark,
+                                contact: typeof entry['联系方式'] === 'string' ? entry['联系方式'].trim() : '',
+                                status: typeof entry['面试状态'] === 'string' ? entry['面试状态'].trim() : '',
+                                interviewComment: typeof entry['面试评价'] === 'string' ? entry['面试评价'].trim() : '',
+                                interviewRemark,
+                        };
+                })
                 .filter((entry) => entry.contact && entry.status);
 };
 
@@ -153,6 +158,7 @@ const syncCurriculumVitaeStatus = async () => {
         const {candidateMap, unknownStatuses} = buildCandidateUpdates(rows);
 
         let updated = 0;
+        const unmatchedContacts = [];
         for (const candidate of candidateMap.values()) {
                 let affected = 0;
                 if (candidate.contact) {
@@ -164,12 +170,27 @@ const syncCurriculumVitaeStatus = async () => {
                 }
                 if (affected > 0) {
                         updated += affected;
+                } else {
+                        unmatchedContacts.push({
+                                contact: candidate.contact,
+                                name: candidate.name,
+                                status: candidate.status,
+                        });
                 }
         }
 
         if (unknownStatuses.size > 0) {
                 logger.warn(
                         `[RecruitmentProcessSync] Encountered unmapped statuses: ${Array.from(unknownStatuses).join(', ')}`
+                );
+        }
+
+        if (unmatchedContacts.length > 0) {
+                const sample = unmatchedContacts.slice(0, 10)
+                        .map((entry) => `${entry.contact}${entry.name ? `(${entry.name})` : ''}`)
+                        .join(', ');
+                logger.warn(
+                        `[RecruitmentProcessSync] Unable to match curriculum vitae by contact for ${unmatchedContacts.length} candidates. Sample: ${sample}`
                 );
         }
 
@@ -182,6 +203,7 @@ const syncCurriculumVitaeStatus = async () => {
                 candidates: candidateMap.size,
                 updated,
                 unknownStatuses: Array.from(unknownStatuses),
+                unmatchedContacts: unmatchedContacts.map((entry) => entry.contact),
                 positions: positionCount,
         };
 };

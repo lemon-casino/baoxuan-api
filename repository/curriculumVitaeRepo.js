@@ -1,6 +1,89 @@
 const {Op} = require('sequelize');
 const CurriculumVitaeModel = require('../model/curriculumVitae');
 
+const CONTACT_SPLIT_REGEX = /[\s,;；，、|/\\]+/u;
+const MIN_LIKE_TOKEN_LENGTH = 3;
+const MIN_DIGIT_TOKEN_LENGTH = 6;
+
+const escapeLikePattern = (value) => value.replace(/([%_\\])/g, '\\$1');
+
+const toDigits = (value) => value.replace(/\D+/g, '');
+
+const buildDigitRegex = (digits) => digits.split('').map((digit) => `${digit}\\D*`).join('');
+
+const supportsRegexp = () => {
+        const dialect = CurriculumVitaeModel?.sequelize?.getDialect?.();
+        if (!dialect) {
+                return false;
+        }
+        return ['mysql', 'mariadb', 'postgres'].includes(dialect);
+};
+
+const extractContactTokens = (rawValue = '') => {
+        if (typeof rawValue !== 'string') {
+                return [];
+        }
+
+        const trimmed = rawValue.trim();
+        if (!trimmed) {
+                return [];
+        }
+
+        const tokens = new Set([trimmed]);
+        trimmed.split(CONTACT_SPLIT_REGEX).forEach((part) => {
+                const token = part.trim();
+                if (token) {
+                        tokens.add(token);
+                }
+        });
+
+        return Array.from(tokens);
+};
+
+const buildContactMatchers = (contact) => {
+        const tokens = extractContactTokens(contact);
+        if (tokens.length === 0) {
+                return [];
+        }
+
+        const likePatterns = new Set();
+        const regexPatterns = new Set();
+
+        tokens.forEach((token) => {
+                const digits = toDigits(token);
+                if (!token.includes('@') && digits.length >= MIN_DIGIT_TOKEN_LENGTH) {
+                        regexPatterns.add(buildDigitRegex(digits));
+                }
+
+                if (token.length >= MIN_LIKE_TOKEN_LENGTH) {
+                        likePatterns.add(escapeLikePattern(token));
+                }
+        });
+
+        const normalizedContact = typeof contact === 'string' ? contact.trim() : '';
+        if (normalizedContact) {
+                likePatterns.add(escapeLikePattern(normalizedContact));
+        }
+
+        const matchers = Array.from(likePatterns).map((pattern) => ({
+                contact: {
+                        [Op.like]: `%${pattern}%`
+                }
+        }));
+
+        if (supportsRegexp()) {
+                regexPatterns.forEach((pattern) => {
+                        matchers.push({
+                                contact: {
+                                        [Op.regexp]: pattern
+                                }
+                        });
+                });
+        }
+
+        return matchers;
+};
+
 const toPlain = (modelInstance) => {
 	if (!modelInstance) {
 		return null;
@@ -150,13 +233,16 @@ const updateShipByContact = async (contact, ship, name) => {
                 updatePayload.name = trimmedName;
         }
 
+        const matchers = buildContactMatchers(normalizedContact);
+        if (matchers.length === 0) {
+                return 0;
+        }
+
         const [affectedRows] = await CurriculumVitaeModel.update(
                 updatePayload,
                 {
                         where: {
-                                contact: {
-                                        [Op.like]: `%${normalizedContact}%`
-                                }
+                                [Op.or]: matchers
                         }
                 }
         );
