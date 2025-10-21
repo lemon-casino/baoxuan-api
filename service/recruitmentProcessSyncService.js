@@ -65,11 +65,12 @@ const extractCandidateEntries = (fieldMap = {}, context = {}) => {
         return parsed
                 .map((entry) => ({
                         name: typeof entry['候选人'] === 'string' ? entry['候选人'].trim() : '',
+					    contact: typeof entry['联系方式'] === 'string' ? entry['联系方式'].trim() : '',
                         status: typeof entry['面试状态'] === 'string' ? entry['面试状态'].trim() : '',
                         interviewComment: typeof entry['面试评价'] === 'string' ? entry['面试评价'].trim() : '',
                         interviewRemark: typeof entry['备注'] === 'string' ? entry['备注'].trim() : '',
                 }))
-                .filter((entry) => entry.name && entry.status);
+			.filter((entry) => entry.contact && entry.status);
 };
 
 const buildCandidateUpdates = (rows) => {
@@ -93,12 +94,13 @@ const buildCandidateUpdates = (rows) => {
                                 interviewRemark: candidate.interviewRemark,
                         };
 
-                        const existing = candidateMap.get(candidate.name);
+                        const candidateKey = candidate.contact;
+                        const existing = candidateMap.get(candidateKey);
                         const currentPriority = SHIP_PRIORITY[resolvedShip] ?? 0;
                         const existingPriority = existing ? SHIP_PRIORITY[existing.ship] ?? 0 : -Infinity;
 
                         if (!existing || currentPriority >= existingPriority) {
-                                candidateMap.set(candidate.name, payload);
+							candidateMap.set(candidateKey, payload);
                         }
                 });
         });
@@ -151,7 +153,14 @@ const syncCurriculumVitaeStatus = async () => {
 
         let updated = 0;
         for (const candidate of candidateMap.values()) {
-                const affected = await curriculumVitaeRepo.updateShipByName(candidate.name, candidate.ship);
+			let affected = 0;
+			if (candidate.contact) {
+				affected = await curriculumVitaeRepo.updateShipByContact(
+					candidate.contact,
+					candidate.ship,
+					candidate.name
+				);
+			}
                 if (affected > 0) {
                         updated += affected;
                 }
