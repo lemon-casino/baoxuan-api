@@ -1,13 +1,13 @@
 const curriculumVitaeRepo = require('../repository/curriculumVitaeRepo');
 
 const SHIP_SUMMARY_ITEMS = [
-        {label: '新候选人', ship: 1},
-        {label: '初选通过', ship: 2},
-        {label: '安排面试', ship: 3},
+        {label: '初选通过', ship: 1},
+        {label: '约面', ship: 2},
+        {label: '面试中', ship: 3},
         {label: '面试通过', ship: 4},
-        {label: '已发offer', ship: 5},
-        {label: '待入职', ship: 6},
-        {label: '已淘汰', ship: 7},
+        {label: 'Offer', ship: 5},
+        {label: '面试淘汰', ship: 6},
+        {label: '简历淘汰', ship: 7},
         {label: '未初始', ship: 8},
 ];
 

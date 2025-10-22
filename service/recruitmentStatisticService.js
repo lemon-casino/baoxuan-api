@@ -1,13 +1,14 @@
 const recruitmentStatisticRepo = require('@/repository/recruitment/recruitmentStatisticRepo');
-
+const curriculumVitaeRepo = require('@/repository/curriculumVitaeRepo');
 const TARGET_SHIPS = [
         {label: '新候选人', ship: 1},
         {label: '面试通过', ship: 4},
         {label: '已发offer', ship: 5},
         {label: '待入职', ship: 6},
 	    {label: '面试淘汰', ship: 7},
+	    {label: '未初始', ship: 8},
 ];
-
+const CURRICULUM_VITAE_SHIPS = new Set([8]);
 const parseDay = (value) => {
         if (typeof value !== 'string') {
                 return null;
@@ -65,13 +66,26 @@ const resolveDateRange = (query = {}) => {
 
 const getCurriculumVitaeShipStatistics = async (query = {}) => {
         const {period, startDate, endDate} = resolveDateRange(query);
-        const rows = await recruitmentStatisticRepo.getCurriculumVitaeShipStatistics({
-                startDate,
-                endDate,
-                ships: TARGET_SHIPS.map((item) => item.ship),
-        });
+	const recruitmentShips = TARGET_SHIPS.filter((item) => !CURRICULUM_VITAE_SHIPS.has(item.ship));
+	let rows = [];
+	if (recruitmentShips.length > 0) {
+		rows = await recruitmentStatisticRepo.getCurriculumVitaeShipStatistics({
+			startDate,
+			endDate,
+			ships: recruitmentShips.map((item) => item.ship),
+		});
+	}
         const counts = new Map(rows.map((row) => [row.ship, row.count]));
-
+	if (CURRICULUM_VITAE_SHIPS.size > 0) {
+		const curriculumVitaeCounts = await curriculumVitaeRepo.countByShipValues({
+			ships: Array.from(CURRICULUM_VITAE_SHIPS),
+			startDate,
+			endDate,
+		});
+		curriculumVitaeCounts.forEach((count, ship) => {
+			counts.set(ship, count);
+		});
+	}
         return {
                 period,
                 startDate,

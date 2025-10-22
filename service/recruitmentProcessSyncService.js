@@ -6,27 +6,20 @@ const recruitmentStatisticRepo = require('@/repository/recruitment/recruitmentSt
 const {FIELD_IDS} = recruitmentProcessRepo;
 
 const STATUS_TO_SHIP = new Map([
-	['未面试', 1], //新候选人
-	['新候选人', 1],//新候选人
-	['初选通过', 2],//初选通过
-	['安排面试', 3], //安排面试
-	['hr面', 3],// 安排面试
-	['一面', 3],//安排面试
-	['二面', 3],//安排面试
-	['三面', 3],// 安排面试
-	['四面', 3],// 安排面试
+	['初选通过', 1], //新候选人
+	['约面', 2],//初选通过
+	['一面', 3],//安排面试    面试中
+	['二面', 3],//安排面试     面试中
+	['三面', 3],// 安排面试     面试中
+	['四面', 3],// 安排面试   面试中
 	['面试通过', 4],
-	['面试通过-候选人考虑中', 5], //已发offer
-	['offer', 5],//已发offer
-	['已发offer', 5],//已发offer
-	['待入职', 6],
-	['回绝offer', 7], //面试淘汰
-	['候选人拒绝', 7],//面试淘汰
-	['终止流程-无法达成候选人预期', 7], //面试淘汰
-	['终止该候选人', 7],// 面试淘汰
-	['面试未通过', 7],//面试淘汰
-	['面试爽约', 7] // 面试淘汰
-	// 简历淘汰 9
+	['Offer', 5],//已发offer
+	['回绝Offer', 6], //面试淘汰
+	['候选人拒绝', 6],//面试淘汰
+	['终止该候选人', 6],// 面试淘汰
+	['面试未通过', 6],//面试淘汰
+	['面试爽约', 6] // 面试淘汰
+	// 简历淘汰 7 入职 9
 ]);
 
 const DEFAULT_SHIP = 8;
@@ -71,7 +64,7 @@ const extractCandidateEntries = (fieldMap = {}, context = {}) => {
 
 			return {
 				name: candidateName || interviewRemark,
-				contact: typeof entry['联系方式'] === 'string' ? entry['联系方式'].trim() : '',
+				contact: typeof entry['简历联系方式'] === 'string' ? entry['简历联系方式'].trim() : '',
 				status: typeof entry['面试状态'] === 'string' ? entry['面试状态'].trim() : '',
 				interviewComment: typeof entry['面试评价'] === 'string' ? entry['面试评价'].trim() : '',
 				interviewRemark,

@@ -363,6 +363,60 @@ const getShipCountsByPeriod = async (startDate, endDate) => {
 	}));
 };
 
+const countByShipValues = async ({ships, startDate, endDate} = {}) => {
+	if (!Array.isArray(ships) || ships.length === 0) {
+		return new Map();
+	}
+
+	const normalizedShips = Array.from(
+		new Set(
+			ships
+				.map((ship) => Number(ship))
+				.filter((ship) => Number.isInteger(ship))
+		)
+	);
+
+	if (normalizedShips.length === 0) {
+		return new Map();
+	}
+
+	const {sequelize} = CurriculumVitaeModel;
+	const where = {
+		ship: {
+			[Op.in]: normalizedShips,
+		},
+	};
+
+	if (startDate || endDate) {
+		where.date = {};
+
+		if (startDate) {
+			where.date[Op.gte] = startDate;
+		}
+
+		if (endDate) {
+			where.date[Op.lt] = endDate;
+		}
+	}
+
+	const rows = await CurriculumVitaeModel.findAll({
+		attributes: [
+			'ship',
+			[sequelize.fn('COUNT', sequelize.col('id')), 'count'],
+		],
+		where,
+		group: ['ship'],
+		raw: true,
+	});
+
+	return new Map(
+		rows.map((row) => [
+			typeof row.ship === 'number' ? row.ship : Number(row.ship),
+			typeof row.count === 'number' ? row.count : Number(row.count),
+		])
+	);
+};
+
 const deleteById = async (id) => {
 	return CurriculumVitaeModel.destroy({
 		where: {id}
@@ -432,4 +486,5 @@ module.exports = {
 	getFilterOptions,
 	updateShipByContact,
 	getShipCountsByPeriod,
+	countByShipValues,
 };
