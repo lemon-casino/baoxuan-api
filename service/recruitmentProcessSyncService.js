@@ -2,29 +2,31 @@ const {logger} = require('@/utils/log');
 const recruitmentProcessRepo = require('@/repository/recruitment/recruitmentProcessRepo');
 const curriculumVitaeRepo = require('@/repository/curriculumVitaeRepo');
 const recruitmentPositionRepo = require('@/repository/recruitment/recruitmentPositionRepo');
-
+const recruitmentStatisticRepo = require('@/repository/recruitment/recruitmentStatisticRepo');
 const {FIELD_IDS} = recruitmentProcessRepo;
 
 const STATUS_TO_SHIP = new Map([
-	['未面试', 1],
-	['新候选人', 1],
-	['初选通过', 2],
-	['安排面试', 3],
-	['hr面', 3],
-	['一面', 3],
-	['二面', 3],
-	['三面', 3],
-	['四面', 3],
+	['未面试', 1], //新候选人
+	['新候选人', 1],//新候选人
+	['初选通过', 2],//初选通过
+	['安排面试', 3], //安排面试
+	['hr面', 3],// 安排面试
+	['一面', 3],//安排面试
+	['二面', 3],//安排面试
+	['三面', 3],// 安排面试
+	['四面', 3],// 安排面试
 	['面试通过', 4],
-	['面试通过-候选人考虑中', 6],
-	['offer', 5],
-	['已发offer', 5],
+	['面试通过-候选人考虑中', 5], //已发offer
+	['offer', 5],//已发offer
+	['已发offer', 5],//已发offer
 	['待入职', 6],
-	['回绝offer', 7],
-	['候选人拒绝', 7],
-	['终止流程-无法达成候选人预期', 7],
-	['终止该候选人', 7],
-	['面试未通过', 7],
+	['回绝offer', 7], //面试淘汰
+	['候选人拒绝', 7],//面试淘汰
+	['终止流程-无法达成候选人预期', 7], //面试淘汰
+	['终止该候选人', 7],// 面试淘汰
+	['面试未通过', 7],//面试淘汰
+	['面试爽约', 7] // 面试淘汰
+	// 简历淘汰 9
 ]);
 
 const DEFAULT_SHIP = 8;
@@ -159,18 +161,41 @@ const syncCurriculumVitaeStatus = async () => {
 
 	let updated = 0;
 	const unmatchedContacts = [];
+	const shipChangeStatistics = [];
 	for (const candidate of candidateMap.values()) {
-		let affected = 0;
+		let result = {matchedCount: 0, affectedRows: 0, changedRecords: []};
 		if (candidate.contact) {
-			affected = await curriculumVitaeRepo.updateShipByContact(
+			result = await curriculumVitaeRepo.updateShipByContact(
 				candidate.contact,
 				candidate.ship,
 				candidate.name
 			);
 		}
-		if (affected > 0) {
-			updated += affected;
-		} else {
+
+		if (result.affectedRows > 0) {
+			updated += result.affectedRows;
+		}
+
+		if (result.changedRecords.length > 0) {
+			result.changedRecords.forEach((record) => {
+				shipChangeStatistics.push({
+					entityType: 'curriculum_vitae',
+					entityId: record.id ? String(record.id) : null,
+					changeType: 'ship',
+					previousShip: record.previousShip,
+					ship: candidate.ship,
+					reference: candidate.contact || null,
+					metadata: {
+						status: candidate.status || null,
+						name: candidate.name || null,
+						interviewComment: candidate.interviewComment || null,
+						interviewRemark: candidate.interviewRemark || null,
+					},
+				});
+			});
+		}
+
+		if (result.matchedCount === 0) {
 			unmatchedContacts.push({
 				contact: candidate.contact,
 				name: candidate.name,
@@ -178,6 +203,18 @@ const syncCurriculumVitaeStatus = async () => {
 			});
 		}
 	}
+
+	if (shipChangeStatistics.length > 0) {
+		try {
+			await recruitmentStatisticRepo.bulkInsertStatistics(shipChangeStatistics);
+		} catch (error) {
+			logger.error(
+				`[RecruitmentProcessSync] failed to record curriculum vitae ship statistics: ${error.message}`,
+				error
+			);
+		}
+	}
+
 
 	if (unknownStatuses.size > 0) {
 		logger.warn(
