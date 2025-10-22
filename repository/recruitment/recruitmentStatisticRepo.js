@@ -28,7 +28,6 @@ const bulkInsertStatistics = async (records = []) => {
 
         return payload.length;
 };
-
 const hasCurriculumVitaeShipStatistic = async ({entityId, reference, ship}) => {
         const normalizedShip = typeof ship === 'number' ? ship : Number(ship);
         if (!Number.isFinite(normalizedShip)) {
