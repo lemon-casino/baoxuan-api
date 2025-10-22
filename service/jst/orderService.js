@@ -381,10 +381,14 @@ const importPurchaseInfo = async (rows) => {
             rows[i].getCell(io_id_row).value.trim() : 
             rows[i].getCell(io_id_row).value
         let sku_code = typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
-            rows[i].getCell(sku_code_row).value.trim() : 
-            rows[i].getCell(sku_code_row).value
+            rows[i].getCell(sku_code_row).value.trim().replace(/_x([0-9A-F]{4})_/g, (m, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+          }) : 
+            rows[i].getCell(sys_sku_id_row).value    
         let goods_code = typeof(rows[i].getCell(goods_code_row).value) == 'string' ? 
-            rows[i].getCell(goods_code_row).value.trim() : 
+            rows[i].getCell(goods_code_row).value.trim().replace(/_x([0-9A-F]{4})_/g, (m, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+            }) : 
             rows[i].getCell(goods_code_row).value
         let io_qty = rows[i].getCell(io_qty_row).value
         let io_amount = rows[i].getCell(io_amount_row).value
