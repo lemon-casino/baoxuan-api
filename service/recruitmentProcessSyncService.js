@@ -239,11 +239,9 @@ const syncCurriculumVitaeStatus = async () => {
 
         const recruitmentPositions = buildRecruitmentPositions(rows);
         let positionCount = 0;
-        let positionChanges = [];
         try {
                 const positionResult = await recruitmentPositionRepo.upsertRecruitmentPositions(recruitmentPositions);
                 positionCount = positionResult?.affectedCount ?? 0;
-                positionChanges = positionResult?.changes ?? [];
         } catch (error) {
                 logger.error(`[RecruitmentProcessSync] failed to sync recruitment positions: ${error.message}`, error);
         }
@@ -309,38 +307,7 @@ const syncCurriculumVitaeStatus = async () => {
                 }
         }
 
-        positionChanges.forEach((change) => {
-                const metadata = {
-                        jobTitle: change.jobTitle || null,
-                        owner: change.owner || null,
-                };
-
-                if (change.departmentChanged) {
-                        statisticEntries.push({
-                                entityType: 'recruitment_positions',
-                                entityId: change.processId || null,
-                                reference: change.processId || null,
-                                changeType: 'department',
-                                previousDepartment: change.previousDepartment ?? null,
-                                department: change.department ?? null,
-                                recordedAt: now,
-                                metadata,
-                        });
-                }
-
-                if (change.statusChanged) {
-                        statisticEntries.push({
-                                entityType: 'recruitment_positions',
-                                entityId: change.processId || null,
-                                reference: change.processId || null,
-                                changeType: 'status',
-                                previousStatus: change.previousStatus ?? null,
-                                status: change.status ?? null,
-                                recordedAt: now,
-                                metadata,
-                        });
-                }
-        });
+        // recruitment_positions 相关统计待定，暂时不记录职位维度的变化
 
         if (statisticEntries.length > 0) {
                 try {

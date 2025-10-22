@@ -1,4 +1,8 @@
 const curriculumVitaeRepo = require('../repository/curriculumVitaeRepo');
+const recruitmentStatisticRepo = require('../repository/recruitment/recruitmentStatisticRepo');
+const {logger} = require('../utils/log');
+
+const DEFAULT_SHIP = 8;
 
 const SHIP_SUMMARY_ITEMS = [
         {label: '新候选人', ship: 1},
@@ -11,10 +15,12 @@ const SHIP_SUMMARY_ITEMS = [
         {label: '未初始', ship: 8},
 ];
 
+const NUMERIC_FIELDS = new Set(['gender', 'age', 'filesize', 'ship']);
+
 const allowedFields = [
-	'hr',
-	'date',
-	'job',
+        'hr',
+        'date',
+        'job',
 	'jobSalary',
 	'name',
 	'latestCorp',
@@ -32,11 +38,11 @@ const allowedFields = [
 ];
 
 const toNumberOrNull = (value) => {
-	if (value === undefined || value === null || value === '') {
-		return null;
-	}
-	const numberValue = Number(value);
-	return Number.isNaN(numberValue) ? null : numberValue;
+        if (value === undefined || value === null || value === '') {
+                return null;
+        }
+        const numberValue = Number(value);
+        return Number.isNaN(numberValue) ? null : numberValue;
 };
 
 const normalizePayload = (payload = {}) => {
@@ -49,10 +55,10 @@ const normalizePayload = (payload = {}) => {
 				normalized[field] = null;
 				continue;
 			}
-			if (['gender', 'age', 'filesize'].includes(field)) {
-				normalized[field] = toNumberOrNull(value);
-				continue;
-			}
+                        if (NUMERIC_FIELDS.has(field)) {
+                                normalized[field] = toNumberOrNull(value);
+                                continue;
+                        }
 			if (field === 'date' && value) {
 				const dateValue = new Date(value);
 				normalized[field] = Number.isNaN(dateValue.getTime()) ? null : dateValue;
@@ -95,11 +101,11 @@ const normalizeFilters = (filters = {}) => {
 };
 
 const list = async (query = {}) => {
-	const page = Math.max(parseInt(query.page, 10) || 1, 1);
-	const pageSize = Math.max(parseInt(query.pageSize, 10) || 10, 1);
-	const filters = normalizeFilters(query);
-	console.log(filters)
-	const {count, rows} = await curriculumVitaeRepo.findAndCountAll(filters, {page, pageSize});
+        const page = Math.max(parseInt(query.page, 10) || 1, 1);
+        const pageSize = Math.max(parseInt(query.pageSize, 10) || 10, 1);
+        const filters = normalizeFilters(query);
+        console.log(filters)
+        const {count, rows} = await curriculumVitaeRepo.findAndCountAll(filters, {page, pageSize});
 
 	return {
 		list: rows,
@@ -111,9 +117,59 @@ const list = async (query = {}) => {
 	};
 };
 
+const toNumberOrNullSafe = (value) => toNumberOrNull(value);
+
+const recordCurriculumVitaeShipStatistic = async (record, previousShip) => {
+        if (!record) {
+                return;
+        }
+
+        const entityId = record.id ? String(record.id) : null;
+        const reference = record.contact || null;
+        const currentShip = toNumberOrNullSafe(record.ship);
+        const nextShip = currentShip ?? DEFAULT_SHIP;
+        const normalizedPrevious = toNumberOrNullSafe(previousShip);
+
+        if (normalizedPrevious === nextShip) {
+                return;
+        }
+
+        const payload = {
+                entityType: 'curriculum_vitae',
+                entityId,
+                reference,
+                changeType: 'ship',
+                previousShip: normalizedPrevious,
+                ship: nextShip,
+                recordedAt: new Date(),
+                metadata: {
+                        name: record.name || null,
+                        hr: record.hr || null,
+                        job: record.job || null,
+                },
+        };
+
+        try {
+                await recruitmentStatisticRepo.bulkInsertStatistics([payload]);
+        } catch (error) {
+                logger.error(
+                        `[CurriculumVitaeService] failed to record recruitment statistic for curriculum vitae ${entityId || 'unknown'}: ${error.message}`,
+                        error
+                );
+        }
+};
+
 const create = async (payload) => {
-	const normalized = normalizePayload(payload);
-	return curriculumVitaeRepo.create(normalized);
+        const normalized = normalizePayload(payload);
+        if (normalized.ship == null) {
+                normalized.ship = DEFAULT_SHIP;
+        }
+
+        const record = await curriculumVitaeRepo.create(normalized);
+
+        await recordCurriculumVitaeShipStatistic(record, null);
+
+        return record;
 };
 
 const getById = async (id) => {
@@ -127,17 +183,30 @@ const getById = async (id) => {
 };
 
 const update = async (id, payload) => {
-	const normalized = normalizePayload(payload);
-	if (Object.keys(normalized).length === 0) {
-		return getById(id);
-	}
-	const record = await curriculumVitaeRepo.updateById(id, normalized);
-	if (!record) {
-		const error = new Error('简历记录不存在');
-		error.code = 404;
-		throw error;
-	}
-	return record;
+        const normalized = normalizePayload(payload);
+        if (Object.keys(normalized).length === 0) {
+                return getById(id);
+        }
+
+        const existing = await curriculumVitaeRepo.findById(id);
+        if (!existing) {
+                const error = new Error('简历记录不存在');
+                error.code = 404;
+                throw error;
+        }
+
+        const record = await curriculumVitaeRepo.updateById(id, normalized);
+        if (!record) {
+                const error = new Error('简历记录不存在');
+                error.code = 404;
+                throw error;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(normalized, 'ship')) {
+                await recordCurriculumVitaeShipStatistic(record, existing.ship);
+        }
+
+        return record;
 };
 
 const remove = async (id) => {
