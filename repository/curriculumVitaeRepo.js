@@ -327,10 +327,10 @@ const updateShipByContact = async (contact, ship, name) => {
 const SHIP_VALUES = [1, 2, 3, 4, 5, 6, 7, 8];
 
 const getShipCountsByPeriod = async (startDate, endDate) => {
-	const {sequelize} = CurriculumVitaeModel;
+        const {sequelize} = CurriculumVitaeModel;
 
-	const where = {
-		ship: {
+        const where = {
+                ship: {
 			[Op.in]: SHIP_VALUES,
 		},
 	};
@@ -357,10 +357,64 @@ const getShipCountsByPeriod = async (startDate, endDate) => {
 		raw: true,
 	});
 
-	return rows.map((row) => ({
-		ship: typeof row.ship === 'number' ? row.ship : Number(row.ship),
-		count: typeof row.count === 'number' ? row.count : Number(row.count),
-	}));
+        return rows.map((row) => ({
+                ship: typeof row.ship === 'number' ? row.ship : Number(row.ship),
+                count: typeof row.count === 'number' ? row.count : Number(row.count),
+        }));
+};
+
+const countByShipValues = async ({ships, startDate, endDate} = {}) => {
+        if (!Array.isArray(ships) || ships.length === 0) {
+                return new Map();
+        }
+
+        const normalizedShips = Array.from(
+                new Set(
+                        ships
+                                .map((ship) => Number(ship))
+                                .filter((ship) => Number.isInteger(ship))
+                )
+        );
+
+        if (normalizedShips.length === 0) {
+                return new Map();
+        }
+
+        const {sequelize} = CurriculumVitaeModel;
+        const where = {
+                ship: {
+                        [Op.in]: normalizedShips,
+                },
+        };
+
+        if (startDate || endDate) {
+                where.date = {};
+
+                if (startDate) {
+                        where.date[Op.gte] = startDate;
+                }
+
+                if (endDate) {
+                        where.date[Op.lt] = endDate;
+                }
+        }
+
+        const rows = await CurriculumVitaeModel.findAll({
+                attributes: [
+                        'ship',
+                        [sequelize.fn('COUNT', sequelize.col('id')), 'count'],
+                ],
+                where,
+                group: ['ship'],
+                raw: true,
+        });
+
+        return new Map(
+                rows.map((row) => [
+                        typeof row.ship === 'number' ? row.ship : Number(row.ship),
+                        typeof row.count === 'number' ? row.count : Number(row.count),
+                ])
+        );
 };
 
 const deleteById = async (id) => {
@@ -430,6 +484,7 @@ module.exports = {
 	updateById,
 	deleteById,
 	getFilterOptions,
-	updateShipByContact,
-	getShipCountsByPeriod,
+        updateShipByContact,
+        getShipCountsByPeriod,
+        countByShipValues,
 };
