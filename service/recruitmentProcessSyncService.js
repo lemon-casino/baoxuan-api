@@ -8,18 +8,28 @@ const {FIELD_IDS} = recruitmentProcessRepo;
 const STATUS_TO_SHIP = new Map([
 	['未面试', 1], //新候选人
 	['新候选人', 1],//新候选人
+
+	 // 在这之前 未面试之前
+
 	['初选通过', 2],//初选通过
-	['安排面试', 3], //安排面试
-	['hr面', 3],// 安排面试
-	['一面', 3],//安排面试
-	['二面', 3],//安排面试
-	['三面', 3],// 安排面试
-	['四面', 3],// 安排面试
+
+	['安排面试', 3], //安排面试- 约面
+
+	['hr面', 3],// 安排面试    约面
+
+	['一面', 3],//安排面试    面试中
+	['二面', 3],//安排面试     面试中
+	['三面', 3],// 安排面试     面试中
+	['四面', 3],// 安排面试   面试中
+
 	['面试通过', 4],
+
 	['面试通过-候选人考虑中', 5], //已发offer
 	['offer', 5],//已发offer
 	['已发offer', 5],//已发offer
+
 	['待入职', 6],
+
 	['回绝offer', 7], //面试淘汰
 	['候选人拒绝', 7],//面试淘汰
 	['终止流程-无法达成候选人预期', 7], //面试淘汰
@@ -71,7 +81,7 @@ const extractCandidateEntries = (fieldMap = {}, context = {}) => {
 
 			return {
 				name: candidateName || interviewRemark,
-				contact: typeof entry['联系方式'] === 'string' ? entry['联系方式'].trim() : '',
+				contact: typeof entry['简历联系方式'] === 'string' ? entry['简历联系方式'].trim() : '',
 				status: typeof entry['面试状态'] === 'string' ? entry['面试状态'].trim() : '',
 				interviewComment: typeof entry['面试评价'] === 'string' ? entry['面试评价'].trim() : '',
 				interviewRemark,
