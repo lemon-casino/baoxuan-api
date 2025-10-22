@@ -1,6 +1,5 @@
 const Sequelize = require('sequelize');
-const sequelize = require('./init');
-
+const sequelize = require('./bpmInit');
 const RecruitmentStatisticModel = sequelize.define(
         'recruitment_statistics',
         {

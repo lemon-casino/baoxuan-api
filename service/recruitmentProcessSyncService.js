@@ -30,25 +30,43 @@ const STATUS_TO_SHIP = new Map([
 
 const DEFAULT_SHIP = 8;
 
-const SHIP_PRIORITY = {
-	8: 0,
-	1: 10,
-	2: 20,
-	3: 30,
-	4: 40,
-	5: 50,
-	6: 60,
-	7: 100,
-};
-
 const normalizeStatus = (status = '') => status.replace(/\s+/g, '').toLowerCase();
 
 const resolveShip = (status) => STATUS_TO_SHIP.get(status) ?? STATUS_TO_SHIP.get(status.toUpperCase()) ?? null;
+const toTimestamp = (value) => {
+        if (!value) {
+                return null;
+        }
+
+        const date = value instanceof Date ? value : new Date(value);
+        const timestamp = date.getTime();
+
+        return Number.isFinite(timestamp) ? timestamp : null;
+};
+
 const extractCandidateEntries = (fieldMap = {}, context = {}) => {
-	const content = fieldMap[FIELD_IDS.candidateList];
-	if (!content) {
-		return [];
-	}
+        const {
+                processId = null,
+                version = null,
+                status: processStatus = null,
+                startTime = null,
+                endTime = null,
+        } = context;
+
+        const parsedVersion =
+                typeof version === 'number'
+                        ? version
+                        : typeof version === 'string' && version.trim().length > 0
+                                ? Number(version)
+                                : null;
+        const sourceVersion = Number.isFinite(parsedVersion) ? parsedVersion : null;
+        const sourceStartTime = startTime ?? null;
+        const sourceEndTime = endTime ?? null;
+        const sourceUpdatedAt = sourceEndTime || sourceStartTime || null;
+        const content = fieldMap[FIELD_IDS.candidateList];
+        if (!content) {
+                return [];
+        }
 	let parsed;
 	try {
 		parsed = JSON.parse(content);
@@ -71,46 +89,115 @@ const extractCandidateEntries = (fieldMap = {}, context = {}) => {
 			return {
 				name: candidateName || interviewRemark,
 				contact: typeof entry['联系方式'] === 'string' ? entry['联系方式'].trim() : '',
-				status: typeof entry['面试状态'] === 'string' ? entry['面试状态'].trim() : '',
-				interviewComment: typeof entry['面试评价'] === 'string' ? entry['面试评价'].trim() : '',
-				interviewRemark,
-			};
-		})
-		.filter((entry) => entry.contact && entry.status);
+                                status: typeof entry['面试状态'] === 'string' ? entry['面试状态'].trim() : '',
+                                interviewComment: typeof entry['面试评价'] === 'string' ? entry['面试评价'].trim() : '',
+                                interviewRemark,
+                                sourceProcessId: processId,
+                                sourceVersion,
+                                sourceProcessStatus: processStatus,
+                                sourceStartTime,
+                                sourceEndTime,
+                                sourceUpdatedAt,
+                        };
+                })
+                .filter((entry) => entry.contact && entry.status);
+};
+
+const shouldReplaceCandidate = (existing, next) => {
+        if (!existing) {
+                return true;
+        }
+
+        const existingUpdatedAt = toTimestamp(existing.sourceUpdatedAt || existing.sourceEndTime || existing.sourceStartTime);
+        const nextUpdatedAt = toTimestamp(next.sourceUpdatedAt || next.sourceEndTime || next.sourceStartTime);
+
+        if (existingUpdatedAt && nextUpdatedAt) {
+                if (nextUpdatedAt > existingUpdatedAt) {
+                        return true;
+                }
+
+                if (nextUpdatedAt < existingUpdatedAt) {
+                        return false;
+                }
+        } else if (nextUpdatedAt && !existingUpdatedAt) {
+                return true;
+        } else if (!nextUpdatedAt && existingUpdatedAt) {
+                return false;
+        }
+
+        const existingVersion =
+                typeof existing.sourceVersion === 'number' && Number.isFinite(existing.sourceVersion)
+                        ? existing.sourceVersion
+                        : null;
+        const nextVersion =
+                typeof next.sourceVersion === 'number' && Number.isFinite(next.sourceVersion) ? next.sourceVersion : null;
+
+        if (existingVersion !== null && nextVersion !== null) {
+                if (nextVersion > existingVersion) {
+                        return true;
+                }
+
+                if (nextVersion < existingVersion) {
+                        return false;
+                }
+        } else if (nextVersion !== null && existingVersion === null) {
+                return true;
+        } else if (existingVersion !== null && nextVersion === null) {
+                return false;
+        }
+
+        if (existing.ship == null && next.ship != null) {
+                return true;
+        }
+
+        if (next.ship == null && existing.ship != null) {
+                return false;
+        }
+
+        return false;
 };
 
 const buildCandidateUpdates = (rows) => {
-	const candidateMap = new Map();
-	const unknownStatuses = new Set();
+        const candidateMap = new Map();
+        const unknownStatuses = new Set();
 
-	rows.forEach((row) => {
-		const candidates = extractCandidateEntries(row.fieldMap, {processId: row.processId});
-		candidates.forEach((candidate) => {
-			const normalizedStatus = normalizeStatus(candidate.status);
-			const ship = resolveShip(normalizedStatus);
-			if (!ship) {
-				unknownStatuses.add(candidate.status);
+        rows.forEach((row) => {
+                const candidates = extractCandidateEntries(row.fieldMap, {
+                        processId: row.processId,
+                        version: row.version,
+                        status: row.status,
+                        startTime: row.startTime,
+                        endTime: row.endTime,
+                });
+                candidates.forEach((candidate) => {
+                        const normalizedStatus = normalizeStatus(candidate.status);
+                        const ship = resolveShip(normalizedStatus);
+                        if (!ship) {
+                                unknownStatuses.add(candidate.status);
 			}
 			const resolvedShip = ship ?? DEFAULT_SHIP;
 			const payload = {
 				contact: candidate.contact,
-				name: candidate.name,
-				ship: resolvedShip,
-				status: candidate.status,
-				interviewComment: candidate.interviewComment,
-				interviewRemark: candidate.interviewRemark,
-			};
+                                name: candidate.name,
+                                ship: resolvedShip,
+                                status: candidate.status,
+                                interviewComment: candidate.interviewComment,
+                                interviewRemark: candidate.interviewRemark,
+                                sourceProcessId: candidate.sourceProcessId,
+                                sourceVersion: candidate.sourceVersion,
+                                sourceProcessStatus: candidate.sourceProcessStatus,
+                                sourceStartTime: candidate.sourceStartTime,
+                                sourceEndTime: candidate.sourceEndTime,
+                                sourceUpdatedAt: candidate.sourceUpdatedAt,
+                        };
 
-			const candidateKey = candidate.contact;
-			const existing = candidateMap.get(candidateKey);
-			const currentPriority = SHIP_PRIORITY[resolvedShip] ?? 0;
-			const existingPriority = existing ? SHIP_PRIORITY[existing.ship] ?? 0 : -Infinity;
-
-			if (!existing || currentPriority >= existingPriority) {
-				candidateMap.set(candidateKey, payload);
-			}
-		});
-	});
+                        const candidateKey = candidate.contact;
+                        const existing = candidateMap.get(candidateKey);
+                        if (!existing || shouldReplaceCandidate(existing, payload)) {
+                                candidateMap.set(candidateKey, payload);
+                        }
+                });
+        });
 
 	return {
 		candidateMap,
@@ -152,11 +239,9 @@ const syncCurriculumVitaeStatus = async () => {
 
         const recruitmentPositions = buildRecruitmentPositions(rows);
         let positionCount = 0;
-        let positionChanges = [];
         try {
                 const positionResult = await recruitmentPositionRepo.upsertRecruitmentPositions(recruitmentPositions);
                 positionCount = positionResult?.affectedCount ?? 0;
-                positionChanges = positionResult?.changes ?? [];
         } catch (error) {
                 logger.error(`[RecruitmentProcessSync] failed to sync recruitment positions: ${error.message}`, error);
         }
@@ -181,6 +266,9 @@ const syncCurriculumVitaeStatus = async () => {
                 if (affected > 0) {
                         updated += affected;
                         changes.forEach((change) => {
+                                const sourceStartTimestamp = toTimestamp(candidate.sourceStartTime);
+                                const sourceEndTimestamp = toTimestamp(candidate.sourceEndTime);
+                                const sourceUpdatedTimestamp = toTimestamp(candidate.sourceUpdatedAt);
                                 statisticEntries.push({
                                         entityType: 'curriculum_vitae',
                                         entityId: change.id ? String(change.id) : null,
@@ -194,6 +282,18 @@ const syncCurriculumVitaeStatus = async () => {
                                                 status: candidate.status || null,
                                                 interviewComment: candidate.interviewComment || null,
                                                 interviewRemark: candidate.interviewRemark || null,
+                                                processId: candidate.sourceProcessId || null,
+                                                processVersion: candidate.sourceVersion ?? null,
+                                                processStatus: candidate.sourceProcessStatus || null,
+                                                processStartTime: sourceStartTimestamp
+                                                        ? new Date(sourceStartTimestamp).toISOString()
+                                                        : null,
+                                                processEndTime: sourceEndTimestamp
+                                                        ? new Date(sourceEndTimestamp).toISOString()
+                                                        : null,
+                                                processUpdatedAt: sourceUpdatedTimestamp
+                                                        ? new Date(sourceUpdatedTimestamp).toISOString()
+                                                        : null,
                                         },
                                 });
                         });
@@ -206,38 +306,7 @@ const syncCurriculumVitaeStatus = async () => {
                 }
         }
 
-        positionChanges.forEach((change) => {
-                const metadata = {
-                        jobTitle: change.jobTitle || null,
-                        owner: change.owner || null,
-                };
-
-                if (change.departmentChanged) {
-                        statisticEntries.push({
-                                entityType: 'recruitment_positions',
-                                entityId: change.processId || null,
-                                reference: change.processId || null,
-                                changeType: 'department',
-                                previousDepartment: change.previousDepartment ?? null,
-                                department: change.department ?? null,
-                                recordedAt: now,
-                                metadata,
-                        });
-                }
-
-                if (change.statusChanged) {
-                        statisticEntries.push({
-                                entityType: 'recruitment_positions',
-                                entityId: change.processId || null,
-                                reference: change.processId || null,
-                                changeType: 'status',
-                                previousStatus: change.previousStatus ?? null,
-                                status: change.status ?? null,
-                                recordedAt: now,
-                                metadata,
-                        });
-                }
-        });
+        // recruitment_positions 相关统计待定，暂时不记录职位维度的变化
 
         if (statisticEntries.length > 0) {
                 try {
