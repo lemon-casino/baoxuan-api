@@ -221,77 +221,33 @@ const updateById = async (id, payload) => {
 };
 
 const updateShipByContact = async (contact, ship, name) => {
-        if (typeof contact !== 'string' || contact.trim().length === 0 || typeof ship !== 'number') {
-                return {affectedRows: 0, changes: []};
-        }
+	if (typeof contact !== 'string' || contact.trim().length === 0 || typeof ship !== 'number') {
+		return 0;
+	}
 
-        const normalizedContact = contact.trim();
-        const trimmedName = typeof name === 'string' ? name.trim() : '';
+	const normalizedContact = contact.trim();
+	const trimmedName = typeof name === 'string' ? name.trim() : '';
 
-        const updatePayload = {ship};
-        if (trimmedName) {
-                updatePayload.name = trimmedName;
-        }
+	const updatePayload = {ship};
+	if (trimmedName) {
+		updatePayload.name = trimmedName;
+	}
 
-        const matchers = buildContactMatchers(normalizedContact);
-        if (matchers.length === 0) {
-                return {affectedRows: 0, changes: []};
-        }
-        const shipDifferenceFilter = {
-                [Op.or]: [
-                        {
-                                ship: {
-                                        [Op.ne]: ship,
-                                },
-                        },
-                        {
-                                ship: {
-                                        [Op.is]: null,
-                                },
-                        },
-                ],
-        };
-        const impactedRows = await CurriculumVitaeModel.findAll({
-                attributes: ['id', 'ship'],
-                where: {
-                        [Op.and]: [
-                                {
-                                        [Op.or]: matchers,
-                                },
-                                shipDifferenceFilter,
-                        ],
-                },
-                raw: true,
-        });
+	const matchers = buildContactMatchers(normalizedContact);
+	if (matchers.length === 0) {
+		return 0;
+	}
 
-        if (impactedRows.length === 0) {
-                return {affectedRows: 0, changes: []};
-        }
+	const [affectedRows] = await CurriculumVitaeModel.update(
+		updatePayload,
+		{
+			where: {
+				[Op.or]: matchers
+			}
+		}
+	);
 
-        const [affectedRows] = await CurriculumVitaeModel.update(updatePayload, {
-                where: {
-                        [Op.and]: [
-                                {
-                                        [Op.or]: matchers,
-                                },
-                                shipDifferenceFilter,
-                        ],
-                },
-        });
-
-        return {
-                affectedRows,
-                changes: impactedRows.map((row) => ({
-                        id: row.id,
-                        previousShip:
-                                row.ship === null || row.ship === undefined
-                                        ? null
-                                        : typeof row.ship === 'number'
-                                                ? row.ship
-                                                : Number(row.ship),
-                        newShip: ship,
-                })),
-        };
+	return affectedRows;
 };
 
 const SHIP_VALUES = [1, 2, 3, 4, 5, 6, 7, 8];

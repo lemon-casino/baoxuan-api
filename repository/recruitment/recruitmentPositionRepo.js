@@ -26,24 +26,24 @@ const normalizeValue = (value) => {
 const hasDifferences = (existing = {}, incoming = {}) =>
 	UPSERT_FIELDS.some((field) => normalizeValue(existing[field]) !== normalizeValue(incoming[field]));
 const upsertRecruitmentPositions = async (positions) => {
-        if (!Array.isArray(positions) || positions.length === 0) {
-                return {affectedCount: 0, changes: []};
-        }
+	if (!Array.isArray(positions) || positions.length === 0) {
+		return 0;
+	}
 
-        const deduped = new Map();
-        positions.forEach((item) => {
-                if (item && item.processId) {
+	const deduped = new Map();
+	positions.forEach((item) => {
+		if (item && item.processId) {
 			deduped.set(item.processId, item);
 		}
 	});
 
-        if (deduped.size === 0) {
-                return {affectedCount: 0, changes: []};
-        }
+	if (deduped.size === 0) {
+		return 0;
+	}
 
-        const processIds = Array.from(deduped.keys());
-        const existingRows = await RecruitmentPositionModel.findAll({
-                where: {
+	const processIds = Array.from(deduped.keys());
+	const existingRows = await RecruitmentPositionModel.findAll({
+		where: {
 			processId: {
 				[Op.in]: processIds,
 			},
@@ -58,46 +58,23 @@ const upsertRecruitmentPositions = async (positions) => {
 		}
 	});
 
-        const payload = [];
-        const changes = [];
-        deduped.forEach((incoming, processId) => {
-                const existing = existingMap.get(processId);
-                if (!existing || hasDifferences(existing, incoming)) {
-                        payload.push(incoming);
+	const payload = [];
+	deduped.forEach((incoming, processId) => {
+		const existing = existingMap.get(processId);
+		if (!existing || hasDifferences(existing, incoming)) {
+			payload.push(incoming);
+		}
+	});
 
-                        const normalizedExistingDepartment = existing?.department ?? null;
-                        const normalizedIncomingDepartment = incoming.department ?? null;
-                        const normalizedExistingStatus = existing?.status ?? null;
-                        const normalizedIncomingStatus = incoming.status ?? null;
+	if (payload.length === 0) {
+		return 0;
+	}
 
-                        const departmentChanged = normalizedExistingDepartment !== normalizedIncomingDepartment;
-                        const statusChanged = normalizedExistingStatus !== normalizedIncomingStatus;
+	await RecruitmentPositionModel.bulkCreate(payload, {
+		updateOnDuplicate: UPSERT_FIELDS,
+	});
 
-                        if (!existing || departmentChanged || statusChanged) {
-                                changes.push({
-                                        processId,
-                                        previousDepartment: normalizedExistingDepartment,
-                                        department: normalizedIncomingDepartment,
-                                        departmentChanged,
-                                        previousStatus: normalizedExistingStatus,
-                                        status: normalizedIncomingStatus,
-                                        statusChanged,
-                                        jobTitle: incoming.jobTitle ?? null,
-                                        owner: incoming.owner ?? null,
-                                });
-                        }
-                }
-        });
-
-        if (payload.length === 0) {
-                return {affectedCount: 0, changes: []};
-        }
-
-        await RecruitmentPositionModel.bulkCreate(payload, {
-                updateOnDuplicate: UPSERT_FIELDS,
-        });
-
-        return {affectedCount: payload.length, changes};
+	return payload.length;
 };
 
 const buildFilter = ({status, jobTitle, owner}) => {
