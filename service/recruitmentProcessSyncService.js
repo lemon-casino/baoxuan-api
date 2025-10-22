@@ -2,6 +2,7 @@ const {logger} = require('@/utils/log');
 const recruitmentProcessRepo = require('@/repository/recruitment/recruitmentProcessRepo');
 const curriculumVitaeRepo = require('@/repository/curriculumVitaeRepo');
 const recruitmentPositionRepo = require('@/repository/recruitment/recruitmentPositionRepo');
+const recruitmentStatisticRepo = require('@/repository/recruitment/recruitmentStatisticRepo');
 
 const {FIELD_IDS} = recruitmentProcessRepo;
 
@@ -138,46 +139,116 @@ const buildRecruitmentPositions = (rows) =>
 
 const syncCurriculumVitaeStatus = async () => {
 	const rows = await recruitmentProcessRepo.getRecruitmentProcesses();
-	if (!rows || rows.length === 0) {
-		return {
-			totalProcesses: 0,
-			candidates: 0,
-			updated: 0,
-			unknownStatuses: [],
-			positions: 0,
-		};
-	}
+        if (!rows || rows.length === 0) {
+                return {
+                        totalProcesses: 0,
+                        candidates: 0,
+                        updated: 0,
+                        unknownStatuses: [],
+                        positions: 0,
+                        statisticsRecorded: 0,
+                };
+        }
 
-	const recruitmentPositions = buildRecruitmentPositions(rows);
-	let positionCount = 0;
-	try {
-		positionCount = await recruitmentPositionRepo.upsertRecruitmentPositions(recruitmentPositions);
-	} catch (error) {
-		logger.error(`[RecruitmentProcessSync] failed to sync recruitment positions: ${error.message}`, error);
-	}
-	const {candidateMap, unknownStatuses} = buildCandidateUpdates(rows);
+        const recruitmentPositions = buildRecruitmentPositions(rows);
+        let positionCount = 0;
+        let positionChanges = [];
+        try {
+                const positionResult = await recruitmentPositionRepo.upsertRecruitmentPositions(recruitmentPositions);
+                positionCount = positionResult?.affectedCount ?? 0;
+                positionChanges = positionResult?.changes ?? [];
+        } catch (error) {
+                logger.error(`[RecruitmentProcessSync] failed to sync recruitment positions: ${error.message}`, error);
+        }
+        const {candidateMap, unknownStatuses} = buildCandidateUpdates(rows);
 
-	let updated = 0;
-	const unmatchedContacts = [];
-	for (const candidate of candidateMap.values()) {
-		let affected = 0;
-		if (candidate.contact) {
-			affected = await curriculumVitaeRepo.updateShipByContact(
-				candidate.contact,
-				candidate.ship,
-				candidate.name
-			);
-		}
-		if (affected > 0) {
-			updated += affected;
-		} else {
-			unmatchedContacts.push({
-				contact: candidate.contact,
-				name: candidate.name,
-				status: candidate.status,
-			});
-		}
-	}
+        let updated = 0;
+        const unmatchedContacts = [];
+        const statisticEntries = [];
+        const now = new Date();
+        for (const candidate of candidateMap.values()) {
+                let affected = 0;
+                let changes = [];
+                if (candidate.contact) {
+                        const result = await curriculumVitaeRepo.updateShipByContact(
+                                candidate.contact,
+                                candidate.ship,
+                                candidate.name
+                        );
+                        affected = result?.affectedRows ?? 0;
+                        changes = result?.changes ?? [];
+                }
+                if (affected > 0) {
+                        updated += affected;
+                        changes.forEach((change) => {
+                                statisticEntries.push({
+                                        entityType: 'curriculum_vitae',
+                                        entityId: change.id ? String(change.id) : null,
+                                        reference: candidate.contact || null,
+                                        changeType: 'ship',
+                                        previousShip: change.previousShip ?? null,
+                                        ship: change.newShip ?? candidate.ship ?? null,
+                                        recordedAt: now,
+                                        metadata: {
+                                                name: candidate.name || null,
+                                                status: candidate.status || null,
+                                                interviewComment: candidate.interviewComment || null,
+                                                interviewRemark: candidate.interviewRemark || null,
+                                        },
+                                });
+                        });
+                } else {
+                        unmatchedContacts.push({
+                                contact: candidate.contact,
+                                name: candidate.name,
+                                status: candidate.status,
+                        });
+                }
+        }
+
+        positionChanges.forEach((change) => {
+                const metadata = {
+                        jobTitle: change.jobTitle || null,
+                        owner: change.owner || null,
+                };
+
+                if (change.departmentChanged) {
+                        statisticEntries.push({
+                                entityType: 'recruitment_positions',
+                                entityId: change.processId || null,
+                                reference: change.processId || null,
+                                changeType: 'department',
+                                previousDepartment: change.previousDepartment ?? null,
+                                department: change.department ?? null,
+                                recordedAt: now,
+                                metadata,
+                        });
+                }
+
+                if (change.statusChanged) {
+                        statisticEntries.push({
+                                entityType: 'recruitment_positions',
+                                entityId: change.processId || null,
+                                reference: change.processId || null,
+                                changeType: 'status',
+                                previousStatus: change.previousStatus ?? null,
+                                status: change.status ?? null,
+                                recordedAt: now,
+                                metadata,
+                        });
+                }
+        });
+
+        if (statisticEntries.length > 0) {
+                try {
+                        await recruitmentStatisticRepo.bulkInsertStatistics(statisticEntries);
+                } catch (error) {
+                        logger.error(
+                                `[RecruitmentProcessSync] failed to record recruitment statistics: ${error.message}`,
+                                error
+                        );
+                }
+        }
 
 	if (unknownStatuses.size > 0) {
 		logger.warn(
@@ -194,18 +265,19 @@ const syncCurriculumVitaeStatus = async () => {
 		);
 	}
 
-	logger.info(
-		`[RecruitmentProcessSync] processed ${rows.length} processes, prepared ${candidateMap.size} candidate updates, affected ${updated} curriculum vitae rows, synced ${positionCount} recruitment positions.`
-	);
+        logger.info(
+                `[RecruitmentProcessSync] processed ${rows.length} processes, prepared ${candidateMap.size} candidate updates, affected ${updated} curriculum vitae rows, synced ${positionCount} recruitment positions.`
+        );
 
-	return {
-		totalProcesses: rows.length,
-		candidates: candidateMap.size,
-		updated,
-		unknownStatuses: Array.from(unknownStatuses),
-		unmatchedContacts: unmatchedContacts.map((entry) => entry.contact),
-		positions: positionCount,
-	};
+        return {
+                totalProcesses: rows.length,
+                candidates: candidateMap.size,
+                updated,
+                unknownStatuses: Array.from(unknownStatuses),
+                unmatchedContacts: unmatchedContacts.map((entry) => entry.contact),
+                positions: positionCount,
+                statisticsRecorded: statisticEntries.length,
+        };
 };
 
 module.exports = {
