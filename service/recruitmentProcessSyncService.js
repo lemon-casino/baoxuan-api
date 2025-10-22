@@ -71,7 +71,7 @@ const extractCandidateEntries = (fieldMap = {}, context = {}) => {
 
 			return {
 				name: candidateName || interviewRemark,
-				contact: typeof entry['简历联系方式'] === 'string' ? entry['简历联系方式'].trim() : '',
+				contact: typeof entry['联系方式'] === 'string' ? entry['联系方式'].trim() : '',
 				status: typeof entry['面试状态'] === 'string' ? entry['面试状态'].trim() : '',
 				interviewComment: typeof entry['面试评价'] === 'string' ? entry['面试评价'].trim() : '',
 				interviewRemark,

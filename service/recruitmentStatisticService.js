@@ -5,7 +5,7 @@ const TARGET_SHIPS = [
         {label: '面试通过', ship: 4},
         {label: '已发offer', ship: 5},
         {label: '待入职', ship: 6},
-        {label: '未初始', ship: 8},
+	    {label: '面试淘汰', ship: 7},
 ];
 
 const parseDay = (value) => {
