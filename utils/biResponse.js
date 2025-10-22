@@ -1,0 +1,44 @@
+const {errorMessages, errorCodes} = require("@/const/errorConst")
+const {successCodes, successMessages} = require("@/const/successConst")
+
+const format = (code, message, data) => {
+    return {code, message, data}
+}
+
+const success = (data) => {
+    return format(successCodes.success, successMessages.common, data)
+}
+
+const simpleSuccess = (message = successMessages.common) => {
+    return format(successCodes.success, message)
+}
+
+const serverError = (message = errorMessages.common) => {
+    return format(errorCodes.commonError, message)
+}
+const canTFindIt = (message = errorMessages.common) => {
+    return format(errorCodes.canTFindIt, message)
+}
+
+const createFailed = (message = errorMessages.createFailed) => {
+    return format(errorCodes.canTFindIt, message)
+}
+
+const updateFailed = (message = errorMessages.updateFailed) => {
+    return format(errorCodes.canTFindIt, message)
+}
+
+const deleteFailed = (message = errorMessages.deleteFailed) => {
+    return format(errorCodes.canTFindIt, message)
+}
+
+module.exports = {
+    format,
+    simpleSuccess,
+    success,
+    serverError,
+    canTFindIt,
+    createFailed,
+    updateFailed,
+    deleteFailed
+}
