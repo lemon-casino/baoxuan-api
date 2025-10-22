@@ -237,7 +237,6 @@ const updateShipByContact = async (contact, ship, name) => {
         if (matchers.length === 0) {
                 return {affectedRows: 0, changes: []};
         }
-
         const shipDifferenceFilter = {
                 [Op.or]: [
                         {
@@ -252,7 +251,6 @@ const updateShipByContact = async (contact, ship, name) => {
                         },
                 ],
         };
-
         const impactedRows = await CurriculumVitaeModel.findAll({
                 attributes: ['id', 'ship'],
                 where: {

@@ -269,7 +269,6 @@ const syncCurriculumVitaeStatus = async () => {
                                 const sourceStartTimestamp = toTimestamp(candidate.sourceStartTime);
                                 const sourceEndTimestamp = toTimestamp(candidate.sourceEndTime);
                                 const sourceUpdatedTimestamp = toTimestamp(candidate.sourceUpdatedAt);
-
                                 statisticEntries.push({
                                         entityType: 'curriculum_vitae',
                                         entityId: change.id ? String(change.id) : null,
