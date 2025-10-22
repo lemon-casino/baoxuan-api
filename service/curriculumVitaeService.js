@@ -3,6 +3,8 @@ const recruitmentProcessRepo = require('../repository/recruitment/recruitmentPro
 const {FIELD_IDS} = recruitmentProcessRepo;
 const {DEFAULT_SHIP, resolveShip} = require('./recruitmentProcessStatus');
 
+const CONTACT_SPLIT_REGEX = /[\s,;；，、|/\\]+/u;
+
 const SHIP_SUMMARY_ITEMS = [
         {label: '初选通过', ship: 1},
         {label: '约面', ship: 2},
@@ -109,6 +111,56 @@ const matchesDateRange = (date, start, end) => {
         return true;
 };
 
+const extractContactTokens = (value) => {
+        if (typeof value !== 'string') {
+                return [];
+        }
+
+        const trimmed = value.trim();
+        if (!trimmed) {
+                return [];
+        }
+
+        const tokens = new Set([trimmed]);
+
+        trimmed.split(CONTACT_SPLIT_REGEX).forEach((part) => {
+                const token = part.trim();
+                if (token) {
+                        tokens.add(token);
+                        const digits = token.replace(/\D+/g, '');
+                        if (digits) {
+                                tokens.add(digits);
+                        }
+                }
+        });
+
+        const digits = trimmed.replace(/\D+/g, '');
+        if (digits) {
+                tokens.add(digits);
+        }
+
+        return Array.from(tokens);
+};
+
+const buildCandidateContactTokens = (value) => {
+        if (typeof value !== 'string') {
+                return [];
+        }
+
+        const trimmed = value.trim();
+        if (!trimmed) {
+                return [];
+        }
+
+        const tokens = new Set([trimmed]);
+        const digits = trimmed.replace(/\D+/g, '');
+        if (digits) {
+                tokens.add(digits);
+        }
+
+        return Array.from(tokens);
+};
+
 const extractCandidateEntries = (fieldMap = {}) => {
         const content = fieldMap[FIELD_IDS.candidateList];
         if (typeof content !== 'string' || !content.trim()) {
@@ -139,6 +191,7 @@ const extractCandidateEntries = (fieldMap = {}) => {
                         return {
                                 name: candidateName || remark || null,
                                 contact: resumeContact || contactField || customContact || null,
+                                resumeContact: resumeContact || null,
                                 status: interviewStatus,
                                 date: parseCandidateDate(interviewDate),
                         };
@@ -186,13 +239,32 @@ const matchesFallbackFilters = (record, filters) => {
         return true;
 };
 
-const buildFallbackRecords = async (filters) => {
+const buildExistingContactTokens = (contacts = []) => {
+        const tokens = new Set();
+
+        contacts.forEach((contact) => {
+                extractContactTokens(contact).forEach((token) => tokens.add(token));
+        });
+
+        return tokens;
+};
+
+const hasMappedResumeContact = (candidate, existingContactTokens) => {
+        if (!candidate.resumeContact || existingContactTokens.size === 0) {
+                return false;
+        }
+
+        return buildCandidateContactTokens(candidate.resumeContact).some((token) => existingContactTokens.has(token));
+};
+
+const buildFallbackRecords = async (filters, existingContacts = []) => {
         const processes = await recruitmentProcessRepo.getRecruitmentProcesses();
         if (!Array.isArray(processes) || processes.length === 0) {
                 return [];
         }
 
         const fallbackRecords = [];
+        const existingContactTokens = buildExistingContactTokens(existingContacts);
 
         processes.forEach((processRow) => {
                 const fieldMap = processRow.fieldMap || {};
@@ -202,6 +274,10 @@ const buildFallbackRecords = async (filters) => {
                 const processTimestamp = processRow.startTime ? new Date(processRow.startTime).getTime() : 0;
 
                 candidates.forEach((candidate, index) => {
+                        if (hasMappedResumeContact(candidate, existingContactTokens)) {
+                                return;
+                        }
+
                         const ship = resolveShip(candidate.status) ?? DEFAULT_SHIP;
                         const record = {
                                 id: null,
@@ -223,6 +299,7 @@ const buildFallbackRecords = async (filters) => {
                                 filesize: null,
                                 filepath: null,
                                 ship,
+                                resumeContact: candidate.resumeContact || null,
                         };
 
                         if (!matchesFallbackFilters(record, filters)) {
@@ -347,16 +424,23 @@ const list = async (query = {}) => {
         const pageSize = Math.max(parseInt(query.pageSize, 10) || 10, 1);
         const filters = normalizeFilters(query);
         const {count, rows} = await curriculumVitaeRepo.findAndCountAll(filters, {page, pageSize});
+        const normalizedRows = Array.isArray(rows)
+                ? rows.map((row) => ({
+                        ...row,
+                        resumeContact: row.resumeContact ?? null,
+                }))
+                : [];
 
         let fallbackRecords = [];
         if (typeof filters.ship === 'number') {
-                fallbackRecords = await buildFallbackRecords(filters);
+                const existingContacts = await curriculumVitaeRepo.findContactsByFilters(filters);
+                fallbackRecords = await buildFallbackRecords(filters, existingContacts);
         }
 
         const total = count + fallbackRecords.length;
         const listRows = fallbackRecords.length > 0
-                ? mergeWithFallback(rows, fallbackRecords, count, page, pageSize)
-                : rows;
+                ? mergeWithFallback(normalizedRows, fallbackRecords, count, page, pageSize)
+                : normalizedRows;
 
         return {
                 list: listRows,
