@@ -1302,7 +1302,9 @@ goodsSalesRepo.getNotList = async() =>{
             LEFT JOIN processes as b
             ON t.process_id = b.process_id
             JOIN (
-                    SELECT 0 AS seq UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
+                SELECT 0 AS seq UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
+                UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION SELECT 11  UNION SELECT 12 UNION SELECT 13
+                UNION SELECT 14 UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20
             ) n ON n.seq < JSON_LENGTH(t.content)
             WHERE t.field IN ('Fnt5ma3psjitfcc','Fyf1ma3jfyi7fuc','Fnt5ma3psjitfcc','Fo5uma263lluhdc','Fz3jma3psq0dfhc') 
             AND t.content IS NOT NULL AND t.process_id IN (SELECT process_id FROM processes WHERE title LIKE '%推品%' 
