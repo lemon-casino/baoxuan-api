@@ -29,6 +29,41 @@ const bulkInsertStatistics = async (records = []) => {
         return payload.length;
 };
 
+const findExistingShipStatisticEntityIds = async (entityIds = []) => {
+        if (!Array.isArray(entityIds) || entityIds.length === 0) {
+                return new Set();
+        }
+
+        const normalizedIds = Array.from(
+                new Set(
+                        entityIds
+                                .map((entityId) =>
+                                        entityId === null || entityId === undefined ? null : String(entityId).trim()
+                                )
+                                .filter((entityId) => entityId)
+                )
+        );
+
+        if (normalizedIds.length === 0) {
+                return new Set();
+        }
+
+        const rows = await RecruitmentStatisticModel.findAll({
+                attributes: ['entityId'],
+                where: {
+                        entityType: 'curriculum_vitae',
+                        changeType: 'ship',
+                        entityId: {
+                                [Op.in]: normalizedIds,
+                        },
+                },
+                group: ['entityId'],
+                raw: true,
+        });
+
+        return new Set(rows.map((row) => row.entityId));
+};
+
 const getCurriculumVitaeShipStatistics = async ({startDate, endDate, ships}) => {
         const sequelize = RecruitmentStatisticModel.sequelize;
         const where = {
@@ -73,4 +108,5 @@ const getCurriculumVitaeShipStatistics = async ({startDate, endDate, ships}) => 
 module.exports = {
         bulkInsertStatistics,
         getCurriculumVitaeShipStatistics,
+        findExistingShipStatisticEntityIds,
 };
