@@ -47,8 +47,9 @@ module.exports = {
     "/operation": require("./operationRouter"),
     "/settlement": require("./settlementRouter"),
     "/workflows-service": require('./workflowServiceRouter'),
-    "/stock": require('./stockRouter'),    
+    "/stock": require('./stockRouter'),
     "/confirmation-notice": require('./confirmationNoticeRouter'),
     "/file-async": require('./downloadInfoRouter'),
-    "/project": require('./projectRouter')
+    "/project": require('./projectRouter'),
+    "/recruitment/statistics": require('./recruitmentStatisticRouter')
 }

@@ -2,6 +2,7 @@ const {logger} = require('@/utils/log');
 const recruitmentProcessRepo = require('@/repository/recruitment/recruitmentProcessRepo');
 const curriculumVitaeRepo = require('@/repository/curriculumVitaeRepo');
 const recruitmentPositionRepo = require('@/repository/recruitment/recruitmentPositionRepo');
+const recruitmentStatisticRepo = require('@/repository/recruitment/recruitmentStatisticRepo');
 
 const {FIELD_IDS} = recruitmentProcessRepo;
 
@@ -29,25 +30,43 @@ const STATUS_TO_SHIP = new Map([
 
 const DEFAULT_SHIP = 8;
 
-const SHIP_PRIORITY = {
-	8: 0,
-	1: 10,
-	2: 20,
-	3: 30,
-	4: 40,
-	5: 50,
-	6: 60,
-	7: 100,
-};
-
 const normalizeStatus = (status = '') => status.replace(/\s+/g, '').toLowerCase();
 
 const resolveShip = (status) => STATUS_TO_SHIP.get(status) ?? STATUS_TO_SHIP.get(status.toUpperCase()) ?? null;
+const toTimestamp = (value) => {
+        if (!value) {
+                return null;
+        }
+
+        const date = value instanceof Date ? value : new Date(value);
+        const timestamp = date.getTime();
+
+        return Number.isFinite(timestamp) ? timestamp : null;
+};
+
 const extractCandidateEntries = (fieldMap = {}, context = {}) => {
-	const content = fieldMap[FIELD_IDS.candidateList];
-	if (!content) {
-		return [];
-	}
+        const {
+                processId = null,
+                version = null,
+                status: processStatus = null,
+                startTime = null,
+                endTime = null,
+        } = context;
+
+        const parsedVersion =
+                typeof version === 'number'
+                        ? version
+                        : typeof version === 'string' && version.trim().length > 0
+                                ? Number(version)
+                                : null;
+        const sourceVersion = Number.isFinite(parsedVersion) ? parsedVersion : null;
+        const sourceStartTime = startTime ?? null;
+        const sourceEndTime = endTime ?? null;
+        const sourceUpdatedAt = sourceEndTime || sourceStartTime || null;
+        const content = fieldMap[FIELD_IDS.candidateList];
+        if (!content) {
+                return [];
+        }
 	let parsed;
 	try {
 		parsed = JSON.parse(content);
@@ -70,46 +89,115 @@ const extractCandidateEntries = (fieldMap = {}, context = {}) => {
 			return {
 				name: candidateName || interviewRemark,
 				contact: typeof entry['联系方式'] === 'string' ? entry['联系方式'].trim() : '',
-				status: typeof entry['面试状态'] === 'string' ? entry['面试状态'].trim() : '',
-				interviewComment: typeof entry['面试评价'] === 'string' ? entry['面试评价'].trim() : '',
-				interviewRemark,
-			};
-		})
-		.filter((entry) => entry.contact && entry.status);
+                                status: typeof entry['面试状态'] === 'string' ? entry['面试状态'].trim() : '',
+                                interviewComment: typeof entry['面试评价'] === 'string' ? entry['面试评价'].trim() : '',
+                                interviewRemark,
+                                sourceProcessId: processId,
+                                sourceVersion,
+                                sourceProcessStatus: processStatus,
+                                sourceStartTime,
+                                sourceEndTime,
+                                sourceUpdatedAt,
+                        };
+                })
+                .filter((entry) => entry.contact && entry.status);
+};
+
+const shouldReplaceCandidate = (existing, next) => {
+        if (!existing) {
+                return true;
+        }
+
+        const existingUpdatedAt = toTimestamp(existing.sourceUpdatedAt || existing.sourceEndTime || existing.sourceStartTime);
+        const nextUpdatedAt = toTimestamp(next.sourceUpdatedAt || next.sourceEndTime || next.sourceStartTime);
+
+        if (existingUpdatedAt && nextUpdatedAt) {
+                if (nextUpdatedAt > existingUpdatedAt) {
+                        return true;
+                }
+
+                if (nextUpdatedAt < existingUpdatedAt) {
+                        return false;
+                }
+        } else if (nextUpdatedAt && !existingUpdatedAt) {
+                return true;
+        } else if (!nextUpdatedAt && existingUpdatedAt) {
+                return false;
+        }
+
+        const existingVersion =
+                typeof existing.sourceVersion === 'number' && Number.isFinite(existing.sourceVersion)
+                        ? existing.sourceVersion
+                        : null;
+        const nextVersion =
+                typeof next.sourceVersion === 'number' && Number.isFinite(next.sourceVersion) ? next.sourceVersion : null;
+
+        if (existingVersion !== null && nextVersion !== null) {
+                if (nextVersion > existingVersion) {
+                        return true;
+                }
+
+                if (nextVersion < existingVersion) {
+                        return false;
+                }
+        } else if (nextVersion !== null && existingVersion === null) {
+                return true;
+        } else if (existingVersion !== null && nextVersion === null) {
+                return false;
+        }
+
+        if (existing.ship == null && next.ship != null) {
+                return true;
+        }
+
+        if (next.ship == null && existing.ship != null) {
+                return false;
+        }
+
+        return false;
 };
 
 const buildCandidateUpdates = (rows) => {
-	const candidateMap = new Map();
-	const unknownStatuses = new Set();
+        const candidateMap = new Map();
+        const unknownStatuses = new Set();
 
-	rows.forEach((row) => {
-		const candidates = extractCandidateEntries(row.fieldMap, {processId: row.processId});
-		candidates.forEach((candidate) => {
-			const normalizedStatus = normalizeStatus(candidate.status);
-			const ship = resolveShip(normalizedStatus);
-			if (!ship) {
-				unknownStatuses.add(candidate.status);
+        rows.forEach((row) => {
+                const candidates = extractCandidateEntries(row.fieldMap, {
+                        processId: row.processId,
+                        version: row.version,
+                        status: row.status,
+                        startTime: row.startTime,
+                        endTime: row.endTime,
+                });
+                candidates.forEach((candidate) => {
+                        const normalizedStatus = normalizeStatus(candidate.status);
+                        const ship = resolveShip(normalizedStatus);
+                        if (!ship) {
+                                unknownStatuses.add(candidate.status);
 			}
 			const resolvedShip = ship ?? DEFAULT_SHIP;
 			const payload = {
 				contact: candidate.contact,
-				name: candidate.name,
-				ship: resolvedShip,
-				status: candidate.status,
-				interviewComment: candidate.interviewComment,
-				interviewRemark: candidate.interviewRemark,
-			};
+                                name: candidate.name,
+                                ship: resolvedShip,
+                                status: candidate.status,
+                                interviewComment: candidate.interviewComment,
+                                interviewRemark: candidate.interviewRemark,
+                                sourceProcessId: candidate.sourceProcessId,
+                                sourceVersion: candidate.sourceVersion,
+                                sourceProcessStatus: candidate.sourceProcessStatus,
+                                sourceStartTime: candidate.sourceStartTime,
+                                sourceEndTime: candidate.sourceEndTime,
+                                sourceUpdatedAt: candidate.sourceUpdatedAt,
+                        };
 
-			const candidateKey = candidate.contact;
-			const existing = candidateMap.get(candidateKey);
-			const currentPriority = SHIP_PRIORITY[resolvedShip] ?? 0;
-			const existingPriority = existing ? SHIP_PRIORITY[existing.ship] ?? 0 : -Infinity;
-
-			if (!existing || currentPriority >= existingPriority) {
-				candidateMap.set(candidateKey, payload);
-			}
-		});
-	});
+                        const candidateKey = candidate.contact;
+                        const existing = candidateMap.get(candidateKey);
+                        if (!existing || shouldReplaceCandidate(existing, payload)) {
+                                candidateMap.set(candidateKey, payload);
+                        }
+                });
+        });
 
 	return {
 		candidateMap,
@@ -138,46 +226,132 @@ const buildRecruitmentPositions = (rows) =>
 
 const syncCurriculumVitaeStatus = async () => {
 	const rows = await recruitmentProcessRepo.getRecruitmentProcesses();
-	if (!rows || rows.length === 0) {
-		return {
-			totalProcesses: 0,
-			candidates: 0,
-			updated: 0,
-			unknownStatuses: [],
-			positions: 0,
-		};
-	}
+        if (!rows || rows.length === 0) {
+                return {
+                        totalProcesses: 0,
+                        candidates: 0,
+                        updated: 0,
+                        unknownStatuses: [],
+                        positions: 0,
+                        statisticsRecorded: 0,
+                };
+        }
 
-	const recruitmentPositions = buildRecruitmentPositions(rows);
-	let positionCount = 0;
-	try {
-		positionCount = await recruitmentPositionRepo.upsertRecruitmentPositions(recruitmentPositions);
-	} catch (error) {
-		logger.error(`[RecruitmentProcessSync] failed to sync recruitment positions: ${error.message}`, error);
-	}
-	const {candidateMap, unknownStatuses} = buildCandidateUpdates(rows);
+        const recruitmentPositions = buildRecruitmentPositions(rows);
+        let positionCount = 0;
+        let positionChanges = [];
+        try {
+                const positionResult = await recruitmentPositionRepo.upsertRecruitmentPositions(recruitmentPositions);
+                positionCount = positionResult?.affectedCount ?? 0;
+                positionChanges = positionResult?.changes ?? [];
+        } catch (error) {
+                logger.error(`[RecruitmentProcessSync] failed to sync recruitment positions: ${error.message}`, error);
+        }
+        const {candidateMap, unknownStatuses} = buildCandidateUpdates(rows);
 
-	let updated = 0;
-	const unmatchedContacts = [];
-	for (const candidate of candidateMap.values()) {
-		let affected = 0;
-		if (candidate.contact) {
-			affected = await curriculumVitaeRepo.updateShipByContact(
-				candidate.contact,
-				candidate.ship,
-				candidate.name
-			);
-		}
-		if (affected > 0) {
-			updated += affected;
-		} else {
-			unmatchedContacts.push({
-				contact: candidate.contact,
-				name: candidate.name,
-				status: candidate.status,
-			});
-		}
-	}
+        let updated = 0;
+        const unmatchedContacts = [];
+        const statisticEntries = [];
+        const now = new Date();
+        for (const candidate of candidateMap.values()) {
+                let affected = 0;
+                let changes = [];
+                if (candidate.contact) {
+                        const result = await curriculumVitaeRepo.updateShipByContact(
+                                candidate.contact,
+                                candidate.ship,
+                                candidate.name
+                        );
+                        affected = result?.affectedRows ?? 0;
+                        changes = result?.changes ?? [];
+                }
+                if (affected > 0) {
+                        updated += affected;
+                        changes.forEach((change) => {
+                                const sourceStartTimestamp = toTimestamp(candidate.sourceStartTime);
+                                const sourceEndTimestamp = toTimestamp(candidate.sourceEndTime);
+                                const sourceUpdatedTimestamp = toTimestamp(candidate.sourceUpdatedAt);
+
+                                statisticEntries.push({
+                                        entityType: 'curriculum_vitae',
+                                        entityId: change.id ? String(change.id) : null,
+                                        reference: candidate.contact || null,
+                                        changeType: 'ship',
+                                        previousShip: change.previousShip ?? null,
+                                        ship: change.newShip ?? candidate.ship ?? null,
+                                        recordedAt: now,
+                                        metadata: {
+                                                name: candidate.name || null,
+                                                status: candidate.status || null,
+                                                interviewComment: candidate.interviewComment || null,
+                                                interviewRemark: candidate.interviewRemark || null,
+                                                processId: candidate.sourceProcessId || null,
+                                                processVersion: candidate.sourceVersion ?? null,
+                                                processStatus: candidate.sourceProcessStatus || null,
+                                                processStartTime: sourceStartTimestamp
+                                                        ? new Date(sourceStartTimestamp).toISOString()
+                                                        : null,
+                                                processEndTime: sourceEndTimestamp
+                                                        ? new Date(sourceEndTimestamp).toISOString()
+                                                        : null,
+                                                processUpdatedAt: sourceUpdatedTimestamp
+                                                        ? new Date(sourceUpdatedTimestamp).toISOString()
+                                                        : null,
+                                        },
+                                });
+                        });
+                } else {
+                        unmatchedContacts.push({
+                                contact: candidate.contact,
+                                name: candidate.name,
+                                status: candidate.status,
+                        });
+                }
+        }
+
+        positionChanges.forEach((change) => {
+                const metadata = {
+                        jobTitle: change.jobTitle || null,
+                        owner: change.owner || null,
+                };
+
+                if (change.departmentChanged) {
+                        statisticEntries.push({
+                                entityType: 'recruitment_positions',
+                                entityId: change.processId || null,
+                                reference: change.processId || null,
+                                changeType: 'department',
+                                previousDepartment: change.previousDepartment ?? null,
+                                department: change.department ?? null,
+                                recordedAt: now,
+                                metadata,
+                        });
+                }
+
+                if (change.statusChanged) {
+                        statisticEntries.push({
+                                entityType: 'recruitment_positions',
+                                entityId: change.processId || null,
+                                reference: change.processId || null,
+                                changeType: 'status',
+                                previousStatus: change.previousStatus ?? null,
+                                status: change.status ?? null,
+                                recordedAt: now,
+                                metadata,
+                        });
+                }
+        });
+
+        if (statisticEntries.length > 0) {
+                try {
+                        await recruitmentStatisticRepo.bulkInsertStatistics(statisticEntries);
+                } catch (error) {
+                        logger.error(
+                                `[RecruitmentProcessSync] failed to record recruitment statistics: ${error.message}`,
+                                error
+                        );
+                }
+        }
 
 	if (unknownStatuses.size > 0) {
 		logger.warn(
@@ -194,18 +368,19 @@ const syncCurriculumVitaeStatus = async () => {
 		);
 	}
 
-	logger.info(
-		`[RecruitmentProcessSync] processed ${rows.length} processes, prepared ${candidateMap.size} candidate updates, affected ${updated} curriculum vitae rows, synced ${positionCount} recruitment positions.`
-	);
+        logger.info(
+                `[RecruitmentProcessSync] processed ${rows.length} processes, prepared ${candidateMap.size} candidate updates, affected ${updated} curriculum vitae rows, synced ${positionCount} recruitment positions.`
+        );
 
-	return {
-		totalProcesses: rows.length,
-		candidates: candidateMap.size,
-		updated,
-		unknownStatuses: Array.from(unknownStatuses),
-		unmatchedContacts: unmatchedContacts.map((entry) => entry.contact),
-		positions: positionCount,
-	};
+        return {
+                totalProcesses: rows.length,
+                candidates: candidateMap.size,
+                updated,
+                unknownStatuses: Array.from(unknownStatuses),
+                unmatchedContacts: unmatchedContacts.map((entry) => entry.contact),
+                positions: positionCount,
+                statisticsRecorded: statisticEntries.length,
+        };
 };
 
 module.exports = {
