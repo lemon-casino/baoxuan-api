@@ -4,41 +4,11 @@ const curriculumVitaeRepo = require('@/repository/curriculumVitaeRepo');
 const recruitmentPositionRepo = require('@/repository/recruitment/recruitmentPositionRepo');
 const recruitmentStatisticRepo = require('@/repository/recruitment/recruitmentStatisticRepo');
 const {FIELD_IDS} = recruitmentProcessRepo;
-
-const normalizeStatus = (status = '') => status.replace(/\s+/g, '').toLowerCase();
-
-const STATUS_TO_SHIP = new Map(
-	[
-		['初选通过', 1], //新候选人
-		['约面', 2],//初选通过
-		['一面', 3],//安排面试    面试中
-		['二面', 3],//安排面试     面试中
-		['三面', 3],// 安排面试     面试中
-		['四面', 3],// 安排面试   面试中
-		['面试通过', 4],
-		['Offer', 5],//已发offer
-		['回绝Offer', 6], //面试淘汰
-		['候选人拒绝', 6],//面试淘汰
-		['终止该候选人', 6],// 面试淘汰
-		['面试未通过', 6],//面试淘汰
-		['面试爽约', 6] // 面试淘汰
-		// 简历淘汰 7 入职 9
-	].map(([status, ship]) => [normalizeStatus(status), ship])
-);
-const DEFAULT_SHIP = 8;
-
-const SHIP_PRIORITY = {
-	8: 0,
-	1: 10,
-	2: 20,
-	3: 30,
-	4: 40,
-	5: 50,
-	6: 60,
-	7: 100,
-};
-
-const resolveShip = (status) => STATUS_TO_SHIP.get(normalizeStatus(status)) ?? null;
+const {
+	DEFAULT_SHIP,
+	SHIP_PRIORITY,
+	resolveShip,
+} = require('./recruitmentProcessStatus');
 const extractCandidateEntries = (fieldMap = {}, context = {}) => {
 	const content = fieldMap[FIELD_IDS.candidateList];
 	if (!content) {
@@ -81,8 +51,7 @@ const buildCandidateUpdates = (rows) => {
 	rows.forEach((row) => {
 		const candidates = extractCandidateEntries(row.fieldMap, {processId: row.processId});
 		candidates.forEach((candidate) => {
-			const normalizedStatus = normalizeStatus(candidate.status);
-			const ship = resolveShip(normalizedStatus);
+			const ship = resolveShip(candidate.status);
 			if (!ship) {
 				unknownStatuses.add(candidate.status);
 			}
