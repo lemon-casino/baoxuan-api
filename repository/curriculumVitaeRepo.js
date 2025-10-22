@@ -237,7 +237,20 @@ const updateShipByContact = async (contact, ship, name) => {
         if (matchers.length === 0) {
                 return {affectedRows: 0, changes: []};
         }
-
+        const shipDifferenceFilter = {
+                [Op.or]: [
+                        {
+                                ship: {
+                                        [Op.ne]: ship,
+                                },
+                        },
+                        {
+                                ship: {
+                                        [Op.is]: null,
+                                },
+                        },
+                ],
+        };
         const impactedRows = await CurriculumVitaeModel.findAll({
                 attributes: ['id', 'ship'],
                 where: {
@@ -245,19 +258,24 @@ const updateShipByContact = async (contact, ship, name) => {
                                 {
                                         [Op.or]: matchers,
                                 },
-                                {
-                                        ship: {
-                                                [Op.ne]: ship,
-                                        },
-                                },
+                                shipDifferenceFilter,
                         ],
                 },
                 raw: true,
         });
 
+        if (impactedRows.length === 0) {
+                return {affectedRows: 0, changes: []};
+        }
+
         const [affectedRows] = await CurriculumVitaeModel.update(updatePayload, {
                 where: {
-                        [Op.or]: matchers,
+                        [Op.and]: [
+                                {
+                                        [Op.or]: matchers,
+                                },
+                                shipDifferenceFilter,
+                        ],
                 },
         });
 
@@ -265,7 +283,12 @@ const updateShipByContact = async (contact, ship, name) => {
                 affectedRows,
                 changes: impactedRows.map((row) => ({
                         id: row.id,
-                        previousShip: typeof row.ship === 'number' ? row.ship : Number(row.ship),
+                        previousShip:
+                                row.ship === null || row.ship === undefined
+                                        ? null
+                                        : typeof row.ship === 'number'
+                                                ? row.ship
+                                                : Number(row.ship),
                         newShip: ship,
                 })),
         };
