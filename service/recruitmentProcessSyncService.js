@@ -2,7 +2,6 @@ const {logger} = require('@/utils/log');
 const recruitmentProcessRepo = require('@/repository/recruitment/recruitmentProcessRepo');
 const curriculumVitaeRepo = require('@/repository/curriculumVitaeRepo');
 const recruitmentPositionRepo = require('@/repository/recruitment/recruitmentPositionRepo');
-const recruitmentStatisticRepo = require('@/repository/recruitment/recruitmentStatisticRepo');
 
 const {FIELD_IDS} = recruitmentProcessRepo;
 
@@ -139,16 +138,15 @@ const buildRecruitmentPositions = (rows) =>
 
 const syncCurriculumVitaeStatus = async () => {
 	const rows = await recruitmentProcessRepo.getRecruitmentProcesses();
-        if (!rows || rows.length === 0) {
-                return {
-                        totalProcesses: 0,
-                        candidates: 0,
-                        updated: 0,
-                        unknownStatuses: [],
-                        positions: 0,
-                        statistics: 0,
-                };
-        }
+	if (!rows || rows.length === 0) {
+		return {
+			totalProcesses: 0,
+			candidates: 0,
+			updated: 0,
+			unknownStatuses: [],
+			positions: 0,
+		};
+	}
 
 	const recruitmentPositions = buildRecruitmentPositions(rows);
 	let positionCount = 0;
@@ -159,106 +157,27 @@ const syncCurriculumVitaeStatus = async () => {
 	}
 	const {candidateMap, unknownStatuses} = buildCandidateUpdates(rows);
 
-        let updated = 0;
-        let statisticsInserted = 0;
-        const unmatchedContacts = [];
-        const statisticRecords = [];
-        const baselineRecords = [];
-        for (const candidate of candidateMap.values()) {
-                let result = {matched: 0, updatedRows: 0, records: []};
-                if (candidate.contact) {
-                        result = await curriculumVitaeRepo.updateShipByContact(
-                                candidate.contact,
-                                candidate.ship,
-                                candidate.name
-                        );
-                }
-
-                if (result.matched === 0) {
-                        unmatchedContacts.push({
-                                contact: candidate.contact,
-                                name: candidate.name,
-                                status: candidate.status,
-                        });
-                        continue;
-                }
-
-                if (result.updatedRows > 0) {
-                        updated += result.updatedRows;
-                }
-
-                result.records.forEach((record) => {
-                        const reference = candidate.contact || null;
-                        const metadata = {
-                                contact: candidate.contact || null,
-                                status: candidate.status || null,
-                                name: candidate.name || null,
-                        };
-
-                        if (record.shipChanged) {
-                                statisticRecords.push({
-                                        entityType: 'curriculum_vitae',
-                                        entityId: record.id == null ? null : String(record.id),
-                                        changeType: 'ship',
-                                        previousShip: record.previousShip,
-                                        ship: candidate.ship,
-                                        reference,
-                                        metadata,
-                                });
-                                return;
-                        }
-
-                        if (candidate.ship === DEFAULT_SHIP) {
-                                baselineRecords.push({
-                                        entityId: record.id == null ? null : String(record.id),
-                                        reference,
-                                        metadata,
-                                });
-                        }
-                });
-        }
-
-        if (baselineRecords.length > 0) {
-                const recordMap = new Map();
-                baselineRecords.forEach((record) => {
-                        if (!record.entityId) {
-                                return;
-                        }
-                        if (!recordMap.has(record.entityId)) {
-                                recordMap.set(record.entityId, record);
-                        }
-                });
-
-                const existingIds = await recruitmentStatisticRepo.findExistingShipStatisticEntityIds(
-                        Array.from(recordMap.keys())
-                );
-
-                recordMap.forEach((record, entityId) => {
-                        if (existingIds.has(entityId)) {
-                                return;
-                        }
-                        statisticRecords.push({
-                                entityType: 'curriculum_vitae',
-                                entityId,
-                                changeType: 'ship',
-                                previousShip: null,
-                                ship: DEFAULT_SHIP,
-                                reference: record.reference || null,
-                                metadata: record.metadata,
-                        });
-                });
-        }
-
-        if (statisticRecords.length > 0) {
-                try {
-                        statisticsInserted = await recruitmentStatisticRepo.bulkInsertStatistics(statisticRecords);
-                } catch (error) {
-                        logger.error(
-                                `[RecruitmentProcessSync] failed to write recruitment statistics: ${error.message}`,
-                                error
-                        );
-                }
-        }
+	let updated = 0;
+	const unmatchedContacts = [];
+	for (const candidate of candidateMap.values()) {
+		let affected = 0;
+		if (candidate.contact) {
+			affected = await curriculumVitaeRepo.updateShipByContact(
+				candidate.contact,
+				candidate.ship,
+				candidate.name
+			);
+		}
+		if (affected > 0) {
+			updated += affected;
+		} else {
+			unmatchedContacts.push({
+				contact: candidate.contact,
+				name: candidate.name,
+				status: candidate.status,
+			});
+		}
+	}
 
 	if (unknownStatuses.size > 0) {
 		logger.warn(
@@ -276,18 +195,17 @@ const syncCurriculumVitaeStatus = async () => {
 	}
 
 	logger.info(
-                `[RecruitmentProcessSync] processed ${rows.length} processes, prepared ${candidateMap.size} candidate updates, affected ${updated} curriculum vitae rows, synced ${positionCount} recruitment positions, recorded ${statisticsInserted} recruitment statistics.`
-        );
+		`[RecruitmentProcessSync] processed ${rows.length} processes, prepared ${candidateMap.size} candidate updates, affected ${updated} curriculum vitae rows, synced ${positionCount} recruitment positions.`
+	);
 
-        return {
-                totalProcesses: rows.length,
-                candidates: candidateMap.size,
-                updated,
-                unknownStatuses: Array.from(unknownStatuses),
-                unmatchedContacts: unmatchedContacts.map((entry) => entry.contact),
-                positions: positionCount,
-                statistics: statisticsInserted,
-        };
+	return {
+		totalProcesses: rows.length,
+		candidates: candidateMap.size,
+		updated,
+		unknownStatuses: Array.from(unknownStatuses),
+		unmatchedContacts: unmatchedContacts.map((entry) => entry.contact),
+		positions: positionCount,
+	};
 };
 
 module.exports = {

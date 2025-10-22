@@ -221,82 +221,33 @@ const updateById = async (id, payload) => {
 };
 
 const updateShipByContact = async (contact, ship, name) => {
-        if (typeof contact !== 'string' || contact.trim().length === 0 || typeof ship !== 'number') {
-                return {
-                        matched: 0,
-                        updatedRows: 0,
-                        records: [],
-                };
-        }
+	if (typeof contact !== 'string' || contact.trim().length === 0 || typeof ship !== 'number') {
+		return 0;
+	}
 
-        const normalizedContact = contact.trim();
-        const trimmedName = typeof name === 'string' ? name.trim() : '';
+	const normalizedContact = contact.trim();
+	const trimmedName = typeof name === 'string' ? name.trim() : '';
 
-        const matchers = buildContactMatchers(normalizedContact);
-        if (matchers.length === 0) {
-                return {
-                        matched: 0,
-                        updatedRows: 0,
-                        records: [],
-                };
-        }
+	const updatePayload = {ship};
+	if (trimmedName) {
+		updatePayload.name = trimmedName;
+	}
 
-        const records = await CurriculumVitaeModel.findAll({
-                where: {
-                        [Op.or]: matchers,
-                },
-        });
+	const matchers = buildContactMatchers(normalizedContact);
+	if (matchers.length === 0) {
+		return 0;
+	}
 
-        if (!records || records.length === 0) {
-                return {
-                        matched: 0,
-                        updatedRows: 0,
-                        records: [],
-                };
-        }
+	const [affectedRows] = await CurriculumVitaeModel.update(
+		updatePayload,
+		{
+			where: {
+				[Op.or]: matchers
+			}
+		}
+	);
 
-        let updatedRows = 0;
-        const results = [];
-
-        for (const record of records) {
-                let previousShip = null;
-                if (record.ship !== null && record.ship !== undefined) {
-                        const parsed = Number(record.ship);
-                        previousShip = Number.isNaN(parsed) ? null : parsed;
-                }
-                const payload = {};
-                let shipChanged = false;
-
-                if (previousShip !== ship) {
-                        payload.ship = ship;
-                        shipChanged = true;
-                }
-
-                if (trimmedName && record.name !== trimmedName) {
-                        payload.name = trimmedName;
-                }
-
-                if (Object.keys(payload).length > 0) {
-                        await record.update(payload);
-                }
-
-                if (shipChanged) {
-                        updatedRows += 1;
-                }
-
-                results.push({
-                        id: record.id,
-                        previousShip,
-                        ship: shipChanged ? ship : previousShip,
-                        shipChanged,
-                });
-        }
-
-        return {
-                matched: results.length,
-                updatedRows,
-                records: results,
-        };
+	return affectedRows;
 };
 
 const SHIP_VALUES = [1, 2, 3, 4, 5, 6, 7, 8];
