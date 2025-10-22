@@ -222,32 +222,106 @@ const updateById = async (id, payload) => {
 
 const updateShipByContact = async (contact, ship, name) => {
 	if (typeof contact !== 'string' || contact.trim().length === 0 || typeof ship !== 'number') {
-		return 0;
+		return {
+			matchedCount: 0,
+			affectedRows: 0,
+			changedRecords: [],
+		};
 	}
 
 	const normalizedContact = contact.trim();
 	const trimmedName = typeof name === 'string' ? name.trim() : '';
+
+	const matchers = buildContactMatchers(normalizedContact);
+	if (matchers.length === 0) {
+		return {
+			matchedCount: 0,
+			affectedRows: 0,
+			changedRecords: [],
+		};
+	}
+
+	const existingRows = await CurriculumVitaeModel.findAll({
+		attributes: ['id', 'ship', 'name'],
+		where: {
+			[Op.or]: matchers,
+		},
+		raw: true,
+	});
+
+	const matchedCount = existingRows.length;
+
+	if (matchedCount === 0) {
+		return {
+			matchedCount: 0,
+			affectedRows: 0,
+			changedRecords: [],
+		};
+	}
+
+	const normalizeShipValue = (value) => {
+		if (value === null || value === undefined) {
+			return null;
+		}
+
+		if (typeof value === 'number') {
+			return value;
+		}
+
+		const numericValue = Number(value);
+		return Number.isNaN(numericValue) ? null : numericValue;
+	};
+
+	const rowsToUpdate = existingRows.filter((row) => normalizeShipValue(row.ship) !== ship);
+	const requiresNameUpdate = Boolean(
+		trimmedName &&
+		existingRows.some((row) => {
+			if (typeof row.name !== 'string') {
+				return true;
+			}
+
+			return row.name.trim() !== trimmedName;
+		})
+	);
+
+	const idsToUpdate = Array.from(
+		new Set([
+			...rowsToUpdate.map((row) => row.id),
+			...(requiresNameUpdate ? existingRows.map((row) => row.id) : []),
+		])
+	).filter((id) => id !== undefined && id !== null);
+
+	if (idsToUpdate.length === 0) {
+		return {
+			matchedCount,
+			affectedRows: 0,
+			changedRecords: [],
+		};
+	}
 
 	const updatePayload = {ship};
 	if (trimmedName) {
 		updatePayload.name = trimmedName;
 	}
 
-	const matchers = buildContactMatchers(normalizedContact);
-	if (matchers.length === 0) {
-		return 0;
-	}
+	const [affectedRows] = await CurriculumVitaeModel.update(updatePayload, {
+		where: {
+			id: {
+				[Op.in]: idsToUpdate,
+			},
+		},
+	});
 
-	const [affectedRows] = await CurriculumVitaeModel.update(
-		updatePayload,
-		{
-			where: {
-				[Op.or]: matchers
-			}
-		}
-	);
+	const changedRecords = rowsToUpdate.map((row) => ({
+		id: row.id,
+		previousShip: normalizeShipValue(row.ship),
+	}));
 
-	return affectedRows;
+	return {
+		matchedCount,
+		affectedRows,
+		changedRecords,
+	};
 };
 
 const SHIP_VALUES = [1, 2, 3, 4, 5, 6, 7, 8];

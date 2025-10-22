@@ -50,5 +50,6 @@ module.exports = {
     "/stock": require('./stockRouter'),    
     "/confirmation-notice": require('./confirmationNoticeRouter'),
     "/file-async": require('./downloadInfoRouter'),
-    "/project": require('./projectRouter')
+    "/project": require('./projectRouter'),
+	"/recruitment/statistics": require('./recruitmentStatisticRouter')
 }
