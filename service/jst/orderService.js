@@ -241,6 +241,7 @@ const importGoodsSku = async (rows) => {
         on_sku_code_row = null, 
         sys_goods_id_row = null, 
         sys_sku_id_row = null, 
+        on_sku_name_row = null,
         is_shelf_row = null, 
         create_time_row = null
     for (let i = 1; i <= columns.length; i++) {
@@ -254,6 +255,7 @@ const importGoodsSku = async (rows) => {
         if (columns[i] == '线上颜色规格') {on_sku_code_row = i; continue}
         if (columns[i] == '系统款式编码') {sys_goods_id_row = i; continue}
         if (columns[i] == '系统商品编码') {sys_sku_id_row = i; continue}
+        if (columns[i] == '线上商品名称') {on_sku_name_row = i; continue}
         if (columns[i] == '是否上架') {is_shelf_row = i; continue}
         if (columns[i] == '创建时间') {create_time_row = i; continue}
     }
@@ -299,7 +301,12 @@ const importGoodsSku = async (rows) => {
             rows[i].getCell(sys_sku_id_row).value.trim().replace(/_x([0-9A-F]{4})_/g, (m, hex) => {
             return String.fromCharCode(parseInt(hex, 16));
           }) : 
-            rows[i].getCell(sys_sku_id_row).value     
+            rows[i].getCell(sys_sku_id_row).value
+        let on_sku_name = typeof(rows[i].getCell(on_sku_name_row).value) == 'string' ? 
+            rows[i].getCell(on_sku_name_row).value.trim().replace(/_x([0-9A-F]{4})_/g, (m, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+          }) : 
+            rows[i].getCell(on_sku_name_row).value   
         let is_shelf = typeof(rows[i].getCell(is_shelf_row).value) == 'string' ? 
             rows[i].getCell(is_shelf_row).value.trim() : 
             rows[i].getCell(is_shelf_row).value        
@@ -318,6 +325,7 @@ const importGoodsSku = async (rows) => {
                 is_shelf,
                 create_time,
                 shop_name,
+                on_sku_name,
                 goods_id,
                 sku_id,
             ])
@@ -333,6 +341,7 @@ const importGoodsSku = async (rows) => {
                 on_sku_code,
                 sys_goods_id,
                 sys_sku_id,
+                on_sku_name,
                 is_shelf,
                 create_time
             )
