@@ -1,11 +1,11 @@
 const recruitmentStatisticRepo = require('@/repository/recruitment/recruitmentStatisticRepo');
 const curriculumVitaeRepo = require('@/repository/curriculumVitaeRepo');
 const TARGET_SHIPS = [
-        {label: '新候选人', ship: 1},
+        {label: '初选通过', ship: 1},
         {label: '面试通过', ship: 4},
         {label: '已发offer', ship: 5},
-        {label: '待入职', ship: 6},
-	    {label: '面试淘汰', ship: 7},
+        {label: '面试淘汰', ship: 6},
+	    {label: '简历淘汰', ship: 7},
 	    {label: '未初始', ship: 8},
 ];
 const CURRICULUM_VITAE_SHIPS = new Set([8]);
