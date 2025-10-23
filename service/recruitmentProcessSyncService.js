@@ -5,9 +5,9 @@ const recruitmentPositionRepo = require('@/repository/recruitment/recruitmentPos
 const recruitmentStatisticRepo = require('@/repository/recruitment/recruitmentStatisticRepo');
 const {FIELD_IDS} = recruitmentProcessRepo;
 const {
-	DEFAULT_SHIP,
-	SHIP_PRIORITY,
-	resolveShip,
+        DEFAULT_SHIP,
+        SHIP_PRIORITY,
+        resolveShip,
 } = require('./recruitmentProcessStatus');
 const extractCandidateEntries = (fieldMap = {}, context = {}) => {
 	const content = fieldMap[FIELD_IDS.candidateList];
@@ -51,7 +51,7 @@ const buildCandidateUpdates = (rows) => {
 	rows.forEach((row) => {
 		const candidates = extractCandidateEntries(row.fieldMap, {processId: row.processId});
 		candidates.forEach((candidate) => {
-			const ship = resolveShip(candidate.status);
+                        const ship = resolveShip(candidate.status);
 			if (!ship) {
 				unknownStatuses.add(candidate.status);
 			}
