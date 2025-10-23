@@ -2,16 +2,15 @@ const curriculumVitaeRepo = require('../repository/curriculumVitaeRepo');
 const recruitmentProcessRepo = require('../repository/recruitment/recruitmentProcessRepo');
 const {FIELD_IDS} = recruitmentProcessRepo;
 const {DEFAULT_SHIP, resolveShip} = require('./recruitmentProcessStatus');
-
 const SHIP_SUMMARY_ITEMS = [
-        {label: '初选通过', ship: 1},
-        {label: '约面', ship: 2},
-        {label: '面试中', ship: 3},
-        {label: '面试通过', ship: 4},
-        {label: 'Offer', ship: 5},
-        {label: '面试淘汰', ship: 6},
-        {label: '简历淘汰', ship: 7},
-        {label: '未初始', ship: 8},
+	{label: '初选通过', ship: 1},
+	{label: '约面', ship: 2},
+	{label: '面试中', ship: 3},
+	{label: '面试通过', ship: 4},
+	{label: 'Offer', ship: 5},
+	{label: '面试淘汰', ship: 6},
+	{label: '简历淘汰', ship: 7},
+	{label: '未初始', ship: 8},
 ];
 
 const allowedFields = [
@@ -517,42 +516,42 @@ const remove = async (id) => {
 	return true;
 };
 const getFilters = async (query = {}) => {
-        return curriculumVitaeRepo.getFilterOptions(query);
+	return curriculumVitaeRepo.getFilterOptions(query);
 };
 
 const parseMonth = (month) => {
-        if (!month || typeof month !== 'string') {
-                return null;
-        }
+	if (!month || typeof month !== 'string') {
+		return null;
+	}
 
-        const trimmed = month.trim();
-        if (!/^\d{4}-\d{2}$/.test(trimmed)) {
-                return null;
-        }
+	const trimmed = month.trim();
+	if (!/^\d{4}-\d{2}$/.test(trimmed)) {
+		return null;
+	}
 
-        const [yearString, monthString] = trimmed.split('-');
-        const year = Number(yearString);
-        const monthIndex = Number(monthString) - 1;
+	const [yearString, monthString] = trimmed.split('-');
+	const year = Number(yearString);
+	const monthIndex = Number(monthString) - 1;
 
-        if (Number.isNaN(year) || Number.isNaN(monthIndex) || monthIndex < 0 || monthIndex > 11) {
-                return null;
-        }
+	if (Number.isNaN(year) || Number.isNaN(monthIndex) || monthIndex < 0 || monthIndex > 11) {
+		return null;
+	}
 
-        return new Date(year, monthIndex, 1);
+	return new Date(year, monthIndex, 1);
 };
 
 const getMonthlyShipSummary = async (query = {}) => {
-        const referenceDate = parseMonth(query.month) || new Date();
-        const startDate = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
-        const endDate = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 1);
+	const referenceDate = parseMonth(query.month) || new Date();
+	const startDate = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
+	const endDate = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 1);
 
-        const rows = await curriculumVitaeRepo.getShipCountsByPeriod(startDate, endDate);
-        const counts = new Map(rows.map((row) => [row.ship, row.count]));
+	const rows = await curriculumVitaeRepo.getShipCountsByPeriod(startDate, endDate);
+	const counts = new Map(rows.map((row) => [row.ship, row.count]));
 
-        return SHIP_SUMMARY_ITEMS.map((item) => ({
-                ...item,
-                count: counts.get(item.ship) ?? 0,
-        }));
+	return SHIP_SUMMARY_ITEMS.map((item) => ({
+		...item,
+		count: counts.get(item.ship) ?? 0,
+	}));
 };
 module.exports = {
         list,

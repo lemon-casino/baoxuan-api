@@ -21,6 +21,7 @@ const STATUS_TO_SHIP = new Map(
 const DEFAULT_SHIP = 8;
 
 const SHIP_PRIORITY = {
+
         8: 0,
         1: 10,
         2: 20,
@@ -46,3 +47,4 @@ module.exports = {
         SHIP_PRIORITY,
         resolveShip,
 };
+

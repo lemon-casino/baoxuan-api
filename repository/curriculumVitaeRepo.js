@@ -201,6 +201,19 @@ const findAndCountAll = async (filters, pagination) => {
 	})
 };
 
+const findContactsByFilters = async (filters = {}) => {
+	const where = buildWhereClause(filters);
+	const rows = await CurriculumVitaeModel.findAll({
+		attributes: ['contact'],
+		where,
+		raw: true,
+	});
+
+	return rows
+		.map((row) => row.contact)
+		.filter((contact) => typeof contact === 'string' && contact.trim().length > 0);
+};
+
 const create = async (payload) => {
         const record = await CurriculumVitaeModel.create(payload);
         return toPlain(record);
@@ -514,4 +527,3 @@ module.exports = {
         countByShipValues,
         extractContactTokens,
 };
-
