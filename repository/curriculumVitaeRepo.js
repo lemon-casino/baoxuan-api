@@ -201,22 +201,9 @@ const findAndCountAll = async (filters, pagination) => {
 	})
 };
 
-const findContactsByFilters = async (filters = {}) => {
-	const where = buildWhereClause(filters);
-	const rows = await CurriculumVitaeModel.findAll({
-		attributes: ['contact'],
-		where,
-		raw: true,
-	});
-
-	return rows
-		.map((row) => row.contact)
-		.filter((contact) => typeof contact === 'string' && contact.trim().length > 0);
-};
-
 const create = async (payload) => {
-	const record = await CurriculumVitaeModel.create(payload);
-	return toPlain(record);
+        const record = await CurriculumVitaeModel.create(payload);
+        return toPlain(record);
 };
 
 const findById = async (id) => {
@@ -234,8 +221,8 @@ const updateById = async (id, payload) => {
 };
 
 const updateShipByContact = async (contact, ship, name) => {
-	if (typeof contact !== 'string' || contact.trim().length === 0 || typeof ship !== 'number') {
-		return {
+        if (typeof contact !== 'string' || contact.trim().length === 0 || typeof ship !== 'number') {
+                return {
 			matchedCount: 0,
 			affectedRows: 0,
 			changedRecords: [],
@@ -330,11 +317,35 @@ const updateShipByContact = async (contact, ship, name) => {
 		previousShip: normalizeShipValue(row.ship),
 	}));
 
-	return {
-		matchedCount,
-		affectedRows,
-		changedRecords,
-	};
+        return {
+                matchedCount,
+                affectedRows,
+                changedRecords,
+        };
+};
+
+const hasContactMatch = async (contact) => {
+        if (typeof contact !== 'string') {
+                return false;
+        }
+
+        const trimmed = contact.trim();
+        if (!trimmed) {
+                return false;
+        }
+
+        const matchers = buildContactMatchers(trimmed);
+        if (matchers.length === 0) {
+                return false;
+        }
+
+        const count = await CurriculumVitaeModel.count({
+                where: {
+                        [Op.or]: matchers,
+                },
+        });
+
+        return count > 0;
 };
 
 const SHIP_VALUES = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -491,15 +502,15 @@ const getFilterOptions = async (query = {}) => {
 	return {hr, job, name};
 };
 module.exports = {
-	findAndCountAll,
-	findContactsByFilters,
-	create,
-	findById,
-	updateById,
-	deleteById,
-	getFilterOptions,
-	updateShipByContact,
-	getShipCountsByPeriod,
-	countByShipValues,
+        findAndCountAll,
+        create,
+        findById,
+        updateById,
+        deleteById,
+        getFilterOptions,
+        updateShipByContact,
+        hasContactMatch,
+        getShipCountsByPeriod,
+        countByShipValues,
 };
 

@@ -3,8 +3,6 @@ const recruitmentProcessRepo = require('../repository/recruitment/recruitmentPro
 const {FIELD_IDS} = recruitmentProcessRepo;
 const {DEFAULT_SHIP, resolveShip} = require('./recruitmentProcessStatus');
 
-const CONTACT_SPLIT_REGEX = /[\s,;；，、|/\\]+/u;
-
 const SHIP_SUMMARY_ITEMS = [
         {label: '初选通过', ship: 1},
         {label: '约面', ship: 2},
@@ -111,56 +109,6 @@ const matchesDateRange = (date, start, end) => {
         return true;
 };
 
-const extractContactTokens = (value) => {
-        if (typeof value !== 'string') {
-                return [];
-        }
-
-        const trimmed = value.trim();
-        if (!trimmed) {
-                return [];
-        }
-
-        const tokens = new Set([trimmed]);
-
-        trimmed.split(CONTACT_SPLIT_REGEX).forEach((part) => {
-                const token = part.trim();
-                if (token) {
-                        tokens.add(token);
-                        const digits = token.replace(/\D+/g, '');
-                        if (digits) {
-                                tokens.add(digits);
-                        }
-                }
-        });
-
-        const digits = trimmed.replace(/\D+/g, '');
-        if (digits) {
-                tokens.add(digits);
-        }
-
-        return Array.from(tokens);
-};
-
-const buildCandidateContactTokens = (value) => {
-        if (typeof value !== 'string') {
-                return [];
-        }
-
-        const trimmed = value.trim();
-        if (!trimmed) {
-                return [];
-        }
-
-        const tokens = new Set([trimmed]);
-        const digits = trimmed.replace(/\D+/g, '');
-        if (digits) {
-                tokens.add(digits);
-        }
-
-        return Array.from(tokens);
-};
-
 const extractCandidateEntries = (fieldMap = {}) => {
         const content = fieldMap[FIELD_IDS.candidateList];
         if (typeof content !== 'string' || !content.trim()) {
@@ -239,32 +187,13 @@ const matchesFallbackFilters = (record, filters) => {
         return true;
 };
 
-const buildExistingContactTokens = (contacts = []) => {
-        const tokens = new Set();
-
-        contacts.forEach((contact) => {
-                extractContactTokens(contact).forEach((token) => tokens.add(token));
-        });
-
-        return tokens;
-};
-
-const hasMappedResumeContact = (candidate, existingContactTokens) => {
-        if (!candidate.resumeContact || existingContactTokens.size === 0) {
-                return false;
-        }
-
-        return buildCandidateContactTokens(candidate.resumeContact).some((token) => existingContactTokens.has(token));
-};
-
-const buildFallbackRecords = async (filters, existingContacts = []) => {
+const buildFallbackRecords = async (filters) => {
         const processes = await recruitmentProcessRepo.getRecruitmentProcesses();
         if (!Array.isArray(processes) || processes.length === 0) {
                 return [];
         }
 
-        const fallbackRecords = [];
-        const existingContactTokens = buildExistingContactTokens(existingContacts);
+        const candidateEntries = [];
 
         processes.forEach((processRow) => {
                 const fieldMap = processRow.fieldMap || {};
@@ -274,48 +203,88 @@ const buildFallbackRecords = async (filters, existingContacts = []) => {
                 const processTimestamp = processRow.startTime ? new Date(processRow.startTime).getTime() : 0;
 
                 candidates.forEach((candidate, index) => {
-                        if (hasMappedResumeContact(candidate, existingContactTokens)) {
-                                return;
-                        }
-
-                        const ship = resolveShip(candidate.status) ?? DEFAULT_SHIP;
-                        const record = {
-                                id: null,
-                                hr: owner || null,
-                                date: candidate.date,
-                                job: jobTitle || null,
-                                jobSalary: null,
-                                name: candidate.name,
-                                contact: candidate.contact,
-                                latestCorp: null,
-                                latestJob: null,
-                                gender: null,
-                                age: null,
-                                location: null,
-                                education: null,
-                                seniority: null,
-                                salary: null,
-                                filename: null,
-                                filesize: null,
-                                filepath: null,
-                                ship,
-                                resumeContact: candidate.resumeContact || null,
-                        };
-
-                        if (!matchesFallbackFilters(record, filters)) {
-                                return;
-                        }
-
-                        const sortTimestamp = record.date instanceof Date && !Number.isNaN(record.date.getTime())
-                                ? record.date.getTime()
-                                : 0;
-
-                        fallbackRecords.push({
-                                record,
-                                sortTimestamp,
+                        candidateEntries.push({
+                                candidate,
+                                owner,
+                                jobTitle,
                                 processTimestamp: Number.isNaN(processTimestamp) ? 0 : processTimestamp,
                                 index,
                         });
+                });
+        });
+
+        if (candidateEntries.length === 0) {
+                return [];
+        }
+
+        const uniqueResumeContacts = Array.from(
+                new Set(
+                        candidateEntries
+                                .map((entry) => entry.candidate.resumeContact)
+                                .filter((value) => typeof value === 'string' && value.length > 0)
+                )
+        );
+
+        const matchedResumeContacts = new Set();
+        if (uniqueResumeContacts.length > 0) {
+                const results = await Promise.all(
+                        uniqueResumeContacts.map(async (resumeContact) => ({
+                                resumeContact,
+                                matched: await curriculumVitaeRepo.hasContactMatch(resumeContact),
+                        }))
+                );
+
+                results.forEach(({resumeContact, matched}) => {
+                        if (matched) {
+                                matchedResumeContacts.add(resumeContact);
+                        }
+                });
+        }
+
+        const fallbackRecords = [];
+
+        candidateEntries.forEach(({candidate, owner, jobTitle, processTimestamp, index}) => {
+                if (candidate.resumeContact && matchedResumeContacts.has(candidate.resumeContact)) {
+                        return;
+                }
+
+                const ship = resolveShip(candidate.status) ?? DEFAULT_SHIP;
+                const record = {
+                        id: null,
+                        hr: owner || null,
+                        date: candidate.date,
+                        job: jobTitle || null,
+                        jobSalary: null,
+                        name: candidate.name,
+                        contact: candidate.contact,
+                        latestCorp: null,
+                        latestJob: null,
+                        gender: null,
+                        age: null,
+                        location: null,
+                        education: null,
+                        seniority: null,
+                        salary: null,
+                        filename: null,
+                        filesize: null,
+                        filepath: null,
+                        ship,
+                        resumeContact: candidate.resumeContact || null,
+                };
+
+                if (!matchesFallbackFilters(record, filters)) {
+                        return;
+                }
+
+                const sortTimestamp = record.date instanceof Date && !Number.isNaN(record.date.getTime())
+                        ? record.date.getTime()
+                        : 0;
+
+                fallbackRecords.push({
+                        record,
+                        sortTimestamp,
+                        processTimestamp,
+                        index,
                 });
         });
 
@@ -433,8 +402,7 @@ const list = async (query = {}) => {
 
         let fallbackRecords = [];
         if (typeof filters.ship === 'number') {
-                const existingContacts = await curriculumVitaeRepo.findContactsByFilters(filters);
-                fallbackRecords = await buildFallbackRecords(filters, existingContacts);
+                fallbackRecords = await buildFallbackRecords(filters);
         }
 
         const total = count + fallbackRecords.length;
