@@ -147,7 +147,6 @@ router.post('/specific-plan/sales/create', specificPlanApi.createSales)
 
 //文件上传至bpm
 router.post('/file-upload', analysisPlanApi.fileUpload)
-router.post('/wangEditorUpload', analysisPlanApi.wangEditorUpload)
 
 //获取天猫的新品数据
 router.get('/tmall-new-goods', operationApi.getTMNewGoods)

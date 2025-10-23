@@ -193,23 +193,4 @@ analysisPlanApi.fileUpload = async (req, res, next) => {
     }
 }
 
-analysisPlanApi.wangEditorUpload = async (req, res, next) => {
-    try {
-        let form = new formidable.IncomingForm()
-        form.uploadDir = "./public/avatar/bpm"
-        fs.mkdirSync(form.uploadDir, { recursive: true })
-        form.keepExtensions = true
-        form.parse(req, async function (error, fields, files) {
-            if (error) {
-                return res.send(biResponse.canTFindIt)
-            }
-            
-            const file = files.file
-            let result = await analysisPlanService.wangEditorUpload(file)
-            return res.send(biResponse.success(result))
-        })
-    } catch (e) {
-        next(e)
-    }
-}
 module.exports = analysisPlanApi
