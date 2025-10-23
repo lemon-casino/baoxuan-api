@@ -285,9 +285,9 @@ const importGoodsSku = async (rows) => {
                 is_shelf,
                 create_time,
                 shop_name,
+                on_sku_name,
                 goods_id,
                 sku_id,
-                on_sku_name
             ])
         } else {
             data.push(
