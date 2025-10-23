@@ -190,7 +190,7 @@ const matchesFallbackFilters = (record, filters) => {
 const buildFallbackRecords = async (filters) => {
         const processes = await recruitmentProcessRepo.getRecruitmentProcesses();
         if (!Array.isArray(processes) || processes.length === 0) {
-                return [];
+                return {records: [], statusByContact: new Map()};
         }
 
         const candidateEntries = [];
@@ -214,7 +214,7 @@ const buildFallbackRecords = async (filters) => {
         });
 
         if (candidateEntries.length === 0) {
-                return [];
+                return {records: [], statusByContact: new Map()};
         }
 
         const uniqueResumeContacts = Array.from(
@@ -226,6 +226,7 @@ const buildFallbackRecords = async (filters) => {
         );
 
         const matchedResumeContacts = new Set();
+        const statusByContact = new Map();
         if (uniqueResumeContacts.length > 0) {
                 const results = await Promise.all(
                         uniqueResumeContacts.map(async (resumeContact) => ({
@@ -244,11 +245,34 @@ const buildFallbackRecords = async (filters) => {
         const fallbackRecords = [];
 
         candidateEntries.forEach(({candidate, owner, jobTitle, processTimestamp, index}) => {
+                const ship = resolveShip(candidate.status) ?? DEFAULT_SHIP;
+                const sortTimestamp = candidate.date instanceof Date && !Number.isNaN(candidate.date.getTime())
+                        ? candidate.date.getTime()
+                        : 0;
+
+                if (candidate.resumeContact) {
+                        const existing = statusByContact.get(candidate.resumeContact);
+                        const shouldReplace = !existing
+                                || existing.sortTimestamp < sortTimestamp
+                                || (existing.sortTimestamp === sortTimestamp
+                                        && (existing.processTimestamp < processTimestamp
+                                                || (existing.processTimestamp === processTimestamp && existing.index > index)));
+
+                        if (shouldReplace) {
+                                statusByContact.set(candidate.resumeContact, {
+                                        status: candidate.status,
+                                        ship,
+                                        sortTimestamp,
+                                        processTimestamp,
+                                        index,
+                                });
+                        }
+                }
+
                 if (candidate.resumeContact && matchedResumeContacts.has(candidate.resumeContact)) {
                         return;
                 }
 
-                const ship = resolveShip(candidate.status) ?? DEFAULT_SHIP;
                 const record = {
                         id: null,
                         hr: owner || null,
@@ -270,15 +294,12 @@ const buildFallbackRecords = async (filters) => {
                         filepath: null,
                         ship,
                         resumeContact: candidate.resumeContact || null,
+                        interviewStatus: candidate.status || null,
                 };
 
                 if (!matchesFallbackFilters(record, filters)) {
                         return;
                 }
-
-                const sortTimestamp = record.date instanceof Date && !Number.isNaN(record.date.getTime())
-                        ? record.date.getTime()
-                        : 0;
 
                 fallbackRecords.push({
                         record,
@@ -300,7 +321,10 @@ const buildFallbackRecords = async (filters) => {
                 return a.index - b.index;
         });
 
-        return fallbackRecords.map((entry) => entry.record);
+        return {
+                records: fallbackRecords.map((entry) => entry.record),
+                statusByContact,
+        };
 };
 
 const mergeWithFallback = (rows, fallback, count, page, pageSize) => {
@@ -393,16 +417,50 @@ const list = async (query = {}) => {
         const pageSize = Math.max(parseInt(query.pageSize, 10) || 10, 1);
         const filters = normalizeFilters(query);
         const {count, rows} = await curriculumVitaeRepo.findAndCountAll(filters, {page, pageSize});
+        let statusByContact = new Map();
         const normalizedRows = Array.isArray(rows)
                 ? rows.map((row) => ({
                         ...row,
                         resumeContact: row.resumeContact ?? null,
+                        interviewStatus: null,
                 }))
                 : [];
 
         let fallbackRecords = [];
         if (typeof filters.ship === 'number') {
-                fallbackRecords = await buildFallbackRecords(filters);
+                const {records, statusByContact: contactStatuses} = await buildFallbackRecords(filters);
+                fallbackRecords = records;
+                statusByContact = contactStatuses;
+        }
+
+        if (statusByContact.size > 0 && normalizedRows.length > 0) {
+                normalizedRows.forEach((row) => {
+                        if (row.interviewStatus) {
+                                return;
+                        }
+
+                        const contactTokens = new Set();
+
+                        if (row.resumeContact) {
+                                curriculumVitaeRepo.extractContactTokens(row.resumeContact).forEach((token) => {
+                                        contactTokens.add(token);
+                                });
+                        }
+
+                        if (row.contact) {
+                                curriculumVitaeRepo.extractContactTokens(row.contact).forEach((token) => {
+                                        contactTokens.add(token);
+                                });
+                        }
+
+                        for (const token of contactTokens) {
+                                const statusInfo = statusByContact.get(token);
+                                if (statusInfo) {
+                                        row.interviewStatus = statusInfo.status || null;
+                                        break;
+                                }
+                        }
+                });
         }
 
         const total = count + fallbackRecords.length;

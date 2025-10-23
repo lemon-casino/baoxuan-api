@@ -20,9 +20,9 @@ const supportsRegexp = () => {
 };
 
 const extractContactTokens = (rawValue = '') => {
-	if (typeof rawValue !== 'string') {
-		return [];
-	}
+        if (typeof rawValue !== 'string') {
+                return [];
+        }
 
 	const trimmed = rawValue.trim();
 	if (!trimmed) {
@@ -512,5 +512,6 @@ module.exports = {
         hasContactMatch,
         getShipCountsByPeriod,
         countByShipValues,
+        extractContactTokens,
 };
 
