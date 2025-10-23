@@ -9,7 +9,7 @@ const operationService = require("../service/operationService")
 const recruitmentProcessSyncService = require('@/service/recruitmentProcessSyncService');
 const {logger} = require('@/utils/log');
 const moment = require('moment')
-
+const bpmProcessTriggerService = require('@/service/bpmProcessTriggerService');
 // 合理调用钉钉，防止限流  当前使用版本 接口每秒调用上线为20(貌似不准确)，涉及的宜搭接口暂时没有qps和总调用量的限制
 // 注意：避免测试和正式同时请求钉钉接口导致调用失败的情况
 
@@ -34,6 +34,7 @@ let caigouLinkData  = "*/5 * * * 1-6"
 let attributeData = "0 9/10 * * 1-7"
 //转正通知 周一到周六  每天9点半触发流程
 let confirmationNotice = "0 30 8 * * 1-6"
+let tmallEvaluationProcessCron = "0 0 9 * * 5"
 if (process.env.NODE_ENV === "dev") {
     syncWorkingDayCron = "0 5 10 * * ?"
     syncTodayRunningAndFinishedFlowsCron = "0 10 12 * * ?"
@@ -88,7 +89,7 @@ schedule.scheduleJob(pddNewTagCron, async function () {
 })
 
 schedule.scheduleJob(recruitmentProcessSyncCron, async function () {
-    if (process.env.NODE_ENV === "dev") {
+    if (process.env.NODE_ENV === "prod") {
         try {
             await recruitmentProcessSyncService.syncCurriculumVitaeStatus();
         } catch (error) {
@@ -282,6 +283,11 @@ schedule.scheduleJob("0 0 0 * * ?", async function () {
         // taskStatus.isRunningJD = false;
         // await redisUtil.set(redisKeys.synchronizedState, JSON.stringify(taskStatus));
     }
+})
+schedule.scheduleJob(tmallEvaluationProcessCron, async function () {
+	if (process.env.NODE_ENV === "prod") {
+		await bpmProcessTriggerService.triggerTmallEvaluationProcesses()
+	}
 })
 
 schedule.scheduleJob(attributeData, async function () {
