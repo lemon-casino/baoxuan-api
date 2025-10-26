@@ -5084,14 +5084,4 @@ developmentService.getNotList = async(type) =>{
     result.data1 = [data1]
     return result
 }
-
-developmentService.getSkuCostInfo = async() =>{
-    let result = await purchaseRepo.getSkuCostInfo()
-    return result
-}
-
-developmentService.getCostOptimize = async() =>{
-    let result = await purchaseRepo.getCostOptimize()
-    return result
-}
 module.exports = developmentService

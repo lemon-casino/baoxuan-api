@@ -57,7 +57,7 @@ const getWeekStats = async (req, res, next) => {
         worksheet6.columns = columns1
         worksheet7.columns = columns1
         worksheet8.columns = columns1
-        const data = await stockService.getStockStats()
+        let data = await stockService.getStockStats()
         for (let i = 0; i < data.length; i++) {
             let month_sale_ave = data[i].month_sale ? Math.ceil(data[i].month_sale / 30) : 0
             let week_sale_ave = data[i].week_sale ? Math.ceil(data[i].week_sale / 30) : 0
@@ -108,19 +108,19 @@ const getWeekStats = async (req, res, next) => {
             }
             worksheet.addRow(row)
         }
-        const { data: info, shopMap } = await orderService.getSaleStats()
-        for (let i = 0; i < info.length; i++) {
-            if (!info[i].sku_id) continue
+        data = await orderService.getSaleStats()
+        for (let i = 0; i < data.length; i++) {
+            if (!data[i].sku_id) continue
             let row = {
-                shop_name: shopMap[info[i].shop_id],
-                name: info[i].name,
-                sku_id: info[i].sku_id,
-                i_id: info[i].i_id,
-                sale: info[i].sale
+                shop_name: data[i].shop_name,
+                name: data[i].name,
+                sku_id: data[i].sku_id,
+                i_id: data[i].i_id,
+                sale: data[i].sale
             }
-            if (info[i].project_id == 1) worksheet6.addRow(row)
-            else if (info[i].project_id == 2) worksheet8.addRow(row)
-            else if (info[i].project_id == 5) worksheet7.addRow(row)
+            if (data[i].project_id == 1) worksheet6.addRow(row)
+            else if (data[i].project_id == 2) worksheet8.addRow(row)
+            else if (data[i].project_id == 5) worksheet7.addRow(row)
             else worksheet5.addRow(row)
         }
 

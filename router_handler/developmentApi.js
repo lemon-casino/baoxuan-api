@@ -630,15 +630,13 @@ const getDevelopProcess = async (req, res, next) => {
             { header: '发起部门', key: 'dept' },
             { header: '流程状态', key: 'process_status' },
             { header: '流程进度', key: 'process_node' },
-            { header: '拼多多是否选中', key: 'first_select' },
-            { header: '抖音是否选中', key: 'second_select' },
-            { header: '京东是否选中', key: 'second_select' },
-            { header: '天猫是否选中', key: 'third_select' },
+            { header: '事业部一是否选中', key: 'first_select' },
+            { header: '事业部二是否选中', key: 'second_select' },
+            { header: '事业部三是否选中', key: 'third_select' },
             { header: '是否选中', key: 'is_select' },
-            { header: '拼多多选中时间', key: 'first_time' },
-            { header: '京东选中时间', key: 'second_time' },
-            { header: '抖音选中时间', key: 'second_time' },
-            { header: '天猫选中时间', key: 'third_time' },
+            { header: '事业部一选中未选中时间', key: 'first_time' },
+            { header: '事业部二选中未选中时间', key: 'second_time' },
+            { header: '事业部三选中未选中时间', key: 'third_time' },
             { header: '事业部一填写上架ID时间', key: 'first_shelf_time' },
             { header: '事业部二填写上架ID时间', key: 'second_shelf_time' },
             { header: '事业部三填写上架ID时间', key: 'third_shelf_time' },
@@ -701,30 +699,6 @@ const getNotList = async (req, res, next) => {
         next(e)
     }
 }
-const getSkuCostInfo = async (req, res, next) => {
-    try {
-        // const {type} = req.query
-        // joiUtil.validate({
-        //     type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}
-        // })
-        let result = await developmentService.getSkuCostInfo()
-        return res.send(biResponse.success(result))
-    } catch (e) {
-        next(e)
-    }
-}
-const getCostOptimize = async (req, res, next) => {
-    try {
-        // const {type} = req.query
-        // joiUtil.validate({
-        //     type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}
-        // })
-        let result = await developmentService.getCostOptimize()
-        return res.send(biResponse.success(result))
-    } catch (e) {
-        next(e)
-    }
-}
 
 module.exports = {
     getWorkPannel, 
@@ -760,7 +734,5 @@ module.exports = {
     getProcessDetail,
     getProcessRunningTask,
     getDevelopProcess,
-    getNotList,
-    getSkuCostInfo,
-    getCostOptimize
+    getNotList
 }

@@ -1,4 +1,4 @@
-const { query } = require('../../model/localDbConn')
+const { query } = require('../../model/dbConn')
 const goodsRepo = {}
 
 goodsRepo.create = async (data, count) => {

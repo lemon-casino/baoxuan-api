@@ -89,7 +89,6 @@ exports.getddUserList = async (req, res) => {
     const is_userId = await UsersModel.findOne({
         where: {
             dingding_user_id: userid,
-            status: 1
         },
     });
     if (is_userId) {
