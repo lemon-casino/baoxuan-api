@@ -7,6 +7,7 @@ const moment = require('moment')
 const purchaseRepo = require('@/repository/jst/purchaseRepo')
 const returnRepo = require('@/repository/jst/returnRepo')
 const oriSkuRepo = require('@/repository/jst/oriSkuRepo')
+const projectInfoRepo = require('@/repository/operation/projectInfoRepo')
 
 const syncOrder = async (start, end) => {
     let shops = await shopInfoRepo.getInfo(), 
@@ -184,8 +185,47 @@ const syncOrder = async (start, end) => {
 const getSaleStats = async () => {
     let start = moment().subtract(30, 'day').format('YYYY-MM-DD')
     let end = moment().format('YYYY-MM-DD')
-    let data = await outOrderRepo.getSalesByTime(start, end)
-    return data || []
+    //拼多多
+    let shops = await projectInfoRepo.getShopNameById(1)
+    let shopIds = '', data = [], shopMap = {}
+    for (let i = 0; i < shops.length; i++) {
+        shopIds = `${shopIds}"${shops[i].shop_id}",`
+        shopMap[shops[i].shop_id] = shops[i].shop_name
+    }
+    if (shopIds?.length) shopIds = shopIds.substring(0, shopIds.length - 1)
+    let info = await outOrderRepo.getSalesByTime(start, end, shopIds, 1)
+    if (info?.length) data = data.concat(info)
+    //淘工厂
+    shops = await projectInfoRepo.getShopNameById(2)
+    shopIds = ''
+    for (let i = 0; i < shops.length; i++) {
+        shopIds = `${shopIds}"${shops[i].shop_id}",`
+        shopMap[shops[i].shop_id] = shops[i].shop_name
+    }
+    if (shopIds?.length) shopIds = shopIds.substring(0, shopIds.length - 1)
+    info = await outOrderRepo.getSalesByTime(start, end, shopIds, 2)
+    if (info?.length) data = data.concat(info)
+    //京东
+    shops = await projectInfoRepo.getShopNameById(5)
+    shopIds = ''
+    for (let i = 0; i < shops.length; i++) {
+        shopIds = `${shopIds}"${shops[i].shop_id}",`
+        shopMap[shops[i].shop_id] = shops[i].shop_name
+    }
+    if (shopIds?.length) shopIds = shopIds.substring(0, shopIds.length - 1)
+    info = await outOrderRepo.getSalesByTime(start, end, shopIds, 5)
+    if (info?.length) data = data.concat(info)
+    //宝选天猫
+    shops = await projectInfoRepo.getShopNameById(14)
+    shopIds = ''
+    for (let i = 0; i < shops.length; i++) {
+        shopIds = `${shopIds}"${shops[i].shop_id}",`
+        shopMap[shops[i].shop_id] = shops[i].shop_name
+    }
+    if (shopIds?.length) shopIds = shopIds.substring(0, shopIds.length - 1)
+    info = await outOrderRepo.getSalesByTime(start, end, shopIds, 14)
+    if (info?.length) data = data.concat(info)
+    return { data, shopMap }
 }
 
 const importGoodsSku = async (rows) => {
@@ -341,10 +381,14 @@ const importPurchaseInfo = async (rows) => {
             rows[i].getCell(io_id_row).value.trim() : 
             rows[i].getCell(io_id_row).value
         let sku_code = typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
-            rows[i].getCell(sku_code_row).value.trim() : 
-            rows[i].getCell(sku_code_row).value
+            rows[i].getCell(sku_code_row).value.trim().replace(/_x([0-9A-F]{4})_/g, (m, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+          }) : 
+            rows[i].getCell(sys_sku_id_row).value    
         let goods_code = typeof(rows[i].getCell(goods_code_row).value) == 'string' ? 
-            rows[i].getCell(goods_code_row).value.trim() : 
+            rows[i].getCell(goods_code_row).value.trim().replace(/_x([0-9A-F]{4})_/g, (m, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+            }) : 
             rows[i].getCell(goods_code_row).value
         let io_qty = rows[i].getCell(io_qty_row).value
         let io_amount = rows[i].getCell(io_amount_row).value

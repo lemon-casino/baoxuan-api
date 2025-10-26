@@ -55,7 +55,11 @@ router.get('/inventory-attribute', developmentApi.getsputags)
 router.get('/inventory-first', developmentApi.getfirst)
 
 router.get('/first-info', developmentApi.getfirstInfo)
+// 到仓未上架
 router.get('/not-list', developmentApi.getNotList)
+// 成本优化
+router.get('/sku-cost-info', developmentApi.getSkuCostInfo)
+router.get('/cost-optimize', developmentApi.getCostOptimize)
 
 router.get('/process/running-task', developmentApi.getProcessRunningTask)
 router.get('/process-info', developmentApi.getProcessInfo)
