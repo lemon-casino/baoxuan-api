@@ -1253,89 +1253,70 @@ goodsSalesRepo.getnegativeProfit =async(goods_id) =>{
 }
 
 goodsSalesRepo.getNotList = async() =>{
-    let sql = `SELECT a.link
-			,a.商品编码 AS sku_code
-			,a.first_order_num
-			,a.second_order_num
-			,a.third_order_num
-			,DATE_FORMAT(b.io_date,"%Y-%m-%d") AS io_date
-			,DATE_FORMAT(c.first_onsale_date,"%Y-%m-%d") AS first_onsale_date
-			,DATE_FORMAT(c.second_onsale_date,"%Y-%m-%d") AS second_onsale_date
-			,DATE_FORMAT(c.third_onsale_date,"%Y-%m-%d") AS third_onsale_date
+    let sql = `select * FROM(
+        SELECT a.link
+            ,a.商品编码 AS sku_code
+            ,a.first_order_num
+            ,a.second_order_num
+            ,a.third_order_num
+            ,a.\`first\`
+            ,a.\`second\`
+            ,a.third
+            ,DATE_FORMAT(b.io_date,"%Y-%m-%d") AS io_date
+            ,DATE_FORMAT(c.first_onsale_date,"%Y-%m-%d") AS first_onsale_date
+            ,DATE_FORMAT(c.second_onsale_date,"%Y-%m-%d") AS second_onsale_date
+            ,DATE_FORMAT(c.third_onsale_date,"%Y-%m-%d") AS third_onsale_date
+            ,(CASE 
+            WHEN a.\`first\` ='选中' AND  first_onsale_date is not NULL THEN '上架'
+            WHEN a.\`first\` ='未选中' AND  first_onsale_date is NULL THEN '上架'
+            WHEN a.\`first\` ='未选中' AND  first_onsale_date is not NULL THEN '上架'
+            ELSE '未上架'END) as first_info
+            ,(CASE 
+            WHEN a.\`second\` ='选中' AND  second_onsale_date is not NULL THEN '上架'
+            WHEN a.\`second\` ='未选中' AND  second_onsale_date is NULL THEN '上架'
+            WHEN a.\`second\` ='未选中' AND  second_onsale_date is not NULL THEN '上架'
+            ELSE '未上架'END) as second_info
+            ,(CASE 
+            WHEN a.\`third\` ='选中' AND  third_onsale_date is not NULL THEN '上架'
+            WHEN a.\`third\` ='未选中' AND  third_onsale_date is NULL THEN '上架'
+            WHEN a.\`third\` ='未选中' AND  third_onsale_date is not NULL THEN '上架'
+            ELSE '未上架'END) as third_info
+            ,yi,er,san
         FROM (
             SELECT CONCAT('http://bpm.pakchoice.cn:8848/bpm/process-instance/detail?id=',process_id) AS link
-                        ,商品编码
-                        ,IF(first_order_num REGEXP '^[0-9]+$',first_order_num,0) AS first_order_num
-                        ,IF(second_order_num REGEXP '^[0-9]+$',second_order_num,0) AS second_order_num
-                        ,IF(third_order_num REGEXP '^[0-9]+$',third_order_num,0) AS third_order_num
+                    ,商品编码
+                    ,IF(first_order_num REGEXP '^[0-9]+$',first_order_num,0) AS first_order_num
+                    ,IF(second_order_num REGEXP '^[0-9]+$',second_order_num,0) AS second_order_num
+                    ,IF(third_order_num REGEXP '^[0-9]+$',third_order_num,0) AS third_order_num
+                    ,IF(first_order_num = '未选中' OR first_order_num = '0' OR TRIM(first_order_num) = '' OR first_order_num = '0.','未选中','选中') as first
+                    ,IF(second_order_num = '未选中' OR second_order_num = '0' OR TRIM(second_order_num) = '' OR second_order_num = '0.','未选中','选中') as second
+                    ,IF(third_order_num = '未选中' OR third_order_num = '0' OR TRIM(third_order_num) = '' OR third_order_num = '0.','未选中','选中') as third
+                    ,first_order_num as yi,second_order_num as er,third_order_num as san
             FROM (
-                SELECT 
-                        t.process_id,
-                        JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."商品编码"'))) AS 商品编码,
-                        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部二订货量"'))), '0')  AS first_order_num,
-                        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部二订货量(Frhbma3pulstg5c)"')))) AS second_order_num,
-                        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部三订货量"'))), '0') AS third_order_num
-                FROM process_info t
-                JOIN (
-                        SELECT 0 AS seq UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
-                ) n ON n.seq < JSON_LENGTH(t.content)
-                WHERE t.field IN ('Fnt5ma3psjitfcc','Fyf1ma3jfyi7fuc','Fnt5ma3psjitfcc','Fo5uma263lluhdc','Fz3jma3psq0dfhc') 
-                AND t.content IS NOT NULL AND t.process_id IN('030e1938-50ba-11f0-a2a8-2ee6f9618836','07e0ba63-50bb-11f0-a2a8-2ee6f9618836',
-                '10468942-5d6a-11f0-ac83-36752c98d096','85ae191c-4dc9-11f0-bdcb-425a51682946','f5b90e4f-5d5e-11f0-ac83-36752c98d096')
-                UNION ALL
-                SELECT 
-                        t.process_id,
-                        JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."商品编码"'))) AS 商品编码,
-                        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部一订货量"'))), '0')  AS first_order_num,
-                        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部二订货量"'))), '0') AS second_order_num,
-                        COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部三订货量"'))), '0') AS third_order_num
-                FROM process_info t
-                LEFT JOIN processes as b
-                ON t.process_id = b.process_id
-                JOIN (
-                        SELECT 0 AS seq UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
-                ) n ON n.seq < JSON_LENGTH(t.content)
-                WHERE t.field IN ('Fnt5ma3psjitfcc','Fyf1ma3jfyi7fuc','Fnt5ma3psjitfcc','Fo5uma263lluhdc','Fz3jma3psq0dfhc') 
-                AND t.content IS NOT NULL AND t.process_id IN (SELECT process_id FROM processes WHERE title LIKE '%推品%' 
-                AND process_id NOT IN('030e1938-50ba-11f0-a2a8-2ee6f9618836','07e0ba63-50bb-11f0-a2a8-2ee6f9618836',
-                '10468942-5d6a-11f0-ac83-36752c98d096','85ae191c-4dc9-11f0-bdcb-425a51682946','f5b90e4f-5d5e-11f0-ac83-36752c98d096'))
-                AND b.status != 4
+            SELECT t.process_id,
+                    JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."商品编码"'))) AS 商品编码,
+                    COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部一订货量"'))), '0')  AS first_order_num,
+                    COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部二订货量"'))), '0') AS second_order_num,
+                    COALESCE(JSON_UNQUOTE(JSON_EXTRACT(t.content, CONCAT('$[', n.seq, ']."事业部三订货量"'))), '0') AS third_order_num
+            FROM process_info t
+            LEFT JOIN processes as b
+            ON t.process_id = b.process_id
+            JOIN (
+                SELECT 0 AS seq UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6
+                UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION SELECT 11  UNION SELECT 12 UNION SELECT 13
+                UNION SELECT 14 UNION SELECT 15 UNION SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20
+            ) n ON n.seq < JSON_LENGTH(t.content)
+            WHERE t.field IN ('Fnt5ma3psjitfcc','Fyf1ma3jfyi7fuc','Fnt5ma3psjitfcc','Fo5uma263lluhdc','Fz3jma3psq0dfhc') 
+            AND t.content IS NOT NULL AND t.process_id IN (SELECT process_id FROM processes WHERE title LIKE '%推品%' 
+            AND process_id NOT IN(select process_id from process_info WHERE title = '运营事业部' and content = '刘海涛事业部-coupang'))
+            AND b.status != 4 AND b.status != 3
             ) AS a 
             WHERE first_order_num !=0 OR second_order_num !=0 OR third_order_num !=0
-        ) AS a 
-        LEFT JOIN (select sku_code,min(io_date) as io_date FROM jst_purchase_info GROUP BY sku_code) as b
-        ON a.商品编码 = b.sku_code
-        LEFT JOIN(
-            SELECT sys_sku_id
-                        ,max(IF(division_name='事业部1',onsale_date,NULL)) AS first_onsale_date
-                        ,max(IF(division_name='事业部2',onsale_date,NULL)) AS second_onsale_date
-                        ,max(IF(division_name='事业部3',onsale_date,NULL)) AS third_onsale_date
-            FROM(
-                SELECT b.division_name,a.sys_sku_id,min(a.create_time) AS onsale_date FROM(
-                    SELECT IFNULL(pc.商品编码, s.sys_sku_id) AS sys_sku_id
-                                    ,s.shop_name
-                                    ,create_time
-                    FROM jst_goods_sku s 
-                    LEFT JOIN danpin.combination_product_code pc 
-                    ON pc.组合商品编码 = s.sys_sku_id
-                    ) AS a
-                LEFT JOIN (
-                    SELECT s.shop_name
-                            ,d.division_name
-                FROM shop_info AS s 
-                LEFT JOIN project_info AS p 
-                ON s.project_id=p.id
-                LEFT JOIN division_info AS d 
-                ON p.division_id=d.id
-                ) AS b
-                ON a.shop_name=b.shop_name
-                GROUP BY b.division_name,a.sys_sku_id
-            ) AS a 
-            GROUP BY sys_sku_id
-        ) AS c
-        ON a.商品编码 = c.sys_sku_id
-        WHERE b.sku_code IS NOT NULL AND (c.sys_sku_id IS NULL OR c.first_onsale_date IS NULL 
-        OR c.second_onsale_date IS NULL OR c.third_onsale_date IS NULL )`
+            )as a
+            LEFT JOIN (select sku_code,min(io_date) as io_date FROM jst_purchase_info GROUP BY sku_code) as b
+            ON a.商品编码 = b.sku_code
+            LEFT JOIN  sku_onsale_date  as c ON a.商品编码 = c.sku_code
+            WHERE b.sku_code IS NOT NULL ) as a WHERE first_info ='未上架' OR second_info ='未上架' OR third_info ='未上架'`
     let result = await query(sql)
     for (i =0;i<result.length-1;i++){
         let sql1 = `SELECT sku_code

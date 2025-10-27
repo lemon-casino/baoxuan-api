@@ -1,6 +1,89 @@
 const {Op} = require('sequelize');
 const CurriculumVitaeModel = require('../model/curriculumVitae');
 
+const CONTACT_SPLIT_REGEX = /[\s,;；，、|/\\]+/u;
+const MIN_LIKE_TOKEN_LENGTH = 3;
+const MIN_DIGIT_TOKEN_LENGTH = 6;
+
+const escapeLikePattern = (value) => value.replace(/([%_\\])/g, '\\$1');
+
+const toDigits = (value) => value.replace(/\D+/g, '');
+
+const buildDigitRegex = (digits) => digits.split('').map((digit) => `${digit}\\D*`).join('');
+
+const supportsRegexp = () => {
+	const dialect = CurriculumVitaeModel?.sequelize?.getDialect?.();
+	if (!dialect) {
+		return false;
+	}
+	return ['mysql', 'mariadb', 'postgres'].includes(dialect);
+};
+
+const extractContactTokens = (rawValue = '') => {
+        if (typeof rawValue !== 'string') {
+                return [];
+        }
+
+	const trimmed = rawValue.trim();
+	if (!trimmed) {
+		return [];
+	}
+
+	const tokens = new Set([trimmed]);
+	trimmed.split(CONTACT_SPLIT_REGEX).forEach((part) => {
+		const token = part.trim();
+		if (token) {
+			tokens.add(token);
+		}
+	});
+
+	return Array.from(tokens);
+};
+
+const buildContactMatchers = (contact) => {
+	const tokens = extractContactTokens(contact);
+	if (tokens.length === 0) {
+		return [];
+	}
+
+	const likePatterns = new Set();
+	const regexPatterns = new Set();
+
+	tokens.forEach((token) => {
+		const digits = toDigits(token);
+		if (!token.includes('@') && digits.length >= MIN_DIGIT_TOKEN_LENGTH) {
+			regexPatterns.add(buildDigitRegex(digits));
+		}
+
+		if (token.length >= MIN_LIKE_TOKEN_LENGTH) {
+			likePatterns.add(escapeLikePattern(token));
+		}
+	});
+
+	const normalizedContact = typeof contact === 'string' ? contact.trim() : '';
+	if (normalizedContact) {
+		likePatterns.add(escapeLikePattern(normalizedContact));
+	}
+
+	const matchers = Array.from(likePatterns).map((pattern) => ({
+		contact: {
+			[Op.like]: `%${pattern}%`
+		}
+	}));
+
+	if (supportsRegexp()) {
+		regexPatterns.forEach((pattern) => {
+			matchers.push({
+				contact: {
+					[Op.regexp]: pattern
+				}
+			});
+		});
+	}
+
+	return matchers;
+};
+
 const toPlain = (modelInstance) => {
 	if (!modelInstance) {
 		return null;
@@ -74,7 +157,8 @@ const buildWhereClause = (filters = {}) => {
 	}
 	if (typeof ship === 'number') {
 		where.ship = ship;
-	} else if (typeof gender === 'number') {
+	}
+	if (typeof gender === 'number') {
 		where.gender = gender;
 	}
 	if (location) {
@@ -117,9 +201,22 @@ const findAndCountAll = async (filters, pagination) => {
 	})
 };
 
+const findContactsByFilters = async (filters = {}) => {
+	const where = buildWhereClause(filters);
+	const rows = await CurriculumVitaeModel.findAll({
+		attributes: ['contact'],
+		where,
+		raw: true,
+	});
+
+	return rows
+		.map((row) => row.contact)
+		.filter((contact) => typeof contact === 'string' && contact.trim().length > 0);
+};
+
 const create = async (payload) => {
-	const record = await CurriculumVitaeModel.create(payload);
-	return toPlain(record);
+        const record = await CurriculumVitaeModel.create(payload);
+        return toPlain(record);
 };
 
 const findById = async (id) => {
@@ -136,60 +233,233 @@ const updateById = async (id, payload) => {
 	return toPlain(record);
 };
 
-const updateShipByName = async (name, ship) => {
-        if (!name || typeof ship !== 'number') {
-                return 0;
+const updateShipByContact = async (contact, ship, name, options = {}) => {
+        if (typeof contact !== 'string' || contact.trim().length === 0 || typeof ship !== 'number') {
+                return {
+                        matchedCount: 0,
+                        affectedRows: 0,
+                        changedRecords: [],
+		};
+	}
+
+	const normalizedContact = contact.trim();
+	const trimmedName = typeof name === 'string' ? name.trim() : '';
+
+	const matchers = buildContactMatchers(normalizedContact);
+	if (matchers.length === 0) {
+		return {
+			matchedCount: 0,
+			affectedRows: 0,
+			changedRecords: [],
+		};
+	}
+
+        const existingRows = await CurriculumVitaeModel.findAll({
+                attributes: ['id', 'ship', 'name', 'allowSync'],
+                where: {
+                        [Op.or]: matchers,
+                },
+                raw: true,
+        });
+
+        const matchedCount = existingRows.length;
+        const updatableRows = existingRows.filter((row) => row.allowSync !== false);
+
+        if (matchedCount === 0 || updatableRows.length === 0) {
+                return {
+                        matchedCount,
+                        affectedRows: 0,
+                        changedRecords: [],
+                };
         }
 
-        const [affectedRows] = await CurriculumVitaeModel.update(
-                {ship},
-                {
-                        where: {
-                                name
-                        }
+        const normalizeShipValue = (value) => {
+                if (value === null || value === undefined) {
+                        return null;
                 }
-        );
 
-        return affectedRows;
+		if (typeof value === 'number') {
+			return value;
+		}
+
+		const numericValue = Number(value);
+		return Number.isNaN(numericValue) ? null : numericValue;
+	};
+
+        const rowsToUpdate = updatableRows.filter((row) => normalizeShipValue(row.ship) !== ship);
+        const requiresNameUpdate = Boolean(
+                trimmedName &&
+                updatableRows.some((row) => {
+                        if (typeof row.name !== 'string') {
+                                return true;
+                        }
+
+                        return row.name.trim() !== trimmedName;
+		})
+	);
+
+	const idsToUpdate = Array.from(
+		new Set([
+                        ...rowsToUpdate.map((row) => row.id),
+                        ...(requiresNameUpdate ? updatableRows.map((row) => row.id) : []),
+                ])
+        ).filter((id) => id !== undefined && id !== null);
+
+        if (idsToUpdate.length === 0) {
+                return {
+			matchedCount,
+			affectedRows: 0,
+			changedRecords: [],
+		};
+	}
+
+        const updatePayload = {ship};
+        if (trimmedName) {
+                updatePayload.name = trimmedName;
+        }
+
+        if (options.lockSync) {
+                updatePayload.allowSync = false;
+        }
+
+        const [affectedRows] = await CurriculumVitaeModel.update(updatePayload, {
+                where: {
+                        id: {
+                                [Op.in]: idsToUpdate,
+                        },
+                        allowSync: {
+                                [Op.ne]: false,
+                        },
+                },
+        });
+
+        const changedRecords = rowsToUpdate.map((row) => ({
+                id: row.id,
+		previousShip: normalizeShipValue(row.ship),
+	}));
+
+        return {
+                matchedCount,
+                affectedRows,
+                changedRecords,
+        };
+};
+
+const hasContactMatch = async (contact) => {
+        if (typeof contact !== 'string') {
+                return false;
+        }
+
+        const trimmed = contact.trim();
+        if (!trimmed) {
+                return false;
+        }
+
+        const matchers = buildContactMatchers(trimmed);
+        if (matchers.length === 0) {
+                return false;
+        }
+
+        const count = await CurriculumVitaeModel.count({
+                where: {
+                        [Op.or]: matchers,
+                },
+        });
+
+        return count > 0;
 };
 
 const SHIP_VALUES = [1, 2, 3, 4, 5, 6, 7, 8];
 
 const getShipCountsByPeriod = async (startDate, endDate) => {
-        const {sequelize} = CurriculumVitaeModel;
+	const {sequelize} = CurriculumVitaeModel;
 
-        const where = {
-                ship: {
-                        [Op.in]: SHIP_VALUES,
-                },
-        };
+	const where = {
+		ship: {
+			[Op.in]: SHIP_VALUES,
+		},
+	};
 
-        if (startDate || endDate) {
-                where.date = {};
+	if (startDate || endDate) {
+		where.date = {};
 
-                if (startDate) {
-                        where.date[Op.gte] = startDate;
-                }
+		if (startDate) {
+			where.date[Op.gte] = startDate;
+		}
 
-                if (endDate) {
-                        where.date[Op.lt] = endDate;
-                }
-        }
+		if (endDate) {
+			where.date[Op.lt] = endDate;
+		}
+	}
 
-        const rows = await CurriculumVitaeModel.findAll({
-                attributes: [
-                        'ship',
-                        [sequelize.fn('COUNT', sequelize.col('id')), 'count'],
-                ],
-                where,
-                group: ['ship'],
-                raw: true,
-        });
+	const rows = await CurriculumVitaeModel.findAll({
+		attributes: [
+			'ship',
+			[sequelize.fn('COUNT', sequelize.col('id')), 'count'],
+		],
+		where,
+		group: ['ship'],
+		raw: true,
+	});
 
-        return rows.map((row) => ({
-                ship: typeof row.ship === 'number' ? row.ship : Number(row.ship),
-                count: typeof row.count === 'number' ? row.count : Number(row.count),
-        }));
+	return rows.map((row) => ({
+		ship: typeof row.ship === 'number' ? row.ship : Number(row.ship),
+		count: typeof row.count === 'number' ? row.count : Number(row.count),
+	}));
+};
+
+const countByShipValues = async ({ships, startDate, endDate} = {}) => {
+	if (!Array.isArray(ships) || ships.length === 0) {
+		return new Map();
+	}
+
+	const normalizedShips = Array.from(
+		new Set(
+			ships
+				.map((ship) => Number(ship))
+				.filter((ship) => Number.isInteger(ship))
+		)
+	);
+
+	if (normalizedShips.length === 0) {
+		return new Map();
+	}
+
+	const {sequelize} = CurriculumVitaeModel;
+	const where = {
+		ship: {
+			[Op.in]: normalizedShips,
+		},
+	};
+
+	if (startDate || endDate) {
+		where.date = {};
+
+		if (startDate) {
+			where.date[Op.gte] = startDate;
+		}
+
+		if (endDate) {
+			where.date[Op.lt] = endDate;
+		}
+	}
+
+	const rows = await CurriculumVitaeModel.findAll({
+		attributes: [
+			'ship',
+			[sequelize.fn('COUNT', sequelize.col('id')), 'count'],
+		],
+		where,
+		group: ['ship'],
+		raw: true,
+	});
+
+	return new Map(
+		rows.map((row) => [
+			typeof row.ship === 'number' ? row.ship : Number(row.ship),
+			typeof row.count === 'number' ? row.count : Number(row.count),
+		])
+	);
 };
 
 const deleteById = async (id) => {
@@ -259,6 +529,9 @@ module.exports = {
         updateById,
         deleteById,
         getFilterOptions,
-        updateShipByName,
+        updateShipByContact,
+        hasContactMatch,
         getShipCountsByPeriod,
+        countByShipValues,
+        extractContactTokens,
 };

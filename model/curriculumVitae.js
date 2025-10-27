@@ -1,5 +1,5 @@
 const Sequelize = require('sequelize');
-const sequelize = require('./init');
+const sequelize = require('./bpmInit');
 
 const CurriculumVitaeModel = sequelize.define('curriculum_vitae', {
 	id: {
@@ -44,6 +44,13 @@ const CurriculumVitaeModel = sequelize.define('curriculum_vitae', {
 		defaultValue: null,
 		comment: '姓名',
 		field: 'name'
+	},
+	contact: {
+		type: Sequelize.STRING(255),
+		allowNull: true,
+		defaultValue: null,
+		comment: '联系方式',
+		field: 'contact'
 	},
 	latestCorp: {
 		type: Sequelize.STRING(255),
@@ -115,23 +122,30 @@ const CurriculumVitaeModel = sequelize.define('curriculum_vitae', {
 		comment: '文件大小',
 		field: 'filesize'
 	},
-	filepath: {
-		type: Sequelize.STRING(255),
-		allowNull: true,
-		defaultValue: null,
-		comment: '文件路径',
-		field: 'filepath'
-	},
-	ship: {
-		type: Sequelize.INTEGER,
-		allowNull: true,
-		defaultValue: null,
-		comment: '状态 1是淘汰, 2是进入面试 3是初面 ',
-		field: 'ship'
-	}
+        filepath: {
+                type: Sequelize.STRING(255),
+                allowNull: true,
+                defaultValue: null,
+                comment: '文件路径',
+                field: 'filepath'
+        },
+        ship: {
+                type: Sequelize.INTEGER,
+                allowNull: true,
+                defaultValue: null,
+                comment: '状态 1是淘汰, 2是进入面试 3是初面 ',
+                field: 'ship'
+        },
+        allowSync: {
+                type: Sequelize.BOOLEAN,
+                allowNull: false,
+                defaultValue: true,
+                comment: '是否允许同步',
+                field: 'allow_sync'
+        }
 }, {
-	tableName: 'curriculum_vitae',
-	timestamps: false
+        tableName: 'curriculum_vitae',
+        timestamps: false
 });
 
 module.exports = CurriculumVitaeModel;
