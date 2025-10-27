@@ -572,7 +572,6 @@ const syncOnboardingProcesses = async ({recruitmentContext, shipChangeStatistics
                                         reference: resolvedContact || null,
                                         recordedAt: entryDate || undefined,
                                         metadata,
-                                        allowSync: false,
                                 });
                         });
                 }
@@ -666,7 +665,6 @@ const syncOnboardingProcesses = async ({recruitmentContext, shipChangeStatistics
                                                         recruitmentJobTitle: candidateContext.jobTitle || null,
                                                         headcount,
                                                 },
-                                                allowSync: false,
                                         });
                                 });
                         }
