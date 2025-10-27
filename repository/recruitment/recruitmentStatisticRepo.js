@@ -54,7 +54,6 @@ const bulkInsertStatistics = async (records = []) => {
 
         const payload = records.map((record) => ({
                 ...record,
-                allowSync: record.allowSync === false ? false : true,
                 metadata: normalizeMetadata(record.metadata),
                 recordedAt: normalizeRecordedAt(record.recordedAt),
         }));

@@ -263,7 +263,22 @@ const updateShipByContact = async (contact, ship, name, options = {}) => {
         });
 
         const matchedCount = existingRows.length;
-        const updatableRows = existingRows.filter((row) => row.allowSync !== false);
+        const updatableRows = existingRows.filter((row) => {
+                const {allowSync} = row;
+                if (allowSync === undefined || allowSync === null) {
+                        return true;
+                }
+
+                if (typeof allowSync === 'number') {
+                        return allowSync !== 0;
+                }
+
+                if (typeof allowSync === 'string') {
+                        return allowSync !== '0';
+                }
+
+                return allowSync !== false;
+        });
 
         if (matchedCount === 0 || updatableRows.length === 0) {
                 return {
@@ -328,7 +343,7 @@ const updateShipByContact = async (contact, ship, name, options = {}) => {
                                 [Op.in]: idsToUpdate,
                         },
                         allowSync: {
-                                [Op.ne]: false,
+                                [Op.notIn]: [false, 0, '0'],
                         },
                 },
         });
