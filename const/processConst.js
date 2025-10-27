@@ -65,6 +65,10 @@ const dColumns = [
                 {header: '进行中', field: 'supplier_original_running', hasChild: false},
                 {header: '已完成', field: 'supplier_original_finish', hasChild: false},
             ]},
+            {header: '半原创', field: 'supplier_half_original', hasChild: true, children: [
+                {header: '进行中', field: 'supplier_half_original_running', hasChild: false},
+                {header: '已完成', field: 'supplier_half_original_finish', hasChild: false},
+            ]},
             {header: '非原创', field: 'supplier_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'supplier_unoriginal_running', hasChild: false},
                 {header: '已完成', field: 'supplier_unoriginal_finish', hasChild: false},
@@ -74,6 +78,10 @@ const dColumns = [
             {header: '原创', field: 'operator_original', hasChild: true, children: [
                 {header: '进行中', field: 'operator_original_running', hasChild: false},
                 {header: '已完成', field: 'operator_original_finish', hasChild: false},
+            ]},
+            {header: '半原创', field: 'operator_half_original', hasChild: true, children: [
+                {header: '进行中', field: 'operator_half_original_running', hasChild: false},
+                {header: '已完成', field: 'operator_half_original_finish', hasChild: false},
             ]},
             {header: '非原创', field: 'operator_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'operator_unoriginal_running', hasChild: false},
@@ -85,6 +93,10 @@ const dColumns = [
                 {header: '进行中', field: 'ip_original_running', hasChild: false},
                 {header: '已完成', field: 'ip_original_finish', hasChild: false},
             ]},
+            {header: '半原创', field: 'ip_half_original', hasChild: true, children: [
+                {header: '进行中', field: 'ip_half_original_running', hasChild: false},
+                {header: '已完成', field: 'ip_half_original_finish', hasChild: false},
+            ]},
             {header: '非原创', field: 'ip_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'ip_unoriginal_running', hasChild: false},
                 {header: '已完成', field: 'ip_unoriginal_finish', hasChild: false},
@@ -94,6 +106,10 @@ const dColumns = [
             {header: '原创', field: 'self_original', hasChild: true, children: [
                 {header: '进行中', field: 'self_original_running', hasChild: false},
                 {header: '已完成', field: 'self_original_finish', hasChild: false},
+            ]},
+            {header: '半原创', field: 'self_half_original', hasChild: true, children: [
+                {header: '进行中', field: 'self_half_original_running', hasChild: false},
+                {header: '已完成', field: 'self_half_original_finish', hasChild: false},
             ]},
             {header: '非原创', field: 'self_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'self_unoriginal_running', hasChild: false},
@@ -151,18 +167,22 @@ const rColumns = [
     {header: '视觉数量', field: 'vision', hasChild: true, children: [
         {header: '正推数量', field: 'vision_supplier', hasChild: true, children: [
             {header: '原创', field: 'original', hasChild: false},
+            {header: '半原创', field: 'half_original', hasChild: false},
             {header: '非原创', field: 'unoriginal', hasChild: false},
         ]},
         {header: '反推数量', field: 'vision_operator', hasChild: true, children: [
             {header: '原创', field: 'original', hasChild: false},
+            {header: '半原创', field: 'half_original', hasChild: false},
             {header: '非原创', field: 'unoriginal', hasChild: false},
         ]},
         {header: 'IP数量', field: 'vision_ip', hasChild: true, children: [
             {header: '原创', field: 'original', hasChild: false},
+            {header: '半原创', field: 'half_original', hasChild: false},
             {header: '非原创', field: 'unoriginal', hasChild: false},
         ]},
         {header: '自研数量', field: 'vision_self', hasChild: true, children: [
             {header: '原创', field: 'original', hasChild: false},
+            {header: '半原创', field: 'half_original', hasChild: false},
             {header: '非原创', field: 'unoriginal', hasChild: false},
         ]},
     ]},
