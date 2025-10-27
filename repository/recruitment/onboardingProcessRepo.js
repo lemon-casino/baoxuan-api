@@ -2,34 +2,23 @@ const {Op} = require('sequelize');
 const ProcessesModel = require('@/model/processes');
 const ProcessInfoModel = require('@/model/processInfo');
 
-const RECRUITMENT_PROCESS_CODE = 'zhaopin';
+const ONBOARDING_PROCESS_CODE = 'ruzhiliucheng';
 const FIELD_IDS = {
-        department: 'F8srmgrpj4r3aec',
-        jobTitle: 'Fpu4mgrpl5euahc',
-        headcount: 'Fddkmgu6wxplanc',
-        owner: 'Cfid8cdci83fu',
-        educationRequirement: 'F3j0mgu6x8nwaqc',
-        experienceRequirement: 'F7ajmgu6yh5fatc',
-        jobContent: 'Fxq6mgu6yofoawc',
-        candidateList: 'F01lmgt4hh6gazc',
+        status: 'Fp4bmgz1euzyabc',
+        candidateName: 'Fgmvmgu9a7wxcec',
+        entryDate: 'Fpd1mgu9b2s2ckc',
+        contact: 'F9x0mh1mieh3b1c',
 };
 
-if (!ProcessesModel.associations?.recruitmentFields) {
+if (!ProcessesModel.associations?.onboardingFields) {
         ProcessesModel.hasMany(ProcessInfoModel, {
-                as: 'recruitmentFields',
+                as: 'onboardingFields',
                 foreignKey: 'processId',
                 sourceKey: 'processId',
         });
 }
 
-if (!ProcessInfoModel.associations?.process) {
-        ProcessInfoModel.belongsTo(ProcessesModel, {
-                as: 'process',
-                foreignKey: 'processId',
-                targetKey: 'processId',
-        });
-}
-const pickRecruitmentFields = (fieldRows = []) => {
+const pickFieldMap = (fieldRows = []) => {
         const fieldMap = {};
         fieldRows.forEach((item) => {
                 if (!item) {
@@ -43,23 +32,23 @@ const pickRecruitmentFields = (fieldRows = []) => {
         return fieldMap;
 };
 
-const getRecruitmentProcesses = async () => {
+const getOnboardingProcesses = async () => {
         const rows = await ProcessesModel.findAll({
                 attributes: ['processId', 'processCode', 'version', 'status', 'startTime', 'endTime', 'title'],
                 where: {
-                        processCode: RECRUITMENT_PROCESS_CODE,
+                        processCode: ONBOARDING_PROCESS_CODE,
                 },
                 include: [
                         {
                                 model: ProcessInfoModel,
-                                as: 'recruitmentFields',
+                                as: 'onboardingFields',
                                 attributes: ['field', 'content'],
                                 where: {
                                         field: {
                                                 [Op.in]: Object.values(FIELD_IDS),
                                         },
                                 },
-                                required: true,
+                                required: false,
                         },
                 ],
                 order: [
@@ -70,10 +59,10 @@ const getRecruitmentProcesses = async () => {
 
         return rows.map((row) => {
                 const plain = row.get({plain: true});
-                const recruitmentFields = Array.isArray(plain.recruitmentFields)
-                        ? plain.recruitmentFields
-                        : [plain.recruitmentFields];
-                const fieldMap = pickRecruitmentFields(recruitmentFields);
+                const onboardingFields = Array.isArray(plain.onboardingFields)
+                        ? plain.onboardingFields
+                        : [plain.onboardingFields].filter(Boolean);
+                const fieldMap = pickFieldMap(onboardingFields);
 
                 return {
                         processId: plain.processId,
@@ -90,5 +79,5 @@ const getRecruitmentProcesses = async () => {
 
 module.exports = {
         FIELD_IDS,
-        getRecruitmentProcesses,
+        getOnboardingProcesses,
 };

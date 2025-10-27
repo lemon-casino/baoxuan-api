@@ -1,4 +1,10 @@
 const processRepo = require("@/repository/processRepo")
+const userRepo = require("@/repository/userRepo")
+const processConst = require('@/const/processConst')
+const { v4 } = require('uuid')
+const developmentProcessesRepo = require("@/repository/process/developmentProcessRepo")
+const actReProcdefRepo = require("@/repository/bpm/actReProcdefRepo")
+const commonReq = require('@/core/bpmReq/commonReq')
 
 const getLatestModifiedProcess = async () => {
     return await processRepo.getLatestModifiedProcess();
@@ -65,6 +71,62 @@ const getProcessMergeIdsData = async (dateType, nickname, startDate, endDate, is
     return number;
 }
 
+const getDevelopmentProcessTotal = async (type, startDate, endDate) => {
+    let result = {columns: [], data: []}
+    if (type == '0') {
+        result.columns = processConst.dColumns
+    } else {
+        result.columns = processConst.rColumns
+    }
+    return result
+}
+
+const getDevelopmentProcessList = async (type, column, startDate, endDate) => {
+    let result = {
+        columns: processConst.defaultColumns,
+        data: []
+    }
+    return result
+}
+
+const createDevelopmentProcess = async (params, dingding_id) => {
+    const user = await userRepo.getUserWithDeptByDingdingUserId(dingding_id)
+    let process_status = ''
+    switch(params.type) {
+        case processConst.typeList.SUPPLIER: 
+            process_status = '开发审核中'
+            break
+        case processConst.typeList.OPERATOR:
+            process_status = '开发审核中'
+            break
+        case processConst.typeList.IP:
+            process_status = '非京东分析中,京东分析中'
+            break
+        case processConst.typeList.SELF:
+            process_status = '非京东分析中,京东分析中'
+            break
+        default:
+    }
+    const uid = v4()
+    let result = await developmentProcessesRepo.insert([
+        uid, user.nickname, user.dept_name, params.type, params.name, params.categories, 
+        params.seasons, params.related, params.image, params.brief_name, params.purchase_type, 
+        params.supplier, params.supplier_type, params.product_info, params.product_type, 
+        params.patent_belongs, params.patent_type, params.sale_purpose, params.analysis, 
+        params.develop_type, params.analysis_name, params.project_type, params.design_type, 
+        params.exploitation_features, params.core_reasons, params.scheduler_arrived_time, 
+        params.scheduler_confirm_time, params.is_self, process_status
+    ])
+    if (result) {
+        let processDefinitionId = await actReProcdefRepo.getProcessDefinitionId(
+            processConst.analysisProcess.name,
+            processConst.analysisProcess.key
+        )
+        const info = await commonReq.createJDProcess({
+
+        })
+    }
+}
 
 module.exports = {
     getLatestModifiedProcess,
@@ -74,5 +136,8 @@ module.exports = {
     getProcessIdsData,
     getProcessIdsTmpData,
     getProcessMergeIdsData,
-    getProcessByProcessInstanceId
+    getProcessByProcessInstanceId,
+    getDevelopmentProcessTotal,
+    getDevelopmentProcessList,
+    createDevelopmentProcess
 }
