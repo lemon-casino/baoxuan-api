@@ -352,6 +352,7 @@ const importGoodsSku = async (rows) => {
     if (count > 0) {
         result = await goodsSkuRepo.batchInsert(data, count)
     }
+    let result1 = await goodsSkuRepo.updateskuonsaledate()
     return result
 }
 
