@@ -84,6 +84,13 @@ const RecruitmentStatisticModel = sequelize.define(
                         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
                         comment: '记录时间',
                 },
+                allowSync: {
+                        type: Sequelize.BOOLEAN,
+                        allowNull: false,
+                        defaultValue: true,
+                        field: 'allow_sync',
+                        comment: '是否允许同步',
+                },
         },
         {
                 tableName: 'recruitment_statistics',
