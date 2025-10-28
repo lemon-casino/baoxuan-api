@@ -80,6 +80,9 @@ const getDevelopmentProcessTotal = async (type, startDate, endDate) => {
         self: 0
     }
 
+    let operatorInquiryStats = {running: 0, success: 0, fail: 0}
+    let dailyInquiryStats = {running: 0, finish: 0}
+
     if (type === '0') {
         result.columns = processConst.dColumns
         const rows = await developmentProcessesRepo.countByType(startDate, endDate)
@@ -101,6 +104,9 @@ const getDevelopmentProcessTotal = async (type, startDate, endDate) => {
                 default:
             }
         })
+
+        operatorInquiryStats = await developmentProcessesRepo.countOperatorInquiryStats({ startDate, endDate })
+        dailyInquiryStats = await developmentProcessesRepo.countDailyInquiryStats({ startDate, endDate })
     } else {
         result.columns = processConst.rColumns
         const rows = await developmentProcessesRepo.countByTypeWithStatus([1])
@@ -122,12 +128,34 @@ const getDevelopmentProcessTotal = async (type, startDate, endDate) => {
                 default:
             }
         })
+
+        operatorInquiryStats = await developmentProcessesRepo.countOperatorInquiryStats({ statusFilter: [1] })
+        dailyInquiryStats = await developmentProcessesRepo.countDailyInquiryStats({ statusFilter: [1] })
     }
+
+    operatorInquiryStats = operatorInquiryStats || {running: 0, success: 0, fail: 0}
+    dailyInquiryStats = dailyInquiryStats || {running: 0, finish: 0}
+
+    const operatorInquiryTotal = type === '0'
+        ? operatorInquiryStats.running + operatorInquiryStats.success + operatorInquiryStats.fail
+        : operatorInquiryStats.running
+    const dailyInquiryTotal = type === '0'
+        ? dailyInquiryStats.running + dailyInquiryStats.finish
+        : dailyInquiryStats.running
+    const inquiryTotal = operatorInquiryTotal + dailyInquiryTotal
 
     const developmentTotal = counts.supplier + counts.operator + counts.ip + counts.self
     result.data = [{
         development: developmentTotal,
-        ...counts
+        ...counts,
+        inquiry: inquiryTotal,
+        inquiry_operator: operatorInquiryTotal,
+        enquiry: dailyInquiryTotal,
+        inquiry_running: operatorInquiryStats.running || 0,
+        inquiry_success: type === '0' ? operatorInquiryStats.success || 0 : 0,
+        inquiry_fail: type === '0' ? operatorInquiryStats.fail || 0 : 0,
+        enquiry_running: dailyInquiryStats.running || 0,
+        enquiry_finish: type === '0' ? dailyInquiryStats.finish || 0 : 0
     }]
 
     return result

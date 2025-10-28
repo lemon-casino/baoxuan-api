@@ -219,6 +219,14 @@ const typeList = {
 const analysisProcess = {
     name: '开发审核子流程',
     key: 'tpkfsh',
+    fieldMappings: {
+        uid: 'Fk0lmgyqg4d4abc', //推品ID
+    },
+    resultTitles: ['反推进度1', '反推进度2', '反推进度3', '寻源结果'],
+    resultContents: {
+        FOUND: '找到',
+        NOT_FOUND: '未找到',
+    },
     template: {
         SUPPLIER: {
             link: 'Fcbymgq06n79djc', //推品流程链接
@@ -303,10 +311,13 @@ const analysisProcess = {
     }
 }
 
+const dailyInquiryProcessCodes = ['scxjlc', 'rcxjlc', 'richangxunjia']
+
 module.exports = {
     dColumns,
     rColumns,
     defaultColumns,
     typeList,
-    analysisProcess
+    analysisProcess,
+    dailyInquiryProcessCodes
 }
