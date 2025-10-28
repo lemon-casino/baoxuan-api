@@ -72,12 +72,64 @@ const getProcessMergeIdsData = async (dateType, nickname, startDate, endDate, is
 }
 
 const getDevelopmentProcessTotal = async (type, startDate, endDate) => {
-    let result = {columns: [], data: []}
-    if (type == '0') {
+    const result = {columns: [], data: []}
+    const counts = {
+        supplier: 0,
+        operator: 0,
+        ip: 0,
+        self: 0
+    }
+
+    if (type === '0') {
         result.columns = processConst.dColumns
+        const rows = await developmentProcessesRepo.countByType(startDate, endDate)
+        rows && rows.forEach(row => {
+            const count = Number(row.count) || 0
+            switch (row.type) {
+                case processConst.typeList.SUPPLIER:
+                    counts.supplier = count
+                    break
+                case processConst.typeList.OPERATOR:
+                    counts.operator = count
+                    break
+                case processConst.typeList.IP:
+                    counts.ip = count
+                    break
+                case processConst.typeList.SELF:
+                    counts.self = count
+                    break
+                default:
+            }
+        })
     } else {
         result.columns = processConst.rColumns
+        const rows = await developmentProcessesRepo.countByTypeWithStatus([1])
+        rows && rows.forEach(row => {
+            const count = Number(row.count) || 0
+            switch (row.type) {
+                case processConst.typeList.SUPPLIER:
+                    counts.supplier = count
+                    break
+                case processConst.typeList.OPERATOR:
+                    counts.operator = count
+                    break
+                case processConst.typeList.IP:
+                    counts.ip = count
+                    break
+                case processConst.typeList.SELF:
+                    counts.self = count
+                    break
+                default:
+            }
+        })
     }
+
+    const developmentTotal = counts.supplier + counts.operator + counts.ip + counts.self
+    result.data = [{
+        development: developmentTotal,
+        ...counts
+    }]
+
     return result
 }
 
