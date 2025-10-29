@@ -64,7 +64,10 @@ const createEmptyStatisticRow = () => ({
     select_result: 0,
     select_running: 0,
     choose: 0,
-    unchoose: 0
+    unchoose: 0,
+    plan: 0,
+    plan_running: 0,
+    plan_finish: 0
 })
 
 /**
@@ -204,6 +207,20 @@ const applySelectionStats = (row, stats = {}, isRunningMode) => {
 }
 
 /**
+ * 写入方案环节的统计结果
+ * @param {object} row 统计结果行
+ * @param {object} stats 方案环节统计数据
+ * @param {boolean} isRunningMode 是否为待办模式
+ */
+const applyPlanStats = (row, stats = {}, isRunningMode) => {
+    const running = Number(stats.running) || 0
+    const finish = Number(stats.finish) || 0
+    row.plan_running = running
+    row.plan_finish = isRunningMode ? 0 : finish
+    row.plan = row.plan_running + row.plan_finish
+}
+
+/**
  * 汇总所有模块的统计结果并生成前端展示结构
  * @param {object} statistics 聚合后的所有统计数据
  * @param {boolean} isRunningMode 是否为待办模式
@@ -217,6 +234,7 @@ const transformStatistics = (statistics = {}, isRunningMode) => {
     applyDesignSupervisionStats(row, statistics.designSupervision, isRunningMode)
     applySampleDeliveryStats(row, statistics.sampleDelivery, isRunningMode)
     applySelectionStats(row, statistics.selection, isRunningMode)
+    applyPlanStats(row, statistics.plan, isRunningMode)
     row.development = row.supplier + row.operator + row.ip + row.self
     row.inquiry = row.inquiry_operator + row.enquiry
     row.design_supervision = row.design + row.supervision
@@ -257,20 +275,26 @@ const getStatisticsByType = async (type, startDate, endDate) => {
         isRunningMode ? undefined : startDate,
         isRunningMode ? undefined : endDate
     )
+    const planPromise = processesRepo.getPlanStats(
+        isRunningMode ? undefined : startDate,
+        isRunningMode ? undefined : endDate
+    )
     const [
         developmentTotals,
         operatorInquiry,
         dailyInquiry,
         designSupervision,
         sampleDelivery,
-        selection
+        selection,
+        plan
     ] = await Promise.all([
         developmentPromise,
         operatorPromise,
         dailyPromise,
         designPromise,
         samplePromise,
-        selectionPromise
+        selectionPromise,
+        planPromise
     ])
     return {
         isRunningMode,
@@ -279,7 +303,8 @@ const getStatisticsByType = async (type, startDate, endDate) => {
         dailyInquiry,
         designSupervision,
         sampleDelivery,
-        selection
+        selection,
+        plan
     }
 }
 

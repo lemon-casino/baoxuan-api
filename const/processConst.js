@@ -156,7 +156,9 @@ const rColumns = [
             {header: '进行中', field: 'select_running', hasChild: false},
         ]},
     ]},
-    {header: '方案数量', field: 'plan', hasChild: false},
+    {header: '方案数量', field: 'plan', hasChild: true, children: [
+        {header: '进行中', field: 'plan_running', hasChild: false},
+    ]},
     {header: '视觉数量', field: 'vision', hasChild: true, children: [
         {header: '正推数量', field: 'vision_supplier', hasChild: true, children: [
             {header: '原创', field: 'original', hasChild: false},
