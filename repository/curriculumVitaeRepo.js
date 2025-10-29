@@ -233,12 +233,12 @@ const updateById = async (id, payload) => {
 	return toPlain(record);
 };
 
-const updateShipByContact = async (contact, ship, name, options = {}) => {
+const updateShipByContact = async (contact, ship, name) => {
         if (typeof contact !== 'string' || contact.trim().length === 0 || typeof ship !== 'number') {
                 return {
-                        matchedCount: 0,
-                        affectedRows: 0,
-                        changedRecords: [],
+			matchedCount: 0,
+			affectedRows: 0,
+			changedRecords: [],
 		};
 	}
 
@@ -254,29 +254,28 @@ const updateShipByContact = async (contact, ship, name, options = {}) => {
 		};
 	}
 
-        const existingRows = await CurriculumVitaeModel.findAll({
-                attributes: ['id', 'ship', 'name', 'allowSync'],
-                where: {
-                        [Op.or]: matchers,
-                },
-                raw: true,
-        });
+	const existingRows = await CurriculumVitaeModel.findAll({
+		attributes: ['id', 'ship', 'name'],
+		where: {
+			[Op.or]: matchers,
+		},
+		raw: true,
+	});
 
-        const matchedCount = existingRows.length;
-        const updatableRows = existingRows.filter((row) => row.allowSync !== false);
+	const matchedCount = existingRows.length;
 
-        if (matchedCount === 0 || updatableRows.length === 0) {
-                return {
-                        matchedCount,
-                        affectedRows: 0,
-                        changedRecords: [],
-                };
-        }
+	if (matchedCount === 0) {
+		return {
+			matchedCount: 0,
+			affectedRows: 0,
+			changedRecords: [],
+		};
+	}
 
-        const normalizeShipValue = (value) => {
-                if (value === null || value === undefined) {
-                        return null;
-                }
+	const normalizeShipValue = (value) => {
+		if (value === null || value === undefined) {
+			return null;
+		}
 
 		if (typeof value === 'number') {
 			return value;
@@ -286,55 +285,48 @@ const updateShipByContact = async (contact, ship, name, options = {}) => {
 		return Number.isNaN(numericValue) ? null : numericValue;
 	};
 
-        const rowsToUpdate = updatableRows.filter((row) => normalizeShipValue(row.ship) !== ship);
-        const requiresNameUpdate = Boolean(
-                trimmedName &&
-                updatableRows.some((row) => {
-                        if (typeof row.name !== 'string') {
-                                return true;
-                        }
+	const rowsToUpdate = existingRows.filter((row) => normalizeShipValue(row.ship) !== ship);
+	const requiresNameUpdate = Boolean(
+		trimmedName &&
+		existingRows.some((row) => {
+			if (typeof row.name !== 'string') {
+				return true;
+			}
 
-                        return row.name.trim() !== trimmedName;
+			return row.name.trim() !== trimmedName;
 		})
 	);
 
 	const idsToUpdate = Array.from(
 		new Set([
-                        ...rowsToUpdate.map((row) => row.id),
-                        ...(requiresNameUpdate ? updatableRows.map((row) => row.id) : []),
-                ])
-        ).filter((id) => id !== undefined && id !== null);
+			...rowsToUpdate.map((row) => row.id),
+			...(requiresNameUpdate ? existingRows.map((row) => row.id) : []),
+		])
+	).filter((id) => id !== undefined && id !== null);
 
-        if (idsToUpdate.length === 0) {
-                return {
+	if (idsToUpdate.length === 0) {
+		return {
 			matchedCount,
 			affectedRows: 0,
 			changedRecords: [],
 		};
 	}
 
-        const updatePayload = {ship};
-        if (trimmedName) {
-                updatePayload.name = trimmedName;
-        }
+	const updatePayload = {ship};
+	if (trimmedName) {
+		updatePayload.name = trimmedName;
+	}
 
-        if (options.lockSync) {
-                updatePayload.allowSync = false;
-        }
+	const [affectedRows] = await CurriculumVitaeModel.update(updatePayload, {
+		where: {
+			id: {
+				[Op.in]: idsToUpdate,
+			},
+		},
+	});
 
-        const [affectedRows] = await CurriculumVitaeModel.update(updatePayload, {
-                where: {
-                        id: {
-                                [Op.in]: idsToUpdate,
-                        },
-                        allowSync: {
-                                [Op.ne]: false,
-                        },
-                },
-        });
-
-        const changedRecords = rowsToUpdate.map((row) => ({
-                id: row.id,
+	const changedRecords = rowsToUpdate.map((row) => ({
+		id: row.id,
 		previousShip: normalizeShipValue(row.ship),
 	}));
 

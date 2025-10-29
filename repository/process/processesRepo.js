@@ -1675,14 +1675,4 @@ processesRepo.getTmallInfo = async (start, end) => {
     return result || []
 }
 
-processesRepo.getDevelopmentProcessTotal = async (start, end) => {
-    const sql = ``
-    const result = await query(sql, [start, end])
-    return result || []
-}
-
-processesRepo.getDevelopmentProcessRunning = async (start, end) => {
-    
-}
-
 module.exports = processesRepo

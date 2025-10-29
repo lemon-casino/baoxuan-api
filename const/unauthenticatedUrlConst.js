@@ -64,5 +64,6 @@ module.exports = [
     '/flow/vision/detail',
     '/development/develop-process',
     '/operation/tmall-info',
+    '/process/development/info',
     /^\/download\/.*/,
 ]
