@@ -1675,23 +1675,42 @@ processesRepo.getTmallInfo = async (start, end) => {
     return result || []
 }
 
+const getDevelopmentProcessDateColumn = () => 'COALESCE(dp.start_time, dp.create_time)'
+
+const formatDateTimeParam = (value, fallbackTime) => {
+    if (!value) {
+        return value
+    }
+    if (/\d{2}:\d{2}/.test(value)) {
+        return value.replace('T', ' ').replace('Z', '').trim()
+    }
+    return `${value} ${fallbackTime}`
+}
+
+const appendDateCondition = (sql, params, start, end) => {
+    const column = getDevelopmentProcessDateColumn()
+    if (start && end) {
+        sql = `${sql}
+        WHERE ${column} BETWEEN ? AND ?`
+        params.push(formatDateTimeParam(start, '00:00:00'))
+        params.push(formatDateTimeParam(end, '23:59:59'))
+    } else if (start) {
+        sql = `${sql}
+        WHERE ${column} >= ?`
+        params.push(formatDateTimeParam(start, '00:00:00'))
+    } else if (end) {
+        sql = `${sql}
+        WHERE ${column} <= ?`
+        params.push(formatDateTimeParam(end, '23:59:59'))
+    }
+    return sql
+}
+
 processesRepo.getDevelopmentProcessTotal = async (start, end) => {
     let sql = `SELECT dp.type, COUNT(DISTINCT dp.uid) AS total
         FROM development_process dp`
     const params = []
-    if (start && end) {
-        sql = `${sql}
-        WHERE DATE(dp.start_time) BETWEEN ? AND ?`
-        params.push(start, end)
-    } else if (start) {
-        sql = `${sql}
-        WHERE DATE(dp.start_time) >= ?`
-        params.push(start)
-    } else if (end) {
-        sql = `${sql}
-        WHERE DATE(dp.start_time) <= ?`
-        params.push(end)
-    }
+    sql = appendDateCondition(sql, params, start, end)
     sql = `${sql}
         GROUP BY dp.type`
     const result = await query(sql, params)
