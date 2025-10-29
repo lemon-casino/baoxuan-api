@@ -53,7 +53,10 @@ const createEmptyStatisticRow = () => ({
     vision_finish: 0,
     product_supervision: 0,
     product_running: 0,
-    product_finish: 0
+    product_finish: 0,
+    send_sample: 0,
+    in_transit: 0,
+    receive: 0
 })
 
 /**
@@ -154,6 +157,20 @@ const applyDesignSupervisionStats = (row, stats = {}, isRunningMode) => {
 }
 
 /**
+ * 写入寄样环节的统计结果
+ * @param {object} row 统计结果行
+ * @param {object} stats 寄样环节统计数据
+ * @param {boolean} isRunningMode 是否为待办模式
+ */
+const applySampleDeliveryStats = (row, stats = {}, isRunningMode) => {
+    const inTransit = Number(stats.inTransit) || 0
+    const receive = Number(stats.receive) || 0
+    row.in_transit = inTransit
+    row.receive = isRunningMode ? 0 : receive
+    row.send_sample = row.in_transit + row.receive
+}
+
+/**
  * 汇总所有模块的统计结果并生成前端展示结构
  * @param {object} statistics 聚合后的所有统计数据
  * @param {boolean} isRunningMode 是否为待办模式
@@ -165,9 +182,11 @@ const transformStatistics = (statistics = {}, isRunningMode) => {
     applyOperatorInquiryStats(row, statistics.operatorInquiry, isRunningMode)
     applyDailyInquiryStats(row, statistics.dailyInquiry, isRunningMode)
     applyDesignSupervisionStats(row, statistics.designSupervision, isRunningMode)
+    applySampleDeliveryStats(row, statistics.sampleDelivery, isRunningMode)
     row.development = row.supplier + row.operator + row.ip + row.self
     row.inquiry = row.inquiry_operator + row.enquiry
     row.design_supervision = row.design + row.supervision
+    row.send_sample = row.in_transit + row.receive
     return [row]
 }
 
@@ -195,18 +214,30 @@ const getStatisticsByType = async (type, startDate, endDate) => {
         isRunningMode ? undefined : startDate,
         isRunningMode ? undefined : endDate
     )
-    const [developmentTotals, operatorInquiry, dailyInquiry, designSupervision] = await Promise.all([
+    const samplePromise = processesRepo.getSampleDeliveryStats(
+        isRunningMode ? undefined : startDate,
+        isRunningMode ? undefined : endDate
+    )
+    const [
+        developmentTotals,
+        operatorInquiry,
+        dailyInquiry,
+        designSupervision,
+        sampleDelivery
+    ] = await Promise.all([
         developmentPromise,
         operatorPromise,
         dailyPromise,
-        designPromise
+        designPromise,
+        samplePromise
     ])
     return {
         isRunningMode,
         developmentTotals,
         operatorInquiry,
         dailyInquiry,
-        designSupervision
+        designSupervision,
+        sampleDelivery
     }
 }
 

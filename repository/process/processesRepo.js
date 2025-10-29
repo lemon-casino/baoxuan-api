@@ -1797,6 +1797,7 @@ const DESIGN_SUPERVISION_TITLE = ['IP设计监修']
 const SAMPLE_SUPERVISION_TITLE = ['设计报样品IP监修']
 const VISION_SUPERVISION_TITLE = ['开始视觉监修']
 const PRODUCT_SUPERVISION_TITLE = ['设计报大货设计监修']
+const SAMPLE_DELIVERY_TITLE = ['确认到货']
 const YANGPIN_PROCESS_CODES = ['yangpinqueren']
 const DELIVERY_PROCESS_CODES = ['jingdongdhlc', 'kjdinghuo']
 
@@ -1836,6 +1837,23 @@ processesRepo.getDesignSupervisionStats = async (start, end) => {
         sample: { running: sampleRunning, finish: sampleFinish },
         vision: { running: visionRunning, finish: visionFinish },
         product: { running: productRunning, finish: productFinish }
+    }
+}
+
+/**
+ * 统计寄样环节在途与签收数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<{inTransit: number, receive: number}>}
+ */
+processesRepo.getSampleDeliveryStats = async (start, end) => {
+    const [inTransit, receive] = await Promise.all([
+        countDevelopmentByTaskStatus(YANGPIN_PROCESS_CODES, SAMPLE_DELIVERY_TITLE, 1, start, end),
+        countDevelopmentByTaskStatus(YANGPIN_PROCESS_CODES, SAMPLE_DELIVERY_TITLE, 2, start, end)
+    ])
+    return {
+        inTransit,
+        receive
     }
 }
 
