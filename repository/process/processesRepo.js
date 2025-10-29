@@ -1675,14 +1675,58 @@ processesRepo.getTmallInfo = async (start, end) => {
     return result || []
 }
 
+const getDevelopmentProcessDateColumn = () => 'COALESCE(dp.create_time, dp.create_time)'
+
+const formatDateTimeParam = (value, fallbackTime) => {
+    if (!value) return value
+
+    // 简化处理逻辑
+    if (value.includes('T')) {
+        return value.replace('T', ' ').replace('Z', '').trim()
+    }
+    // 确保日期格式正确
+    return `${value.trim()} ${fallbackTime}`
+}
+
+const appendDateCondition = (sql, params, start, end) => {
+    const column = getDevelopmentProcessDateColumn()
+    if (start && end) {
+        sql = `${sql}
+        WHERE ${column} BETWEEN ? AND ?`
+        params.push(formatDateTimeParam(start, '00:00:00'))
+        params.push(formatDateTimeParam(end, '23:59:59'))
+    } else if (start) {
+        sql = `${sql}
+        WHERE ${column} >= ?`
+        params.push(formatDateTimeParam(start, '00:00:00'))
+    } else if (end) {
+        sql = `${sql}
+        WHERE ${column} <= ?`
+        params.push(formatDateTimeParam(end, '23:59:59'))
+    }
+    console.log(sql)
+    return sql
+}
+
 processesRepo.getDevelopmentProcessTotal = async (start, end) => {
-    const sql = ``
-    const result = await query(sql, [start, end])
+    let sql = `SELECT dp.type, COUNT(DISTINCT dp.uid) AS total
+        FROM development_process dp`
+    const params = []
+    sql = appendDateCondition(sql, params, start, end)
+    sql = `${sql}
+        GROUP BY dp.type`
+    const result = await query(sql, params)
     return result || []
 }
 
-processesRepo.getDevelopmentProcessRunning = async (start, end) => {
-    
+processesRepo.getDevelopmentProcessRunning = async () => {
+    const sql = `SELECT dp.type, COUNT(DISTINCT dp.uid) AS total
+        FROM development_process dp
+        JOIN process_info pi ON pi.field = 'Fk0lmgyqg4d4abc' AND pi.content = dp.uid
+        JOIN processes p ON p.process_id = pi.process_id AND p.status = 1
+        GROUP BY dp.type`
+    const result = await query(sql)
+    return result || []
 }
 
 module.exports = processesRepo
