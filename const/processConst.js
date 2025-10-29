@@ -145,7 +145,9 @@ const rColumns = [
             {header: '大货监修', field: 'product_supervision', hasChild: false},
         ]},
     ]},
-    {header: '寄样数量', field: 'send_sample', hasChild: false},
+    {header: '寄样数量', field: 'send_sample', hasChild: true, children: [
+        {header: '在途', field: 'in_transit', hasChild: false},
+    ]},
     {header: '选品数量', field: 'select', hasChild: false},
     {header: '方案数量', field: 'plan', hasChild: false},
     {header: '视觉数量', field: 'vision', hasChild: true, children: [
