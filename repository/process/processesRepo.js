@@ -1675,17 +1675,17 @@ processesRepo.getTmallInfo = async (start, end) => {
     return result || []
 }
 
-const getDevelopmentProcessDateColumn = () => 'COALESCE(dp.create_time, dp.create_time)'
+const getDevelopmentProcessDateColumn = () => 'COALESCE(NULLIF(dp.start_time, ""), dp.create_time)'
 
 const formatDateTimeParam = (value, fallbackTime) => {
-    if (!value) return value
-
-    // 简化处理逻辑
-    if (value.includes('T')) {
-        return value.replace('T', ' ').replace('Z', '').trim()
+    if (!value) {
+        return value
     }
-    // 确保日期格式正确
-    return `${value.trim()} ${fallbackTime}`
+    const normalized = value.trim().replace('T', ' ').replace(/Z$/i, '')
+    if (/\d{2}:\d{2}/.test(normalized)) {
+        return normalized
+    }
+    return `${normalized} ${fallbackTime}`
 }
 
 const appendDateCondition = (sql, params, start, end) => {
@@ -1704,7 +1704,6 @@ const appendDateCondition = (sql, params, start, end) => {
         WHERE ${column} <= ?`
         params.push(formatDateTimeParam(end, '23:59:59'))
     }
-    console.log(sql)
     return sql
 }
 
