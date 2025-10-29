@@ -1675,16 +1675,17 @@ processesRepo.getTmallInfo = async (start, end) => {
     return result || []
 }
 
-const getDevelopmentProcessDateColumn = () => 'COALESCE(dp.start_time, dp.create_time)'
+const getDevelopmentProcessDateColumn = () => 'COALESCE(NULLIF(dp.start_time, ""), dp.create_time)'
 
 const formatDateTimeParam = (value, fallbackTime) => {
     if (!value) {
         return value
     }
-    if (/\d{2}:\d{2}/.test(value)) {
-        return value.replace('T', ' ').replace('Z', '').trim()
+    const normalized = value.trim().replace('T', ' ').replace(/Z$/i, '')
+    if (/\d{2}:\d{2}/.test(normalized)) {
+        return normalized
     }
-    return `${value} ${fallbackTime}`
+    return `${normalized} ${fallbackTime}`
 }
 
 const appendDateCondition = (sql, params, start, end) => {
