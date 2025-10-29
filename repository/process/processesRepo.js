@@ -1704,6 +1704,31 @@ const appendDateRangeClauses = (clauses, params, column, start, end) => {
 
 const extractCount = (rows) => Number(rows && rows[0] && rows[0].total) || 0
 
+const toArray = (value) => (Array.isArray(value) ? value : [value])
+
+const buildInPlaceholders = (values) => values.map(() => '?').join(', ')
+
+const countDevelopmentByTaskStatus = async (processCodes, taskTitles, statuses, start, end) => {
+    const codes = toArray(processCodes)
+    const titles = toArray(taskTitles)
+    const statusList = toArray(statuses)
+    const params = [...codes, ...titles, ...statusList]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        `pt.title IN (${buildInPlaceholders(titles)})`,
+        `pt.status IN (${buildInPlaceholders(statusList)})`
+    ]
+    appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    const sql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        FROM development_process dp
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        JOIN process_tasks pt ON pt.process_id = p.process_id
+        WHERE ${conditions.join(' AND ')}`
+    const result = await query(sql, params)
+    return extractCount(result)
+}
+
 processesRepo.getDevelopmentProcessTotal = async (start, end) => {
     const params = []
     const clauses = []
@@ -1764,6 +1789,53 @@ processesRepo.getOperatorInquiryStats = async (start, end) => {
         running: extractCount(runningResult),
         success: extractCount(successResult),
         fail: extractCount(failResult)
+    }
+}
+
+const DESIGN_UPLOAD_TITLES = ['北京上传设计草图', '杭州上传设计草图']
+const DESIGN_SUPERVISION_TITLE = ['IP设计监修']
+const SAMPLE_SUPERVISION_TITLE = ['设计报样品IP监修']
+const VISION_SUPERVISION_TITLE = ['开始视觉监修']
+const PRODUCT_SUPERVISION_TITLE = ['设计报大货设计监修']
+const YANGPIN_PROCESS_CODES = ['yangpinqueren']
+const DELIVERY_PROCESS_CODES = ['jingdongdhlc', 'kjdinghuo']
+
+/**
+ * 统计设计监修各阶段的数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<object>} 设计与监修阶段数量
+ */
+processesRepo.getDesignSupervisionStats = async (start, end) => {
+    const [
+        designRunning,
+        designFinish,
+        sketchRunning,
+        sketchFinish,
+        sampleRunning,
+        sampleFinish,
+        visionRunning,
+        visionFinish,
+        productRunning,
+        productFinish
+    ] = await Promise.all([
+        countDevelopmentByTaskStatus(YANGPIN_PROCESS_CODES, DESIGN_UPLOAD_TITLES, 1, start, end),
+        countDevelopmentByTaskStatus(YANGPIN_PROCESS_CODES, DESIGN_UPLOAD_TITLES, [2, 3], start, end),
+        countDevelopmentByTaskStatus(YANGPIN_PROCESS_CODES, DESIGN_SUPERVISION_TITLE, 1, start, end),
+        countDevelopmentByTaskStatus(YANGPIN_PROCESS_CODES, DESIGN_SUPERVISION_TITLE, [2, 3], start, end),
+        countDevelopmentByTaskStatus(DELIVERY_PROCESS_CODES, SAMPLE_SUPERVISION_TITLE, 1, start, end),
+        countDevelopmentByTaskStatus(DELIVERY_PROCESS_CODES, SAMPLE_SUPERVISION_TITLE, [2, 3], start, end),
+        countDevelopmentByTaskStatus(DELIVERY_PROCESS_CODES, VISION_SUPERVISION_TITLE, 1, start, end),
+        countDevelopmentByTaskStatus(DELIVERY_PROCESS_CODES, VISION_SUPERVISION_TITLE, [2, 3], start, end),
+        countDevelopmentByTaskStatus(DELIVERY_PROCESS_CODES, PRODUCT_SUPERVISION_TITLE, 1, start, end),
+        countDevelopmentByTaskStatus(DELIVERY_PROCESS_CODES, PRODUCT_SUPERVISION_TITLE, [2, 3], start, end)
+    ])
+    return {
+        design: { running: designRunning, finish: designFinish },
+        sketch: { running: sketchRunning, finish: sketchFinish },
+        sample: { running: sampleRunning, finish: sampleFinish },
+        vision: { running: visionRunning, finish: visionFinish },
+        product: { running: productRunning, finish: productFinish }
     }
 }
 
