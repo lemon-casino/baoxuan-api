@@ -3,6 +3,7 @@ const { getOrderByShopId } = require('../../core/jstReq/inReq')
 const outOrderRepo = require('../../repository/jst/outOrderRepo')
 const outSubOrderRepo = require('../../repository/jst/outSubOrderRepo')
 const goodsSkuRepo = require('../../repository/jst/goodsSkuRepo')
+const goodsInventoryRepo = require('../../repository/jst/goodsInventoryRepo')
 const moment = require('moment')
 const purchaseRepo = require('@/repository/jst/purchaseRepo')
 const returnRepo = require('@/repository/jst/returnRepo')
@@ -555,11 +556,56 @@ const importOriSkuInfo = async (rows) => {
     return result
 }
 
+const importGoodsInventory = async (rows,time) => {
+    let count = 0, data = [], result = false
+    let columns = rows[0].values,
+        sku_code_row = null, 
+        transit_row = null, 
+        orders_num_row = null,
+        main_inventory_row = null,
+        stock_num_row = null,
+        date = time
+    for (let i = 1; i <= columns.length; i++) {
+        if (columns[i] == '商品编码') {sku_code_row = i; continue}
+        if (columns[i] == '采购在途') {transit_row = i; continue}
+        if (columns[i] == '订单占有数') {orders_num_row = i; continue}
+        if (columns[i] == '主仓实际库存') {main_inventory_row = i; continue}
+        if (columns[i] == '进货仓库存') {stock_num_row = i; continue}
+    }
+    for (let i = 1; i < rows.length; i++) {
+        let sku_code = typeof(rows[i].getCell(sku_code_row).value) == 'string' ? 
+            rows[i].getCell(sku_code_row).value.trim().replace(/_x([0-9A-F]{4})_/g, (m, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+          }) : 
+            rows[i].getCell(sku_code_row).value
+        let transit = rows[i].getCell(transit_row).value
+        let orders_num = rows[i].getCell(orders_num_row).value
+        let main_inventory = rows[i].getCell(main_inventory_row).value
+        let stock_num = rows[i].getCell(stock_num_row).value
+        data.push(
+            sku_code, 
+            transit,
+            orders_num,
+            main_inventory,
+            stock_num,
+            date
+        )
+        count += 1
+    }
+    logger.info(`[商品主题分析库存导入]`)
+    if (count > 0) {
+        await goodsInventoryRepo.delete(date)
+        result = await goodsInventoryRepo.batchInsert(data, count)
+    }
+    return result
+}
+
 module.exports = {
     syncOrder,
     getSaleStats,
     importGoodsSku,
     importPurchaseInfo,
     importOriSkuInfo,
-    importPurchaseReturn
+    importPurchaseReturn,
+    importGoodsInventory
 }
