@@ -11,6 +11,7 @@ const systemUsersRepo = require("@/repository/bpm/systemUsersRepo")
 const processesRepo = require("@/repository/process/processesRepo")
 const processTasksRepo = require("@/repository/process/processTasksRepo")
 const moment = require('moment')
+const developmentTotalService = require('@/service/process/developmentTotalService')
 
 const getLatestModifiedProcess = async () => {
     return await processRepo.getLatestModifiedProcess();
@@ -78,21 +79,15 @@ const getProcessMergeIdsData = async (dateType, nickname, startDate, endDate, is
 }
 
 const getDevelopmentProcessTotal = async (type, startDate, endDate) => {
-    let result = {columns: [], data: []}
-    if (type == '0') {
-        result.columns = processConst.dColumns
-    } else {
-        result.columns = processConst.rColumns
-    }
-    return result
+    return await developmentTotalService.getDevelopmentProcessTotal(type, startDate, endDate)
 }
 
 const getDevelopmentProcessList = async (type, column, startDate, endDate) => {
-    let result = {
+
+    return {
         columns: processConst.defaultColumns,
         data: []
     }
-    return result
 }
 
 const robotStartProcess = async (name, key, variables) => {

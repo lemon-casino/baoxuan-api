@@ -75,6 +75,8 @@ const getProcessMergeIdsData = async (req, res, next) => {
 const getDevelopmentProcessTotal = async (req, res, next) => {
     try {
         const {type, startDate, endDate} = req.query
+        console.log(startDate,
+        endDate)
         joiUtil.validate({
             type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}
         })
