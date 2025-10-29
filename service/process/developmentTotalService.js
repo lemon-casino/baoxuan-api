@@ -25,6 +25,7 @@ const getColumnsByQueryType = (type) => {
  */
 const createEmptyStatisticRow = () => ({
     development: 0,
+    inquiry: 0,
     supplier: 0,
     operator: 0,
     ip: 0,
@@ -106,6 +107,7 @@ const transformStatistics = (statistics = {}, isRunningMode) => {
     applyOperatorInquiryStats(row, statistics.operatorInquiry, isRunningMode)
     applyDailyInquiryStats(row, statistics.dailyInquiry, isRunningMode)
     row.development = row.supplier + row.operator + row.ip + row.self
+    row.inquiry = row.inquiry_operator + row.enquiry
     return [row]
 }
 
