@@ -1729,6 +1729,24 @@ const countDevelopmentByTaskStatus = async (processCodes, taskTitles, statuses, 
     return extractCount(result)
 }
 
+const countDevelopmentByProcessStatus = async (processCodes, statuses, start, end) => {
+    const codes = toArray(processCodes)
+    const statusList = toArray(statuses)
+    const params = [...codes, ...statusList]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        `p.status IN (${buildInPlaceholders(statusList)})`
+    ]
+    appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    const sql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        FROM development_process dp
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        WHERE ${conditions.join(' AND ')}`
+    const result = await query(sql, params)
+    return extractCount(result)
+}
+
 processesRepo.getDevelopmentProcessTotal = async (start, end) => {
     const params = []
     const clauses = []
@@ -1800,6 +1818,7 @@ const PRODUCT_SUPERVISION_TITLE = ['设计报大货设计监修']
 const SAMPLE_DELIVERY_TITLE = ['确认到货']
 const YANGPIN_PROCESS_CODES = ['yangpinqueren']
 const DELIVERY_PROCESS_CODES = ['jingdongdhlc', 'kjdinghuo']
+const PLAN_PROCESS_CODES = ['baokuanliuchengxb_copyceshi']
 const SELECTION_PROCESS_CODES = ['jingdongdandulc', 'syybyycl']
 const MARKET_ANALYSIS_TITLES = ['运营1上传市场分析', '运营2上传市场分析', '运营上传市场分析']
 const SELECTION_REVIEW_TITLES = ['负责人审核', '事业一部负责人审核', '事业二部负责人审核', '事业三部负责人审核']
@@ -1866,6 +1885,21 @@ processesRepo.getSampleDeliveryStats = async (start, end) => {
     return {
         inTransit,
         receive
+    }
+}
+
+/**
+ * 统计方案流程在不同状态下的数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<{running: number, finish: number}>}
+ */
+processesRepo.getPlanStats = async (start, end) => {
+    const running = await countDevelopmentByProcessStatus(PLAN_PROCESS_CODES, 1, start, end)
+    const finish = await countDevelopmentByProcessStatus(PLAN_PROCESS_CODES, [2, 3, 4], start, end)
+    return {
+        running,
+        finish
     }
 }
 
