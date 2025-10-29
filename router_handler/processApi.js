@@ -109,10 +109,10 @@ const createDevelopmentProcess = async (req, res, next) => {
         joiUtil.validate({
             type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
             name: {value: name, schema: joiUtil.commonJoiSchemas.strRequired},
-            categories: {value: categories, schema: joiUtil.commonJoiSchemas.strRequired},
+            categories: {value: categories, schema: joiUtil.commonJoiSchemas.arrayRequired},
             seasons: {value: seasons, schema: joiUtil.commonJoiSchemas.strRequired},
             related: {value: related, schema: joiUtil.commonJoiSchemas.strRequired},
-            image: {value: image, schema: joiUtil.commonJoiSchemas.strRequired}
+            image: {value: image, schema: joiUtil.commonJoiSchemas.arrayRequired}
         })
         const result = await processService.createDevelopmentProcess(req.body, req.user.userId)
         return res.send(biResponse.success(result))

@@ -415,6 +415,31 @@ const getRealProject = (deptName) => {
     return ''
 }
 
+const getProjectInfo = (deptName) => {
+    if (deptName.indexOf('猫超') != -1) {
+        return '刘海涛事业部-天猫超市'
+    } else if (deptName.indexOf('拼多多') != -1) {
+        return '刘海涛事业部-拼多多'
+    } else if (deptName.indexOf('跨境') != -1) {
+        return '刘海涛事业部-coupang'
+    } else if (deptName.indexOf('天猫') != -1) {
+        return '王洪彬事业部-天猫'
+    } else if (deptName.indexOf('小红书') != -1) {
+        return '王洪彬事业部-天猫垂类店、小红书'
+    } else if (deptName.indexOf('国货') != -1) {
+        return '王洪彬事业部-淘工厂'
+    } else if (deptName.indexOf('京东') != -1) {
+        return '陆瑶事业部-京东'
+    } else if (deptName.indexOf('1688') != -1) {
+        return '陆瑶事业部-1688'
+    } else if (deptName.indexOf('抖音') != -1) {
+        return '陆瑶事业部-抖音、快手'
+    } else if (deptName.indexOf('唯品会') != -1) {
+        return '陆瑶事业部-得物、唯品会'
+    }
+    return ''
+}
+
 module.exports = {
     getDepartments,
     getDepartmentsOfUser,
@@ -430,5 +455,6 @@ module.exports = {
     hasMatchedDeptName,
     getAllUsers,
     getRealDepartment,
-    getRealProject
+    getRealProject,
+    getProjectInfo
 }
