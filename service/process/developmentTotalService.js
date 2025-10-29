@@ -36,7 +36,24 @@ const createEmptyStatisticRow = () => ({
     inquiry_fail: 0,
     enquiry: 0,
     enquiry_running: 0,
-    enquiry_finish: 0
+    enquiry_finish: 0,
+    design_supervision: 0,
+    design: 0,
+    design_running: 0,
+    design_finish: 0,
+    supervision: 0,
+    sketch_supervision: 0,
+    sketch_running: 0,
+    sketch_finish: 0,
+    sample_supervision: 0,
+    sample_running: 0,
+    sample_finish: 0,
+    vision_supervision: 0,
+    vision_running: 0,
+    vision_finish: 0,
+    product_supervision: 0,
+    product_running: 0,
+    product_finish: 0
 })
 
 /**
@@ -96,6 +113,47 @@ const applyDailyInquiryStats = (row, stats = {}, isRunningMode) => {
 }
 
 /**
+ * 写入设计监修阶段的统计结果
+ * @param {object} row 统计结果行
+ * @param {object} stats 设计监修统计数据
+ * @param {boolean} isRunningMode 是否为待办模式
+ */
+const applyDesignSupervisionStats = (row, stats = {}, isRunningMode) => {
+    const normalizeCounts = (key) => {
+        const data = stats[key] || {}
+        const running = Number(data.running) || 0
+        const finish = Number(data.finish) || 0
+        return {
+            running,
+            finish: isRunningMode ? 0 : finish
+        }
+    }
+
+    const designCounts = normalizeCounts('design')
+    row.design_running = designCounts.running
+    row.design_finish = designCounts.finish
+    row.design = row.design_running + row.design_finish
+
+    const supervisionConfigs = [
+        { key: 'sketch', prefix: 'sketch', field: 'sketch_supervision' },
+        { key: 'sample', prefix: 'sample', field: 'sample_supervision' },
+        { key: 'vision', prefix: 'vision', field: 'vision_supervision' },
+        { key: 'product', prefix: 'product', field: 'product_supervision' }
+    ]
+
+    let supervisionTotal = 0
+    supervisionConfigs.forEach(({ key, prefix, field }) => {
+        const counts = normalizeCounts(key)
+        row[`${prefix}_running`] = counts.running
+        row[`${prefix}_finish`] = counts.finish
+        row[field] = counts.running + counts.finish
+        supervisionTotal += row[field]
+    })
+
+    row.supervision = supervisionTotal
+}
+
+/**
  * 汇总所有模块的统计结果并生成前端展示结构
  * @param {object} statistics 聚合后的所有统计数据
  * @param {boolean} isRunningMode 是否为待办模式
@@ -106,8 +164,10 @@ const transformStatistics = (statistics = {}, isRunningMode) => {
     applyDevelopmentTotals(row, statistics.developmentTotals || [])
     applyOperatorInquiryStats(row, statistics.operatorInquiry, isRunningMode)
     applyDailyInquiryStats(row, statistics.dailyInquiry, isRunningMode)
+    applyDesignSupervisionStats(row, statistics.designSupervision, isRunningMode)
     row.development = row.supplier + row.operator + row.ip + row.self
     row.inquiry = row.inquiry_operator + row.enquiry
+    row.design_supervision = row.design + row.supervision
     return [row]
 }
 
@@ -131,16 +191,22 @@ const getStatisticsByType = async (type, startDate, endDate) => {
         isRunningMode ? undefined : startDate,
         isRunningMode ? undefined : endDate
     )
-    const [developmentTotals, operatorInquiry, dailyInquiry] = await Promise.all([
+    const designPromise = processesRepo.getDesignSupervisionStats(
+        isRunningMode ? undefined : startDate,
+        isRunningMode ? undefined : endDate
+    )
+    const [developmentTotals, operatorInquiry, dailyInquiry, designSupervision] = await Promise.all([
         developmentPromise,
         operatorPromise,
-        dailyPromise
+        dailyPromise,
+        designPromise
     ])
     return {
         isRunningMode,
         developmentTotals,
         operatorInquiry,
-        dailyInquiry
+        dailyInquiry,
+        designSupervision
     }
 }
 
