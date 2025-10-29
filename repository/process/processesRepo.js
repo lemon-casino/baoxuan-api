@@ -1675,7 +1675,7 @@ processesRepo.getTmallInfo = async (start, end) => {
     return result || []
 }
 
-const getDevelopmentProcessDateColumn = () => 'COALESCE(NULLIF(dp.start_time, ""), dp.create_time)'
+const getDevelopmentProcessDateColumn = () => 'dp.create_time'
 
 const formatDateTimeParam = (value, fallbackTime) => {
     if (!value) {
@@ -1688,31 +1688,30 @@ const formatDateTimeParam = (value, fallbackTime) => {
     return `${normalized} ${fallbackTime}`
 }
 
-const appendDateCondition = (sql, params, start, end) => {
-    const column = getDevelopmentProcessDateColumn()
+const appendDateRangeClauses = (clauses, params, column, start, end) => {
     if (start && end) {
-        sql = `${sql}
-        WHERE ${column} BETWEEN ? AND ?`
+        clauses.push(`${column} BETWEEN ? AND ?`)
         params.push(formatDateTimeParam(start, '00:00:00'))
         params.push(formatDateTimeParam(end, '23:59:59'))
     } else if (start) {
-        sql = `${sql}
-        WHERE ${column} >= ?`
+        clauses.push(`${column} >= ?`)
         params.push(formatDateTimeParam(start, '00:00:00'))
     } else if (end) {
-        sql = `${sql}
-        WHERE ${column} <= ?`
+        clauses.push(`${column} <= ?`)
         params.push(formatDateTimeParam(end, '23:59:59'))
     }
-    return sql
 }
 
+const extractCount = (rows) => Number(rows && rows[0] && rows[0].total) || 0
+
 processesRepo.getDevelopmentProcessTotal = async (start, end) => {
-    let sql = `SELECT dp.type, COUNT(DISTINCT dp.uid) AS total
-        FROM development_process dp`
     const params = []
-    sql = appendDateCondition(sql, params, start, end)
-    sql = `${sql}
+    const clauses = []
+    appendDateRangeClauses(clauses, params, getDevelopmentProcessDateColumn(), start, end)
+    const whereClause = clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''
+    const sql = `SELECT dp.type, COUNT(DISTINCT dp.uid) AS total
+        FROM development_process dp
+        ${whereClause}
         GROUP BY dp.type`
     const result = await query(sql, params)
     return result || []
@@ -1726,6 +1725,70 @@ processesRepo.getDevelopmentProcessRunning = async () => {
         GROUP BY dp.type`
     const result = await query(sql)
     return result || []
+}
+
+/**
+ * 统计反推询价在不同状态下的数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<{running: number, success: number, fail: number}>}
+ */
+processesRepo.getOperatorInquiryStats = async (start, end) => {
+    const params = []
+    const dateClauses = []
+    appendDateRangeClauses(dateClauses, params, 'dp.create_time', start, end)
+    const dateCondition = dateClauses.length ? ` AND ${dateClauses.join(' AND ')}` : ''
+    const baseJoin = `FROM development_process dp
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id`
+    const baseWhere = `dp.type = '反推推品' AND p.process_code = 'tpkfsh'`
+    const runningSql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        ${baseJoin}
+        WHERE ${baseWhere} AND p.status = 1${dateCondition}`
+    const runningResult = await query(runningSql, params.slice())
+    const successSql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        ${baseJoin}
+        LEFT JOIN process_info pi_success ON pi_success.process_id = p.process_id
+            AND pi_success.title IN ('反推进度1', '反推进度2', '反推进度3', '寻源结果')
+            AND pi_success.content = '找到'
+        WHERE ${baseWhere} AND p.status = 2${dateCondition} AND pi_success.id IS NOT NULL`
+    const successResult = await query(successSql, params.slice())
+    const failSql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        ${baseJoin}
+        LEFT JOIN process_info pi_success ON pi_success.process_id = p.process_id
+            AND pi_success.title IN ('反推进度1', '反推进度2', '反推进度3', '寻源结果')
+            AND pi_success.content = '找到'
+        WHERE ${baseWhere} AND p.status = 2${dateCondition} AND pi_success.id IS NULL`
+    const failResult = await query(failSql, params.slice())
+    return {
+        running: extractCount(runningResult),
+        success: extractCount(successResult),
+        fail: extractCount(failResult)
+    }
+}
+
+/**
+ * 统计日常询价在不同状态下的数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<{running: number, finish: number}>}
+ */
+processesRepo.getDailyInquiryStats = async (start, end) => {
+    const conditions = ["p.process_code = 'cpxjsq'"]
+    const params = []
+    appendDateRangeClauses(conditions, params, 'p.start_time', start, end)
+    const runningSql = `SELECT COUNT(DISTINCT p.process_id) AS total
+        FROM processes p
+        WHERE ${conditions.concat('p.status = 1').join(' AND ')}`
+    const runningResult = await query(runningSql, params.slice())
+    const finishSql = `SELECT COUNT(DISTINCT p.process_id) AS total
+        FROM processes p
+        WHERE ${conditions.concat('p.status IN (2,3,4)').join(' AND ')}`
+    const finishResult = await query(finishSql, params.slice())
+    return {
+        running: extractCount(runningResult),
+        finish: extractCount(finishResult)
+    }
 }
 
 module.exports = processesRepo

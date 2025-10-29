@@ -25,27 +25,89 @@ const getColumnsByQueryType = (type) => {
  */
 const createEmptyStatisticRow = () => ({
     development: 0,
+    inquiry: 0,
     supplier: 0,
     operator: 0,
     ip: 0,
-    self: 0
+    self: 0,
+    inquiry_operator: 0,
+    inquiry_running: 0,
+    inquiry_success: 0,
+    inquiry_fail: 0,
+    enquiry: 0,
+    enquiry_running: 0,
+    enquiry_finish: 0
 })
 
 /**
- * 将数据库返回的原始统计数据转换为前端所需结构
- * @param {Array<object>} statistics 原始统计数据
- * @returns {Array<object>} 转换后的表格数据
+ * 写入发起数量的基础统计数据
+ * @param {object} row 统计结果行
+ * @param {Array<object>} totals 开发类型聚合结果
  */
-const transformStatistics = (statistics = []) => {
-    const row = createEmptyStatisticRow()
-    statistics.forEach((item) => {
+const applyDevelopmentTotals = (row, totals = []) => {
+    totals.forEach((item) => {
         const field = TYPE_FIELD_MAP[item?.type]
         if (!field) {
             return
         }
         row[field] = Number(item.total) || 0
     })
+}
+
+/**
+ * 写入询价环节中反推数量的统计结果
+ * @param {object} row 统计结果行
+ * @param {object} stats 反推询价统计数据
+ * @param {boolean} isRunningMode 是否为待办模式
+ */
+const applyOperatorInquiryStats = (row, stats = {}, isRunningMode) => {
+    const running = Number(stats.running) || 0
+    const success = Number(stats.success) || 0
+    const fail = Number(stats.fail) || 0
+    row.inquiry_running = running
+    if (isRunningMode) {
+        row.inquiry_success = 0
+        row.inquiry_fail = 0
+        row.inquiry_operator = running
+        return
+    }
+    row.inquiry_success = success
+    row.inquiry_fail = fail
+    row.inquiry_operator = running + success + fail
+}
+
+/**
+ * 写入询价环节中日常询价的统计结果
+ * @param {object} row 统计结果行
+ * @param {object} stats 日常询价统计数据
+ * @param {boolean} isRunningMode 是否为待办模式
+ */
+const applyDailyInquiryStats = (row, stats = {}, isRunningMode) => {
+    const running = Number(stats.running) || 0
+    const finish = Number(stats.finish) || 0
+    row.enquiry_running = running
+    if (isRunningMode) {
+        row.enquiry_finish = 0
+        row.enquiry = running
+        return
+    }
+    row.enquiry_finish = finish
+    row.enquiry = running + finish
+}
+
+/**
+ * 汇总所有模块的统计结果并生成前端展示结构
+ * @param {object} statistics 聚合后的所有统计数据
+ * @param {boolean} isRunningMode 是否为待办模式
+ * @returns {Array<object>} 表格数据
+ */
+const transformStatistics = (statistics = {}, isRunningMode) => {
+    const row = createEmptyStatisticRow()
+    applyDevelopmentTotals(row, statistics.developmentTotals || [])
+    applyOperatorInquiryStats(row, statistics.operatorInquiry, isRunningMode)
+    applyDailyInquiryStats(row, statistics.dailyInquiry, isRunningMode)
     row.development = row.supplier + row.operator + row.ip + row.self
+    row.inquiry = row.inquiry_operator + row.enquiry
     return [row]
 }
 
@@ -54,13 +116,32 @@ const transformStatistics = (statistics = []) => {
  * @param {string} type 查询模式，0 表示发起模式，1 表示待办模式
  * @param {string|undefined} startDate 开始日期
  * @param {string|undefined} endDate 结束日期
- * @returns {Promise<Array<object>>} 数据库统计结果
+ * @returns {Promise<object>} 聚合后的多维统计结果
  */
 const getStatisticsByType = async (type, startDate, endDate) => {
-    if (type === '1') {
-        return await processesRepo.getDevelopmentProcessRunning()
+    const isRunningMode = type === '1'
+    const developmentPromise = isRunningMode
+        ? processesRepo.getDevelopmentProcessRunning()
+        : processesRepo.getDevelopmentProcessTotal(startDate, endDate)
+    const operatorPromise = processesRepo.getOperatorInquiryStats(
+        isRunningMode ? undefined : startDate,
+        isRunningMode ? undefined : endDate
+    )
+    const dailyPromise = processesRepo.getDailyInquiryStats(
+        isRunningMode ? undefined : startDate,
+        isRunningMode ? undefined : endDate
+    )
+    const [developmentTotals, operatorInquiry, dailyInquiry] = await Promise.all([
+        developmentPromise,
+        operatorPromise,
+        dailyPromise
+    ])
+    return {
+        isRunningMode,
+        developmentTotals,
+        operatorInquiry,
+        dailyInquiry
     }
-    return await processesRepo.getDevelopmentProcessTotal(startDate, endDate)
 }
 
 /**
@@ -72,10 +153,8 @@ const getStatisticsByType = async (type, startDate, endDate) => {
  */
 const getDevelopmentProcessTotal = async (type, startDate, endDate) => {
     const columns = getColumnsByQueryType(type)
-    const statistics = await getStatisticsByType(type, startDate, endDate)
-    console.log('getDevelopmentProcessTotal', statistics)
-    const data = transformStatistics(statistics)
-    console.log(data)
+    const { isRunningMode, ...statistics } = await getStatisticsByType(type, startDate, endDate)
+    const data = transformStatistics(statistics, isRunningMode)
     return { columns, data }
 }
 
