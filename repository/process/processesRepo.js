@@ -1685,4 +1685,12 @@ processesRepo.getDevelopmentProcessRunning = async (start, end) => {
     
 }
 
+processesRepo.getProcessByUid = async (uid, key) => {
+    const sql = `SELECT p.* FROM development_process d LEFT JOIN process_info pi ON d.uid = pi.content 
+            AND pi.title = '推品ID' LEFT JOIN processes p ON p.process_id = pi.process_id 
+        WHERE d.uid = ? AND p.process_code = ?`
+    const result = await query(sql, [uid, key])
+    return result || []
+}
+
 module.exports = processesRepo
