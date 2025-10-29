@@ -1676,13 +1676,36 @@ processesRepo.getTmallInfo = async (start, end) => {
 }
 
 processesRepo.getDevelopmentProcessTotal = async (start, end) => {
-    const sql = ``
-    const result = await query(sql, [start, end])
+    let sql = `SELECT dp.type, COUNT(DISTINCT dp.uid) AS total
+        FROM development_process dp`
+    const params = []
+    if (start && end) {
+        sql = `${sql}
+        WHERE DATE(dp.start_time) BETWEEN ? AND ?`
+        params.push(start, end)
+    } else if (start) {
+        sql = `${sql}
+        WHERE DATE(dp.start_time) >= ?`
+        params.push(start)
+    } else if (end) {
+        sql = `${sql}
+        WHERE DATE(dp.start_time) <= ?`
+        params.push(end)
+    }
+    sql = `${sql}
+        GROUP BY dp.type`
+    const result = await query(sql, params)
     return result || []
 }
 
-processesRepo.getDevelopmentProcessRunning = async (start, end) => {
-    
+processesRepo.getDevelopmentProcessRunning = async () => {
+    const sql = `SELECT dp.type, COUNT(DISTINCT dp.uid) AS total
+        FROM development_process dp
+        JOIN process_info pi ON pi.field = 'Fk0lmgyqg4d4abc' AND pi.content = dp.uid
+        JOIN processes p ON p.process_id = pi.process_id AND p.status = 1
+        GROUP BY dp.type`
+    const result = await query(sql)
+    return result || []
 }
 
 module.exports = processesRepo
