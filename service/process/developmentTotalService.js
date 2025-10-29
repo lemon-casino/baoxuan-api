@@ -56,7 +56,15 @@ const createEmptyStatisticRow = () => ({
     product_finish: 0,
     send_sample: 0,
     in_transit: 0,
-    receive: 0
+    receive: 0,
+    select: 0,
+    analysis: 0,
+    analysis_running: 0,
+    analysis_finish: 0,
+    select_result: 0,
+    select_running: 0,
+    choose: 0,
+    unchoose: 0
 })
 
 /**
@@ -171,6 +179,31 @@ const applySampleDeliveryStats = (row, stats = {}, isRunningMode) => {
 }
 
 /**
+ * 写入选品环节的统计结果
+ * @param {object} row 统计结果行
+ * @param {object} stats 选品环节统计数据
+ * @param {boolean} isRunningMode 是否为待办模式
+ */
+const applySelectionStats = (row, stats = {}, isRunningMode) => {
+    const analysisStats = stats.analysis || {}
+    const resultStats = stats.result || {}
+
+    const analysisRunning = Number(analysisStats.running) || 0
+    const analysisFinish = Number(analysisStats.finish) || 0
+    row.analysis_running = analysisRunning
+    row.analysis_finish = isRunningMode ? 0 : analysisFinish
+    row.analysis = row.analysis_running + row.analysis_finish
+
+    const selectRunning = Number(resultStats.running) || 0
+    const choose = Number(resultStats.choose) || 0
+    const unchoose = Number(resultStats.unchoose) || 0
+    row.select_running = selectRunning
+    row.choose = isRunningMode ? 0 : choose
+    row.unchoose = isRunningMode ? 0 : unchoose
+    row.select_result = row.select_running + row.choose + row.unchoose
+}
+
+/**
  * 汇总所有模块的统计结果并生成前端展示结构
  * @param {object} statistics 聚合后的所有统计数据
  * @param {boolean} isRunningMode 是否为待办模式
@@ -183,10 +216,12 @@ const transformStatistics = (statistics = {}, isRunningMode) => {
     applyDailyInquiryStats(row, statistics.dailyInquiry, isRunningMode)
     applyDesignSupervisionStats(row, statistics.designSupervision, isRunningMode)
     applySampleDeliveryStats(row, statistics.sampleDelivery, isRunningMode)
+    applySelectionStats(row, statistics.selection, isRunningMode)
     row.development = row.supplier + row.operator + row.ip + row.self
     row.inquiry = row.inquiry_operator + row.enquiry
     row.design_supervision = row.design + row.supervision
     row.send_sample = row.in_transit + row.receive
+    row.select = row.analysis + row.select_result
     return [row]
 }
 
@@ -218,18 +253,24 @@ const getStatisticsByType = async (type, startDate, endDate) => {
         isRunningMode ? undefined : startDate,
         isRunningMode ? undefined : endDate
     )
+    const selectionPromise = processesRepo.getSelectionStats(
+        isRunningMode ? undefined : startDate,
+        isRunningMode ? undefined : endDate
+    )
     const [
         developmentTotals,
         operatorInquiry,
         dailyInquiry,
         designSupervision,
-        sampleDelivery
+        sampleDelivery,
+        selection
     ] = await Promise.all([
         developmentPromise,
         operatorPromise,
         dailyPromise,
         designPromise,
-        samplePromise
+        samplePromise,
+        selectionPromise
     ])
     return {
         isRunningMode,
@@ -237,7 +278,8 @@ const getStatisticsByType = async (type, startDate, endDate) => {
         operatorInquiry,
         dailyInquiry,
         designSupervision,
-        sampleDelivery
+        sampleDelivery,
+        selection
     }
 }
 
