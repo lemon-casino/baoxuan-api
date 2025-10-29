@@ -1797,8 +1797,21 @@ const DESIGN_SUPERVISION_TITLE = ['IP设计监修']
 const SAMPLE_SUPERVISION_TITLE = ['设计报样品IP监修']
 const VISION_SUPERVISION_TITLE = ['开始视觉监修']
 const PRODUCT_SUPERVISION_TITLE = ['设计报大货设计监修']
+const SAMPLE_DELIVERY_TITLE = ['确认到货']
 const YANGPIN_PROCESS_CODES = ['yangpinqueren']
 const DELIVERY_PROCESS_CODES = ['jingdongdhlc', 'kjdinghuo']
+const SELECTION_PROCESS_CODES = ['jingdongdandulc', 'syybyycl']
+const MARKET_ANALYSIS_TITLES = ['运营1上传市场分析', '运营2上传市场分析', '运营上传市场分析']
+const SELECTION_REVIEW_TITLES = ['负责人审核', '事业一部负责人审核', '事业二部负责人审核', '事业三部负责人审核']
+const SELECTION_RESULT_TITLES = ['京东是否选中', '事业一部是否选中', '事业二部是否选中', '事业三部是否选中']
+const SELECTION_VALUE_CHOOSE = '选中'
+const SELECTION_VALUE_UNCHOOSE = '未选中'
+
+const escapeSingleQuote = (value = '') => String(value).replace(/'/g, "''")
+
+const formatTitleList = (titles) => titles.map((title) => `'${escapeSingleQuote(title)}'`).join(', ')
+
+const SELECTION_TITLE_SQL = formatTitleList(SELECTION_RESULT_TITLES)
 
 /**
  * 统计设计监修各阶段的数量
@@ -1836,6 +1849,122 @@ processesRepo.getDesignSupervisionStats = async (start, end) => {
         sample: { running: sampleRunning, finish: sampleFinish },
         vision: { running: visionRunning, finish: visionFinish },
         product: { running: productRunning, finish: productFinish }
+    }
+}
+
+/**
+ * 统计寄样环节在途与签收数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<{inTransit: number, receive: number}>}
+ */
+processesRepo.getSampleDeliveryStats = async (start, end) => {
+    const [inTransit, receive] = await Promise.all([
+        countDevelopmentByTaskStatus(YANGPIN_PROCESS_CODES, SAMPLE_DELIVERY_TITLE, 1, start, end),
+        countDevelopmentByTaskStatus(YANGPIN_PROCESS_CODES, SAMPLE_DELIVERY_TITLE, 2, start, end)
+    ])
+    return {
+        inTransit,
+        receive
+    }
+}
+
+const buildSelectionBase = (statuses) => {
+    const codes = toArray(SELECTION_PROCESS_CODES)
+    const titles = toArray(SELECTION_REVIEW_TITLES)
+    const statusList = toArray(statuses)
+    const params = [...codes, ...titles, ...statusList]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        `pt.title IN (${buildInPlaceholders(titles)})`,
+        `pt.status IN (${buildInPlaceholders(statusList)})`
+    ]
+    return { params, conditions }
+}
+
+const appendSelectionConditions = (conditions, params, start, end) => {
+    appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+}
+
+const buildSelectionQuery = (conditions) => `SELECT COUNT(DISTINCT dp.uid) AS total
+    FROM development_process dp
+    JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+    JOIN processes p ON p.process_id = pi_id.process_id
+    JOIN process_tasks pt ON pt.process_id = p.process_id
+    WHERE ${conditions.join(' AND ')}`
+
+const addSelectionExistsClauses = (conditions, params, { requireChoose, requireUnchoose, excludeChoose }) => {
+    if (excludeChoose) {
+        conditions.push(`NOT EXISTS (SELECT 1 FROM process_info pi_sel WHERE pi_sel.process_id = p.process_id
+            AND pi_sel.title IN (${SELECTION_TITLE_SQL}) AND pi_sel.content = ?)`)
+        params.push(SELECTION_VALUE_CHOOSE)
+    }
+    if (requireChoose) {
+        conditions.push(`EXISTS (SELECT 1 FROM process_info pi_sel WHERE pi_sel.process_id = p.process_id
+            AND pi_sel.title IN (${SELECTION_TITLE_SQL}) AND pi_sel.content = ?)`)
+        params.push(SELECTION_VALUE_CHOOSE)
+    }
+    if (requireUnchoose) {
+        conditions.push(`EXISTS (SELECT 1 FROM process_info pi_sel WHERE pi_sel.process_id = p.process_id
+            AND pi_sel.title IN (${SELECTION_TITLE_SQL}) AND pi_sel.content = ?)`)
+        params.push(SELECTION_VALUE_UNCHOOSE)
+    }
+}
+
+/**
+ * 统计选品审核节点在指定状态下的推品数量
+ * @param {number|Array<number>} statuses 需要统计的任务状态
+ * @param {object} options 附加筛选条件
+ * @param {boolean} [options.requireChoose] 是否要求存在选中结果
+ * @param {boolean} [options.requireUnchoose] 是否要求存在未选中结果
+ * @param {boolean} [options.excludeChoose] 是否排除已选中结果
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<number>} 满足条件的推品数量
+ */
+const countSelectionReview = async (statuses, options = {}, start, end) => {
+    const { params, conditions } = buildSelectionBase(statuses)
+    appendSelectionConditions(conditions, params, start, end)
+    addSelectionExistsClauses(conditions, params, options)
+    const sql = buildSelectionQuery(conditions)
+    const result = await query(sql, params)
+    return extractCount(result)
+}
+
+/**
+ * 统计选品环节的市场分析与选中结果数据
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<object>} 选品阶段的统计结果
+ */
+processesRepo.getSelectionStats = async (start, end) => {
+    const analysisRunning = await countDevelopmentByTaskStatus(
+        SELECTION_PROCESS_CODES,
+        MARKET_ANALYSIS_TITLES,
+        1,
+        start,
+        end
+    )
+    const analysisFinish = await countDevelopmentByTaskStatus(
+        SELECTION_PROCESS_CODES,
+        MARKET_ANALYSIS_TITLES,
+        [2, 3],
+        start,
+        end
+    )
+    const selectRunning = await countSelectionReview(1, { excludeChoose: true }, start, end)
+    const choose = await countSelectionReview([2, 3], { requireChoose: true }, start, end)
+    const unchoose = await countSelectionReview([2, 3], { requireUnchoose: true, excludeChoose: true }, start, end)
+    return {
+        analysis: {
+            running: analysisRunning,
+            finish: analysisFinish
+        },
+        result: {
+            running: selectRunning,
+            choose,
+            unchoose
+        }
     }
 }
 
