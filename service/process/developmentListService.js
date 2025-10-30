@@ -44,7 +44,7 @@ const queryDevelopmentList = async (isRunningMode, developmentType, startDate, e
  * @returns {Promise<{columns: Array<object>, data: Array<object>}>} 列配置与数据
  */
 const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
-    const columns = defaultColumns
+    const columns = defaultColumns.map((column) => ({ ...column }))
     const developmentType = resolveDevelopmentType(field)
     if (!developmentType) {
         return { columns, data: [] }

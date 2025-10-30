@@ -1765,7 +1765,8 @@ processesRepo.getDevelopmentProcessTotal = async (start, end) => {
 processesRepo.getDevelopmentProcessRunning = async () => {
     const sql = `SELECT dp.type, COUNT(DISTINCT dp.uid) AS total
         FROM development_process dp
-        JOIN process_info pi ON pi.field = '${DEVELOPMENT_UID_FIELD}' AND pi.content = dp.uid
+        JOIN process_info pi ON pi.content = dp.uid
+            AND (pi.field = '${DEVELOPMENT_UID_FIELD}' OR pi.title = '推品ID')
         JOIN processes p ON p.process_id = pi.process_id AND p.status = 1
         GROUP BY dp.type`
     const result = await query(sql)
@@ -1781,7 +1782,7 @@ const DEVELOPMENT_LIST_SELECT = `SELECT DATE_FORMAT(dp.create_time, '%Y-%m-%d') 
     FROM development_process dp`
 
 const appendRunningJoins = (joins) => {
-    joins.push(`JOIN process_info pi ON pi.field = '${DEVELOPMENT_UID_FIELD}' AND pi.content = dp.uid`)
+    joins.push(`JOIN process_info pi ON pi.content = dp.uid AND (pi.field = '${DEVELOPMENT_UID_FIELD}' OR pi.title = '推品ID')`)
     joins.push('JOIN processes p ON p.process_id = pi.process_id')
 }
 
