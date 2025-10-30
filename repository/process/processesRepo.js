@@ -1825,6 +1825,8 @@ const SELECTION_REVIEW_TITLES = ['负责人审核', '事业一部负责人审核
 const SELECTION_RESULT_TITLES = ['京东是否选中', '事业一部是否选中', '事业二部是否选中', '事业三部是否选中']
 const SELECTION_VALUE_CHOOSE = '选中'
 const SELECTION_VALUE_UNCHOOSE = '未选中'
+const ORDER_TASK_TITLES = ['采购审批', '审批合同', '代发确认']
+const WAREHOUSING_TASK_TITLES = ['周转确认到仓', '仓库质检并确认样品与大货一致']
 
 const escapeSingleQuote = (value = '') => String(value).replace(/'/g, "''")
 
@@ -1900,6 +1902,66 @@ processesRepo.getPlanStats = async (start, end) => {
     return {
         running,
         finish
+    }
+}
+
+const buildPurchaseQuery = (taskTitles, { finished }, start, end) => {
+    const codes = toArray(DELIVERY_PROCESS_CODES)
+    const tasks = toArray(taskTitles)
+    const params = [...codes]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        'p.status = 1'
+    ]
+    appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    const taskPlaceholders = buildInPlaceholders(tasks)
+    if (finished) {
+        conditions.push(`EXISTS (SELECT 1 FROM process_tasks pt_done WHERE pt_done.process_id = p.process_id
+            AND pt_done.title IN (${taskPlaceholders}) AND pt_done.status = 2)`)
+        params.push(...tasks)
+    } else {
+        conditions.push(`EXISTS (SELECT 1 FROM process_tasks pt_active WHERE pt_active.process_id = p.process_id
+            AND pt_active.title IN (${taskPlaceholders}) AND IFNULL(pt_active.status, 0) <> 2)`)
+        params.push(...tasks)
+        conditions.push(`NOT EXISTS (SELECT 1 FROM process_tasks pt_finish WHERE pt_finish.process_id = p.process_id
+            AND pt_finish.title IN (${taskPlaceholders}) AND pt_finish.status = 2)`)
+        params.push(...tasks)
+    }
+    const sql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        FROM development_process dp
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        WHERE ${conditions.join(' AND ')}`
+    return { sql, params }
+}
+
+const countPurchaseProgress = async (taskTitles, options, start, end) => {
+    const { sql, params } = buildPurchaseQuery(taskTitles, options, start, end)
+    const result = await query(sql, params)
+    return extractCount(result)
+}
+
+/**
+ * 统计采购环节的订货与仓库到货数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<object>} 采购统计数据
+ */
+processesRepo.getPurchaseStats = async (start, end) => {
+    const [
+        orderRunning,
+        orderFinish,
+        warehousingRunning,
+        warehousingFinish
+    ] = await Promise.all([
+        countPurchaseProgress(ORDER_TASK_TITLES, { finished: false }, start, end),
+        countPurchaseProgress(ORDER_TASK_TITLES, { finished: true }, start, end),
+        countPurchaseProgress(WAREHOUSING_TASK_TITLES, { finished: false }, start, end),
+        countPurchaseProgress(WAREHOUSING_TASK_TITLES, { finished: true }, start, end)
+    ])
+    return {
+        order: { running: orderRunning, finish: orderFinish },
+        warehousing: { running: warehousingRunning, finish: warehousingFinish }
     }
 }
 
