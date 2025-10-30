@@ -178,13 +178,19 @@ const rColumns = [
         ]},
     ]},
     {header: '采购数量', field: 'purchase', hasChild: true, children: [
-        {header: '订货', field: 'order', hasChild: false},
-        {header: '仓库到货', field: 'warehousing', hasChild: false}
+        {header: '订货', field: 'order', hasChild: true, children: [
+            {header: '进行中', field: 'order_running', hasChild: false},
+        ]},
+        {header: '仓库到货', field: 'warehousing', hasChild: true, children: [
+            {header: '进行中', field: 'warehousing_running', hasChild: false},
+        ]}
     ]},
     {header: '上架数量', field: 'shelf', hasChild: true, children: [
-        {header: '事业1部', field: 'division1', hasChild: false},
-        {header: '事业2部', field: 'division2', hasChild: false},
-        {header: '事业3部', field: 'division3', hasChild: false},
+        {header: '未上架', field: 'unshelf', hasChild: true, children: [
+            {header: '事业1部', field: 'unshelf_division1', hasChild: false},
+            {header: '事业2部', field: 'unshelf_division2', hasChild: false},
+            {header: '事业3部', field: 'unshelf_division3', hasChild: false},
+        ]},
     ]},
 ]
 

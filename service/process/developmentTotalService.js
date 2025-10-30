@@ -67,7 +67,23 @@ const createEmptyStatisticRow = () => ({
     unchoose: 0,
     plan: 0,
     plan_running: 0,
-    plan_finish: 0
+    plan_finish: 0,
+    purchase: 0,
+    order: 0,
+    order_running: 0,
+    order_finish: 0,
+    warehousing: 0,
+    warehousing_running: 0,
+    warehousing_finish: 0,
+    shelf: 0,
+    unshelf: 0,
+    unshelf_division1: 0,
+    unshelf_division2: 0,
+    unshelf_division3: 0,
+    shelfed: 0,
+    shelfed_division1: 0,
+    shelfed_division2: 0,
+    shelfed_division3: 0
 })
 
 /**
@@ -221,6 +237,65 @@ const applyPlanStats = (row, stats = {}, isRunningMode) => {
 }
 
 /**
+ * 写入采购环节的统计结果
+ * @param {object} row 统计结果行
+ * @param {object} stats 采购环节统计数据
+ * @param {boolean} isRunningMode 是否为待办模式
+ */
+const applyPurchaseStats = (row, stats = {}, isRunningMode) => {
+    const normalize = (key) => {
+        const data = stats[key] || {}
+        const running = Number(data.running) || 0
+        const finish = Number(data.finish) || 0
+        return {
+            running,
+            finish: isRunningMode ? 0 : finish
+        }
+    }
+
+    const orderStats = normalize('order')
+    row.order_running = orderStats.running
+    row.order_finish = orderStats.finish
+    row.order = row.order_running + row.order_finish
+
+    const warehousingStats = normalize('warehousing')
+    row.warehousing_running = warehousingStats.running
+    row.warehousing_finish = warehousingStats.finish
+    row.warehousing = row.warehousing_running + row.warehousing_finish
+
+    row.purchase = row.order + row.warehousing
+}
+
+/**
+ * 写入上架环节的统计结果
+ * @param {object} row 统计结果行
+ * @param {object} stats 上架环节统计数据
+ * @param {boolean} isRunningMode 是否为待办模式
+ */
+const applyShelfStats = (row, stats = {}, isRunningMode) => {
+    const divisions = ['division1', 'division2', 'division3']
+    const assignGroup = (prefix, group = {}, allowValues = true) => {
+        let total = 0
+        divisions.forEach((key) => {
+            const field = `${prefix}_${key}`
+            const value = allowValues ? Number(group[key]) || 0 : 0
+            row[field] = value
+            total += value
+        })
+        row[prefix] = total
+        return total
+    }
+
+    assignGroup('unshelf', stats.unshelf)
+    if (isRunningMode) {
+        assignGroup('shelfed', {}, false)
+    } else {
+        assignGroup('shelfed', stats.shelfed)
+    }
+    row.shelf = row.unshelf + row.shelfed
+}
+
+/**
  * 汇总所有模块的统计结果并生成前端展示结构
  * @param {object} statistics 聚合后的所有统计数据
  * @param {boolean} isRunningMode 是否为待办模式
@@ -235,11 +310,15 @@ const transformStatistics = (statistics = {}, isRunningMode) => {
     applySampleDeliveryStats(row, statistics.sampleDelivery, isRunningMode)
     applySelectionStats(row, statistics.selection, isRunningMode)
     applyPlanStats(row, statistics.plan, isRunningMode)
+    applyPurchaseStats(row, statistics.purchase, isRunningMode)
+    applyShelfStats(row, statistics.shelf, isRunningMode)
     row.development = row.supplier + row.operator + row.ip + row.self
     row.inquiry = row.inquiry_operator + row.enquiry
     row.design_supervision = row.design + row.supervision
     row.send_sample = row.in_transit + row.receive
     row.select = row.analysis + row.select_result
+    row.purchase = row.order + row.warehousing
+    row.shelf = row.unshelf + row.shelfed
     return [row]
 }
 
@@ -279,6 +358,14 @@ const getStatisticsByType = async (type, startDate, endDate) => {
         isRunningMode ? undefined : startDate,
         isRunningMode ? undefined : endDate
     )
+    const purchasePromise = processesRepo.getPurchaseStats(
+        isRunningMode ? undefined : startDate,
+        isRunningMode ? undefined : endDate
+    )
+    const shelfPromise = processesRepo.getShelfStats(
+        isRunningMode ? undefined : startDate,
+        isRunningMode ? undefined : endDate
+    )
     const [
         developmentTotals,
         operatorInquiry,
@@ -286,7 +373,9 @@ const getStatisticsByType = async (type, startDate, endDate) => {
         designSupervision,
         sampleDelivery,
         selection,
-        plan
+        plan,
+        purchase,
+        shelf
     ] = await Promise.all([
         developmentPromise,
         operatorPromise,
@@ -294,7 +383,9 @@ const getStatisticsByType = async (type, startDate, endDate) => {
         designPromise,
         samplePromise,
         selectionPromise,
-        planPromise
+        planPromise,
+        purchasePromise,
+        shelfPromise
     ])
     return {
         isRunningMode,
@@ -304,7 +395,9 @@ const getStatisticsByType = async (type, startDate, endDate) => {
         designSupervision,
         sampleDelivery,
         selection,
-        plan
+        plan,
+        purchase,
+        shelf
     }
 }
 
