@@ -121,6 +121,16 @@ const createDevelopmentProcess = async (req, res, next) => {
     }
 }
 
+//根据推品ID获取推品详情
+const getById = async (req, res, next) => {
+    try {
+        const record = await processService.getById(req.query.id);
+        return res.send(biResponse.success(record));
+    } catch (e) {
+        next(e)
+    }
+};
+
 module.exports = {
     getProcurementProcessStatistics,
     getProcessIdsData,
@@ -128,5 +138,6 @@ module.exports = {
     getProcessMergeIdsData,
     getDevelopmentProcessTotal,
     getDevelopmentProcessList,
-    createDevelopmentProcess
+    createDevelopmentProcess,
+    getById,
 }

@@ -30,7 +30,6 @@ const SHIP_PRIORITY = {
         5: 50,
         6: 60,
         7: 100,
-        9: 120,
 };
 
 const resolveShip = (status) => {
