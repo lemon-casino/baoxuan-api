@@ -1765,7 +1765,8 @@ processesRepo.getDevelopmentProcessTotal = async (start, end) => {
 processesRepo.getDevelopmentProcessRunning = async () => {
     const sql = `SELECT dp.type, COUNT(DISTINCT dp.uid) AS total
         FROM development_process dp
-        JOIN process_info pi ON pi.field = '${DEVELOPMENT_UID_FIELD}' AND pi.content = dp.uid
+        JOIN process_info pi ON pi.content = dp.uid
+            AND (pi.field = '${DEVELOPMENT_UID_FIELD}' OR pi.title = '推品ID')
         JOIN processes p ON p.process_id = pi.process_id AND p.status = 1
         GROUP BY dp.type`
     const result = await query(sql)
@@ -1781,7 +1782,7 @@ const DEVELOPMENT_LIST_SELECT = `SELECT DATE_FORMAT(dp.create_time, '%Y-%m-%d') 
     FROM development_process dp`
 
 const appendRunningJoins = (joins) => {
-    joins.push(`JOIN process_info pi ON pi.field = '${DEVELOPMENT_UID_FIELD}' AND pi.content = dp.uid`)
+    joins.push(`JOIN process_info pi ON pi.content = dp.uid AND (pi.field = '${DEVELOPMENT_UID_FIELD}' OR pi.title = '推品ID')`)
     joins.push('JOIN processes p ON p.process_id = pi.process_id')
 }
 
@@ -1807,6 +1808,35 @@ processesRepo.getDevelopmentProcessList = async ({ developmentType, isRunningMod
 }
 
 /**
+ * 查询反推询价不同状态下的推品明细
+ * @param {object} options 查询参数
+ * @param {'running'|'success'|'fail'} options.status 目标状态
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式下的开始时间
+ * @param {string|undefined} options.end 发起模式下的结束时间
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+processesRepo.getOperatorInquiryList = async ({ status, isRunningMode, start, end }) => {
+    if (!status || (isRunningMode && status !== 'running')) {
+        return []
+    }
+    const existsCondition = buildOperatorInquiryExistsCondition(status)
+    if (!existsCondition) {
+        return []
+    }
+    const params = []
+    const conditions = ["dp.type = '反推推品'", existsCondition]
+    if (!isRunningMode) {
+        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    }
+    const whereSql = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : ''
+    const sql = `${DEVELOPMENT_LIST_SELECT}${whereSql}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
+}
+
+/**
  * 统计反推询价在不同状态下的数量
  * @param {string|undefined} start 开始日期
  * @param {string|undefined} end 结束日期
@@ -1820,7 +1850,7 @@ processesRepo.getOperatorInquiryStats = async (start, end) => {
     const baseJoin = `FROM development_process dp
         JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
         JOIN processes p ON p.process_id = pi_id.process_id`
-    const baseWhere = `dp.type = '反推推品' AND p.process_code = 'tpkfsh'`
+    const baseWhere = `dp.type = '反推推品' AND p.process_code = '${OPERATOR_PROCESS_CODE}'`
     const runningSql = `SELECT COUNT(DISTINCT dp.uid) AS total
         ${baseJoin}
         WHERE ${baseWhere} AND p.status = 1${dateCondition}`
@@ -1829,14 +1859,14 @@ processesRepo.getOperatorInquiryStats = async (start, end) => {
         ${baseJoin}
         LEFT JOIN process_info pi_success ON pi_success.process_id = p.process_id
             AND pi_success.title IN ('反推进度1', '反推进度2', '反推进度3', '寻源结果')
-            AND pi_success.content = '找到'
+            AND pi_success.content = '${OPERATOR_PROGRESS_SUCCESS_VALUE}'
         WHERE ${baseWhere} AND p.status = 2${dateCondition} AND pi_success.id IS NOT NULL`
     const successResult = await query(successSql, params.slice())
     const failSql = `SELECT COUNT(DISTINCT dp.uid) AS total
         ${baseJoin}
         LEFT JOIN process_info pi_success ON pi_success.process_id = p.process_id
             AND pi_success.title IN ('反推进度1', '反推进度2', '反推进度3', '寻源结果')
-            AND pi_success.content = '找到'
+            AND pi_success.content = '${OPERATOR_PROGRESS_SUCCESS_VALUE}'
         WHERE ${baseWhere} AND p.status = 2${dateCondition} AND pi_success.id IS NULL`
     const failResult = await query(failSql, params.slice())
     return {
@@ -1870,6 +1900,9 @@ const SHELF_DIVISION_PLATFORMS = {
     division2: ['京东', '得物', '唯品会', '抖音', '快手', '1688'],
     division3: ['天猫', '天猫垂类店', '淘工厂', '小红书']
 }
+const OPERATOR_PROCESS_CODE = 'tpkfsh'
+const OPERATOR_PROGRESS_TITLES = ['反推进度1', '反推进度2', '反推进度3', '寻源结果']
+const OPERATOR_PROGRESS_SUCCESS_VALUE = '找到'
 const VISION_PROCESS_CODES = ['xbsjmblc_copy']
 const VISION_DEVELOPMENT_TYPES = {
     supplier: '供应商推品',
@@ -1897,6 +1930,46 @@ const VISION_CREATIVE_FIELD_MAP = Object.entries(VISION_CREATIVE_TYPES).reduce((
 const escapeSingleQuote = (value = '') => String(value).replace(/'/g, "''")
 
 const formatTitleList = (titles) => titles.map((title) => `'${escapeSingleQuote(title)}'`).join(', ')
+
+const buildOperatorInquiryExistsCondition = (status) => {
+    const progressTitles = formatTitleList(OPERATOR_PROGRESS_TITLES)
+    const base = `SELECT 1
+        FROM process_info pi_id
+        JOIN processes p ON p.process_id = pi_id.process_id
+        WHERE pi_id.title = '推品ID'
+            AND pi_id.content = dp.uid
+            AND p.process_code = '${OPERATOR_PROCESS_CODE}'`
+    if (status === 'running') {
+        return `EXISTS (${base}
+            AND p.status = 1
+        )`
+    }
+    if (status === 'success') {
+        return `EXISTS (${base}
+            AND p.status = 2
+            AND EXISTS (
+                SELECT 1
+                FROM process_info pi_success
+                WHERE pi_success.process_id = p.process_id
+                    AND pi_success.title IN (${progressTitles})
+                    AND pi_success.content = '${OPERATOR_PROGRESS_SUCCESS_VALUE}'
+            )
+        )`
+    }
+    if (status === 'fail') {
+        return `EXISTS (${base}
+            AND p.status = 2
+            AND NOT EXISTS (
+                SELECT 1
+                FROM process_info pi_success
+                WHERE pi_success.process_id = p.process_id
+                    AND pi_success.title IN (${progressTitles})
+                    AND pi_success.content = '${OPERATOR_PROGRESS_SUCCESS_VALUE}'
+            )
+        )`
+    }
+    return ''
+}
 
 const SELECTION_TITLE_SQL = formatTitleList(SELECTION_RESULT_TITLES)
 
