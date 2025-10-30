@@ -1,6 +1,8 @@
 const { query } = require('../../model/dbConn')
 const processesRepo = {}
 
+const DEVELOPMENT_UID_FIELD = 'Fk0lmgyqg4d4abc'
+
 processesRepo.getProcessNodeCount = async (typeList, start, end) => {
     let sql = '', params = [], result = [] 
     for (let i = 0; i < typeList.length; i++) {
@@ -1763,11 +1765,45 @@ processesRepo.getDevelopmentProcessTotal = async (start, end) => {
 processesRepo.getDevelopmentProcessRunning = async () => {
     const sql = `SELECT dp.type, COUNT(DISTINCT dp.uid) AS total
         FROM development_process dp
-        JOIN process_info pi ON pi.field = 'Fk0lmgyqg4d4abc' AND pi.content = dp.uid
+        JOIN process_info pi ON pi.field = '${DEVELOPMENT_UID_FIELD}' AND pi.content = dp.uid
         JOIN processes p ON p.process_id = pi.process_id AND p.status = 1
         GROUP BY dp.type`
     const result = await query(sql)
     return result || []
+}
+
+const DEVELOPMENT_LIST_SELECT = `SELECT DATE_FORMAT(dp.create_time, '%Y-%m-%d') AS \`date\`,
+    dp.sort, dp.name, dp.spu, dp.sku_code, dp.type, dp.image, dp.developer, dp.starter,
+    dp.\`status\`, dp.is_select, dp.jd_status, dp.jd_is_select, dp.first_select, dp.second_select,
+    dp.third_select, dp.order_type, dp.vision_type, dp.jd_vision_type, dp.select_project,
+    dp.order_num, dp.jd_order_num, dp.operator, dp.jd_operator, dp.running_node,
+    dp.jd_running_node, dp.first_goods_id, dp.second_goods_id, dp.third_goods_id
+    FROM development_process dp`
+
+const appendRunningJoins = (joins) => {
+    joins.push(`JOIN process_info pi ON pi.field = '${DEVELOPMENT_UID_FIELD}' AND pi.content = dp.uid`)
+    joins.push('JOIN processes p ON p.process_id = pi.process_id')
+}
+
+processesRepo.getDevelopmentProcessList = async ({ developmentType, isRunningMode, start, end }) => {
+    if (!developmentType) {
+        return []
+    }
+    const params = [developmentType]
+    const conditions = ['dp.type = ?']
+    const joins = []
+    if (isRunningMode) {
+        appendRunningJoins(joins)
+        conditions.push('p.status = 1')
+    } else {
+        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    }
+    const joinSql = joins.length ? ` ${joins.join('\n    ')}` : ''
+    const whereSql = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : ''
+    const sql = `${DEVELOPMENT_LIST_SELECT}${joinSql}${whereSql}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
 }
 
 /**
