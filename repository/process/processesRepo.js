@@ -1731,6 +1731,32 @@ const countDevelopmentByTaskStatus = async (processCodes, taskTitles, statuses, 
     return extractCount(result)
 }
 
+const fetchDevelopmentListByTaskStatus = async ({ processCodes, taskTitles, statuses, isRunningMode, start, end }) => {
+    const codes = toArray(processCodes)
+    const titles = toArray(taskTitles)
+    const statusList = toArray(statuses)
+    if (!codes.length || !titles.length || !statusList.length) {
+        return []
+    }
+    const params = [...codes, ...titles, ...statusList]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        `pt.title IN (${buildInPlaceholders(titles)})`,
+        `pt.status IN (${buildInPlaceholders(statusList)})`
+    ]
+    if (!isRunningMode) {
+        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    }
+    const sql = `${DEVELOPMENT_LIST_SELECT}
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        JOIN process_tasks pt ON pt.process_id = p.process_id
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
+}
+
 const countDevelopmentByProcessStatus = async (processCodes, statuses, start, end) => {
     const codes = toArray(processCodes)
     const statusList = toArray(statuses)
@@ -2042,26 +2068,65 @@ processesRepo.getSampleDeliveryList = async ({ status, isRunningMode, start, end
     if (!status) {
         return []
     }
-    const codes = toArray(YANGPIN_PROCESS_CODES)
-    const titles = toArray(SAMPLE_DELIVERY_TITLE)
-    const statusList = toArray(status)
-    const params = [...codes, ...titles, ...statusList]
-    const conditions = [
-        `p.process_code IN (${buildInPlaceholders(codes)})`,
-        `pt.title IN (${buildInPlaceholders(titles)})`,
-        `pt.status IN (${buildInPlaceholders(statusList)})`
-    ]
-    if (!isRunningMode) {
-        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    return fetchDevelopmentListByTaskStatus({
+        processCodes: YANGPIN_PROCESS_CODES,
+        taskTitles: SAMPLE_DELIVERY_TITLE,
+        statuses: status,
+        isRunningMode,
+        start,
+        end
+    })
+}
+
+const DESIGN_SUPERVISION_CATEGORY_CONFIG = {
+    design: {
+        processCodes: YANGPIN_PROCESS_CODES,
+        taskTitles: DESIGN_UPLOAD_TITLES
+    },
+    sketch: {
+        processCodes: YANGPIN_PROCESS_CODES,
+        taskTitles: DESIGN_SUPERVISION_TITLE
+    },
+    sample: {
+        processCodes: DELIVERY_PROCESS_CODES,
+        taskTitles: SAMPLE_SUPERVISION_TITLE
+    },
+    vision: {
+        processCodes: DELIVERY_PROCESS_CODES,
+        taskTitles: VISION_SUPERVISION_TITLE
+    },
+    product: {
+        processCodes: DELIVERY_PROCESS_CODES,
+        taskTitles: PRODUCT_SUPERVISION_TITLE
     }
-    const sql = `${DEVELOPMENT_LIST_SELECT}
-        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
-        JOIN processes p ON p.process_id = pi_id.process_id
-        JOIN process_tasks pt ON pt.process_id = p.process_id
-        WHERE ${conditions.join(' AND ')}
-        ORDER BY dp.create_time DESC, dp.sort ASC`
-    const rows = await query(sql, params)
-    return rows || []
+}
+
+/**
+ * 查询设计及各类监修阶段的推品明细
+ * @param {object} options 查询参数
+ * @param {'design'|'sketch'|'sample'|'vision'|'product'} options.category 环节标识
+ * @param {number|Array<number>} options.statuses 目标任务状态
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式的开始日期
+ * @param {string|undefined} options.end 发起模式的结束日期
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+processesRepo.getDesignSupervisionList = async ({ category, statuses, isRunningMode, start, end }) => {
+    if (!category || !statuses) {
+        return []
+    }
+    const config = DESIGN_SUPERVISION_CATEGORY_CONFIG[category]
+    if (!config) {
+        return []
+    }
+    return fetchDevelopmentListByTaskStatus({
+        processCodes: config.processCodes,
+        taskTitles: config.taskTitles,
+        statuses,
+        isRunningMode,
+        start,
+        end
+    })
 }
 
 /**
