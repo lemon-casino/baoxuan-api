@@ -1834,6 +1834,29 @@ const SHELF_DIVISION_PLATFORMS = {
     division2: ['京东', '得物', '唯品会', '抖音', '快手', '1688'],
     division3: ['天猫', '天猫垂类店', '淘工厂', '小红书']
 }
+const VISION_PROCESS_CODES = ['xbsjmblc_copy']
+const VISION_DEVELOPMENT_TYPES = {
+    supplier: '供应商推品',
+    operator: '反推推品',
+    ip: 'IP推品',
+    self: '自研推品'
+}
+const VISION_CREATIVE_TYPES = {
+    original: '原创',
+    semi_original: '半原创',
+    unoriginal: '非原创'
+}
+const VISION_STATUS_VALUES = [1, 2, 3, 4]
+
+const VISION_TYPE_FIELD_MAP = Object.entries(VISION_DEVELOPMENT_TYPES).reduce((acc, [key, value]) => {
+    acc[value] = key
+    return acc
+}, {})
+
+const VISION_CREATIVE_FIELD_MAP = Object.entries(VISION_CREATIVE_TYPES).reduce((acc, [key, value]) => {
+    acc[value] = key
+    return acc
+}, {})
 
 const escapeSingleQuote = (value = '') => String(value).replace(/'/g, "''")
 
@@ -2051,6 +2074,19 @@ const buildSelectionQuery = (conditions) => `SELECT COUNT(DISTINCT dp.uid) AS to
     JOIN process_tasks pt ON pt.process_id = p.process_id
     WHERE ${conditions.join(' AND ')}`
 
+const createEmptyVisionCategory = () => ({
+    original: { running: 0, finish: 0 },
+    semi_original: { running: 0, finish: 0 },
+    unoriginal: { running: 0, finish: 0 }
+})
+
+const createEmptyVisionStats = () => ({
+    supplier: createEmptyVisionCategory(),
+    operator: createEmptyVisionCategory(),
+    ip: createEmptyVisionCategory(),
+    self: createEmptyVisionCategory()
+})
+
 const addSelectionExistsClauses = (conditions, params, { requireChoose, requireUnchoose, excludeChoose }) => {
     if (excludeChoose) {
         conditions.push(`NOT EXISTS (SELECT 1 FROM process_info pi_sel WHERE pi_sel.process_id = p.process_id
@@ -2124,6 +2160,48 @@ processesRepo.getSelectionStats = async (start, end) => {
             unchoose
         }
     }
+}
+
+/**
+ * 统计视觉流程在不同创意类型与流程状态下的推品数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<object>} 视觉流程统计数据
+ */
+processesRepo.getVisionStats = async (start, end) => {
+    const codes = toArray(VISION_PROCESS_CODES)
+    const typeValues = Object.values(VISION_DEVELOPMENT_TYPES)
+    const creativeValues = Object.values(VISION_CREATIVE_TYPES)
+    const statusValues = toArray(VISION_STATUS_VALUES)
+    const params = [...codes, ...typeValues, ...creativeValues, ...statusValues]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        `dp.type IN (${buildInPlaceholders(typeValues)})`,
+        `dp.vision_type IN (${buildInPlaceholders(creativeValues)})`,
+        `p.status IN (${buildInPlaceholders(statusValues)})`
+    ]
+    appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    const sql = `SELECT dp.type, dp.vision_type,` +
+        " CASE WHEN p.status = 1 THEN 'running' ELSE 'finish' END AS stage," +
+        ' COUNT(DISTINCT dp.uid) AS total' +
+        ' FROM development_process dp' +
+        " JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid" +
+        ' JOIN processes p ON p.process_id = pi_id.process_id' +
+        ` WHERE ${conditions.join(' AND ')}` +
+        ' GROUP BY dp.type, dp.vision_type, stage'
+    const rows = await query(sql, params)
+    const stats = createEmptyVisionStats()
+    rows.forEach((row) => {
+        const categoryKey = VISION_TYPE_FIELD_MAP[row.type]
+        const creativeKey = VISION_CREATIVE_FIELD_MAP[row.vision_type]
+        if (!categoryKey || !creativeKey) {
+            return
+        }
+        const stageKey = row.stage === 'running' ? 'running' : 'finish'
+        const value = Number(row.total) || 0
+        stats[categoryKey][creativeKey][stageKey] += value
+    })
+    return stats
 }
 
 /**
