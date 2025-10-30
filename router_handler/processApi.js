@@ -75,8 +75,6 @@ const getProcessMergeIdsData = async (req, res, next) => {
 const getDevelopmentProcessTotal = async (req, res, next) => {
     try {
         const {type, startDate, endDate} = req.query
-        console.log(startDate,
-        endDate)
         joiUtil.validate({
             type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}
         })
@@ -90,12 +88,12 @@ const getDevelopmentProcessTotal = async (req, res, next) => {
 //查询推品全流程的明细数据
 const getDevelopmentProcessList = async (req, res, next) => {
     try {
-        const {type, column, startDate, endDate} = req.query
+        const {type, field, startDate, endDate} = req.query
         joiUtil.validate({
             type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
-            column: {value: column, schema: joiUtil.commonJoiSchemas.strRequired}
+            field: {value: field, schema: joiUtil.commonJoiSchemas.strRequired}
         })
-        const result = await processService.getDevelopmentProcessList(type, column, startDate, endDate)
+        const result = await processService.getDevelopmentProcessList(type, field, startDate, endDate)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
@@ -121,6 +119,16 @@ const createDevelopmentProcess = async (req, res, next) => {
     }
 }
 
+//根据推品ID获取推品详情
+const getById = async (req, res, next) => {
+    try {
+        const record = await processService.getById(req.query.id);
+        return res.send(biResponse.success(record));
+    } catch (e) {
+        next(e)
+    }
+};
+
 module.exports = {
     getProcurementProcessStatistics,
     getProcessIdsData,
@@ -128,5 +136,6 @@ module.exports = {
     getProcessMergeIdsData,
     getDevelopmentProcessTotal,
     getDevelopmentProcessList,
-    createDevelopmentProcess
+    createDevelopmentProcess,
+    getById,
 }

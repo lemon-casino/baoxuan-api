@@ -45,4 +45,10 @@ developmentProcessesRepo.updateJDStatusToFinishByUid = async (uid) => {
     return result?.affectedRows ? true:false
 }
 
+developmentProcessesRepo.getById = async (id) => {
+    const sql = `SELECT * FROM development_process WHERE uid = ?`
+    const result = await query(sql, [id])
+    return result
+}
+
 module.exports = developmentProcessesRepo

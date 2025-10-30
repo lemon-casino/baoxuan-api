@@ -13,6 +13,7 @@ const processTasksRepo = require("@/repository/process/processTasksRepo")
 const moment = require('moment')
 const developmentTotalService = require('@/service/process/developmentTotalService')
 const processInfoRepo = require("@/repository/process/processInfoRepo")
+const developmentListService = require('@/service/process/developmentListService')
 
 const getLatestModifiedProcess = async () => {
     return await processRepo.getLatestModifiedProcess();
@@ -83,12 +84,8 @@ const getDevelopmentProcessTotal = async (type, startDate, endDate) => {
     return await developmentTotalService.getDevelopmentProcessTotal(type, startDate, endDate)
 }
 
-const getDevelopmentProcessList = async (type, column, startDate, endDate) => {
-
-    return {
-        columns: processConst.defaultColumns,
-        data: []
-    }
+const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
+    return await developmentListService.getDevelopmentProcessList(type, field, startDate, endDate)
 }
 
 const robotStartProcess = async (name, key, variables) => {
@@ -1632,6 +1629,12 @@ const updateDevelopmetProcess = async () => {
     }
 }
 
+const getById = async (id) => {
+    const result = await developmentProcessesRepo.getById(id)
+    return result?.length ? result[0] : null
+}
+
+
 module.exports = {
     getLatestModifiedProcess,
     saveProcess,
@@ -1644,5 +1647,6 @@ module.exports = {
     getDevelopmentProcessTotal,
     getDevelopmentProcessList,
     createDevelopmentProcess,
-    updateDevelopmetProcess
+    updateDevelopmetProcess,
+    getById,
 }

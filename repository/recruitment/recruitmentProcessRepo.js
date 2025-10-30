@@ -45,7 +45,7 @@ const pickRecruitmentFields = (fieldRows = []) => {
 
 const getRecruitmentProcesses = async () => {
         const rows = await ProcessesModel.findAll({
-                attributes: ['processId', 'processCode', 'version', 'status', 'startTime', 'endTime', 'title'],
+                attributes: ['processId', 'processCode', 'version', 'status', 'startTime', 'endTime'],
                 where: {
                         processCode: RECRUITMENT_PROCESS_CODE,
                 },
@@ -80,7 +80,6 @@ const getRecruitmentProcesses = async () => {
                         processCode: plain.processCode,
                         version: plain.version,
                         status: plain.status,
-                        title: plain.title,
                         startTime: plain.startTime,
                         endTime: plain.endTime,
                         fieldMap,
