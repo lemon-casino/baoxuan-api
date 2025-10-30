@@ -2030,6 +2030,41 @@ processesRepo.getSampleDeliveryStats = async (start, end) => {
 }
 
 /**
+ * 查询寄样环节在途或签收的推品明细
+ * @param {object} options 查询参数
+ * @param {number} options.status 目标任务状态
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式的开始日期
+ * @param {string|undefined} options.end 发起模式的结束日期
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+processesRepo.getSampleDeliveryList = async ({ status, isRunningMode, start, end }) => {
+    if (!status) {
+        return []
+    }
+    const codes = toArray(YANGPIN_PROCESS_CODES)
+    const titles = toArray(SAMPLE_DELIVERY_TITLE)
+    const statusList = toArray(status)
+    const params = [...codes, ...titles, ...statusList]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        `pt.title IN (${buildInPlaceholders(titles)})`,
+        `pt.status IN (${buildInPlaceholders(statusList)})`
+    ]
+    if (!isRunningMode) {
+        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    }
+    const sql = `${DEVELOPMENT_LIST_SELECT}
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        JOIN process_tasks pt ON pt.process_id = p.process_id
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
+}
+
+/**
  * 统计方案流程在不同状态下的数量
  * @param {string|undefined} start 开始日期
  * @param {string|undefined} end 结束日期
