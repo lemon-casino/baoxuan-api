@@ -12,6 +12,7 @@ const processesRepo = require("@/repository/process/processesRepo")
 const processTasksRepo = require("@/repository/process/processTasksRepo")
 const moment = require('moment')
 const developmentTotalService = require('@/service/process/developmentTotalService')
+const developmentListService = require('@/service/process/developmentListService')
 
 const getLatestModifiedProcess = async () => {
     return await processRepo.getLatestModifiedProcess();
@@ -82,12 +83,8 @@ const getDevelopmentProcessTotal = async (type, startDate, endDate) => {
     return await developmentTotalService.getDevelopmentProcessTotal(type, startDate, endDate)
 }
 
-const getDevelopmentProcessList = async (type, column, startDate, endDate) => {
-
-    return {
-        columns: processConst.defaultColumns,
-        data: []
-    }
+const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
+    return await developmentListService.getDevelopmentProcessList(type, field, startDate, endDate)
 }
 
 const robotStartProcess = async (name, key, variables) => {
