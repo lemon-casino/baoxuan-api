@@ -1909,10 +1909,10 @@ const buildPurchaseQuery = (taskTitles, { finished }, start, end) => {
     const codes = toArray(DELIVERY_PROCESS_CODES)
     const tasks = toArray(taskTitles)
     const params = [...codes]
-    const conditions = [
-        `p.process_code IN (${buildInPlaceholders(codes)})`,
-        'p.status = 1'
-    ]
+    const conditions = [`p.process_code IN (${buildInPlaceholders(codes)})`]
+    if (!finished) {
+        conditions.push('p.status = 1')
+    }
     appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
     const taskPlaceholders = buildInPlaceholders(tasks)
     if (finished) {
