@@ -46,7 +46,7 @@ developmentProcessesRepo.updateJDStatusToFinishByUid = async (uid) => {
 }
 
 developmentProcessesRepo.getById = async (id) => {
-    let sql = `SELECT * FROM development_process WHERE uid = ?`
+    const sql = `SELECT * FROM development_process WHERE uid = ?`
     const result = await query(sql, [id])
     return result
 }

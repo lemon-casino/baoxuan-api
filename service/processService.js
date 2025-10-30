@@ -295,7 +295,7 @@ const updateDevelopmetProcess = async () => {
 }
 
 const getById = async (id) => {
-    const result = await developmentRepo.getById(id)
+    const result = await developmentProcessesRepo.getById(id)
     return result?.length ? result[0] : null
 }
 

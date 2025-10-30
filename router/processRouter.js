@@ -10,7 +10,6 @@ router.post("/getProcessIdsData",processApi.getProcessIdsData)
 router.post("/getProcessIdsTmpData",processApi.getProcessIdsTmpData)
 // 查询进行中和和已完成表数据
 router.post("/getProcessMergeIdsData",processApi.getProcessMergeIdsData)
-
 // 根据推品ID查询推品信息
 router.get('/development/info', processApi.getById);
 

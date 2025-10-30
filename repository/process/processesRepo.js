@@ -1675,9 +1675,9 @@ processesRepo.getTmallInfo = async (start, end) => {
     return result || []
 }
 
-<<<<<<< HEAD
+
 module.exports = processesRepo
-=======
+
 const getDevelopmentProcessDateColumn = () => 'dp.create_time'
 
 const formatDateTimeParam = (value, fallbackTime) => {
