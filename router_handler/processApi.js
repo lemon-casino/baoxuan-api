@@ -71,9 +71,62 @@ const getProcessMergeIdsData = async (req, res, next) => {
     }
 }
 
+//查询推品全流程的统计数据
+const getDevelopmentProcessTotal = async (req, res, next) => {
+    try {
+        const {type, startDate, endDate} = req.query
+        console.log(startDate,
+        endDate)
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const result = await processService.getDevelopmentProcessTotal(type, startDate, endDate)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+//查询推品全流程的明细数据
+const getDevelopmentProcessList = async (req, res, next) => {
+    try {
+        const {type, column, startDate, endDate} = req.query
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
+            column: {value: column, schema: joiUtil.commonJoiSchemas.strRequired}
+        })
+        const result = await processService.getDevelopmentProcessList(type, column, startDate, endDate)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
+//创建推品流程
+const createDevelopmentProcess = async (req, res, next) => {
+    try {
+        const {type, name, categories, seasons, related, image} = req.body
+        joiUtil.validate({
+            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
+            name: {value: name, schema: joiUtil.commonJoiSchemas.strRequired},
+            categories: {value: categories, schema: joiUtil.commonJoiSchemas.arrayRequired},
+            seasons: {value: seasons, schema: joiUtil.commonJoiSchemas.strRequired},
+            related: {value: related, schema: joiUtil.commonJoiSchemas.strRequired},
+            image: {value: image, schema: joiUtil.commonJoiSchemas.arrayRequired}
+        })
+        const result = await processService.createDevelopmentProcess(req.body, req.user.userId)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
     getProcurementProcessStatistics,
     getProcessIdsData,
     getProcessIdsTmpData,
     getProcessMergeIdsData,
+    getDevelopmentProcessTotal,
+    getDevelopmentProcessList,
+    createDevelopmentProcess
 }
