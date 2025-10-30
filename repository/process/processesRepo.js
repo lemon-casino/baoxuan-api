@@ -1757,6 +1757,39 @@ const fetchDevelopmentListByTaskStatus = async ({ processCodes, taskTitles, stat
     return rows || []
 }
 
+/**
+ * 按流程状态查询推品明细
+ * @param {object} options 查询参数
+ * @param {Array<string>} options.processCodes 流程模型编码集合
+ * @param {number|Array<number>} options.statuses 目标流程状态
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式开始时间
+ * @param {string|undefined} options.end 发起模式结束时间
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+const fetchDevelopmentListByProcessStatus = async ({ processCodes, statuses, isRunningMode, start, end }) => {
+    const codes = toArray(processCodes)
+    const statusList = toArray(statuses)
+    if (!codes.length || !statusList.length) {
+        return []
+    }
+    const params = [...codes, ...statusList]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        `p.status IN (${buildInPlaceholders(statusList)})`
+    ]
+    if (!isRunningMode) {
+        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    }
+    const sql = `${DEVELOPMENT_LIST_SELECT}
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
+}
+
 const countDevelopmentByProcessStatus = async (processCodes, statuses, start, end) => {
     const codes = toArray(processCodes)
     const statusList = toArray(statuses)
@@ -2142,6 +2175,28 @@ processesRepo.getPlanStats = async (start, end) => {
         running,
         finish
     }
+}
+
+/**
+ * 查询方案流程明细
+ * @param {object} options 查询参数
+ * @param {number|Array<number>} options.statuses 目标流程状态
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式开始时间
+ * @param {string|undefined} options.end 发起模式结束时间
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+processesRepo.getPlanProcessList = async ({ statuses, isRunningMode, start, end }) => {
+    if (!statuses) {
+        return []
+    }
+    return fetchDevelopmentListByProcessStatus({
+        processCodes: PLAN_PROCESS_CODES,
+        statuses,
+        isRunningMode,
+        start,
+        end
+    })
 }
 
 const buildPurchaseQuery = (taskTitles, { finished }, start, end) => {

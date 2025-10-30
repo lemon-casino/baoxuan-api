@@ -21,6 +21,11 @@ const SAMPLE_FIELD_TO_STATUS = {
     receive: 2
 }
 
+const PLAN_FIELD_TO_STATUSES = {
+    plan_running: [1],
+    plan_finish: [2, 3, 4]
+}
+
 const DESIGN_FIELD_TO_OPTIONS = {
     design: { category: 'design', statuses: [1, 2, 3] },
     design_running: { category: 'design', statuses: 1 },
@@ -66,6 +71,13 @@ const resolveSampleStatus = (field) => SAMPLE_FIELD_TO_STATUS[field]
  * @returns {object|undefined} 查询配置
  */
 const resolveDesignOptions = (field) => DESIGN_FIELD_TO_OPTIONS[field]
+
+/**
+ * 根据字段名解析方案流程的状态
+ * @param {string} field 前端传入的字段标识
+ * @returns {Array<number>|undefined} 流程状态集合
+ */
+const resolvePlanStatuses = (field) => PLAN_FIELD_TO_STATUSES[field]
 
 /**
  * 查询满足条件的推品明细列表
@@ -122,6 +134,33 @@ const querySampleList = async (isRunningMode, status, startDate, endDate) => {
 }
 
 /**
+ * 查询方案流程满足条件的推品明细
+ * @param {boolean} isRunningMode 是否为待办模式
+ * @param {Array<number>} statuses 流程状态集合
+ * @param {string|undefined} startDate 开始日期
+ * @param {string|undefined} endDate 结束日期
+ * @returns {Promise<Array<object>>} 推品明细列表
+ */
+const queryPlanList = async (isRunningMode, statuses, startDate, endDate) => {
+    if (!statuses) {
+        return []
+    }
+    const effectiveStatuses = isRunningMode
+        ? statuses.filter((status) => Number(status) === 1)
+        : statuses
+    if (!effectiveStatuses.length) {
+        return []
+    }
+    const options = {
+        statuses: effectiveStatuses,
+        isRunningMode,
+        start: isRunningMode ? undefined : startDate,
+        end: isRunningMode ? undefined : endDate
+    }
+    return processesRepo.getPlanProcessList(options)
+}
+
+/**
  * 查询设计与各类监修环节满足条件的推品明细
  * @param {boolean} isRunningMode 是否为待办模式
  * @param {object} designOptions 查询配置
@@ -175,6 +214,11 @@ const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
     const sampleStatus = resolveSampleStatus(field)
     if (sampleStatus) {
         const data = await querySampleList(isRunningMode, sampleStatus, startDate, endDate)
+        return { columns, data }
+    }
+    const planStatuses = resolvePlanStatuses(field)
+    if (planStatuses) {
+        const data = await queryPlanList(isRunningMode, planStatuses, startDate, endDate)
         return { columns, data }
     }
     const designOptions = resolveDesignOptions(field)
