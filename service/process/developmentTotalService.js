@@ -68,6 +68,47 @@ const createEmptyStatisticRow = () => ({
     plan: 0,
     plan_running: 0,
     plan_finish: 0,
+    vision: 0,
+    vision_supplier: 0,
+    supplier_original: 0,
+    supplier_original_running: 0,
+    supplier_original_finish: 0,
+    supplier_semi_original: 0,
+    supplier_semi_original_running: 0,
+    supplier_semi_original_finish: 0,
+    supplier_unoriginal: 0,
+    supplier_unoriginal_running: 0,
+    supplier_unoriginal_finish: 0,
+    vision_operator: 0,
+    operator_original: 0,
+    operator_original_running: 0,
+    operator_original_finish: 0,
+    operator_semi_original: 0,
+    operator_semi_original_running: 0,
+    operator_semi_original_finish: 0,
+    operator_unoriginal: 0,
+    operator_unoriginal_running: 0,
+    operator_unoriginal_finish: 0,
+    vision_ip: 0,
+    ip_original: 0,
+    ip_original_running: 0,
+    ip_original_finish: 0,
+    ip_semi_original: 0,
+    ip_semi_original_running: 0,
+    ip_semi_original_finish: 0,
+    ip_unoriginal: 0,
+    ip_unoriginal_running: 0,
+    ip_unoriginal_finish: 0,
+    vision_self: 0,
+    self_original: 0,
+    self_original_running: 0,
+    self_original_finish: 0,
+    self_semi_original: 0,
+    self_semi_original_running: 0,
+    self_semi_original_finish: 0,
+    self_unoriginal: 0,
+    self_unoriginal_running: 0,
+    self_unoriginal_finish: 0,
     purchase: 0,
     order: 0,
     order_running: 0,
@@ -236,6 +277,48 @@ const applyPlanStats = (row, stats = {}, isRunningMode) => {
     row.plan = row.plan_running + row.plan_finish
 }
 
+const VISION_CATEGORY_CONFIGS = [
+    { key: 'supplier', field: 'vision_supplier' },
+    { key: 'operator', field: 'vision_operator' },
+    { key: 'ip', field: 'vision_ip' },
+    { key: 'self', field: 'vision_self' }
+]
+
+const VISION_CREATIVE_CONFIGS = [
+    { key: 'original', suffix: 'original' },
+    { key: 'semi_original', suffix: 'semi_original' },
+    { key: 'unoriginal', suffix: 'unoriginal' }
+]
+
+/**
+ * 写入视觉环节的统计结果
+ * @param {object} row 统计结果行
+ * @param {object} stats 视觉环节统计数据
+ * @param {boolean} isRunningMode 是否为待办模式
+ */
+const applyVisionStats = (row, stats = {}, isRunningMode) => {
+    let visionTotal = 0
+    VISION_CATEGORY_CONFIGS.forEach(({ key, field }) => {
+        const categoryStats = stats[key] || {}
+        let categoryTotal = 0
+        VISION_CREATIVE_CONFIGS.forEach(({ key: creativeKey, suffix }) => {
+            const data = categoryStats[creativeKey] || {}
+            const running = Number(data.running) || 0
+            const finish = Number(data.finish) || 0
+            const finishValue = isRunningMode ? 0 : finish
+            const total = running + finishValue
+            const baseField = `${key}_${suffix}`
+            row[`${baseField}_running`] = running
+            row[`${baseField}_finish`] = finishValue
+            row[baseField] = total
+            categoryTotal += total
+        })
+        row[field] = categoryTotal
+        visionTotal += categoryTotal
+    })
+    row.vision = visionTotal
+}
+
 /**
  * 写入采购环节的统计结果
  * @param {object} row 统计结果行
@@ -310,6 +393,7 @@ const transformStatistics = (statistics = {}, isRunningMode) => {
     applySampleDeliveryStats(row, statistics.sampleDelivery, isRunningMode)
     applySelectionStats(row, statistics.selection, isRunningMode)
     applyPlanStats(row, statistics.plan, isRunningMode)
+    applyVisionStats(row, statistics.vision, isRunningMode)
     applyPurchaseStats(row, statistics.purchase, isRunningMode)
     applyShelfStats(row, statistics.shelf, isRunningMode)
     row.development = row.supplier + row.operator + row.ip + row.self
@@ -317,6 +401,7 @@ const transformStatistics = (statistics = {}, isRunningMode) => {
     row.design_supervision = row.design + row.supervision
     row.send_sample = row.in_transit + row.receive
     row.select = row.analysis + row.select_result
+    row.vision = row.vision_supplier + row.vision_operator + row.vision_ip + row.vision_self
     row.purchase = row.order + row.warehousing
     row.shelf = row.unshelf + row.shelfed
     return [row]
@@ -358,6 +443,10 @@ const getStatisticsByType = async (type, startDate, endDate) => {
         isRunningMode ? undefined : startDate,
         isRunningMode ? undefined : endDate
     )
+    const visionPromise = processesRepo.getVisionStats(
+        isRunningMode ? undefined : startDate,
+        isRunningMode ? undefined : endDate
+    )
     const purchasePromise = processesRepo.getPurchaseStats(
         isRunningMode ? undefined : startDate,
         isRunningMode ? undefined : endDate
@@ -374,6 +463,7 @@ const getStatisticsByType = async (type, startDate, endDate) => {
         sampleDelivery,
         selection,
         plan,
+        vision,
         purchase,
         shelf
     ] = await Promise.all([
@@ -384,6 +474,7 @@ const getStatisticsByType = async (type, startDate, endDate) => {
         samplePromise,
         selectionPromise,
         planPromise,
+        visionPromise,
         purchasePromise,
         shelfPromise
     ])
@@ -396,6 +487,7 @@ const getStatisticsByType = async (type, startDate, endDate) => {
         sampleDelivery,
         selection,
         plan,
+        vision,
         purchase,
         shelf
     }
