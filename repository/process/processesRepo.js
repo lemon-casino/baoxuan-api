@@ -1778,6 +1778,57 @@ processesRepo.getProcessByUid = async (uid, key) => {
     return result || []
 }
 
+processesRepo.getProcessByUidAndColumn = async (uid, key, field, value) => {
+    const sql = `SELECT p.* FROM development_process d LEFT JOIN process_info pi ON d.uid = pi.content 
+            AND pi.title = '推品ID' LEFT JOIN processes p ON p.process_id = pi.process_id 
+        WHERE d.uid = ? AND p.process_code = ? AND EXISTS(
+            SELECT * FROM process_info p1 WHERE p1.process_id = p.process_id AND p1.field = ? 
+                AND p1.content = ?)`
+    const result = await query(sql, [uid, key, field, value])
+    return result || []
+}
+
+processesRepo.getFirstShelfProcess = async (uid, key) => {
+    const sql = `SELECT p.* FROM development_process d LEFT JOIN process_info pi ON d.uid = pi.content 
+            AND pi.title = '推品ID' LEFT JOIN processes p ON p.process_id = pi.process_id 
+        WHERE d.uid = ? AND p.process_code = ? AND EXISTS(
+            SELECT * FROM process_info p1 WHERE p1.process_id = p.process_id AND p1.title = '上架平台' 
+                AND (p1.content LIKE '%拼多多%' OR p1.content LIKE '%天猫超市%' OR p1.content LIKE '%Coupang%'))`
+    const result = await query(sql, [uid, key])
+    return result || []
+}
+
+processesRepo.getSecondShelfProcess = async (uid, key) => {
+    const sql = `SELECT p.* FROM development_process d LEFT JOIN process_info pi ON d.uid = pi.content 
+            AND pi.title = '推品ID' LEFT JOIN processes p ON p.process_id = pi.process_id 
+        WHERE d.uid = ? AND p.process_code = ? AND EXISTS(
+            SELECT * FROM process_info p1 WHERE p1.process_id = p.process_id AND p1.title = '上架平台' 
+                AND (p1.content LIKE '%抖音%' OR p1.content LIKE '%快手%' OR p1.content LIKE '%得物%' 
+                    OR p1.content LIKE '%唯品会%' OR p1.content LIKE '%1688%'))`
+    const result = await query(sql, [uid, key])
+    return result || []
+}
+
+processesRepo.getJDShelfProcess = async (uid, key) => {
+    const sql = `SELECT p.* FROM development_process d LEFT JOIN process_info pi ON d.uid = pi.content 
+            AND pi.title = '推品ID' LEFT JOIN processes p ON p.process_id = pi.process_id 
+        WHERE d.uid = ? AND p.process_code = ? AND EXISTS(
+            SELECT * FROM process_info p1 WHERE p1.process_id = p.process_id AND p1.title = '上架平台' 
+                AND (p1.content LIKE '%京东%'))`
+    const result = await query(sql, [uid, key])
+    return result || []
+}
+
+processesRepo.getThirdShelfProcess = async (uid, key) => {
+    const sql = `SELECT p.* FROM development_process d LEFT JOIN process_info pi ON d.uid = pi.content 
+            AND pi.title = '推品ID' LEFT JOIN processes p ON p.process_id = pi.process_id 
+        WHERE d.uid = ? AND p.process_code = ? AND EXISTS(
+            SELECT * FROM process_info p1 WHERE p1.process_id = p.process_id AND p1.title = '上架平台' 
+                AND (p1.content LIKE '%天猫%' OR p1.content LIKE '%淘工厂%' OR p1.content LIKE '%小红书%'))`
+    const result = await query(sql, [uid, key])
+    return result || []
+}
+
 /**
  * 统计反推询价在不同状态下的数量
  * @param {string|undefined} start 开始日期

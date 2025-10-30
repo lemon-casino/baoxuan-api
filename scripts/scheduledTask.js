@@ -6,6 +6,7 @@ const {redisKeys} = require("@/const/redisConst");
 const orderService = require("../service/jst/orderService")
 const purchaseService = require("../service/jst/purchaseService")
 const operationService = require("../service/operationService")
+const processService = require("../service/processService")
 const recruitmentProcessSyncService = require('@/service/recruitmentProcessSyncService');
 const {logger} = require('@/utils/log');
 const moment = require('moment')
@@ -51,6 +52,7 @@ let jstPurchaseCron = "0 36 */1 * * ?"
 let saleCron = "0 30 9/12 * * ?"
 let pddNewTagCron = "0 30 8 * * ?"
 let recruitmentProcessSyncCron = "0 */2 * * * ?"
+let processSync = "0 */2 * * * ?"
 schedule.scheduleJob(saleCron, async function () {
     if (process.env.NODE_ENV === "prod") {
         await operationService.updateInventory()
@@ -85,6 +87,13 @@ schedule.scheduleJob(jstPurchaseCron, async function () {
 schedule.scheduleJob(pddNewTagCron, async function () {
     if (process.env.NODE_ENV === "prod") {
         await operationService.updatePDDNewTag()
+    }
+})
+
+//每隔2分钟跑一次
+schedule.scheduleJob(processSync, async function () {
+    if (process.env.NODE_ENV === "prod") {
+        await processService.updateDevelopmetProcess()
     }
 })
 

@@ -257,6 +257,8 @@ const statusList = {
     END: '结束'
 }
 
+const previousUrl = 'https://bi.pakchoice.cn/bi/#/process/development/detail?uid='
+
 const typeList = {
     SUPPLIER: '供应商推品',
     OPERATOR: '反推推品',
@@ -269,6 +271,17 @@ const jdStatusList = {
     FALSE: '否'
 }
 
+const analysisStatusList = {
+    TRUE: '选中',
+    FALSE: '未选中'
+}
+
+const sampleCheckStatusList = {
+    TRUE: '是',
+    FALSE: '否'
+}
+
+//开发审核
 const developCheckProcess = {
     name: '开发审核子流程',
     key: 'tpkfsh',
@@ -358,9 +371,16 @@ const developCheckProcess = {
             {name: 'image', key: 'Cfidv84ga4ncy', type: 'array'}, //对应产品图
             {name: 'is_self', key: 'Fklmmgyslee2brc', type: 'string'}, //自研-是否需要自主设计
         ]
+    },
+    column: {
+        developer: {
+            DEFAULT: 'Cfidc8ey7qjvn', //供应商推品，IP推品，自研推品
+            OTHER: ['Cfidc8ey7qjvn', 'Feghmgyr8ln7b7c', 'Ftp3mgyr8lwzbac', 'Cfidbyd3d4sw9'], //反推推品，先匹配上的就是
+        },
+        is_jd: 'F42amhbc86o9abc'
     }
 }
-
+//京东分析
 const jdAnalysisProcess = {
     name: '京东单独分析流程',
     key: 'jingdongdandulc',
@@ -446,9 +466,14 @@ const jdAnalysisProcess = {
             {name: 'image', key: 'Cfidv84ga4ncy', type: 'array'}, //对应产品图
             {name: 'is_self', key: 'Fklmmgyslee2brc', type: 'string'}, //自研-是否需要自主设计
         ]
+    },
+    column: {
+        select: 'Fenomgq6rp5jaic', //京东是否选中
+        spu: 'Fsccmh1rkh4xb6c',
+        sku_code: 'Fj2rmh1rras9bcc',
     }
 }
-
+//非京东分析
 const analysisProcess = {
     name: '事业部运营处理',
     key: 'syybyycl',
@@ -534,9 +559,19 @@ const analysisProcess = {
             {name: 'image', key: 'Cfidv84ga4ncy', type: 'array'}, //对应产品图
             {name: 'is_self', key: 'Fklmmgyslee2brc', type: 'string'}, //自研-是否需要自主设计
         ]
+    },
+    column: {
+        spu: 'F8vtmh1rabocaoc', //SPU编码
+        sku_code: 'Flj7mh1rv211c7c', //商品信息
+        first_operator: 'Fmmzmh0akzapfzc', //事业一部运营负责人
+        second_operator: 'Fd32mh0al3ong8c', //事业二部运营负责人
+        third_operator: 'Fqdrmh0alxwfhnc', //事业三部运营负责人
+        first_select: 'Fsv5mh0alew7goc', //事业一部是否选中
+        second_select: 'Fyaemh0altj3hec', //事业二部是否选中
+        third_select: 'F1njmh0am7wai9c', //事业三部是否选中
     }
 }
-
+//寄样
 const sampleProcess = {
     name: '样品确认',
     key: 'yangpinqueren',
@@ -548,19 +583,17 @@ const sampleProcess = {
         type: 'F4fymgytui22c3c', //推品类型
         project: 'Fj1ama2csbpoabc', //运营事业部
         product_info: 'Cfid3wew07ks5', //产品信息
-        beijing_designer: 'Cfidh094smzvc', //北京设计执行人
-        beijing_image: 'Cfid0d4esotgv', //北京上传设计草图
-        hangzhou_designer: 'Cfidvz9j0x697', //杭州设计执行人
-        hangzhou_image: 'Cfiddnd4msbib', //杭州上传设计草图
-        designer: 'Cfidl1n5ply0l', //设计完整执行人 
-        design_image: 'Fxwqmgyu4t19cgc', //选择确认使用设计草图
-        design_duration: 'Fjzkmgyu5c67cjc', //产品及包装设计周期
-        image: 'Cfidqoplfioe7', //上传定稿图以及上传链图云
         developer: 'Cfidse9vqk8s0', //开发负责人
+    }, 
+    column: {
+        design_image: 'Cfidqoplfioe7', //上传定稿图以及上传链图云
         sample_image: 'Cfide75io34yh', //上传样品图片
+        first_select: 'Fa1pmh0dojf2avc', //事业一部样品是否选中
+        second_select: 'Ffysmh0dpc11ayc', //事业二部样品是否选中
+        third_select: 'Fnx0mh0dpdy6b1c', //事业三部样品是否选中
     }
 }
-
+//样品选中
 const sampleCheckProcess = {
     name: '事业部样品是否选中',
     key: 'shiyebuypsfxz',
@@ -573,7 +606,7 @@ const sampleCheckProcess = {
         third_operator: 'Cfidj9fr4p35j', //事业三部运营
     }
 }
-
+//企划审核
 const reviewProcess = {
     name: '企划审核子流程',
     key: 'qihuashenhe',
@@ -668,9 +701,16 @@ const reviewProcess = {
             {name: 'sample_image', key: 'Cfidp9oyk2a2b', type: 'array'}, //样品图片
             {name: 'design_image', key: 'Cfidh88j1whmf', type: 'array'}, //草图文件
         ]
+    },
+    column: {
+        is_jd: 'F0q3mhbcamtaakc',
+        select_project: 'Fsixmh1eq8k0abc', //选中平台
+        purchase_type: 'Fu53mgss019jaec', //产品采购
+        vision_type: 'Ffammh909z1i19gc', //视觉类型
+        division: 'Fh0nmgq916jwdkc', //选择做爆款方案的事业部
     }
 }
-
+//爆款
 const designProposalProcess = {
     name: '爆款方案流程-新版测试',
     key: 'baokuanliuchengxb_copyceshi',
@@ -683,9 +723,13 @@ const designProposalProcess = {
         first_select: 'Fnpsmgrc8mogdyc', //事业一部是否选中
         second_select: 'Fqbhmgrc9nb7e4c', //事业二部是否选中
         third_select: 'Fc2smgrc9m8je1c', //事业三部是否选中
+    }, 
+    column: {
+        operator: 'Cfidclaxyqgv7', //爆款方案负责人
+        link_type: 'radioField_lxkb9f8z', //链接类别
     }
 }
-
+//视觉
 const visionDesignProcess = {
     name: '新版-视觉+美编测试流程',
     key: 'xbsjmblc_copy',
@@ -702,7 +746,7 @@ const visionDesignProcess = {
         image: 'Cfidnewwzhdez', //产品图片
     }
 }
-
+//非京东订货
 const purchaseProcess = {
     name: '订货-测试',
     key: 'kjdinghuo',
@@ -715,9 +759,12 @@ const purchaseProcess = {
         first_select: 'Ffvbmgrbq6modjc', //事业一部是否选中
         second_select: 'Fxenmgrbret1dvc', //事业二部是否选中
         third_select: 'F5armgrbre9hdsc', //事业三部是否选中
+    },
+    column: {
+        order_num: 'Fo5uma263lluhdc', //实际订货量
     }
 }
-
+//京东订货
 const jdPurchaseProcess = {
     name: '京东订货流程',
     key: 'jingdongdhlc',
@@ -728,9 +775,12 @@ const jdPurchaseProcess = {
         operator: 'Cfidqh6mjooo7', //运营负责人
         spu: 'F2vpmh1f7x61atc', //SPU编码
         developer: 'employeeField_lxn38ajk', //开发负责人
+    },
+    column: {
+        order_num: 'Fvzmmej9wzunabc'
     }
 }
-
+//上架
 const shelfProcess = {
     name: '上架流程-测试',
     key: 'sjlcqpt_copy',
@@ -740,6 +790,20 @@ const shelfProcess = {
         project: 'Fsixmh1eq8k0abc', //上架平台
         developer: 'Fgxsmhbmolq1vsc', //开发负责人
         link_type: 'F9ujm99rbh1o1i2c', //链接属性
+    }, 
+    column: {
+        pdd: 'F6fkm99rjy981ibc', //拼多多上架链接ID
+        tmcs: 'F3i8mhabudfib5c', //天猫超市上架链接ID
+        coupang: 'Fs6tmhabud6eb2c', //coupang上架链接ID
+        jd: 'F166mhabucr2azc', //京东上架链接ID
+        dy: 'F0damhabucfaawc', //抖音上架链接ID
+        ks: 'F2u3mhabuc4uatc', //快手上架链接ID
+        dw: 'Fyy9mhabubtiaqc', //得物上架链接ID
+        vip: 'Fxwzmhabubiuanc', //唯品会上架链接ID
+        xhs: 'Fdzemhabub6uakc', //小红书上架链接ID
+        '1688': 'Fze4mhabuaviahc', //1688上架链接ID
+        tm: 'Fvt2mhabuakmaec', //天猫上架链接ID
+        tgc: 'Fz01mhabua6nabc', //淘工厂上架链接ID
     }
 }
 
@@ -747,6 +811,7 @@ module.exports = {
     dColumns,
     rColumns,
     defaultColumns,
+    previousUrl,
     statusList,
     typeList,
     jdStatusList,
@@ -760,5 +825,7 @@ module.exports = {
     visionDesignProcess,
     purchaseProcess,
     jdPurchaseProcess,
-    shelfProcess
+    shelfProcess,
+    analysisStatusList,
+    sampleCheckStatusList
 }
