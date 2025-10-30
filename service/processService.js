@@ -294,6 +294,12 @@ const updateDevelopmetProcess = async () => {
     }
 }
 
+const getById = async (id) => {
+    const result = await developmentRepo.getById(id)
+    return result?.length ? result[0] : null
+}
+
+
 module.exports = {
     getLatestModifiedProcess,
     saveProcess,
@@ -306,5 +312,6 @@ module.exports = {
     getDevelopmentProcessTotal,
     getDevelopmentProcessList,
     createDevelopmentProcess,
-    updateDevelopmetProcess
+    updateDevelopmetProcess,
+    getById,
 }
