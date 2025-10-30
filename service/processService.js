@@ -6,6 +6,7 @@ const developmentProcessesRepo = require("@/repository/process/developmentProces
 const actReProcdefRepo = require("@/repository/bpm/actReProcdefRepo")
 const commonReq = require('@/core/bpmReq/commonReq')
 const developmentTotalService = require('@/service/process/developmentTotalService')
+const developmentListService = require('@/service/process/developmentListService')
 
 const getLatestModifiedProcess = async () => {
     return await processRepo.getLatestModifiedProcess();
@@ -76,12 +77,8 @@ const getDevelopmentProcessTotal = async (type, startDate, endDate) => {
     return await developmentTotalService.getDevelopmentProcessTotal(type, startDate, endDate)
 }
 
-const getDevelopmentProcessList = async (type, column, startDate, endDate) => {
-    let result = {
-        columns: processConst.defaultColumns,
-        data: []
-    }
-    return result
+const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
+    return await developmentListService.getDevelopmentProcessList(type, field, startDate, endDate)
 }
 
 const createDevelopmentProcess = async (params, dingding_id) => {
