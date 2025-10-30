@@ -13,40 +13,6 @@ const normalizeMetadata = (metadata) => {
         }
 };
 
-const normalizeRecordedAt = (value) => {
-        if (!value) {
-                return new Date();
-        }
-
-        if (value instanceof Date && !Number.isNaN(value.getTime())) {
-                return value;
-        }
-
-        if (typeof value === 'number') {
-                const date = new Date(value);
-                return Number.isNaN(date.getTime()) ? new Date() : date;
-        }
-
-        if (typeof value === 'string') {
-                const trimmed = value.trim();
-                if (!trimmed) {
-                        return new Date();
-                }
-
-                const sanitized = trimmed
-                        .replace(/[年月]/g, '-')
-                        .replace(/[日]/g, '')
-                        .replace(/[./]/g, '-');
-                const parsed = new Date(sanitized);
-                if (!Number.isNaN(parsed.getTime())) {
-                        return parsed;
-                }
-        }
-
-        const fallback = new Date(value);
-        return Number.isNaN(fallback.getTime()) ? new Date() : fallback;
-};
-
 const bulkInsertStatistics = async (records = []) => {
         if (!Array.isArray(records) || records.length === 0) {
                 return 0;
@@ -54,9 +20,8 @@ const bulkInsertStatistics = async (records = []) => {
 
         const payload = records.map((record) => ({
                 ...record,
-                allowSync: record.allowSync === false ? false : true,
                 metadata: normalizeMetadata(record.metadata),
-                recordedAt: normalizeRecordedAt(record.recordedAt),
+                recordedAt: record.recordedAt || new Date(),
         }));
 
         await RecruitmentStatisticModel.bulkCreate(payload);
