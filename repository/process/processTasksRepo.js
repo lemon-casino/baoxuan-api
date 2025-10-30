@@ -7,4 +7,12 @@ processTasksRepo.getSuccessTasksByProcessIdAndTitle = async (process_id, title) 
     return result || []
 }
 
+processTasksRepo.getRunningTasksByProcessId = async (process_ids) => {
+    const sql = `SELECT t.*, p.title AS process_title FROM process_tasks t 
+        JOIN processes p ON p.process_id = t.process_id 
+        WHERE t.process_id IN ("${process_ids}") AND t.status = 1`
+    const result = await query(sql)
+    return result || []
+}
+
 module.exports = processTasksRepo
