@@ -1757,6 +1757,35 @@ const fetchDevelopmentListByTaskStatus = async ({ processCodes, taskTitles, stat
     return rows || []
 }
 
+const fetchSelectionReviewList = async ({ statuses, isRunningMode, start, end, excludeChoose, requireChoose, requireUnchoose }) => {
+    const codes = toArray(SELECTION_PROCESS_CODES)
+    const titles = toArray(SELECTION_REVIEW_TITLES)
+    const statusList = toArray(statuses)
+    if (!codes.length || !titles.length || !statusList.length) {
+        return []
+    }
+    const params = [...codes, ...titles, ...statusList]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        `pt.title IN (${buildInPlaceholders(titles)})`,
+        `pt.status IN (${buildInPlaceholders(statusList)})`
+    ]
+    if (isRunningMode) {
+        conditions.push('p.status = 1')
+    } else {
+        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    }
+    addSelectionExistsClauses(conditions, params, { excludeChoose, requireChoose, requireUnchoose })
+    const sql = `${DEVELOPMENT_LIST_SELECT}
+        JOIN process_info pi ON pi.content = dp.uid AND (pi.field = '${DEVELOPMENT_UID_FIELD}' OR pi.title = '推品ID')
+        JOIN processes p ON p.process_id = pi.process_id
+        JOIN process_tasks pt ON pt.process_id = p.process_id
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
+}
+
 /**
  * 按流程状态查询推品明细
  * @param {object} options 查询参数
@@ -2607,6 +2636,56 @@ processesRepo.getSelectionStats = async (start, end) => {
             unchoose
         }
     }
+}
+
+/**
+ * 查询选品环节的推品明细
+ * @param {object} options 查询参数
+ * @param {'analysis'|'review'} options.category 查询分类
+ * @param {number|Array<number>} options.statuses 目标任务状态
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式开始日期
+ * @param {string|undefined} options.end 发起模式结束日期
+ * @param {boolean} [options.excludeChoose] 是否排除已选中记录
+ * @param {boolean} [options.requireChoose] 是否要求存在选中记录
+ * @param {boolean} [options.requireUnchoose] 是否要求存在未选中记录
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+processesRepo.getSelectionProcessList = async ({
+    category,
+    statuses,
+    isRunningMode,
+    start,
+    end,
+    excludeChoose,
+    requireChoose,
+    requireUnchoose
+}) => {
+    if (!category || !statuses) {
+        return []
+    }
+    if (category === 'analysis') {
+        return fetchDevelopmentListByTaskStatus({
+            processCodes: SELECTION_PROCESS_CODES,
+            taskTitles: MARKET_ANALYSIS_TITLES,
+            statuses,
+            isRunningMode,
+            start,
+            end
+        })
+    }
+    if (category === 'review') {
+        return fetchSelectionReviewList({
+            statuses,
+            isRunningMode,
+            start,
+            end,
+            excludeChoose,
+            requireChoose,
+            requireUnchoose
+        })
+    }
+    return []
 }
 
 /**
