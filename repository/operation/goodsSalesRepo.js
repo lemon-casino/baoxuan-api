@@ -820,10 +820,10 @@ goodsSalesRepo.updatemonth6 = async (day,type,column) =>{
             select IFNULL(c.商品编码,a.编码) as '商品编码'
                 ,IF(c.数量 is not NULL,a.数量*c.数量,a.数量) as '数量' 
             from (
-                select 编码 ,成交商品件数 as '数量',时间 from danpin.jb_ziying 
+                select 编码 ,发货商品件数 as '数量',时间 from danpin.jb_ziying 
                 where 时间  >= DATE_SUB(DATE(NOW()),INTERVAL ${day} ${type})
                 UNION ALL
-                select 编码 ,成交商品件数 as '数量',时间 from danpin.jb_ziying_everday
+                select 编码 ,发货商品件数 as '数量',时间 from danpin.jb_ziying_everday
                 where 时间  >= DATE_SUB(DATE(NOW()),INTERVAL ${day} ${type})
             ) as a
             LEFT JOIN
@@ -844,20 +844,47 @@ goodsSalesRepo.updatemonth6 = async (day,type,column) =>{
 }
 
 
-goodsSalesRepo.updateNJsaleqty = async (day,column) =>{
-    let result1
-    let sql = `SELECT sku_code,SUM(sale_qty) as sale_qty  
-        FROM goods_sale_info 
-        WHERE date >= DATE_SUB(DATE(NOW()),INTERVAL ? DAY) 
-        AND shop_name not in ('京东自营-厨具' ,'京东自营-日用')
-        GROUP BY sku_code`
-    const result = await query(sql,[day])
-    for (i=0;i<=result.length -1;i++){
-        sql = `UPDATE inventory_attributes 
-        SET ${column} = ${result[i].sale_qty},update_time = CURRENT_TIMESTAMP
-        where upper(sku_code) = upper('${result[i].sku_code}')`
-        result1 = await query(sql)
-    }
+goodsSalesRepo.InsertInventory = async () =>{
+    let sql = `DELETE from inventory_attributes`
+    let result = await query(sql)
+    sql = `INSERT INTO inventory_attributes (sku_code,spu_name,first_category,second_category,third_category,
+        cost_price,ps,image,create_time,turnover_officer,nj30_sale_qty,nj7_sale_qty,nj_transit,nj_num,jd_colud,goods_info)
+        SELECT a.商品编码 AS sku_code,a.spu简称,a.一级类目,a.二级类目,a.三级类目,IFNULL( a.成本价, a.采购价)
+        ,a.备注标签,a.图片,a.创建时间,a.周转员,IFNULL(b.nj30_sale_qty,0),IFNULL(c.nj7_sale_qty,0),IFNULL(d.nj_transit,0)
+        ,IFNULL(d.nj_num,0),IFNULL(d.jd_colud,0),a.商品属性
+        FROM danpin.goods_info AS a
+        LEFT JOIN(
+            SELECT sku_code,SUM(sale_qty) as nj30_sale_qty  
+            FROM goods_sale_info 
+            WHERE date BETWEEN DATE_SUB(DATE(NOW()),INTERVAL 30 DAY) AND DATE_SUB(DATE(NOW()),INTERVAL 1 DAY)
+            AND shop_name not in ('京东自营-厨具' ,'京东自营-日用')
+            GROUP BY sku_code
+        ) AS b on a.商品编码 = b.sku_code
+        LEFT JOIN(
+            SELECT sku_code,SUM(sale_qty) as nj7_sale_qty
+            FROM goods_sale_info 
+            WHERE date BETWEEN DATE_SUB(DATE(NOW()),INTERVAL 7 DAY) AND DATE_SUB(DATE(NOW()),INTERVAL 1 DAY)
+            AND shop_name not in ('京东自营-厨具' ,'京东自营-日用')
+            GROUP BY sku_code
+        ) AS c on a.商品编码 = c.sku_code
+        LEFT JOIN(
+        SELECT a.sku_code
+                    ,a.transit AS nj_transit
+                    ,a.main_inventory-a.orders_num+a.stock_num -IFNULL(b.jd_colud,0) -IFNULL(b.COUPANG,0) AS nj_num 
+                    ,IFNULL(b.jd_colud,0) AS jd_colud 
+                FROM jst_goods_inventory AS a
+                LEFT JOIN (
+                    SELECT 商品编码
+                                ,sum(IF(运营云仓名称='南京仓京东自备',运营云仓可用数,0)) AS jd_colud
+                        ,sum(IF(运营云仓名称='COUPANG/猫超南京仓',运营云仓可用数,0)) AS 'COUPANG'
+                    FROM danpin.goods_kucun_fen 
+                    WHERE 运营云仓名称 IN ('南京仓京东自备','COUPANG/猫超南京仓') 
+                    AND 统计日期 = DATE_SUB(DATE(NOW()),INTERVAL 1 DAY)
+                    GROUP BY 商品编码
+                ) AS b ON a.sku_code = b.商品编码
+                WHERE a.date = DATE_SUB(DATE(NOW()),INTERVAL 1 DAY)
+        )AS d on a.商品编码 = d.sku_code`
+    result = await query(sql)
     return result
 }
 
@@ -867,10 +894,10 @@ goodsSalesRepo.updateJDsaleqty = async (day,column) =>{
         select IFNULL(c.商品编码,a.编码) as '商品编码'
                 ,IF(c.数量 is not NULL,a.数量*c.数量,a.数量) as '数量' 
         from (
-                select 编码 ,成交商品件数 as '数量',时间 from danpin.jb_ziying 
+                select 编码 ,发货商品件数 as '数量',时间 from danpin.jb_ziying 
                 where 时间  >= DATE_SUB(DATE(NOW()),INTERVAL ? DAY)
                 UNION ALL
-                select 编码 ,成交商品件数 as '数量',时间 from danpin.jb_ziying_everday
+                select 编码 ,发货商品件数 as '数量',时间 from danpin.jb_ziying_everday
                 where 时间  >= DATE_SUB(DATE(NOW()),INTERVAL ? DAY)
         ) as a
         LEFT JOIN
@@ -892,34 +919,20 @@ goodsSalesRepo.updateJDsaleqty = async (day,column) =>{
 goodsSalesRepo.updateinventory = async(day,num,total_num) =>{
     let result1
     let sql = `select 商品编码,SUM(在仓库存) as '在仓库存',SUM(总库存) as '总库存' from (
-        SELECT a.商品编码
-            ,IFNULL(a.主仓实际库存数,0) - IFNULL(a.订单占有数,0)- IFNULL(a.进货仓库存,0) - IFNULL(c.南京仓京东自备,0) 
-            - IFNULL(c.\`COUPANG/猫超南京仓\`,0)  as '在仓库存'
-            ,IFNULL(a.主仓实际库存数,0) - IFNULL(a.订单占有数,0)- IFNULL(a.进货仓库存,0) - IFNULL(c.南京仓京东自备,0) 
-            - IFNULL(c.\`COUPANG/猫超南京仓\`,0) + IFNULL(a.采购在途数,0) as '总库存'
-        FROM (
-        select 商品编码
-            ,SUM(主仓实际库存数) as '主仓实际库存数'
-            ,SUM(公有可用数) as '公有可用数'
-            ,sum(采购在途数) as '采购在途数'
-            ,sum(调拨在途数)as '调拨在途数'
-            ,SUM(订单占有数) as '订单占有数'
-            ,SUM(进货仓库存) as '进货仓库存'
-        from danpin.goods_kucun 
-        where 统计日期 =  DATE_SUB(DATE(NOW()),INTERVAL ? DAY) and 仓储方='北京超速树懒科技有限公司'
-        GROUP BY 商品编码
-        )as a
-        LEFT JOIN(
-        select 商品编码
-            ,sum(IF(运营云仓名称='南京仓京东自备',运营云仓可用数,0)) as '南京仓京东自备'
-            ,sum(IF(运营云仓名称='事业三部（天猫/小红书/TEOTM)',运营云仓可用数,0)) as '事业三部'
-            ,sum(IF(运营云仓名称='事业一部（PDD/淘工厂/猫超/COUPANG）',运营云仓可用数,0)) AS '事业一部'
-            ,sum(IF(运营云仓名称='事业二部（京东/抖音/唯品会/得物/1688）',运营云仓可用数,0)) AS '事业二部'
-            ,sum(IF(运营云仓名称='COUPANG/猫超南京仓',运营云仓可用数,0)) AS 'COUPANG/猫超南京仓'
-        FROM danpin.goods_kucun_fen WHERE 统计日期 =  DATE_SUB(DATE(NOW()),INTERVAL ? DAY)
-        GROUP BY 商品编码
-        ) as c
-        on a.商品编码=c.商品编码
+        SELECT a.sku_code AS 商品编码
+			,a.main_inventory-a.orders_num+a.stock_num -IFNULL(b.jd_colud,0) -IFNULL(b.COUPANG,0) AS 在仓库存 
+			,a.transit + a.main_inventory-a.orders_num+a.stock_num -IFNULL(b.jd_colud,0) -IFNULL(b.COUPANG,0) AS '总库存' 
+        FROM jst_goods_inventory AS a
+        LEFT JOIN (
+            SELECT 商品编码
+                ,sum(IF(运营云仓名称='南京仓京东自备',运营云仓可用数,0)) AS jd_colud
+                ,sum(IF(运营云仓名称='COUPANG/猫超南京仓',运营云仓可用数,0)) AS 'COUPANG'
+            FROM danpin.goods_kucun_fen 
+            WHERE 运营云仓名称 IN ('南京仓京东自备','COUPANG/猫超南京仓') 
+            AND 统计日期 = DATE_SUB(DATE(NOW()),INTERVAL 1 DAY)
+            GROUP BY 商品编码
+        ) AS b ON a.sku_code = b.商品编码
+        WHERE a.date = DATE_SUB(DATE(NOW()),INTERVAL 1 DAY)
         union ALL
         select a.商品编码
             ,sum(京东仓库存) as '在仓库存'
@@ -933,7 +946,7 @@ goodsSalesRepo.updateinventory = async(day,num,total_num) =>{
                         ,全国现货库存 as '京东仓库存'
                         ,全国采购在途数量 as '京东在途库存' 
                     from danpin.inventory_jdzz 
-                    where 时间 =  DATE_SUB(DATE(NOW()),INTERVAL ? DAY)
+                    where 时间 =  DATE_SUB(DATE(NOW()),INTERVAL 1 DAY)
                     ) as a
                 LEFT JOIN bi_serve.dianshang_operation_attribute as b
                 on a.SKU=b.sku_id
@@ -992,45 +1005,6 @@ goodsSalesRepo.updateinventory1 = async()=>{
     return result1
 }
 
-goodsSalesRepo.updateinventory2 = async()=>{
-    let result1
-    let sql = ` SELECT a.商品编码
-            ,IFNULL(a.主仓实际库存数,0) - IFNULL(a.订单占有数,0)- IFNULL(a.进货仓库存,0)- IFNULL(c.\`COUPANG/猫超南京仓\`,0)  as '在仓库存'
-            , IFNULL(a.采购在途数,0) as '采购在途'
-            ,IFNULL(c.南京仓京东自备,0) as '京东云仓'
-        FROM (
-        select 商品编码
-            ,SUM(主仓实际库存数) as '主仓实际库存数'
-            ,SUM(公有可用数) as '公有可用数'
-            ,sum(采购在途数) as '采购在途数'
-            ,sum(调拨在途数)as '调拨在途数'
-            ,SUM(订单占有数) as '订单占有数'
-            ,SUM(进货仓库存) as '进货仓库存'
-        from danpin.goods_kucun 
-        where 统计日期 =  DATE_SUB(DATE(NOW()),INTERVAL 1 DAY) and 仓储方='北京超速树懒科技有限公司'
-        GROUP BY 商品编码
-        )as a
-        LEFT JOIN(
-        select 商品编码
-            ,sum(IF(运营云仓名称='南京仓京东自备',运营云仓可用数,0)) as '南京仓京东自备'
-            ,sum(IF(运营云仓名称='事业三部（天猫/小红书/TEOTM)',运营云仓可用数,0)) as '事业三部'
-            ,sum(IF(运营云仓名称='事业一部（PDD/淘工厂/猫超/COUPANG）',运营云仓可用数,0)) AS '事业一部'
-            ,sum(IF(运营云仓名称='事业二部（京东/抖音/唯品会/得物/1688）',运营云仓可用数,0)) AS '事业二部'
-            ,sum(IF(运营云仓名称='COUPANG/猫超南京仓',运营云仓可用数,0)) AS 'COUPANG/猫超南京仓'
-        FROM danpin.goods_kucun_fen WHERE 统计日期 =  DATE_SUB(DATE(NOW()),INTERVAL 1 DAY)
-        GROUP BY 商品编码
-        ) as c
-        on a.商品编码=c.商品编码`
-    const result = await query(sql)
-    for (i=0;i<=result.length -1 ;i++){
-        sql = `UPDATE inventory_attributes 
-        SET nj_transit = ${result[i].采购在途},nj_num = ${result[i].在仓库存},jd_colud = ${result[i].在仓库存}, update_time = CURRENT_TIMESTAMP
-        where upper(sku_code) = upper('${result[i].商品编码}')`
-        result1 = await query(sql)
-    }
-    return result1
-}
-
 goodsSalesRepo.updateTags = async() =>{
     const sql = `UPDATE inventory_attributes a LEFT join (
             select sku_code,SUM(io_qty) as io_qty 
@@ -1042,14 +1016,14 @@ goodsSalesRepo.updateTags = async() =>{
     const result = await query(sql)   
     const sql1 =`UPDATE inventory_attributes SET sale_days = IF(day30_sale_qty!=0,ROUND(num/(day30_sale_qty/30),0),0),update_time = CURRENT_TIMESTAMP WHERE day30_sale_qty != 0`
     const result1 = await query(sql1)
-    const sql2 = `UPDATE inventory_attributes set tags = (CASE 
-                WHEN day30_sale_qty <=0 THEN '30天内零动销'
-                WHEN sale_days > 90 THEN '支撑大于90天'
-                WHEN sale_days >= 60 and sale_days <=90 THEN '支撑60-90天'
-                WHEN sale_days >= 30 and sale_days <60 THEN '支撑30-60天'
-                WHEN sale_days >= 15 and sale_days <30 THEN '支撑15-30天'
-                ELSE '支撑小于15天' END ),update_time = CURRENT_TIMESTAMP`
-    const result2 = await query(sql2)
+    // const sql2 = `UPDATE inventory_attributes set tags = (CASE 
+    //             WHEN day30_sale_qty <=0 THEN '30天内零动销'
+    //             WHEN sale_days > 90 THEN '支撑大于90天'
+    //             WHEN sale_days >= 60 and sale_days <=90 THEN '支撑60-90天'
+    //             WHEN sale_days >= 30 and sale_days <60 THEN '支撑30-60天'
+    //             WHEN sale_days >= 15 and sale_days <30 THEN '支撑15-30天'
+    //             ELSE '支撑小于15天' END ),update_time = CURRENT_TIMESTAMP`
+    // const result2 = await query(sql2)
     const sql3 = `UPDATE inventory_attributes a LEFT join (
             select sku_code,SUM(qty) as qty 
             from jst_purchase_return 
@@ -1073,55 +1047,85 @@ goodsSalesRepo.updateTags = async() =>{
                 select sys_sku_id,min(create_time) from jst_goods_sku GROUP BY sys_sku_id
                 ) as a GROUP BY sku_code) as b
                 on upper(a.sku_code) = upper(b.sku_code)
-                SET a.create_time = b.onsale_date 
+                SET a.onsale_date = b.onsale_date 
                 WHERE a.create_time is null`
     const result5 = await query(sql5)
     return result3
 }
 
-goodsSalesRepo.getsputags = async(type) =>{
-    let subsql = ''
-    if (type == 1){
-        subsql = `WHERE shipping_attributes is null`
-    }
-    let sql = `SELECT attribute
-			,COUNT(spu_name) as spu_num
-			,ROUND(SUM(cost)/10000,1) as cost
-			,ROUND(SUM(cost)/max(total_cost)*100,2) as cost_proportion
-			,ROUND(SUM(num)/(SUM(day7_sale_qty)/7),0) as stock_sale7
-            ,ROUND(SUM(num)/(SUM(day30_sale_qty)/30),0) as stock_sale30
-			,ROUND(SUM(day30_sale_qty)/(SUM(num30)+SUM(io_qty)-IFNULL(SUM(fund_num),0))*100,2) as sell_through_rate
-			,ROUND(SUM(day30_cost)/((sum(cost30)+sum(cost))*2)*100,2) as inventory_turnover
-        FROM(
-                SELECT spu_name,(CASE
-                WHEN (sale_days >90 and month6_sale_qty<=10) OR day30_sale_qty <= 10 THEN '零动销'
-                WHEN (sale_days >90 and month6_sale_qty>10) OR ps like '%滞销%' OR ps like '%销完下架%' THEN '滞销'
-                WHEN sale_days >60 and sale_days <= 90 THEN '低周转'
-                WHEN sale_days >30 and sale_days <= 60  THEN '正常周转'
-                WHEN sale_days <=30 THEN '高周转'
-                END) as attribute,a.cost,b.total_cost,a.sale_days,a.month6_sale_qty,a.day7_sale_qty,a.day30_sale_qty,a.num,a.num30,a.io_qty,a.fund_num,a.cost30,a.day30_cost
-                FROM (
-                    SELECT spu_name
-                        ,IF(SUM(day30_sale_qty)!=0,ROUND(SUM(num)/(SUM(day30_sale_qty)/30),0),0) as sale_days
-                        ,SUM(month6_sale_qty) as month6_sale_qty
-                        ,SUM(num) as num
-                        ,SUM(day7_sale_qty) as day7_sale_qty
-                        ,SUM(day30_sale_qty) as day30_sale_qty
-                        ,SUM(day30_sale_qty*cost_price) as day30_cost
-                        ,SUM(cost_price*num) as cost 
-                        ,SUM(num30) as num30
-                        ,SUM(cost_price*num30) as cost30
-                        ,SUM(fund_num) as fund_num
-                        ,SUM(io_qty) as io_qty
-                        ,MAX(ps) as ps
-                    from inventory_attributes ${subsql}
-                    GROUP BY spu_name 
-                ) as a
-                LEFT JOIN (SELECT SUM(cost_price*num) as total_cost from inventory_attributes ) as b 
-                on 1=1
-        ) as a 
-        GROUP BY attribute`
+goodsSalesRepo.getsputags = async() =>{
+    let sql = `SELECT '库存成本' as label
+			,SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price) as nj_total_cost
+			,SUM(IFNULL(nj_num,0)*cost_price) as nj_cost
+			,SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price) as jd_cost
+        FROM inventory_attributes
+        WHERE IFNULL(ps,'') NOT REGEXP '配件|零件' AND goods_info != '包材'
+        UNION ALL
+        SELECT '7天日均销售成本可支撑天数' as label
+			,SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price)/SUM(IFNULL(nj7_sale_qty,0)*cost_price/7) as nj_total_cost
+			,SUM(IFNULL(nj_num,0)*cost_price)/SUM(IFNULL(nj7_sale_qty,0)*cost_price/7) as nj_cost
+			,SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price)/SUM(IFNULL(jd7_sale_qty,0)*cost_price/7) as jd_cost
+        FROM inventory_attributes
+        WHERE IFNULL(ps,'') NOT REGEXP '配件|零件' AND goods_info != '包材'
+        UNION ALL
+        SELECT '30天日均销售成本可支撑天数' as label
+			,SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price)/SUM(IFNULL(nj30_sale_qty,0)*cost_price/30) as nj_total_cost
+			,SUM(IFNULL(nj_num,0)*cost_price)/SUM(IFNULL(nj30_sale_qty,0)*cost_price/30) as nj_cost
+			,SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price)/SUM(IFNULL(jd30_sale_qty,0)*cost_price/30) as jd_cost
+        FROM inventory_attributes
+        WHERE IFNULL(ps,'') NOT REGEXP '配件|零件' AND goods_info != '包材'
+        UNION ALL
+        SELECT '配件/零件库存成本' as label
+			,SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price) as nj_total_cost
+			,SUM(IFNULL(nj_num,0)*cost_price) as nj_cost
+			,SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price) as jd_cost
+        FROM inventory_attributes
+        WHERE IFNULL(ps,'') REGEXP '配件|零件' AND goods_info != '包材'
+        UNION ALL
+        SELECT '包材库存成本' as label
+			,SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price) as nj_total_cost
+			,SUM(IFNULL(nj_num,0)*cost_price) as nj_cost
+			,SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price) as jd_cost
+        FROM inventory_attributes
+        WHERE goods_info = '包材' `
     const result = await query(sql)
+    return result
+}
+
+goodsSalesRepo.getsputags1 = async(params) =>{
+    let page = parseInt(params.currentPage)
+    let size = parseInt(params.pageSize)
+    let offset = (page - 1) * size
+    let result = {
+        currentPage: params.currentPage,
+        pageSize: params.pageSize,
+        data: []
+    }
+    let sql = `SELECT second_category
+			,third_category
+			,spu_name
+			,sku_code
+			,cost_price
+			,IFNULL(nj_num,0)+IFNULL(nj_transit,0) as nj_total_num
+			,ROUND((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price,2) as nj_total_cost
+			,ROUND((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price/(IFNULL(nj7_sale_qty,0)*cost_price/7),0) as nj7_total_sale_days
+			,ROUND((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price/(IFNULL(nj30_sale_qty,0)*cost_price/30),0) as nj30_total_sale_days
+			,IFNULL(nj_num,0) as nj_num
+			,ROUND(IFNULL(nj_num,0)*cost_price,2) as nj_cost
+			,ROUND(IFNULL(nj_num,0)*cost_price/(IFNULL(nj7_sale_qty,0)*cost_price/7),0) as nj7_sale_days
+			,ROUND(IFNULL(nj_num,0)*cost_price/(IFNULL(nj30_sale_qty,0)*cost_price/30),0) as nj30_sale_days
+			,IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0) as jd_num
+			,ROUND((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price,2) as jd_cost
+			,ROUND((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price/(IFNULL(jd7_sale_qty,0)*cost_price)/7,0) as jd7_sale_days
+			,ROUND((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price/(IFNULL(jd30_sale_qty,0)*cost_price)/30,0) as jd30_sale_days
+			,turnover_officer
+        FROM inventory_attributes`
+    let sql1= `select count(1) as count from (${sql} )as a `
+    let data1 = await query(sql1)
+    result.total = data1[0].count
+    sql = `${sql} LIMIT ${offset}, ${size}`
+    let data = await query(sql)
+    result.data = data
     return result
 }
 

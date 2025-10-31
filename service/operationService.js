@@ -5298,17 +5298,15 @@ const getShopSaleQtyData = async(day,day7,day30,day31) => {
 
 const updateInventory = async () =>{
     logger.info(`[inventory_attributes开始刷新]：时间:${moment().subtract(1, 'day').format('YYYY-MM-DD')}`)
-    await goodsSalesRepo.updatemonth6(6,'month','month6_sale_qty')
-    await goodsSalesRepo.updatemonth6(7,'day','day7_sale_qty')
-    await goodsSalesRepo.updatemonth6(30,'day','day30_sale_qty')
-    await goodsSalesRepo.updateNJsaleqty(7,'nj7_sale_qty')
-    await goodsSalesRepo.updateNJsaleqty(30,'nj30_sale_qty')
+    await goodsSalesRepo.InsertInventory()
+    await goodsSalesRepo.updateinventory1()
     await goodsSalesRepo.updateJDsaleqty(7,'jd7_sale_qty')
     await goodsSalesRepo.updateJDsaleqty(30,'jd30_sale_qty')
     await goodsSalesRepo.updateinventory(1,'num','total_num')
     await goodsSalesRepo.updateinventory(31,'num30','total_num30')
-    await goodsSalesRepo.updateinventory1()
-    await goodsSalesRepo.updateinventory2()
+    await goodsSalesRepo.updatemonth6(6,'month','month6_sale_qty')
+    await goodsSalesRepo.updatemonth6(7,'day','day7_sale_qty')
+    await goodsSalesRepo.updatemonth6(30,'day','day30_sale_qty')
     await goodsSalesRepo.updateTags()
     logger.info(`[inventory_attributes刷新成功]：时间:${moment().subtract(1, 'day').format('YYYY-MM-DD')}`)
     return true
