@@ -4532,7 +4532,7 @@ developmentService.getProcessDetail = async (params) => {
             if (result[i].image != null && result[i].image.indexOf('[') != -1) {
                 let content = JSON.parse(result[i].image)
                 result[i].image = content[0]
-            }
+            } 
             if (result[i].image?.length) result[i].image = result[i].image.replace(':9000/', ':9003/').replace('http:', 'https:').replace('//bpm.', '//minio.')
             if (result[i].info) {
                 result[i]['pre_purchase_num'] = 0
