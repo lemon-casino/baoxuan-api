@@ -2235,6 +2235,63 @@ const countPurchaseProgress = async (taskTitles, options, start, end) => {
     return extractCount(result)
 }
 
+const PURCHASE_CATEGORY_TASKS = {
+    order: ORDER_TASK_TITLES,
+    warehousing: WAREHOUSING_TASK_TITLES
+}
+
+/**
+ * 查询采购环节满足条件的推品明细
+ * @param {object} options 查询参数
+ * @param {'order'|'warehousing'} options.category 环节标识
+ * @param {boolean} options.finished 是否查询已完成记录
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式的开始日期
+ * @param {string|undefined} options.end 发起模式的结束日期
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+processesRepo.getPurchaseProcessList = async ({ category, finished, isRunningMode, start, end }) => {
+    const taskTitles = PURCHASE_CATEGORY_TASKS[category]
+    if (!taskTitles) {
+        return []
+    }
+    const codes = toArray(DELIVERY_PROCESS_CODES)
+    const tasks = toArray(taskTitles)
+    if (!codes.length || !tasks.length) {
+        return []
+    }
+    const conditions = []
+    const params = []
+    conditions.push(`p.process_code IN (${buildInPlaceholders(codes)})`)
+    params.push(...codes)
+    if (!finished) {
+        conditions.push('p.status = 1')
+    }
+    if (!isRunningMode) {
+        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    }
+    const taskPlaceholders = buildInPlaceholders(tasks)
+    if (finished) {
+        conditions.push(`EXISTS (SELECT 1 FROM process_tasks pt_done WHERE pt_done.process_id = p.process_id
+            AND pt_done.title IN (${taskPlaceholders}) AND pt_done.status = 2)`)
+        params.push(...tasks)
+    } else {
+        conditions.push(`EXISTS (SELECT 1 FROM process_tasks pt_active WHERE pt_active.process_id = p.process_id
+            AND pt_active.title IN (${taskPlaceholders}) AND IFNULL(pt_active.status, 0) <> 2)`)
+        params.push(...tasks)
+        conditions.push(`NOT EXISTS (SELECT 1 FROM process_tasks pt_finish WHERE pt_finish.process_id = p.process_id
+            AND pt_finish.title IN (${taskPlaceholders}) AND pt_finish.status = 2)`)
+        params.push(...tasks)
+    }
+    const sql = `${DEVELOPMENT_LIST_SELECT}
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
+}
+
 const countShelfProgress = async (statuses, platforms, start, end) => {
     const codes = toArray(SHELF_PROCESS_CODES)
     const statusList = toArray(statuses)
