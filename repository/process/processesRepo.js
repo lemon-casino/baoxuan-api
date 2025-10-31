@@ -1677,9 +1677,6 @@ processesRepo.getTmallInfo = async (start, end) => {
     return result || []
 }
 
-
-module.exports = processesRepo
-
 const getDevelopmentProcessDateColumn = () => 'dp.create_time'
 
 const formatDateTimeParam = (value, fallbackTime) => {
@@ -1899,6 +1896,40 @@ processesRepo.getOperatorInquiryList = async ({ status, isRunningMode, start, en
 }
 
 /**
+ * 查询日常询价不同状态下的推品明细
+ * @param {object} options 查询参数
+ * @param {'running'|'finish'} options.status 目标状态
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式下的开始时间
+ * @param {string|undefined} options.end 发起模式下的结束时间
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+processesRepo.getDailyInquiryList = async ({ status, isRunningMode, start, end }) => {
+    if (!status || (isRunningMode && status !== 'running')) {
+        return []
+    }
+    const params = []
+    const conditions = [`p.process_code = '${DAILY_INQUIRY_PROCESS_CODE}'`]
+    if (!isRunningMode) {
+        appendDateRangeClauses(conditions, params, 'p.start_time', start, end)
+    }
+    if (status === 'running') {
+        conditions.push('p.status = 1')
+    } else if (status === 'finish') {
+        conditions.push('p.status IN (2,3,4)')
+    } else {
+        return []
+    }
+    const sql = `${DEVELOPMENT_LIST_SELECT}
+        JOIN process_info pi ON pi.content = dp.uid AND (pi.field = '${DEVELOPMENT_UID_FIELD}' OR pi.title = '推品ID')
+        JOIN processes p ON p.process_id = pi.process_id
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
+}
+
+/**
  * 统计反推询价在不同状态下的数量
  * @param {string|undefined} start 开始日期
  * @param {string|undefined} end 结束日期
@@ -1963,6 +1994,7 @@ const SHELF_DIVISION_PLATFORMS = {
     division3: ['天猫', '天猫垂类店', '淘工厂', '小红书']
 }
 const OPERATOR_PROCESS_CODE = 'tpkfsh'
+const DAILY_INQUIRY_PROCESS_CODE = 'cpxjsq'
 const OPERATOR_PROGRESS_TITLES = ['反推进度1', '反推进度2', '反推进度3', '寻源结果']
 const OPERATOR_PROGRESS_SUCCESS_VALUE = '找到'
 const VISION_PROCESS_CODES = ['xbsjmblc_copy']
@@ -2654,16 +2686,19 @@ processesRepo.getVisionProcessList = async ({ typeKey, creativeKey, stage, isRun
  * @returns {Promise<{running: number, finish: number}>}
  */
 processesRepo.getDailyInquiryStats = async (start, end) => {
-    const conditions = ["p.process_code = 'cpxjsq'"]
     const params = []
-    appendDateRangeClauses(conditions, params, 'p.start_time', start, end)
-    const runningSql = `SELECT COUNT(DISTINCT p.process_id) AS total
-        FROM processes p
-        WHERE ${conditions.concat('p.status = 1').join(' AND ')}`
+    const baseConditions = [`p.process_code = '${DAILY_INQUIRY_PROCESS_CODE}'`]
+    appendDateRangeClauses(baseConditions, params, 'p.start_time', start, end)
+    const baseJoin = `FROM development_process dp
+        JOIN process_info pi ON pi.content = dp.uid AND (pi.field = '${DEVELOPMENT_UID_FIELD}' OR pi.title = '推品ID')
+        JOIN processes p ON p.process_id = pi.process_id`
+    const runningSql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        ${baseJoin}
+        WHERE ${baseConditions.concat('p.status = 1').join(' AND ')}`
     const runningResult = await query(runningSql, params.slice())
-    const finishSql = `SELECT COUNT(DISTINCT p.process_id) AS total
-        FROM processes p
-        WHERE ${conditions.concat('p.status IN (2,3,4)').join(' AND ')}`
+    const finishSql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        ${baseJoin}
+        WHERE ${baseConditions.concat('p.status IN (2,3,4)').join(' AND ')}`
     const finishResult = await query(finishSql, params.slice())
     return {
         running: extractCount(runningResult),
