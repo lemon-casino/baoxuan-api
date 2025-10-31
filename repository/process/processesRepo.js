@@ -2292,6 +2292,46 @@ processesRepo.getPurchaseProcessList = async ({ category, finished, isRunningMod
     return rows || []
 }
 
+/**
+ * 查询上架流程明细
+ * @param {object} options 查询参数
+ * @param {number|Array<number>} options.status 上架流程状态
+ * @param {string} options.division 事业部标识
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式开始日期
+ * @param {string|undefined} options.end 发起模式结束日期
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+processesRepo.getShelfProcessList = async ({ status, division, isRunningMode, start, end }) => {
+    const statusList = toArray(status)
+    const platforms = SHELF_DIVISION_PLATFORMS[division]
+    const codes = toArray(SHELF_PROCESS_CODES)
+    if (!statusList.length || !platforms || !codes.length) {
+        return []
+    }
+    const conditions = []
+    const params = []
+    conditions.push(`p.process_code IN (${buildInPlaceholders(codes)})`)
+    params.push(...codes)
+    conditions.push(`p.status IN (${buildInPlaceholders(statusList)})`)
+    params.push(...statusList)
+    conditions.push('pi_platform.title = ?')
+    params.push(SHELF_PLATFORM_TITLE)
+    conditions.push(`pi_platform.content IN (${buildInPlaceholders(platforms)})`)
+    params.push(...platforms)
+    if (!isRunningMode) {
+        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    }
+    const sql = `${DEVELOPMENT_LIST_SELECT}
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        JOIN process_info pi_platform ON pi_platform.process_id = p.process_id
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
+}
+
 const countShelfProgress = async (statuses, platforms, start, end) => {
     const codes = toArray(SHELF_PROCESS_CODES)
     const statusList = toArray(statuses)

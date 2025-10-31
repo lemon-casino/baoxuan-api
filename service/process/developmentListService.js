@@ -33,6 +33,15 @@ const PURCHASE_FIELD_OPTIONS = {
     warehousing_finish: { category: 'warehousing', finished: true }
 }
 
+const SHELF_FIELD_OPTIONS = {
+    unshelf_division1: { status: 1, division: 'division1' },
+    unshelf_division2: { status: 1, division: 'division2' },
+    unshelf_division3: { status: 1, division: 'division3' },
+    shelfed_division1: { status: 2, division: 'division1' },
+    shelfed_division2: { status: 2, division: 'division2' },
+    shelfed_division3: { status: 2, division: 'division3' }
+}
+
 const VISION_CATEGORY_CONFIGS = [
     { key: 'supplier', field: 'vision_supplier' },
     { key: 'operator', field: 'vision_operator' },
@@ -124,6 +133,13 @@ const resolveVisionOptions = (field) => VISION_FIELD_OPTIONS[field]
  * @returns {object|undefined} 查询配置
  */
 const resolvePurchaseOptions = (field) => PURCHASE_FIELD_OPTIONS[field]
+
+/**
+ * 根据字段名解析上架流程的查询配置
+ * @param {string} field 前端传入的字段标识
+ * @returns {object|undefined} 查询配置
+ */
+const resolveShelfOptions = (field) => SHELF_FIELD_OPTIONS[field]
 
 /**
  * 查询满足条件的推品明细列表
@@ -251,6 +267,29 @@ const queryPurchaseList = async (isRunningMode, purchaseOptions, startDate, endD
 }
 
 /**
+ * 查询上架流程满足条件的推品明细
+ * @param {boolean} isRunningMode 是否为待办模式
+ * @param {object} shelfOptions 查询配置
+ * @param {number} shelfOptions.status 上架流程状态
+ * @param {string} shelfOptions.division 事业部标识
+ * @param {string|undefined} startDate 开始日期
+ * @param {string|undefined} endDate 结束日期
+ * @returns {Promise<Array<object>>} 推品明细列表
+ */
+const queryShelfList = async (isRunningMode, shelfOptions, startDate, endDate) => {
+    if (!shelfOptions) {
+        return []
+    }
+    const options = {
+        ...shelfOptions,
+        isRunningMode,
+        start: isRunningMode ? undefined : startDate,
+        end: isRunningMode ? undefined : endDate
+    }
+    return processesRepo.getShelfProcessList(options)
+}
+
+/**
  * 查询设计与各类监修环节满足条件的推品明细
  * @param {boolean} isRunningMode 是否为待办模式
  * @param {object} designOptions 查询配置
@@ -324,6 +363,11 @@ const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
     const purchaseOptions = resolvePurchaseOptions(field)
     if (purchaseOptions) {
         const data = await queryPurchaseList(isRunningMode, purchaseOptions, startDate, endDate)
+        return { columns, data }
+    }
+    const shelfOptions = resolveShelfOptions(field)
+    if (shelfOptions) {
+        const data = await queryShelfList(isRunningMode, shelfOptions, startDate, endDate)
         return { columns, data }
     }
     return { columns, data: [] }
