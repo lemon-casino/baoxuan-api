@@ -1723,7 +1723,7 @@ const countDevelopmentByTaskStatus = async (processCodes, taskTitles, statuses, 
     appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
     const sql = `SELECT COUNT(DISTINCT dp.uid) AS total
         FROM development_process dp
-        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN process_info pi_id ON pi_id.content = dp.uid AND (pi_id.field = '${DEVELOPMENT_UID_FIELD}' OR pi_id.title = '推品ID')
         JOIN processes p ON p.process_id = pi_id.process_id
         JOIN process_tasks pt ON pt.process_id = p.process_id
         WHERE ${conditions.join(' AND ')}`
@@ -1748,7 +1748,7 @@ const fetchDevelopmentListByTaskStatus = async ({ processCodes, taskTitles, stat
         appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
     }
     const sql = `${DEVELOPMENT_LIST_SELECT}
-        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN process_info pi_id ON pi_id.content = dp.uid AND (pi_id.field = '${DEVELOPMENT_UID_FIELD}' OR pi_id.title = '推品ID')
         JOIN processes p ON p.process_id = pi_id.process_id
         JOIN process_tasks pt ON pt.process_id = p.process_id
         WHERE ${conditions.join(' AND ')}
@@ -1811,7 +1811,7 @@ const fetchDevelopmentListByProcessStatus = async ({ processCodes, statuses, isR
         appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
     }
     const sql = `${DEVELOPMENT_LIST_SELECT}
-        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN process_info pi_id ON pi_id.content = dp.uid AND (pi_id.field = '${DEVELOPMENT_UID_FIELD}' OR pi_id.title = '推品ID')
         JOIN processes p ON p.process_id = pi_id.process_id
         WHERE ${conditions.join(' AND ')}
         ORDER BY dp.create_time DESC, dp.sort ASC`
@@ -1830,7 +1830,7 @@ const countDevelopmentByProcessStatus = async (processCodes, statuses, start, en
     appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
     const sql = `SELECT COUNT(DISTINCT dp.uid) AS total
         FROM development_process dp
-        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN process_info pi_id ON pi_id.content = dp.uid AND (pi_id.field = '${DEVELOPMENT_UID_FIELD}' OR pi_id.title = '推品ID')
         JOIN processes p ON p.process_id = pi_id.process_id
         WHERE ${conditions.join(' AND ')}`
     const result = await query(sql, params)
@@ -1970,7 +1970,7 @@ processesRepo.getOperatorInquiryStats = async (start, end) => {
     appendDateRangeClauses(dateClauses, params, 'dp.create_time', start, end)
     const dateCondition = dateClauses.length ? ` AND ${dateClauses.join(' AND ')}` : ''
     const baseJoin = `FROM development_process dp
-        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN process_info pi_id ON pi_id.content = dp.uid AND (pi_id.field = '${DEVELOPMENT_UID_FIELD}' OR pi_id.title = '推品ID')
         JOIN processes p ON p.process_id = pi_id.process_id`
     const baseWhere = `dp.type = '反推推品' AND p.process_code = '${OPERATOR_PROCESS_CODE}'`
     const runningSql = `SELECT COUNT(DISTINCT dp.uid) AS total
@@ -2059,8 +2059,8 @@ const buildOperatorInquiryExistsCondition = (status) => {
     const base = `SELECT 1
         FROM process_info pi_id
         JOIN processes p ON p.process_id = pi_id.process_id
-        WHERE pi_id.title = '推品ID'
-            AND pi_id.content = dp.uid
+        WHERE pi_id.content = dp.uid
+            AND (pi_id.field = '${DEVELOPMENT_UID_FIELD}' OR pi_id.title = '推品ID')
             AND p.process_code = '${OPERATOR_PROCESS_CODE}'`
     if (status === 'running') {
         return `EXISTS (${base}
@@ -2287,7 +2287,7 @@ const buildPurchaseQuery = (taskTitles, { finished }, start, end) => {
     }
     const sql = `SELECT COUNT(DISTINCT dp.uid) AS total
         FROM development_process dp
-        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN process_info pi_id ON pi_id.content = dp.uid AND (pi_id.field = '${DEVELOPMENT_UID_FIELD}' OR pi_id.title = '推品ID')
         JOIN processes p ON p.process_id = pi_id.process_id
         WHERE ${conditions.join(' AND ')}`
     return { sql, params }
@@ -2348,7 +2348,7 @@ processesRepo.getPurchaseProcessList = async ({ category, finished, isRunningMod
         params.push(...tasks)
     }
     const sql = `${DEVELOPMENT_LIST_SELECT}
-        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN process_info pi_id ON pi_id.content = dp.uid AND (pi_id.field = '${DEVELOPMENT_UID_FIELD}' OR pi_id.title = '推品ID')
         JOIN processes p ON p.process_id = pi_id.process_id
         WHERE ${conditions.join(' AND ')}
         ORDER BY dp.create_time DESC, dp.sort ASC`
@@ -2387,7 +2387,7 @@ processesRepo.getShelfProcessList = async ({ status, division, isRunningMode, st
         appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
     }
     const sql = `${DEVELOPMENT_LIST_SELECT}
-        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN process_info pi_id ON pi_id.content = dp.uid AND (pi_id.field = '${DEVELOPMENT_UID_FIELD}' OR pi_id.title = '推品ID')
         JOIN processes p ON p.process_id = pi_id.process_id
         JOIN process_info pi_platform ON pi_platform.process_id = p.process_id
         WHERE ${conditions.join(' AND ')}
@@ -2413,7 +2413,7 @@ const countShelfProgress = async (statuses, platforms, start, end) => {
     appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
     const sql = `SELECT COUNT(DISTINCT dp.uid) AS total
         FROM development_process dp
-        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN process_info pi_id ON pi_id.content = dp.uid AND (pi_id.field = '${DEVELOPMENT_UID_FIELD}' OR pi_id.title = '推品ID')
         JOIN processes p ON p.process_id = pi_id.process_id
         JOIN process_info pi_platform ON pi_platform.process_id = p.process_id
         WHERE ${conditions.join(' AND ')}`
@@ -2494,7 +2494,7 @@ const appendSelectionConditions = (conditions, params, start, end) => {
 
 const buildSelectionQuery = (conditions) => `SELECT COUNT(DISTINCT dp.uid) AS total
     FROM development_process dp
-    JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+    JOIN process_info pi_id ON pi_id.content = dp.uid AND (pi_id.field = '${DEVELOPMENT_UID_FIELD}' OR pi_id.title = '推品ID')
     JOIN processes p ON p.process_id = pi_id.process_id
     JOIN process_tasks pt ON pt.process_id = p.process_id
     WHERE ${conditions.join(' AND ')}`
@@ -2660,7 +2660,7 @@ processesRepo.getVisionStats = async (start, end) => {
         " CASE WHEN p.status = 1 THEN 'running' ELSE 'finish' END AS stage," +
         ' COUNT(DISTINCT dp.uid) AS total' +
         ' FROM development_process dp' +
-        " JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid" +
+        " JOIN process_info pi_id ON pi_id.content = dp.uid AND (pi_id.field = '${DEVELOPMENT_UID_FIELD}' OR pi_id.title = '推品ID')" +
         ' JOIN processes p ON p.process_id = pi_id.process_id' +
         ` WHERE ${conditions.join(' AND ')}` +
         ' GROUP BY dp.type, dp.vision_type, stage'
@@ -2750,7 +2750,7 @@ processesRepo.getVisionProcessList = async ({ typeKey, creativeKey, stage, isRun
     }
 
     const sql = `${DEVELOPMENT_LIST_SELECT}
-        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN process_info pi_id ON pi_id.content = dp.uid AND (pi_id.field = '${DEVELOPMENT_UID_FIELD}' OR pi_id.title = '推品ID')
         JOIN processes p ON p.process_id = pi_id.process_id
         WHERE ${conditions.join(' AND ')}
         ORDER BY dp.create_time DESC, dp.sort ASC`
