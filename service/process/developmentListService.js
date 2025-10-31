@@ -26,6 +26,13 @@ const PLAN_FIELD_TO_STATUSES = {
     plan_finish: [2, 3, 4]
 }
 
+const PURCHASE_FIELD_OPTIONS = {
+    order_running: { category: 'order', finished: false },
+    order_finish: { category: 'order', finished: true },
+    warehousing_running: { category: 'warehousing', finished: false },
+    warehousing_finish: { category: 'warehousing', finished: true }
+}
+
 const VISION_CATEGORY_CONFIGS = [
     { key: 'supplier', field: 'vision_supplier' },
     { key: 'operator', field: 'vision_operator' },
@@ -110,6 +117,13 @@ const resolvePlanStatuses = (field) => PLAN_FIELD_TO_STATUSES[field]
  * @returns {object|undefined} 查询配置
  */
 const resolveVisionOptions = (field) => VISION_FIELD_OPTIONS[field]
+
+/**
+ * 根据字段名解析采购流程的查询配置
+ * @param {string} field 前端传入的字段标识
+ * @returns {object|undefined} 查询配置
+ */
+const resolvePurchaseOptions = (field) => PURCHASE_FIELD_OPTIONS[field]
 
 /**
  * 查询满足条件的推品明细列表
@@ -214,6 +228,29 @@ const queryVisionList = async (isRunningMode, visionOptions = {}, startDate, end
 }
 
 /**
+ * 查询采购环节满足条件的推品明细
+ * @param {boolean} isRunningMode 是否为待办模式
+ * @param {object} purchaseOptions 查询配置
+ * @param {'order'|'warehousing'} purchaseOptions.category 环节标识
+ * @param {boolean} purchaseOptions.finished 是否查询已完成记录
+ * @param {string|undefined} startDate 开始日期
+ * @param {string|undefined} endDate 结束日期
+ * @returns {Promise<Array<object>>} 推品明细列表
+ */
+const queryPurchaseList = async (isRunningMode, purchaseOptions, startDate, endDate) => {
+    if (!purchaseOptions) {
+        return []
+    }
+    const options = {
+        ...purchaseOptions,
+        isRunningMode,
+        start: isRunningMode ? undefined : startDate,
+        end: isRunningMode ? undefined : endDate
+    }
+    return processesRepo.getPurchaseProcessList(options)
+}
+
+/**
  * 查询设计与各类监修环节满足条件的推品明细
  * @param {boolean} isRunningMode 是否为待办模式
  * @param {object} designOptions 查询配置
@@ -282,6 +319,11 @@ const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
     const visionOptions = resolveVisionOptions(field)
     if (visionOptions) {
         const data = await queryVisionList(isRunningMode, visionOptions, startDate, endDate)
+        return { columns, data }
+    }
+    const purchaseOptions = resolvePurchaseOptions(field)
+    if (purchaseOptions) {
+        const data = await queryPurchaseList(isRunningMode, purchaseOptions, startDate, endDate)
         return { columns, data }
     }
     return { columns, data: [] }
