@@ -5,6 +5,8 @@ const { v4 } = require('uuid')
 const developmentProcessesRepo = require("@/repository/process/developmentProcessRepo")
 const actReProcdefRepo = require("@/repository/bpm/actReProcdefRepo")
 const commonReq = require('@/core/bpmReq/commonReq')
+const developmentTotalService = require('@/service/process/developmentTotalService')
+const developmentListService = require('@/service/process/developmentListService')
 
 const getLatestModifiedProcess = async () => {
     return await processRepo.getLatestModifiedProcess();
@@ -72,21 +74,11 @@ const getProcessMergeIdsData = async (dateType, nickname, startDate, endDate, is
 }
 
 const getDevelopmentProcessTotal = async (type, startDate, endDate) => {
-    let result = {columns: [], data: []}
-    if (type == '0') {
-        result.columns = processConst.dColumns
-    } else {
-        result.columns = processConst.rColumns
-    }
-    return result
+    return await developmentTotalService.getDevelopmentProcessTotal(type, startDate, endDate)
 }
 
-const getDevelopmentProcessList = async (type, column, startDate, endDate) => {
-    let result = {
-        columns: processConst.defaultColumns,
-        data: []
-    }
-    return result
+const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
+    return await developmentListService.getDevelopmentProcessList(type, field, startDate, endDate)
 }
 
 const createDevelopmentProcess = async (params, dingding_id) => {

@@ -1,6 +1,8 @@
 const { query } = require('../../model/dbConn')
 const processesRepo = {}
 
+const DEVELOPMENT_UID_FIELD = 'Fk0lmgyqg4d4abc'
+
 processesRepo.getProcessNodeCount = async (typeList, start, end) => {
     let sql = '', params = [], result = [] 
     for (let i = 0; i < typeList.length; i++) {
@@ -1675,14 +1677,898 @@ processesRepo.getTmallInfo = async (start, end) => {
     return result || []
 }
 
+const getDevelopmentProcessDateColumn = () => 'dp.create_time'
+
+const formatDateTimeParam = (value, fallbackTime) => {
+    if (!value) {
+        return value
+    }
+    const normalized = value.trim().replace('T', ' ').replace(/Z$/i, '')
+    if (/\d{2}:\d{2}/.test(normalized)) {
+        return normalized
+    }
+    return `${normalized} ${fallbackTime}`
+}
+
+const appendDateRangeClauses = (clauses, params, column, start, end) => {
+    if (start && end) {
+        clauses.push(`${column} BETWEEN ? AND ?`)
+        params.push(formatDateTimeParam(start, '00:00:00'))
+        params.push(formatDateTimeParam(end, '23:59:59'))
+    } else if (start) {
+        clauses.push(`${column} >= ?`)
+        params.push(formatDateTimeParam(start, '00:00:00'))
+    } else if (end) {
+        clauses.push(`${column} <= ?`)
+        params.push(formatDateTimeParam(end, '23:59:59'))
+    }
+}
+
+const extractCount = (rows) => Number(rows && rows[0] && rows[0].total) || 0
+
+const toArray = (value) => (Array.isArray(value) ? value : [value])
+
+const buildInPlaceholders = (values) => values.map(() => '?').join(', ')
+
+const countDevelopmentByTaskStatus = async (processCodes, taskTitles, statuses, start, end) => {
+    const codes = toArray(processCodes)
+    const titles = toArray(taskTitles)
+    const statusList = toArray(statuses)
+    const params = [...codes, ...titles, ...statusList]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        `pt.title IN (${buildInPlaceholders(titles)})`,
+        `pt.status IN (${buildInPlaceholders(statusList)})`
+    ]
+    appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    const sql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        FROM development_process dp
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        JOIN process_tasks pt ON pt.process_id = p.process_id
+        WHERE ${conditions.join(' AND ')}`
+    const result = await query(sql, params)
+    return extractCount(result)
+}
+
+const fetchDevelopmentListByTaskStatus = async ({ processCodes, taskTitles, statuses, isRunningMode, start, end }) => {
+    const codes = toArray(processCodes)
+    const titles = toArray(taskTitles)
+    const statusList = toArray(statuses)
+    if (!codes.length || !titles.length || !statusList.length) {
+        return []
+    }
+    const params = [...codes, ...titles, ...statusList]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        `pt.title IN (${buildInPlaceholders(titles)})`,
+        `pt.status IN (${buildInPlaceholders(statusList)})`
+    ]
+    if (!isRunningMode) {
+        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    }
+    const sql = `${DEVELOPMENT_LIST_SELECT}
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        JOIN process_tasks pt ON pt.process_id = p.process_id
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
+}
+
+/**
+ * 按流程状态查询推品明细
+ * @param {object} options 查询参数
+ * @param {Array<string>} options.processCodes 流程模型编码集合
+ * @param {number|Array<number>} options.statuses 目标流程状态
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式开始时间
+ * @param {string|undefined} options.end 发起模式结束时间
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+const fetchDevelopmentListByProcessStatus = async ({ processCodes, statuses, isRunningMode, start, end }) => {
+    const codes = toArray(processCodes)
+    const statusList = toArray(statuses)
+    if (!codes.length || !statusList.length) {
+        return []
+    }
+    const params = [...codes, ...statusList]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        `p.status IN (${buildInPlaceholders(statusList)})`
+    ]
+    if (!isRunningMode) {
+        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    }
+    const sql = `${DEVELOPMENT_LIST_SELECT}
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
+}
+
+const countDevelopmentByProcessStatus = async (processCodes, statuses, start, end) => {
+    const codes = toArray(processCodes)
+    const statusList = toArray(statuses)
+    const params = [...codes, ...statusList]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        `p.status IN (${buildInPlaceholders(statusList)})`
+    ]
+    appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    const sql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        FROM development_process dp
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        WHERE ${conditions.join(' AND ')}`
+    const result = await query(sql, params)
+    return extractCount(result)
+}
+
 processesRepo.getDevelopmentProcessTotal = async (start, end) => {
-    const sql = ``
-    const result = await query(sql, [start, end])
+    const params = []
+    const clauses = []
+    appendDateRangeClauses(clauses, params, getDevelopmentProcessDateColumn(), start, end)
+    const whereClause = clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''
+    const sql = `SELECT dp.type, COUNT(DISTINCT dp.uid) AS total
+        FROM development_process dp
+        ${whereClause}
+        GROUP BY dp.type`
+    const result = await query(sql, params)
     return result || []
 }
 
-processesRepo.getDevelopmentProcessRunning = async (start, end) => {
-    
+processesRepo.getDevelopmentProcessRunning = async () => {
+    const sql = `SELECT dp.type, COUNT(DISTINCT dp.uid) AS total
+        FROM development_process dp
+        JOIN process_info pi ON pi.content = dp.uid
+            AND (pi.field = '${DEVELOPMENT_UID_FIELD}' OR pi.title = '推品ID')
+        JOIN processes p ON p.process_id = pi.process_id AND p.status = 1
+        GROUP BY dp.type`
+    const result = await query(sql)
+    return result || []
+}
+
+const DEVELOPMENT_LIST_SELECT = `SELECT DATE_FORMAT(dp.create_time, '%Y-%m-%d') AS \`date\`,
+    dp.sort, dp.name, dp.spu, dp.sku_code, dp.type, dp.image, dp.developer, dp.starter,
+    dp.\`status\`, dp.is_select, dp.jd_status, dp.jd_is_select, dp.first_select, dp.second_select,
+    dp.third_select, dp.order_type, dp.vision_type, dp.jd_vision_type, dp.select_project,
+    dp.order_num, dp.jd_order_num, dp.operator, dp.jd_operator, dp.running_node,
+    dp.jd_running_node, dp.first_goods_id, dp.second_goods_id, dp.third_goods_id
+    FROM development_process dp`
+
+const appendRunningJoins = (joins) => {
+    joins.push(`JOIN process_info pi ON pi.content = dp.uid AND (pi.field = '${DEVELOPMENT_UID_FIELD}' OR pi.title = '推品ID')`)
+    joins.push('JOIN processes p ON p.process_id = pi.process_id')
+}
+
+processesRepo.getDevelopmentProcessList = async ({ developmentType, isRunningMode, start, end }) => {
+    if (!developmentType) {
+        return []
+    }
+    const params = [developmentType]
+    const conditions = ['dp.type = ?']
+    const joins = []
+    if (isRunningMode) {
+        appendRunningJoins(joins)
+        conditions.push('p.status = 1')
+    } else {
+        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    }
+    const joinSql = joins.length ? ` ${joins.join('\n    ')}` : ''
+    const whereSql = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : ''
+    const sql = `${DEVELOPMENT_LIST_SELECT}${joinSql}${whereSql}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
+}
+
+/**
+ * 查询反推询价不同状态下的推品明细
+ * @param {object} options 查询参数
+ * @param {'running'|'success'|'fail'} options.status 目标状态
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式下的开始时间
+ * @param {string|undefined} options.end 发起模式下的结束时间
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+processesRepo.getOperatorInquiryList = async ({ status, isRunningMode, start, end }) => {
+    if (!status || (isRunningMode && status !== 'running')) {
+        return []
+    }
+    const existsCondition = buildOperatorInquiryExistsCondition(status)
+    if (!existsCondition) {
+        return []
+    }
+    const params = []
+    const conditions = ["dp.type = '反推推品'", existsCondition]
+    if (!isRunningMode) {
+        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    }
+    const whereSql = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : ''
+    const sql = `${DEVELOPMENT_LIST_SELECT}${whereSql}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
+}
+
+/**
+ * 统计反推询价在不同状态下的数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<{running: number, success: number, fail: number}>}
+ */
+processesRepo.getOperatorInquiryStats = async (start, end) => {
+    const params = []
+    const dateClauses = []
+    appendDateRangeClauses(dateClauses, params, 'dp.create_time', start, end)
+    const dateCondition = dateClauses.length ? ` AND ${dateClauses.join(' AND ')}` : ''
+    const baseJoin = `FROM development_process dp
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id`
+    const baseWhere = `dp.type = '反推推品' AND p.process_code = '${OPERATOR_PROCESS_CODE}'`
+    const runningSql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        ${baseJoin}
+        WHERE ${baseWhere} AND p.status = 1${dateCondition}`
+    const runningResult = await query(runningSql, params.slice())
+    const successSql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        ${baseJoin}
+        LEFT JOIN process_info pi_success ON pi_success.process_id = p.process_id
+            AND pi_success.title IN ('反推进度1', '反推进度2', '反推进度3', '寻源结果')
+            AND pi_success.content = '${OPERATOR_PROGRESS_SUCCESS_VALUE}'
+        WHERE ${baseWhere} AND p.status = 2${dateCondition} AND pi_success.id IS NOT NULL`
+    const successResult = await query(successSql, params.slice())
+    const failSql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        ${baseJoin}
+        LEFT JOIN process_info pi_success ON pi_success.process_id = p.process_id
+            AND pi_success.title IN ('反推进度1', '反推进度2', '反推进度3', '寻源结果')
+            AND pi_success.content = '${OPERATOR_PROGRESS_SUCCESS_VALUE}'
+        WHERE ${baseWhere} AND p.status = 2${dateCondition} AND pi_success.id IS NULL`
+    const failResult = await query(failSql, params.slice())
+    return {
+        running: extractCount(runningResult),
+        success: extractCount(successResult),
+        fail: extractCount(failResult)
+    }
+}
+
+const DESIGN_UPLOAD_TITLES = ['北京上传设计草图', '杭州上传设计草图']
+const DESIGN_SUPERVISION_TITLE = ['IP设计监修']
+const SAMPLE_SUPERVISION_TITLE = ['设计报样品IP监修']
+const VISION_SUPERVISION_TITLE = ['开始视觉监修']
+const PRODUCT_SUPERVISION_TITLE = ['设计报大货设计监修']
+const SAMPLE_DELIVERY_TITLE = ['确认到货']
+const YANGPIN_PROCESS_CODES = ['yangpinqueren']
+const DELIVERY_PROCESS_CODES = ['jingdongdhlc', 'kjdinghuo']
+const PLAN_PROCESS_CODES = ['baokuanliuchengxb_copyceshi']
+const SELECTION_PROCESS_CODES = ['jingdongdandulc', 'syybyycl']
+const MARKET_ANALYSIS_TITLES = ['运营1上传市场分析', '运营2上传市场分析', '运营上传市场分析']
+const SELECTION_REVIEW_TITLES = ['负责人审核', '事业一部负责人审核', '事业二部负责人审核', '事业三部负责人审核']
+const SELECTION_RESULT_TITLES = ['京东是否选中', '事业一部是否选中', '事业二部是否选中', '事业三部是否选中']
+const SELECTION_VALUE_CHOOSE = '选中'
+const SELECTION_VALUE_UNCHOOSE = '未选中'
+const ORDER_TASK_TITLES = ['采购审批', '审批合同', '代发确认']
+const WAREHOUSING_TASK_TITLES = ['周转确认到仓', '仓库质检并确认样品与大货一致']
+const SHELF_PROCESS_CODES = ['sjlcqpt_copy']
+const SHELF_PLATFORM_TITLE = '上架平台'
+const SHELF_DIVISION_PLATFORMS = {
+    division1: ['拼多多', '天猫超市', 'Coupang'],
+    division2: ['京东', '得物', '唯品会', '抖音', '快手', '1688'],
+    division3: ['天猫', '天猫垂类店', '淘工厂', '小红书']
+}
+const OPERATOR_PROCESS_CODE = 'tpkfsh'
+const OPERATOR_PROGRESS_TITLES = ['反推进度1', '反推进度2', '反推进度3', '寻源结果']
+const OPERATOR_PROGRESS_SUCCESS_VALUE = '找到'
+const VISION_PROCESS_CODES = ['xbsjmblc_copy']
+const VISION_DEVELOPMENT_TYPES = {
+    supplier: '供应商推品',
+    operator: '反推推品',
+    ip: 'IP推品',
+    self: '自研推品'
+}
+const VISION_CREATIVE_TYPES = {
+    original: '原创',
+    semi_original: '半原创',
+    unoriginal: '非原创'
+}
+const VISION_STATUS_VALUES = [1, 2, 3, 4]
+
+const VISION_TYPE_FIELD_MAP = Object.entries(VISION_DEVELOPMENT_TYPES).reduce((acc, [key, value]) => {
+    acc[value] = key
+    return acc
+}, {})
+
+const VISION_CREATIVE_FIELD_MAP = Object.entries(VISION_CREATIVE_TYPES).reduce((acc, [key, value]) => {
+    acc[value] = key
+    return acc
+}, {})
+
+const escapeSingleQuote = (value = '') => String(value).replace(/'/g, "''")
+
+const formatTitleList = (titles) => titles.map((title) => `'${escapeSingleQuote(title)}'`).join(', ')
+
+const buildOperatorInquiryExistsCondition = (status) => {
+    const progressTitles = formatTitleList(OPERATOR_PROGRESS_TITLES)
+    const base = `SELECT 1
+        FROM process_info pi_id
+        JOIN processes p ON p.process_id = pi_id.process_id
+        WHERE pi_id.title = '推品ID'
+            AND pi_id.content = dp.uid
+            AND p.process_code = '${OPERATOR_PROCESS_CODE}'`
+    if (status === 'running') {
+        return `EXISTS (${base}
+            AND p.status = 1
+        )`
+    }
+    if (status === 'success') {
+        return `EXISTS (${base}
+            AND p.status = 2
+            AND EXISTS (
+                SELECT 1
+                FROM process_info pi_success
+                WHERE pi_success.process_id = p.process_id
+                    AND pi_success.title IN (${progressTitles})
+                    AND pi_success.content = '${OPERATOR_PROGRESS_SUCCESS_VALUE}'
+            )
+        )`
+    }
+    if (status === 'fail') {
+        return `EXISTS (${base}
+            AND p.status = 2
+            AND NOT EXISTS (
+                SELECT 1
+                FROM process_info pi_success
+                WHERE pi_success.process_id = p.process_id
+                    AND pi_success.title IN (${progressTitles})
+                    AND pi_success.content = '${OPERATOR_PROGRESS_SUCCESS_VALUE}'
+            )
+        )`
+    }
+    return ''
+}
+
+const SELECTION_TITLE_SQL = formatTitleList(SELECTION_RESULT_TITLES)
+
+/**
+ * 统计设计监修各阶段的数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<object>} 设计与监修阶段数量
+ */
+processesRepo.getDesignSupervisionStats = async (start, end) => {
+    const [
+        designRunning,
+        designFinish,
+        sketchRunning,
+        sketchFinish,
+        sampleRunning,
+        sampleFinish,
+        visionRunning,
+        visionFinish,
+        productRunning,
+        productFinish
+    ] = await Promise.all([
+        countDevelopmentByTaskStatus(YANGPIN_PROCESS_CODES, DESIGN_UPLOAD_TITLES, 1, start, end),
+        countDevelopmentByTaskStatus(YANGPIN_PROCESS_CODES, DESIGN_UPLOAD_TITLES, [2, 3], start, end),
+        countDevelopmentByTaskStatus(YANGPIN_PROCESS_CODES, DESIGN_SUPERVISION_TITLE, 1, start, end),
+        countDevelopmentByTaskStatus(YANGPIN_PROCESS_CODES, DESIGN_SUPERVISION_TITLE, [2, 3], start, end),
+        countDevelopmentByTaskStatus(DELIVERY_PROCESS_CODES, SAMPLE_SUPERVISION_TITLE, 1, start, end),
+        countDevelopmentByTaskStatus(DELIVERY_PROCESS_CODES, SAMPLE_SUPERVISION_TITLE, [2, 3], start, end),
+        countDevelopmentByTaskStatus(DELIVERY_PROCESS_CODES, VISION_SUPERVISION_TITLE, 1, start, end),
+        countDevelopmentByTaskStatus(DELIVERY_PROCESS_CODES, VISION_SUPERVISION_TITLE, [2, 3], start, end),
+        countDevelopmentByTaskStatus(DELIVERY_PROCESS_CODES, PRODUCT_SUPERVISION_TITLE, 1, start, end),
+        countDevelopmentByTaskStatus(DELIVERY_PROCESS_CODES, PRODUCT_SUPERVISION_TITLE, [2, 3], start, end)
+    ])
+    return {
+        design: { running: designRunning, finish: designFinish },
+        sketch: { running: sketchRunning, finish: sketchFinish },
+        sample: { running: sampleRunning, finish: sampleFinish },
+        vision: { running: visionRunning, finish: visionFinish },
+        product: { running: productRunning, finish: productFinish }
+    }
+}
+
+/**
+ * 统计寄样环节在途与签收数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<{inTransit: number, receive: number}>}
+ */
+processesRepo.getSampleDeliveryStats = async (start, end) => {
+    const [inTransit, receive] = await Promise.all([
+        countDevelopmentByTaskStatus(YANGPIN_PROCESS_CODES, SAMPLE_DELIVERY_TITLE, 1, start, end),
+        countDevelopmentByTaskStatus(YANGPIN_PROCESS_CODES, SAMPLE_DELIVERY_TITLE, 2, start, end)
+    ])
+    return {
+        inTransit,
+        receive
+    }
+}
+
+/**
+ * 查询寄样环节在途或签收的推品明细
+ * @param {object} options 查询参数
+ * @param {number} options.status 目标任务状态
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式的开始日期
+ * @param {string|undefined} options.end 发起模式的结束日期
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+processesRepo.getSampleDeliveryList = async ({ status, isRunningMode, start, end }) => {
+    if (!status) {
+        return []
+    }
+    return fetchDevelopmentListByTaskStatus({
+        processCodes: YANGPIN_PROCESS_CODES,
+        taskTitles: SAMPLE_DELIVERY_TITLE,
+        statuses: status,
+        isRunningMode,
+        start,
+        end
+    })
+}
+
+const DESIGN_SUPERVISION_CATEGORY_CONFIG = {
+    design: {
+        processCodes: YANGPIN_PROCESS_CODES,
+        taskTitles: DESIGN_UPLOAD_TITLES
+    },
+    sketch: {
+        processCodes: YANGPIN_PROCESS_CODES,
+        taskTitles: DESIGN_SUPERVISION_TITLE
+    },
+    sample: {
+        processCodes: DELIVERY_PROCESS_CODES,
+        taskTitles: SAMPLE_SUPERVISION_TITLE
+    },
+    vision: {
+        processCodes: DELIVERY_PROCESS_CODES,
+        taskTitles: VISION_SUPERVISION_TITLE
+    },
+    product: {
+        processCodes: DELIVERY_PROCESS_CODES,
+        taskTitles: PRODUCT_SUPERVISION_TITLE
+    }
+}
+
+/**
+ * 查询设计及各类监修阶段的推品明细
+ * @param {object} options 查询参数
+ * @param {'design'|'sketch'|'sample'|'vision'|'product'} options.category 环节标识
+ * @param {number|Array<number>} options.statuses 目标任务状态
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式的开始日期
+ * @param {string|undefined} options.end 发起模式的结束日期
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+processesRepo.getDesignSupervisionList = async ({ category, statuses, isRunningMode, start, end }) => {
+    if (!category || !statuses) {
+        return []
+    }
+    const config = DESIGN_SUPERVISION_CATEGORY_CONFIG[category]
+    if (!config) {
+        return []
+    }
+    return fetchDevelopmentListByTaskStatus({
+        processCodes: config.processCodes,
+        taskTitles: config.taskTitles,
+        statuses,
+        isRunningMode,
+        start,
+        end
+    })
+}
+
+/**
+ * 统计方案流程在不同状态下的数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<{running: number, finish: number}>}
+ */
+processesRepo.getPlanStats = async (start, end) => {
+    const running = await countDevelopmentByProcessStatus(PLAN_PROCESS_CODES, 1, start, end)
+    const finish = await countDevelopmentByProcessStatus(PLAN_PROCESS_CODES, [2, 3, 4], start, end)
+    return {
+        running,
+        finish
+    }
+}
+
+/**
+ * 查询方案流程明细
+ * @param {object} options 查询参数
+ * @param {number|Array<number>} options.statuses 目标流程状态
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式开始时间
+ * @param {string|undefined} options.end 发起模式结束时间
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+processesRepo.getPlanProcessList = async ({ statuses, isRunningMode, start, end }) => {
+    if (!statuses) {
+        return []
+    }
+    return fetchDevelopmentListByProcessStatus({
+        processCodes: PLAN_PROCESS_CODES,
+        statuses,
+        isRunningMode,
+        start,
+        end
+    })
+}
+
+const buildPurchaseQuery = (taskTitles, { finished }, start, end) => {
+    const codes = toArray(DELIVERY_PROCESS_CODES)
+    const tasks = toArray(taskTitles)
+    const params = [...codes]
+    const conditions = [`p.process_code IN (${buildInPlaceholders(codes)})`]
+    if (!finished) {
+        conditions.push('p.status = 1')
+    }
+    appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    const taskPlaceholders = buildInPlaceholders(tasks)
+    if (finished) {
+        conditions.push(`EXISTS (SELECT 1 FROM process_tasks pt_done WHERE pt_done.process_id = p.process_id
+            AND pt_done.title IN (${taskPlaceholders}) AND pt_done.status = 2)`)
+        params.push(...tasks)
+    } else {
+        conditions.push(`EXISTS (SELECT 1 FROM process_tasks pt_active WHERE pt_active.process_id = p.process_id
+            AND pt_active.title IN (${taskPlaceholders}) AND IFNULL(pt_active.status, 0) <> 2)`)
+        params.push(...tasks)
+        conditions.push(`NOT EXISTS (SELECT 1 FROM process_tasks pt_finish WHERE pt_finish.process_id = p.process_id
+            AND pt_finish.title IN (${taskPlaceholders}) AND pt_finish.status = 2)`)
+        params.push(...tasks)
+    }
+    const sql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        FROM development_process dp
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        WHERE ${conditions.join(' AND ')}`
+    return { sql, params }
+}
+
+const countPurchaseProgress = async (taskTitles, options, start, end) => {
+    const { sql, params } = buildPurchaseQuery(taskTitles, options, start, end)
+    const result = await query(sql, params)
+    return extractCount(result)
+}
+
+const countShelfProgress = async (statuses, platforms, start, end) => {
+    const codes = toArray(SHELF_PROCESS_CODES)
+    const statusList = toArray(statuses)
+    const platformList = toArray(platforms)
+    const params = []
+    const conditions = []
+    conditions.push(`p.process_code IN (${buildInPlaceholders(codes)})`)
+    params.push(...codes)
+    conditions.push(`p.status IN (${buildInPlaceholders(statusList)})`)
+    params.push(...statusList)
+    conditions.push('pi_platform.title = ?')
+    params.push(SHELF_PLATFORM_TITLE)
+    conditions.push(`pi_platform.content IN (${buildInPlaceholders(platformList)})`)
+    params.push(...platformList)
+    appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    const sql = `SELECT COUNT(DISTINCT dp.uid) AS total
+        FROM development_process dp
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        JOIN process_info pi_platform ON pi_platform.process_id = p.process_id
+        WHERE ${conditions.join(' AND ')}`
+    const result = await query(sql, params)
+    return extractCount(result)
+}
+
+const countShelfByStatus = async (statuses, start, end) => {
+    const entries = await Promise.all(
+        Object.entries(SHELF_DIVISION_PLATFORMS).map(async ([division, platforms]) => {
+            const total = await countShelfProgress(statuses, platforms, start, end)
+            return { division, total }
+        })
+    )
+    return entries.reduce((acc, { division, total }) => {
+        acc[division] = total
+        return acc
+    }, {})
+}
+
+/**
+ * 统计采购环节的订货与仓库到货数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<object>} 采购统计数据
+ */
+processesRepo.getPurchaseStats = async (start, end) => {
+    const [
+        orderRunning,
+        orderFinish,
+        warehousingRunning,
+        warehousingFinish
+    ] = await Promise.all([
+        countPurchaseProgress(ORDER_TASK_TITLES, { finished: false }, start, end),
+        countPurchaseProgress(ORDER_TASK_TITLES, { finished: true }, start, end),
+        countPurchaseProgress(WAREHOUSING_TASK_TITLES, { finished: false }, start, end),
+        countPurchaseProgress(WAREHOUSING_TASK_TITLES, { finished: true }, start, end)
+    ])
+    return {
+        order: { running: orderRunning, finish: orderFinish },
+        warehousing: { running: warehousingRunning, finish: warehousingFinish }
+    }
+}
+
+/**
+ * 统计上架环节的未上架与已上架数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<object>} 上架统计数据
+ */
+processesRepo.getShelfStats = async (start, end) => {
+    const [unshelf, shelfed] = await Promise.all([
+        countShelfByStatus(1, start, end),
+        countShelfByStatus(2, start, end)
+    ])
+    return {
+        unshelf,
+        shelfed
+    }
+}
+
+const buildSelectionBase = (statuses) => {
+    const codes = toArray(SELECTION_PROCESS_CODES)
+    const titles = toArray(SELECTION_REVIEW_TITLES)
+    const statusList = toArray(statuses)
+    const params = [...codes, ...titles, ...statusList]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        `pt.title IN (${buildInPlaceholders(titles)})`,
+        `pt.status IN (${buildInPlaceholders(statusList)})`
+    ]
+    return { params, conditions }
+}
+
+const appendSelectionConditions = (conditions, params, start, end) => {
+    appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+}
+
+const buildSelectionQuery = (conditions) => `SELECT COUNT(DISTINCT dp.uid) AS total
+    FROM development_process dp
+    JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+    JOIN processes p ON p.process_id = pi_id.process_id
+    JOIN process_tasks pt ON pt.process_id = p.process_id
+    WHERE ${conditions.join(' AND ')}`
+
+const createEmptyVisionCategory = () => ({
+    original: { running: 0, finish: 0 },
+    semi_original: { running: 0, finish: 0 },
+    unoriginal: { running: 0, finish: 0 }
+})
+
+const createEmptyVisionStats = () => ({
+    supplier: createEmptyVisionCategory(),
+    operator: createEmptyVisionCategory(),
+    ip: createEmptyVisionCategory(),
+    self: createEmptyVisionCategory()
+})
+
+const addSelectionExistsClauses = (conditions, params, { requireChoose, requireUnchoose, excludeChoose }) => {
+    if (excludeChoose) {
+        conditions.push(`NOT EXISTS (SELECT 1 FROM process_info pi_sel WHERE pi_sel.process_id = p.process_id
+            AND pi_sel.title IN (${SELECTION_TITLE_SQL}) AND pi_sel.content = ?)`)
+        params.push(SELECTION_VALUE_CHOOSE)
+    }
+    if (requireChoose) {
+        conditions.push(`EXISTS (SELECT 1 FROM process_info pi_sel WHERE pi_sel.process_id = p.process_id
+            AND pi_sel.title IN (${SELECTION_TITLE_SQL}) AND pi_sel.content = ?)`)
+        params.push(SELECTION_VALUE_CHOOSE)
+    }
+    if (requireUnchoose) {
+        conditions.push(`EXISTS (SELECT 1 FROM process_info pi_sel WHERE pi_sel.process_id = p.process_id
+            AND pi_sel.title IN (${SELECTION_TITLE_SQL}) AND pi_sel.content = ?)`)
+        params.push(SELECTION_VALUE_UNCHOOSE)
+    }
+}
+
+/**
+ * 统计选品审核节点在指定状态下的推品数量
+ * @param {number|Array<number>} statuses 需要统计的任务状态
+ * @param {object} options 附加筛选条件
+ * @param {boolean} [options.requireChoose] 是否要求存在选中结果
+ * @param {boolean} [options.requireUnchoose] 是否要求存在未选中结果
+ * @param {boolean} [options.excludeChoose] 是否排除已选中结果
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<number>} 满足条件的推品数量
+ */
+const countSelectionReview = async (statuses, options = {}, start, end) => {
+    const { params, conditions } = buildSelectionBase(statuses)
+    appendSelectionConditions(conditions, params, start, end)
+    addSelectionExistsClauses(conditions, params, options)
+    const sql = buildSelectionQuery(conditions)
+    const result = await query(sql, params)
+    return extractCount(result)
+}
+
+/**
+ * 统计选品环节的市场分析与选中结果数据
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<object>} 选品阶段的统计结果
+ */
+processesRepo.getSelectionStats = async (start, end) => {
+    const analysisRunning = await countDevelopmentByTaskStatus(
+        SELECTION_PROCESS_CODES,
+        MARKET_ANALYSIS_TITLES,
+        1,
+        start,
+        end
+    )
+    const analysisFinish = await countDevelopmentByTaskStatus(
+        SELECTION_PROCESS_CODES,
+        MARKET_ANALYSIS_TITLES,
+        [2, 3],
+        start,
+        end
+    )
+    const selectRunning = await countSelectionReview(1, { excludeChoose: true }, start, end)
+    const choose = await countSelectionReview([2, 3], { requireChoose: true }, start, end)
+    const unchoose = await countSelectionReview([2, 3], { requireUnchoose: true, excludeChoose: true }, start, end)
+    return {
+        analysis: {
+            running: analysisRunning,
+            finish: analysisFinish
+        },
+        result: {
+            running: selectRunning,
+            choose,
+            unchoose
+        }
+    }
+}
+
+/**
+ * 统计视觉流程在不同创意类型与流程状态下的推品数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<object>} 视觉流程统计数据
+ */
+processesRepo.getVisionStats = async (start, end) => {
+    const codes = toArray(VISION_PROCESS_CODES)
+    const typeValues = Object.values(VISION_DEVELOPMENT_TYPES)
+    const creativeValues = Object.values(VISION_CREATIVE_TYPES)
+    const statusValues = toArray(VISION_STATUS_VALUES)
+    const params = [...codes, ...typeValues, ...creativeValues, ...statusValues]
+    const conditions = [
+        `p.process_code IN (${buildInPlaceholders(codes)})`,
+        `dp.type IN (${buildInPlaceholders(typeValues)})`,
+        `dp.vision_type IN (${buildInPlaceholders(creativeValues)})`,
+        `p.status IN (${buildInPlaceholders(statusValues)})`
+    ]
+    appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    const sql = `SELECT dp.type, dp.vision_type,` +
+        " CASE WHEN p.status = 1 THEN 'running' ELSE 'finish' END AS stage," +
+        ' COUNT(DISTINCT dp.uid) AS total' +
+        ' FROM development_process dp' +
+        " JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid" +
+        ' JOIN processes p ON p.process_id = pi_id.process_id' +
+        ` WHERE ${conditions.join(' AND ')}` +
+        ' GROUP BY dp.type, dp.vision_type, stage'
+    const rows = await query(sql, params)
+    const stats = createEmptyVisionStats()
+    rows.forEach((row) => {
+        const categoryKey = VISION_TYPE_FIELD_MAP[row.type]
+        const creativeKey = VISION_CREATIVE_FIELD_MAP[row.vision_type]
+        if (!categoryKey || !creativeKey) {
+            return
+        }
+        const stageKey = row.stage === 'running' ? 'running' : 'finish'
+        const value = Number(row.total) || 0
+        stats[categoryKey][creativeKey][stageKey] += value
+    })
+    return stats
+}
+
+/**
+ * 查询视觉流程的推品明细
+ * @param {object} options 查询参数
+ * @param {string|undefined} options.typeKey 推品类型标识
+ * @param {string|undefined} options.creativeKey 视觉创意类型标识
+ * @param {'running'|'finish'|undefined} options.stage 流程阶段
+ * @param {boolean} options.isRunningMode 是否为待办模式
+ * @param {string|undefined} options.start 发起模式的开始日期
+ * @param {string|undefined} options.end 发起模式的结束日期
+ * @returns {Promise<Array<object>>} 推品列表
+ */
+processesRepo.getVisionProcessList = async ({ typeKey, creativeKey, stage, isRunningMode, start, end }) => {
+    const codes = toArray(VISION_PROCESS_CODES)
+    if (!codes.length) {
+        return []
+    }
+    const params = [...codes]
+    const conditions = [`p.process_code IN (${buildInPlaceholders(codes)})`]
+
+    if (typeKey) {
+        const typeValue = VISION_DEVELOPMENT_TYPES[typeKey]
+        if (!typeValue) {
+            return []
+        }
+        conditions.push('dp.type = ?')
+        params.push(typeValue)
+    }
+
+    let creativeValues
+    if (creativeKey) {
+        const creativeValue = VISION_CREATIVE_TYPES[creativeKey]
+        if (!creativeValue) {
+            return []
+        }
+        creativeValues = [creativeValue]
+    } else {
+        creativeValues = Object.values(VISION_CREATIVE_TYPES)
+    }
+
+    if (!creativeValues.length) {
+        return []
+    }
+
+    conditions.push(`dp.vision_type IN (${buildInPlaceholders(creativeValues)})`)
+    params.push(...creativeValues)
+
+    let statusList
+    if (stage === 'running') {
+        statusList = [1]
+    } else if (stage === 'finish') {
+        statusList = [2, 3, 4]
+    } else {
+        statusList = toArray(VISION_STATUS_VALUES)
+    }
+
+    if (isRunningMode) {
+        statusList = statusList.filter((status) => Number(status) === 1)
+    }
+
+    if (!statusList.length) {
+        return []
+    }
+
+    conditions.push(`p.status IN (${buildInPlaceholders(statusList)})`)
+    params.push(...statusList)
+
+    if (!isRunningMode) {
+        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    }
+
+    const sql = `${DEVELOPMENT_LIST_SELECT}
+        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
+        JOIN processes p ON p.process_id = pi_id.process_id
+        WHERE ${conditions.join(' AND ')}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
+}
+
+/**
+ * 统计日常询价在不同状态下的数量
+ * @param {string|undefined} start 开始日期
+ * @param {string|undefined} end 结束日期
+ * @returns {Promise<{running: number, finish: number}>}
+ */
+processesRepo.getDailyInquiryStats = async (start, end) => {
+    const conditions = ["p.process_code = 'cpxjsq'"]
+    const params = []
+    appendDateRangeClauses(conditions, params, 'p.start_time', start, end)
+    const runningSql = `SELECT COUNT(DISTINCT p.process_id) AS total
+        FROM processes p
+        WHERE ${conditions.concat('p.status = 1').join(' AND ')}`
+    const runningResult = await query(runningSql, params.slice())
+    const finishSql = `SELECT COUNT(DISTINCT p.process_id) AS total
+        FROM processes p
+        WHERE ${conditions.concat('p.status IN (2,3,4)').join(' AND ')}`
+    const finishResult = await query(finishSql, params.slice())
+    return {
+        running: extractCount(runningResult),
+        finish: extractCount(finishResult)
+    }
 }
 
 module.exports = processesRepo

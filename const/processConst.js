@@ -65,6 +65,10 @@ const dColumns = [
                 {header: '进行中', field: 'supplier_original_running', hasChild: false},
                 {header: '已完成', field: 'supplier_original_finish', hasChild: false},
             ]},
+            {header: '半原创', field: 'supplier_semi_original', hasChild: true, children: [
+                {header: '进行中', field: 'supplier_semi_original_running', hasChild: false},
+                {header: '已完成', field: 'supplier_semi_original_finish', hasChild: false},
+            ]},
             {header: '非原创', field: 'supplier_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'supplier_unoriginal_running', hasChild: false},
                 {header: '已完成', field: 'supplier_unoriginal_finish', hasChild: false},
@@ -74,6 +78,10 @@ const dColumns = [
             {header: '原创', field: 'operator_original', hasChild: true, children: [
                 {header: '进行中', field: 'operator_original_running', hasChild: false},
                 {header: '已完成', field: 'operator_original_finish', hasChild: false},
+            ]},
+            {header: '半原创', field: 'operator_semi_original', hasChild: true, children: [
+                {header: '进行中', field: 'operator_semi_original_running', hasChild: false},
+                {header: '已完成', field: 'operator_semi_original_finish', hasChild: false},
             ]},
             {header: '非原创', field: 'operator_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'operator_unoriginal_running', hasChild: false},
@@ -85,6 +93,10 @@ const dColumns = [
                 {header: '进行中', field: 'ip_original_running', hasChild: false},
                 {header: '已完成', field: 'ip_original_finish', hasChild: false},
             ]},
+            {header: '半原创', field: 'ip_semi_original', hasChild: true, children: [
+                {header: '进行中', field: 'ip_semi_original_running', hasChild: false},
+                {header: '已完成', field: 'ip_semi_original_finish', hasChild: false},
+            ]},
             {header: '非原创', field: 'ip_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'ip_unoriginal_running', hasChild: false},
                 {header: '已完成', field: 'ip_unoriginal_finish', hasChild: false},
@@ -94,6 +106,10 @@ const dColumns = [
             {header: '原创', field: 'self_original', hasChild: true, children: [
                 {header: '进行中', field: 'self_original_running', hasChild: false},
                 {header: '已完成', field: 'self_original_finish', hasChild: false},
+            ]},
+            {header: '半原创', field: 'self_semi_original', hasChild: true, children: [
+                {header: '进行中', field: 'self_semi_original_running', hasChild: false},
+                {header: '已完成', field: 'self_semi_original_finish', hasChild: false},
             ]},
             {header: '非原创', field: 'self_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'self_unoriginal_running', hasChild: false},
@@ -145,35 +161,80 @@ const rColumns = [
             {header: '大货监修', field: 'product_supervision', hasChild: false},
         ]},
     ]},
-    {header: '寄样数量', field: 'send_sample', hasChild: false},
-    {header: '选品数量', field: 'select', hasChild: false},
-    {header: '方案数量', field: 'plan', hasChild: false},
+    {header: '寄样数量', field: 'send_sample', hasChild: true, children: [
+        {header: '在途', field: 'in_transit', hasChild: false},
+    ]},
+    {header: '选品数量', field: 'select', hasChild: true, children: [
+        {header: '市场分析', field: 'analysis', hasChild: true, children: [
+            {header: '进行中', field: 'analysis_running', hasChild: false},
+        ]},
+        {header: '选中未选中', field: 'select_result', hasChild: true, children: [
+            {header: '进行中', field: 'select_running', hasChild: false},
+        ]},
+    ]},
+    {header: '方案数量', field: 'plan', hasChild: true, children: [
+        {header: '进行中', field: 'plan_running', hasChild: false},
+    ]},
     {header: '视觉数量', field: 'vision', hasChild: true, children: [
         {header: '正推数量', field: 'vision_supplier', hasChild: true, children: [
-            {header: '原创', field: 'original', hasChild: false},
-            {header: '非原创', field: 'unoriginal', hasChild: false},
+            {header: '原创', field: 'supplier_original', hasChild: true, children: [
+                {header: '进行中', field: 'supplier_original_running', hasChild: false},
+            ]},
+            {header: '半原创', field: 'supplier_semi_original', hasChild: true, children: [
+                {header: '进行中', field: 'supplier_semi_original_running', hasChild: false},
+            ]},
+            {header: '非原创', field: 'supplier_unoriginal', hasChild: true, children: [
+                {header: '进行中', field: 'supplier_unoriginal_running', hasChild: false},
+            ]},
         ]},
         {header: '反推数量', field: 'vision_operator', hasChild: true, children: [
-            {header: '原创', field: 'original', hasChild: false},
-            {header: '非原创', field: 'unoriginal', hasChild: false},
+            {header: '原创', field: 'operator_original', hasChild: true, children: [
+                {header: '进行中', field: 'operator_original_running', hasChild: false},
+            ]},
+            {header: '半原创', field: 'operator_semi_original', hasChild: true, children: [
+                {header: '进行中', field: 'operator_semi_original_running', hasChild: false},
+            ]},
+            {header: '非原创', field: 'operator_unoriginal', hasChild: true, children: [
+                {header: '进行中', field: 'operator_unoriginal_running', hasChild: false},
+            ]},
         ]},
         {header: 'IP数量', field: 'vision_ip', hasChild: true, children: [
-            {header: '原创', field: 'original', hasChild: false},
-            {header: '非原创', field: 'unoriginal', hasChild: false},
+            {header: '原创', field: 'ip_original', hasChild: true, children: [
+                {header: '进行中', field: 'ip_original_running', hasChild: false},
+            ]},
+            {header: '半原创', field: 'ip_semi_original', hasChild: true, children: [
+                {header: '进行中', field: 'ip_semi_original_running', hasChild: false},
+            ]},
+            {header: '非原创', field: 'ip_unoriginal', hasChild: true, children: [
+                {header: '进行中', field: 'ip_unoriginal_running', hasChild: false},
+            ]},
         ]},
         {header: '自研数量', field: 'vision_self', hasChild: true, children: [
-            {header: '原创', field: 'original', hasChild: false},
-            {header: '非原创', field: 'unoriginal', hasChild: false},
+            {header: '原创', field: 'self_original', hasChild: true, children: [
+                {header: '进行中', field: 'self_original_running', hasChild: false},
+            ]},
+            {header: '半原创', field: 'self_semi_original', hasChild: true, children: [
+                {header: '进行中', field: 'self_semi_original_running', hasChild: false},
+            ]},
+            {header: '非原创', field: 'self_unoriginal', hasChild: true, children: [
+                {header: '进行中', field: 'self_unoriginal_running', hasChild: false},
+            ]},
         ]},
     ]},
     {header: '采购数量', field: 'purchase', hasChild: true, children: [
-        {header: '订货', field: 'order', hasChild: false},
-        {header: '仓库到货', field: 'warehousing', hasChild: false}
+        {header: '订货', field: 'order', hasChild: true, children: [
+            {header: '进行中', field: 'order_running', hasChild: false},
+        ]},
+        {header: '仓库到货', field: 'warehousing', hasChild: true, children: [
+            {header: '进行中', field: 'warehousing_running', hasChild: false},
+        ]}
     ]},
     {header: '上架数量', field: 'shelf', hasChild: true, children: [
-        {header: '事业1部', field: 'division1', hasChild: false},
-        {header: '事业2部', field: 'division2', hasChild: false},
-        {header: '事业3部', field: 'division3', hasChild: false},
+        {header: '未上架', field: 'unshelf', hasChild: true, children: [
+            {header: '事业1部', field: 'unshelf_division1', hasChild: false},
+            {header: '事业2部', field: 'unshelf_division2', hasChild: false},
+            {header: '事业3部', field: 'unshelf_division3', hasChild: false},
+        ]},
     ]},
 ]
 
