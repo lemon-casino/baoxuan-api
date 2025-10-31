@@ -21,6 +21,36 @@ const SAMPLE_FIELD_TO_STATUS = {
     receive: 2
 }
 
+const PLAN_FIELD_TO_STATUSES = {
+    plan_running: [1],
+    plan_finish: [2, 3, 4]
+}
+
+const VISION_CATEGORY_CONFIGS = [
+    { key: 'supplier', field: 'vision_supplier' },
+    { key: 'operator', field: 'vision_operator' },
+    { key: 'ip', field: 'vision_ip' },
+    { key: 'self', field: 'vision_self' }
+]
+
+const VISION_CREATIVE_CONFIGS = [
+    { key: 'original', suffix: 'original' },
+    { key: 'semi_original', suffix: 'semi_original' },
+    { key: 'unoriginal', suffix: 'unoriginal' }
+]
+
+const VISION_FIELD_OPTIONS = { vision: {} }
+
+VISION_CATEGORY_CONFIGS.forEach(({ key, field }) => {
+    VISION_FIELD_OPTIONS[field] = { typeKey: key }
+    VISION_CREATIVE_CONFIGS.forEach(({ key: creativeKey, suffix }) => {
+        const baseField = `${key}_${suffix}`
+        VISION_FIELD_OPTIONS[baseField] = { typeKey: key, creativeKey }
+        VISION_FIELD_OPTIONS[`${baseField}_running`] = { typeKey: key, creativeKey, stage: 'running' }
+        VISION_FIELD_OPTIONS[`${baseField}_finish`] = { typeKey: key, creativeKey, stage: 'finish' }
+    })
+})
+
 const DESIGN_FIELD_TO_OPTIONS = {
     design: { category: 'design', statuses: [1, 2, 3] },
     design_running: { category: 'design', statuses: 1 },
@@ -66,6 +96,20 @@ const resolveSampleStatus = (field) => SAMPLE_FIELD_TO_STATUS[field]
  * @returns {object|undefined} 查询配置
  */
 const resolveDesignOptions = (field) => DESIGN_FIELD_TO_OPTIONS[field]
+
+/**
+ * 根据字段名解析方案流程的状态
+ * @param {string} field 前端传入的字段标识
+ * @returns {Array<number>|undefined} 流程状态集合
+ */
+const resolvePlanStatuses = (field) => PLAN_FIELD_TO_STATUSES[field]
+
+/**
+ * 根据字段名解析视觉流程的查询配置
+ * @param {string} field 前端传入的字段标识
+ * @returns {object|undefined} 查询配置
+ */
+const resolveVisionOptions = (field) => VISION_FIELD_OPTIONS[field]
 
 /**
  * 查询满足条件的推品明细列表
@@ -119,6 +163,54 @@ const querySampleList = async (isRunningMode, status, startDate, endDate) => {
         end: isRunningMode ? undefined : endDate
     }
     return processesRepo.getSampleDeliveryList(options)
+}
+
+/**
+ * 查询方案流程满足条件的推品明细
+ * @param {boolean} isRunningMode 是否为待办模式
+ * @param {Array<number>} statuses 流程状态集合
+ * @param {string|undefined} startDate 开始日期
+ * @param {string|undefined} endDate 结束日期
+ * @returns {Promise<Array<object>>} 推品明细列表
+ */
+const queryPlanList = async (isRunningMode, statuses, startDate, endDate) => {
+    if (!statuses) {
+        return []
+    }
+    const effectiveStatuses = isRunningMode
+        ? statuses.filter((status) => Number(status) === 1)
+        : statuses
+    if (!effectiveStatuses.length) {
+        return []
+    }
+    const options = {
+        statuses: effectiveStatuses,
+        isRunningMode,
+        start: isRunningMode ? undefined : startDate,
+        end: isRunningMode ? undefined : endDate
+    }
+    return processesRepo.getPlanProcessList(options)
+}
+
+/**
+ * 查询视觉流程满足条件的推品明细
+ * @param {boolean} isRunningMode 是否为待办模式
+ * @param {object} visionOptions 查询配置
+ * @param {string|undefined} visionOptions.typeKey 推品类型标识
+ * @param {string|undefined} visionOptions.creativeKey 视觉创意类型标识
+ * @param {'running'|'finish'|undefined} visionOptions.stage 流程阶段
+ * @param {string|undefined} startDate 开始日期
+ * @param {string|undefined} endDate 结束日期
+ * @returns {Promise<Array<object>>} 推品明细列表
+ */
+const queryVisionList = async (isRunningMode, visionOptions = {}, startDate, endDate) => {
+    const options = {
+        ...visionOptions,
+        isRunningMode,
+        start: isRunningMode ? undefined : startDate,
+        end: isRunningMode ? undefined : endDate
+    }
+    return processesRepo.getVisionProcessList(options)
 }
 
 /**
@@ -177,9 +269,19 @@ const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
         const data = await querySampleList(isRunningMode, sampleStatus, startDate, endDate)
         return { columns, data }
     }
+    const planStatuses = resolvePlanStatuses(field)
+    if (planStatuses) {
+        const data = await queryPlanList(isRunningMode, planStatuses, startDate, endDate)
+        return { columns, data }
+    }
     const designOptions = resolveDesignOptions(field)
     if (designOptions) {
         const data = await queryDesignList(isRunningMode, designOptions, startDate, endDate)
+        return { columns, data }
+    }
+    const visionOptions = resolveVisionOptions(field)
+    if (visionOptions) {
+        const data = await queryVisionList(isRunningMode, visionOptions, startDate, endDate)
         return { columns, data }
     }
     return { columns, data: [] }
