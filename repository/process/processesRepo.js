@@ -1921,7 +1921,15 @@ processesRepo.getOperatorInquiryList = async ({ status, isRunningMode, start, en
     const sql = `${DEVELOPMENT_LIST_SELECT}${whereSql}
         ORDER BY dp.create_time DESC, dp.sort ASC`
     const rows = await query(sql, params)
-    return rows || []
+    return rows || [] 
+}
+ 
+processesRepo.getProcessByUid = async (uid, key) => { 
+    const sql = `SELECT p.* FROM development_process d LEFT JOIN process_info pi ON d.uid = pi.content 
+            AND pi.title = '推品ID' LEFT JOIN processes p ON p.process_id = pi.process_id 
+        WHERE d.uid = ? AND p.process_code = ?`
+    const result = await query(sql, [uid, key])
+    return result || []
 }
 
 processesRepo.getProcessByUidAndColumn = async (uid, key, field, value) => {
