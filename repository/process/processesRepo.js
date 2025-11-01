@@ -1895,7 +1895,7 @@ processesRepo.getOperatorInquiryList = async ({ status, isRunningMode, start, en
     const sql = `${DEVELOPMENT_LIST_SELECT}${whereSql}
         ORDER BY dp.create_time DESC, dp.sort ASC`
     const rows = await query(sql, params)
-    return rows || []
+    return rows || [] 
 }
  
 processesRepo.getProcessByUid = async (uid, key) => { 
