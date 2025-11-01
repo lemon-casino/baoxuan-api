@@ -1055,37 +1055,37 @@ goodsSalesRepo.updateTags = async() =>{
 
 goodsSalesRepo.getsputags = async() =>{
     let sql = `SELECT '库存成本' as label
-			,SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price) as nj_total_cost
-			,SUM(IFNULL(nj_num,0)*cost_price) as nj_cost
-			,SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price) as jd_cost
+			,ROUND(SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price),0) as nj_total_cost
+			,ROUND(SUM(IFNULL(nj_num,0)*cost_price),0) as nj_cost
+			,ROUND(SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price),0) as jd_cost
         FROM inventory_attributes
         WHERE IFNULL(ps,'') NOT REGEXP '配件|零件' AND goods_info != '包材'
         UNION ALL
         SELECT '7天日均销售成本可支撑天数' as label
-			,SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price)/SUM(IFNULL(nj7_sale_qty,0)*cost_price/7) as nj_total_cost
-			,SUM(IFNULL(nj_num,0)*cost_price)/SUM(IFNULL(nj7_sale_qty,0)*cost_price/7) as nj_cost
-			,SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price)/SUM(IFNULL(jd7_sale_qty,0)*cost_price/7) as jd_cost
+			,ROUND(SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price)/SUM(IFNULL(nj7_sale_qty,0)*cost_price/7),0) as nj_total_cost
+			,ROUND(SUM(IFNULL(nj_num,0)*cost_price)/SUM(IFNULL(nj7_sale_qty,0)*cost_price/7),0) as nj_cost
+			,ROUND(SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price)/SUM(IFNULL(jd7_sale_qty,0)*cost_price/7),0) as jd_cost
         FROM inventory_attributes
         WHERE IFNULL(ps,'') NOT REGEXP '配件|零件' AND goods_info != '包材'
         UNION ALL
         SELECT '30天日均销售成本可支撑天数' as label
-			,SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price)/SUM(IFNULL(nj30_sale_qty,0)*cost_price/30) as nj_total_cost
-			,SUM(IFNULL(nj_num,0)*cost_price)/SUM(IFNULL(nj30_sale_qty,0)*cost_price/30) as nj_cost
-			,SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price)/SUM(IFNULL(jd30_sale_qty,0)*cost_price/30) as jd_cost
+			,ROUND(SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price)/SUM(IFNULL(nj30_sale_qty,0)*cost_price/30),0) as nj_total_cost
+			,ROUND(SUM(IFNULL(nj_num,0)*cost_price)/SUM(IFNULL(nj30_sale_qty,0)*cost_price/30),0) as nj_cost
+			,ROUND(SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price)/SUM(IFNULL(jd30_sale_qty,0)*cost_price/30),0) as jd_cost
         FROM inventory_attributes
         WHERE IFNULL(ps,'') NOT REGEXP '配件|零件' AND goods_info != '包材'
         UNION ALL
         SELECT '配件/零件库存成本' as label
-			,SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price) as nj_total_cost
-			,SUM(IFNULL(nj_num,0)*cost_price) as nj_cost
-			,SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price) as jd_cost
+			,ROUND(SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price),0) as nj_total_cost
+			,ROUND(SUM(IFNULL(nj_num,0)*cost_price),0) as nj_cost
+			,ROUND(SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price),0) as jd_cost
         FROM inventory_attributes
         WHERE IFNULL(ps,'') REGEXP '配件|零件' AND goods_info != '包材'
         UNION ALL
         SELECT '包材库存成本' as label
-			,SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price) as nj_total_cost
-			,SUM(IFNULL(nj_num,0)*cost_price) as nj_cost
-			,SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price) as jd_cost
+			,ROUND(SUM((IFNULL(nj_num,0)+IFNULL(nj_transit,0))*cost_price),0) as nj_total_cost
+			,ROUND(SUM(IFNULL(nj_num,0)*cost_price),0) as nj_cost
+			,ROUND(SUM((IFNULL(jd_num,0)+IFNULL(jd_transit,0)+IFNULL(jd_colud,0))*cost_price),0) as jd_cost
         FROM inventory_attributes
         WHERE goods_info = '包材' `
     const result = await query(sql)
