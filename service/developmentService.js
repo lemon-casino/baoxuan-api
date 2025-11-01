@@ -3919,21 +3919,11 @@ developmentService.getProductSalesFourth = async (start, end, type, productType,
     return result
 }
 
-developmentService.getsputags = async(type) =>{
-    let result = await goodsSalesRepo.getsputags(type)
-    const sortOrder = {
-        "高周转":1,
-        "正常周转":2,
-        "低周转":3,
-        "滞销":4,
-        "零动销":5
-    }
-    const sortedData = result.sort((a, b) => {
-        const groupA = a.attribute
-        const groupB = b.attribute
-        return sortOrder[groupA] - sortOrder[groupB]
-    })
-    return sortedData
+developmentService.getsputags = async(params) =>{
+    let result = {data: [],data1: []}
+    result.data = await goodsSalesRepo.getsputags()
+    result.data1 = await goodsSalesRepo.getsputags1(params)
+    return result
 }
 
 developmentService.getfirst = async(type) =>{
