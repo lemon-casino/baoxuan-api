@@ -220,9 +220,10 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
     // 获取运行中的开发流程
     let process = await developmentProcessesRepo.getRunningProcess() // 获取所有仍在进行中的开发流程记录，等待异步结果返回，声明局部变量
     for (let i = 0; i < process.length; i++) { // 遍历集合执行批量逻辑
-        if (!process[i].status) { // 进入非京东流程状态分支
+        if (process[i].status !== processConst.statusList.END) { // 进入非京东流程状态分支
             let process_ids = [], process_status = [] // 初始化待回写的流程实例 ID 与状态集合，声明局部变量
-            if (process[i].status.indexOf(processConst.statusList.DEVELOPMENT_CHECK) != -1) { // 处理开发审核状态，判断非京东状态列表中是否包含目标状态
+            const nonJdStatusValue = process[i].status || ''
+            if (nonJdStatusValue.includes(processConst.statusList.DEVELOPMENT_CHECK)) { // 处理开发审核状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getProcessByUidAndColumn( // 根据流程 UID 及指定字段查询流程实例，根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.developCheckProcess.key, // 涉及开发审核流程
@@ -345,7 +346,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`开发审核流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.SAMPLE) != -1) { // 处理寄样状态，判断非京东状态列表中是否包含目标状态
+            if (nonJdStatusValue.includes(processConst.statusList.SAMPLE)) { // 处理寄样状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getProcessByUidAndColumn( // 根据流程 UID 及指定字段查询流程实例，根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.sampleProcess.key, // 涉及寄样流程
@@ -408,7 +409,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`寄样流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.ANALYSIS) != -1) { // 处理非京东分析状态，判断非京东状态列表中是否包含目标状态
+            if (nonJdStatusValue.includes(processConst.statusList.ANALYSIS)) { // 处理非京东分析状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getProcessByUid( // 根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.analysisProcess.key) // 涉及非京东分析流程
@@ -539,7 +540,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`非京东分析流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.SAMPLE_CHECK) != -1) { // 处理寄样状态，处理样品选中状态，判断非京东状态列表中是否包含目标状态
+            if (nonJdStatusValue.includes(processConst.statusList.SAMPLE_CHECK)) { // 处理寄样状态，处理样品选中状态，判断非京东状态列表中是否包含目标状态
                 // 反推样品选中触发企划审核，更新spu,sku_code
                 let instance = await processesRepo.getProcessByUidAndColumn( // 根据流程 UID 及指定字段查询流程实例，根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
@@ -604,7 +605,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`样品选中流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.REVIEW) != -1) { // 处理企划审核状态，判断非京东状态列表中是否包含目标状态
+            if (nonJdStatusValue.includes(processConst.statusList.REVIEW)) { // 处理企划审核状态，判断非京东状态列表中是否包含目标状态
                 // 更新选中平台，事业1部是否选中，事业2部是否选中，事业3部是否选中，非京东是否选中，采购方式, 视觉类型
                 let instance = await processesRepo.getProcessByUidAndColumn( // 根据流程 UID 及指定字段查询流程实例，根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
@@ -686,7 +687,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`企划审核流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.DESIGN_PROPOSAL) != -1) { // 处理爆款方案状态，判断非京东状态列表中是否包含目标状态
+            if (nonJdStatusValue.includes(processConst.statusList.DESIGN_PROPOSAL)) { // 处理爆款方案状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getProcessByUidAndColumn( // 根据流程 UID 及指定字段查询流程实例，根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.designProposalProcess.key, // 涉及爆款方案流程
@@ -772,7 +773,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`爆款流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.VISION_DESIGN) != -1) { // 处理视觉流程状态，判断非京东状态列表中是否包含目标状态
+            if (nonJdStatusValue.includes(processConst.statusList.VISION_DESIGN)) { // 处理视觉流程状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getProcessByUidAndColumn( // 根据流程 UID 及指定字段查询流程实例，根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.visionDesignProcess.key, // 涉及视觉流程
@@ -843,7 +844,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`视觉流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.PURCHASE) != -1) { // 处理订货状态，判断非京东状态列表中是否包含目标状态
+            if (nonJdStatusValue.includes(processConst.statusList.PURCHASE)) { // 处理订货状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getProcessByUid( // 根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.purchaseProcess.key) // 涉及非京东订货流程
@@ -913,7 +914,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`非京东订货流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.FIRST_SHELF) != -1) { // 处理事业一部上架状态，判断非京东状态列表中是否包含目标状态
+            if (nonJdStatusValue.includes(processConst.statusList.FIRST_SHELF)) { // 处理事业一部上架状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getFirstShelfProcess( // 获取事业一部上架流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.shelfProcess.key) // 涉及上架流程
@@ -961,7 +962,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`事业1部上架流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.SECOND_SHELF) != -1) { // 处理事业二部上架状态，判断非京东状态列表中是否包含目标状态
+            if (nonJdStatusValue.includes(processConst.statusList.SECOND_SHELF)) { // 处理事业二部上架状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getSecondShelfProcess( // 获取事业二部上架流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.shelfProcess.key) // 涉及上架流程
@@ -1015,7 +1016,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`事业2部上架流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.THIRD_SHELF) != -1) { // 处理事业三部上架状态，判断非京东状态列表中是否包含目标状态
+            if (nonJdStatusValue.includes(processConst.statusList.THIRD_SHELF)) { // 处理事业三部上架状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getThirdShelfProcess( // 获取事业三部上架流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.shelfProcess.key) // 涉及上架流程
@@ -1068,19 +1069,21 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                 let tasks = await processTasksRepo.getRunningTasksByProcessId(process_ids) // 查询流程实例当前正在执行的任务节点，等待异步结果返回，声明局部变量
                 let tasks_names = '' // 拼接运行节点名称信息，声明局部变量
                 for (let j = 0; j < tasks.length; j++) { // 遍历集合执行批量逻辑
-                    tasks_names = `${tasks_names}${tasks[i].process_title}:${tasks[i].title};` // 拼接运行节点名称信息
+                    tasks_names = `${tasks_names}${tasks[j].process_title}:${tasks[j].title};` // 拼接运行节点名称信息
                 } // 结束当前逻辑块
                 developmentProcessesRepo.updateColumnByUid(process[i].uid, 'running_node', tasks_names) // 回写开发流程表中的指定字段，将字段 信息 回写到开发流程表，使用当前开发流程的 UID
             } // 结束当前逻辑块
             if (process_status?.length) { // 根据条件执行不同逻辑
                 process_status = process_status.join(',') // 将状态数组转换为逗号分隔的字符串
                 developmentProcessesRepo.updateColumnByUid(process[i].uid, 'status', process_status) // 回写开发流程表中的指定字段，将字段 信息 回写到开发流程表，使用当前开发流程的 UID
+            } else if (nonJdStatusValue) {
+                developmentProcessesRepo.updateStatusToFinishByUid(process[i].uid) // 当子流程结束时同步主流程为完成状态，将非京东流程状态标记为完成，将非京东流程标记为已完成，使用当前开发流程的 UID
             } // 结束当前逻辑块
-            console.log(process_ids, process_status) // 输出调试日志
         } // 结束当前逻辑块
-        if (!process[i].jd_status) { // 进入京东流程状态分支
+        if (process[i].jd_status !== processConst.statusList.END) { // 进入京东流程状态分支
             let process_ids = [], process_status = [] // 初始化待回写的流程实例 ID 与状态集合，声明局部变量
-            if (process[i].status.indexOf(processConst.statusList.DEVELOPMENT_CHECK) != -1) { // 处理开发审核状态，判断非京东状态列表中是否包含目标状态
+            const jdStatusValue = process[i].jd_status || ''
+            if (jdStatusValue.includes(processConst.statusList.DEVELOPMENT_CHECK)) { // 处理开发审核状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getProcessByUidAndColumn( // 根据流程 UID 及指定字段查询流程实例，根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.developCheckProcess.key, // 涉及开发审核流程
@@ -1203,7 +1206,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`京东开发审核流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.SAMPLE) != -1) { // 处理寄样状态，判断非京东状态列表中是否包含目标状态
+            if (jdStatusValue.includes(processConst.statusList.SAMPLE)) { // 处理寄样状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getProcessByUidAndColumn( // 根据流程 UID 及指定字段查询流程实例，根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.sampleProcess.key, // 涉及寄样流程
@@ -1266,7 +1269,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`京东寄样流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.ANALYSIS) != -1) { // 处理非京东分析状态，判断非京东状态列表中是否包含目标状态
+            if (jdStatusValue.includes(processConst.statusList.ANALYSIS)) { // 处理非京东分析状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getProcessByUid( // 根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.jdAnalysisProcess.key) // 涉及京东分析流程
@@ -1365,7 +1368,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     expectedProcessKey: processConst.jdAnalysisProcess.key
                 }) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.SAMPLE_CHECK) != -1) { // 处理寄样状态，处理样品选中状态，判断非京东状态列表中是否包含目标状态
+            if (jdStatusValue.includes(processConst.statusList.SAMPLE_CHECK)) { // 处理寄样状态，处理样品选中状态，判断非京东状态列表中是否包含目标状态
                 // 反推样品选中触发企划审核，更新spu,sku_code
                 let instance = await processesRepo.getProcessByUidAndColumn( // 根据流程 UID 及指定字段查询流程实例，根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
@@ -1430,7 +1433,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`京东样品选中流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.REVIEW) != -1) { // 处理企划审核状态，判断非京东状态列表中是否包含目标状态
+            if (jdStatusValue.includes(processConst.statusList.REVIEW)) { // 处理企划审核状态，判断非京东状态列表中是否包含目标状态
                 // 更新选中平台，事业1部是否选中，事业2部是否选中，事业3部是否选中，非京东是否选中，采购方式, 视觉类型
                 let instance = await processesRepo.getProcessByUidAndColumn( // 根据流程 UID 及指定字段查询流程实例，根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
@@ -1482,7 +1485,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`京东企划审核流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.DESIGN_PROPOSAL) != -1) { // 处理爆款方案状态，判断非京东状态列表中是否包含目标状态
+            if (jdStatusValue.includes(processConst.statusList.DESIGN_PROPOSAL)) { // 处理爆款方案状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getProcessByUidAndColumn( // 根据流程 UID 及指定字段查询流程实例，根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.designProposalProcess.key, // 涉及爆款方案流程
@@ -1539,7 +1542,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`京东爆款流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.VISION_DESIGN) != -1) { // 处理视觉流程状态，判断非京东状态列表中是否包含目标状态
+            if (jdStatusValue.includes(processConst.statusList.VISION_DESIGN)) { // 处理视觉流程状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getProcessByUidAndColumn( // 根据流程 UID 及指定字段查询流程实例，根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.visionDesignProcess.key, // 涉及视觉流程
@@ -1576,7 +1579,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`京东视觉流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.PURCHASE) != -1) { // 处理订货状态，判断非京东状态列表中是否包含目标状态
+            if (jdStatusValue.includes(processConst.statusList.PURCHASE)) { // 处理订货状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getProcessByUid( // 根据流程 UID 查询流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.jdPurchaseProcess.key) // 涉及京东订货流程
@@ -1612,7 +1615,7 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                     } // 结束当前逻辑块
                 } else logger.error(`京东订货流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
-            if (process[i].status.indexOf(processConst.statusList.SECOND_SHELF) != -1) { // 处理事业二部上架状态，判断非京东状态列表中是否包含目标状态
+            if (jdStatusValue.includes(processConst.statusList.SECOND_SHELF)) { // 处理事业二部上架状态，判断非京东状态列表中是否包含目标状态
                 let instance = await processesRepo.getJDShelfProcess( // 获取京东上架流程实例，等待异步结果返回，声明局部变量
                     process[i].uid, // 使用当前开发流程的 UID
                     processConst.shelfProcess.key) // 涉及上架流程
@@ -1640,15 +1643,16 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                 let tasks = await processTasksRepo.getRunningTasksByProcessId(process_ids) // 查询流程实例当前正在执行的任务节点，等待异步结果返回，声明局部变量
                 let tasks_names = '' // 拼接运行节点名称信息，声明局部变量
                 for (let j = 0; j < tasks.length; j++) { // 遍历集合执行批量逻辑
-                    tasks_names = `${tasks_names}${tasks[i].process_title}:${tasks[i].title};` // 拼接运行节点名称信息
+                    tasks_names = `${tasks_names}${tasks[j].process_title}:${tasks[j].title};` // 拼接运行节点名称信息
                 } // 结束当前逻辑块
                 developmentProcessesRepo.updateColumnByUid(process[i].uid, 'jd_running_node', tasks_names) // 回写开发流程表中的指定字段，将字段 信息 回写到开发流程表，使用当前开发流程的 UID
             } // 结束当前逻辑块
             if (process_status?.length) { // 根据条件执行不同逻辑
                 process_status = process_status.join(',') // 将状态数组转换为逗号分隔的字符串
                 developmentProcessesRepo.updateColumnByUid(process[i].uid, 'jd_status', process_status) // 回写开发流程表中的指定字段，将字段 信息 回写到开发流程表，使用当前开发流程的 UID
+            } else if (jdStatusValue) {
+                developmentProcessesRepo.updateJDStatusToFinishByUid(process[i].uid) // 当京东链路流程结束时同步主流程为完成状态，将京东流程状态标记为完成，将京东流程标记为已完成，使用当前开发流程的 UID
             } // 结束当前逻辑块
-            console.log(process_ids, process_status) // 输出调试日志
         } // 结束当前逻辑块
     } // 结束当前逻辑块
 } // 结束当前逻辑块
