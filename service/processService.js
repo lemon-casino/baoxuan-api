@@ -14,6 +14,7 @@ const moment = require('moment')
 const developmentTotalService = require('@/service/process/developmentTotalService')
 const processInfoRepo = require("@/repository/process/processInfoRepo")
 const developmentListService = require('@/service/process/developmentListService')
+const { logger } = require('@/utils/log')
 
 const getLatestModifiedProcess = async () => {
     return await processRepo.getLatestModifiedProcess();
@@ -93,6 +94,27 @@ const robotStartProcess = async (name, key, variables) => {
     let token = await credentialsReq.getBpmgAccessToken()
     let response = commonReq.createJDProcess(269, processDefinitionId, variables, token.data.accessToken)
     if (response.code != 0) logger.error(`触发${name}失败: ${JSON.stringify(variables)}`)
+}
+
+const buildProcessLogContext = (processItem, extra = {}) => {
+    if (!processItem) return extra
+
+    const baseContext = {
+        name: processItem.name ?? null,
+        type: processItem.type ?? null,
+        develop_type: processItem.develop_type ?? null,
+        status: processItem.status ?? null,
+        jd_status: processItem.jd_status ?? null,
+        developer: processItem.developer ?? null,
+        starter: processItem.starter ?? null,
+    }
+
+    return {...baseContext, ...extra}
+}
+
+const logProcessTriggerFailure = (stage, processItem, reason, extra = {}) => {
+    const context = buildProcessLogContext(processItem, extra)
+    logger.error(`${stage}触发失败, uid=${processItem?.uid}, reason=${reason}, context=${JSON.stringify(context)}`)
 }
 
 const createDevelopmentProcess = async (params, dingding_id) => {
@@ -1339,7 +1361,9 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                         process_ids.push(instance[0].process_id) // 收集需要回写状态的流程实例 ID
                         process_status.push(processConst.statusList.ANALYSIS) // 记录非京东分析状态以便回写，处理非京东分析状态
                     } // 结束当前逻辑块
-                } else logger.error(`京东分析流程触发失败, uid=${process[i].uid}`) // 使用当前开发流程的 UID
+                } else logProcessTriggerFailure('京东分析流程', process[i], '未查询到流程实例', {
+                    expectedProcessKey: processConst.jdAnalysisProcess.key
+                }) // 使用当前开发流程的 UID
             } // 结束当前逻辑块
             if (process[i].status.indexOf(processConst.statusList.SAMPLE_CHECK) != -1) { // 处理寄样状态，处理样品选中状态，判断非京东状态列表中是否包含目标状态
                 // 反推样品选中触发企划审核，更新spu,sku_code
