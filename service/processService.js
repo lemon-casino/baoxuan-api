@@ -149,7 +149,10 @@ const createDevelopmentProcess = async (params, dingding_id) => {
     }
     const uid = v4()
     params.categories = params.categories ? JSON.stringify(params.categories) : null  
-    params.image = params.image ? JSON.stringify(params.image.replace(':9003/', ':9000/').replace('https:', 'http:').replace('//minio.','//bpm.')) : null
+    if (params.image && Array.isArray(params.image) && params.image.length > 0) {
+        params.image = params.image.map(url =>
+            url.replace('https://minio.pakchoice.cn:9003', 'http://minio.pakchoice.cn:9000')
+    )};
     params.product_info = params.product_info ? JSON.stringify(params.product_info) : null
     params.analysis = params.analysis ? JSON.stringify(params.analysis) : null
     let result = await developmentProcessesRepo.insert([
