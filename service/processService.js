@@ -391,9 +391,9 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                             // IP,自研审核通过触发企划审核
                             let reviewVarables = JSON.parse(JSON.stringify(processConst.reviewProcess.template.SUPPLIER)) // 复制企划审核流程的模板变量，涉及企划审核流程，为企划审核流程模板字段 SUPPLIER 赋值，声明局部变量，解析 JSON 字符串获取结构化数据，复制模板以避免原数据被修改
                             let variables = {} // 初始化流程变量容器，声明局部变量
-                            process['link'] = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
-                            process['start_time'] = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
-                            process['is_jd'] = processConst.jdStatusList.FALSE // 区分非京东链路标识
+                            process[i].link = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
+                            process[i].start_time = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
+                            process[i].is_jd = processConst.jdStatusList.FALSE // 区分非京东链路标识
                             for (let j = 0; j < reviewVarables.length; j++) { // 遍历集合执行批量逻辑
                                 variables[reviewVarables[j].key] = reviewVarables[j].type == 'array' ? // 执行赋值操作
                                     [process[i][reviewVarables[j].name]] : process[i][reviewVarables[j].name] // 执行流程相关操作
@@ -427,8 +427,8 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                         if (tasks?.length && !jdInstance.length) { // 根据条件执行不同逻辑
                             let jdAnalysisVariables = JSON.parse(JSON.stringify(processConst.jdAnalysisProcess.template.IP)) // 涉及京东分析流程，为京东分析流程模板字段 IP 赋值，声明局部变量，解析 JSON 字符串获取结构化数据，复制模板以避免原数据被修改
                             let variables = {} // 初始化流程变量容器，声明局部变量
-                            process['link'] = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
-                            process['start_time'] = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
+                            process[i].link = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
+                            process[i].start_time = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
                             for (let j = 0; j < jdAnalysisVariables.length; j++) { // 遍历集合执行批量逻辑
                                 variables[jdAnalysisVariables[j].key] = jdAnalysisVariables[j].type == 'array' ? // 执行赋值操作
                                     [process[i][jdAnalysisVariables[j].name]] : process[i][jdAnalysisVariables[j].name] // 执行流程相关操作
@@ -451,9 +451,9 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                                     JSON.parse(JSON.stringify(processConst.developCheckProcess.template.IP)) : // 涉及开发审核流程，为开发审核流程模板字段 IP 赋值，解析 JSON 字符串获取结构化数据，复制模板以避免原数据被修改
                                     JSON.parse(JSON.stringify(processConst.developCheckProcess.template.SELF)) // 涉及开发审核流程，为开发审核流程模板字段 SELF 赋值，解析 JSON 字符串获取结构化数据，复制模板以避免原数据被修改
                                 let variables = {} // 初始化流程变量容器，声明局部变量
-                                process['link'] = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
-                                process['start_time'] = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
-                                process['is_jd'] = processConst.jdStatusList.FALSE // 区分非京东链路标识
+                                process[i].link = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
+                                process[i].start_time = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
+                                process[i].is_jd = processConst.jdStatusList.FALSE // 区分非京东链路标识
                                 for (let j = 0; j < developCheckVarables.length; j++) { // 遍历集合执行批量逻辑
                                     variables[developCheckVarables[j].key] = developCheckVarables[j].type == 'array' ? // 执行赋值操作
                                         [process[i][developCheckVarables[j].name]] : process[i][developCheckVarables[j].name] // 执行流程相关操作
@@ -492,9 +492,9 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                                 if (is_select) { // 根据条件执行不同逻辑
                                     let reviewVarables = JSON.parse(JSON.stringify(processConst.reviewProcess.template.SUPPLIER)) // 复制企划审核流程的模板变量，涉及企划审核流程，为企划审核流程模板字段 SUPPLIER 赋值，声明局部变量，解析 JSON 字符串获取结构化数据，复制模板以避免原数据被修改
                                     let variables = {} // 初始化流程变量容器，声明局部变量
-                                    process['link'] = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
-                                    process['start_time'] = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
-                                    process['is_jd'] = processConst.jdStatusList.FALSE // 区分非京东链路标识
+                                    process[i].link = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
+                                    process[i].start_time = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
+                                    process[i].is_jd = processConst.jdStatusList.FALSE // 区分非京东链路标识
                                     for (let j = 0; j < reviewVarables.length; j++) { // 遍历集合执行批量逻辑
                                         variables[reviewVarables[j].key] = reviewVarables[j].type == 'array' ? // 执行赋值操作
                                             [process[i][reviewVarables[j].name]] : process[i][reviewVarables[j].name] // 执行流程相关操作
@@ -577,9 +577,9 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                             if (is_select) { // 根据条件执行不同逻辑
                                 let reviewVarables = JSON.parse(JSON.stringify(processConst.reviewProcess.template.SUPPLIER)) // 复制企划审核流程的模板变量，涉及企划审核流程，为企划审核流程模板字段 SUPPLIER 赋值，声明局部变量，解析 JSON 字符串获取结构化数据，复制模板以避免原数据被修改
                                 let variables = {} // 初始化流程变量容器，声明局部变量
-                                process['link'] = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
-                                process['start_time'] = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
-                                process['is_jd'] = processConst.jdStatusList.FALSE // 区分非京东链路标识
+                                process[i].link = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
+                                process[i].start_time = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
+                                process[i].is_jd = processConst.jdStatusList.FALSE // 区分非京东链路标识
                                 for (let j = 0; j < reviewVarables.length; j++) { // 遍历集合执行批量逻辑
                                     variables[reviewVarables[j].key] = reviewVarables[j].type == 'array' ? // 执行赋值操作
                                         [process[i][reviewVarables[j].name]] : process[i][reviewVarables[j].name] // 执行流程相关操作
@@ -1251,9 +1251,9 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                             // IP,自研审核通过触发企划审核
                             let reviewVarables = JSON.parse(JSON.stringify(processConst.reviewProcess.template.SUPPLIER)) // 复制企划审核流程的模板变量，涉及企划审核流程，为企划审核流程模板字段 SUPPLIER 赋值，声明局部变量，解析 JSON 字符串获取结构化数据，复制模板以避免原数据被修改
                             let variables = {} // 初始化流程变量容器，声明局部变量
-                            process['link'] = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
-                            process['start_time'] = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
-                            process['is_jd'] = processConst.jdStatusList.TRUE // 区分京东链路标识
+                            process[i].link = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
+                            process[i].start_time = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
+                            process[i].is_jd = processConst.jdStatusList.TRUE // 区分京东链路标识
                             for (let j = 0; j < reviewVarables.length; j++) { // 遍历集合执行批量逻辑
                                 variables[reviewVarables[j].key] = reviewVarables[j].type == 'array' ? // 执行赋值操作
                                     [process[i][reviewVarables[j].name]] : process[i][reviewVarables[j].name] // 执行流程相关操作
@@ -1287,9 +1287,9 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                                     JSON.parse(JSON.stringify(processConst.developCheckProcess.template.IP)) : // 涉及开发审核流程，为开发审核流程模板字段 IP 赋值，解析 JSON 字符串获取结构化数据，复制模板以避免原数据被修改
                                     JSON.parse(JSON.stringify(processConst.developCheckProcess.template.SELF)) // 涉及开发审核流程，为开发审核流程模板字段 SELF 赋值，解析 JSON 字符串获取结构化数据，复制模板以避免原数据被修改
                                 let variables = {} // 初始化流程变量容器，声明局部变量
-                                process['link'] = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
-                                process['start_time'] = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
-                                process['is_jd'] = processConst.jdStatusList.TRUE // 区分京东链路标识
+                                process[i].link = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
+                                process[i].start_time = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
+                                process[i].is_jd = processConst.jdStatusList.TRUE // 区分京东链路标识
                                 for (let j = 0; j < developCheckVarables.length; j++) { // 遍历集合执行批量逻辑
                                     variables[developCheckVarables[j].key] = developCheckVarables[j].type == 'array' ? // 执行赋值操作
                                         [process[i][developCheckVarables[j].name]] : process[i][developCheckVarables[j].name] // 执行流程相关操作
@@ -1318,9 +1318,9 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                                 if (is_select) { // 根据条件执行不同逻辑
                                     let reviewVarables = JSON.parse(JSON.stringify(processConst.reviewProcess.template.SUPPLIER)) // 复制企划审核流程的模板变量，涉及企划审核流程，为企划审核流程模板字段 SUPPLIER 赋值，声明局部变量，解析 JSON 字符串获取结构化数据，复制模板以避免原数据被修改
                                     let variables = {} // 初始化流程变量容器，声明局部变量
-                                    process['link'] = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
-                                    process['start_time'] = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
-                                    process['is_jd'] = processConst.jdStatusList.TRUE // 区分京东链路标识
+                                    process[i].link = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
+                                    process[i].start_time = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
+                                    process[i].is_jd = processConst.jdStatusList.TRUE // 区分京东链路标识
                                     for (let j = 0; j < reviewVarables.length; j++) { // 遍历集合执行批量逻辑
                                         variables[reviewVarables[j].key] = reviewVarables[j].type == 'array' ? // 执行赋值操作
                                             [process[i][reviewVarables[j].name]] : process[i][reviewVarables[j].name] // 执行流程相关操作
@@ -1405,9 +1405,9 @@ const updateDevelopmetProcess = async () => { // 定义异步任务，用于批�
                             if (is_select) { // 根据条件执行不同逻辑
                                 let reviewVarables = JSON.parse(JSON.stringify(processConst.reviewProcess.template.SUPPLIER)) // 复制企划审核流程的模板变量，涉及企划审核流程，为企划审核流程模板字段 SUPPLIER 赋值，声明局部变量，解析 JSON 字符串获取结构化数据，复制模板以避免原数据被修改
                                 let variables = {} // 初始化流程变量容器，声明局部变量
-                                process['link'] = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
-                                process['start_time'] = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
-                                process['is_jd'] = processConst.jdStatusList.TRUE // 区分京东链路标识
+                                process[i].link = processConst.previousUrl + process[i].uid // 拼接流程跳转链接并附带当前 UID，拼接流程详情页面链接，使用当前开发流程的 UID
+                                process[i].start_time = moment(process[i].create_time).format('YYYY-MM-DD') // 格式化日期字符串
+                                process[i].is_jd = processConst.jdStatusList.TRUE // 区分京东链路标识
                                 for (let j = 0; j < reviewVarables.length; j++) { // 遍历集合执行批量逻辑
                                     variables[reviewVarables[j].key] = reviewVarables[j].type == 'array' ? // 执行赋值操作
                                         [process[i][reviewVarables[j].name]] : process[i][reviewVarables[j].name] // 执行流程相关操作
