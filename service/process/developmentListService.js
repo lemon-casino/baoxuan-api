@@ -413,56 +413,98 @@ const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
     const developmentType = resolveDevelopmentType(field)
     if (developmentType) {
         const data = await queryDevelopmentList(isRunningMode, developmentType, startDate, endDate)
-        return { columns, data }
+        return { columns, data: processImageData(data)  }
     }
     const inquiryStatus = resolveInquiryStatus(field)
     if (inquiryStatus) {
         const data = await queryInquiryList(isRunningMode, inquiryStatus, startDate, endDate)
-        return { columns, data }
+        return { columns, data:processImageData(data)  }
     }
     const dailyInquiryStatus = resolveDailyInquiryStatus(field)
     if (dailyInquiryStatus) {
         const data = await queryDailyInquiryList(isRunningMode, dailyInquiryStatus, startDate, endDate)
-        return { columns, data }
+        return { columns, data:processImageData(data)  }
     }
     const sampleStatus = resolveSampleStatus(field)
     if (sampleStatus) {
         const data = await querySampleList(isRunningMode, sampleStatus, startDate, endDate)
-        return { columns, data }
+        return { columns, data: processImageData(data)  }
     }
     const selectionOptions = resolveSelectionOptions(field)
     if (selectionOptions) {
         const data = await querySelectionList(isRunningMode, selectionOptions, startDate, endDate)
-        return { columns, data }
+        return { columns, data:processImageData(data)  }
     }
     const planStatuses = resolvePlanStatuses(field)
     if (planStatuses) {
         const data = await queryPlanList(isRunningMode, planStatuses, startDate, endDate)
-        return { columns, data }
+        return { columns, data:processImageData(data)  }
     }
     const designOptions = resolveDesignOptions(field)
     if (designOptions) {
         const data = await queryDesignList(isRunningMode, designOptions, startDate, endDate)
-        return { columns, data }
+        return { columns, data:processImageData(data)  }
     }
     const visionOptions = resolveVisionOptions(field)
     if (visionOptions) {
         const data = await queryVisionList(isRunningMode, visionOptions, startDate, endDate)
-        return { columns, data }
+        return { columns, data:processImageData(data)  }
     }
     const purchaseOptions = resolvePurchaseOptions(field)
     if (purchaseOptions) {
         const data = await queryPurchaseList(isRunningMode, purchaseOptions, startDate, endDate)
-        return { columns, data }
+        return { columns, data:processImageData(data)  }
     }
     const shelfOptions = resolveShelfOptions(field)
     if (shelfOptions) {
         const data = await queryShelfList(isRunningMode, shelfOptions, startDate, endDate)
-        return { columns, data }
+        return { columns, data:processImageData(data)  }
     }
     return { columns, data: [] }
 }
+// 处理图片链接的函数
+function processImageData(data) {
+    if (!data || !Array.isArray(data)) return data
 
+    return data.map(item => {
+        if (item.image) {
+            // 处理单个链接或链接数组
+            if (typeof item.image === 'string') {
+                // 如果是 JSON 字符串格式的数组
+                if (item.image.startsWith('[') && item.image.endsWith(']')) {
+                    try {
+                        const imageArray = JSON.parse(item.image)
+                        if (Array.isArray(imageArray)) {
+                            item.image = JSON.stringify(imageArray.map(url => replaceImageUrl(url)))
+                        }
+                    } catch (e) {
+                        console.error('解析图片数组失败:', e)
+                    }
+                } else {
+                    // 单个链接
+                    item.image = replaceImageUrl(item.image)
+                }
+            } else if (Array.isArray(item.image)) {
+                // 直接是数组格式
+                item.image = item.image.map(url => replaceImageUrl(url))
+            }
+        }
+        return item
+    })
+}
+
+// 替换单个图片链接
+function replaceImageUrl(url) {
+    if (!url || typeof url !== 'string') return url
+
+    // 替换 http://minio.pakchoice.cn:9000 为 https://minio.pakchoice.cn:9003
+    if (url.includes('http://minio.pakchoice.cn:9000')) {
+        return url.replace('http://minio.pakchoice.cn:9000', 'https://minio.pakchoice.cn:9003')
+    }
+
+    // 如果已经是 https://minio.pakchoice.cn:9003 则保持不变
+    return url
+}
 module.exports = {
     getDevelopmentProcessList
 }
