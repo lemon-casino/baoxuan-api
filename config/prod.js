@@ -52,7 +52,7 @@ const configs = {
     },
     serverConfig: {
         port: nConf.get("BI_PROD_SERVER_PORT")
-    }
+    },
 }
 
 module.exports = configs
