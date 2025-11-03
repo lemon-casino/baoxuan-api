@@ -29,7 +29,9 @@ developmentProcessesRepo.getRunningProcess = async () => {
 
 developmentProcessesRepo.getAllForFieldSync = async () => {
     const sql = `SELECT uid, jd_is_select, first_select, second_select, third_select, categories, seasons,
-            related, brief_name, purchase_type, supplier, supplier_type, product_info, product_type
+            related, brief_name, purchase_type, supplier, supplier_type, product_info, product_type,
+            sale_purpose, analysis_name, project_type, design_type, exploitation_features, core_reasons,
+            schedule_arrived_time, schedule_confirm_time, is_self, spu
         FROM development_process`
     const result = await query(sql)
     return result || []

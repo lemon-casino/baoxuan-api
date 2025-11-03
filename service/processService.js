@@ -28,7 +28,17 @@ const DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS = [
     { title: '供应商名称', column: 'supplier', defaultValue: '-', emptyValue: '无' },
     { title: '供应商属性', column: 'supplier_type', defaultValue: '-', emptyValue: '无' },
     { title: '产品信息', column: 'product_info', defaultValue: '-', emptyValue: '无' },
-    { title: '产品属性', column: 'product_type', defaultValue: '-', emptyValue: '无' }
+    { title: '产品属性', column: 'product_type', defaultValue: '-', emptyValue: '无' },
+    { title: '产品销售目的', column: 'sale_purpose', defaultValue: '-', emptyValue: '无' },
+    { title: '市场分析名称', column: 'analysis_name', defaultValue: '-', emptyValue: '无' },
+    { title: '立项性质', column: 'project_type', defaultValue: '-', emptyValue: '无' },
+    { title: '设计定义', column: 'design_type', defaultValue: '-', emptyValue: '无' },
+    { title: '产品开发性质', column: 'exploitation_features', defaultValue: '-', emptyValue: '无' },
+    { title: '核心立项理由', column: 'core_reasons', defaultValue: '-', emptyValue: '无' },
+    { title: '预计开发周期（大货时间）', column: 'schedule_arrived_time', defaultValue: '-', emptyValue: '无' },
+    { title: '预计样品确认时间', column: 'schedule_confirm_time', defaultValue: '-', emptyValue: '无' },
+    { title: '自研-是否需要自主设计', column: 'is_self', defaultValue: '-', emptyValue: '无' },
+    { title: 'SPU编码', column: 'spu', defaultValue: '-', emptyValue: '无' }
 ]
 
 const DEVELOPMENT_PROCESS_FIELD_TITLES = DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS.map((item) => item.title)
