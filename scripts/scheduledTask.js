@@ -91,11 +91,11 @@ schedule.scheduleJob(pddNewTagCron, async function () {
 })
 
 //每隔2分钟跑一次
-schedule.scheduleJob(processSync, async function () {
-    if (process.env.NODE_ENV === "prod") {
-        await processService.updateDevelopmetProcess()
-    }
-})
+// schedule.scheduleJob(processSync, async function () {
+//     if (process.env.NODE_ENV === "prod") {
+//         await processService.updateDevelopmetProcess()
+//     }
+// })
 
 schedule.scheduleJob(recruitmentProcessSyncCron, async function () {
     if (process.env.NODE_ENV === "prod") {
