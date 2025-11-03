@@ -15,6 +15,24 @@ const developmentTotalService = require('@/service/process/developmentTotalServi
 const processInfoRepo = require("@/repository/process/processInfoRepo")
 const developmentListService = require('@/service/process/developmentListService')
 
+const DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS = [
+    { title: '京东是否选中', column: 'jd_is_select', defaultValue: '-' },
+    { title: '事业一部是否选中', column: 'first_select', defaultValue: '-', emptyValue: '无' },
+    { title: '事业二部是否选中', column: 'second_select', defaultValue: '-', emptyValue: '无' },
+    { title: '事业三部是否选中', column: 'third_select', defaultValue: '-', emptyValue: '无' },
+    { title: '类目选择', column: 'categories', defaultValue: '-', emptyValue: '无' },
+    { title: '产品销售季节', column: 'seasons', defaultValue: '-', emptyValue: '无' },
+    { title: '相关联的产品类型和节日', column: 'related', defaultValue: '-', emptyValue: '无' },
+    { title: '产品线简称', column: 'brief_name', defaultValue: '-', emptyValue: '无' },
+    { title: '采购形式', column: 'purchase_type', defaultValue: '-', emptyValue: '无' },
+    { title: '供应商名称', column: 'supplier', defaultValue: '-', emptyValue: '无' },
+    { title: '供应商属性', column: 'supplier_type', defaultValue: '-', emptyValue: '无' },
+    { title: '产品信息', column: 'product_info', defaultValue: '-', emptyValue: '无' },
+    { title: '产品属性', column: 'product_type', defaultValue: '-', emptyValue: '无' }
+]
+
+const DEVELOPMENT_PROCESS_FIELD_TITLES = DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS.map((item) => item.title)
+
 const getLatestModifiedProcess = async () => {
     return await processRepo.getLatestModifiedProcess();
 }
@@ -1637,6 +1655,55 @@ const getById = async (id) => {
     return result?.length ? result[0] : null
 }
 
+const syncDevelopmentProcessFormFields = async () => {
+    const processes = await developmentProcessesRepo.getAllForFieldSync()
+    if (!processes?.length) return
+
+    const fieldRows = await processInfoRepo.getFieldValuesForDevelopmentProcesses(DEVELOPMENT_PROCESS_FIELD_TITLES)
+    const fieldMap = new Map()
+
+    for (const row of fieldRows || []) {
+        const uid = row?.development_uid
+        const title = row?.field_title
+        if (!uid || !title) continue
+        const content = row?.content
+        if (!fieldMap.has(uid)) fieldMap.set(uid, {})
+        const current = fieldMap.get(uid)
+        if (!Object.prototype.hasOwnProperty.call(current, title) ||
+            ((current[title] === null || current[title] === undefined || current[title] === '' || current[title] === '无') && content)) {
+            current[title] = content
+        }
+    }
+
+    for (const process of processes) {
+        const uid = process?.uid
+        if (!uid) continue
+        const values = fieldMap.get(uid) || {}
+        const updates = {}
+
+        for (const config of DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS) {
+            let targetValue = config.defaultValue
+            if (Object.prototype.hasOwnProperty.call(values, config.title)) {
+                const rawContent = values[config.title]
+                const normalized = typeof rawContent === 'string' ? rawContent.trim() : rawContent
+                if (normalized === null || normalized === undefined || normalized === '') {
+                    targetValue = Object.prototype.hasOwnProperty.call(config, 'emptyValue') ? config.emptyValue : config.defaultValue
+                } else {
+                    targetValue = normalized
+                }
+            }
+
+            if (process[config.column] !== targetValue) {
+                updates[config.column] = targetValue
+            }
+        }
+
+        if (Object.keys(updates).length) {
+            await developmentProcessesRepo.updateFieldsByUid(uid, updates)
+        }
+    }
+}
+
 
 module.exports = {
     getLatestModifiedProcess,
@@ -1652,4 +1719,5 @@ module.exports = {
     createDevelopmentProcess,
     updateDevelopmetProcess,
     getById,
+    syncDevelopmentProcessFormFields,
 }
