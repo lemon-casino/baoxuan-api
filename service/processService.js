@@ -1712,6 +1712,7 @@ const getById = async (id) => {
 
 const syncDevelopmentProcessFormFields = async () => {
     const processes = await developmentProcessesRepo.getAllForFieldSync()
+    console.log(processes)
     if (!processes?.length) return
 
     const fieldRows = await processInfoRepo.getFieldValuesForDevelopmentProcesses(DEVELOPMENT_PROCESS_FIELD_TITLES)
