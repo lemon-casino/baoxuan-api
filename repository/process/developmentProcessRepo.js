@@ -27,9 +27,31 @@ developmentProcessesRepo.getRunningProcess = async () => {
     return result || []
 }
 
+developmentProcessesRepo.getAllForFieldSync = async () => {
+    const sql = `SELECT uid, jd_is_select, first_select, second_select, third_select, categories, seasons,
+            related, brief_name, purchase_type, supplier, supplier_type, product_info, product_type,
+            sale_purpose, analysis_name, project_type, design_type, exploitation_features, core_reasons,
+            schedule_arrived_time, schedule_confirm_time, is_self, spu
+        FROM development_process`
+    const result = await query(sql)
+    return result || []
+}
+
 developmentProcessesRepo.updateColumnByUid = async (uid, column, value) => {
     const sql = `UPDATE development_process SET \`${column}\` = ? WHERE uid = ?`
     const result = await query(sql, [value, uid])
+    return result?.affectedRows ? true:false
+}
+
+developmentProcessesRepo.updateFieldsByUid = async (uid, fields) => {
+    if (!uid || !fields || typeof fields !== 'object') return false
+    const columns = Object.keys(fields).filter((column) => column)
+    if (!columns.length) return false
+    const assignments = columns.map((column) => `\`${column}\` = ?`).join(', ')
+    const values = columns.map((column) => fields[column])
+    values.push(uid)
+    const sql = `UPDATE development_process SET ${assignments} WHERE uid = ?`
+    const result = await query(sql, values)
     return result?.affectedRows ? true:false
 }
 
