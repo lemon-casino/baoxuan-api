@@ -1,7 +1,7 @@
 const processRepo = require("@/repository/processRepo")
 const userRepo = require("@/repository/userRepo")
 const processConst = require('@/const/processConst')
-const { v4 } = require('uuid')
+const { v4, parse } = require('uuid')
 const developmentProcessesRepo = require("@/repository/process/developmentProcessRepo")
 const actReProcdefRepo = require("@/repository/bpm/actReProcdefRepo")
 const commonReq = require('@/core/bpmReq/commonReq')
@@ -192,6 +192,9 @@ const createDevelopmentProcess = async (params, dingding_id) => {
     params['start_time'] = moment().format('YYYY-MM-DD')
     //bi往bpm发起流程需要进行地址转换
     params.image=params.image?params.image.replace('https://minio.pakchoice.cn:9003', 'http://bpm.pakchoice.cn:9000'):''
+    params.image=JSON.parse(params.image).join(',')
+   
+    console.log('传往bpm的图片格式',params.image)
     let starter = await await systemUsersRepo.getID(user.nickname)
     if (starter?.length) params['starter'] = starter[0].id
     if (result) {
