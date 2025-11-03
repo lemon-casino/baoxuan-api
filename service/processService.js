@@ -194,7 +194,9 @@ const createDevelopmentProcess = async (params, dingding_id) => {
     if (params.image && Array.isArray(params.image) && params.image.length > 0) {
         params.image = params.image.map(url =>
             url.replace('https://minio.pakchoice.cn:9003', 'http://bpm.pakchoice.cn:9000')
-    )};
+        )
+        params.image=params.image.join(',')
+    };
     let starter = await await systemUsersRepo.getID(user.nickname)
     if (starter?.length) params['starter'] = starter[0].id
     if (result) {
