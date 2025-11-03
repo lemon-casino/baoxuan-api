@@ -16,10 +16,10 @@ const processInfoRepo = require("@/repository/process/processInfoRepo")
 const developmentListService = require('@/service/process/developmentListService')
 
 const DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS = [
-    { title: '京东是否选中', column: 'jd_is_select', defaultValue: '-' },
-    { title: '事业一部是否选中', column: 'first_select', defaultValue: '-', emptyValue: '无' },
-    { title: '事业二部是否选中', column: 'second_select', defaultValue: '-', emptyValue: '无' },
-    { title: '事业三部是否选中', column: 'third_select', defaultValue: '-', emptyValue: '无' },
+    { title: '京东是否选中', column: 'jd_is_select', defaultValue: '-', emptyValue: '无', valueType: 'selectionStatus' },
+    { title: '事业一部是否选中', column: 'first_select', defaultValue: '-', emptyValue: '无', valueType: 'selectionStatus' },
+    { title: '事业二部是否选中', column: 'second_select', defaultValue: '-', emptyValue: '无', valueType: 'selectionStatus' },
+    { title: '事业三部是否选中', column: 'third_select', defaultValue: '-', emptyValue: '无', valueType: 'selectionStatus' },
     { title: '类目选择', column: 'categories', defaultValue: '-', emptyValue: '无' },
     { title: '产品销售季节', column: 'seasons', defaultValue: '-', emptyValue: '无' },
     { title: '相关联的产品类型和节日', column: 'related', defaultValue: '-', emptyValue: '无' },
@@ -42,6 +42,51 @@ const DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS = [
 ]
 
 const DEVELOPMENT_PROCESS_FIELD_TITLES = DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS.map((item) => item.title)
+
+const SELECTION_STATUS_COLUMN_SET = new Set(
+    DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS
+        .filter((config) => config.valueType === 'selectionStatus')
+        .map((config) => config.column)
+)
+
+const SELECTION_TRUE_VALUES = new Set(['选中', '是', 'true', 'TRUE', '1', 1])
+const SELECTION_FALSE_VALUES = new Set(['未选中', '否', 'false', 'FALSE', '0', 0])
+
+const normalizeSelectionStatus = (value) => {
+    if (value === null || value === undefined) return 'blank'
+    if (typeof value === 'number') {
+        if (value === 1) return 'selected'
+        if (value === 0) return 'not_selected'
+        return 'blank'
+    }
+    if (typeof value === 'boolean') return value ? 'selected' : 'not_selected'
+    const trimmed = `${value}`.trim()
+    if (!trimmed || trimmed === '-' || trimmed === '无') return 'blank'
+    if (SELECTION_TRUE_VALUES.has(trimmed)) return 'selected'
+    if (SELECTION_FALSE_VALUES.has(trimmed)) return 'not_selected'
+    return trimmed
+}
+
+const convertSelectionStatusToStorage = (value) => {
+    const status = normalizeSelectionStatus(value)
+    switch (status) {
+    case 'selected':
+        return 1
+    case 'not_selected':
+        return 0
+    case 'blank':
+        return null
+    default:
+        return null
+    }
+}
+
+const valuesAreEqual = (column, currentValue, targetValue) => {
+    if (SELECTION_STATUS_COLUMN_SET.has(column)) {
+        return normalizeSelectionStatus(currentValue) === normalizeSelectionStatus(targetValue)
+    }
+    return currentValue === targetValue
+}
 
 const getLatestModifiedProcess = async () => {
     return await processRepo.getLatestModifiedProcess();
@@ -1703,8 +1748,11 @@ const syncDevelopmentProcessFormFields = async () => {
                 }
             }
 
-            if (process[config.column] !== targetValue) {
-                updates[config.column] = targetValue
+            if (!valuesAreEqual(config.column, process[config.column], targetValue)) {
+                const nextValue = SELECTION_STATUS_COLUMN_SET.has(config.column)
+                    ? convertSelectionStatusToStorage(targetValue)
+                    : targetValue
+                updates[config.column] = nextValue
             }
         }
 
