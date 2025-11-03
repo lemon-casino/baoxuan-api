@@ -191,7 +191,10 @@ const createDevelopmentProcess = async (params, dingding_id) => {
     params['link'] = processConst.previousUrl + uid
     params['start_time'] = moment().format('YYYY-MM-DD')
     //bi往bpm发起流程需要进行地址转换
-    params.image = params.image ? JSON.stringify(params.image).replace(':9003/', ':9000/').replace('https:', 'http:').replace('//minio.', '//bpm.') : null
+    if (params.image && Array.isArray(params.image) && params.image.length > 0) {
+        params.image = params.image.map(url =>
+            url.replace('https://minio.pakchoice.cn:9003', 'http://bpm.pakchoice.cn:9000')
+    )};
     let starter = await await systemUsersRepo.getID(user.nickname)
     if (starter?.length) params['starter'] = starter[0].id
     if (result) {
