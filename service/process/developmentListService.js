@@ -463,35 +463,39 @@ const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
     return { columns, data: [] }
 }
 // 处理图片链接的函数
+// 处理图片链接的函数
 function processImageData(data) {
     if (!data || !Array.isArray(data)) return data
 
-    return data.map(item => {
-        if (item.image) {
-            // 处理单个链接或链接数组
-            if (typeof item.image === 'string') {
-                // 如果是 JSON 字符串格式的数组
-                if (item.image.startsWith('[') && item.image.endsWith(']')) {
+    const imageFields = ['image', 'sample_image', 'design_image']
+
+    return data.map((item) => {
+        imageFields.forEach((field) => {
+            if (!item[field]) {
+                return
+            }
+            const value = item[field]
+            if (typeof value === 'string') {
+                if (value.startsWith('[') && value.endsWith(']')) {
                     try {
-                        const imageArray = JSON.parse(item.image)
+                        const imageArray = JSON.parse(value)
                         if (Array.isArray(imageArray)) {
-                            item.image = JSON.stringify(imageArray.map(url => replaceImageUrl(url)))
+                            item[field] = JSON.stringify(imageArray.map((url) => replaceImageUrl(url)))
                         }
                     } catch (e) {
                         console.error('解析图片数组失败:', e)
                     }
                 } else {
-                    // 单个链接
-                    item.image = replaceImageUrl(item.image)
+                    item[field] = replaceImageUrl(value)
                 }
-            } else if (Array.isArray(item.image)) {
-                // 直接是数组格式
-                item.image = item.image.map(url => replaceImageUrl(url))
+            } else if (Array.isArray(value)) {
+                item[field] = value.map((url) => replaceImageUrl(url))
             }
-        }
+        })
         return item
     })
 }
+
 
 // 替换单个图片链接
 function replaceImageUrl(url) {
