@@ -222,10 +222,6 @@ const createDevelopmentProcess = async (params, dingding_id) => {
     }
     const uid = v4()
     params.categories = params.categories ? JSON.stringify(params.categories) : null
-    if (params.image && Array.isArray(params.image) && params.image.length > 0) {
-        params.image = params.image.map(url =>
-            url.replace('https://minio.pakchoice.cn:9003', 'http://minio.pakchoice.cn:9000')
-        )};
     params.product_info = params.product_info ? JSON.stringify(params.product_info) : null
     params.analysis = params.analysis ? JSON.stringify(params.analysis) : null
     let result = await developmentProcessesRepo.insert([
@@ -240,6 +236,10 @@ const createDevelopmentProcess = async (params, dingding_id) => {
     params['uid'] = uid
     params['link'] = processConst.previousUrl + uid
     params['start_time'] = moment().format('YYYY-MM-DD')
+    //bi往bpm发起流程需要进行地址转换
+    params.image=params.image?params.image.replace('https://minio.pakchoice.cn:9003', 'http://bpm.pakchoice.cn:9000'):''
+    params.image=JSON.parse(params.image).join(',')
+    
     let starter = await await systemUsersRepo.getID(user.nickname)
     if (starter?.length) params['starter'] = starter[0].id
     if (result) {
@@ -251,6 +251,7 @@ const createDevelopmentProcess = async (params, dingding_id) => {
             }
             robotStartProcess(processConst.developCheckProcess.name, processConst.developCheckProcess.key, variables)
         }
+        //非京东分析
         if (analysis) {
             let variables = {}
             for (let i = 0; i < analysisVariables.length; i++) {
@@ -259,6 +260,7 @@ const createDevelopmentProcess = async (params, dingding_id) => {
             }
             robotStartProcess(processConst.analysisProcess.name, processConst.analysisProcess.key, variables)
         }
+        //京东分析流程
         if (jdAnalysis) {
             let variables = {}
             for (let i = 0; i < jdAnalysisVariables.length; i++) {
