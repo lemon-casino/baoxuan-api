@@ -206,6 +206,7 @@ const createDevelopmentProcess = async (params, dingding_id) => {
             }
             robotStartProcess(processConst.developCheckProcess.name, processConst.developCheckProcess.key, variables)
         }
+        //非京东分析
         if (analysis) {
             let variables = {}
             for (let i = 0; i < analysisVariables.length; i++) {
@@ -214,6 +215,7 @@ const createDevelopmentProcess = async (params, dingding_id) => {
             }
             robotStartProcess(processConst.analysisProcess.name, processConst.analysisProcess.key, variables)
         }
+        //京东分析流程
         if (jdAnalysis) {
             let variables = {}
             for (let i = 0; i < jdAnalysisVariables.length; i++) {
