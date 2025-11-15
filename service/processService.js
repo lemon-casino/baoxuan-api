@@ -27,6 +27,10 @@ const isBlankFormFieldValue = (value) => {
 const MARKET_ANALYSIS_PROCESS_CODE = 'syybyycl'
 const MARKET_ANALYSIS_FIELD_TITLES = ['事业一部市场分析上传', '事业二部市场分析上传', '事业三部市场分析上传']
 const ORDER_TYPE_FIELD_TITLE = '产品采购'
+const VISION_TYPE_PROCESS_CODE = 'qihuashenhe'
+const VISION_TYPE_FIELD_TITLE = '视觉类型'
+const VISION_PLATFORM_FIELD_TITLE = '平台是否为京东'
+const VISION_FIELD_TITLES = [VISION_TYPE_FIELD_TITLE, VISION_PLATFORM_FIELD_TITLE]
 
 const DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS = [
     { title: '京东是否选中', column: 'jd_is_select', defaultValue: '-', emptyValue: '无', valueType: 'selectionStatus' },
@@ -201,6 +205,81 @@ const resolveOrderTypeValue = (entries) => {
     return filtered
         .map(({ processId, content }) => `${processId}:${content}`)
         .join(';')
+}
+
+const PLATFORM_IS_JD_TRUE_VALUES = new Set(['是', 'true', 'TRUE', '1', 1, 'yes', 'YES'])
+const PLATFORM_IS_JD_FALSE_VALUES = new Set(['否', 'false', 'FALSE', '0', 0, 'no', 'NO'])
+
+const normalizePlatformIsJdValue = (value) => {
+    if (value === null || value === undefined) return null
+    const trimmed = `${value}`.trim()
+    if (!trimmed || trimmed === '-' || trimmed === '无') return null
+    if (PLATFORM_IS_JD_TRUE_VALUES.has(trimmed)) return true
+    if (PLATFORM_IS_JD_FALSE_VALUES.has(trimmed)) return false
+    return null
+}
+
+const normalizeVisionTypeContent = (value) => {
+    if (value === null || value === undefined) return null
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed || trimmed === '-' || trimmed === '无') return null
+        return trimmed
+    }
+    const normalized = `${value}`.trim()
+    return normalized ? normalized : null
+}
+
+const mergeVisionValues = (values) => {
+    const filtered = []
+    for (const value of values || []) {
+        if (!value) continue
+        if (!filtered.includes(value)) filtered.push(value)
+    }
+    if (!filtered.length) return null
+    if (filtered.length === 1) return filtered[0]
+    return filtered.join(';')
+}
+
+const buildVisionTypeFieldMap = (rows) => {
+    const perUidProcesses = new Map()
+    for (const row of rows || []) {
+        const uid = row?.development_uid
+        const processId = row?.process_id
+        const title = row?.field_title
+        if (!uid || !processId || !title) continue
+        if (!perUidProcesses.has(uid)) perUidProcesses.set(uid, new Map())
+        const processMap = perUidProcesses.get(uid)
+        if (!processMap.has(processId)) processMap.set(processId, {})
+        const entry = processMap.get(processId)
+        if (title === VISION_PLATFORM_FIELD_TITLE) {
+            entry.platform = row?.content
+        } else if (title === VISION_TYPE_FIELD_TITLE) {
+            entry.vision = row?.content
+        }
+    }
+
+    const result = new Map()
+    for (const [uid, processMap] of perUidProcesses.entries()) {
+        const jdValues = []
+        const normalValues = []
+        for (const entry of processMap.values()) {
+            const normalizedVision = normalizeVisionTypeContent(entry.vision)
+            if (!normalizedVision) continue
+            const isJd = normalizePlatformIsJdValue(entry.platform)
+            if (isJd === true) {
+                jdValues.push(normalizedVision)
+            } else {
+                normalValues.push(normalizedVision)
+            }
+        }
+        const jdValue = mergeVisionValues(jdValues)
+        const normalValue = mergeVisionValues(normalValues)
+        if (jdValue !== null || normalValue !== null) {
+            result.set(uid, { jd: jdValue, normal: normalValue })
+        }
+    }
+    return result
 }
 
 const getLatestModifiedProcess = async () => {
@@ -1858,9 +1937,14 @@ const syncDevelopmentProcessFormFields = async () => {
         MARKET_ANALYSIS_PROCESS_CODE,
         MARKET_ANALYSIS_FIELD_TITLES,
     )
+    const visionTypeRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
+        VISION_TYPE_PROCESS_CODE,
+        VISION_FIELD_TITLES,
+    )
     const orderTypeRows = await processInfoRepo.getProcessFieldRowsByTitle(ORDER_TYPE_FIELD_TITLE)
     const fieldMap = new Map()
     const marketAnalysisMap = buildMarketAnalysisMap(marketAnalysisRows)
+    const visionTypeMap = buildVisionTypeFieldMap(visionTypeRows)
     const orderTypeMap = buildOrderTypeFieldMap(orderTypeRows)
 
     for (const row of fieldRows || []) {
@@ -1930,6 +2014,22 @@ const syncDevelopmentProcessFormFields = async () => {
         const targetOrderTypeValue = resolveOrderTypeValue(orderTypeMap.get(uid))
         if (targetOrderTypeValue !== null && !valuesAreEqual('order_type', process.order_type, targetOrderTypeValue)) {
             updates.order_type = targetOrderTypeValue
+        }
+
+        const visionAssignments = visionTypeMap.get(uid)
+        if (visionAssignments) {
+            if (
+                visionAssignments.normal !== null &&
+                !valuesAreEqual('vision_type', process.vision_type, visionAssignments.normal)
+            ) {
+                updates.vision_type = visionAssignments.normal
+            }
+            if (
+                visionAssignments.jd !== null &&
+                !valuesAreEqual('jd_vision_type', process.jd_vision_type, visionAssignments.jd)
+            ) {
+                updates.jd_vision_type = visionAssignments.jd
+            }
         }
 
         if (Object.keys(updates).length) {

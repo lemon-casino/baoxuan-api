@@ -31,7 +31,7 @@ processInfoRepo.getFieldValuesForDevelopmentProcesses = async (titles) => {
 processInfoRepo.getProcessFieldValuesByCodeAndTitles = async (processCode, titles) => {
     if (!processCode || !Array.isArray(titles) || !titles.length) return []
     const placeholders = titles.map(() => '?').join(', ')
-    const sql = `SELECT DISTINCT dp.uid AS development_uid, pi.title AS field_title, pi.content
+    const sql = `SELECT DISTINCT dp.uid AS development_uid, pi.process_id, pi.title AS field_title, pi.content
         FROM development_process dp
         JOIN process_info pi_uid ON pi_uid.content = dp.uid
         JOIN process_info pi ON pi.process_id = pi_uid.process_id
