@@ -41,6 +41,36 @@ const VISION_AND_PLATFORM_FIELD_TITLES = [
     PLATFORM_IS_JD_FIELD_TITLE,
     SELECT_PROJECT_FIELD_TITLE,
 ]
+const SHELF_PROCESS_CODE = 'sjlcqpt_copy'
+const GOODS_ID_FIELD_CONFIGS = [
+    { title: '拼多多上架完成填入链接ID', platform: '拼多多', group: 'first' },
+    { title: '天猫超市上架完成填入链接ID', platform: '天猫超市', group: 'first' },
+    { title: 'Coupang上架完成填入链接ID', platform: 'Coupang', group: 'first' },
+    { title: '淘工厂上架完成填入链接ID', platform: '淘工厂', group: 'first' },
+    { title: '京东上架完成填入链接ID', platform: '京东', group: 'second' },
+    { title: '抖音上架完成填入链接ID', platform: '抖音', group: 'second' },
+    { title: '快手上架完成填入链接ID', platform: '快手', group: 'second' },
+    { title: '得物上架完成填入链接ID', platform: '得物', group: 'second' },
+    { title: '唯品会上架完成填入链接ID', platform: '唯品会', group: 'second' },
+    { title: '1688上架完成填入链接ID', platform: '1688', group: 'second' },
+    { title: '天猫上架完成填入链接ID', platform: '天猫', group: 'third' },
+    { title: '小红书上架完成填入链接ID', platform: '小红书', group: 'third' },
+]
+const GOODS_ID_FIELD_TITLES = Array.from(new Set(GOODS_ID_FIELD_CONFIGS.map((config) => config.title)))
+const GOODS_ID_GROUP_TO_COLUMN = {
+    first: 'first_goods_id',
+    second: 'second_goods_id',
+    third: 'third_goods_id',
+}
+const GOODS_ID_GROUP_PLATFORM_ORDER = {
+    first: ['拼多多', '天猫超市', '淘工厂', 'Coupang'],
+    second: ['京东', '抖音', '快手', '得物', '唯品会', '1688'],
+    third: ['天猫', '小红书'],
+}
+const GOODS_ID_FIELD_CONFIG_MAP = GOODS_ID_FIELD_CONFIGS.reduce((map, config) => {
+    map[config.title] = config
+    return map
+}, {})
 
 const DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS = [
     { title: '京东是否选中', column: 'jd_is_select', defaultValue: '-', emptyValue: '无', valueType: 'selectionStatus' },
@@ -425,6 +455,61 @@ const buildHotPlanOperatorMap = (rows) => {
             result.set(uid, { jd: jdValue, normal: normalValue })
         }
     }
+    return result
+}
+
+const formatGoodsIdGroupValue = (groupKey, platformMap) => {
+    if (!platformMap || !(platformMap instanceof Map) || platformMap.size === 0) return null
+    const orderedPlatforms = GOODS_ID_GROUP_PLATFORM_ORDER[groupKey] || []
+    const entries = []
+    const used = new Set()
+
+    for (const platform of orderedPlatforms) {
+        if (platformMap.has(platform)) {
+            entries.push(`${platform}:${platformMap.get(platform)};`)
+            used.add(platform)
+        }
+    }
+
+    for (const [platform, value] of platformMap.entries()) {
+        if (used.has(platform)) continue
+        entries.push(`${platform}:${value};`)
+    }
+
+    return entries.length ? entries.join('') : null
+}
+
+const buildShelfGoodsIdAssignments = (rows) => {
+    const perUidGroups = new Map()
+
+    for (const row of rows || []) {
+        const uid = row?.development_uid
+        const title = row?.field_title
+        if (!uid || !title) continue
+        const config = GOODS_ID_FIELD_CONFIG_MAP[title]
+        if (!config) continue
+        const normalizedContent = normalizeNonEmptyStringContent(row?.content)
+        if (!normalizedContent) continue
+        if (!perUidGroups.has(uid)) perUidGroups.set(uid, {})
+        const groups = perUidGroups.get(uid)
+        if (!groups[config.group]) groups[config.group] = new Map()
+        groups[config.group].set(config.platform, normalizedContent)
+    }
+
+    const result = new Map()
+    for (const [uid, groups] of perUidGroups.entries()) {
+        const assignment = {}
+        for (const [groupKey, column] of Object.entries(GOODS_ID_GROUP_TO_COLUMN)) {
+            const formatted = formatGoodsIdGroupValue(groupKey, groups[groupKey])
+            if (formatted !== null) {
+                assignment[column] = formatted
+            }
+        }
+        if (Object.keys(assignment).length) {
+            result.set(uid, assignment)
+        }
+    }
+
     return result
 }
 
@@ -2095,6 +2180,10 @@ const syncDevelopmentProcessFormFields = async () => {
         ORDER_QUANTITY_PROCESS_CODE,
         [ORDER_QUANTITY_FIELD_TITLE],
     )
+    const shelfGoodsRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
+        SHELF_PROCESS_CODE,
+        GOODS_ID_FIELD_TITLES,
+    )
     const orderTypeRows = await processInfoRepo.getProcessFieldRowsByTitle(ORDER_TYPE_FIELD_TITLE)
     const fieldMap = new Map()
     const marketAnalysisMap = buildMarketAnalysisMap(marketAnalysisRows)
@@ -2103,6 +2192,7 @@ const syncDevelopmentProcessFormFields = async () => {
     const selectProjectMap = buildSelectProjectMap(visionProcessRows)
     const orderTypeMap = buildOrderTypeFieldMap(orderTypeRows)
     const orderQuantityMap = buildOrderQuantityMap(orderQuantityRows)
+    const shelfGoodsAssignmentsMap = buildShelfGoodsIdAssignments(shelfGoodsRows)
 
     for (const row of fieldRows || []) {
         const uid = row?.development_uid
@@ -2216,6 +2306,15 @@ const syncDevelopmentProcessFormFields = async () => {
                 !valuesAreEqual('jd_operator', process.jd_operator, operatorAssignments.jd)
             ) {
                 updates.jd_operator = operatorAssignments.jd
+            }
+        }
+
+        const shelfGoodsAssignments = shelfGoodsAssignmentsMap.get(uid)
+        if (shelfGoodsAssignments) {
+            for (const [column, value] of Object.entries(shelfGoodsAssignments)) {
+                if (!valuesAreEqual(column, process[column], value)) {
+                    updates[column] = value
+                }
             }
         }
 

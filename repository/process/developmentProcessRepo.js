@@ -32,7 +32,7 @@ developmentProcessesRepo.getAllForFieldSync = async () => {
             related, brief_name, purchase_type, supplier, supplier_type, product_info, product_type,
             sale_purpose, analysis, analysis_name, project_type, design_type, exploitation_features, core_reasons,
             schedule_arrived_time, schedule_confirm_time, is_self, spu, order_type, select_project, order_num,
-            vision_type, jd_vision_type, operator, jd_operator
+            vision_type, jd_vision_type, operator, jd_operator, first_goods_id, second_goods_id, third_goods_id
         FROM development_process`
     const result = await query(sql)
     return result || []
