@@ -31,11 +31,14 @@ const ORDER_QUANTITY_PROCESS_CODE = 'kjdinghuo'
 const ORDER_QUANTITY_FIELD_TITLE = '实际订货量'
 const VISION_TYPE_PROCESS_CODE = 'qihuashenhe'
 const VISION_TYPE_FIELD_TITLE = '视觉类型'
-const VISION_PLATFORM_FIELD_TITLE = '平台是否为京东'
+const PLATFORM_IS_JD_FIELD_TITLE = '平台是否为京东'
+const HOT_PLAN_PROCESS_CODE = 'baokuanliuchengxb_copyceshi'
+const HOT_PLAN_OPERATOR_FIELD_TITLE = '运营负责人'
+const HOT_PLAN_FIELD_TITLES = [PLATFORM_IS_JD_FIELD_TITLE, HOT_PLAN_OPERATOR_FIELD_TITLE]
 const SELECT_PROJECT_FIELD_TITLE = '选中平台'
 const VISION_AND_PLATFORM_FIELD_TITLES = [
     VISION_TYPE_FIELD_TITLE,
-    VISION_PLATFORM_FIELD_TITLE,
+    PLATFORM_IS_JD_FIELD_TITLE,
     SELECT_PROJECT_FIELD_TITLE,
 ]
 
@@ -321,7 +324,7 @@ const normalizePlatformIsJdValue = (value) => {
     return null
 }
 
-const normalizeVisionTypeContent = (value) => {
+const normalizeNonEmptyStringContent = (value) => {
     if (value === null || value === undefined) return null
     if (typeof value === 'string') {
         const trimmed = value.trim()
@@ -332,7 +335,7 @@ const normalizeVisionTypeContent = (value) => {
     return normalized ? normalized : null
 }
 
-const mergeVisionValues = (values) => {
+const mergeDistinctStrings = (values) => {
     const filtered = []
     for (const value of values || []) {
         if (!value) continue
@@ -354,7 +357,7 @@ const buildVisionTypeFieldMap = (rows) => {
         const processMap = perUidProcesses.get(uid)
         if (!processMap.has(processId)) processMap.set(processId, {})
         const entry = processMap.get(processId)
-        if (title === VISION_PLATFORM_FIELD_TITLE) {
+        if (title === PLATFORM_IS_JD_FIELD_TITLE) {
             entry.platform = row?.content
         } else if (title === VISION_TYPE_FIELD_TITLE) {
             entry.vision = row?.content
@@ -366,7 +369,7 @@ const buildVisionTypeFieldMap = (rows) => {
         const jdValues = []
         const normalValues = []
         for (const entry of processMap.values()) {
-            const normalizedVision = normalizeVisionTypeContent(entry.vision)
+            const normalizedVision = normalizeNonEmptyStringContent(entry.vision)
             if (!normalizedVision) continue
             const isJd = normalizePlatformIsJdValue(entry.platform)
             if (isJd === true) {
@@ -375,8 +378,49 @@ const buildVisionTypeFieldMap = (rows) => {
                 normalValues.push(normalizedVision)
             }
         }
-        const jdValue = mergeVisionValues(jdValues)
-        const normalValue = mergeVisionValues(normalValues)
+        const jdValue = mergeDistinctStrings(jdValues)
+        const normalValue = mergeDistinctStrings(normalValues)
+        if (jdValue !== null || normalValue !== null) {
+            result.set(uid, { jd: jdValue, normal: normalValue })
+        }
+    }
+    return result
+}
+
+const buildHotPlanOperatorMap = (rows) => {
+    const perUidProcesses = new Map()
+    for (const row of rows || []) {
+        const uid = row?.development_uid
+        const processId = row?.process_id
+        const title = row?.field_title
+        if (!uid || !processId || !title) continue
+        if (!perUidProcesses.has(uid)) perUidProcesses.set(uid, new Map())
+        const processMap = perUidProcesses.get(uid)
+        if (!processMap.has(processId)) processMap.set(processId, {})
+        const entry = processMap.get(processId)
+        if (title === PLATFORM_IS_JD_FIELD_TITLE) {
+            entry.platform = row?.content
+        } else if (title === HOT_PLAN_OPERATOR_FIELD_TITLE) {
+            entry.operator = row?.content
+        }
+    }
+
+    const result = new Map()
+    for (const [uid, processMap] of perUidProcesses.entries()) {
+        const jdValues = []
+        const normalValues = []
+        for (const entry of processMap.values()) {
+            const normalizedOperator = normalizeNonEmptyStringContent(entry.operator)
+            if (!normalizedOperator) continue
+            const isJd = normalizePlatformIsJdValue(entry.platform)
+            if (isJd === true) {
+                jdValues.push(normalizedOperator)
+            } else {
+                normalValues.push(normalizedOperator)
+            }
+        }
+        const jdValue = mergeDistinctStrings(jdValues)
+        const normalValue = mergeDistinctStrings(normalValues)
         if (jdValue !== null || normalValue !== null) {
             result.set(uid, { jd: jdValue, normal: normalValue })
         }
@@ -2043,6 +2087,10 @@ const syncDevelopmentProcessFormFields = async () => {
         VISION_TYPE_PROCESS_CODE,
         VISION_AND_PLATFORM_FIELD_TITLES,
     )
+    const hotPlanOperatorRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
+        HOT_PLAN_PROCESS_CODE,
+        HOT_PLAN_FIELD_TITLES,
+    )
     const orderQuantityRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
         ORDER_QUANTITY_PROCESS_CODE,
         [ORDER_QUANTITY_FIELD_TITLE],
@@ -2051,6 +2099,7 @@ const syncDevelopmentProcessFormFields = async () => {
     const fieldMap = new Map()
     const marketAnalysisMap = buildMarketAnalysisMap(marketAnalysisRows)
     const visionTypeMap = buildVisionTypeFieldMap(visionProcessRows)
+    const hotPlanOperatorMap = buildHotPlanOperatorMap(hotPlanOperatorRows)
     const selectProjectMap = buildSelectProjectMap(visionProcessRows)
     const orderTypeMap = buildOrderTypeFieldMap(orderTypeRows)
     const orderQuantityMap = buildOrderQuantityMap(orderQuantityRows)
@@ -2151,6 +2200,22 @@ const syncDevelopmentProcessFormFields = async () => {
                 !valuesAreEqual('jd_vision_type', process.jd_vision_type, visionAssignments.jd)
             ) {
                 updates.jd_vision_type = visionAssignments.jd
+            }
+        }
+
+        const operatorAssignments = hotPlanOperatorMap.get(uid)
+        if (operatorAssignments) {
+            if (
+                operatorAssignments.normal !== null &&
+                !valuesAreEqual('operator', process.operator, operatorAssignments.normal)
+            ) {
+                updates.operator = operatorAssignments.normal
+            }
+            if (
+                operatorAssignments.jd !== null &&
+                !valuesAreEqual('jd_operator', process.jd_operator, operatorAssignments.jd)
+            ) {
+                updates.jd_operator = operatorAssignments.jd
             }
         }
 
