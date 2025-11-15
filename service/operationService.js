@@ -301,6 +301,7 @@ const getPromotionStats = async (id, start, end, params) => {
         const permissions = await userOperationRepo.getPermission(id)
         if (permissions.length == 0) return []
         oriType = permissions[0].type
+        // if ([typeList.division.key, typeList.project.key].includes(oriType)) except = true  这段代码看似没用
         if ([typeList.division.key, typeList.project.key].includes(oriType)) except = true
         for (let i = 0; i < permissions.length; i++) {
             const { shops, users, typeValue } = await getQueryInfo(
@@ -342,6 +343,7 @@ const getPromotionStats = async (id, start, end, params) => {
     }
     for (let i = 0; i < result[type].data.length; i++) {
         result[type].data[i].id += i
+        result.total.data[0].hit_line += result[type].data[i].hit_line
         result.total.data[0].negative_profit += result[type].data[i].negative_profit
         result.total.data[0].low_profit += result[type].data[i].low_profit
         result.total.data[0].none_promotion += result[type].data[i].none_promotion
@@ -685,7 +687,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         })
     for (let i = 0; i < shopName.length; i++) {
         let division_info = await shopInfoRepo.getDivisionByShopName(shopName[i].shop_name)
-        let negative_profit = 0, negative_profit_child = {}, low_profit = 0, low_profit_child = {}, 
+        let hit_line=0,negative_profit = 0, negative_profit_child = {}, low_profit = 0, low_profit_child = {}, 
             none_promotion = 0, none_promotion_child = {}, low_promotion = 0, low_promotion_child = {}, 
             low_roi = 0, low_roi_child = {}, low_plan_roi = 0, low_plan_roi_child = {}, low_plan_roi1 = 0, 
             low_plan_roi1_child = {}, invalid = '', invalid_link = 0, invalid_sale_amount = 0, 
@@ -698,8 +700,9 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         let promotion_rate, roi, plan, plan1, gross, important, child, child1, child2, child3, child4
         if (division_info?.length) {
             if (division_info[0].division_name == '事业部2') {
+                hit_line=0
                 promotion_rate = 0.06
-                roi = await func.getLowROIByShopNamesAndTime2(shopName[i].shop_name, otherName[i])
+                roi = await func.getLowROIByShopNamesAndTime2(shopName[i].shop_name,end, otherName[i])
                 child1 = await func.getChildLowROIByShopNamesAndTime2(shopName[i].shop_name, otherName[i])
                 plan = await func.getLowPlanROIByShopNamesAndTime2(shopName[i].shop_name, 3, 7, otherName[i])
                 child2 = await func.getChildLowPlanROIByShopNamesAndTime2(shopName[i].shop_name, 3, 7, otherName[i])
@@ -709,8 +712,13 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
                 gross = await goodsSaleVerifiedRepo.getLowGrossProfitByShopNamesAndTime1(shopName[i].shop_name, start, end, 0.55, 0.21, otherName[i])
                 child4 = await goodsSaleVerifiedRepo.getChildLowGrossProfitByShopNamesAndTime1(shopName[i].shop_name, start, end, 0.55, 0.21, otherName[i])
             } else if (division_info[0].division_name == '事业部3') {
-                promotion_rate = 0.1
-                roi = await func.getLowROIByShopNamesAndTime(shopName[i].shop_name)
+                let hitLineTotalResult=await func.getHitLineTotal(shopName[i].shop_name, end+ ' 00:00:00')
+                if(hitLineTotalResult?.length>0)
+                {
+                    hit_line=hitLineTotalResult?.length
+                }
+                promotion_rate = 0.1 
+                roi = await func.getLowROIByShopNamesAndTime(shopName[i].shop_name,end)
                 child1 = await func.getChildLowROIByShopNamesAndTime(shopName[i].shop_name, otherName[i])
                 plan = await func.getLowPlanROIByShopNamesAndTime(shopName[i].shop_name, 3, 7)
                 child2 = await func.getChildLowPlanROIByShopNamesAndTime(shopName[i].shop_name, 3, 7)
@@ -720,8 +728,9 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
                 gross = await goodsSaleVerifiedRepo.getLowGrossProfitByShopNamesAndTime(shopName[i].shop_name, start, end, 0.55)
                 child4 = await goodsSaleVerifiedRepo.getChildLowGrossProfitByShopNamesAndTime(shopName[i].shop_name, start, end, 0.55)
             } else {
+                hit_line=0
                 promotion_rate = 0.08
-                roi = await func.getLowROIByShopNamesAndTime1(shopName[i].shop_name)
+                roi = await func.getLowROIByShopNamesAndTime1(shopName[i].shop_name,end)
                 child1 = await func.getChildLowROIByShopNamesAndTime1(shopName[i].shop_name, otherName[i])
                 plan = await func.getLowPlanROIByShopNamesAndTime1(shopName[i].shop_name, 3, 7)                
                 child2 = await func.getChildLowPlanROIByShopNamesAndTime1(shopName[i].shop_name, 3, 7)
@@ -739,7 +748,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
             otherName[i])
         if (negative?.length) {
             negative_profit = parseInt(negative[0].count)
-            if (negative[0].count > 0) {
+            if (negative_profit > 0) {
                 child = await func.getChildNegativeProfitByShopNamesAndTime(
                     shopName[i].shop_name, 
                     start, 
@@ -753,11 +762,14 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
                 }
             }
         }
-        let low = await func.getLowProfitByShopNamesAndTime(shopName[i].shop_name, otherName[i])
+        let low = await func.getLowProfitByShopNamesAndTime(
+            shopName[i].shop_name,
+            end,
+            otherName[i])
         if (low?.length) {
             low_profit = parseInt(low[0].count)
             if (low[0].count > 0) {
-                child = await func.getChildLowProfitByShopNamesAndTime(shopName[i].shop_name, otherName[i])
+                child = await func.getChildLowProfitByShopNamesAndTime(shopName[i].shop_name,end, otherName[i])
                 for (let j = 0; j < child?.length; j++) {
                     if (low_profit_child[child[j].type] == undefined) {
                         low_profit_child[child[j].type] = {}                        
@@ -886,6 +898,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
         if (unsalable?.length) unsalable_link = parseInt(unsalable[0].count)
         result[type].data.push({
             name: shopName[i].name,
+            hit_line,
             negative_profit, 
             negative_profit_child,
             low_profit, 
@@ -913,7 +926,7 @@ const queryShopPromotion = async (shops, result, type, start, end, func) => {
             unsalable_profit, 
             unsalable_code, 
             unsalable_code_child, 
-            ip, 
+            ip,  
             ip_child, 
             ip_link, 
             ip_sale_amount, 
@@ -1628,6 +1641,7 @@ const getGoodsInfo = async (startDate, endDate, params, id,tab) => {
     }
     let userNames = null, shopNames = null, linkIds = null, shopInfo = [], userInfo = [],
         shop=[],shopNames1=null
+
     if (params.type) {
         const { shops, users } = await getQueryInfo(
             typeList[params.type].map[0],
@@ -1679,6 +1693,7 @@ const getGoodsInfo = async (startDate, endDate, params, id,tab) => {
     shopNames1 = shop.map((item) => item.shop_name).join('","')
     let func = params.stats == 'verified' ? goodsSaleVerifiedRepo : 
         (params.stats == 'info') ? goodsSaleInfoRepo : goodsPayInfoRepo
+
     if (params.infoType == 1)
         result.data = await func.getPromotionData(startDate, endDate, params, shopNames, linkIds,shopNames1)
     else result.data = await func.getData(startDate, endDate, params, shopNames, linkIds,shopNames1)
@@ -4935,23 +4950,6 @@ const getSaleData = async(lstart,lend,preStart,preEnd,value,name) => {
     return result
 }
 
-const getInventoryData = async(type) => {
-    let result = [{name:"当前在仓库存成本（万元）",value:null},
-                {name:"当前库总存成本（万元）",value:null},
-                {name:"库存可售天数（按7天日均销售）",value:null},
-                {name:"库存可售天数（按30天日均销售）",value:null},
-                {name:"累计售罄率（月）",value:null},
-                {name:"库存周转率（月）",value:null}]
-    let data = await goodsSaleInfoRepo.getInventoryData(type)
-    result[0].value=(data[0].Current_inventory_cost/10000).toFixed(1)
-    result[1].value=(data[0].total_inventory_cost/10000).toFixed(1)
-    result[2].value=data[0].stock_sale7
-    result[3].value=data[0].stock_sale30
-    result[4].value=data[0].sell_through_rate + '%'
-    result[5].value=data[0].inventory_turnover + '%'
-    return result
-}
-
 const getDivisionSaleData = async(day,day7,day30,day31) => {
     let data = await goodsSaleInfoRepo.getDivisionSaleData()
     const groupedData = data.reduce((acc, item) => {
@@ -5298,17 +5296,7 @@ const getShopSaleQtyData = async(day,day7,day30,day31) => {
 
 const updateInventory = async () =>{
     logger.info(`[inventory_attributes开始刷新]：时间:${moment().subtract(1, 'day').format('YYYY-MM-DD')}`)
-    await goodsSalesRepo.updatemonth6(6,'month','month6_sale_qty')
-    await goodsSalesRepo.updatemonth6(7,'day','day7_sale_qty')
-    await goodsSalesRepo.updatemonth6(30,'day','day30_sale_qty')
-    await goodsSalesRepo.updateNJsaleqty(7,'nj7_sale_qty')
-    await goodsSalesRepo.updateNJsaleqty(30,'nj30_sale_qty')
-    await goodsSalesRepo.updateJDsaleqty(7,'jd7_sale_qty')
-    await goodsSalesRepo.updateJDsaleqty(30,'jd30_sale_qty')
-    await goodsSalesRepo.updateinventory(1,'num','total_num')
-    await goodsSalesRepo.updateinventory(31,'num30','total_num30')
-    await goodsSalesRepo.updateinventory1()
-    await goodsSalesRepo.updateinventory2()
+    await goodsSalesRepo.InsertInventory()
     await goodsSalesRepo.updateTags()
     logger.info(`[inventory_attributes刷新成功]：时间:${moment().subtract(1, 'day').format('YYYY-MM-DD')}`)
     return true
@@ -5783,6 +5771,146 @@ const getTmallInfo = async (start, end) => {
     return result
 }
 
+
+const importLinkPlan = async (rows,shop_name,plan_name, time) => {
+    let data = [], count = 0, result = false,
+        promotion_type=plan_name,start_time = time,
+        create_time = moment().format('YYYY-MM-DD HH:mm:ss')
+    let columns = rows[0].values,
+    time_line_row = null,
+    act_roi_row = null,
+    cumulative_sale_num_row = null,
+    cumulative_sale_amount_row = null,
+    ctr_row = null,
+    immed_deal_amount_row = null,
+    immed_deal_num_row = null,
+    net_act_prod_ratio_row = null,
+    net_deal_amount_row = null,
+    net_deal_num_row = null,
+    net_sale_prod_ratio_row = null,
+    presale_ratio_row = null,
+    cost_amount_row = null,
+    show_num_row = null,
+    click_num_row = null,
+    click_rate_row = null,
+    avg_click_cost_amount_row = null,
+    thd_show_cost_amount_row = null,
+    cart_num_row = null,
+    collect_num_row = null,
+    collect_cart_num_row = null,
+    base_amount_row = null,
+    up_amount_row = null,
+    base_amount1_row = null,
+    plan_id_row = null,
+    goods_id_row = null
+    for(let i=1;i<columns.length;i++){
+        if(columns[i] == '时间'){
+            time_line_row = i
+        }else if(columns[i]=='实际投产比'){
+            act_roi_row = i
+        }else if(columns[i] == '总成交笔数'){
+            cumulative_sale_num_row = i
+        }else if(columns[i] == '总成交金额(元)'){
+            cumulative_sale_amount_row = i
+        }else if(columns[i] == '点击转化率'){
+            ctr_row = i
+        }else if(columns[i] == '直接成交金额(元)'){
+            immed_deal_amount_row = i
+        }else if(columns[i] == '直接成交笔数'){
+            immed_deal_num_row = i
+        }else if(columns[i] == '净实际投产比'){
+            net_act_prod_ratio_row = i
+        }else if(columns[i] == '净成交金额'){
+            net_deal_amount_row = i
+        }else if(columns[i] == '净成交笔数'){
+            net_deal_num_row = i
+        }else if(columns[i] == '净成交金额占比'){
+            net_sale_prod_ratio_row = i
+        }else if(columns[i] == '净含预售投产比'){
+            presale_ratio_row = i
+        }else if(columns[i] == '花费(元)'){
+            cost_amount_row = i
+        }else if(columns[i] == '展现量'){
+            show_num_row = i
+        }else if(columns[i] == '点击量'){
+            click_num_row = i
+        }else if(columns[i] == '点击率'){
+            click_rate_row = i
+        }else if(columns[i] == '平均点击花费(元)'){
+            avg_click_cost_amount_row = i
+        }else if(columns[i] == '千次展现花费(元)'){
+            thd_show_cost_amount_row = i
+        }else if(columns[i] == '总购物车数'){
+            cart_num_row = i
+        }else if(columns[i] == '收藏宝贝数'){
+            collect_num_row = i
+        }else if(columns[i] == '宝贝收藏加购数'){
+            collect_cart_num_row = i
+        }else if(columns[i] == '宝贝ID'){
+            goods_id_row = i
+        }else if(columns[i] == '计划ID'){
+            plan_id_row = i
+        }else if(columns[i] == '基础花费'){
+            base_amount_row = i
+        }else if(columns[i] == '起量花费'){
+            up_amount_row = i
+        }else if(columns[i] == '每日预算'){
+            base_amount1_row = i
+        }
+    }
+    let goods_id,plan_id
+    for(let i=1;i<rows.length;i++){
+        let base_amount,up_amount
+        if(rows[i].getCell(goods_id_row).value == '宝贝ID' || rows[i].getCell(cost_amount_row).value == 0){
+            continue
+        }else if(rows[i].getCell(cost_amount_row).value == 0){
+            continue
+        }else if(rows[i].getCell(goods_id_row).value != null){
+            goods_id =rows[i].getCell(goods_id_row).value
+            plan_id =rows[i].getCell(plan_id_row).value
+            base_amount = rows[i].getCell(base_amount_row).value != null  ? rows[i].getCell(base_amount_row).value.toString().replace('元','').replace(',','') : 
+            rows[i].getCell(base_amount1_row).value.toString().replace('元','').replace(',','')
+            up_amount = rows[i].getCell(up_amount_row).value != null ? rows[i].getCell(up_amount_row).value.toString().replace('元','') : 0
+        }
+        let time_line = rows[i].getCell(time_line_row).value.toISOString().split('T')[1].split('.')[0]
+        console.log(promotion_type)
+        data.push(
+            goods_id,
+            plan_id,
+            rows[i].getCell(cost_amount_row).value,
+            time_line,
+            rows[i].getCell(act_roi_row).value,
+            rows[i].getCell(cumulative_sale_num_row).value,
+            rows[i].getCell(cumulative_sale_amount_row).value,
+            rows[i].getCell(ctr_row).value,
+            rows[i].getCell(immed_deal_amount_row).value,
+            rows[i].getCell(immed_deal_num_row).value,
+            rows[i].getCell(net_act_prod_ratio_row).value,
+            rows[i].getCell(net_deal_amount_row).value,
+            rows[i].getCell(net_deal_num_row).value,
+            rows[i].getCell(net_sale_prod_ratio_row).value,
+            rows[i].getCell(presale_ratio_row).value,
+            rows[i].getCell(show_num_row).value,
+            rows[i].getCell(click_num_row).value,
+            rows[i].getCell(click_rate_row).value,
+            rows[i].getCell(avg_click_cost_amount_row).value,
+            rows[i].getCell(thd_show_cost_amount_row).value,
+            rows[i].getCell(cart_num_row).value,
+            rows[i].getCell(collect_num_row).value,
+            rows[i].getCell(collect_cart_num_row).value,
+            base_amount,
+            up_amount,
+            promotion_type,
+            shop_name,
+            start_time,
+            create_time 
+        )
+        count++
+    }
+    await goodsPromotionRepo.deletepromotionlog(shop_name,promotion_type,start_time)
+    result = await goodsPromotionRepo.Insertpromotionlog(data,count)
+    return result
+}
 module.exports = {
     getDataStats,
     getPromotionStats,
@@ -5838,7 +5966,6 @@ module.exports = {
     getTMPromotioninfo,
     importTmallpromotioninfo,
     getSaleData,
-    getInventoryData,
     getDivisionSaleData,
     getDivisionSaleQtyData,
     getProjectSaleData,
@@ -5863,5 +5990,6 @@ module.exports = {
     initiateprocess,
     updateTMLinkStage,
     goodslog,
-    getTmallInfo
+    getTmallInfo,
+    importLinkPlan
 }

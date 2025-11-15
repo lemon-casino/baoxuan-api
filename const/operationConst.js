@@ -57,6 +57,7 @@ const columnList = [
 
 const columnList1 = [
 	{ label: "", key: "name", is_link: true, show: true, sort: 1 },
+	{ label: "撞线", key: "hit_line", show: true },
 	{ label: "负利润", key: "negative_profit", show: true },
 	{ label: "低利润", key: "low_profit", show: true },
 	{ label: "无推广", key: "none_promotion", show: true },

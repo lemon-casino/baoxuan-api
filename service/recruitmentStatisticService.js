@@ -5,8 +5,9 @@ const TARGET_SHIPS = [
         {label: '面试通过', ship: 4},
         {label: '已发offer', ship: 5},
         {label: '面试淘汰', ship: 6},
-	    {label: '简历淘汰', ship: 7},
-	    {label: '未初始', ship: 8},
+        {label: '简历淘汰', ship: 7},
+        {label: '试用淘汰', ship: 10},
+        {label: '收简历数', ship: 8},
 ];
 const CURRICULUM_VITAE_SHIPS = new Set([8]);
 const parseDay = (value) => {
@@ -64,37 +65,29 @@ const resolveDateRange = (query = {}) => {
         };
 };
 
-const getCurriculumVitaeShipStatistics = async (query = {}) => {
-        const {period, startDate, endDate} = resolveDateRange(query);
+const getCurriculumVitaeShipStatistics = async (query) => {
 	const recruitmentShips = TARGET_SHIPS.filter((item) => !CURRICULUM_VITAE_SHIPS.has(item.ship));
-	let rows = [];
-	if (recruitmentShips.length > 0) {
-		rows = await recruitmentStatisticRepo.getCurriculumVitaeShipStatistics({
-			startDate,
-			endDate,
-			ships: recruitmentShips.map((item) => item.ship),
-		});
-	}
+        let startDate = query.startDate , endDate = query.endDate
+        let rows = await recruitmentStatisticRepo.getCurriculumVitaeShipStatistics(startDate,endDate)
         const counts = new Map(rows.map((row) => [row.ship, row.count]));
-	if (CURRICULUM_VITAE_SHIPS.size > 0) {
-		const curriculumVitaeCounts = await curriculumVitaeRepo.countByShipValues({
-			ships: Array.from(CURRICULUM_VITAE_SHIPS),
-			startDate,
-			endDate,
-		});
-		curriculumVitaeCounts.forEach((count, ship) => {
-			counts.set(ship, count);
-		});
-	}
+        let rows1 = await recruitmentStatisticRepo.getHrCount(startDate,endDate)
+        let rows2 = await recruitmentStatisticRepo.getJobCount(startDate,endDate)
+        let items=TARGET_SHIPS.map((item) => ({
+                ...item,
+                count: counts.get(item.ship) ?? 0,
+                hr:[],
+                job:[]
+        }))
+        items = items.map(item => {
+                return {
+                    ...item,
+                    hr: rows1.filter(hrItem => hrItem.ship === item.ship),
+                    job: rows2.filter(jobItem => jobItem.ship === item.ship)
+                };
+            });
         return {
-                period,
-                startDate,
-                endDate,
-                items: TARGET_SHIPS.map((item) => ({
-                        ...item,
-                        count: counts.get(item.ship) ?? 0,
-                })),
-        };
+                items
+        }
 };
 
 module.exports = {

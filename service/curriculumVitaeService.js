@@ -10,6 +10,7 @@ const SHIP_SUMMARY_ITEMS = [
 	{label: 'Offer', ship: 5},
 	{label: '面试淘汰', ship: 6},
 	{label: '简历淘汰', ship: 7},
+        {label: '试用淘汰', ship: 10},
 	{label: '未初始', ship: 8},
 ];
 
@@ -415,7 +416,9 @@ const list = async (query = {}) => {
         const page = Math.max(parseInt(query.page, 10) || 1, 1);
         const pageSize = Math.max(parseInt(query.pageSize, 10) || 10, 1);
         const filters = normalizeFilters(query);
-        const {count, rows} = await curriculumVitaeRepo.findAndCountAll(filters, {page, pageSize});
+        const result = await curriculumVitaeRepo.findAndCountAll(filters, {page, pageSize});
+        const rows = result.data
+        const count = result.count[0].count
         let statusByContact = new Map();
         const normalizedRows = Array.isArray(rows)
                 ? rows.map((row) => ({

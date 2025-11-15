@@ -26,6 +26,8 @@ const getDataStats = async (req, res, next) => {
         const startDate = moment(req.query.startDate).format('YYYY-MM-DD')
         const endDate = moment(req.query.endDate).format('YYYY-MM-DD')
         let result
+        console.log('req.query',req.query) 
+        //req.query.infoType=1为推广模式、req.query.infoType=0为数据模式
         if (req.query.infoType == '1') 
             result = await operationService.getPromotionStats(req.user.id, startDate, endDate, req.query)
         else 
@@ -924,19 +926,6 @@ const getSaleData = async (req, res, next) => {
     }
 }
 
-const getInventoryData = async (req, res, next) => {
-    try {
-        const {type} = req.query
-        joiUtil.validate({
-            type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
-        })
-        result = await operationService.getInventoryData(type)
-        return res.send(biResponse.success(result))
-    } catch (e) {
-        next(e)
-    }
-}
-
 const getDivisionSaleData = async (req, res, next) => {
     try {
         const day = moment().subtract(1, 'day').format('YYYY-MM-DD')
@@ -1256,10 +1245,7 @@ const importOrdersGoods = async (req, res, next) => {
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()
-            let datainfo = fs.readFileSync(newPath)
-            datainfo = iconv.decode(datainfo, 'GBK')
-            fs.writeFileSync(newPath, datainfo)
-            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            let readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
@@ -1373,10 +1359,7 @@ const importOrdersGoodsVerified = async (req, res, next) => {
                 if (err) throw err
             })
             const workbook = new ExcelJS.Workbook()
-            let datainfo = fs.readFileSync(newPath)
-            datainfo = iconv.decode(datainfo, 'GBK')
-            fs.writeFileSync(newPath, datainfo)
-            let readRes = await workbook.csv.readFile(newPath, {map: newMap})
+            let readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
             if (readRes) {
                 const worksheet = workbook.getWorksheet(1)
                 let rows = worksheet.getRows(1, worksheet.rowCount)
@@ -1809,6 +1792,48 @@ const getTmallInfo = async (req, res, next) => {
     }
 }
 
+const importLinkPlan = async(req, res, next) =>{
+    try {
+        let form = new formidable.IncomingForm()
+        form.uploadDir = "./public/excel"
+        fs.mkdirSync(form.uploadDir, { recursive: true })
+        form.keepExtensions = true
+        form.parse(req, async function (error, fields, files) {
+            if (error) {
+                return res.send(biResponse.canTFindIt)
+            }
+            
+            const file = files.file
+            const date = file.originalFilename.split('.')[0].split('_')
+            const shop_name = date[1]
+            const plan_name = date[2]
+            const time = date[3]
+            console.log(shop_name,plan_name,time)
+            const newPath = `${form.uploadDir}/${moment().valueOf()}-${file.originalFilename}`
+            fs.renameSync(file.filepath, newPath, (err) => {  
+                if (err) throw err
+            })
+            const workbook = new ExcelJS.Workbook()
+            // let datainfo = fs.readFileSync(newPath)
+            // datainfo = iconv.decode(datainfo, 'GBK')
+            // fs.writeFileSync(newPath, datainfo)
+            let readRes = await workbook.xlsx.readFile(newPath, {map: newMap})
+            if (readRes) {
+                const worksheet = workbook.getWorksheet(1)
+                let rows = worksheet.getRows(1, worksheet.rowCount)
+                let result = await operationService.importLinkPlan(rows,shop_name,plan_name, time)
+                if (result) {
+                    fs.rmSync(newPath)
+                } else {
+                    return res.send(biResponse.createFailed())
+                }
+            }
+            return res.send(biResponse.success())
+        })
+    } catch (e) {
+        next(e)
+    }
+}
 module.exports = {
     getDataStats,
     getDataStatsDetail,
@@ -1858,7 +1883,6 @@ module.exports = {
     ReportDownload,
     importTmallpromotioninfo,
     getSaleData,
-    getInventoryData,
     getDivisionSaleData,
     getDivisionSaleQtyData,
     getProjectSaleData,
@@ -1878,5 +1902,6 @@ module.exports = {
     initiateprocess,
     updateTMLinkStage,
     goodslog,
-    getTmallInfo
+    getTmallInfo,
+    importLinkPlan
 }

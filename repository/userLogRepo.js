@@ -80,7 +80,10 @@ const setUserDown = async (userId) => {
     await models.userLogModel.update({
         isOnline: false
     }, {
-        where: {userId}
+        where: {
+            userId,
+            isOnline:true
+        }
     })
 }
 

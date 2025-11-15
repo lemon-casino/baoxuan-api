@@ -88,9 +88,8 @@ exports.login = async (req, res, next) => {
         const user = {
             token: null, refreshToken: null, brief: null, permissions: null, departments: null
         }
-        
         const {token, refreshToken} = await getTokenAndRefreshToken(username, password)
-        
+
         // 用户基本信息
         const brief = await UsersModel.findOne({
             where: {username: username},
@@ -208,7 +207,6 @@ const getTokenAndRefreshToken = async (userName, password) => {
     const brief = await UsersModel.findOne({
         where: {username: userName},
     });
-    
     if (!brief) {
         throw new UserError("用户不存在")
     }

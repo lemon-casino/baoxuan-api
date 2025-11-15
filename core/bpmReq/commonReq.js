@@ -53,7 +53,7 @@ commonReq.createJDProcess = async (refreshToken, processDefinitionId, variables,
     body.refreshToken = refreshToken
     body.processDefinitionId = processDefinitionId
     body.variables=variables
-    // console.log(url, body, headers)
+    console.log(url, body, headers)
     let result = await httpUtil.post(url, body, headers)
     // console.log(result)
     return false

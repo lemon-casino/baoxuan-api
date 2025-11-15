@@ -214,7 +214,6 @@ const buildCandidateUpdates = (rows) => {
 				interviewComment: candidate.interviewComment,
 				interviewRemark: candidate.interviewRemark,
 			};
-
 			const candidateKey = candidate.contact;
 			const existing = candidateMap.get(candidateKey);
 			const currentPriority = SHIP_PRIORITY[resolvedShip] ?? 0;
@@ -423,8 +422,7 @@ const matchRecruitmentCandidate = (context, candidateInfo = {}) => {
 
         return null;
 };
-
-const syncOnboardingProcesses = async ({recruitmentContext, shipChangeStatistics}) => {
+const syncOnboardingProcesses = async ({recruitmentContext, shipChangeStatistics,trialmap}) => {
         const rows = await onboardingProcessRepo.getOnboardingProcesses();
         const summary = {
                 total: Array.isArray(rows) ? rows.length : 0,
@@ -543,13 +541,18 @@ const syncOnboardingProcesses = async ({recruitmentContext, shipChangeStatistics
                 } else if (typeof fieldMap[ONBOARDING_FIELD_IDS.entryDate] === 'string') {
                         metadata.onboardingDateRaw = fieldMap[ONBOARDING_FIELD_IDS.entryDate];
                 }
-
-                const result = await curriculumVitaeRepo.updateShipByContact(
-                        resolvedContact,
-                        ship,
-                        candidateContext.name || candidateName,
-                        {lockSync: true}
-                );
+                let result = null
+                if (trialmap.has(resolvedContact)){
+                        continue
+                }else{
+                        result = await curriculumVitaeRepo.updateShipByContact(
+                                resolvedContact,
+                                ship,
+                                candidateContext.name || candidateName,
+                                {lockSync: true}
+                        );
+                }
+                
 
                 if (result.affectedRows > 0) {
                         summary.updatedRows += result.affectedRows;
@@ -695,11 +698,13 @@ const syncCurriculumVitaeStatus = async () => {
 		logger.error(`[RecruitmentProcessSync] failed to sync recruitment positions: ${error.message}`, error);
 	}
 	const {candidateMap, unknownStatuses} = buildCandidateUpdates(rows);
-
+        const trial = await recruitmentProcessRepo.gettrial()
+        const trialmap = new Map(trial.map(item => [item.contact, item]));
+        const candidateMap1 = new Map([...candidateMap, ...trialmap]);
 	let updated = 0;
 	const unmatchedContacts = [];
 	const shipChangeStatistics = [];
-        for (const candidate of candidateMap.values()) {
+        for (const candidate of candidateMap1.values()) {
                 let result = {matchedCount: 0, affectedRows: 0, changedRecords: []};
                 if (candidate.contact) {
                         result = await curriculumVitaeRepo.updateShipByContact(
@@ -746,6 +751,7 @@ const syncCurriculumVitaeStatus = async () => {
                 onboardingSummary = await syncOnboardingProcesses({
                         recruitmentContext,
                         shipChangeStatistics,
+                        trialmap
                 });
         } catch (error) {
                 logger.error(
@@ -837,6 +843,33 @@ const syncCurriculumVitaeStatus = async () => {
         };
 };
 
+const bpmzpform = async () =>{
+        let result = await recruitmentStatisticRepo.zhopinform()
+        for(let i=0;i<result.length;i++){
+                let data = JSON.parse(result[i].concat)
+                await recruitmentStatisticRepo.DeleteRecruitment(result[i].process_id)
+                for(let j = 0;j<data.length;j++){
+                        let data1 = []
+                        data1.push([
+                                result[i].process_id,
+                                result[i].username,
+                                result[i].position,
+                                data[j].面试官 ?  data[j].面试官 : null,
+                                data[j].候选人 ? data[j].候选人 : null,
+                                data[j].简历联系方式 ? data[j].简历联系方式 : null,
+                                data[j].联系方式 ? data[j].联系方式 : null,
+                                data[j].面试状态  ? data[j].面试状态: null,
+                                data[j].时间 ? data[j].时间: null,
+                                data[j].拒绝原因 ? data[j].拒绝原因: null,
+                                data[j].面试评价 ? data[j].面试评价: null,
+                                data[j].备注 ?  data[j].备注 : null
+                        ])
+                        await recruitmentStatisticRepo.InsertRecruitment(data1)
+                }
+        }
+}
+
 module.exports = {
 	syncCurriculumVitaeStatus,
+        bpmzpform
 };

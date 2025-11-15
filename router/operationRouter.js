@@ -77,7 +77,7 @@ router.post('/tmall-promotion-info/import', operationApi.importTmallpromotioninf
 
 //首页销售数据
 router.get('/sale_data', operationApi.getSaleData)
-router.get('/inventory-data', operationApi.getInventoryData)
+// 前端已经注释，不确定功能还要不要
 router.get('/division-sale', operationApi.getDivisionSaleData)
 router.get('/project-sale', operationApi.getProjectSaleData)
 router.get('/shop-sale', operationApi.getShopSaleData)
@@ -163,4 +163,6 @@ router.get('/goods-info-log', operationApi.goodslog)
 
 //天猫执行数据
 router.get('/tmall-info', operationApi.getTmallInfo)
+// 链接推广撞线
+router.post('/link-plan', operationApi.importLinkPlan)
 module.exports = router

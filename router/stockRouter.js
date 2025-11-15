@@ -11,5 +11,6 @@ router.post('/purchase-info/import', stockApi.importPurchaseInfo)
 router.post('/ori-sku-info/import', stockApi.importOriSkuInfo)
 router.post('/sync-purchase-order', stockApi.syncPurchaseOrder)
 router.post('/purchase-return/import', stockApi.importPurchaseReturn)
+router.post('/goods-inventory/import', stockApi.importGoodsInventory)
 
 module.exports = router

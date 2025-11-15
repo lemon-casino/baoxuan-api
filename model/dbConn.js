@@ -1,5 +1,6 @@
 const mysql = require('mysql2')
 const { dbConfig } = require('../config/index')
+const { sqlPrint } = require('../utils/sqlPrintUtil')
 const { logger } = require("@/utils/log")
 
 const pool = mysql.createPool({
@@ -15,16 +16,15 @@ const pool = mysql.createPool({
     dateStrings: true,
 })
 
-const query = async function (sql, params) {
+const query = async function (sql, params) { 
     return new Promise(function (resolve, reject) {
-        // console.log('sql:', sql, ', params:', params)
         pool.query(sql, params, function (err, result) {
             if (err) {
                 logger.error(`mysql connect error ==> ${JSON.stringify(err)}`)
                 resolve(null)
             } else {
                 resolve(result)
-            }
+            } 
         })
     })
 }

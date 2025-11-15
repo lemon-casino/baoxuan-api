@@ -1,7 +1,7 @@
 const {Op} = require('sequelize');
 const ProcessesModel = require('@/model/processes');
 const ProcessInfoModel = require('@/model/processInfo');
-
+const { query } = require('../../model/dbConn')
 const RECRUITMENT_PROCESS_CODE = 'zhaopin';
 const FIELD_IDS = {
         department: 'F8srmgrpj4r3aec',
@@ -45,7 +45,7 @@ const pickRecruitmentFields = (fieldRows = []) => {
 
 const getRecruitmentProcesses = async () => {
         const rows = await ProcessesModel.findAll({
-                attributes: ['processId', 'processCode', 'version', 'status', 'startTime', 'endTime', 'title'],
+                attributes: ['processId', 'processCode', 'version', 'status', 'startTime', 'endTime'],
                 where: {
                         processCode: RECRUITMENT_PROCESS_CODE,
                 },
@@ -80,7 +80,6 @@ const getRecruitmentProcesses = async () => {
                         processCode: plain.processCode,
                         version: plain.version,
                         status: plain.status,
-                        title: plain.title,
                         startTime: plain.startTime,
                         endTime: plain.endTime,
                         fieldMap,
@@ -88,7 +87,19 @@ const getRecruitmentProcesses = async () => {
         });
 };
 
+const gettrial = async () => {
+        let sql = `select a2.content AS 'name',a3.content as 'contact',10 AS ship, '试用淘汰' AS status
+        ,CONCAT(a1.title,a1.content) AS interviewComment ,'' AS interviewRemark from process_info a1
+	LEFT JOIN process_info a2
+	ON a1.process_id = a2.process_id AND a2.field = 'Fgmvmgu9a7wxcec'
+	LEFT JOIN process_info a3
+	ON a1.process_id = a3.process_id AND a3.field = 'F9x0mh1mieh3b1c'
+	where a1.field in ('Fxrvmhabccwcazc','F3ylmhabdfrcb5c','Fkqumhabdfmqb2c') AND a1.content = '人事劝离'`
+        let result = await query(sql)
+        return result
+}
 module.exports = {
         FIELD_IDS,
         getRecruitmentProcesses,
-};
+        gettrial
+}

@@ -384,4 +384,37 @@ goodsSkuRepo.getPDDNewGoods = async () => {
     return result || []
 }
 
+goodsSkuRepo.updateskuonsaledate = async () => {
+    let sql = `DELETE from sku_onsale_date`
+    let result = await query(sql)
+    sql = `INSERT INTO sku_onsale_date (sku_code,first_onsale_date,second_onsale_date,third_onsale_date,update_date)
+        SELECT sku_code
+                    ,MIN(IF(division_name = '事业部1',create_time,NULL)) AS first_onsale_date
+                    ,MIN(IF(division_name = '事业部2',create_time,NULL)) AS second_onsale_date
+                    ,MIN(IF(division_name = '事业部3',create_time,NULL)) AS third_onsale_date
+                    ,CURRENT_TIME
+        FROM (
+            SELECT c.division_name,IFNULL(b.商品编码,a.sys_sku_id) AS sku_code,create_time FROM (
+                SELECT shop_name,sys_sku_id,create_time FROM jst_goods_sku
+                UNION ALL
+                SELECT '京东自营-厨具',b.code,MIN(a.上柜时间) FROM danpin.inventory_jdzz AS a
+                LEFT JOIN dianshang_operation_attribute AS b
+                ON a.SKU = b.sku_id
+                GROUP BY b.code
+            ) AS a
+            LEFT JOIN danpin.combination_product_code as b
+            ON a.sys_sku_id = b.组合商品编码
+            LEFT JOIN (
+                SELECT a.division_name,c.shop_name FROM division_info AS a
+                LEFT JOIN project_info AS b
+                ON a.id = b.division_id
+                LEFT JOIN shop_info AS c
+                ON b.id = c.project_id
+            ) AS c
+            ON a.shop_name = c.shop_name
+        ) AS a
+        GROUP BY sku_code`
+    result = await query(sql)
+    return result
+}
 module.exports = goodsSkuRepo

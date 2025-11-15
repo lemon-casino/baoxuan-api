@@ -1,6 +1,7 @@
 const {Op} = require('sequelize');
 const CurriculumVitaeModel = require('../model/curriculumVitae');
-
+const { query:querydb1 } = require('../model/bpmDbConn')
+const { query:querydb2 } = require('../model/dbConn')
 const CONTACT_SPLIT_REGEX = /[\s,;；，、|/\\]+/u;
 const MIN_LIKE_TOKEN_LENGTH = 3;
 const MIN_DIGIT_TOKEN_LENGTH = 6;
@@ -187,20 +188,61 @@ const findAndCountAll = async (filters, pagination) => {
 	const { page, pageSize } = pagination
 	const where = buildWhereClause(filters)
 	const offset = (page - 1) * pageSize
-
-	return CurriculumVitaeModel.findAndCountAll({
-		where,
-		order: [
-			["date", "DESC"],
-			["id", "DESC"],
-		],
-		offset,
-		limit: pageSize,
-		raw: true,
-		logging: true,
-	})
-};
-
+	let result = {}
+	let subsql = `SELECT 
+				a.id, a.hr, a.date, a.job, a.job_salary, a.name, 
+				a.contact, a.latest_corp, a.latest_job , 
+				a.gender, a.age, a.location, a.education, a.seniority, a.salary, 
+				a.filename, a.filesize, a.filepath, a.ship,
+				ROW_NUMBER() OVER (
+					PARTITION BY hr, name, contact 
+					ORDER BY date DESC,id DESC
+				) as rn
+			FROM bi_serve.curriculum_vitae AS a 
+			LEFT JOIN bi_serve.recruitment AS b
+			ON a.hr = b.hr AND a.name = b.candidate
+			WHERE ship = ${where.ship} AND b.hr IS NOT NULL`
+	if (where.ship == 8){
+		subsql = `SELECT 
+				id, hr, date, job, job_salary AS jobSalary, name, 
+				contact, latest_corp AS latestCorp, latest_job AS latestJob, 
+				gender, age, location, education, seniority, salary, 
+				filename, filesize, filepath, ship,
+				ROW_NUMBER() OVER (
+					PARTITION BY hr, name, contact 
+					ORDER BY date DESC,id DESC
+				) as rn
+			FROM bi_serve.curriculum_vitae `
+	} else if(where.ship == 1){
+		subsql = `SELECT 
+				a.id, a.hr, a.date, a.job, a.job_salary, a.name, 
+				a.contact, a.latest_corp, a.latest_job , 
+				a.gender, a.age, a.location, a.education, a.seniority, a.salary, 
+				a.filename, a.filesize, a.filepath, a.ship,
+				ROW_NUMBER() OVER (
+					PARTITION BY hr, name, contact 
+					ORDER BY date DESC,id DESC
+				) as rn
+			FROM bi_serve.curriculum_vitae AS a 
+			LEFT JOIN bi_serve.recruitment AS b
+			ON a.hr = b.hr AND a.name = b.candidate
+			WHERE ship != 8 AND b.hr IS NOT NULL`
+	}
+	let sql = `SELECT * FROM (
+			${subsql}
+		) ranked
+		WHERE rn = 1
+		ORDER BY date DESC, id DESC LIMIT ${offset}, ${pageSize}`
+	let sql1 = `SELECT count(*) as count FROM (
+			${subsql}
+		) ranked
+		WHERE rn = 1`
+	let data = await querydb1(sql)
+	let count = await querydb1(sql1)
+	result.data = data
+	result.count = count
+	return result
+}
 const findContactsByFilters = async (filters = {}) => {
 	const where = buildWhereClause(filters);
 	const rows = await CurriculumVitaeModel.findAll({
@@ -423,60 +465,6 @@ const getShipCountsByPeriod = async (startDate, endDate) => {
 	}));
 };
 
-const countByShipValues = async ({ships, startDate, endDate} = {}) => {
-	if (!Array.isArray(ships) || ships.length === 0) {
-		return new Map();
-	}
-
-	const normalizedShips = Array.from(
-		new Set(
-			ships
-				.map((ship) => Number(ship))
-				.filter((ship) => Number.isInteger(ship))
-		)
-	);
-
-	if (normalizedShips.length === 0) {
-		return new Map();
-	}
-
-	const {sequelize} = CurriculumVitaeModel;
-	const where = {
-		ship: {
-			[Op.in]: normalizedShips,
-		},
-	};
-
-	if (startDate || endDate) {
-		where.date = {};
-
-		if (startDate) {
-			where.date[Op.gte] = startDate;
-		}
-
-		if (endDate) {
-			where.date[Op.lt] = endDate;
-		}
-	}
-
-	const rows = await CurriculumVitaeModel.findAll({
-		attributes: [
-			'ship',
-			[sequelize.fn('COUNT', sequelize.col('id')), 'count'],
-		],
-		where,
-		group: ['ship'],
-		raw: true,
-	});
-
-	return new Map(
-		rows.map((row) => [
-			typeof row.ship === 'number' ? row.ship : Number(row.ship),
-			typeof row.count === 'number' ? row.count : Number(row.count),
-		])
-	);
-};
-
 const deleteById = async (id) => {
 	return CurriculumVitaeModel.destroy({
 		where: {id}
@@ -547,6 +535,5 @@ module.exports = {
         updateShipByContact,
         hasContactMatch,
         getShipCountsByPeriod,
-        countByShipValues,
         extractContactTokens,
 };

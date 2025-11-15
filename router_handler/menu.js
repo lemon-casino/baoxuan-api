@@ -109,6 +109,7 @@ exports.addMenu = (req, res, next) => {
 
 exports.editMenu = (req, res, next) => {
     const {value, error} = edit_menu_schema.validate(req.body)
+    console.log('editMenu',error)
     if (error) {
         return next(error)
     }

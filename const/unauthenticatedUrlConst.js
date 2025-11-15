@@ -51,6 +51,7 @@ module.exports = [
     '/stock/purchase-info/import',
     '/stock/ori-sku-info/import',
     '/stock/purchase-return/import',
+    '/stock/goods-inventory/import',
     '/product-attrs/upload-pdd',
     '/development/running-process',
     '/development/finish-process',
@@ -64,5 +65,7 @@ module.exports = [
     '/flow/vision/detail',
     '/development/develop-process',
     '/operation/tmall-info',
+    '/process/development/info',
+    '/operation/link-plan',
     /^\/download\/.*/,
 ]

@@ -122,4 +122,48 @@ goodsPromotionRepo.Inserttmallpromotion = async (data) =>{
     return result
     
 }
+
+goodsPromotionRepo.deletepromotionlog = async (shop_name,promotion_type,start_time) =>{
+    sql = `delete from goods_promotion_log where shop_name= ? and promotion_type = ? and start_time= ? `
+    const result = await query(sql, [shop_name,promotion_type,start_time])
+    return result
+}
+goodsPromotionRepo.Insertpromotionlog = async (data,count) =>{
+    sql = `INSERT INTO goods_promotion_log (goods_id,
+        plan_id,
+        cost_amount,
+        time_line,
+        act_roi,
+        cumulative_sale_num,
+        cumulative_sale_amount,
+        ctr,
+        immed_deal_amount,
+        immed_deal_num,
+        net_act_prod_ratio,
+        net_deal_amount,
+        net_deal_num,
+        net_sale_prod_ratio,
+        presale_ratio,
+        show_num,
+        click_num,
+        click_rate,
+        avg_click_cost_amount,
+        thd_show_cost_amount,
+        cart_num,
+        collect_num,
+        collect_cart_num,
+        base_amount,
+        up_amount,
+        promotion_type,
+        shop_name,
+        start_time,
+        create_time) VALUES`
+    for (let i = 0; i < count; i++) {
+        sql = `${sql}(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?),`
+    }
+    sql = sql.substring(0, sql.length - 1)
+    const result = await query(sql, data)
+    return result?.affectedRows ? true : false
+}
+
 module.exports = goodsPromotionRepo
