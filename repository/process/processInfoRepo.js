@@ -28,4 +28,19 @@ processInfoRepo.getFieldValuesForDevelopmentProcesses = async (titles) => {
     return result || []
 }
 
+processInfoRepo.getProcessFieldValuesByCodeAndTitles = async (processCode, titles) => {
+    if (!processCode || !Array.isArray(titles) || !titles.length) return []
+    const placeholders = titles.map(() => '?').join(', ')
+    const sql = `SELECT DISTINCT dp.uid AS development_uid, pi.title AS field_title, pi.content
+        FROM development_process dp
+        JOIN process_info pi_uid ON pi_uid.content = dp.uid
+        JOIN process_info pi ON pi.process_id = pi_uid.process_id
+        JOIN processes p ON p.process_id = pi.process_id
+        WHERE p.process_code = ? AND pi.title IN (${placeholders}) AND pi_uid.content IS NOT NULL
+        ORDER BY pi.process_id, pi.id`
+    const params = [processCode, ...titles]
+    const result = await query(sql, params)
+    return result || []
+}
+
 module.exports = processInfoRepo

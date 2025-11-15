@@ -24,6 +24,9 @@ const isBlankFormFieldValue = (value) => {
     return false
 }
 
+const MARKET_ANALYSIS_PROCESS_CODE = 'syybyycl'
+const MARKET_ANALYSIS_FIELD_TITLES = ['事业一部市场分析上传', '事业二部市场分析上传', '事业三部市场分析上传']
+
 const DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS = [
     { title: '京东是否选中', column: 'jd_is_select', defaultValue: '-', emptyValue: '无', valueType: 'selectionStatus' },
     { title: '事业一部是否选中', column: 'first_select', defaultValue: '-', emptyValue: '无', valueType: 'selectionStatus' },
@@ -118,6 +121,52 @@ const valuesAreEqual = (column, currentValue, targetValue) => {
         return normalizeSelectionStorageValue(currentValue) === normalizeSelectionStorageValue(targetValue)
     }
     return currentValue === targetValue
+}
+
+const parseMarketAnalysisContent = (value) => {
+    if (value === null || value === undefined) return []
+    if (Array.isArray(value)) return value
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed) return []
+        try {
+            const parsed = JSON.parse(trimmed)
+            if (Array.isArray(parsed)) {
+                return parsed
+            }
+        } catch (err) {
+            // ignore JSON parse errors and treat as raw string below
+        }
+        return [value]
+    }
+    return [value]
+}
+
+const buildMarketAnalysisMap = (rows) => {
+    const map = new Map()
+    for (const row of rows || []) {
+        const uid = row?.development_uid
+        const title = row?.field_title
+        if (!uid || !title) continue
+        const contents = parseMarketAnalysisContent(row?.content)
+        if (!contents.length) continue
+        if (!map.has(uid)) map.set(uid, new Map())
+        const titleMap = map.get(uid)
+        if (!titleMap.has(title)) titleMap.set(title, [])
+        titleMap.get(title).push(...contents)
+    }
+    return map
+}
+
+const buildMarketAnalysisPayload = (titleMap) => {
+    if (!titleMap) return null
+    const payload = []
+    for (const title of MARKET_ANALYSIS_FIELD_TITLES) {
+        const contents = titleMap.get(title)
+        if (!contents?.length) continue
+        payload.push({ title, content: contents })
+    }
+    return payload.length ? payload : null
 }
 
 const getLatestModifiedProcess = async () => {
@@ -1771,7 +1820,12 @@ const syncDevelopmentProcessFormFields = async () => {
     if (!processes?.length) return
 
     const fieldRows = await processInfoRepo.getFieldValuesForDevelopmentProcesses(DEVELOPMENT_PROCESS_FIELD_TITLES)
+    const marketAnalysisRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
+        MARKET_ANALYSIS_PROCESS_CODE,
+        MARKET_ANALYSIS_FIELD_TITLES,
+    )
     const fieldMap = new Map()
+    const marketAnalysisMap = buildMarketAnalysisMap(marketAnalysisRows)
 
     for (const row of fieldRows || []) {
         const uid = row?.development_uid
@@ -1829,6 +1883,12 @@ const syncDevelopmentProcessFormFields = async () => {
             if (!valuesAreEqual(config.column, process[config.column], targetValue)) {
                 updates[config.column] = targetValue
             }
+        }
+
+        const marketAnalysisPayload = buildMarketAnalysisPayload(marketAnalysisMap.get(uid))
+        const targetAnalysisValue = marketAnalysisPayload ? JSON.stringify(marketAnalysisPayload) : null
+        if (!valuesAreEqual('analysis', process.analysis, targetAnalysisValue)) {
+            updates.analysis = targetAnalysisValue
         }
 
         if (Object.keys(updates).length) {
