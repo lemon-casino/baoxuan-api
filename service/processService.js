@@ -27,10 +27,17 @@ const isBlankFormFieldValue = (value) => {
 const MARKET_ANALYSIS_PROCESS_CODE = 'syybyycl'
 const MARKET_ANALYSIS_FIELD_TITLES = ['事业一部市场分析上传', '事业二部市场分析上传', '事业三部市场分析上传']
 const ORDER_TYPE_FIELD_TITLE = '产品采购'
+const ORDER_QUANTITY_PROCESS_CODE = 'kjdinghuo'
+const ORDER_QUANTITY_FIELD_TITLE = '实际订货量'
 const VISION_TYPE_PROCESS_CODE = 'qihuashenhe'
 const VISION_TYPE_FIELD_TITLE = '视觉类型'
 const VISION_PLATFORM_FIELD_TITLE = '平台是否为京东'
-const VISION_FIELD_TITLES = [VISION_TYPE_FIELD_TITLE, VISION_PLATFORM_FIELD_TITLE]
+const SELECT_PROJECT_FIELD_TITLE = '选中平台'
+const VISION_AND_PLATFORM_FIELD_TITLES = [
+    VISION_TYPE_FIELD_TITLE,
+    VISION_PLATFORM_FIELD_TITLE,
+    SELECT_PROJECT_FIELD_TITLE,
+]
 
 const DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS = [
     { title: '京东是否选中', column: 'jd_is_select', defaultValue: '-', emptyValue: '无', valueType: 'selectionStatus' },
@@ -172,6 +179,101 @@ const buildMarketAnalysisPayload = (titleMap) => {
         payload.push({ title, content: contents })
     }
     return payload.length ? payload : null
+}
+
+const parseJsonArrayContent = (value) => {
+    if (value === null || value === undefined) return []
+    if (Array.isArray(value)) return value
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed) return []
+        try {
+            const parsed = JSON.parse(trimmed)
+            if (Array.isArray(parsed)) {
+                return parsed
+            }
+        } catch (err) {
+            // ignore JSON parse error
+        }
+        return [trimmed]
+    }
+    return [value]
+}
+
+const buildSelectProjectMap = (rows) => {
+    const perUidValues = new Map()
+    for (const row of rows || []) {
+        if (row?.field_title !== SELECT_PROJECT_FIELD_TITLE) continue
+        const uid = row?.development_uid
+        if (!uid) continue
+        const contents = parseJsonArrayContent(row?.content)
+        if (!contents.length) continue
+        if (!perUidValues.has(uid)) perUidValues.set(uid, new Set())
+        const valueSet = perUidValues.get(uid)
+        for (const item of contents) {
+            const normalized = typeof item === 'string' ? item.trim() : `${item}`.trim()
+            if (normalized) {
+                valueSet.add(normalized)
+            }
+        }
+    }
+
+    const result = new Map()
+    for (const [uid, valueSet] of perUidValues.entries()) {
+        if (!valueSet.size) continue
+        result.set(uid, JSON.stringify(Array.from(valueSet)))
+    }
+    return result
+}
+
+const buildOrderQuantityMap = (rows) => {
+    const perUidEntries = new Map()
+    for (const row of rows || []) {
+        const uid = row?.development_uid
+        if (!uid) continue
+        const entries = parseJsonArrayContent(row?.content)
+        if (!entries.length) continue
+        if (!perUidEntries.has(uid)) perUidEntries.set(uid, [])
+        perUidEntries.get(uid).push(...entries)
+    }
+
+    const result = new Map()
+    for (const [uid, entries] of perUidEntries.entries()) {
+        const normalizedEntries = []
+        const seen = new Set()
+        for (const entry of entries) {
+            let normalized = entry
+            if (typeof entry === 'string') {
+                const trimmed = entry.trim()
+                if (!trimmed) continue
+                try {
+                    normalized = JSON.parse(trimmed)
+                } catch (err) {
+                    normalized = trimmed
+                }
+            }
+
+            if (normalized === null || normalized === undefined) continue
+            const keyPrefix = typeof normalized === 'string' ? 'str' : 'obj'
+            let keyValue = normalized
+            if (keyPrefix === 'obj') {
+                try {
+                    keyValue = JSON.stringify(normalized)
+                } catch (err) {
+                    keyValue = null
+                }
+            }
+            const dedupeKey = keyValue !== null && keyValue !== undefined ? `${keyPrefix}:${keyValue}` : null
+            if (dedupeKey && seen.has(dedupeKey)) continue
+            if (dedupeKey) seen.add(dedupeKey)
+            normalizedEntries.push(normalized)
+        }
+
+        if (normalizedEntries.length) {
+            result.set(uid, JSON.stringify(normalizedEntries))
+        }
+    }
+    return result
 }
 
 const normalizeOrderTypeContent = (value) => {
@@ -1937,15 +2039,21 @@ const syncDevelopmentProcessFormFields = async () => {
         MARKET_ANALYSIS_PROCESS_CODE,
         MARKET_ANALYSIS_FIELD_TITLES,
     )
-    const visionTypeRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
+    const visionProcessRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
         VISION_TYPE_PROCESS_CODE,
-        VISION_FIELD_TITLES,
+        VISION_AND_PLATFORM_FIELD_TITLES,
+    )
+    const orderQuantityRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
+        ORDER_QUANTITY_PROCESS_CODE,
+        [ORDER_QUANTITY_FIELD_TITLE],
     )
     const orderTypeRows = await processInfoRepo.getProcessFieldRowsByTitle(ORDER_TYPE_FIELD_TITLE)
     const fieldMap = new Map()
     const marketAnalysisMap = buildMarketAnalysisMap(marketAnalysisRows)
-    const visionTypeMap = buildVisionTypeFieldMap(visionTypeRows)
+    const visionTypeMap = buildVisionTypeFieldMap(visionProcessRows)
+    const selectProjectMap = buildSelectProjectMap(visionProcessRows)
     const orderTypeMap = buildOrderTypeFieldMap(orderTypeRows)
+    const orderQuantityMap = buildOrderQuantityMap(orderQuantityRows)
 
     for (const row of fieldRows || []) {
         const uid = row?.development_uid
@@ -2014,6 +2122,20 @@ const syncDevelopmentProcessFormFields = async () => {
         const targetOrderTypeValue = resolveOrderTypeValue(orderTypeMap.get(uid))
         if (targetOrderTypeValue !== null && !valuesAreEqual('order_type', process.order_type, targetOrderTypeValue)) {
             updates.order_type = targetOrderTypeValue
+        }
+
+        if (selectProjectMap.has(uid)) {
+            const targetSelectProjectValue = selectProjectMap.get(uid)
+            if (!valuesAreEqual('select_project', process.select_project, targetSelectProjectValue)) {
+                updates.select_project = targetSelectProjectValue
+            }
+        }
+
+        if (orderQuantityMap.has(uid)) {
+            const targetOrderQuantityValue = orderQuantityMap.get(uid)
+            if (!valuesAreEqual('order_num', process.order_num, targetOrderQuantityValue)) {
+                updates.order_num = targetOrderQuantityValue
+            }
         }
 
         const visionAssignments = visionTypeMap.get(uid)
