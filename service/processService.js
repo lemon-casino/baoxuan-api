@@ -15,6 +15,15 @@ const developmentTotalService = require('@/service/process/developmentTotalServi
 const processInfoRepo = require("@/repository/process/processInfoRepo")
 const developmentListService = require('@/service/process/developmentListService')
 
+const isBlankFormFieldValue = (value) => {
+    if (value === null || value === undefined) return true
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        return trimmed === '' || trimmed === '无' || trimmed === '-'
+    }
+    return false
+}
+
 const DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS = [
     { title: '京东是否选中', column: 'jd_is_select', defaultValue: '-', emptyValue: '无', valueType: 'selectionStatus' },
     { title: '事业一部是否选中', column: 'first_select', defaultValue: '-', emptyValue: '无', valueType: 'selectionStatus' },
@@ -67,23 +76,46 @@ const normalizeSelectionStatus = (value) => {
     return trimmed
 }
 
-const convertSelectionStatusToStorage = (value) => {
-    const status = normalizeSelectionStatus(value)
-    switch (status) {
-    case 'selected':
-        return 1
-    case 'not_selected':
-        return 0
-    case 'blank':
-        return null
-    default:
-        return null
+const SELECTION_STORAGE_VALUES = {
+    selected: 1,
+    not_selected: 0,
+    missing: 3,
+    empty: 4,
+}
+
+const resolveSelectionStorageValue = (hasFieldValue, rawValue) => {
+    if (!hasFieldValue) {
+        return SELECTION_STORAGE_VALUES.missing
     }
+    if (isBlankFormFieldValue(rawValue)) {
+        return SELECTION_STORAGE_VALUES.empty
+    }
+    const status = normalizeSelectionStatus(rawValue)
+    if (status === 'selected') {
+        return SELECTION_STORAGE_VALUES.selected
+    }
+    if (status === 'not_selected') {
+        return SELECTION_STORAGE_VALUES.not_selected
+    }
+    return SELECTION_STORAGE_VALUES.empty
+}
+
+const normalizeSelectionStorageValue = (value) => {
+    if (value === null || value === undefined) return null
+    if (typeof value === 'number') return value
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed) return null
+        const parsed = Number(trimmed)
+        if (!Number.isNaN(parsed)) return parsed
+        return trimmed
+    }
+    return value
 }
 
 const valuesAreEqual = (column, currentValue, targetValue) => {
     if (SELECTION_STATUS_COLUMN_SET.has(column)) {
-        return normalizeSelectionStatus(currentValue) === normalizeSelectionStatus(targetValue)
+        return normalizeSelectionStorageValue(currentValue) === normalizeSelectionStorageValue(targetValue)
     }
     return currentValue === targetValue
 }
@@ -1739,7 +1771,6 @@ const syncDevelopmentProcessFormFields = async () => {
     if (!processes?.length) return
 
     const fieldRows = await processInfoRepo.getFieldValuesForDevelopmentProcesses(DEVELOPMENT_PROCESS_FIELD_TITLES)
-	console.log(fieldRows)
     const fieldMap = new Map()
 
     for (const row of fieldRows || []) {
@@ -1749,8 +1780,19 @@ const syncDevelopmentProcessFormFields = async () => {
         const content = row?.content
         if (!fieldMap.has(uid)) fieldMap.set(uid, {})
         const current = fieldMap.get(uid)
-        if (!Object.prototype.hasOwnProperty.call(current, title) ||
-            ((current[title] === null || current[title] === undefined || current[title] === '' || current[title] === '无') && content)) {
+        const hasValue = Object.prototype.hasOwnProperty.call(current, title)
+
+        if (!hasValue) {
+            current[title] = content
+            continue
+        }
+
+        if (!isBlankFormFieldValue(content)) {
+            current[title] = content
+            continue
+        }
+
+        if (isBlankFormFieldValue(current[title])) {
             current[title] = content
         }
     }
@@ -1762,11 +1804,22 @@ const syncDevelopmentProcessFormFields = async () => {
         const updates = {}
 
         for (const config of DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS) {
+            if (SELECTION_STATUS_COLUMN_SET.has(config.column)) {
+                const hasFieldValue = Object.prototype.hasOwnProperty.call(values, config.title)
+                const rawContent = hasFieldValue ? values[config.title] : undefined
+                const targetValue = resolveSelectionStorageValue(hasFieldValue, rawContent)
+
+                if (!valuesAreEqual(config.column, process[config.column], targetValue)) {
+                    updates[config.column] = targetValue
+                }
+                continue
+            }
+
             let targetValue = config.defaultValue
             if (Object.prototype.hasOwnProperty.call(values, config.title)) {
                 const rawContent = values[config.title]
                 const normalized = typeof rawContent === 'string' ? rawContent.trim() : rawContent
-                if (normalized === null || normalized === undefined || normalized === '') {
+                if (isBlankFormFieldValue(normalized)) {
                     targetValue = Object.prototype.hasOwnProperty.call(config, 'emptyValue') ? config.emptyValue : config.defaultValue
                 } else {
                     targetValue = normalized
@@ -1774,10 +1827,7 @@ const syncDevelopmentProcessFormFields = async () => {
             }
 
             if (!valuesAreEqual(config.column, process[config.column], targetValue)) {
-                const nextValue = SELECTION_STATUS_COLUMN_SET.has(config.column)
-                    ? convertSelectionStatusToStorage(targetValue)
-                    : targetValue
-                updates[config.column] = nextValue
+                updates[config.column] = targetValue
             }
         }
 
