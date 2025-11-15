@@ -26,6 +26,7 @@ const isBlankFormFieldValue = (value) => {
 
 const MARKET_ANALYSIS_PROCESS_CODE = 'syybyycl'
 const MARKET_ANALYSIS_FIELD_TITLES = ['事业一部市场分析上传', '事业二部市场分析上传', '事业三部市场分析上传']
+const ORDER_TYPE_FIELD_TITLE = '产品采购'
 
 const DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS = [
     { title: '京东是否选中', column: 'jd_is_select', defaultValue: '-', emptyValue: '无', valueType: 'selectionStatus' },
@@ -167,6 +168,39 @@ const buildMarketAnalysisPayload = (titleMap) => {
         payload.push({ title, content: contents })
     }
     return payload.length ? payload : null
+}
+
+const normalizeOrderTypeContent = (value) => {
+    if (value === null || value === undefined) return ''
+    if (typeof value === 'string') return value.trim()
+    return `${value}`.trim()
+}
+
+const buildOrderTypeFieldMap = (rows) => {
+    const map = new Map()
+    for (const row of rows || []) {
+        const uid = row?.development_uid
+        const processId = row?.process_id
+        if (!uid || !processId) continue
+        const content = normalizeOrderTypeContent(row?.content)
+        if (!map.has(uid)) map.set(uid, [])
+        map.get(uid).push({ processId, content })
+    }
+    return map
+}
+
+const resolveOrderTypeValue = (entries) => {
+    if (!entries?.length) return null
+    const filtered = entries.filter(({ content }) => content)
+    if (!filtered.length) return null
+    const [first] = filtered
+    const hasMismatch = filtered.some(({ content }) => content !== first.content)
+    if (!hasMismatch) {
+        return first.content
+    }
+    return filtered
+        .map(({ processId, content }) => `${processId}:${content}`)
+        .join(';')
 }
 
 const getLatestModifiedProcess = async () => {
@@ -1824,8 +1858,10 @@ const syncDevelopmentProcessFormFields = async () => {
         MARKET_ANALYSIS_PROCESS_CODE,
         MARKET_ANALYSIS_FIELD_TITLES,
     )
+    const orderTypeRows = await processInfoRepo.getProcessFieldRowsByTitle(ORDER_TYPE_FIELD_TITLE)
     const fieldMap = new Map()
     const marketAnalysisMap = buildMarketAnalysisMap(marketAnalysisRows)
+    const orderTypeMap = buildOrderTypeFieldMap(orderTypeRows)
 
     for (const row of fieldRows || []) {
         const uid = row?.development_uid
@@ -1889,6 +1925,11 @@ const syncDevelopmentProcessFormFields = async () => {
         const targetAnalysisValue = marketAnalysisPayload ? JSON.stringify(marketAnalysisPayload) : null
         if (!valuesAreEqual('analysis', process.analysis, targetAnalysisValue)) {
             updates.analysis = targetAnalysisValue
+        }
+
+        const targetOrderTypeValue = resolveOrderTypeValue(orderTypeMap.get(uid))
+        if (targetOrderTypeValue !== null && !valuesAreEqual('order_type', process.order_type, targetOrderTypeValue)) {
+            updates.order_type = targetOrderTypeValue
         }
 
         if (Object.keys(updates).length) {
