@@ -407,58 +407,103 @@ const queryDesignList = async (isRunningMode, designOptions, startDate, endDate)
  * @param {string|undefined} endDate 结束日期
  * @returns {Promise<{columns: Array<object>, data: Array<object>}>} 列配置与数据
  */
+const SELECTION_STATUS_LIST_COLUMNS = ['jd_is_select', 'first_select', 'second_select', 'third_select']
+
+const SELECTION_STATUS_DISPLAY_MAP = new Map([
+    [1, '选中'],
+    [0, '未选中'],
+    [3, '-'],
+    [4, '无'],
+])
+
+const formatSelectionStatusValue = (value) => {
+    if (value === undefined) {
+        return '-'
+    }
+    if (value === null) {
+        return '无'
+    }
+    const numeric = typeof value === 'number' ? value : Number(value)
+    if (!Number.isNaN(numeric) && SELECTION_STATUS_DISPLAY_MAP.has(numeric)) {
+        return SELECTION_STATUS_DISPLAY_MAP.get(numeric)
+    }
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed) {
+            return '无'
+        }
+        return trimmed
+    }
+    return value
+}
+
+const applySelectionStatusDisplay = (data) => {
+    if (!Array.isArray(data)) return data
+    return data.map((item) => {
+        const next = { ...item }
+        SELECTION_STATUS_LIST_COLUMNS.forEach((column) => {
+            if (Object.prototype.hasOwnProperty.call(next, column)) {
+                next[column] = formatSelectionStatusValue(next[column])
+            }
+        })
+        return next
+    })
+}
+
+const formatListData = (data) => applySelectionStatusDisplay(processImageData(data))
+
 const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
     const columns = defaultColumns.map((column) => ({ ...column }))
     const isRunningMode = type === '1'
     const developmentType = resolveDevelopmentType(field)
     if (developmentType) {
         const data = await queryDevelopmentList(isRunningMode, developmentType, startDate, endDate)
-        return { columns, data: processImageData(data)  }
+        return { columns, data: formatListData(data) }
     }
     const inquiryStatus = resolveInquiryStatus(field)
     if (inquiryStatus) {
         const data = await queryInquiryList(isRunningMode, inquiryStatus, startDate, endDate)
-        return { columns, data:processImageData(data)  }
+        return { columns, data: formatListData(data) }
     }
     const dailyInquiryStatus = resolveDailyInquiryStatus(field)
     if (dailyInquiryStatus) {
         const data = await queryDailyInquiryList(isRunningMode, dailyInquiryStatus, startDate, endDate)
-        return { columns, data:processImageData(data)  }
+        return { columns, data: formatListData(data) }
     }
     const sampleStatus = resolveSampleStatus(field)
     if (sampleStatus) {
         const data = await querySampleList(isRunningMode, sampleStatus, startDate, endDate)
-        return { columns, data: processImageData(data)  }
+        return { columns, data: formatListData(data) }
     }
     const selectionOptions = resolveSelectionOptions(field)
     if (selectionOptions) {
         const data = await querySelectionList(isRunningMode, selectionOptions, startDate, endDate)
-        return { columns, data:processImageData(data)  }
+        return { columns, data: formatListData(data) }
     }
     const planStatuses = resolvePlanStatuses(field)
     if (planStatuses) {
         const data = await queryPlanList(isRunningMode, planStatuses, startDate, endDate)
-        return { columns, data:processImageData(data)  }
+        return { columns, data: formatListData(data) }
     }
     const designOptions = resolveDesignOptions(field)
     if (designOptions) {
         const data = await queryDesignList(isRunningMode, designOptions, startDate, endDate)
-        return { columns, data:processImageData(data)  }
+        return { columns, data: formatListData(data) }
     }
     const visionOptions = resolveVisionOptions(field)
     if (visionOptions) {
         const data = await queryVisionList(isRunningMode, visionOptions, startDate, endDate)
-        return { columns, data:processImageData(data)  }
+        return { columns, data: formatListData(data) }
     }
     const purchaseOptions = resolvePurchaseOptions(field)
     if (purchaseOptions) {
         const data = await queryPurchaseList(isRunningMode, purchaseOptions, startDate, endDate)
-        return { columns, data:processImageData(data)  }
+        return { columns, data: formatListData(data) }
     }
     const shelfOptions = resolveShelfOptions(field)
     if (shelfOptions) {
         const data = await queryShelfList(isRunningMode, shelfOptions, startDate, endDate)
-        return { columns, data:processImageData(data)  }
+        return { columns, data: formatListData(data) }
     }
     return { columns, data: [] }
 }
