@@ -369,6 +369,7 @@ const developCheckProcess = {
             {name: 'is_jd', key: 'F42amhbc86o9abc', type: 'string'}, //平台是否为京东
             {name: 'type', key: 'F3ecmgyqgfo5aec', type: 'string'}, //推品类型
             {name: 'project', key: 'Fj1ama2csbpoabc', type: 'string'}, //运营事业部
+			{name: 'develop_type', key: 'Fj1ama2csbpoabc', type: 'string'}, //运营事业部
             {name: 'start_time', key: 'Fcq6ma23efriabc', type: 'string'}, //推品日期
             {name: 'starter', key: 'Cfidxhbnf9y0v', type: 'string'}, //反推运营发起人
             {name: 'name', key: 'Frb5mh49hqdbbfc', type: 'string'}, //参考-产品简称

@@ -15,6 +15,63 @@ const developmentTotalService = require('@/service/process/developmentTotalServi
 const processInfoRepo = require("@/repository/process/processInfoRepo")
 const developmentListService = require('@/service/process/developmentListService')
 
+const isBlankFormFieldValue = (value) => {
+    if (value === null || value === undefined) return true
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        return trimmed === '' || trimmed === '无' || trimmed === '-'
+    }
+    return false
+}
+
+const MARKET_ANALYSIS_PROCESS_CODE = 'syybyycl'
+const MARKET_ANALYSIS_FIELD_TITLES = ['事业一部市场分析上传', '事业二部市场分析上传', '事业三部市场分析上传']
+const ORDER_TYPE_FIELD_TITLE = '产品采购'
+const ORDER_QUANTITY_PROCESS_CODE = 'kjdinghuo'
+const ORDER_QUANTITY_FIELD_TITLE = '实际订货量'
+const VISION_TYPE_PROCESS_CODE = 'qihuashenhe'
+const VISION_TYPE_FIELD_TITLE = '视觉类型'
+const PLATFORM_IS_JD_FIELD_TITLE = '平台是否为京东'
+const HOT_PLAN_PROCESS_CODE = 'baokuanliuchengxb_copyceshi'
+const HOT_PLAN_OPERATOR_FIELD_TITLE = '运营负责人'
+const HOT_PLAN_FIELD_TITLES = [PLATFORM_IS_JD_FIELD_TITLE, HOT_PLAN_OPERATOR_FIELD_TITLE]
+const SELECT_PROJECT_FIELD_TITLE = '选中平台'
+const VISION_AND_PLATFORM_FIELD_TITLES = [
+    VISION_TYPE_FIELD_TITLE,
+    PLATFORM_IS_JD_FIELD_TITLE,
+    SELECT_PROJECT_FIELD_TITLE,
+]
+const SHELF_PROCESS_CODE = 'sjlcqpt_copy'
+const GOODS_ID_FIELD_CONFIGS = [
+    { title: '拼多多上架完成填入链接ID', platform: '拼多多', group: 'first' },
+    { title: '天猫超市上架完成填入链接ID', platform: '天猫超市', group: 'first' },
+    { title: 'Coupang上架完成填入链接ID', platform: 'Coupang', group: 'first' },
+    { title: '淘工厂上架完成填入链接ID', platform: '淘工厂', group: 'first' },
+    { title: '京东上架完成填入链接ID', platform: '京东', group: 'second' },
+    { title: '抖音上架完成填入链接ID', platform: '抖音', group: 'second' },
+    { title: '快手上架完成填入链接ID', platform: '快手', group: 'second' },
+    { title: '得物上架完成填入链接ID', platform: '得物', group: 'second' },
+    { title: '唯品会上架完成填入链接ID', platform: '唯品会', group: 'second' },
+    { title: '1688上架完成填入链接ID', platform: '1688', group: 'second' },
+    { title: '天猫上架完成填入链接ID', platform: '天猫', group: 'third' },
+    { title: '小红书上架完成填入链接ID', platform: '小红书', group: 'third' },
+]
+const GOODS_ID_FIELD_TITLES = Array.from(new Set(GOODS_ID_FIELD_CONFIGS.map((config) => config.title)))
+const GOODS_ID_GROUP_TO_COLUMN = {
+    first: 'first_goods_id',
+    second: 'second_goods_id',
+    third: 'third_goods_id',
+}
+const GOODS_ID_GROUP_PLATFORM_ORDER = {
+    first: ['拼多多', '天猫超市', '淘工厂', 'Coupang'],
+    second: ['京东', '抖音', '快手', '得物', '唯品会', '1688'],
+    third: ['天猫', '小红书'],
+}
+const GOODS_ID_FIELD_CONFIG_MAP = GOODS_ID_FIELD_CONFIGS.reduce((map, config) => {
+    map[config.title] = config
+    return map
+}, {})
+
 const DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS = [
     { title: '京东是否选中', column: 'jd_is_select', defaultValue: '-', emptyValue: '无', valueType: 'selectionStatus' },
     { title: '事业一部是否选中', column: 'first_select', defaultValue: '-', emptyValue: '无', valueType: 'selectionStatus' },
@@ -67,25 +124,393 @@ const normalizeSelectionStatus = (value) => {
     return trimmed
 }
 
-const convertSelectionStatusToStorage = (value) => {
-    const status = normalizeSelectionStatus(value)
-    switch (status) {
-    case 'selected':
-        return 1
-    case 'not_selected':
-        return 0
-    case 'blank':
-        return null
-    default:
-        return null
+const SELECTION_STORAGE_VALUES = {
+    selected: 1,
+    not_selected: 0,
+    missing: 3,
+    empty: 4,
+}
+
+const resolveSelectionStorageValue = (hasFieldValue, rawValue) => {
+    if (!hasFieldValue) {
+        return SELECTION_STORAGE_VALUES.missing
     }
+    if (isBlankFormFieldValue(rawValue)) {
+        return SELECTION_STORAGE_VALUES.empty
+    }
+    const status = normalizeSelectionStatus(rawValue)
+    if (status === 'selected') {
+        return SELECTION_STORAGE_VALUES.selected
+    }
+    if (status === 'not_selected') {
+        return SELECTION_STORAGE_VALUES.not_selected
+    }
+    return SELECTION_STORAGE_VALUES.empty
+}
+
+const normalizeSelectionStorageValue = (value) => {
+    if (value === null || value === undefined) return null
+    if (typeof value === 'number') return value
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed) return null
+        const parsed = Number(trimmed)
+        if (!Number.isNaN(parsed)) return parsed
+        return trimmed
+    }
+    return value
 }
 
 const valuesAreEqual = (column, currentValue, targetValue) => {
     if (SELECTION_STATUS_COLUMN_SET.has(column)) {
-        return normalizeSelectionStatus(currentValue) === normalizeSelectionStatus(targetValue)
+        return normalizeSelectionStorageValue(currentValue) === normalizeSelectionStorageValue(targetValue)
     }
     return currentValue === targetValue
+}
+
+const parseMarketAnalysisContent = (value) => {
+    if (value === null || value === undefined) return []
+    if (Array.isArray(value)) return value
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed) return []
+        try {
+            const parsed = JSON.parse(trimmed)
+            if (Array.isArray(parsed)) {
+                return parsed
+            }
+        } catch (err) {
+            // ignore JSON parse errors and treat as raw string below
+        }
+        return [value]
+    }
+    return [value]
+}
+
+const buildMarketAnalysisMap = (rows) => {
+    const map = new Map()
+    for (const row of rows || []) {
+        const uid = row?.development_uid
+        const title = row?.field_title
+        if (!uid || !title) continue
+        const contents = parseMarketAnalysisContent(row?.content)
+        if (!contents.length) continue
+        if (!map.has(uid)) map.set(uid, new Map())
+        const titleMap = map.get(uid)
+        if (!titleMap.has(title)) titleMap.set(title, [])
+        titleMap.get(title).push(...contents)
+    }
+    return map
+}
+
+const buildMarketAnalysisPayload = (titleMap) => {
+    if (!titleMap) return null
+    const payload = []
+    for (const title of MARKET_ANALYSIS_FIELD_TITLES) {
+        const contents = titleMap.get(title)
+        if (!contents?.length) continue
+        payload.push({ title, content: contents })
+    }
+    return payload.length ? payload : null
+}
+
+const parseJsonArrayContent = (value) => {
+    if (value === null || value === undefined) return []
+    if (Array.isArray(value)) return value
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed) return []
+        try {
+            const parsed = JSON.parse(trimmed)
+            if (Array.isArray(parsed)) {
+                return parsed
+            }
+        } catch (err) {
+            // ignore JSON parse error
+        }
+        return [trimmed]
+    }
+    return [value]
+}
+
+const buildSelectProjectMap = (rows) => {
+    const perUidValues = new Map()
+    for (const row of rows || []) {
+        if (row?.field_title !== SELECT_PROJECT_FIELD_TITLE) continue
+        const uid = row?.development_uid
+        if (!uid) continue
+        const contents = parseJsonArrayContent(row?.content)
+        if (!contents.length) continue
+        if (!perUidValues.has(uid)) perUidValues.set(uid, new Set())
+        const valueSet = perUidValues.get(uid)
+        for (const item of contents) {
+            const normalized = typeof item === 'string' ? item.trim() : `${item}`.trim()
+            if (normalized) {
+                valueSet.add(normalized)
+            }
+        }
+    }
+
+    const result = new Map()
+    for (const [uid, valueSet] of perUidValues.entries()) {
+        if (!valueSet.size) continue
+        result.set(uid, JSON.stringify(Array.from(valueSet)))
+    }
+    return result
+}
+
+const buildOrderQuantityMap = (rows) => {
+    const perUidEntries = new Map()
+    for (const row of rows || []) {
+        const uid = row?.development_uid
+        if (!uid) continue
+        const entries = parseJsonArrayContent(row?.content)
+        if (!entries.length) continue
+        if (!perUidEntries.has(uid)) perUidEntries.set(uid, [])
+        perUidEntries.get(uid).push(...entries)
+    }
+
+    const result = new Map()
+    for (const [uid, entries] of perUidEntries.entries()) {
+        const normalizedEntries = []
+        const seen = new Set()
+        for (const entry of entries) {
+            let normalized = entry
+            if (typeof entry === 'string') {
+                const trimmed = entry.trim()
+                if (!trimmed) continue
+                try {
+                    normalized = JSON.parse(trimmed)
+                } catch (err) {
+                    normalized = trimmed
+                }
+            }
+
+            if (normalized === null || normalized === undefined) continue
+            const keyPrefix = typeof normalized === 'string' ? 'str' : 'obj'
+            let keyValue = normalized
+            if (keyPrefix === 'obj') {
+                try {
+                    keyValue = JSON.stringify(normalized)
+                } catch (err) {
+                    keyValue = null
+                }
+            }
+            const dedupeKey = keyValue !== null && keyValue !== undefined ? `${keyPrefix}:${keyValue}` : null
+            if (dedupeKey && seen.has(dedupeKey)) continue
+            if (dedupeKey) seen.add(dedupeKey)
+            normalizedEntries.push(normalized)
+        }
+
+        if (normalizedEntries.length) {
+            result.set(uid, JSON.stringify(normalizedEntries))
+        }
+    }
+    return result
+}
+
+const normalizeOrderTypeContent = (value) => {
+    if (value === null || value === undefined) return ''
+    if (typeof value === 'string') return value.trim()
+    return `${value}`.trim()
+}
+
+const buildOrderTypeFieldMap = (rows) => {
+    const map = new Map()
+    for (const row of rows || []) {
+        const uid = row?.development_uid
+        const processId = row?.process_id
+        if (!uid || !processId) continue
+        const content = normalizeOrderTypeContent(row?.content)
+        if (!map.has(uid)) map.set(uid, [])
+        map.get(uid).push({ processId, content })
+    }
+    return map
+}
+
+const resolveOrderTypeValue = (entries) => {
+    if (!entries?.length) return null
+    const filtered = entries.filter(({ content }) => content)
+    if (!filtered.length) return null
+    const [first] = filtered
+    const hasMismatch = filtered.some(({ content }) => content !== first.content)
+    if (!hasMismatch) {
+        return first.content
+    }
+    return filtered
+        .map(({ processId, content }) => `${processId}:${content}`)
+        .join(';')
+}
+
+const PLATFORM_IS_JD_TRUE_VALUES = new Set(['是', 'true', 'TRUE', '1', 1, 'yes', 'YES'])
+const PLATFORM_IS_JD_FALSE_VALUES = new Set(['否', 'false', 'FALSE', '0', 0, 'no', 'NO'])
+
+const normalizePlatformIsJdValue = (value) => {
+    if (value === null || value === undefined) return null
+    const trimmed = `${value}`.trim()
+    if (!trimmed || trimmed === '-' || trimmed === '无') return null
+    if (PLATFORM_IS_JD_TRUE_VALUES.has(trimmed)) return true
+    if (PLATFORM_IS_JD_FALSE_VALUES.has(trimmed)) return false
+    return null
+}
+
+const normalizeNonEmptyStringContent = (value) => {
+    if (value === null || value === undefined) return null
+    if (typeof value === 'string') {
+        const trimmed = value.trim()
+        if (!trimmed || trimmed === '-' || trimmed === '无') return null
+        return trimmed
+    }
+    const normalized = `${value}`.trim()
+    return normalized ? normalized : null
+}
+
+const mergeDistinctStrings = (values) => {
+    const filtered = []
+    for (const value of values || []) {
+        if (!value) continue
+        if (!filtered.includes(value)) filtered.push(value)
+    }
+    if (!filtered.length) return null
+    if (filtered.length === 1) return filtered[0]
+    return filtered.join(';')
+}
+
+const buildVisionTypeFieldMap = (rows) => {
+    const perUidProcesses = new Map()
+    for (const row of rows || []) {
+        const uid = row?.development_uid
+        const processId = row?.process_id
+        const title = row?.field_title
+        if (!uid || !processId || !title) continue
+        if (!perUidProcesses.has(uid)) perUidProcesses.set(uid, new Map())
+        const processMap = perUidProcesses.get(uid)
+        if (!processMap.has(processId)) processMap.set(processId, {})
+        const entry = processMap.get(processId)
+        if (title === PLATFORM_IS_JD_FIELD_TITLE) {
+            entry.platform = row?.content
+        } else if (title === VISION_TYPE_FIELD_TITLE) {
+            entry.vision = row?.content
+        }
+    }
+
+    const result = new Map()
+    for (const [uid, processMap] of perUidProcesses.entries()) {
+        const jdValues = []
+        const normalValues = []
+        for (const entry of processMap.values()) {
+            const normalizedVision = normalizeNonEmptyStringContent(entry.vision)
+            if (!normalizedVision) continue
+            const isJd = normalizePlatformIsJdValue(entry.platform)
+            if (isJd === true) {
+                jdValues.push(normalizedVision)
+            } else {
+                normalValues.push(normalizedVision)
+            }
+        }
+        const jdValue = mergeDistinctStrings(jdValues)
+        const normalValue = mergeDistinctStrings(normalValues)
+        if (jdValue !== null || normalValue !== null) {
+            result.set(uid, { jd: jdValue, normal: normalValue })
+        }
+    }
+    return result
+}
+
+const buildHotPlanOperatorMap = (rows) => {
+    const perUidProcesses = new Map()
+    for (const row of rows || []) {
+        const uid = row?.development_uid
+        const processId = row?.process_id
+        const title = row?.field_title
+        if (!uid || !processId || !title) continue
+        if (!perUidProcesses.has(uid)) perUidProcesses.set(uid, new Map())
+        const processMap = perUidProcesses.get(uid)
+        if (!processMap.has(processId)) processMap.set(processId, {})
+        const entry = processMap.get(processId)
+        if (title === PLATFORM_IS_JD_FIELD_TITLE) {
+            entry.platform = row?.content
+        } else if (title === HOT_PLAN_OPERATOR_FIELD_TITLE) {
+            entry.operator = row?.content
+        }
+    }
+
+    const result = new Map()
+    for (const [uid, processMap] of perUidProcesses.entries()) {
+        const jdValues = []
+        const normalValues = []
+        for (const entry of processMap.values()) {
+            const normalizedOperator = normalizeNonEmptyStringContent(entry.operator)
+            if (!normalizedOperator) continue
+            const isJd = normalizePlatformIsJdValue(entry.platform)
+            if (isJd === true) {
+                jdValues.push(normalizedOperator)
+            } else {
+                normalValues.push(normalizedOperator)
+            }
+        }
+        const jdValue = mergeDistinctStrings(jdValues)
+        const normalValue = mergeDistinctStrings(normalValues)
+        if (jdValue !== null || normalValue !== null) {
+            result.set(uid, { jd: jdValue, normal: normalValue })
+        }
+    }
+    return result
+}
+
+const formatGoodsIdGroupValue = (groupKey, platformMap) => {
+    if (!platformMap || !(platformMap instanceof Map) || platformMap.size === 0) return null
+    const orderedPlatforms = GOODS_ID_GROUP_PLATFORM_ORDER[groupKey] || []
+    const entries = []
+    const used = new Set()
+
+    for (const platform of orderedPlatforms) {
+        if (platformMap.has(platform)) {
+            entries.push(`${platform}:${platformMap.get(platform)};`)
+            used.add(platform)
+        }
+    }
+
+    for (const [platform, value] of platformMap.entries()) {
+        if (used.has(platform)) continue
+        entries.push(`${platform}:${value};`)
+    }
+
+    return entries.length ? entries.join('') : null
+}
+
+const buildShelfGoodsIdAssignments = (rows) => {
+    const perUidGroups = new Map()
+
+    for (const row of rows || []) {
+        const uid = row?.development_uid
+        const title = row?.field_title
+        if (!uid || !title) continue
+        const config = GOODS_ID_FIELD_CONFIG_MAP[title]
+        if (!config) continue
+        const normalizedContent = normalizeNonEmptyStringContent(row?.content)
+        if (!normalizedContent) continue
+        if (!perUidGroups.has(uid)) perUidGroups.set(uid, {})
+        const groups = perUidGroups.get(uid)
+        if (!groups[config.group]) groups[config.group] = new Map()
+        groups[config.group].set(config.platform, normalizedContent)
+    }
+
+    const result = new Map()
+    for (const [uid, groups] of perUidGroups.entries()) {
+        const assignment = {}
+        for (const [groupKey, column] of Object.entries(GOODS_ID_GROUP_TO_COLUMN)) {
+            const formatted = formatGoodsIdGroupValue(groupKey, groups[groupKey])
+            if (formatted !== null) {
+                assignment[column] = formatted
+            }
+        }
+        if (Object.keys(assignment).length) {
+            result.set(uid, assignment)
+        }
+    }
+
+    return result
 }
 
 const getLatestModifiedProcess = async () => {
@@ -169,6 +594,7 @@ const robotStartProcess = async (name, key, variables) => {
 }
 
 const createDevelopmentProcess = async (params, dingding_id) => {
+	// 拿到bi的用户信息
     const user = await userRepo.getUserWithDeptByDingdingUserId(dingding_id)
     let process_status = null, jd_process_status = null, 
         check = false, analysis = false, jdAnalysis = false,
@@ -252,6 +678,7 @@ const createDevelopmentProcess = async (params, dingding_id) => {
                 variables[checkVariables[i].key] = checkVariables[i].type == 'array' ? 
                     [params[checkVariables[i].name]] : params[checkVariables[i].name]
             }
+
             robotStartProcess(processConst.developCheckProcess.name, processConst.developCheckProcess.key, variables)
             running_node.push(processConst.developCheckProcess.name)
         }
@@ -1739,8 +2166,35 @@ const syncDevelopmentProcessFormFields = async () => {
     if (!processes?.length) return
 
     const fieldRows = await processInfoRepo.getFieldValuesForDevelopmentProcesses(DEVELOPMENT_PROCESS_FIELD_TITLES)
-	console.log(fieldRows)
+    const marketAnalysisRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
+        MARKET_ANALYSIS_PROCESS_CODE,
+        MARKET_ANALYSIS_FIELD_TITLES,
+    )
+    const visionProcessRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
+        VISION_TYPE_PROCESS_CODE,
+        VISION_AND_PLATFORM_FIELD_TITLES,
+    )
+    const hotPlanOperatorRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
+        HOT_PLAN_PROCESS_CODE,
+        HOT_PLAN_FIELD_TITLES,
+    )
+    const orderQuantityRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
+        ORDER_QUANTITY_PROCESS_CODE,
+        [ORDER_QUANTITY_FIELD_TITLE],
+    )
+    const shelfGoodsRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
+        SHELF_PROCESS_CODE,
+        GOODS_ID_FIELD_TITLES,
+    )
+    const orderTypeRows = await processInfoRepo.getProcessFieldRowsByTitle(ORDER_TYPE_FIELD_TITLE)
     const fieldMap = new Map()
+    const marketAnalysisMap = buildMarketAnalysisMap(marketAnalysisRows)
+    const visionTypeMap = buildVisionTypeFieldMap(visionProcessRows)
+    const hotPlanOperatorMap = buildHotPlanOperatorMap(hotPlanOperatorRows)
+    const selectProjectMap = buildSelectProjectMap(visionProcessRows)
+    const orderTypeMap = buildOrderTypeFieldMap(orderTypeRows)
+    const orderQuantityMap = buildOrderQuantityMap(orderQuantityRows)
+    const shelfGoodsAssignmentsMap = buildShelfGoodsIdAssignments(shelfGoodsRows)
 
     for (const row of fieldRows || []) {
         const uid = row?.development_uid
@@ -1749,8 +2203,19 @@ const syncDevelopmentProcessFormFields = async () => {
         const content = row?.content
         if (!fieldMap.has(uid)) fieldMap.set(uid, {})
         const current = fieldMap.get(uid)
-        if (!Object.prototype.hasOwnProperty.call(current, title) ||
-            ((current[title] === null || current[title] === undefined || current[title] === '' || current[title] === '无') && content)) {
+        const hasValue = Object.prototype.hasOwnProperty.call(current, title)
+
+        if (!hasValue) {
+            current[title] = content
+            continue
+        }
+
+        if (!isBlankFormFieldValue(content)) {
+            current[title] = content
+            continue
+        }
+
+        if (isBlankFormFieldValue(current[title])) {
             current[title] = content
         }
     }
@@ -1762,11 +2227,22 @@ const syncDevelopmentProcessFormFields = async () => {
         const updates = {}
 
         for (const config of DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS) {
+            if (SELECTION_STATUS_COLUMN_SET.has(config.column)) {
+                const hasFieldValue = Object.prototype.hasOwnProperty.call(values, config.title)
+                const rawContent = hasFieldValue ? values[config.title] : undefined
+                const targetValue = resolveSelectionStorageValue(hasFieldValue, rawContent)
+
+                if (!valuesAreEqual(config.column, process[config.column], targetValue)) {
+                    updates[config.column] = targetValue
+                }
+                continue
+            }
+
             let targetValue = config.defaultValue
             if (Object.prototype.hasOwnProperty.call(values, config.title)) {
                 const rawContent = values[config.title]
                 const normalized = typeof rawContent === 'string' ? rawContent.trim() : rawContent
-                if (normalized === null || normalized === undefined || normalized === '') {
+                if (isBlankFormFieldValue(normalized)) {
                     targetValue = Object.prototype.hasOwnProperty.call(config, 'emptyValue') ? config.emptyValue : config.defaultValue
                 } else {
                     targetValue = normalized
@@ -1774,10 +2250,73 @@ const syncDevelopmentProcessFormFields = async () => {
             }
 
             if (!valuesAreEqual(config.column, process[config.column], targetValue)) {
-                const nextValue = SELECTION_STATUS_COLUMN_SET.has(config.column)
-                    ? convertSelectionStatusToStorage(targetValue)
-                    : targetValue
-                updates[config.column] = nextValue
+                updates[config.column] = targetValue
+            }
+        }
+
+        const marketAnalysisPayload = buildMarketAnalysisPayload(marketAnalysisMap.get(uid))
+        const targetAnalysisValue = marketAnalysisPayload ? JSON.stringify(marketAnalysisPayload) : null
+        if (!valuesAreEqual('analysis', process.analysis, targetAnalysisValue)) {
+            updates.analysis = targetAnalysisValue
+        }
+
+        const targetOrderTypeValue = resolveOrderTypeValue(orderTypeMap.get(uid))
+        if (targetOrderTypeValue !== null && !valuesAreEqual('order_type', process.order_type, targetOrderTypeValue)) {
+            updates.order_type = targetOrderTypeValue
+        }
+
+        if (selectProjectMap.has(uid)) {
+            const targetSelectProjectValue = selectProjectMap.get(uid)
+            if (!valuesAreEqual('select_project', process.select_project, targetSelectProjectValue)) {
+                updates.select_project = targetSelectProjectValue
+            }
+        }
+
+        if (orderQuantityMap.has(uid)) {
+            const targetOrderQuantityValue = orderQuantityMap.get(uid)
+            if (!valuesAreEqual('order_num', process.order_num, targetOrderQuantityValue)) {
+                updates.order_num = targetOrderQuantityValue
+            }
+        }
+
+        const visionAssignments = visionTypeMap.get(uid)
+        if (visionAssignments) {
+            if (
+                visionAssignments.normal !== null &&
+                !valuesAreEqual('vision_type', process.vision_type, visionAssignments.normal)
+            ) {
+                updates.vision_type = visionAssignments.normal
+            }
+            if (
+                visionAssignments.jd !== null &&
+                !valuesAreEqual('jd_vision_type', process.jd_vision_type, visionAssignments.jd)
+            ) {
+                updates.jd_vision_type = visionAssignments.jd
+            }
+        }
+
+        const operatorAssignments = hotPlanOperatorMap.get(uid)
+        if (operatorAssignments) {
+            if (
+                operatorAssignments.normal !== null &&
+                !valuesAreEqual('operator', process.operator, operatorAssignments.normal)
+            ) {
+                updates.operator = operatorAssignments.normal
+            }
+            if (
+                operatorAssignments.jd !== null &&
+                !valuesAreEqual('jd_operator', process.jd_operator, operatorAssignments.jd)
+            ) {
+                updates.jd_operator = operatorAssignments.jd
+            }
+        }
+
+        const shelfGoodsAssignments = shelfGoodsAssignmentsMap.get(uid)
+        if (shelfGoodsAssignments) {
+            for (const [column, value] of Object.entries(shelfGoodsAssignments)) {
+                if (!valuesAreEqual(column, process[column], value)) {
+                    updates[column] = value
+                }
             }
         }
 
