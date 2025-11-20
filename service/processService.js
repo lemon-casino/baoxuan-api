@@ -594,13 +594,18 @@ const robotStartProcess = async (name, key, variables) => {
 }
 
 const createDevelopmentProcess = async (params, dingding_id) => {
-	// 拿到bi的用户信息
+        // 拿到bi的用户信息
     const user = await userRepo.getUserWithDeptByDingdingUserId(dingding_id)
-    let process_status = null, jd_process_status = null, 
+    const bpmStarter = await systemUsersRepo.getBpmIdByNickname(user.nickname)
+    const bpmStarterId = bpmStarter?.[0]?.id
+    let process_status = null, jd_process_status = null,
         check = false, analysis = false, jdAnalysis = false,
         checkVariables = {}, analysisVariables = {}, jdAnalysisVariables = {}
+    const appendBpmStarter = (variables) => {
+        if (bpmStarterId) variables['Cfid3e1nprsop'] = bpmStarterId
+    }
     switch(params.type) {
-        case processConst.typeList.SUPPLIER: 
+        case processConst.typeList.SUPPLIER:
             process_status = processConst.statusList.DEVELOPMENT_REVIEW
             jd_process_status = processConst.statusList.DEVELOPMENT_REVIEW
             params['is_jd'] = processConst.jdStatusList.FALSE
@@ -675,9 +680,10 @@ const createDevelopmentProcess = async (params, dingding_id) => {
         if (check) {
             let variables = {}
             for (let i = 0; i < checkVariables.length; i++) {
-                variables[checkVariables[i].key] = checkVariables[i].type == 'array' ? 
+                variables[checkVariables[i].key] = checkVariables[i].type == 'array' ?
                     [params[checkVariables[i].name]] : params[checkVariables[i].name]
             }
+            appendBpmStarter(variables)
 
             robotStartProcess(processConst.developCheckProcess.name, processConst.developCheckProcess.key, variables)
             running_node.push(processConst.developCheckProcess.name)
@@ -686,9 +692,10 @@ const createDevelopmentProcess = async (params, dingding_id) => {
         if (analysis) {
             let variables = {}
             for (let i = 0; i < analysisVariables.length; i++) {
-                variables[analysisVariables[i].key] = analysisVariables[i].type == 'array' ? 
+                variables[analysisVariables[i].key] = analysisVariables[i].type == 'array' ?
                     [params[analysisVariables[i].name]] : params[analysisVariables[i].name]
             }
+            appendBpmStarter(variables)
             robotStartProcess(processConst.analysisProcess.name, processConst.analysisProcess.key, variables)
             running_node.push(processConst.developCheckProcess.name)
         }
@@ -696,9 +703,10 @@ const createDevelopmentProcess = async (params, dingding_id) => {
         if (jdAnalysis) {
             let variables = {}
             for (let i = 0; i < jdAnalysisVariables.length; i++) {
-                variables[jdAnalysisVariables[i].key] = jdAnalysisVariables[i].type == 'array' ? 
+                variables[jdAnalysisVariables[i].key] = jdAnalysisVariables[i].type == 'array' ?
                     [params[jdAnalysisVariables[i].name]] : params[jdAnalysisVariables[i].name]
             }
+            appendBpmStarter(variables)
             robotStartProcess(processConst.jdAnalysisProcess.name, processConst.jdAnalysisProcess.key, variables)
             running_node.push(processConst.jdAnalysisProcess.name)
         }
