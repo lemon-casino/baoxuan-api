@@ -1,4 +1,6 @@
 const { query } = require('../../model/bpmDbConn')
+const bpmSequelize = require('@/model/bpmInit')
+const { QueryTypes } = require('sequelize')
 const systemUsersRepo = {}
 
 systemUsersRepo.getRefreshToken = async (mobile) => {
@@ -11,6 +13,11 @@ systemUsersRepo.getID = async (nickname) => {
     let sql = `SELECT id FROM system_users WHERE nickname = ? AND status = 0 `
     let result = await query(sql, [nickname])
     return result
+}
+
+systemUsersRepo.getBpmIdByNickname = async (nickname) => {
+    const sql = `SELECT id FROM system_users WHERE nickname = ? AND status = 0`
+    return bpmSequelize.query(sql, { replacements: [nickname], type: QueryTypes.SELECT })
 }
 
 module.exports = systemUsersRepo
