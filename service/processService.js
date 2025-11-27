@@ -582,8 +582,8 @@ const getDevelopmentProcessTotal = async (type, startDate, endDate) => {
     return await developmentTotalService.getDevelopmentProcessTotal(type, startDate, endDate)
 }
 
-const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
-    return await developmentListService.getDevelopmentProcessList(type, field, startDate, endDate)
+const getDevelopmentProcessList = async (type, field, startDate, endDate, statuses) => {
+    return await developmentListService.getDevelopmentProcessList(type, field, startDate, endDate, statuses)
 }
 
 const robotStartProcess = async (name, key, variables) => {

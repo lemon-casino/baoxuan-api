@@ -243,7 +243,7 @@ const rColumns = [
 const defaultColumns = [
     {header: '日期', field: 'date'},
     {header: '推品名称', field: 'name'},
-    {header: '开发人', field: 'developer'},
+    // {header: '开发人', field: 'developer'},
     {header: '发起人', field: 'starter'},
     {header: '部门', field: 'dept'},
     {header: '类目', field: 'categories'},

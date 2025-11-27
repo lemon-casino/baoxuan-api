@@ -88,12 +88,12 @@ const getDevelopmentProcessTotal = async (req, res, next) => {
 //查询推品全流程的明细数据
 const getDevelopmentProcessList = async (req, res, next) => {
     try {
-        const {type, field, startDate, endDate} = req.query
+        const {type, field, startDate, endDate, statuses} = req.query
         joiUtil.validate({
             type: {value: type, schema: joiUtil.commonJoiSchemas.strRequired},
             field: {value: field, schema: joiUtil.commonJoiSchemas.strRequired}
         })
-        const result = await processService.getDevelopmentProcessList(type, field, startDate, endDate)
+        const result = await processService.getDevelopmentProcessList(type, field, startDate, endDate, statuses)
         return res.send(biResponse.success(result))
     } catch (e) {
         next(e)
