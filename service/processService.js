@@ -2166,6 +2166,7 @@ const syncDevelopmentProcessFormFields = async () => {
     if (!processes?.length) return
 
     const fieldRows = await processInfoRepo.getFieldValuesForDevelopmentProcesses(DEVELOPMENT_PROCESS_FIELD_TITLES)
+    const processStatusRows = await processInfoRepo.getProcessStatusesForDevelopmentProcesses()
     const marketAnalysisRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
         MARKET_ANALYSIS_PROCESS_CODE,
         MARKET_ANALYSIS_FIELD_TITLES,
@@ -2187,6 +2188,7 @@ const syncDevelopmentProcessFormFields = async () => {
         GOODS_ID_FIELD_TITLES,
     )
     const orderTypeRows = await processInfoRepo.getProcessFieldRowsByTitle(ORDER_TYPE_FIELD_TITLE)
+    const processStatusMap = new Map()
     const fieldMap = new Map()
     const marketAnalysisMap = buildMarketAnalysisMap(marketAnalysisRows)
     const visionTypeMap = buildVisionTypeFieldMap(visionProcessRows)
@@ -2195,6 +2197,14 @@ const syncDevelopmentProcessFormFields = async () => {
     const orderTypeMap = buildOrderTypeFieldMap(orderTypeRows)
     const orderQuantityMap = buildOrderQuantityMap(orderQuantityRows)
     const shelfGoodsAssignmentsMap = buildShelfGoodsIdAssignments(shelfGoodsRows)
+
+    for (const row of processStatusRows || []) {
+        const uid = row?.development_uid
+        if (!uid || row?.process_status === undefined || row?.process_status === null) continue
+        if (!processStatusMap.has(uid)) {
+            processStatusMap.set(uid, row.process_status)
+        }
+    }
 
     for (const row of fieldRows || []) {
         const uid = row?.development_uid
@@ -2318,6 +2328,15 @@ const syncDevelopmentProcessFormFields = async () => {
                     updates[column] = value
                 }
             }
+        }
+
+        const processStatusValue = processStatusMap.get(uid)
+        if (
+            processStatusValue !== undefined &&
+            processStatusValue !== null &&
+            !valuesAreEqual('process_status', process.process_status, processStatusValue)
+        ) {
+            updates.process_status = processStatusValue
         }
 
         if (Object.keys(updates).length) {
