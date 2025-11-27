@@ -1871,7 +1871,7 @@ const DEVELOPMENT_LIST_SELECT = `SELECT DATE_FORMAT(dp.create_time, '%Y-%m-%d') 
     dp.\`status\`, dp.is_select, dp.jd_status, dp.jd_is_select, dp.first_select, dp.second_select,
     dp.third_select, dp.order_type, dp.vision_type, dp.jd_vision_type, dp.select_project,
     dp.order_num, dp.jd_order_num, dp.operator, dp.jd_operator, dp.running_node,
-    dp.jd_running_node, dp.first_goods_id, dp.second_goods_id, dp.third_goods_id, dp.remark
+    dp.jd_running_node, dp.process_status, dp.first_goods_id, dp.second_goods_id, dp.third_goods_id, dp.remark
     FROM development_process dp`
 
 const appendRunningJoins = (joins) => {
@@ -1879,13 +1879,18 @@ const appendRunningJoins = (joins) => {
     joins.push('JOIN processes p ON p.process_id = pi.process_id')
 }
 
-processesRepo.getDevelopmentProcessList = async ({ developmentType, isRunningMode, start, end }) => {
+processesRepo.getDevelopmentProcessList = async ({ developmentType, isRunningMode, start, end, statuses }) => {
     if (!developmentType) {
         return []
     }
     const params = [developmentType]
     const conditions = ['dp.type = ?']
     const joins = []
+    if (Array.isArray(statuses) && statuses.length) {
+        const placeholders = statuses.map(() => '?').join(', ')
+        conditions.push(`dp.process_status IN (${placeholders})`)
+        params.push(...statuses)
+    }
     if (isRunningMode) {
         appendRunningJoins(joins)
         conditions.push('p.status = 1')

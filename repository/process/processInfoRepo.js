@@ -55,4 +55,16 @@ processInfoRepo.getProcessFieldRowsByTitle = async (title) => {
     return result || []
 }
 
+processInfoRepo.getProcessStatusesForDevelopmentProcesses = async () => {
+    const sql = `SELECT dp.uid AS development_uid, pi_uid.process_id, p.status AS process_status,
+            p.start_time
+        FROM development_process dp
+        JOIN process_info pi_uid ON pi_uid.content = dp.uid
+        JOIN processes p ON p.process_id = pi_uid.process_id
+        WHERE pi_uid.content IS NOT NULL
+        ORDER BY p.start_time DESC, pi_uid.process_id DESC`
+    const result = await query(sql)
+    return result || []
+}
+
 module.exports = processInfoRepo

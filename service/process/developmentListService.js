@@ -176,12 +176,13 @@ const resolveShelfOptions = (field) => SHELF_FIELD_OPTIONS[field]
  * @param {string|undefined} endDate 结束日期
  * @returns {Promise<Array<object>>} 推品明细列表
  */
-const queryDevelopmentList = async (isRunningMode, developmentType, startDate, endDate) => {
+const queryDevelopmentList = async (isRunningMode, developmentType, startDate, endDate, statuses) => {
     const options = {
         developmentType,
         isRunningMode,
         start: isRunningMode ? undefined : startDate,
-        end: isRunningMode ? undefined : endDate
+        end: isRunningMode ? undefined : endDate,
+        statuses
     }
     return processesRepo.getDevelopmentProcessList(options)
 }
@@ -452,12 +453,32 @@ const applySelectionStatusDisplay = (data) => {
 
 const formatListData = (data) => applySelectionStatusDisplay(processImageData(data))
 
-const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
+const parseProcessStatuses = (statuses) => {
+    if (!statuses && statuses !== 0) return undefined
+    if (Array.isArray(statuses)) {
+        const result = statuses.map((value) => Number(value)).filter((value) => !Number.isNaN(value))
+        return result.length ? result : undefined
+    }
+    if (typeof statuses === 'string') {
+        const parsed = statuses
+            .split(',')
+            .map((value) => value.trim())
+            .filter(Boolean)
+            .map((value) => Number(value))
+            .filter((value) => !Number.isNaN(value))
+        return parsed.length ? parsed : undefined
+    }
+    const numeric = Number(statuses)
+    return Number.isNaN(numeric) ? undefined : [numeric]
+}
+
+const getDevelopmentProcessList = async (type, field, startDate, endDate, statuses) => {
     const columns = defaultColumns.map((column) => ({ ...column }))
     const isRunningMode = type === '1'
     const developmentType = resolveDevelopmentType(field)
+    const statusList = parseProcessStatuses(statuses)
     if (developmentType) {
-        const data = await queryDevelopmentList(isRunningMode, developmentType, startDate, endDate)
+        const data = await queryDevelopmentList(isRunningMode, developmentType, startDate, endDate, statusList)
         return { columns, data: formatListData(data) }
     }
     const inquiryStatus = resolveInquiryStatus(field)
