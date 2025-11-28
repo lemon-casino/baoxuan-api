@@ -2237,10 +2237,14 @@ const syncDevelopmentProcessFormFields = async () => {
         const updates = {}
 
         for (const config of DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS) {
+            if (!Object.prototype.hasOwnProperty.call(values, config.title)) continue
+
+            const rawContent = values[config.title]
+            const normalized = typeof rawContent === 'string' ? rawContent.trim() : rawContent
+            if (isBlankFormFieldValue(normalized)) continue
+
             if (SELECTION_STATUS_COLUMN_SET.has(config.column)) {
-                const hasFieldValue = Object.prototype.hasOwnProperty.call(values, config.title)
-                const rawContent = hasFieldValue ? values[config.title] : undefined
-                const targetValue = resolveSelectionStorageValue(hasFieldValue, rawContent)
+                const targetValue = resolveSelectionStorageValue(true, rawContent)
 
                 if (!valuesAreEqual(config.column, process[config.column], targetValue)) {
                     updates[config.column] = targetValue
@@ -2248,19 +2252,8 @@ const syncDevelopmentProcessFormFields = async () => {
                 continue
             }
 
-            let targetValue = config.defaultValue
-            if (Object.prototype.hasOwnProperty.call(values, config.title)) {
-                const rawContent = values[config.title]
-                const normalized = typeof rawContent === 'string' ? rawContent.trim() : rawContent
-                if (isBlankFormFieldValue(normalized)) {
-                    targetValue = Object.prototype.hasOwnProperty.call(config, 'emptyValue') ? config.emptyValue : config.defaultValue
-                } else {
-                    targetValue = normalized
-                }
-            }
-
-            if (!valuesAreEqual(config.column, process[config.column], targetValue)) {
-                updates[config.column] = targetValue
+            if (!valuesAreEqual(config.column, process[config.column], normalized)) {
+                updates[config.column] = normalized
             }
         }
 
