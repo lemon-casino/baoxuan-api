@@ -582,8 +582,8 @@ const getDevelopmentProcessTotal = async (type, startDate, endDate) => {
     return await developmentTotalService.getDevelopmentProcessTotal(type, startDate, endDate)
 }
 
-const getDevelopmentProcessList = async (type, field, startDate, endDate) => {
-    return await developmentListService.getDevelopmentProcessList(type, field, startDate, endDate)
+const getDevelopmentProcessList = async (type, field, startDate, endDate, statuses) => {
+    return await developmentListService.getDevelopmentProcessList(type, field, startDate, endDate, statuses)
 }
 
 const robotStartProcess = async (name, key, variables) => {
@@ -2166,6 +2166,7 @@ const syncDevelopmentProcessFormFields = async () => {
     if (!processes?.length) return
 
     const fieldRows = await processInfoRepo.getFieldValuesForDevelopmentProcesses(DEVELOPMENT_PROCESS_FIELD_TITLES)
+    const processStatusRows = await processInfoRepo.getProcessStatusesForDevelopmentProcesses()
     const marketAnalysisRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
         MARKET_ANALYSIS_PROCESS_CODE,
         MARKET_ANALYSIS_FIELD_TITLES,
@@ -2187,6 +2188,7 @@ const syncDevelopmentProcessFormFields = async () => {
         GOODS_ID_FIELD_TITLES,
     )
     const orderTypeRows = await processInfoRepo.getProcessFieldRowsByTitle(ORDER_TYPE_FIELD_TITLE)
+    const processStatusMap = new Map()
     const fieldMap = new Map()
     const marketAnalysisMap = buildMarketAnalysisMap(marketAnalysisRows)
     const visionTypeMap = buildVisionTypeFieldMap(visionProcessRows)
@@ -2195,6 +2197,14 @@ const syncDevelopmentProcessFormFields = async () => {
     const orderTypeMap = buildOrderTypeFieldMap(orderTypeRows)
     const orderQuantityMap = buildOrderQuantityMap(orderQuantityRows)
     const shelfGoodsAssignmentsMap = buildShelfGoodsIdAssignments(shelfGoodsRows)
+
+    for (const row of processStatusRows || []) {
+        const uid = row?.development_uid
+        if (!uid || row?.process_status === undefined || row?.process_status === null) continue
+        if (!processStatusMap.has(uid)) {
+            processStatusMap.set(uid, row.process_status)
+        }
+    }
 
     for (const row of fieldRows || []) {
         const uid = row?.development_uid
@@ -2227,10 +2237,14 @@ const syncDevelopmentProcessFormFields = async () => {
         const updates = {}
 
         for (const config of DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS) {
+            if (!Object.prototype.hasOwnProperty.call(values, config.title)) continue
+
+            const rawContent = values[config.title]
+            const normalized = typeof rawContent === 'string' ? rawContent.trim() : rawContent
+            if (isBlankFormFieldValue(normalized)) continue
+
             if (SELECTION_STATUS_COLUMN_SET.has(config.column)) {
-                const hasFieldValue = Object.prototype.hasOwnProperty.call(values, config.title)
-                const rawContent = hasFieldValue ? values[config.title] : undefined
-                const targetValue = resolveSelectionStorageValue(hasFieldValue, rawContent)
+                const targetValue = resolveSelectionStorageValue(true, rawContent)
 
                 if (!valuesAreEqual(config.column, process[config.column], targetValue)) {
                     updates[config.column] = targetValue
@@ -2238,19 +2252,8 @@ const syncDevelopmentProcessFormFields = async () => {
                 continue
             }
 
-            let targetValue = config.defaultValue
-            if (Object.prototype.hasOwnProperty.call(values, config.title)) {
-                const rawContent = values[config.title]
-                const normalized = typeof rawContent === 'string' ? rawContent.trim() : rawContent
-                if (isBlankFormFieldValue(normalized)) {
-                    targetValue = Object.prototype.hasOwnProperty.call(config, 'emptyValue') ? config.emptyValue : config.defaultValue
-                } else {
-                    targetValue = normalized
-                }
-            }
-
-            if (!valuesAreEqual(config.column, process[config.column], targetValue)) {
-                updates[config.column] = targetValue
+            if (!valuesAreEqual(config.column, process[config.column], normalized)) {
+                updates[config.column] = normalized
             }
         }
 
@@ -2318,6 +2321,15 @@ const syncDevelopmentProcessFormFields = async () => {
                     updates[column] = value
                 }
             }
+        }
+
+        const processStatusValue = processStatusMap.get(uid)
+        if (
+            processStatusValue !== undefined &&
+            processStatusValue !== null &&
+            !valuesAreEqual('process_status', process.process_status, processStatusValue)
+        ) {
+            updates.process_status = processStatusValue
         }
 
         if (Object.keys(updates).length) {
