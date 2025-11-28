@@ -571,6 +571,9 @@ function replaceImageUrl(url) {
     if (url.includes('http://minio.pakchoice.cn:9000')) {
         return url.replace('http://minio.pakchoice.cn:9000', 'https://minio.pakchoice.cn:9003')
     }
+	if (url.includes('http://bpm.pakchoice.cn:9000')) {
+		return url.replace('http://bpm.pakchoice.cn:9000', 'https://minio.pakchoice.cn:9003')
+	}
 
     // 如果已经是 https://minio.pakchoice.cn:9003 则保持不变
     return url
