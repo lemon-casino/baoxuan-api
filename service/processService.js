@@ -2446,7 +2446,70 @@ const syncDevelopmentProcessFormFields = async () => {
         }
     }
 }
+const syncDevelopmentProcessRunningNodes = async () => {
+    const runningTaskRows = await processesRepo.getRunningDevelopmentProcessTasks()
+    const runningNodeMap = new Map()
 
+    for (const row of runningTaskRows || []) {
+        const uid = row?.uid
+        const processId = row?.process_id
+
+        if (!uid || !processId) continue
+
+        if (!runningNodeMap.has(uid)) {
+            runningNodeMap.set(uid, new Map())
+        }
+
+        const processMap = runningNodeMap.get(uid)
+
+        if (!processMap.has(processId)) {
+            processMap.set(processId, {
+                title: row.process_title,
+                tasks: new Map()
+            })
+        }
+
+        const processEntry = processMap.get(processId)
+
+        if (!processEntry.tasks.has(row.pt_task_id)) {
+            processEntry.tasks.set(row.pt_task_id, {
+                content: row.pt_content,
+                username: row.task_username
+            })
+        }
+    }
+
+    const existingProcesses = await developmentProcessesRepo.getAllUids()
+    const existingRunningNodes = new Map(
+        (existingProcesses || []).map((item) => [item.uid, item.running_node])
+    )
+
+    const updatedUids = new Set()
+
+    for (const [uid, processMap] of runningNodeMap.entries()) {
+        const segments = []
+
+        for (const { title, tasks } of processMap.values()) {
+            const taskSegments = Array.from(tasks.values()).map((task) =>
+                `${task.content}-${task.username}`
+            )
+            segments.push(`${title}:${taskSegments.join(',')}`)
+        }
+
+        const runningNodeValue = segments.join(';') || null
+        updatedUids.add(uid)
+
+        if (existingRunningNodes.get(uid) !== runningNodeValue) {
+            await developmentProcessesRepo.updateColumnByUid(uid, 'running_node', runningNodeValue)
+        }
+    }
+
+    for (const process of existingProcesses || []) {
+        if (!updatedUids.has(process.uid) && process.running_node !== null) {
+            await developmentProcessesRepo.updateColumnByUid(process.uid, 'running_node', null)
+        }
+    }
+}
 
 module.exports = {
     getLatestModifiedProcess,
@@ -2463,4 +2526,5 @@ module.exports = {
     updateDevelopmetProcess,
     getById,
     syncDevelopmentProcessFormFields,
+    syncDevelopmentProcessRunningNodes
 }

@@ -95,6 +95,7 @@ schedule.scheduleJob(processSync, async function () {
     if (process.env.NODE_ENV === "prod") {
         try {
             await processService.syncDevelopmentProcessFormFields()
+            await processService.syncDevelopmentProcessRunningNodes()
         } catch (error) {
             logger.error(`[DevelopmentProcessSync] job failed: ${error.message}`, error)
         }

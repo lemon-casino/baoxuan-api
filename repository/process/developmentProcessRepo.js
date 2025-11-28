@@ -76,4 +76,10 @@ developmentProcessesRepo.getById = async (id) => {
     return result
 }
 
+developmentProcessesRepo.getAllUids = async () => {
+    const sql = 'SELECT uid, running_node FROM development_process'
+    const result = await query(sql)
+    return result || []
+}
+
 module.exports = developmentProcessesRepo

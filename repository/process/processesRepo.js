@@ -2853,5 +2853,34 @@ processesRepo.getDailyInquiryStats = async (start, end) => {
         finish: extractCount(finishResult)
     }
 }
+processesRepo.getRunningDevelopmentProcessTasks = async () => {
+    const sql = `SELECT
+            dp.uid,
+            t.process_id,
+            t.process_title,
+            t.pt_task_id,
+            t.pt_content,
+            t.task_username
+        FROM development_process dp
+        JOIN (
+            SELECT
+                p.process_id,
+                p.title AS process_title,
+                MAX(CASE WHEN pi.title = '推品ID' THEN pi.content END) AS uid_content,
+                pt.title AS pt_content,
+                pt.task_id AS pt_task_id,
+                pt.username AS task_username,
+                pt.status AS task_status
+            FROM processes p
+            JOIN process_info pi ON pi.process_id = p.process_id
+            JOIN process_tasks pt ON p.process_id = pt.process_id
+            WHERE p.source_id = 1
+                AND pi.title IN ('推品ID')
+                AND pt.status = 1
+            GROUP BY p.process_id, p.title, pt.task_id, pt.title, pt.username, pt.status
+        ) t ON t.uid_content = dp.uid`
+    const result = await query(sql)
+    return result || []
+}
 
 module.exports = processesRepo
