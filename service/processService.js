@@ -619,7 +619,26 @@ const createDevelopmentProcess = async (params, dingding_id) => {
 		analysisVariables = {},
 		jdAnalysisVariables = {}
 	const appendBpmStarter = (variables) => {
-		if (bpmStarterId) variables["Cfid3e1nprsop"] = bpmStarterId
+        console.log(variables)
+        if (bpmStarterId) variables["Cfid3e1nprsop"] = bpmStarterId
+        // 根据 F3ecmgyqgfo5aec 的值决定 Fr04mi738hm7abc 的内容
+         switch(variables["F3ecmgyqgfo5aec"]) {
+             case "IP推品":
+                 variables["Fr04mi738hm7abc"] = variables["Fxtjmh480hmtanc"];
+                 break;
+             case "自研推品":
+                 variables["Fr04mi738hm7abc"] = variables["Fxtjmh480hmtanc"];
+                 break;
+             case "反推推品":
+                 variables["Fr04mi738hm7abc"] = variables["Frb5mh49hqdbbfc"];
+                 break;
+             case "供应商推品":
+                 variables["Fr04mi738hm7abc"] = variables["Frrima23qogmb1c"];
+                 break;
+             default:
+                 // 如果没有匹配到任何情况，保持原值或进行其他处理
+                 break;
+         }
 	}
 	switch (params.type) {
 		case processConst.typeList.SUPPLIER:
@@ -699,7 +718,6 @@ const createDevelopmentProcess = async (params, dingding_id) => {
 		: null
 	params.analysis = params.analysis ? JSON.stringify(params.analysis) : null
 	params.image = params.image?.length ? JSON.stringify(params.image) : ""
-
 	let result = await developmentProcessesRepo.insert([
 		uid,
 		user.nickname,
@@ -752,16 +770,16 @@ const createDevelopmentProcess = async (params, dingding_id) => {
 			let variables = {}
 			for (let i = 0; i < checkVariables.length; i++) {
 				variables[checkVariables[i].key] =
-					checkVariables[i].type == "array"
+					checkVariables[i].type === "array"
 						? [params[checkVariables[i].name]]
 						: params[checkVariables[i].name]
 			}
 			appendBpmStarter(variables)
-			robotStartProcess(
-				processConst.developCheckProcess.name,
-				processConst.developCheckProcess.key,
-				variables
-			)
+			await robotStartProcess(
+                processConst.developCheckProcess.name,
+                processConst.developCheckProcess.key,
+                variables
+            )
 			running_node.push(processConst.developCheckProcess.name)
 		}
 		//非京东分析
@@ -769,16 +787,16 @@ const createDevelopmentProcess = async (params, dingding_id) => {
 			let variables = {}
 			for (let i = 0; i < analysisVariables.length; i++) {
 				variables[analysisVariables[i].key] =
-					analysisVariables[i].type == "array"
+					analysisVariables[i].type === "array"
 						? [params[analysisVariables[i].name]]
 						: params[analysisVariables[i].name]
 			}
 			appendBpmStarter(variables)
-			robotStartProcess(
-				processConst.analysisProcess.name,
-				processConst.analysisProcess.key,
-				variables
-			)
+			await robotStartProcess(
+                processConst.analysisProcess.name,
+                processConst.analysisProcess.key,
+                variables
+            )
 			running_node.push(processConst.developCheckProcess.name)
 		}
 		//京东分析流程
@@ -786,46 +804,46 @@ const createDevelopmentProcess = async (params, dingding_id) => {
 			let variables = {}
 			for (let i = 0; i < jdAnalysisVariables.length; i++) {
 				variables[jdAnalysisVariables[i].key] =
-					jdAnalysisVariables[i].type == "array"
+					jdAnalysisVariables[i].type === "array"
 						? [params[jdAnalysisVariables[i].name]]
 						: params[jdAnalysisVariables[i].name]
 			}
 			appendBpmStarter(variables)
-			robotStartProcess(
-				processConst.jdAnalysisProcess.name,
-				processConst.jdAnalysisProcess.key,
-				variables
-			)
+			await robotStartProcess(
+                processConst.jdAnalysisProcess.name,
+                processConst.jdAnalysisProcess.key,
+                variables
+            )
 			running_node.push(processConst.jdAnalysisProcess.name)
 		}
 
-		developmentProcessesRepo.updateColumnByUid(
-			uid,
-			"running_node",
-			running_node.join(",")
-		)
+		await developmentProcessesRepo.updateColumnByUid(
+            uid,
+            "running_node",
+            running_node.join(",")
+        )
 
 		const processId =
 			await processInfoRepo.getDevelopmentProcessesInstanceidByUid(uid)
-		if (processId == "") return
+		if (processId === "") return
 
 		const taskResult =
 			processTasksRepo.getRunningTasksByProcessId(processId)
 		if (!taskResult?.length) {
-			developmentProcessesRepo.updateColumnByUid(
-				uid,
-				"running_node",
-				running_node.join(",") + "->已结束"
-			)
+			await developmentProcessesRepo.updateColumnByUid(
+                uid,
+                "running_node",
+                running_node.join(",") + "->已结束"
+            )
 			return
 		}
 		let processDetailDesc =
 			taskResult[0].title + "|" + taskResult[0].username + "|待审核"
-		developmentProcessesRepo.updateColumnByUid(
-			uid,
-			"running_node",
-			running_node.join(",") + "->" + processDetailDesc
-		)
+		await developmentProcessesRepo.updateColumnByUid(
+            uid,
+            "running_node",
+            running_node.join(",") + "->" + processDetailDesc
+        )
 	}
 }
 
@@ -2446,6 +2464,7 @@ const syncDevelopmentProcessFormFields = async () => {
         }
     }
 }
+
 const syncDevelopmentProcessRunningNodes = async () => {
     const runningTaskRows = await processesRepo.getRunningDevelopmentProcessTasks()
     const runningNodeMap = new Map()

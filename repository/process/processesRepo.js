@@ -1862,12 +1862,12 @@ processesRepo.getDevelopmentProcessRunning = async () => {
 }
 
 const DEVELOPMENT_LIST_SELECT = `SELECT DATE_FORMAT(dp.create_time, '%Y-%m-%d') AS \`date\`,
-    dp.sort, dp.name, dp.dept, dp.categories, dp.seasons, dp.related, dp.image, dp.brief_name,
+    dp.sort, dp.name, dp.dept, dp.categories, dp.l1categories,dp.l2categories,dp.l3categories,dp.seasons, dp.related, dp.image, dp.brief_name,
     dp.purchase_type, dp.supplier, dp.supplier_type, dp.product_info, dp.product_type,
     dp.patent_belongs, dp.patent_type, dp.sale_purpose, dp.analysis, dp.develop_type,
     dp.analysis_name, dp.project_type, dp.design_type, dp.exploitation_features,
     dp.core_reasons, dp.schedule_arrived_time, dp.schedule_confirm_time, dp.is_self,
-    dp.sample_image, dp.design_image, dp.spu, dp.sku_code, dp.type, dp.developer, dp.starter,
+    dp.sample_image, dp.hz_design_image,dp.bj_design_image, dp.spu, dp.sku_code, dp.type, dp.developer, dp.starter,
     dp.\`status\`, dp.is_select, dp.jd_status, dp.jd_is_select, dp.first_select, dp.second_select,
     dp.third_select, dp.order_type, dp.vision_type, dp.jd_vision_type, dp.select_project,
     dp.order_num, dp.jd_order_num, dp.operator, dp.jd_operator, dp.running_node,
@@ -2853,6 +2853,7 @@ processesRepo.getDailyInquiryStats = async (start, end) => {
         finish: extractCount(finishResult)
     }
 }
+
 processesRepo.getRunningDevelopmentProcessTasks = async () => {
     const sql = `SELECT
             dp.uid,

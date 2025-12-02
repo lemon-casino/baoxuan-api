@@ -533,7 +533,7 @@ const getDevelopmentProcessList = async (type, field, startDate, endDate, status
 function processImageData(data) {
     if (!data || !Array.isArray(data)) return data
 
-    const imageFields = ['image', 'sample_image', 'design_image']
+    const imageFields = ['image', 'sample_image', 'bj_design_image', 'hz_design_image']
 
     return data.map((item) => {
         imageFields.forEach((field) => {
