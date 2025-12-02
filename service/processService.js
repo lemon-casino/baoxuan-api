@@ -26,6 +26,8 @@ const isBlankFormFieldValue = (value) => {
 
 const MARKET_ANALYSIS_PROCESS_CODE = 'syybyycl'
 const MARKET_ANALYSIS_FIELD_TITLES = ['事业一部市场分析上传', '事业二部市场分析上传', '事业三部市场分析上传']
+const MARKET_ANALYSIS_UPLOAD_TITLES = ['市场分析上传', '反推-运营提供市场分析']
+const MARKET_ANALYSIS_UPLOAD_PROCESS_CODES = ['tpkfsh', 'jingdongdandulc']
 const ORDER_TYPE_FIELD_TITLE = '产品采购'
 const ORDER_QUANTITY_PROCESS_CODE = 'kjdinghuo'
 const ORDER_QUANTITY_FIELD_TITLE = '实际订货量'
@@ -99,6 +101,27 @@ const DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS = [
 ]
 
 const DEVELOPMENT_PROCESS_FIELD_TITLES = DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS.map((item) => item.title)
+
+const DEVELOP_TYPE_FIELD_TITLES = ['推品类型', '运营事业部', 'ip-运营事业部']
+const ANALYSIS_NAME_FIELD_TITLES = ['推品类型', '推品名称', '参考-产品简称', '市场分析名称']
+const EXTENDED_FIELD_SYNC_CONFIGS = [
+    { column: 'project_type', titles: ['立项性质'], processCodes: ['jingdongdandulc', 'syybyycl'] },
+    { column: 'design_type', titles: ['设计定义'], processCodes: ['jingdongdandulc', 'syybyycl'] },
+    { column: 'exploitation_features', titles: ['产品开发性质'], processCodes: ['jingdongdandulc', 'syybyycl'] },
+    { column: 'core_reasons', titles: ['核心立项理由'], processCodes: ['jingdongdandulc', 'syybyycl'] },
+    { column: 'schedule_arrived_time', titles: ['预计开发周期（大货时间）'], processCodes: ['sctgtplc', 'iptplc'] },
+    { column: 'schedule_confirm_time', titles: ['预计样品确认时间'], processCodes: ['sctgtplc', 'iptplc'] },
+    { column: 'is_self', titles: ['是否需要自主设计'], processCodes: ['sctgtplc', 'iptplc'] },
+    { column: 'sample_image', titles: ['上传样品图片'] },
+    { column: 'bj_design_image', titles: ['北京上传设计草图'] },
+    { column: 'hz_design_image', titles: ['杭州上传设计草图'] },
+    { column: 'patent_belongs', titles: ['专利归属', '供应商-专利归属'] },
+    { column: 'patent_type', titles: ['供应商-专利-二级', 'ip-专利-二级'] },
+    { column: 'purchase_type', titles: ['采购形式'] },
+    { column: 'purchase_type', titles: ['是否代发'], normalizer: (value) => normalizeShipOrOrderType(value, 'purchase_type') },
+    { column: 'order_type', titles: ['采购形式'] },
+    { column: 'order_type', titles: ['是否代发'], normalizer: (value) => normalizeShipOrOrderType(value, 'order_type') }
+]
 
 const SELECTION_STATUS_COLUMN_SET = new Set(
     DEVELOPMENT_PROCESS_FIELD_SYNC_CONFIGS
@@ -206,11 +229,20 @@ const buildMarketAnalysisMap = (rows) => {
 const buildMarketAnalysisPayload = (titleMap) => {
     if (!titleMap) return null
     const payload = []
+    const handledTitles = new Set()
+
     for (const title of MARKET_ANALYSIS_FIELD_TITLES) {
         const contents = titleMap.get(title)
         if (!contents?.length) continue
         payload.push({ title, content: contents })
+        handledTitles.add(title)
     }
+
+    for (const [title, contents] of titleMap.entries()) {
+        if (handledTitles.has(title) || !contents?.length) continue
+        payload.push({ title, content: contents })
+    }
+
     return payload.length ? payload : null
 }
 
@@ -365,6 +397,16 @@ const normalizeNonEmptyStringContent = (value) => {
     return normalized ? normalized : null
 }
 
+function normalizeShipOrOrderType(value, column) {
+    if (value === null || value === undefined) return null
+    const normalized = `${value}`.trim()
+    if (!normalized) return null
+    if (['是', '1'].includes(normalized)) return '代发'
+    if (['否', '2'].includes(normalized)) return '订货'
+    if (column === 'purchase_type' || column === 'order_type') return normalizeNonEmptyStringContent(value)
+    return null
+}
+
 const mergeDistinctStrings = (values) => {
     const filtered = []
     for (const value of values || []) {
@@ -412,6 +454,85 @@ const buildVisionTypeFieldMap = (rows) => {
         const normalValue = mergeDistinctStrings(normalValues)
         if (jdValue !== null || normalValue !== null) {
             result.set(uid, { jd: jdValue, normal: normalValue })
+        }
+    }
+    return result
+}
+
+const mergeMarketAnalysisEntry = (map, uid, title, rawContent) => {
+    const contents = parseMarketAnalysisContent(rawContent)
+    if (!contents.length || !uid || !title) return
+    if (!map.has(uid)) map.set(uid, new Map())
+    const titleMap = map.get(uid)
+    if (!titleMap.has(title)) titleMap.set(title, [])
+    titleMap.get(title).push(...contents)
+}
+
+const buildProcessFieldProcessMap = (rows) => {
+    const perUidProcesses = new Map()
+    for (const row of rows || []) {
+        const uid = row?.development_uid
+        const processId = row?.process_id
+        const processCode = row?.process_code
+        const title = row?.field_title
+        if (!uid || !processId || !title) continue
+        if (!perUidProcesses.has(uid)) perUidProcesses.set(uid, new Map())
+        const processMap = perUidProcesses.get(uid)
+        if (!processMap.has(processId)) processMap.set(processId, { process_code: processCode, fields: {} })
+        processMap.get(processId).fields[title] = row?.content
+    }
+    return perUidProcesses
+}
+
+const resolveDevelopType = (processMap) => {
+    if (!processMap) return null
+    let result = null
+    for (const { process_code: processCode, fields } of processMap.values()) {
+        const pushType = normalizeNonEmptyStringContent(fields['推品类型'])
+        const dept = normalizeNonEmptyStringContent(fields['运营事业部'])
+        const ipDept = normalizeNonEmptyStringContent(fields['ip-运营事业部'])
+
+        if (processCode === 'syybyycl' && pushType === 'IP推品' && ipDept) return ipDept
+        if ((processCode === 'fantuituipin' || processCode === 'fttplc') && dept) result = result || dept
+        if (processCode === 'syybyycl' && dept && !result) result = dept
+    }
+    return result
+}
+
+const resolveAnalysisName = (processMap) => {
+    if (!processMap) return null
+    for (const { fields } of processMap.values()) {
+        const pushType = normalizeNonEmptyStringContent(fields['推品类型'])
+        const supplierName = normalizeNonEmptyStringContent(fields['推品名称'])
+        const referenceName = normalizeNonEmptyStringContent(fields['参考-产品简称'])
+        const analysisName = normalizeNonEmptyStringContent(fields['市场分析名称'])
+
+        if (pushType === '供应商推品' && supplierName) return supplierName
+        if (pushType === '反推推品' && referenceName) return referenceName
+        if ((pushType === '自研推品' || pushType === 'IP推品') && analysisName) return analysisName
+    }
+    return null
+}
+
+const buildColumnValueMap = (rows, configs) => {
+    const result = new Map()
+    for (const row of rows || []) {
+        const uid = row?.development_uid
+        const title = row?.field_title
+        const processCode = row?.process_code
+        if (!uid || !title) continue
+
+        for (const config of configs || []) {
+            if (!config?.titles?.includes(title)) continue
+            if (config.processCodes?.length && !config.processCodes.includes(processCode)) continue
+            const normalizer = config.normalizer || normalizeNonEmptyStringContent
+            const value = normalizer(row?.content)
+            if (value === null || value === undefined) continue
+            if (!result.has(uid)) result.set(uid, {})
+            const current = result.get(uid)
+            if (!current[config.column]) {
+                current[config.column] = value
+            }
         }
     }
     return result
@@ -2298,6 +2419,13 @@ const syncDevelopmentProcessFormFields = async () => {
         MARKET_ANALYSIS_PROCESS_CODE,
         MARKET_ANALYSIS_FIELD_TITLES,
     )
+    const marketAnalysisUploadRows = await processInfoRepo.getProcessFieldRowsByTitles(
+        MARKET_ANALYSIS_UPLOAD_TITLES,
+        MARKET_ANALYSIS_UPLOAD_PROCESS_CODES,
+    )
+    const legacyMarketAnalysisRows = await processInfoRepo.getProcessFieldRowsByTitles([
+        '反推-运营提供市场分析'
+    ])
     const visionProcessRows = await processInfoRepo.getProcessFieldValuesByCodeAndTitles(
         VISION_TYPE_PROCESS_CODE,
         VISION_AND_PLATFORM_FIELD_TITLES,
@@ -2315,15 +2443,45 @@ const syncDevelopmentProcessFormFields = async () => {
         GOODS_ID_FIELD_TITLES,
     )
     const orderTypeRows = await processInfoRepo.getProcessFieldRowsByTitle(ORDER_TYPE_FIELD_TITLE)
+    const developTypeRows = await processInfoRepo.getProcessFieldRowsByTitles(DEVELOP_TYPE_FIELD_TITLES)
+    const analysisNameRows = await processInfoRepo.getProcessFieldRowsByTitles(ANALYSIS_NAME_FIELD_TITLES)
+    const extendedFieldRows = await processInfoRepo.getProcessFieldRowsByTitles(
+        Array.from(new Set(EXTENDED_FIELD_SYNC_CONFIGS.flatMap((item) => item.titles)))
+    )
     const processStatusMap = new Map()
     const fieldMap = new Map()
     const marketAnalysisMap = buildMarketAnalysisMap(marketAnalysisRows)
+    const mergeMarketAnalysisRows = (rows) => {
+        for (const row of rows || []) {
+            mergeMarketAnalysisEntry(
+                marketAnalysisMap,
+                row?.development_uid,
+                row?.field_title,
+                row?.content
+            )
+        }
+    }
+    mergeMarketAnalysisRows(marketAnalysisUploadRows)
+    mergeMarketAnalysisRows(legacyMarketAnalysisRows)
     const visionTypeMap = buildVisionTypeFieldMap(visionProcessRows)
     const hotPlanOperatorMap = buildHotPlanOperatorMap(hotPlanOperatorRows)
     const selectProjectMap = buildSelectProjectMap(visionProcessRows)
     const orderTypeMap = buildOrderTypeFieldMap(orderTypeRows)
     const orderQuantityMap = buildOrderQuantityMap(orderQuantityRows)
     const shelfGoodsAssignmentsMap = buildShelfGoodsIdAssignments(shelfGoodsRows)
+    const developTypeProcessMap = buildProcessFieldProcessMap(developTypeRows)
+    const analysisNameProcessMap = buildProcessFieldProcessMap(analysisNameRows)
+    const extendedFieldValueMap = buildColumnValueMap(extendedFieldRows, EXTENDED_FIELD_SYNC_CONFIGS)
+    const developTypeMap = new Map(
+        Array.from(developTypeProcessMap.entries())
+            .map(([uid, processMap]) => [uid, resolveDevelopType(processMap)])
+            .filter(([, value]) => value !== null && value !== undefined)
+    )
+    const analysisNameMap = new Map(
+        Array.from(analysisNameProcessMap.entries())
+            .map(([uid, processMap]) => [uid, resolveAnalysisName(processMap)])
+            .filter(([, value]) => value !== null && value !== undefined)
+    )
 
     for (const row of processStatusRows || []) {
         const uid = row?.development_uid
@@ -2390,6 +2548,18 @@ const syncDevelopmentProcessFormFields = async () => {
             updates.analysis = targetAnalysisValue
         }
 
+        const developTypeValue = developTypeMap.get(uid)
+        if (developTypeValue !== undefined && developTypeValue !== null &&
+            !valuesAreEqual('develop_type', process.develop_type, developTypeValue)) {
+            updates.develop_type = developTypeValue
+        }
+
+        const analysisNameValue = analysisNameMap.get(uid)
+        if (analysisNameValue !== undefined && analysisNameValue !== null &&
+            !valuesAreEqual('analysis_name', process.analysis_name, analysisNameValue)) {
+            updates.analysis_name = analysisNameValue
+        }
+
         const targetOrderTypeValue = resolveOrderTypeValue(orderTypeMap.get(uid))
         if (targetOrderTypeValue !== null && !valuesAreEqual('order_type', process.order_type, targetOrderTypeValue)) {
             updates.order_type = targetOrderTypeValue
@@ -2406,6 +2576,15 @@ const syncDevelopmentProcessFormFields = async () => {
             const targetOrderQuantityValue = orderQuantityMap.get(uid)
             if (!valuesAreEqual('order_num', process.order_num, targetOrderQuantityValue)) {
                 updates.order_num = targetOrderQuantityValue
+            }
+        }
+
+        const extendedFieldValues = extendedFieldValueMap.get(uid)
+        if (extendedFieldValues) {
+            for (const [column, value] of Object.entries(extendedFieldValues)) {
+                if (!valuesAreEqual(column, process[column], value)) {
+                    updates[column] = value
+                }
             }
         }
 

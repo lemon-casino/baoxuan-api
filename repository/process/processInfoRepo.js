@@ -55,6 +55,30 @@ processInfoRepo.getProcessFieldRowsByTitle = async (title) => {
     return result || []
 }
 
+processInfoRepo.getProcessFieldRowsByTitles = async (titles, processCodes = []) => {
+    if (!Array.isArray(titles) || !titles.length) return []
+
+    const titlePlaceholders = titles.map(() => '?').join(', ')
+    const params = [...titles]
+
+    let processCodeFilter = ''
+    if (Array.isArray(processCodes) && processCodes.length) {
+        processCodeFilter = ` AND p.process_code IN (${processCodes.map(() => '?').join(', ')})`
+        params.push(...processCodes)
+    }
+
+    const sql = `SELECT DISTINCT dp.uid AS development_uid, pi.process_id, p.process_code,
+            pi.title AS field_title, pi.content
+        FROM development_process dp
+        JOIN process_info pi_uid ON pi_uid.content = dp.uid
+        JOIN process_info pi ON pi.process_id = pi_uid.process_id
+        JOIN processes p ON p.process_id = pi.process_id
+        WHERE pi.title IN (${titlePlaceholders}) AND pi_uid.content IS NOT NULL${processCodeFilter}`
+
+    const result = await query(sql, params)
+    return result || []
+}
+
 processInfoRepo.getProcessStatusesForDevelopmentProcesses = async () => {
     const sql = `SELECT dp.uid AS development_uid, pi_uid.process_id, p.status AS process_status,
             p.start_time
