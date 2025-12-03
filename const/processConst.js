@@ -43,13 +43,28 @@ const dColumns = [
     ]},
     {header: '选品数量', field: 'select', hasChild: true, children: [
         {header: '市场分析', field: 'analysis', hasChild: true, children: [
-            {header: '进行中', field: 'analysis_running', hasChild: false},
-            {header: '已完成', field: 'analysis_finish', hasChild: false}
+            {header: '进行中', field: 'analysis_running', hasChild: true,children: [
+    {header: '事业1部', field: 'analysis_division1', hasChild: false},
+    {header: '事业2部', field: 'analysis_division2', hasChild: false},
+    {header: '事业3部', field: 'analysis_division3', hasChild: false},
+]},
+            {header: '已完成', field: 'analysis_finish', hasChild: true,children: [
+                    {header: '事业1部', field: 'analysis_division1', hasChild: false},
+                    {header: '事业2部', field: 'analysis_division2', hasChild: false},
+                    {header: '事业3部', field: 'analysis_division3', hasChild: false},
+                ]}
         ]},
         {header: '选中未选中', field: 'select_result', hasChild: true, children: [
-            {header: '进行中', field: 'select_running', hasChild: false},
-            {header: '选中', field: 'choose', hasChild: false},
-            {header: '未选中', field: 'unchoose', hasChild: false},
+            {header: '选中', field: 'choose', hasChild: true,children: [
+                    {header: '事业1部', field: 'choose_division1', hasChild: false},
+                    {header: '事业2部', field: 'choose_division2', hasChild: false},
+                    {header: '事业3部', field: 'choose_division3', hasChild: false},
+                ]},
+            {header: '未选中', field: 'unchoose', hasChild: true,children: [
+                    {header: '事业1部', field: 'unchoose_division1', hasChild: false},
+                    {header: '事业2部', field: 'unchoose_division2', hasChild: false},
+                    {header: '事业3部', field: 'unchoose_division3', hasChild: false},
+                ]},
         ]}
     ]},
     {header: '方案数量', field: 'plan', hasChild: true, children: [

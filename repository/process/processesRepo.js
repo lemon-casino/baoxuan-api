@@ -1871,7 +1871,19 @@ const DEVELOPMENT_LIST_SELECT = `SELECT DATE_FORMAT(dp.create_time, '%Y-%m-%d') 
     dp.\`status\`, dp.is_select, dp.jd_status, dp.jd_is_select, dp.first_select, dp.second_select,
     dp.third_select, dp.order_type, dp.vision_type, dp.jd_vision_type, dp.select_project,
     dp.order_num, dp.jd_order_num, dp.operator, dp.jd_operator, dp.running_node,
-    dp.jd_running_node, dp.process_status, dp.first_goods_id, dp.second_goods_id, dp.third_goods_id, dp.remark
+    dp.jd_running_node, dp.process_status, dp.first_goods_id, dp.second_goods_id, dp.third_goods_id, dp.remark,
+    dp.project_approval_status, dp.development_leader, dp.jushuitan_product_created,
+    dp.sample_confirmation_status, dp.hangzhou_sample_tracking_number, dp.product_factory_diagram_link,
+    dp.business_unit1_operator, dp.business_unit2_operator, dp.business_unit3_operator, dp.purchase_executor,
+    dp.purchase_contract, dp.estimated_arrival_date, dp.issue_resolved, dp.goods_warehouse_arrival_date,
+    dp.goods_quality_check, dp.final_sample_to_nanjing, dp.matches_sealed_sample, dp.estimated_order_quantity,
+    dp.beijing_design_executor, dp.hangzhou_design_executor, dp.design_complete_executor, dp.confirmed_design_draft,
+    dp.design_cycle_period, dp.final_design_upload, dp.product_procurement, dp.hot_sale_business_unit,
+    dp.need_designer_or_visual, dp.product_info_organized, dp.link_main_sales_code, dp.link_attribute,
+    dp.cost_price, dp.contact_group_name, dp.erp_purchase_order, dp.production_period, dp.shipment_source,
+    dp.turnover_estimate_nanjing_date, dp.turnover_estimate_shipment_date, dp.turnover_estimate_arrival_date,
+    dp.business_unit1_sample_selected, dp.business_unit2_sample_selected, dp.business_unit3_sample_selected,
+    dp.difficulty_level, dp.volume_target, dp.main_sales_code, dp.hot_sale_plan_upload, dp.listing_type, dp.link_type
     FROM development_process dp`
 
 const appendRunningJoins = (joins) => {
