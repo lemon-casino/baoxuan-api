@@ -22,6 +22,11 @@
   - 上架完成的链接 ID 按平台分三组写入 `first_goods_id`、`second_goods_id`、`third_goods_id`；
   - 扩展字段批量归并：立项性质、设计定义、产品开发性质、核心立项理由、预计大货时间、预计样品确认时间、是否自主设计、样品图片、北京/杭州设计草图、专利归属、专利二级、采购/订货方式等；
   - 同步流程状态到 `process_status`。
+- 重点新增同步项：
+  - 立项审批、聚水潭创建等二选一字段统一转成 1/0（未识别时回落为 0/空），填入 `project_approval_status`、`jushuitan_product_created`、事业部样品选中等列；
+  - 研发、采购、供应链节点的负责人、合同、到货/订货时间、设计草图/定稿上传链接等写入对应字段，例如 `development_leader`、`estimated_arrival_date`、`bj_design_executor`、`product_factory_diagram_link`；
+  - 期货/订货、爆款方案及京东动销链路的细节字段（如 `product_info_organized`、`link_main_sales_code`、`production_period`、`turnover_estimate_*`）按照流程编码过滤后同步；
+  - 爆款流程指标（难易度、体量目标、主销编码、爆款方案上传、上架/链接类型）同步到 `baokuanliuchengxb_copy` 对应列。
 - 仅当目标值与当前数据不一致时才执行数据库更新，避免无效写入。
 
 ## 运行节点同步（syncDevelopmentProcessRunningNodes）

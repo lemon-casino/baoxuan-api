@@ -120,7 +120,49 @@ const EXTENDED_FIELD_SYNC_CONFIGS = [
     { column: 'purchase_type', titles: ['采购形式'] },
     { column: 'purchase_type', titles: ['是否代发'], normalizer: (value) => normalizeShipOrOrderType(value, 'purchase_type') },
     { column: 'order_type', titles: ['采购形式'] },
-    { column: 'order_type', titles: ['是否代发'], normalizer: (value) => normalizeShipOrOrderType(value, 'order_type') }
+    { column: 'order_type', titles: ['是否代发'], normalizer: (value) => normalizeShipOrOrderType(value, 'order_type') },
+    { column: 'project_approval_status', titles: ['立项是否通过'], normalizer: normalizeBinarySelectionToNumber },
+    { column: 'development_leader', titles: ['开发负责人'], processCodes: ['tpkfsh'] },
+    { column: 'jushuitan_product_created', titles: ['是否在聚水潭建立产品信息'], processCodes: ['syybyycl'], normalizer: (value) => normalizeBinarySelectionToNumber(value, { defaultValue: null, fallbackToZero: true }) },
+    { column: 'product_factory_diagram_link', titles: ['产品厂图+白膜信息上传网盘在线链接'], processCodes: ['syybyycl'] },
+    { column: 'purchase_executor', titles: ['采购执行人'], processCodes: ['gystplc', 'gongyingshangtuipin'] },
+    { column: 'purchase_contract', titles: ['采购订货合同'], processCodes: ['gystplc', 'gongyingshangtuipin'] },
+    { column: 'estimated_arrival_date', titles: ['预计到货时间'], processCodes: ['gystplc', 'fantuituipin', 'gongyingshangtuipin'] },
+    { column: 'issue_resolved', titles: ['问题是否解决'], processCodes: ['kjdinghuo'] },
+    { column: 'goods_warehouse_arrival_date', titles: ['货品到仓时间'], processCodes: ['kjdinghuo'] },
+    { column: 'goods_quality_check', titles: ['货品质检'], processCodes: ['kjdinghuo'] },
+    { column: 'final_sample_to_nanjing', titles: ['发往南京库房最终样品'], processCodes: ['kjdinghuo'] },
+    { column: 'matches_sealed_sample', titles: ['是否跟封样一致'], processCodes: ['kjdinghuo'] },
+    { column: 'estimated_order_quantity', titles: ['预计订货量'], processCodes: ['kjdinghuo'] },
+    { column: 'beijing_design_executor', titles: ['北京设计执行人'], processCodes: ['yangpinqueren'] },
+    { column: 'hangzhou_design_executor', titles: ['杭州设计执行人'], processCodes: ['yangpinqueren'] },
+    { column: 'design_complete_executor', titles: ['设计完整执行人'], processCodes: ['yangpinqueren'] },
+    { column: 'confirmed_design_draft', titles: ['选择确认使用设计草图'], processCodes: ['yangpinqueren'] },
+    { column: 'design_cycle_period', titles: ['产品及包装设计周期'], processCodes: ['yangpinqueren'] },
+    { column: 'final_design_upload', titles: ['上传定稿图以及上传联图云'], processCodes: ['yangpinqueren'] },
+    { column: 'product_procurement', titles: ['产品采购'], processCodes: ['qihuashenhe'] },
+    { column: 'hot_sale_business_unit', titles: ['选择做爆款方案的事业部'], processCodes: ['qihuashenhe'] },
+    { column: 'need_designer_or_visual', titles: ['需要美编还是视觉'], processCodes: ['qihuashenhe'] },
+    { column: 'product_info_organized', titles: ['整理产品信息：图片&成本&订货量等细节(郑总审核查看)'], processCodes: ['kjdinghuo', 'jingdongdhlc'] },
+    { column: 'link_main_sales_code', titles: ['链接主销编码'], processCodes: ['jingdongdhlc'] },
+    { column: 'link_attribute', titles: ['链接属性'], processCodes: ['jingdongdhlc'] },
+    { column: 'cost_price', titles: ['成本价'], processCodes: ['jingdongdhlc'] },
+    { column: 'contact_group_name', titles: ['对接群名'], processCodes: ['jingdongdhlc'] },
+    { column: 'erp_purchase_order', titles: ['ERP采购单号'], processCodes: ['jingdongdhlc'] },
+    { column: 'production_period', titles: ['工期'], processCodes: ['jingdongdhlc'] },
+    { column: 'production_period', titles: ['需要订货是从哪里走货'], processCodes: ['jingdongdhlc'] },
+    { column: 'turnover_estimate_nanjing_date', titles: ['周转预计到南京仓时间'], processCodes: ['jingdongdhlc'] },
+    { column: 'turnover_estimate_shipment_date', titles: ['周转预计走货时间'], processCodes: ['jingdongdhlc'] },
+    { column: 'turnover_estimate_arrival_date', titles: ['周转预计到仓时间'], processCodes: ['jingdongdhlc'] },
+    { column: 'business_unit1_sample_selected', titles: ['事业一部样品是否选中'], processCodes: ['shiyebuypsfxz'], normalizer: (value) => normalizeBinarySelectionToNumber(value, { fallbackToZero: true }) },
+    { column: 'business_unit2_sample_selected', titles: ['事业二部样品是否选中'], processCodes: ['shiyebuypsfxz'], normalizer: (value) => normalizeBinarySelectionToNumber(value, { fallbackToZero: true }) },
+    { column: 'business_unit3_sample_selected', titles: ['事业三部样品是否选中'], processCodes: ['shiyebuypsfxz'], normalizer: (value) => normalizeBinarySelectionToNumber(value, { fallbackToZero: true }) },
+    { column: 'difficulty_level', titles: ['难易度'], processCodes: ['baokuanliuchengxb_copy'] },
+    { column: 'volume_target', titles: ['体量目标'], processCodes: ['baokuanliuchengxb_copy'] },
+    { column: 'main_sales_code', titles: ['主销编码'], processCodes: ['baokuanliuchengxb_copy'] },
+    { column: 'hot_sale_plan_upload', titles: ['上传爆款方案'], processCodes: ['baokuanliuchengxb_copy'] },
+    { column: 'listing_type', titles: ['上架类型'], processCodes: ['baokuanliuchengxb_copy'] },
+    { column: 'link_type', titles: ['链接类型'], processCodes: ['baokuanliuchengxb_copy'] }
 ]
 
 const SELECTION_STATUS_COLUMN_SET = new Set(
@@ -397,6 +439,15 @@ const normalizeNonEmptyStringContent = (value) => {
     return normalized ? normalized : null
 }
 
+function normalizeBinarySelectionToNumber(value, { defaultValue = 0, fallbackToZero = false } = {}) {
+    if (value === null || value === undefined) return null
+    const trimmed = `${value}`.trim()
+    if (!trimmed) return fallbackToZero ? 0 : defaultValue
+    if (SELECTION_TRUE_VALUES.has(trimmed)) return 1
+    if (SELECTION_FALSE_VALUES.has(trimmed)) return 0
+    return fallbackToZero ? 0 : defaultValue
+}
+
 function normalizeShipOrOrderType(value, column) {
     if (value === null || value === undefined) return null
     const normalized = `${value}`.trim()
@@ -515,24 +566,38 @@ const resolveAnalysisName = (processMap) => {
 }
 
 const buildColumnValueMap = (rows, configs) => {
-    const result = new Map()
+    const intermediate = new Map()
+    const normalizedConfigs = configs || []
+
     for (const row of rows || []) {
         const uid = row?.development_uid
         const title = row?.field_title
         const processCode = row?.process_code
         if (!uid || !title) continue
 
-        for (const config of configs || []) {
-            if (!config?.titles?.includes(title)) continue
-            if (config.processCodes?.length && !config.processCodes.includes(processCode)) continue
+        normalizedConfigs.forEach((config, index) => {
+            if (!config?.titles?.includes(title)) return
+            if (config.processCodes?.length && !config.processCodes.includes(processCode)) return
             const normalizer = config.normalizer || normalizeNonEmptyStringContent
             const value = normalizer(row?.content)
-            if (value === null || value === undefined) continue
-            if (!result.has(uid)) result.set(uid, {})
-            const current = result.get(uid)
-            if (!current[config.column]) {
-                current[config.column] = value
+            if (value === null || value === undefined) return
+            if (!intermediate.has(uid)) intermediate.set(uid, {})
+            const current = intermediate.get(uid)
+            const existingEntry = current[config.column]
+            if (!existingEntry || index < existingEntry.priority) {
+                current[config.column] = { value, priority: index }
             }
+        })
+    }
+
+    const result = new Map()
+    for (const [uid, entries] of intermediate.entries()) {
+        const columns = {}
+        for (const [column, entry] of Object.entries(entries)) {
+            columns[column] = entry.value
+        }
+        if (Object.keys(columns).length) {
+            result.set(uid, columns)
         }
     }
     return result
