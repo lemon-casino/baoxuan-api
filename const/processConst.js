@@ -325,7 +325,6 @@ const defaultColumns = [
     {header: '成本价', field: 'cost_price'},
     {header: '对接群名', field: 'contact_group_name'},
     {header: 'ERP采购单号', field: 'erp_purchase_order'},
-    {header: 'ERP采购单号不能为空', field: 'erp_order_required'},
     {header: '工期', field: 'production_period'},
     {header: '需要订货是从哪里走货', field: 'shipment_source'},
     {header: '周转预计到南京仓时间', field: 'turnover_estimate_nanjing_date'},
@@ -339,8 +338,7 @@ const defaultColumns = [
     {header: '主销编码', field: 'main_sales_code'},
     {header: '上传爆款方案', field: 'hot_sale_plan_upload'},
     {header: '上架类型', field: 'listing_type'},
-    {header: '链接类型', field: 'link_type'},
-    {header: '货品到仓时间', field: 'goods_warehouse_arrival_date'}
+    {header: '链接类型', field: 'link_type'}
 ]
 
 const statusList = {
