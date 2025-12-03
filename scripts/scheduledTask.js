@@ -52,7 +52,7 @@ let jstPurchaseCron = "0 36 */1 * * ?"
 let saleCron = "0 30 9/12 * * ?"
 let pddNewTagCron = "0 30 8 * * ?"
 let recruitmentProcessSyncCron = "0 0 9/18 * * ?"
-let processSync = "0 */2 * * * ?"
+let processSync = "0 */4 * * * ?"
 schedule.scheduleJob(saleCron, async function () {
     if (process.env.NODE_ENV === "prod") {
         await operationService.updateInventory()

@@ -56,14 +56,44 @@ const dColumns = [
         ]},
         {header: '选中未选中', field: 'select_result', hasChild: true, children: [
             {header: '选中', field: 'choose', hasChild: true,children: [
-                    {header: '事业1部', field: 'choose_division1', hasChild: false},
-                    {header: '事业2部', field: 'choose_division2', hasChild: false},
-                    {header: '事业3部', field: 'choose_division3', hasChild: false},
+                    {header: '事业1部', field: 'choose_division1', hasChild: true, children: [
+                            {header: '正推数量', field: 'choose_division1_supplier', hasChild: false},
+                            {header: '反推数量', field: 'choose_division1_operator', hasChild: false},
+                            {header: 'IP数量', field: 'choose_division1_ip', hasChild: false},
+                            {header: '自研数量', field: 'choose_division1_self', hasChild: false},
+                        ]},
+                    {header: '事业2部', field: 'choose_division2', hasChild: true, children: [
+                            {header: '正推数量', field: 'choose_division2_supplier', hasChild: false},
+                            {header: '反推数量', field: 'choose_division2_operator', hasChild: false},
+                            {header: 'IP数量', field: 'choose_division2_ip', hasChild: false},
+                            {header: '自研数量', field: 'choose_division2_self', hasChild: false},
+                        ]},
+                    {header: '事业3部', field: 'choose_division3', hasChild: true, children: [
+                            {header: '正推数量', field: 'choose_division3_supplier', hasChild: false},
+                            {header: '反推数量', field: 'choose_division3_operator', hasChild: false},
+                            {header: 'IP数量', field: 'choose_division3_ip', hasChild: false},
+                            {header: '自研数量', field: 'choose_division3_self', hasChild: false},
+                        ]},
                 ]},
             {header: '未选中', field: 'unchoose', hasChild: true,children: [
-                    {header: '事业1部', field: 'unchoose_division1', hasChild: false},
-                    {header: '事业2部', field: 'unchoose_division2', hasChild: false},
-                    {header: '事业3部', field: 'unchoose_division3', hasChild: false},
+                    {header: '事业1部', field: 'unchoose_division1', hasChild: true, children: [
+                            {header: '正推数量', field: 'unchoose_division1_supplier', hasChild: false},
+                            {header: '反推数量', field: 'unchoose_division1_operator', hasChild: false},
+                            {header: 'IP数量', field: 'unchoose_division1_ip', hasChild: false},
+                            {header: '自研数量', field: 'unchoose_division1_self', hasChild: false},
+                        ]},
+                    {header: '事业2部', field: 'unchoose_division2', hasChild: true, children: [
+                            {header: '正推数量', field: 'unchoose_division2_supplier', hasChild: false},
+                            {header: '反推数量', field: 'unchoose_division2_operator', hasChild: false},
+                            {header: 'IP数量', field: 'unchoose_division2_ip', hasChild: false},
+                            {header: '自研数量', field: 'unchoose_division2_self', hasChild: false},
+                        ]},
+                    {header: '事业3部', field: 'unchoose_division3', hasChild: true, children: [
+                            {header: '正推数量', field: 'unchoose_division3_supplier', hasChild: false},
+                            {header: '反推数量', field: 'unchoose_division3_operator', hasChild: false},
+                            {header: 'IP数量', field: 'unchoose_division3_ip', hasChild: false},
+                            {header: '自研数量', field: 'unchoose_division3_self', hasChild: false},
+                        ]},
                 ]},
         ]}
     ]},
@@ -77,10 +107,6 @@ const dColumns = [
                 {header: '进行中', field: 'supplier_original_running', hasChild: false},
                 {header: '已完成', field: 'supplier_original_finish', hasChild: false},
             ]},
-            {header: '半原创', field: 'supplier_semi_original', hasChild: true, children: [
-                {header: '进行中', field: 'supplier_semi_original_running', hasChild: false},
-                {header: '已完成', field: 'supplier_semi_original_finish', hasChild: false},
-            ]},
             {header: '非原创', field: 'supplier_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'supplier_unoriginal_running', hasChild: false},
                 {header: '已完成', field: 'supplier_unoriginal_finish', hasChild: false},
@@ -90,10 +116,6 @@ const dColumns = [
             {header: '原创', field: 'operator_original', hasChild: true, children: [
                 {header: '进行中', field: 'operator_original_running', hasChild: false},
                 {header: '已完成', field: 'operator_original_finish', hasChild: false},
-            ]},
-            {header: '半原创', field: 'operator_semi_original', hasChild: true, children: [
-                {header: '进行中', field: 'operator_semi_original_running', hasChild: false},
-                {header: '已完成', field: 'operator_semi_original_finish', hasChild: false},
             ]},
             {header: '非原创', field: 'operator_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'operator_unoriginal_running', hasChild: false},
@@ -105,10 +127,6 @@ const dColumns = [
                 {header: '进行中', field: 'ip_original_running', hasChild: false},
                 {header: '已完成', field: 'ip_original_finish', hasChild: false},
             ]},
-            {header: '半原创', field: 'ip_semi_original', hasChild: true, children: [
-                {header: '进行中', field: 'ip_semi_original_running', hasChild: false},
-                {header: '已完成', field: 'ip_semi_original_finish', hasChild: false},
-            ]},
             {header: '非原创', field: 'ip_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'ip_unoriginal_running', hasChild: false},
                 {header: '已完成', field: 'ip_unoriginal_finish', hasChild: false},
@@ -118,10 +136,6 @@ const dColumns = [
             {header: '原创', field: 'self_original', hasChild: true, children: [
                 {header: '进行中', field: 'self_original_running', hasChild: false},
                 {header: '已完成', field: 'self_original_finish', hasChild: false},
-            ]},
-            {header: '半原创', field: 'self_semi_original', hasChild: true, children: [
-                {header: '进行中', field: 'self_semi_original_running', hasChild: false},
-                {header: '已完成', field: 'self_semi_original_finish', hasChild: false},
             ]},
             {header: '非原创', field: 'self_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'self_unoriginal_running', hasChild: false},
@@ -141,14 +155,44 @@ const dColumns = [
     ]},
     {header: '上架数量', field: 'shelf', hasChild: true, children: [
         {header: '未上架', field: 'unshelf', hasChild: true, children: [
-            {header: '事业1部', field: 'unshelf_division1', hasChild: false},
-            {header: '事业2部', field: 'unshelf_division2', hasChild: false},
-            {header: '事业3部', field: 'unshelf_division3', hasChild: false},
+            {header: '事业1部', field: 'unshelf_division1', hasChild: true, children: [
+                {header: '正推数量', field: 'unshelf_division1_supplier', hasChild: false},
+                {header: '反推数量', field: 'unshelf_division1_operator', hasChild: false},
+                {header: 'IP数量', field: 'unshelf_division1_ip', hasChild: false},
+                {header: '自研数量', field: 'unshelf_division1_self', hasChild: false},
+            ]},
+            {header: '事业2部', field: 'unshelf_division2', hasChild: true, children: [
+                {header: '正推数量', field: 'unshelf_division2_supplier', hasChild: false},
+                {header: '反推数量', field: 'unshelf_division2_operator', hasChild: false},
+                {header: 'IP数量', field: 'unshelf_division2_ip', hasChild: false},
+                {header: '自研数量', field: 'unshelf_division2_self', hasChild: false},
+            ]},
+            {header: '事业3部', field: 'unshelf_division3', hasChild: true, children: [
+                {header: '正推数量', field: 'unshelf_division3_supplier', hasChild: false},
+                {header: '反推数量', field: 'unshelf_division3_operator', hasChild: false},
+                {header: 'IP数量', field: 'unshelf_division3_ip', hasChild: false},
+                {header: '自研数量', field: 'unshelf_division3_self', hasChild: false},
+            ]},
         ]},
         {header: '已上架', field: 'shelfed', hasChild: true, children: [
-            {header: '事业1部', field: 'shelfed_division1', hasChild: false},
-            {header: '事业2部', field: 'shelfed_division2', hasChild: false},
-            {header: '事业3部', field: 'shelfed_division3', hasChild: false},
+            {header: '事业1部', field: 'shelfed_division1', hasChild: true, children: [
+                {header: '正推数量', field: 'shelfed_division1_supplier', hasChild: false},
+                {header: '反推数量', field: 'shelfed_division1_operator', hasChild: false},
+                {header: 'IP数量', field: 'shelfed_division1_ip', hasChild: false},
+                {header: '自研数量', field: 'shelfed_division1_self', hasChild: false},
+            ]},
+            {header: '事业2部', field: 'shelfed_division2', hasChild: true, children: [
+                {header: '正推数量', field: 'shelfed_division2_supplier', hasChild: false},
+                {header: '反推数量', field: 'shelfed_division2_operator', hasChild: false},
+                {header: 'IP数量', field: 'shelfed_division2_ip', hasChild: false},
+                {header: '自研数量', field: 'shelfed_division2_self', hasChild: false},
+            ]},
+            {header: '事业3部', field: 'shelfed_division3', hasChild: true, children: [
+                {header: '正推数量', field: 'shelfed_division3_supplier', hasChild: false},
+                {header: '反推数量', field: 'shelfed_division3_operator', hasChild: false},
+                {header: 'IP数量', field: 'shelfed_division3_ip', hasChild: false},
+                {header: '自研数量', field: 'shelfed_division3_self', hasChild: false},
+            ]},
         ]}
     ]},
 ]
@@ -181,6 +225,46 @@ const rColumns = [
         ]},
         {header: '选中未选中', field: 'select_result', hasChild: true, children: [
             {header: '进行中', field: 'select_running', hasChild: false},
+            {header: '选中', field: 'choose', hasChild: true, children: [
+                {header: '事业1部', field: 'choose_division1', hasChild: true, children: [
+                    {header: '正推数量', field: 'choose_division1_supplier', hasChild: false},
+                    {header: '反推数量', field: 'choose_division1_operator', hasChild: false},
+                    {header: 'IP数量', field: 'choose_division1_ip', hasChild: false},
+                    {header: '自研数量', field: 'choose_division1_self', hasChild: false},
+                ]},
+                {header: '事业2部', field: 'choose_division2', hasChild: true, children: [
+                    {header: '正推数量', field: 'choose_division2_supplier', hasChild: false},
+                    {header: '反推数量', field: 'choose_division2_operator', hasChild: false},
+                    {header: 'IP数量', field: 'choose_division2_ip', hasChild: false},
+                    {header: '自研数量', field: 'choose_division2_self', hasChild: false},
+                ]},
+                {header: '事业3部', field: 'choose_division3', hasChild: true, children: [
+                    {header: '正推数量', field: 'choose_division3_supplier', hasChild: false},
+                    {header: '反推数量', field: 'choose_division3_operator', hasChild: false},
+                    {header: 'IP数量', field: 'choose_division3_ip', hasChild: false},
+                    {header: '自研数量', field: 'choose_division3_self', hasChild: false},
+                ]},
+            ]},
+            {header: '未选中', field: 'unchoose', hasChild: true, children: [
+                {header: '事业1部', field: 'unchoose_division1', hasChild: true, children: [
+                    {header: '正推数量', field: 'unchoose_division1_supplier', hasChild: false},
+                    {header: '反推数量', field: 'unchoose_division1_operator', hasChild: false},
+                    {header: 'IP数量', field: 'unchoose_division1_ip', hasChild: false},
+                    {header: '自研数量', field: 'unchoose_division1_self', hasChild: false},
+                ]},
+                {header: '事业2部', field: 'unchoose_division2', hasChild: true, children: [
+                    {header: '正推数量', field: 'unchoose_division2_supplier', hasChild: false},
+                    {header: '反推数量', field: 'unchoose_division2_operator', hasChild: false},
+                    {header: 'IP数量', field: 'unchoose_division2_ip', hasChild: false},
+                    {header: '自研数量', field: 'unchoose_division2_self', hasChild: false},
+                ]},
+                {header: '事业3部', field: 'unchoose_division3', hasChild: true, children: [
+                    {header: '正推数量', field: 'unchoose_division3_supplier', hasChild: false},
+                    {header: '反推数量', field: 'unchoose_division3_operator', hasChild: false},
+                    {header: 'IP数量', field: 'unchoose_division3_ip', hasChild: false},
+                    {header: '自研数量', field: 'unchoose_division3_self', hasChild: false},
+                ]},
+            ]},
         ]},
     ]},
     {header: '方案数量', field: 'plan', hasChild: true, children: [
@@ -242,9 +326,24 @@ const rColumns = [
     ]},
     {header: '上架数量', field: 'shelf', hasChild: true, children: [
         {header: '未上架', field: 'unshelf', hasChild: true, children: [
-            {header: '事业1部', field: 'unshelf_division1', hasChild: false},
-            {header: '事业2部', field: 'unshelf_division2', hasChild: false},
-            {header: '事业3部', field: 'unshelf_division3', hasChild: false},
+            {header: '事业1部', field: 'unshelf_division1', hasChild: true, children: [
+                {header: '正推数量', field: 'unshelf_division1_supplier', hasChild: false},
+                {header: '反推数量', field: 'unshelf_division1_operator', hasChild: false},
+                {header: 'IP数量', field: 'unshelf_division1_ip', hasChild: false},
+                {header: '自研数量', field: 'unshelf_division1_self', hasChild: false},
+            ]},
+            {header: '事业2部', field: 'unshelf_division2', hasChild: true, children: [
+                {header: '正推数量', field: 'unshelf_division2_supplier', hasChild: false},
+                {header: '反推数量', field: 'unshelf_division2_operator', hasChild: false},
+                {header: 'IP数量', field: 'unshelf_division2_ip', hasChild: false},
+                {header: '自研数量', field: 'unshelf_division2_self', hasChild: false},
+            ]},
+            {header: '事业3部', field: 'unshelf_division3', hasChild: true, children: [
+                {header: '正推数量', field: 'unshelf_division3_supplier', hasChild: false},
+                {header: '反推数量', field: 'unshelf_division3_operator', hasChild: false},
+                {header: 'IP数量', field: 'unshelf_division3_ip', hasChild: false},
+                {header: '自研数量', field: 'unshelf_division3_self', hasChild: false},
+            ]},
         ]},
     ]},
 ]

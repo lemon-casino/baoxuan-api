@@ -10,6 +10,13 @@ const FIELD_TO_TYPE_MAP = {
     self: typeList.SELF
 }
 
+const DEVELOPMENT_TYPE_VALUES = {
+    supplier: typeList.SUPPLIER,
+    operator: typeList.OPERATOR,
+    ip: typeList.IP,
+    self: typeList.SELF
+}
+
 const INQUIRY_FIELD_TO_STATUS = {
     inquiry_running: 'running',
     inquiry_success: 'success',
@@ -30,9 +37,36 @@ const SELECTION_FIELD_OPTIONS = {
     analysis_running: { category: 'analysis', statuses: 1 },
     analysis_finish: { category: 'analysis', statuses: [2, 3] },
     select_running: { category: 'review', statuses: 1, excludeChoose: true },
-    choose: { category: 'review', statuses: [2, 3], requireChoose: true },
-    unchoose: { category: 'review', statuses: [2, 3], requireUnchoose: true, excludeChoose: true }
+    choose_division1: { category: 'division', column: 'first_select', value: 1 },
+    choose_division2: { category: 'division', column: 'second_select', value: 1 },
+    choose_division3: { category: 'division', column: 'third_select', value: 1 },
+    unchoose_division1: { category: 'division', column: 'first_select', value: 0 },
+    unchoose_division2: { category: 'division', column: 'second_select', value: 0 },
+    unchoose_division3: { category: 'division', column: 'third_select', value: 0 }
 }
+
+const DIVISION_COLUMN_MAP = {
+    division1: 'first_select',
+    division2: 'second_select',
+    division3: 'third_select'
+}
+
+Object.entries(DIVISION_COLUMN_MAP).forEach(([division, column]) => {
+    Object.entries(DEVELOPMENT_TYPE_VALUES).forEach(([typeKey, typeValue]) => {
+        SELECTION_FIELD_OPTIONS[`choose_${division}_${typeKey}`] = {
+            category: 'division',
+            column,
+            value: 1,
+            type: typeValue
+        }
+        SELECTION_FIELD_OPTIONS[`unchoose_${division}_${typeKey}`] = {
+            category: 'division',
+            column,
+            value: 0,
+            type: typeValue
+        }
+    })
+})
 
 const PLAN_FIELD_TO_STATUSES = {
     plan_running: [1],
@@ -54,6 +88,13 @@ const SHELF_FIELD_OPTIONS = {
     shelfed_division2: { status: 2, division: 'division2' },
     shelfed_division3: { status: 2, division: 'division3' }
 }
+
+Object.keys(SHELF_FIELD_OPTIONS).forEach((key) => {
+    const base = SHELF_FIELD_OPTIONS[key]
+    Object.entries(DEVELOPMENT_TYPE_VALUES).forEach(([typeKey, typeValue]) => {
+        SHELF_FIELD_OPTIONS[`${key}_${typeKey}`] = { ...base, type: typeValue }
+    })
+})
 
 const VISION_CATEGORY_CONFIGS = [
     { key: 'supplier', field: 'vision_supplier' },
@@ -257,6 +298,15 @@ const querySampleList = async (isRunningMode, status, startDate, endDate) => {
 const querySelectionList = async (isRunningMode, selectionOptions, startDate, endDate) => {
     if (!selectionOptions) {
         return []
+    }
+    if (selectionOptions.category === 'division') {
+        const options = {
+            ...selectionOptions,
+            isRunningMode,
+            start: isRunningMode ? undefined : startDate,
+            end: isRunningMode ? undefined : endDate
+        }
+        return processesRepo.getDivisionSelectionList(options)
     }
     const rawStatuses = selectionOptions.statuses
     const statusList = Array.isArray(rawStatuses) ? rawStatuses : [rawStatuses]
