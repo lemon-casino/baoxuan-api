@@ -2491,9 +2491,9 @@ processesRepo.getShelfProcessList = async ({ status, division, type, isRunningMo
     const params = []
     const conditions = []
     if (Number(statusList[0]) === 2) {
-        conditions.push(`dp.${column} IS NOT NULL`)
+        conditions.push(`dp.${column} IS NOT NULL AND TRIM(dp.${column}) <> ''`)
     } else {
-        conditions.push(`dp.${column} IS NULL`)
+        conditions.push(`dp.${column} IS NULL OR TRIM(dp.${column}) = ''`)
     }
     if (type) {
         conditions.push('dp.type = ?')
@@ -2523,9 +2523,9 @@ const countShelfByStatus = async (statuses, start, end) => {
                     const params = [typeValue]
                     const conditions = [`dp.type = ?`]
                     if (targetStatus === 2) {
-                        conditions.push(`dp.${column} IS NOT NULL`)
+                        conditions.push(`dp.${column} IS NOT NULL AND TRIM(dp.${column}) <> ''`)
                     } else {
-                        conditions.push(`dp.${column} IS NULL`)
+                        conditions.push(`dp.${column} IS NULL OR TRIM(dp.${column}) = ''`)
                     }
                     appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
                     const sql = `SELECT COUNT(*) AS total FROM development_process dp WHERE ${conditions.join(' AND ')}`
@@ -2797,8 +2797,8 @@ processesRepo.getSelectionProcessList = async ({
     return []
 }
 
-processesRepo.getDivisionSelectionList = async ({ column, value, isRunningMode, start, end }) => {
-    return fetchDevelopmentListBySelectionValue({ column, value, isRunningMode, start, end })
+processesRepo.getDivisionSelectionList = async ({ column, value, type, isRunningMode, start, end }) => {
+    return fetchDevelopmentListBySelectionValue({ column, value, type, isRunningMode, start, end })
 }
 
 /**
