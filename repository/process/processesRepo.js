@@ -1786,6 +1786,27 @@ const fetchSelectionReviewList = async ({ statuses, isRunningMode, start, end, e
     return rows || []
 }
 
+const fetchDevelopmentListBySelectionValue = async ({ column, value, isRunningMode, start, end }) => {
+    if (!column) {
+        return []
+    }
+    const params = [value]
+    const conditions = [`dp.${column} = ?`]
+    const joins = []
+    if (isRunningMode) {
+        appendRunningJoins(joins)
+        conditions.push('p.status = 1')
+    } else {
+        appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    }
+    const joinSql = joins.length ? ` ${joins.join('\n    ')}` : ''
+    const whereSql = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : ''
+    const sql = `${DEVELOPMENT_LIST_SELECT}${joinSql}${whereSql}
+        ORDER BY dp.create_time DESC, dp.sort ASC`
+    const rows = await query(sql, params)
+    return rows || []
+}
+
 /**
  * 按流程状态查询推品明细
  * @param {object} options 查询参数
@@ -2092,16 +2113,19 @@ const SELECTION_PROCESS_CODES = ['jingdongdandulc', 'syybyycl']
 const MARKET_ANALYSIS_TITLES = ['运营1上传市场分析', '运营2上传市场分析', '运营上传市场分析']
 const SELECTION_REVIEW_TITLES = ['负责人审核', '事业一部负责人审核', '事业二部负责人审核', '事业三部负责人审核']
 const SELECTION_RESULT_TITLES = ['京东是否选中', '事业一部是否选中', '事业二部是否选中', '事业三部是否选中']
+const SELECTION_DIVISION_COLUMN_MAP = {
+    division1: 'first_select',
+    division2: 'second_select',
+    division3: 'third_select'
+}
 const SELECTION_VALUE_CHOOSE = '选中'
 const SELECTION_VALUE_UNCHOOSE = '未选中'
 const ORDER_TASK_TITLES = ['采购审批', '审批合同', '代发确认']
 const WAREHOUSING_TASK_TITLES = ['周转确认到仓', '仓库质检并确认样品与大货一致']
-const SHELF_PROCESS_CODES = ['sjlcqpt_copy']
-const SHELF_PLATFORM_TITLE = '上架平台'
-const SHELF_DIVISION_PLATFORMS = {
-    division1: ['拼多多', '天猫超市', 'Coupang'],
-    division2: ['京东', '得物', '唯品会', '抖音', '快手', '1688'],
-    division3: ['天猫', '天猫垂类店', '淘工厂', '小红书']
+const SHELF_DIVISION_GOODS_COLUMN = {
+    division1: 'first_goods_id',
+    division2: 'second_goods_id',
+    division3: 'third_goods_id'
 }
 const OPERATOR_PROCESS_CODE = 'tpkfsh'
 const DAILY_INQUIRY_PROCESS_CODE = 'cpxjsq'
@@ -2449,64 +2473,47 @@ processesRepo.getPurchaseProcessList = async ({ category, finished, isRunningMod
  */
 processesRepo.getShelfProcessList = async ({ status, division, isRunningMode, start, end }) => {
     const statusList = toArray(status)
-    const platforms = SHELF_DIVISION_PLATFORMS[division]
-    const codes = toArray(SHELF_PROCESS_CODES)
-    if (!statusList.length || !platforms || !codes.length) {
+    const column = SHELF_DIVISION_GOODS_COLUMN[division]
+    if (!statusList.length || !column) {
         return []
     }
-    const conditions = []
     const params = []
-    conditions.push(`p.process_code IN (${buildInPlaceholders(codes)})`)
-    params.push(...codes)
-    conditions.push(`p.status IN (${buildInPlaceholders(statusList)})`)
-    params.push(...statusList)
-    conditions.push('pi_platform.title = ?')
-    params.push(SHELF_PLATFORM_TITLE)
-    conditions.push(`pi_platform.content IN (${buildInPlaceholders(platforms)})`)
-    params.push(...platforms)
-    if (!isRunningMode) {
+    const conditions = []
+    if (Number(statusList[0]) === 2) {
+        conditions.push(`dp.${column} IS NOT NULL`)
+    } else {
+        conditions.push(`dp.${column} IS NULL`)
+    }
+    const joins = []
+    if (isRunningMode) {
+        appendRunningJoins(joins)
+        conditions.push('p.status = 1')
+    } else {
         appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
     }
-    const sql = `${DEVELOPMENT_LIST_SELECT}
-        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
-        JOIN processes p ON p.process_id = pi_id.process_id
-        JOIN process_info pi_platform ON pi_platform.process_id = p.process_id
-        WHERE ${conditions.join(' AND ')}
+    const joinSql = joins.length ? ` ${joins.join('\n    ')}` : ''
+    const whereSql = conditions.length ? ` WHERE ${conditions.join(' AND ')}` : ''
+    const sql = `${DEVELOPMENT_LIST_SELECT}${joinSql}${whereSql}
         ORDER BY dp.create_time DESC, dp.sort ASC`
     const rows = await query(sql, params)
     return rows || []
 }
 
-const countShelfProgress = async (statuses, platforms, start, end) => {
-    const codes = toArray(SHELF_PROCESS_CODES)
-    const statusList = toArray(statuses)
-    const platformList = toArray(platforms)
-    const params = []
-    const conditions = []
-    conditions.push(`p.process_code IN (${buildInPlaceholders(codes)})`)
-    params.push(...codes)
-    conditions.push(`p.status IN (${buildInPlaceholders(statusList)})`)
-    params.push(...statusList)
-    conditions.push('pi_platform.title = ?')
-    params.push(SHELF_PLATFORM_TITLE)
-    conditions.push(`pi_platform.content IN (${buildInPlaceholders(platformList)})`)
-    params.push(...platformList)
-    appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
-    const sql = `SELECT COUNT(DISTINCT dp.uid) AS total
-        FROM development_process dp
-        JOIN process_info pi_id ON pi_id.title = '推品ID' AND pi_id.content = dp.uid
-        JOIN processes p ON p.process_id = pi_id.process_id
-        JOIN process_info pi_platform ON pi_platform.process_id = p.process_id
-        WHERE ${conditions.join(' AND ')}`
-    const result = await query(sql, params)
-    return extractCount(result)
-}
-
 const countShelfByStatus = async (statuses, start, end) => {
+    const targetStatus = Number(statuses)
     const entries = await Promise.all(
-        Object.entries(SHELF_DIVISION_PLATFORMS).map(async ([division, platforms]) => {
-            const total = await countShelfProgress(statuses, platforms, start, end)
-            return { division, total }
+        Object.entries(SHELF_DIVISION_GOODS_COLUMN).map(async ([division, column]) => {
+            const params = []
+            const conditions = []
+            if (targetStatus === 2) {
+                conditions.push(`dp.${column} IS NOT NULL`)
+            } else {
+                conditions.push(`dp.${column} IS NULL`)
+            }
+            appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+            const sql = `SELECT COUNT(*) AS total FROM development_process dp WHERE ${conditions.join(' AND ')}`
+            const result = await query(sql, params)
+            return { division, total: extractCount(result) }
         })
     )
     return entries.reduce((acc, { division, total }) => {
@@ -2631,6 +2638,31 @@ const countSelectionReview = async (statuses, options = {}, start, end) => {
     return extractCount(result)
 }
 
+const countDivisionSelectionValue = async (column, value, start, end) => {
+    if (!column) {
+        return 0
+    }
+    const params = [value]
+    const conditions = [`dp.${column} = ?`]
+    appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+    const sql = `SELECT COUNT(*) AS total FROM development_process dp WHERE ${conditions.join(' AND ')}`
+    const result = await query(sql, params)
+    return extractCount(result)
+}
+
+const countDivisionSelection = async (value, start, end) => {
+    const entries = await Promise.all(
+        Object.entries(SELECTION_DIVISION_COLUMN_MAP).map(async ([division, column]) => {
+            const total = await countDivisionSelectionValue(column, value, start, end)
+            return { division, total }
+        })
+    )
+    return entries.reduce((acc, { division, total }) => {
+        acc[division] = total
+        return acc
+    }, {})
+}
+
 /**
  * 统计选品环节的市场分析与选中结果数据
  * @param {string|undefined} start 开始日期
@@ -2652,9 +2684,11 @@ processesRepo.getSelectionStats = async (start, end) => {
         start,
         end
     )
-    const selectRunning = await countSelectionReview(1, { excludeChoose: true }, start, end)
-    const choose = await countSelectionReview([2, 3], { requireChoose: true }, start, end)
-    const unchoose = await countSelectionReview([2, 3], { requireUnchoose: true, excludeChoose: true }, start, end)
+    const [selectRunning, choose, unchoose] = await Promise.all([
+        countSelectionReview(1, { excludeChoose: true }, start, end),
+        countDivisionSelection(1, start, end),
+        countDivisionSelection(0, start, end)
+    ])
     return {
         analysis: {
             running: analysisRunning,
@@ -2716,6 +2750,10 @@ processesRepo.getSelectionProcessList = async ({
         })
     }
     return []
+}
+
+processesRepo.getDivisionSelectionList = async ({ column, value, isRunningMode, start, end }) => {
+    return fetchDevelopmentListBySelectionValue({ column, value, isRunningMode, start, end })
 }
 
 /**

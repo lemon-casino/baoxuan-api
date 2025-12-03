@@ -30,8 +30,12 @@ const SELECTION_FIELD_OPTIONS = {
     analysis_running: { category: 'analysis', statuses: 1 },
     analysis_finish: { category: 'analysis', statuses: [2, 3] },
     select_running: { category: 'review', statuses: 1, excludeChoose: true },
-    choose: { category: 'review', statuses: [2, 3], requireChoose: true },
-    unchoose: { category: 'review', statuses: [2, 3], requireUnchoose: true, excludeChoose: true }
+    choose_division1: { category: 'division', column: 'first_select', value: 1 },
+    choose_division2: { category: 'division', column: 'second_select', value: 1 },
+    choose_division3: { category: 'division', column: 'third_select', value: 1 },
+    unchoose_division1: { category: 'division', column: 'first_select', value: 0 },
+    unchoose_division2: { category: 'division', column: 'second_select', value: 0 },
+    unchoose_division3: { category: 'division', column: 'third_select', value: 0 }
 }
 
 const PLAN_FIELD_TO_STATUSES = {
@@ -257,6 +261,15 @@ const querySampleList = async (isRunningMode, status, startDate, endDate) => {
 const querySelectionList = async (isRunningMode, selectionOptions, startDate, endDate) => {
     if (!selectionOptions) {
         return []
+    }
+    if (selectionOptions.category === 'division') {
+        const options = {
+            ...selectionOptions,
+            isRunningMode,
+            start: isRunningMode ? undefined : startDate,
+            end: isRunningMode ? undefined : endDate
+        }
+        return processesRepo.getDivisionSelectionList(options)
     }
     const rawStatuses = selectionOptions.statuses
     const statusList = Array.isArray(rawStatuses) ? rawStatuses : [rawStatuses]

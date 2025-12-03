@@ -64,7 +64,13 @@ const createEmptyStatisticRow = () => ({
     select_result: 0,
     select_running: 0,
     choose: 0,
+    choose_division1: 0,
+    choose_division2: 0,
+    choose_division3: 0,
     unchoose: 0,
+    unchoose_division1: 0,
+    unchoose_division2: 0,
+    unchoose_division3: 0,
     plan: 0,
     plan_running: 0,
     plan_finish: 0,
@@ -255,11 +261,24 @@ const applySelectionStats = (row, stats = {}, isRunningMode) => {
     row.analysis = row.analysis_running + row.analysis_finish
 
     const selectRunning = Number(resultStats.running) || 0
-    const choose = Number(resultStats.choose) || 0
-    const unchoose = Number(resultStats.unchoose) || 0
+    const chooseStats = resultStats.choose || {}
+    const unchooseStats = resultStats.unchoose || {}
+    const divisions = ['division1', 'division2', 'division3']
+    let chooseTotal = 0
+    let unchooseTotal = 0
+    divisions.forEach((division) => {
+        const chooseValue = Number(chooseStats[division]) || 0
+        const unchooseValue = Number(unchooseStats[division]) || 0
+        const chooseField = `choose_${division}`
+        const unchooseField = `unchoose_${division}`
+        row[chooseField] = isRunningMode ? 0 : chooseValue
+        row[unchooseField] = isRunningMode ? 0 : unchooseValue
+        chooseTotal += row[chooseField]
+        unchooseTotal += row[unchooseField]
+    })
     row.select_running = selectRunning
-    row.choose = isRunningMode ? 0 : choose
-    row.unchoose = isRunningMode ? 0 : unchoose
+    row.choose = chooseTotal
+    row.unchoose = unchooseTotal
     row.select_result = row.select_running + row.choose + row.unchoose
 }
 
