@@ -65,12 +65,36 @@ const createEmptyStatisticRow = () => ({
     select_running: 0,
     choose: 0,
     choose_division1: 0,
+    choose_division1_supplier: 0,
+    choose_division1_operator: 0,
+    choose_division1_ip: 0,
+    choose_division1_self: 0,
     choose_division2: 0,
+    choose_division2_supplier: 0,
+    choose_division2_operator: 0,
+    choose_division2_ip: 0,
+    choose_division2_self: 0,
     choose_division3: 0,
+    choose_division3_supplier: 0,
+    choose_division3_operator: 0,
+    choose_division3_ip: 0,
+    choose_division3_self: 0,
     unchoose: 0,
     unchoose_division1: 0,
+    unchoose_division1_supplier: 0,
+    unchoose_division1_operator: 0,
+    unchoose_division1_ip: 0,
+    unchoose_division1_self: 0,
     unchoose_division2: 0,
+    unchoose_division2_supplier: 0,
+    unchoose_division2_operator: 0,
+    unchoose_division2_ip: 0,
+    unchoose_division2_self: 0,
     unchoose_division3: 0,
+    unchoose_division3_supplier: 0,
+    unchoose_division3_operator: 0,
+    unchoose_division3_ip: 0,
+    unchoose_division3_self: 0,
     plan: 0,
     plan_running: 0,
     plan_finish: 0,
@@ -125,12 +149,36 @@ const createEmptyStatisticRow = () => ({
     shelf: 0,
     unshelf: 0,
     unshelf_division1: 0,
+    unshelf_division1_supplier: 0,
+    unshelf_division1_operator: 0,
+    unshelf_division1_ip: 0,
+    unshelf_division1_self: 0,
     unshelf_division2: 0,
+    unshelf_division2_supplier: 0,
+    unshelf_division2_operator: 0,
+    unshelf_division2_ip: 0,
+    unshelf_division2_self: 0,
     unshelf_division3: 0,
+    unshelf_division3_supplier: 0,
+    unshelf_division3_operator: 0,
+    unshelf_division3_ip: 0,
+    unshelf_division3_self: 0,
     shelfed: 0,
     shelfed_division1: 0,
+    shelfed_division1_supplier: 0,
+    shelfed_division1_operator: 0,
+    shelfed_division1_ip: 0,
+    shelfed_division1_self: 0,
     shelfed_division2: 0,
-    shelfed_division3: 0
+    shelfed_division2_supplier: 0,
+    shelfed_division2_operator: 0,
+    shelfed_division2_ip: 0,
+    shelfed_division2_self: 0,
+    shelfed_division3: 0,
+    shelfed_division3_supplier: 0,
+    shelfed_division3_operator: 0,
+    shelfed_division3_ip: 0,
+    shelfed_division3_self: 0
 })
 
 /**
@@ -253,6 +301,7 @@ const applySampleDeliveryStats = (row, stats = {}, isRunningMode) => {
 const applySelectionStats = (row, stats = {}, isRunningMode) => {
     const analysisStats = stats.analysis || {}
     const resultStats = stats.result || {}
+    const typeKeys = ['supplier', 'operator', 'ip', 'self']
 
     const analysisRunning = Number(analysisStats.running) || 0
     const analysisFinish = Number(analysisStats.finish) || 0
@@ -267,12 +316,27 @@ const applySelectionStats = (row, stats = {}, isRunningMode) => {
     let chooseTotal = 0
     let unchooseTotal = 0
     divisions.forEach((division) => {
-        const chooseValue = Number(chooseStats[division]) || 0
-        const unchooseValue = Number(unchooseStats[division]) || 0
         const chooseField = `choose_${division}`
         const unchooseField = `unchoose_${division}`
-        row[chooseField] = isRunningMode ? 0 : chooseValue
-        row[unchooseField] = isRunningMode ? 0 : unchooseValue
+        const divisionChooseStats = chooseStats[division] || {}
+        const divisionUnchooseStats = unchooseStats[division] || {}
+
+        let chooseDivisionTotal = 0
+        let unchooseDivisionTotal = 0
+
+        typeKeys.forEach((typeKey) => {
+            const chooseFieldKey = `${chooseField}_${typeKey}`
+            const unchooseFieldKey = `${unchooseField}_${typeKey}`
+            const chooseValue = Number(divisionChooseStats[typeKey]) || 0
+            const unchooseValue = Number(divisionUnchooseStats[typeKey]) || 0
+            row[chooseFieldKey] = isRunningMode ? 0 : chooseValue
+            row[unchooseFieldKey] = isRunningMode ? 0 : unchooseValue
+            chooseDivisionTotal += row[chooseFieldKey]
+            unchooseDivisionTotal += row[unchooseFieldKey]
+        })
+
+        row[chooseField] = chooseDivisionTotal
+        row[unchooseField] = unchooseDivisionTotal
         chooseTotal += row[chooseField]
         unchooseTotal += row[unchooseField]
     })
@@ -376,13 +440,20 @@ const applyPurchaseStats = (row, stats = {}, isRunningMode) => {
  */
 const applyShelfStats = (row, stats = {}, isRunningMode) => {
     const divisions = ['division1', 'division2', 'division3']
+    const typeKeys = ['supplier', 'operator', 'ip', 'self']
     const assignGroup = (prefix, group = {}, allowValues = true) => {
         let total = 0
-        divisions.forEach((key) => {
-            const field = `${prefix}_${key}`
-            const value = allowValues ? Number(group[key]) || 0 : 0
-            row[field] = value
-            total += value
+        divisions.forEach((division) => {
+            let divisionTotal = 0
+            typeKeys.forEach((typeKey) => {
+                const field = `${prefix}_${division}_${typeKey}`
+                const value = allowValues ? Number(group?.[division]?.[typeKey]) || 0 : 0
+                row[field] = value
+                divisionTotal += value
+            })
+            const divisionField = `${prefix}_${division}`
+            row[divisionField] = divisionTotal
+            total += divisionTotal
         })
         row[prefix] = total
         return total

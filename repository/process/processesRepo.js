@@ -1786,12 +1786,16 @@ const fetchSelectionReviewList = async ({ statuses, isRunningMode, start, end, e
     return rows || []
 }
 
-const fetchDevelopmentListBySelectionValue = async ({ column, value, isRunningMode, start, end }) => {
+const fetchDevelopmentListBySelectionValue = async ({ column, value, type, isRunningMode, start, end }) => {
     if (!column) {
         return []
     }
     const params = [value]
     const conditions = [`dp.${column} = ?`]
+    if (type) {
+        conditions.push('dp.type = ?')
+        params.push(type)
+    }
     const joins = []
     if (isRunningMode) {
         appendRunningJoins(joins)
@@ -2143,6 +2147,13 @@ const VISION_CREATIVE_TYPES = {
     semi_original: '半原创',
     unoriginal: '非原创'
 }
+
+const DEVELOPMENT_TYPE_VALUES = {
+    supplier: VISION_DEVELOPMENT_TYPES.supplier,
+    operator: VISION_DEVELOPMENT_TYPES.operator,
+    ip: VISION_DEVELOPMENT_TYPES.ip,
+    self: VISION_DEVELOPMENT_TYPES.self
+}
 const VISION_STATUS_VALUES = [1, 2, 3, 4]
 
 const VISION_TYPE_FIELD_MAP = Object.entries(VISION_DEVELOPMENT_TYPES).reduce((acc, [key, value]) => {
@@ -2471,7 +2482,7 @@ processesRepo.getPurchaseProcessList = async ({ category, finished, isRunningMod
  * @param {string|undefined} options.end 发起模式结束日期
  * @returns {Promise<Array<object>>} 推品列表
  */
-processesRepo.getShelfProcessList = async ({ status, division, isRunningMode, start, end }) => {
+processesRepo.getShelfProcessList = async ({ status, division, type, isRunningMode, start, end }) => {
     const statusList = toArray(status)
     const column = SHELF_DIVISION_GOODS_COLUMN[division]
     if (!statusList.length || !column) {
@@ -2483,6 +2494,10 @@ processesRepo.getShelfProcessList = async ({ status, division, isRunningMode, st
         conditions.push(`dp.${column} IS NOT NULL`)
     } else {
         conditions.push(`dp.${column} IS NULL`)
+    }
+    if (type) {
+        conditions.push('dp.type = ?')
+        params.push(type)
     }
     const joins = []
     if (isRunningMode) {
@@ -2503,21 +2518,34 @@ const countShelfByStatus = async (statuses, start, end) => {
     const targetStatus = Number(statuses)
     const entries = await Promise.all(
         Object.entries(SHELF_DIVISION_GOODS_COLUMN).map(async ([division, column]) => {
-            const params = []
-            const conditions = []
-            if (targetStatus === 2) {
-                conditions.push(`dp.${column} IS NOT NULL`)
-            } else {
-                conditions.push(`dp.${column} IS NULL`)
-            }
-            appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
-            const sql = `SELECT COUNT(*) AS total FROM development_process dp WHERE ${conditions.join(' AND ')}`
-            const result = await query(sql, params)
-            return { division, total: extractCount(result) }
+            const typeEntries = await Promise.all(
+                Object.entries(DEVELOPMENT_TYPE_VALUES).map(async ([typeKey, typeValue]) => {
+                    const params = [typeValue]
+                    const conditions = [`dp.type = ?`]
+                    if (targetStatus === 2) {
+                        conditions.push(`dp.${column} IS NOT NULL`)
+                    } else {
+                        conditions.push(`dp.${column} IS NULL`)
+                    }
+                    appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
+                    const sql = `SELECT COUNT(*) AS total FROM development_process dp WHERE ${conditions.join(' AND ')}`
+                    const result = await query(sql, params)
+                    return { typeKey, total: extractCount(result) }
+                })
+            )
+            const stats = typeEntries.reduce(
+                (acc, { typeKey, total }) => {
+                    acc[typeKey] = total
+                    acc.total += total
+                    return acc
+                },
+                { total: 0 }
+            )
+            return { division, stats }
         })
     )
-    return entries.reduce((acc, { division, total }) => {
-        acc[division] = total
+    return entries.reduce((acc, { division, stats }) => {
+        acc[division] = stats
         return acc
     }, {})
 }
@@ -2638,12 +2666,16 @@ const countSelectionReview = async (statuses, options = {}, start, end) => {
     return extractCount(result)
 }
 
-const countDivisionSelectionValue = async (column, value, start, end) => {
+const countDivisionSelectionValue = async (column, value, type, start, end) => {
     if (!column) {
         return 0
     }
     const params = [value]
     const conditions = [`dp.${column} = ?`]
+    if (type) {
+        conditions.push('dp.type = ?')
+        params.push(type)
+    }
     appendDateRangeClauses(conditions, params, 'dp.create_time', start, end)
     const sql = `SELECT COUNT(*) AS total FROM development_process dp WHERE ${conditions.join(' AND ')}`
     const result = await query(sql, params)
@@ -2653,12 +2685,25 @@ const countDivisionSelectionValue = async (column, value, start, end) => {
 const countDivisionSelection = async (value, start, end) => {
     const entries = await Promise.all(
         Object.entries(SELECTION_DIVISION_COLUMN_MAP).map(async ([division, column]) => {
-            const total = await countDivisionSelectionValue(column, value, start, end)
-            return { division, total }
+            const typeEntries = await Promise.all(
+                Object.entries(DEVELOPMENT_TYPE_VALUES).map(async ([typeKey, typeValue]) => {
+                    const total = await countDivisionSelectionValue(column, value, typeValue, start, end)
+                    return { typeKey, total }
+                })
+            )
+            const stats = typeEntries.reduce(
+                (acc, { typeKey, total }) => {
+                    acc[typeKey] = total
+                    acc.total += total
+                    return acc
+                },
+                { total: 0 }
+            )
+            return { division, stats }
         })
     )
-    return entries.reduce((acc, { division, total }) => {
-        acc[division] = total
+    return entries.reduce((acc, { division, stats }) => {
+        acc[division] = stats
         return acc
     }, {})
 }

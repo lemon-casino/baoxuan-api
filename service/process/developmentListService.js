@@ -10,6 +10,13 @@ const FIELD_TO_TYPE_MAP = {
     self: typeList.SELF
 }
 
+const DEVELOPMENT_TYPE_VALUES = {
+    supplier: typeList.SUPPLIER,
+    operator: typeList.OPERATOR,
+    ip: typeList.IP,
+    self: typeList.SELF
+}
+
 const INQUIRY_FIELD_TO_STATUS = {
     inquiry_running: 'running',
     inquiry_success: 'success',
@@ -38,6 +45,29 @@ const SELECTION_FIELD_OPTIONS = {
     unchoose_division3: { category: 'division', column: 'third_select', value: 0 }
 }
 
+const DIVISION_COLUMN_MAP = {
+    division1: 'first_select',
+    division2: 'second_select',
+    division3: 'third_select'
+}
+
+Object.entries(DIVISION_COLUMN_MAP).forEach(([division, column]) => {
+    Object.entries(DEVELOPMENT_TYPE_VALUES).forEach(([typeKey, typeValue]) => {
+        SELECTION_FIELD_OPTIONS[`choose_${division}_${typeKey}`] = {
+            category: 'division',
+            column,
+            value: 1,
+            type: typeValue
+        }
+        SELECTION_FIELD_OPTIONS[`unchoose_${division}_${typeKey}`] = {
+            category: 'division',
+            column,
+            value: 0,
+            type: typeValue
+        }
+    })
+})
+
 const PLAN_FIELD_TO_STATUSES = {
     plan_running: [1],
     plan_finish: [2, 3, 4]
@@ -58,6 +88,13 @@ const SHELF_FIELD_OPTIONS = {
     shelfed_division2: { status: 2, division: 'division2' },
     shelfed_division3: { status: 2, division: 'division3' }
 }
+
+Object.keys(SHELF_FIELD_OPTIONS).forEach((key) => {
+    const base = SHELF_FIELD_OPTIONS[key]
+    Object.entries(DEVELOPMENT_TYPE_VALUES).forEach(([typeKey, typeValue]) => {
+        SHELF_FIELD_OPTIONS[`${key}_${typeKey}`] = { ...base, type: typeValue }
+    })
+})
 
 const VISION_CATEGORY_CONFIGS = [
     { key: 'supplier', field: 'vision_supplier' },
