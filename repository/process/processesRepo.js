@@ -2797,8 +2797,8 @@ processesRepo.getSelectionProcessList = async ({
     return []
 }
 
-processesRepo.getDivisionSelectionList = async ({ column, value, isRunningMode, start, end }) => {
-    return fetchDevelopmentListBySelectionValue({ column, value, isRunningMode, start, end })
+processesRepo.getDivisionSelectionList = async ({ column, value, type, isRunningMode, start, end }) => {
+    return fetchDevelopmentListBySelectionValue({ column, value, type, isRunningMode, start, end })
 }
 
 /**
