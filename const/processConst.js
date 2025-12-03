@@ -1,5 +1,40 @@
 const { template } = require("lodash")
 
+const createTypeLeaves = (baseField) => ([
+    {header: '正推数量', field: `${baseField}_supplier`, hasChild: false},
+    {header: '反推数量', field: `${baseField}_operator`, hasChild: false},
+    {header: 'IP数量', field: `${baseField}_ip`, hasChild: false},
+    {header: '自研数量', field: `${baseField}_self`, hasChild: false},
+])
+
+const createDivisionTypeNodes = (baseField) => [1, 2, 3].map((index) => ({
+    header: `事业${index}部`,
+    field: `${baseField}${index}`,
+    hasChild: true,
+    children: createTypeLeaves(`${baseField}${index}`),
+}))
+
+const createSelectionResult = () => ({
+    header: '选中未选中',
+    field: 'select_result',
+    hasChild: true,
+    children: [
+        {header: '进行中', field: 'select_running', hasChild: false},
+        {header: '选中', field: 'choose', hasChild: true, children: createDivisionTypeNodes('choose_division')},
+        {header: '未选中', field: 'unchoose', hasChild: true, children: createDivisionTypeNodes('unchoose_division')},
+    ],
+})
+
+const createShelfColumns = () => ({
+    header: '上架数量',
+    field: 'shelf',
+    hasChild: true,
+    children: [
+        {header: '未上架', field: 'unshelf', hasChild: true, children: createDivisionTypeNodes('unshelf_division')},
+        {header: '已上架', field: 'shelfed', hasChild: true, children: createDivisionTypeNodes('shelfed_division')},
+    ],
+})
+
 const dColumns = [
     {header: '发起数量', field: 'development', hasChild: true, children: [
         {header: '正推数量', field: 'supplier', hasChild: false},
@@ -54,18 +89,7 @@ const dColumns = [
                     {header: '事业3部', field: 'analysis_division3', hasChild: false},
                 ]}
         ]},
-        {header: '选中未选中', field: 'select_result', hasChild: true, children: [
-            {header: '选中', field: 'choose', hasChild: true,children: [
-                    {header: '事业1部', field: 'choose_division1', hasChild: false},
-                    {header: '事业2部', field: 'choose_division2', hasChild: false},
-                    {header: '事业3部', field: 'choose_division3', hasChild: false},
-                ]},
-            {header: '未选中', field: 'unchoose', hasChild: true,children: [
-                    {header: '事业1部', field: 'unchoose_division1', hasChild: false},
-                    {header: '事业2部', field: 'unchoose_division2', hasChild: false},
-                    {header: '事业3部', field: 'unchoose_division3', hasChild: false},
-                ]},
-        ]}
+        createSelectionResult()
     ]},
     {header: '方案数量', field: 'plan', hasChild: true, children: [
         {header: '进行中', field: 'plan_running', hasChild: false},
@@ -139,18 +163,7 @@ const dColumns = [
             {header: '已完成', field: 'warehousing_finish', hasChild: false},
         ]}
     ]},
-    {header: '上架数量', field: 'shelf', hasChild: true, children: [
-        {header: '未上架', field: 'unshelf', hasChild: true, children: [
-            {header: '事业1部', field: 'unshelf_division1', hasChild: false},
-            {header: '事业2部', field: 'unshelf_division2', hasChild: false},
-            {header: '事业3部', field: 'unshelf_division3', hasChild: false},
-        ]},
-        {header: '已上架', field: 'shelfed', hasChild: true, children: [
-            {header: '事业1部', field: 'shelfed_division1', hasChild: false},
-            {header: '事业2部', field: 'shelfed_division2', hasChild: false},
-            {header: '事业3部', field: 'shelfed_division3', hasChild: false},
-        ]}
-    ]},
+    createShelfColumns(),
 ]
 
 const rColumns = [
@@ -179,9 +192,7 @@ const rColumns = [
         {header: '市场分析', field: 'analysis', hasChild: true, children: [
             {header: '进行中', field: 'analysis_running', hasChild: false},
         ]},
-        {header: '选中未选中', field: 'select_result', hasChild: true, children: [
-            {header: '进行中', field: 'select_running', hasChild: false},
-        ]},
+        createSelectionResult(),
     ]},
     {header: '方案数量', field: 'plan', hasChild: true, children: [
         {header: '进行中', field: 'plan_running', hasChild: false},
@@ -240,13 +251,19 @@ const rColumns = [
             {header: '进行中', field: 'warehousing_running', hasChild: false},
         ]}
     ]},
-    {header: '上架数量', field: 'shelf', hasChild: true, children: [
-        {header: '未上架', field: 'unshelf', hasChild: true, children: [
-            {header: '事业1部', field: 'unshelf_division1', hasChild: false},
-            {header: '事业2部', field: 'unshelf_division2', hasChild: false},
-            {header: '事业3部', field: 'unshelf_division3', hasChild: false},
-        ]},
-    ]},
+    {
+        header: '上架数量',
+        field: 'shelf',
+        hasChild: true,
+        children: [
+            {
+                header: '未上架',
+                field: 'unshelf',
+                hasChild: true,
+                children: createDivisionTypeNodes('unshelf_division'),
+            },
+        ],
+    },
 ]
 
 const defaultColumns = [
