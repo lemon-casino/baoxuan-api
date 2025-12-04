@@ -101,10 +101,6 @@ const dColumns = [
                 {header: '进行中', field: 'supplier_original_running', hasChild: false},
                 {header: '已完成', field: 'supplier_original_finish', hasChild: false},
             ]},
-            {header: '半原创', field: 'supplier_semi_original', hasChild: true, children: [
-                {header: '进行中', field: 'supplier_semi_original_running', hasChild: false},
-                {header: '已完成', field: 'supplier_semi_original_finish', hasChild: false},
-            ]},
             {header: '非原创', field: 'supplier_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'supplier_unoriginal_running', hasChild: false},
                 {header: '已完成', field: 'supplier_unoriginal_finish', hasChild: false},
@@ -114,10 +110,6 @@ const dColumns = [
             {header: '原创', field: 'operator_original', hasChild: true, children: [
                 {header: '进行中', field: 'operator_original_running', hasChild: false},
                 {header: '已完成', field: 'operator_original_finish', hasChild: false},
-            ]},
-            {header: '半原创', field: 'operator_semi_original', hasChild: true, children: [
-                {header: '进行中', field: 'operator_semi_original_running', hasChild: false},
-                {header: '已完成', field: 'operator_semi_original_finish', hasChild: false},
             ]},
             {header: '非原创', field: 'operator_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'operator_unoriginal_running', hasChild: false},
@@ -129,10 +121,6 @@ const dColumns = [
                 {header: '进行中', field: 'ip_original_running', hasChild: false},
                 {header: '已完成', field: 'ip_original_finish', hasChild: false},
             ]},
-            {header: '半原创', field: 'ip_semi_original', hasChild: true, children: [
-                {header: '进行中', field: 'ip_semi_original_running', hasChild: false},
-                {header: '已完成', field: 'ip_semi_original_finish', hasChild: false},
-            ]},
             {header: '非原创', field: 'ip_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'ip_unoriginal_running', hasChild: false},
                 {header: '已完成', field: 'ip_unoriginal_finish', hasChild: false},
@@ -143,10 +131,7 @@ const dColumns = [
                 {header: '进行中', field: 'self_original_running', hasChild: false},
                 {header: '已完成', field: 'self_original_finish', hasChild: false},
             ]},
-            {header: '半原创', field: 'self_semi_original', hasChild: true, children: [
-                {header: '进行中', field: 'self_semi_original_running', hasChild: false},
-                {header: '已完成', field: 'self_semi_original_finish', hasChild: false},
-            ]},
+
             {header: '非原创', field: 'self_unoriginal', hasChild: true, children: [
                 {header: '进行中', field: 'self_unoriginal_running', hasChild: false},
                 {header: '已完成', field: 'self_unoriginal_finish', hasChild: false},
