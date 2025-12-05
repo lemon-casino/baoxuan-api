@@ -720,8 +720,17 @@ const getCostOptimize = async (req, res, next) => {
     }
 }
 
+const getTypeSelectionStatistics = async (req, res, next) => {
+    try {
+        const result = await developmentService.getTypeSelectionStatistics()
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
-    getWorkPannel, 
+    getWorkPannel,
     getWorkDetail,
     getProjectData,
     createProjectData,
@@ -756,5 +765,6 @@ module.exports = {
     getDevelopProcess,
     getNotList,
     getSkuCostInfo,
-    getCostOptimize
+    getCostOptimize,
+    getTypeSelectionStatistics
 }

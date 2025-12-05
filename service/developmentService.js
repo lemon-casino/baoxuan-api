@@ -33,6 +33,7 @@ const combinationProductCodeRepo = require('@/repository/danpin/combinationProdu
 const { getRealDepartment, getRealProject } = require('@/service/departmentService')
 const userSettingRepo = require('@/repository/userSettingRepo')
 const processesRepo = require('@/repository/process/processesRepo')
+const {query} = require('../model/dbConn')
 
 developmentService.getDataStats = async (type, start, end, month, timeType, project, process) => {
     let result = []
@@ -5083,5 +5084,46 @@ developmentService.getSkuCostInfo = async() =>{
 developmentService.getCostOptimize = async() =>{
     let result = await purchaseRepo.getCostOptimize()
     return result
+}
+
+developmentService.getTypeSelectionStatistics = async() => {
+    const types = ['供应商推品', '反推推品', 'IP推品', '自研推品']
+    const placeholders = types.map(() => '?').join(', ')
+    const sql = `SELECT type,
+        SUM(CASE WHEN first_select = 0 THEN 1 ELSE 0 END) AS first_is_0,
+        SUM(CASE WHEN first_select = 1 THEN 1 ELSE 0 END) AS first_is_1,
+        SUM(CASE WHEN first_select IS NULL THEN 1 ELSE 0 END) AS first_is_null,
+        SUM(CASE WHEN second_select = 0 THEN 1 ELSE 0 END) AS second_is_0,
+        SUM(CASE WHEN second_select = 1 THEN 1 ELSE 0 END) AS second_is_1,
+        SUM(CASE WHEN second_select IS NULL THEN 1 ELSE 0 END) AS second_is_null,
+        SUM(CASE WHEN third_select = 0 THEN 1 ELSE 0 END) AS third_is_0,
+        SUM(CASE WHEN third_select = 1 THEN 1 ELSE 0 END) AS third_is_1,
+        SUM(CASE WHEN third_select IS NULL THEN 1 ELSE 0 END) AS third_is_null
+      FROM development_process
+      WHERE type IN (${placeholders})
+      GROUP BY type`
+    const rows = await query(sql, types)
+    const formatRow = (type) => {
+        const row = rows.find((item) => item.type === type) || {}
+        return {
+            type,
+            first: {
+                is_0: Number(row.first_is_0) || 0,
+                is_1: Number(row.first_is_1) || 0,
+                is_null: Number(row.first_is_null) || 0
+            },
+            second: {
+                is_0: Number(row.second_is_0) || 0,
+                is_1: Number(row.second_is_1) || 0,
+                is_null: Number(row.second_is_null) || 0
+            },
+            third: {
+                is_0: Number(row.third_is_0) || 0,
+                is_1: Number(row.third_is_1) || 0,
+                is_null: Number(row.third_is_null) || 0
+            }
+        }
+    }
+    return types.map(formatRow)
 }
 module.exports = developmentService
