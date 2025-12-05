@@ -5086,9 +5086,19 @@ developmentService.getCostOptimize = async() =>{
     return result
 }
 
-developmentService.getTypeSelectionStatistics = async() => {
+developmentService.getTypeSelectionStatistics = async(startDate, endDate) => {
     const types = ['供应商推品', '反推推品', 'IP推品', '自研推品']
     const placeholders = types.map(() => '?').join(', ')
+    const whereSql = [`type IN (${placeholders})`]
+    const params = [...types]
+    if (startDate) {
+        whereSql.push('create_time >= ?')
+        params.push(startDate)
+    }
+    if (endDate) {
+        whereSql.push('create_time <= ?')
+        params.push(endDate)
+    }
     const sql = `SELECT type,
         SUM(CASE WHEN first_select = 0 THEN 1 ELSE 0 END) AS first_is_0,
         SUM(CASE WHEN first_select = 1 THEN 1 ELSE 0 END) AS first_is_1,
@@ -5100,9 +5110,9 @@ developmentService.getTypeSelectionStatistics = async() => {
         SUM(CASE WHEN third_select = 1 THEN 1 ELSE 0 END) AS third_is_1,
         SUM(CASE WHEN third_select IS NULL THEN 1 ELSE 0 END) AS third_is_null
       FROM development_process
-      WHERE type IN (${placeholders})
+      WHERE ${whereSql.join(' AND ')}
       GROUP BY type`
-    const rows = await query(sql, types)
+    const rows = await query(sql, params)
     const formatRow = (type) => {
         const row = rows.find((item) => item.type === type) || {}
         return {
