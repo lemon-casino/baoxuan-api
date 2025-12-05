@@ -5113,6 +5113,11 @@ developmentService.getTypeSelectionStatistics = async(startDate, endDate) => {
       WHERE ${whereSql.join(' AND ')}
       GROUP BY type`
     const rows = await query(sql, params)
+    const countSql = `SELECT type, COUNT(*) AS cnt
+      FROM development_process
+      WHERE ${whereSql.join(' AND ')}
+      GROUP BY type`
+    const countRows = await query(countSql, [...params])
     const formatRow = (type) => {
         const row = rows.find((item) => item.type === type) || {}
         return {
@@ -5134,6 +5139,10 @@ developmentService.getTypeSelectionStatistics = async(startDate, endDate) => {
             }
         }
     }
-    return types.map(formatRow)
+    const typeCounts = types.map((type) => {
+        const row = countRows.find((item) => item.type === type) || {}
+        return { type, cnt: Number(row.cnt) || 0 }
+    })
+    return { selectionStats: types.map(formatRow), typeCounts }
 }
 module.exports = developmentService
