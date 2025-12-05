@@ -720,8 +720,20 @@ const getCostOptimize = async (req, res, next) => {
     }
 }
 
+const getTypeSelectionStatistics = async (req, res, next) => {
+    try {
+        const {startDate, endDate} = req.query
+        const start = startDate ? moment(startDate).startOf('day').format('YYYY-MM-DD HH:mm:ss') : null
+        const end = endDate ? moment(endDate).endOf('day').format('YYYY-MM-DD HH:mm:ss') : null
+        const result = await developmentService.getTypeSelectionStatistics(start, end)
+        return res.send(biResponse.success(result))
+    } catch (e) {
+        next(e)
+    }
+}
+
 module.exports = {
-    getWorkPannel, 
+    getWorkPannel,
     getWorkDetail,
     getProjectData,
     createProjectData,
@@ -756,5 +768,6 @@ module.exports = {
     getDevelopProcess,
     getNotList,
     getSkuCostInfo,
-    getCostOptimize
+    getCostOptimize,
+    getTypeSelectionStatistics
 }
